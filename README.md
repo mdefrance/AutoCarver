@@ -116,7 +116,7 @@ print(auto_carver.non_viable_features)
 The `Discretizer` and `AutoCarver` steps can be stored in a `Pipeline` and can than be stored as a `pickle` file.
 
 ```python
-from pickle import dump, load
+from pickle import dump
 from sklearn.pipeline import Pipeline
 
 # storing Discretizer
@@ -133,6 +133,8 @@ dump(pipe, open('my_pipe.pkl', 'wb'))
 The stored `Pipeline`, can then be used to transform new datasets.
 
 ```python
+from pickle import load
+
 # restoring the pipeline
 pipe = load(open('my_pipe.pkl', 'rb'))
 
