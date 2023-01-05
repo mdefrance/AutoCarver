@@ -1,13 +1,12 @@
-from association_measure import association_quali_y
-from data_processing import order_naf_niv1, order_naf_niv2
 from IPython.display import display_html
-from numpy import sort, nan, inf, float32, where, isin, argsort, array, select, append, quantile, linspace, argmin
-from pandas import DataFrame, Series, isna, qcut, notna, unique, concat
+from numpy import sort, nan, inf, float32, where, isin, argsort, array, select, append, quantile, linspace, argmin, sqrt
+from pandas import DataFrame, Series, isna, qcut, notna, unique, concat, crosstab
+from scipy.stats import chi2_contingency
 from sklearn.base import BaseEstimator, TransformerMixin
 from tqdm.notebook import tqdm
 from warnings import warn
 from Discretizers import GroupedList, GroupedListDiscretizer, is_equal
-        
+
 
 class AutoCarver(GroupedListDiscretizer):
     """ Automatic carving of continuous, categorical and categorical ordinal features 
@@ -412,3 +411,40 @@ def get_combinations(n_class, q):
     combinations = [list(map(lambda u: (str(u[0]).zfill(len(str(q-1))), str(u[1]).zfill(len(str(q-1)))), l)) for l in __li_of_res__]
     
     return combinations
+
+def association_quali_y(x: array, y: array, keep_nans: bool):
+    """ Computes measures of association between feature x and feature2. """
+    
+    # whether or not to keep nans
+    if keep_nans:
+        yx = y.astype(str)
+        xc = x.astype(str)
+    else:
+         yc = y[notna(x)].astype(str)
+         xc = x[notna(x)].astype(str)
+
+    # numnber of observations
+    n_obs = len(xc)
+
+    # number of values taken by the features
+    n_mod_x, n_mod_y = len(unique(xc)), len(unique(yc))
+
+    # frequency across target and feature values
+    crossed = crosstab(xc, yc)
+
+    # Chi2 statistic
+    chi2 = chi2_contingency(crossed)[0]
+
+    # Cramer's V
+    cramerv = sqrt(chi2 / n_obs)
+
+    # Tschuprow's T
+    n_mods = sqrt((n_mod_x - 1) * (n_mod_y - 1))
+    tschuprowt = 0
+    if n_mods > 0:
+        tschuprowt = sqrt(chi2 / n_obs / n_mods)
+    
+    # recupération des résultats
+    results = {'cramerv': cramerv, 'tschuprowt': tschuprowt}
+    
+    return results
