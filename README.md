@@ -10,7 +10,7 @@ Can also be used to discretize quantitative features, that are prealably cut in 
  
 Uses Tschurpow's T or Cramer's V to find the optimal carving (regrouping) of modalities/values of features.
 
-AutoCarver is an `sklearn` transformer.
+`AutoCarver` is an `sklearn` transformer.
 
 Only implementend for binary classification problems.
 
