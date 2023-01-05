@@ -36,24 +36,16 @@ X_test, y_test = ...
 </pre>
 
 All features need to be discretized via a Discretizer so AutoCarver can group their modalities. Following parameters must be set for Discretizer:
-- <pre>min_freq</pre>
-  - For qualitative features:  Minimal frequency of a modality, less frequent modalities are grouped in the `__OTHER__` modality.
+- `min_freq`, should be set from 0.01 (preciser) to 0.05 (faster, increased stability).
+  - For qualitative features:  Minimal frequency of a modality, less frequent modalities are grouped in the `'__OTHER__'` modality.
   - For qualitative ordinal features: Less frequent modalities are grouped to the closest modality  (smallest frequency or closest target rate), between the superior and inferior values (specified in the <pre>values_orders</pre> dictionnary).
-Recommandation: `min_freq` should be set from 0.01 (preciser) to 0.05 (faster, increased stability).
 
-q: int, default None
-[Quantitative features] Number of quantiles to initialy cut the feature.
-- NaNs are considered a specific value but will not be grouped.
-- Values more frequent than `1/q` will be set as their own group and remaining frequency will be
-cut into proportionaly less quantiles (`q:=max(round(non_frequent * q), 1)`). 
-Exemple: if q=10 and the value numpy.nan represent 50 % of the observed values, non-NaNs will be 
-cut in q=5 quantiles.
-Recommandation: `q` should be set from 10 (faster) to 20 (preciser).
+- `q`, should be set from 10 (faster) to 20 (preciser).
+  - For quantitative features: Number of quantiles to initialy cut the feature. Values more frequent than `1/q` will be set as their own group and remaining frequency will be cut into proportionaly less quantiles (`q:=max(round(non_frequent * q), 1)`). 
 
-values_orders: dict, default {}
-[Qualitative ordinal features] dict of features values and list of orders of their values.
-- [Qualitative ordinal features] Less frequent modalities are grouped to the closest modality 
-(smallest frequency or closest target rate), between the superior and inferior values (described
+
+- `values_orders`
+  - For qualitative ordinal features: `dict` of features values and list of orders of their values. Modalities less frequent than `min_freq` are automaticaly grouped to the closest modality (smallest frequency or closest target rate), between the superior and inferior values.
 
 
 <pre>
@@ -71,6 +63,8 @@ values_orders = {
 discretizer = Discretizer(selected_quanti, selected_quali, min_freq=0.02, q=20, values_orders=values_orders)
 X_train = discretizer.fit_transform(X_train, y_train)
 X_test = discretizer.transform(X_test)
+</pre>
+
 
 # storing Discretizer
 pipe = [('Discretizer', discretizer)]
