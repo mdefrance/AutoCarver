@@ -105,9 +105,6 @@ auto_carver.fit_transform(X_train, y_train, X_test, y_test)
 
 # applying transformation on test sample
 auto_carver.transform(X_test)
-
-# identifying non stable/robust features
-print(auto_carver.non_viable_features)
 ```
 <p align="left">
   <img width="500" src="/docs/auto_carver_fit.PNG" />
