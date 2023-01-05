@@ -82,8 +82,8 @@ values_orders = discretizer.values_orders
 All specified features can now automatically be carved in an association maximising grouping of their modalities while reducing their number. Following parameters must be set for `AutoCarver`:
 
 - `sort_by`, association measure used to find the optimal group modality combination.
-  - Use `'cramerv'` for more modalities, less robust.
-  - Use `'tschuprowt'` for more robust modalities.
+  - Use `sort_by='cramerv'` for more modalities, less robust.
+  - Use `sort_by='tschuprowt'` for more robust modalities.
   - **Tip:** a combination of features carved with `sort_by='cramerv'` and `sort_by='tschuprowt'` can sometime prove to be better than only one of those.
 
 - `sample_size`, sample size used for stratified sampling per feature modalities by target rate. Should be set from 0.01 (faster, use with large dataset) to 0.5 (preciser, use with small dataset).
