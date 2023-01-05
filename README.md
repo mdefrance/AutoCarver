@@ -90,6 +90,9 @@ All specified features can now automatically be carved in an association maximis
 
 - `max_n_mod`, maximum number of modalities for the carved features (excluding `numpy.nan`). All possible combinations of less than `max_n_mod` groups of modalities will be tested. Should be set from 4 (faster) to 6 (preciser).
 
+At this step, all `numpy.nan` are grouped to the best non-NaN value (after they were grouped). Use `keep_nans=True` if you want `numpy.nan` to remain as a specific modality.
+
+
 ```python
 from AutoCarver import AutoCarver
 
