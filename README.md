@@ -110,7 +110,7 @@ auto_carver.transform(X_test)
 print(auto_carver.non_viable_features)
 ```
 <p align="left">
-  <img width="544" src="/docs/auto_carver_fit.PNG" />
+  <img width="500" src="/docs/auto_carver_fit.PNG" />
 </p>
 
 #### Storing, reusing an AutoCarver
