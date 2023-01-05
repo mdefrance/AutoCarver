@@ -12,9 +12,9 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url='https://github.com/mdefrance/AutoCarver',
-    #project_urls = {
-    #    "Bug Tracker": "https://github.com/mike-huls/toolbox/issues"
-    #},
+    project_urls = {
+        "Bug Tracker": "https://github.com/mdefrance/AutoCarver/issues"
+    },
     license='MIT',
     packages=['AutoCarver']
 )
