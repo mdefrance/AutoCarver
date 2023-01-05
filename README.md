@@ -22,6 +22,8 @@ pip install --upgrade autocarver
 
 ## Example
 
+#### Setting up Samples
+
 AutoCarver needs to test the robustness of carvings on specific sample. For this purpose, the use of an out of time sample is recommended. 
 
 
@@ -30,6 +32,8 @@ AutoCarver needs to test the robustness of carvings on specific sample. For this
 X_train, y_train = ...
 X_test, y_test = ...
 ```
+
+#### Formatting features to de carved
 
 All features need to be discretized via a Discretizer so AutoCarver can group their modalities. Following parameters must be set for Discretizer:
 - `min_freq`, should be set from 0.01 (preciser) to 0.05 (faster, increased stability).
@@ -66,6 +70,7 @@ X_test = discretizer.transform(X_test)
 values_orders = discretizer.values_orders
 ```
 
+#### Automatic Carving of features
 
 ```python
 from AutoCarver import AutoCarver
@@ -85,6 +90,7 @@ print(auto_carver.non_viable_features)
 ```
 
 
+#### Storing, reusing an AutoCarver
 
 ```python
 from sklearn.pipeline import Pipeline
