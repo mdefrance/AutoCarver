@@ -26,7 +26,7 @@ pip install --upgrade autocarver
 
 #### Setting up Samples
 
-AutoCarver tests the robustness of carvings on specific sample. For this purpose, the use of an out of time sample is recommended. 
+`AutoCarver` tests the robustness of carvings on specific sample. For this purpose, the use of an out of time sample is recommended. 
 
 ```python
 # defining training and testing sets
@@ -37,7 +37,7 @@ X_val, y_val = ...
 
 #### Formatting features to de carved
 
-All features need to be discretized via a Discretizer so AutoCarver can group their modalities. Following parameters must be set for Discretizer:
+All features need to be discretized via a `Discretizer` so `AutoCarver` can group their modalities. Following parameters must be set for `Discretizer`:
 
 - `min_freq`, should be set from 0.01 (preciser) to 0.05 (faster, increased stability).
   - *For qualitative features:*  Minimal frequency of a modality, less frequent modalities are grouped in the `default_value='__OTHER__'` modality.
@@ -77,7 +77,7 @@ values_orders = discretizer.values_orders
 
 #### Automatic Carving of features
 
-All specified features can now automatically be carved in an association maximising grouping of their modalities while reducing their number. Following parameters must be set for AutoCarver:
+All specified features can now automatically be carved in an association maximising grouping of their modalities while reducing their number. Following parameters must be set for `AutoCarver`:
 
 - `sort_by`, association measure used to find the optimal group modality combination.
   - Use `'cramerv'` for more modalities, less robust.
@@ -108,9 +108,9 @@ print(auto_carver.non_viable_features)
 
 #### Storing, reusing an AutoCarver
 
-The Discretizer and AutoCarver steps can be stored in a `sklearn.pipeline.Pipeline` and can than be stored as a `pickle` file.
+The `Discretizer` and `AutoCarver` steps can be stored in a `Pipeline` and can than be stored as a `pickle` file.
 
-The stored `sklearn.pipeline.Pipeline`, can then be used for transforming of new datasets.
+The stored `Pipeline`, can then be used for transforming of new datasets.
 
 ```python
 from pickle import dump, load
