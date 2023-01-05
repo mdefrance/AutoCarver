@@ -5,7 +5,7 @@ from scipy.stats import chi2_contingency
 from sklearn.base import BaseEstimator, TransformerMixin
 from tqdm.notebook import tqdm
 from warnings import warn
-from .Discretizers import GroupedList, GroupedListDiscretizer, is_equal
+from Discretizers import GroupedList, GroupedListDiscretizer, is_equal
 
 
 class AutoCarver(GroupedListDiscretizer):
@@ -14,9 +14,9 @@ class AutoCarver(GroupedListDiscretizer):
 
     Modalities/values of features are carved/regrouped according to a computed specific
     order defined based on their types:
-     - [Categorical features] grouped based on modality target rate.
-     - [Categorical ordinal features] grouped based on specified modality order.
-     - [Continuous features] grouped based on the order of their values.
+     - [Qualitative features] grouped based on modality target rate.
+     - [Qualitative ordinal features] grouped based on specified modality order.
+     - [Quantitative features] grouped based on the order of their values.
     Uses Tschurpow's T to find the optimal carving (regrouping) of modalities/values
     of features.
 
@@ -83,7 +83,7 @@ class AutoCarver(GroupedListDiscretizer):
     auto_carver = AutoCarver(values_orders, sort_by='cramerv', max_n_mod=5, sample_size=0.01)
 
     # fitting on training sample 
-    # a test sample can be specified to evaluate carving robustess
+    # a test sample can be specified to evaluate carving robustness
     X_train = auto_carver.fit_transform(X_train, y_train, X_test, y_test)
 
     # applying transformation on test sample
@@ -137,7 +137,7 @@ class AutoCarver(GroupedListDiscretizer):
 
         # découpage automatique de chacune des variables
         for n, feature in enumerate(self.features):
-            if self.verbose: print("\n\n - Processing {} ({}/{})".format(feature, n + 1, len(self.features)))
+            if self.verbose: print(f"\n---\n[AutoCarver] Fitting {feature} ({n+1}/{len(self.features)})")
 
             # sampling data for faster computation
             Xc = X[[feature, self.target]].groupby([feature, self.target], group_keys=False, dropna=False).apply(lambda x: x.sample(frac=self.sample_size))
@@ -149,7 +149,9 @@ class AutoCarver(GroupedListDiscretizer):
             ytestc = Xtestc[self.target]
 
             # printing the group statistics and determining default ordering
-            if self.verbose: self.display_target_rate(Xc, Xtestc, feature)
+            if self.verbose:
+                print(f'\n - {feature} Initial distribution')
+                self.display_target_rate(Xc, Xtestc, feature)
 
             # getting best combination
             best_groups = self.get_best_combination(feature, Xc, yc, Xtestc, ytestc)
@@ -161,7 +163,8 @@ class AutoCarver(GroupedListDiscretizer):
 
             # feature can be carved robustly
             elif self.verbose:
-                target_rate_order = self.display_target_rate(
+                print(f'\n - {feature} Fitted distribution')
+                self.display_target_rate(
                 	DataFrame({feature: best_groups.get('x_cut'), self.target: yc}), 
                 	DataFrame({feature: best_groups.get('x_test_cut'), self.target: ytestc}), feature)
 
@@ -179,7 +182,7 @@ class AutoCarver(GroupedListDiscretizer):
         combinations = [[self.values_orders.get(feature)[int(c[0]): int(c[1]) + 1] for c in combi] for combi in combinations]  # getting real feature values
 
         # measuring association with target for each combination and testing for stability on TEST
-        if self.verbose: print("Grouping Modalities:")
+        if self.verbose: print(" - Grouping Modalities:")
         best_groups = best_combination(combinations, self.sort_by, feature, X, y, X_test, y_test, self.verbose, keep_nans=False)
 
         # storing grouped modalities in values_orders
@@ -194,7 +197,7 @@ class AutoCarver(GroupedListDiscretizer):
         # testing adding NaNs to built groups
         if any(isna(X[feature])) & (not self.keep_nans):
             
-            if self.verbose: print("Grouping NaNs:")
+            if self.verbose: print(" - Grouping NaNs:")
 
             # measuring association with target for each combination and testing for stability on TEST
             combinations = get_all_nan_combinations(order)
@@ -245,6 +248,10 @@ class AutoCarver(GroupedListDiscretizer):
             # ordering TRAIN
             train_stats = train_stats.reindex(new_train_order)
 
+            # adding start and end modalities
+            renamed_train_order = [f'{known_order.get(c)[-1]} to {known_order.get(c)[0]}' if c in known_order and len(known_order.get(c)) > 1 else c for c in new_train_order]
+            train_stats.index = renamed_train_order
+
             # ordering the TEST statistics based on known order
             new_test_order = new_train_order[:]
 
@@ -253,6 +260,10 @@ class AutoCarver(GroupedListDiscretizer):
 
             # ordering TEST
             test_stats = test_stats.reindex(new_test_order)
+
+            # adding start and end modalities
+            renamed_test_order = [f'{known_order.get(c)[-1]} to {known_order.get(c)[0]}' if c in known_order and len(known_order.get(c)) > 1 else c for c in new_test_order]
+            test_stats.index = renamed_test_order
 
         # Displaying feature level stats
         styler = concat([train_stats, test_stats], ignore_index=True).style.background_gradient(cmap='coolwarm')  # unifying colors for both stats
@@ -417,11 +428,11 @@ def association_quali_y(x: array, y: array, keep_nans: bool):
     
     # whether or not to keep nans
     if keep_nans:
-        yx = y.astype(str)
+        yc = y.astype(str)
         xc = x.astype(str)
     else:
-         yc = y[notna(x)].astype(str)
-         xc = x[notna(x)].astype(str)
+        yc = y[notna(x)].astype(str)
+        xc = x[notna(x)].astype(str)
 
     # numnber of observations
     n_obs = len(xc)
