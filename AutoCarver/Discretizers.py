@@ -1,5 +1,3 @@
-from association_measure import association_quali_quali
-from data_processing import order_naf_niv1, order_naf_niv2
 from IPython.display import display_html
 from numpy import sort, nan, inf, float32, where, isin, argsort, array, select, append, quantile, linspace, argmin
 from pandas import DataFrame, Series, isna, qcut, notna

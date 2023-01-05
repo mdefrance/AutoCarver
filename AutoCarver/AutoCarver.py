@@ -5,7 +5,7 @@ from scipy.stats import chi2_contingency
 from sklearn.base import BaseEstimator, TransformerMixin
 from tqdm.notebook import tqdm
 from warnings import warn
-from Discretizers import GroupedList, GroupedListDiscretizer, is_equal
+from .Discretizers import GroupedList, GroupedListDiscretizer, is_equal
 
 
 class AutoCarver(GroupedListDiscretizer):
