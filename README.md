@@ -109,8 +109,9 @@ auto_carver.transform(X_test)
 # identifying non stable/robust features
 print(auto_carver.non_viable_features)
 ```
+![This is an image](docs/auto_carver_fit.PNG)
 <p align="center">
-  <img width="544" src="/docs/auto_carver_fit.png" />
+  <img width="544" src="/docs/auto_carver_fit.PNG" />
 </p>
 
 #### Storing, reusing an AutoCarver
@@ -124,7 +125,7 @@ from sklearn.pipeline import Pipeline
 # storing Discretizer
 pipe = [('Discretizer', discretizer)]
 
-# storing fitted AutoCarver in a sklearn.pipeline.Pipeline
+# storing fitted AutoCarver in a Pipeline
 pipe += [('AutoCarver', auto_carver)]
 pipe = Pipeline(pipe)
 
