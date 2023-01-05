@@ -109,7 +109,9 @@ auto_carver.transform(X_test)
 # identifying non stable/robust features
 print(auto_carver.non_viable_features)
 ```
-
+<p align="center">
+  <img width="544" src="/docs/auto_carver_fit.png" />
+</p>
 
 #### Storing, reusing an AutoCarver
 
