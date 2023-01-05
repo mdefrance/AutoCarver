@@ -24,8 +24,7 @@ pip install --upgrade autocarver
 
 #### Setting up Samples
 
-AutoCarver needs to test the robustness of carvings on specific sample. For this purpose, the use of an out of time sample is recommended. 
-
+AutoCarver tests the robustness of carvings on specific sample. For this purpose, the use of an out of time sample is recommended. 
 
 ```python
 # defining training and testing sets
@@ -36,17 +35,19 @@ X_test, y_test = ...
 #### Formatting features to de carved
 
 All features need to be discretized via a Discretizer so AutoCarver can group their modalities. Following parameters must be set for Discretizer:
+
 - `min_freq`, should be set from 0.01 (preciser) to 0.05 (faster, increased stability).
-  - For qualitative features:  Minimal frequency of a modality, less frequent modalities are grouped in the `'__OTHER__'` modality.
+  - For qualitative features:  Minimal frequency of a modality, less frequent modalities are grouped in the `default_value='__OTHER__'` modality.
   - For qualitative ordinal features: Less frequent modalities are grouped to the closest modality  (smallest frequency or closest target rate), between the superior and inferior values (specified in the `values_orders` dictionnary).
 
 - `q`, should be set from 10 (faster) to 20 (preciser).
   - For quantitative features: Number of quantiles to initialy cut the feature. Values more frequent than `1/q` will be set as their own group and remaining frequency will be cut into proportionaly less quantiles (`q:=max(round(non_frequent * q), 1)`). 
 
-
 - `values_orders`
-  - For qualitative ordinal features: `dict` of features values and list of orders of their values. Modalities less frequent than `min_freq` are automaticaly grouped to the closest modality (smallest frequency or closest target rate), between the superior and inferior values.
+  - For qualitative ordinal features: `dict` of features values and `GroupedList` of their values. Modalities less frequent than `min_freq` are automaticaly grouped to the closest modality (smallest frequency or closest target rate), between the superior and inferior values.
 
+At this step, all `numpy.nan` are kept as their own modality.
+For qualitative features, unknown modalities passed to `Discretizer.transform` (that where not passed to `Discretizer.fit`) are automaticaly grouped to the `default_value='__OTHER__'` modality.
 
 ```python
 from AutoCarver.Discretizers import Discretizer
@@ -71,6 +72,17 @@ values_orders = discretizer.values_orders
 ```
 
 #### Automatic Carving of features
+
+All specified features can now automatically be carved in an association maximising grouping of their modalities while reducing their number. Following parameters must be set for AutoCarver:
+
+- `sort_by`, association measure used to find the optimal group modality combination.
+  - Use `'cramerv'` for more modalities, less robust.
+  - Use `'tschuprowt'` for more robust modalities.
+**Tip:** a combination of features carved with `sort_by='cramerv'` and `sort_by='tschuprowt'` can sometime prove to be better than only one of those.
+
+- `sample_size`, sample size used for stratified sampling per feature modalities by target rate. Should be set from 0.01 (faster, use with large dataset) to 0.5 (preciser, use with small dataset).
+
+- `max_n_mod`, maximum number of modalities for the carved features (excluding `numpy.nan`). All possible combinations of less than `max_n_mod` groups of modalities will be tested. Should be set from 4 (faster) to 6 (preciser).
 
 ```python
 from AutoCarver import AutoCarver
