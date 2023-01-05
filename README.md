@@ -64,8 +64,8 @@ values_orders = {
 
 # pre-processing of features into categorical ordinal features
 discretizer = Discretizer(selected_quanti, selected_quali, min_freq=0.02, q=20, values_orders=values_orders)
-X_train = discretizer.fit_transform(X_train, y_train)
-X_test = discretizer.transform(X_test)
+discretizer.fit_transform(X_train, y_train)
+discretizer.transform(X_test)
 
 # updating features' values orders (at this step every features are qualitative ordinal)
 values_orders = discretizer.values_orders
@@ -92,10 +92,10 @@ auto_carver = AutoCarver(values_orders, sort_by='cramerv', max_n_mod=5, sample_s
 
 # fitting on training sample 
 # a test sample can be specified to evaluate carving robustness
-X_train = auto_carver.fit_transform(X_train, y_train, X_test, y_test)
+auto_carver.fit_transform(X_train, y_train, X_test, y_test)
 
 # applying transformation on test sample
-X_test = auto_carver.transform(X_test)
+auto_carver.transform(X_test)
 
 # identifying non stable/robust features
 print(auto_carver.non_viable_features)
