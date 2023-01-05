@@ -10,6 +10,8 @@ Can also be used to discretize quantitative features, that are prealably cut in 
  
 Uses Tschurpow's T or Cramer's V to find the optimal carving (regrouping) of modalities/values of features.
 
+AutoCarver is an `sklearn` transformer.
+
 Only implementend for binary classification problems.
 
 ## Install
@@ -30,6 +32,7 @@ AutoCarver tests the robustness of carvings on specific sample. For this purpose
 # defining training and testing sets
 X_train, y_train = ...
 X_test, y_test = ...
+X_val, y_val = ...
 ```
 
 #### Formatting features to de carved
@@ -79,7 +82,7 @@ All specified features can now automatically be carved in an association maximis
 - `sort_by`, association measure used to find the optimal group modality combination.
   - Use `'cramerv'` for more modalities, less robust.
   - Use `'tschuprowt'` for more robust modalities.
-**Tip:** a combination of features carved with `sort_by='cramerv'` and `sort_by='tschuprowt'` can sometime prove to be better than only one of those.
+  - **Tip:** a combination of features carved with `sort_by='cramerv'` and `sort_by='tschuprowt'` can sometime prove to be better than only one of those.
 
 - `sample_size`, sample size used for stratified sampling per feature modalities by target rate. Should be set from 0.01 (faster, use with large dataset) to 0.5 (preciser, use with small dataset).
 
@@ -105,15 +108,26 @@ print(auto_carver.non_viable_features)
 
 #### Storing, reusing an AutoCarver
 
+The Discretizer and AutoCarver steps can be stored in a `sklearn.pipeline.Pipeline` and can than be stored as a `pickle` file.
+
+The stored `sklearn.pipeline.Pipeline`, can then be used for transforming of new datasets.
+
 ```python
+from pickle import dump, load
 from sklearn.pipeline import Pipeline
 
 # storing Discretizer
 pipe = [('Discretizer', discretizer)]
 
 # storing fitted AutoCarver in a sklearn.pipeline.Pipeline
-pipe += [('AutoCarver', auto_carver.discretizer)]
+pipe += [('AutoCarver', auto_carver)]
 pipe = Pipeline(pipe)
+
+# storing as pickle file
+dump(pipe, open('my_pipe.pkl', 'wb'))
+
+# restoring the pipeline
+pipe = load(open('my_pipe.pkl', 'rb'))
 
 # applying pipe to a validation set or in production
 X_val = pipe.transform(X_val)
