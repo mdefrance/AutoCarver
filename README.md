@@ -35,7 +35,7 @@ X_test, y_test = ...
 X_val, y_val = ...
 ```
 
-#### Formatting features to de carved
+#### Formatting features to be carved
 
 All features need to be discretized via a `Discretizer` so `AutoCarver` can group their modalities. Following parameters must be set for `Discretizer`:
 
@@ -52,6 +52,8 @@ All features need to be discretized via a `Discretizer` so `AutoCarver` can grou
 At this step, all `numpy.nan` are kept as their own modality.
 
 For qualitative features, unknown modalities passed to `Discretizer.transform` (that where not passed to `Discretizer.fit`) are automaticaly grouped to the `default_value='__OTHER__'` modality.
+
+By default, samples are modified and not copied (recommanded for large datasets). Use `copy=True` if you want a new `DataFrame` to be returned.
 
 ```python
 from AutoCarver.Discretizers import Discretizer
