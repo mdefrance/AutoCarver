@@ -1,6 +1,6 @@
 # AutoCarver
 
-**AutoCarver** is an approach for maximising a categorical feature's association with a binary target feature while reducing it's number of distinct modalities.
+**AutoCarver** is an approach for maximising a qualitative feature's association with a binary target feature while reducing it's number of distinct modalities.
 Can also be used to discretize quantitative features, that are prealably cut in quantiles.
 
  Modalities/values of features are carved/regrouped according to a computed specific order defined based on their types:
