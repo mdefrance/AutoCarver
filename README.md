@@ -1,14 +1,14 @@
 # AutoCarver
 
 **AutoCarver** is an approach for maximising a categorical feature's association with a binary target feature while reducing it's number of distinct modalities.
-Can alse be used to discretize quantitative features, that are prealably cut in quantiles.
+Can also be used to discretize quantitative features, that are prealably cut in quantiles.
 
  Modalities/values of features are carved/regrouped according to a computed specific order defined based on their types:
-     - [Qualitative features] grouped based on target rate per modality.
-     - [Qualitative ordinal features] grouped based on specified modality order.
-     - [Quantitative features] grouped based on the order of their values.
+     - *Qualitative features* grouped based on target rate per modality.
+     - *Qualitative ordinal features* grouped based on specified modality order.
+     - *Quantitative features* grouped based on the order of their values.
  
- Uses Tschurpow's T or Cramer's V to find the optimal carving (regrouping) of modalities/values of features.
+Uses Tschurpow's T or Cramer's V to find the optimal carving (regrouping) of modalities/values of features.
 
 Only implementend for binary classification problems.
 
