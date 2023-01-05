@@ -37,14 +37,14 @@ X_test, y_test = ...
 All features need to be discretized via a Discretizer so AutoCarver can group their modalities. Following parameters must be set for Discretizer:
 
 - `min_freq`, should be set from 0.01 (preciser) to 0.05 (faster, increased stability).
-  - For qualitative features:  Minimal frequency of a modality, less frequent modalities are grouped in the `default_value='__OTHER__'` modality.
-  - For qualitative ordinal features: Less frequent modalities are grouped to the closest modality  (smallest frequency or closest target rate), between the superior and inferior values (specified in the `values_orders` dictionnary).
+  - * *For qualitative features:*  Minimal frequency of a modality, less frequent modalities are grouped in the `default_value='__OTHER__'` modality.
+  - * *For qualitative ordinal features:* Less frequent modalities are grouped to the closest modality  (smallest frequency or closest target rate), between the superior and inferior values (specified in the `values_orders` dictionnary).
 
 - `q`, should be set from 10 (faster) to 20 (preciser).
-  - For quantitative features: Number of quantiles to initialy cut the feature. Values more frequent than `1/q` will be set as their own group and remaining frequency will be cut into proportionaly less quantiles (`q:=max(round(non_frequent * q), 1)`). 
+  - * *For quantitative features:* Number of quantiles to initialy cut the feature. Values more frequent than `1/q` will be set as their own group and remaining frequency will be cut into proportionaly less quantiles (`q:=max(round(non_frequent * q), 1)`). 
 
 - `values_orders`
-  - For qualitative ordinal features: `dict` of features values and `GroupedList` of their values. Modalities less frequent than `min_freq` are automaticaly grouped to the closest modality (smallest frequency or closest target rate), between the superior and inferior values.
+  - * *For qualitative ordinal features:* `dict` of features values and `GroupedList` of their values. Modalities less frequent than `min_freq` are automaticaly grouped to the closest modality (smallest frequency or closest target rate), between the superior and inferior values.
 
 At this step, all `numpy.nan` are kept as their own modality.
 For qualitative features, unknown modalities passed to `Discretizer.transform` (that where not passed to `Discretizer.fit`) are automaticaly grouped to the `default_value='__OTHER__'` modality.
