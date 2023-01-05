@@ -47,6 +47,7 @@ All features need to be discretized via a Discretizer so AutoCarver can group th
   - *For qualitative ordinal features:* `dict` of features values and `GroupedList` of their values. Modalities less frequent than `min_freq` are automaticaly grouped to the closest modality (smallest frequency or closest target rate), between the superior and inferior values.
 
 At this step, all `numpy.nan` are kept as their own modality.
+
 For qualitative features, unknown modalities passed to `Discretizer.transform` (that where not passed to `Discretizer.fit`) are automaticaly grouped to the `default_value='__OTHER__'` modality.
 
 ```python
