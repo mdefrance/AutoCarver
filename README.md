@@ -22,7 +22,7 @@ AutoCarver can be installed from [PyPI](https://pypi.org/project/AutoCarver):
 pip install --upgrade autocarver
 </pre>
 
-## Example
+## Complete Example
 
 #### Setting up Samples
 
