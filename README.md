@@ -59,8 +59,8 @@ By default, samples are modified and not copied (recommanded for large datasets)
 from AutoCarver.Discretizers import Discretizer
 
 # specifying features to be carved
-selected_quanti = ['amount', 'distance', 'length', 'height']
-selected_quali = ['age', 'type', 'grade', 'city']
+quantitatives = ['amount', 'distance', 'length', 'height']
+qualitatives = ['age', 'type', 'grade', 'city']
 
 # specifying orders of categorical ordinal features
 values_orders = {
@@ -69,7 +69,7 @@ values_orders = {
 }
 
 # pre-processing of features into categorical ordinal features
-discretizer = Discretizer(selected_quanti, selected_quali, min_freq=0.02, q=20, values_orders=values_orders)
+discretizer = Discretizer(quantitatives, qualitatives, min_freq=0.02, q=20, values_orders=values_orders)
 discretizer.fit_transform(X_train, y_train)
 discretizer.transform(X_test)
 
