@@ -26,7 +26,7 @@ pip install --upgrade autocarver
 
 #### Setting up Samples
 
-`AutoCarver` tests the robustness of carvings on specific sample. For this purpose, the use of an out of time sample is recommended. 
+`AutoCarver` tests the robustness of carvings on a specific sample. For this purpose, the use of an out of time sample is recommended. 
 
 ```python
 # defining training and testing sets
