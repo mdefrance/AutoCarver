@@ -1,11 +1,11 @@
+from .Discretizers import GroupedList, GroupedListDiscretizer, is_equal
 from IPython.display import display_html
-from numpy import sort, nan, inf, float32, where, isin, argsort, array, select, append, quantile, linspace, argmin, sqrt
+from numpy import sort, nan, inf, float32, where, isin, argsort, array, select, append, quantile, linspace, argmin, sqrt, random
 from pandas import DataFrame, Series, isna, qcut, notna, unique, concat, crosstab
 from scipy.stats import chi2_contingency
 from sklearn.base import BaseEstimator, TransformerMixin
 from tqdm.notebook import tqdm
 from warnings import warn
-from .Discretizers import GroupedList, GroupedListDiscretizer, is_equal
 
 
 class AutoCarver(GroupedListDiscretizer):
@@ -103,8 +103,7 @@ class AutoCarver(GroupedListDiscretizer):
     
     def __init__(self, values_orders: dict={}, *, sort_by: str='tschuprowt', sample_size: float=0.01,
                  copy: bool=False, max_n_mod: int=5, keep_nans: bool=False, test_sample_size: float=None, 
-                 verbose: bool=True):
-        """ Découpage automatique des variables : min_freq pour variables qualitatives, q pour celle continue"""
+                 verbose: bool=True, random_state: int=None):
         
         self.features = list(values_orders.keys())
         self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
@@ -118,6 +117,8 @@ class AutoCarver(GroupedListDiscretizer):
         self.verbose = verbose
         self.sample_size = sample_size
         self.test_sample_size = test_sample_size
+        self.random_state = random_state
+        random.seed(self.random_state)
 
     def fit(self, X: DataFrame, y: Series, X_test: DataFrame=None, y_test: Series=None):
  
@@ -142,15 +143,15 @@ class AutoCarver(GroupedListDiscretizer):
             # sampling data for faster computation
             Xc = X[[feature, self.target]].groupby([feature, self.target], group_keys=False, dropna=False).apply(lambda x: x.sample(frac=self.sample_size))
             yc = Xc[self.target]
+            Xtestc = X_test[[feature, self.target]]
             if self.test_sample_size < 1:
-                Xtestc = X_test[[feature, self.target]].groupby([feature, self.target], group_keys=False, dropna=False).apply(lambda x: x.sample(frac=self.test_sample_size))
-            else:
-            	Xtestc = X_test[[feature, self.target]]
+                Xtestc = Xtestc.groupby([feature, self.target], group_keys=False, dropna=False).apply(lambda x: x.sample(frac=self.test_sample_size))
+            	
             ytestc = Xtestc[self.target]
 
             # printing the group statistics and determining default ordering
             if self.verbose:
-                print(f'\n - {feature} Initial distribution')
+                print(f'\n - Initial distribution')
                 self.display_target_rate(Xc, Xtestc, feature)
 
             # getting best combination
@@ -163,7 +164,7 @@ class AutoCarver(GroupedListDiscretizer):
 
             # feature can be carved robustly
             elif self.verbose:
-                print(f'\n - {feature} Fitted distribution')
+                print(f'\n - Fitted distribution')
                 self.display_target_rate(
                 	DataFrame({feature: best_groups.get('x_cut'), self.target: yc}), 
                 	DataFrame({feature: best_groups.get('x_test_cut'), self.target: ytestc}), feature)
@@ -176,34 +177,51 @@ class AutoCarver(GroupedListDiscretizer):
 
     def get_best_combination(self, feature: str, X: DataFrame, y: Series, X_test: DataFrame, y_test: Series):
 
+        if self.verbose: print(" - Grouping Modalities:")
+
         # getting all possible combinations for the feature without NaNS
-        n_values = X[feature].nunique(dropna=True)
-        combinations = get_all_combinations(n_values, self.max_n_mod)
-        combinations = [[self.values_orders.get(feature)[int(c[0]): int(c[1]) + 1] for c in combi] for combi in combinations]  # getting real feature values
+        combinations = get_all_combinations(self.values_orders.get(feature), X[feature].nunique(dropna=True), self.max_n_mod)
 
         # measuring association with target for each combination and testing for stability on TEST
-        if self.verbose: print(" - Grouping Modalities:")
         best_groups = best_combination(combinations, self.sort_by, feature, X, y, X_test, y_test, self.verbose, keep_nans=False)
 
-        # storing grouped modalities in values_orders
-        order = self.values_orders.get(feature)
+        # update of the values_orders grouped modalities in values_orders
         if bool(best_groups):
-            combination = best_groups.get('combination')
-            for group in combination:
-                order.group_list(group[1:], [group[0]] * len(group[1:]))
+            self.update_values_orders(feature, best_groups)
             X = DataFrame({feature: best_groups.get('x_cut')})
             X_test = DataFrame({feature: best_groups.get('x_test_cut')})
 
         # testing adding NaNs to built groups
-        if any(isna(X[feature])) & (not self.keep_nans):
+        order = self.values_orders.get(feature)
+        if any(isna(X[feature])) & (not self.keep_nans) & (len(order) <= self.max_n_mod):
             
             if self.verbose: print(" - Grouping NaNs:")
 
-            # measuring association with target for each combination and testing for stability on TEST
+            # getting all possible combinations for the feature with NaNS
             combinations = get_all_nan_combinations(order)
+
+            # measuring association with target for each combination and testing for stability on TEST
             best_groups = best_combination(combinations, self.sort_by, feature, X, y, X_test, y_test, self.verbose, keep_nans=True)
 
+            # update of the values_orders grouped modalities in values_orders
+            if bool(best_groups):
+                order.append(nan)
+                self.update_values_orders(feature, best_groups)
+
         return best_groups
+
+    def update_values_orders(self, feature, best_groups):
+        """ Updates the values_orders according to the best_groups"""
+
+        # accessing current order for specified feature
+        order = self.values_orders.get(feature)
+
+        # best combination found
+        combination = best_groups.get('combination')
+
+        # grouping for each group of the combination
+        for group in combination:
+            order.group_list(group[1:], [group[0]] * len(group[1:]))
 
     def display_target_rate(self, X, X_test, feature):
         """ Pretty display of frequency and target rate per modality on the same line. """
@@ -267,7 +285,6 @@ class AutoCarver(GroupedListDiscretizer):
 
         # Displaying feature level stats
         styler = concat([train_stats, test_stats], ignore_index=True).style.background_gradient(cmap='coolwarm')  # unifying colors for both stats
-
         train_style = train_stats.style.use(styler.export()).set_table_attributes("style='display:inline'").set_caption('Train:')
         test_style = test_stats.style.use(styler.export()).set_table_attributes("style='display:inline'").set_caption('Test:')
         display_html(train_style._repr_html_() + ' ' + test_style._repr_html_(), raw=True)
@@ -296,6 +313,7 @@ def best_combination(combinations: list, sort_by: str, feature: str, X: DataFram
         # measuring association with the target
         association = association_quali_y(x_cut, y.values, keep_nans)
         
+        #if keep_nans: print(combination, association)
         # storing results
         association.update({'combination': combination, 'x_cut': x_cut})
         associations += [association]
@@ -309,11 +327,11 @@ def best_combination(combinations: list, sort_by: str, feature: str, X: DataFram
         associations = associations.to_dict(orient='records')
     
         # evaluating stability on test sample
-        combination = test_stability(associations, feature, X, y, X_test, y_test, verbose)
+        combination = test_stability(associations, feature, X, y, X_test, y_test, verbose, keep_nans)
     
         return combination
 
-def test_stability(associations: list, feature: str, X: DataFrame, y: Series, X_test: DataFrame, y_test: Series, verbose: bool):
+def test_stability(associations: list, feature: str, X: DataFrame, y: Series, X_test: DataFrame, y_test: Series, verbose: bool, keep_nans: bool):
 
     # iterating over each combination
     for association in tqdm(associations, disable=not verbose):
@@ -330,21 +348,29 @@ def test_stability(associations: list, feature: str, X: DataFrame, y: Series, X_
             value_input = [combi[0] for combi in combination]
             x_test_cut = select(to_input, value_input, default=X_test[feature])
 
-        # same groups in TRAIN and TEST
+        # converting NaNs to strings if NaNs are being grouped
+        if keep_nans:
+            x_cut[isna(x_cut)] = '__NAN__'
+            x_test_cut[isna(x_test_cut)] = '__NAN__'
+
+        # checking that all non-nan groups are in TRAIN and TEST
         viability = all([e in unique(x_cut) for e in unique(x_test_cut) if notna(e)])
         viability = viability and all([e in unique(x_test_cut) for e in unique(x_cut) if notna(e)])
+
         # same target rate order in TRAIN and TEST
         train_target_rate = y.groupby(x_cut, dropna=True).mean().sort_values()
         test_target_rate = y_test.groupby(x_test_cut, dropna=True).mean().sort_values()
         viability = viability and all(train_target_rate.index == test_target_rate.index)
         
         if viability:
+            x_cut[x_cut == '__NAN__'] = nan
+            x_test_cut[x_test_cut == '__NAN__'] = nan
             association.update({'x_test_cut': x_test_cut})
 
             return association
 
-def get_all_combinations(q: int, max_n_mod: int=None):
-    
+def get_all_combinations(values: list, q: int, max_n_mod: int=None):
+
     # max number of classes
     if max_n_mod is None:
     	max_n_mod = q
@@ -354,37 +380,35 @@ def get_all_combinations(q: int, max_n_mod: int=None):
     for n_class in range(2, max_n_mod + 1):
         combinations += get_combinations(n_class, q)
 
+    combinations = [[values[int(c[0]): int(c[1]) + 1] for c in combi] for combi in combinations]  # getting real feature values
+
     return combinations
 
 def get_all_nan_combinations(order: list):
     """ all possible combinations of modalities with numpy.nan"""
 
-    # initiating combination with NaN as a specific modality
-    combinations = [[[c] for c in order] + [[nan]]]
+    # computing all non-NaN combinationscombinations = []
+    combinations = get_all_combinations(order, len(order))
 
-    # adding combination in which non nans are grouped but not NAN
-    for n in range(len(order) - 1):
+    # iterating over each combinations of non-NaNs
+    new_combinations = []
+    for combi in combinations:
 
-        # grouping NaNs with an existing group
-        new_combination = [order[n],  order[n+1]]
+         # NaNs not attributed to a group (own modality)
+        new_combinations += [combi + [[nan]]] 
 
-        # adding other groups unchanged
-        pre = [[o] for o in order[:n]]
-        nex = [[o] for o in order[n+2:]]
-        combinations += [pre + [new_combination] + nex + [[nan]]]
+        # NaNs attributed to a group of non NaNs
+        for n in range(len(combi)):
 
-    # iterating over each groups
-    for n in range(len(order)):
+            # grouping NaNs with an existing group
+            new_combination = [combi[n] + [nan]]
 
-        # grouping NaNs with an existing group
-        new_combination = [order[n], nan]
+            # adding other groups unchanged
+            pre = [o for o in combi[:n]]
+            nex = [o for o in combi[n+1:]]
+            new_combinations += [pre + new_combination + nex]
 
-        # adding other groups unchanged
-        pre = [[o] for o in order[:n]]
-        nex = [[o] for o in order[n+1:]]
-        combinations += [pre + [new_combination] + nex]
-
-    return combinations
+    return new_combinations
 
 
 def consecutive_combinations(n_remaining, start, end, grp_for_this_step=[]):
