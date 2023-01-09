@@ -94,7 +94,7 @@ At this step, all `numpy.nan` are grouped to the best non-NaN value (after they 
 
 
 ```python
-from AutoCarver import AutoCarver
+from AutoCarver.AutoCarver import AutoCarver
 
 # intiating AutoCarver
 auto_carver = AutoCarver(values_orders, sort_by='cramerv', max_n_mod=5, sample_size=0.01)
