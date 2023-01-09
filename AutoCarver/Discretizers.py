@@ -26,7 +26,7 @@ class GroupedList(list):
         # case 1: s'il ne s'agit pas déjà d'une liste groupée -> création des groupes
         elif isinstance(iterable, GroupedList):
 
-        	# initialsiation de la liste
+            # initialsiation de la liste
             super().__init__(iterable)
 
             # copie des groupes
@@ -41,10 +41,10 @@ class GroupedList(list):
             # création des groupes
             self.contained = {v: [v] for v in iterable}
 
-    def group_list(self, to_discard, to_keep):
+    def group_list(self, to_discard: list, to_keep: str):
         """ Groups elements to_discard into values to_keep"""
 
-        for discarded, kept in zip(to_discard, to_keep):
+        for discarded, kept in zip(to_discard, [to_keep] * len(to_discard)):
             self.group(discarded, kept)
 
     def group(self, discarded, kept):
@@ -356,7 +356,7 @@ class ChainedDiscretizer(GroupedListDiscretizer):
                 
                 # historizing in the feature's order
                 for discarded, kept in zip(to_discard, order):
-                    self.values_orders.get(feature).group_list(discarded, [kept] * len(discarded))  # historisation dans l'order
+                    self.values_orders.get(feature).group_list(discarded, kept)  # historisation dans l'order
                     
                 # updating frequencies of each modality for the next ordering
                 frequencies = Xc[feature].value_counts(dropna=False, normalize=True).drop(nan, errors='ignore')  # dropping nans to keep them anyways
@@ -531,7 +531,7 @@ class DefaultDiscretizer(BaseEstimator, TransformerMixin):
                 order.append(self.default_value)
                 
                 # grouping rare modalities into default_value
-                order.group_list(to_discard, [self.default_value] * len(to_discard))
+                order.group_list(to_discard, self.default_value)
                 
                 # computing target rate for default value and reordering values according to feature's target rate
                 default_target_rate = y.loc[X[feature].isin(order.get(self.default_value))].mean()  # computing target rate for default value
