@@ -164,7 +164,7 @@ class AutoCarver(GroupedListDiscretizer):
 
         # measuring association with target for each combination and testing for stability on TEST
         best_groups = best_combination(combinations, self.sort_by, xtab[notna(xtab.index)], 
-                                       xtab_test[notna(xtab_test.index)], self.verbose)
+                                       xtab_test[notna(xtab_test.index)])
 
         # update of the values_orders grouped modalities in values_orders
         if bool(best_groups):
@@ -185,7 +185,7 @@ class AutoCarver(GroupedListDiscretizer):
             order.append(nan)
 
             # measuring association with target for each combination and testing for stability on TEST
-            best_groups = best_combination(combinations, self.sort_by, xtab, xtab_test, self.verbose)
+            best_groups = best_combination(combinations, self.sort_by, xtab, xtab_test)
 
             # update of the values_orders grouped modalities in values_orders
             if bool(best_groups):
