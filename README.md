@@ -86,8 +86,6 @@ All specified features can now automatically be carved in an association maximis
   - Use `sort_by='tschuprowt'` for more robust modalities.
   - **Tip:** a combination of features carved with `sort_by='cramerv'` and `sort_by='tschuprowt'` can sometime prove to be better than only one of those.
 
-- `sample_size`, sample size used for stratified sampling per feature modalities by target rate. Should be set from 0.01 (faster, use with large dataset) to 0.5 (preciser, use with small dataset).
-
 - `max_n_mod`, maximum number of modalities for the carved features (excluding `numpy.nan`). All possible combinations of less than `max_n_mod` groups of modalities will be tested. Should be set from 4 (faster) to 6 (preciser).
 
 At this step, all `numpy.nan` are grouped to the best non-NaN value (after they were grouped). Use `keep_nans=True` if you want `numpy.nan` to remain as a specific modality.
@@ -97,7 +95,7 @@ At this step, all `numpy.nan` are grouped to the best non-NaN value (after they 
 from AutoCarver.AutoCarver import AutoCarver
 
 # intiating AutoCarver
-auto_carver = AutoCarver(values_orders, sort_by='cramerv', max_n_mod=5, sample_size=0.01)
+auto_carver = AutoCarver(values_orders, sort_by='cramerv', max_n_mod=5, verbose=True)
 
 # fitting on training sample 
 # a test sample can be specified to evaluate carving robustness
