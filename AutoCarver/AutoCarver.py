@@ -36,7 +36,7 @@ class AutoCarver(GroupedListDiscretizer):
 
     keep_nans: bool, default False
         Whether or not to group `numpy.nan` to other modalities/values.
-    
+
     Examples
     ----------
 
@@ -72,7 +72,7 @@ class AutoCarver(GroupedListDiscretizer):
     # intiating AutoCarver
     auto_carver = AutoCarver(values_orders, sort_by='cramerv', max_n_mod=5, sample_size=0.01)
 
-    # fitting on training sample 
+    # fitting on training sample
     # a test sample can be specified to evaluate carving robustness
     X_train = auto_carver.fit_transform(X_train, y_train, X_test, y_test)
 
@@ -83,7 +83,7 @@ class AutoCarver(GroupedListDiscretizer):
     print(auto_carver.non_viable_features)
 
     # storing fitted GroupedListDiscretizer in a sklearn.pipeline.Pipeline
-    pipe += [('AutoCarver', auto_carver.discretizer)]
+    pipe += [('AutoCarver', auto_carver)]
     pipe = Pipeline(pipe)
 
     # applying pipe to a validation set or in production
@@ -167,7 +167,8 @@ class AutoCarver(GroupedListDiscretizer):
                                        xtab_test[notna(xtab_test.index)])
 
         # update of the values_orders grouped modalities in values_orders
-        if bool(best_groups):
+        if best_groups:
+
             self.update_values_orders(feature, best_groups['combination'])
             # update of the crosstabs
             xtab = xtab.groupby(list(map(best_groups['combination'].get_group, xtab.index)), dropna=False).sum()
@@ -188,14 +189,16 @@ class AutoCarver(GroupedListDiscretizer):
             best_groups = best_combination(combinations, self.sort_by, xtab, xtab_test)
 
             # update of the values_orders grouped modalities in values_orders
-            if bool(best_groups):
+            if best_groups:
+
                 self.update_values_orders(feature, best_groups['combination'])
                 # update of the crosstabs
                 xtab = xtab.groupby(list(map(best_groups['combination'].get_group, xtab.index)), dropna=False).sum()
                 xtab_test = xtab_test.groupby(list(map(best_groups['combination'].get_group, xtab_test.index)), dropna=False).sum()
 
         # printing the new group statistics
-        if bool(best_groups) & (self.verbose):
+        if best_groups & self.verbose:
+
             print(f'\n - Fitted distribution of {feature}')
             self.display_target_rate(feature, xtab, xtab_test)
 
@@ -385,14 +388,18 @@ def get_all_nan_combinations(order: list):
     return new_combinations
 
 
-def consecutive_combinations(n_remaining, start, end, grp_for_this_step=[]):
+def consecutive_combinations(n_remaining: int, start: int, end: int, grp_for_this_step: list=None):
     """HELPER finds all consecutive combinations between start and end.    """
 
     # Import de la liste globale
     global __li_of_res__
+
+    # initiating group
+    if not grp_for_this_step:
+    	grp_for_this_step = []
     
-    ### cas d'arrêt de la fonction récursive : quand il ne reste plus de nouvelle classe à créer ###
-    if n_remaining==0:
+    # stopping when there are non more remaining classes
+    if n_remaining == 0:
         
         ### On ajoute le dernier quantile restant au découpage ###
         grp_for_this_step += [(start, end)]
@@ -401,13 +408,12 @@ def consecutive_combinations(n_remaining, start, end, grp_for_this_step=[]):
         __li_of_res__ += [grp_for_this_step]
 
     
-    ### Hors du cas d'arrêt ####
+    # adding all possible combinations of each possible range
     else:
         
         ### Parcours de toutes les valeurs possibles de fin pour le i-ème groupe du groupement à x quantiles ###
         for i in range(start, end):
-            
-            ### Ajout de récursivité ###
+
             consecutive_combinations(n_remaining-1, i+1, end, grp_for_this_step + [(start, i)])
             
 def get_combinations(n_class, q):
@@ -441,8 +447,7 @@ def association_xtab(xtab: DataFrame):
     tschuprowt = 0
     if n_mods > 0:
         tschuprowt = sqrt(chi2 / n_obs / n_mods)
-    
-    # recupération des résultats
+
     results = {'cramerv': cramerv, 'tschuprowt': tschuprowt}
     
     return results

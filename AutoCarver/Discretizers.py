@@ -49,11 +49,11 @@ class GroupedList(list):
 
     def group(self, discarded, kept):
         """ Groups the discarded value with the kept value"""
-        
+
         if not is_equal(discarded, kept):
 
-            assert discarded in self, "{} not in list".format(discarded)
-            assert kept in self, "{} not in list".format(kept)
+            assert discarded in self, f"{discarded} not in list"
+            assert kept in self, f"{kept} not in list"
 
             contained_discarded = self.contained.get(discarded)
             contained_kept = self.contained.get(kept)
@@ -341,7 +341,7 @@ class ChainedDiscretizer(GroupedListDiscretizer):
 
             # checking for unknown values (values to present in an order of self.chained_orders)
             missing = [value for value in values if notna(value) and (value not in self.known_values)]
-            assert not any(missing), "Order needs to be provided for values: {}".format(missing)
+            assert not any(missing), f"Order needs to be provided for values: {missing}"
 
             # iterating over each specified orders
             for order in self.chained_orders:
@@ -480,7 +480,7 @@ class ClosestDiscretizer(BaseEstimator, TransformerMixin):
             if any(unknowns):
                 to_input = [X_c[feature] == unknown for unknown in unknowns]  # identification des valeurs à regrouper
                 X_c[feature] = select(to_input, [self.default_values.get(feature)], default=X_c[feature])  # regroupement des valeurs
-                warn("Unknown modalities provided for {}: {}".format(feature, unknowns))
+                warn(f"Unknown modalities provided for {feature}: {unknowns}")
 
             # grouping values inside groups of modalities
             to_discard = [order.get(group) for group in order]  # identification des valeur à regrouper
@@ -632,11 +632,8 @@ def is_equal(a, b):
     equal = a == b
     
     # Case where a and b are NaNs
-    if isinstance(a, float):
-        if isna(a):
-            if isinstance(b, float):
-                if isna(b):
-                     equal = True
+    if isna(a) and isna(b):
+        equal = True
     
     return equal
 
@@ -769,7 +766,7 @@ def find_closest_modality(value, idx, freq_target, min_freq):
     
     return closest_value
 
-def format_float(num):
+def format_float(num: float):
     
     if abs(num) > 1000000000:
         str_num = '{:+8.3f}B '.format(round(num / 1000000000, 3))
@@ -785,8 +782,6 @@ def format_float(num):
         str_num = '{:+8.3f}mi'.format(round(num * 1000000, 3))
     elif abs(num) < 0.001:
         str_num = '{:+8.3f}m '.format(round(num * 1000, 3))
-#     elif 0.001 <= num <= 1:
-#         str_num = '{:7.3%}'.format(round(num, 6))
     else:
         str_num = '{:+8.3f}  '.format(round(num, 3))
         
