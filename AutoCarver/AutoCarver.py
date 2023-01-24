@@ -3,7 +3,6 @@ from IPython.display import display_html
 from numpy import sort, nan, inf, float32, where, isin, argsort, array, select, append, quantile, linspace, argmin, sqrt, random
 from pandas import DataFrame, Series, isna, qcut, notna, unique, concat, crosstab
 from scipy.stats import chi2_contingency
-from sklearn.base import BaseEstimator, TransformerMixin
 from tqdm.notebook import tqdm
 
 
