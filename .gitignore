@@ -1,3 +1,5 @@
 
 *.gz
 *.pyc
+*.txt
+AutoCarver.egg-info/PKG-INFO
