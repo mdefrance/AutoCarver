@@ -1,6 +1,6 @@
 from IPython.display import display_html
 from numpy import sort, nan, inf, float32, where, isin, argsort, array, select, append, quantile, linspace, argmin
-from pandas import DataFrame, Series, isna, qcut, notna
+from pandas import DataFrame, Series, isna, qcut, notna, unique
 from sklearn.base import BaseEstimator, TransformerMixin
 from tqdm.notebook import tqdm
 from warnings import warn
@@ -395,7 +395,7 @@ class QuantileDiscretizer(BaseEstimator, TransformerMixin):
 
             # quantiles as strings
             feature_quantiles = self.quantiles.get(feature)
-            str_values = ['<= ' + format_float(q) for q in feature_quantiles]
+            str_values = ['<= ' + q for q in format_list(feature_quantiles)]
 
             # case when there is only one value
             if len(feature_quantiles) == 0:
@@ -766,23 +766,54 @@ def find_closest_modality(value, idx, freq_target, min_freq):
     
     return closest_value
 
-def format_float(num: float):
-    
-    if abs(num) > 1000000000:
-        str_num = '{:+8.3f}B '.format(round(num / 1000000000, 3))
-    elif abs(num) > 1000000:
-        str_num = '{:+8.3f}M '.format(round(num / 1000000, 3))
-    elif abs(num) > 1000:
-        str_num = '{:+8.3f}K '.format(round(num / 1000, 3))
-    elif 0 <= abs(num) < 0.00000001:
-        str_num = '   0.000 '
-    elif abs(num) < 0.00000001:
-        str_num = '{:+8.3f}n '.format(round(num * 1000000000, 3))
-    elif abs(num) < 0.00001:
-        str_num = '{:+8.3f}mi'.format(round(num * 1000000, 3))
-    elif abs(num) < 0.001:
-        str_num = '{:+8.3f}m '.format(round(num * 1000, 3))
-    else:
-        str_num = '{:+8.3f}  '.format(round(num, 3))
-        
-    return str_num
+
+def format_list(a_list: list):
+    """ Formats a list of floats to a list of unique rounded strings of floats"""
+
+    # finding the closest power of thsousands for each element
+    closest_powers = [next((k for k in range(-3, 4) if abs(elt) // 1000**(k) < 10)) for elt in a_list]
+
+    # rounding elements to the closest power of thousands
+    rounded_to_powers = [elt / 1000**(k) for elt, k in zip(a_list, closest_powers)]
+
+    # computing optimal decimal per unique power of thousands
+    optimal_decimals = {}
+    for power in unique(closest_powers):  # iterating over each power of thousands found
+
+        # filtering on the specific power of thousands
+        sub_array = array([elt for elt, p in zip(rounded_to_powers, closest_powers) if power == p])
+
+        # number of distinct values
+        n_uniques = sub_array.shape[0]
+
+        # computing the first rounding decimal that allows for distinction of each values when rounded
+        # by default None (no rounding)
+        optimal_decimal = next((k for k in range(1, 10) if len(unique(sub_array.round(k))) == n_uniques), None)
+
+        # storing in the dict    
+        optimal_decimals.update({
+            power: optimal_decimal
+        })
+
+    # rounding according to each optimal_decimal
+    rounded_list = []
+    for elt, power in zip(rounded_to_powers, closest_powers):
+
+        # rounding each element
+        rounded = elt  # by default None (no rounding)
+        optimal_decimal = optimal_decimals.get(power)
+        if optimal_decimal:  # checking that the optimal decimal exists
+            rounded = round(elt, optimal_decimal)
+
+        # adding the rounded number to the list
+        rounded_list += [rounded]
+
+    # dict of suffixes per power of thousands
+    suffixes = {
+        -3: 'n', -2: 'mi', -1: 'm', 0: '', 1: 'K', 2: 'M', 3: 'B'
+    }
+
+    # adding the suffixes
+    formatted_list = [str(elt) + suffixes.get(power) for elt, power in zip(rounded_list, closest_powers)]
+
+    return formatted_list

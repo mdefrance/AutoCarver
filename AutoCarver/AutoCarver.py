@@ -197,7 +197,7 @@ class AutoCarver(GroupedListDiscretizer):
                 xtab_test = xtab_test.groupby(list(map(best_groups['combination'].get_group, xtab_test.index)), dropna=False).sum()
 
         # printing the new group statistics
-        if best_groups & self.verbose:
+        if self.verbose and best_groups:
 
             print(f'\n - Fitted distribution of {feature}')
             self.display_target_rate(feature, xtab, xtab_test)
@@ -292,7 +292,7 @@ def best_combination(combinations: list, sort_by: str, xtab: DataFrame, xtab_tes
 
     # initiating list of associations between cut feature and target 
     associations = []
-    
+
     # iterating over each combination
     for combination in combinations:
         
@@ -300,7 +300,8 @@ def best_combination(combinations: list, sort_by: str, xtab: DataFrame, xtab_tes
         association = {'combination': combination}
 
         # grouping modalities in the initial crosstab
-        combi_xtab = xtab.groupby(list(map(combination.get_group, xtab.index)), dropna=False).sum()
+        groups = list(map(combination.get_group, xtab.index))
+        combi_xtab = xtab.groupby(groups, dropna=False).sum()
         association.update({'combi_xtab': combi_xtab})
 
         # measuring association with the target
