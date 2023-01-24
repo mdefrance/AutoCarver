@@ -1,2 +1,4 @@
 
 *.gz
+*.txt
+AutoCarver.egg-info/PKG-INFO
