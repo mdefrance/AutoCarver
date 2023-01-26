@@ -188,7 +188,7 @@ class Discretizer(BaseEstimator, TransformerMixin):
         Exemple: for an `age` feature, `values_orders` could be `{'age': ['0-18', '18-30', '30-50', '50+']}`.
     """
     
-    def __init__(self, quanti_features: list, quali_features: list, q: int=None, min_freq: float=None, values_orders: dict=None, copy: bool=False, verbose: bool=False):
+    def __init__(self, quanti_features: list=[], quali_features: list=[], q: int=None, min_freq: float=None, values_orders: dict={}, copy: bool=False, verbose: bool=False):
     
         
         self.features = quanti_features[:] + quali_features[:]
