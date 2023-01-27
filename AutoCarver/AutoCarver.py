@@ -97,7 +97,6 @@ class AutoCarver(GroupedListDiscretizer):
         self.features = list(values_orders.keys())
         self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
         self.target = None  # le nom de la target est récupéré lors du fit
-        self.discretizer = None
         self.non_viable_features = []  # liste des features pas stable entre TRAIN et TEST
         self.max_n_mod = max_n_mod  # nombre maximal de modalités
         self.keep_nans = keep_nans  # whether or not to group NaNs with other modalities
@@ -143,18 +142,9 @@ class AutoCarver(GroupedListDiscretizer):
         combinations = get_all_combinations(self.values_orders.get(feature), X[feature].nunique(dropna=True), self.max_n_mod)
         combinations = [GroupedList({group[0]: group for group in combination}) for combination in combinations]
 
-        # keeping NaNs as a specific modality
-        nan_val = '__NAN__'  # value to be imputed as NaN
-        df_feature = X[feature].fillna(nan_val)
-        df_feature_test = X_test[feature].fillna(nan_val)
-
-        # computing initial crosstabs
-        xtab = crosstab(df_feature, y)
-        xtab_test = crosstab(df_feature_test, y_test)
-
-        # keeping track of nans if there are any
-        xtab.index = [idx if idx != nan_val else nan for idx in xtab.index]
-        xtab_test.index = [idx if idx != nan_val else nan for idx in xtab_test.index]
+        # computing crosstabs
+        xtab = nan_crosstab(X[feature], y)
+        xtab_test = nan_crosstab(X_test[feature], y_test)
 
         # printing the group statistics
         if self.verbose:
@@ -221,13 +211,13 @@ class AutoCarver(GroupedListDiscretizer):
 
         # target rate and frequency on TRAIN
         train_stats = DataFrame({
-            'target_rate': xtab[1].divide(xtab[0]),  # target rate of each modality
+            'target_rate': xtab[1].divide(xtab[0].add(xtab[1])),  # target rate of each modality
             'frequency': xtab[1].add(xtab[0]) / xtab.sum().sum()  # frequency of each modality
         })
     
         # target rate and frequency on TEST
         test_stats = DataFrame({
-            'target_rate': xtab_test[1].divide(xtab_test[0]),  # target rate of each modality
+            'target_rate': xtab_test[1].divide(xtab_test[0].add(xtab_test[1])),  # target rate of each modality
             'frequency': xtab_test[1].add(xtab_test[0]) / xtab_test.sum().sum()  # frequency of each modality
         })
 
@@ -451,3 +441,18 @@ def association_xtab(xtab: DataFrame):
     results = {'cramerv': cramerv, 'tschuprowt': tschuprowt}
     
     return results
+
+def nan_crosstab(x: Series, y: Series):
+    """ Crosstab that keeps nans as a specific value"""
+    
+    # keeping NaNs as a specific modality
+    nan_val = '__NAN__'  # value to be imputed as NaN
+    x_filled = x.fillna(nan_val)  # filling NaNs
+
+    # computing initial crosstabs
+    xtab = crosstab(x_filled, y)
+
+    # keeping track of nans if there are any
+    xtab.index = [idx if idx != nan_val else nan for idx in xtab.index]
+    
+    return xtab

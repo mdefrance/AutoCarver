@@ -433,9 +433,10 @@ class QuantileDiscretizer(BaseEstimator, TransformerMixin):
             nans = isna(X[feature])  # keeping track of nans
 
             # grouping values inside quantiles
-            to_input = [X[feature].values <= q for q in self.quantiles.get(feature)]  # values that will be imputed
+            arr_feature = X[feature].values
+            to_input = [arr_feature <= q for q in self.quantiles.get(feature)]  # values that will be imputed
             values = [[v] * len(X) for v in self.values_orders.get(feature)]  # new values to imput
-            X_c[feature] = select(to_input, values, default=X[feature].values)  # grouping modalities
+            X_c[feature] = select(to_input, values, default=arr_feature)  # grouping modalities
 
             # adding back nans
             if any(nans):
