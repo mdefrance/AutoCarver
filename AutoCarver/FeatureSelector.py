@@ -368,11 +368,11 @@ def vif_filter(X: DataFrame, ranks: DataFrame, **params):
         
         # computation of VIF
         vif = nan
-        if any(better_features) and len(X_vif) > 0:
+        if len(better_features) > 1 and len(X_vif) > 0:
             vif = variance_inflation_factor(X_vif.values, len(better_features))
         
         # dropping the feature if it was too correlated to a better feature
-        if (vif > params.get('thresh_vif', inf)) and notna(vif):
+        if vif > params.get('thresh_vif', inf) and notna(vif):
             dropped += [feature]
             
         # kept feature: updating associations with this feature

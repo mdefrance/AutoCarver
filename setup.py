@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name='AutoCarver',
-    version='3.0.3',
+    version='3.0.4',
     author='Mario DEFRANCE',
     author_email='defrancemario@gmail.com',
     description='Automatic Carving of Features with Optimal Association',
