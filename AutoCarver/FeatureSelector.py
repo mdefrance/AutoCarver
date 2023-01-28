@@ -4,6 +4,7 @@ from numpy import triu, ones
 from pandas import DataFrame, Series
 from scipy.stats import kruskal
 from statsmodels.formula.api import ols
+from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 
 class FeatureSelector():
@@ -234,7 +235,7 @@ def zscore_measure(active: bool, association: dict, x: Series, y: Series=None, *
     return active, association
 
 def iqr_measure(active: bool, association: dict, x: Series, y: Series=None, **params):
-    """ Computes outliers based on the z-score"""
+    """ Computes outliers based on the inter-quartile range"""
     
     # check that previous steps where passed for computational optimization
     if active:
@@ -315,6 +316,7 @@ def quantitative_filter(X: DataFrame, ranks: DataFrame, corr_measure: str, **par
     
     return associations 
 
+
 def spearman_filter(X: DataFrame, ranks: DataFrame, **params):
     """ Computes max Spearman between X and X (quantitative) excluding features 
     that are correlated to a feature more associated with the target 
@@ -332,5 +334,22 @@ def pearson_filter(X: DataFrame, ranks: DataFrame, **params):
             
     # applying quantitative filter with spearman correlation
     associations = quantitative_filter(X, ranks, 'pearson', **params)
+    
+    return associations
+
+def vif_filter(X: DataFrame, ranks: DataFrame, **params):
+    """ Computes Variance Inflation Factor (multicolinearity)"""
+    
+    # iterating over each column
+    associations = []
+    for i, feature in enumerate(X):
+        vif = variance_inflation_factor(X.values, i)
+        associations += [{'feature': feature, 'vif_measure': vif}]
+    
+    # formatting ouput to DataFrame
+    associations = DataFrame(associations).set_index('feature')
+            
+    # applying filter on association
+    associations = ranks.join(associations, how='right')
     
     return associations
