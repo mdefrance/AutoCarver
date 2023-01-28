@@ -1,7 +1,7 @@
 from IPython.display import display_html
 from math import sqrt
-from numpy import triu, ones
-from pandas import DataFrame, Series
+from numpy import triu, ones, nan, inf
+from pandas import DataFrame, Series, notna
 from scipy.stats import kruskal
 from statsmodels.formula.api import ols
 from statsmodels.stats.outliers_influence import variance_inflation_factor
@@ -63,6 +63,8 @@ class FeatureSelector():
         ----------
         thresh_corr, float: default 1.
           Maximum association between features
+        thresh_vif, float: default inf
+          Maximum VIF between features
         ascending, bool: default False
           Ascending of Descending sort by sort_measure
         """
@@ -78,14 +80,16 @@ class FeatureSelector():
         
         return self.filtered_associations
     
-    def display_stats(self, X: DataFrame, y: Series):
+    def display_stats(self, X: DataFrame, y: Series, sort_measure: str=None):
         """ Computes statistics for EDA with default params"""
         
         # initial computation of all association measures
         self.measure_apply(X, y)
         
         # filtering
-        association = self.filter_apply(X, self.measures[-1].__name__)
+        if not sort_measure:  # by default, last measure passed
+            sort_measure = self.measures[-1].__name__
+        association = self.filter_apply(X, sort_measure)
             
         # appllying style 
         subset = [c for c in association if 'pct_' in c or '_measure' in c]
@@ -106,6 +110,8 @@ class FeatureSelector():
           Maximum percentage of Outliers in a feature
         thresh_corr, float: default 1.
           Maximum association between features
+        thresh_vif, float: default inf
+          Maximum VIF between features
         ascending, bool: default False
           Ascending of Descending sort by sort_measure
         """
@@ -345,14 +351,33 @@ def vif_filter(X: DataFrame, ranks: DataFrame, **params):
     # accessing the prefered order
     prefered_order = ranks.index
     
-    # initiating list of maximum association per feature
+    # initiating list association per feature
     associations = []
     
+    # list of dropped features
+    dropped = []
     
     # iterating over each column
-    for i, feature in enumerate(X):
-        vif = variance_inflation_factor(X.values, i)
-        associations += [{'feature': feature, 'vif_measure': vif}]
+    for i, feature in enumerate(prefered_order):
+        
+        # identifying remaining more associated features
+        better_features = [f for f in prefered_order[:i+1] if f not in dropped]
+        
+        X_vif = X[better_features]  # keeping only better features
+        X_vif = X_vif.dropna(axis=0)  # dropping NaNs for OLS
+        
+        # computation of VIF
+        vif = nan
+        if any(better_features) and len(X_vif) > 0:
+            vif = variance_inflation_factor(X_vif.values, len(better_features))
+        
+        # dropping the feature if it was too correlated to a better feature
+        if (vif > params.get('thresh_vif', inf)) and notna(vif):
+            dropped += [feature]
+            
+        # kept feature: updating associations with this feature
+        else:
+            associations += [{'feature': feature, 'vif_measure': vif}]
     
     # formatting ouput to DataFrame
     associations = DataFrame(associations).set_index('feature')
