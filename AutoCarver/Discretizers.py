@@ -1,5 +1,5 @@
 from IPython.display import display_html
-from numpy import sort, nan, inf, float32, where, isin, argsort, array, select, append, quantile, linspace, argmin
+from numpy import sort, nan, inf, float16, where, isin, argsort, array, select, append, quantile, linspace, argmin
 from pandas import DataFrame, Series, isna, qcut, notna, unique
 from sklearn.base import BaseEstimator, TransformerMixin
 from warnings import warn
@@ -298,18 +298,16 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         for n, feature in enumerate(self.features):
             if self.verbose: print(f" - [GroupedListDiscretizer] Discretizing {feature} ({n+1}/{len(self.features)})")
             
-            # initial feature
-            arr_feature = Xc[feature].values
-
             order = self.values_orders.get(feature)  # récupération des groupes
             to_discard = [order.get(group) for group in order]  # identification des valeur à regrouper
             to_input = [Xc[feature].isin(discarded) for discarded in to_discard]  # identification des observations à regrouper
             to_keep = [n if self.output == float else group for n, group in enumerate(order)]  # récupération du groupe dans lequel regrouper
-            Xc[feature] = select(to_input, to_keep, default=arr_feature)  # grouping modalities
+            arr_feature = select(to_input, to_keep, default=Xc[feature])  # grouping modalities
+            Xc[feature] = arr_feature  # storing grouped feature
 
         # converting to float
         if self.output == float:
-            Xc[self.features] = Xc[self.features].astype(float32)
+            Xc[self.features] = Xc[self.features].astype(float16)
 
         return Xc
 
@@ -350,14 +348,12 @@ class ChainedDiscretizer(GroupedListDiscretizer):
                 
                 # identifying modalities which rarest values
                 to_keep = values[frequencies >= self.min_freq]
-                
-                # initial feature
-                arr_feature = Xc[feature].values
 
                 # grouping rare modalities
                 to_discard = [[value for value in order.get(group) if (not value in to_keep)] for group in order]  # identifying rare values
                 to_input = [Xc[feature].isin(discarded) for discarded in to_discard]  # identifying observation to input
-                Xc[feature] = select(to_input, to_input, default=arr_feature)  # regroupement des naf peu fréquents
+                arr_feature = select(to_input, to_input, default=Xc[feature])  # regroupement des naf peu fréquents
+                Xc[feature] = arr_feature  # storing grouped feature
                 
                 # historizing in the feature's order
                 for discarded, kept in zip(to_discard, order):
@@ -422,27 +418,29 @@ class QuantileDiscretizer(BaseEstimator, TransformerMixin):
     def transform(self, X, y=None):
         
         # copying dataset if requested
-        X_c = X
+        Xc = X
         if self.copy:
-            X_c = X.copy()
+            Xc = X.copy()
         
         # iterating over each feature
         for n, feature in enumerate(self.features):
             if self.verbose: print(f" - [QuantileDiscretizer] Discretizing {feature} ({n+1}/{len(self.features)})")
 
-            nans = isna(X[feature])  # keeping track of nans
+            arr_feature = Xc[feature].values  # initial feature value
+            nans = isna(arr_feature)  # keeping track of nans
 
             # grouping values inside quantiles
-            arr_feature = X[feature].values
             to_input = [arr_feature <= q for q in self.quantiles.get(feature)]  # values that will be imputed
             values = [[v] * len(X) for v in self.values_orders.get(feature)]  # new values to imput
-            X_c[feature] = select(to_input, values, default=arr_feature)  # grouping modalities
+            arr_feature = select(to_input, values, default=arr_feature)  # grouping modalities
 
             # adding back nans
             if any(nans):
-                X_c.loc[nans, feature] = nan
+                Xc.loc[nans, feature] = nan
+
+            Xc[feature] = arr_feature  # storing grouped feature
         
-        return X_c
+        return Xc
 
 class ClosestDiscretizer(BaseEstimator, TransformerMixin):
     
@@ -462,9 +460,8 @@ class ClosestDiscretizer(BaseEstimator, TransformerMixin):
         # grouping rare modalities for each feature
         common_modalities = X[self.features].apply(
             lambda u: find_common_modalities(u, y, self.min_freq, self.values_orders.get(u.name)), 
-            axis=0
-        )
-        common_modalities.index = self.features  # making sure the indices are the features' names
+            axis=0, result_type='expand'
+        ).T
 
         # updating the order per feature
         self.values_orders = {f: common_modalities.get(f).get('order') for f in self.features}
@@ -492,16 +489,16 @@ class ClosestDiscretizer(BaseEstimator, TransformerMixin):
             unknowns = [value for value in X_c[feature].unique() if not any(is_equal(value, known) for known in order.values())]
             unknowns = [value for value in unknowns if notna(value)]  # suppression des NaNs
             if any(unknowns):
-                arr_fature = X_c[feature].values  # initial feature
                 to_input = [X_c[feature] == unknown for unknown in unknowns]  # identification des valeurs à regrouper
-                X_c[feature] = select(to_input, [self.default_values.get(feature)], default=arr_fature)  # regroupement des valeurs
+                arr_feature = select(to_input, [self.default_values.get(feature)], default=X_c[feature])  # regroupement des valeurs
+                X_c[feature] = arr_feature  # storing grouped feature
                 warn(f"Unknown modalities provided for {feature}: {unknowns}")
 
             # grouping values inside groups of modalities
-            arr_fature = X_c[feature].values  # initial feature
             to_discard = [order.get(group) for group in order]  # identification des valeur à regrouper
             to_input = [X_c[feature].isin(discarded) for discarded in to_discard]  # identification des valeurs à regrouper
-            X_c[feature] = select(to_input, order, default=arr_fature)  # regroupement des valeurs
+            arr_feature = select(to_input, order, default=X_c[feature])  # regroupement des valeurs
+            X_c[feature] = arr_feature  # storing grouped feature
 
         return X_c
 
@@ -571,8 +568,8 @@ class DefaultDiscretizer(BaseEstimator, TransformerMixin):
             if self.verbose: print(f" - [DefaultDiscretizer] Discretizing {feature} ({n+1}/{len(self.features)})")
 
             # grouping modalities
-            arr_fature = X_c[feature].values  # initial feature
-            X_c[feature] = select([~X_c[feature].isin(self.to_keep.get(feature))], [self.default_value], default=arr_fature)
+            arr_feature = select([~X_c[feature].isin(self.to_keep.get(feature))], [self.default_value], default=X_c[feature])
+            X_c[feature] = arr_feature  # storing grouped feature
 
         return X_c
 
