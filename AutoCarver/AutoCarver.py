@@ -1,4 +1,4 @@
-from Discretizers import GroupedList, GroupedListDiscretizer, is_equal
+from .Discretizers import GroupedList, GroupedListDiscretizer, is_equal
 from IPython.display import display_html
 from numpy import sort, nan, inf, float32, where, isin, argsort, array, append, quantile, linspace, argmin, sqrt, random
 from pandas import DataFrame, Series, isna, qcut, notna, unique, concat, crosstab
