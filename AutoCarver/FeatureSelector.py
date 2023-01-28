@@ -193,8 +193,10 @@ def R_measure(active: bool, association: dict, x: Series, y: Series, **params):
     # check that previous steps where passed
     if active:
     
+        nans = x.isnull()  # ckecking for nans
+
         # grouping feature and target
-        ols_df = DataFrame({'feature': x, 'target': y})
+        ols_df = DataFrame({'feature': x[~nans], 'target': y[~nans]})
         
         # fitting regression of feature by target
         regression = ols('feature~C(target)', ols_df).fit()
@@ -340,8 +342,14 @@ def pearson_filter(X: DataFrame, ranks: DataFrame, **params):
 def vif_filter(X: DataFrame, ranks: DataFrame, **params):
     """ Computes Variance Inflation Factor (multicolinearity)"""
     
-    # iterating over each column
+    # accessing the prefered order
+    prefered_order = ranks.index
+    
+    # initiating list of maximum association per feature
     associations = []
+    
+    
+    # iterating over each column
     for i, feature in enumerate(X):
         vif = variance_inflation_factor(X.values, i)
         associations += [{'feature': feature, 'vif_measure': vif}]
