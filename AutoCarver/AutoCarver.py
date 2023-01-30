@@ -270,7 +270,7 @@ class AutoCarver(GroupedListDiscretizer):
 
         # plotting the train stats
         if plot:
-        	fig, ax = plot_stats(train_stats)
+            fig, ax = plot_stats(train_stats)
             show()
 
         # displaying the train and test stats
