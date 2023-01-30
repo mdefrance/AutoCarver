@@ -474,14 +474,15 @@ def plot_stats(stats):
     x = [0] + [elt for e in stats['frequency'].cumsum()[:-1] for elt in [e] * 2] + [1]
     y2 = [elt for e in list(stats['target_rate']) for elt in [e]*2]
     s = list(stats.index)
-    c = color_palette("coolwarm", as_cmap=True)(y2)
+    scaled_y2 = [(y-min(y2)) / (max(y2) - min(y2)) for y in y2]
+    c = color_palette("coolwarm", as_cmap=True)(scaled_y2)
 
     fig, ax = subplots()
 
     for i in range(len(stats)):
         k = i*2
         ax.fill_between(x[k: k+2], [0, 0], y2[k: k+2], color=c[k])
-        ax.text(sum(x[k: k+2]) / 2, y2[k], s[i], ha='center', va='bottom')
+        ax.text(sum(x[k: k+2]) / 2, y2[k], s[i], rotation=90, ha='center', va='bottom')
 
     ax.xaxis.set_major_formatter(PercentFormatter(xmax=1))    
     ax.yaxis.set_major_formatter(PercentFormatter(xmax=1))    
