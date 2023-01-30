@@ -1,8 +1,11 @@
 from .Discretizers import GroupedList, GroupedListDiscretizer, is_equal
 from IPython.display import display_html
+from matplotlib.pyplot import subplots
+from matplotlib.ticker import PercentFormatter
 from numpy import sort, nan, inf, float32, where, isin, argsort, array, append, quantile, linspace, argmin, sqrt, random
 from pandas import DataFrame, Series, isna, qcut, notna, unique, concat, crosstab
 from scipy.stats import chi2_contingency
+from seaborn import color_palette, despine
 from tqdm.notebook import tqdm
 
 
@@ -189,7 +192,7 @@ class AutoCarver(GroupedListDiscretizer):
         if self.verbose and best_groups:
 
             print(f'\n - Fitted distribution of {feature}')
-            self.display_target_rate(feature, xtab, xtab_test)
+            self.display_target_rate(feature, xtab, xtab_test, plot=True)
 
         return best_groups
 
@@ -203,7 +206,7 @@ class AutoCarver(GroupedListDiscretizer):
         for kept, discarded in best_groups.contained.items():
             order.group_list(discarded, kept)
 
-    def display_target_rate(self, feature: str, xtab: DataFrame, xtab_test: DataFrame):
+    def display_target_rate(self, feature: str, xtab: DataFrame, xtab_test: DataFramen, plot: bool=False):
         """ Pretty display of frequency and target rate per modality on the same line. """
 
         known_order = self.values_orders.get(feature)
@@ -265,13 +268,19 @@ class AutoCarver(GroupedListDiscretizer):
             renamed_test_order = [f'{known_order.get(c)[-1]} to {known_order.get(c)[0]}' if c in known_order and len(known_order.get(c)) > 1 else c for c in new_test_order]
             test_stats.index = renamed_test_order
 
-        # Displaying feature level stats
-        styler = concat([train_stats, test_stats], ignore_index=True).style.background_gradient(cmap='coolwarm')  # unifying colors for both stats
-        train_style = train_stats.style.use(styler.export()).set_table_attributes("style='display:inline'").set_caption('Train:')
-        test_style = test_stats.style.use(styler.export()).set_table_attributes("style='display:inline'").set_caption('Test:')
-        display_html(train_style._repr_html_() + ' ' + test_style._repr_html_(), raw=True)
-    
-        return train_order
+        # plotting the train stats
+        if plot:
+        	fig, ax = plot_stats(train_stats)
+
+        # displaying the train and test stats
+        else:
+
+            # Displaying feature level stats
+            styler = concat([train_stats, test_stats], ignore_index=True).style.background_gradient(cmap='coolwarm')  # unifying colors for both stats
+            train_style = train_stats.style.use(styler.export()).set_table_attributes("style='display:inline'").set_caption('Train:')
+            test_style = test_stats.style.use(styler.export()).set_table_attributes("style='display:inline'").set_caption('Test:')
+            display_html(train_style._repr_html_() + ' ' + test_style._repr_html_(), raw=True)
+
 
 def best_combination(combinations: list, sort_by: str, xtab: DataFrame, xtab_test: DataFrame):
     """ Finds the best combination of groups of feature's values:
@@ -456,3 +465,29 @@ def nan_crosstab(x: Series, y: Series):
     xtab.index = [idx if idx != nan_val else nan for idx in xtab.index]
     
     return xtab
+
+
+def plot_stats(stats):
+    """ Barplot of the volume and target rate"""
+    
+    x = [0] + [elt for e in stats['frequency'].cumsum()[:-1] for elt in [e] * 2] + [1]
+    y2 = [elt for e in list(stats['target_rate']) for elt in [e]*2]
+    s = list(stats.index)
+    c = color_palette("coolwarm", as_cmap=True)(y2)
+
+    fig, ax = subplots()
+
+    for i in range(len(stats)):
+        k = i*2
+        ax.fill_between(x[k: k+2], y1[k: k+2], y2[k: k+2], color=c[k])
+        ax.text(sum(x[k: k+2]) / 2, y2[k], s[i], ha='center', va='bottom')
+
+    ax.xaxis.set_major_formatter(PercentFormatter(xmax=1))    
+    ax.yaxis.set_major_formatter(PercentFormatter(xmax=1))    
+    ax.set_xlabel('Volume')
+    ax.set_ylabel('Target rate')
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    despine()
+    
+    return fig, ax
