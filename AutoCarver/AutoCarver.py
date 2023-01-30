@@ -206,7 +206,7 @@ class AutoCarver(GroupedListDiscretizer):
         for kept, discarded in best_groups.contained.items():
             order.group_list(discarded, kept)
 
-    def display_target_rate(self, feature: str, xtab: DataFrame, xtab_test: DataFramen, plot: bool=False):
+    def display_target_rate(self, feature: str, xtab: DataFrame, xtab_test: DataFrame, plot: bool=False):
         """ Pretty display of frequency and target rate per modality on the same line. """
 
         known_order = self.values_orders.get(feature)
