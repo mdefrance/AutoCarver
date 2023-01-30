@@ -1,6 +1,6 @@
 from .Discretizers import GroupedList, GroupedListDiscretizer, is_equal
 from IPython.display import display_html
-from matplotlib.pyplot import subplots
+from matplotlib.pyplot import subplots, show
 from matplotlib.ticker import PercentFormatter
 from numpy import sort, nan, inf, float32, where, isin, argsort, array, append, quantile, linspace, argmin, sqrt, random
 from pandas import DataFrame, Series, isna, qcut, notna, unique, concat, crosstab
@@ -271,6 +271,7 @@ class AutoCarver(GroupedListDiscretizer):
         # plotting the train stats
         if plot:
         	fig, ax = plot_stats(train_stats)
+            show()
 
         # displaying the train and test stats
         else:
