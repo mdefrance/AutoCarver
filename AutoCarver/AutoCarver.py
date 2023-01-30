@@ -479,7 +479,7 @@ def plot_stats(stats):
 
     for i in range(len(stats)):
         k = i*2
-        ax.fill_between(x[k: k+2], y1[k: k+2], y2[k: k+2], color=c[k])
+        ax.fill_between(x[k: k+2], [0, 0], y2[k: k+2], color=c[k])
         ax.text(sum(x[k: k+2]) / 2, y2[k], s[i], ha='center', va='bottom')
 
     ax.xaxis.set_major_formatter(PercentFormatter(xmax=1))    
