@@ -511,10 +511,19 @@ class DefaultDiscretizer(BaseEstimator, TransformerMixin):
     def fit(self, X, y):
 
         # computing frequencies of each modality
-        frequencies = X[self.features].apply(lambda u: u.value_counts(dropna=False, normalize=True).to_dict(), axis=0).to_dict()
+        frequencies = X[self.features].apply(
+            lambda u: u.value_counts(dropna=False, normalize=True).to_dict(), 
+        axis=0)
+        frequencies.index = self.features
+        frequencies = frequencies.to_dict()
 
         # computing target rate per modality for ordering
-        target_rates = X[self.features].apply(lambda u: y.groupby(u, dropna=True).mean().sort_values().to_dict(), axis=0).to_dict()
+        target_rates = X[self.features].apply(
+            lambda u: y.groupby(u, dropna=True).mean().sort_values().to_dict(), 
+            axis=0
+        )
+        target_rates.index = self.features
+        target_rates = target_rates.to_dict()
 
         # attributing orders to each feature
         self.values_orders = {feature: GroupedList([value for value, _ in target_rates.get(feature).items()]) for feature in self.features}
