@@ -1,4 +1,4 @@
-from .Discretizers import GroupedList, GroupedListDiscretizer, is_equal
+from Discretizers import GroupedList, GroupedListDiscretizer, is_equal
 from IPython.display import display_html
 from matplotlib.pyplot import subplots, show
 from matplotlib.ticker import PercentFormatter
@@ -95,7 +95,7 @@ class AutoCarver(GroupedListDiscretizer):
     
     def __init__(self, values_orders: dict={}, *, sort_by: str='tschuprowt',
                  copy: bool=False, max_n_mod: int=5, keep_nans: bool=False,
-                 verbose: bool=True):
+                 verbose: bool=True) -> None:
         
         self.features = list(values_orders.keys())
         self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
@@ -107,7 +107,7 @@ class AutoCarver(GroupedListDiscretizer):
         self.copy = copy
         self.verbose = verbose
 
-    def fit(self, X: DataFrame, y: Series, X_test: DataFrame=None, y_test: Series=None):
+    def fit(self, X: DataFrame, y: Series, X_test: DataFrame=None, y_test: Series=None) -> None:
  
         # copying dataframes
         Xc = X
@@ -489,7 +489,7 @@ def plot_stats(stats):
     ax.set_xlabel('Volume')
     ax.set_ylabel('Target rate')
     ax.set_xlim(0, 1)
-    ax.set_ylim(0, 1)
+    ax.set_ylim(0)
     despine()
     
     return fig, ax
