@@ -146,6 +146,32 @@ class GroupedList(list):
 
         return any(is_equal(value, known) for known in known_values)
 
+    def get_repr(self, char_limit: int=10) -> List[str]:
+        """" Returns a representative list of strings of values of groups. """
+
+        # initiating list of group representation
+        repr: List[str] = []
+
+        # iterating over each group
+        for group in self:
+
+            # accessing group's values
+            values = self.get(group)
+            
+            if len(values) == 0:  # case 0: there are no value in this group
+                pass
+            
+            elif len(values) == 1:  # case 1: there is only one value in this group
+                repr += [f'{values[0]}'[:char_limit]]
+            
+            elif len(values) == 2:  # case 2: two values in this group
+                repr += [f'{values[1]}'[:char_limit]+' and '+f'{values[0]}'[:char_limit]]
+            
+            elif len(values) > 2:  # case 3: more than two values in this group
+                repr += [f'{values[-1]}'[:char_limit]+' to '+f'{values[0]}'[:char_limit]]
+                
+        return repr
+
 
 class Discretizer(BaseEstimator, TransformerMixin):
     """ Automatic discretizing of continuous, categorical and categorical ordinal features.

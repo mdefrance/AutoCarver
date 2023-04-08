@@ -282,65 +282,69 @@ class AutoCarver(GroupedListDiscretizer):
             test_style = test_stats.style.use(styler.export()).set_table_attributes("style='display:inline'").set_caption('Test:')
             display_html(train_style._repr_html_() + ' ' + test_style._repr_html_(), raw=True)
 
+def apply_combination(xtab: DataFrame, combination: GroupedList) -> Dict[str, Any]:
+    """ applies a modality combination to a crosstab """
 
-def best_combination(combinations: list, sort_by: str, xtab: DataFrame, xtab_test: DataFrame):
+    # initiating association dict
+    association = {'combination': combination}
+
+    # grouping modalities in the initial crosstab
+    groups = list(map(combination.get_group, xtab.index))
+    combi_xtab = xtab.groupby(groups, dropna=False).sum()
+    association.update({'combi_xtab': combi_xtab})
+
+    # measuring association with the target
+    association.update(association_xtab(combi_xtab))
+
+    return association
+
+def best_combination(combinations: List[GroupedList], sort_by: str, xtab: DataFrame, xtab_test: DataFrame=None):
     """ Finds the best combination of groups of feature's values:
      - Most associated combination on train sample 
      - Stable target rate of combination on test sample.
     """
 
-    # initiating list of associations between cut feature and target 
-    associations = []
-
-    # iterating over each combination
-    for combination in combinations:
-        
-        # converting combination to a grouped list
-        association = {'combination': combination}
-
-        # grouping modalities in the initial crosstab
-        groups = list(map(combination.get_group, xtab.index))
-        combi_xtab = xtab.groupby(groups, dropna=False).sum()
-        association.update({'combi_xtab': combi_xtab})
-
-        # measuring association with the target
-        association.update(association_xtab(combi_xtab))
-        
-        # storing results
-        associations += [association]
+    # computing association measure per combination 
+    associations = [apply_combination(xtab, combi) for combi in combinations]
 
     # sort according to association measure
-    if any(combinations):
+    if len(combinations) > 0:
         associations = DataFrame(associations)
         associations.sort_values(sort_by, inplace=True, ascending=False)
         associations = associations.to_dict(orient='records')
 
     # testing associations
-    for association in associations:
-        
-        # needed parameters
-        combination, combi_xtab = association['combination'], association['combi_xtab']
+    # case 0: no test set was provided
+    if xtab_test is None:
+        return associations[0]
+    
+    # case 1: testing viability on provided TEST sample
+    else:
+        for association in associations:
+            
+            # needed parameters
+            combination, combi_xtab = association['combination'], association['combi_xtab']
 
-        # grouping modalities in the initial crosstab
-        combi_xtab_test = xtab_test.groupby(list(map(combination.get_group, xtab_test.index)), dropna=False).sum()
+            # grouping modalities in the initial crosstab
+            combi_xtab_test = xtab_test.groupby(list(map(combination.get_group, xtab_test.index)), dropna=False).sum()
 
-        # checking that all non-nan groups are in TRAIN and TEST
-        unq_x =  [v for v in unique(combi_xtab.index) if v != notna(v)]
-        unq_xtest = [v for v in unique(combi_xtab_test.index) if v != notna(v)]
-        viability = all([e in unq_x for e in unq_xtest])
-        viability = viability and all([e in unq_xtest for e in unq_x])
+            # checking that all non-nan groups are in TRAIN and TEST
+            unq_x =  [v for v in unique(combi_xtab.index) if v != notna(v)]
+            unq_xtest = [v for v in unique(combi_xtab_test.index) if v != notna(v)]
+            viability = all([e in unq_x for e in unq_xtest])
+            viability = viability and all([e in unq_xtest for e in unq_x])
 
-        # same target rate order in TRAIN and TEST
-        train_target_rate = combi_xtab[1].divide(combi_xtab[0]).sort_values()
-        test_target_rate = combi_xtab_test[1].divide(combi_xtab_test[0]).sort_values()
-        viability = viability and all(train_target_rate.index == test_target_rate.index)
+            # same target rate order in TRAIN and TEST
+            train_target_rate = combi_xtab[1].divide(combi_xtab[0]).sort_values()
+            test_target_rate = combi_xtab_test[1].divide(combi_xtab_test[0]).sort_values()
+            viability = viability and all(train_target_rate.index == test_target_rate.index)
 
-        # checking that some combinations were provided
-        if viability:
+            # checking that some combinations were provided
+            if viability:
 
-        	association.update({'combi_xtab_test': combi_xtab_test})
+                association.update({'combi_xtab_test': combi_xtab_test})
 
-        	return association
+                return association
 
 
 def get_all_combinations(values: list, q: int, max_n_mod: int=None):
