@@ -1,3 +1,8 @@
+
+.. image:: [http://img.shields.io/pypi/v/pytest-xdist](https://img.shields.io/pypi/pyversions/autocarver)
+    :alt: PyPI version
+    :target: [https://pypi.python.org/pypi/pytest-xdist](https://img.shields.io/pypi/pyversions/autocarver)
+    
 # AutoCarver
 
 **AutoCarver** is an approach for maximising a qualitative feature's association with a binary target feature while reducing it's number of distinct modalities.
