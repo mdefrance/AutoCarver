@@ -1,8 +1,9 @@
+</p>
+<p align="center">
+    <img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/autocarver?style=flat-square">
+</p>
 
-[![PyPI version][(https://img.shields.io/pypi/pyversions/autocarver)](https://img.shields.io/pypi/pyversions/autocarver).svg)](https://img.shields.io/pypi/pyversions/autocarver)
-   
-   
-  https://img.shields.io/pypi/pyversions/autocarver
+
 # AutoCarver
 
 **AutoCarver** is an approach for maximising a qualitative feature's association with a binary target feature while reducing it's number of distinct modalities.
