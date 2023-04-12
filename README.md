@@ -1,7 +1,5 @@
-
-.. image:: [http://img.shields.io/pypi/v/pytest-xdist](https://img.shields.io/pypi/pyversions/autocarver)
-    :alt: PyPI version
-    :target: [https://pypi.python.org/pypi/pytest-xdist](https://img.shields.io/pypi/pyversions/autocarver)
+[![PyPI version](https://badge.fury.io/py/autocarver.svg)](https://badge.fury.io/py/autocarver)
+[![PyPI version][https://badge.fury.io/py/autocarver](https://img.shields.io/pypi/pyversions/autocarver).svg)]
     
 # AutoCarver
 
