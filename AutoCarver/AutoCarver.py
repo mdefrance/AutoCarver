@@ -8,7 +8,7 @@ from pandas.api.types import is_string_dtype
 from scipy.stats import chi2_contingency
 from seaborn import color_palette, despine
 from tqdm.notebook import tqdm
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 
 class AutoCarver(GroupedListDiscretizer):
@@ -113,7 +113,7 @@ class AutoCarver(GroupedListDiscretizer):
         self.copy = copy
         self.verbose = verbose
     
-    def prepare_data(self, X: DataFrame, y: Series, X_test: DataFrame=None, y_test: Series=None) -> tuple:
+    def prepare_data(self, X: DataFrame, y: Series, X_test: DataFrame=None, y_test: Series=None) -> Tuple[DataFrame, Series, DataFrame, Series]:
         """ Checks validity of provided data"""
         
         # preparing train sample
@@ -232,7 +232,7 @@ class AutoCarver(GroupedListDiscretizer):
 
         return best_groups
 
-    def update_order(self, feature: str, best_groups: GroupedList, xtab: DataFrame, xtab_test: DataFrame=None) -> tuple[DataFrame, DataFrame]:
+    def update_order(self, feature: str, best_groups: GroupedList, xtab: DataFrame, xtab_test: DataFrame=None) -> Tuple[DataFrame, DataFrame]:
         """ Updates the values_orders and xtabs according to the best_groups"""
 
         # accessing current order for specified feature

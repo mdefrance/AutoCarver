@@ -504,37 +504,41 @@ class Discretizer(BaseEstimator, TransformerMixin):
     def fit(self, X: DataFrame, y: Series) -> None:
 
         # [Qualitative features] Grouping qualitative features
-        # verbose if requested
-        if self.verbose:
-            print("\n---\n[Discretizer] Fit Qualitative Features")
+        if len(self.quali_features) > 0:
 
-        # grouping qualitative features
-        discretizer = QualitativeDiscretizer(
-            self.quali_features, min_freq=self.min_freq,
-            values_orders=self.values_orders, copy=self.copy,
-            verbose=self.verbose, dropna=self.dropna
-        )
-        discretizer.fit(X, y)
+            # verbose if requested
+            if self.verbose:
+                print("\n---\n[Discretizer] Fit Qualitative Features")
 
-        # storing results
-        self.values_orders.update(discretizer.values_orders)  # adding orders of grouped features
-        self.pipe += discretizer.pipe  # adding discretizer to pipe
+            # grouping qualitative features
+            discretizer = QualitativeDiscretizer(
+                self.quali_features, min_freq=self.min_freq,
+                values_orders=self.values_orders, copy=self.copy,
+                verbose=self.verbose, dropna=self.dropna
+            )
+            discretizer.fit(X, y)
+
+            # storing results
+            self.values_orders.update(discretizer.values_orders)  # adding orders of grouped features
+            self.pipe += discretizer.pipe  # adding discretizer to pipe
 
         # [Quantitative features] Grouping quantitative features
-        # verbose if requested
-        if self.verbose:
-            print("\n---\n[Discretizer] Fit Quantitative Features")
+        if len(self.quanti_features) > 0:
 
-        # grouping quantitative features
-        discretizer = QuantitativeDiscretizer(
-            self.quanti_features, q=self.q, copy=self.copy,
-            verbose=self.verbose, dropna=self.dropna
-        )
-        discretizer.fit(X, y)
+            # verbose if requested
+            if self.verbose:
+                print("\n---\n[Discretizer] Fit Quantitative Features")
 
-        # storing results
-        self.values_orders.update(discretizer.values_orders)  # adding orders of grouped features
-        self.pipe += discretizer.pipe  # adding discretizer to pipe
+            # grouping quantitative features
+            discretizer = QuantitativeDiscretizer(
+                self.quanti_features, q=self.q, copy=self.copy,
+                verbose=self.verbose, dropna=self.dropna
+            )
+            discretizer.fit(X, y)
+
+            # storing results
+            self.values_orders.update(discretizer.values_orders)  # adding orders of grouped features
+            self.pipe += discretizer.pipe  # adding discretizer to pipe
 
         return self
 
