@@ -242,7 +242,7 @@ class QualitativeDiscretizer(BaseEstimator, TransformerMixin):
     features: list
         Contains qualitative (categorical and categorical ordinal) features to be discretized.
 
-    min_freq: int, default None
+    min_freq: int
         [Qualitative features] Minimal frequency of a modality.
          - NaNs are considered a specific modality but will not be grouped.
          - [Qualitative features] Less frequent modalities are grouped in the `__OTHER__` modality.
@@ -259,7 +259,7 @@ class QualitativeDiscretizer(BaseEstimator, TransformerMixin):
         Exemple: for an `age` feature, `values_orders` could be `{'age': ['0-18', '18-30', '30-50', '50+']}`.
     """
     
-    def __init__(self, features: List[str], min_freq: float=None, 
+    def __init__(self, features: List[str], min_freq: float, *,
                  values_orders: Dict[str, Any]={}, copy: bool=False, 
                  verbose: bool=False, dropna: bool=False) -> None:
     
@@ -320,6 +320,7 @@ class QualitativeDiscretizer(BaseEstimator, TransformerMixin):
 
             # Grouping rare modalities
             discretizer = DefaultDiscretizer(self.non_ordinal_features, min_freq=self.min_freq, 
+                                             values_orders=self.values_orders,
                                              verbose=self.verbose, dropna=self.dropna)
             discretizer.fit(Xc, y)
 
@@ -365,11 +366,11 @@ class QuantitativeDiscretizer(BaseEstimator, TransformerMixin):
 
     """
     
-    def __init__(self, features: List[str], q: int=None, copy: bool=False, 
+    def __init__(self, features: List[str], q: int, *, values_orders: Dict[str, Any]={}, copy: bool=False, 
                  verbose: bool=False, dropna: bool=False) -> None:
         
         self.features = features[:]
-        self.values_orders: Dict[str, GroupedList] = {}
+        self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
         self.q = q
         self.pipe: List[BaseEstimator] = []
         self.copy = copy
@@ -397,9 +398,9 @@ class QuantitativeDiscretizer(BaseEstimator, TransformerMixin):
         
         # checking data before bucketization
         Xc = self.prepare_data(X, y)
-        
+
         # [Quantitative features] Grouping values into quantiles
-        discretizer = QuantileDiscretizer(self.features, q=self.q, verbose=self.verbose)
+        discretizer = QuantileDiscretizer(self.features, q=self.q, values_orders=self.values_orders, verbose=self.verbose)
         Xc = discretizer.fit_transform(Xc, y)
 
         # storing results
@@ -487,7 +488,7 @@ class Discretizer(BaseEstimator, TransformerMixin):
         Exemple: for an `age` feature, `values_orders` could be `{'age': ['0-18', '18-30', '30-50', '50+']}`.
     """
 
-    def __init__(self, quanti_features: List[str], quali_features: List[str], q: int=None, min_freq: float=None, 
+    def __init__(self, quanti_features: List[str], quali_features: List[str], q: int, min_freq: float, *, 
                  values_orders: Dict[str, Any]={}, copy: bool=False, verbose: bool=False, dropna: bool=False) -> None:
 
         self.features = quanti_features[:] + quali_features[:]
@@ -531,7 +532,8 @@ class Discretizer(BaseEstimator, TransformerMixin):
 
             # grouping quantitative features
             discretizer = QuantitativeDiscretizer(
-                self.quanti_features, q=self.q, copy=self.copy,
+                self.quanti_features, q=self.q,
+                values_orders=self.values_orders, copy=self.copy,
                 verbose=self.verbose, dropna=self.dropna
             )
             discretizer.fit(X, y)
@@ -565,7 +567,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
     def __init__(self, values_orders: Dict[str, Any], *, copy: bool=False, output: type= float, verbose: bool=False) -> None:
         
         self.features = list(values_orders.keys())
-        self.values_orders = {feature: GroupedList(order) for feature, order in values_orders.items()}
+        self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
         self.copy = copy
         self.output = output
         self.verbose = verbose
@@ -666,12 +668,14 @@ class ChainedDiscretizer(GroupedListDiscretizer):
 
 class QuantileDiscretizer(BaseEstimator, TransformerMixin):
     
-    def __init__(self, features: List[str], q: int, copy: bool=False, verbose: bool=False) -> None:
+    def __init__(self, features: List[str], q: int, *, 
+    	         values_orders: Dict[str, Any]={},
+                 copy: bool=False, verbose: bool=False) -> None:
         """ Discretizes quantitative features into groups of q quantiles"""
         
         self.features = features[:]
         self.q = q
-        self.values_orders: Dict[str, any] = {}
+        self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
         self.quantiles: Dict[str, Any] = {}
         self.copy = copy
         self.verbose = verbose
@@ -764,7 +768,7 @@ class ClosestDiscretizer(BaseEstimator, TransformerMixin):
         ).T.to_dict()
 
         # updating the order per feature
-        self.values_orders = {f: common_modalities.get('order').get(f) for f in self.features}
+        self.values_orders.update({f: common_modalities.get('order').get(f) for f in self.features})
 
         # defining the default value based on the strategy
         self.default_values = {f: common_modalities.get(self.default).get(f) for f in self.features}
@@ -780,7 +784,10 @@ class ClosestDiscretizer(BaseEstimator, TransformerMixin):
 
         # iterating over each feature
         for n, feature in enumerate(self.features):
-            if self.verbose: print(f" - [ClosestDiscretizer] Transform {feature} ({n+1}/{len(self.features)})")
+
+            # printing verbose if requested
+            if self.verbose:
+                print(f" - [ClosestDiscretizer] Transform {feature} ({n+1}/{len(self.features)})")
 
             # accessing feature's modalities' order
             order = self.values_orders.get(feature)
@@ -848,13 +855,14 @@ class DefaultDiscretizer(BaseEstimator, TransformerMixin):
     
     def __init__(
         self, features: List[str], min_freq: float, *, 
+        values_orders: Dict[str, Any]={},
         default_value: str='__OTHER__', dropna: bool=False, 
         copy: bool=False, verbose: bool=False) -> None:
         """ Groups a qualitative features' values less frequent than min_freq into a default_value"""
         
         self.features = features[:]
         self.min_freq = min_freq
-        self.values_orders: Dict[str, Any] = {}
+        self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
         self.default_value = default_value[:]
         self.copy = copy
         self.verbose = verbose
@@ -869,7 +877,7 @@ class DefaultDiscretizer(BaseEstimator, TransformerMixin):
         target_rates = X[self.features].apply(target_rate, y=y, dropna=True, ascending=True, axis=0)
 
         # attributing orders to each feature
-        self.values_orders = {feature: GroupedList(list(target_rates[feature])) for feature in self.features}
+        self.values_orders.update({feature: GroupedList(list(target_rates[feature])) for feature in self.features})
         
         #number of unique modality perf feature
         nuniques = X[self.features].apply(nunique, dropna=self.dropna, axis=0)
@@ -885,32 +893,34 @@ class DefaultDiscretizer(BaseEstimator, TransformerMixin):
         
         # grouping rare modalities 
         for n, feature in enumerate(self.features):
+
+        	# printing verbose
             if self.verbose:
                 print(f" - [DefaultDiscretizer] Fit {feature} ({n+1}/{len(self.features)})")
             
                 
-                # identifying values to discard (rare modalities)
-                to_discard = [value for value in self.values_orders[feature] if value not in self.to_keep[feature]]
+            # identifying values to discard (rare modalities)
+            to_discard = [value for value in self.values_orders[feature] if value not in self.to_keep[feature]]
 
-                # discarding rare modalities
-                if len(to_discard) > 0:
+            # discarding rare modalities
+            if len(to_discard) > 0:
 
-                    # adding default_value to possible values
-                    order = self.values_orders[feature]
-                    order.append(self.default_value)
+                # adding default_value to possible values
+                order = self.values_orders[feature]
+                order.append(self.default_value)
 
-                    # grouping rare modalities into default_value
-                    order.group_list(to_discard, self.default_value)
+                # grouping rare modalities into default_value
+                order.group_list(to_discard, self.default_value)
 
-                    # computing target rate for default value and reordering values according to feature's target rate
-                    default_target_rate = y.loc[X[feature].isin(order.get(self.default_value))].mean()  # computing target rate for default value
-                    order_target_rate = [target_rates.get(feature).get(value) for value in order if value != self.default_value]
-                    default_position = next(n for n, trate in enumerate(order_target_rate + [inf]) if trate > default_target_rate)
+                # computing target rate for default value and reordering values according to feature's target rate
+                default_target_rate = y.loc[X[feature].isin(order.get(self.default_value))].mean()  # computing target rate for default value
+                order_target_rate = [target_rates.get(feature).get(value) for value in order if value != self.default_value]
+                default_position = next(n for n, trate in enumerate(order_target_rate + [inf]) if trate > default_target_rate)
 
-                    # updating the modalities' order                
-                    new_order = order[:-1][:default_position] + [self.default_value] + order[:-1][default_position:]  # getting rid of default value already in order
-                    order = order.sort_by(new_order)
-                    self.values_orders.update({feature: order})
+                # updating the modalities' order                
+                new_order = order[:-1][:default_position] + [self.default_value] + order[:-1][default_position:]  # getting rid of default value already in order
+                order = order.sort_by(new_order)
+                self.values_orders.update({feature: order})
 
         return self
 

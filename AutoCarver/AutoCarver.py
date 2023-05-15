@@ -493,7 +493,7 @@ def association_xtab(xtab: DataFrame):
     """ Computes measures of association between feature x and feature2. """
 
     # numnber of observations
-    n_obs = xtab.sum(axis=None)
+    n_obs = xtab.sum().sum()
 
     # number of values taken by the features
     n_mod_x, n_mod_y = len(xtab.index), len(xtab.columns)
