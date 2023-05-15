@@ -3,141 +3,173 @@ from math import sqrt
 from numpy import triu, ones, nan, inf
 from pandas import DataFrame, Series, notna
 from scipy.stats import kruskal
+from sklearn.base import BaseEstimator, TransformerMixin
 from statsmodels.formula.api import ols
 from statsmodels.stats.outliers_influence import variance_inflation_factor
+from typing import List, Dict, Any, Callable
 
 
-class FeatureSelector():
-    """ A pipeline of measures to perform EDA and feature pre-selection"""
-    
-    def __init__(self, measures: list=[], filters: list=[]):
+class FeatureSelector(BaseEstimator, TransformerMixin):
+    """ A pipeline of measures to perform EDA and feature pre-selection
         
-        self.measures = [dtype_measure, nans_measure, mode_measure] + measures[:]
+    Parameters
+    ----------
+    features: List[str]
+        Features on which to compute association.
+    n_best, int:
+        Number of features to be selected
+    measures, List[Callable]: default list().
+        List of association measures to be used.
+        Implemented measures are:
+            - For association evaluation: `kruskal_measure`, `R_measure`
+            - For outlier detection: `zscore_measure`, `iqr_measure`
+        Ranks features based on last measure of the list.
+    filters, List[Callable]: default list().
+        List of filters to be used.
+        Implemented filters are:
+          - For linear correlation: `spearman_filter`, `pearson_filter`
+          - For multicoloinearity: `vif_filter`
+
+    params examples
+    ---------------
+    thresh_nan, float: default 1.
+        Maximum percentage of NaNs in a feature
+    thresh_mode, float: default 1.
+        Maximum percentage of the mode of a feature
+    thresh_outlier, float: default 1.
+        Maximum percentage of Outliers in a feature
+    thresh_corr, float: default 1.
+        Maximum association between features
+    thresh_vif, float: default inf
+        Maximum VIF between features
+    ascending, bool: default False
+        Ascending of Descending sort by sort_measure
+    """
+    
+    def __init__(self, features: List[str], n_best: int, measures: List[Callable]=list(), filters: List[Callable]=list(),
+                 copy: bool=True, verbose: bool=True, **params) -> None:
+        
+        self.features = features[:]
+        self.n_best = n_best
+        assert n_best <= len(features), "Must set n_best <= len(features)"
+
+        self.measures = [dtype_measure, nans_measure, mode_measure, zscore_measure] + measures[:]
         self.filters = [thresh_filter] + filters[:]
-        
-        self.associations = []
-        self.filtered_associations = []
+        self.sort_measures = [measure.__name__ for measure in measures[-1::]]
+
+        self.copy = copy
+        self.verbose = verbose
+        self.params = params
     
-    def measure(self, x: Series, y: Series, **params):
-        """ Measures association between x and y
+    def measure(self, x: Series, y: Series) -> Dict[str, Any]:
+        """ Measures association between x and y """
         
-        Parameters
-        ----------
-        thresh_nan, float: default 1.
-          Maximum percentage of NaNs in a feature
-        thresh_mode, float: default 1.
-          Maximum percentage of the mode of a feature
-        thresh_outlier, float: default 1.
-          Maximum percentage of Outliers in a feature
-        """
-        
-        passed = True
+        passed = True  # measures keep going only if previous basic tests are passed
         association = {}
+
+        # iterating over each measure
         for measure in self.measures:
-            passed, association = measure(passed, association, x, y, **params)
+            passed, association = measure(passed, association, x, y, **self.params)
             
         return association
     
-    def measure_apply(self, X: DataFrame, y: Series, **params):
+    def measure_apply(self, X: DataFrame, y: Series) -> None:
         """ Measures association between columns of X and y
-        
-        Parameters
-        ----------
-        thresh_nan, float: default 1.
-          Maximum percentage of NaNs in a feature
-        thresh_mode, float: default 1.
-          Maximum percentage of the mode of a feature
-        thresh_outlier, float: default 1.
-          Maximum percentage of Outliers in a feature
-        """
+
+    Parameters
+    ----------
+    ascending, bool: default False
+      Ascending of Descending sort by sort_measure
+    """
         
         # applying association measure to each column
-        self.associations = X.apply(self.measure, y=y, **params, result_type='expand', axis=0).T
-        
-        return self.associations
+        self.associations = X[self.features].apply(self.measure, y=y, result_type='expand', axis=0).T
+        self.associations = self.associations.sort_values(self.sort_measures[0], ascending=self.params.get('ascending', False))
     
-    def filter_apply(self, X: DataFrame, sort_measure: str, **params):
-        """ Filters out to correlated features that are less relevant
-        
-        Parameters
-        ----------
-        thresh_corr, float: default 1.
-          Maximum association between features
-        thresh_vif, float: default inf
-          Maximum VIF between features
-        ascending, bool: default False
-          Ascending of Descending sort by sort_measure
-        """
+    def filter_apply(self, X: DataFrame, sort_measure: str) -> DataFrame:
+        """ Filters out too correlated features (least relevant first)
+
+    Parameters
+    ----------
+    ascending, bool: default False
+      Ascending of Descending sort by sort_measure
+    """
         
         # ordering features by sort_by
-        self.filtered_associations = self.associations.sort_values(sort_measure, ascending=params.get('ascending', False))
+        self.filtered_associations = self.associations.sort_values(sort_measure, ascending=self.params.get('ascending', False))
 
         # applying successive filters
         for filtering in self.filters:
 
             # ordered filtering
-            self.filtered_associations = filtering(X, self.filtered_associations, **params)
-        
-        return self.filtered_associations
+            self.filtered_associations = filtering(X, self.filtered_associations, **self.params)
     
-    def display_stats(self, X: DataFrame, y: Series, sort_measure: str=None):
-        """ Computes statistics for EDA with default params"""
+    def display_stats(self, association: DataFrame, caption: str) -> None:
+        """ EDA of fitted associations"""
+        
+        # appllying style 
+        subset = [c for c in association if 'pct_' in c or '_measure' in c]
+        style = association.style.background_gradient(cmap='coolwarm', subset=subset)
+        style = style.set_table_attributes("style='display:inline'")
+        style = style.set_caption(caption)
+        display_html(style._repr_html_(), raw=True)
+        
+    
+    def fit(self, X: DataFrame, y: Series) -> None:
+        """ Selects the n_best features"""
         
         # initial computation of all association measures
         self.measure_apply(X, y)
+
+        # displaying association measure
+        if self.verbose:
+            self.display_stats(self.associations, 'Raw association')
         
-        # filtering
-        if not sort_measure:  # by default, last measure passed
-            sort_measure = self.measures[-1].__name__
-        association = self.filter_apply(X, sort_measure)
-            
-        # appllying style 
-        subset = [c for c in association if 'pct_' in c or '_measure' in c]
-        association = association.style.background_gradient(cmap='coolwarm', subset=subset)
-        display_html(association.set_table_attributes("style='display:inline'")._repr_html_(), raw=True)
-        
-    
-    def select_features(self, X: DataFrame, y: Series, n_best: int, sort_measures: list, **params):
-        """ Selects the n_best features
-        
-        Parameters
-        ----------
-        thresh_nan, float: default 1.
-          Maximum percentage of NaNs in a feature
-        thresh_mode, float: default 1.
-          Maximum percentage of the mode of a feature
-        thresh_outlier, float: default 1.
-          Maximum percentage of Outliers in a feature
-        thresh_corr, float: default 1.
-          Maximum association between features
-        thresh_vif, float: default inf
-          Maximum VIF between features
-        ascending, bool: default False
-          Ascending of Descending sort by sort_measure
-        """
-        
-        # initial computation of all association measures
-#         if len(self.associations) == 0:
-        self.measure_apply(X, y, **params)
-        
-        # iterating over each sort_measures
+        # iterating over each sort_measures 
+        # useful when measures hints to specific associations
         ranks = []
-        for sort_measure in sort_measures:
+        for n, sort_measure in enumerate(self.sort_measures):
             
             # filtering by sort_measure
-            rank = list(self.filter_apply(X, sort_measure, **params).index)
-            ranks += [rank]
-        
-        # retrieving the n_best features per ranking
-        best_features = [feature for rank in ranks for feature in rank[:n_best]]
-        best_features = list(set(best_features))  # deduplicating
-        
-        return best_features
+            self.filter_apply(X, sort_measure)
+            ranks += [list(self.filtered_associations.index)]
 
-    
+            # displaying filtered out association measure
+            if n == 0 and self.verbose:
+                self.display_stats(self.filtered_associations, 'Filtered association')
+
+        # retrieving the n_best features per ranking
+        self.best_features = [feature for rank in ranks for feature in rank[:self.n_best]]
+        self.best_features = list(set(self.best_features))  # deduplicating
+
+        # displaying filtered out association measure
+        # if n == 0 and self.verbose:
+        #     self.display_stats(self.associations.reindex(self.best_features), 'Filtered association')
+
+        return self
+
+    def transform(self, X: DataFrame, y: Series=None) -> DataFrame:
+
+        # copying dataset
+        Xc = X
+        if self.copy:
+            Xc.copy()
+
+        # filtering out unwanted features
+        Xc = X.drop([c for c in self.features if c not in self.best_features], axis=1)
+
+        return Xc
+
+
 # MEASURES
-def nans_measure(active: bool, association: dict, x: Series, y: Series=None, **params):
-    """ Measure of the percentage of NaNs"""
+def nans_measure(active: bool, association: Dict[str, Any], x: Series, y: Series=None, **params) -> Tuple[bool, Dict[str, Any]]:
+    """ Measure of the percentage of NaNs
+
+    Parameters
+    ----------
+    thresh_nan, float: default 1.
+      Maximum percentage of NaNs in a feature
+    """
     
     passed = True  # whether or not tests where passed
     
@@ -152,7 +184,7 @@ def nans_measure(active: bool, association: dict, x: Series, y: Series=None, **p
     
     return passed, association
 
-def dtype_measure(active: bool, association: dict, x: Series, y: Series=None, **params):
+def dtype_measure(active: bool, association: Dict[str, Any], x: Series, y: Series=None, **params) -> Tuple[bool, Dict[str, Any]]:
     """ Gets dtype"""
     
     # updating association
@@ -160,8 +192,14 @@ def dtype_measure(active: bool, association: dict, x: Series, y: Series=None, **
         
     return active, association
 
-def mode_measure(active: bool, association: dict, x: Series, y: Series=None, **params):
-    """ Measure of the percentage of the Mode"""
+def mode_measure(active: bool, association: Dict[str, Any], x: Series, y: Series=None, **params) -> Tuple[bool, Dict[str, Any]]:
+    """ Measure of the percentage of the Mode
+
+    Parameters
+    ----------
+    thresh_mode, float: default 1.
+      Maximum percentage of the mode of a feature
+    """
     
     passed = True  # whether or not tests where passed
     
@@ -176,7 +214,7 @@ def mode_measure(active: bool, association: dict, x: Series, y: Series=None, **p
     
     return passed, association
 
-def kruskal_measure(active: bool, association: dict, x: Series, y: Series, **params):
+def kruskal_measure(active: bool, association: Dict[str, Any], x: Series, y: Series, **params) -> Tuple[bool, Dict[str, Any]]:
     """ Kruskal-Wallis statistic between x (quantitative) and y (binary)"""
     
     # check that previous steps where passed
@@ -193,7 +231,7 @@ def kruskal_measure(active: bool, association: dict, x: Series, y: Series, **par
         
     return active, association
 
-def R_measure(active: bool, association: dict, x: Series, y: Series, **params):
+def R_measure(active: bool, association: Dict[str, Any], x: Series, y: Series, **params) -> Tuple[bool, Dict[str, Any]]:
     """ R of the linear regression of x (quantitative) by y (binary)"""
     
     # check that previous steps where passed
@@ -214,8 +252,14 @@ def R_measure(active: bool, association: dict, x: Series, y: Series, **params):
     return active, association
 
 
-def zscore_measure(active: bool, association: dict, x: Series, y: Series=None, **params):
-    """ Computes outliers based on the z-score"""
+def zscore_measure(active: bool, association: Dict[str, Any], x: Series, y: Series=None, **params) -> Tuple[bool, Dict[str, Any]]:
+    """ Computes outliers based on the z-score
+
+    Parameters
+    ----------
+    thresh_outlier, float: default 1.
+      Maximum percentage of Outliers in a feature
+    """
     
     # check that previous steps where passed for computational optimization
     if active:
@@ -242,8 +286,14 @@ def zscore_measure(active: bool, association: dict, x: Series, y: Series=None, *
         
     return active, association
 
-def iqr_measure(active: bool, association: dict, x: Series, y: Series=None, **params):
-    """ Computes outliers based on the inter-quartile range"""
+def iqr_measure(active: bool, association: Dict[str, Any], x: Series, y: Series=None, **params) -> Tuple[bool, Dict[str, Any]]:
+    """ Computes outliers based on the inter-quartile range
+
+    Parameters
+    ----------
+    thresh_outlier, float: default 1.
+      Maximum percentage of Outliers in a feature
+    """
     
     # check that previous steps where passed for computational optimization
     if active:
@@ -272,7 +322,7 @@ def iqr_measure(active: bool, association: dict, x: Series, y: Series=None, **pa
 
     
 # FILTERS        
-def thresh_filter(X: DataFrame, ranks: DataFrame, **params):
+def thresh_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
     """ Filters out missing association measure (did not pass a threshold)"""
     
     # drops rows with nans
@@ -280,10 +330,16 @@ def thresh_filter(X: DataFrame, ranks: DataFrame, **params):
     
     return associations
 
-def quantitative_filter(X: DataFrame, ranks: DataFrame, corr_measure: str, **params):
+def quantitative_filter(X: DataFrame, ranks: DataFrame, corr_measure: str, **params) -> Dict[str, Any]:
     """ Computes max association between X and X (quantitative) excluding features 
     that are correlated to a feature more associated with the target 
-    (defined by the prefered_order)."""
+    (defined by the prefered_order).
+
+    Parameters
+    ----------
+    thresh_corr, float: default 1.
+      Maximum association between features
+    """
     
     # accessing the prefered order
     prefered_order = ranks.index
@@ -325,28 +381,46 @@ def quantitative_filter(X: DataFrame, ranks: DataFrame, corr_measure: str, **par
     return associations 
 
 
-def spearman_filter(X: DataFrame, ranks: DataFrame, **params):
+def spearman_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
     """ Computes max Spearman between X and X (quantitative) excluding features 
     that are correlated to a feature more associated with the target 
-    (defined by the prefered_order)."""
+    (defined by the prefered_order).
+
+    Parameters
+    ----------
+    thresh_corr, float: default 1.
+      Maximum association between features
+    """
             
     # applying quantitative filter with spearman correlation
     associations = quantitative_filter(X, ranks, 'spearman', **params)
     
     return associations
 
-def pearson_filter(X: DataFrame, ranks: DataFrame, **params):
+def pearson_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
     """ Computes max Pearson between X and X (quantitative) excluding features 
     that are correlated to a feature more associated with the target 
-    (defined by the prefered_order)."""
+    (defined by the prefered_order).
+
+    Parameters
+    ----------
+    thresh_corr, float: default 1.
+      Maximum association between features
+    """
             
     # applying quantitative filter with spearman correlation
     associations = quantitative_filter(X, ranks, 'pearson', **params)
     
     return associations
 
-def vif_filter(X: DataFrame, ranks: DataFrame, **params):
-    """ Computes Variance Inflation Factor (multicolinearity)"""
+def vif_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
+    """ Computes Variance Inflation Factor (multicolinearity)
+
+    Parameters
+    ----------
+    thresh_vif, float: default inf
+      Maximum VIF between features
+    """
     
     # accessing the prefered order
     prefered_order = ranks.index

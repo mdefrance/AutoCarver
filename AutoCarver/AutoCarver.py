@@ -95,7 +95,7 @@ class AutoCarver(GroupedListDiscretizer):
 
     """
    
-    def __init__(self, values_orders: Dict[str, Any]={}, *, sort_by: str='tschuprowt',
+    def __init__(self, values_orders: Dict[str, Any], *, sort_by: str='tschuprowt',
                  copy: bool=False, max_n_mod: int=5, dropna: bool=True,
                  verbose: bool=True) -> None:
         
@@ -493,22 +493,23 @@ def association_xtab(xtab: DataFrame):
     """ Computes measures of association between feature x and feature2. """
 
     # numnber of observations
-    n_obs = xtab.sum().sum()
+    n_obs = xtab.sum(axis=None)
 
     # number of values taken by the features
     n_mod_x, n_mod_y = len(xtab.index), len(xtab.columns)
+    min_n_mod = min(n_mod_x, n_mod_y)
 
     # Chi2 statistic
     chi2 = chi2_contingency(xtab)[0]
 
     # Cramer's V
-    cramerv = sqrt(chi2 / n_obs)
+    cramerv = sqrt(chi2 / n_obs / (min_n_mod - 1))
 
     # Tschuprow's T
-    n_mods = sqrt((n_mod_x - 1) * (n_mod_y - 1))
+    dof_mods = sqrt((n_mod_x - 1) * (n_mod_y - 1))
     tschuprowt = 0
-    if n_mods > 0:
-        tschuprowt = sqrt(chi2 / n_obs / n_mods)
+    if dof_mods > 0:
+        tschuprowt = sqrt(chi2 / n_obs / dof_mods)
 
     results = {'cramerv': cramerv, 'tschuprowt': tschuprowt}
     
