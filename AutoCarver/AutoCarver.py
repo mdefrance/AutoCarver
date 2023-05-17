@@ -1,4 +1,4 @@
-from .Discretizers import GroupedList, GroupedListDiscretizer, is_equal
+from Discretizers import GroupedList, GroupedListDiscretizer, is_equal
 from IPython.display import display_html
 from matplotlib.pyplot import subplots, show
 from matplotlib.ticker import PercentFormatter
@@ -97,7 +97,7 @@ class AutoCarver(GroupedListDiscretizer):
    
     def __init__(self, values_orders: Dict[str, Any], *, sort_by: str='tschuprowt',
                  copy: bool=False, max_n_mod: int=5, dropna: bool=True,
-                 verbose: bool=True) -> None:
+                 verbose: bool=True, str_nan: str='__NAN__') -> None:
         
         self.features = list(values_orders.keys())
         self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
@@ -112,6 +112,7 @@ class AutoCarver(GroupedListDiscretizer):
 
         self.copy = copy
         self.verbose = verbose
+        self.str_nan = str_nan
     
     def prepare_data(self, X: DataFrame, y: Series, X_test: DataFrame=None, y_test: Series=None) -> Tuple[DataFrame, Series, DataFrame, Series]:
         """ Checks validity of provided data"""
@@ -172,34 +173,30 @@ class AutoCarver(GroupedListDiscretizer):
                 self.non_viable_features += [feature]  # adding it to list of non viable features
 
         # discretizing features based on each feature's values_order
-        super().__init__(self.values_orders, copy=self.copy, output=float)
+        super().__init__(self.values_orders, str_nan=self.str_nan, copy=self.copy, output=float)
         super().fit(X, y)
 
         return self
 
     def get_best_combination(self, feature: str, X: DataFrame, y: Series, X_test: DataFrame=None, y_test: Series=None) -> Dict[str, Any]:
 
-        # getting all possible combinations for the feature without NaNS
-        combinations = get_all_combinations(self.values_orders.get(feature), X[feature].nunique(dropna=True), self.max_n_mod)
-        combinations = [GroupedList({group[0]: group for group in combination}) for combination in combinations]
-
         # computing crosstabs
         # crosstab on TRAIN
-        xtab = nan_crosstab(X[feature], y)
+        xtab = nan_crosstab(X[feature], y, self.str_nan)
+        notna_xtab = xtab[xtab.index != self.str_nan]  # filtering out nans
+
         # crosstab on TEST
-        xtab_test = None
+        xtab_test, notna_xtab_test = None, None
         if X_test is not None:
-            xtab_test = nan_crosstab(X_test[feature], y_test)
+            xtab_test = nan_crosstab(X_test[feature], y_test, self.str_nan)
+            notna_xtab_test = xtab_test[xtab_test.index != self.str_nan]  # filtering out nans
 
         # printing the group statistics
         if self.verbose:
             self.display_xtabs(feature, 'Raw', xtab, xtab_test)
-            
-        # filtering out nans
-        notna_xtab = xtab[notna(xtab.index)]
-        notna_xtab_test = None
-        if xtab_test is not None:
-            notna_xtab_test = xtab_test[notna(xtab_test.index)]
+
+        # getting all possible combinations for the feature without NaNS
+        combinations = get_all_combinations(self.values_orders.get(feature), self.max_n_mod)
 
         # measuring association with target for each combination and testing for stability on TEST
         best_groups = best_combination(combinations, self.sort_by, notna_xtab, notna_xtab_test)
@@ -210,14 +207,18 @@ class AutoCarver(GroupedListDiscretizer):
 
         # testing adding NaNs to built groups
         order = self.values_orders.get(feature)
-        if any(isna(X[feature])) & self.dropna & (len(order) <= self.max_n_mod) & (len(order)>1):
+        if (self.str_nan in xtab.index) & self.dropna:
 
-            # getting all possible combinations for the feature with NaNS
-            combinations = get_all_nan_combinations(order)
-            combinations = [GroupedList({group[0]: group for group in combination}) for combination in combinations]
-            
             # adding nans at the end of the order
-            order.append(nan)
+            order = order.append(self.str_nan)
+
+            # reordering order according to target rate
+            new_order = xtab[1].divide(xtab.sum(axis=1)).sort_values().index.tolist()
+            order = order.sort_by(new_order)
+            self.values_orders.update({feature: order})
+
+            # getting all possible combinations for the feature without NaNS
+            combinations = get_all_combinations(order, self.max_n_mod)
 
             # measuring association with target for each combination and testing for stability on TEST
             best_groups = best_combination(combinations, self.sort_by, xtab, xtab_test)
@@ -235,12 +236,8 @@ class AutoCarver(GroupedListDiscretizer):
     def update_order(self, feature: str, best_groups: GroupedList, xtab: DataFrame, xtab_test: DataFrame=None) -> Tuple[DataFrame, DataFrame]:
         """ Updates the values_orders and xtabs according to the best_groups"""
 
-        # accessing current order for specified feature
-        order = self.values_orders.get(feature)
-
-        # grouping for each group of the combination
-        for kept, discarded in best_groups.contained.items():
-            order.group_list(discarded, kept)
+        # updating values_orders with best_combination 
+        self.values_orders.update({feature: best_groups})
 
         # update of the TRAIN crosstab
         best_combi = list(map(best_groups.get_group, xtab.index))
@@ -286,15 +283,24 @@ class AutoCarver(GroupedListDiscretizer):
         # displaying html of colored DataFrame
         display_html(html, raw=True)
 
+def groupedlist_combination(combination: List[List[Any]], order: GroupedList) -> GroupedList:
+    """ Converts a list of combination to a GroupedList"""
+    
+    order_copy = GroupedList(order)
+    for combi in combination:
+        order_copy.group_list(combi, combi[0])
+    
+    return order_copy
+
 def stats_xtab(xtab: DataFrame, known_order: List[Any]=None, known_labels: List[Any]=None) -> DataFrame:
     """ Computes column (target) rate per row (modality) and row frequency"""
     
     # target rate and frequency statistics per modality
     stats = DataFrame({
         # target rate per modality
-        'target_rate': xtab[1].divide(xtab[0].add(xtab[1])),
+        'target_rate': xtab[1].divide(xtab.sum(axis=1)),
         # frequency per modality
-        'frequency': xtab[1].add(xtab[0]) / xtab.sum().sum()
+        'frequency': xtab.sum(axis=1) / xtab.sum().sum()
     })
     
     # sorting statistics
@@ -400,9 +406,12 @@ def best_combination(combinations: List[GroupedList], sort_by: str, xtab: DataFr
                 return association
 
 
-def get_all_combinations(values: list, q: int, max_n_mod: int=None):
+def get_all_combinations(values: GroupedList, max_n_mod: int=None):
 
-    # max number of classes
+    # maximum number of classes
+    q = len(values)
+
+    # desired max number of classes
     if max_n_mod is None:
     	max_n_mod = q
 
@@ -412,6 +421,7 @@ def get_all_combinations(values: list, q: int, max_n_mod: int=None):
         combinations += get_combinations(n_class, q)
 
     combinations = [[values[int(c[0]): int(c[1]) + 1] for c in combi] for combi in combinations]  # getting real feature values
+    combinations = [groupedlist_combination(combination, values) for combination in combinations]  # converting back to GroupedList
 
     return combinations
 
@@ -515,18 +525,14 @@ def association_xtab(xtab: DataFrame):
     
     return results
 
-def nan_crosstab(x: Series, y: Series):
+def nan_crosstab(x: Series, y: Series, str_nan: str='__NAN__'):
     """ Crosstab that keeps nans as a specific value"""
     
     # keeping NaNs as a specific modality
-    nan_val = '__NAN__'  # value to be imputed as NaN
-    x_filled = x.fillna(nan_val)  # filling NaNs
+    x_filled = x.fillna(str_nan)  # filling NaNs
 
     # computing initial crosstabs
     xtab = crosstab(x_filled, y)
-
-    # keeping track of nans if there are any
-    xtab.index = [idx if idx != nan_val else nan for idx in xtab.index]
     
     return xtab
 

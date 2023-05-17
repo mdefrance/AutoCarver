@@ -1,16 +1,19 @@
 from IPython.display import display_html
 from math import sqrt
 from numpy import triu, ones, nan, inf
-from pandas import DataFrame, Series, notna
-from scipy.stats import kruskal
+from pandas import DataFrame, Series, notna, crosstab
+from scipy.stats import kruskal, chi2_contingency
 from sklearn.base import BaseEstimator, TransformerMixin
 from statsmodels.formula.api import ols
 from statsmodels.stats.outliers_influence import variance_inflation_factor
-from typing import List, Dict, Any, Callable
+from typing import List, Dict, Any, Callable, Tuple
 
 
 class FeatureSelector(BaseEstimator, TransformerMixin):
     """ A pipeline of measures to perform EDA and feature pre-selection
+     
+     - best features are the n_best of each measure
+     - selected features are stored in FeatureSelector.best_features
         
     Parameters
     ----------
@@ -52,10 +55,11 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
         self.features = features[:]
         self.n_best = n_best
         assert n_best <= len(features), "Must set n_best <= len(features)"
-
-        self.measures = [dtype_measure, nans_measure, mode_measure, zscore_measure] + measures[:]
+        self.best_features = features[:]
+        
+        self.measures = [dtype_measure, nans_measure, mode_measure] + measures[:]
         self.filters = [thresh_filter] + filters[:]
-        self.sort_measures = [measure.__name__ for measure in measures[-1::]]
+        self.sort_measures = [measure.__name__ for measure in measures[::-1]]
 
         self.copy = copy
         self.verbose = verbose
@@ -84,7 +88,15 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
         
         # applying association measure to each column
         self.associations = X[self.features].apply(self.measure, y=y, result_type='expand', axis=0).T
-        self.associations = self.associations.sort_values(self.sort_measures[0], ascending=self.params.get('ascending', False))
+        
+        # filtering non association measure (pct_zscore, pct_iqr...)
+        asso_measures = [c for c in self.associations if '_measure' in c]
+        self.sort_measures = [c for c in self.sort_measures if c in asso_measures]
+        
+        # sorting statistics if an association measure was provided
+        self.associations = self.associations.sort_values(
+            self.sort_measures, ascending=self.params.get('ascending', False)
+        )
     
     def filter_apply(self, X: DataFrame, sort_measure: str) -> DataFrame:
         """ Filters out too correlated features (least relevant first)
@@ -108,7 +120,7 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
         """ EDA of fitted associations"""
         
         # appllying style 
-        subset = [c for c in association if 'pct_' in c or '_measure' in c]
+        subset = [c for c in association if 'pct_' in c or '_measure' in c or '_filter' in c]
         style = association.style.background_gradient(cmap='coolwarm', subset=subset)
         style = style.set_table_attributes("style='display:inline'")
         style = style.set_caption(caption)
@@ -135,16 +147,13 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
             ranks += [list(self.filtered_associations.index)]
 
             # displaying filtered out association measure
-            if n == 0 and self.verbose:
+            if n == 0 and self.verbose and len(self.filters) > 1:
                 self.display_stats(self.filtered_associations, 'Filtered association')
 
         # retrieving the n_best features per ranking
-        self.best_features = [feature for rank in ranks for feature in rank[:self.n_best]]
-        self.best_features = list(set(self.best_features))  # deduplicating
-
-        # displaying filtered out association measure
-        # if n == 0 and self.verbose:
-        #     self.display_stats(self.associations.reindex(self.best_features), 'Filtered association')
+        if len(self.sort_measures) > 0:
+            self.best_features = [feature for rank in ranks for feature in rank[:self.n_best]]
+            self.best_features = list(set(self.best_features))  # deduplicating
 
         return self
 
@@ -320,6 +329,90 @@ def iqr_measure(active: bool, association: Dict[str, Any], x: Series, y: Series=
         
     return active, association
 
+def chi2_measure(active: bool, association: Dict[str, Any], x: Series,
+                 y: Series, **params) -> Tuple[bool, Dict[str, Any]]:
+    """ Chi2 Measure between two Series of qualitative features"""
+        
+    # check that previous steps where passed
+    if active:
+    
+        # computing crosstab between x and y
+        xtab = crosstab(x, y)
+
+        # numnber of observations
+        n_obs = xtab.sum(axis=None)
+
+        # number of values taken by the features
+        n_mod_x, n_mod_y = len(xtab.index), len(xtab.columns)
+
+        # Chi2 statistic
+        chi2 = chi2_contingency(xtab)[0]
+
+        # updating association
+        association.update({'chi2_measure': chi2})
+    
+    return active, association
+
+def cramerv_measure(active: bool, association: Dict[str, Any], x: Series,
+                    y: Series, **params) -> Tuple[bool, Dict[str, Any]]:
+    """ Carmer's V between two Series of qualitative features"""
+
+    # check that previous steps where passed
+    if active:
+    
+        # computing chi2
+        if 'chi2_measure' not in association:
+            active, association = chi2_measure(active, association, x, y, **params)
+
+        # numnber of observations
+        n_obs = (notna(x) & notna(y)).sum()
+
+        # number of values taken by the features
+        n_mod_x, n_mod_y = x.nunique(), y.nunique()
+        min_n_mod = min(n_mod_x, n_mod_y)
+        
+        # Chi2 statistic
+        chi2 = association.get('chi2_measure')
+
+        # Cramer's V
+        cramerv = sqrt(chi2 / n_obs / (min_n_mod - 1))
+
+        # updating association
+        association.update({'cramerv_measure': cramerv})
+    
+    return active, association
+
+def tschuprowt_measure(active: bool, association: Dict[str, Any],x: Series,
+                       y: Series, **params) -> Tuple[bool, Dict[str, Any]]:
+    """ Tschuprow's T between two Series of qualitative features"""
+        
+    # check that previous steps where passed
+    if active:
+    
+        # computing chi2
+        if 'chi2_measure' not in association:
+            active, association = chi2_measure(active, association, x, y, **params)
+
+        # numnber of observations
+        n_obs = (notna(x) & notna(y)).sum()
+
+        # number of values taken by the features
+        n_mod_x, n_mod_y = x.nunique(), y.nunique()
+        
+        # Chi2 statistic
+        chi2 = association.get('chi2_measure')
+
+        # Tschuprow's T
+        dof_mods = sqrt((n_mod_x - 1) * (n_mod_y - 1))
+        tschuprowt = 0
+        if dof_mods > 0:
+            tschuprowt = sqrt(chi2 / n_obs / dof_mods)
+
+        # updating association
+        association.update({'tschuprowt_measure': tschuprowt})
+    
+    return active, association
+
     
 # FILTERS        
 def thresh_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
@@ -333,7 +426,7 @@ def thresh_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
 def quantitative_filter(X: DataFrame, ranks: DataFrame, corr_measure: str, **params) -> Dict[str, Any]:
     """ Computes max association between X and X (quantitative) excluding features 
     that are correlated to a feature more associated with the target 
-    (defined by the prefered_order).
+    (defined by the ranks).
 
     Parameters
     ----------
@@ -361,14 +454,14 @@ def quantitative_filter(X: DataFrame, ranks: DataFrame, corr_measure: str, **par
         corr_with, worst_corr = corr_with_better_features.agg(['idxmax', 'max'])
         
         # dropping the feature if it was too correlated to a better feature
-        if worst_corr > params.get('thresh_corr', 1.):
+        if worst_corr > params.get('thresh_corr', 1):
             X_corr = X_corr.drop(feature, axis=0).drop(feature, axis=1)
             
         # kept feature: updating associations with this feature
         else:
             associations += [{
                 'feature': feature, 
-                f'{corr_measure}_measure': worst_corr,
+                f'{corr_measure}_filter': worst_corr,
                 f'{corr_measure}_with': corr_with
             }]
             
@@ -384,7 +477,7 @@ def quantitative_filter(X: DataFrame, ranks: DataFrame, corr_measure: str, **par
 def spearman_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
     """ Computes max Spearman between X and X (quantitative) excluding features 
     that are correlated to a feature more associated with the target 
-    (defined by the prefered_order).
+    (defined by the ranks).
 
     Parameters
     ----------
@@ -393,14 +486,12 @@ def spearman_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
     """
             
     # applying quantitative filter with spearman correlation
-    associations = quantitative_filter(X, ranks, 'spearman', **params)
-    
-    return associations
+    return quantitative_filter(X, ranks, 'spearman', **params)
 
 def pearson_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
     """ Computes max Pearson between X and X (quantitative) excluding features 
     that are correlated to a feature more associated with the target 
-    (defined by the prefered_order).
+    (defined by the ranks).
 
     Parameters
     ----------
@@ -409,9 +500,7 @@ def pearson_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
     """
             
     # applying quantitative filter with spearman correlation
-    associations = quantitative_filter(X, ranks, 'pearson', **params)
-    
-    return associations
+    return quantitative_filter(X, ranks, 'pearson', **params)
 
 def vif_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
     """ Computes Variance Inflation Factor (multicolinearity)
@@ -451,7 +540,7 @@ def vif_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
             
         # kept feature: updating associations with this feature
         else:
-            associations += [{'feature': feature, 'vif_measure': vif}]
+            associations += [{'feature': feature, 'vif_filter': vif}]
     
     # formatting ouput to DataFrame
     associations = DataFrame(associations).set_index('feature')
@@ -460,3 +549,110 @@ def vif_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
     associations = ranks.join(associations, how='right')
     
     return associations
+
+def qualitative_worst_corr(X: DataFrame, feature: str, ranks: DataFrame, corr_measure: Callable, **params):
+    """ Computes maximum association between a feature and features 
+    more associated to the target (according to ranks)
+    """
+    
+    # measure name
+    measure_name = corr_measure.__name__
+    measure = measure_name.replace('_measure', '')
+        
+    # initiating worst correlation
+    worst_corr = {'feature': feature}
+    
+    # features more associated with target
+    better_features = list(ranks.loc[:feature].index)[:-1]
+
+    # iterating over each better feature
+    for better_feature in better_features:
+
+        # computing association with better feature
+        _, association = corr_measure(True, {f'{measure}_with': better_feature}, 
+                                      X[feature], X[better_feature], **params)
+
+
+        # updating association if it's greater than previous better features
+        if association.get(measure_name) > worst_corr.get(measure_name, 0):
+
+            # renaming association measure as filter
+            association[f'{measure}_filter'] = association.pop(measure_name)
+            
+            # removing temporary measures
+            association = {k: v for k, v in association.items() if '_measure' not in k}
+
+            # updating worst known association
+            worst_corr.update(association)
+
+        # stopping measurements if association is greater than threshold
+        if association.get(f'{measure}_filter') > params.get('thresh_corr', 1):
+            ranks = ranks.drop(feature, axis=0)  # removing feature from ranks
+            
+            return ranks, None
+    
+    return ranks, worst_corr
+
+def qualitative_filter(X: DataFrame, ranks: DataFrame, corr_measure: Callable, **params) -> Dict[str, Any]:
+    """ Computes max association between X and X (qualitative) excluding features 
+    that are correlated to a feature more associated with the target 
+    (defined by the ranks).
+
+    Parameters
+    ----------
+    thresh_corr, float: default 1.
+        Maximum association between features
+    """
+    
+    # accessing the prefered order
+    prefered_order = ranks.index
+
+    # initiating list of maximum association per feature
+    associations = []
+    
+    # iterating over each feature by target association order
+    for feature in prefered_order:
+        
+        
+        # computing correlation with better features anf filtering out ranks
+        ranks, worst_corr = qualitative_worst_corr(X, feature, ranks, corr_measure, **params)
+        
+        # updating associations
+        if worst_corr:
+            associations += [worst_corr]
+
+    # formatting ouput to DataFrame
+    associations = DataFrame(associations).set_index('feature')
+            
+    # applying filter on association
+    associations = ranks.join(associations, how='right')
+    
+    return associations 
+
+def cramerv_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
+    """ Computes max Cramer's V between X and X (qualitative) excluding features 
+    that are correlated to a feature more associated with the target 
+    (defined by the ranks).
+
+    Parameters
+    ----------
+    thresh_corr, float: default 1.
+        Maximum association between features
+    """
+            
+    # applying quantitative filter with Cramer's V correlation    
+    return qualitative_filter(X, ranks, cramerv_measure, **params)
+
+def tschuprowt_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
+    """ Computes max Tschuprow's T between X and X (qualitative) excluding features 
+    that are correlated to a feature more associated with the target 
+    (defined by the ranks).
+
+    Parameters
+    ----------
+    thresh_corr, float: default 1.
+        Maximum association between features
+    """
+            
+    # applying quantitative filter with Tschuprow's T correlation
+    return qualitative_filter(X, ranks, tschuprowt_measure, **params)

@@ -21,12 +21,12 @@ class GroupedList(list):
     
     def __init__(self, iterable=()) -> None:
         """ An ordered list that historizes its elements' merges."""
-        
-        # case 0: iterable est le dictionnaire contained
+
+        # case 0: iterable is the contained dict
         if isinstance(iterable, dict):
             
             # récupération des valeurs de la liste (déjà ordonné)
-            values = [key for key, _ in iterable.items()]
+            values = [key for key in iterable]
 
             # initialsiation de la liste
             super().__init__(values)
@@ -34,8 +34,8 @@ class GroupedList(list):
             # attribution des valeurs contenues
             self.contained = {k: v for k, v in iterable.items()}
         
-        # case 1: s'il ne s'agit pas déjà d'une liste groupée -> création des groupes
-        elif isinstance(iterable, GroupedList):
+        # case 1: copying a GroupedList
+        elif hasattr(iterable, 'contained'):
 
             # initialsiation de la liste
             super().__init__(iterable)
@@ -43,8 +43,8 @@ class GroupedList(list):
             # copie des groupes
             self.contained = {k: v for k, v in iterable.contained.items()}
         
-        # case 2: il s'agit d'une GroupedList -> copie des groupes
-        else:
+        # case 2: initiating GroupedList from a list
+        elif isinstance(iterable, list):
 
             # initialsiation de la liste
             super().__init__(iterable)
@@ -61,19 +61,24 @@ class GroupedList(list):
     def group(self, discarded: Any, kept: Any) -> None:
         """ Groups the discarded value with the kept value"""
 
+        # checking that those values are distinct
         if not is_equal(discarded, kept):
 
+            # checking that those values exist in the list
             assert discarded in self, f"{discarded} not in list"
             assert kept in self, f"{kept} not in list"
 
+            # accessing values contained in each value
             contained_discarded = self.contained.get(discarded)
             contained_kept = self.contained.get(kept)
 
+            # updating contained dict
             self.contained.update({
                 kept: contained_discarded + contained_kept,
                 discarded: []
             })
 
+            # removing discarded from the list
             self.remove(discarded)
         
         return self
@@ -100,14 +105,18 @@ class GroupedList(list):
         keys = list(sort(keys_str)) + list(sort(keys_float)) 
 
         # recreating an ordered GroupedList
-        self = GroupedList({key: self.get(key) for key in keys})
+        self = GroupedList({k: self.get(k) for k in keys})
 
         return self
 
     def sort_by(self, ordering: List[Any]) -> None:
         """ Sorts the values of the list and dict, if any, NaNs are the last. """
 
-        # recreating an ordered GroupedList
+        # checking that all values are given an order
+        assert all([o in self for o in ordering]), f"Unknown values in ordering: {', '.join([str(v) for v in ordering if v not in self])}"
+        assert all([s in ordering for s in self]), f"Missing value from ordering: {', '.join([str(v) for v in self if v not in ordering])}"
+
+        # ordering the contained
         self = GroupedList({k: self.get(k) for k in ordering})
 
         return self
@@ -130,8 +139,8 @@ class GroupedList(list):
         found = self.contained.get(key)
 
         # copying with dictionnaries (not working with numpy.nan)
-        if isna(key):
-            found = [value for dict_key, value in self.contained.items() if is_equal(dict_key, key)][0]
+        # if isna(key):
+            # found = [value for dict_key, value in self.contained.items() if is_equal(dict_key, key)][0]
 
         return found
 
@@ -142,6 +151,8 @@ class GroupedList(list):
 
         if any(found):
             return found[0]
+        else:
+        	return value
 
     def values(self) -> List[Any]:
         """ returns all values contained in each group """
@@ -168,7 +179,7 @@ class GroupedList(list):
 
             # accessing group's values
             values = self.get(group)
-            
+
             if len(values) == 0:  # case 0: there are no value in this group
                 pass
             
@@ -184,51 +195,61 @@ class GroupedList(list):
         return repr
 
 
-class StringConverter(BaseEstimator, TransformerMixin):
-    """ Converts specified columns a DataFrame into str
+class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
     
-     - Keeps NaN inplace
-     - Converts floats of int to int
-
-    Parameters
-    ----------
-    features: list, default []
-        List of columns to be converted to string.
-    """
-    
-    def __init__(self, features: List[str]=[], copy: bool=False) -> None:
-    
-        self.features = features[:]
+    def __init__(self, values_orders: Dict[str, Any], *, 
+    	copy: bool=False, output: type= float,
+    	str_nan: str=None, verbose: bool=False) -> None:
+        
+        self.features = list(values_orders.keys())
+        self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
         self.copy = copy
+        self.output = output
+        self.verbose = verbose
+        self.str_nan = str_nan
         
-    def fit(self, X: DataFrame, y: Series=None):
-        
+    def fit(self, X, y=None) -> None:
+
         return self
-        
+    
     def transform(self, X: DataFrame, y: Series=None) -> DataFrame:
-        
-        # copying DataFrame if requested
+
+        # copying dataframes
         Xc = X
         if self.copy:
             Xc = X.copy()
 
-        # storing nans
-        nans = isna(Xc[self.features])
+        # filling up nans with specified value
+        if self.str_nan:
+            Xc[self.features] = Xc[self.features].fillna(self.str_nan)
 
-        # storing ints
-        ints = Xc[self.features].applymap(lambda u: isinstance(u, float) and float.is_integer(u))
-        
-        # converting to string
-        Xc[self.features] = Xc[self.features].astype(str)
-        
-        # converting to int-strings
-        converted_ints = Xc[ints][self.features].applymap(lambda u: str(int(float(u))) if isinstance(u, str) else u)
-        Xc[self.features] = select([ints], [converted_ints], default=Xc[self.features])
-        
-        # converting back to nan
-        Xc[nans] = nan
-        
+        # iterating over each feature
+        for n, feature in enumerate(self.features):
+            
+            # verbose if requested
+            if self.verbose: 
+                print(f" - [GroupedListDiscretizer] Transform {feature} ({n+1}/{len(self.features)})")
+            
+            # bucketizing feature
+            order = self.values_orders.get(feature)  # récupération des groupes
+            to_discard = [order.get(group) for group in order]  # identification des valeur à regrouper
+            to_input = [Xc[feature].isin(discarded) for discarded in to_discard]  # identifying main bucket value
+            to_keep = [n if self.output == float else group for n, group in enumerate(order)]  # récupération du groupe dans lequel regrouper
+
+            # case when there are no values
+            if len(to_input)==0 & len(to_keep)==0:
+                pass
+
+            # grouping modalities
+            else:
+                Xc[feature] = select(to_input, to_keep, default=Xc[feature])
+
+        # converting to float
+        if self.output == float:
+            Xc[self.features] = Xc[self.features].astype(float16)
+
         return Xc
+
 
 class QualitativeDiscretizer(BaseEstimator, TransformerMixin):
     """ Automatic discretizing of categorical and categorical ordinal features.
@@ -261,24 +282,23 @@ class QualitativeDiscretizer(BaseEstimator, TransformerMixin):
     
     def __init__(self, features: List[str], min_freq: float, *,
                  values_orders: Dict[str, Any]={}, copy: bool=False, 
-                 verbose: bool=False, dropna: bool=False) -> None:
+                 verbose: bool=False) -> None:
     
         self.features = features[:]
         self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
-        self.ordinal_features = [f for f in values_orders if f in features]
+        self.ordinal_features = [f for f in values_orders if f in features]  # ignores non qualitative features
         self.non_ordinal_features = [f for f in features if f not in self.ordinal_features]
         self.min_freq = min_freq
         self.pipe: List[BaseEstimator] = []
         self.copy = copy
         self.verbose = verbose
-        self.dropna = dropna
         
     def prepare_data(self, X: DataFrame, y: Series) -> DataFrame:
         """ Checking data for bucketization"""
         
         # checking for quantitative columns
         is_object = X[self.features].dtypes.apply(is_string_dtype)
-        assert all(is_object), f"Non-string features: {', '.join(is_object[~is_object].index)}, consider using StringConverter."
+        assert all(is_object), f"Non-string features: {', '.join(is_object[~is_object].index)}, consider using Converters.StringConverter."
         
         # checking for binary target
         y_values = unique(y)
@@ -306,9 +326,10 @@ class QualitativeDiscretizer(BaseEstimator, TransformerMixin):
         if len(self.ordinal_features) > 0:
 
             # discretizing
-            ordinal_orders = {f: self.values_orders[f] for f in self.ordinal_features}
-            discretizer = ClosestDiscretizer(ordinal_orders, min_freq=self.min_freq, 
-                                             verbose=self.verbose)
+            ordinal_orders = {k: GroupedList(v) for k, v in self.values_orders.items() if k in self.ordinal_features}
+            discretizer = ClosestDiscretizer(
+                ordinal_orders, min_freq=self.min_freq, verbose=self.verbose
+            )
             discretizer.fit(Xc, y)
 
             # storing results
@@ -321,7 +342,7 @@ class QualitativeDiscretizer(BaseEstimator, TransformerMixin):
             # Grouping rare modalities
             discretizer = DefaultDiscretizer(self.non_ordinal_features, min_freq=self.min_freq, 
                                              values_orders=self.values_orders,
-                                             verbose=self.verbose, dropna=self.dropna)
+                                             verbose=self.verbose)
             discretizer.fit(Xc, y)
 
             # storing results
@@ -367,7 +388,7 @@ class QuantitativeDiscretizer(BaseEstimator, TransformerMixin):
     """
     
     def __init__(self, features: List[str], q: int, *, values_orders: Dict[str, Any]={}, copy: bool=False, 
-                 verbose: bool=False, dropna: bool=False) -> None:
+                 verbose: bool=False) -> None:
         
         self.features = features[:]
         self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
@@ -488,19 +509,20 @@ class Discretizer(BaseEstimator, TransformerMixin):
         Exemple: for an `age` feature, `values_orders` could be `{'age': ['0-18', '18-30', '30-50', '50+']}`.
     """
 
-    def __init__(self, quanti_features: List[str], quali_features: List[str], q: int, min_freq: float, *, 
-                 values_orders: Dict[str, Any]={}, copy: bool=False, verbose: bool=False, dropna: bool=False) -> None:
+    def __init__(self, quanti_features: List[str], quali_features: List[str], min_freq: float, *, 
+                 values_orders: Dict[str, Any]={}, copy: bool=False, verbose: bool=False) -> None:
 
         self.features = quanti_features[:] + quali_features[:]
         self.quanti_features = quanti_features[:]
+        assert len(list(set(quanti_features))) == len(quanti_features), "Column duplicates in quanti_features"
         self.quali_features = quali_features[:]
+        assert len(list(set(quali_features))) == len(quali_features), "Column duplicates in quali_features"
         self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
         self.min_freq = min_freq
-        self.q = q
+        self.q = int(1 / min_freq)  # number of quantiles
         self.pipe: List[BaseEstimator] = []
         self.copy = copy
         self.verbose = verbose
-        self.dropna = dropna
 
     def fit(self, X: DataFrame, y: Series) -> None:
 
@@ -515,7 +537,7 @@ class Discretizer(BaseEstimator, TransformerMixin):
             discretizer = QualitativeDiscretizer(
                 self.quali_features, min_freq=self.min_freq,
                 values_orders=self.values_orders, copy=self.copy,
-                verbose=self.verbose, dropna=self.dropna
+                verbose=self.verbose
             )
             discretizer.fit(X, y)
 
@@ -534,7 +556,7 @@ class Discretizer(BaseEstimator, TransformerMixin):
             discretizer = QuantitativeDiscretizer(
                 self.quanti_features, q=self.q,
                 values_orders=self.values_orders, copy=self.copy,
-                verbose=self.verbose, dropna=self.dropna
+                verbose=self.verbose
             )
             discretizer.fit(X, y)
 
@@ -562,54 +584,6 @@ class Discretizer(BaseEstimator, TransformerMixin):
         return Xc
 
 
-class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
-    
-    def __init__(self, values_orders: Dict[str, Any], *, copy: bool=False, output: type= float, verbose: bool=False) -> None:
-        
-        self.features = list(values_orders.keys())
-        self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
-        self.copy = copy
-        self.output = output
-        self.verbose = verbose
-        
-    def fit(self, X, y=None) -> None:
-        """ Does nothing, info is found in values_orders"""
-
-        return self
-    
-    def transform(self, X: DataFrame, y: Series=None) -> DataFrame:
-
-        # copying dataframes
-        Xc = X
-        if self.copy:
-            Xc = X.copy()
-
-        # iterating over each feature
-        for n, feature in enumerate(self.features):
-            
-            # verbose if requested
-            if self.verbose: 
-                print(f" - [GroupedListDiscretizer] Transform {feature} ({n+1}/{len(self.features)})")
-            
-            # bucketizing feature
-            order = self.values_orders.get(feature)  # récupération des groupes
-            to_discard = [order.get(group) for group in order]  # identification des valeur à regrouper
-            to_input = [Xc[feature].isin(discarded) for discarded in to_discard]  # identifying main bucket value
-            to_keep = [n if self.output == float else group for n, group in enumerate(order)]  # récupération du groupe dans lequel regrouper
-
-            # case when there are no values
-            if len(to_input)==0 & len(to_keep)==0:
-                pass
-
-            # grouping modalities
-            else:
-                Xc[feature] = select(to_input, to_keep, default=Xc[feature])
-
-        # converting to float
-        if self.output == float:
-            Xc[self.features] = Xc[self.features].astype(float16)
-
-        return Xc
 
 class ChainedDiscretizer(GroupedListDiscretizer):
     
@@ -632,7 +606,10 @@ class ChainedDiscretizer(GroupedListDiscretizer):
         
         # iterating over each feature
         for n, feature in enumerate(self.features):
-            if self.verbose: print(f" - [ChainedDiscretizer] Fit {feature} ({n+1}/{len(self.features)})")
+
+            # verbose if requested
+            if self.verbose:
+                print(f" - [ChainedDiscretizer] Fit {feature} ({n+1}/{len(self.features)})")
 
             # computing frequencies of each modality
             frequencies = Xc[feature].value_counts(dropna=False, normalize=True).drop(nan, errors='ignore')  # dropping nans to keep them anyways
@@ -727,7 +704,10 @@ class QuantileDiscretizer(BaseEstimator, TransformerMixin):
         
         # iterating over each feature
         for n, feature in enumerate(self.features):
-            if self.verbose: print(f" - [QuantileDiscretizer] Transform {feature} ({n+1}/{len(self.features)})")
+
+            # verbose if requested
+            if self.verbose:
+                print(f" - [QuantileDiscretizer] Transform {feature} ({n+1}/{len(self.features)})")
 
             nans = isna(Xc[feature])  # keeping track of nans
 
@@ -856,7 +836,7 @@ class DefaultDiscretizer(BaseEstimator, TransformerMixin):
     def __init__(
         self, features: List[str], min_freq: float, *, 
         values_orders: Dict[str, Any]={},
-        default_value: str='__OTHER__', dropna: bool=False, 
+        default_value: str='__OTHER__',
         copy: bool=False, verbose: bool=False) -> None:
         """ Groups a qualitative features' values less frequent than min_freq into a default_value"""
         
@@ -866,7 +846,6 @@ class DefaultDiscretizer(BaseEstimator, TransformerMixin):
         self.default_value = default_value[:]
         self.copy = copy
         self.verbose = verbose
-        self.dropna = dropna
 
     def fit(self, X: DataFrame, y: Series) -> None:
 
@@ -877,20 +856,27 @@ class DefaultDiscretizer(BaseEstimator, TransformerMixin):
         target_rates = X[self.features].apply(target_rate, y=y, dropna=True, ascending=True, axis=0)
 
         # attributing orders to each feature
-        self.values_orders.update({feature: GroupedList(list(target_rates[feature])) for feature in self.features})
+        self.values_orders.update({f: GroupedList(list(target_rates[f])) for f in self.features})
         
-        #number of unique modality perf feature
-        nuniques = X[self.features].apply(nunique, dropna=self.dropna, axis=0)
+        #number of unique modality per feature
+        nuniques = X[self.features].apply(nunique, dropna=False, axis=0)
             
         # identifying modalities which are the most common
-        kept_nan = [nan] * (~self.dropna)  # whether or not to keep nans whatever there frequency
-        self.to_keep = {
-            feature: kept_nan[:] + [
-                value for value, frequency in frequencies[feature].items()
-                    if ((frequency >= self.min_freq) & notna(value)) | (nuniques[feature] <= 2)
-            ] for feature in self.features
-        }
-        
+        self.to_keep: Dict[str, Any] = {}  # dict of features and corresponding kept modalities
+
+        # iterating over each feature
+        for feature in self.features:
+
+            # checking for binary features
+            if nuniques[feature] > 2:
+                kept = [val for val, freq in frequencies[feature].items() if freq >= self.min_freq]
+
+            # keeping all modalities of binary features
+            else:
+                kept = [val for val, freq in frequencies[feature].items()]
+
+            self.to_keep.update({feature: kept})
+
         # grouping rare modalities 
         for n, feature in enumerate(self.features):
 
@@ -933,7 +919,10 @@ class DefaultDiscretizer(BaseEstimator, TransformerMixin):
 
         # grouping values inside groups of modalities
         for n, feature in enumerate(self.features):
-            if self.verbose: print(f" - [DefaultDiscretizer] Transform {feature} ({n+1}/{len(self.features)})")
+
+        	# verbose if requested
+            if self.verbose: 
+                print(f" - [DefaultDiscretizer] Transform {feature} ({n+1}/{len(self.features)})")
 
             # grouping modalities
             Xc[feature] = select([~Xc[feature].isin(self.to_keep[feature])], [self.default_value], default=Xc[feature])
@@ -1046,7 +1035,7 @@ def find_common_modalities(df_feature: Series, y: Series, min_freq: float, order
     else:
         
         # computing frequencies and target rate of each modality
-        init_frequencies = df_feature.value_counts(dropna=False, normalize=True).drop(nan, errors='ignore')  # dropping nans to keep them anyways
+        init_frequencies = df_feature.value_counts(dropna=False, normalize=False) / len_df
         init_values, init_frequencies = init_frequencies.index, init_frequencies.values
         
         # ordering
