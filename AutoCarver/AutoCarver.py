@@ -1,4 +1,4 @@
-from Discretizers import GroupedList, GroupedListDiscretizer, is_equal
+from .Discretizers import GroupedList, GroupedListDiscretizer, is_equal
 from IPython.display import display_html
 from matplotlib.pyplot import subplots, show
 from matplotlib.ticker import PercentFormatter
