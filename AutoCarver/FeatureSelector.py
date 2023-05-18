@@ -24,29 +24,48 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
     measures, List[Callable]: default list().
         List of association measures to be used.
         Implemented measures are:
-            - For association evaluation: `kruskal_measure`, `R_measure`
-            - For outlier detection: `zscore_measure`, `iqr_measure`
+            [Quantitative Features] 
+             - For association evaluation: `kruskal_measure`, `R_measure`
+             - For outlier detection: `zscore_measure`, `iqr_measure`
+            [Qualitative Features] 
+             - For correlation: `chi2_measure`, `cramerv_measure`, `tschuprowt_measure`
         Ranks features based on last measure of the list.
     filters, List[Callable]: default list().
         List of filters to be used.
         Implemented filters are:
-          - For linear correlation: `spearman_filter`, `pearson_filter`
-          - For multicoloinearity: `vif_filter`
+            [Quantitative Features] 
+             - For linear correlation: `spearman_filter`, `pearson_filter`
+             - For multicoloinearity: `vif_filter`
+            [Qualitative Features] 
+             - For correlation: `cramerv_filter`, `tschuprowt_filter`
 
-    params examples
-    ---------------
+    Thresholds (to be passed as kwargs)
+    ----------
+    thresh, float: default 0.
+        Minimum association between target and features
+        To be used with: `association_filter`
+    measure, str
+        Measure to be used for minimum association filtering
+        To be used with: `association_filter`
     thresh_nan, float: default 1.
         Maximum percentage of NaNs in a feature
+        To be used with: `nans_measure`
     thresh_mode, float: default 1.
         Maximum percentage of the mode of a feature
+        To be used with: `mode_measure`
     thresh_outlier, float: default 1.
         Maximum percentage of Outliers in a feature
+        To be used with: `iqr_measure`, `zscore_measure`
     thresh_corr, float: default 1.
         Maximum association between features
+        To be used with: `spearman_filter`, `pearson_filter`, `cramerv_filter`, `tschuprowt_filter`
     thresh_vif, float: default inf
         Maximum VIF between features
-    ascending, bool: default False
-        Ascending of Descending sort by sort_measure
+        To be used with: `vif_filter`
+    ascending, bool default False
+        According to this measure:
+         - True: Lower values of the measure are to be considered as more associated to the target
+         - False: Higher values of the measure are to be considered as more associated to the target
     """
     
     def __init__(self, features: List[str], n_best: int, measures: List[Callable]=list(), filters: List[Callable]=list(),
@@ -82,8 +101,10 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-    ascending, bool: default False
-      Ascending of Descending sort by sort_measure
+    ascending, bool default False
+        According to this measure:
+         - True: Lower values of the measure are to be considered as more associated to the target
+         - False: Higher values of the measure are to be considered as more associated to the target
     """
         
         # applying association measure to each column
@@ -103,8 +124,10 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-    ascending, bool: default False
-      Ascending of Descending sort by sort_measure
+    ascending, bool default False
+        According to this measure:
+         - True: Lower values of the measure are to be considered as more associated to the target
+         - False: Higher values of the measure are to be considered as more associated to the target
     """
         
         # ordering features by sort_by
@@ -180,18 +203,19 @@ def nans_measure(active: bool, association: Dict[str, Any], x: Series, y: Series
       Maximum percentage of NaNs in a feature
     """
     
-    passed = True  # whether or not tests where passed
+    # whether or not tests where passed
+    if active:
     
-    nans = x.isnull()  # ckecking for nans
-    pct_nan = nans.mean()   # Computing percentage of nans
+        nans = x.isnull()  # ckecking for nans
+        pct_nan = nans.mean()   # Computing percentage of nans
     
-    # updating association
-    association.update({'pct_nan': pct_nan})
+        # updating association
+        association.update({'pct_nan': pct_nan})
     
-    # Excluding feature that have to many NaNs
-    passed = pct_nan < params.get('thresh_nan', 1.)
+        # Excluding feature that have to many NaNs
+        active = pct_nan < params.get('thresh_nan', 1.)
     
-    return passed, association
+    return active, association
 
 def dtype_measure(active: bool, association: Dict[str, Any], x: Series, y: Series=None, **params) -> Tuple[bool, Dict[str, Any]]:
     """ Gets dtype"""
@@ -210,18 +234,19 @@ def mode_measure(active: bool, association: Dict[str, Any], x: Series, y: Series
       Maximum percentage of the mode of a feature
     """
     
-    passed = True  # whether or not tests where passed
+    # whether or not tests where passed
+    if active:
     
-    mode = x.mode(dropna=True).values[0]  # computing mode
-    pct_mode = (x == mode).mean()  # Computing percentage of the mode
+        mode = x.mode(dropna=True).values[0]  # computing mode
+        pct_mode = (x == mode).mean()  # Computing percentage of the mode
     
-    # updating association
-    association.update({'pct_mode': pct_mode, 'mode': mode})
+        # updating association
+        association.update({'pct_mode': pct_mode, 'mode': mode})
     
-    # Excluding feature with too frequent modes
-    passed = pct_mode < params.get('thresh_mode', 1.)
+        # Excluding feature with too frequent modes
+        active = pct_mode < params.get('thresh_mode', 1.)
     
-    return passed, association
+    return active, association
 
 def kruskal_measure(active: bool, association: Dict[str, Any], x: Series, y: Series, **params) -> Tuple[bool, Dict[str, Any]]:
     """ Kruskal-Wallis statistic between x (quantitative) and y (binary)"""
@@ -291,7 +316,7 @@ def zscore_measure(active: bool, association: Dict[str, Any], x: Series, y: Seri
         })
 
         # Excluding feature with too frequent modes
-        passed = pct_zscore < params.get('thresh_outlier', 1.)
+        active = pct_zscore < params.get('thresh_outlier', 1.)
         
     return active, association
 
@@ -325,7 +350,7 @@ def iqr_measure(active: bool, association: Dict[str, Any], x: Series, y: Series=
         })
 
         # Excluding feature with too frequent modes
-        passed = pct_iqr < params.get('thresh_outlier', 1.)
+        active = pct_iqr < params.get('thresh_outlier', 1.)
         
     return active, association
 
@@ -414,12 +439,30 @@ def tschuprowt_measure(active: bool, association: Dict[str, Any],x: Series,
     return active, association
 
     
-# FILTERS        
+# FILTERS 
 def thresh_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
     """ Filters out missing association measure (did not pass a threshold)"""
     
     # drops rows with nans
     associations = ranks.dropna(axis=0)
+    
+    return associations
+
+def measure_filter(X: DataFrame, ranks: DataFrame, thresh: float, measure: str, **params) -> Dict[str, Any]:
+    """ Filters out specified measure's lower ranks than threshold
+
+    Parameters
+    ----------
+    thresh, float: default 0.
+        Minimum association between target and features
+        To be used with: `association_filter`
+    measure, str
+        Measure to be used for minimum association filtering
+        To be used with: `association_filter`
+    """
+    
+    # drops rows with nans
+    associations = ranks[ranks[measure] > thresh]
     
     return associations
 
@@ -431,7 +474,7 @@ def quantitative_filter(X: DataFrame, ranks: DataFrame, corr_measure: str, **par
     Parameters
     ----------
     thresh_corr, float: default 1.
-      Maximum association between features
+        Maximum association between features
     """
     
     # accessing the prefered order

@@ -24,6 +24,7 @@ class GroupedList(list):
 
         # case 0: iterable is the contained dict
         if isinstance(iterable, dict):
+        	# TODO: check thaht keys are in list
             
             # récupération des valeurs de la liste (déjà ordonné)
             values = [key for key in iterable]
@@ -33,6 +34,10 @@ class GroupedList(list):
 
             # attribution des valeurs contenues
             self.contained = {k: v for k, v in iterable.items()}
+
+            # adding key to itself if that's not the case
+            for k in [k for k in values if k not in self.contained.get(k)]:
+            	self.contained.update({k: self.contained.get(k) + [k]})
         
         # case 1: copying a GroupedList
         elif hasattr(iterable, 'contained'):
@@ -89,6 +94,18 @@ class GroupedList(list):
         self += [new_value]
         
         self.contained.update({new_value: [new_value]})
+        
+        return self
+        
+    def update(self, new_value: Dict[Any, List[Any]]) -> None:
+        """ Updates the GroupedList via a dict"""
+        
+        # adding keys to the order if they are new values
+        for k in [c for c in new_value if c not in self]:
+            self += new_value.keys()
+        
+        # updating contained accord to new_value
+        self.contained.update(new_value)
         
         return self
 
@@ -257,6 +274,8 @@ class QualitativeDiscretizer(BaseEstimator, TransformerMixin):
     Modalities/values of features are grouped according to there respective orders:
      - [Qualitative features] order based on modality target rate.
      - [Qualitative ordinal features] user-specified order.
+
+    TODO: pass ordinal_features/qualitati_features as parameters to be able to pass values_orders with other orders (ex: from chaineddiscretizer)
 
     Parameters
     ----------
@@ -587,22 +606,27 @@ class Discretizer(BaseEstimator, TransformerMixin):
 
 class ChainedDiscretizer(GroupedListDiscretizer):
     
-    def __init__(self, features: List[str], min_freq: float, chained_orders: List[List[Any]], *, copy: bool=False, verbose: bool=False) -> None:       
+    def __init__(self, features: List[str], min_freq: float, chained_orders: List[GroupedList], *, 
+                 remove_unknown: bool=False, str_nan: str='__NAN__', copy: bool=False, verbose: bool=False) -> None:       
         
         self.min_freq = min_freq
         self.features = features[:]
         self.chained_orders = [GroupedList(order) for order in chained_orders]
         self.copy = copy
         self.verbose = verbose
+
+        # parameters to handle missing/unknown values
+        self.remove_unknown = remove_unknown
+        self.str_nan = str_nan
         
         # initiating features' values orders to all possible values
         self.known_values = list(set([value for group in self.chained_orders for value in group.values()]))
-        self.values_orders = {f: GroupedList(self.known_values[:]) for f in self.features}
+        self.values_orders = {f: GroupedList(self.known_values[:] + [self.str_nan]) for f in self.features}
 
     def fit(self, X: DataFrame, y: Series=None) -> None:
         
-        # copying dataframe
-        Xc = X[self.features].copy()
+        # filling nans
+        Xc = X[self.features].fillna(self.str_nan)
         
         # iterating over each feature
         for n, feature in enumerate(self.features):
@@ -612,12 +636,25 @@ class ChainedDiscretizer(GroupedListDiscretizer):
                 print(f" - [ChainedDiscretizer] Fit {feature} ({n+1}/{len(self.features)})")
 
             # computing frequencies of each modality
-            frequencies = Xc[feature].value_counts(dropna=False, normalize=True).drop(nan, errors='ignore')  # dropping nans to keep them anyways
+            frequencies = Xc[feature].value_counts(normalize=True)
             values, frequencies = frequencies.index, frequencies.values
 
             # checking for unknown values (values to present in an order of self.chained_orders)
             missing = [value for value in values if notna(value) and (value not in self.known_values)]
-            assert not any(missing), f"Order needs to be provided for values: {missing}"
+
+            # converting unknown values to NaN
+            if self.remove_unknown & (len(missing) > 0):
+
+            	# alerting user
+                print(f"Order for {feature} was not provided for values: {missing}, these values will be converted to '{self.str_nan}' (policy remove_unknown=True)")
+
+                # adding missing valyes to the order
+                order = self.values_orders.get(feature)
+                order.update({self.str_nan: missing + order.get(self.str_nan)})
+
+            # alerting user
+            else:
+                assert not len(missing) > 0, f"Order for {feature} needs to be provided for values: {missing}, otherwise set remove_unknown=True"
 
             # iterating over each specified orders
             for order in self.chained_orders:
@@ -638,7 +675,7 @@ class ChainedDiscretizer(GroupedListDiscretizer):
                 frequencies = Xc[feature].value_counts(dropna=False, normalize=True).drop(nan, errors='ignore')  # dropping nans to keep them anyways
                 values, frequencies = frequencies.index, frequencies.values
         
-        super().__init__(self.values_orders, copy=self.copy, output=str)
+        super().__init__(self.values_orders, str_nan=self.str_nan, copy=self.copy, output=str)
         super().fit(X, y)
             
         return self
@@ -837,6 +874,7 @@ class DefaultDiscretizer(BaseEstimator, TransformerMixin):
         self, features: List[str], min_freq: float, *, 
         values_orders: Dict[str, Any]={},
         default_value: str='__OTHER__',
+        str_nan: str='__NAN__',
         copy: bool=False, verbose: bool=False) -> None:
         """ Groups a qualitative features' values less frequent than min_freq into a default_value"""
         
@@ -844,22 +882,26 @@ class DefaultDiscretizer(BaseEstimator, TransformerMixin):
         self.min_freq = min_freq
         self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
         self.default_value = default_value[:]
+        self.str_nan = str_nan[:]
         self.copy = copy
         self.verbose = verbose
 
     def fit(self, X: DataFrame, y: Series) -> None:
 
+        # filling up NaNs
+        Xc = X[self.features].fillna(self.str_nan)
+
         # computing frequencies of each modality
-        frequencies = X[self.features].apply(value_counts, dropna=False, normalize=True, axis=0)
+        frequencies = Xc.apply(value_counts, normalize=True, axis=0)
 
         # computing ordered target rate per modality for ordering
-        target_rates = X[self.features].apply(target_rate, y=y, dropna=True, ascending=True, axis=0)
+        target_rates = Xc.apply(target_rate, y=y, ascending=True, axis=0)
 
         # attributing orders to each feature
         self.values_orders.update({f: GroupedList(list(target_rates[f])) for f in self.features})
         
-        #number of unique modality per feature
-        nuniques = X[self.features].apply(nunique, dropna=False, axis=0)
+        # number of unique modality per feature
+        nuniques = Xc.apply(nunique, axis=0)
             
         # identifying modalities which are the most common
         self.to_keep: Dict[str, Any] = {}  # dict of features and corresponding kept modalities
@@ -883,8 +925,7 @@ class DefaultDiscretizer(BaseEstimator, TransformerMixin):
         	# printing verbose
             if self.verbose:
                 print(f" - [DefaultDiscretizer] Fit {feature} ({n+1}/{len(self.features)})")
-            
-                
+
             # identifying values to discard (rare modalities)
             to_discard = [value for value in self.values_orders[feature] if value not in self.to_keep[feature]]
 
@@ -916,6 +957,9 @@ class DefaultDiscretizer(BaseEstimator, TransformerMixin):
         Xc = X
         if self.copy:
             Xc = X.copy()
+
+        # filling up NaNs
+        Xc[self.features] = Xc[self.features].fillna(self.str_nan)
 
         # grouping values inside groups of modalities
         for n, feature in enumerate(self.features):

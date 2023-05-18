@@ -178,7 +178,9 @@ class AutoCarver(GroupedListDiscretizer):
 
         return self
 
+
     def get_best_combination(self, feature: str, X: DataFrame, y: Series, X_test: DataFrame=None, y_test: Series=None) -> Dict[str, Any]:
+    	""" Carves a feature"""
 
         # computing crosstabs
         # crosstab on TRAIN
@@ -195,33 +197,21 @@ class AutoCarver(GroupedListDiscretizer):
         if self.verbose:
             self.display_xtabs(feature, 'Raw', xtab, xtab_test)
 
-        # getting all possible combinations for the feature without NaNS
-        combinations = get_all_combinations(self.values_orders.get(feature), self.max_n_mod)
-
         # measuring association with target for each combination and testing for stability on TEST
-        best_groups = best_combination(combinations, self.sort_by, notna_xtab, notna_xtab_test)
+        best_groups = best_combination(self.values_orders.get(feature), self.max_n_mod, self.sort_by, notna_xtab, notna_xtab_test)
 
         # update of the values_orders grouped modalities in values_orders
         if best_groups:
             xtab, xtab_test = self.update_order(feature, best_groups['combination'], xtab, xtab_test)
 
         # testing adding NaNs to built groups
-        order = self.values_orders.get(feature)
         if (self.str_nan in xtab.index) & self.dropna:
 
-            # adding nans at the end of the order
-            order = order.append(self.str_nan)
-
-            # reordering order according to target rate
-            new_order = xtab[1].divide(xtab.sum(axis=1)).sort_values().index.tolist()
-            order = order.sort_by(new_order)
-            self.values_orders.update({feature: order})
-
-            # getting all possible combinations for the feature without NaNS
-            combinations = get_all_combinations(order, self.max_n_mod)
+            # adding NaN to the order
+            order = self.insert_nan(feature, xtab)
 
             # measuring association with target for each combination and testing for stability on TEST
-            best_groups = best_combination(combinations, self.sort_by, xtab, xtab_test)
+            best_groups = best_combination(self.values_orders.get(feature), self.max_n_mod, self.sort_by, xtab, xtab_test)
 
             # update of the values_orders grouped modalities in values_orders
             if best_groups:
@@ -232,6 +222,27 @@ class AutoCarver(GroupedListDiscretizer):
             self.display_xtabs(feature, 'Fitted', xtab, xtab_test)
 
         return best_groups
+
+    def insert_nan(self, feature: str, xtab: DataFrame) -> GroupedList:
+    	""" Inserts NaNs in the order"""
+
+    	# accessing order for specified feature
+        order = self.values_orders.get(feature)
+
+        # adding nans at the end of the order
+        order = order.append(self.str_nan)
+
+        # ordering modalities by target rate
+        new_order = xtab[1].divide(xtab.sum(axis=1)).sort_values().index.tolist()
+
+        # resetting order accordingly
+        order = order.sort_by(new_order)
+
+        # updating values_orders
+        self.values_orders.update({feature: order})
+
+        return order
+
 
     def update_order(self, feature: str, best_groups: GroupedList, xtab: DataFrame, xtab_test: DataFrame=None) -> Tuple[DataFrame, DataFrame]:
         """ Updates the values_orders and xtabs according to the best_groups"""
@@ -357,11 +368,14 @@ def apply_combination(xtab: DataFrame, combination: GroupedList) -> Dict[str, An
 
     return association
 
-def best_combination(combinations: List[GroupedList], sort_by: str, xtab: DataFrame, xtab_test: DataFrame=None):
+def best_combination(order: GroupedList, max_n_mod: int, sort_by: str, xtab: DataFrame, xtab_test: DataFrame=None):
     """ Finds the best combination of groups of feature's values:
      - Most associated combination on train sample 
      - Stable target rate of combination on test sample.
     """
+
+    # getting all possible combinations for the feature without NaNS
+    combinations = get_all_combinations(order, max_n_mod)
 
     # computing association measure per combination 
     associations = [apply_combination(xtab, combi) for combi in combinations]
