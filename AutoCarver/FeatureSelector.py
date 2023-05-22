@@ -2,6 +2,7 @@ from IPython.display import display_html
 from math import sqrt
 from numpy import triu, ones, nan, inf
 from pandas import DataFrame, Series, notna, crosstab
+from random import shuffle
 from scipy.stats import kruskal, chi2_contingency
 from sklearn.base import BaseEstimator, TransformerMixin
 from statsmodels.formula.api import ols
@@ -21,6 +22,12 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
         Features on which to compute association.
     n_best, int:
         Number of features to be selected
+    sample_size: float, default 1.
+        Should be set between ]0, 1]
+        Size of sampled list of features speeds up computation. 
+        By default, all features are used. For sample_size=0.5,
+        FeatureSelector will search for the best features in 
+        features[:len(features)//2] and then in features[len(features)//2:]
     measures, List[Callable]: default list().
         List of association measures to be used.
         Implemented measures are:
@@ -41,12 +48,12 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
 
     Thresholds (to be passed as kwargs)
     ----------
-    thresh, float: default 0.
+    thresh_measure, float: default 0.
         Minimum association between target and features
-        To be used with: `association_filter`
-    measure, str
+        To be used with: `measure_filter`
+    name_measure, str
         Measure to be used for minimum association filtering
-        To be used with: `association_filter`
+        To be used with: `measure_filter`
     thresh_nan, float: default 1.
         Maximum percentage of NaNs in a feature
         To be used with: `nans_measure`
@@ -69,12 +76,13 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
     """
     
     def __init__(self, features: List[str], n_best: int, measures: List[Callable]=list(), filters: List[Callable]=list(),
-                 copy: bool=True, verbose: bool=True, **params) -> None:
+                 sample_size: float=1., copy: bool=True, verbose: bool=True, **params) -> None:
         
         self.features = features[:]
         self.n_best = n_best
         assert n_best <= len(features), "Must set n_best <= len(features)"
         self.best_features = features[:]
+        self.sample_size = sample_size
         
         self.measures = [dtype_measure, nans_measure, mode_measure] + measures[:]
         self.filters = [thresh_filter] + filters[:]
@@ -96,7 +104,7 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
             
         return association
     
-    def measure_apply(self, X: DataFrame, y: Series) -> None:
+    def measure_apply(self, X: DataFrame, y: Series, features: List[str]) -> None:
         """ Measures association between columns of X and y
 
     Parameters
@@ -108,7 +116,7 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
     """
         
         # applying association measure to each column
-        self.associations = X[self.features].apply(self.measure, y=y, result_type='expand', axis=0).T
+        self.associations = X[features].apply(self.measure, y=y, result_type='expand', axis=0).T
         
         # filtering non association measure (pct_zscore, pct_iqr...)
         asso_measures = [c for c in self.associations if '_measure' in c]
@@ -149,12 +157,11 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
         style = style.set_caption(caption)
         display_html(style._repr_html_(), raw=True)
         
-    
-    def fit(self, X: DataFrame, y: Series) -> None:
-        """ Selects the n_best features"""
+    def fit_features(self, X: DataFrame, y: Series, features: List[str], n_best: int) -> List[str]:
+        """ Selects the n_best features amongst the specified ones"""
         
         # initial computation of all association measures
-        self.measure_apply(X, y)
+        self.measure_apply(X, y, features)
 
         # displaying association measure
         if self.verbose:
@@ -173,10 +180,48 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
             if n == 0 and self.verbose and len(self.filters) > 1:
                 self.display_stats(self.filtered_associations, 'Filtered association')
 
-        # retrieving the n_best features per ranking
+        # retrieving the n_best features per each ranking
+        best_features = []
         if len(self.sort_measures) > 0:
-            self.best_features = [feature for rank in ranks for feature in rank[:self.n_best]]
-            self.best_features = list(set(self.best_features))  # deduplicating
+            best_features = [feature for rank in ranks for feature in rank[:n_best]]
+            best_features = list(set(best_features))  # deduplicating
+        
+        return best_features
+    
+    def fit(self, X: DataFrame, y: Series) -> None:
+        """ Selects the n_best features"""
+        
+        # splitting features in chunks
+        if self.sample_size < 1:
+            
+            # shuffling features to get random samples of features
+            shuffle(self.features)
+
+            # number of features per sample
+            chunks = int(len(self.features) // (1 / self.sample_size))
+
+            # splitting feature list in samples
+            feature_samples = [self.features[chunks * i: chunks * (i + 1)] for i in range(int(1 / self.sample_size)-1)]
+
+            # adding last sample with all remaining features
+            feature_samples += [self.features[chunks * (int(1 / self.sample_size) - 1):]]
+
+            # iterating over each feature samples
+            best_features = []
+            for features in feature_samples:
+
+                # fitting association on features
+                best_features += self.fit_features(X, y, features, int(self.n_best // 2))
+        
+        # splitting in chunks not requested
+        else:
+            best_features = self.features[:]
+        
+        # final selection with all best_features selected
+        self.best_features = self.fit_features(X, y, best_features, self.n_best)
+            
+        # dropped features
+        self.dropped_features = [c for c in self.features if c not in self.best_features]
 
         return self
 
@@ -188,7 +233,7 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
             Xc.copy()
 
         # filtering out unwanted features
-        Xc = X.drop([c for c in self.features if c not in self.best_features], axis=1)
+        Xc = Xc.drop(self.dropped_features, axis=1)
 
         return Xc
 
@@ -448,21 +493,24 @@ def thresh_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
     
     return associations
 
-def measure_filter(X: DataFrame, ranks: DataFrame, thresh: float, measure: str, **params) -> Dict[str, Any]:
+def measure_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
     """ Filters out specified measure's lower ranks than threshold
 
     Parameters
     ----------
-    thresh, float: default 0.
+    thresh_measure, float: default 0.
         Minimum association between target and features
         To be used with: `association_filter`
-    measure, str
+    name_measure, str
         Measure to be used for minimum association filtering
         To be used with: `association_filter`
     """
     
+    associations = ranks.copy()
+
     # drops rows with nans
-    associations = ranks[ranks[measure] > thresh]
+    if 'name_measure' in params:
+        associations = ranks[ranks[params.get('name_measure')] > params.get('thresh_measure', 0.)]
     
     return associations
 

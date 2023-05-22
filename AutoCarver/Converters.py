@@ -71,7 +71,7 @@ class TimeDeltaConverter(BaseEstimator, TransformerMixin):
         
         self.features = features[:]
         self.copy = copy
-        self.delta_features: List[str] = []
+        self.new_features: List[str] = []
         self.nans = nans
         self.drop = drop
         
@@ -80,7 +80,7 @@ class TimeDeltaConverter(BaseEstimator, TransformerMixin):
         # creating list of names of delta featuers
         for i, date1 in enumerate(self.features):
             for date2 in self.features[i+1:]:
-                self.delta_features += [f'delta_{date1}_{date2}']
+                self.new_features += [f'delta_{date1}_{date2}']
         
         return self
     
@@ -110,6 +110,75 @@ class TimeDeltaConverter(BaseEstimator, TransformerMixin):
         
         return Xc
 
+class GroupNormalizer(BaseEstimator, TransformerMixin):
+    """ Normalizes a feature's values based on specified means and stds per groups' values
+
+    Parameters
+    ----------
+    groups: List[str]
+        List of qualitative features used to compute feature's mean/std per there modalities.
+    features: List[str]
+        List of quantitative features to be normalized.
+    """
+
+    def __init__(self, groups: List[str], features: List[str], copy: bool=True) -> None:
+        
+        self.features = features[:]
+        self.groups = groups[:]
+        
+        self.copy = copy
+        
+        self.group_means = dict()
+        self.group_stds = dict()
+        
+        self.new_features = list()
+
+    def fit(self, X: DataFrame, y: Series=None) -> None:
+        
+        # iterating over each grouping column
+        for group in self.groups:
+            
+            # computing group mean
+            self.group_means.update({group: X.groupby(group)[self.features].mean().to_dict()})
+            
+            # computing group std
+            self.group_stds.update({group: X.groupby(group)[self.features].std().to_dict()})
+            
+            # adding built features
+            self.new_features += [f"{f}_norm_{group}" for f in self.features]
+
+        return self
+
+    
+
+    def transform(self, X: DataFrame, y: Series=None) -> DataFrame:
+        
+        # coppying dataframe
+        Xc = X
+        if self.copy:
+            Xc = X.copy()
+        
+        # iterating over each group
+        for group in self.groups:
+            
+            # computing observation level mean
+            means = Xc[self.features].apply(lambda u: Xc[group].apply(self.group_means[group][u.name].get))
+
+            # computing observation level std
+            stds = Xc[self.features].apply(lambda u: Xc[group].apply(self.group_stds[group][u.name].get))
+            
+            # applying normalization to the feature
+            Xc = Xc.join(
+                Xc[self.features].sub(means)\
+                                 .replace(0, nan)\
+                                 .divide(stds)\
+                                 .rename({f: f"{f}_norm_{group}" for f in self.features}, axis=1)
+            )
+
+        del means
+        del stds
+        
+        return Xc
 
 class TanhNormalizer(BaseEstimator, TransformerMixin):
     """ Tanh Normalization that keeps data distribution and borns between 0 and 1
@@ -140,5 +209,53 @@ class TanhNormalizer(BaseEstimator, TransformerMixin):
         
         # applying tanh normalization
         Xc[self.features] = (tanh(Xc[self.features].sub(self.distribs['mean']).divide(self.distribs['std']) * 0.01) + 1 ) / 2
+        
+        return Xc
+
+class CrossConverter(BaseEstimator, TransformerMixin):
+    """ Normalizes a feature's values based on specified means and stds per groups' values
+
+    Parameters
+    ----------
+    features: List[str]
+        List of qualitative features to be crossed should be passed through AutoCarver early on.
+    """
+
+    def __init__(self, features: List[str], copy: bool=True) -> None:
+        
+        self.features = features[:]
+        self.copy = copy
+        self.new_features = list()
+
+    def fit(self, X: DataFrame, y: Series=None) -> None:
+        
+        # iterating over each feature
+        for i, feature in enumerate(self.features):
+            
+            # adding features names to the list of built features
+            self.new_features += [f'{f}_x_{feature}' for f in self.features[i+1:]]
+
+        return self
+
+    
+
+    def transform(self, X: DataFrame, y: Series=None) -> DataFrame:
+        
+        # coppying dataframe
+        Xc = X
+        if self.copy:
+            Xc = X.copy()
+            
+        # converting features to strings
+        Xc[self.features] = Xc[self.features].astype(str)
+        
+        # iterating over each group
+        for i, feature in enumerate(self.features):
+            
+            # applying normalization to the feature
+            Xc = Xc.join(
+                Xc[self.features[i+1:]].apply(lambda u: u + '_x_' + Xc[feature])\
+                                       .rename({f: f"{f}_x_{feature}" for f in self.features[i+1:]}, axis=1)
+            )
         
         return Xc

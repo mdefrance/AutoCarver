@@ -1,5 +1,5 @@
 from IPython.display import display_html
-from numpy import sort, nan, inf, float16, where, isin, argsort, array, select, append, quantile, linspace, argmin
+from numpy import sort, nan, inf, float32, where, isin, argsort, array, select, append, quantile, linspace, argmin
 from pandas import DataFrame, Series, isna, qcut, notna, unique
 from pandas.api.types import is_numeric_dtype, is_string_dtype
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -24,7 +24,7 @@ class GroupedList(list):
 
         # case 0: iterable is the contained dict
         if isinstance(iterable, dict):
-        	# TODO: check thaht keys are in list
+            # TODO: check thaht keys are in list
             
             # récupération des valeurs de la liste (déjà ordonné)
             values = [key for key in iterable]
@@ -37,7 +37,7 @@ class GroupedList(list):
 
             # adding key to itself if that's not the case
             for k in [k for k in values if k not in self.contained.get(k)]:
-            	self.contained.update({k: self.contained.get(k) + [k]})
+                self.contained.update({k: self.contained.get(k) + [k]})
         
         # case 1: copying a GroupedList
         elif hasattr(iterable, 'contained'):
@@ -169,7 +169,7 @@ class GroupedList(list):
         if any(found):
             return found[0]
         else:
-        	return value
+            return value
 
     def values(self) -> List[Any]:
         """ returns all values contained in each group """
@@ -215,8 +215,8 @@ class GroupedList(list):
 class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
     
     def __init__(self, values_orders: Dict[str, Any], *, 
-    	copy: bool=False, output: type= float,
-    	str_nan: str=None, verbose: bool=False) -> None:
+        copy: bool=False, output: type= float,
+        str_nan: str=None, verbose: bool=False) -> None:
         
         self.features = list(values_orders.keys())
         self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
@@ -263,7 +263,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
 
         # converting to float
         if self.output == float:
-            Xc[self.features] = Xc[self.features].astype(float16)
+            Xc[self.features] = Xc[self.features].astype(float32)
 
         return Xc
 
