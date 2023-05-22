@@ -386,7 +386,7 @@ def best_combination(order: GroupedList, max_n_mod: int, sort_by: str, xtab_trai
     else:
     
         # getting all possible combinations for the feature with NaNS
-        combinations = get_all_nan_combinations(order, str_nan)
+        combinations = get_all_nan_combinations(order, str_nan, max_n_mod)
 
     # computing association measure per combination 
     associations = [apply_combination(xtab, combi) for combi in combinations]
@@ -454,13 +454,13 @@ def get_all_combinations(values: GroupedList, max_n_mod: int=None, raw: bool=Fal
 
     return combinations
 
-def get_all_nan_combinations(order: GroupedList, str_nan: str) -> List[GroupedList]:
+def get_all_nan_combinations(order: GroupedList, str_nan: str, max_n_mod: int) -> List[GroupedList]:
     """ all possible combinations of modalities with numpy.nan"""
 
     # computing all non-NaN combinations
     # case 0: several modalities -> several combinations
     if len(order) > 1:
-        combinations = get_all_combinations(order, len(order), raw=True)
+        combinations = get_all_combinations(order, max_n_mod-1, raw=True)
     # case 1: unique or no modality -> two combinations
     else:
         combinations = []
