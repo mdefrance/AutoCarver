@@ -59,7 +59,7 @@ class GroupedList(list):
 
     def group_list(self, to_discard: List[Any], to_keep: Any) -> None:
         """ Groups elements to_discard into values to_keep"""
-
+        
         for discarded, kept in zip(to_discard, [to_keep] * len(to_discard)):
             self.group(discarded, kept)
 
@@ -620,7 +620,7 @@ class ChainedDiscretizer(GroupedListDiscretizer):
         self.str_nan = str_nan
         
         # initiating features' values orders to all possible values
-        self.known_values = list(set([value for group in self.chained_orders for value in group.values()]))
+        self.known_values = list(set([v for o in self.chained_orders for v in o.values()]))
         self.values_orders = {f: GroupedList(self.known_values[:] + [self.str_nan]) for f in self.features}
 
     def fit(self, X: DataFrame, y: Series=None) -> None:
@@ -645,7 +645,7 @@ class ChainedDiscretizer(GroupedListDiscretizer):
             # converting unknown values to NaN
             if self.remove_unknown & (len(missing) > 0):
 
-            	# alerting user
+                # alerting user
                 print(f"Order for {feature} was not provided for values: {missing}, these values will be converted to '{self.str_nan}' (policy remove_unknown=True)")
 
                 # adding missing valyes to the order
@@ -659,17 +659,27 @@ class ChainedDiscretizer(GroupedListDiscretizer):
             # iterating over each specified orders
             for order in self.chained_orders:
                 
-                # identifying modalities which rarest values
-                to_keep = values[frequencies >= self.min_freq]
+                # values that are frequent enough
+                to_keep = list(values[frequencies >= self.min_freq])
 
-                # grouping rare modalities
-                to_discard = [[value for value in order.get(group) if (not value in to_keep)] for group in order]  # identifying rare values
-                to_input = [Xc[feature].isin(discarded) for discarded in to_discard]  # identifying observation to input
-                Xc[feature] = select(to_input, to_input, default=Xc[feature])  # regroupement des naf peu fréquents
+                # all values from the order 
+                values_order = [o for v in order for o in order.get(v)]
+
+                # values from the order to group (not frequent enough or absent)
+                to_discard = [value for value in values_order if value not in to_keep]
+
+                # values to group into discarded values
+                value_to_group = [order.get_group(value) for value in to_discard]
+
+                # values of the series to input
+                df_to_input = [Xc[feature] == discarded for discarded in to_discard]  # identifying observation to input
+
+                # inputing non frequent values
+                Xc[feature] = select(df_to_input, value_to_group, default=Xc[feature])
                 
                 # historizing in the feature's order
-                for discarded, kept in zip(to_discard, order):
-                    self.values_orders.get(feature).group_list(discarded, kept)  # historisation dans l'order
+                for discarded, kept in zip(to_discard, value_to_group):
+                    self.values_orders.get(feature).group(discarded, kept)
                     
                 # updating frequencies of each modality for the next ordering
                 frequencies = Xc[feature].value_counts(dropna=False, normalize=True).drop(nan, errors='ignore')  # dropping nans to keep them anyways
@@ -964,7 +974,7 @@ class DefaultDiscretizer(BaseEstimator, TransformerMixin):
         # grouping values inside groups of modalities
         for n, feature in enumerate(self.features):
 
-        	# verbose if requested
+            # verbose if requested
             if self.verbose: 
                 print(f" - [DefaultDiscretizer] Transform {feature} ({n+1}/{len(self.features)})")
 
@@ -972,6 +982,7 @@ class DefaultDiscretizer(BaseEstimator, TransformerMixin):
             Xc[feature] = select([~Xc[feature].isin(self.to_keep[feature])], [self.default_value], default=Xc[feature])
 
         return Xc
+
 
 
 def find_quantiles(df_feature: Series, q: int, len_df: int=None, quantiles: List[float]=None) -> List[float]:

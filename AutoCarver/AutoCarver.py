@@ -203,7 +203,7 @@ class AutoCarver(GroupedListDiscretizer):
             xtab, xtab_test = self.update_order(feature, best_groups['combination'], xtab, xtab_test)
 
         # testing adding NaNs to built groups
-        if (self.str_nan in xtab.index) & self.dropna:
+        if (self.str_nan in xtab.index) & self.dropna & (self.str_nan not in self.values_orders.get(feature)):
 
             # measuring association with target for each combination and testing for stability on TEST
             best_groups = best_combination(self.values_orders.get(feature), self.max_n_mod, self.sort_by, xtab, xtab_test, dropna=False, str_nan=self.str_nan)
@@ -456,7 +456,7 @@ def get_all_combinations(values: GroupedList, max_n_mod: int=None, raw: bool=Fal
 
 def get_all_nan_combinations(order: GroupedList, str_nan: str, max_n_mod: int) -> List[GroupedList]:
     """ all possible combinations of modalities with numpy.nan"""
-
+    
     # computing all non-NaN combinations
     # case 0: several modalities -> several combinations
     if len(order) > 1:
@@ -484,7 +484,8 @@ def get_all_nan_combinations(order: GroupedList, str_nan: str, max_n_mod: int) -
             new_combinations += [pre + new_combination + nex]
             
     # adding NaN to order
-    order = order.append(str_nan)
+    if str_nan not in order:
+        order = order.append(str_nan)
     
     # converting back to GroupedList
     new_combinations = [groupedlist_combination(combination, order) for combination in new_combinations] 

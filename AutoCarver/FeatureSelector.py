@@ -326,7 +326,10 @@ def R_measure(active: bool, association: Dict[str, Any], x: Series, y: Series, *
         
         # updating association
         if regression.rsquared:
-            association.update({'R_measure': sqrt(regression.rsquared)})
+            if regression.rsquared >= 0:
+                association.update({'R_measure': sqrt(regression.rsquared)})
+            else:
+                association.update({'R_measure': nan})
         
     return active, association
 

@@ -1,7 +1,7 @@
 from numpy import select, nan, tanh
 from pandas import isna, notna, DataFrame, Series, to_datetime
 from sklearn.base import BaseEstimator, TransformerMixin
-from typing import List, Tuple, Any
+from typing import List, Tuple, Any, Dict
 
 
 class StringConverter(BaseEstimator, TransformerMixin):
@@ -225,15 +225,28 @@ class CrossConverter(BaseEstimator, TransformerMixin):
         
         self.features = features[:]
         self.copy = copy
-        self.new_features = list()
+        self.new_features: List[str] = list()
+        self.values: Dict[str, List[Any]] = dict()
 
     def fit(self, X: DataFrame, y: Series=None) -> None:
         
         # iterating over each feature
-        for i, feature in enumerate(self.features):
+        for i, feature1 in enumerate(self.features):
             
-            # adding features names to the list of built features
-            self.new_features += [f'{f}_x_{feature}' for f in self.features[i+1:]]
+            # unique values of feature1
+            unq1 = X[feature1].astype(str).unique()
+            
+            for feature2 in self.features[i+1:]:
+            
+                # adding features names to the list of built features
+                self.new_features += [f'{feature2}_x_{feature1}']
+            
+                # unique values of feature2
+                unq2 = X[feature2].astype(str).unique()
+                
+                self.values.update({
+                    f'{feature2}_x_{feature1}': [u2 + '_x_' + u1 for u2 in unq2 for u1 in unq1]
+                })
 
         return self
 
@@ -247,15 +260,27 @@ class CrossConverter(BaseEstimator, TransformerMixin):
             Xc = X.copy()
             
         # converting features to strings
-        Xc[self.features] = Xc[self.features].astype(str)
+        Xc_features = Xc[self.features].astype(str)
         
         # iterating over each group
         for i, feature in enumerate(self.features):
             
+            # features to cross with
+            Xc_tocross = Xc_features[self.features[i+1:]]
+            
+            # feature to be crossed
+            Xc_crosser = Xc_features[feature]
+
+            # crossing features
+            Xc_crossed = Xc_tocross.apply(lambda u: u + '_x_' + Xc_crosser)\
+                                   .rename({f: f"{f}_x_{feature}" for f in self.features[i+1:]}, axis=1)
+            
             # applying normalization to the feature
-            Xc = Xc.join(
-                Xc[self.features[i+1:]].apply(lambda u: u + '_x_' + Xc[feature])\
-                                       .rename({f: f"{f}_x_{feature}" for f in self.features[i+1:]}, axis=1)
-            )
+            Xc = Xc.join(Xc_crossed)
+        
+        del Xc_features
+        del Xc_crossed
+        del Xc_tocross
+        del Xc_crosser
         
         return Xc
