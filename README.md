@@ -103,29 +103,26 @@ By default, samples are modified and not copied (recommanded for large datasets)
 All features need to be discretized via a `Discretizer` so `AutoCarver` can group their modalities. Following parameters must be set for `Discretizer`:
 
 All specified features can now automatically be carved in an association maximising grouping of their modalities while reducing their number. Following parameters must be set for `AutoCarver`:
-
+- `values_orders`, dict of all features matched to the order of their modalities
 - `sort_by`, association measure used to find the optimal group modality combination.
   - Use `sort_by='cramerv'` for more modalities, less robust.
   - Use `sort_by='tschuprowt'` for more robust modalities.
   - **Tip:** a combination of features carved with `sort_by='cramerv'` and `sort_by='tschuprowt'` can sometime prove to be better than only one of those.
-
 - `max_n_mod`, maximum number of modalities for the carved features (excluding `numpy.nan`). All possible combinations of less than `max_n_mod` groups of modalities will be tested. Should be set from 4 (faster) to 6 (preciser).
-
-At this step, all `numpy.nan` are grouped to the best non-NaN value (after they were grouped). Use `keep_nans=True` if you want `numpy.nan` to remain as a specific modality.
-
+- `keep_nans`, whether or not to try groupin missing values to non-missing values. Use `keep_nans=True` if you want `numpy.nan` to remain as a specific modality.
 
 ```python
 from AutoCarver.AutoCarver import AutoCarver
 
 # intiating AutoCarver
-auto_carver = AutoCarver(values_orders, sort_by='cramerv', max_n_mod=5, verbose=True)
+auto_carver = AutoCarver(values_orders=values_orders, sort_by='cramerv', max_n_mod=5, verbose=True)
 
-# fitting on training sample 
-# a test sample can be specified to evaluate carving robustness
-auto_carver.fit_transform(X_train, y_train, X_test, y_test)
+# fitting on training sample, a test sample can be specified to evaluate carving robustness
+auto_carver.fit_transform(X_train, y_train, X_dev, y_dev)
+auto_carver.transform(X_dev)
 
-# applying transformation on test sample
-auto_carver.transform(X_test)
+# append the auto_carver to the feature engineering pipeline
+pipe.steps.append(['AutoCarver', auto_carver])
 ```
 <p align="left">
   <img width="500" src="/docs/auto_carver_fit.PNG" />
