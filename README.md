@@ -45,7 +45,7 @@ from sklearn.pipeline import Pipeline
 pipe = Pipeline()
 ```
 
-### AutoCarver.Discretizers Examples
+### Discretizers Examples
 
 The `AutoCarver.Discretizers` is a user-friendly tool that enables the discretization of various types of data into basic buckets. With this package, users can easily transform qualitative, qualitative ordinal, and quantitative data into discrete categories for further analysis and modeling.
 
