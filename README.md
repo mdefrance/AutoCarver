@@ -128,7 +128,33 @@ pipe.steps.append(['AutoCarver', auto_carver])
   <img width="500" src="/docs/auto_carver_fit.PNG" />
 </p>
 
-#### Storing, reusing an AutoCarver
+
+### Cherry picking the most target-associated features with FeatureSelector
+
+#### Quantitative data
+
+```python
+from AutoCarver.FeatureSelector import FeatureSelector
+from AutoCarver.FeatureSelector import zscore_measure, iqr_measure, kruskal_measure, R_measure, measure_filter
+
+measures = [zscore_measure, iqr_measure, kruskal_measure, R_measure]
+filters = [measure_filter]
+
+# fitting on training sample, a test sample can be specified to evaluate carving robustness
+auto_carver.fit_transform(X_train, y_train, X_dev, y_dev)
+auto_carver.transform(X_dev)
+
+# append the auto_carver to the feature engineering pipeline
+pipe.steps.append(['AutoCarver', auto_carver])
+```
+             - For association evaluation: ``, ``
+             - For outlier detection: ``, ``
+
+#### Qualitative data
+
+
+
+### Storing, reusing the AutoCarver
 
 The `Discretizer` and `AutoCarver` steps can be stored in a `Pipeline` and can than be stored as a `pickle` file.
 
@@ -239,3 +265,4 @@ pipe = load(open('my_pipe.pkl', 'rb'))
 # applying pipe to a validation set or in production
 X_val = pipe.transform(X_val)
 ```
+**TODO: add before after picture**
