@@ -14,7 +14,6 @@
  3. **FeatureSelector**: Feature selection that maximizes association with binary target that offers control over inter-feature association.
 
 
-
 **AutoCarver** is an approach for maximising a qualitative feature's association with a binary target feature while reducing it's number of distinct modalities.
 Can also be used to discretize quantitative features, that are prealably cut in quantiles.
 
@@ -34,21 +33,76 @@ Only implementend for binary classification problems.
 AutoCarver can be installed from [PyPI](https://pypi.org/project/AutoCarver):
 
 <pre>
-pip install --upgrade autocarver
+pip install autocarver
 </pre>
 
-## Complete Example
 
-#### Setting up Samples
+## Examples
 
-`AutoCarver` tests the robustness of carvings on a specific sample. For this purpose, the use of an out of time sample is recommended. 
+### Setting up Samples
+
+`AutoCarver` is able to test the robustness of buckets on a dev sample `X_dev`.
 
 ```python
 # defining training and testing sets
-X_train, y_train = ...
-X_test, y_test = ...
-X_val, y_val = ...
+X_train, y_train = ...  # used to fit the AutoCarver and the model
+X_dev, y_dev = ...  # used to validate the AutoCarver's buckets and optimize the model's parameters/hyperparameters
+X_test, y_test = ...  # used to evaluate the final model's performances
 ```
+
+### Initiating Pipeline
+
+One of the great advantages of the `AutoCarver` package is its seamless integration with scikit-learn pipelines, making it incredibly convenient for production-level implementations. By leveraging scikit-learn's pipeline functionality, `AutoCarver` can be effortlessly incorporated into the end-to-end machine learning workflow.
+
+```python
+from sklearn.pipeline import Pipeline
+
+pipe = Pipeline()
+```
+
+### AutoCarver.Discretizers Examples
+
+The `AutoCarver.Discretizers` is a user-friendly tool that enables the discretization of various types of data into basic buckets. With this package, users can easily transform qualitative, qualitative ordinal, and quantitative data into discrete categories for further analysis and modeling.
+
+#### QualitativeDiscretizer
+
+`QualitativeDiscretizer` enables the transformation of qualitative data into statistically relevant categories, facilitating analysis and interpretation.
+ - Qualitative data consists of categorical variables without any inherent order
+ - Qualitative Ordinal data consists of categorical variables with a predefined order or hierarchy
+
+```python
+from AutoCarver.Discretizers import QualitativeDiscretizer
+
+quali_features = ['age', 'type', 'grade', 'city']  # features to be discretized
+
+# specifying orders of qualitative ordinal features
+values_orders = {
+    'age': ['0-18', '18-30', '30-50', '50+'],
+    'grade': ['A', 'B', 'C', 'D', 'J', 'K', 'NN']
+}
+
+# pre-processing of features into categorical ordinal features
+quali_discretizer = QualitativeDiscretizer(
+    features=quali_features, min_freq=0.02, values_orders=values_orders)
+quali_discretizer.fit_transform(X_train, y_train)
+quali_discretizer.transform(X_dev)
+
+pipe.steps.append(['QualitativeDiscretizer', quali_disc])
+```
+
+`QualitativeDiscretizer` ensures that the ordinal nature of the data is preserved during the discretization process, resulting in meaningful and interpretable categories.
+
+
+#### QuantitativeDiscretizer
+
+Moreover, the package caters to the discretization of quantitative data, which involves continuous numerical variables. By dividing the range of values into automatically determined intervals, the Discretizers package simplifies the representation of quantitative data, allowing for easier analysis and modeling.
+
+#### Complete Wrapper
+
+
+Overall, the Discretizers package provides a straightforward and efficient solution for discretizing qualitative, qualitative ordinal, and quantitative data into simple buckets. By transforming data into discrete categories, it enables researchers, analysts, and data scientists to gain insights, perform statistical analyses, and build models on discretized data.
+
+For more info look into AutoCarver.Discretizers README
 
 #### Formatting features to be carved
 
