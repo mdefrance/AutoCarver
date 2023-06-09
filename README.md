@@ -70,6 +70,15 @@ The `AutoCarver.Discretizers` is a user-friendly tool that enables the discretiz
  - Qualitative data consists of categorical variables without any inherent order
  - Qualitative Ordinal data consists of categorical variables with a predefined order or hierarchy
 
+Following parameters must be set for `QualitativeDiscretizer`:
+- `features`, list of qualitative and qualitative ordinal data to discretize
+- `min_freq`, should be set from 0.01 (preciser, decreased stability) to 0.05 (faster, increased stability).
+  - *For qualitative features:*  Minimal frequency of a modality, less frequent modalities are grouped in the `default_value='__OTHER__'` modality.
+  - *For qualitative ordinal features:* Less frequent modalities are grouped to the closest modality  (smallest frequency or closest target rate), between the superior and inferior values (specified in the `values_orders` dictionnary).
+- `values_orders`, dict of qualitative ordinal features matched to the order of their modalities
+  - *For qualitative ordinal features:* `dict` of features values and `GroupedList` of their values. Modalities less frequent than `min_freq` are automaticaly grouped to the closest modality (smallest frequency or closest target rate), between the superior and inferior values.
+
+
 ```python
 from AutoCarver.Discretizers import QualitativeDiscretizer
 
@@ -89,7 +98,7 @@ quali_discretizer.transform(X_dev)
 
 pipe.steps.append(['QualitativeDiscretizer', quali_disc])
 ```
-%to know -> 
+
 `QualitativeDiscretizer` ensures that the ordinal nature of the data is preserved during the discretization process, resulting in meaningful and interpretable categories.
 
 
