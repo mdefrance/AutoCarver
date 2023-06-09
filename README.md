@@ -168,49 +168,13 @@ Overall, the Discretizers package provides a straightforward and efficient solut
 
 For more details and further functionnalities look into AutoCarver.Discretizers README.
 
-#### Formatting features to be carved
-
-All features need to be discretized via a `Discretizer` so `AutoCarver` can group their modalities. Following parameters must be set for `Discretizer`:
-
-- `min_freq`, should be set from 0.01 (preciser) to 0.05 (faster, increased stability).
-  - *For qualitative features:*  Minimal frequency of a modality, less frequent modalities are grouped in the `default_value='__OTHER__'` modality.
-  - *For qualitative ordinal features:* Less frequent modalities are grouped to the closest modality  (smallest frequency or closest target rate), between the superior and inferior values (specified in the `values_orders` dictionnary).
-
-- `q`, should be set from 10 (faster) to 20 (preciser).
-  - *For quantitative features:* Number of quantiles to initialy cut the feature. Values more frequent than `1/q` will be set as their own group and remaining frequency will be cut into proportionaly less quantiles (`q:=max(round(non_frequent * q), 1)`). 
-
-- `values_orders`
-  - *For qualitative ordinal features:* `dict` of features values and `GroupedList` of their values. Modalities less frequent than `min_freq` are automaticaly grouped to the closest modality (smallest frequency or closest target rate), between the superior and inferior values.
-
-At this step, all `numpy.nan` are kept as their own modality.
-
 For qualitative features, unknown modalities passed to `Discretizer.transform` (that where not passed to `Discretizer.fit`) are automaticaly grouped to the `default_value='__OTHER__'` modality.
 
 By default, samples are modified and not copied (recommanded for large datasets). Use `copy=True` if you want a new `DataFrame` to be returned.
 
-```python
-from AutoCarver.Discretizers import Discretizer
-
-# specifying features to be carved
-quantitatives = ['amount', 'distance', 'length', 'height']
-qualitatives = ['age', 'type', 'grade', 'city']
-
-# specifying orders of categorical ordinal features
-values_orders = {
-    'age': ['0-18', '18-30', '30-50', '50+'],
-    'grade': ['A', 'B', 'C', 'D', 'J', 'K', 'NN']
-}
-
-# pre-processing of features into categorical ordinal features
-discretizer = Discretizer(quantitatives, qualitatives, min_freq=0.02, q=20, values_orders=values_orders)
-discretizer.fit_transform(X_train, y_train)
-discretizer.transform(X_test)
-
-# updating features' values orders (at this step every features are qualitative ordinal)
-values_orders = discretizer.values_orders
-```
 
 #### Automatic Carving of features
+All features need to be discretized via a `Discretizer` so `AutoCarver` can group their modalities. Following parameters must be set for `Discretizer`:
 
 All specified features can now automatically be carved in an association maximising grouping of their modalities while reducing their number. Following parameters must be set for `AutoCarver`:
 
