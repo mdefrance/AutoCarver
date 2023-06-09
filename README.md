@@ -131,8 +131,24 @@ pipe.steps.append(['AutoCarver', auto_carver])
 
 ### Cherry picking the most target-associated features with FeatureSelector
 
+Following parameters must be set for `FeatureSelector`:
+- `features`, list of candidate features by column name
+- `n_best`, number of features to select
+- `sample_size=1`, size of sampled list of features speeds up computation. By default, all features are used. For sample_size=0.5, FeatureSelector will search for the best features in features[:len(features)//2] and then in features[len(features)//2:]. Should be set between ]0, 1]. 
+  - **Tip:** for a DataFrame of 100 000 rows, `sample_size` could be set such as `len(features)*sample_size` equals 100-200.
+- `measures`, list of `FeatureSelector`'s association measures to be evaluated. Ranks features based on last measure of the list.
+  - *For qualitative data* implemented association measures are `chi2_measure`, `cramerv_measure`, `tschuprowt_measure`
+  - *For quantitative data* implemented association measures are `kruskal_measure`, `R_measure` and implemented outlier metrics are `zscore_measure`, `iqr_measure`
+- `filters`, list of `FeatureSelector`'s filters used to put aside features.
+  - *For qualitative data* implemented correlation-based filters are `cramerv_filter`, `tschuprowt_filter`
+  - *For quantitative data* implemented linear filters are `spearman_filter`, `pearson_filter` and `vif_filter` for multicolinearity filtering
+
+**TODO: add by default measures and filters + add ranking according to several measures**
+
 #### Quantitative data
 
+             
+             
 ```python
 from AutoCarver.FeatureSelector import FeatureSelector
 from AutoCarver.FeatureSelector import zscore_measure, iqr_measure, kruskal_measure, R_measure, measure_filter
@@ -260,3 +276,6 @@ pipe = load(open('my_pipe.pkl', 'rb'))
 X_val = pipe.transform(X_val)
 ```
 **TODO: add before after picture**
+
+
+**FeatureSelector TODO: add how to build on measures and filters**
