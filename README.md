@@ -159,6 +159,7 @@ filters = [measure_filter]
 
 ```
 
+**TODO; add pictures say that it does not make sense to use zscore_measure as last measure**
 
 #### Qualitative data
 
