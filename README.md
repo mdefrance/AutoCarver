@@ -10,7 +10,7 @@
 
 **AutoCarver** is a powerful set of tools designed for binary classification problems. It offers a range of functionalities to enhance the feature engineering process and improve the performance of binary classification models. It provides:
  1. **Discretizers**: Discretization of qualitative (either ordinal or non-ordinal) and quantitative features
- 2. **AutoCarver**: Bucketization of qualitative features that maximizes association the binary target feature
+ 2. **AutoCarver**: Bucketization of qualitative features that maximizes association with a binary target feature
  3. **FeatureSelector**: Feature selection that maximizes association with binary target that offers control over maximum inter-feature association.
 
 
