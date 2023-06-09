@@ -123,8 +123,7 @@ from AutoCarver.Discretizers import QuantitativeDiscretizer
 quanti_features = ['amount', 'distance', 'length', 'height']  # features to be discretized
 
 # pre-processing of features into categorical ordinal features
-quanti_discretizer = QuantitativeDiscretizer(
-    features=quanti_features, q=40)
+quanti_discretizer = QuantitativeDiscretizer(features=quanti_features, q=40)
 quanti_discretizer.fit_transform(X_train, y_train)
 quanti_discretizer.transform(X_dev)
 
