@@ -122,12 +122,6 @@ from AutoCarver.Discretizers import QuantitativeDiscretizer
 
 quanti_features = ['amount', 'distance', 'length', 'height']  # features to be discretized
 
-# specifying orders of qualitative ordinal features
-values_orders = {
-    'age': ['0-18', '18-30', '30-50', '50+'],
-    'grade': ['A', 'B', 'C', 'D', 'J', 'K', 'NN']
-}
-
 # pre-processing of features into categorical ordinal features
 quanti_discretizer = QuantitativeDiscretizer(
     features=quanti_features, q=40)
