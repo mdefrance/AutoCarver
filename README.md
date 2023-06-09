@@ -46,7 +46,7 @@ from sklearn.pipeline import Pipeline
 pipe = Pipeline()
 ```
 
-### Use Discretizer from Discretizers
+### Quickly build basic buckets with Discretizer
 
 The `AutoCarver.Discretizers` is a user-friendly tool that enables the discretization of various types of data into basic buckets. With this package, users can easily transform qualitative, qualitative ordinal, and quantitative data into discrete categories for further analysis and modeling.
 
@@ -98,7 +98,8 @@ For qualitative features, unknown modalities passed to `Discretizer.transform` (
 By default, samples are modified and not copied (recommanded for large datasets). Use `copy=True` if you want a new `DataFrame` to be returned.
 
 
-#### Automatic Carving of features
+### Maximize target association of features' buckets with AutoCarver
+
 All features need to be discretized via a `Discretizer` so `AutoCarver` can group their modalities. Following parameters must be set for `Discretizer`:
 
 All specified features can now automatically be carved in an association maximising grouping of their modalities while reducing their number. Following parameters must be set for `AutoCarver`:
