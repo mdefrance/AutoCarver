@@ -96,7 +96,7 @@ quali_discretizer = QualitativeDiscretizer(
 quali_discretizer.fit_transform(X_train, y_train)
 quali_discretizer.transform(X_dev)
 
-# storing initial modalities' buckets
+# storing built buckets
 values_orders.update(quali_discretizer.values_orders)
 
 # append the discretizer to the feature engineering pipeline
@@ -127,7 +127,7 @@ quanti_discretizer = QuantitativeDiscretizer(features=quanti_features, q=40)
 quanti_discretizer.fit_transform(X_train, y_train)
 quanti_discretizer.transform(X_dev)
 
-# storing initial modalities' buckets
+# storing built buckets
 values_orders.update(quanti_discretizer.values_orders)
 
 # append the discretizer to the feature engineering pipeline
