@@ -5,6 +5,7 @@
     <img alt="GitHub" src="https://img.shields.io/github/license/mdefrance/autocarver?style=flat-square">
 </p>
 
+This is a work in progress.
 
 # AutoCarver
 
@@ -51,6 +52,8 @@ The `AutoCarver.Discretizers` is a user-friendly tool that enables the discretiz
 
 #### QualitativeDiscretizer Example
 
+**TODO: add StringConverter**
+
 `QualitativeDiscretizer` enables the transformation of qualitative data into statistically relevant categories, facilitating model robustness.
  - *Qualitative Data* consists of categorical variables without any inherent order
  - *Qualitative Ordinal Data* consists of categorical variables with a predefined order or hierarchy
@@ -58,10 +61,10 @@ The `AutoCarver.Discretizers` is a user-friendly tool that enables the discretiz
 Following parameters must be set for `QualitativeDiscretizer`:
 - `features`, list of column names of qualitative and qualitative ordinal data to discretize
 - `min_freq`, should be set from 0.01 (preciser, decreased stability) to 0.05 (faster, increased stability).
-  - *For qualitative features:*  Minimal frequency of a modality, less frequent modalities are grouped in the `default_value='__OTHER__'` modality. Values are ordered based on `y_train` bucket mean.
-  - *For qualitative ordinal features:* Less frequent modalities are grouped to the closest modality  (smallest frequency or closest target rate), between the superior and inferior values (specified in the `values_orders` dictionnary).
+  - *For qualitative data:*  Minimal frequency of a modality, less frequent modalities are grouped in the `default_value='__OTHER__'` modality. Values are ordered based on `y_train` bucket mean.
+  - *For qualitative ordinal data:* Less frequent modalities are grouped to the closest modality  (smallest frequency or closest target rate), between the superior and inferior values (specified in the `values_orders` dictionnary).
 - `values_orders`, dict of qualitative ordinal features matched to the order of their modalities
-  - *For qualitative ordinal features:* `dict` of features values and `GroupedList` of their values. Modalities less frequent than `min_freq` are automaticaly grouped to the closest modality (smallest frequency or closest target rate), between the superior and inferior values.
+  - *For qualitative ordinal data:* `dict` of features values and `GroupedList` of their values. Modalities less frequent than `min_freq` are automaticaly grouped to the closest modality (smallest frequency or closest target rate), between the superior and inferior values.
 
 
 ```python
@@ -76,8 +79,7 @@ values_orders = {
 }
 
 # pre-processing of features into categorical ordinal features
-quali_discretizer = QualitativeDiscretizer(
-    features=quali_features, min_freq=0.02, values_orders=values_orders)
+quali_discretizer = QualitativeDiscretizer(features=quali_features, min_freq=0.02, values_orders=values_orders)
 quali_discretizer.fit_transform(X_train, y_train)
 quali_discretizer.transform(X_dev)
 
@@ -94,13 +96,15 @@ At this step, all `numpy.nan` are kept as their own modality. **not all of them*
 
 #### QuantitativeDiscretizer Example
 
+**TODO: change q for min_freq**
+
 `QuantitativeDiscretizer` enables the transformation of quantitative data into automatically determined intervals of ranges of values, facilitating model robustness.
  - *Quantitative Data* consists of continuous and discrete numerical variables.
 
 Following parameters must be set for `QuantitativeDiscretizer`:
 - `features`, list of column names of quantitative data to discretize
 - `q`, should be set from 20 (faster, increased stability) to 50 (preciser, decreased stability).
-  - *For quantitative features:* Number of quantiles to initialy cut the feature in. Values more frequent than `1/q` will be set as their own group and remaining frequency will be cut into proportionaly less quantiles (`q:=max(round(non_frequent * q), 1)`). 
+  - *For quantitative data:* Number of quantiles to initialy cut the feature in. Values more frequent than `1/q` will be set as their own group and remaining frequency will be cut into proportionaly less quantiles (`q:=max(round(non_frequent * q), 1)`). 
 
 ```python
 from AutoCarver.Discretizers import QuantitativeDiscretizer
@@ -126,12 +130,17 @@ At this step, all `numpy.nan` are kept as their own modality.
 `Discretizer` is the combination of `QuantitativeDiscretizer` and `QuantitativeDiscretizer`.
 
 Following parameters must be set for `Discretizer`:
-- `features`, list of column names of quantitative data to discretize
-- `q`, should be set from 20 (faster, increased stability) to 50 (preciser, decreased stability).
-  - *For quantitative features:* Number of quantiles to initialy cut the feature in. Values more frequent than `1/q` will be set as their own group and remaining frequency will be cut into proportionaly less quantiles (`q:=max(round(non_frequent * q), 1)`). 
+- `quantitative_features`, list of column names of quantitative data to discretize
+- `quantitative_features`, list of column names of qualitative and qualitative ordinal data to discretize
+- `min_freq`, should be set from 0.01 (preciser, decreased stability) to 0.05 (faster, increased stability).
+  - *For qualitative data:*  Minimal frequency of a modality, less frequent modalities are grouped in the `default_value='__OTHER__'` modality. Values are ordered based on `y_train` bucket mean.
+  - *For qualitative ordinal data:* Less frequent modalities are grouped to the closest modality  (smallest frequency or closest target rate), between the superior and inferior values (specified in the `values_orders` dictionnary).
+  - *For quantitative data:* Equivalent to the inverse of `QuantitativeDiscretizer`'s `q` parameter. Number of quantiles to initialy cut the feature in. Values more frequent than `min_freq` will be set as their own group and remaining frequency will be cut into proportionaly less quantiles (`1/min_freq:=max(round(non_frequent * 1/min_freq), 1)`). 
+- `values_orders`, dict of qualitative ordinal features matched to the order of their modalities
+  - *For qualitative ordinal data:* `dict` of features values and `GroupedList` of their values. Modalities less frequent than `min_freq` are automaticaly grouped to the closest modality (smallest frequency or closest target rate), between the superior and inferior values.
 
 ```python
-from AutoCarver.Discretizers import QuantitativeDiscretizer
+from AutoCarver.Discretizers import Discretizer
 
 quanti_features = ['amount', 'distance', 'length', 'height']  # quantitative features to be discretized
 quali_features = ['age', 'type', 'grade', 'city']  # qualitative features to be discretized
@@ -143,21 +152,21 @@ values_orders = {
 }
 
 # pre-processing of features into categorical ordinal features
-quanti_discretizer = QuantitativeDiscretizer(features=quanti_features, q=40)
-quanti_discretizer.fit_transform(X_train, y_train)
-quanti_discretizer.transform(X_dev)
+discretizer = Discretizer(quantitative_features=quanti_features, qualitative_features=quali_features, min_freq=0.02)
+discretizer.fit_transform(X_train, y_train)
+discretizer.transform(X_dev)
 
 # storing built buckets
-values_orders.update(quanti_discretizer.values_orders)
+values_orders.update(discretizer.values_orders)
 
 # append the discretizer to the feature engineering pipeline
-pipe.steps.append(['QuantitativeDiscretizer', quanti_discretizer])
+pipe.steps.append(['Discretizer', discretizer])
 ```
 
 
 Overall, the Discretizers package provides a straightforward and efficient solution for discretizing qualitative, qualitative ordinal, and quantitative data into simple buckets. By transforming data into discrete categories, it enables researchers, analysts, and data scientists to gain insights, perform statistical analyses, and build models on discretized data.
 
-For more info look into AutoCarver.Discretizers README
+For more details and further functionnalities look into AutoCarver.Discretizers README.
 
 #### Formatting features to be carved
 
