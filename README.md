@@ -152,7 +152,7 @@ values_orders = {
 }
 
 # pre-processing of features into categorical ordinal features
-discretizer = Discretizer(quantitative_features=quanti_features, qualitative_features=quali_features, min_freq=0.02)
+discretizer = Discretizer(quantitative_features=quanti_features, qualitative_features=quali_features, min_freq=0.02, values_orders=values_orders)
 discretizer.fit_transform(X_train, y_train)
 discretizer.transform(X_dev)
 
