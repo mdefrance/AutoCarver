@@ -64,7 +64,7 @@ pipe = Pipeline()
 
 The `AutoCarver.Discretizers` is a user-friendly tool that enables the discretization of various types of data into basic buckets. With this package, users can easily transform qualitative, qualitative ordinal, and quantitative data into discrete categories for further analysis and modeling.
 
-#### QualitativeDiscretizer
+#### QualitativeDiscretizer Example
 
 `QualitativeDiscretizer` enables the transformation of qualitative data into statistically relevant categories, facilitating model robustness.
  - *Qualitative Data* consists of categorical variables without any inherent order
@@ -82,7 +82,7 @@ Following parameters must be set for `QualitativeDiscretizer`:
 ```python
 from AutoCarver.Discretizers import QualitativeDiscretizer
 
-quali_features = ['age', 'type', 'grade', 'city']  # features to be discretized
+quali_features = ['age', 'type', 'grade', 'city']  # qualitative features to be discretized
 
 # specifying orders of qualitative ordinal features
 values_orders = {
@@ -107,7 +107,7 @@ pipe.steps.append(['QualitativeDiscretizer', quali_discretizer])
 
 At this step, all `numpy.nan` are kept as their own modality. **not all of them**
 
-#### QuantitativeDiscretizer
+#### QuantitativeDiscretizer Example
 
 `QuantitativeDiscretizer` enables the transformation of quantitative data into automatically determined intervals of ranges of values, facilitating model robustness.
  - *Quantitative Data* consists of continuous and discrete numerical variables.
@@ -120,7 +120,7 @@ Following parameters must be set for `QuantitativeDiscretizer`:
 ```python
 from AutoCarver.Discretizers import QuantitativeDiscretizer
 
-quanti_features = ['amount', 'distance', 'length', 'height']  # features to be discretized
+quanti_features = ['amount', 'distance', 'length', 'height']  # quantitative features to be discretized
 
 # pre-processing of features into categorical ordinal features
 quanti_discretizer = QuantitativeDiscretizer(features=quanti_features, q=40)
@@ -136,7 +136,38 @@ pipe.steps.append(['QuantitativeDiscretizer', quanti_discretizer])
 
 At this step, all `numpy.nan` are kept as their own modality.
 
-#### Complete Wrapper
+#### Discretizer Example
+
+`Discretizer` is the combination of `QuantitativeDiscretizer` and `QuantitativeDiscretizer`.
+
+Following parameters must be set for `Discretizer`:
+- `features`, list of column names of quantitative data to discretize
+- `q`, should be set from 20 (faster, increased stability) to 50 (preciser, decreased stability).
+  - *For quantitative features:* Number of quantiles to initialy cut the feature in. Values more frequent than `1/q` will be set as their own group and remaining frequency will be cut into proportionaly less quantiles (`q:=max(round(non_frequent * q), 1)`). 
+
+```python
+from AutoCarver.Discretizers import QuantitativeDiscretizer
+
+quanti_features = ['amount', 'distance', 'length', 'height']  # quantitative features to be discretized
+quali_features = ['age', 'type', 'grade', 'city']  # qualitative features to be discretized
+
+# specifying orders of qualitative ordinal features
+values_orders = {
+    'age': ['0-18', '18-30', '30-50', '50+'],
+    'grade': ['A', 'B', 'C', 'D', 'J', 'K', 'NN']
+}
+
+# pre-processing of features into categorical ordinal features
+quanti_discretizer = QuantitativeDiscretizer(features=quanti_features, q=40)
+quanti_discretizer.fit_transform(X_train, y_train)
+quanti_discretizer.transform(X_dev)
+
+# storing built buckets
+values_orders.update(quanti_discretizer.values_orders)
+
+# append the discretizer to the feature engineering pipeline
+pipe.steps.append(['QuantitativeDiscretizer', quanti_discretizer])
+```
 
 
 Overall, the Discretizers package provides a straightforward and efficient solution for discretizing qualitative, qualitative ordinal, and quantitative data into simple buckets. By transforming data into discrete categories, it enables researchers, analysts, and data scientists to gain insights, perform statistical analyses, and build models on discretized data.
