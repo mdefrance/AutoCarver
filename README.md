@@ -66,7 +66,7 @@ The `AutoCarver.Discretizers` is a user-friendly tool that enables the discretiz
 
 #### QualitativeDiscretizer
 
-`QualitativeDiscretizer` enables the transformation of qualitative data into statistically relevant categories, facilitating analysis and interpretation.
+`QualitativeDiscretizer` enables the transformation of qualitative data into statistically relevant categories, facilitating model robustness.
  - Qualitative data consists of categorical variables without any inherent order
  - Qualitative Ordinal data consists of categorical variables with a predefined order or hierarchy
 
@@ -89,7 +89,7 @@ quali_discretizer.transform(X_dev)
 
 pipe.steps.append(['QualitativeDiscretizer', quali_disc])
 ```
-
+%to know -> 
 `QualitativeDiscretizer` ensures that the ordinal nature of the data is preserved during the discretization process, resulting in meaningful and interpretable categories.
 
 
