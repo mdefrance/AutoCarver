@@ -210,6 +210,21 @@ The stored `Pipeline`, can then be used to transform new datasets.
 
 ## Detailed Examples
 
+### StringConverter Example
+
+             
+```python
+from AutoCarver.Converters import StringConverter
+
+stringer = StringConverter(features=quali_features)
+X_train = stringer.fit_transform(X_train)
+X_dev = stringer.transform(X_dev)
+
+# append the string converter to the feature engineering pipeline
+pipe.steps.append(['StringConverter', stringer])
+```
+
+
 ### Discretizers Examples
 
 The `AutoCarver.Discretizers` is a user-friendly tool that enables the discretization of various types of data into basic buckets. With this package, users can easily transform qualitative, qualitative ordinal, and quantitative data into discrete categories for further analysis and modeling.
