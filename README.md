@@ -143,7 +143,7 @@ Following parameters must be set for `FeatureSelector`:
   - *For qualitative data* implemented correlation-based filters are `cramerv_filter`, `tschuprowt_filter`
   - *For quantitative data* implemented linear filters are `spearman_filter`, `pearson_filter` and `vif_filter` for multicolinearity filtering
 
-**TODO: add by default measures and filters + add ranking according to several measures**
+**TODO: add by default measures and filters + add ranking according to several measures  + say that it filters out non-selected columns**
 
 #### Quantitative data
 
@@ -151,12 +151,27 @@ Following parameters must be set for `FeatureSelector`:
              
 ```python
 from AutoCarver.FeatureSelector import FeatureSelector
-from AutoCarver.FeatureSelector import zscore_measure, iqr_measure, kruskal_measure, R_measure, measure_filter
+from AutoCarver.FeatureSelector import zscore_measure, iqr_measure, kruskal_measure, R_measure, measure_filter, spearman_filter
 
-measures = [zscore_measure, iqr_measure, kruskal_measure, R_measure]
-filters = [measure_filter]
+measures = [zscore_measure, iqr_measure, kruskal_measure, R_measure]  # measures of interest
+filters = [measure_filter, spearman_filter]  # filtering out by inter-feature correlation
 
+# select the best 25 most target associated quantitative features
+quanti_selector = FeatureSelector(
+    features=quanti_features,  # features to select from
+    n_best=25,  # best 25 features
+    measures=measures, filters=filters,   # selected measures and filters
+    thresh_mode=0.9,  # filters out features with more than 90% of their mode
+    thresh_nan=0.9,  # filters out features with more than 90% of missing values
+    thresh_corr=0.5,  # filters out features with spearman greater than 0.5 with a better feature
+    name_measure='R_measure', thresh_measure=0.06,  # filters out features with R_measure lower than 0.06
+    verbose=True  # displays statistics
+)
+X_train = quanti_selector.fit_transform(X_train, y_train)
+X_dev = quanti_selector.transform(X_dev)
 
+# append the selector to the feature engineering pipeline
+pipe.steps.append(['QuantiFeatureSelector', quanti_selector])
 ```
 
 **TODO; add pictures say that it does not make sense to use zscore_measure as last measure**
@@ -185,6 +200,16 @@ dump(pipe, open('my_pipe.pkl', 'wb'))
 ```
 
 The stored `Pipeline`, can then be used to transform new datasets.
+
+
+
+
+
+
+
+
+
+
 
 ## Detailed Examples
 
