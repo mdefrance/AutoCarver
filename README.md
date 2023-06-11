@@ -145,38 +145,35 @@ Following parameters must be set for `FeatureSelector`:
 
 **TODO: add by default measures and filters + add ranking according to several measures  + say that it filters out non-selected columns**
 
-#### Quantitative data
 
-             
-             
+**TODO; add pictures say that it does not make sense to use zscore_measure as last measure**
+
 ```python
 from AutoCarver.FeatureSelector import FeatureSelector
-from AutoCarver.FeatureSelector import zscore_measure, iqr_measure, kruskal_measure, R_measure, measure_filter, spearman_filter
+from AutoCarver.FeatureSelector import tschuprowt_measure, cramerv_measure, cramerv_filter, tschuprowt_filter, measure_filter
 
-measures = [zscore_measure, iqr_measure, kruskal_measure, R_measure]  # measures of interest
-filters = [measure_filter, spearman_filter]  # filtering out by inter-feature correlation
+features = quanti_features + quali_features  # after AutoCarver, everything is qualitative
 
-# select the best 25 most target associated quantitative features
-quanti_selector = FeatureSelector(
-    features=quanti_features,  # features to select from
+measures = [cramerv_measure, tschuprowt_measure]  # measures of interest (the last one is used for ranking)
+filters = [tschuprowt_filter, measure_filter]  # filtering out by inter-feature correlation
+
+# select the best 25 most target associated qualitative features
+quali_selector = FeatureSelector(
+    features=features,  # features to select from
     n_best=25,  # best 25 features
     measures=measures, filters=filters,   # selected measures and filters
     thresh_mode=0.9,  # filters out features with more than 90% of their mode
     thresh_nan=0.9,  # filters out features with more than 90% of missing values
     thresh_corr=0.5,  # filters out features with spearman greater than 0.5 with a better feature
-    name_measure='R_measure', thresh_measure=0.06,  # filters out features with R_measure lower than 0.06
+    name_measure='cramerv_measure', thresh_measure=0.06,  # filters out features with cramerv_measure lower than 0.06
     verbose=True  # displays statistics
 )
-X_train = quanti_selector.fit_transform(X_train, y_train)
-X_dev = quanti_selector.transform(X_dev)
+X_train = quali_selector.fit_transform(X_train, y_train)
+X_dev = quali_selector.transform(X_dev)
 
 # append the selector to the feature engineering pipeline
-pipe.steps.append(['QuantiFeatureSelector', quanti_selector])
+pipe.steps.append(['QualiFeatureSelector', quali_selector])
 ```
-
-**TODO; add pictures say that it does not make sense to use zscore_measure as last measure**
-
-#### Qualitative data
 
 
 
@@ -302,6 +299,37 @@ pipe = load(open('my_pipe.pkl', 'rb'))
 X_val = pipe.transform(X_val)
 ```
 **TODO: add before after picture**
+
+
+### FeatureSelector Examples
+#### Quantitative data
+
+             
+             
+```python
+from AutoCarver.FeatureSelector import FeatureSelector
+from AutoCarver.FeatureSelector import zscore_measure, iqr_measure, kruskal_measure, R_measure, measure_filter, spearman_filter
+
+measures = [zscore_measure, iqr_measure, kruskal_measure, R_measure]  # measures of interest (the last one is used for ranking)
+filters = [measure_filter, spearman_filter]  # filtering out by inter-feature correlation
+
+# select the best 25 most target associated quantitative features
+quanti_selector = FeatureSelector(
+    features=quanti_features,  # features to select from
+    n_best=25,  # best 25 features
+    measures=measures, filters=filters,   # selected measures and filters
+    thresh_mode=0.9,  # filters out features with more than 90% of their mode
+    thresh_nan=0.9,  # filters out features with more than 90% of missing values
+    thresh_corr=0.5,  # filters out features with spearman greater than 0.5 with a better feature
+    name_measure='R_measure', thresh_measure=0.06,  # filters out features with R_measure lower than 0.06
+    verbose=True  # displays statistics
+)
+X_train = quanti_selector.fit_transform(X_train, y_train)
+X_dev = quanti_selector.transform(X_dev)
+
+# append the selector to the feature engineering pipeline
+pipe.steps.append(['QuantiFeatureSelector', quanti_selector])
+```
 
 
 **FeatureSelector TODO: add how to build on measures and filters**
