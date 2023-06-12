@@ -9,7 +9,7 @@ with open(path.join(here, "README.md"), encoding="utf-8") as fh:
 
 setup(
     name='AutoCarver',
-    version='4.4.0',
+    version='4.4.1',
     author='Mario DEFRANCE',
     author_email='defrancemario@gmail.com',
     description='Automatic Bucketizing of Features with Optimal Association',
