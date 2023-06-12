@@ -16,13 +16,14 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url='https://github.com/mdefrance/AutoCarver',
-    project_urls = {
+    project_urls={
         "Bug Tracker": "https://github.com/mdefrance/AutoCarver/issues"
     },
     license='MIT',
     packages=['AutoCarver'],
     classifiers=[
-        'Development Status :: 4 - Beta',  # ou 4 - Beta ou 5 - Production/Stable
+        # ou 4 - Beta ou 5 - Production/Stable
+        'Development Status :: 4 - Beta',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',

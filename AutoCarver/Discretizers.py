@@ -1,3 +1,4 @@
+from .Converters import StringConverter
 from IPython.display import display_html
 from numpy import sort, nan, inf, float32, where, isin, argsort, array, select, append, quantile, linspace, argmin
 from pandas import DataFrame, Series, isna, qcut, notna, unique
@@ -214,9 +215,15 @@ class GroupedList(list):
 
 class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
     
-    def __init__(self, values_orders: Dict[str, Any], *, 
-        copy: bool=False, output: type= float,
-        str_nan: str=None, verbose: bool=False) -> None:
+    def __init__(
+            self,
+            values_orders: Dict[str, Any],
+            *,
+            copy: bool=False,
+            output: type= float,
+            str_nan: str=None,
+            verbose: bool=False
+        ) -> None:
         
         self.features = list(values_orders.keys())
         self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
@@ -299,9 +306,15 @@ class QualitativeDiscretizer(BaseEstimator, TransformerMixin):
         Exemple: for an `age` feature, `values_orders` could be `{'age': ['0-18', '18-30', '30-50', '50+']}`.
     """
     
-    def __init__(self, features: List[str], min_freq: float, *,
-                 values_orders: Dict[str, Any]={}, copy: bool=False, 
-                 verbose: bool=False) -> None:
+    def __init__(
+            self,
+            features: List[str],
+            min_freq: float,
+            *,
+            values_orders: Dict[str, Any]={},
+            copy: bool=False,
+            verbose: bool=False
+        ) -> None:
     
         self.features = features[:]
         self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
@@ -314,25 +327,35 @@ class QualitativeDiscretizer(BaseEstimator, TransformerMixin):
         
     def prepare_data(self, X: DataFrame, y: Series) -> DataFrame:
         """ Checking data for bucketization"""
-        
+
+        # copying dataframe
+        Xc = X.copy()
+
         # checking for quantitative columns
-        is_object = X[self.features].dtypes.apply(is_string_dtype)
-        assert all(is_object), f"Non-string features: {', '.join(is_object[~is_object].index)}, consider using Converters.StringConverter."
-        
+        is_object = Xc[self.features].dtypes.apply(is_string_dtype)
+        if not all(is_object):  # non qualitative features detected
+
+            if self.verbose:
+                print(f"""Non-string features: {', '.join(is_object[~is_object].index)}, will be converted using Converters.StringConverter.""")
+
+            # converting specified features into qualitative features
+            stringer = StringConverter(features=self.features)
+            Xc = stringer.fit_transform(Xc)
+
+            # append the string converter to the feature engineering pipeline
+            self.pipe += [('StringConverter', stringer)]
+
         # checking for binary target
         y_values = unique(y)
         assert (0 in y_values) & (1 in y_values), "y must be a binary Series (int or float, not object)"
         assert len(y_values) == 2, "y must be a binary Series (int or float, not object)"
-        
+
         # checking that all unique values in X are in values_orders
-        uniques = X[self.features].apply(nan_unique)
+        uniques = Xc[self.features].apply(nan_unique)
         for feature in self.ordinal_features:
             missing = [val for val in uniques[feature] if val not in self.values_orders[feature]]
             assert len(missing)==0, f"The ordering for {', '.join(missing)} of feature '{feature}' must be specified in values_orders (str-only)."
-        
-        # copying dataframe
-        Xc = X.copy()
-        
+
         return Xc
 
     def fit(self, X: DataFrame, y: Series) -> None:
@@ -406,8 +429,15 @@ class QuantitativeDiscretizer(BaseEstimator, TransformerMixin):
 
     """
     
-    def __init__(self, features: List[str], q: int, *, values_orders: Dict[str, Any]={}, copy: bool=False, 
-                 verbose: bool=False) -> None:
+    def __init__(
+            self,
+            features: List[str],
+            q: int,
+            *,
+            values_orders: Dict[str, Any]={},
+            copy: bool=False,
+            verbose: bool=False
+        ) -> None:
         
         self.features = features[:]
         self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
@@ -528,8 +558,16 @@ class Discretizer(BaseEstimator, TransformerMixin):
         Exemple: for an `age` feature, `values_orders` could be `{'age': ['0-18', '18-30', '30-50', '50+']}`.
     """
 
-    def __init__(self, quanti_features: List[str], quali_features: List[str], min_freq: float, *, 
-                 values_orders: Dict[str, Any]={}, copy: bool=False, verbose: bool=False) -> None:
+    def __init__(
+            self,
+            quanti_features: List[str],
+            quali_features: List[str],
+            min_freq: float,
+            *,
+            values_orders: Dict[str, Any]={},
+            copy: bool=False,
+            verbose: bool=False
+        ) -> None:
 
         self.features = quanti_features[:] + quali_features[:]
         self.quanti_features = quanti_features[:]
@@ -606,8 +644,17 @@ class Discretizer(BaseEstimator, TransformerMixin):
 
 class ChainedDiscretizer(GroupedListDiscretizer):
     
-    def __init__(self, features: List[str], min_freq: float, chained_orders: List[GroupedList], *, 
-                 remove_unknown: bool=False, str_nan: str='__NAN__', copy: bool=False, verbose: bool=False) -> None:       
+    def __init__(
+            self,
+            features: List[str],
+            min_freq: float,
+            chained_orders: List[GroupedList],
+            *,
+            remove_unknown: bool=False,
+            str_nan: str='__NAN__',
+            copy: bool=False,
+            verbose: bool=False
+        ) -> None:       
         
         self.min_freq = min_freq
         self.features = features[:]

@@ -75,8 +75,17 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
          - False: Higher values of the measure are to be considered as more associated to the target
     """
     
-    def __init__(self, features: List[str], n_best: int, measures: List[Callable]=list(), filters: List[Callable]=list(),
-                 sample_size: float=1., copy: bool=True, verbose: bool=True, **params) -> None:
+    def __init__(
+            self,
+            features: List[str],
+            n_best: int,
+            measures: List[Callable]=list(),
+            filters: List[Callable]=list(),
+            sample_size: float=1.,
+            copy: bool=True,
+            verbose: bool=True,
+            **params
+        ) -> None:
         
         self.features = features[:]
         self.n_best = n_best
