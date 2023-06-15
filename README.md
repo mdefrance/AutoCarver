@@ -25,25 +25,19 @@ pip install autocarver
 
 ## Quick-Start Examples
 
-### Setting up Samples
+### Setting up Samples, initiating Pipeline
 
 `AutoCarver` is able to test the robustness of buckets on a dev sample `X_dev`.
+
+One of the great advantages of the `AutoCarver` package is its seamless integration with scikit-learn pipelines, making it incredibly convenient for production-level implementations. By leveraging scikit-learn's pipeline functionality, `AutoCarver` can be effortlessly incorporated into the end-to-end machine learning workflow.
 
 ```python
 # defining training and testing sets
 X_train, y_train = ...  # used to fit the AutoCarver and the model
 X_dev, y_dev = ...  # used to validate the AutoCarver's buckets and optimize the model's parameters/hyperparameters
 X_test, y_test = ...  # used to evaluate the final model's performances
-```
 
-### Initiating Pipeline
-
-One of the great advantages of the `AutoCarver` package is its seamless integration with scikit-learn pipelines, making it incredibly convenient for production-level implementations. By leveraging scikit-learn's pipeline functionality, `AutoCarver` can be effortlessly incorporated into the end-to-end machine learning workflow.
-
-```python
-from sklearn.pipeline import Pipeline
-
-pipe = Pipeline()
+pipe = []  # initiating as an empty list that will be filled along the feature engineering
 ```
 
 ### Quickly build basic buckets with Discretizer
@@ -85,7 +79,7 @@ discretizer.transform(X_dev)
 values_orders.update(discretizer.values_orders)
 
 # append the discretizer to the feature engineering pipeline
-pipe.steps.append(['Discretizer', discretizer])
+pipe += [('Discretizer', discretizer)]
 ```
 
 
@@ -122,7 +116,7 @@ auto_carver.fit_transform(X_train, y_train, X_dev, y_dev)
 auto_carver.transform(X_dev)
 
 # append the auto_carver to the feature engineering pipeline
-pipe.steps.append(['AutoCarver', auto_carver])
+pipe += [('AutoCarver', auto_carver)]
 ```
 <p align="left">
   <img width="500" src="/docs/auto_carver_fit.PNG" />
@@ -172,7 +166,7 @@ X_train = quali_selector.fit_transform(X_train, y_train)
 X_dev = quali_selector.transform(X_dev)
 
 # append the selector to the feature engineering pipeline
-pipe.steps.append(['QualiFeatureSelector', quali_selector])
+pipe += [('QualiFeatureSelector', quali_selector)]
 ```
 
 
@@ -185,11 +179,7 @@ The `Discretizer` and `AutoCarver` steps can be stored in a `Pipeline` and can t
 from pickle import dump
 from sklearn.pipeline import Pipeline
 
-# storing Discretizer
-pipe = [('Discretizer', discretizer)]
-
-# storing fitted AutoCarver in a Pipeline
-pipe += [('AutoCarver', auto_carver)]
+# storing fitted Discretizer, AutoCarver and FeatureSelector in a Pipeline
 pipe = Pipeline(pipe)
 
 # storing as pickle file
