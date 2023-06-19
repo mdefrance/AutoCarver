@@ -112,7 +112,7 @@ from AutoCarver.AutoCarver import AutoCarver
 auto_carver = AutoCarver(values_orders=values_orders, sort_by='cramerv', max_n_mod=5, verbose=True)
 
 # fitting on training sample, a test sample can be specified to evaluate carving robustness
-auto_carver.fit_transform(X_train, y_train, X_dev, y_dev)
+auto_carver.fit_transform(X_train, y_train, X_test=X_dev, y_test=y_dev)
 auto_carver.transform(X_dev)
 
 # append the auto_carver to the feature engineering pipeline
