@@ -49,8 +49,8 @@ The `AutoCarver.Discretizers` is a user-friendly tool that enables the discretiz
 `Discretizer` is the combination of `QuantitativeDiscretizer` and `QuantitativeDiscretizer`.
 
 Following parameters must be set for `Discretizer`:
-- `quantitative_features`, list of column names of quantitative data to discretize
-- `quantitative_features`, list of column names of qualitative and qualitative ordinal data to discretize
+- `quanti_features`, list of column names of quantitative data to discretize
+- `quanli_features`, list of column names of qualitative and qualitative ordinal data to discretize
 - `min_freq`, should be set from 0.01 (preciser, decreased stability) to 0.05 (faster, increased stability).
   - *For qualitative data:*  Minimal frequency of a modality, less frequent modalities are grouped in the `default_value='__OTHER__'` modality. Values are ordered based on `y_train` bucket mean.
   - *For qualitative ordinal data:* Less frequent modalities are grouped to the closest modality  (smallest frequency or closest target rate), between the superior and inferior values (specified in the `values_orders` dictionnary).
@@ -71,7 +71,7 @@ values_orders = {
 }
 
 # pre-processing of features into categorical ordinal features
-discretizer = Discretizer(quantitative_features=quanti_features, qualitative_features=quali_features, min_freq=0.02, values_orders=values_orders)
+discretizer = Discretizer(quanti_features=quanti_features, quali_features=quali_features, min_freq=0.02, values_orders=values_orders)
 discretizer.fit_transform(X_train, y_train)
 discretizer.transform(X_dev)
 
