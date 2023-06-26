@@ -334,7 +334,30 @@ X_dev = quanti_selector.transform(X_dev)
 
 # append the selector to the feature engineering pipeline
 pipe.steps.append(['QuantiFeatureSelector', quanti_selector])
+pipe += [('QuantiFeatureSelector', quanti_selector)]
 ```
 
 
 **FeatureSelector TODO: add how to build on measures and filters**
+
+
+### Converters Examples
+#### CrossConverter
+
+             
+```python
+from AutoCarver.Converters import CrossConverter
+
+# qualitative and quantitative features should be discretized (and bucketized with AutoCarver)
+to_cross = quali_features + quanti_features
+
+cross_converter = CrossConverter(to_cross)
+X_train = cross_converter.fit_transform(X_train, y_train)
+X_dev = cross_converter.transform(X_dev)
+
+# append the crosser to the feature engineering pipeline
+pipe += [('CrossConverter', cross_converter)]
+
+quali_features_built = crosser.new_features  # adding to qualitative_features_built for no further feature engineering
+print(f"Qualitative features built: total {len(quali_features_built)}")
+```
