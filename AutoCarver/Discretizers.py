@@ -1545,8 +1545,7 @@ def find_closest_modality(
 
 
 def format_list(a_list: List[float]) -> List[str]:
-    """Formats a list of floats to a list of unique rounded strings of floats
-    """
+    """Formats a list of floats to a list of unique rounded strings of floats"""
 
     # finding the closest power of thousands for each element
     closest_powers = [

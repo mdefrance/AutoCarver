@@ -238,13 +238,13 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
 
             # splitting feature list in samples
             feature_samples = [
-                self.features[chunks * i: chunks * (i + 1)]
+                self.features[chunks * i : chunks * (i + 1)]
                 for i in range(int(1 / self.sample_size) - 1)
             ]
 
             # adding last sample with all remaining features
             feature_samples += [
-                self.features[chunks * (int(1 / self.sample_size) - 1):]
+                self.features[chunks * (int(1 / self.sample_size) - 1) :]
             ]
 
             # iterating over each feature samples
