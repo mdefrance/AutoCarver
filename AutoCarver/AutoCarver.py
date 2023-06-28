@@ -1,20 +1,22 @@
-from .Discretizers import GroupedList, GroupedListDiscretizer, is_equal
+from typing import Any, Dict, List, Tuple
+
 from IPython.display import display_html
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.pyplot import subplots
 from matplotlib.ticker import PercentFormatter
 from numpy import sqrt
-from pandas import DataFrame, Series, notna, unique, crosstab
+from pandas import DataFrame, Series, crosstab, notna, unique
 from pandas.api.types import is_string_dtype
 from scipy.stats import chi2_contingency
 from seaborn import color_palette, despine
 from tqdm.notebook import tqdm
-from typing import Any, Dict, List, Tuple
+
+from .Discretizers import GroupedList, GroupedListDiscretizer, is_equal
 
 
 class AutoCarver(GroupedListDiscretizer):
-    """ Automatic carving of continuous, categorical and categorical ordinal
+    """Automatic carving of continuous, categorical and categorical ordinal
     features that maximizes association with a binary target.
 
     Modalities/values of features are carved/regrouped according to a computed
@@ -103,121 +105,156 @@ class AutoCarver(GroupedListDiscretizer):
     X_val = pipe.transform(X_val)
 
     """
-   
+
     def __init__(
-            self,
-            values_orders: Dict[str, Any],
-            *,
-            max_n_mod: int=5,
-            sort_by: str='tschuprowt',
-            str_nan: str='__NAN__',
-            dropna: bool=True,
-            copy: bool=False,
-            verbose: bool=True
-        ) -> None:
-        
+        self,
+        values_orders: Dict[str, Any],
+        *,
+        max_n_mod: int = 5,
+        sort_by: str = "tschuprowt",
+        str_nan: str = "__NAN__",
+        dropna: bool = True,
+        copy: bool = False,
+        verbose: bool = True,
+    ) -> None:
         self.features = list(values_orders.keys())
-        self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
-        self.non_viable_features: List[str] = []  # list of features non viable features
+        self.values_orders = {
+            k: GroupedList(v) for k, v in values_orders.items()
+        }
+        self.non_viable_features: List[
+            str
+        ] = []  # list of features non viable features
         self.max_n_mod = max_n_mod  # maximum number of modality per feature
-        self.dropna = dropna  # whether or not to group NaNs with other modalities
-        
+        self.dropna = (
+            dropna  # whether or not to group NaNs with other modalities
+        )
+
         # association measure used to find the best groups
-        measures = ['tschuprowt', 'cramerv']
-        assert sort_by in measures, f"""{sort_by} not yet implemented. Choose
+        measures = ["tschuprowt", "cramerv"]
+        assert (
+            sort_by in measures
+        ), f"""{sort_by} not yet implemented. Choose
                                         from: {', '.join(measures)}."""
         self.sort_by = sort_by
 
         self.copy = copy
         self.verbose = verbose
         self.str_nan = str_nan
-    
+
     def prepare_data(
-            self,
-            X: DataFrame,
-            y: Series,
-            X_test: DataFrame=None,
-            y_test: Series=None
-        ) -> Tuple[DataFrame, Series, DataFrame, Series]:
-        """ Checks validity of provided data"""
-        
+        self,
+        X: DataFrame,
+        y: Series,
+        X_test: DataFrame = None,
+        y_test: Series = None,
+    ) -> Tuple[DataFrame, Series, DataFrame, Series]:
+        """Checks validity of provided data"""
+
         # preparing train sample
         # checking for binary target
         y_values = unique(y)
-        assert (0 in y_values) & (1 in y_values), "y must be a binary Series (int or float, not object)"
-        assert len(y_values) == 2, "y must be a binary Series (int or float, not object)"
-        
+        assert (0 in y_values) & (
+            1 in y_values
+        ), "y must be a binary Series (int or float, not object)"
+        assert (
+            len(y_values) == 2
+        ), "y must be a binary Series (int or float, not object)"
+
         # checking for quantitative columns
         is_object = X[self.features].dtypes.apply(is_string_dtype)
-        assert all(is_object), f"Non-string features in X: {', '.join(is_object[~is_object].index)}, consider using Discretizer."
-        
+        assert all(
+            is_object
+        ), f"Non-string features in X: {', '.join(is_object[~is_object].index)}, consider using Discretizer."
+
         # Copying DataFrame if requested
         Xc = X
         if self.copy:
             Xc = X.copy()
-        
+
         # preparing test sample
         # checking for binary target
         if y_test is not None:
-            assert X_test is not None, "y_test was provided but X_test is missing"
+            assert (
+                X_test is not None
+            ), "y_test was provided but X_test is missing"
             y_values = unique(y_test)
-            assert (0 in y_values) & (1 in y_values), "y_test must be a binary Series (int or float, not object)"
-            assert len(y_values) == 2, "y_test must be a binary Series (int or float, not object)"
-        
+            assert (0 in y_values) & (
+                1 in y_values
+            ), "y_test must be a binary Series (int or float, not object)"
+            assert (
+                len(y_values) == 2
+            ), "y_test must be a binary Series (int or float, not object)"
+
         # Copying DataFrame if requested
         Xtestc = X_test
         if X_test is not None:
-            assert y_test is not None, "X_test was provided but y_test is missing"
+            assert (
+                y_test is not None
+            ), "X_test was provided but y_test is missing"
             if self.copy:
                 Xtestc = X_test.copy()
-        
+
             # checking for quantitative columns
             is_object = X_test[self.features].dtypes.apply(is_string_dtype)
-            assert all(is_object), f"Non-string features in X_test: {', '.join(is_object[~is_object].index)}, consider using Discretizer."
-            
-        return Xc, y, Xtestc, y_test
-    
-    def fit(
-            self,
-            X: DataFrame,
-            y: Series,
-            X_test: DataFrame=None,
-            y_test: Series=None
-        ) -> None:
+            assert all(
+                is_object
+            ), f"Non-string features in X_test: {', '.join(is_object[~is_object].index)}, consider using Discretizer."
 
+        return Xc, y, Xtestc, y_test
+
+    def fit(
+        self,
+        X: DataFrame,
+        y: Series,
+        X_test: DataFrame = None,
+        y_test: Series = None,
+    ) -> None:
         # preparing datasets and checking for wrong values
         Xc, y, Xtestc, y_test = self.prepare_data(X, y, X_test, y_test)
-        
-        # automatic carving of each feature
-        for n, feature in tqdm(enumerate(self.features), total=len(self.features), disable=self.verbose):
 
+        # automatic carving of each feature
+        for n, feature in tqdm(
+            enumerate(self.features),
+            total=len(self.features),
+            disable=self.verbose,
+        ):
             # printing the group statistics and determining default ordering
             if self.verbose:
-                print(f"\n---\n[AutoCarver] Fit {feature} ({n+1}/{len(self.features)})")
+                print(
+                    f"\n---\n[AutoCarver] Fit {feature} ({n+1}/{len(self.features)})"
+                )
 
             # getting best combination
-            best_groups = self.get_best_combination(feature, Xc, y, Xtestc, y_test)
+            best_groups = self.get_best_combination(
+                feature, Xc, y, Xtestc, y_test
+            )
 
             # feature can not be carved robustly
             if not bool(best_groups):
-                self.non_viable_features += [feature]  # adding it to list of non viable features
+                self.non_viable_features += [
+                    feature
+                ]  # adding it to list of non viable features
 
         # discretizing features based on each feature's values_order
-        super().__init__(self.values_orders, str_nan=self.str_nan, copy=self.copy, output=float)
+        super().__init__(
+            self.values_orders,
+            str_nan=self.str_nan,
+            copy=self.copy,
+            output=float,
+        )
         super().fit(X, y)
 
         return self
 
-
     def get_best_combination(
-            self,
-            feature: str,
-            X: DataFrame,
-            y: Series,
-            X_test: DataFrame=None,
-            y_test: Series=None
-        ) -> Dict[str, Any]:
-        """ Carves a feature"""
+        self,
+        feature: str,
+        X: DataFrame,
+        y: Series,
+        X_test: DataFrame = None,
+        y_test: Series = None,
+    ) -> Dict[str, Any]:
+        """Carves a feature"""
 
         # computing crosstabs
         # crosstab on TRAIN
@@ -230,40 +267,59 @@ class AutoCarver(GroupedListDiscretizer):
 
         # printing the group statistics
         if self.verbose:
-            self.display_xtabs(feature, 'Raw', xtab, xtab_test)
+            self.display_xtabs(feature, "Raw", xtab, xtab_test)
 
         # measuring association with target for each combination and testing for stability on TEST
-        best_groups = best_combination(self.values_orders.get(feature), self.max_n_mod, self.sort_by, xtab, xtab_test, dropna=True, str_nan=self.str_nan)
+        best_groups = best_combination(
+            self.values_orders.get(feature),
+            self.max_n_mod,
+            self.sort_by,
+            xtab,
+            xtab_test,
+            dropna=True,
+            str_nan=self.str_nan,
+        )
 
         # update of the values_orders grouped modalities in values_orders
         if best_groups:
-            xtab, xtab_test = self.update_order(feature, best_groups['combination'], xtab, xtab_test)
+            xtab, xtab_test = self.update_order(
+                feature, best_groups["combination"], xtab, xtab_test
+            )
 
         # testing adding NaNs to built groups
-        if (self.str_nan in xtab.index) & self.dropna & (self.str_nan not in self.values_orders.get(feature)):
-
+        if (
+            (self.str_nan in xtab.index)
+            & self.dropna
+            & (self.str_nan not in self.values_orders.get(feature))
+        ):
             # measuring association with target for each combination and testing for stability on TEST
-            best_groups = best_combination(self.values_orders.get(feature), self.max_n_mod, self.sort_by, xtab, xtab_test, dropna=False, str_nan=self.str_nan)
+            best_groups = best_combination(
+                self.values_orders.get(feature),
+                self.max_n_mod,
+                self.sort_by,
+                xtab,
+                xtab_test,
+                dropna=False,
+                str_nan=self.str_nan,
+            )
 
             # adding NaN to the order
             self.insert_nan(feature, xtab)
 
             # update of the values_orders grouped modalities in values_orders
             if best_groups:
-                xtab, xtab_test = self.update_order(feature, best_groups['combination'], xtab, xtab_test)
+                xtab, xtab_test = self.update_order(
+                    feature, best_groups["combination"], xtab, xtab_test
+                )
 
         # printing the new group statistics
         if self.verbose and best_groups:
-            self.display_xtabs(feature, 'Fitted', xtab, xtab_test)
+            self.display_xtabs(feature, "Fitted", xtab, xtab_test)
 
         return best_groups
 
-    def insert_nan(
-            self,
-            feature: str,
-            xtab: DataFrame
-        ) -> GroupedList:
-        """ Inserts NaNs in the order"""
+    def insert_nan(self, feature: str, xtab: DataFrame) -> GroupedList:
+        """Inserts NaNs in the order"""
 
         # accessing order for specified feature
         order = self.values_orders.get(feature)
@@ -276,15 +332,15 @@ class AutoCarver(GroupedListDiscretizer):
             self.values_orders.update({feature: order})
 
     def update_order(
-            self,
-            feature: str,
-            best_groups: GroupedList,
-            xtab: DataFrame,
-            xtab_test: DataFrame=None
-        ) -> Tuple[DataFrame, DataFrame]:
-        """ Updates the values_orders and xtabs according to the best_groups"""
+        self,
+        feature: str,
+        best_groups: GroupedList,
+        xtab: DataFrame,
+        xtab_test: DataFrame = None,
+    ) -> Tuple[DataFrame, DataFrame]:
+        """Updates the values_orders and xtabs according to the best_groups"""
 
-        # updating values_orders with best_combination 
+        # updating values_orders with best_combination
         self.values_orders.update({feature: best_groups})
 
         # update of the TRAIN crosstab
@@ -295,88 +351,106 @@ class AutoCarver(GroupedListDiscretizer):
         if xtab_test is not None:
             best_combi = list(map(best_groups.get_group, xtab_test.index))
             xtab_test = xtab_test.groupby(best_combi, dropna=False).sum()
-        
+
         return xtab, xtab_test
-    
+
     def display_xtabs(
-            self,
-            feature: str,
-            caption: str,
-            xtab: DataFrame,
-            xtab_test: DataFrame=None
-        ) -> None:
-        """ Pretty display of frequency and target rate per modality on the same line. """
-        
+        self,
+        feature: str,
+        caption: str,
+        xtab: DataFrame,
+        xtab_test: DataFrame = None,
+    ) -> None:
+        """Pretty display of frequency and target rate per modality on the same line."""
+
         # known_order per feature
         known_order = self.values_orders.get(feature)
-        
+
         # target rate and frequency on TRAIN
         train_stats = stats_xtab(xtab, known_order)
-    
+
         # target rate and frequency on TEST
         if xtab_test is not None:
-            test_stats = stats_xtab(xtab_test, train_stats.index, train_stats.labels)
-            test_stats = test_stats.set_index('labels')  # setting labels as indices
-        
+            test_stats = stats_xtab(
+                xtab_test, train_stats.index, train_stats.labels
+            )
+            test_stats = test_stats.set_index(
+                "labels"
+            )  # setting labels as indices
+
         # setting TRAIN labels as indices
-        train_stats = train_stats.set_index('labels')
+        train_stats = train_stats.set_index("labels")
 
         # Displaying TRAIN modality level stats
-        train_style = train_stats.style.background_gradient(cmap='coolwarm')  # color scaling
-        train_style = train_style.set_table_attributes("style='display:inline'")  # printing in notebook
-        train_style = train_style.set_caption(f'{caption} distribution on X:')  # title
+        train_style = train_stats.style.background_gradient(
+            cmap="coolwarm"
+        )  # color scaling
+        train_style = train_style.set_table_attributes(
+            "style='display:inline'"
+        )  # printing in notebook
+        train_style = train_style.set_caption(
+            f"{caption} distribution on X:"
+        )  # title
         html = train_style._repr_html_()
-        
+
         # adding TEST modality level stats
         if xtab_test is not None:
-            test_style = test_stats.style.background_gradient(cmap='coolwarm')  # color scaling
-            test_style = test_style.set_table_attributes("style='display:inline'")  # printing in notebook
-            test_style = test_style.set_caption(f'{caption} distribution on X_test:')  # title
-            html += ' ' + test_style._repr_html_()
+            test_style = test_stats.style.background_gradient(
+                cmap="coolwarm"
+            )  # color scaling
+            test_style = test_style.set_table_attributes(
+                "style='display:inline'"
+            )  # printing in notebook
+            test_style = test_style.set_caption(
+                f"{caption} distribution on X_test:"
+            )  # title
+            html += " " + test_style._repr_html_()
 
         # displaying html of colored DataFrame
         display_html(html, raw=True)
 
+
 def groupedlist_combination(
-        combination: List[List[Any]],
-        order: GroupedList
-    ) -> GroupedList:
-    """ Converts a list of combination to a GroupedList"""
-    
+    combination: List[List[Any]], order: GroupedList
+) -> GroupedList:
+    """Converts a list of combination to a GroupedList"""
+
     order_copy = GroupedList(order)
     for combi in combination:
         order_copy.group_list(combi, combi[0])
-    
+
     return order_copy
 
+
 def stats_xtab(
-        xtab: DataFrame,
-        known_order: List[Any]=None,
-        known_labels: List[Any]=None
-    ) -> DataFrame:
-    """ Computes column (target) rate per row (modality) and row frequency"""
-    
+    xtab: DataFrame,
+    known_order: List[Any] = None,
+    known_labels: List[Any] = None,
+) -> DataFrame:
+    """Computes column (target) rate per row (modality) and row frequency"""
+
     # target rate and frequency statistics per modality
-    stats = DataFrame({
-        # target rate per modality
-        'target_rate': xtab[1].divide(xtab.sum(axis=1)),
-        # frequency per modality
-        'frequency': xtab.sum(axis=1) / xtab.sum().sum()
-    })
-    
+    stats = DataFrame(
+        {
+            # target rate per modality
+            "target_rate": xtab[1].divide(xtab.sum(axis=1)),
+            # frequency per modality
+            "frequency": xtab.sum(axis=1) / xtab.sum().sum(),
+        }
+    )
+
     # sorting statistics
     # case 0: default ordering based on observed target rate
     if known_order is None:
-        order = list(stats.sort_values('target_rate', ascending=True).index)
-    
+        order = list(stats.sort_values("target_rate", ascending=True).index)
+
     # case 1: a known_order was provided
     else:
         order = known_order[:]
-      
+
     # modalities' labels
     # case 0: default labels
     if known_labels is None:
-        
         # accessing string representation of the GroupedList
         if isinstance(known_order, GroupedList):
             labels = known_order.get_repr()
@@ -384,129 +458,138 @@ def stats_xtab(
         # labels are the default order
         else:
             labels = order[:]
-            
+
     # case 1: known_labels were provided
     else:
         labels = known_labels[:]
-            
-            
+
     # keeping values missing from the order at the end
     unknown_modality = [mod for mod in xtab.index if mod not in order]
     for mod in unknown_modality:
         order = [c for c in order if not is_equal(c, mod)] + [mod]
         labels = [c for c in labels if not is_equal(c, mod)] + [mod]
-    
+
     # sorting statistics
     stats = stats.reindex(order, fill_value=0)
-    stats['labels'] = labels
-    
+    stats["labels"] = labels
+
     return stats
 
+
 def apply_combination(
-        xtab: DataFrame,
-        combination: GroupedList
-    ) -> Dict[str, Any]:
-    """ applies a modality combination to a crosstab """
+    xtab: DataFrame, combination: GroupedList
+) -> Dict[str, Any]:
+    """applies a modality combination to a crosstab"""
 
     # initiating association dict
-    association = {'combination': combination}
+    association = {"combination": combination}
 
     # grouping modalities in the initial crosstab
     groups = list(map(combination.get_group, xtab.index))
     combi_xtab = xtab.groupby(groups, dropna=False).sum()
-    association.update({'combi_xtab': combi_xtab})
+    association.update({"combi_xtab": combi_xtab})
 
     # measuring association with the target
     association.update(association_xtab(combi_xtab))
 
     return association
 
+
 def best_combination(
-        order: GroupedList,
-        max_n_mod: int,
-        sort_by: str,
-        xtab_train: DataFrame,
-        xtab_dev: DataFrame=None,
-        dropna: bool=True,
-        str_nan: str=None
-    ) -> Dict[str, Any]:
-    """ Finds the best combination of groups of feature's values:
-     - Most associated combination on train sample 
-     - Stable target rate of combination on test sample.
+    order: GroupedList,
+    max_n_mod: int,
+    sort_by: str,
+    xtab_train: DataFrame,
+    xtab_dev: DataFrame = None,
+    dropna: bool = True,
+    str_nan: str = None,
+) -> Dict[str, Any]:
+    """Finds the best combination of groups of feature's values:
+    - Most associated combination on train sample
+    - Stable target rate of combination on test sample.
     """
-    
+
     # copying crosstabs
     xtab = xtab_train
     xtab_test = xtab_dev
-    
+
     # removing nans if requested
     if dropna:
-        
         # crosstab on TRAIN
         xtab = xtab_train[xtab_train.index != str_nan]  # filtering out nans
 
         # crosstab on TEST
         if xtab_test is not None:
-            xtab_test = xtab_dev[xtab_dev.index != str_nan]  # filtering out nans
-    
+            xtab_test = xtab_dev[
+                xtab_dev.index != str_nan
+            ]  # filtering out nans
+
         # getting all possible combinations for the feature without NaNS
         combinations = get_all_combinations(order, max_n_mod, raw=False)
-    
+
     # keeping nans as a modality
     else:
-    
         # getting all possible combinations for the feature with NaNS
         combinations = get_all_nan_combinations(order, str_nan, max_n_mod)
 
-    # computing association measure per combination 
+    # computing association measure per combination
     associations = [apply_combination(xtab, combi) for combi in combinations]
 
     # sort according to association measure
     if len(combinations) > 0:
         associations = DataFrame(associations)
         associations.sort_values(sort_by, inplace=True, ascending=False)
-        associations = associations.to_dict(orient='records')
+        associations = associations.to_dict(orient="records")
 
     # testing associations
     # case 0: no test set was provided
     if xtab_test is None and len(associations) > 0:
         return associations[0]
-    
+
     # case 1: testing viability on provided TEST sample
     else:
         for association in associations:
-            
             # needed parameters
-            combination, combi_xtab = association['combination'], association['combi_xtab']
+            combination, combi_xtab = (
+                association["combination"],
+                association["combi_xtab"],
+            )
 
             # grouping modalities in the initial crosstab
-            combi_xtab_test = xtab_test.groupby(list(map(combination.get_group, xtab_test.index)), dropna=False).sum()
+            combi_xtab_test = xtab_test.groupby(
+                list(map(combination.get_group, xtab_test.index)), dropna=False
+            ).sum()
 
             # checking that all non-nan groups are in TRAIN and TEST
-            unq_x =  [v for v in unique(combi_xtab.index) if v != notna(v)]
-            unq_xtest = [v for v in unique(combi_xtab_test.index) if v != notna(v)]
+            unq_x = [v for v in unique(combi_xtab.index) if v != notna(v)]
+            unq_xtest = [
+                v for v in unique(combi_xtab_test.index) if v != notna(v)
+            ]
             viability = all([e in unq_x for e in unq_xtest])
             viability = viability and all([e in unq_xtest for e in unq_x])
 
             # same target rate order in TRAIN and TEST
-            train_target_rate = combi_xtab[1].divide(combi_xtab[0]).sort_values()
-            test_target_rate = combi_xtab_test[1].divide(combi_xtab_test[0]).sort_values()
-            viability = viability and all(train_target_rate.index == test_target_rate.index)
+            train_target_rate = (
+                combi_xtab[1].divide(combi_xtab[0]).sort_values()
+            )
+            test_target_rate = (
+                combi_xtab_test[1].divide(combi_xtab_test[0]).sort_values()
+            )
+            viability = viability and all(
+                train_target_rate.index == test_target_rate.index
+            )
 
             # checking that some combinations were provided
             if viability:
-
-                association.update({'combi_xtab_test': combi_xtab_test})
+                association.update({"combi_xtab_test": combi_xtab_test})
 
                 return association
 
 
 def get_all_combinations(
-        values: GroupedList,
-        max_n_mod: int=None,
-        raw: bool=False
-    ) -> List[GroupedList]:
-    """ Returns all possible triangular combinations"""
+    values: GroupedList, max_n_mod: int = None, raw: bool = False
+) -> List[GroupedList]:
+    """Returns all possible triangular combinations"""
 
     # maximum number of classes
     q = len(values)
@@ -521,25 +604,30 @@ def get_all_combinations(
         combinations += get_combinations(n_class, q)
 
     # getting real feature values
-    combinations = [[values[int(c[0]): int(c[1]) + 1] for c in combi] for combi in combinations]
-    
+    combinations = [
+        [values[int(c[0]) : int(c[1]) + 1] for c in combi]
+        for combi in combinations
+    ]
+
     # converting back to GroupedList
     if not raw:
-        combinations = [groupedlist_combination(combination, values) for combination in combinations]
+        combinations = [
+            groupedlist_combination(combination, values)
+            for combination in combinations
+        ]
 
     return combinations
 
+
 def get_all_nan_combinations(
-        order: GroupedList,
-        str_nan: str,
-        max_n_mod: int
-    ) -> List[GroupedList]:
-    """ all possible combinations of modalities with numpy.nan"""
-    
+    order: GroupedList, str_nan: str, max_n_mod: int
+) -> List[GroupedList]:
+    """all possible combinations of modalities with numpy.nan"""
+
     # computing all non-NaN combinations
     # case 0: several modalities -> several combinations
     if len(order) > 1:
-        combinations = get_all_combinations(order, max_n_mod-1, raw=True)
+        combinations = get_all_combinations(order, max_n_mod - 1, raw=True)
     # case 1: unique or no modality -> two combinations
     else:
         combinations = []
@@ -547,38 +635,36 @@ def get_all_nan_combinations(
     # iterating over each combinations of non-NaNs
     new_combinations = []
     for combi in combinations:
-
-         # NaNs not attributed to a group (own modality)
-        new_combinations += [combi + [[str_nan]]] 
+        # NaNs not attributed to a group (own modality)
+        new_combinations += [combi + [[str_nan]]]
 
         # NaNs attributed to a group of non NaNs
         for n in range(len(combi)):
-
             # grouping NaNs with an existing group
             new_combination = [combi[n] + [str_nan]]
 
             # adding other groups unchanged
             pre = [o for o in combi[:n]]
-            nex = [o for o in combi[n+1:]]
+            nex = [o for o in combi[n + 1 :]]
             new_combinations += [pre + new_combination + nex]
-            
+
     # adding NaN to order
     if str_nan not in order:
         order = order.append(str_nan)
-    
+
     # converting back to GroupedList
-    new_combinations = [groupedlist_combination(combination, order) for combination in new_combinations] 
+    new_combinations = [
+        groupedlist_combination(combination, order)
+        for combination in new_combinations
+    ]
 
     return new_combinations
 
 
 def consecutive_combinations(
-        n_remaining: int,
-        start: int,
-        end: int,
-        grp_for_this_step: list=None
-    ) -> None:
-    """HELPER finds all consecutive combinations between start and end.    """
+    n_remaining: int, start: int, end: int, grp_for_this_step: list = None
+) -> None:
+    """HELPER finds all consecutive combinations between start and end."""
 
     # Import de la liste globale
     global __li_of_res__
@@ -586,38 +672,49 @@ def consecutive_combinations(
     # initiating group
     if not grp_for_this_step:
         grp_for_this_step = []
-    
+
     # stopping when there are non more remaining classes
     if n_remaining == 0:
-        
         ### On ajoute le dernier quantile restant au découpage ###
         grp_for_this_step += [(start, end)]
 
         ### Ajout du découpage réalisé au groupe des solutions ###
         __li_of_res__ += [grp_for_this_step]
 
-    
     # adding all possible combinations of each possible range
     else:
-        
         ### Parcours de toutes les valeurs possibles de fin pour le i-ème groupe du groupement à x quantiles ###
         for i in range(start, end):
+            consecutive_combinations(
+                n_remaining - 1, i + 1, end, grp_for_this_step + [(start, i)]
+            )
 
-            consecutive_combinations(n_remaining-1, i+1, end, grp_for_this_step + [(start, i)])
-            
+
 def get_combinations(n_class: int, q: int) -> List[List[str]]:
     """HELPER recupération des combinaisons possibles de q quantiles pour n_class."""
-    
-    globals()['__li_of_res__'] = []
 
-    consecutive_combinations(n_class-1, 0, q-1)
-    
-    combinations = [list(map(lambda u: (str(u[0]).zfill(len(str(q-1))), str(u[1]).zfill(len(str(q-1)))), l)) for l in __li_of_res__]
-    
+    globals()["__li_of_res__"] = []
+
+    consecutive_combinations(n_class - 1, 0, q - 1)
+
+    combinations = [
+        list(
+            map(
+                lambda u: (
+                    str(u[0]).zfill(len(str(q - 1))),
+                    str(u[1]).zfill(len(str(q - 1))),
+                ),
+                l,
+            )
+        )
+        for l in __li_of_res__
+    ]
+
     return combinations
 
+
 def association_xtab(xtab: DataFrame) -> Dict[str, float]:
-    """ Computes measures of association between feature x and feature2. """
+    """Computes measures of association between feature x and feature2."""
 
     # numnber of observations
     n_obs = xtab.sum().sum()
@@ -640,48 +737,56 @@ def association_xtab(xtab: DataFrame) -> Dict[str, float]:
     if dof_mods > 0:
         tschuprowt = sqrt(chi2 / n_obs / dof_mods)
 
-    results = {'cramerv': cramerv, 'tschuprowt': tschuprowt}
-    
+    results = {"cramerv": cramerv, "tschuprowt": tschuprowt}
+
     return results
 
-def nan_crosstab(
-        x: Series,
-        y: Series,
-        str_nan: str='__NAN__'
-    ):
-    """ Crosstab that keeps nans as a specific value"""
-    
+
+def nan_crosstab(x: Series, y: Series, str_nan: str = "__NAN__"):
+    """Crosstab that keeps nans as a specific value"""
+
     # keeping NaNs as a specific modality
     x_filled = x.fillna(str_nan)  # filling NaNs
 
     # computing initial crosstabs
     xtab = crosstab(x_filled, y)
-    
+
     return xtab
 
 
 def plot_stats(stats: DataFrame) -> Tuple[Figure, Axes]:
-    """ Barplot of the volume and target rate"""
-    
-    x = [0] + [elt for e in stats['frequency'].cumsum()[:-1] for elt in [e] * 2] + [1]
-    y2 = [elt for e in list(stats['target_rate']) for elt in [e]*2]
+    """Barplot of the volume and target rate"""
+
+    x = (
+        [0]
+        + [elt for e in stats["frequency"].cumsum()[:-1] for elt in [e] * 2]
+        + [1]
+    )
+    y2 = [elt for e in list(stats["target_rate"]) for elt in [e] * 2]
     s = list(stats.index)
-    scaled_y2 = [(y-min(y2)) / (max(y2) - min(y2)) for y in y2]
+    scaled_y2 = [(y - min(y2)) / (max(y2) - min(y2)) for y in y2]
     c = color_palette("coolwarm", as_cmap=True)(scaled_y2)
 
     fig, ax = subplots()
 
     for i in range(len(stats)):
-        k = i*2
-        ax.fill_between(x[k: k+2], [0, 0], y2[k: k+2], color=c[k])
-        ax.text(sum(x[k: k+2]) / 2, y2[k], s[i], rotation=90, ha='center', va='bottom')
+        k = i * 2
+        ax.fill_between(x[k : k + 2], [0, 0], y2[k : k + 2], color=c[k])
+        ax.text(
+            sum(x[k : k + 2]) / 2,
+            y2[k],
+            s[i],
+            rotation=90,
+            ha="center",
+            va="bottom",
+        )
 
-    ax.xaxis.set_major_formatter(PercentFormatter(xmax=1))    
-    ax.yaxis.set_major_formatter(PercentFormatter(xmax=1))    
-    ax.set_xlabel('Volume')
-    ax.set_ylabel('Target rate')
+    ax.xaxis.set_major_formatter(PercentFormatter(xmax=1))
+    ax.yaxis.set_major_formatter(PercentFormatter(xmax=1))
+    ax.set_xlabel("Volume")
+    ax.set_ylabel("Target rate")
     ax.set_xlim(0, 1)
     ax.set_ylim(0)
     despine()
-    
+
     return fig, ax
