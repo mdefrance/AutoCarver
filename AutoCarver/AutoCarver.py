@@ -251,6 +251,7 @@ class AutoCarver(GroupedListDiscretizer):
         feature: str,
         X: DataFrame,
         y: Series,
+        *,
         X_test: DataFrame = None,
         y_test: Series = None,
     ) -> Dict[str, Any]:
@@ -318,7 +319,7 @@ class AutoCarver(GroupedListDiscretizer):
 
         return best_groups
 
-    def insert_nan(self, feature: str, xtab: DataFrame) -> GroupedList:
+    def insert_nan(self, feature: str) -> GroupedList:
         """Inserts NaNs in the order"""
 
         # accessing order for specified feature
@@ -547,43 +548,42 @@ def best_combination(
         return associations[0]
 
     # case 1: testing viability on provided TEST sample
-    else:
-        for association in associations:
-            # needed parameters
-            combination, combi_xtab = (
-                association["combination"],
-                association["combi_xtab"],
-            )
+    for association in associations:
+        # needed parameters
+        combination, combi_xtab = (
+            association["combination"],
+            association["combi_xtab"],
+        )
 
-            # grouping modalities in the initial crosstab
-            combi_xtab_test = xtab_test.groupby(
-                list(map(combination.get_group, xtab_test.index)), dropna=False
-            ).sum()
+        # grouping modalities in the initial crosstab
+        combi_xtab_test = xtab_test.groupby(
+            list(map(combination.get_group, xtab_test.index)), dropna=False
+        ).sum()
 
-            # checking that all non-nan groups are in TRAIN and TEST
-            unq_x = [v for v in unique(combi_xtab.index) if v != notna(v)]
-            unq_xtest = [
-                v for v in unique(combi_xtab_test.index) if v != notna(v)
-            ]
-            viability = all([e in unq_x for e in unq_xtest])
-            viability = viability and all([e in unq_xtest for e in unq_x])
+        # checking that all non-nan groups are in TRAIN and TEST
+        unq_x = [v for v in unique(combi_xtab.index) if v != notna(v)]
+        unq_xtest = [
+            v for v in unique(combi_xtab_test.index) if v != notna(v)
+        ]
+        viability = all([e in unq_x for e in unq_xtest])
+        viability = viability and all([e in unq_xtest for e in unq_x])
 
-            # same target rate order in TRAIN and TEST
-            train_target_rate = (
-                combi_xtab[1].divide(combi_xtab[0]).sort_values()
-            )
-            test_target_rate = (
-                combi_xtab_test[1].divide(combi_xtab_test[0]).sort_values()
-            )
-            viability = viability and all(
-                train_target_rate.index == test_target_rate.index
-            )
+        # same target rate order in TRAIN and TEST
+        train_target_rate = (
+            combi_xtab[1].divide(combi_xtab[0]).sort_values()
+        )
+        test_target_rate = (
+            combi_xtab_test[1].divide(combi_xtab_test[0]).sort_values()
+        )
+        viability = viability and all(
+            train_target_rate.index == test_target_rate.index
+        )
 
-            # checking that some combinations were provided
-            if viability:
-                association.update({"combi_xtab_test": combi_xtab_test})
+        # checking that some combinations were provided
+        if viability:
+            association.update({"combi_xtab_test": combi_xtab_test})
 
-                return association
+            return association
 
 
 def get_all_combinations(
@@ -599,7 +599,7 @@ def get_all_combinations(
         max_n_mod = q
 
     # all possible combinations
-    combinations = list()
+    combinations = []
     for n_class in range(2, max_n_mod + 1):
         combinations += get_combinations(n_class, q)
 
@@ -639,9 +639,9 @@ def get_all_nan_combinations(
         new_combinations += [combi + [[str_nan]]]
 
         # NaNs attributed to a group of non NaNs
-        for n in range(len(combi)):
+        for n, combi_elt in enumerate(combi):
             # grouping NaNs with an existing group
-            new_combination = [combi[n] + [str_nan]]
+            new_combination = [combi_elt + [str_nan]]
 
             # adding other groups unchanged
             pre = [o for o in combi[:n]]

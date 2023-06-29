@@ -152,10 +152,24 @@ class GroupedList(list):
         return self
 
     def remove(self, value: Any) -> None:
+        """Removes a value from the GroupedList
+
+        Parameters
+        ----------
+        value : Any
+            value to be removed
+        """        
         super().remove(value)
         self.contained.pop(value)
 
     def pop(self, idx: int) -> None:
+        """Pop a value from the GroupedList by index
+
+        Parameters
+        ----------
+        idx : int
+            Index of the value to be popped out
+        """        
         value = self[idx]
         self.remove(value)
 
@@ -238,15 +252,33 @@ class GroupedList(list):
 
 
 class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
+    """Discretizer that uses a dict of grouped values."""
+    
     def __init__(
         self,
-        values_orders: Dict[str, Any],
+        values_orders: Dict[str, GroupedList],
         *,
         copy: bool = False,
         output: type = float,
         str_nan: str = None,
         verbose: bool = False,
     ) -> None:
+        """Initiates a Discretizer that uses a dict of GroupedList
+
+        Parameters
+        ----------
+        values_orders : Dict[str, GroupedList]
+            Per feature ordering 
+        copy : bool, optional
+            Whether or not to copy the input DataFrame, by default False
+        output : type, optional
+            Type of the columns to be returned: float or str, by default float
+        str_nan : str, optional
+            Default values attributed to nan, by default None
+        verbose : bool, optional
+            If True, prints information, by default False
+        """
+
         self.features = list(values_orders.keys())
         self.values_orders = {
             k: GroupedList(v) for k, v in values_orders.items()
@@ -256,10 +288,25 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         self.verbose = verbose
         self.str_nan = str_nan
 
-    def fit(self, X, y=None) -> None:
+    def fit(self, X: DataFrame, y: Series=None) -> None:
         return self
 
     def transform(self, X: DataFrame, y: Series = None) -> DataFrame:
+        """_summary_
+
+        Parameters
+        ----------
+        X : DataFrame
+            _description_
+        y : Series, optional
+            _description_, by default None
+
+        Returns
+        -------
+        DataFrame
+            _description_
+        """
+   
         # copying dataframes
         Xc = X
         if self.copy:
@@ -360,8 +407,22 @@ class QualitativeDiscretizer(BaseEstimator, TransformerMixin):
         self.copy = copy
         self.verbose = verbose
 
-    def prepare_data(self, X: DataFrame, y: Series) -> DataFrame:
-        """Checking data for bucketization"""
+    def prepare_data(self, X: DataFrame, y: Series=None) -> DataFrame:
+        """Prepares the data for bucketization, checks column types.
+        Converts non-string columns into strings.
+
+        Parameters
+        ----------
+        X : DataFrame
+            Dataset to be bucketized
+        y : Series
+            Model target, by default None
+
+        Returns
+        -------
+        DataFrame
+            Formatted X for bucketization
+        """
 
         # copying dataframe
         Xc = X.copy()
@@ -739,17 +800,40 @@ class Discretizer(BaseEstimator, TransformerMixin):
 
 
 class ChainedDiscretizer(GroupedListDiscretizer):
+    """Chained Discretization based on a list of GroupedList."""
     def __init__(
         self,
         features: List[str],
         min_freq: float,
         chained_orders: List[GroupedList],
         *,
-        remove_unknown: bool = False,
+        remove_unknown: bool = True,
         str_nan: str = "__NAN__",
         copy: bool = False,
         verbose: bool = False,
     ) -> None:
+        """Initializes a ChainedDiscretizer
+
+        Parameters
+        ----------
+        features : List[str]
+            Columns to be bucketized
+        min_freq : float
+            Minimum frequency per modality
+        chained_orders : List[GroupedList]
+            List of modality orders
+        remove_unknown : bool, optional
+            Whether or not to remove unknown values. If true, they are grouped
+            into the value of`str_nan` otherwise it throws an error,
+            by default True
+        str_nan : str, optional
+            Value used to replace nan. If set, same value should be used across
+            all Discretizers, by default "__NAN__"
+        copy : bool, optional
+            Whether or not to copy the dataset, by default False
+        verbose : bool, optional
+            Whether or not to print information during fit, by default False
+        """        
         self.min_freq = min_freq
         self.features = features[:]
         self.chained_orders = [GroupedList(order) for order in chained_orders]
@@ -796,7 +880,7 @@ class ChainedDiscretizer(GroupedListDiscretizer):
             if self.remove_unknown & (len(missing) > 0):
                 # alerting user
                 print(
-                    f"Order for {feature} was not provided for values: {missing}, these values will be converted to '{self.str_nan}' (policy remove_unknown=True)"
+                    f"Order for feature '{feature}' was not provided for values: {missing}, these values will be converted to '{self.str_nan}' (policy remove_unknown=True)"
                 )
 
                 # adding missing valyes to the order
@@ -807,7 +891,7 @@ class ChainedDiscretizer(GroupedListDiscretizer):
             else:
                 assert (
                     not len(missing) > 0
-                ), f"Order for {feature} needs to be provided for values: {missing}, otherwise set remove_unknown=True"
+                ), f"Order for feature '{feature}' needs to be provided for values: {missing}, otherwise set remove_unknown=True"
 
             # iterating over each specified orders
             for order in self.chained_orders:
@@ -1054,7 +1138,7 @@ class ClosestDiscretizer(BaseEstimator, TransformerMixin):
                     [self.default_values.get(feature)],
                     default=Xc[feature],
                 )  # regroupement des valeurs
-                warn(f"Unknown modalities provided for {feature}: {unknowns}")
+                warn(f"Unknown modalities provided for feature '{feature}': {unknowns}")
 
             # grouping values inside groups of modalities
             to_discard = [
