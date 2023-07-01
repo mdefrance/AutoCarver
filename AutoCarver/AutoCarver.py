@@ -561,8 +561,8 @@ def best_combination(
         # checking that all non-nan groups are in TRAIN and TEST
         unq_x = [v for v in unique(combi_xtab.index) if v != notna(v)]
         unq_xtest = [v for v in unique(combi_xtab_test.index) if v != notna(v)]
-        viability = all([e in unq_x for e in unq_xtest])
-        viability = viability and all([e in unq_xtest for e in unq_x])
+        viability = all(e in unq_x for e in unq_xtest)
+        viability = viability and all(e in unq_xtest for e in unq_x)
 
         # same target rate order in TRAIN and TEST
         train_target_rate = combi_xtab[1].divide(combi_xtab[0]).sort_values()

@@ -134,10 +134,10 @@ class GroupedList(list):
 
         # checking that all values are given an order
         assert all(
-            [o in self for o in ordering]
+            o in self for o in ordering
         ), f"Unknown values in ordering: {', '.join([str(v) for v in ordering if v not in self])}"
         assert all(
-            [s in ordering for s in self]
+            s in ordering for s in self
         ), f"Missing value from ordering: {', '.join([str(v) for v in self if v not in ordering])}"
 
         # ordering the contained
