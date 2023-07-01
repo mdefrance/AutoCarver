@@ -1,3 +1,7 @@
+"""Base tools to build simple buckets out of Quantitative and Qualitative features
+for a binary classification model.
+"""
+
 from typing import Any, Dict, List
 from warnings import warn
 
@@ -32,6 +36,7 @@ def nan_unique(x: Series):
 
 
 class GroupedList(list):
+    """An ordered list that extends dict."""
     def __init__(self, iterable=()) -> None:
         """An ordered list that historizes its elements' merges."""
 

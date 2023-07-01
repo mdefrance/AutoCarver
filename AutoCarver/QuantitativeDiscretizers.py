@@ -1,3 +1,7 @@
+"""Tools to build simple buckets out of Quantitative features
+for a binary classification model.
+"""
+
 from typing import Any, Dict, List
 
 from numpy import (

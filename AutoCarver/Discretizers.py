@@ -1,3 +1,7 @@
+"""Tools to build simple buckets out of Quantitative and Qualitative features
+for a binary classification model.
+"""
+
 from typing import Any, Dict, List
 from pandas import DataFrame, Series, unique
 from pandas.api.types import is_numeric_dtype, is_string_dtype
