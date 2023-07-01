@@ -1,7 +1,7 @@
 from codecs import open
 from os import path
 
-from setuptools import setup
+from setuptools import setup,find_packages
 
 here = path.abspath(path.dirname(__file__))
 
@@ -21,7 +21,7 @@ setup(
         "Bug Tracker": "https://github.com/mdefrance/AutoCarver/issues"
     },
     license="MIT",
-    packages=["AutoCarver"],
+    packages=find_packages(),
     classifiers=[
         # ou 4 - Beta ou 5 - Production/Stable
         "Development Status :: 4 - Beta",
