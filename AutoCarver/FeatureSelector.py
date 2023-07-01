@@ -1,3 +1,5 @@
+"""Tools to select the best Quantitative and Qualitative features."""
+
 from math import sqrt
 from random import shuffle
 from typing import Any, Callable, Dict, List, Tuple
@@ -87,6 +89,25 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
         verbose: bool = True,
         **params,
     ) -> None:
+        """_summary_
+
+        Parameters
+        ----------
+        features : List[str]
+            _description_
+        n_best : int
+            _description_
+        measures : List[Callable], optional
+            _description_, by default list()
+        filters : List[Callable], optional
+            _description_, by default list()
+        sample_size : float, optional
+            _description_, by default 1.0
+        copy : bool, optional
+            _description_, by default True
+        verbose : bool, optional
+            _description_, by default True
+        """
         self.features = features[:]
         self.n_best = n_best
         assert n_best <= len(features), "Must set n_best <= len(features)"

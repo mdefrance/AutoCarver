@@ -16,7 +16,7 @@ from scipy.stats import chi2_contingency
 from seaborn import color_palette, despine
 from tqdm.notebook import tqdm
 
-from .Discretizers import GroupedList, GroupedListDiscretizer, is_equal
+from .BaseDiscretizers import GroupedList, GroupedListDiscretizer, is_equal
 
 
 class AutoCarver(GroupedListDiscretizer):

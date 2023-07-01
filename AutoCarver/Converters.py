@@ -1,3 +1,5 @@
+"""Tools for FeatureEngineering."""
+
 from typing import Any, Dict, List
 
 from numpy import nan, select, tanh
@@ -18,13 +20,45 @@ class StringConverter(BaseEstimator, TransformerMixin):
     """
 
     def __init__(self, features: List[str] = [], copy: bool = False) -> None:
+        """_summary_
+
+        Parameters
+        ----------
+        features : List[str], optional
+            _description_, by default []
+        copy : bool, optional
+            _description_, by default False
+        """
         self.features = features[:]
         self.copy = copy
 
-    def fit(self, X: DataFrame, y: Series = None):
+    def fit(self, X: DataFrame, y: Series = None) -> None:
+        """_summary_
+
+        Parameters
+        ----------
+        X : DataFrame
+            _description_
+        y : Series, optional
+            _description_, by default None
+        """
         return self
 
     def transform(self, X: DataFrame, y: Series = None) -> DataFrame:
+        """_summary_
+
+        Parameters
+        ----------
+        X : DataFrame
+            _description_
+        y : Series, optional
+            _description_, by default None
+
+        Returns
+        -------
+        DataFrame
+            _description_
+        """
         # copying DataFrame if requested
         Xc = X
         if self.copy:
@@ -74,6 +108,19 @@ class TimeDeltaConverter(BaseEstimator, TransformerMixin):
         copy: bool = False,
         drop: bool = True,
     ) -> None:
+        """_summary_
+
+        Parameters
+        ----------
+        features : List[str]
+            _description_
+        nans : Any, optional
+            _description_, by default nan
+        copy : bool, optional
+            _description_, by default False
+        drop : bool, optional
+            _description_, by default True
+        """
         self.features = features[:]
         self.copy = copy
         self.new_features: List[str] = []
@@ -81,6 +128,15 @@ class TimeDeltaConverter(BaseEstimator, TransformerMixin):
         self.drop = drop
 
     def fit(self, X: DataFrame, y=None) -> None:
+        """_summary_
+
+        Parameters
+        ----------
+        X : DataFrame
+            _description_
+        y : _type_, optional
+            _description_, by default None
+        """
         # creating list of names of delta featuers
         for i, date1 in enumerate(self.features):
             for date2 in self.features[i + 1 :]:
@@ -89,6 +145,20 @@ class TimeDeltaConverter(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X: DataFrame, y: Series = None) -> DataFrame:
+        """_summary_
+
+        Parameters
+        ----------
+        X : DataFrame
+            _description_
+        y : Series, optional
+            _description_, by default None
+
+        Returns
+        -------
+        DataFrame
+            _description_
+        """
         # copying dataset
         Xc = X
         if self.copy:
@@ -125,6 +195,17 @@ class GroupNormalizer(BaseEstimator, TransformerMixin):
     """
 
     def __init__(self, groups: List[str], features: List[str], copy: bool = True) -> None:
+        """_summary_
+
+        Parameters
+        ----------
+        groups : List[str]
+            _description_
+        features : List[str]
+            _description_
+        copy : bool, optional
+            _description_, by default True
+        """
         self.features = features[:]
         self.groups = groups[:]
 
@@ -136,6 +217,15 @@ class GroupNormalizer(BaseEstimator, TransformerMixin):
         self.new_features = list()
 
     def fit(self, X: DataFrame, y: Series = None) -> None:
+        """_summary_
+
+        Parameters
+        ----------
+        X : DataFrame
+            _description_
+        y : Series, optional
+            _description_, by default None
+        """
         # iterating over each grouping column
         for group in self.groups:
             # computing group mean
@@ -150,6 +240,20 @@ class GroupNormalizer(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X: DataFrame, y: Series = None) -> DataFrame:
+        """_summary_
+
+        Parameters
+        ----------
+        X : DataFrame
+            _description_
+        y : Series, optional
+            _description_, by default None
+
+        Returns
+        -------
+        DataFrame
+            _description_
+        """
         # coppying dataframe
         Xc = X
         if self.copy:
@@ -192,15 +296,47 @@ class TanhNormalizer(BaseEstimator, TransformerMixin):
     """
 
     def __init__(self, features: List[str], copy: bool = False) -> None:
+        """_summary_
+
+        Parameters
+        ----------
+        features : List[str]
+            _description_
+        copy : bool, optional
+            _description_, by default False
+        """
         self.features = features[:]
         self.copy = copy
 
     def fit(self, X: DataFrame, y=None) -> None:
+        """_summary_
+
+        Parameters
+        ----------
+        X : DataFrame
+            _description_
+        y : _type_, optional
+            _description_, by default None
+        """
         self.distribs = X[self.features].agg(["mean", "std"]).to_dict(orient="index")
 
         return self
 
     def transform(self, X: DataFrame, y: Series = None) -> DataFrame:
+        """_summary_
+
+        Parameters
+        ----------
+        X : DataFrame
+            _description_
+        y : Series, optional
+            _description_, by default None
+
+        Returns
+        -------
+        DataFrame
+            _description_
+        """
         # copying dataset
         Xc = X
         if self.copy:
@@ -225,12 +361,30 @@ class CrossConverter(BaseEstimator, TransformerMixin):
     """
 
     def __init__(self, features: List[str], copy: bool = True) -> None:
+        """_summary_
+
+        Parameters
+        ----------
+        features : List[str]
+            _description_
+        copy : bool, optional
+            _description_, by default True
+        """
         self.features = features[:]
         self.copy = copy
         self.new_features: List[str] = list()
         self.values: Dict[str, List[Any]] = dict()
 
     def fit(self, X: DataFrame, y: Series = None) -> None:
+        """_summary_
+
+        Parameters
+        ----------
+        X : DataFrame
+            _description_
+        y : Series, optional
+            _description_, by default None
+        """
         # iterating over each feature
         for i, feature1 in enumerate(self.features):
             # unique values of feature1
@@ -250,6 +404,20 @@ class CrossConverter(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X: DataFrame, y: Series = None) -> DataFrame:
+        """_summary_
+
+        Parameters
+        ----------
+        X : DataFrame
+            _description_
+        y : Series, optional
+            _description_, by default None
+
+        Returns
+        -------
+        DataFrame
+            _description_
+        """
         # coppying dataframe
         Xc = X
         if self.copy:
