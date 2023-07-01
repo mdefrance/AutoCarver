@@ -5,9 +5,8 @@ for a binary classification model.
 from typing import Any, Dict, List
 from warnings import warn
 
-from numpy import argmin, array, float32, inf, linspace, nan, quantile, select, sort
+from numpy import argmin, float32, nan, select, sort
 from pandas import DataFrame, Series, isna, notna, unique
-from pandas.api.types import is_numeric_dtype, is_string_dtype
 from sklearn.base import BaseEstimator, TransformerMixin
 
 
@@ -188,8 +187,8 @@ class GroupedList(list):
 
         if any(found):
             return found[0]
-        else:
-            return value
+        
+        return value
 
     def values(self) -> List[Any]:
         """returns all values contained in each group"""
@@ -267,6 +266,15 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         self.str_nan = str_nan
 
     def fit(self, X: DataFrame, y: Series = None) -> None:
+        """_summary_
+
+        Parameters
+        ----------
+        X : DataFrame
+            _description_
+        y : Series, optional
+            _description_, by default None
+        """        
         return self
 
     def transform(self, X: DataFrame, y: Series = None) -> DataFrame:
@@ -570,7 +578,7 @@ def find_common_modalities(
             init_values[init_values == value][0] if any(init_values == value) else value
             for value in order
         ]  # sort selon l'ordre des modalités
-        target_rate = (
+        rate_target = (
             y.groupby(df_feature).sum().reindex(order) / frequencies / len_df
         )  # target rate per modality
         underrepresented = [
@@ -587,7 +595,7 @@ def find_common_modalities(
             kept = find_closest_modality(
                 discarded,
                 discarded_idx,
-                list(zip(order, frequencies, target_rate)),
+                list(zip(order, frequencies, rate_target)),
                 min_freq,
             )
 
@@ -603,14 +611,14 @@ def find_common_modalities(
                 init_values[init_values == value][0] if any(init_values == value) else value
                 for value in order
             ]  # sort selon l'ordre des modalités
-            target_rate = (
+            rate_target = (
                 y.groupby(df_feature).sum().reindex(order) / frequencies / len_df
             )  # target rate per modality
             underrepresented = [
                 value for value, frequency in zip(values, frequencies) if frequency < min_freq
             ]  # valeur peu fréquentes
 
-        worst, best = target_rate.idxmin(), target_rate.idxmax()
+        worst, best = rate_target.idxmin(), rate_target.idxmax()
 
         # cas 2 : il n'existe pas de valeur sous-représentée
         return {"order": order, "worst": worst, "best": best}
@@ -630,13 +638,13 @@ def find_closest_modality(value, idx: int, freq_target: Series, min_freq: float)
     # case 3: not the lowwest nor the biggest modality
     else:
         # previous modality's volume and target rate
-        previous_value, previous_volume, previous_target = freq_target[idx - 1]
+        _, previous_volume, previous_target = freq_target[idx - 1]
 
         # current modality's volume and target rate
-        _, volume, target = freq_target[idx]
+        _, _, target = freq_target[idx]
 
         # next modality's volume and target rate
-        next_value, next_volume, next_target = freq_target[idx + 1]
+        _, next_volume, next_target = freq_target[idx + 1]
 
         # regroupement par volumétrie (préféré s'il n'y a pas beaucoup de volume)
         # case 1: la modalité suivante est inférieure à min_freq

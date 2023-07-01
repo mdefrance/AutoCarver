@@ -4,8 +4,8 @@ for a binary classification model.
 
 from typing import Any, Dict, List
 
-from numpy import argmin, inf, nan, select
-from pandas import DataFrame, Series, isna, notna
+from numpy import inf, nan, select
+from pandas import DataFrame, Series, notna
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from base_discretizers import GroupedList, GroupedListDiscretizer, value_counts, target_rate, nunique
@@ -58,7 +58,7 @@ class ChainedDiscretizer(GroupedListDiscretizer):
         self.str_nan = str_nan
 
         # initiating features' values orders to all possible values
-        self.known_values = list(set([v for o in self.chained_orders for v in o.values()]))
+        self.known_values = list(set(v for o in self.chained_orders for v in o.values()))
         self.values_orders = {
             f: GroupedList(self.known_values[:] + [self.str_nan]) for f in self.features
         }
@@ -165,7 +165,7 @@ class DefaultDiscretizer(BaseEstimator, TransformerMixin):
         features: List[str],
         min_freq: float,
         *,
-        values_orders: Dict[str, Any] = {},
+        values_orders: Dict[str, Any] = None,
         default_value: str = "__OTHER__",
         str_nan: str = "__NAN__",
         copy: bool = False,
@@ -180,7 +180,7 @@ class DefaultDiscretizer(BaseEstimator, TransformerMixin):
         min_freq : float
             _description_
         values_orders : Dict[str, Any], optional
-            _description_, by default {}
+            _description_, by default None
         default_value : str, optional
             _description_, by default "__OTHER__"
         str_nan : str, optional
@@ -192,6 +192,8 @@ class DefaultDiscretizer(BaseEstimator, TransformerMixin):
         """
         self.features = features[:]
         self.min_freq = min_freq
+        if values_orders is None:
+            values_orders = {}
         self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
         self.default_value = default_value[:]
         self.str_nan = str_nan[:]
@@ -321,5 +323,3 @@ class DefaultDiscretizer(BaseEstimator, TransformerMixin):
             )
 
         return Xc
-
-

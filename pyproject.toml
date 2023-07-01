@@ -9,4 +9,4 @@ line_length = 100
 good-names = ["X", "y"]
 
 [tool.pylint.messages_control]
-disable = ["C0301"]
+disable = ["C0301", "C0103", "import-error"]
