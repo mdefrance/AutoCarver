@@ -8,7 +8,7 @@ from numpy import argmin, inf, nan, select
 from pandas import DataFrame, Series, isna, notna
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from BaseDiscretizers import GroupedList, GroupedListDiscretizer, value_counts, target_rate, nunique
+from base_discretizers import GroupedList, GroupedListDiscretizer, value_counts, target_rate, nunique
 
 
 class ChainedDiscretizer(GroupedListDiscretizer):

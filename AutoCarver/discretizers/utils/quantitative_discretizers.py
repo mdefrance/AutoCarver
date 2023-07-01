@@ -8,7 +8,7 @@ from numpy import array, inf, linspace, nan, quantile, select
 from pandas import DataFrame, Series, isna, notna, unique
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from BaseDiscretizers import GroupedList
+from base_discretizers import GroupedList
 
 
 class QuantileDiscretizer(BaseEstimator, TransformerMixin):

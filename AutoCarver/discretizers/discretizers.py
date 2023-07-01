@@ -8,10 +8,10 @@ from pandas import DataFrame, Series, unique
 from pandas.api.types import is_numeric_dtype, is_string_dtype
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from utils.BaseDiscretizers import ClosestDiscretizer, GroupedList, nan_unique, min_value_counts
+from utils.base_discretizers import ClosestDiscretizer, GroupedList, nan_unique, min_value_counts
 from ..Converters import StringConverter
-from utils.QualitativeDiscretizers import DefaultDiscretizer
-from utils.QuantitativeDiscretizers import QuantileDiscretizer
+from utils.qualitative_discretizers import DefaultDiscretizer
+from utils.quantitative_discretizers import QuantileDiscretizer
 
 
 class Discretizer(BaseEstimator, TransformerMixin):
