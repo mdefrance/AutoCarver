@@ -16,7 +16,7 @@ from scipy.stats import chi2_contingency
 from seaborn import color_palette, despine
 from tqdm.notebook import tqdm
 
-from discretizers.BaseDiscretizers import GroupedList, GroupedListDiscretizer, is_equal
+from discretizers.utils.base_discretizers import GroupedList, GroupedListDiscretizer, is_equal
 
 
 class AutoCarver(GroupedListDiscretizer):
@@ -245,7 +245,7 @@ class AutoCarver(GroupedListDiscretizer):
                 print(f"\n---\n[AutoCarver] Fit {feature} ({n+1}/{len(self.features)})")
 
             # getting best combination
-            best_groups = self.get_best_combination(feature, Xc, y, Xtestc, y_test)
+            best_groups = self.get_best_combination(feature, Xc, y, X_test=Xtestc, y_test=y_test)
 
             # feature can not be carved robustly
             if not bool(best_groups):
@@ -321,7 +321,7 @@ class AutoCarver(GroupedListDiscretizer):
             )
 
             # adding NaN to the order
-            self.insert_nan(feature, xtab)
+            self.insert_nan(feature)
 
             # update of the values_orders grouped modalities in values_orders
             if best_groups:
