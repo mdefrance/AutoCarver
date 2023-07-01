@@ -1,3 +1,7 @@
+"""Tool to build optimized buckets out of Quantitative and Qualitative features
+for a binary classification model.
+"""
+
 from typing import Any, Dict, List, Tuple
 
 from IPython.display import display_html
@@ -117,17 +121,30 @@ class AutoCarver(GroupedListDiscretizer):
         copy: bool = False,
         verbose: bool = True,
     ) -> None:
+        """_summary_
+
+        Parameters
+        ----------
+        values_orders : Dict[str, Any]
+            _description_
+        max_n_mod : int, optional
+            _description_, by default 5
+        sort_by : str, optional
+            _description_, by default "tschuprowt"
+        str_nan : str, optional
+            _description_, by default "__NAN__"
+        dropna : bool, optional
+            _description_, by default True
+        copy : bool, optional
+            _description_, by default False
+        verbose : bool, optional
+            _description_, by default True
+        """
         self.features = list(values_orders.keys())
-        self.values_orders = {
-            k: GroupedList(v) for k, v in values_orders.items()
-        }
-        self.non_viable_features: List[
-            str
-        ] = []  # list of features non viable features
+        self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
+        self.non_viable_features: List[str] = []  # list of features non viable features
         self.max_n_mod = max_n_mod  # maximum number of modality per feature
-        self.dropna = (
-            dropna  # whether or not to group NaNs with other modalities
-        )
+        self.dropna = dropna  # whether or not to group NaNs with other modalities
 
         # association measure used to find the best groups
         measures = ["tschuprowt", "cramerv"]
@@ -156,9 +173,7 @@ class AutoCarver(GroupedListDiscretizer):
         assert (0 in y_values) & (
             1 in y_values
         ), "y must be a binary Series (int or float, not object)"
-        assert (
-            len(y_values) == 2
-        ), "y must be a binary Series (int or float, not object)"
+        assert len(y_values) == 2, "y must be a binary Series (int or float, not object)"
 
         # checking for quantitative columns
         is_object = X[self.features].dtypes.apply(is_string_dtype)
@@ -174,23 +189,17 @@ class AutoCarver(GroupedListDiscretizer):
         # preparing test sample
         # checking for binary target
         if y_test is not None:
-            assert (
-                X_test is not None
-            ), "y_test was provided but X_test is missing"
+            assert X_test is not None, "y_test was provided but X_test is missing"
             y_values = unique(y_test)
             assert (0 in y_values) & (
                 1 in y_values
             ), "y_test must be a binary Series (int or float, not object)"
-            assert (
-                len(y_values) == 2
-            ), "y_test must be a binary Series (int or float, not object)"
+            assert len(y_values) == 2, "y_test must be a binary Series (int or float, not object)"
 
         # Copying DataFrame if requested
         Xtestc = X_test
         if X_test is not None:
-            assert (
-                y_test is not None
-            ), "X_test was provided but y_test is missing"
+            assert y_test is not None, "X_test was provided but y_test is missing"
             if self.copy:
                 Xtestc = X_test.copy()
 
@@ -209,6 +218,19 @@ class AutoCarver(GroupedListDiscretizer):
         X_test: DataFrame = None,
         y_test: Series = None,
     ) -> None:
+        """_summary_
+
+        Parameters
+        ----------
+        X : DataFrame
+            _description_
+        y : Series
+            _description_
+        X_test : DataFrame, optional
+            _description_, by default None
+        y_test : Series, optional
+            _description_, by default None
+        """
         # preparing datasets and checking for wrong values
         Xc, y, Xtestc, y_test = self.prepare_data(X, y, X_test, y_test)
 
@@ -220,20 +242,14 @@ class AutoCarver(GroupedListDiscretizer):
         ):
             # printing the group statistics and determining default ordering
             if self.verbose:
-                print(
-                    f"\n---\n[AutoCarver] Fit {feature} ({n+1}/{len(self.features)})"
-                )
+                print(f"\n---\n[AutoCarver] Fit {feature} ({n+1}/{len(self.features)})")
 
             # getting best combination
-            best_groups = self.get_best_combination(
-                feature, Xc, y, Xtestc, y_test
-            )
+            best_groups = self.get_best_combination(feature, Xc, y, Xtestc, y_test)
 
             # feature can not be carved robustly
             if not bool(best_groups):
-                self.non_viable_features += [
-                    feature
-                ]  # adding it to list of non viable features
+                self.non_viable_features += [feature]  # adding it to list of non viable features
 
         # discretizing features based on each feature's values_order
         super().__init__(
@@ -372,48 +388,34 @@ class AutoCarver(GroupedListDiscretizer):
 
         # target rate and frequency on TEST
         if xtab_test is not None:
-            test_stats = stats_xtab(
-                xtab_test, train_stats.index, train_stats.labels
-            )
-            test_stats = test_stats.set_index(
-                "labels"
-            )  # setting labels as indices
+            test_stats = stats_xtab(xtab_test, train_stats.index, train_stats.labels)
+            test_stats = test_stats.set_index("labels")  # setting labels as indices
 
         # setting TRAIN labels as indices
         train_stats = train_stats.set_index("labels")
 
         # Displaying TRAIN modality level stats
-        train_style = train_stats.style.background_gradient(
-            cmap="coolwarm"
-        )  # color scaling
+        train_style = train_stats.style.background_gradient(cmap="coolwarm")  # color scaling
         train_style = train_style.set_table_attributes(
             "style='display:inline'"
         )  # printing in notebook
-        train_style = train_style.set_caption(
-            f"{caption} distribution on X:"
-        )  # title
+        train_style = train_style.set_caption(f"{caption} distribution on X:")  # title
         html = train_style._repr_html_()
 
         # adding TEST modality level stats
         if xtab_test is not None:
-            test_style = test_stats.style.background_gradient(
-                cmap="coolwarm"
-            )  # color scaling
+            test_style = test_stats.style.background_gradient(cmap="coolwarm")  # color scaling
             test_style = test_style.set_table_attributes(
                 "style='display:inline'"
             )  # printing in notebook
-            test_style = test_style.set_caption(
-                f"{caption} distribution on X_test:"
-            )  # title
+            test_style = test_style.set_caption(f"{caption} distribution on X_test:")  # title
             html += " " + test_style._repr_html_()
 
         # displaying html of colored DataFrame
         display_html(html, raw=True)
 
 
-def groupedlist_combination(
-    combination: List[List[Any]], order: GroupedList
-) -> GroupedList:
+def groupedlist_combination(combination: List[List[Any]], order: GroupedList) -> GroupedList:
     """Converts a list of combination to a GroupedList"""
 
     order_copy = GroupedList(order)
@@ -477,9 +479,7 @@ def stats_xtab(
     return stats
 
 
-def apply_combination(
-    xtab: DataFrame, combination: GroupedList
-) -> Dict[str, Any]:
+def apply_combination(xtab: DataFrame, combination: GroupedList) -> Dict[str, Any]:
     """applies a modality combination to a crosstab"""
 
     # initiating association dict
@@ -521,9 +521,7 @@ def best_combination(
 
         # crosstab on TEST
         if xtab_test is not None:
-            xtab_test = xtab_dev[
-                xtab_dev.index != str_nan
-            ]  # filtering out nans
+            xtab_test = xtab_dev[xtab_dev.index != str_nan]  # filtering out nans
 
         # getting all possible combinations for the feature without NaNS
         combinations = get_all_combinations(order, max_n_mod, raw=False)
@@ -562,22 +560,14 @@ def best_combination(
 
         # checking that all non-nan groups are in TRAIN and TEST
         unq_x = [v for v in unique(combi_xtab.index) if v != notna(v)]
-        unq_xtest = [
-            v for v in unique(combi_xtab_test.index) if v != notna(v)
-        ]
+        unq_xtest = [v for v in unique(combi_xtab_test.index) if v != notna(v)]
         viability = all([e in unq_x for e in unq_xtest])
         viability = viability and all([e in unq_xtest for e in unq_x])
 
         # same target rate order in TRAIN and TEST
-        train_target_rate = (
-            combi_xtab[1].divide(combi_xtab[0]).sort_values()
-        )
-        test_target_rate = (
-            combi_xtab_test[1].divide(combi_xtab_test[0]).sort_values()
-        )
-        viability = viability and all(
-            train_target_rate.index == test_target_rate.index
-        )
+        train_target_rate = combi_xtab[1].divide(combi_xtab[0]).sort_values()
+        test_target_rate = combi_xtab_test[1].divide(combi_xtab_test[0]).sort_values()
+        viability = viability and all(train_target_rate.index == test_target_rate.index)
 
         # checking that some combinations were provided
         if viability:
@@ -604,24 +594,18 @@ def get_all_combinations(
         combinations += get_combinations(n_class, q)
 
     # getting real feature values
-    combinations = [
-        [values[int(c[0]) : int(c[1]) + 1] for c in combi]
-        for combi in combinations
-    ]
+    combinations = [[values[int(c[0]) : int(c[1]) + 1] for c in combi] for combi in combinations]
 
     # converting back to GroupedList
     if not raw:
         combinations = [
-            groupedlist_combination(combination, values)
-            for combination in combinations
+            groupedlist_combination(combination, values) for combination in combinations
         ]
 
     return combinations
 
 
-def get_all_nan_combinations(
-    order: GroupedList, str_nan: str, max_n_mod: int
-) -> List[GroupedList]:
+def get_all_nan_combinations(order: GroupedList, str_nan: str, max_n_mod: int) -> List[GroupedList]:
     """all possible combinations of modalities with numpy.nan"""
 
     # computing all non-NaN combinations
@@ -654,8 +638,7 @@ def get_all_nan_combinations(
 
     # converting back to GroupedList
     new_combinations = [
-        groupedlist_combination(combination, order)
-        for combination in new_combinations
+        groupedlist_combination(combination, order) for combination in new_combinations
     ]
 
     return new_combinations
@@ -685,9 +668,7 @@ def consecutive_combinations(
     else:
         ### Parcours de toutes les valeurs possibles de fin pour le i-ème groupe du groupement à x quantiles ###
         for i in range(start, end):
-            consecutive_combinations(
-                n_remaining - 1, i + 1, end, grp_for_this_step + [(start, i)]
-            )
+            consecutive_combinations(n_remaining - 1, i + 1, end, grp_for_this_step + [(start, i)])
 
 
 def get_combinations(n_class: int, q: int) -> List[List[str]]:
@@ -757,11 +738,7 @@ def nan_crosstab(x: Series, y: Series, str_nan: str = "__NAN__"):
 def plot_stats(stats: DataFrame) -> Tuple[Figure, Axes]:
     """Barplot of the volume and target rate"""
 
-    x = (
-        [0]
-        + [elt for e in stats["frequency"].cumsum()[:-1] for elt in [e] * 2]
-        + [1]
-    )
+    x = [0] + [elt for e in stats["frequency"].cumsum()[:-1] for elt in [e] * 2] + [1]
     y2 = [elt for e in list(stats["target_rate"]) for elt in [e] * 2]
     s = list(stats.index)
     scaled_y2 = [(y - min(y2)) / (max(y2) - min(y2)) for y in y2]

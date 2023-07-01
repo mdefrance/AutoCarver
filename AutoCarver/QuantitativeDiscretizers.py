@@ -4,29 +4,21 @@ for a binary classification model.
 
 from typing import Any, Dict, List
 
-from numpy import (
-    array,
-    inf,
-    linspace,
-    nan,
-    quantile,
-    select,
-)
+from numpy import array, inf, linspace, nan, quantile, select
 from pandas import DataFrame, Series, isna, notna, unique
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from .BaseDiscretizers import GroupedList
 
 
-
-
 class QuantileDiscretizer(BaseEstimator, TransformerMixin):
+    """Builds per-feature buckets of quantiles"""
     def __init__(
         self,
         features: List[str],
-        q: int,
+        q: int,  # TODO: change this for min_freq
         *,
-        values_orders: Dict[str, Any] = {},
+        values_orders: Dict[str, Any] = None,
         copy: bool = False,
         verbose: bool = False,
     ) -> None:
@@ -34,35 +26,36 @@ class QuantileDiscretizer(BaseEstimator, TransformerMixin):
 
         self.features = features[:]
         self.q = q
-        self.values_orders = {
-            k: GroupedList(v) for k, v in values_orders.items()
-        }
+        if values_orders is None:
+            values_orders = {}
+        self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
         self.quantiles: Dict[str, Any] = {}
         self.copy = copy
         self.verbose = verbose
 
     def fit(self, X: DataFrame, y: Series = None) -> None:
+        """_summary_
+
+        Parameters
+        ----------
+        X : DataFrame
+            _description_
+        y : Series, optional
+            _description_, by default None
+        """
         # computing quantiles for the feature
-        self.quantiles = X[self.features].apply(
-            find_quantiles, q=self.q, axis=0
-        )
+        self.quantiles = X[self.features].apply(find_quantiles, q=self.q, axis=0)
 
         # case when only one feature is discretized
         if len(self.features) == 1:
-            self.quantiles = {
-                self.features[0]: list(
-                    self.quantiles.get(self.features[0]).values
-                )
-            }
+            self.quantiles = {self.features[0]: list(self.quantiles.get(self.features[0]).values)}
 
         # building string of values to be displayed
         values: List[str] = []
         for n, feature in enumerate(self.features):
             # verbose
             if self.verbose:
-                print(
-                    f" - [QuantileDiscretizer] Fit {feature} ({n+1}/{len(self.features)})"
-                )
+                print(f" - [QuantileDiscretizer] Fit {feature} ({n+1}/{len(self.features)})")
 
             # quantiles as strings
             feature_quantiles = self.quantiles.get(feature)
@@ -74,9 +67,7 @@ class QuantileDiscretizer(BaseEstimator, TransformerMixin):
 
             # last quantile is between the last value and inf
             else:
-                str_values = str_values + [
-                    str_values[-1].replace("<= ", ">  ")
-                ]
+                str_values = str_values + [str_values[-1].replace("<= ", ">  ")]
             values += [str_values]
 
         # adding inf for the last quantiles
@@ -84,15 +75,26 @@ class QuantileDiscretizer(BaseEstimator, TransformerMixin):
 
         # creating the values orders based on quantiles
         self.values_orders.update(
-            {
-                feature: GroupedList(str_values)
-                for feature, str_values in zip(self.features, values)
-            }
+            {feature: GroupedList(str_values) for feature, str_values in zip(self.features, values)}
         )
 
         return self
 
     def transform(self, X: DataFrame, y: Series = None) -> DataFrame:
+        """_summary_
+
+        Parameters
+        ----------
+        X : DataFrame
+            _description_
+        y : Series, optional
+            _description_, by default None
+
+        Returns
+        -------
+        DataFrame
+            _description_
+        """
         # copying dataset if requested
         Xc = X
         if self.copy:
@@ -102,9 +104,7 @@ class QuantileDiscretizer(BaseEstimator, TransformerMixin):
         for n, feature in enumerate(self.features):
             # verbose if requested
             if self.verbose:
-                print(
-                    f" - [QuantileDiscretizer] Transform {feature} ({n+1}/{len(self.features)})"
-                )
+                print(f" - [QuantileDiscretizer] Transform {feature} ({n+1}/{len(self.features)})")
 
             nans = isna(Xc[feature])  # keeping track of nans
 
@@ -112,12 +112,8 @@ class QuantileDiscretizer(BaseEstimator, TransformerMixin):
             to_input = [
                 Xc[feature] <= q for q in self.quantiles.get(feature)
             ]  # values that will be imputed
-            values = [
-                [v] * len(X) for v in self.values_orders.get(feature)
-            ]  # new values to imput
-            Xc[feature] = select(
-                to_input, values, default=Xc[feature]
-            )  # grouping modalities
+            values = [[v] * len(X) for v in self.values_orders.get(feature)]  # new values to imput
+            Xc[feature] = select(to_input, values, default=Xc[feature])  # grouping modalities
 
             # adding back nans
             if any(nans):
@@ -151,10 +147,7 @@ def find_quantiles(
 
     # calcul du nombre d'occurences de chaque valeur
     frequencies = (
-        df_feature.value_counts(dropna=False, normalize=False).drop(
-            nan, errors="ignore"
-        )
-        / len_df
+        df_feature.value_counts(dropna=False, normalize=False).drop(nan, errors="ignore") / len_df
     )  # dropping nans to keep them anyways
     values, frequencies = array(frequencies.index), array(frequencies.values)
 
@@ -218,28 +211,17 @@ def format_list(a_list: List[float]) -> List[str]:
 
     # finding the closest power of thousands for each element
     closest_powers = [
-        next((k for k in range(-3, 4) if abs(elt) / 100 // 1000 ** (k) < 10))
-        for elt in a_list
+        next((k for k in range(-3, 4) if abs(elt) / 100 // 1000 ** (k) < 10)) for elt in a_list
     ]
 
     # rounding elements to the closest power of thousands
-    rounded_to_powers = [
-        elt / 1000 ** (k) for elt, k in zip(a_list, closest_powers)
-    ]
+    rounded_to_powers = [elt / 1000 ** (k) for elt, k in zip(a_list, closest_powers)]
 
     # computing optimal decimal per unique power of thousands
     optimal_decimals: Dict[str, int] = {}
-    for power in unique(
-        closest_powers
-    ):  # iterating over each power of thousands found
+    for power in unique(closest_powers):  # iterating over each power of thousands found
         # filtering on the specific power of thousands
-        sub_array = array(
-            [
-                elt
-                for elt, p in zip(rounded_to_powers, closest_powers)
-                if power == p
-            ]
-        )
+        sub_array = array([elt for elt, p in zip(rounded_to_powers, closest_powers) if power == p])
 
         # number of distinct values
         n_uniques = sub_array.shape[0]
@@ -247,11 +229,7 @@ def format_list(a_list: List[float]) -> List[str]:
         # computing the first rounding decimal that allows for distinction of
         # each values when rounded, by default None (no rounding)
         optimal_decimal = next(
-            (
-                k
-                for k in range(1, 10)
-                if len(unique(sub_array.round(k))) == n_uniques
-            ),
+            (k for k in range(1, 10) if len(unique(sub_array.round(k))) == n_uniques),
             None,
         )
 
@@ -275,14 +253,12 @@ def format_list(a_list: List[float]) -> List[str]:
 
     # adding the suffixes
     formatted_list = [
-        f"{elt: 3.3f}{suffixes[power]}"
-        for elt, power in zip(rounded_list, closest_powers)
+        f"{elt: 3.3f}{suffixes[power]}" for elt, power in zip(rounded_list, closest_powers)
     ]
 
     # keeping zeros
     formatted_list = [
-        rounded if raw != 0 else f"{raw: 3.3f}"
-        for rounded, raw in zip(formatted_list, a_list)
+        rounded if raw != 0 else f"{raw: 3.3f}" for rounded, raw in zip(formatted_list, a_list)
     ]
 
     return formatted_list

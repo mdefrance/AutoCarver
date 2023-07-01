@@ -3,12 +3,13 @@ for a binary classification model.
 """
 
 from typing import Any, Dict, List
+
 from pandas import DataFrame, Series, unique
 from pandas.api.types import is_numeric_dtype, is_string_dtype
 from sklearn.base import BaseEstimator, TransformerMixin
 
+from .BaseDiscretizers import ClosestDiscretizer, GroupedList
 from .Converters import StringConverter
-from .BaseDiscretizers import GroupedList, ClosestDiscretizer
 from .QualitativeDiscretizers import DefaultDiscretizer
 from .QuantitativeDiscretizers import QuantileDiscretizer
 
@@ -81,7 +82,7 @@ class Discretizer(BaseEstimator, TransformerMixin):
             _description_, by default False
         verbose : bool, optional
             _description_, by default False
-        """        
+        """
         self.features = quanti_features[:] + quali_features[:]
         self.quanti_features = quanti_features[:]
         assert len(list(set(quanti_features))) == len(
@@ -93,9 +94,7 @@ class Discretizer(BaseEstimator, TransformerMixin):
         ), "Column duplicates in quali_features"
         if values_orders is None:
             values_orders = {}
-        self.values_orders = {
-            k: GroupedList(v) for k, v in values_orders.items()
-        }
+        self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
         self.min_freq = min_freq
         self.q = int(1 / min_freq)  # number of quantiles
         self.pipe: List[BaseEstimator] = []
@@ -111,7 +110,7 @@ class Discretizer(BaseEstimator, TransformerMixin):
             _description_
         y : Series
             _description_
-        """        
+        """
         # [Qualitative features] Grouping qualitative features
         if len(self.quali_features) > 0:
             # verbose if requested
@@ -172,7 +171,7 @@ class Discretizer(BaseEstimator, TransformerMixin):
         -------
         DataFrame
             _description_
-        """        
+        """
         # verbose if requested
         if self.verbose:
             print("\n---\n[Discretizer] Transform Features")
@@ -187,7 +186,7 @@ class Discretizer(BaseEstimator, TransformerMixin):
             Xc = step.transform(Xc)
 
         return Xc
-    
+
 
 class QualitativeDiscretizer(BaseEstimator, TransformerMixin):
     """Automatic discretizing of categorical and categorical ordinal features.
@@ -243,25 +242,21 @@ class QualitativeDiscretizer(BaseEstimator, TransformerMixin):
             _description_, by default False
         verbose : bool, optional
             _description_, by default False
-        """        
+        """
         self.features = features[:]
         if values_orders is None:
             values_orders = {}
-        self.values_orders = {
-            k: GroupedList(v) for k, v in values_orders.items()
-        }
+        self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
         self.ordinal_features = [
             f for f in values_orders if f in features
         ]  # ignores non qualitative features
-        self.non_ordinal_features = [
-            f for f in features if f not in self.ordinal_features
-        ]
+        self.non_ordinal_features = [f for f in features if f not in self.ordinal_features]
         self.min_freq = min_freq
         self.pipe: List[BaseEstimator] = []
         self.copy = copy
         self.verbose = verbose
 
-    def prepare_data(self, X: DataFrame, y: Series=None) -> DataFrame:
+    def prepare_data(self, X: DataFrame, y: Series = None) -> DataFrame:
         """Prepares the data for bucketization, checks column types.
         Converts non-string columns into strings.
 
@@ -301,18 +296,12 @@ class QualitativeDiscretizer(BaseEstimator, TransformerMixin):
         assert (0 in y_values) & (
             1 in y_values
         ), "y must be a binary Series (int or float, not object)"
-        assert (
-            len(y_values) == 2
-        ), "y must be a binary Series (int or float, not object)"
+        assert len(y_values) == 2, "y must be a binary Series (int or float, not object)"
 
         # checking that all unique values in X are in values_orders
         uniques = Xc[self.features].apply(nan_unique)
         for feature in self.ordinal_features:
-            missing = [
-                val
-                for val in uniques[feature]
-                if val not in self.values_orders[feature]
-            ]
+            missing = [val for val in uniques[feature] if val not in self.values_orders[feature]]
             assert (
                 len(missing) == 0
             ), f"The ordering for {', '.join(missing)} of feature '{feature}' must be specified in values_orders (str-only)."
@@ -361,9 +350,7 @@ class QualitativeDiscretizer(BaseEstimator, TransformerMixin):
             self.values_orders.update(
                 discretizer.values_orders
             )  # adding orders of grouped features
-            self.pipe += [
-                ("DefaultDiscretizer", discretizer)
-            ]  # adding discretizer to pipe
+            self.pipe += [("DefaultDiscretizer", discretizer)]  # adding discretizer to pipe
 
         return self
 
@@ -414,9 +401,7 @@ class QuantitativeDiscretizer(BaseEstimator, TransformerMixin):
         verbose: bool = False,
     ) -> None:
         self.features = features[:]
-        self.values_orders = {
-            k: GroupedList(v) for k, v in values_orders.items()
-        }
+        self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
         self.q = q
         self.pipe: List[BaseEstimator] = []
         self.copy = copy
@@ -427,18 +412,14 @@ class QuantitativeDiscretizer(BaseEstimator, TransformerMixin):
 
         # checking for quantitative columns
         is_numeric = X[self.features].dtypes.apply(is_numeric_dtype)
-        assert all(
-            is_numeric
-        ), f"Non-numeric features: {', '.join(is_numeric[~is_numeric].index)}"
+        assert all(is_numeric), f"Non-numeric features: {', '.join(is_numeric[~is_numeric].index)}"
 
         # checking for binary target
         y_values = unique(y)
         assert (0 in y_values) & (
             1 in y_values
         ), "y must be a binary Series (int or float, not object)"
-        assert (
-            len(y_values) == 2
-        ), "y must be a binary Series (int or float, not object)"
+        assert len(y_values) == 2, "y must be a binary Series (int or float, not object)"
 
         # copying dataframe
         Xc = X.copy()
@@ -461,12 +442,8 @@ class QuantitativeDiscretizer(BaseEstimator, TransformerMixin):
         Xc = discretizer.fit_transform(Xc, y)
 
         # storing results
-        self.values_orders.update(
-            discretizer.values_orders
-        )  # adding orders of grouped features
-        self.pipe += [
-            ("QuantileDiscretizer", discretizer)
-        ]  # adding discretizer to pipe
+        self.values_orders.update(discretizer.values_orders)  # adding orders of grouped features
+        self.pipe += [("QuantileDiscretizer", discretizer)]  # adding discretizer to pipe
 
         # [Quantitative features] Grouping rare quantiles into closest common one
         #  -> can exist because of overrepresented values (values more frequent than 1/q)

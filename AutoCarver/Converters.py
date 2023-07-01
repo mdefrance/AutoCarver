@@ -34,9 +34,7 @@ class StringConverter(BaseEstimator, TransformerMixin):
         nans = isna(Xc[self.features])
 
         # storing ints
-        ints = Xc[self.features].applymap(
-            lambda u: isinstance(u, float) and float.is_integer(u)
-        )
+        ints = Xc[self.features].applymap(lambda u: isinstance(u, float) and float.is_integer(u))
 
         # converting to string
         Xc[self.features] = Xc[self.features].astype(str)
@@ -45,9 +43,7 @@ class StringConverter(BaseEstimator, TransformerMixin):
         converted_ints = Xc[ints][self.features].applymap(
             lambda u: str(int(float(u))) if isinstance(u, str) else u
         )
-        Xc[self.features] = select(
-            [ints], [converted_ints], default=Xc[self.features]
-        )
+        Xc[self.features] = select([ints], [converted_ints], default=Xc[self.features])
 
         # converting back to nan
         Xc[nans] = nan
@@ -100,9 +96,7 @@ class TimeDeltaConverter(BaseEstimator, TransformerMixin):
 
         # converting back nans
         if notna(self.nans):
-            Xc[self.features] = Xc[self.features].where(
-                Xc[self.features] != self.nans, nan
-            )
+            Xc[self.features] = Xc[self.features].where(Xc[self.features] != self.nans, nan)
 
         # converting to datetime
         Xc[self.features] = to_datetime(Xc[self.features].stack()).unstack()
@@ -130,9 +124,7 @@ class GroupNormalizer(BaseEstimator, TransformerMixin):
         List of quantitative features to be normalized.
     """
 
-    def __init__(
-        self, groups: List[str], features: List[str], copy: bool = True
-    ) -> None:
+    def __init__(self, groups: List[str], features: List[str], copy: bool = True) -> None:
         self.features = features[:]
         self.groups = groups[:]
 
@@ -147,14 +139,10 @@ class GroupNormalizer(BaseEstimator, TransformerMixin):
         # iterating over each grouping column
         for group in self.groups:
             # computing group mean
-            self.group_means.update(
-                {group: X.groupby(group)[self.features].mean().to_dict()}
-            )
+            self.group_means.update({group: X.groupby(group)[self.features].mean().to_dict()})
 
             # computing group std
-            self.group_stds.update(
-                {group: X.groupby(group)[self.features].std().to_dict()}
-            )
+            self.group_stds.update({group: X.groupby(group)[self.features].std().to_dict()})
 
             # adding built features
             self.new_features += [f"{f}_norm_{group}" for f in self.features]
@@ -185,9 +173,7 @@ class GroupNormalizer(BaseEstimator, TransformerMixin):
                 .sub(means)
                 .replace(0, nan)
                 .divide(stds)
-                .rename(
-                    {f: f"{f}_norm_{group}" for f in self.features}, axis=1
-                )
+                .rename({f: f"{f}_norm_{group}" for f in self.features}, axis=1)
             )
 
         del means
@@ -210,9 +196,7 @@ class TanhNormalizer(BaseEstimator, TransformerMixin):
         self.copy = copy
 
     def fit(self, X: DataFrame, y=None) -> None:
-        self.distribs = (
-            X[self.features].agg(["mean", "std"]).to_dict(orient="index")
-        )
+        self.distribs = X[self.features].agg(["mean", "std"]).to_dict(orient="index")
 
         return self
 
@@ -224,12 +208,7 @@ class TanhNormalizer(BaseEstimator, TransformerMixin):
 
         # applying tanh normalization
         Xc[self.features] = (
-            tanh(
-                Xc[self.features]
-                .sub(self.distribs["mean"])
-                .divide(self.distribs["std"])
-                * 0.01
-            )
+            tanh(Xc[self.features].sub(self.distribs["mean"]).divide(self.distribs["std"]) * 0.01)
             + 1
         ) / 2
 
@@ -265,11 +244,7 @@ class CrossConverter(BaseEstimator, TransformerMixin):
                 unq2 = X[feature2].astype(str).unique()
 
                 self.values.update(
-                    {
-                        f"{feature2}_x_{feature1}": [
-                            u2 + "_x_" + u1 for u2 in unq2 for u1 in unq1
-                        ]
-                    }
+                    {f"{feature2}_x_{feature1}": [u2 + "_x_" + u1 for u2 in unq2 for u1 in unq1]}
                 )
 
         return self
@@ -292,9 +267,7 @@ class CrossConverter(BaseEstimator, TransformerMixin):
             Xc_crosser = Xc_features[feature]
 
             # crossing features
-            Xc_crossed = Xc_tocross.apply(
-                lambda u: u + "_x_" + Xc_crosser
-            ).rename(
+            Xc_crossed = Xc_tocross.apply(lambda u: u + "_x_" + Xc_crosser).rename(
                 {f: f"{f}_x_{feature}" for f in self.features[i + 1 :]}, axis=1
             )
 

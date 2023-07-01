@@ -5,17 +5,7 @@ for a binary classification model.
 from typing import Any, Dict, List
 from warnings import warn
 
-from numpy import (
-    argmin,
-    array,
-    float32,
-    inf,
-    linspace,
-    nan,
-    quantile,
-    select,
-    sort,
-)
+from numpy import argmin, array, float32, inf, linspace, nan, quantile, select, sort
 from pandas import DataFrame, Series, isna, notna, unique
 from pandas.api.types import is_numeric_dtype, is_string_dtype
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -37,6 +27,7 @@ def nan_unique(x: Series):
 
 class GroupedList(list):
     """An ordered list that extends dict."""
+
     def __init__(self, iterable=()) -> None:
         """An ordered list that historizes its elements' merges."""
 
@@ -93,9 +84,7 @@ class GroupedList(list):
             contained_kept = self.contained.get(kept)
 
             # updating contained dict
-            self.contained.update(
-                {kept: contained_discarded + contained_kept, discarded: []}
-            )
+            self.contained.update({kept: contained_discarded + contained_kept, discarded: []})
 
             # removing discarded from the list
             self.remove(discarded)
@@ -163,7 +152,7 @@ class GroupedList(list):
         ----------
         value : Any
             value to be removed
-        """        
+        """
         super().remove(value)
         self.contained.pop(value)
 
@@ -174,7 +163,7 @@ class GroupedList(list):
         ----------
         idx : int
             Index of the value to be popped out
-        """        
+        """
         value = self[idx]
         self.remove(value)
 
@@ -207,9 +196,7 @@ class GroupedList(list):
     def values(self) -> List[Any]:
         """returns all values contained in each group"""
 
-        known = [
-            value for values in self.contained.values() for value in values
-        ]
+        known = [value for values in self.contained.values() for value in values]
 
         return known
 
@@ -221,7 +208,7 @@ class GroupedList(list):
         return any(is_equal(value, known) for known in known_values)
 
     def get_repr(self, char_limit: int = 10) -> List[str]:
-        """ " Returns a representative list of strings of values of groups."""
+        """Returns a representative list of strings of values of groups."""
 
         # initiating list of group representation
         repr: List[str] = []
@@ -234,31 +221,21 @@ class GroupedList(list):
             if len(values) == 0:  # case 0: there are no value in this group
                 pass
 
-            elif (
-                len(values) == 1
-            ):  # case 1: there is only one value in this group
+            elif len(values) == 1:  # case 1: there is only one value in this group
                 repr += [values[0]]
 
             elif len(values) == 2:  # case 2: two values in this group
-                repr += [
-                    f"{values[1]}"[:char_limit]
-                    + " and "
-                    + f"{values[0]}"[:char_limit]
-                ]
+                repr += [f"{values[1]}"[:char_limit] + " and " + f"{values[0]}"[:char_limit]]
 
             elif len(values) > 2:  # case 3: more than two values in this group
-                repr += [
-                    f"{values[-1]}"[:char_limit]
-                    + " to "
-                    + f"{values[0]}"[:char_limit]
-                ]
+                repr += [f"{values[-1]}"[:char_limit] + " to " + f"{values[0]}"[:char_limit]]
 
         return repr
 
 
 class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
     """Discretizer that uses a dict of grouped values."""
-    
+
     def __init__(
         self,
         values_orders: Dict[str, GroupedList],
@@ -273,7 +250,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         Parameters
         ----------
         values_orders : Dict[str, GroupedList]
-            Per feature ordering 
+            Per feature ordering
         copy : bool, optional
             Whether or not to copy the input DataFrame, by default False
         output : type, optional
@@ -285,15 +262,13 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         """
 
         self.features = list(values_orders.keys())
-        self.values_orders = {
-            k: GroupedList(v) for k, v in values_orders.items()
-        }
+        self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
         self.copy = copy
         self.output = output
         self.verbose = verbose
         self.str_nan = str_nan
 
-    def fit(self, X: DataFrame, y: Series=None) -> None:
+    def fit(self, X: DataFrame, y: Series = None) -> None:
         return self
 
     def transform(self, X: DataFrame, y: Series = None) -> DataFrame:
@@ -311,7 +286,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         DataFrame
             _description_
         """
-   
+
         # copying dataframes
         Xc = X
         if self.copy:
@@ -338,8 +313,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
                 Xc[feature].isin(discarded) for discarded in to_discard
             ]  # identifying main bucket value
             to_keep = [
-                n if self.output == float else group
-                for n, group in enumerate(order)
+                n if self.output == float else group for n, group in enumerate(order)
             ]  # récupération du groupe dans lequel regrouper
 
             # case when there are no values
@@ -375,9 +349,7 @@ def min_value_counts(x: Series, order: List[Any]) -> float:
     return min_values
 
 
-def value_counts(
-    x: Series, dropna: bool = False, normalize: bool = True
-) -> dict:
+def value_counts(x: Series, dropna: bool = False, normalize: bool = True) -> dict:
     """Counts the values of each modality of a series into a dictionnary"""
 
     values = x.value_counts(dropna=dropna, normalize=normalize)
@@ -385,9 +357,7 @@ def value_counts(
     return values.to_dict()
 
 
-def target_rate(
-    x: Series, y: Series, dropna: bool = True, ascending=True
-) -> dict:
+def target_rate(x: Series, y: Series, dropna: bool = True, ascending=True) -> dict:
     """Target y rate per modality of x into a dictionnary"""
 
     rates = y.groupby(x, dropna=dropna).mean().sort_values(ascending=ascending)
@@ -408,6 +378,7 @@ def nunique(x: Series, dropna=False) -> int:
 
     return n
 
+
 def is_equal(a: Any, b: Any) -> bool:
     """checks if a and b are equal (NaN insensitive)"""
 
@@ -422,6 +393,7 @@ def is_equal(a: Any, b: Any) -> bool:
 
 
 class ClosestDiscretizer(BaseEstimator, TransformerMixin):
+    """Discretizes ordered qualitative features into groups more frequent than min_freq"""
     def __init__(
         self,
         values_orders: Dict[str, Any],
@@ -431,19 +403,40 @@ class ClosestDiscretizer(BaseEstimator, TransformerMixin):
         copy: bool = False,
         verbose: bool = False,
     ):
-        """Discretizes ordered qualitative features into groups more frequent than min_freq"""
+        """_summary_
+
+        Parameters
+        ----------
+        values_orders : Dict[str, Any]
+            _description_
+        min_freq : float
+            _description_
+        default : str, optional
+            _description_, by default "worst"
+        copy : bool, optional
+            _description_, by default False
+        verbose : bool, optional
+            _description_, by default False
+        """
 
         self.features = list(values_orders.keys())
         self.min_freq = min_freq
-        self.values_orders = {
-            k: GroupedList(v) for k, v in values_orders.items()
-        }
+        self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
         self.default = default[:]
         self.default_values: Dict[str, Any] = {}
         self.copy = copy
         self.verbose = verbose
 
     def fit(self, X: DataFrame, y: Series) -> None:
+        """_summary_
+
+        Parameters
+        ----------
+        X : DataFrame
+            _description_
+        y : Series
+            _description_
+        """
         # verbose
         if self.verbose:
             print(f" - [ClosestDiscretizer] Fit {', '.join(self.features)}")
@@ -462,19 +455,28 @@ class ClosestDiscretizer(BaseEstimator, TransformerMixin):
         )
 
         # updating the order per feature
-        self.values_orders.update(
-            {f: common_modalities.get("order").get(f) for f in self.features}
-        )
+        self.values_orders.update({f: common_modalities.get("order").get(f) for f in self.features})
 
         # defining the default value based on the strategy
-        self.default_values = {
-            f: common_modalities.get(self.default).get(f)
-            for f in self.features
-        }
+        self.default_values = {f: common_modalities.get(self.default).get(f) for f in self.features}
 
         return self
 
     def transform(self, X: DataFrame, y: Series = None) -> DataFrame:
+        """_summary_
+
+        Parameters
+        ----------
+        X : DataFrame
+            _description_
+        y : Series, optional
+            _description_, by default None
+
+        Returns
+        -------
+        DataFrame
+            _description_
+        """
         # copying dataset if requested
         Xc = X
         if self.copy:
@@ -484,9 +486,7 @@ class ClosestDiscretizer(BaseEstimator, TransformerMixin):
         for n, feature in enumerate(self.features):
             # printing verbose if requested
             if self.verbose:
-                print(
-                    f" - [ClosestDiscretizer] Transform {feature} ({n+1}/{len(self.features)})"
-                )
+                print(f" - [ClosestDiscretizer] Transform {feature} ({n+1}/{len(self.features)})")
 
             # accessing feature's modalities' order
             order = self.values_orders.get(feature)
@@ -497,9 +497,7 @@ class ClosestDiscretizer(BaseEstimator, TransformerMixin):
                 for value in Xc[feature].unique()
                 if not any(is_equal(value, known) for known in order.values())
             ]
-            unknowns = [
-                value for value in unknowns if notna(value)
-            ]  # suppression des NaNs
+            unknowns = [value for value in unknowns if notna(value)]  # suppression des NaNs
             if any(unknowns):
                 to_input = [
                     Xc[feature] == unknown for unknown in unknowns
@@ -518,8 +516,6 @@ class ClosestDiscretizer(BaseEstimator, TransformerMixin):
             to_input = [
                 Xc[feature].isin(discarded) for discarded in to_discard
             ]  # identification des valeurs à regrouper
-            Xc[feature] = select(
-                to_input, order, default=Xc[feature]
-            )  # regroupement des valeurs
+            Xc[feature] = select(to_input, order, default=Xc[feature])  # regroupement des valeurs
 
         return Xc
