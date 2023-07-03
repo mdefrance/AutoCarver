@@ -255,7 +255,7 @@ class AutoCarver(GroupedListDiscretizer):
             self.values_orders,
             str_nan=self.str_nan,
             copy=self.copy,
-            output=float,
+            output='float',
         )
         super().fit(X, y)
 

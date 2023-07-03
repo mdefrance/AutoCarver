@@ -588,7 +588,9 @@ class ClosestDiscretizer(GroupedListDiscretizer):
     NaNs are left untouched.
 
     Modality is choosen amongst the preceding and following values in the provided order.
-    
+    The choosen modality is:
+    - the closest in target rate
+    - or the one with the lowest frequency
     """
 
     def __init__(
@@ -596,7 +598,6 @@ class ClosestDiscretizer(GroupedListDiscretizer):
         values_orders: Dict[str, Any],
         min_freq: float,
         *,
-        default: str = "worst",
         copy: bool = False,
         verbose: bool = False,
     ):
@@ -651,67 +652,18 @@ class ClosestDiscretizer(GroupedListDiscretizer):
         # updating the order per feature
         self.values_orders.update({f: common_modalities.get("order").get(f) for f in self.features})
 
+
+        # discretizing features based on each feature's values_order
+        super().__init__(
+            self.values_orders,
+            copy=self.copy,
+            output='str',
+        )
+        super().fit(X, y)
+
         return self
 
-    def transform(self, X: DataFrame, y: Series = None) -> DataFrame:
-        """_summary_
-
-        Parameters
-        ----------
-        X : DataFrame
-            _description_
-        y : Series, optional
-            _description_, by default None
-
-        Returns
-        -------
-        DataFrame
-            _description_
-        """
-        # copying dataset if requested
-        Xc = X
-        if self.copy:
-            Xc = X.copy()
-
-        # iterating over each feature
-        for n, feature in enumerate(self.features):
-            # printing verbose if requested
-            if self.verbose:
-                print(f" - [ClosestDiscretizer] Transform {feature} ({n+1}/{len(self.features)})")
-
-            # accessing feature's modalities' order
-            order = self.values_orders.get(feature)
-
-            # imputation des valeurs inconnues le cas échéant
-            unknowns = [
-                value
-                for value in Xc[feature].unique()
-                if not any(is_equal(value, known) for known in order.values())
-            ]
-            unknowns = [value for value in unknowns if notna(value)]  # suppression des NaNs
-            if any(unknowns):
-                to_input = [
-                    Xc[feature] == unknown for unknown in unknowns
-                ]  # identification des valeurs à regrouper
-                Xc[feature] = select(
-                    to_input,
-                    [self.default_values.get(feature)],
-                    default=Xc[feature],
-                )  # regroupement des valeurs
-                warn(f"Unknown modalities provided for feature '{feature}': {unknowns}")
-
-            # grouping values inside groups of modalities
-            to_discard = [
-                order.get(group) for group in order
-            ]  # identification des valeur à regrouper
-            to_input = [
-                Xc[feature].isin(discarded) for discarded in to_discard
-            ]  # identification des valeurs à regrouper
-            Xc[feature] = select(to_input, order, default=Xc[feature])  # regroupement des valeurs
-
-        return Xc
-
-
+# TODO: if there is no target rate, group with the less frequent previous or next modality
 def find_common_modalities(
     df_feature: Series,
     y: Series,
