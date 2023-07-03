@@ -82,8 +82,9 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
         self,
         features: List[str],
         n_best: int,
-        measures: List[Callable] = list(),
-        filters: List[Callable] = list(),
+        measures: List[Callable],
+        *,
+        filters: List[Callable] = None,
         sample_size: float = 1.0,
         copy: bool = True,
         verbose: bool = True,
@@ -112,15 +113,21 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
         self.n_best = n_best
         assert n_best <= len(features), "Must set n_best <= len(features)"
         self.best_features = features[:]
+        self.dropped_features: List[str] = []
         self.sample_size = sample_size
 
         self.measures = [dtype_measure, nans_measure, mode_measure] + measures[:]
+        if filters is None:
+            filters = []
         self.filters = [thresh_filter] + filters[:]
         self.sort_measures = [measure.__name__ for measure in measures[::-1]]
 
         self.copy = copy
         self.verbose = verbose
         self.params = params
+
+        self.associations = None
+        self.filtered_associations = None
 
     def measure(self, x: Series, y: Series) -> Dict[str, Any]:
         """Measures association between x and y"""
@@ -251,12 +258,34 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
         # final selection with all best_features selected
         self.best_features = self.fit_features(X, y, best_features, self.n_best)
 
-        # dropped features
-        self.dropped_features = [c for c in self.features if c not in self.best_features]
+        # ordering best_features according to their rank
+        self.best_features = [
+            f for f in self.filtered_associations.index if f in self.best_features
+        ]
+
+        # ordered dropped features
+        self.dropped_features = [f for f in self.associations.index if f not in self.best_features]
+        self.dropped_features += [
+            f for f in self.features if f not in self.best_features + self.dropped_features
+        ]
 
         return self
 
     def transform(self, X: DataFrame, y: Series = None) -> DataFrame:
+        """Drops the non-selected columns from `features`.
+
+        Parameters
+        ----------
+        X : DataFrame
+            Contains columns named in `features`
+        y : Series, optional
+            Model target, by default None
+
+        Returns
+        -------
+        DataFrame
+            `X` without non-selected columns from `features`.
+        """
         # copying dataset
         Xc = X
         if self.copy:

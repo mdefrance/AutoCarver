@@ -4,11 +4,16 @@ for a binary classification model.
 
 from typing import Any, Dict, List
 
+from base_discretizers import (
+    GroupedList,
+    GroupedListDiscretizer,
+    nunique,
+    target_rate,
+    value_counts,
+)
 from numpy import inf, nan, select
 from pandas import DataFrame, Series, notna
 from sklearn.base import BaseEstimator, TransformerMixin
-
-from base_discretizers import GroupedList, GroupedListDiscretizer, value_counts, target_rate, nunique
 
 
 class ChainedDiscretizer(GroupedListDiscretizer):
@@ -160,6 +165,7 @@ class ChainedDiscretizer(GroupedListDiscretizer):
 
 class DefaultDiscretizer(BaseEstimator, TransformerMixin):
     """Groups a qualitative features' values less frequent than min_freq into a default_value"""
+
     def __init__(
         self,
         features: List[str],
@@ -200,6 +206,9 @@ class DefaultDiscretizer(BaseEstimator, TransformerMixin):
         self.copy = copy
         self.verbose = verbose
 
+        # dict of features and corresponding kept modalities
+        self.to_keep: Dict[str, Any] = {}
+
     def fit(self, X: DataFrame, y: Series) -> None:
         """_summary_
 
@@ -226,9 +235,6 @@ class DefaultDiscretizer(BaseEstimator, TransformerMixin):
         nuniques = Xc.apply(nunique, axis=0)
 
         # identifying modalities which are the most common
-        self.to_keep: Dict[str, Any] = {}  # dict of features and corresponding kept modalities
-
-        # iterating over each feature
         for feature in self.features:
             # checking for binary features
             if nuniques[feature] > 2:

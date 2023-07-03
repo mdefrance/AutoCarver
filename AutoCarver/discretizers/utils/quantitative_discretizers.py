@@ -4,15 +4,15 @@ for a binary classification model.
 
 from typing import Any, Dict, List
 
+from base_discretizers import GroupedList
 from numpy import array, inf, linspace, nan, quantile, select
 from pandas import DataFrame, Series, isna, notna, unique
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from base_discretizers import GroupedList
-
 
 class QuantileDiscretizer(BaseEstimator, TransformerMixin):
     """Builds per-feature buckets of quantiles"""
+
     def __init__(
         self,
         features: List[str],
@@ -151,12 +151,12 @@ def find_quantiles(
     )  # dropping nans to keep them anyways
     values, frequencies = array(frequencies.index), array(frequencies.values)
 
-    # cas 1 : il n'y a pas d'observation dans le dataframe
+    # case 1: no observation, all values have been attributed there corresponding modality
     if len(df_feature) == 0:
         return quantiles
 
-    # cas 2 : il y a des valeurs manquantes NaN
-    elif any(isna(df_feature)):
+    # case 2: there are missing values
+    if any(isna(df_feature)):
         return find_quantiles(
             df_feature[notna(df_feature)],
             q,
@@ -164,46 +164,40 @@ def find_quantiles(
             quantiles=quantiles,
         )
 
-    # cas 2 : il n'y a que des valeurs dans le dataframe (pas de NaN)
+    # case 3 : there are no missing values
+    # case 3.1 : there is an over-populated value
+    if any(frequencies > 1 / q):
+        # identification de la valeur sur-représentée
+        frequent_value = values[frequencies.argmax()]
+
+        # ajout de la valeur fréquente à la liste des quantiles
+        quantiles += [frequent_value]
+
+        # calcul des quantiles pour les parties inférieures et supérieures
+        quantiles_inf = find_quantiles(df_feature[df_feature < frequent_value], q, len_df=len_df)
+        quantiles_sup = find_quantiles(df_feature[df_feature > frequent_value], q, len_df=len_df)
+
+        return quantiles_inf + quantiles + quantiles_sup
+
+    # case 3.2 : there is no over-populated value
+    # nouveau nombre de quantile en prenant en compte les classes déjà constituées
+    new_q = max(round(len(df_feature) / len_df * q), 1)
+
+    # calcul des quantiles sur le dataframe
+    if new_q > 1:
+        quantiles += list(
+            quantile(
+                df_feature.values,
+                linspace(0, 1, new_q + 1)[1:-1],
+                interpolation="lower",
+            )
+        )
+
+    # case when there are no enough observations to compute quantiles
     else:
-        # cas 1 : il existe une valeur sur-représentée
-        if any(frequencies > 1 / q):
-            # identification de la valeur sur-représentée
-            frequent_value = values[frequencies.argmax()]
+        quantiles += [max(df_feature.values)]
 
-            # ajout de la valeur fréquente à la liste des quantiles
-            quantiles += [frequent_value]
-
-            # calcul des quantiles pour les parties inférieures et supérieures
-            quantiles_inf = find_quantiles(
-                df_feature[df_feature < frequent_value], q, len_df=len_df
-            )
-            quantiles_sup = find_quantiles(
-                df_feature[df_feature > frequent_value], q, len_df=len_df
-            )
-
-            return quantiles_inf + quantiles + quantiles_sup
-
-        # cas 2 : il n'existe pas de valeur sur-représentée
-        else:
-            # nouveau nombre de quantile en prenant en compte les classes déjà constituées
-            new_q = max(round(len(df_feature) / len_df * q), 1)
-
-            # calcul des quantiles sur le dataframe
-            if new_q > 1:
-                quantiles += list(
-                    quantile(
-                        df_feature.values,
-                        linspace(0, 1, new_q + 1)[1:-1],
-                        interpolation="lower",
-                    )
-                )
-
-            # case when there are no enough observations to compute quantiles
-            else:
-                quantiles += [max(df_feature.values)]
-
-            return quantiles
+    return quantiles
 
 
 def format_list(a_list: List[float]) -> List[str]:

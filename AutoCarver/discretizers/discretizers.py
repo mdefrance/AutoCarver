@@ -7,11 +7,11 @@ from typing import Any, Dict, List
 from pandas import DataFrame, Series, unique
 from pandas.api.types import is_numeric_dtype, is_string_dtype
 from sklearn.base import BaseEstimator, TransformerMixin
-
-from utils.base_discretizers import ClosestDiscretizer, GroupedList, nan_unique, min_value_counts
-from ..Converters import StringConverter
+from utils.base_discretizers import ClosestDiscretizer, GroupedList, min_value_counts, nan_unique
 from utils.qualitative_discretizers import DefaultDiscretizer
 from utils.quantitative_discretizers import QuantileDiscretizer
+
+from ..Converters import StringConverter
 
 
 class Discretizer(BaseEstimator, TransformerMixin):
@@ -396,11 +396,13 @@ class QuantitativeDiscretizer(BaseEstimator, TransformerMixin):
         features: List[str],
         q: int,
         *,
-        values_orders: Dict[str, Any] = {},
+        values_orders: Dict[str, Any] = None,
         copy: bool = False,
         verbose: bool = False,
     ) -> None:
         self.features = features[:]
+        if values_orders is None:
+            values_orders = {}
         self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
         self.q = q
         self.pipe: List[BaseEstimator] = []

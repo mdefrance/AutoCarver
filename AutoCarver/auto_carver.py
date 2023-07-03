@@ -4,6 +4,7 @@ for a binary classification model.
 
 from typing import Any, Dict, List, Tuple
 
+from discretizers.utils.base_discretizers import GroupedList, GroupedListDiscretizer, is_equal
 from IPython.display import display_html
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
@@ -15,8 +16,6 @@ from pandas.api.types import is_string_dtype
 from scipy.stats import chi2_contingency
 from seaborn import color_palette, despine
 from tqdm.notebook import tqdm
-
-from discretizers.utils.base_discretizers import GroupedList, GroupedListDiscretizer, is_equal
 
 
 class AutoCarver(GroupedListDiscretizer):
@@ -628,8 +627,8 @@ def get_all_nan_combinations(order: GroupedList, str_nan: str, max_n_mod: int) -
             new_combination = [combi_elt + [str_nan]]
 
             # adding other groups unchanged
-            pre = [o for o in combi[:n]]
-            nex = [o for o in combi[n + 1 :]]
+            pre = list(combi[:n])
+            nex = list(combi[n + 1 :])
             new_combinations += [pre + new_combination + nex]
 
     # adding NaN to order

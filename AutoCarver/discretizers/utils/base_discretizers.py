@@ -30,16 +30,16 @@ class GroupedList(list):
 
         # case 0: iterable is the contained dict
         if isinstance(iterable, dict):
-            # TODO: check thaht keys are in list
+            # TODO: check that keys are in list
 
             # récupération des valeurs de la liste (déjà ordonné)
-            values = [key for key in iterable]
+            values = list(iterable)
 
             # initialsiation de la liste
             super().__init__(values)
 
             # attribution des valeurs contenues
-            self.contained = {k: v for k, v in iterable.items()}
+            self.contained = dict(iterable.items())
 
             # adding key to itself if that's not the case
             for k in [k for k in values if k not in self.contained.get(k)]:
@@ -51,7 +51,7 @@ class GroupedList(list):
             super().__init__(iterable)
 
             # copie des groupes
-            self.contained = {k: v for k, v in iterable.contained.items()}
+            self.contained = dict(iterable.contained.items())
 
         # case 2: initiating GroupedList from a list
         elif isinstance(iterable, list):
@@ -187,7 +187,7 @@ class GroupedList(list):
 
         if any(found):
             return found[0]
-        
+
         return value
 
     def values(self) -> List[Any]:
@@ -274,7 +274,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
             _description_
         y : Series, optional
             _description_, by default None
-        """        
+        """
         return self
 
     def transform(self, X: DataFrame, y: Series = None) -> DataFrame:
@@ -400,6 +400,7 @@ def is_equal(a: Any, b: Any) -> bool:
 
 class ClosestDiscretizer(BaseEstimator, TransformerMixin):
     """Discretizes ordered qualitative features into groups more frequent than min_freq"""
+
     def __init__(
         self,
         values_orders: Dict[str, Any],
@@ -550,7 +551,7 @@ def find_common_modalities(
     # conversion en GroupedList si ce n'est pas le cas
     order = GroupedList(order)
 
-    # cas 1 : il y a des valeurs manquantes NaN
+    # case 1: there are missing values
     if any(isna(df_feature)):
         return find_common_modalities(
             df_feature[notna(df_feature)],
@@ -560,14 +561,45 @@ def find_common_modalities(
             len_df,
         )
 
-    # cas 2 : il n'y a que des valeurs dans le dataframe (pas de NaN)
-    else:
-        # computing frequencies and target rate of each modality
-        init_frequencies = df_feature.value_counts(dropna=False, normalize=False) / len_df
-        init_values, init_frequencies = (
-            init_frequencies.index,
-            init_frequencies.values,
+    # case 2: no missing values
+    # computing frequencies and target rate of each modality
+    init_frequencies = df_feature.value_counts(dropna=False, normalize=False) / len_df
+    init_values, init_frequencies = (
+        init_frequencies.index,
+        init_frequencies.values,
+    )
+
+    # ordering
+    frequencies = [
+        init_frequencies[init_values == value][0] if any(init_values == value) else 0
+        for value in order
+    ]  # sort selon l'ordre des modalités
+    values = [
+        init_values[init_values == value][0] if any(init_values == value) else value
+        for value in order
+    ]  # sort selon l'ordre des modalités
+    rate_target = (
+        y.groupby(df_feature).sum().reindex(order) / frequencies / len_df
+    )  # target rate per modality
+    underrepresented = [
+        value for value, frequency in zip(values, frequencies) if frequency < min_freq
+    ]  # valeur peu fréquentes
+
+    # cas 1 : il existe une valeur sous-représentée
+    while any(underrepresented) & (len(frequencies) > 1):
+        # identification de la valeur sous-représentée
+        discarded_idx = argmin(frequencies)
+        discarded = values[discarded_idx]
+
+        # identification de la modalité la plus proche (volume et taux de défaut)
+        kept = find_closest_modality(
+            discarded_idx,
+            list(zip(order, frequencies, rate_target)),
+            min_freq,
         )
+
+        # removing the value from the initial ordering
+        order.group(discarded, kept)
 
         # ordering
         frequencies = [
@@ -585,46 +617,13 @@ def find_common_modalities(
             value for value, frequency in zip(values, frequencies) if frequency < min_freq
         ]  # valeur peu fréquentes
 
-        # cas 1 : il existe une valeur sous-représentée
-        while any(underrepresented) & (len(frequencies) > 1):
-            # identification de la valeur sous-représentée
-            discarded_idx = argmin(frequencies)
-            discarded = values[discarded_idx]
+    worst, best = rate_target.idxmin(), rate_target.idxmax()
 
-            # identification de la modalité la plus proche (volume et taux de défaut)
-            kept = find_closest_modality(
-                discarded,
-                discarded_idx,
-                list(zip(order, frequencies, rate_target)),
-                min_freq,
-            )
-
-            # removing the value from the initial ordering
-            order.group(discarded, kept)
-
-            # ordering
-            frequencies = [
-                init_frequencies[init_values == value][0] if any(init_values == value) else 0
-                for value in order
-            ]  # sort selon l'ordre des modalités
-            values = [
-                init_values[init_values == value][0] if any(init_values == value) else value
-                for value in order
-            ]  # sort selon l'ordre des modalités
-            rate_target = (
-                y.groupby(df_feature).sum().reindex(order) / frequencies / len_df
-            )  # target rate per modality
-            underrepresented = [
-                value for value, frequency in zip(values, frequencies) if frequency < min_freq
-            ]  # valeur peu fréquentes
-
-        worst, best = rate_target.idxmin(), rate_target.idxmax()
-
-        # cas 2 : il n'existe pas de valeur sous-représentée
-        return {"order": order, "worst": worst, "best": best}
+    # cas 2 : il n'existe pas de valeur sous-représentée
+    return {"order": order, "worst": worst, "best": best}
 
 
-def find_closest_modality(value, idx: int, freq_target: Series, min_freq: float) -> int:
+def find_closest_modality(idx: int, freq_target: Series, min_freq: float) -> int:
     """[Qualitative] HELPER Finds the closest modality in terms of frequency and target rate"""
 
     # case 1: lowest modality

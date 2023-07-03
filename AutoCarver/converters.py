@@ -10,54 +10,49 @@ from sklearn.base import BaseEstimator, TransformerMixin
 class StringConverter(BaseEstimator, TransformerMixin):
     """Converts specified columns a DataFrame into str
 
-     - Keeps NaN inplace
-     - Converts floats of int to int
-
-    Parameters
-    ----------
-    features: list, default []
-        List of columns to be converted to string.
+    - Keeps NaN inplace
+    - Converts floats of int to int
     """
 
-    def __init__(self, features: List[str] = [], copy: bool = False) -> None:
-        """_summary_
+    def __init__(self, features: List[str], copy: bool = False) -> None:
+        """Initializes the Stringconverter
 
         Parameters
         ----------
         features : List[str], optional
-            _description_, by default []
+            List of columns to be converted to string.
         copy : bool, optional
-            _description_, by default False
+            If True, copies the DataFrame, by default False
         """
         self.features = features[:]
         self.copy = copy
 
     def fit(self, X: DataFrame, y: Series = None) -> None:
-        """_summary_
+        """Does nothing
 
         Parameters
         ----------
         X : DataFrame
-            _description_
+            Contains columns named according to `features` list.
         y : Series, optional
-            _description_, by default None
+            Model target, by default None
         """
         return self
 
     def transform(self, X: DataFrame, y: Series = None) -> DataFrame:
-        """_summary_
+        """Converts columns into `str`
 
         Parameters
         ----------
         X : DataFrame
-            _description_
+            Contains columns named according to `features` list.
         y : Series, optional
-            _description_, by default None
+            Model target, by default None
 
         Returns
         -------
         DataFrame
-            _description_
+            `X` with columns `features` converted to `str`.
         """
         # copying DataFrame if requested
         Xc = X
@@ -211,10 +206,10 @@ class GroupNormalizer(BaseEstimator, TransformerMixin):
 
         self.copy = copy
 
-        self.group_means = dict()
-        self.group_stds = dict()
+        self.group_means = {}
+        self.group_stds = {}
 
-        self.new_features = list()
+        self.new_features = []
 
     def fit(self, X: DataFrame, y: Series = None) -> None:
         """_summary_
@@ -308,6 +303,8 @@ class TanhNormalizer(BaseEstimator, TransformerMixin):
         self.features = features[:]
         self.copy = copy
 
+        self.distribs = None
+
     def fit(self, X: DataFrame, y=None) -> None:
         """_summary_
 
@@ -372,8 +369,8 @@ class CrossConverter(BaseEstimator, TransformerMixin):
         """
         self.features = features[:]
         self.copy = copy
-        self.new_features: List[str] = list()
-        self.values: Dict[str, List[Any]] = dict()
+        self.new_features: List[str] = []
+        self.values: Dict[str, List[Any]] = {}
 
     def fit(self, X: DataFrame, y: Series = None) -> None:
         """_summary_
