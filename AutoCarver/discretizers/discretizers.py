@@ -11,7 +11,7 @@ from utils.base_discretizers import ClosestDiscretizer, GroupedList, min_value_c
 from utils.qualitative_discretizers import DefaultDiscretizer
 from utils.quantitative_discretizers import QuantileDiscretizer
 
-from ..Converters import StringConverter
+from ..converters import StringConverter
 
 
 class Discretizer(BaseEstimator, TransformerMixin):

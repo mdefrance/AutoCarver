@@ -270,7 +270,26 @@ class AutoCarver(GroupedListDiscretizer):
         X_test: DataFrame = None,
         y_test: Series = None,
     ) -> Dict[str, Any]:
-        """Carves a feature"""
+        """Carves a feature
+
+        Parameters
+        ----------
+        feature : str
+            Column name of the feature to be bucketized
+        X : DataFrame
+            Contains a column named `feature`
+        y : Series
+            Model target
+        X_test : DataFrame, optional
+            Used for robustess evaluation. Contains a column named `feature`, by default None
+        y_test : Series, optional
+            Used for robustess evaluation. Model target, by default None
+
+        Returns
+        -------
+        Dict[str, Any]
+            _description_
+        """
 
         # computing crosstabs
         # crosstab on TRAIN
@@ -286,15 +305,17 @@ class AutoCarver(GroupedListDiscretizer):
             self.display_xtabs(feature, "Raw", xtab, xtab_test)
 
         # measuring association with target for each combination and testing for stability on TEST
-        best_groups = best_combination(
-            self.values_orders.get(feature),
-            self.max_n_mod,
-            self.sort_by,
-            xtab,
-            xtab_test,
-            dropna=True,
-            str_nan=self.str_nan,
-        )
+        best_groups = None
+        if xtab.shape[0] > 2:  # checking that there are modalities
+            best_groups = best_combination(
+                self.values_orders.get(feature),
+                self.max_n_mod,
+                self.sort_by,
+                xtab,
+                xtab_dev=xtab_test,
+                dropna=True,
+                str_nan=self.str_nan,
+            )
 
         # update of the values_orders grouped modalities in values_orders
         if best_groups:
@@ -314,7 +335,7 @@ class AutoCarver(GroupedListDiscretizer):
                 self.max_n_mod,
                 self.sort_by,
                 xtab,
-                xtab_test,
+                xtab_dev=xtab_test,
                 dropna=False,
                 str_nan=self.str_nan,
             )
@@ -479,7 +500,20 @@ def stats_xtab(
 
 
 def apply_combination(xtab: DataFrame, combination: GroupedList) -> Dict[str, Any]:
-    """applies a modality combination to a crosstab"""
+    """Applies a modality combination to a crosstab
+
+    Parameters
+    ----------
+    xtab : DataFrame
+        Crosstab
+    combination : GroupedList
+        Combination of index to apply to the crosstab
+
+    Returns
+    -------
+    Dict[str, Any]
+        _description_
+    """
 
     # initiating association dict
     association = {"combination": combination}
@@ -500,13 +534,36 @@ def best_combination(
     max_n_mod: int,
     sort_by: str,
     xtab_train: DataFrame,
+    *,
     xtab_dev: DataFrame = None,
     dropna: bool = True,
-    str_nan: str = None,
+    str_nan: str = '__NAN__',
 ) -> Dict[str, Any]:
     """Finds the best combination of groups of feature's values:
     - Most associated combination on train sample
     - Stable target rate of combination on test sample.
+
+    Parameters
+    ----------
+    order : GroupedList
+        _description_
+    max_n_mod : int
+        _description_
+    sort_by : str
+        _description_
+    xtab_train : DataFrame
+        _description_
+    xtab_dev : DataFrame, optional
+        _description_, by default None
+    dropna : bool, optional
+        _description_, by default True
+    str_nan : str, optional
+        _description_, by default '__NAN__'
+
+    Returns
+    -------
+    Dict[str, Any]
+        _description_
     """
 
     # copying crosstabs
