@@ -25,50 +25,90 @@ def nan_unique(x: Series):
 class GroupedList(list):
     """An ordered list that extends dict."""
 
-    def __init__(self, iterable=()) -> None:
-        """An ordered list that historizes its elements' merges."""
+    def __init__(self, iterable: Any=()) -> None:
+        """An ordered list that historizes its elements' merges.
+
+        Parameters
+        ----------
+        iterable : Any, optional
+            list, dict or GroupedList, by default ()
+        """
 
         # case 0: iterable is the contained dict
         if isinstance(iterable, dict):
-            # TODO: check that keys are in list
+            # storing ordered keys of the dict
+            keys = list(iterable)
 
-            # récupération des valeurs de la liste (déjà ordonné)
-            values = list(iterable)
-
-            # initialsiation de la liste
-            super().__init__(values)
-
-            # attribution des valeurs contenues
+            # storing the values contained per key
             self.contained = dict(iterable.items())
 
-            # adding key to itself if that's not the case
-            for k in [k for k in values if k not in self.contained.get(k)]:
-                self.contained.update({k: self.contained.get(k) + [k]})
+            # checking that all values are only present once
+            all_values = [val for _, values in iterable.items() for val in values]
+            assert len(list(set(all_values))) == len(all_values), "A value is present in several keys (groups)"
+            
+            # adding key to itself if it's not present in an other key
+            keys_copy = keys[:]  # copying initial keys
+            for key in keys_copy:
+                # checking that the value is not comprised in an other key
+                all_values = [val for iter_key, values in iterable.items() for val in values if key != iter_key]
+                if key not in all_values:
+                    # checking that key is missing from its values
+                    if key not in iterable[key]:
+                        self.contained.update({key: self.contained[key] + [key]})
+                # the key already is in another key (and its values are empty)
+                # the key as already been grouped
+                else:
+                    self.contained.pop(key)
+                    keys.remove(key)
+
+            # initiating the list with those keys
+            super().__init__(keys)
 
         # case 1: copying a GroupedList
         elif hasattr(iterable, "contained"):
-            # initialsiation de la liste
+            # initiating the list with the provided list of keys
             super().__init__(iterable)
 
-            # copie des groupes
+            # copying values associated to keys
             self.contained = dict(iterable.contained.items())
 
         # case 2: initiating GroupedList from a list
         elif isinstance(iterable, list):
-            # initialsiation de la liste
+            # initiating the list with the provided list of keys
             super().__init__(iterable)
 
-            # création des groupes
+            # initiating the values with the provided list of keys
             self.contained = {v: [v] for v in iterable}
 
-    def group_list(self, to_discard: List[Any], to_keep: Any) -> None:
-        """Groups elements to_discard into values to_keep"""
+    def get(self, key: Any) -> List[Any]:
+        """List of values contained in key
 
-        for discarded, kept in zip(to_discard, [to_keep] * len(to_discard)):
-            self.group(discarded, kept)
+        Parameters
+        ----------
+        key : Any
+            Group.
+
+        Returns
+        -------
+        List[Any]
+            Values contained in key
+        """
+
+        # default to fing an element
+        found = self.contained.get(key)
+
+        return found
 
     def group(self, discarded: Any, kept: Any) -> None:
-        """Groups the discarded value with the kept value"""
+        """Groups the discarded value with the kept value
+
+        Parameters
+        ----------
+        discarded : Any
+            Value to be grouped into the key `to_keep`.
+        kept : Any
+            Key value in which to group `discarded`.
+        """
 
         # checking that those values are distinct
         if not is_equal(discarded, kept):
@@ -86,32 +126,55 @@ class GroupedList(list):
             # removing discarded from the list
             self.remove(discarded)
 
-        return self
+    def group_list(self, to_discard: List[Any], to_keep: Any) -> None:
+        """Groups elements to_discard into values to_keep
+
+        Parameters
+        ----------
+        to_discard : List[Any]
+            Values to be grouped into the key `to_keep`.
+        to_keep : Any
+            Key value in which to group `to_discard` values.
+        """
+
+        for discarded, kept in zip(to_discard, [to_keep] * len(to_discard)):
+            self.group(discarded, kept)
 
     def append(self, new_value: Any) -> None:
-        """Appends a new_value to the GroupedList"""
+        """Appends a new_value to the GroupedList
+
+        Parameters
+        ----------
+        new_value : Any
+            New key to be added.
+        """
 
         self += [new_value]
-
         self.contained.update({new_value: [new_value]})
 
-        return self
-
     def update(self, new_value: Dict[Any, List[Any]]) -> None:
-        """Updates the GroupedList via a dict"""
+        """Updates the GroupedList via a dict"
+
+        Parameters
+        ----------
+        new_value : Dict[Any, List[Any]]
+            Dict of key, values to updated `contained` dict
+        """
 
         # adding keys to the order if they are new values
-        for k in [c for c in new_value if c not in self]:
-            self += new_value.keys()
+        self += [key for key, _ in new_value.items() if key not in self]
 
-        # updating contained accord to new_value
+        # updating contained according to new_value
         self.contained.update(new_value)
 
-        return self
+    def sort(self):
+        """Sorts the values of the list and dict (if any, NaNs are last).
 
-    def sort(self) -> None:
-        """Sorts the values of the list and dict (if any, NaNs are last)."""
-
+        Returns
+        -------
+        GroupedList
+            Sorted GroupedList
+        """
         # str values
         keys_str = [key for key in self if isinstance(key, str)]
 
@@ -122,12 +185,23 @@ class GroupedList(list):
         keys = list(sort(keys_str)) + list(sort(keys_float))
 
         # recreating an ordered GroupedList
-        self = GroupedList({k: self.get(k) for k in keys})
+        sorted = GroupedList({k: self.get(k) for k in keys})
 
-        return self
+        return sorted
 
     def sort_by(self, ordering: List[Any]) -> None:
-        """Sorts the values of the list and dict, if any, NaNs are the last."""
+        """Sorts the values of the list and dict according to `ordering`, if any, NaNs are the last.
+
+        Parameters
+        ----------
+        ordering : List[Any]
+            Order used for ordering of the list of keys.
+
+        Returns
+        -------
+        GroupedList
+            Sorted GroupedList
+        """
 
         # checking that all values are given an order
         assert all(
@@ -138,9 +212,9 @@ class GroupedList(list):
         ), f"Missing value from ordering: {', '.join([str(v) for v in self if v not in ordering])}"
 
         # ordering the contained
-        self = GroupedList({k: self.get(k) for k in ordering})
+        sorted = GroupedList({k: self.get(k) for k in ordering})
 
-        return self
+        return sorted
 
     def remove(self, value: Any) -> None:
         """Removes a value from the GroupedList
@@ -164,20 +238,19 @@ class GroupedList(list):
         value = self[idx]
         self.remove(value)
 
-    def get(self, key: Any) -> List[Any]:
-        """returns list of values contained in key"""
-
-        # default to fing an element
-        found = self.contained.get(key)
-
-        # copying with dictionnaries (not working with numpy.nan)
-        # if isna(key):
-        # found = [value for dict_key, value in self.contained.items() if is_equal(dict_key, key)][0]
-
-        return found
-
     def get_group(self, value: Any) -> Any:
-        """returns the group containing the specified value"""
+        """Returns the key (group) containing the specified value
+
+        Parameters
+        ----------
+        value : Any
+            Value for which to find the group.
+
+        Returns
+        -------
+        Any
+            Corresponding key (group)
+        """
 
         found = [
             key
@@ -191,21 +264,49 @@ class GroupedList(list):
         return value
 
     def values(self) -> List[Any]:
-        """returns all values contained in each group"""
+        """All values contained in all groups
+
+        Returns
+        -------
+        List[Any]
+            List of all values in the GroupedList
+        """
 
         known = [value for values in self.contained.values() for value in values]
 
         return known
 
     def contains(self, value: Any) -> bool:
-        """checks if a value if contained in any group"""
+        """Checks if a value is contained in any group, also matches NaNs.
+
+        Parameters
+        ----------
+        value : Any
+            Value to search for
+
+        Returns
+        -------
+        bool
+            Whether the value is in the GroupedList 
+        """
 
         known_values = self.values()
 
         return any(is_equal(value, known) for known in known_values)
 
-    def get_repr(self, char_limit: int = 10) -> List[str]:
-        """Returns a representative list of strings of values of groups."""
+    def get_repr(self, char_limit: int = 6) -> List[str]:
+        """Returns a representative list of strings of values of groups.
+
+        Parameters
+        ----------
+        char_limit : int, optional
+            Maximum number of character per string, by default 6
+
+        Returns
+        -------
+        List[str]
+            List of short str representation of the keys' values
+        """
 
         # initiating list of group representation
         repr: List[str] = []
@@ -229,7 +330,7 @@ class GroupedList(list):
 
         return repr
 
-
+# TODO: add a base discretizer that implements prepare_data
 class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
     """Discretizer that uses a dict of grouped values."""
 
@@ -535,13 +636,30 @@ def find_common_modalities(
     order: GroupedList,
     len_df: int = None,
 ) -> Dict[str, Any]:
-    """[Qualitative] Découpage en modalités de fréquence minimal (Cas des variables ordonnées).
+    """Découpage en modalités de fréquence minimal (Cas des variables ordonnées).
 
     Fonction récursive : on prend l'échantillon et on cherche des valeurs sur-représentées
     Si la valeur existe on la met dans une classe et on cherche à gauche et à droite de celle-ci, d'autres variables sur-représentées
     Une fois il n'y a plus de valeurs qui soient sur-représentées,
     on fait un découpage classique avec qcut en multipliant le nombre de classes souhaité par le pourcentage de valeurs restantes sur le total
 
+    Parameters
+    ----------
+    df_feature : Series
+        _description_
+    y : Series
+        _description_
+    min_freq : float
+        _description_
+    order : GroupedList
+        _description_
+    len_df : int, optional
+        _description_, by default None
+
+    Returns
+    -------
+    Dict[str, Any]
+        _description_
     """
 
     # initialisation de la taille totale du dataframe
@@ -624,7 +742,22 @@ def find_common_modalities(
 
 
 def find_closest_modality(idx: int, freq_target: Series, min_freq: float) -> int:
-    """[Qualitative] HELPER Finds the closest modality in terms of frequency and target rate"""
+    """HELPER Finds the closest modality in terms of frequency and target rate
+
+    Parameters
+    ----------
+    idx : int
+        _description_
+    freq_target : Series
+        _description_
+    min_freq : float
+        _description_
+
+    Returns
+    -------
+    int
+        _description_
+    """
 
     # case 1: lowest modality
     if idx == 0:

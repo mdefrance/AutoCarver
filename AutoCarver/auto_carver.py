@@ -4,7 +4,7 @@ for a binary classification model.
 
 from typing import Any, Dict, List, Tuple
 
-from discretizers.utils.base_discretizers import GroupedList, GroupedListDiscretizer, is_equal
+from .discretizers.utils.base_discretizers import GroupedList, GroupedListDiscretizer, is_equal
 from IPython.display import display_html
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure

@@ -2,3 +2,6 @@
 
 from AutoCarver.auto_carver import *
 from pytest import fixture
+
+def test_nothing():
+    pass

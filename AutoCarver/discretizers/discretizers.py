@@ -7,9 +7,9 @@ from typing import Any, Dict, List
 from pandas import DataFrame, Series, unique
 from pandas.api.types import is_numeric_dtype, is_string_dtype
 from sklearn.base import BaseEstimator, TransformerMixin
-from utils.base_discretizers import ClosestDiscretizer, GroupedList, min_value_counts, nan_unique
-from utils.qualitative_discretizers import DefaultDiscretizer
-from utils.quantitative_discretizers import QuantileDiscretizer
+from .utils.base_discretizers import ClosestDiscretizer, GroupedList, min_value_counts, nan_unique
+from .utils.qualitative_discretizers import DefaultDiscretizer
+from .utils.quantitative_discretizers import QuantileDiscretizer
 
 from ..converters import StringConverter
 

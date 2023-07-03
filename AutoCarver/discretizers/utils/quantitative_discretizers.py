@@ -4,7 +4,7 @@ for a binary classification model.
 
 from typing import Any, Dict, List
 
-from base_discretizers import GroupedList
+from .base_discretizers import GroupedList
 from numpy import array, inf, linspace, nan, quantile, select
 from pandas import DataFrame, Series, isna, notna, unique
 from sklearn.base import BaseEstimator, TransformerMixin

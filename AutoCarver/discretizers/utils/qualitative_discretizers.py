@@ -4,7 +4,7 @@ for a binary classification model.
 
 from typing import Any, Dict, List
 
-from base_discretizers import (
+from .base_discretizers import (
     GroupedList,
     GroupedListDiscretizer,
     nunique,

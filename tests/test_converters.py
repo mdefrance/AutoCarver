@@ -2,3 +2,7 @@
 
 from AutoCarver.converters import *
 from pytest import fixture
+
+
+def test_nothing():
+    pass

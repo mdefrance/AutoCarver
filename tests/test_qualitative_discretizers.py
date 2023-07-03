@@ -2,3 +2,7 @@
 
 from AutoCarver.discretizers.utils.qualitative_discretizers import *
 from pytest import fixture
+
+
+def test_nothing():
+    pass

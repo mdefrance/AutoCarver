@@ -2,3 +2,7 @@
 
 from AutoCarver.feature_selector import *
 from pytest import fixture
+
+
+def test_nothing():
+    pass
