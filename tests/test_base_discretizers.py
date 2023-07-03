@@ -2,6 +2,8 @@
 
 from AutoCarver.discretizers.utils.base_discretizers import *
 from pytest import fixture, raises
+from pandas import DataFrame
+from numpy import nan, random
 
 def test_groupedlist_init():
     """ Tests the initialization of a GroupedList"""
@@ -43,6 +45,56 @@ def test_groupedlist_init():
     groupedlist_copy = GroupedList(groupedlist)
     assert groupedlist_copy == ['1', '2', '3', '5'], "When init by GroupedList, GroupedList should be an exact copy"
     assert groupedlist_copy.contained == {'1': ['1', '4'], '2': ['2'], '3': ['3'], '5': ['5']}, "When init by GroupedList, GroupedList should be an exact copy"
+
+
+
+def init_test_df(seed: int) -> DataFrame:
+    """Initializes a DataFrame used in tests
+
+    Parameters
+    ----------
+    seed : int
+        Seed for the random samples
+
+    Returns
+    -------
+    DataFrame
+        A DataFrame to perform Discretizers tests
+    """    
+    
+    # Set random seed for reproducibility
+    random.seed(seed)
+
+    # Generate random qualitative ordinal features
+    qual_ord_features = (
+        ['Low-'] * int(1 * 100) + ['Low'] * int(0 * 100) + ['Low+'] * int(12 * 100) +  # 13%
+        ['Medium-'] * int(10 * 100) + ['Medium'] * int(24 * 100) + ['Medium+'] * int(6 * 100) +  # 40%
+        ['High-'] * int(0 * 100) + ['High'] * int(7 * 100) + ['High+'] * int(40 * 100) # 47 %
+    )
+    # qual_ord_features = ['Low-', 'Low', 'Low+', 'Medium-', 'Medium', 'Medium+', 'High-', 'High', 'High+']
+    ordinal_data = random.choice(qual_ord_features, size=1000)
+
+    # Generate random qualitative features
+    qual_features = ['Category A', 'Category B', 'Category C']
+    qualitative_data = random.choice(qual_features, size=1000)
+
+    # Generate random quantitative features
+    quantitative_data = random.rand(1000) * 100
+
+    # Create DataFrame
+    data = {
+        'Qualitative_Ordinal': ordinal_data,
+        'Qualitative': qualitative_data,
+        'Quantitative': quantitative_data
+    }
+    df = DataFrame(data)
+
+
+    df["Qualitative_Ordinal_lownan"] = df["Qualitative_Ordinal"].replace("Low-", nan)
+    df["Qualitative_Ordinal_highnan"] = df["Qualitative_Ordinal"].replace("High+", nan)
+
+    # Print the DataFrame
+    return df
 
 def test_groupedlist_functions():
     
@@ -120,3 +172,107 @@ def test_groupedlist_functions():
     # test get_repr
     assert groupedlist.get_repr() == ['5 to 3', '7 and 0']
 
+def test_groupedlistdiscretizer():
+    
+    # values to input nans
+    str_nan = '__NAN__'
+    
+    # initiating test dataframe
+    x_train = init_test_df(123)
+    
+    # defining values_orders
+    order = ['Low-', 'Low', 'Low+', 'Medium-', 'Medium', 'Medium+', 'High-', 'High', 'High+']
+    
+    # ordering for base qualitative ordinal feature
+    groupedlist = GroupedList(order)
+    groupedlist.group_list(['Low-', 'Low'], 'Low+')
+    groupedlist.group_list(['Medium+', 'High-'], 'High')
+
+    # ordering for qualitative ordinal feature that contains NaNs
+    groupedlist_lownan = GroupedList(order + [str_nan])
+    groupedlist_lownan.group_list(['Low-', 'Low'], 'Low+')
+    groupedlist_lownan.group_list(['Medium+', 'High-'], 'High')
+
+    # storing per feature orders
+    values_orders = {
+        "Qualitative_Ordinal": groupedlist,
+        "Qualitative_Ordinal_lownan": groupedlist_lownan,
+    }
+    
+    # initiating discretizer with output str
+    discretizer = GroupedListDiscretizer(values_orders, str_nan=str_nan, output='str', copy=True)
+    x_discretized = discretizer.fit_transform(x_train)
+
+    # testing ordinal qualitative feature discretization
+    x_expected = x_train.copy()
+    x_expected["Qualitative_Ordinal"] = x_expected["Qualitative_Ordinal"].replace('Low-', 'Low+')\
+        .replace('Low', 'Low+')\
+        .replace('Low+', 'Low+')\
+        .replace('Medium-', 'Medium-')\
+        .replace('Medium', 'Medium')\
+        .replace('Medium+', 'High')\
+        .replace('High-', 'High')\
+        .replace('High', 'High')\
+        .replace('High+', 'High+')
+    assert all(x_expected["Qualitative_Ordinal"] == x_discretized["Qualitative_Ordinal"]), "incorrect discretization, for output 'str'"
+
+    # testing ordinal qualitative feature discretization with nans
+    x_expected = x_train.copy()
+    x_expected["Qualitative_Ordinal_lownan"] = x_expected["Qualitative_Ordinal_lownan"].replace('Low-', 'Low+')\
+        .replace('Low', 'Low+')\
+        .replace('Low+', 'Low+')\
+        .replace('Medium-', 'Medium-')\
+        .replace('Medium', 'Medium')\
+        .replace('Medium+', 'High')\
+        .replace('High-', 'High')\
+        .replace('High', 'High')\
+        .replace('High+', 'High+')\
+        .replace(nan, '__NAN__')
+    assert all(x_expected["Qualitative_Ordinal_lownan"] == x_discretized["Qualitative_Ordinal_lownan"]), "incorrect discretization with nans, for output 'str'"
+
+    # checking that other columns are left unchanged
+    assert all(x_discretized["Quantitative"] == x_discretized["Quantitative"]), "Other columns should not be modified"
+
+    # initiating discretizer with output float
+    discretizer = GroupedListDiscretizer(values_orders, str_nan=str_nan, output='float', copy=True)
+    x_discretized = discretizer.fit_transform(x_train)
+
+    # testing ordinal qualitative feature discretization
+    x_expected = x_train.copy()
+    x_expected["Qualitative_Ordinal"] = x_expected["Qualitative_Ordinal"].replace('Low-', 0)\
+        .replace('Low', 0)\
+        .replace('Low+', 0)\
+        .replace('Medium-', 1)\
+        .replace('Medium', 2)\
+        .replace('Medium+', 3)\
+        .replace('High-', 3)\
+        .replace('High', 3)\
+        .replace('High+', 4)
+    assert all(x_expected["Qualitative_Ordinal"] == x_discretized["Qualitative_Ordinal"]), "incorrect discretization, for output 'float'"
+    
+    # testing ordinal qualitative feature discretization with nans
+    x_expected = x_train.copy()
+    x_expected["Qualitative_Ordinal_lownan"] = x_expected["Qualitative_Ordinal_lownan"].replace('Low-', 0)\
+        .replace('Low', 0)\
+        .replace('Low+', 0)\
+        .replace('Medium-', 1)\
+        .replace('Medium', 2)\
+        .replace('Medium+', 3)\
+        .replace('High-', 3)\
+        .replace('High', 3)\
+        .replace('High+', 4)\
+        .replace(nan, 5)
+    assert all(x_expected["Qualitative_Ordinal_lownan"] == x_discretized["Qualitative_Ordinal_lownan"]), "incorrect discretization with nans, for output 'float'"
+
+    # testing by adding nan in test set
+    x_test = init_test_df(1234)
+    discretizer.transform(x_test)
+    x_test['Qualitative_Ordinal'] = x_test['Qualitative_Ordinal'].replace('High+', nan)
+    with raises(AssertionError):
+        discretizer.transform(x_test)
+
+    # testing by adding a new value in test set
+    x_test = init_test_df(12345)
+    x_test['Qualitative_Ordinal'] = x_test['Qualitative_Ordinal'].replace('High+', 'High++')
+    with raises(AssertionError):
+        discretizer.transform(x_test)

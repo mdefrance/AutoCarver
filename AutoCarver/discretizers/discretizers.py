@@ -299,6 +299,7 @@ class QualitativeDiscretizer(BaseEstimator, TransformerMixin):
         assert len(y_values) == 2, "y must be a binary Series (int or float, not object)"
 
         # checking that all unique values in X are in values_orders
+        # TODO: use base_discretizers.check_new_value
         uniques = Xc[self.features].apply(nan_unique)
         for feature in self.ordinal_features:
             missing = [val for val in uniques[feature] if val not in self.values_orders[feature]]
