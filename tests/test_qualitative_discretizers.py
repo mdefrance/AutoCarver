@@ -4,5 +4,11 @@ from AutoCarver.discretizers.utils.qualitative_discretizers import *
 from pytest import fixture
 
 
-def test_nothing():
+def test_chained_discretizer():
+    """TODO"""
+    pass
+
+
+def test_default_discretizer():
+    """TODO"""
     pass

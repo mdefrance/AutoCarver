@@ -10,12 +10,163 @@ from .base_discretizers import (
     nunique,
     target_rate,
     value_counts,
+    nan_unique,
+    check_new_values,
+    check_missing_values,
 )
-from numpy import inf, nan, select
-from pandas import DataFrame, Series, notna
-from sklearn.base import BaseEstimator, TransformerMixin
+from numpy import nan, select
+from pandas import DataFrame, Series, notna, unique
 
 
+class DefaultDiscretizer(GroupedListDiscretizer):
+    """Groups a qualitative features' values less frequent than min_freq into a default_value7
+    
+    Only use for qualitative non-ordinal features
+    """
+
+    def __init__(
+        self,
+        features: List[str],
+        min_freq: float,
+        *,
+        values_orders: Dict[str, GroupedList] = None,
+        default_value: str = "__OTHER__",
+        str_nan: str = "__NAN__",
+        copy: bool = False,
+        verbose: bool = False,
+    ) -> None:
+        """_summary_
+
+        Parameters
+        ----------
+        features : List[str]
+            List of column names to be discretized
+        min_freq : float
+            Minimum frequency per modality. Less frequent modalities are grouped in the closest value of the order.
+        values_orders : Dict[str, GroupedList], optional
+            Dict of column names (keys) and modalities' associated order (values), by default None
+        default_value : str, optional
+            _description_, by default "__OTHER__"
+        str_nan : str, optional
+            _description_, by default "__NAN__"
+        copy : bool, optional
+            _description_, by default False
+        verbose : bool, optional
+            _description_, by default False
+        """
+        self.features = features[:]
+        self.min_freq = min_freq
+        if values_orders is None:
+            values_orders = {}
+        self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
+
+        self.default_value = default_value[:]
+        self.str_nan = str_nan[:]
+
+        self.copy = copy
+        self.verbose = verbose
+
+        # dict of features and corresponding kept modalities
+        self.to_keep: Dict[str, Any] = {}
+
+    def prepare_data(self, X: DataFrame, y: Series) -> DataFrame:
+        """Called during fit step
+
+        Parameters
+        ----------
+        X : DataFrame
+            _description_
+        y : Series
+            _description_
+
+        Returns
+        -------
+        DataFrame
+            _description_
+        """
+        # checks and initilizes values_orders
+        for feature in self.features:
+            # initiatind features missing from values_orders
+            if feature not in self.values_orders:
+                self.values_orders.update({feature: GroupedList(nan_unique(X[feature]))})
+
+        # checking that all unique values in X are in values_orders
+        check_new_values(X, self.features, self.values_orders)
+        # checking that all unique values in values_orders are in X
+        check_missing_values(X, self.features, self.values_orders)
+
+        # adding NANS
+        for feature in self.features:
+            if any(X[feature].isna()):
+                self.values_orders[feature].append(self.str_nan)
+        
+        # filling up NaNs
+        Xc = X[self.features].fillna(self.str_nan)
+
+        # checking for binary target
+        y_values = unique(y)
+        assert (0 in y_values) & (
+            1 in y_values
+        ), "y must be a binary Series (int or float, not object)"
+        assert len(y_values) == 2, "y must be a binary Series (int or float, not object)"
+
+        return Xc
+
+
+    def fit(self, X: DataFrame, y: Series) -> None:
+        """Learns modalities that are common enough (greater than min_freq)
+
+        Parameters
+        ----------
+        X : DataFrame
+            _description_
+        y : Series
+            _description_
+        """
+        # checking data before bucketization
+        Xc = self.prepare_data(X, y)
+
+        # computing frequencies of each modality
+        frequencies = Xc.apply(value_counts, normalize=True, axis=0)
+        
+        for feature in self.features:
+            # sorting orders based on target rates
+            order = self.values_orders[feature]
+                                  
+            # checking for rare values
+            rare_values = [val for val, freq in frequencies[feature].items() if freq < self.min_freq]
+            if any(rare_values):
+                 # adding default value to the order
+                order.append(self.default_value)
+
+                # grouping rare values in default value
+                order.group_list(rare_values, self.default_value)
+                Xc.loc[Xc[feature].isin(rare_values), feature] = self.default_value 
+
+                # updating values_orders
+                self.values_orders.update({feature: order})
+
+        # computing target rate per modality for ordering
+        target_rates = Xc.apply(target_rate, y=y, ascending=True, axis=0)
+        
+        for feature in self.features:
+            # sorting orders based on target rates
+            order = self.values_orders[feature]
+
+            # updating values_orders
+            self.values_orders.update({feature: order.sort_by(list(target_rates[feature]))})
+
+        # discretizing features based on each feature's values_order
+        super().__init__(
+            self.values_orders,
+            copy=self.copy,
+            output='str',
+            str_nan=self.str_nan,
+        )
+        super().fit(Xc, y)
+
+        return self
+    
 class ChainedDiscretizer(GroupedListDiscretizer):
     """Chained Discretization based on a list of GroupedList."""
 
@@ -163,169 +314,3 @@ class ChainedDiscretizer(GroupedListDiscretizer):
         return self
 
 
-class DefaultDiscretizer(BaseEstimator, TransformerMixin):
-    """Groups a qualitative features' values less frequent than min_freq into a default_value"""
-
-    def __init__(
-        self,
-        features: List[str],
-        min_freq: float,
-        *,
-        values_orders: Dict[str, Any] = None,
-        default_value: str = "__OTHER__",
-        str_nan: str = "__NAN__",
-        copy: bool = False,
-        verbose: bool = False,
-    ) -> None:
-        """_summary_
-
-        Parameters
-        ----------
-        features : List[str]
-            _description_
-        min_freq : float
-            _description_
-        values_orders : Dict[str, Any], optional
-            _description_, by default None
-        default_value : str, optional
-            _description_, by default "__OTHER__"
-        str_nan : str, optional
-            _description_, by default "__NAN__"
-        copy : bool, optional
-            _description_, by default False
-        verbose : bool, optional
-            _description_, by default False
-        """
-        self.features = features[:]
-        self.min_freq = min_freq
-        if values_orders is None:
-            values_orders = {}
-        self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
-        self.default_value = default_value[:]
-        self.str_nan = str_nan[:]
-        self.copy = copy
-        self.verbose = verbose
-
-        # dict of features and corresponding kept modalities
-        self.to_keep: Dict[str, Any] = {}
-
-    def fit(self, X: DataFrame, y: Series) -> None:
-        """_summary_
-
-        Parameters
-        ----------
-        X : DataFrame
-            _description_
-        y : Series
-            _description_
-        """
-        # filling up NaNs
-        Xc = X[self.features].fillna(self.str_nan)
-
-        # computing frequencies of each modality
-        frequencies = Xc.apply(value_counts, normalize=True, axis=0)
-
-        # computing ordered target rate per modality for ordering
-        target_rates = Xc.apply(target_rate, y=y, ascending=True, axis=0)
-
-        # attributing orders to each feature
-        self.values_orders.update({f: GroupedList(list(target_rates[f])) for f in self.features})
-
-        # number of unique modality per feature
-        nuniques = Xc.apply(nunique, axis=0)
-
-        # identifying modalities which are the most common
-        for feature in self.features:
-            # checking for binary features
-            if nuniques[feature] > 2:
-                kept = [val for val, freq in frequencies[feature].items() if freq >= self.min_freq]
-
-            # keeping all modalities of binary features
-            else:
-                kept = [val for val, freq in frequencies[feature].items()]
-
-            self.to_keep.update({feature: kept})
-
-        # grouping rare modalities
-        for n, feature in enumerate(self.features):
-            # printing verbose
-            if self.verbose:
-                print(f" - [DefaultDiscretizer] Fit {feature} ({n+1}/{len(self.features)})")
-
-            # identifying values to discard (rare modalities)
-            to_discard = [
-                value for value in self.values_orders[feature] if value not in self.to_keep[feature]
-            ]
-
-            # discarding rare modalities
-            if len(to_discard) > 0:
-                # adding default_value to possible values
-                order = self.values_orders[feature]
-                order.append(self.default_value)
-
-                # grouping rare modalities into default_value
-                order.group_list(to_discard, self.default_value)
-
-                # computing target rate for default value and reordering values according to feature's target rate
-                default_target_rate = y.loc[
-                    X[feature].isin(order.get(self.default_value))
-                ].mean()  # computing target rate for default value
-                order_target_rate = [
-                    target_rates.get(feature).get(value)
-                    for value in order
-                    if value != self.default_value
-                ]
-                default_position = next(
-                    n
-                    for n, trate in enumerate(order_target_rate + [inf])
-                    if trate > default_target_rate
-                )
-
-                # updating the modalities' order
-                new_order = (
-                    order[:-1][:default_position]
-                    + [self.default_value]
-                    + order[:-1][default_position:]
-                )  # getting rid of default value already in order
-                order = order.sort_by(new_order)
-                self.values_orders.update({feature: order})
-
-        return self
-
-    def transform(self, X: DataFrame, y: Series = None) -> DataFrame:
-        """_summary_
-
-        Parameters
-        ----------
-        X : DataFrame
-            _description_
-        y : Series, optional
-            _description_, by default None
-
-        Returns
-        -------
-        DataFrame
-            _description_
-        """
-        # copying dataset if requested
-        Xc = X
-        if self.copy:
-            Xc = X.copy()
-
-        # filling up NaNs
-        Xc[self.features] = Xc[self.features].fillna(self.str_nan)
-
-        # grouping values inside groups of modalities
-        for n, feature in enumerate(self.features):
-            # verbose if requested
-            if self.verbose:
-                print(f" - [DefaultDiscretizer] Transform {feature} ({n+1}/{len(self.features)})")
-
-            # grouping modalities
-            Xc[feature] = select(
-                [~Xc[feature].isin(self.to_keep[feature])],
-                [self.default_value],
-                default=Xc[feature],
-            )
-
-        return Xc

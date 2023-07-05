@@ -5,7 +5,7 @@ for a binary classification model.
 from typing import Any, Dict, List, Union
 from warnings import warn
 
-from numpy import argmin, float32, nan, select, sort
+from numpy import argmin, float32, nan, select, sort, ndarray
 from pandas import DataFrame, Series, isna, notna, unique
 from sklearn.base import BaseEstimator, TransformerMixin
 
@@ -85,6 +85,33 @@ def check_new_values(X: DataFrame, features: List[str], known_values: Dict[str, 
             len(unexpected) == 0
         ), f"Unexpected value! The ordering for values: {', '.join(unexpected)} of feature '{feature}' was not provided. There might be new values in your test/dev set. Consider taking a bigger test/dev set or dropping the column {feature}."
 
+def check_missing_values(X: DataFrame, features: List[str], known_values: Dict[str, List[Any]]) -> None:
+    """Checks for missing values from X, (unexpected values in values_orders) 
+
+    Parameters
+    ----------
+    X : DataFrame
+        New DataFrame (at transform time)
+    features : List[str]
+        List of column names
+    known_values : Dict[str, List[Any]]
+        Dict of known values per column name
+    """
+    # unique non-nan values in new dataframe 
+    uniques = X[features].apply(
+        nan_unique,
+        axis=0,
+        result_type="expand",
+    )
+    uniques = applied_to_dict_list(uniques)
+
+    # checking for unexpected values for each feature
+    for feature in features:
+        unexpected = [val for val in known_values[feature] if val not in uniques[feature]]
+        assert (
+            len(unexpected) == 0
+        ), f"Unexpected value! The ordering for values: {', '.join(unexpected)} of feature '{feature}' was provided but there are not matching value in provided X. You should check 'values_orders['{feature}']' for unwanted values."
+
 
 class GroupedList(list):
     """An ordered list that's extended with a dict."""
@@ -97,6 +124,10 @@ class GroupedList(list):
         iterable : Any, optional
             list, dict or GroupedList, by default ()
         """
+
+        # case -1: iterable is an array
+        if isinstance(iterable, ndarray):
+            iterable = list(iterable)
 
         # case 0: iterable is the contained dict
         if isinstance(iterable, dict):
@@ -595,6 +626,7 @@ class ClosestDiscretizer(GroupedListDiscretizer):
 
     def __init__(
         self,
+        features: List[str],
         values_orders: Dict[str, Any],
         min_freq: float,
         *,
@@ -605,6 +637,8 @@ class ClosestDiscretizer(GroupedListDiscretizer):
 
         Parameters
         ----------
+        features : List[str]
+            List of column names to be discretized
         values_orders : Dict[str, Any]
             Dict of column names (keys) and modalities' associated order (values)
         min_freq : float
@@ -617,7 +651,7 @@ class ClosestDiscretizer(GroupedListDiscretizer):
             _description_, by default False
         """
 
-        self.features = list(values_orders.keys())
+        self.features = features[:]
         self.min_freq = min_freq
         self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
         self.copy = copy
@@ -716,7 +750,7 @@ def find_common_modalities(
     # case 2: no missing values
     # computing frequencies and target rate of each modality
     init_frequencies = df_feature.value_counts(dropna=False, normalize=False) / len_df
-    init_rate_target = y.groupby(df_feature).sum().reindex(order)
+    init_target_rates = y.groupby(df_feature).sum().reindex(order)
 
     # per-modality/value frequencies, filling missing by 0
     frequencies = init_frequencies.reindex(order, fill_value=0)
@@ -725,7 +759,7 @@ def find_common_modalities(
     while any(frequencies < min_freq) & (len(frequencies) > 1):
 
         # updating per-group target rate per modality/value
-        rate_target = series_groupy_order(init_rate_target, order) / frequencies / len_df
+        target_rates = series_groupy_order(init_target_rates, order) / frequencies / len_df
 
         # identifying the underrepresented value
         discarded_idx = argmin(frequencies)
@@ -736,7 +770,7 @@ def find_common_modalities(
             discarded_idx,
             order,
             list(frequencies),
-            list(rate_target),
+            list(target_rates),
             min_freq,
         )
 
@@ -771,7 +805,7 @@ def series_groupy_order(series: Series, order: GroupedList) -> Series:
     return grouped_series
 
 
-def find_closest_modality(idx: int, order: GroupedList, frequencies: List[float], rate_target: Series, min_freq: float) -> Any:
+def find_closest_modality(idx: int, order: GroupedList, frequencies: List[float], target_rates: Series, min_freq: float) -> Any:
     """HELPER Finds the closest modality in terms of frequency and target rate
 
     Parameters
@@ -799,13 +833,13 @@ def find_closest_modality(idx: int, order: GroupedList, frequencies: List[float]
     # case 3: modality ranked in the middle
     else:
         # previous modality's volume and target rate
-        previous_freq, previous_target = frequencies[idx - 1], rate_target[idx - 1]
+        previous_freq, previous_target = frequencies[idx - 1], target_rates[idx - 1]
 
         # current modality's volume and target rate
-        current_target = rate_target[idx]
+        current_target = target_rates[idx]
 
         # next modality's volume and target rate
-        next_freq, next_target = frequencies[idx + 1], rate_target[idx + 1]
+        next_freq, next_target = frequencies[idx + 1], target_rates[idx + 1]
 
         # identifying closest modality in terms of frequency
         least_frequent = idx - 1

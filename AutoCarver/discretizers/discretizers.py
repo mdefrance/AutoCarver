@@ -401,6 +401,21 @@ class QuantitativeDiscretizer(BaseEstimator, TransformerMixin):
         copy: bool = False,
         verbose: bool = False,
     ) -> None:
+        """_summary_
+
+        Parameters
+        ----------
+        features : List[str]
+            _description_
+        q : int
+            _description_
+        values_orders : Dict[str, Any], optional
+            _description_, by default None
+        copy : bool, optional
+            _description_, by default False
+        verbose : bool, optional
+            _description_, by default False
+        """        
         self.features = features[:]
         if values_orders is None:
             values_orders = {}
