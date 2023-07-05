@@ -641,19 +641,17 @@ class ClosestDiscretizer(GroupedListDiscretizer):
         common_modalities = (
             X[self.features]
             .apply(
-                lambda u: find_common_modalities(
-                    u, y, self.min_freq, self.values_orders.get(u.name)
-                ),
+                find_common_modalities,
+                y=y,
+                min_freq=self.min_freq,
+                values_orders=self.values_orders,
                 axis=0,
-                result_type="expand",
+                result_type="reduce",
             )
         )
-        print(common_modalities)
-        print(applied_to_dict_list(common_modalities))
-        print(common_modalities.T.to_dict())
 
         # updating the order per feature
-        self.values_orders.update({f: common_modalities.get("order").get(f) for f in self.features})
+        self.values_orders.update(common_modalities)
 
         # discretizing features based on each feature's values_order
         super().__init__(
@@ -665,12 +663,12 @@ class ClosestDiscretizer(GroupedListDiscretizer):
 
         return self
 
-# TODO: if there is no target rate, group with the less frequent previous or next modality
+
 def find_common_modalities(
     df_feature: Series,
     y: Series,
     min_freq: float,
-    order: GroupedList,
+    values_orders: Dict[str, GroupedList],
     len_df: int = None,
 ) -> Dict[str, Any]:
     """Découpage en modalités de fréquence minimal (Cas des variables ordonnées).
@@ -698,7 +696,8 @@ def find_common_modalities(
     Dict[str, Any]
         _description_
     """
-
+    # getting feature's order
+    order = values_orders[df_feature.name]
 
     # initialisation de la taille totale du dataframe
     if len_df is None:
@@ -710,32 +709,25 @@ def find_common_modalities(
             df_feature[notna(df_feature)],
             y[notna(df_feature)],
             min_freq,
-            order,
+            values_orders,
             len_df,
         )
 
     # case 2: no missing values
     # computing frequencies and target rate of each modality
     init_frequencies = df_feature.value_counts(dropna=False, normalize=False) / len_df
-    init_values = init_frequencies.index
+    init_rate_target = y.groupby(df_feature).sum().reindex(order)
 
     # per-modality/value frequencies, filling missing by 0
-    frequencies = [
-        init_frequencies[value] if value in init_values else 0 for value in order
-    ]
-    # underrepresented modalities/values
-    underrepresented = [
-        value for value, frequency in zip(order, frequencies) if frequency < min_freq
-    ]
+    frequencies = init_frequencies.reindex(order, fill_value=0)
 
-    # case 1: there are underrepresented modalities/values
-    while any(underrepresented) & (len(frequencies) > 1):
-        # target rate per modality/value
-        rate_target = list(
-            y.groupby(df_feature).sum().reindex(order) / frequencies / len_df
-        )
+    # case 2.1: there are underrepresented modalities/values
+    while any(frequencies < min_freq) & (len(frequencies) > 1):
 
-        # identification de la valeur sous-représentée
+        # updating per-group target rate per modality/value
+        rate_target = series_groupy_order(init_rate_target, order) / frequencies / len_df
+
+        # identifying the underrepresented value
         discarded_idx = argmin(frequencies)
         discarded_value = order[discarded_idx]
 
@@ -743,8 +735,8 @@ def find_common_modalities(
         kept_value = find_closest_modality(
             discarded_idx,
             order,
-            frequencies,
-            rate_target,
+            list(frequencies),
+            list(rate_target),
             min_freq,
         )
 
@@ -752,14 +744,31 @@ def find_common_modalities(
         order.group(discarded_value, kept_value)
 
         # removing discarded_value from frequencies
-        del frequencies[discarded_idx]
-        # removing discarded_value from underrepresented
-        underrepresented = [
-            value for value, frequency in zip(order, frequencies) if frequency < min_freq
-        ]
+        frequencies = series_groupy_order(init_frequencies, order).fillna(0)
 
-    # case 2 : no underrepresented value
+    # case 2.2 : no underrepresented value
     return order
+
+def series_groupy_order(series: Series, order: GroupedList) -> Series:
+    """Groups a series according to groups specified in the order
+
+    Parameters
+    ----------
+    series : Series
+        Values to group
+    order : GroupedList
+        Groups of values
+
+    Returns
+    -------
+    Series
+        Grouped Series
+    """
+    grouped_series = series.groupby(
+            list(map(order.get_group, series.index)), dropna=False
+    ).sum().reindex(order)
+
+    return grouped_series
 
 
 def find_closest_modality(idx: int, order: GroupedList, frequencies: List[float], rate_target: Series, min_freq: float) -> Any:
@@ -779,7 +788,6 @@ def find_closest_modality(idx: int, order: GroupedList, frequencies: List[float]
     int
         _description_
     """
-
     # case 1: lowest ranked modality
     if idx == 0:
         idx_closest_modality = 1
@@ -806,15 +814,18 @@ def find_closest_modality(idx: int, order: GroupedList, frequencies: List[float]
 
         # identifying closest modality in terms of target rate
         closest_target = idx - 1
-        if notna(current_target):  # checking that the modality exists in the dataset
-            if abs(previous_target - current_target) >= abs(next_target - current_target):
-                closest_target = idx + 1
+        if abs(previous_target - current_target) >= abs(next_target - current_target):
+            closest_target = idx + 1
         
-        # case 1: grouping with the closest target rate
+        # case 3.1: grouping with the closest target rate
         idx_closest_modality = closest_target
 
-        # case 2: one modality isn't common, the least frequent is choosen
-        if min(previous_freq, next_freq) < min_freq:
+        # case 3.2: (only) one modality isn't common, the least frequent is choosen
+        if (previous_freq < min_freq < next_freq) or (next_freq < min_freq < previous_freq):
+            idx_closest_modality = least_frequent
+
+        # case 3.3: current modality is missing (no target rate), the least frequent is choosen
+        if isna(current_target):
             idx_closest_modality = least_frequent
 
     # finding the closest value

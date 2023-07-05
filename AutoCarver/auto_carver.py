@@ -608,7 +608,8 @@ def best_combination(
             association["combination"],
             association["combi_xtab"],
         )
-
+        
+        # TODO: replace by base_discretizer.series_groupy_order
         # grouping modalities in the initial crosstab
         combi_xtab_test = xtab_test.groupby(
             list(map(combination.get_group, xtab_test.index)), dropna=False
