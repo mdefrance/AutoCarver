@@ -9,7 +9,7 @@ from numpy import array, inf, linspace, nan, quantile, select
 from pandas import DataFrame, Series, isna, notna, unique
 from sklearn.base import BaseEstimator, TransformerMixin
 
-
+# TODO: issue with ranking of values? -> displayed not in an ascending way
 class QuantileDiscretizer(BaseEstimator, TransformerMixin):
     """Builds per-feature buckets of quantiles"""
 

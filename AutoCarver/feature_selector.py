@@ -13,6 +13,7 @@ from statsmodels.formula.api import ols
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 
+# TODO: add parameter to shut down displayed info
 class FeatureSelector(BaseEstimator, TransformerMixin):
     """A pipeline of measures to perform EDA and feature pre-selection
 

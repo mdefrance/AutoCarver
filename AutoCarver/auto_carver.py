@@ -17,7 +17,7 @@ from scipy.stats import chi2_contingency
 from seaborn import color_palette, despine
 from tqdm.notebook import tqdm
 
-
+# TODO: add parameter to shut down displayed info
 class AutoCarver(GroupedListDiscretizer):
     """Automatic carving of continuous, categorical and categorical ordinal
     features that maximizes association with a binary target.
