@@ -1,9 +1,8 @@
 """Set of tests for base_discretizers module."""
 
 from AutoCarver.discretizers.utils.base_discretizers import *
-from pytest import fixture, raises
-from pandas import DataFrame
-from numpy import nan, random
+from pytest import raises
+from numpy import nan
 
 def test_grouped_list_init():
     """ Tests the initialization of a GroupedList"""
@@ -46,67 +45,8 @@ def test_grouped_list_init():
     assert groupedlist_copy.contained == {'1': ['1', '4'], '2': ['2'], '3': ['3'], '5': ['5']}, "When init by GroupedList, GroupedList should be an exact copy"
 
 
-
-def init_test_df(seed: int, size: int = 1000) -> DataFrame:
-    """Initializes a DataFrame used in tests
-
-    Parameters
-    ----------
-    seed : int
-        Seed for the random samples
-    size : int
-        Generated sample size
-
-    Returns
-    -------
-    DataFrame
-        A DataFrame to perform Discretizers tests
-    """    
-    
-    # Set random seed for reproducibility
-    random.seed(seed)
-
-    # Generate random qualitative ordinal features
-    qual_ord_features = (
-        ['Low-'] * int(1 * 100) + ['Low'] * int(0 * 100) + ['Low+'] * int(12 * 100) +  # 13%
-        ['Medium-'] * int(10 * 100) + ['Medium'] * int(24 * 100) + ['Medium+'] * int(6 * 100) +  # 40%
-        ['High-'] * int(0 * 100) + ['High'] * int(7 * 100) + ['High+'] * int(40 * 100) # 47 %
-    )
-    # qual_ord_features = ['Low-', 'Low', 'Low+', 'Medium-', 'Medium', 'Medium+', 'High-', 'High', 'High+']
-    ordinal_data = random.choice(qual_ord_features, size=size)
-    
-    # adding binary target associated to qualitative ordinal feature
-    binary = [1 - (qual_ord_features.index(val) / (len(qual_ord_features) - 1)) for val in ordinal_data]
-
-    # Generate random qualitative features
-    qual_features = ['Category A', 'Category B', 'Category C']
-    qualitative_data = random.choice(qual_features, size=size)
-
-    # Generate random quantitative features
-    quantitative_data = random.rand(size) * 100
-
-    # Create DataFrame
-    data = {
-        'Qualitative_Ordinal': ordinal_data,
-        'Qualitative': qualitative_data,
-        'Quantitative': quantitative_data,
-        'Binary': binary
-    }
-    df = DataFrame(data)
-    
-    df["quali_ordinal_target"] = df["Binary"].apply(
-        lambda u:
-        random.choice([0, 1], p=[1-(u*1/3), (u*1/3)])
-    )
-
-    # building specific cases
-    df["Qualitative_Ordinal_lownan"] = df["Qualitative_Ordinal"].replace("Low-", nan)
-    df["Qualitative_Ordinal_highnan"] = df["Qualitative_Ordinal"].replace("High+", nan)
-
-    return df
-
-
 def test_grouped_list_functions():
+    """Tests GroupedList functions"""
     
     # init a groupedlist
     test_dict = {'1': ['1', '4'], '2': ['2'], '3': ['3'], '4': [], '5': []}
@@ -180,14 +120,21 @@ def test_grouped_list_functions():
     # test get_repr
     assert groupedlist.get_repr() == ['5 to 3', '7 and 0']
 
-def test_grouped_list_discretizer():
-    """ Tests a basic GroupedListDiscretizer"""
+def test_grouped_list_discretizer(x_train: DataFrame, x_test_1: DataFrame, x_test_2: DataFrame):
+    """Tests GroupedListDiscretizer
+
+    Parameters
+    ----------
+    x_train : DataFrame
+        Simulated Train DataFrame
+    x_test_1 : DataFrame
+        Simulated Test DataFrame
+    x_test_2 : DataFrame
+        Simulated Test DataFrame
+    """
     
     # values to input nans
     str_nan = '__NAN__'
-    
-    # initiating test dataframe
-    x_train = init_test_df(123)
     
     # defining values_orders
     order = ['Low-', 'Low', 'Low+', 'Medium-', 'Medium', 'Medium+', 'High-', 'High', 'High+']
@@ -274,24 +221,29 @@ def test_grouped_list_discretizer():
     assert all(x_expected["Qualitative_Ordinal_lownan"] == x_discretized["Qualitative_Ordinal_lownan"]), "incorrect discretization with nans, for output 'float'"
 
     # testing by adding nan in test set
-    x_test = init_test_df(1234)
-    discretizer.transform(x_test)
-    x_test['Qualitative_Ordinal'] = x_test['Qualitative_Ordinal'].replace('High+', nan)
+    discretizer.transform(x_test_1)
+    x_test_1['Qualitative_Ordinal'] = x_test_1['Qualitative_Ordinal'].replace('High+', nan)
     with raises(AssertionError):
-        discretizer.transform(x_test)
+        discretizer.transform(x_test_1)
 
     # testing by adding a new value in test set
-    x_test = init_test_df(12345)
-    x_test['Qualitative_Ordinal'] = x_test['Qualitative_Ordinal'].replace('High+', 'High++')
+    x_test_2['Qualitative_Ordinal'] = x_test_2['Qualitative_Ordinal'].replace('High+', 'High++')
     with raises(AssertionError):
-        discretizer.transform(x_test)
+        discretizer.transform(x_test_2)
 
 
-def test_closest_discretizer():
-    """ Tests a ClosestDiscretizer"""
-    
-    # initiating test dataframe
-    x_train = init_test_df(123, 10000)
+def test_closest_discretizer(x_train: DataFrame):
+    """Tests ClosestDiscretizer
+
+    Parameters
+    ----------
+    x_train : DataFrame
+        Simulated Train DataFrame
+    x_test_1 : DataFrame
+        Simulated Test DataFrame
+    x_test_2 : DataFrame
+        Simulated Test DataFrame
+    """
 
     # defining values_orders
     order = ['Low-', 'Low', 'Low+', 'Medium-', 'Medium', 'Medium+', 'High-', 'High', 'High+']
@@ -302,6 +254,7 @@ def test_closest_discretizer():
     groupedlist_lownan = GroupedList(order)
 
     # storing per feature orders
+    features = ["Qualitative_Ordinal", "Qualitative_Ordinal_lownan"]
     values_orders = {
         "Qualitative_Ordinal": groupedlist,
         "Qualitative_Ordinal_lownan": groupedlist_lownan,
@@ -311,7 +264,7 @@ def test_closest_discretizer():
     min_freq = 0.01
 
     # discretizing features
-    discretizer = ClosestDiscretizer(values_orders, min_freq, copy=True)
+    discretizer = ClosestDiscretizer(features, values_orders, min_freq, copy=True)
     discretizer.fit_transform(x_train, x_train["quali_ordinal_target"])
 
     expected_ordinal_01 = {
@@ -338,7 +291,7 @@ def test_closest_discretizer():
     min_freq = 0.08
 
     # discretizing features
-    discretizer = ClosestDiscretizer(values_orders, min_freq, copy=True)
+    discretizer = ClosestDiscretizer(features, values_orders, min_freq, copy=True)
     discretizer.fit_transform(x_train, x_train["quali_ordinal_target"])
 
     expected_ordinal_08 = {
