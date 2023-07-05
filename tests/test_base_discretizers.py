@@ -5,7 +5,7 @@ from pytest import fixture, raises
 from pandas import DataFrame
 from numpy import nan, random
 
-def test_groupedlist_init():
+def test_grouped_list_init():
     """ Tests the initialization of a GroupedList"""
     
     # init by list
@@ -38,7 +38,6 @@ def test_groupedlist_init():
     test_dict = {'1': ['1', '4'], '2': ['2'], '3': ['3'], '4': [], '5': []}
     groupedlist = GroupedList(test_dict)
     assert groupedlist == ['1', '2', '3', '5'], "When init by dict, keys that are in no key (group) should be kept in the list"
-    print(groupedlist.contained)
     assert groupedlist.contained == {'1': ['1', '4'], '2': ['2'], '3': ['3'], '5': ['5']},"When init by dict, keys that are in no key (group) should be added to themselves"
     
     # init by copy
@@ -48,13 +47,15 @@ def test_groupedlist_init():
 
 
 
-def init_test_df(seed: int) -> DataFrame:
+def init_test_df(seed: int, size: int = 1000) -> DataFrame:
     """Initializes a DataFrame used in tests
 
     Parameters
     ----------
     seed : int
         Seed for the random samples
+    size : int
+        Generated sample size
 
     Returns
     -------
@@ -72,31 +73,40 @@ def init_test_df(seed: int) -> DataFrame:
         ['High-'] * int(0 * 100) + ['High'] * int(7 * 100) + ['High+'] * int(40 * 100) # 47 %
     )
     # qual_ord_features = ['Low-', 'Low', 'Low+', 'Medium-', 'Medium', 'Medium+', 'High-', 'High', 'High+']
-    ordinal_data = random.choice(qual_ord_features, size=1000)
+    ordinal_data = random.choice(qual_ord_features, size=size)
+    
+    # adding binary target associated to qualitative ordinal feature
+    binary = [1 - (qual_ord_features.index(val) / (len(qual_ord_features) - 1)) for val in ordinal_data]
 
     # Generate random qualitative features
     qual_features = ['Category A', 'Category B', 'Category C']
-    qualitative_data = random.choice(qual_features, size=1000)
+    qualitative_data = random.choice(qual_features, size=size)
 
     # Generate random quantitative features
-    quantitative_data = random.rand(1000) * 100
+    quantitative_data = random.rand(size) * 100
 
     # Create DataFrame
     data = {
         'Qualitative_Ordinal': ordinal_data,
         'Qualitative': qualitative_data,
-        'Quantitative': quantitative_data
+        'Quantitative': quantitative_data,
+        'Binary': binary
     }
     df = DataFrame(data)
+    
+    df["quali_ordinal_target"] = df["Binary"].apply(
+        lambda u:
+        random.choice([0, 1], p=[1-(u*1/3), (u*1/3)])
+    )
 
-
+    # building specific cases
     df["Qualitative_Ordinal_lownan"] = df["Qualitative_Ordinal"].replace("Low-", nan)
     df["Qualitative_Ordinal_highnan"] = df["Qualitative_Ordinal"].replace("High+", nan)
 
-    # Print the DataFrame
     return df
 
-def test_groupedlist_functions():
+
+def test_grouped_list_functions():
     
     # init a groupedlist
     test_dict = {'1': ['1', '4'], '2': ['2'], '3': ['3'], '4': [], '5': []}
@@ -166,13 +176,12 @@ def test_groupedlist_functions():
     # test contains
     assert groupedlist.contains('3')
     assert not groupedlist.contains('15')
-    print(groupedlist)
-    print(groupedlist.contained)
     
     # test get_repr
     assert groupedlist.get_repr() == ['5 to 3', '7 and 0']
 
-def test_groupedlistdiscretizer():
+def test_grouped_list_discretizer():
+    """ Tests a basic GroupedListDiscretizer"""
     
     # values to input nans
     str_nan = '__NAN__'
@@ -276,3 +285,75 @@ def test_groupedlistdiscretizer():
     x_test['Qualitative_Ordinal'] = x_test['Qualitative_Ordinal'].replace('High+', 'High++')
     with raises(AssertionError):
         discretizer.transform(x_test)
+
+
+def test_closest_discretizer():
+    """ Tests a ClosestDiscretizer"""
+    
+    # initiating test dataframe
+    x_train = init_test_df(123, 10000)
+
+    # defining values_orders
+    order = ['Low-', 'Low', 'Low+', 'Medium-', 'Medium', 'Medium+', 'High-', 'High', 'High+']
+    # ordering for base qualitative ordinal feature
+    groupedlist = GroupedList(order)
+
+    # ordering for qualitative ordinal feature that contains NaNs
+    groupedlist_lownan = GroupedList(order)
+
+    # storing per feature orders
+    values_orders = {
+        "Qualitative_Ordinal": groupedlist,
+        "Qualitative_Ordinal_lownan": groupedlist_lownan,
+    }
+
+    # minimum frequency per modality + apply(find_common_modalities) outputs a Series
+    min_freq = 0.01
+
+    # discretizing features
+    discretizer = ClosestDiscretizer(values_orders, min_freq, copy=True)
+    discretizer.fit_transform(x_train, x_train["quali_ordinal_target"])
+
+    expected_ordinal_01 = {
+        'Low-': ['Low', 'Low-'],
+        'Low+': ['Low+'],
+        'Medium-': ['Medium-'],
+        'Medium': ['Medium'],
+        'Medium+': ['High-', 'Medium+'],
+        'High': ['High'],
+        'High+': ['High+']
+    }
+    expected_ordinal_lownan_01 = {
+        'Low+': ['Low-', 'Low','Low+'],
+        'Medium-': ['Medium-'],
+        'Medium': ['Medium'],
+        'Medium+': ['High-', 'Medium+'],
+        'High': ['High'],
+        'High+': ['High+']
+    }
+    assert discretizer.values_orders['Qualitative_Ordinal'].contained == expected_ordinal_01, "Missing value in order not correctly grouped"
+    assert discretizer.values_orders['Qualitative_Ordinal_lownan'].contained == expected_ordinal_lownan_01, "Missing value in order not correctly grouped or introduced nans."
+
+    # minimum frequency per modality + apply(find_common_modalities) outputs a DataFrame
+    min_freq = 0.08
+
+    # discretizing features
+    discretizer = ClosestDiscretizer(values_orders, min_freq, copy=True)
+    discretizer.fit_transform(x_train, x_train["quali_ordinal_target"])
+
+    expected_ordinal_08 = {
+        'Low+': ['Low', 'Low-', 'Low+'],
+        'Medium-': ['Medium-'],
+        'Medium': ['Medium'],
+        'High': ['High-', 'Medium+', 'High'],
+        'High+': ['High+']
+    }
+    expected_ordinal_lownan_08 = {
+        'Low+': ['Low-', 'Low', 'Low+'],
+        'Medium-': ['Medium-'],
+        'Medium': ['Medium'],
+        'High': ['High-', 'Medium+', 'High'],
+        'High+': ['High+']
+    }
+    assert discretizer.values_orders['Qualitative_Ordinal'].contained == expected_ordinal_08, "Values not correctly grouped"
+    assert discretizer.values_orders['Qualitative_Ordinal_lownan'].contained == expected_ordinal_lownan_08, "Values not correctly grouped or introduced nans."
