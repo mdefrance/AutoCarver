@@ -2,7 +2,7 @@
 
 from AutoCarver.discretizers.utils.quantitative_discretizers import *
 from pytest import fixture
-
+from numpy import inf
 
 def test_quantile_discretizer(x_train: DataFrame):
     """Tests QuantileDiscretizer
@@ -20,7 +20,7 @@ def test_quantile_discretizer(x_train: DataFrame):
     x_discretized = discretizer.fit_transform(x_train)
 
     assert all(x_discretized.Quantitative.value_counts(normalize=True) == min_freq), "Wrong quantiles"
-    assert discretizer.values_orders["Discrete_Quantitative_highnan"] == [2.0, 3.0, 4.0, 7.0, '__NAN__'], "NaNs should be added to the order"
+    assert discretizer.values_orders["Discrete_Quantitative_highnan"] == [2.0, 3.0, 4.0, 7.0, inf, '__NAN__'], "NaNs should be added to the order"
     assert '__NAN__' in x_discretized["Discrete_Quantitative_highnan"].unique(), "NaNs should be filled with the str_nan value"
-    assert discretizer.values_orders["Discrete_Quantitative_lownan"] == [1.0, 2.0, 3.0, 4.0, 6.0, '__NAN__'], "NaNs should not be grouped whatsoever"
-    assert discretizer.values_orders["Discrete_Quantitative_rarevalue"] == [0.5, 1.0, 2.0, 3.0, 4.0, 6.0], "Wrongly associated rare values"
+    assert discretizer.values_orders["Discrete_Quantitative_lownan"] == [1.0, 2.0, 3.0, 4.0, 6.0, inf, '__NAN__'], "NaNs should not be grouped whatsoever"
+    assert discretizer.values_orders["Discrete_Quantitative_rarevalue"] == [0.5, 1.0, 2.0, 3.0, 4.0, 6.0, inf], "Wrongly associated rare values"

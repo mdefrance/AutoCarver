@@ -539,6 +539,11 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         DataFrame
             _description_
         """
+        # getting group "name" per quantile
+        quantiles_aliases = get_quantiles_aliases(self.features, self.values_orders, self.str_nan)
+
+        # dataset length
+        x_len = X.shape[0]
 
         for n, feature in enumerate(self.features):
             if self.verbose:  # verbose if requested
@@ -553,18 +558,12 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
             quantiles = list(order)
             if self.str_nan in quantiles:
                 quantiles = [val for val in quantiles if val != self.str_nan]
-            
-            # converting quantiles in string
-            output_order = format_quantiles(quantiles)
-
-            # adding inf as the upper bound of the last quantile
-            quantiles = quantiles + [inf]
 
             # list of masks of values to replace with there respective group
             values_to_group = [X[feature] <= q for q in quantiles]
 
             # corressponding group for each value
-            group_key = [[v] * len(X[feature]) for v in output_order if v != self.str_nan] 
+            group_key = [[quantiles_aliases[feature][quantile]] * x_len for quantile in quantiles if quantile != self.str_nan] 
             
             # grouping values into groups
             X[feature] = select(values_to_group, group_key, default=X[feature])
@@ -642,7 +641,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
 
         return X
 
-def min_value_counts(x: Series, values_orders: Dict[str, GroupedList]) -> float:
+def min_value_counts(x: Series, dropna: bool = False, normalize: bool = True) -> float:
     """Minimum of modalities' frequencies.
 
     Parameters
@@ -657,18 +656,8 @@ def min_value_counts(x: Series, values_orders: Dict[str, GroupedList]) -> float:
     float
         _description_
     """
-
-    # accessing order for this feature
-    order = values_orders[x.name]
-
     # modality frequency
-    values = x.value_counts(dropna=False, normalize=True)
-
-    # ignoring NaNs
-    values = values.drop(nan, errors="ignore")
-
-    # adding missing modalities
-    values = values.reindex(order).fillna(0)
+    values = x.value_counts(dropna=dropna, normalize=normalize)
 
     # minimal frequency
     min_values = values.values.min()
@@ -677,7 +666,22 @@ def min_value_counts(x: Series, values_orders: Dict[str, GroupedList]) -> float:
 
 
 def value_counts(x: Series, dropna: bool = False, normalize: bool = True) -> dict:
-    """Counts the values of each modality of a series into a dictionnary"""
+    """Counts the values of each modality of a series into a dictionnary
+
+    Parameters
+    ----------
+    x : Series
+        _description_
+    dropna : bool, optional
+        _description_, by default False
+    normalize : bool, optional
+        _description_, by default True
+
+    Returns
+    -------
+    dict
+        _description_
+    """
 
     values = x.value_counts(dropna=dropna, normalize=normalize)
 
@@ -685,7 +689,24 @@ def value_counts(x: Series, dropna: bool = False, normalize: bool = True) -> dic
 
 
 def target_rate(x: Series, y: Series, dropna: bool = True, ascending=True) -> dict:
-    """Target y rate per modality of x into a dictionnary"""
+    """Target y rate per modality of x into a dictionnary
+
+    Parameters
+    ----------
+    x : Series
+        _description_
+    y : Series
+        _description_
+    dropna : bool, optional
+        _description_, by default True
+    ascending : bool, optional
+        _description_, by default True
+
+    Returns
+    -------
+    dict
+        _description_
+    """
 
     rates = y.groupby(x, dropna=dropna).mean().sort_values(ascending=ascending)
 
@@ -693,7 +714,20 @@ def target_rate(x: Series, y: Series, dropna: bool = True, ascending=True) -> di
 
 
 def nunique(x: Series, dropna=False) -> int:
-    """Computes number of unique modalities"""
+    """Computes number of unique modalities
+
+    Parameters
+    ----------
+    x : Series
+        _description_
+    dropna : bool, optional
+        _description_, by default False
+
+    Returns
+    -------
+    int
+        _description_
+    """
 
     uniques = unique(x)
     n = len(uniques)
@@ -707,7 +741,20 @@ def nunique(x: Series, dropna=False) -> int:
 
 
 def is_equal(a: Any, b: Any) -> bool:
-    """checks if a and b are equal (NaN insensitive)"""
+    """Checks if a and b are equal (NaN insensitive)
+
+    Parameters
+    ----------
+    a : Any
+        _description_
+    b : Any
+        _description_
+
+    Returns
+    -------
+    bool
+        _description_
+    """
 
     # default equality
     equal = a == b
@@ -718,6 +765,85 @@ def is_equal(a: Any, b: Any) -> bool:
 
     return equal
 
+def get_aliases(quantiles: List[float], str_nan: str) -> List[str]:
+    """_summary_
+
+    Parameters
+    ----------
+    feature : str
+        _description_
+    order : GroupedList
+        _description_
+    str_nan : str
+        _description_
+
+    Returns
+    -------
+    List[str]
+        _description_
+    """
+    # filtering out nan for formatting
+    if str_nan in quantiles:
+        quantiles = [val for val in quantiles if val != str_nan]
+        
+    # converting quantiles in string
+    aliases = format_quantiles(quantiles[:-1])  # removing inf
+
+    return aliases
+
+def get_quantiles_aliases(features: List[str], values_orders: Dict[str, GroupedList], str_nan: str) -> Dict[str, GroupedList]:
+    """Converts a values_orders of quantiles into a values_orders of string quantiles
+
+    Parameters
+    ----------
+    features : List[str]
+        _description_
+    values_orders : Dict[str, GroupedList]
+        _description_
+    str_nan : str
+        _description_
+
+    Returns
+    -------
+    Dict[str, GroupedList]
+        _description_
+    """
+    # applying quantiles formatting to orders of specified features
+    quantiles_aliases = {}
+    for feature in features:
+        quantiles = list(values_orders[feature])
+        aliases = get_aliases(quantiles, str_nan)
+        # associates quantiles to their respective aliases
+        quantiles_aliases.update({feature: {quantile: alias for quantile, alias in zip(quantiles, aliases)}})
+
+    return quantiles_aliases
+
+def get_aliases_quantiles(features: List[str], values_orders: Dict[str, GroupedList], str_nan: str) -> Dict[str, GroupedList]:
+    """Converts a values_orders of quantiles into a values_orders of string quantiles
+
+    Parameters
+    ----------
+    features : List[str]
+        _description_
+    values_orders : Dict[str, GroupedList]
+        _description_
+    str_nan : str
+        _description_
+
+    Returns
+    -------
+    Dict[str, GroupedList]
+        _description_
+    """
+    # applying quantiles formatting to orders of specified features
+    aliases_quantiles = {}
+    for feature in features:
+        quantiles = list(values_orders[feature])
+        aliases = get_aliases(quantiles, str_nan)
+        # associates quantiles to their respective aliases
+        aliases_quantiles.update({feature: {alias: quantile for quantile, alias in zip(quantiles, aliases)}})
+
+    return aliases_quantiles 
 
 def format_quantiles(a_list: List[float]) -> List[str]:
     """Formats a list of float quantiles into a list of boundaries.

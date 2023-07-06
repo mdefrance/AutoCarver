@@ -7,12 +7,13 @@ from typing import Any, Dict, List
 from .base_discretizers import (
     GroupedList,
     GroupedListDiscretizer,
-    nunique,
     target_rate,
     value_counts,
     nan_unique,
     check_new_values,
     check_missing_values,
+    get_quantiles_aliases,
+    get_aliases_quantiles,
 )
 from numpy import nan, select, argmin
 from pandas import DataFrame, Series, notna, unique, isna
@@ -129,7 +130,9 @@ class DefaultDiscretizer(GroupedListDiscretizer):
         # computing frequencies of each modality
         frequencies = Xc.apply(value_counts, normalize=True, axis=0)
         
-        for feature in self.features:
+        for n, feature in enumerate(self.features):
+            if self.verbose:  # verbose if requested
+                print(f" - [DefaultDiscretizer] Fit {feature} ({n+1}/{len(self.features)})")
             # sorting orders based on target rates
             order = self.values_orders[feature]
                                   
@@ -335,10 +338,11 @@ class OrdinalDiscretizer(GroupedListDiscretizer):
         min_freq: float,
         *,
         str_nan: str = None,
+        input_dtype: str = 'str',
         copy: bool = False,
         verbose: bool = False,
     ):
-        """Initializes a ClosestDiscretizer
+        """Initializes a OrdinalDiscretizer
 
         Parameters
         ----------
@@ -350,6 +354,11 @@ class OrdinalDiscretizer(GroupedListDiscretizer):
             Minimum frequency per modality. Less frequent modalities are grouped in the closest value of the order.
         str_nan : str, optional
             _description_, by default None
+        input_dtype : type, optional
+            Type of the input columns:
+            - if 'float' uses transform_quantitative
+            - if 'str' uses transform_qualitative,
+            by default 'str'
         copy : bool, optional
             _description_, by default False
         verbose : bool, optional
@@ -362,6 +371,7 @@ class OrdinalDiscretizer(GroupedListDiscretizer):
         self.copy = copy
         self.verbose = verbose
         self.str_nan = str_nan
+        self.input_dtype = input_dtype
 
     def fit(self, X: DataFrame, y: Series) -> None:
         """Learns common modalities on the training set
@@ -375,12 +385,25 @@ class OrdinalDiscretizer(GroupedListDiscretizer):
         """
         # verbose
         if self.verbose:
-            print(f" - [ClosestDiscretizer] Fit {', '.join(self.features)}")
+            print(f" - [OrdinalDiscretizer] Fit {', '.join(self.features)}")
 
         # removing NaNs if any
         x_copy = X[self.features]
         if self.str_nan:
             x_copy = x_copy.replace(self.str_nan, nan)
+        
+        # copying values_orders
+        known_orders = {k: GroupedList(v) for k,v in self.values_orders.items()}
+
+        # for quantitative features getting aliases per quantile
+        if self.input_dtype == 'float':
+            # getting group "name" per quantile
+            quantiles_aliases = get_quantiles_aliases(self.features, self.values_orders, self.str_nan)
+            # applying alliases to known orders
+            known_orders.update({
+                feature: GroupedList([quantiles_aliases[feature][quantile] for quantile in known_orders[feature] if quantile!=self.str_nan])
+                for feature in self.features
+            })
 
         # grouping rare modalities for each feature
         common_modalities = (
@@ -389,14 +412,38 @@ class OrdinalDiscretizer(GroupedListDiscretizer):
                 find_common_modalities,
                 y=y,
                 min_freq=self.min_freq,
-                values_orders=self.values_orders,
+                values_orders=known_orders,
                 axis=0,
                 result_type="reduce",
             )
         )
 
-        # updating the order per feature
-        self.values_orders.update(common_modalities)
+        # for quantitative features getting quantile per alias
+        if self.input_dtype == 'float':
+            # getting group "name" per quantile
+            aliases_quantiles = get_aliases_quantiles(self.features, self.values_orders, self.str_nan)
+
+            for feature in self.features:
+                # checking for grouped modalities
+                grouped_quantiles = common_modalities[feature].contained
+                order = self.values_orders[feature]
+
+                # grouping the raw quantile values
+                for discarded in grouped_quantiles.values():
+                    # getting raw quantiles to be grouped
+                    discarded = [aliases_quantiles[feature][discard] for discard in discarded]
+                    # keeping the largest value amongst the discarded (otherwise they wont be grouped)
+                    kept = max(discarded)
+
+                    # grouping quantiles
+                    order.group_list(discarded, kept)
+                
+                # updating ordering
+                self.values_orders.update({feature: order})
+        
+        # for qualitative features updating the order per feature
+        else:
+            self.values_orders.update(common_modalities)
 
         # discretizing features based on each feature's values_order
         super().__init__(
@@ -404,7 +451,7 @@ class OrdinalDiscretizer(GroupedListDiscretizer):
             self.values_orders,
             copy=self.copy,
             str_nan=self.str_nan,
-            input_dtype='str',
+            input_dtype=self.input_dtype,
             output_dtype='str',
         )
         super().fit(X, y)

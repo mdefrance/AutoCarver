@@ -5,7 +5,7 @@ for a binary classification model.
 from typing import Any, Dict, List
 
 from .base_discretizers import GroupedList, applied_to_dict_list, GroupedListDiscretizer
-from numpy import array, linspace, nan, quantile
+from numpy import array, linspace, nan, quantile, inf
 from pandas import DataFrame, Series, isna, notna
 
 class QuantileDiscretizer(GroupedListDiscretizer):
@@ -71,7 +71,7 @@ class QuantileDiscretizer(GroupedListDiscretizer):
         # storing ordering
         for feature in self.features:
             # Converting to a groupedlist 
-            order = GroupedList(quantiles[feature])
+            order = GroupedList(quantiles[feature] + [inf])
 
             # adding NANs if ther are any
             if any(isna(X[feature])):
@@ -161,7 +161,7 @@ def find_quantiles(
             quantile(
                 df_feature.values,
                 linspace(0, 1, new_q + 1)[1:-1],
-                interpolation="lower",
+                method="lower",
             )
         )
 

@@ -93,8 +93,8 @@ def test_default_discretizer(x_train: DataFrame):
     assert discretizer.values_orders['Qualitative_grouped'].contained == groupedlist_grouped.contained, "Grouped values should stay grouped"
 
 
-def test_closest_discretizer(x_train: DataFrame):
-    """Tests ClosestDiscretizer
+def test_ordinal_discretizer(x_train: DataFrame):
+    """Tests OrdinalDiscretizer
 
     Parameters
     ----------

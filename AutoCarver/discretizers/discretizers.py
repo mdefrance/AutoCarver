@@ -7,7 +7,7 @@ from typing import Any, Dict, List
 from pandas import DataFrame, Series, unique
 from pandas.api.types import is_numeric_dtype, is_string_dtype
 from sklearn.base import BaseEstimator, TransformerMixin
-from .utils.base_discretizers import GroupedList, min_value_counts, nan_unique, GroupedListDiscretizer
+from .utils.base_discretizers import GroupedList, min_value_counts, nan_unique, GroupedListDiscretizer, check_new_values
 from .utils.qualitative_discretizers import DefaultDiscretizer, OrdinalDiscretizer
 from .utils.quantitative_discretizers import QuantileDiscretizer
 
@@ -188,14 +188,12 @@ class Discretizer(BaseEstimator, TransformerMixin):
         return Xc
 
 
-class QualitativeDiscretizer(BaseEstimator, TransformerMixin):
+class QualitativeDiscretizer(GroupedListDiscretizer):
     """Automatic discretizing of categorical and categorical ordinal features.
 
     Modalities/values of features are grouped according to there respective orders:
      - [Qualitative features] order based on modality target rate.
      - [Qualitative ordinal features] user-specified order.
-
-    TODO: pass ordinal_features/qualitati_features as parameters to be able to pass values_orders with other orders (ex: from chaineddiscretizer)
 
     Parameters
     ----------
@@ -224,7 +222,9 @@ class QualitativeDiscretizer(BaseEstimator, TransformerMixin):
         features: List[str],
         min_freq: float,
         *,
+        ordinal_features: List[str] = None,
         values_orders: Dict[str, Any] = None,
+        str_nan: str = '__NAN__',
         copy: bool = False,
         verbose: bool = False,
     ) -> None:
@@ -236,8 +236,12 @@ class QualitativeDiscretizer(BaseEstimator, TransformerMixin):
             _description_
         min_freq : float
             _description_
+        ordinal_features : List[str], optional
+            _description_, by default None
         values_orders : Dict[str, Any], optional
             _description_, by default None
+        str_nan : str, optional
+            _description_, by default '__NAN__'
         copy : bool, optional
             _description_, by default False
         verbose : bool, optional
@@ -247,15 +251,17 @@ class QualitativeDiscretizer(BaseEstimator, TransformerMixin):
         if values_orders is None:
             values_orders = {}
         self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
-        self.ordinal_features = [
-            f for f in values_orders if f in features
-        ]  # ignores non qualitative features
+        if ordinal_features is None:
+            ordinal_features = []
+        self.ordinal_features = ordinal_features[:]
         self.non_ordinal_features = [f for f in features if f not in self.ordinal_features]
         self.min_freq = min_freq
-        self.pipe: List[BaseEstimator] = []
+        self.str_nan = str_nan
         self.copy = copy
         self.verbose = verbose
 
+        self.known_values = {feature: order.values() for feature, order in self.values_orders.items()}
+        
     def prepare_data(self, X: DataFrame, y: Series = None) -> DataFrame:
         """Prepares the data for bucketization, checks column types.
         Converts non-string columns into strings.
@@ -289,7 +295,8 @@ class QualitativeDiscretizer(BaseEstimator, TransformerMixin):
             Xc = stringer.fit_transform(Xc)
 
             # append the string converter to the feature engineering pipeline
-            self.pipe += [("StringConverter", stringer)]
+            # self.pipe += [("StringConverter", stringer)]
+            # TODO: build stringconverter discretizer ?
 
         # checking for binary target
         y_values = unique(y)
@@ -299,42 +306,38 @@ class QualitativeDiscretizer(BaseEstimator, TransformerMixin):
         assert len(y_values) == 2, "y must be a binary Series (int or float, not object)"
 
         # checking that all unique values in X are in values_orders
-        # TODO: use base_discretizers.check_new_value
-        uniques = Xc[self.features].apply(nan_unique)
-        for feature in self.ordinal_features:
-            missing = [val for val in uniques[feature] if val not in self.values_orders[feature]]
-            assert (
-                len(missing) == 0
-            ), f"The ordering for {', '.join(missing)} of feature '{feature}' must be specified in values_orders (str-only)."
+        check_new_values(X, self.ordinal_features, self.known_values)
 
         return Xc
 
     def fit(self, X: DataFrame, y: Series) -> None:
-        """Learning TRAIN distribution"""
+        """Learning TRAIN distribution
+
+        Parameters
+        ----------
+        X : DataFrame
+            _description_
+        y : Series
+            _description_
+
+        Returns
+        -------
+        _type_
+            _description_
+        """
 
         # checking data before bucketization
         Xc = self.prepare_data(X, y)
 
         # [Qualitative ordinal features] Grouping rare values into closest common one
         if len(self.ordinal_features) > 0:
-            # discretizing
-            ordinal_orders = {
-                k: GroupedList(v)
-                for k, v in self.values_orders.items()
-                if k in self.ordinal_features
-            }
             discretizer = OrdinalDiscretizer(
-                ordinal_orders, min_freq=self.min_freq, verbose=self.verbose
+                features=self.ordinal_features, values_orders=self.values_orders, min_freq=self.min_freq, verbose=self.verbose, str_nan=self.str_nan
             )
             discretizer.fit(Xc, y)
 
-            # storing results
-            self.values_orders.update(
-                discretizer.values_orders
-            )  # adding orders of grouped features
-            self.pipe += [
-                ("QualitativeOrdinalDiscretizer", discretizer)
-            ]  # adding discretizer to pipe
+            # storing orders of grouped features
+            self.values_orders.update(discretizer.values_orders)
 
         # [Qualitative non-ordinal features] Grouping rare values into default_value '__OTHER__'
         if len(self.non_ordinal_features) > 0:
@@ -347,27 +350,21 @@ class QualitativeDiscretizer(BaseEstimator, TransformerMixin):
             )
             discretizer.fit(Xc, y)
 
-            # storing results
-            self.values_orders.update(
-                discretizer.values_orders
-            )  # adding orders of grouped features
-            self.pipe += [("DefaultDiscretizer", discretizer)]  # adding discretizer to pipe
+            # storing orders of grouped features
+            self.values_orders.update(discretizer.values_orders) 
+
+        # discretizing features based on each feature's values_order
+        super().__init__(
+            self.features,
+            self.values_orders,
+            copy=self.copy,
+            input_dtype='str',
+            output_dtype='str',
+            str_nan=self.str_nan,
+        )
+        super().fit(X, y)
 
         return self
-
-    def transform(self, X: DataFrame, y: Series = None) -> DataFrame:
-        """Applying learned bucketization on TRAIN and/or TEST"""
-
-        # copying dataframe if requested
-        Xc = X
-        if self.copy:
-            Xc = X.copy()
-
-        # iterating over each transformer
-        for _, step in self.pipe:
-            Xc = step.transform(Xc)
-
-        return Xc
 
 
 class QuantitativeDiscretizer(GroupedListDiscretizer):
@@ -398,7 +395,7 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
         min_freq: float,
         *,
         values_orders: Dict[str, Any] = None,
-        str_nan: str = None,
+        str_nan: str = '__NAN__',
         copy: bool = False,
         verbose: bool = False,
     ) -> None:
@@ -408,15 +405,17 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
         ----------
         features : List[str]
             _description_
-        q : int
+        min_freq : float
             _description_
         values_orders : Dict[str, Any], optional
             _description_, by default None
+        str_nan : str, optional
+            _description_, by default '__NAN__'
         copy : bool, optional
             _description_, by default False
         verbose : bool, optional
             _description_, by default False
-        """        
+        """
         self.features = features[:]
         if values_orders is None:
             values_orders = {}
@@ -464,26 +463,27 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
 
         # storing orders of grouped features
         self.values_orders.update(discretizer.values_orders)
-        print("self.values_orders", self.values_orders)
 
         # [Quantitative features] Grouping rare quantiles into closest common one
         #  -> can exist because of overrepresented values (values more frequent than 1/q)
         # searching for features with rare quantiles: computing min frequency per feature
-        frequencies = Xc[self.features].apply(min_value_counts, values_orders=self.values_orders, axis=0)
-        # TODO: change the values_orders for the formatted one
-        print("frequencies", frequencies)
+        frequencies = Xc[self.features].apply(min_value_counts, axis=0)
 
         # minimal frequency of a quantile
         q_min_freq = self.min_freq / 2
 
         # identifying features that have rare modalities
         has_rare = list(frequencies[frequencies <= q_min_freq].index)
-        print("has_rare", has_rare)
 
         # Grouping rare modalities
         if len(has_rare) > 0:
             discretizer = OrdinalDiscretizer(
-                has_rare, min_freq=self.min_freq, values_orders=self.values_orders, str_nan=self.str_nan, verbose=self.verbose
+                has_rare,
+                min_freq=self.min_freq,
+                values_orders=self.values_orders,
+                str_nan=self.str_nan,
+                verbose=self.verbose,
+                input_dtype='float'
             )
             discretizer.fit(Xc, y)
 
