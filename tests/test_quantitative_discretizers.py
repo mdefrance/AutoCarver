@@ -4,5 +4,6 @@ from AutoCarver.discretizers.utils.quantitative_discretizers import *
 from pytest import fixture
 
 
-def test_nothing():
+def test_quantile_discretizer():
+    # TODO
     pass
