@@ -14,7 +14,7 @@ from .utils.quantitative_discretizers import QuantileDiscretizer
 from ..converters import StringConverter
 
 
-class Discretizer(BaseEstimator, TransformerMixin):
+class Discretizer(GroupedListDiscretizer):
     """Automatic discretizing of continuous, categorical and categorical ordinal features.
 
     Modalities/values of features are grouped according to there respective orders:
@@ -24,10 +24,10 @@ class Discretizer(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-    quanti_features: list
+    quantitative_features: list
         Contains quantitative (continuous) features to be discretized.
 
-    quali_features: list
+    qualitative_features: list
         Contains qualitative (categorical and categorical ordinal) features to be discretized.
 
     min_freq: int, default None
@@ -58,48 +58,68 @@ class Discretizer(BaseEstimator, TransformerMixin):
 
     def __init__(
         self,
-        quanti_features: List[str],
-        quali_features: List[str],
+        quantitative_features: List[str],
+        qualitative_features: List[str],
         min_freq: float,
         *,
+        ordinal_features: List[str] = None,
         values_orders: Dict[str, Any] = None,
         copy: bool = False,
         verbose: bool = False,
+        str_nan: str = '__NAN__',
+        str_default: str = '__OTHER__'
     ) -> None:
         """_summary_
 
         Parameters
         ----------
-        quanti_features : List[str]
+        quantitative_features : List[str]
             _description_
-        quali_features : List[str]
+        qualitative_features : List[str]
             _description_
         min_freq : float
             _description_
+        ordinal_features : List[str], optional
+            _description_, by default None
         values_orders : Dict[str, Any], optional
             _description_, by default None
         copy : bool, optional
             _description_, by default False
         verbose : bool, optional
             _description_, by default False
+        str_nan : str, optional
+            _description_, by default '__NAN__'
+        str_default : str, optional
+            _description_, by default '__OTHER__'
         """
-        self.features = quanti_features[:] + quali_features[:]
-        self.quanti_features = quanti_features[:]
-        assert len(list(set(quanti_features))) == len(
-            quanti_features
-        ), "Column duplicates in quanti_features"
-        self.quali_features = quali_features[:]
-        assert len(list(set(quali_features))) == len(
-            quali_features
-        ), "Column duplicates in quali_features"
+        self.quantitative_features = quantitative_features[:]
+        assert len(list(set(quantitative_features))) == len(
+            quantitative_features
+        ), "Column duplicates in quantitative_features"
+
+        self.qualitative_features = qualitative_features[:]
+        assert len(list(set(qualitative_features))) == len(
+            qualitative_features
+        ), "Column duplicates in qualitative_features"
+        
+        if ordinal_features is None:
+            ordinal_features = {}
+        self.ordinal_features = ordinal_features[:]
         if values_orders is None:
             values_orders = {}
         self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
         self.min_freq = min_freq
-        self.q = int(1 / min_freq)  # number of quantiles
-        self.pipe: List[BaseEstimator] = []
+
         self.copy = copy
         self.verbose = verbose
+        self.str_nan = str_nan
+        self.str_default = str_default
+        
+        self.features = list(set(quantitative_features + qualitative_features + ordinal_features))
+
+        # initializing input_dtypes
+        self.input_dtypes = {feature: 'str' for feature in self.features}
+        self.input_dtypes.update({feature: 'float' for feature in quantitative_features})
 
     def fit(self, X: DataFrame, y: Series) -> None:
         """_summary_
@@ -112,80 +132,57 @@ class Discretizer(BaseEstimator, TransformerMixin):
             _description_
         """
         # [Qualitative features] Grouping qualitative features
-        if len(self.quali_features) > 0:
-            # verbose if requested
-            if self.verbose:
+        if len(self.qualitative_features) > 0:
+            if self.verbose:  # verbose if requested
                 print("\n---\n[Discretizer] Fit Qualitative Features")
 
             # grouping qualitative features
             discretizer = QualitativeDiscretizer(
-                self.quali_features,
+                qualitative_features=self.qualitative_features, 
+                ordinal_features=self.ordinal_features,
                 min_freq=self.min_freq,
                 values_orders=self.values_orders,
+                str_nan=self.str_nan,
+                str_default=self.str_default,
                 copy=self.copy,
                 verbose=self.verbose,
             )
             discretizer.fit(X, y)
 
-            # storing results
-            self.values_orders.update(
-                discretizer.values_orders
-            )  # adding orders of grouped features
-            self.pipe += discretizer.pipe  # adding discretizer to pipe
+            # storing orders of grouped features
+            self.values_orders.update(discretizer.values_orders)
 
         # [Quantitative features] Grouping quantitative features
-        if len(self.quanti_features) > 0:
-            # verbose if requested
-            if self.verbose:
+        if len(self.quantitative_features) > 0:
+            if self.verbose:  # verbose if requested
                 print("\n---\n[Discretizer] Fit Quantitative Features")
 
             # grouping quantitative features
             discretizer = QuantitativeDiscretizer(
-                self.quanti_features,
-                q=self.q,
+                features=self.quantitative_features,
+                min_freq=self.min_freq,
                 values_orders=self.values_orders,
+                str_nan=self.str_nan,
                 copy=self.copy,
                 verbose=self.verbose,
             )
             discretizer.fit(X, y)
 
-            # storing results
-            self.values_orders.update(
-                discretizer.values_orders
-            )  # adding orders of grouped features
-            self.pipe += discretizer.pipe  # adding discretizer to pipe
+            # storing orders of grouped features
+            self.values_orders.update(discretizer.values_orders)
+
+        # discretizing features based on each feature's values_order
+        super().__init__(
+            self.features,
+            self.values_orders,
+            copy=self.copy,
+            input_dtypes=self.input_dtypes,
+            output_dtype='str',  # TODO: it won't work up to auto carver
+            str_nan=self.str_nan,
+        )
+        super().fit(X, y)
 
         return self
-
-    def transform(self, X: DataFrame, y: Series = None) -> DataFrame:
-        """_summary_
-
-        Parameters
-        ----------
-        X : DataFrame
-            _description_
-        y : Series, optional
-            _description_, by default None
-
-        Returns
-        -------
-        DataFrame
-            _description_
-        """
-        # verbose if requested
-        if self.verbose:
-            print("\n---\n[Discretizer] Transform Features")
-
-        # copying dataframe if requested
-        Xc = X
-        if self.copy:
-            Xc = X.copy()
-
-        # iterating over each transformer
-        for _, step in self.pipe:
-            Xc = step.transform(Xc)
-
-        return Xc
 
 
 class QualitativeDiscretizer(GroupedListDiscretizer):
@@ -225,6 +222,7 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
         ordinal_features: List[str] = None,
         values_orders: Dict[str, Any] = None,
         str_nan: str = '__NAN__',
+        str_default: str = '__OTHER__',
         copy: bool = False,
         verbose: bool = False,
     ) -> None:
@@ -256,6 +254,7 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
         self.ordinal_features = ordinal_features[:]
         self.min_freq = min_freq
         self.str_nan = str_nan
+        self.str_default = str_default
         self.copy = copy
         self.verbose = verbose
 
@@ -269,6 +268,8 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
     def prepare_data(self, X: DataFrame, y: Series = None) -> DataFrame:
         """Prepares the data for bucketization, checks column types.
         Converts non-string columns into strings.
+
+        TODO: check that features dont have too many values (-> quantitative features?)
 
         Parameters
         ----------
@@ -336,21 +337,25 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
         # [Qualitative ordinal features] Grouping rare values into closest common one
         if len(self.ordinal_features) > 0:
             discretizer = OrdinalDiscretizer(
-                features=self.ordinal_features, values_orders=self.values_orders, min_freq=self.min_freq, verbose=self.verbose, str_nan=self.str_nan
+                features=self.ordinal_features,
+                values_orders=self.values_orders,
+                min_freq=self.min_freq,
+                verbose=self.verbose,
+                str_nan=self.str_nan
             )
             discretizer.fit(Xc, y)
 
             # storing orders of grouped features
             self.values_orders.update(discretizer.values_orders)
 
-        # [Qualitative non-ordinal features] Grouping rare values into default_value '__OTHER__'
+        # [Qualitative non-ordinal features] Grouping rare values into str_default '__OTHER__'
         if len(self.non_ordinal_features) > 0:
-            # Grouping rare modalities
             discretizer = DefaultDiscretizer(
                 self.non_ordinal_features,
                 min_freq=self.min_freq,
                 values_orders=self.values_orders,
                 str_nan=self.str_nan,
+                str_default=self.str_default,
                 verbose=self.verbose,
             )
             discretizer.fit(Xc, y)

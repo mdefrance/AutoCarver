@@ -20,7 +20,7 @@ from pandas import DataFrame, Series, notna, unique, isna
 
 
 class DefaultDiscretizer(GroupedListDiscretizer):
-    """Groups a qualitative features' values less frequent than min_freq into a default_value7
+    """Groups a qualitative features' values less frequent than min_freq into a str_default string
     
     Only use for qualitative non-ordinal features
     """
@@ -31,7 +31,7 @@ class DefaultDiscretizer(GroupedListDiscretizer):
         min_freq: float,
         *,
         values_orders: Dict[str, GroupedList] = None,
-        default_value: str = "__OTHER__",
+        str_default: str = "__OTHER__",
         str_nan: str = "__NAN__",
         copy: bool = False,
         verbose: bool = False,
@@ -46,7 +46,7 @@ class DefaultDiscretizer(GroupedListDiscretizer):
             Minimum frequency per modality. Less frequent modalities are grouped in the closest value of the order.
         values_orders : Dict[str, GroupedList], optional
             Dict of column names (keys) and modalities' associated order (values), by default None
-        default_value : str, optional
+        str_default : str, optional
             _description_, by default "__OTHER__"
         str_nan : str, optional
             _description_, by default "__NAN__"
@@ -61,7 +61,7 @@ class DefaultDiscretizer(GroupedListDiscretizer):
             values_orders = {}
         self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
 
-        self.default_value = default_value[:]
+        self.str_default = str_default[:]
         self.str_nan = str_nan[:]
 
         self.copy = copy
@@ -140,11 +140,11 @@ class DefaultDiscretizer(GroupedListDiscretizer):
             rare_values = [val for val, freq in frequencies[feature].items() if freq < self.min_freq]
             if any(rare_values):
                  # adding default value to the order
-                order.append(self.default_value)
+                order.append(self.str_default)
 
                 # grouping rare values in default value
-                order.group_list(rare_values, self.default_value)
-                Xc.loc[Xc[feature].isin(rare_values), feature] = self.default_value 
+                order.group_list(rare_values, self.str_default)
+                Xc.loc[Xc[feature].isin(rare_values), feature] = self.str_default 
 
                 # updating values_orders
                 self.values_orders.update({feature: order})
