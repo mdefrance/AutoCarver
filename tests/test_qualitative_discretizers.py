@@ -125,7 +125,7 @@ def test_closest_discretizer(x_train: DataFrame):
     min_freq = 0.01
 
     # discretizing features
-    discretizer = ClosestDiscretizer(features, values_orders, min_freq, copy=True)
+    discretizer = OrdinalDiscretizer(features, values_orders, min_freq, copy=True)
     discretizer.fit_transform(x_train, x_train["quali_ordinal_target"])
 
     expected_ordinal_01 = {
@@ -152,7 +152,7 @@ def test_closest_discretizer(x_train: DataFrame):
     min_freq = 0.08
 
     # discretizing features
-    discretizer = ClosestDiscretizer(features, values_orders, min_freq, copy=True)
+    discretizer = OrdinalDiscretizer(features, values_orders, min_freq, copy=True)
     discretizer.fit_transform(x_train, x_train["quali_ordinal_target"])
 
     expected_ordinal_08 = {

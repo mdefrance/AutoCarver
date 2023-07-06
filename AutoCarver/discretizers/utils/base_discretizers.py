@@ -642,8 +642,24 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
 
         return X
 
-def min_value_counts(x: Series, order: List[Any]) -> float:
-    """Minimum of modalities' frequencies."""
+def min_value_counts(x: Series, values_orders: Dict[str, GroupedList]) -> float:
+    """Minimum of modalities' frequencies.
+
+    Parameters
+    ----------
+    x : Series
+        _description_
+    values_orders : Dict[str, GroupedList]
+        _description_
+
+    Returns
+    -------
+    float
+        _description_
+    """
+
+    # accessing order for this feature
+    order = values_orders[x.name]
 
     # modality frequency
     values = x.value_counts(dropna=False, normalize=True)

@@ -318,7 +318,7 @@ class ChainedDiscretizer(GroupedListDiscretizer):
         return self
 
 
-class ClosestDiscretizer(GroupedListDiscretizer):
+class OrdinalDiscretizer(GroupedListDiscretizer):
     """Discretizes ordered qualitative features into groups more frequent than min_freq.
     NaNs are left untouched.
 
@@ -334,6 +334,7 @@ class ClosestDiscretizer(GroupedListDiscretizer):
         values_orders: Dict[str, Any],
         min_freq: float,
         *,
+        str_nan: str = None,
         copy: bool = False,
         verbose: bool = False,
     ):
@@ -347,8 +348,8 @@ class ClosestDiscretizer(GroupedListDiscretizer):
             Dict of column names (keys) and modalities' associated order (values)
         min_freq : float
             Minimum frequency per modality. Less frequent modalities are grouped in the closest value of the order.
-        default : str, optional
-            _description_, by default "worst"
+        str_nan : str, optional
+            _description_, by default None
         copy : bool, optional
             _description_, by default False
         verbose : bool, optional
@@ -360,6 +361,7 @@ class ClosestDiscretizer(GroupedListDiscretizer):
         self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
         self.copy = copy
         self.verbose = verbose
+        self.str_nan = str_nan
 
     def fit(self, X: DataFrame, y: Series) -> None:
         """Learns common modalities on the training set
@@ -375,9 +377,14 @@ class ClosestDiscretizer(GroupedListDiscretizer):
         if self.verbose:
             print(f" - [ClosestDiscretizer] Fit {', '.join(self.features)}")
 
+        # removing NaNs if any
+        x_copy = X[self.features]
+        if self.str_nan:
+            x_copy = x_copy.replace(self.str_nan, nan)
+
         # grouping rare modalities for each feature
         common_modalities = (
-            X[self.features]
+            x_copy
             .apply(
                 find_common_modalities,
                 y=y,
@@ -396,6 +403,7 @@ class ClosestDiscretizer(GroupedListDiscretizer):
             self.features,
             self.values_orders,
             copy=self.copy,
+            str_nan=self.str_nan,
             input_dtype='str',
             output_dtype='str',
         )

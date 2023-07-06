@@ -2,7 +2,7 @@
 
 from pytest import fixture
 from pandas import DataFrame
-from numpy import nan, random
+from numpy import nan, random, arange
 
 def init_test_df(seed: int, size: int = 10000) -> DataFrame:
     """Initializes a DataFrame used in tests
