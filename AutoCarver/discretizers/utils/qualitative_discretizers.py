@@ -14,8 +14,8 @@ from .base_discretizers import (
     check_new_values,
     check_missing_values,
 )
-from numpy import nan, select
-from pandas import DataFrame, Series, notna, unique
+from numpy import nan, select, argmin
+from pandas import DataFrame, Series, notna, unique, isna
 
 
 class DefaultDiscretizer(GroupedListDiscretizer):
@@ -158,9 +158,11 @@ class DefaultDiscretizer(GroupedListDiscretizer):
 
         # discretizing features based on each feature's values_order
         super().__init__(
+            self.features,
             self.values_orders,
             copy=self.copy,
-            output='str',
+            input_dtype='str',
+            output_dtype='str',
             str_nan=self.str_nan,
         )
         super().fit(Xc, y)
@@ -304,13 +306,269 @@ class ChainedDiscretizer(GroupedListDiscretizer):
                 values, frequencies = frequencies.index, frequencies.values
 
         super().__init__(
+            self.features,
             self.values_orders,
             str_nan=self.str_nan,
             copy=self.copy,
-            output=str,
+            input_dtype='str',
+            output_dtype='str',
         )
         super().fit(X, y)
 
         return self
 
 
+class ClosestDiscretizer(GroupedListDiscretizer):
+    """Discretizes ordered qualitative features into groups more frequent than min_freq.
+    NaNs are left untouched.
+
+    Modality is choosen amongst the preceding and following values in the provided order.
+    The choosen modality is:
+    - the closest in target rate
+    - or the one with the lowest frequency
+    """
+
+    def __init__(
+        self,
+        features: List[str],
+        values_orders: Dict[str, Any],
+        min_freq: float,
+        *,
+        copy: bool = False,
+        verbose: bool = False,
+    ):
+        """Initializes a ClosestDiscretizer
+
+        Parameters
+        ----------
+        features : List[str]
+            List of column names to be discretized
+        values_orders : Dict[str, Any]
+            Dict of column names (keys) and modalities' associated order (values)
+        min_freq : float
+            Minimum frequency per modality. Less frequent modalities are grouped in the closest value of the order.
+        default : str, optional
+            _description_, by default "worst"
+        copy : bool, optional
+            _description_, by default False
+        verbose : bool, optional
+            _description_, by default False
+        """
+
+        self.features = features[:]
+        self.min_freq = min_freq
+        self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
+        self.copy = copy
+        self.verbose = verbose
+
+    def fit(self, X: DataFrame, y: Series) -> None:
+        """Learns common modalities on the training set
+
+        Parameters
+        ----------
+        X : DataFrame
+            Training set that contains columns named after `values_orders` keys.
+        y : Series
+            Model target.
+        """
+        # verbose
+        if self.verbose:
+            print(f" - [ClosestDiscretizer] Fit {', '.join(self.features)}")
+
+        # grouping rare modalities for each feature
+        common_modalities = (
+            X[self.features]
+            .apply(
+                find_common_modalities,
+                y=y,
+                min_freq=self.min_freq,
+                values_orders=self.values_orders,
+                axis=0,
+                result_type="reduce",
+            )
+        )
+
+        # updating the order per feature
+        self.values_orders.update(common_modalities)
+
+        # discretizing features based on each feature's values_order
+        super().__init__(
+            self.features,
+            self.values_orders,
+            copy=self.copy,
+            input_dtype='str',
+            output_dtype='str',
+        )
+        super().fit(X, y)
+
+        return self
+
+
+def find_common_modalities(
+    df_feature: Series,
+    y: Series,
+    min_freq: float,
+    values_orders: Dict[str, GroupedList],
+    len_df: int = None,
+) -> Dict[str, Any]:
+    """Découpage en modalités de fréquence minimal (Cas des variables ordonnées).
+
+    Fonction récursive : on prend l'échantillon et on cherche des valeurs sur-représentées
+    Si la valeur existe on la met dans une classe et on cherche à gauche et à droite de celle-ci, d'autres variables sur-représentées
+    Une fois il n'y a plus de valeurs qui soient sur-représentées,
+    on fait un découpage classique avec qcut en multipliant le nombre de classes souhaité par le pourcentage de valeurs restantes sur le total
+
+    Parameters
+    ----------
+    df_feature : Series
+        _description_
+    y : Series
+        _description_
+    min_freq : float
+        _description_
+    order : GroupedList
+        _description_
+    len_df : int, optional
+        _description_, by default None
+
+    Returns
+    -------
+    Dict[str, Any]
+        _description_
+    """
+    # getting feature's order
+    order = values_orders[df_feature.name]
+
+    # initialisation de la taille totale du dataframe
+    if len_df is None:
+        len_df = len(df_feature)
+
+    # case 1: there are missing values
+    if any(isna(df_feature)):
+        return find_common_modalities(
+            df_feature[notna(df_feature)],
+            y[notna(df_feature)],
+            min_freq,
+            values_orders,
+            len_df,
+        )
+
+    # case 2: no missing values
+    # computing frequencies and target rate of each modality
+    init_frequencies = df_feature.value_counts(dropna=False, normalize=False) / len_df
+    init_target_rates = y.groupby(df_feature).sum().reindex(order)
+
+    # per-modality/value frequencies, filling missing by 0
+    frequencies = init_frequencies.reindex(order, fill_value=0)
+
+    # case 2.1: there are underrepresented modalities/values
+    while any(frequencies < min_freq) & (len(frequencies) > 1):
+
+        # updating per-group target rate per modality/value
+        target_rates = series_groupy_order(init_target_rates, order) / frequencies / len_df
+
+        # identifying the underrepresented value
+        discarded_idx = argmin(frequencies)
+        discarded_value = order[discarded_idx]
+
+        # choosing amongst previous and next modality (by volume and target rate)
+        kept_value = find_closest_modality(
+            discarded_idx,
+            order,
+            list(frequencies),
+            list(target_rates),
+            min_freq,
+        )
+
+        # removing the value from the initial ordering
+        order.group(discarded_value, kept_value)
+
+        # removing discarded_value from frequencies
+        frequencies = series_groupy_order(init_frequencies, order).fillna(0)
+
+    # case 2.2 : no underrepresented value
+    return order
+
+def series_groupy_order(series: Series, order: GroupedList) -> Series:
+    """Groups a series according to groups specified in the order
+
+    Parameters
+    ----------
+    series : Series
+        Values to group
+    order : GroupedList
+        Groups of values
+
+    Returns
+    -------
+    Series
+        Grouped Series
+    """
+    grouped_series = series.groupby(
+            list(map(order.get_group, series.index)), dropna=False
+    ).sum().reindex(order)
+
+    return grouped_series
+
+
+def find_closest_modality(idx: int, order: GroupedList, frequencies: List[float], target_rates: Series, min_freq: float) -> Any:
+    """HELPER Finds the closest modality in terms of frequency and target rate
+
+    Parameters
+    ----------
+    idx : int
+        _description_
+    freq_target : Series
+        _description_
+    min_freq : float
+        _description_
+
+    Returns
+    -------
+    int
+        _description_
+    """
+    # case 1: lowest ranked modality
+    if idx == 0:
+        idx_closest_modality = 1
+
+    # case 2: highest ranked modality
+    elif idx == len(order) - 1:
+        idx_closest_modality = len(order) - 2
+
+    # case 3: modality ranked in the middle
+    else:
+        # previous modality's volume and target rate
+        previous_freq, previous_target = frequencies[idx - 1], target_rates[idx - 1]
+
+        # current modality's volume and target rate
+        current_target = target_rates[idx]
+
+        # next modality's volume and target rate
+        next_freq, next_target = frequencies[idx + 1], target_rates[idx + 1]
+
+        # identifying closest modality in terms of frequency
+        least_frequent = idx - 1
+        if next_freq < previous_freq:
+            least_frequent = idx + 1
+
+        # identifying closest modality in terms of target rate
+        closest_target = idx - 1
+        if abs(previous_target - current_target) >= abs(next_target - current_target):
+            closest_target = idx + 1
+        
+        # case 3.1: grouping with the closest target rate
+        idx_closest_modality = closest_target
+
+        # case 3.2: (only) one modality isn't common, the least frequent is choosen
+        if (previous_freq < min_freq < next_freq) or (next_freq < min_freq < previous_freq):
+            idx_closest_modality = least_frequent
+
+        # case 3.3: current modality is missing (no target rate), the least frequent is choosen
+        if isna(current_target):
+            idx_closest_modality = least_frequent
+
+    # finding the closest value
+    closest_value = order[idx_closest_modality]
+
+    return closest_value

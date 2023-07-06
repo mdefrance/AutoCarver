@@ -1,7 +1,7 @@
 """Set of tests for qualitative_discretizers module."""
 
 from AutoCarver.discretizers.utils.qualitative_discretizers import *
-from pytest import fixture, raises
+from pytest import raises
 
 
 def test_chained_discretizer():
@@ -19,7 +19,6 @@ def test_default_discretizer(x_train: DataFrame):
     """    
 
     # defining values_orders
-    # order = list(x_train["Qualitative"].unique())
     order = ['Category A', 'Category B', 'Category C', 'Category D', 'Category E', 'Category F']
     # ordering for base qualitative ordinal feature
     groupedlist = GroupedList(order)
@@ -42,14 +41,14 @@ def test_default_discretizer(x_train: DataFrame):
         "Qualitative_grouped": groupedlist_grouped,
         "Qualitative_highnan": groupedlist,
         "Qualitative_lownan": groupedlist,
-        "Qualitative_Ordinal": groupedlist_ordinal,  # TODO: check that it has not been changed
+        "Qualitative_Ordinal": groupedlist_ordinal,
     }
 
     features = ["Qualitative", "Qualitative_grouped", "Qualitative_lownan", "Qualitative_highnan"]
 
+    min_freq = 0.02
     # unwanted value in values_orders
     with raises(AssertionError):
-        min_freq = 0.02
 
         discretizer = DefaultDiscretizer(features, min_freq, values_orders=values_orders, copy=True)
         x_discretized = discretizer.fit_transform(x_train, x_train["quali_ordinal_target"])
@@ -62,8 +61,6 @@ def test_default_discretizer(x_train: DataFrame):
         "Qualitative_lownan": groupedlist_lownan,
         "Qualitative_Ordinal": groupedlist_ordinal,
     }
-
-    min_freq = 0.02
 
     discretizer = DefaultDiscretizer(features, min_freq, values_orders=values_orders, copy=True)
     x_discretized = discretizer.fit_transform(x_train, x_train["quali_ordinal_target"])
@@ -94,3 +91,83 @@ def test_default_discretizer(x_train: DataFrame):
     }
     assert discretizer.values_orders['Qualitative_highnan'].contained == quali_highnan_expected, "If any, NaN values should be put into str_nan"
     assert discretizer.values_orders['Qualitative_grouped'].contained == groupedlist_grouped.contained, "Grouped values should stay grouped"
+
+
+def test_closest_discretizer(x_train: DataFrame):
+    """Tests ClosestDiscretizer
+
+    Parameters
+    ----------
+    x_train : DataFrame
+        Simulated Train DataFrame
+    x_test_1 : DataFrame
+        Simulated Test DataFrame
+    x_test_2 : DataFrame
+        Simulated Test DataFrame
+    """
+
+    # defining values_orders
+    order = ['Low-', 'Low', 'Low+', 'Medium-', 'Medium', 'Medium+', 'High-', 'High', 'High+']
+    # ordering for base qualitative ordinal feature
+    groupedlist = GroupedList(order)
+
+    # ordering for qualitative ordinal feature that contains NaNs
+    groupedlist_lownan = GroupedList(order)
+
+    # storing per feature orders
+    features = ["Qualitative_Ordinal", "Qualitative_Ordinal_lownan"]
+    values_orders = {
+        "Qualitative_Ordinal": groupedlist,
+        "Qualitative_Ordinal_lownan": groupedlist_lownan,
+    }
+
+    # minimum frequency per modality + apply(find_common_modalities) outputs a Series
+    min_freq = 0.01
+
+    # discretizing features
+    discretizer = ClosestDiscretizer(features, values_orders, min_freq, copy=True)
+    discretizer.fit_transform(x_train, x_train["quali_ordinal_target"])
+
+    expected_ordinal_01 = {
+        'Low-': ['Low', 'Low-'],
+        'Low+': ['Low+'],
+        'Medium-': ['Medium-'],
+        'Medium': ['Medium'],
+        'Medium+': ['High-', 'Medium+'],
+        'High': ['High'],
+        'High+': ['High+']
+    }
+    expected_ordinal_lownan_01 = {
+        'Low+': ['Low-', 'Low','Low+'],
+        'Medium-': ['Medium-'],
+        'Medium': ['Medium'],
+        'Medium+': ['High-', 'Medium+'],
+        'High': ['High'],
+        'High+': ['High+']
+    }
+    assert discretizer.values_orders['Qualitative_Ordinal'].contained == expected_ordinal_01, "Missing value in order not correctly grouped"
+    assert discretizer.values_orders['Qualitative_Ordinal_lownan'].contained == expected_ordinal_lownan_01, "Missing value in order not correctly grouped or introduced nans."
+
+    # minimum frequency per modality + apply(find_common_modalities) outputs a DataFrame
+    min_freq = 0.08
+
+    # discretizing features
+    discretizer = ClosestDiscretizer(features, values_orders, min_freq, copy=True)
+    discretizer.fit_transform(x_train, x_train["quali_ordinal_target"])
+
+    expected_ordinal_08 = {
+        'Low+': ['Low', 'Low-', 'Low+'],
+        'Medium-': ['Medium-'],
+        'Medium': ['Medium'],
+        'High': ['High-', 'Medium+', 'High'],
+        'High+': ['High+']
+    }
+    expected_ordinal_lownan_08 = {
+        'Low+': ['Low-', 'Low', 'Low+'],
+        'Medium-': ['Medium-'],
+        'Medium': ['Medium'],
+        'High': ['High-', 'Medium+', 'High'],
+        'High+': ['High+']
+    }
+    assert discretizer.values_orders['Qualitative_Ordinal'].contained == expected_ordinal_08, "Values not correctly grouped"
+    assert discretizer.values_orders['Qualitative_Ordinal_lownan'].contained == expected_ordinal_lownan_08, "Values not correctly grouped or introduced nans."

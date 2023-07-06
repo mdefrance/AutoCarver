@@ -5,7 +5,7 @@ for a binary classification model.
 from typing import Any, Dict, List, Union
 from warnings import warn
 
-from numpy import argmin, float32, nan, select, sort, ndarray
+from numpy import argmin, float32, nan, select, sort, ndarray, inf, array
 from pandas import DataFrame, Series, isna, notna, unique
 from sklearn.base import BaseEstimator, TransformerMixin
 
@@ -426,18 +426,21 @@ class GroupedList(list):
         return repr
 
 
-
-
+# TODO: add a summary
+# TODO: output a json
+# TODO: GroupedListDiscretizer for quantitative features?
 # TODO: add a base discretizer that implements prepare_data (add reset_index ? -> add duplicate column check)
 class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
     """Discretizer that uses a dict of grouped values."""
 
     def __init__(
         self,
+        features: List[str],
         values_orders: Dict[str, GroupedList],
         *,
         copy: bool = False,
-        output: str = 'float',
+        input_dtype: str = 'str',
+        output_dtype: str = 'str',
         str_nan: str = None,
         verbose: bool = False,
     ) -> None:
@@ -445,22 +448,30 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
+        features : List[str]
+            List of column names to be discretized
         values_orders : Dict[str, GroupedList]
             Per feature ordering
         copy : bool, optional
             Whether or not to copy the input DataFrame, by default False
-        output : type, optional
-            Type of the columns to be returned: 'float' or 'str', by default 'float'
+        input_dtype : type, optional
+            Type of the input columns:
+            - if 'float' uses transform_quantitative
+            - if 'str' uses transform_qualitative,
+            by default 'str'
+        output_dtype : type, optional
+            Type of the columns to be returned: 'float' or 'str', by default 'str'
         str_nan : str, optional
             Default values attributed to nan, by default None
         verbose : bool, optional
             If True, prints information, by default False
         """
 
-        self.features = list(values_orders.keys())
+        self.features = features[:]
         self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
         self.copy = copy
-        self.output = output
+        self.input_dtype = input_dtype
+        self.output_dtype = output_dtype
         self.verbose = verbose
         self.str_nan = str_nan
 
@@ -498,45 +509,124 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         """
 
         # copying dataframes
-        Xc = X
+        x_copy = X
         if self.copy:
-            Xc = X.copy()
+            x_copy = X.copy()
+
+        # checking for input type
+        if self.input_dtype == 'float':  # quantitative features
+            x_copy = self.transform_quantitative(x_copy, y)
+
+        else:  # quantitative features
+            x_copy = self.transform_qualitative(x_copy, y)
+
+        return x_copy
+
+    def transform_quantitative(self, X: DataFrame, y: Series) -> DataFrame:
+        """Groups values of features (values_orders keys) according to
+        there corresponding GroupedList (values_orders values) based on
+        the `GroupedList.contained` dict.
+
+        Parameters
+        ----------
+        X : DataFrame
+            Contains columns named after `values_orders` keys
+        y : Series, optional
+            Model target, by default None
+
+        Returns
+        -------
+        DataFrame
+            _description_
+        """
+
+        for n, feature in enumerate(self.features):
+            if self.verbose:  # verbose if requested
+                print(f" - [GroupedListDiscretizer] Transform Qualitative {feature} ({n+1}/{len(self.features)})")
+
+            nans = isna(X[feature])  # keeping track of nans
+
+            # quantiles ordering for the feature
+            order = self.values_orders[feature]
+
+            # filtering out nan if any
+            quantiles = list(order)
+            if self.str_nan in quantiles:
+                quantiles = [val for val in quantiles if val != self.str_nan]
+            
+            # converting quantiles in string
+            output_order = format_quantiles(quantiles)
+
+            # adding inf as the upper bound of the last quantile
+            quantiles = quantiles + [inf]
+
+            # list of masks of values to replace with there respective group
+            values_to_group = [X[feature] <= q for q in quantiles]
+
+            # corressponding group for each value
+            group_key = [[v] * len(X[feature]) for v in output_order if v != self.str_nan] 
+            
+            # grouping values into groups
+            X[feature] = select(values_to_group, group_key, default=X[feature])
+
+            # converting nans
+            if any(nans):
+                assert self.str_nan in order, f"Unexpected value! Missing values found for feature '{feature}' at transform step but not during fit. There might be new values in your test/dev set. Consider taking a bigger test/dev set or dropping the column {feature}."
+                X.loc[nans, feature] = self.str_nan
+
+        return X
+
+    def transform_qualitative(self, X: DataFrame, y: Series = None) -> DataFrame:
+        """Groups values of features (values_orders keys) according to
+        there corresponding GroupedList (values_orders values) based on
+        the `GroupedList.contained` dict.
+
+        Parameters
+        ----------
+        X : DataFrame
+            Contains columns named after `values_orders` keys
+        y : Series, optional
+            Model target, by default None
+
+        Returns
+        -------
+        DataFrame
+            _description_
+        """
 
         # filling up nans with specified value
         if self.str_nan:
-            Xc[self.features] = Xc[self.features].fillna(self.str_nan)
+            X[self.features] = X[self.features].fillna(self.str_nan)
 
         # checking that all unique values in X are in values_orders
-        check_new_values(Xc, self.features, self.known_values)
+        check_new_values(X, self.features, self.known_values)
 
         # iterating over each feature
         for n, feature in enumerate(self.features):
             if self.verbose:  # verbose if requested
-                print(
-                    f" - [GroupedListDiscretizer] Transform {feature} ({n+1}/{len(self.features)})"
-                )
+                print(f" - [GroupedListDiscretizer] Transform Qualitative {feature} ({n+1}/{len(self.features)})")
 
             # Selected groups (keys)
-            order = self.values_orders.get(feature)
+            order = self.values_orders[feature]
 
             # converting order to float if requested
-            output_order = GroupedList(order)
-            if self.output == 'float':
+            output_order = GroupedList(order)  # copy of order
+            if self.output_dtype == 'float':
                 # creating GroupedList of ints
                 output_order = GroupedList(list(range(len(order))))
 
                 # adding values to each key
                 for key in output_order:
-                    output_order.update({key: order.get(order[key])+[key]})
+                    output_order.update({key: order.get(order[key]) + [key]})
 
-                # keeping track ther ordering
+                # keeping track of the ordering
                 self.values_orders.update({feature: output_order})
 
             # values associated to each key
             group_values = [output_order.get(key) for key in output_order]
 
             # identifying bucket's key per modality
-            values_to_key = [Xc[feature].isin(discarded) for discarded in group_values]
+            values_to_key = [X[feature].isin(discarded) for discarded in group_values]
 
             # case when there are no values
             if len(values_to_key) == 0 & len(values_to_key) == 0:
@@ -544,14 +634,13 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
 
             # grouping modalities
             else:
-                Xc[feature] = select(values_to_key, output_order, default=Xc[feature])
+                X[feature] = select(values_to_key, output_order, default=X[feature])
 
         # converting to float32
-        if self.output == 'float':
-            Xc[self.features] = Xc[self.features].astype(float32)
+        if self.output_dtype == 'float':
+            X[self.features] = X[self.features].astype(float32)
 
-        return Xc
-
+        return X
 
 def min_value_counts(x: Series, order: List[Any]) -> float:
     """Minimum of modalities' frequencies."""
@@ -614,255 +703,87 @@ def is_equal(a: Any, b: Any) -> bool:
     return equal
 
 
-class ClosestDiscretizer(GroupedListDiscretizer):
-    """Discretizes ordered qualitative features into groups more frequent than min_freq.
-    NaNs are left untouched.
+def format_quantiles(a_list: List[float]) -> List[str]:
+    """Formats a list of float quantiles into a list of boundaries.
 
-    Modality is choosen amongst the preceding and following values in the provided order.
-    The choosen modality is:
-    - the closest in target rate
-    - or the one with the lowest frequency
-    """
-
-    def __init__(
-        self,
-        features: List[str],
-        values_orders: Dict[str, Any],
-        min_freq: float,
-        *,
-        copy: bool = False,
-        verbose: bool = False,
-    ):
-        """Initializes a ClosestDiscretizer
-
-        Parameters
-        ----------
-        features : List[str]
-            List of column names to be discretized
-        values_orders : Dict[str, Any]
-            Dict of column names (keys) and modalities' associated order (values)
-        min_freq : float
-            Minimum frequency per modality. Less frequent modalities are grouped in the closest value of the order.
-        default : str, optional
-            _description_, by default "worst"
-        copy : bool, optional
-            _description_, by default False
-        verbose : bool, optional
-            _description_, by default False
-        """
-
-        self.features = features[:]
-        self.min_freq = min_freq
-        self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
-        self.copy = copy
-        self.verbose = verbose
-
-    def fit(self, X: DataFrame, y: Series) -> None:
-        """Learns common modalities on the training set
-
-        Parameters
-        ----------
-        X : DataFrame
-            Training set that contains columns named after `values_orders` keys.
-        y : Series
-            Model target.
-        """
-        # verbose
-        if self.verbose:
-            print(f" - [ClosestDiscretizer] Fit {', '.join(self.features)}")
-
-        # grouping rare modalities for each feature
-        common_modalities = (
-            X[self.features]
-            .apply(
-                find_common_modalities,
-                y=y,
-                min_freq=self.min_freq,
-                values_orders=self.values_orders,
-                axis=0,
-                result_type="reduce",
-            )
-        )
-
-        # updating the order per feature
-        self.values_orders.update(common_modalities)
-
-        # discretizing features based on each feature's values_order
-        super().__init__(
-            self.values_orders,
-            copy=self.copy,
-            output='str',
-        )
-        super().fit(X, y)
-
-        return self
-
-
-def find_common_modalities(
-    df_feature: Series,
-    y: Series,
-    min_freq: float,
-    values_orders: Dict[str, GroupedList],
-    len_df: int = None,
-) -> Dict[str, Any]:
-    """Découpage en modalités de fréquence minimal (Cas des variables ordonnées).
-
-    Fonction récursive : on prend l'échantillon et on cherche des valeurs sur-représentées
-    Si la valeur existe on la met dans une classe et on cherche à gauche et à droite de celle-ci, d'autres variables sur-représentées
-    Une fois il n'y a plus de valeurs qui soient sur-représentées,
-    on fait un découpage classique avec qcut en multipliant le nombre de classes souhaité par le pourcentage de valeurs restantes sur le total
+    Rounds quantiles to the closest power of 1000.
 
     Parameters
     ----------
-    df_feature : Series
-        _description_
-    y : Series
-        _description_
-    min_freq : float
-        _description_
-    order : GroupedList
-        _description_
-    len_df : int, optional
-        _description_, by default None
+    a_list : List[float]
+        Sorted list of quantiles to convert into string
 
     Returns
     -------
-    Dict[str, Any]
-        _description_
+    List[str]
+        List of boundaries per quantile
     """
-    # getting feature's order
-    order = values_orders[df_feature.name]
 
-    # initialisation de la taille totale du dataframe
-    if len_df is None:
-        len_df = len(df_feature)
+    # finding the closest power of thousands for each element
+    closest_powers = [
+        next((k for k in range(-3, 4) if abs(elt) / 100 // 1000 ** (k) < 10)) for elt in a_list
+    ]
 
-    # case 1: there are missing values
-    if any(isna(df_feature)):
-        return find_common_modalities(
-            df_feature[notna(df_feature)],
-            y[notna(df_feature)],
-            min_freq,
-            values_orders,
-            len_df,
+    # rounding elements to the closest power of thousands
+    rounded_to_powers = [elt / 1000 ** (k) for elt, k in zip(a_list, closest_powers)]
+
+    # computing optimal decimal per unique power of thousands
+    optimal_decimals: Dict[str, int] = {}
+    for power in unique(closest_powers):  # iterating over each power of thousands found
+        # filtering on the specific power of thousands
+        sub_array = array([elt for elt, p in zip(rounded_to_powers, closest_powers) if power == p])
+
+        # number of distinct values
+        n_uniques = sub_array.shape[0]
+
+        # computing the first rounding decimal that allows for distinction of
+        # each values when rounded, by default None (no rounding)
+        optimal_decimal = next(
+            (k for k in range(1, 10) if len(unique(sub_array.round(k))) == n_uniques),
+            None,
         )
 
-    # case 2: no missing values
-    # computing frequencies and target rate of each modality
-    init_frequencies = df_feature.value_counts(dropna=False, normalize=False) / len_df
-    init_target_rates = y.groupby(df_feature).sum().reindex(order)
+        # storing in the dict
+        optimal_decimals.update({power: optimal_decimal})
 
-    # per-modality/value frequencies, filling missing by 0
-    frequencies = init_frequencies.reindex(order, fill_value=0)
+    # rounding according to each optimal_decimal
+    rounded_list: List[float] = []
+    for elt, power in zip(rounded_to_powers, closest_powers):
+        # rounding each element
+        rounded = elt  # by default None (no rounding)
+        optimal_decimal = optimal_decimals.get(power)
+        if optimal_decimal:  # checking that the optimal decimal exists
+            rounded = round(elt, optimal_decimal)
 
-    # case 2.1: there are underrepresented modalities/values
-    while any(frequencies < min_freq) & (len(frequencies) > 1):
+        # adding the rounded number to the list
+        rounded_list += [rounded]
 
-        # updating per-group target rate per modality/value
-        target_rates = series_groupy_order(init_target_rates, order) / frequencies / len_df
+    # dict of suffixes per power of thousands
+    suffixes = {-3: "n", -2: "mi", -1: "m", 0: "", 1: "K", 2: "M", 3: "B"}
 
-        # identifying the underrepresented value
-        discarded_idx = argmin(frequencies)
-        discarded_value = order[discarded_idx]
+    # adding the suffixes
+    formatted_list = [
+        f"{elt: 1.1f}{suffixes[power]}" for elt, power in zip(rounded_list, closest_powers)
+    ]
 
-        # choosing amongst previous and next modality (by volume and target rate)
-        kept_value = find_closest_modality(
-            discarded_idx,
-            order,
-            list(frequencies),
-            list(target_rates),
-            min_freq,
-        )
+    # keeping zeros
+    formatted_list = [
+        rounded if raw != 0 else f"{raw: 1.1f}" for rounded, raw in zip(formatted_list, a_list)
+    ]
+    
+    # stripping whitespaces
+    formatted_list = [string.strip() for string in formatted_list]
 
-        # removing the value from the initial ordering
-        order.group(discarded_value, kept_value)
+    # low and high bounds per quantiles
+    upper_bounds = formatted_list + [nan]
+    lower_bounds = [nan] + formatted_list
+    order: List[str] = []
+    for lower, upper in zip(lower_bounds, upper_bounds):
+        if isna(lower):
+            order += [f"x <= {upper}"]
+        elif isna(upper):
+            order += [f"{lower} < x"]
+        else:
+            order += [f"{lower} < x <= {upper}"]
 
-        # removing discarded_value from frequencies
-        frequencies = series_groupy_order(init_frequencies, order).fillna(0)
-
-    # case 2.2 : no underrepresented value
     return order
-
-def series_groupy_order(series: Series, order: GroupedList) -> Series:
-    """Groups a series according to groups specified in the order
-
-    Parameters
-    ----------
-    series : Series
-        Values to group
-    order : GroupedList
-        Groups of values
-
-    Returns
-    -------
-    Series
-        Grouped Series
-    """
-    grouped_series = series.groupby(
-            list(map(order.get_group, series.index)), dropna=False
-    ).sum().reindex(order)
-
-    return grouped_series
-
-
-def find_closest_modality(idx: int, order: GroupedList, frequencies: List[float], target_rates: Series, min_freq: float) -> Any:
-    """HELPER Finds the closest modality in terms of frequency and target rate
-
-    Parameters
-    ----------
-    idx : int
-        _description_
-    freq_target : Series
-        _description_
-    min_freq : float
-        _description_
-
-    Returns
-    -------
-    int
-        _description_
-    """
-    # case 1: lowest ranked modality
-    if idx == 0:
-        idx_closest_modality = 1
-
-    # case 2: highest ranked modality
-    elif idx == len(order) - 1:
-        idx_closest_modality = len(order) - 2
-
-    # case 3: modality ranked in the middle
-    else:
-        # previous modality's volume and target rate
-        previous_freq, previous_target = frequencies[idx - 1], target_rates[idx - 1]
-
-        # current modality's volume and target rate
-        current_target = target_rates[idx]
-
-        # next modality's volume and target rate
-        next_freq, next_target = frequencies[idx + 1], target_rates[idx + 1]
-
-        # identifying closest modality in terms of frequency
-        least_frequent = idx - 1
-        if next_freq < previous_freq:
-            least_frequent = idx + 1
-
-        # identifying closest modality in terms of target rate
-        closest_target = idx - 1
-        if abs(previous_target - current_target) >= abs(next_target - current_target):
-            closest_target = idx + 1
-        
-        # case 3.1: grouping with the closest target rate
-        idx_closest_modality = closest_target
-
-        # case 3.2: (only) one modality isn't common, the least frequent is choosen
-        if (previous_freq < min_freq < next_freq) or (next_freq < min_freq < previous_freq):
-            idx_closest_modality = least_frequent
-
-        # case 3.3: current modality is missing (no target rate), the least frequent is choosen
-        if isna(current_target):
-            idx_closest_modality = least_frequent
-
-    # finding the closest value
-    closest_value = order[idx_closest_modality]
-
-    return closest_value

@@ -17,6 +17,7 @@ from scipy.stats import chi2_contingency
 from seaborn import color_palette, despine
 from tqdm.notebook import tqdm
 
+# TODO: issue with ranking of quantitative values? -> displayed not in an ascending way
 # TODO: add parameter to shut down displayed info
 class AutoCarver(GroupedListDiscretizer):
     """Automatic carving of continuous, categorical and categorical ordinal
