@@ -16,7 +16,7 @@ def test_default_discretizer(x_train: DataFrame):
     ----------
     x_train : DataFrame
         Simulated Train DataFrame
-    """    
+    """
 
     # defining values_orders
     order = ['Category A', 'Category B', 'Category C', 'Category D', 'Category E', 'Category F']

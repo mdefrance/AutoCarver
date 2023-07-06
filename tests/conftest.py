@@ -43,14 +43,18 @@ def init_test_df(seed: int, size: int = 10000) -> DataFrame:
     qualitative_data = random.choice(qual_features, size=size)
 
     # Generate random quantitative features
-    quantitative_data = random.rand(size) * 100
+    quantitative_data = random.rand(size) * 1000
+    
+    # Generate random discrete quantitative feature
+    discrete_quantitative_data = random.choice(arange(1, 8), size=size, p=[0.3, 0.25, 0.2, 0.15, 0.05, 0.03, 0.02])
 
     # Create DataFrame
     data = {
         'Qualitative_Ordinal': ordinal_data,
         'Qualitative': qualitative_data,
         'Quantitative': quantitative_data,
-        'Binary': binary
+        'Binary': binary,
+        'Discrete_Quantitative': discrete_quantitative_data
     }
     df = DataFrame(data)
     
@@ -67,8 +71,14 @@ def init_test_df(seed: int, size: int = 10000) -> DataFrame:
     df["Qualitative_grouped"] = df["Qualitative"].replace("Category A", "Category D")
     df["Qualitative_highnan"] = df["Qualitative"].replace("Category F", nan)
     df["Qualitative_lownan"] = df["Qualitative"].replace("Category A", nan)
+    
+    # building specific cases for quantitative_discretizer
+    df["Discrete_Quantitative_highnan"] = df["Discrete_Quantitative"].replace(1, nan)
+    df["Discrete_Quantitative_lownan"] = df["Discrete_Quantitative"].replace(7, nan)
+    df["Discrete_Quantitative_rarevalue"] = df["Discrete_Quantitative_lownan"].fillna(0.5)
 
     return df
+
 
 @fixture
 def x_train():
