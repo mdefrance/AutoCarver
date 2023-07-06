@@ -428,7 +428,6 @@ class GroupedList(list):
 
 # TODO: add a summary
 # TODO: output a json
-# TODO: GroupedListDiscretizer for quantitative features?
 # TODO: add a base discretizer that implements prepare_data (add reset_index ? -> add duplicate column check)
 class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
     """Discretizer that uses a dict of grouped values."""
@@ -439,7 +438,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         values_orders: Dict[str, GroupedList],
         *,
         copy: bool = False,
-        input_dtype: str = 'str',
+        input_dtypes: Dict[str, str] = None,
         output_dtype: str = 'str',
         str_nan: str = None,
         verbose: bool = False,
@@ -454,12 +453,12 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
             Per feature ordering
         copy : bool, optional
             Whether or not to copy the input DataFrame, by default False
-        input_dtype : type, optional
-            Type of the input columns:
+        input_dtypes : Dict[str, str], optional
+            Dict of column name and associated type:
             - if 'float' uses transform_quantitative
             - if 'str' uses transform_qualitative,
-            by default 'str'
-        output_dtype : type, optional
+            default 'str'
+        output_dtype : str, optional
             Type of the columns to be returned: 'float' or 'str', by default 'str'
         str_nan : str, optional
             Default values attributed to nan, by default None
@@ -470,11 +469,16 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         self.features = features[:]
         self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
         self.copy = copy
-        self.input_dtype = input_dtype
+        if input_dtypes is None:
+            input_dtypes = {feature: 'str' for feature in features}
+        self.input_dtypes = input_dtypes
+
         self.output_dtype = output_dtype
         self.verbose = verbose
         self.str_nan = str_nan
 
+        self.qualitative_features = [feature for feature in features if self.input_dtypes[feature] == 'str']
+        self.quantitative_features = [feature for feature in features if self.input_dtypes[feature] == 'float']
         self.known_values = {feature: self.values_orders[feature].values() for feature in self.features}
 
     def fit(self, X: DataFrame, y: Series = None) -> None:
@@ -513,11 +517,12 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         if self.copy:
             x_copy = X.copy()
 
-        # checking for input type
-        if self.input_dtype == 'float':  # quantitative features
+        # transforming quantitative features
+        if len(self.quantitative_features) > 0:
             x_copy = self.transform_quantitative(x_copy, y)
 
-        else:  # quantitative features
+        # transforming qualitative features
+        if len(self.qualitative_features) > 0:
             x_copy = self.transform_qualitative(x_copy, y)
 
         return x_copy
@@ -540,14 +545,14 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
             _description_
         """
         # getting group "name" per quantile
-        quantiles_aliases = get_quantiles_aliases(self.features, self.values_orders, self.str_nan)
+        quantiles_aliases = get_quantiles_aliases(self.quantitative_features, self.values_orders, self.str_nan)
 
         # dataset length
         x_len = X.shape[0]
 
-        for n, feature in enumerate(self.features):
+        for n, feature in enumerate(self.quantitative_features):
             if self.verbose:  # verbose if requested
-                print(f" - [GroupedListDiscretizer] Transform Qualitative {feature} ({n+1}/{len(self.features)})")
+                print(f" - [GroupedListDiscretizer] Transform Qualitative {feature} ({n+1}/{len(self.quantitative_features)})")
 
             nans = isna(X[feature])  # keeping track of nans
 
@@ -595,15 +600,15 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
 
         # filling up nans with specified value
         if self.str_nan:
-            X[self.features] = X[self.features].fillna(self.str_nan)
+            X[self.qualitative_features] = X[self.qualitative_features].fillna(self.str_nan)
 
         # checking that all unique values in X are in values_orders
-        check_new_values(X, self.features, self.known_values)
+        check_new_values(X, self.qualitative_features, self.known_values)
 
         # iterating over each feature
-        for n, feature in enumerate(self.features):
+        for n, feature in enumerate(self.qualitative_features):
             if self.verbose:  # verbose if requested
-                print(f" - [GroupedListDiscretizer] Transform Qualitative {feature} ({n+1}/{len(self.features)})")
+                print(f" - [GroupedListDiscretizer] Transform Qualitative {feature} ({n+1}/{len(self.qualitative_features)})")
 
             # Selected groups (keys)
             order = self.values_orders[feature]
@@ -637,7 +642,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
 
         # converting to float32
         if self.output_dtype == 'float':
-            X[self.features] = X[self.features].astype(float32)
+            X[self.qualitative_features] = X[self.qualitative_features].astype(float32)
 
         return X
 
