@@ -219,7 +219,7 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
 
     def __init__(
         self,
-        features: List[str],
+        qualitative_features: List[str],
         min_freq: float,
         *,
         ordinal_features: List[str] = None,
@@ -232,7 +232,7 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
 
         Parameters
         ----------
-        features : List[str]
+        qualitative_features : List[str]
             _description_
         min_freq : float
             _description_
@@ -247,19 +247,23 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
         verbose : bool, optional
             _description_, by default False
         """
-        self.features = features[:]
+        self.qualitative_features = qualitative_features[:]
         if values_orders is None:
             values_orders = {}
         self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
         if ordinal_features is None:
             ordinal_features = []
         self.ordinal_features = ordinal_features[:]
-        self.non_ordinal_features = [f for f in features if f not in self.ordinal_features]
         self.min_freq = min_freq
         self.str_nan = str_nan
         self.copy = copy
         self.verbose = verbose
 
+        # non-ordinal qualitative features
+        self.non_ordinal_features = [f for f in qualitative_features if f not in self.ordinal_features]
+        # all unique features
+        self.features = self.ordinal_features + self.non_ordinal_features
+        # all known values for features
         self.known_values = {feature: order.values() for feature, order in self.values_orders.items()}
         
     def prepare_data(self, X: DataFrame, y: Series = None) -> DataFrame:
@@ -346,12 +350,13 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
                 self.non_ordinal_features,
                 min_freq=self.min_freq,
                 values_orders=self.values_orders,
+                str_nan=self.str_nan,
                 verbose=self.verbose,
             )
             discretizer.fit(Xc, y)
 
             # storing orders of grouped features
-            self.values_orders.update(discretizer.values_orders) 
+            self.values_orders.update(discretizer.values_orders)
 
         # discretizing features based on each feature's values_order
         super().__init__(

@@ -96,6 +96,8 @@ def test_default_discretizer(x_train: DataFrame):
 def test_ordinal_discretizer(x_train: DataFrame):
     """Tests OrdinalDiscretizer
 
+    # TODO: add tests for quantitative features
+
     Parameters
     ----------
     x_train : DataFrame
@@ -138,12 +140,13 @@ def test_ordinal_discretizer(x_train: DataFrame):
         'High+': ['High+']
     }
     expected_ordinal_lownan_01 = {
-        'Low+': ['Low-', 'Low','Low+'],
+        'Low+': ['Low', 'Low-', 'Low+'],
         'Medium-': ['Medium-'],
         'Medium': ['Medium'],
         'Medium+': ['High-', 'Medium+'],
         'High': ['High'],
-        'High+': ['High+']
+        'High+': ['High+'],
+        '__NAN__': ['__NAN__']
     }
     assert discretizer.values_orders['Qualitative_Ordinal'].contained == expected_ordinal_01, "Missing value in order not correctly grouped"
     assert discretizer.values_orders['Qualitative_Ordinal_lownan'].contained == expected_ordinal_lownan_01, "Missing value in order not correctly grouped or introduced nans."
@@ -156,18 +159,19 @@ def test_ordinal_discretizer(x_train: DataFrame):
     discretizer.fit_transform(x_train, x_train["quali_ordinal_target"])
 
     expected_ordinal_08 = {
-        'Low+': ['Low', 'Low-', 'Low+'],
-        'Medium-': ['Medium-'],
-        'Medium': ['Medium'],
-        'High': ['High-', 'Medium+', 'High'],
-        'High+': ['High+']
-    }
-    expected_ordinal_lownan_08 = {
         'Low+': ['Low-', 'Low', 'Low+'],
         'Medium-': ['Medium-'],
         'Medium': ['Medium'],
-        'High': ['High-', 'Medium+', 'High'],
+        'High': ['Medium+', 'High-', 'High'],
         'High+': ['High+']
     }
+    expected_ordinal_lownan_08 = {
+        'Low+': ['Low', 'Low-', 'Low+'],
+        'Medium-': ['Medium-'],
+        'Medium': ['Medium'],
+        'High': ['Medium+', 'High-', 'High'],
+        'High+': ['High+'],
+        '__NAN__': ['__NAN__']
+    }
     assert discretizer.values_orders['Qualitative_Ordinal'].contained == expected_ordinal_08, "Values not correctly grouped"
-    assert discretizer.values_orders['Qualitative_Ordinal_lownan'].contained == expected_ordinal_lownan_08, "Values not correctly grouped or introduced nans."
+    assert discretizer.values_orders['Qualitative_Ordinal_lownan'].contained == expected_ordinal_lownan_08, "NaNs should stay by themselves."
