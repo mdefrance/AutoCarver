@@ -2,7 +2,7 @@
 for a binary classification model.
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union
 
 from .base_discretizers import (
     GroupedList,
@@ -164,7 +164,6 @@ class DefaultDiscretizer(GroupedListDiscretizer):
             self.features,
             self.values_orders,
             copy=self.copy,
-            input_dtype='str',
             output_dtype='str',
             str_nan=self.str_nan,
         )
@@ -313,7 +312,7 @@ class ChainedDiscretizer(GroupedListDiscretizer):
             self.values_orders,
             str_nan=self.str_nan,
             copy=self.copy,
-            input_dtype='str',
+            input_dtypes='str',
             output_dtype='str',
         )
         super().fit(X, y)
@@ -338,7 +337,7 @@ class OrdinalDiscretizer(GroupedListDiscretizer):
         min_freq: float,
         *,
         str_nan: str = '__NAN__',
-        input_dtype: str = 'str',
+        input_dtypes: Union[str, Dict[str, str]] = None,
         copy: bool = False,
         verbose: bool = False,
     ):
@@ -354,11 +353,12 @@ class OrdinalDiscretizer(GroupedListDiscretizer):
             Minimum frequency per modality. Less frequent modalities are grouped in the closest value of the order.
         str_nan : str, optional
             _description_, by default None
-        input_dtype : type, optional
-            Type of the input columns:
+        input_dtypes : Union[str, Dict[str, str]], optional
+            String of type to be considered for all features or
+            Dict of column names and associated types:
             - if 'float' uses transform_quantitative
             - if 'str' uses transform_qualitative,
-            by default 'str'
+            default 'str'
         copy : bool, optional
             _description_, by default False
         verbose : bool, optional
@@ -371,7 +371,14 @@ class OrdinalDiscretizer(GroupedListDiscretizer):
         self.copy = copy
         self.verbose = verbose
         self.str_nan = str_nan
-        self.input_dtype = input_dtype
+        if input_dtypes is None:
+            input_dtypes = {feature: 'str' for feature in features}
+        if isinstance(input_dtypes, str):
+            input_dtypes = {feature: input_dtypes for feature in features}
+        self.input_dtypes = input_dtypes
+
+        self.quantitative_features = [feature for feature, input_type in input_dtypes.items() if input_type == 'float']
+        self.qualitative_features = [feature for feature, input_type in input_dtypes.items() if input_type == 'str']
 
     def prepare_data(self, X: DataFrame, y: Series) -> DataFrame:
         """Called during fit step
@@ -431,15 +438,15 @@ class OrdinalDiscretizer(GroupedListDiscretizer):
         }
 
         # for quantitative features getting aliases per quantile
-        if self.input_dtype == 'float':
+        if any(self.quantitative_features):
             # getting group "name" per quantile
-            quantiles_aliases = get_quantiles_aliases(self.features, self.values_orders, self.str_nan)
-            # getting group "name" per quantile
-            aliases_quantiles = get_aliases_quantiles(self.features, self.values_orders, self.str_nan)
+            quantiles_aliases = get_quantiles_aliases(self.quantitative_features, self.values_orders, self.str_nan)
+            # getting quantile per group "name"
+            aliases_quantiles = get_aliases_quantiles(self.quantitative_features, self.values_orders, self.str_nan)
             # applying alliases to known orders
             known_orders.update({
                 feature: GroupedList([quantiles_aliases[feature][quantile] for quantile in known_orders[feature]])
-                for feature in self.features
+                for feature in self.quantitative_features
             })
 
         # grouping rare modalities for each feature
@@ -468,7 +475,7 @@ class OrdinalDiscretizer(GroupedListDiscretizer):
 
                 # for qualitative features grouping as is
                 # for quantitative features getting quantile per alias
-                if self.input_dtype == 'float':
+                if feature in self.quantitative_features:
                     # getting raw quantiles to be grouped
                     discarded = [aliases_quantiles[feature][discard] for discard in discarded]
                     # keeping the largest value amongst the discarded (otherwise they wont be grouped)
@@ -486,7 +493,7 @@ class OrdinalDiscretizer(GroupedListDiscretizer):
             self.values_orders,
             copy=self.copy,
             str_nan=self.str_nan,
-            input_dtype=self.input_dtype,
+            input_dtypes=self.input_dtypes,
             output_dtype='str',
         )
         super().fit(x_copy, y)

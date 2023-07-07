@@ -85,7 +85,7 @@ class QuantileDiscretizer(GroupedListDiscretizer):
             self.features,
             self.values_orders,
             copy=self.copy,
-            input_dtype='float',
+            input_dtypes='float',
             output_dtype='str',
             str_nan=self.str_nan,
         )

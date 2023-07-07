@@ -158,7 +158,7 @@ def test_grouped_list_discretizer(x_train: DataFrame, x_test_1: DataFrame, x_tes
     features = ["Qualitative_Ordinal", "Qualitative_Ordinal_lownan"]
     
     # initiating discretizer with output str
-    discretizer = GroupedListDiscretizer(features, values_orders, str_nan=str_nan, input_dtype='str', output_dtype='str', copy=True)
+    discretizer = GroupedListDiscretizer(features, values_orders, str_nan=str_nan, input_dtypes='str', output_dtype='str', copy=True)
     x_discretized = discretizer.fit_transform(x_train)
 
     # testing ordinal qualitative feature discretization
@@ -192,7 +192,7 @@ def test_grouped_list_discretizer(x_train: DataFrame, x_test_1: DataFrame, x_tes
     assert all(x_discretized["Quantitative"] == x_discretized["Quantitative"]), "Other columns should not be modified"
 
     # initiating discretizer with output float
-    discretizer = GroupedListDiscretizer(features, values_orders, str_nan=str_nan, input_dtype='str', output_dtype='float', copy=True)
+    discretizer = GroupedListDiscretizer(features, values_orders, str_nan=str_nan, input_dtypes='str', output_dtype='float', copy=True)
     x_discretized = discretizer.fit_transform(x_train)
 
     # testing ordinal qualitative feature discretization

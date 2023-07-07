@@ -2,7 +2,7 @@
 for a binary classification model.
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union
 
 from pandas import DataFrame, Series, unique
 from pandas.api.types import is_numeric_dtype, is_string_dtype
@@ -83,6 +83,12 @@ class Discretizer(GroupedListDiscretizer):
             _description_, by default None
         values_orders : Dict[str, Any], optional
             _description_, by default None
+        input_dtypes : Union[str, Dict[str, str]], optional
+            String of type to be considered for all features or
+            Dict of column names and associated types:
+            - if 'float' uses transform_quantitative
+            - if 'str' uses transform_qualitative,
+            default 'str'
         copy : bool, optional
             _description_, by default False
         verbose : bool, optional
@@ -142,6 +148,7 @@ class Discretizer(GroupedListDiscretizer):
                 ordinal_features=self.ordinal_features,
                 min_freq=self.min_freq,
                 values_orders=self.values_orders,
+                input_dtypes=self.input_dtypes,
                 str_nan=self.str_nan,
                 str_default=self.str_default,
                 copy=self.copy,
@@ -221,6 +228,7 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
         *,
         ordinal_features: List[str] = None,
         values_orders: Dict[str, Any] = None,
+        input_dtypes: Union[str, Dict[str, str]] = None,
         str_nan: str = '__NAN__',
         str_default: str = '__OTHER__',
         copy: bool = False,
@@ -238,6 +246,12 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
             _description_, by default None
         values_orders : Dict[str, Any], optional
             _description_, by default None
+        input_dtypes : Union[str, Dict[str, str]], optional
+            String of type to be considered for all features or
+            Dict of column names and associated types:
+            - if 'float' uses transform_quantitative
+            - if 'str' uses transform_qualitative,
+            default 'str'
         str_nan : str, optional
             _description_, by default '__NAN__'
         copy : bool, optional
@@ -264,6 +278,12 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
         self.features = self.ordinal_features + self.non_ordinal_features
         # all known values for features
         self.known_values = {feature: order.values() for feature, order in self.values_orders.items()}
+
+        if input_dtypes is None:
+            input_dtypes = {feature: 'str' for feature in self.features}
+        if isinstance(input_dtypes, str):
+            input_dtypes = {feature: input_dtypes for feature in self.features}
+        self.input_dtypes = input_dtypes
         
     def prepare_data(self, X: DataFrame, y: Series = None) -> DataFrame:
         """Prepares the data for bucketization, checks column types.
@@ -368,7 +388,7 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
             self.features,
             self.values_orders,
             copy=self.copy,
-            input_dtype='str',
+            input_dtypes=self.input_dtypes,
             output_dtype='str',
             str_nan=self.str_nan,
         )
@@ -405,6 +425,7 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
         min_freq: float,
         *,
         values_orders: Dict[str, Any] = None,
+        input_dtypes: Union[str, Dict[str, str]] = None,
         str_nan: str = '__NAN__',
         copy: bool = False,
         verbose: bool = False,
@@ -419,6 +440,12 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
             _description_
         values_orders : Dict[str, Any], optional
             _description_, by default None
+        input_dtypes : Union[str, Dict[str, str]], optional
+            String of type to be considered for all features or
+            Dict of column names and associated types:
+            - if 'float' uses transform_quantitative
+            - if 'str' uses transform_qualitative,
+            default 'str'
         str_nan : str, optional
             _description_, by default '__NAN__'
         copy : bool, optional
@@ -434,6 +461,12 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
         self.str_nan = str_nan
         self.copy = copy
         self.verbose = verbose
+
+        if input_dtypes is None:
+            input_dtypes = {feature: 'str' for feature in self.features}
+        if isinstance(input_dtypes, str):
+            input_dtypes = {feature: input_dtypes for feature in self.features}
+        self.input_dtypes = input_dtypes
 
     def prepare_data(self, X: DataFrame, y: Series) -> DataFrame:
         """Checking data for bucketization"""
@@ -493,7 +526,7 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
                 values_orders=self.values_orders,
                 str_nan=self.str_nan,
                 verbose=self.verbose,
-                input_dtype='float'
+                input_dtypes=self.input_dtypes
             )
             discretizer.fit(Xc, y)
 
@@ -505,7 +538,7 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
             self.features,
             self.values_orders,
             copy=self.copy,
-            input_dtype='float',
+            input_dtypes=self.input_dtypes,
             output_dtype='str',
             str_nan=self.str_nan,
         )

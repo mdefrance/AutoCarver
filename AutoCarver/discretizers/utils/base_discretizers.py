@@ -3,7 +3,6 @@ for a binary classification model.
 """
 
 from typing import Any, Dict, List, Union
-from warnings import warn
 
 from numpy import argmin, float32, nan, select, sort, ndarray, inf, array
 from pandas import DataFrame, Series, isna, notna, unique
@@ -438,7 +437,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         values_orders: Dict[str, GroupedList],
         *,
         copy: bool = False,
-        input_dtypes: Dict[str, str] = None,
+        input_dtypes: Union[str, Dict[str, str]] = None,
         output_dtype: str = 'str',
         str_nan: str = None,
         verbose: bool = False,
@@ -453,8 +452,9 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
             Per feature ordering
         copy : bool, optional
             Whether or not to copy the input DataFrame, by default False
-        input_dtypes : Dict[str, str], optional
-            Dict of column name and associated type:
+        input_dtypes : Union[str, Dict[str, str]], optional
+            String of type to be considered for all features or
+            Dict of column names and associated types:
             - if 'float' uses transform_quantitative
             - if 'str' uses transform_qualitative,
             default 'str'
@@ -471,6 +471,8 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         self.copy = copy
         if input_dtypes is None:
             input_dtypes = {feature: 'str' for feature in features}
+        if isinstance(input_dtypes, str):
+            input_dtypes = {feature: input_dtypes for feature in features}
         self.input_dtypes = input_dtypes
 
         self.output_dtype = output_dtype
