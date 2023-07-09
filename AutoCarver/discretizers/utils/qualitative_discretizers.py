@@ -377,8 +377,8 @@ class OrdinalDiscretizer(GroupedListDiscretizer):
             input_dtypes = {feature: input_dtypes for feature in features}
         self.input_dtypes = input_dtypes
 
-        self.quantitative_features = [feature for feature, input_type in input_dtypes.items() if input_type == 'float']
-        self.qualitative_features = [feature for feature, input_type in input_dtypes.items() if input_type == 'str']
+        self.quantitative_features = [feature for feature in features if input_dtypes[feature] == 'float']
+        self.qualitative_features = [feature for feature in features if input_dtypes[feature] == 'str']
 
     def prepare_data(self, X: DataFrame, y: Series) -> DataFrame:
         """Called during fit step
@@ -436,18 +436,19 @@ class OrdinalDiscretizer(GroupedListDiscretizer):
             feature: GroupedList([value for value in self.values_orders[feature] if value != self.str_nan])
             for feature in self.features
         }
-
+        
         # for quantitative features getting aliases per quantile
         if any(self.quantitative_features):
             # getting group "name" per quantile
             quantiles_aliases = get_quantiles_aliases(self.quantitative_features, self.values_orders, self.str_nan)
             # getting quantile per group "name"
             aliases_quantiles = get_aliases_quantiles(self.quantitative_features, self.values_orders, self.str_nan)
+
             # applying alliases to known orders
-            known_orders.update({
-                feature: GroupedList([quantiles_aliases[feature][quantile] for quantile in known_orders[feature]])
-                for feature in self.quantitative_features
-            })
+            for feature in self.quantitative_features:
+                known_orders.update({
+                    feature: GroupedList([quantiles_aliases[feature][quantile] for quantile in known_orders[feature]])
+                })
 
         # grouping rare modalities for each feature
         common_modalities = (

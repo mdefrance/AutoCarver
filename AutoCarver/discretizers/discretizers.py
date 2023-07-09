@@ -228,7 +228,7 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
         *,
         ordinal_features: List[str] = None,
         values_orders: Dict[str, Any] = None,
-        input_dtypes: Union[str, Dict[str, str]] = None,
+        input_dtypes: Union[str, Dict[str, str]] = 'str',
         str_nan: str = '__NAN__',
         str_default: str = '__OTHER__',
         copy: bool = False,
@@ -425,7 +425,7 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
         min_freq: float,
         *,
         values_orders: Dict[str, Any] = None,
-        input_dtypes: Union[str, Dict[str, str]] = None,
+        input_dtypes: Union[str, Dict[str, str]] = 'float',
         str_nan: str = '__NAN__',
         copy: bool = False,
         verbose: bool = False,
@@ -463,7 +463,7 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
         self.verbose = verbose
 
         if input_dtypes is None:
-            input_dtypes = {feature: 'str' for feature in self.features}
+            input_dtypes = {feature: 'float' for feature in self.features}
         if isinstance(input_dtypes, str):
             input_dtypes = {feature: input_dtypes for feature in self.features}
         self.input_dtypes = input_dtypes

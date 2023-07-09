@@ -191,44 +191,45 @@ def test_grouped_list_discretizer(x_train: DataFrame, x_test_1: DataFrame, x_tes
     # checking that other columns are left unchanged
     assert all(x_discretized["Quantitative"] == x_discretized["Quantitative"]), "Other columns should not be modified"
 
-    # initiating discretizer with output float
-    discretizer = GroupedListDiscretizer(features, values_orders, str_nan=str_nan, input_dtypes='str', output_dtype='float', copy=True)
-    x_discretized = discretizer.fit_transform(x_train)
 
-    # testing ordinal qualitative feature discretization
-    x_expected = x_train.copy()
-    x_expected["Qualitative_Ordinal"] = x_expected["Qualitative_Ordinal"].replace('Low-', 0)\
-        .replace('Low', 0)\
-        .replace('Low+', 0)\
-        .replace('Medium-', 1)\
-        .replace('Medium', 2)\
-        .replace('Medium+', 3)\
-        .replace('High-', 3)\
-        .replace('High', 3)\
-        .replace('High+', 4)
-    assert all(x_expected["Qualitative_Ordinal"] == x_discretized["Qualitative_Ordinal"]), "incorrect discretization, for output 'float'"
-    
-    # testing ordinal qualitative feature discretization with nans
-    x_expected = x_train.copy()
-    x_expected["Qualitative_Ordinal_lownan"] = x_expected["Qualitative_Ordinal_lownan"].replace('Low-', 0)\
-        .replace('Low', 0)\
-        .replace('Low+', 0)\
-        .replace('Medium-', 1)\
-        .replace('Medium', 2)\
-        .replace('Medium+', 3)\
-        .replace('High-', 3)\
-        .replace('High', 3)\
-        .replace('High+', 4)\
-        .replace(nan, 5)
-    assert all(x_expected["Qualitative_Ordinal_lownan"] == x_discretized["Qualitative_Ordinal_lownan"]), "incorrect discretization with nans, for output 'float'"
+#     # initiating discretizer with output float
+#     discretizer = GroupedListDiscretizer(features, values_orders, str_nan=str_nan, input_dtypes='str', output_dtype='float', copy=True)
+#     x_discretized = discretizer.fit_transform(x_train)
 
-    # testing by adding nan in test set
-    discretizer.transform(x_test_1)
-    x_test_1['Qualitative_Ordinal'] = x_test_1['Qualitative_Ordinal'].replace('High+', nan)
-    with raises(AssertionError):
-        discretizer.transform(x_test_1)
+#     # testing ordinal qualitative feature discretization
+#     x_expected = x_train.copy()
+#     x_expected["Qualitative_Ordinal"] = x_expected["Qualitative_Ordinal"].replace('Low-', 0)\
+#         .replace('Low', 0)\
+#         .replace('Low+', 0)\
+#         .replace('Medium-', 1)\
+#         .replace('Medium', 2)\
+#         .replace('Medium+', 3)\
+#         .replace('High-', 3)\
+#         .replace('High', 3)\
+#         .replace('High+', 4)
+#     assert all(x_expected["Qualitative_Ordinal"] == x_discretized["Qualitative_Ordinal"]), "incorrect discretization, for output 'float'"
 
-    # testing by adding a new value in test set
-    x_test_2['Qualitative_Ordinal'] = x_test_2['Qualitative_Ordinal'].replace('High+', 'High++')
-    with raises(AssertionError):
-        discretizer.transform(x_test_2)
+#     # testing ordinal qualitative feature discretization with nans
+#     x_expected = x_train.copy()
+#     x_expected["Qualitative_Ordinal_lownan"] = x_expected["Qualitative_Ordinal_lownan"].replace('Low-', 0)\
+#         .replace('Low', 0)\
+#         .replace('Low+', 0)\
+#         .replace('Medium-', 1)\
+#         .replace('Medium', 2)\
+#         .replace('Medium+', 3)\
+#         .replace('High-', 3)\
+#         .replace('High', 3)\
+#         .replace('High+', 4)\
+#         .replace(nan, 5)
+#     assert all(x_expected["Qualitative_Ordinal_lownan"] == x_discretized["Qualitative_Ordinal_lownan"]), "incorrect discretization with nans, for output 'float'"
+
+#     # testing by adding nan in test set
+#     discretizer.transform(x_test_1)
+#     x_test_1['Qualitative_Ordinal'] = x_test_1['Qualitative_Ordinal'].replace('High+', nan)
+#     with raises(AssertionError):
+#         discretizer.transform(x_test_1)
+
+#     # testing by adding a new value in test set
+#     x_test_2['Qualitative_Ordinal'] = x_test_2['Qualitative_Ordinal'].replace('High+', 'High++')
+#     with raises(AssertionError):
+#         discretizer.transform(x_test_2)

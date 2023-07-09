@@ -425,6 +425,25 @@ class GroupedList(list):
         return repr
 
 
+
+# TODO: add aliases for str/float with output_dtypes
+#     # converting order to float if requested
+#     output_order = GroupedList(order)  # copy of order
+#     if self.output_dtype == 'float':
+#         # creating GroupedList of ints
+#         output_order = GroupedList(list(range(len(order))))
+
+#         # adding values to each key
+#         for key in output_order:
+#             output_order.update({key: order.get(order[key]) + [key]})
+
+#         # keeping track of the ordering
+#         self.values_orders.update({feature: output_order})  # TODO supprimer faire un converter to float, l'utiliser dans autocarver seulement?
+
+# # converting to float32
+# if self.output_dtype == 'float':
+#     X[self.qualitative_features] = X[self.qualitative_features].astype(float32)
+
 # TODO: add a summary
 # TODO: output a json
 # TODO: add a base discretizer that implements prepare_data (add reset_index ? -> add duplicate column check)
@@ -474,8 +493,8 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         if isinstance(input_dtypes, str):
             input_dtypes = {feature: input_dtypes for feature in features}
         self.input_dtypes = input_dtypes
-
         self.output_dtype = output_dtype
+
         self.verbose = verbose
         self.str_nan = str_nan
 
@@ -615,21 +634,8 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
             # Selected groups (keys)
             order = self.values_orders[feature]
 
-            # converting order to float if requested
-            output_order = GroupedList(order)  # copy of order
-            if self.output_dtype == 'float':
-                # creating GroupedList of ints
-                output_order = GroupedList(list(range(len(order))))
-
-                # adding values to each key
-                for key in output_order:
-                    output_order.update({key: order.get(order[key]) + [key]})
-
-                # keeping track of the ordering
-                self.values_orders.update({feature: output_order})
-
             # values associated to each key
-            group_values = [output_order.get(key) for key in output_order]
+            group_values = [order.get(key) for key in order]
 
             # identifying bucket's key per modality
             values_to_key = [X[feature].isin(discarded) for discarded in group_values]
@@ -640,11 +646,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
 
             # grouping modalities
             else:
-                X[feature] = select(values_to_key, output_order, default=X[feature])
-
-        # converting to float32
-        if self.output_dtype == 'float':
-            X[self.qualitative_features] = X[self.qualitative_features].astype(float32)
+                X[feature] = select(values_to_key, order, default=X[feature])
 
         return X
 
