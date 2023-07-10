@@ -3,5 +3,5 @@
 from AutoCarver.auto_carver import *
 from pytest import fixture
 
-def test_nothing():
-    pass
+def test_auto_carver():
+    assert False, "TODO"
