@@ -18,7 +18,7 @@ def test_quantile_discretizer(x_train: DataFrame):
 
     discretizer = QuantileDiscretizer(features, min_freq, copy=True)
     x_discretized = discretizer.fit_transform(x_train)
-
+    
     assert all(x_discretized.Quantitative.value_counts(normalize=True) == min_freq), "Wrong quantiles"
     assert discretizer.values_orders["Discrete_Quantitative_highnan"] == [2.0, 3.0, 4.0, 7.0, inf, '__NAN__'], "NaNs should be added to the order"
     assert '__NAN__' in x_discretized["Discrete_Quantitative_highnan"].unique(), "NaNs should be filled with the str_nan value"

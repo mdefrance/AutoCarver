@@ -21,6 +21,7 @@ setup(
         "Bug Tracker": "https://github.com/mdefrance/AutoCarver/issues"
     },
     license="MIT",
+    # install_requires= # TODO,
     packages=find_packages(),
     classifiers=[
         # ou 4 - Beta ou 5 - Production/Stable

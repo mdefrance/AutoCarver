@@ -4,7 +4,7 @@ for a binary classification model.
 
 from typing import Any, Dict, List, Union
 
-from numpy import argmin, float32, nan, select, sort, ndarray, inf, array
+from numpy import argmin, float32, nan, select, sort, ndarray, inf, array, isfinite
 from pandas import DataFrame, Series, isna, notna, unique
 from sklearn.base import BaseEstimator, TransformerMixin
 
@@ -426,7 +426,7 @@ class GroupedList(list):
 
 
 
-# TODO: add aliases for str/float with output_dtypes
+# TODO: add labels for str/float with output_dtypes
 #     # converting order to float if requested
 #     output_order = GroupedList(order)  # copy of order
 #     if self.output_dtype == 'float':
@@ -565,8 +565,8 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         DataFrame
             _description_
         """
-        # getting group "name" per quantile
-        quantiles_aliases = get_quantiles_aliases(self.quantitative_features, self.values_orders, self.str_nan)
+        # converting potential quantiles into there respective labels
+        known_orders = convert_to_labels(self.features, self.quantitative_features, self.values_orders, self.str_nan)
 
         # dataset length
         x_len = X.shape[0]
@@ -575,28 +575,30 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
             if self.verbose:  # verbose if requested
                 print(f" - [GroupedListDiscretizer] Transform Qualitative {feature} ({n+1}/{len(self.quantitative_features)})")
 
-            nans = isna(X[feature])  # keeping track of nans
+            # keeping track of nans
+            nans = isna(X[feature])
 
-            # quantiles ordering for the feature
-            order = self.values_orders[feature]
+            # feature's labels associated to each quantile
+            feature_labels = known_orders[feature]
 
-            # filtering out nan if any
-            quantiles = list(order)
-            if self.str_nan in quantiles:
-                quantiles = [val for val in quantiles if val != self.str_nan]
+            # quantiles ordering of the feature (can not mix str and floats for comparison purposes)
+            feature_quantiles = self.values_orders[feature]
+            if self.str_nan in feature_quantiles:  # filtering out nans if any
+                feature_quantiles= [val for val in feature_quantiles if val != self.str_nan]
 
             # list of masks of values to replace with there respective group
-            values_to_group = [X[feature] <= q for q in quantiles]
+            values_to_group = [X[feature] <= q for q in feature_quantiles]
 
             # corressponding group for each value
-            group_key = [[quantiles_aliases[feature][quantile]] * x_len for quantile in quantiles if quantile != self.str_nan] 
+            group_labels = [[label] * x_len for label in feature_labels] 
             
-            # grouping values into groups
-            X[feature] = select(values_to_group, group_key, default=X[feature])
+            # checking for values to group
+            if len(values_to_group) > 0:
+                X[feature] = select(values_to_group, group_labels, default=X[feature])
 
             # converting nans
             if any(nans):
-                assert self.str_nan in order, f"Unexpected value! Missing values found for feature '{feature}' at transform step but not during fit. There might be new values in your test/dev set. Consider taking a bigger test/dev set or dropping the column {feature}."
+                assert self.str_nan in self.values_orders[feature], f"Unexpected value! Missing values found for feature '{feature}' at transform step but not during fit. There might be new values in your test/dev set. Consider taking a bigger test/dev set or dropping the column {feature}."
                 X.loc[nans, feature] = self.str_nan
 
         return X
@@ -631,26 +633,86 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
             if self.verbose:  # verbose if requested
                 print(f" - [GroupedListDiscretizer] Transform Qualitative {feature} ({n+1}/{len(self.qualitative_features)})")
 
-            # Selected groups (keys)
-            order = self.values_orders[feature]
+            # Group labels are the keys of the contained dict attribute (list elements)
+            group_labels = self.values_orders[feature]
 
-            # values associated to each key
-            group_values = [order.get(key) for key in order]
+            # Group of values to discard are the corresponding values of the contained dict attribute
+            groups_to_discard = [group_labels.get(key) for key in group_labels]
 
             # identifying bucket's key per modality
-            values_to_key = [X[feature].isin(discarded) for discarded in group_values]
+            values_to_group = [X[feature].isin(group_to_discard) for group_to_discard in groups_to_discard]
 
-            # case when there are no values
-            if len(values_to_key) == 0 & len(values_to_key) == 0:
-                pass
-
-            # grouping modalities
-            else:
-                X[feature] = select(values_to_key, order, default=X[feature])
+            # checking for values to group
+            if len(values_to_group) > 0:
+            	X[feature] = select(values_to_group, group_labels, default=X[feature])
 
         return X
 
-def min_value_counts(x: Series, dropna: bool = False, normalize: bool = True) -> float:
+
+def convert_to_labels(
+    features: List[str],
+    quantitative_features: List[str],
+    values_orders: Dict[str, GroupedList],
+    str_nan: str,
+    dropna: bool = True,
+) -> Dict[str, GroupedList]:
+    """Converts a values_orders values to labels (quantiles)"""
+
+    # copying values_orders without nans
+    known_orders = {
+        feature: GroupedList([value for value in values_orders[feature] if value != str_nan])
+        for feature in features
+    }
+
+    # for quantitative features getting labels per quantile
+    if any(quantitative_features):
+        # getting group "name" per quantile
+        quantiles_labels = get_quantiles_labels(quantitative_features, values_orders, str_nan)
+
+        # applying alliases to known orders
+        for feature in quantitative_features:
+            known_orders.update({
+                feature: GroupedList([quantiles_labels[feature][quantile] for quantile in known_orders[feature]])
+            })
+
+    # adding back nans if requested
+    if not dropna:
+    	for feature in features:
+    		if str_nan in values_orders[feature]:
+    			order = known_orders[feature]
+    			order.append(str_nan)  # adding back nans at the end of the order
+    			known_orders.update({feature: order})
+            
+    return known_orders
+
+def convert_to_values(
+	feature: str,
+    labels: List[str],
+    quantitative_features: List[str],
+    values_orders: Dict[str, GroupedList],
+    str_nan: str,
+) -> List[float]:
+    """Converts a list of labels into the corresponding values (quantiles)
+
+    TODO: do not use, call to get_labels_quantiles to often
+    """
+    
+    # copying labels
+    values = labels[:]
+
+    # for quantitative features getting labels per quantile
+    if any(quantitative_features):
+        # getting quantile per group "name"
+        labels_quantiles = get_labels_quantiles(quantitative_features, values_orders, str_nan)
+
+    # for quantitative features getting quantile per alias
+    if feature in quantitative_features:
+        # getting raw quantiles to be grouped
+        values = [labels_quantiles[feature][val] for val in values]
+            
+    return values
+
+def min_value_counts(x: Series, values_orders: Dict[str, GroupedList] = None, dropna: bool = False, normalize: bool = True) -> float:
     """Minimum of modalities' frequencies.
 
     Parameters
@@ -667,6 +729,11 @@ def min_value_counts(x: Series, dropna: bool = False, normalize: bool = True) ->
     """
     # modality frequency
     values = x.value_counts(dropna=dropna, normalize=normalize)
+
+    # setting indices
+    order = values_orders.get(x.name)
+    if order is not None:
+        values = values.reindex(order).fillna(0)
 
     # minimal frequency
     min_values = values.values.min()
@@ -774,7 +841,7 @@ def is_equal(a: Any, b: Any) -> bool:
 
     return equal
 
-def get_aliases(quantiles: List[float], str_nan: str) -> List[str]:
+def get_labels(quantiles: List[float], str_nan: str) -> List[str]:
     """_summary_
 
     Parameters
@@ -794,13 +861,17 @@ def get_aliases(quantiles: List[float], str_nan: str) -> List[str]:
     # filtering out nan for formatting
     if str_nan in quantiles:
         quantiles = [val for val in quantiles if val != str_nan]
-        
+
+    # filtering out inf for formatting
+    if inf in quantiles:
+        quantiles = [val for val in quantiles if isfinite(val)]
+
     # converting quantiles in string
-    aliases = format_quantiles(quantiles[:-1])  # removing inf
+    labels = format_quantiles(quantiles)
 
-    return aliases
+    return labels
 
-def get_quantiles_aliases(features: List[str], values_orders: Dict[str, GroupedList], str_nan: str) -> Dict[str, GroupedList]:
+def get_quantiles_labels(features: List[str], values_orders: Dict[str, GroupedList], str_nan: str) -> Dict[str, GroupedList]:
     """Converts a values_orders of quantiles into a values_orders of string quantiles
 
     Parameters
@@ -818,16 +889,16 @@ def get_quantiles_aliases(features: List[str], values_orders: Dict[str, GroupedL
         _description_
     """
     # applying quantiles formatting to orders of specified features
-    quantiles_aliases = {}
+    quantiles_to_labels = {}
     for feature in features:
         quantiles = list(values_orders[feature])
-        aliases = get_aliases(quantiles, str_nan)
-        # associates quantiles to their respective aliases
-        quantiles_aliases.update({feature: {quantile: alias for quantile, alias in zip(quantiles, aliases)}})
+        labels = get_labels(quantiles, str_nan)
+        # associates quantiles to their respective labels
+        quantiles_to_labels.update({feature: {quantile: alias for quantile, alias in zip(quantiles, labels)}})
 
-    return quantiles_aliases
+    return quantiles_to_labels
 
-def get_aliases_quantiles(features: List[str], values_orders: Dict[str, GroupedList], str_nan: str) -> Dict[str, GroupedList]:
+def get_labels_quantiles(features: List[str], values_orders: Dict[str, GroupedList], str_nan: str) -> Dict[str, GroupedList]:
     """Converts a values_orders of quantiles into a values_orders of string quantiles
 
     Parameters
@@ -845,14 +916,14 @@ def get_aliases_quantiles(features: List[str], values_orders: Dict[str, GroupedL
         _description_
     """
     # applying quantiles formatting to orders of specified features
-    aliases_quantiles = {}
+    labels_to_quantiles = {}
     for feature in features:
         quantiles = list(values_orders[feature])
-        aliases = get_aliases(quantiles, str_nan)
-        # associates quantiles to their respective aliases
-        aliases_quantiles.update({feature: {alias: quantile for quantile, alias in zip(quantiles, aliases)}})
+        labels = get_labels(quantiles, str_nan)
+        # associates quantiles to their respective labels
+        labels_to_quantiles.update({feature: {alias: quantile for quantile, alias in zip(quantiles, labels)}})
 
-    return aliases_quantiles 
+    return labels_to_quantiles 
 
 def format_quantiles(a_list: List[float]) -> List[str]:
     """Formats a list of float quantiles into a list of boundaries.

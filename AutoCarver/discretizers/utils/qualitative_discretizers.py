@@ -12,8 +12,8 @@ from .base_discretizers import (
     nan_unique,
     check_new_values,
     check_missing_values,
-    get_quantiles_aliases,
-    get_aliases_quantiles,
+    convert_to_labels,
+    get_labels_quantiles,
 )
 from numpy import nan, select, argmin
 from pandas import DataFrame, Series, notna, unique, isna
@@ -61,14 +61,11 @@ class DefaultDiscretizer(GroupedListDiscretizer):
             values_orders = {}
         self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
 
-        self.str_default = str_default[:]
-        self.str_nan = str_nan[:]
+        self.str_default = str_default
+        self.str_nan = str_nan
 
         self.copy = copy
         self.verbose = verbose
-
-        # dict of features and corresponding kept modalities
-        self.to_keep: Dict[str, Any] = {}
 
     def prepare_data(self, X: DataFrame, y: Series) -> DataFrame:
         """Called during fit step
@@ -102,7 +99,7 @@ class DefaultDiscretizer(GroupedListDiscretizer):
                 self.values_orders[feature].append(self.str_nan)
         
         # filling up NaNs
-        Xc = X[self.features].fillna(self.str_nan)
+        x_copy = X[self.features].fillna(self.str_nan)
 
         # checking for binary target
         y_values = unique(y)
@@ -111,7 +108,7 @@ class DefaultDiscretizer(GroupedListDiscretizer):
         ), "y must be a binary Series (int or float, not object)"
         assert len(y_values) == 2, "y must be a binary Series (int or float, not object)"
 
-        return Xc
+        return x_copy
 
 
     def fit(self, X: DataFrame, y: Series) -> None:
@@ -124,40 +121,49 @@ class DefaultDiscretizer(GroupedListDiscretizer):
         y : Series
             _description_
         """
-        # checking data before bucketization
-        Xc = self.prepare_data(X, y)
+        # copying dataframe and checking data before bucketization
+        x_copy = self.prepare_data(X, y)
 
         # computing frequencies of each modality
-        frequencies = Xc.apply(value_counts, normalize=True, axis=0)
+        frequencies = x_copy.apply(value_counts, normalize=True, axis=0)
         
         for n, feature in enumerate(self.features):
             if self.verbose:  # verbose if requested
                 print(f" - [DefaultDiscretizer] Fit {feature} ({n+1}/{len(self.features)})")
+
             # sorting orders based on target rates
             order = self.values_orders[feature]
                                   
             # checking for rare values
-            rare_values = [val for val, freq in frequencies[feature].items() if freq < self.min_freq]
-            if any(rare_values):
+            values_to_group = [val for val, freq in frequencies[feature].items() if freq < self.min_freq and val != self.str_nan]
+            if any(values_to_group):
                  # adding default value to the order
                 order.append(self.str_default)
 
                 # grouping rare values in default value
-                order.group_list(rare_values, self.str_default)
-                Xc.loc[Xc[feature].isin(rare_values), feature] = self.str_default 
+                order.group_list(values_to_group, self.str_default)
+                x_copy.loc[x_copy[feature].isin(values_to_group), feature] = self.str_default 
 
                 # updating values_orders
                 self.values_orders.update({feature: order})
 
         # computing target rate per modality for ordering
-        target_rates = Xc.apply(target_rate, y=y, ascending=True, axis=0)
+        target_rates = x_copy.apply(target_rate, y=y, ascending=True, axis=0)
         
+        # sorting orders based on target rates
         for feature in self.features:
-            # sorting orders based on target rates
             order = self.values_orders[feature]
 
-            # updating values_orders
-            self.values_orders.update({feature: order.sort_by(list(target_rates[feature]))})
+            # new ordering according to target rate
+            new_order = list(target_rates[feature])
+
+            # leaving NaNs at the end of the list
+            if self.str_nan in new_order:
+            	new_order.remove(self.str_nan)
+            	new_order += [self.str_nan]
+
+            # sorting order updating values_orders
+            self.values_orders.update({feature: order.sort_by(new_order)})
 
         # discretizing features based on each feature's values_order
         super().__init__(
@@ -167,7 +173,7 @@ class DefaultDiscretizer(GroupedListDiscretizer):
             output_dtype='str',
             str_nan=self.str_nan,
         )
-        super().fit(Xc, y)
+        super().fit(X, y)
 
         return self
     
@@ -239,7 +245,7 @@ class ChainedDiscretizer(GroupedListDiscretizer):
             _description_
         """
         # filling nans
-        Xc = X[self.features].fillna(self.str_nan)
+        x_copy = X[self.features].fillna(self.str_nan)
 
         # iterating over each feature
         for n, feature in enumerate(self.features):
@@ -248,7 +254,7 @@ class ChainedDiscretizer(GroupedListDiscretizer):
                 print(f" - [ChainedDiscretizer] Fit {feature} ({n+1}/{len(self.features)})")
 
             # computing frequencies of each modality
-            frequencies = Xc[feature].value_counts(normalize=True)
+            frequencies = x_copy[feature].value_counts(normalize=True)
             values, frequencies = frequencies.index, frequencies.values
 
             # checking for unknown values (values to present in an order of self.chained_orders)
@@ -289,11 +295,11 @@ class ChainedDiscretizer(GroupedListDiscretizer):
 
                 # values of the series to input
                 df_to_input = [
-                    Xc[feature] == discarded for discarded in to_discard
+                    x_copy[feature] == discarded for discarded in to_discard
                 ]  # identifying observation to input
 
                 # inputing non frequent values
-                Xc[feature] = select(df_to_input, value_to_group, default=Xc[feature])
+                x_copy[feature] = select(df_to_input, value_to_group, default=x_copy[feature])
 
                 # historizing in the feature's order
                 for discarded, kept in zip(to_discard, value_to_group):
@@ -301,7 +307,7 @@ class ChainedDiscretizer(GroupedListDiscretizer):
 
                 # updating frequencies of each modality for the next ordering
                 frequencies = (
-                    Xc[feature]
+                    x_copy[feature]
                     .value_counts(dropna=False, normalize=True)
                     .drop(nan, errors="ignore")
                 )  # dropping nans to keep them anyways
@@ -380,6 +386,8 @@ class OrdinalDiscretizer(GroupedListDiscretizer):
         self.quantitative_features = [feature for feature in features if input_dtypes[feature] == 'float']
         self.qualitative_features = [feature for feature in features if input_dtypes[feature] == 'str']
 
+
+
     def prepare_data(self, X: DataFrame, y: Series) -> DataFrame:
         """Called during fit step
 
@@ -431,24 +439,8 @@ class OrdinalDiscretizer(GroupedListDiscretizer):
         # checking values orders
         x_copy = self.prepare_data(X, y)
 
-        # copying values_orders without nans
-        known_orders = {
-            feature: GroupedList([value for value in self.values_orders[feature] if value != self.str_nan])
-            for feature in self.features
-        }
-        
-        # for quantitative features getting aliases per quantile
-        if any(self.quantitative_features):
-            # getting group "name" per quantile
-            quantiles_aliases = get_quantiles_aliases(self.quantitative_features, self.values_orders, self.str_nan)
-            # getting quantile per group "name"
-            aliases_quantiles = get_aliases_quantiles(self.quantitative_features, self.values_orders, self.str_nan)
-
-            # applying alliases to known orders
-            for feature in self.quantitative_features:
-                known_orders.update({
-                    feature: GroupedList([quantiles_aliases[feature][quantile] for quantile in known_orders[feature]])
-                })
+        # converting potential quantiles into there labels
+        known_orders = convert_to_labels(self.features, self.quantitative_features, self.values_orders, self.str_nan)
 
         # grouping rare modalities for each feature
         common_modalities = (
@@ -463,27 +455,32 @@ class OrdinalDiscretizer(GroupedListDiscretizer):
             )
         )
 
+        # for quantitative features getting labels per quantile
+        if any(self.quantitative_features):
+            # getting quantile per group "name"
+            labels_to_quantiles = get_labels_quantiles(self.quantitative_features, self.values_orders, self.str_nan)
+
         # updating feature orders (that keeps NaNs and quantiles)
         for feature in self.features:
             # initial complete ordering with NAN and quantiles
             order = self.values_orders[feature]
 
             # checking for grouped modalities
-            grouped_modalities = common_modalities[feature].contained
+            groups_to_discard = common_modalities[feature].contained
 
             # grouping the raw quantile values
-            for kept, discarded in grouped_modalities.items():
+            for kept_value, group_to_discard in groups_to_discard.items():
 
                 # for qualitative features grouping as is
                 # for quantitative features getting quantile per alias
                 if feature in self.quantitative_features:
                     # getting raw quantiles to be grouped
-                    discarded = [aliases_quantiles[feature][discard] for discard in discarded]
+                    group_to_discard = [labels_to_quantiles[feature][label_discarded] for label_discarded in group_to_discard]
                     # keeping the largest value amongst the discarded (otherwise they wont be grouped)
-                    kept = max(discarded)
+                    kept_value = max(group_to_discard)
 
                 # grouping quantiles
-                order.group_list(discarded, kept)
+                order.group_list(group_to_discard, kept_value)
             
             # updating ordering
             self.values_orders.update({feature: order})

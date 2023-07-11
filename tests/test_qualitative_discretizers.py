@@ -6,7 +6,7 @@ from pytest import raises
 
 def test_chained_discretizer():
     """TODO"""
-    pass
+    assert False, "TODO"
 
 
 def test_default_discretizer(x_train: DataFrame):
@@ -68,20 +68,24 @@ def test_default_discretizer(x_train: DataFrame):
     assert discretizer.values_orders['Qualitative_Ordinal'].contained == groupedlist_ordinal.contained, "Column names of values_orders not provided if features should not be discretized."
     quali_expected = {
         '__OTHER__': ['Category A', '__OTHER__'],
-         'Category C': ['Category C'],
-         'Category F': ['Category F'],
-         'Category E': ['Category E'],
-         'Category D': ['Category D']
+        'Category C': ['Category C'],
+        'Category F': ['Category F'],
+        'Category E': ['Category E'],
+        'Category D': ['Category D']
     }
+    quali_expected_order = ['Category D', '__OTHER__', 'Category F', 'Category C', 'Category E']
+    assert discretizer.values_orders['Qualitative'] == quali_expected_order, "Incorrect ordering by target rate"
     assert discretizer.values_orders['Qualitative'].contained == quali_expected, "Values less frequent than min_freq should be grouped into default_value"
     quali_lownan_expected = {
-        '__OTHER__': ['__NAN__', '__OTHER__'],
-         'Category C': ['Category C'],
-         'Category F': ['Category F'],
-         'Category E': ['Category E'],
-         'Category D': ['Category D']
+        '__NAN__': ['__NAN__'],
+        'Category C': ['Category C'],
+        'Category F': ['Category F'],
+        'Category E': ['Category E'],
+        'Category D': ['Category D']
     }
-    assert discretizer.values_orders['Qualitative_lownan'].contained == quali_lownan_expected, "If any, NaN values should be put into str_nan"
+    quali_lownan_expected_order = ['Category D', 'Category F', 'Category C', 'Category E', '__NAN__']
+    assert discretizer.values_orders['Qualitative_lownan'] == quali_lownan_expected_order, "Incorrect ordering by target rate"
+    assert discretizer.values_orders['Qualitative_lownan'].contained == quali_lownan_expected, "If any, NaN values should be put into str_nan and kept by themselves"
     quali_highnan_expected = {
         '__OTHER__': ['Category A', '__OTHER__'],
         'Category C': ['Category C'],
@@ -89,8 +93,11 @@ def test_default_discretizer(x_train: DataFrame):
         'Category E': ['Category E'],
         'Category D': ['Category D']
     }
-    assert discretizer.values_orders['Qualitative_highnan'].contained == quali_highnan_expected, "If any, NaN values should be put into str_nan"
-    assert discretizer.values_orders['Qualitative_grouped'].contained == groupedlist_grouped.contained, "Grouped values should stay grouped"
+    quali_highnan_expected_order = ['Category D', '__OTHER__', 'Category C', 'Category E', '__NAN__']
+    assert discretizer.values_orders['Qualitative_highnan'] == quali_highnan_expected_order, "Incorrect ordering by target rate"
+    assert discretizer.values_orders['Qualitative_highnan'].contained == quali_highnan_expected, "If any, NaN values should be put into str_nan and kept by themselves"
+
+    assert discretizer.values_orders['Qualitative_grouped'].contained == groupedlist_grouped.contained, "Grouped values should keep there group"
 
 
 def test_ordinal_discretizer(x_train: DataFrame):

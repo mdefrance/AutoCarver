@@ -63,7 +63,7 @@ class Discretizer(GroupedListDiscretizer):
         min_freq: float,
         *,
         ordinal_features: List[str] = None,
-        values_orders: Dict[str, Any] = None,
+        values_orders: Dict[str, GroupedList] = None,
         copy: bool = False,
         verbose: bool = False,
         str_nan: str = '__NAN__',
@@ -81,7 +81,7 @@ class Discretizer(GroupedListDiscretizer):
             _description_
         ordinal_features : List[str], optional
             _description_, by default None
-        values_orders : Dict[str, Any], optional
+        values_orders : Dict[str, GroupedList], optional
             _description_, by default None
         input_dtypes : Union[str, Dict[str, str]], optional
             String of type to be considered for all features or
@@ -109,7 +109,7 @@ class Discretizer(GroupedListDiscretizer):
         ), "Column duplicates in qualitative_features"
         
         if ordinal_features is None:
-            ordinal_features = {}
+            ordinal_features = []
         self.ordinal_features = ordinal_features[:]
         if values_orders is None:
             values_orders = {}
@@ -510,7 +510,7 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
         # [Quantitative features] Grouping rare quantiles into closest common one
         #  -> can exist because of overrepresented values (values more frequent than 1/q)
         # searching for features with rare quantiles: computing min frequency per feature
-        frequencies = Xc[self.features].apply(min_value_counts, axis=0)
+        frequencies = Xc[self.features].apply(min_value_counts, values_orders=self.values_orders, axis=0)
 
         # minimal frequency of a quantile
         q_min_freq = self.min_freq / 2

@@ -5,7 +5,8 @@ for a binary classification model.
 from typing import Any, Dict, List, Tuple
 
 from .discretizers.utils.base_discretizers import GroupedList, GroupedListDiscretizer, is_equal
-from IPython.display import display_html
+from .discretizers.discretizers import Discretizer
+from IPython.display import display_html  # TODO: remove this
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.pyplot import subplots
@@ -112,39 +113,55 @@ class AutoCarver(GroupedListDiscretizer):
 
     def __init__(
         self,
-        values_orders: Dict[str, Any],
+        quantitative_features: List[str],
+        qualitative_features: List[str],
+        min_freq: float,
         *,
+        ordinal_features: List[str] = None,
+        values_orders: Dict[str, GroupedList] = None,
         max_n_mod: int = 5,
         sort_by: str = "tschuprowt",
         str_nan: str = "__NAN__",
+        str_default: str = '__OTHER__',
         dropna: bool = True,
         copy: bool = False,
         verbose: bool = True,
     ) -> None:
-        """_summary_
 
-        Parameters
-        ----------
-        values_orders : Dict[str, Any]
-            _description_
-        max_n_mod : int, optional
-            _description_, by default 5
-        sort_by : str, optional
-            _description_, by default "tschuprowt"
-        str_nan : str, optional
-            _description_, by default "__NAN__"
-        dropna : bool, optional
-            _description_, by default True
-        copy : bool, optional
-            _description_, by default False
-        verbose : bool, optional
-            _description_, by default True
-        """
-        self.features = list(values_orders.keys())
+        # copying quantitative features and checking for duplicates
+        self.quantitative_features = quantitative_features[:]
+        assert len(list(set(quantitative_features))) == len(
+            quantitative_features
+        ), "Column duplicates in quantitative_features"
+
+        # copying qualitative features and checking for duplicates
+        self.qualitative_features = qualitative_features[:]
+        assert len(list(set(qualitative_features))) == len(
+            qualitative_features
+        ), "Column duplicates in qualitative_features"
+        
+        # copying ordinal features and checking for duplicates
+        if ordinal_features is None:
+            ordinal_features = []
+        self.ordinal_features = ordinal_features[:]
+        assert len(list(set(ordinal_features))) == len(
+            ordinal_features
+        ), "Column duplicates in ordinal_features"
+
+        # initiating values_orders
+        if values_orders is None:
+            values_orders = {}
         self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
-        self.non_viable_features: List[str] = []  # list of features non viable features
-        self.max_n_mod = max_n_mod  # maximum number of modality per feature
-        self.dropna = dropna  # whether or not to group NaNs with other modalities
+
+        # list of all features
+        self.features = list(set(quantitative_features + qualitative_features + ordinal_features))
+
+        # minimum frequency per base bucket
+        self.min_freq = min_freq
+        # maximum number of modality per feature
+        self.max_n_mod = max_n_mod
+        # whether or not to group NaNs with other modalities
+        self.dropna = dropna
 
         # association measure used to find the best groups
         measures = ["tschuprowt", "cramerv"]
@@ -157,6 +174,7 @@ class AutoCarver(GroupedListDiscretizer):
         self.copy = copy
         self.verbose = verbose
         self.str_nan = str_nan
+        self.str_default = str_default
 
     def prepare_data(
         self,
@@ -164,7 +182,7 @@ class AutoCarver(GroupedListDiscretizer):
         y: Series,
         X_test: DataFrame = None,
         y_test: Series = None,
-    ) -> Tuple[DataFrame, Series, DataFrame, Series]:
+    ) -> Tuple[DataFrame, DataFrame]:
         """Checks validity of provided data"""
 
         # preparing train sample
@@ -175,16 +193,10 @@ class AutoCarver(GroupedListDiscretizer):
         ), "y must be a binary Series (int or float, not object)"
         assert len(y_values) == 2, "y must be a binary Series (int or float, not object)"
 
-        # checking for quantitative columns
-        is_object = X[self.features].dtypes.apply(is_string_dtype)
-        assert all(
-            is_object
-        ), f"Non-string features in X: {', '.join(is_object[~is_object].index)}, consider using Discretizer."
-
         # Copying DataFrame if requested
-        Xc = X
+        x_copy = X
         if self.copy:
-            Xc = X.copy()
+            x_copy = X.copy()
 
         # preparing test sample
         # checking for binary target
@@ -197,11 +209,11 @@ class AutoCarver(GroupedListDiscretizer):
             assert len(y_values) == 2, "y_test must be a binary Series (int or float, not object)"
 
         # Copying DataFrame if requested
-        Xtestc = X_test
+        x_test_copy = X_test
         if X_test is not None:
             assert y_test is not None, "X_test was provided but y_test is missing"
             if self.copy:
-                Xtestc = X_test.copy()
+                x_test_copy = X_test.copy()
 
             # checking for quantitative columns
             is_object = X_test[self.features].dtypes.apply(is_string_dtype)
@@ -209,7 +221,7 @@ class AutoCarver(GroupedListDiscretizer):
                 is_object
             ), f"Non-string features in X_test: {', '.join(is_object[~is_object].index)}, consider using Discretizer."
 
-        return Xc, y, Xtestc, y_test
+        return x_copy, x_test_copy
 
     def fit(
         self,
@@ -232,31 +244,46 @@ class AutoCarver(GroupedListDiscretizer):
             _description_, by default None
         """
         # preparing datasets and checking for wrong values
-        Xc, y, Xtestc, y_test = self.prepare_data(X, y, X_test, y_test)
+        x_copy, x_test_copy = self.prepare_data(X, y, X_test, y_test)
 
-        # automatic carving of each feature
-        for n, feature in tqdm(
-            enumerate(self.features),
-            total=len(self.features),
-            disable=self.verbose,
-        ):
-            # printing the group statistics and determining default ordering
-            if self.verbose:
+        # discretizing all features
+        discretizer = Discretizer(
+            quantitative_features = self.quantitative_features,
+            qualitative_features = self.qualitative_features,
+            min_freq = self.min_freq,
+            ordinal_features = self.ordinal_features,
+            values_orders = self.values_orders,
+            str_nan = self.str_nan,
+            str_default = self.str_default,
+            copy = False,
+            verbose = self.verbose,
+        )
+        x_copy = discretizer.fit_transform(x_copy, y)
+        if x_test_copy is not None:
+            x_test_copy = discretizer.transform(x_test_copy, y_test)
+
+        # updating values_orders according to base bucketization
+        self.values_orders.update(discretizer.values_orders)
+
+        # optimal butcketization/carving of each feature
+        # if not self.verbose:
+        # best_groups = X.apply(self.get_best_combination(feature, X, y, X_test=X_test, y_test=y_test))
+        for n, feature in enumerate(self.features):
+            if self.verbose:  # verbose if requested
                 print(f"\n---\n[AutoCarver] Fit {feature} ({n+1}/{len(self.features)})")
 
             # getting best combination
-            best_groups = self.get_best_combination(feature, Xc, y, X_test=Xtestc, y_test=y_test)
-
-            # feature can not be carved robustly
-            if not bool(best_groups):
-                self.non_viable_features += [feature]  # adding it to list of non viable features
+            self.get_best_combination(feature, x_copy, y, X_test=x_test_copy, y_test=y_test)
 
         # discretizing features based on each feature's values_order
         super().__init__(
-            self.values_orders,
-            str_nan=self.str_nan,
+            features=self.features,
+            values_orders=self.values_orders,
             copy=self.copy,
-            output='float',
+            input_dtypes=discretizer.input_dtypes,
+            output_dtype='float',
+            str_nan=self.str_nan,
+            verbose=self.verbose,
         )
         super().fit(X, y)
 
@@ -301,15 +328,14 @@ class AutoCarver(GroupedListDiscretizer):
         if X_test is not None:
             xtab_test = nan_crosstab(X_test[feature], y_test, self.str_nan)
 
-        # printing the group statistics
-        if self.verbose:
+        if self.verbose:  # printing the group statistics
             self.display_xtabs(feature, "Raw", xtab, xtab_test)
 
         # measuring association with target for each combination and testing for stability on TEST
         best_groups = None
         if xtab.shape[0] > 2:  # checking that there are modalities
             best_groups = best_combination(
-                self.values_orders.get(feature),
+                self.values_orders[feature],
                 self.max_n_mod,
                 self.sort_by,
                 xtab,
@@ -402,7 +428,7 @@ class AutoCarver(GroupedListDiscretizer):
         """Pretty display of frequency and target rate per modality on the same line."""
 
         # known_order per feature
-        known_order = self.values_orders.get(feature)
+        known_order = self.values_orders[feature]
 
         # target rate and frequency on TRAIN
         train_stats = stats_xtab(xtab, known_order)
@@ -701,96 +727,65 @@ def get_all_nan_combinations(order: GroupedList, str_nan: str, max_n_mod: int) -
 
     return new_combinations
 
+def combinations_at_index(start_idx, order, nb_remaining_groups, min_group_size=1):
+    """Gets all possible combinations of sizes up to the last element of a list"""
+    
+    # iterating over each possible length of groups
+    for size in range(min_group_size, len(order) + 1):
+        next_idx = start_idx + size  # index from which to start the next group
+        
+        # checking that next index is not off the order list
+        if next_idx < len(order) + 1:
+            # checking that there are remaining groups or that it is the last group
+            if (nb_remaining_groups > 1) | (next_idx == len(order)):
+                combination = list(order[start_idx : next_idx])
+                yield (combination, next_idx, nb_remaining_groups - 1)
 
-def consecutive_combinations(
-    n_remaining: int, start: int, end: int, grp_for_this_step: list = None
-) -> None:
-    """HELPER finds all consecutive combinations between start and end."""
+def consecutive_combinations(raw_order, max_group_size, min_group_size = 1, nb_remaining_group = None, current_combination = None, next_index = None, all_combinations = None):
+    """Computes all possible combinations of values of order up to max_group_size."""
 
-    # Import de la liste globale
-    global __li_of_res__
+    # initiating recursive attributes
+    if current_combination is None:
+        current_combination = []
+    if next_index is None:
+        next_index = 0
+    if nb_remaining_group is None:
+        nb_remaining_group = max_group_size
+    if all_combinations is None:
+        all_combinations = []
+    
+    # getting combinations for next index
+    next_combinations = [elt for elt in combinations_at_index(next_index, raw_order, nb_remaining_group, min_group_size)]
+    
+    # stop case: no next_combinations possible -> adding to all_combinations
+    if len(next_combinations) == 0 and min_group_size < len(current_combination) <= max_group_size:
+        # saving up combination
+        all_combinations += [current_combination]
+        
+        # resetting remaining number of groups
+        nb_remaining_group = max_group_size
+        
 
-    # initiating group
-    if not grp_for_this_step:
-        grp_for_this_step = []
-
-    # stopping when there are non more remaining classes
-    if n_remaining == 0:
-        ### On ajoute le dernier quantile restant au découpage ###
-        grp_for_this_step += [(start, end)]
-
-        ### Ajout du découpage réalisé au groupe des solutions ###
-        __li_of_res__ += [grp_for_this_step]
-
-    # adding all possible combinations of each possible range
-    else:
-        ### Parcours de toutes les valeurs possibles de fin pour le i-ème groupe du groupement à x quantiles ###
-        for i in range(start, end):
-            consecutive_combinations(n_remaining - 1, i + 1, end, grp_for_this_step + [(start, i)])
-
-
-def get_combinations(n_class: int, q: int) -> List[List[str]]:
-    """HELPER recupération des combinaisons possibles de q quantiles pour n_class."""
-
-    globals()["__li_of_res__"] = []
-
-    consecutive_combinations(n_class - 1, 0, q - 1)
-
-    combinations = [
-        list(
-            map(
-                lambda u: (
-                    str(u[0]).zfill(len(str(q - 1))),
-                    str(u[1]).zfill(len(str(q - 1))),
-                ),
-                l,
-            )
+    # otherwise: adding all next_combinations to the current_combination
+    for combination, next_index, current_nb_remaining_group in next_combinations:
+        
+        # going a rank further in the raw_xtab 
+        consecutive_combinations(
+            raw_order,
+            max_group_size,
+            min_group_size=min_group_size,
+            nb_remaining_group=current_nb_remaining_group,
+            current_combination=current_combination + [combination],
+            next_index=next_index,
+            all_combinations=all_combinations,
         )
-        for l in __li_of_res__
-    ]
-
-    return combinations
+    
+    return all_combinations
 
 
-def association_xtab(xtab: DataFrame) -> Dict[str, float]:
-    """Computes measures of association between feature x and feature2."""
-
-    # numnber of observations
-    n_obs = xtab.sum().sum()
-
-    # number of values taken by the features
-    n_mod_x, n_mod_y = len(xtab.index), len(xtab.columns)
-    min_n_mod = min(n_mod_x, n_mod_y)
-
-    # Chi2 statistic
-    chi2 = chi2_contingency(xtab)[0]
-
-    # Cramer's V
-    cramerv = 0
-    if min_n_mod > 1:
-        cramerv = sqrt(chi2 / n_obs / (min_n_mod - 1))
-
-    # Tschuprow's T
-    dof_mods = sqrt((n_mod_x - 1) * (n_mod_y - 1))
-    tschuprowt = 0
-    if dof_mods > 0:
-        tschuprowt = sqrt(chi2 / n_obs / dof_mods)
-
-    results = {"cramerv": cramerv, "tschuprowt": tschuprowt}
-
-    return results
 
 
-def nan_crosstab(x: Series, y: Series, str_nan: str = "__NAN__"):
-    """Crosstab that keeps nans as a specific value"""
 
-    # keeping NaNs as a specific modality
-    x_filled = x.fillna(str_nan)  # filling NaNs
-
-    # computing initial crosstabs
-    xtab = crosstab(x_filled, y)
-
-    return xtab
 
 
 def plot_stats(stats: DataFrame) -> Tuple[Figure, Axes]:
