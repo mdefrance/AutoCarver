@@ -4,7 +4,7 @@ for a binary classification model.
 
 from typing import Any, Dict, List, Union
 
-from numpy import nan, select, sort, ndarray, inf, array, isfinite
+from numpy import array, inf, isfinite, nan, ndarray, select, sort
 from pandas import DataFrame, Series, isna, notna, unique
 from sklearn.base import BaseEstimator, TransformerMixin
 
@@ -31,6 +31,7 @@ def nan_unique(x: Series) -> List[Any]:
 
     return uniques
 
+
 def applied_to_dict_list(applied: Union[DataFrame, Series]) -> Dict[str, List[Any]]:
     """Converts a DataFrame or a List in a Dict of lists
 
@@ -51,14 +52,13 @@ def applied_to_dict_list(applied: Union[DataFrame, Series]) -> Dict[str, List[An
 
     # case when it's a DataFrame
     if isinstance(applied, DataFrame):
-        converted = applied.to_dict(orient='list')
-    
+        converted = applied.to_dict(orient="list")
+
     return converted
 
 
-
 def check_new_values(X: DataFrame, features: List[str], known_values: Dict[str, List[Any]]) -> None:
-    """Checks for new, unexpected values, in X 
+    """Checks for new, unexpected values, in X
 
     Parameters
     ----------
@@ -69,7 +69,7 @@ def check_new_values(X: DataFrame, features: List[str], known_values: Dict[str, 
     known_values : Dict[str, List[Any]]
         Dict of known values per column name
     """
-    # unique non-nan values in new dataframe 
+    # unique non-nan values in new dataframe
     uniques = X[features].apply(
         nan_unique,
         axis=0,
@@ -84,8 +84,11 @@ def check_new_values(X: DataFrame, features: List[str], known_values: Dict[str, 
             len(unexpected) == 0
         ), f"Unexpected value! The ordering for values: {str(unexpected)} of feature '{feature}' was not provided. There might be new values in your test/dev set. Consider taking a bigger test/dev set or dropping the column {feature}."
 
-def check_missing_values(X: DataFrame, features: List[str], known_values: Dict[str, List[Any]]) -> None:
-    """Checks for missing values from X, (unexpected values in values_orders) 
+
+def check_missing_values(
+    X: DataFrame, features: List[str], known_values: Dict[str, List[Any]]
+) -> None:
+    """Checks for missing values from X, (unexpected values in values_orders)
 
     Parameters
     ----------
@@ -96,7 +99,7 @@ def check_missing_values(X: DataFrame, features: List[str], known_values: Dict[s
     known_values : Dict[str, List[Any]]
         Dict of known values per column name
     """
-    # unique non-nan values in new dataframe 
+    # unique non-nan values in new dataframe
     uniques = X[features].apply(
         nan_unique,
         axis=0,
@@ -115,7 +118,7 @@ def check_missing_values(X: DataFrame, features: List[str], known_values: Dict[s
 class GroupedList(list):
     """An ordered list that's extended with a dict."""
 
-    def __init__(self, iterable: Any=()) -> None:
+    def __init__(self, iterable: Any = ()) -> None:
         """An ordered list that historizes its elements' merges.
 
         Parameters
@@ -138,13 +141,20 @@ class GroupedList(list):
 
             # checking that all values are only present once
             all_values = [val for _, values in iterable.items() for val in values]
-            assert len(list(set(all_values))) == len(all_values), "A value is present in several keys (groups)"
-            
+            assert len(list(set(all_values))) == len(
+                all_values
+            ), "A value is present in several keys (groups)"
+
             # adding key to itself if it's not present in an other key
             keys_copy = keys[:]  # copying initial keys
             for key in keys_copy:
                 # checking that the value is not comprised in an other key
-                all_values = [val for iter_key, values in iterable.items() for val in values if key != iter_key]
+                all_values = [
+                    val
+                    for iter_key, values in iterable.items()
+                    for val in values
+                    if key != iter_key
+                ]
                 if key not in all_values:
                     # checking that key is missing from its values
                     if key not in iterable[key]:
@@ -381,7 +391,7 @@ class GroupedList(list):
         Returns
         -------
         bool
-            Whether the value is in the GroupedList 
+            Whether the value is in the GroupedList
         """
 
         known_values = self.values()
@@ -425,7 +435,6 @@ class GroupedList(list):
         return repr
 
 
-
 # TODO: add labels for str/float with output_dtypes
 #     # converting order to float if requested
 #     output_order = GroupedList(order)  # copy of order
@@ -444,6 +453,7 @@ class GroupedList(list):
 # if self.output_dtype == 'float':
 #     X[self.qualitative_features] = X[self.qualitative_features].astype(float32)
 
+
 # TODO: add a summary
 # TODO: output a json
 # TODO: add a base discretizer that implements prepare_data (add reset_index ? -> add duplicate column check)
@@ -457,7 +467,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         *,
         copy: bool = False,
         input_dtypes: Union[str, Dict[str, str]] = None,
-        output_dtype: str = 'str',
+        output_dtype: str = "str",
         str_nan: str = None,
         verbose: bool = False,
     ) -> None:
@@ -489,7 +499,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
         self.copy = copy
         if input_dtypes is None:
-            input_dtypes = {feature: 'str' for feature in features}
+            input_dtypes = {feature: "str" for feature in features}
         if isinstance(input_dtypes, str):
             input_dtypes = {feature: input_dtypes for feature in features}
         self.input_dtypes = input_dtypes
@@ -498,9 +508,15 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         self.verbose = verbose
         self.str_nan = str_nan
 
-        self.qualitative_features = [feature for feature in features if self.input_dtypes[feature] == 'str']
-        self.quantitative_features = [feature for feature in features if self.input_dtypes[feature] == 'float']
-        self.known_values = {feature: self.values_orders[feature].values() for feature in self.features}
+        self.qualitative_features = [
+            feature for feature in features if self.input_dtypes[feature] == "str"
+        ]
+        self.quantitative_features = [
+            feature for feature in features if self.input_dtypes[feature] == "float"
+        ]
+        self.known_values = {
+            feature: self.values_orders[feature].values() for feature in self.features
+        }
 
     def fit(self, X: DataFrame, y: Series = None) -> None:
         """Learns the known values for each feature
@@ -566,14 +582,18 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
             _description_
         """
         # converting potential quantiles into there respective labels
-        labels_orders = convert_to_labels(self.features, self.quantitative_features, self.values_orders, self.str_nan)
+        labels_orders = convert_to_labels(
+            self.features, self.quantitative_features, self.values_orders, self.str_nan
+        )
 
         # dataset length
         x_len = X.shape[0]
 
         for n, feature in enumerate(self.quantitative_features):
             if self.verbose:  # verbose if requested
-                print(f" - [GroupedListDiscretizer] Transform Qualitative {feature} ({n+1}/{len(self.quantitative_features)})")
+                print(
+                    f" - [GroupedListDiscretizer] Transform Qualitative {feature} ({n+1}/{len(self.quantitative_features)})"
+                )
 
             # feature's labels associated to each quantile
             feature_labels = labels_orders[feature]
@@ -584,7 +604,9 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
 
             # converting nans to there corresponding quantile (if it was grouped to a quantile)
             if any(nans):
-                assert self.str_nan in feature_values.values(), f"Unexpected value! Missing values found for feature '{feature}' at transform step but not during fit. There might be new values in your test/dev set. Consider taking a bigger test/dev set or dropping the column {feature}."
+                assert (
+                    self.str_nan in feature_values.values()
+                ), f"Unexpected value! Missing values found for feature '{feature}' at transform step but not during fit. There might be new values in your test/dev set. Consider taking a bigger test/dev set or dropping the column {feature}."
                 nan_value = feature_values.get_group(self.str_nan)
                 # checking that nans have been grouped to a quantile otherwise they are left as numpy.nan
                 if nan_value != self.str_nan:
@@ -593,14 +615,14 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
             # quantiles ordering of the feature (can not mix str and floats for comparison purposes)
             feature_quantiles = feature_values[:]
             if self.str_nan in feature_quantiles:  # filtering out nans if any
-                feature_quantiles= [val for val in feature_quantiles if val != self.str_nan]
+                feature_quantiles = [val for val in feature_quantiles if val != self.str_nan]
 
             # list of masks of values to replace with there respective group
             values_to_group = [X[feature] <= q for q in feature_quantiles]
 
             # corressponding group for each value
-            group_labels = [[label] * x_len for label in feature_labels] 
-            
+            group_labels = [[label] * x_len for label in feature_labels]
+
             # checking for values to group
             if len(values_to_group) > 0:
                 X[feature] = select(values_to_group, group_labels, default=X[feature])
@@ -642,7 +664,9 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         # iterating over each feature
         for n, feature in enumerate(self.qualitative_features):
             if self.verbose:  # verbose if requested
-                print(f" - [GroupedListDiscretizer] Transform Qualitative {feature} ({n+1}/{len(self.qualitative_features)})")
+                print(
+                    f" - [GroupedListDiscretizer] Transform Qualitative {feature} ({n+1}/{len(self.qualitative_features)})"
+                )
 
             # keeping track of nans that should stay nans
             nans = X[feature].isna()
@@ -654,12 +678,14 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
             groups_to_discard = [group_labels.get(key) for key in group_labels]
 
             # identifying bucket's key per modality
-            values_to_group = [X[feature].isin(group_to_discard) for group_to_discard in groups_to_discard]
+            values_to_group = [
+                X[feature].isin(group_to_discard) for group_to_discard in groups_to_discard
+            ]
 
             # checking for values to group
             if len(values_to_group) > 0:
                 X[feature] = select(values_to_group, group_labels, default=X[feature])
-            
+
             # giving back nans
             if any(nans):
                 X.loc[nans, feature] = nan
@@ -689,19 +715,24 @@ def convert_to_labels(
 
         # applying alliases to known orders
         for feature in quantitative_features:
-            labels_orders.update({
-                feature: GroupedList([quantiles_labels[feature][quantile] for quantile in labels_orders[feature]])
-            })
+            labels_orders.update(
+                {
+                    feature: GroupedList(
+                        [quantiles_labels[feature][quantile] for quantile in labels_orders[feature]]
+                    )
+                }
+            )
 
     # adding back nans if requested
     if not dropna:
-    	for feature in features:
-    		if str_nan in values_orders[feature]:
-    			order = labels_orders[feature]
-    			order.append(str_nan)  # adding back nans at the end of the order
-    			labels_orders.update({feature: order})
-            
+        for feature in features:
+            if str_nan in values_orders[feature]:
+                order = labels_orders[feature]
+                order.append(str_nan)  # adding back nans at the end of the order
+                labels_orders.update({feature: order})
+
     return labels_orders
+
 
 def convert_to_values(
     features: List[str],
@@ -710,8 +741,6 @@ def convert_to_values(
     label_orders: Dict[str, GroupedList],
     str_nan: str,
 ):
-    
-    
     # for quantitative features getting labels per quantile
     if any(quantitative_features):
         # getting quantile per group "name"
@@ -727,12 +756,16 @@ def convert_to_values(
 
         # grouping the raw quantile values
         for kept_value, group_to_discard in groups_to_discard.items():
-
             # for qualitative features grouping as is
             # for quantitative features getting quantile per alias
             if feature in quantitative_features:
                 # getting raw quantiles to be grouped
-                group_to_discard = [labels_to_quantiles[feature][label_discarded] if label_discarded != str_nan else str_nan for label_discarded in group_to_discard]
+                group_to_discard = [
+                    labels_to_quantiles[feature][label_discarded]
+                    if label_discarded != str_nan
+                    else str_nan
+                    for label_discarded in group_to_discard
+                ]
                 # keeping the largest value amongst the discarded (otherwise they wont be grouped)
                 kept_value = max([value for value in group_to_discard if value != str_nan])
 
@@ -741,10 +774,16 @@ def convert_to_values(
 
         # updating ordering
         values_orders.update({feature: order})
-    
+
     return values_orders
 
-def min_value_counts(x: Series, values_orders: Dict[str, GroupedList] = None, dropna: bool = False, normalize: bool = True) -> float:
+
+def min_value_counts(
+    x: Series,
+    values_orders: Dict[str, GroupedList] = None,
+    dropna: bool = False,
+    normalize: bool = True,
+) -> float:
     """Minimum of modalities' frequencies.
 
     Parameters
@@ -873,6 +912,7 @@ def is_equal(a: Any, b: Any) -> bool:
 
     return equal
 
+
 def get_labels(quantiles: List[float], str_nan: str) -> List[str]:
     """_summary_
 
@@ -903,7 +943,10 @@ def get_labels(quantiles: List[float], str_nan: str) -> List[str]:
 
     return labels
 
-def get_quantiles_labels(features: List[str], values_orders: Dict[str, GroupedList], str_nan: str) -> Dict[str, GroupedList]:
+
+def get_quantiles_labels(
+    features: List[str], values_orders: Dict[str, GroupedList], str_nan: str
+) -> Dict[str, GroupedList]:
     """Converts a values_orders of quantiles into a values_orders of string quantiles
 
     Parameters
@@ -926,11 +969,16 @@ def get_quantiles_labels(features: List[str], values_orders: Dict[str, GroupedLi
         quantiles = list(values_orders[feature])
         labels = get_labels(quantiles, str_nan)
         # associates quantiles to their respective labels
-        quantiles_to_labels.update({feature: {quantile: alias for quantile, alias in zip(quantiles, labels)}})
+        quantiles_to_labels.update(
+            {feature: {quantile: alias for quantile, alias in zip(quantiles, labels)}}
+        )
 
     return quantiles_to_labels
 
-def get_labels_quantiles(features: List[str], values_orders: Dict[str, GroupedList], str_nan: str) -> Dict[str, GroupedList]:
+
+def get_labels_quantiles(
+    features: List[str], values_orders: Dict[str, GroupedList], str_nan: str
+) -> Dict[str, GroupedList]:
     """Converts a values_orders of quantiles into a values_orders of string quantiles
 
     Parameters
@@ -953,9 +1001,12 @@ def get_labels_quantiles(features: List[str], values_orders: Dict[str, GroupedLi
         quantiles = list(values_orders[feature])
         labels = get_labels(quantiles, str_nan)
         # associates quantiles to their respective labels
-        labels_to_quantiles.update({feature: {alias: quantile for quantile, alias in zip(quantiles, labels)}})
+        labels_to_quantiles.update(
+            {feature: {alias: quantile for quantile, alias in zip(quantiles, labels)}}
+        )
 
-    return labels_to_quantiles 
+    return labels_to_quantiles
+
 
 def format_quantiles(a_list: List[float]) -> List[str]:
     """Formats a list of float quantiles into a list of boundaries.
@@ -1024,7 +1075,7 @@ def format_quantiles(a_list: List[float]) -> List[str]:
     formatted_list = [
         rounded if raw != 0 else f"{raw: 1.1f}" for rounded, raw in zip(formatted_list, a_list)
     ]
-    
+
     # stripping whitespaces
     formatted_list = [string.strip() for string in formatted_list]
 

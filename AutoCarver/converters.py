@@ -2,8 +2,8 @@
 
 from typing import Any, Dict, List
 
-from numpy import nan, select, tanh
-from pandas import DataFrame, Series, isna, notna, to_datetime
+from numpy import nan, tanh
+from pandas import DataFrame, Series, notna, to_datetime
 from sklearn.base import BaseEstimator, TransformerMixin
 
 

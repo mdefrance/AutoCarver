@@ -4,20 +4,26 @@ for a binary classification model.
 
 from typing import Any, Dict, List, Tuple
 
-from .discretizers.utils.base_discretizers import GroupedList, GroupedListDiscretizer, is_equal, convert_to_labels, convert_to_values
-from .discretizers.discretizers import Discretizer
+import numpy as np
 from IPython.display import display_html  # TODO: remove this
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.pyplot import subplots
 from matplotlib.ticker import PercentFormatter
-from pandas import DataFrame, Series, crosstab, notna, unique
-from pandas.api.types import is_string_dtype
+from pandas import DataFrame, Series, crosstab, unique
 from scipy.stats import chi2_contingency
 from seaborn import color_palette, despine
 from tqdm import tqdm
 
-import numpy as np
+from .discretizers.discretizers import Discretizer
+from .discretizers.utils.base_discretizers import (
+    GroupedList,
+    GroupedListDiscretizer,
+    convert_to_labels,
+    convert_to_values,
+    is_equal,
+)
+
 
 # TODO: display tables
 class AutoCarver(GroupedListDiscretizer):
@@ -123,12 +129,11 @@ class AutoCarver(GroupedListDiscretizer):
         min_carved_freq: float = 0,  # TODO: update this parameter so that it is set according to frequency rather than number of groups
         sort_by: str = "tschuprowt",
         str_nan: str = "__NAN__",
-        str_default: str = '__OTHER__',
+        str_default: str = "__OTHER__",
         dropna: bool = True,
         copy: bool = False,
         verbose: bool = True,
     ) -> None:
-
         # copying quantitative features and checking for duplicates
         self.quantitative_features = quantitative_features[:]
         assert len(list(set(quantitative_features))) == len(
@@ -140,7 +145,7 @@ class AutoCarver(GroupedListDiscretizer):
         assert len(list(set(qualitative_features))) == len(
             qualitative_features
         ), "Column duplicates in qualitative_features"
-        
+
         # copying ordinal features and checking for duplicates
         if ordinal_features is None:
             ordinal_features = []
@@ -176,7 +181,7 @@ class AutoCarver(GroupedListDiscretizer):
         self.verbose = verbose
         self.str_nan = str_nan
         self.str_default = str_default
-        
+
         self.min_carved_freq = min_carved_freq
         self.min_group_size = 1
 
@@ -219,12 +224,6 @@ class AutoCarver(GroupedListDiscretizer):
             if self.copy:
                 x_test_copy = X_test.copy()
 
-            # checking for quantitative columns
-            is_object = X_test[self.features].dtypes.apply(is_string_dtype)
-            assert all(
-                is_object
-            ), f"Non-string features in X_test: {', '.join(is_object[~is_object].index)}, consider using Discretizer."
-
         return x_copy, x_test_copy
 
     def fit(
@@ -252,15 +251,15 @@ class AutoCarver(GroupedListDiscretizer):
 
         # discretizing all features
         discretizer = Discretizer(
-            quantitative_features = self.quantitative_features,
-            qualitative_features = self.qualitative_features,
-            min_freq = self.min_freq,
-            ordinal_features = self.ordinal_features,
-            values_orders = self.values_orders,
-            str_nan = self.str_nan,
-            str_default = self.str_default,
-            copy = False,
-            verbose = self.verbose,
+            quantitative_features=self.quantitative_features,
+            qualitative_features=self.qualitative_features,
+            min_freq=self.min_freq,
+            ordinal_features=self.ordinal_features,
+            values_orders=self.values_orders,
+            str_nan=self.str_nan,
+            str_default=self.str_default,
+            copy=False,
+            verbose=self.verbose,
         )
         x_copy = discretizer.fit_transform(x_copy, y)
         if x_test_copy is not None:
@@ -268,25 +267,25 @@ class AutoCarver(GroupedListDiscretizer):
 
         # updating values_orders according to base bucketization
         self.values_orders.update(discretizer.values_orders)
-        
+
         # converting potential quantiles into there respective labels
         labels_orders = convert_to_labels(
             features=self.features,
             quantitative_features=self.quantitative_features,
             values_orders=self.values_orders,
             str_nan=self.str_nan,
-            dropna=False
+            dropna=False,
         )
 
         # computing crosstabs for each feature on train/test
         xtabs = get_xtabs(self.features, x_copy, y, labels_orders)
         xtabs_test = get_xtabs(self.features, x_test_copy, y_test, labels_orders)
-        
+
         # optimal butcketization/carving of each feature
         for n, feature in enumerate(self.features):
             if self.verbose:  # verbose if requested
                 print(f"\n---\n[AutoCarver] Fit {feature} ({n+1}/{len(self.features)})")
-            
+
             # getting xtabs on train/test
             xtab = xtabs[feature]
             xtab_test = xtabs_test[feature]
@@ -300,10 +299,10 @@ class AutoCarver(GroupedListDiscretizer):
             order, xtab, xtab_test = self.get_best_combination(order, xtab, xtab_test=xtab_test)
             if self.verbose:  # verbose if requested
                 print(xtab)
-            
+
             # updating label_orders
             labels_orders.update({feature: order})
-            
+
         # converting potential labels into there respective values (quantiles)
         self.values_orders.update(
             convert_to_values(
@@ -321,7 +320,7 @@ class AutoCarver(GroupedListDiscretizer):
             values_orders=self.values_orders,
             copy=self.copy,
             input_dtypes=discretizer.input_dtypes,
-            output_dtype='float',
+            output_dtype="float",
             str_nan=self.str_nan,
             verbose=self.verbose,
         )
@@ -336,7 +335,6 @@ class AutoCarver(GroupedListDiscretizer):
         *,
         xtab_test: DataFrame = None,
     ) -> Tuple[GroupedList, DataFrame, DataFrame]:
-
         # raw ordering
         raw_order = GroupedList(order)
         if self.str_nan in raw_order:
@@ -348,16 +346,23 @@ class AutoCarver(GroupedListDiscretizer):
 
         # checking for non-nan values
         if raw_xtab.shape[0] > 1:
-
-            # all possible consecutive combinations 
-            combinations = consecutive_combinations(raw_order, self.max_n_mod, min_group_size=self.min_group_size)
+            # all possible consecutive combinations
+            combinations = consecutive_combinations(
+                raw_order, self.max_n_mod, min_group_size=self.min_group_size
+            )
 
             # getting most associated combination
-            best_association = get_best_association(raw_xtab, combinations, sort_by=self.sort_by, xtab_test=raw_xtab_test, verbose=self.verbose)
+            best_association = get_best_association(
+                raw_xtab,
+                combinations,
+                sort_by=self.sort_by,
+                xtab_test=raw_xtab_test,
+                verbose=self.verbose,
+            )
             # TODO test missing values in test
 
             # applying best_combination to order and xtabs
-            order = order_apply_combination(order, best_association['combination'])
+            order = order_apply_combination(order, best_association["combination"])
             xtab = xtab_apply_order(xtab, order)
             xtab_test = xtab_apply_order(xtab_test, order)
 
@@ -367,17 +372,27 @@ class AutoCarver(GroupedListDiscretizer):
                 raw_order = GroupedList(order)
                 raw_order.remove(self.str_nan)
 
-                # all possible consecutive combinations 
-                combinations = consecutive_combinations(raw_order, self.max_n_mod, min_group_size=self.min_group_size)
+                # all possible consecutive combinations
+                combinations = consecutive_combinations(
+                    raw_order, self.max_n_mod, min_group_size=self.min_group_size
+                )
 
                 # adding combinations with NaNs
-                nan_combinations = add_nan_in_combinations(combinations, self.str_nan, self.max_n_mod)
+                nan_combinations = add_nan_in_combinations(
+                    combinations, self.str_nan, self.max_n_mod
+                )
 
                 # getting most associated combination
-                best_association = get_best_association(xtab, nan_combinations, sort_by=self.sort_by, xtab_test=xtab_test, verbose=self.verbose)
+                best_association = get_best_association(
+                    xtab,
+                    nan_combinations,
+                    sort_by=self.sort_by,
+                    xtab_test=xtab_test,
+                    verbose=self.verbose,
+                )
 
                 # applying best_combination to order and xtab
-                order = order_apply_combination(order, best_association['combination'])
+                order = order_apply_combination(order, best_association["combination"])
                 xtab = xtab_apply_order(xtab, order)
                 xtab_test = xtab_apply_order(xtab_test, order)
 
@@ -491,13 +506,15 @@ def filter_nan_xtab(xtab: DataFrame, str_nan: str) -> DataFrame:
         filtered_xtab = xtab.copy()
         if str_nan in xtab.index:
             filtered_xtab = xtab.drop(str_nan, axis=0)
-    
+
     return filtered_xtab
 
-def get_xtabs(features: List[str], X: DataFrame, y: Series, labels_orders: Dict[str, GroupedList]) -> Dict[str, DataFrame]:
-    """Computes crosstabs for specified features and ensures that the crosstab is ordered according to the known labels
-    """
-    
+
+def get_xtabs(
+    features: List[str], X: DataFrame, y: Series, labels_orders: Dict[str, GroupedList]
+) -> Dict[str, DataFrame]:
+    """Computes crosstabs for specified features and ensures that the crosstab is ordered according to the known labels"""
+
     # checking for empty datasets
     xtabs = {feature: None for feature in features}
     if X is not None:
@@ -513,6 +530,7 @@ def get_xtabs(features: List[str], X: DataFrame, y: Series, labels_orders: Dict[
             xtabs.update({feature: xtab})
 
     return xtabs
+
 
 def association_xtab(xtab: DataFrame, n_obs, n_mod_y) -> Dict[str, float]:
     """Computes measures of association between feature x and feature2."""
@@ -534,7 +552,7 @@ def association_xtab(xtab: DataFrame, n_obs, n_mod_y) -> Dict[str, float]:
 
 def vectorized_groupby_sum(xtab: DataFrame, groupby: List[str]):
     """Groups a crosstab by groupby and sums column values by groups"""
-    
+
     # all indices that may be duplicated
     index_values = np.array(groupby)
 
@@ -552,21 +570,31 @@ def vectorized_groupby_sum(xtab: DataFrame, groupby: List[str]):
 
     return grouped_xtab
 
+
 def combinations_at_index(start_idx, order, nb_remaining_groups, min_group_size=1):
     """Gets all possible combinations of sizes up to the last element of a list"""
-    
+
     # iterating over each possible length of groups
     for size in range(min_group_size, len(order) + 1):
         next_idx = start_idx + size  # index from which to start the next group
-        
+
         # checking that next index is not off the order list
         if next_idx < len(order) + 1:
             # checking that there are remaining groups or that it is the last group
             if (nb_remaining_groups > 1) | (next_idx == len(order)):
-                combination = list(order[start_idx : next_idx])
+                combination = list(order[start_idx:next_idx])
                 yield (combination, next_idx, nb_remaining_groups - 1)
 
-def consecutive_combinations(raw_order, max_group_size, min_group_size = 1, nb_remaining_group = None, current_combination = None, next_index = None, all_combinations = None):
+
+def consecutive_combinations(
+    raw_order,
+    max_group_size,
+    min_group_size=1,
+    nb_remaining_group=None,
+    current_combination=None,
+    next_index=None,
+    all_combinations=None,
+):
     """Computes all possible combinations of values of order up to max_group_size."""
 
     # initiating recursive attributes
@@ -578,23 +606,24 @@ def consecutive_combinations(raw_order, max_group_size, min_group_size = 1, nb_r
         nb_remaining_group = max_group_size
     if all_combinations is None:
         all_combinations = []
-    
+
     # getting combinations for next index
-    next_combinations = [elt for elt in combinations_at_index(next_index, raw_order, nb_remaining_group, min_group_size)]
-    
+    next_combinations = [
+        elt
+        for elt in combinations_at_index(next_index, raw_order, nb_remaining_group, min_group_size)
+    ]
+
     # stop case: no next_combinations possible -> adding to all_combinations
     if len(next_combinations) == 0 and min_group_size < len(current_combination) <= max_group_size:
         # saving up combination
         all_combinations += [current_combination]
-        
+
         # resetting remaining number of groups
         nb_remaining_group = max_group_size
-        
 
     # otherwise: adding all next_combinations to the current_combination
     for combination, next_index, current_nb_remaining_group in next_combinations:
-        
-        # going a rank further in the raw_xtab 
+        # going a rank further in the raw_xtab
         consecutive_combinations(
             raw_order,
             max_group_size,
@@ -604,39 +633,64 @@ def consecutive_combinations(raw_order, max_group_size, min_group_size = 1, nb_r
             next_index=next_index,
             all_combinations=all_combinations,
         )
-    
+
     return all_combinations
+
 
 def xtab_target_rate(xtab: DataFrame) -> DataFrame:
     """Computes target rate per row for a binary target (column) in a crosstab"""
-    
+
     return xtab[1].divide(xtab[0]).sort_values()
 
-def get_best_association(xtab: DataFrame, combinations: List[List[str]], sort_by: str, xtab_test: DataFrame = None, verbose: bool=False) -> Dict[str, Any]:
-    """ Computes associations of the xtab for each combination"""
-    
+
+def get_best_association(
+    xtab: DataFrame,
+    combinations: List[List[str]],
+    sort_by: str,
+    xtab_test: DataFrame = None,
+    verbose: bool = False,
+) -> Dict[str, Any]:
+    """Computes associations of the xtab for each combination"""
+
     # values to groupby indices with
-    indices_to_groupby = [[value for values in ([group[0]] * len(group) for group in combination) for value in values] for combination in combinations]
+    indices_to_groupby = [
+        [value for values in ([group[0]] * len(group) for group in combination) for value in values]
+        for combination in combinations
+    ]
 
     # grouping xtab by its indices
-    grouped_xtabs = [vectorized_groupby_sum(xtab, index_to_groupby) for index_to_groupby in tqdm(indices_to_groupby, disable=not verbose, desc="Grouping modalities")]
+    grouped_xtabs = [
+        vectorized_groupby_sum(xtab, index_to_groupby)
+        for index_to_groupby in tqdm(
+            indices_to_groupby, disable=not verbose, desc="Grouping modalities"
+        )
+    ]
 
     # computing associations for each xtabs
     n_obs = xtab.sum().sum()  # number of observation
     n_mod_y = len(xtab.columns)  # number of modalities and minimum number of modalities
-    associations_xtab = [association_xtab(grouped_xtab, n_obs, n_mod_y) for grouped_xtab in tqdm(grouped_xtabs, disable=not verbose, desc="Computing associations")]
+    associations_xtab = [
+        association_xtab(grouped_xtab, n_obs, n_mod_y)
+        for grouped_xtab in tqdm(grouped_xtabs, disable=not verbose, desc="Computing associations")
+    ]
 
     # adding corresponding combination to the association
-    for combination, index_to_groupby, association, grouped_xtab in zip(combinations, indices_to_groupby, associations_xtab, grouped_xtabs):
-        association.update({'combination': combination, 'index_to_groupby': index_to_groupby, 'xtab': grouped_xtab})
-    
+    for combination, index_to_groupby, association, grouped_xtab in zip(
+        combinations, indices_to_groupby, associations_xtab, grouped_xtabs
+    ):
+        association.update(
+            {"combination": combination, "index_to_groupby": index_to_groupby, "xtab": grouped_xtab}
+        )
+
     # sorting associations according to specified metric
-    associations_xtab = DataFrame(associations_xtab).sort_values(sort_by, ascending=False).to_dict(orient='records')
-    
+    associations_xtab = (
+        DataFrame(associations_xtab).sort_values(sort_by, ascending=False).to_dict(orient="records")
+    )
+
     # case 0: no test sample provided -> not testing for robustness
     if xtab_test is None:
         return associations_xtab[0]
-    
+
     # case 1: testing viability on provided test sample
     for association in tqdm(associations_xtab, disable=not verbose, desc="Testing robustness"):
         # needed parameters
@@ -647,23 +701,24 @@ def get_best_association(xtab: DataFrame, combinations: List[List[str]], sort_by
 
         # grouping rows of the test crosstab
         grouped_xtab_test = vectorized_groupby_sum(xtab_test, index_to_groupby)
-        
+
         # computing target rate ranks per value
         train_ranks = xtab_target_rate(xtab).index
         test_ranks = xtab_target_rate(grouped_xtab_test).index
-        
-        # viable on test sample: grouped values have the same ranks in train/test  
+
+        # viable on test sample: grouped values have the same ranks in train/test
         if all(train_ranks == test_ranks):
             return association
 
-def add_nan_in_combinations(combinations: List[List[str]], str_nan: str, max_n_mod: int) -> List[List[str]]:
-    """Adds nan to each possible group and a last group only with nan if the max_n_mod is not reached by the combination
-    """
-    
+
+def add_nan_in_combinations(
+    combinations: List[List[str]], str_nan: str, max_n_mod: int
+) -> List[List[str]]:
+    """Adds nan to each possible group and a last group only with nan if the max_n_mod is not reached by the combination"""
+
     # iterating over each combination
     nan_combinations = []
     for combination in combinations:
-
         # adding nan to each group of the combination
         nan_combination = []
         for n in range(len(combination)):
@@ -680,10 +735,11 @@ def add_nan_in_combinations(combinations: List[List[str]], str_nan: str, max_n_m
             new_combination = combination[:]
             # adding a group for nans only
             nan_combination += [new_combination + [[str_nan]]]
-        
+
         nan_combinations += nan_combination
-    
+
     return nan_combinations
+
 
 def order_apply_combination(order: GroupedList, combination: List[List[Any]]) -> GroupedList:
     """Converts a list of combination to a GroupedList"""
@@ -693,6 +749,7 @@ def order_apply_combination(order: GroupedList, combination: List[List[Any]]) ->
         order_copy.group_list(combi, combi[0])
 
     return order_copy
+
 
 def xtab_apply_order(xtab: DataFrame, order: GroupedList) -> DataFrame:
     """Applies an order (combination) to a crosstab
@@ -717,10 +774,6 @@ def xtab_apply_order(xtab: DataFrame, order: GroupedList) -> DataFrame:
         combi_xtab = xtab.groupby(groups, dropna=False, sort=False).sum()
 
     return combi_xtab
-
-
-
-
 
 
 def plot_stats(stats: DataFrame) -> Tuple[Figure, Axes]:

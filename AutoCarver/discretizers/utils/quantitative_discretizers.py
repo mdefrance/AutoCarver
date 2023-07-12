@@ -4,9 +4,11 @@ for a binary classification model.
 
 from typing import Any, Dict, List
 
-from .base_discretizers import GroupedList, applied_to_dict_list, GroupedListDiscretizer
-from numpy import array, linspace, nan, quantile, inf
+from numpy import array, inf, linspace, nan, quantile
 from pandas import DataFrame, Series, isna, notna
+
+from .base_discretizers import GroupedList, GroupedListDiscretizer, applied_to_dict_list
+
 
 class QuantileDiscretizer(GroupedListDiscretizer):
     """Builds per-feature buckets of quantiles"""
@@ -17,7 +19,7 @@ class QuantileDiscretizer(GroupedListDiscretizer):
         min_freq: float,
         *,
         values_orders: Dict[str, Any] = None,
-        str_nan: str = '__NAN__',
+        str_nan: str = "__NAN__",
         copy: bool = False,
         verbose: bool = False,
     ) -> None:
@@ -70,7 +72,7 @@ class QuantileDiscretizer(GroupedListDiscretizer):
 
         # storing ordering
         for feature in self.features:
-            # Converting to a groupedlist 
+            # Converting to a groupedlist
             order = GroupedList(quantiles[feature] + [inf])
 
             # adding NANs if ther are any
@@ -85,8 +87,8 @@ class QuantileDiscretizer(GroupedListDiscretizer):
             self.features,
             self.values_orders,
             copy=self.copy,
-            input_dtypes='float',
-            output_dtype='str',
+            input_dtypes="float",
+            output_dtype="str",
             str_nan=self.str_nan,
         )
         super().fit(X, y)

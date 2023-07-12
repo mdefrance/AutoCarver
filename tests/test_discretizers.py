@@ -80,7 +80,7 @@ def test_qualitative_discretizer(x_train: DataFrame):
     assert discretizer.values_orders['Qualitative_Ordinal'].contained == expected_ordinal, "Values not correctly grouped"
     assert discretizer.values_orders['Qualitative_Ordinal_lownan'].contained == expected_ordinal_lownan, "NaNs should stay by themselves."
 
-def test_discretizer(x_train: DataFrame):
+def test_discretizer(x_train: DataFrame, x_test_1: DataFrame):
     """Tests Discretizer
 
     Parameters
@@ -113,8 +113,7 @@ def test_discretizer(x_train: DataFrame):
         copy=True,
     )
     x_discretized = discretizer.fit_transform(x_train, x_train["quali_ordinal_target"])
-
-
+    x_test_discretized = discretizer.transform(x_test_1)
 
 
 
@@ -180,3 +179,10 @@ def test_discretizer(x_train: DataFrame):
         '__NAN__': ['__NAN__']
     }
     assert discretizer.values_orders["Discrete_Qualitative_highnan"].contained == expected, "Ordinal qualitative features with int or float values that contain nan should be converted to string and there values stored in the values_orders"
+
+    # checking for inconsistancies in tranform
+    for feature in discretizer.features:
+        test_unique = x_test_discretized[feature].unique()
+        train_unique = x_discretized[feature].unique()
+        assert all(value in test_unique for value in train_unique), "Missing value from test (at transform step)"
+        assert all(value in train_unique for value in test_unique), "Missing value from train (at transform step)"

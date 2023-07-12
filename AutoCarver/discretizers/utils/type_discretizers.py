@@ -2,8 +2,11 @@
 """
 
 from typing import List
-from .base_discretizers import GroupedListDiscretizer, GroupedList, nan_unique
+
 from pandas import DataFrame, Series
+
+from .base_discretizers import GroupedList, GroupedListDiscretizer, nan_unique
+
 
 class StringDiscretizer(GroupedListDiscretizer):
     """Converts specified columns of a DataFrame into str
@@ -26,7 +29,7 @@ class StringDiscretizer(GroupedListDiscretizer):
             _description_, by default False
         verbose : bool, optional
             _description_, by default False
-        """        
+        """
 
         self.features = features[:]
         self.values_orders = {}
@@ -43,11 +46,10 @@ class StringDiscretizer(GroupedListDiscretizer):
         """
         # converting each feature's value
         for feature in self.features:
-            
             # unique feature values
             unique_values = nan_unique(X[feature])
             values_order = GroupedList(unique_values)
-            
+
             # formatting values
             for value in unique_values:
                 # case 0: the value is an integer
@@ -60,7 +62,7 @@ class StringDiscretizer(GroupedListDiscretizer):
                 # updating order
                 values_order.append(str_value)  # adding string value to the order
                 values_order.group(value, str_value)  # grouping integer value into the string value
-            
+
             # saving feature's values
             self.values_orders.update({feature: values_order})
 
@@ -68,8 +70,8 @@ class StringDiscretizer(GroupedListDiscretizer):
         super().__init__(
             features=self.features,
             values_orders=self.values_orders,
-            input_dtypes='str',
-            output_dtype='str',
+            input_dtypes="str",
+            output_dtype="str",
         )
         super().fit(X, y)
 

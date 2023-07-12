@@ -4,25 +4,25 @@ for a binary classification model.
 
 from typing import Any, Dict, List, Union
 
+from numpy import argmin, nan, select
+from pandas import DataFrame, Series, isna, notna, unique
+
 from .base_discretizers import (
     GroupedList,
     GroupedListDiscretizer,
-    target_rate,
-    value_counts,
-    nan_unique,
-    check_new_values,
     check_missing_values,
+    check_new_values,
     convert_to_labels,
     convert_to_values,
-    get_labels_quantiles,
+    nan_unique,
+    target_rate,
+    value_counts,
 )
-from numpy import nan, select, argmin
-from pandas import DataFrame, Series, notna, unique, isna
 
 
 class DefaultDiscretizer(GroupedListDiscretizer):
     """Groups a qualitative features' values less frequent than min_freq into a str_default string
-    
+
     Only use for qualitative non-ordinal features
     """
 
@@ -98,7 +98,7 @@ class DefaultDiscretizer(GroupedListDiscretizer):
         for feature in self.features:
             if any(X[feature].isna()):
                 self.values_orders[feature].append(self.str_nan)
-        
+
         # filling up NaNs
         x_copy = X[self.features].fillna(self.str_nan)
 
@@ -110,7 +110,6 @@ class DefaultDiscretizer(GroupedListDiscretizer):
         assert len(y_values) == 2, "y must be a binary Series (int or float, not object)"
 
         return x_copy
-
 
     def fit(self, X: DataFrame, y: Series) -> None:
         """Learns modalities that are common enough (greater than min_freq)
@@ -127,30 +126,34 @@ class DefaultDiscretizer(GroupedListDiscretizer):
 
         # computing frequencies of each modality
         frequencies = x_copy.apply(value_counts, normalize=True, axis=0)
-        
+
         for n, feature in enumerate(self.features):
             if self.verbose:  # verbose if requested
                 print(f" - [DefaultDiscretizer] Fit {feature} ({n+1}/{len(self.features)})")
 
             # sorting orders based on target rates
             order = self.values_orders[feature]
-                                  
+
             # checking for rare values
-            values_to_group = [val for val, freq in frequencies[feature].items() if freq < self.min_freq and val != self.str_nan]
+            values_to_group = [
+                val
+                for val, freq in frequencies[feature].items()
+                if freq < self.min_freq and val != self.str_nan
+            ]
             if any(values_to_group):
-                 # adding default value to the order
+                # adding default value to the order
                 order.append(self.str_default)
 
                 # grouping rare values in default value
                 order.group_list(values_to_group, self.str_default)
-                x_copy.loc[x_copy[feature].isin(values_to_group), feature] = self.str_default 
+                x_copy.loc[x_copy[feature].isin(values_to_group), feature] = self.str_default
 
                 # updating values_orders
                 self.values_orders.update({feature: order})
 
         # computing target rate per modality for ordering
         target_rates = x_copy.apply(target_rate, y=y, ascending=True, axis=0)
-        
+
         # sorting orders based on target rates
         for feature in self.features:
             order = self.values_orders[feature]
@@ -160,8 +163,8 @@ class DefaultDiscretizer(GroupedListDiscretizer):
 
             # leaving NaNs at the end of the list
             if self.str_nan in new_order:
-            	new_order.remove(self.str_nan)
-            	new_order += [self.str_nan]
+                new_order.remove(self.str_nan)
+                new_order += [self.str_nan]
 
             # sorting order updating values_orders
             self.values_orders.update({feature: order.sort_by(new_order)})
@@ -171,13 +174,14 @@ class DefaultDiscretizer(GroupedListDiscretizer):
             self.features,
             self.values_orders,
             copy=self.copy,
-            output_dtype='str',
+            output_dtype="str",
             str_nan=self.str_nan,
         )
         super().fit(X, y)
 
         return self
-    
+
+
 class ChainedDiscretizer(GroupedListDiscretizer):
     """Chained Discretization based on a list of GroupedList."""
 
@@ -318,8 +322,8 @@ class ChainedDiscretizer(GroupedListDiscretizer):
             self.values_orders,
             str_nan=self.str_nan,
             copy=self.copy,
-            input_dtypes='str',
-            output_dtype='str',
+            input_dtypes="str",
+            output_dtype="str",
         )
         super().fit(X, y)
 
@@ -342,7 +346,7 @@ class OrdinalDiscretizer(GroupedListDiscretizer):
         values_orders: Dict[str, Any],
         min_freq: float,
         *,
-        str_nan: str = '__NAN__',
+        str_nan: str = "__NAN__",
         input_dtypes: Union[str, Dict[str, str]] = None,
         copy: bool = False,
         verbose: bool = False,
@@ -378,15 +382,17 @@ class OrdinalDiscretizer(GroupedListDiscretizer):
         self.verbose = verbose
         self.str_nan = str_nan
         if input_dtypes is None:
-            input_dtypes = {feature: 'str' for feature in features}
+            input_dtypes = {feature: "str" for feature in features}
         if isinstance(input_dtypes, str):
             input_dtypes = {feature: input_dtypes for feature in features}
         self.input_dtypes = input_dtypes
 
-        self.quantitative_features = [feature for feature in features if input_dtypes[feature] == 'float']
-        self.qualitative_features = [feature for feature in features if input_dtypes[feature] == 'str']
-
-
+        self.quantitative_features = [
+            feature for feature in features if input_dtypes[feature] == "float"
+        ]
+        self.qualitative_features = [
+            feature for feature in features if input_dtypes[feature] == "str"
+        ]
 
     def prepare_data(self, X: DataFrame, y: Series) -> DataFrame:
         """Called during fit step
@@ -449,16 +455,13 @@ class OrdinalDiscretizer(GroupedListDiscretizer):
         )
 
         # grouping rare modalities for each feature
-        common_modalities = (
-            x_copy[self.features]
-            .apply(
-                find_common_modalities,
-                y=y,
-                min_freq=self.min_freq,
-                values_orders=known_orders,
-                axis=0,
-                result_type="reduce",
-            )
+        common_modalities = x_copy[self.features].apply(
+            find_common_modalities,
+            y=y,
+            min_freq=self.min_freq,
+            values_orders=known_orders,
+            axis=0,
+            result_type="reduce",
         )
 
         # converting potential labels into there respective values (quantiles)
@@ -479,7 +482,7 @@ class OrdinalDiscretizer(GroupedListDiscretizer):
             copy=self.copy,
             str_nan=self.str_nan,
             input_dtypes=self.input_dtypes,
-            output_dtype='str',
+            output_dtype="str",
         )
         super().fit(x_copy, y)
 
@@ -545,7 +548,6 @@ def find_common_modalities(
 
     # case 2.1: there are underrepresented modalities/values
     while any(frequencies < min_freq) & (len(frequencies) > 1):
-
         # updating per-group target rate per modality/value
         target_rates = series_groupy_order(init_target_rates, order) / frequencies / len_df
 
@@ -571,6 +573,7 @@ def find_common_modalities(
     # case 2.2 : no underrepresented value
     return order
 
+
 def series_groupy_order(series: Series, order: GroupedList) -> Series:
     """Groups a series according to groups specified in the order
 
@@ -586,14 +589,16 @@ def series_groupy_order(series: Series, order: GroupedList) -> Series:
     Series
         Grouped Series
     """
-    grouped_series = series.groupby(
-            list(map(order.get_group, series.index)), dropna=False
-    ).sum().reindex(order)
+    grouped_series = (
+        series.groupby(list(map(order.get_group, series.index)), dropna=False).sum().reindex(order)
+    )
 
     return grouped_series
 
 
-def find_closest_modality(idx: int, order: GroupedList, frequencies: List[float], target_rates: Series, min_freq: float) -> Any:
+def find_closest_modality(
+    idx: int, order: GroupedList, frequencies: List[float], target_rates: Series, min_freq: float
+) -> Any:
     """HELPER Finds the closest modality in terms of frequency and target rate
 
     Parameters
@@ -638,7 +643,7 @@ def find_closest_modality(idx: int, order: GroupedList, frequencies: List[float]
         closest_target = idx - 1
         if abs(previous_target - current_target) >= abs(next_target - current_target):
             closest_target = idx + 1
-        
+
         # case 3.1: grouping with the closest target rate
         idx_closest_modality = closest_target
 

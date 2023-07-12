@@ -5,8 +5,13 @@ for a binary classification model.
 from typing import Any, Dict, List, Union
 
 from pandas import DataFrame, Series, unique
-from pandas.api.types import is_numeric_dtype
-from .utils.base_discretizers import GroupedList, min_value_counts, GroupedListDiscretizer, check_new_values
+
+from .utils.base_discretizers import (
+    GroupedList,
+    GroupedListDiscretizer,
+    check_new_values,
+    min_value_counts,
+)
 from .utils.qualitative_discretizers import DefaultDiscretizer, OrdinalDiscretizer
 from .utils.quantitative_discretizers import QuantileDiscretizer
 from .utils.type_discretizers import StringDiscretizer
@@ -64,8 +69,8 @@ class Discretizer(GroupedListDiscretizer):
         values_orders: Dict[str, GroupedList] = None,
         copy: bool = False,
         verbose: bool = False,
-        str_nan: str = '__NAN__',
-        str_default: str = '__OTHER__'
+        str_nan: str = "__NAN__",
+        str_default: str = "__OTHER__",
     ) -> None:
         """_summary_
 
@@ -105,7 +110,7 @@ class Discretizer(GroupedListDiscretizer):
         assert len(list(set(qualitative_features))) == len(
             qualitative_features
         ), "Column duplicates in qualitative_features"
-        
+
         if ordinal_features is None:
             ordinal_features = []
         self.ordinal_features = ordinal_features[:]
@@ -118,12 +123,12 @@ class Discretizer(GroupedListDiscretizer):
         self.verbose = verbose
         self.str_nan = str_nan
         self.str_default = str_default
-        
+
         self.features = list(set(quantitative_features + qualitative_features + ordinal_features))
 
         # initializing input_dtypes
-        self.input_dtypes = {feature: 'str' for feature in self.features}
-        self.input_dtypes.update({feature: 'float' for feature in quantitative_features})
+        self.input_dtypes = {feature: "str" for feature in self.features}
+        self.input_dtypes.update({feature: "float" for feature in quantitative_features})
 
     def fit(self, X: DataFrame, y: Series) -> None:
         """_summary_
@@ -142,7 +147,7 @@ class Discretizer(GroupedListDiscretizer):
 
             # grouping qualitative features
             discretizer = QualitativeDiscretizer(
-                qualitative_features=self.qualitative_features, 
+                qualitative_features=self.qualitative_features,
                 ordinal_features=self.ordinal_features,
                 min_freq=self.min_freq,
                 values_orders=self.values_orders,
@@ -182,7 +187,7 @@ class Discretizer(GroupedListDiscretizer):
             self.values_orders,
             copy=self.copy,
             input_dtypes=self.input_dtypes,
-            output_dtype='str',  # TODO: it won't work up to auto carver
+            output_dtype="str",  # TODO: it won't work up to auto carver
             str_nan=self.str_nan,
         )
         super().fit(X, y)
@@ -226,9 +231,9 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
         *,
         ordinal_features: List[str] = None,
         values_orders: Dict[str, Any] = None,
-        input_dtypes: Union[str, Dict[str, str]] = 'str',
-        str_nan: str = '__NAN__',
-        str_default: str = '__OTHER__',
+        input_dtypes: Union[str, Dict[str, str]] = "str",
+        str_nan: str = "__NAN__",
+        str_default: str = "__OTHER__",
         copy: bool = False,
         verbose: bool = False,
     ) -> None:
@@ -260,7 +265,9 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
         self.qualitative_features = list(set(qualitative_features))
         if values_orders is None:
             values_orders = {}
-        self.values_orders = {feature: GroupedList(values) for feature, values in values_orders.items()}
+        self.values_orders = {
+            feature: GroupedList(values) for feature, values in values_orders.items()
+        }
         if ordinal_features is None:
             ordinal_features = []
         self.ordinal_features = list(set(ordinal_features))
@@ -271,16 +278,18 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
         self.verbose = verbose
 
         # non-ordinal qualitative features
-        self.non_ordinal_features = [feature for feature in qualitative_features if feature not in self.ordinal_features]
+        self.non_ordinal_features = [
+            feature for feature in qualitative_features if feature not in self.ordinal_features
+        ]
         # all unique features
         self.features = list(set(self.ordinal_features + self.non_ordinal_features))
 
         if input_dtypes is None:
-            input_dtypes = {feature: 'str' for feature in self.features}
+            input_dtypes = {feature: "str" for feature in self.features}
         if isinstance(input_dtypes, str):
             input_dtypes = {feature: input_dtypes for feature in self.features}
         self.input_dtypes = input_dtypes
-        
+
     def prepare_data(self, X: DataFrame, y: Series = None) -> DataFrame:
         """Prepares the data for bucketization, checks column types.
         Converts non-string columns into strings.
@@ -318,14 +327,16 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
             x_copy = stringer.fit_transform(x_copy)
 
             # TODO: put this into stringdiscretizer
-            # updating values_orders accordingly 
+            # updating values_orders accordingly
             for feature, order in stringer.values_orders.items():
                 # case 0: non-ordinal features, updating as is
                 if feature not in self.ordinal_features:
                     self.values_orders.update({feature: order})
                 # case 1: ordinal features, adding to contained dict
                 else:
-                    known_order = self.values_orders[feature]  # currently known order (only with strings)
+                    known_order = self.values_orders[
+                        feature
+                    ]  # currently known order (only with strings)
                     known_order.update(order.contained)
 
         # checking for binary target
@@ -337,7 +348,7 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
 
         # all known values for features
         known_values = {feature: values.values() for feature, values in self.values_orders.items()}
-        
+
         # checking that all unique values in X are in values_orders
         check_new_values(x_copy, self.ordinal_features, known_values)
 
@@ -369,7 +380,7 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
                 values_orders=self.values_orders,
                 min_freq=self.min_freq,
                 verbose=self.verbose,
-                str_nan=self.str_nan
+                str_nan=self.str_nan,
             )
             discretizer.fit(Xc, y)
 
@@ -397,7 +408,7 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
             self.values_orders,
             copy=self.copy,
             input_dtypes=self.input_dtypes,
-            output_dtype='str',
+            output_dtype="str",
             str_nan=self.str_nan,
         )
         super().fit(X, y)
@@ -433,8 +444,8 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
         min_freq: float,
         *,
         values_orders: Dict[str, Any] = None,
-        input_dtypes: Union[str, Dict[str, str]] = 'float',
-        str_nan: str = '__NAN__',
+        input_dtypes: Union[str, Dict[str, str]] = "float",
+        str_nan: str = "__NAN__",
         copy: bool = False,
         verbose: bool = False,
     ) -> None:
@@ -464,14 +475,16 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
         self.features = list(set(features))
         if values_orders is None:
             values_orders = {}
-        self.values_orders = {feature: GroupedList(values) for feature, values in values_orders.items()}
+        self.values_orders = {
+            feature: GroupedList(values) for feature, values in values_orders.items()
+        }
         self.min_freq = min_freq
         self.str_nan = str_nan
         self.copy = copy
         self.verbose = verbose
 
         if input_dtypes is None:
-            input_dtypes = {feature: 'float' for feature in self.features}
+            input_dtypes = {feature: "float" for feature in self.features}
         if isinstance(input_dtypes, str):
             input_dtypes = {feature: input_dtypes for feature in self.features}
         self.input_dtypes = input_dtypes
@@ -509,7 +522,7 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
             values_orders=self.values_orders,
             verbose=self.verbose,
             str_nan=self.str_nan,
-            copy=False
+            copy=False,
         )
         Xc = discretizer.fit_transform(Xc, y)
 
@@ -519,7 +532,9 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
         # [Quantitative features] Grouping rare quantiles into closest common one
         #  -> can exist because of overrepresented values (values more frequent than 1/q)
         # searching for features with rare quantiles: computing min frequency per feature
-        frequencies = Xc[self.features].apply(min_value_counts, values_orders=self.values_orders, axis=0)
+        frequencies = Xc[self.features].apply(
+            min_value_counts, values_orders=self.values_orders, axis=0
+        )
 
         # minimal frequency of a quantile
         q_min_freq = self.min_freq / 2
@@ -535,7 +550,7 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
                 values_orders=self.values_orders,
                 str_nan=self.str_nan,
                 verbose=self.verbose,
-                input_dtypes=self.input_dtypes
+                input_dtypes=self.input_dtypes,
             )
             discretizer.fit(Xc, y)
 
@@ -548,7 +563,7 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
             self.values_orders,
             copy=self.copy,
             input_dtypes=self.input_dtypes,
-            output_dtype='str',
+            output_dtype="str",
             str_nan=self.str_nan,
         )
         super().fit(X, y)
