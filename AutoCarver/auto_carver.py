@@ -270,6 +270,12 @@ class AutoCarver(GroupedListDiscretizer):
         # updating values_orders according to base bucketization
         self.values_orders.update(discretizer.values_orders)
 
+        # removing dropped features
+        for feature in self.features:
+            if feature not in discretizer.values_orders:
+                self.remove_feature(feature)
+
+
         # converting potential quantiles into there respective labels
         labels_orders = convert_to_labels(
             features=self.features,
@@ -301,7 +307,7 @@ class AutoCarver(GroupedListDiscretizer):
             best_combination = self.get_best_combination(order, xtab, xtab_test=xtab_test)
 
             # checking that a suitable combination has been found
-            if any(best_combination):
+            if best_combination is not None:
                 order, xtab, xtab_test = best_combination
                 if self.verbose:  # verbose if requested
                     print(xtab)
@@ -311,10 +317,10 @@ class AutoCarver(GroupedListDiscretizer):
             
             # no suitable combination has been found -> removing feature
             else:
-                print(f"No robust combination for feature '{feature}' could be found. It will be ignored. You should increase the size of your test sample (test sample not representative of test sample for this feature).")
+                print(f"No robust combination for feature '{feature}' could be found. It will be ignored. You might have to increase the size of your test sample (test sample not representative of test sample for this feature) or you should consider dropping this features.")
                 self.remove_feature(feature)
-                labels_orders.pop(feature)
-                labels_orders.pop(feature)
+                if feature in labels_orders:
+                    labels_orders.pop(feature)
 
 
         # converting potential labels into there respective values (quantiles)
@@ -351,8 +357,10 @@ class AutoCarver(GroupedListDiscretizer):
         """        
         
         self.features.remove(feature)
-        self.values_orders.pop(feature)
-        self.input_dtypes.pop(feature)
+        if feature in self.values_orders:
+            self.values_orders.pop(feature)
+        if feature in self.input_dtypes:
+            self.input_dtypes.pop(feature)
         if feature in self.qualitative_features:
             self.qualitative_features.remove(feature)
         if feature in self.ordinal_features:
@@ -377,6 +385,7 @@ class AutoCarver(GroupedListDiscretizer):
         raw_xtab_test = filter_nan_xtab(xtab_test, self.str_nan)
 
         # checking for non-nan values
+        best_association = None
         if raw_xtab.shape[0] > 1:
             # all possible consecutive combinations
             combinations = consecutive_combinations(

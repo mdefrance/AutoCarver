@@ -82,7 +82,7 @@ def check_new_values(X: DataFrame, features: List[str], known_values: Dict[str, 
         unexpected = [val for val in uniques[feature] if val not in known_values[feature]]
         assert (
             len(unexpected) == 0
-        ), f"Unexpected value! The ordering for values: {str(unexpected)} of feature '{feature}' was not provided. There might be new values in your test/dev set. Consider taking a bigger test/dev set or dropping the column {feature}."
+        ), f"Unexpected value! The ordering for values: {str(list(unexpected))} of feature '{feature}' was not provided. There might be new values in your test/dev set. Consider taking a bigger test/dev set or dropping the column {feature}."
 
 
 def check_missing_values(
@@ -112,7 +112,7 @@ def check_missing_values(
         unexpected = [val for val in known_values[feature] if val not in uniques[feature]]
         assert (
             len(unexpected) == 0
-        ), f"Unexpected value! The ordering for values: {str(unexpected)} of feature '{feature}' was provided but there are not matching value in provided X. You should check 'values_orders['{feature}']' for unwanted values."
+        ), f"Unexpected value! The ordering for values: {str(list(unexpected))} of feature '{feature}' was provided but there are not matching value in provided X. You should check 'values_orders['{feature}']' for unwanted values."
 
 
 class GroupedList(list):
@@ -743,8 +743,15 @@ def convert_to_values(
                     else str_nan
                     for label_discarded in group_to_discard
                 ]
-                # keeping the largest value amongst the discarded (otherwise they wont be grouped)
-                kept_value = max([value for value in group_to_discard if value != str_nan])
+
+                # choosing the value to keep as the group
+                which_to_keep = [value for value in group_to_discard if value != str_nan]
+                # case 0: keeping the largest value amongst the discarded (otherwise they wont be grouped)
+                if len(which_to_keep) > 0:
+                    kept_value = max(which_to_keep)
+                # case 1: there is only str_nan in the group (it was not grouped)
+                else:
+                    kept_value = group_to_discard[0]
 
             # grouping quantiles
             order.group_list(group_to_discard, kept_value)

@@ -3,7 +3,7 @@ for a binary classification model.
 """
 
 from typing import Any, Dict, List, Union
-
+from numpy import nan
 from pandas import DataFrame, Series, unique
 
 from .utils.base_discretizers import (
@@ -113,10 +113,18 @@ class Discretizer(GroupedListDiscretizer):
 
         if ordinal_features is None:
             ordinal_features = []
+        assert len(list(set(ordinal_features))) == len(
+            ordinal_features
+        ), "Column duplicates in qualitative_features"
         self.ordinal_features = ordinal_features[:]
+
+        # adding up all qualitative features
+        self.qualitative_features = list(set(self.qualitative_features + self.ordinal_features))
+
         if values_orders is None:
             values_orders = {}
-        self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
+        self.values_orders = {feature: GroupedList(value) for feature, value in values_orders.items()}
+
         self.min_freq = min_freq
 
         self.copy = copy
@@ -129,6 +137,26 @@ class Discretizer(GroupedListDiscretizer):
         # initializing input_dtypes
         self.input_dtypes = {feature: "str" for feature in self.features}
         self.input_dtypes.update({feature: "float" for feature in quantitative_features})
+    
+    def remove_feature(self, feature: str) -> None:
+        """Removes a feature from the Discretizer
+
+        Parameters
+        ----------
+        feature : str
+            Column name of the feature
+        """
+        self.features.remove(feature)
+        if feature in self.ordinal_features:
+            self.ordinal_features.remove(feature)
+        if feature in self.qualitative_features:
+            self.qualitative_features.remove(feature)
+        if feature in self.quantitative_features:
+            self.quantitative_features.remove(feature)
+        if feature in self.values_orders:
+            self.values_orders.pop(feature)
+        if feature in self.input_dtypes:
+            self.input_dtypes.pop(feature)
 
     def fit(self, X: DataFrame, y: Series) -> None:
         """_summary_
@@ -162,6 +190,11 @@ class Discretizer(GroupedListDiscretizer):
             # storing orders of grouped features
             self.values_orders.update(discretizer.values_orders)
 
+            # removing dropped features
+            for feature in self.qualitative_features:
+                if feature not in discretizer.values_orders:
+                    self.remove_feature(feature)
+
         # [Quantitative features] Grouping quantitative features
         if len(self.quantitative_features) > 0:
             if self.verbose:  # verbose if requested
@@ -180,6 +213,11 @@ class Discretizer(GroupedListDiscretizer):
 
             # storing orders of grouped features
             self.values_orders.update(discretizer.values_orders)
+
+            # removing dropped features
+            for feature in self.quantitative_features:
+                if feature not in discretizer.values_orders:
+                    self.remove_feature(feature)
 
         # discretizing features based on each feature's values_order
         super().__init__(
@@ -311,15 +349,26 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
         # copying dataframe
         x_copy = X.copy()
 
+        # checking for ids (unique value per row)
+        frequencies = x_copy[self.features].apply(
+            lambda u: u.value_counts(normalize=True, dropna=False).drop(nan, errors='ignore').max(), axis=0
+        )
+        # for each feature, checking that at least one value 
+        for feature in self.features:
+            if frequencies[feature] < self.min_freq:
+                print(f"For feature '{feature}', the largest modality has {frequencies[feature]:2.2%} observations which is lower than {self.min_freq:2.2%}. This feature will not be Discretized. Consider decreasing parameter min_freq or removing this feature.")
+                self.remove_feature(feature)
+
         # checking for columns containing floats or integers even with filled nans
         dtypes = x_copy[self.features].fillna(self.str_nan).applymap(type).apply(unique)
-        not_object = dtypes.apply(lambda u: float in u or int in u)
+        not_object = dtypes.apply(lambda u: any(typ != str for typ in u))
 
         # non qualitative features detected
         if any(not_object):
             if self.verbose:
+                unexpected_dtypes = [typ for dtyp in dtypes[not_object] for typ in dtyp if typ != str]
                 print(
-                    f"""Non-string features: {str(not_object[not_object].index)}, will be converted using type_discretizers.StringDiscretizer."""
+                    f"""Non-string features: {str(list(not_object[not_object].index))}. Trying to convert them using type_discretizers.StringDiscretizer, otherwise convert them manually. Unexpected data types: {str(list(unexpected_dtypes))}."""
                 )
 
             # converting specified features into qualitative features
@@ -353,6 +402,25 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
         check_new_values(x_copy, self.ordinal_features, known_values)
 
         return x_copy
+    
+    def remove_feature(self, feature: str) -> None:
+        """Removes a feature from the Discretizer
+
+        Parameters
+        ----------
+        feature : str
+            Column name of the feature
+        """
+        self.features.remove(feature)
+        if feature in self.ordinal_features:
+            self.ordinal_features.remove(feature)
+        if feature in self.non_ordinal_features:
+            self.non_ordinal_features.remove(feature)
+        if feature in self.qualitative_features:
+            self.qualitative_features.remove(feature)
+        if feature in self.values_orders:
+            self.values_orders.pop(feature)
+
 
     def fit(self, X: DataFrame, y: Series) -> None:
         """Learning TRAIN distribution
@@ -494,7 +562,7 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
         # checking for quantitative columns
         dtypes = X[self.features].applymap(type).apply(unique)
         not_numeric = dtypes.apply(lambda u: str in u)
-        assert all(~not_numeric), f"Non-numeric features: {str(not_numeric[not_numeric].index)}"
+        assert all(~not_numeric), f"Non-numeric features: {str(list(not_numeric[not_numeric].index))}"
 
         # checking for binary target
         y_values = unique(y)
