@@ -317,6 +317,7 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
             stringer = StringDiscretizer(features=list(not_object.index[not_object]))
             x_copy = stringer.fit_transform(x_copy)
 
+            # TODO: put this into stringdiscretizer
             # updating values_orders accordingly 
             for feature, order in stringer.values_orders.items():
                 # case 0: non-ordinal features, updating as is

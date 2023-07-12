@@ -89,13 +89,15 @@ def test_discretizer(x_train: DataFrame):
         Simulated Train DataFrame
     """
 
-    quantitative_features = ['Quantitative', 'Discrete_Quantitative', 'Discrete_Quantitative_highnan', 'Discrete_Quantitative_lownan', 'Discrete_Quantitative_rarevalue']
-    qualitative_features = ["Qualitative", "Qualitative_grouped", "Qualitative_lownan", "Qualitative_highnan"]
-    ordinal_features = ["Qualitative_Ordinal", "Qualitative_Ordinal_lownan"]
+    quantitative_features = ['Quantitative', 'Discrete_Quantitative_highnan', 'Discrete_Quantitative_lownan', 'Discrete_Quantitative', 'Discrete_Quantitative_rarevalue']
+    qualitative_features = ["Qualitative", "Qualitative_grouped", "Qualitative_lownan", "Qualitative_highnan", "Discrete_Qualitative", "Discrete_Qualitative_lownan", "Discrete_Qualitative_rarevalue"]
+    ordinal_features = ["Qualitative_Ordinal", "Qualitative_Ordinal_lownan", "Discrete_Qualitative_highnan"]
     values_orders = {
         "Qualitative_Ordinal": ['Low-', 'Low', 'Low+', 'Medium-', 'Medium', 'Medium+', 'High-', 'High', 'High+'],
         "Qualitative_Ordinal_lownan": ['Low-', 'Low', 'Low+', 'Medium-', 'Medium', 'Medium+', 'High-', 'High', 'High+'],
+        "Discrete_Qualitative_highnan" : ["1", "2", "3", "4", "5", "6", "7"],
     }
+
 
 
     # minimum frequency per modality + apply(find_common_modalities) outputs a Series
@@ -152,3 +154,29 @@ def test_discretizer(x_train: DataFrame):
     }
     assert discretizer.values_orders['Qualitative_Ordinal'].contained == expected_ordinal, "Values not correctly grouped"
     assert discretizer.values_orders['Qualitative_Ordinal_lownan'].contained == expected_ordinal_lownan, "NaNs should stay by themselves."
+
+    # Testing out qualitative with int/float values inside -> StringDiscretizer
+    expected = {
+        '2': [2.0, '2'],
+        '4': [4.0, '4'],
+        '1': [1.0, '1'],
+        '3': [3.0, '3'],
+        '__OTHER__': [0.5, '0.5', 6.0, '6', 5.0, '5', '__OTHER__']
+    }
+    assert discretizer.values_orders["Discrete_Qualitative_rarevalue"].contained == expected, "Qualitative features with float values should be converted to string and there values stored in the values_orders"
+    expected = {
+        '2': [2, '2'],
+        '4': [4, '4'],
+        '1': [1, '1'],
+        '3': [3, '3'],
+        '__OTHER__': [7, '7', 6, '6', 5, '5', '__OTHER__']
+    }
+    assert discretizer.values_orders["Discrete_Qualitative"].contained == expected, "Qualitative features with int values should be converted to string and there values stored in the values_orders"
+    expected = {
+        '2': ['1', 2.0, '2'],
+        '3': [3.0, '3'],
+        '4': [4.0, '4'],
+        '5': [6.0, '6', 7.0, '7', 5.0, '5'],
+        '__NAN__': ['__NAN__']
+    }
+    assert discretizer.values_orders["Discrete_Qualitative_highnan"].contained == expected, "Ordinal qualitative features with int or float values that contain nan should be converted to string and there values stored in the values_orders"
