@@ -566,7 +566,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
             _description_
         """
         # converting potential quantiles into there respective labels
-        known_orders = convert_to_labels(self.features, self.quantitative_features, self.values_orders, self.str_nan)
+        labels_orders = convert_to_labels(self.features, self.quantitative_features, self.values_orders, self.str_nan)
 
         # dataset length
         x_len = X.shape[0]
@@ -575,14 +575,23 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
             if self.verbose:  # verbose if requested
                 print(f" - [GroupedListDiscretizer] Transform Qualitative {feature} ({n+1}/{len(self.quantitative_features)})")
 
+            # feature's labels associated to each quantile
+            feature_labels = labels_orders[feature]
+            feature_values = self.values_orders[feature]
+
             # keeping track of nans
             nans = isna(X[feature])
 
-            # feature's labels associated to each quantile
-            feature_labels = known_orders[feature]
+            # converting nans to there corresponding quantile (if it was grouped to a quantile)
+            if any(nans):
+                assert self.str_nan in feature_values.values(), f"Unexpected value! Missing values found for feature '{feature}' at transform step but not during fit. There might be new values in your test/dev set. Consider taking a bigger test/dev set or dropping the column {feature}."
+                nan_value = feature_values.get_group(self.str_nan)
+                # checking that nans have been grouped to a quantile otherwise they are left as numpy.nan
+                if nan_value != self.str_nan:
+                    X.loc[nans, feature] = nan_value
 
             # quantiles ordering of the feature (can not mix str and floats for comparison purposes)
-            feature_quantiles = self.values_orders[feature]
+            feature_quantiles = feature_values[:]
             if self.str_nan in feature_quantiles:  # filtering out nans if any
                 feature_quantiles= [val for val in feature_quantiles if val != self.str_nan]
 
@@ -596,10 +605,12 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
             if len(values_to_group) > 0:
                 X[feature] = select(values_to_group, group_labels, default=X[feature])
 
-            # converting nans
+            # converting nans to str_nan
             if any(nans):
-                assert self.str_nan in self.values_orders[feature], f"Unexpected value! Missing values found for feature '{feature}' at transform step but not during fit. There might be new values in your test/dev set. Consider taking a bigger test/dev set or dropping the column {feature}."
-                X.loc[nans, feature] = self.str_nan
+                nan_value = feature_values.get_group(self.str_nan)
+                # checking that nans have not been grouped to a quantile -> converting them to str_nan
+                if nan_value == self.str_nan:
+                    X.loc[nans, feature] = self.str_nan
 
         return X
 
@@ -659,7 +670,7 @@ def convert_to_labels(
     """Converts a values_orders values to labels (quantiles)"""
 
     # copying values_orders without nans
-    known_orders = {
+    labels_orders = {
         feature: GroupedList([value for value in values_orders[feature] if value != str_nan])
         for feature in features
     }
@@ -671,46 +682,60 @@ def convert_to_labels(
 
         # applying alliases to known orders
         for feature in quantitative_features:
-            known_orders.update({
-                feature: GroupedList([quantiles_labels[feature][quantile] for quantile in known_orders[feature]])
+            labels_orders.update({
+                feature: GroupedList([quantiles_labels[feature][quantile] for quantile in labels_orders[feature]])
             })
 
     # adding back nans if requested
     if not dropna:
     	for feature in features:
     		if str_nan in values_orders[feature]:
-    			order = known_orders[feature]
+    			order = labels_orders[feature]
     			order.append(str_nan)  # adding back nans at the end of the order
-    			known_orders.update({feature: order})
+    			labels_orders.update({feature: order})
             
-    return known_orders
+    return labels_orders
 
 def convert_to_values(
-	feature: str,
-    labels: List[str],
+    features: List[str],
     quantitative_features: List[str],
     values_orders: Dict[str, GroupedList],
+    label_orders: Dict[str, GroupedList],
     str_nan: str,
-) -> List[float]:
-    """Converts a list of labels into the corresponding values (quantiles)
-
-    TODO: do not use, call to get_labels_quantiles to often
-    """
+):
     
-    # copying labels
-    values = labels[:]
-
+    
     # for quantitative features getting labels per quantile
     if any(quantitative_features):
         # getting quantile per group "name"
-        labels_quantiles = get_labels_quantiles(quantitative_features, values_orders, str_nan)
+        labels_to_quantiles = get_labels_quantiles(quantitative_features, values_orders, str_nan)
 
-    # for quantitative features getting quantile per alias
-    if feature in quantitative_features:
-        # getting raw quantiles to be grouped
-        values = [labels_quantiles[feature][val] for val in values]
-            
-    return values
+    # updating feature orders (that keeps NaNs and quantiles)
+    for feature in features:
+        # initial complete ordering with NAN and quantiles
+        order = values_orders[feature]
+
+        # checking for grouped modalities
+        groups_to_discard = label_orders[feature].contained
+
+        # grouping the raw quantile values
+        for kept_value, group_to_discard in groups_to_discard.items():
+
+            # for qualitative features grouping as is
+            # for quantitative features getting quantile per alias
+            if feature in quantitative_features:
+                # getting raw quantiles to be grouped
+                group_to_discard = [labels_to_quantiles[feature][label_discarded] if label_discarded != str_nan else str_nan for label_discarded in group_to_discard]
+                # keeping the largest value amongst the discarded (otherwise they wont be grouped)
+                kept_value = max([value for value in group_to_discard if value != str_nan])
+
+            # grouping quantiles
+            order.group_list(group_to_discard, kept_value)
+
+        # updating ordering
+        values_orders.update({feature: order})
+    
+    return values_orders
 
 def min_value_counts(x: Series, values_orders: Dict[str, GroupedList] = None, dropna: bool = False, normalize: bool = True) -> float:
     """Minimum of modalities' frequencies.

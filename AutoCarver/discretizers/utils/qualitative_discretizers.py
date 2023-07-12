@@ -13,6 +13,7 @@ from .base_discretizers import (
     check_new_values,
     check_missing_values,
     convert_to_labels,
+    convert_to_values,
     get_labels_quantiles,
 )
 from numpy import nan, select, argmin
@@ -440,7 +441,13 @@ class OrdinalDiscretizer(GroupedListDiscretizer):
         x_copy = self.prepare_data(X, y)
 
         # converting potential quantiles into there labels
-        known_orders = convert_to_labels(self.features, self.quantitative_features, self.values_orders, self.str_nan)
+        known_orders = convert_to_labels(
+            features=self.features,
+            quantitative_features=self.quantitative_features,
+            values_orders=self.values_orders,
+            str_nan=self.str_nan,
+            dropna=True,
+        )
 
         # grouping rare modalities for each feature
         common_modalities = (
@@ -455,35 +462,16 @@ class OrdinalDiscretizer(GroupedListDiscretizer):
             )
         )
 
-        # for quantitative features getting labels per quantile
-        if any(self.quantitative_features):
-            # getting quantile per group "name"
-            labels_to_quantiles = get_labels_quantiles(self.quantitative_features, self.values_orders, self.str_nan)
-
-        # updating feature orders (that keeps NaNs and quantiles)
-        for feature in self.features:
-            # initial complete ordering with NAN and quantiles
-            order = self.values_orders[feature]
-
-            # checking for grouped modalities
-            groups_to_discard = common_modalities[feature].contained
-
-            # grouping the raw quantile values
-            for kept_value, group_to_discard in groups_to_discard.items():
-
-                # for qualitative features grouping as is
-                # for quantitative features getting quantile per alias
-                if feature in self.quantitative_features:
-                    # getting raw quantiles to be grouped
-                    group_to_discard = [labels_to_quantiles[feature][label_discarded] for label_discarded in group_to_discard]
-                    # keeping the largest value amongst the discarded (otherwise they wont be grouped)
-                    kept_value = max(group_to_discard)
-
-                # grouping quantiles
-                order.group_list(group_to_discard, kept_value)
-            
-            # updating ordering
-            self.values_orders.update({feature: order})
+        # converting potential labels into there respective values (quantiles)
+        self.values_orders.update(
+            convert_to_values(
+                features=self.features,
+                quantitative_features=self.quantitative_features,
+                values_orders=self.values_orders,
+                label_orders=common_modalities,
+                str_nan=self.str_nan,
+            )
+        )
 
         # discretizing features based on each feature's values_order
         super().__init__(
