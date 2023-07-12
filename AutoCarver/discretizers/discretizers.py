@@ -188,7 +188,6 @@ class Discretizer(GroupedListDiscretizer):
             copy=self.copy,
             verbose=self.verbose,
             input_dtypes=self.input_dtypes,
-            output_dtype="str",  # TODO: it won't work up to auto carver
             str_nan=self.str_nan,
         )
         super().fit(X, y)
@@ -405,11 +404,10 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
 
         # discretizing features based on each feature's values_order
         super().__init__(
-            self.features,
-            self.values_orders,
+            features=self.features,
+            values_orders=self.values_orders,
             copy=self.copy,
             input_dtypes=self.input_dtypes,
-            output_dtype="str",
             str_nan=self.str_nan,
         )
         super().fit(X, y)
@@ -560,11 +558,10 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
 
         # discretizing features based on each feature's values_order
         super().__init__(
-            self.features,
-            self.values_orders,
+            features=self.features,
+            values_orders=self.values_orders,
             copy=self.copy,
             input_dtypes=self.input_dtypes,
-            output_dtype="str",
             str_nan=self.str_nan,
         )
         super().fit(X, y)

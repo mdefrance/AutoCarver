@@ -435,25 +435,6 @@ class GroupedList(list):
         return repr
 
 
-# TODO: add labels for str/float with output_dtypes
-#     # converting order to float if requested
-#     output_order = GroupedList(order)  # copy of order
-#     if self.output_dtype == 'float':
-#         # creating GroupedList of ints
-#         output_order = GroupedList(list(range(len(order))))
-
-#         # adding values to each key
-#         for key in output_order:
-#             output_order.update({key: order.get(order[key]) + [key]})
-
-#         # keeping track of the ordering
-#         self.values_orders.update({feature: output_order})  # TODO supprimer faire un converter to float, l'utiliser dans autocarver seulement?
-
-# # converting to float32
-# if self.output_dtype == 'float':
-#     X[self.qualitative_features] = X[self.qualitative_features].astype(float32)
-
-
 # TODO: add a summary
 # TODO: output a json
 # TODO: add a base discretizer that implements prepare_data (add reset_index ? -> add duplicate column check)
@@ -467,7 +448,6 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         *,
         copy: bool = False,
         input_dtypes: Union[str, Dict[str, str]] = None,
-        output_dtype: str = "str",
         str_nan: str = None,
         verbose: bool = False,
     ) -> None:
@@ -487,8 +467,6 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
             - if 'float' uses transform_quantitative
             - if 'str' uses transform_qualitative,
             default 'str'
-        output_dtype : str, optional
-            Type of the columns to be returned: 'float' or 'str', by default 'str'
         str_nan : str, optional
             Default values attributed to nan, by default None
         verbose : bool, optional
@@ -503,7 +481,6 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         if isinstance(input_dtypes, str):
             input_dtypes = {feature: input_dtypes for feature in features}
         self.input_dtypes = input_dtypes
-        self.output_dtype = output_dtype
 
         self.verbose = verbose
         self.str_nan = str_nan

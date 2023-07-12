@@ -71,7 +71,6 @@ class StringDiscretizer(GroupedListDiscretizer):
             features=self.features,
             values_orders=self.values_orders,
             input_dtypes="str",
-            output_dtype="str",
         )
         super().fit(X, y)
 

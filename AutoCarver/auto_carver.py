@@ -334,7 +334,6 @@ class AutoCarver(GroupedListDiscretizer):
             values_orders=self.values_orders,
             copy=self.copy,
             input_dtypes=self.input_dtypes,
-            output_dtype="float",
             str_nan=self.str_nan,
             verbose=self.verbose,
         )

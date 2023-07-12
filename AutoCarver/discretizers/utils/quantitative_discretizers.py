@@ -84,11 +84,10 @@ class QuantileDiscretizer(GroupedListDiscretizer):
 
         # discretizing features based on each feature's values_order
         super().__init__(
-            self.features,
-            self.values_orders,
+            features=self.features,
+            values_orders=self.values_orders,
             copy=self.copy,
             input_dtypes="float",
-            output_dtype="str",
             str_nan=self.str_nan,
         )
         super().fit(X, y)

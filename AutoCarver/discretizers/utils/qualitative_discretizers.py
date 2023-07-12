@@ -171,10 +171,9 @@ class DefaultDiscretizer(GroupedListDiscretizer):
 
         # discretizing features based on each feature's values_order
         super().__init__(
-            self.features,
-            self.values_orders,
+            features=self.features,
+            values_orders=self.values_orders,
             copy=self.copy,
-            output_dtype="str",
             str_nan=self.str_nan,
         )
         super().fit(X, y)
@@ -318,12 +317,11 @@ class ChainedDiscretizer(GroupedListDiscretizer):
                 values, frequencies = frequencies.index, frequencies.values
 
         super().__init__(
-            self.features,
-            self.values_orders,
+            features=self.features,
+            values_orders=self.values_orders,
             str_nan=self.str_nan,
             copy=self.copy,
             input_dtypes="str",
-            output_dtype="str",
         )
         super().fit(X, y)
 
@@ -477,12 +475,11 @@ class OrdinalDiscretizer(GroupedListDiscretizer):
 
         # discretizing features based on each feature's values_order
         super().__init__(
-            self.features,
-            self.values_orders,
+            features=self.features,
+            values_orders=self.values_orders,
             copy=self.copy,
             str_nan=self.str_nan,
             input_dtypes=self.input_dtypes,
-            output_dtype="str",
         )
         super().fit(x_copy, y)
 
