@@ -87,6 +87,8 @@ def test_discretizer(x_train: DataFrame, x_test_1: DataFrame):
     ----------
     x_train : DataFrame
         Simulated Train DataFrame
+    x_test_1 : DataFrame
+        Simulated Test DataFrame
     """
 
     quantitative_features = ['Quantitative', 'Discrete_Quantitative_highnan', 'Discrete_Quantitative_lownan', 'Discrete_Quantitative', 'Discrete_Quantitative_rarevalue']

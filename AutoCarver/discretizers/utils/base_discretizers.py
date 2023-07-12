@@ -592,7 +592,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         for n, feature in enumerate(self.quantitative_features):
             if self.verbose:  # verbose if requested
                 print(
-                    f" - [GroupedListDiscretizer] Transform Qualitative {feature} ({n+1}/{len(self.quantitative_features)})"
+                    f" - [GroupedListDiscretizer] Transform Quantitative {feature} ({n+1}/{len(self.quantitative_features)})"
                 )
 
             # feature's labels associated to each quantile

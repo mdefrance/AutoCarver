@@ -311,7 +311,7 @@ class AutoCarver(GroupedListDiscretizer):
             
             # no suitable combination has been found -> removing feature
             else:
-                print(f"No robust combination for feature '{feature}' could be found. It will be ignored.")
+                print(f"No robust combination for feature '{feature}' could be found. It will be ignored. You should increase the size of your test sample (test sample not representative of test sample for this feature).")
                 self.remove_feature(feature)
                 labels_orders.pop(feature)
                 labels_orders.pop(feature)
@@ -699,7 +699,7 @@ def get_best_association(
     grouped_xtabs = [
         vectorized_groupby_sum(xtab, index_to_groupby)
         for index_to_groupby in tqdm(
-            indices_to_groupby, disable=not verbose, desc="Grouping modalities"
+            indices_to_groupby, disable=not verbose, desc="Grouping modalities   "
         )
     ]
 
@@ -729,7 +729,7 @@ def get_best_association(
         return associations_xtab[0]
 
     # case 1: testing viability on provided test sample
-    for association in tqdm(associations_xtab, disable=not verbose, desc="Testing robustness"):
+    for association in tqdm(associations_xtab, disable=not verbose, desc="Testing robustness    "):
         # needed parameters
         index_to_groupby, xtab = (
             association["index_to_groupby"],
