@@ -4,8 +4,6 @@ from AutoCarver.converters import *
 from pytest import fixture
 
 
-def test_string_converter():
-    assert False, "TODO"
 
 def test_time_delta_converter():
     assert False, "TODO"

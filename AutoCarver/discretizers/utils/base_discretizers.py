@@ -4,7 +4,7 @@ for a binary classification model.
 
 from typing import Any, Dict, List, Union
 
-from numpy import argmin, float32, nan, select, sort, ndarray, inf, array, isfinite
+from numpy import nan, select, sort, ndarray, inf, array, isfinite
 from pandas import DataFrame, Series, isna, notna, unique
 from sklearn.base import BaseEstimator, TransformerMixin
 
@@ -644,6 +644,9 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
             if self.verbose:  # verbose if requested
                 print(f" - [GroupedListDiscretizer] Transform Qualitative {feature} ({n+1}/{len(self.qualitative_features)})")
 
+            # keeping track of nans that should stay nans
+            nans = X[feature].isna()
+
             # Group labels are the keys of the contained dict attribute (list elements)
             group_labels = self.values_orders[feature]
 
@@ -655,7 +658,11 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
 
             # checking for values to group
             if len(values_to_group) > 0:
-            	X[feature] = select(values_to_group, group_labels, default=X[feature])
+                X[feature] = select(values_to_group, group_labels, default=X[feature])
+            
+            # giving back nans
+            if any(nans):
+                X.loc[nans, feature] = nan
 
         return X
 

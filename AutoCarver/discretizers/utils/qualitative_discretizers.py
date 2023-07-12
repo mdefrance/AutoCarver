@@ -250,8 +250,7 @@ class ChainedDiscretizer(GroupedListDiscretizer):
 
         # iterating over each feature
         for n, feature in enumerate(self.features):
-            # verbose if requested
-            if self.verbose:
+            if self.verbose:  # verbose if requested
                 print(f" - [ChainedDiscretizer] Fit {feature} ({n+1}/{len(self.features)})")
 
             # computing frequencies of each modality

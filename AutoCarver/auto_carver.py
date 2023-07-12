@@ -612,19 +612,19 @@ def xtab_target_rate(xtab: DataFrame) -> DataFrame:
     
     return xtab[1].divide(xtab[0]).sort_values()
 
-def get_best_association(xtab: DataFrame, combinations: List[List[str]], sort_by: str, xtab_test: DataFrame = None, verbose: bool=True) -> Dict[str, Any]:
+def get_best_association(xtab: DataFrame, combinations: List[List[str]], sort_by: str, xtab_test: DataFrame = None, verbose: bool=False) -> Dict[str, Any]:
     """ Computes associations of the xtab for each combination"""
     
     # values to groupby indices with
     indices_to_groupby = [[value for values in ([group[0]] * len(group) for group in combination) for value in values] for combination in combinations]
 
     # grouping xtab by its indices
-    grouped_xtabs = [vectorized_groupby_sum(xtab, index_to_groupby) for index_to_groupby in tqdm(indices_to_groupby, disable=not verbose)]
+    grouped_xtabs = [vectorized_groupby_sum(xtab, index_to_groupby) for index_to_groupby in tqdm(indices_to_groupby, disable=not verbose, desc="Grouping modalities")]
 
     # computing associations for each xtabs
     n_obs = xtab.sum().sum()  # number of observation
     n_mod_y = len(xtab.columns)  # number of modalities and minimum number of modalities
-    associations_xtab = [association_xtab(grouped_xtab, n_obs, n_mod_y) for grouped_xtab in tqdm(grouped_xtabs, disable=not verbose)]
+    associations_xtab = [association_xtab(grouped_xtab, n_obs, n_mod_y) for grouped_xtab in tqdm(grouped_xtabs, disable=not verbose, desc="Computing associations")]
 
     # adding corresponding combination to the association
     for combination, index_to_groupby, association, grouped_xtab in zip(combinations, indices_to_groupby, associations_xtab, grouped_xtabs):
@@ -638,7 +638,7 @@ def get_best_association(xtab: DataFrame, combinations: List[List[str]], sort_by
         return associations_xtab[0]
     
     # case 1: testing viability on provided test sample
-    for association in tqdm(associations_xtab, disable=~verbose):
+    for association in tqdm(associations_xtab, disable=not verbose, desc="Testing robustness"):
         # needed parameters
         index_to_groupby, xtab = (
             association["index_to_groupby"],

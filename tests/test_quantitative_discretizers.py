@@ -1,7 +1,6 @@
 """Set of tests for quantitative_discretizers module."""
 
 from AutoCarver.discretizers.utils.quantitative_discretizers import *
-from pytest import fixture
 from numpy import inf
 
 def test_quantile_discretizer(x_train: DataFrame):

@@ -19,7 +19,7 @@ def test_quantitative_discretizer(x_train: DataFrame):
     discretizer = discretizers.QuantitativeDiscretizer(features, min_freq, copy=True)
     x_discretized = discretizer.fit_transform(x_train, x_train["quali_ordinal_target"])
 
-    assert inf not in discretizer.values_orders["Discrete_Quantitative_lownan"], "Missing order should be grouped with ordinal_discretizer"
+    assert '__NAN__' in discretizer.values_orders["Discrete_Quantitative_lownan"], "Missing order should not be grouped with ordinal_discretizer"
     assert all(x_discretized.Quantitative.value_counts(normalize=True) >= min_freq), "Non-nan value was not grouped"
     assert discretizer.values_orders["Discrete_Quantitative_lownan"] == [1.0, 2.0, 3.0, inf, '__NAN__'], "NaNs should not be grouped whatsoever"
     assert discretizer.values_orders["Discrete_Quantitative_rarevalue"] == [1.0, 2.0, 3.0, inf], "Rare values should be grouped to the closest one (OrdinalDiscretizer)"

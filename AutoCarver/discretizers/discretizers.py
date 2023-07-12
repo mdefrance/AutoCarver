@@ -10,8 +10,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from .utils.base_discretizers import GroupedList, min_value_counts, nan_unique, GroupedListDiscretizer, check_new_values
 from .utils.qualitative_discretizers import DefaultDiscretizer, OrdinalDiscretizer
 from .utils.quantitative_discretizers import QuantileDiscretizer
-
-from ..converters import StringConverter
+from .utils.type_discretizers import StringDiscretizer
 
 
 class Discretizer(GroupedListDiscretizer):
@@ -262,7 +261,7 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
         self.qualitative_features = qualitative_features[:]
         if values_orders is None:
             values_orders = {}
-        self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
+        self.values_orders = {feature: GroupedList(values) for feature, values in values_orders.items()}
         if ordinal_features is None:
             ordinal_features = []
         self.ordinal_features = ordinal_features[:]
@@ -273,11 +272,9 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
         self.verbose = verbose
 
         # non-ordinal qualitative features
-        self.non_ordinal_features = [f for f in qualitative_features if f not in self.ordinal_features]
+        self.non_ordinal_features = [feature for feature in qualitative_features if feature not in self.ordinal_features]
         # all unique features
-        self.features = self.ordinal_features + self.non_ordinal_features
-        # all known values for features
-        self.known_values = {feature: order.values() for feature, order in self.values_orders.items()}
+        self.features = list(set(self.ordinal_features + self.non_ordinal_features))
 
         if input_dtypes is None:
             input_dtypes = {feature: 'str' for feature in self.features}
@@ -305,23 +302,23 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
         """
 
         # copying dataframe
-        Xc = X.copy()
+        x_copy = X.copy()
 
         # checking for quantitative columns
-        is_object = Xc[self.features].dtypes.apply(is_string_dtype)
+        is_object = x_copy[self.features].dtypes.apply(is_string_dtype)
         if not all(is_object):  # non qualitative features detected
             if self.verbose:
                 print(
-                    f"""Non-string features: {', '.join(is_object[~is_object].index)}, will be converted using Converters.StringConverter."""
+                    f"""Non-string features: {', '.join(is_object[~is_object].index)}, will be converted using type_discretizers.StringDiscretizer."""
                 )
 
             # converting specified features into qualitative features
-            stringer = StringConverter(features=self.features)
-            Xc = stringer.fit_transform(Xc)
+            stringer = StringDiscretizer(features=self.features)
+            x_copy = stringer.fit_transform(x_copy)
 
-            # append the string converter to the feature engineering pipeline
-            # self.pipe += [("StringConverter", stringer)]
-            # TODO: build stringconverter discretizer ?
+            # updating values_orders accordingly
+            non_ordinal_orders = {feature: value for feature, value in stringer.values_orders.items() if feature not in self.ordinal_features}
+            self.values_orders.update(non_ordinal_orders)
 
         # checking for binary target
         y_values = unique(y)
@@ -330,10 +327,13 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
         ), "y must be a binary Series (int or float, not object)"
         assert len(y_values) == 2, "y must be a binary Series (int or float, not object)"
 
-        # checking that all unique values in X are in values_orders
-        check_new_values(X, self.ordinal_features, self.known_values)
+        # all known values for features
+        known_values = {feature: order.values() for feature, order in self.values_orders.items()}
 
-        return Xc
+        # checking that all unique values in X are in values_orders
+        check_new_values(X, self.ordinal_features, known_values)
+
+        return x_copy
 
     def fit(self, X: DataFrame, y: Series) -> None:
         """Learning TRAIN distribution
