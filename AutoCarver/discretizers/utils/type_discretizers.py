@@ -2,7 +2,7 @@
 """
 
 from typing import List
-from .base_discretizers import GroupedListDiscretizer, nan_unique
+from .base_discretizers import GroupedListDiscretizer, GroupedList, nan_unique
 from pandas import DataFrame, Series
 
 class StringDiscretizer(GroupedListDiscretizer):
@@ -41,10 +41,8 @@ class StringDiscretizer(GroupedListDiscretizer):
         y : Series, optional
             _description_, by default None
         """
-        
-        for n, feature in enumerate(self.features):
-            if self.verbose:  # verbose if requested
-                print(f" - [StringDiscretizer] Fit {feature} ({n+1}/{len(self.features)})")
+        # converting each feature's value
+        for feature in self.features:
             
             # unique feature values
             unique_values = nan_unique(X[feature])

@@ -5,9 +5,8 @@ for a binary classification model.
 from typing import Any, Dict, List, Union
 
 from pandas import DataFrame, Series, unique
-from pandas.api.types import is_numeric_dtype, is_string_dtype
-from sklearn.base import BaseEstimator, TransformerMixin
-from .utils.base_discretizers import GroupedList, min_value_counts, nan_unique, GroupedListDiscretizer, check_new_values
+from pandas.api.types import is_numeric_dtype
+from .utils.base_discretizers import GroupedList, min_value_counts, GroupedListDiscretizer, check_new_values
 from .utils.qualitative_discretizers import DefaultDiscretizer, OrdinalDiscretizer
 from .utils.quantitative_discretizers import QuantileDiscretizer
 from .utils.type_discretizers import StringDiscretizer
@@ -258,13 +257,13 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
         verbose : bool, optional
             _description_, by default False
         """
-        self.qualitative_features = qualitative_features[:]
+        self.qualitative_features = list(set(qualitative_features))
         if values_orders is None:
             values_orders = {}
         self.values_orders = {feature: GroupedList(values) for feature, values in values_orders.items()}
         if ordinal_features is None:
             ordinal_features = []
-        self.ordinal_features = ordinal_features[:]
+        self.ordinal_features = list(set(ordinal_features))
         self.min_freq = min_freq
         self.str_nan = str_nan
         self.str_default = str_default
@@ -300,20 +299,22 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
         DataFrame
             Formatted X for bucketization
         """
-
         # copying dataframe
         x_copy = X.copy()
 
-        # checking for quantitative columns
-        is_object = x_copy[self.features].dtypes.apply(is_string_dtype)
-        if not all(is_object):  # non qualitative features detected
+        # checking for columns containing floats or integers even with filled nans
+        dtypes = x_copy[self.features].fillna(self.str_nan).applymap(type).apply(unique)
+        not_object = dtypes.apply(lambda u: float in u or int in u)
+
+        # non qualitative features detected
+        if any(not_object):
             if self.verbose:
                 print(
-                    f"""Non-string features: {', '.join(is_object[~is_object].index)}, will be converted using type_discretizers.StringDiscretizer."""
+                    f"""Non-string features: {', '.join(not_object[not_object].index)}, will be converted using type_discretizers.StringDiscretizer."""
                 )
 
             # converting specified features into qualitative features
-            stringer = StringDiscretizer(features=self.features)
+            stringer = StringDiscretizer(features=list(not_object.index[not_object]))
             x_copy = stringer.fit_transform(x_copy)
 
             # updating values_orders accordingly
@@ -453,10 +454,10 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
         verbose : bool, optional
             _description_, by default False
         """
-        self.features = features[:]
+        self.features = list(set(features))
         if values_orders is None:
             values_orders = {}
-        self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
+        self.values_orders = {feature: GroupedList(values) for feature, values in values_orders.items()}
         self.min_freq = min_freq
         self.str_nan = str_nan
         self.copy = copy
@@ -472,8 +473,9 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
         """Checking data for bucketization"""
 
         # checking for quantitative columns
-        is_numeric = X[self.features].dtypes.apply(is_numeric_dtype)
-        assert all(is_numeric), f"Non-numeric features: {', '.join(is_numeric[~is_numeric].index)}"
+        dtypes = X[self.features].applymap(type).apply(unique)
+        not_numeric = dtypes.apply(lambda u: str in u)
+        assert all(~not_numeric), f"Non-numeric features: {', '.join(not_numeric[not_numeric].index)}"
 
         # checking for binary target
         y_values = unique(y)
