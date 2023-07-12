@@ -82,7 +82,7 @@ def check_new_values(X: DataFrame, features: List[str], known_values: Dict[str, 
         unexpected = [val for val in uniques[feature] if val not in known_values[feature]]
         assert (
             len(unexpected) == 0
-        ), f"Unexpected value! The ordering for values: {', '.join(unexpected)} of feature '{feature}' was not provided. There might be new values in your test/dev set. Consider taking a bigger test/dev set or dropping the column {feature}."
+        ), f"Unexpected value! The ordering for values: {str(unexpected)} of feature '{feature}' was not provided. There might be new values in your test/dev set. Consider taking a bigger test/dev set or dropping the column {feature}."
 
 def check_missing_values(X: DataFrame, features: List[str], known_values: Dict[str, List[Any]]) -> None:
     """Checks for missing values from X, (unexpected values in values_orders) 
@@ -109,7 +109,7 @@ def check_missing_values(X: DataFrame, features: List[str], known_values: Dict[s
         unexpected = [val for val in known_values[feature] if val not in uniques[feature]]
         assert (
             len(unexpected) == 0
-        ), f"Unexpected value! The ordering for values: {', '.join(unexpected)} of feature '{feature}' was provided but there are not matching value in provided X. You should check 'values_orders['{feature}']' for unwanted values."
+        ), f"Unexpected value! The ordering for values: {str(unexpected)} of feature '{feature}' was provided but there are not matching value in provided X. You should check 'values_orders['{feature}']' for unwanted values."
 
 
 class GroupedList(list):
@@ -300,10 +300,10 @@ class GroupedList(list):
         # checking that all values are given an order
         assert all(
             o in self for o in ordering
-        ), f"Unknown values in ordering: {', '.join([str(v) for v in ordering if v not in self])}"
+        ), f"Unknown values in ordering: {str([v for v in ordering if v not in self])}"
         assert all(
             s in ordering for s in self
-        ), f"Missing value from ordering: {', '.join([str(v) for v in self if v not in ordering])}"
+        ), f"Missing value from ordering: {str([v for v in self if v not in ordering])}"
 
         # ordering the contained
         sorted = GroupedList({k: self.get(k) for k in ordering})

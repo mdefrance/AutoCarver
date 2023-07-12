@@ -310,16 +310,22 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
         if any(not_object):
             if self.verbose:
                 print(
-                    f"""Non-string features: {', '.join(not_object[not_object].index)}, will be converted using type_discretizers.StringDiscretizer."""
+                    f"""Non-string features: {str(not_object[not_object].index)}, will be converted using type_discretizers.StringDiscretizer."""
                 )
 
             # converting specified features into qualitative features
             stringer = StringDiscretizer(features=list(not_object.index[not_object]))
             x_copy = stringer.fit_transform(x_copy)
 
-            # updating values_orders accordingly
-            non_ordinal_orders = {feature: value for feature, value in stringer.values_orders.items() if feature not in self.ordinal_features}
-            self.values_orders.update(non_ordinal_orders)
+            # updating values_orders accordingly 
+            for feature, order in stringer.values_orders.items():
+                # case 0: non-ordinal features, updating as is
+                if feature not in self.ordinal_features:
+                    self.values_orders.update({feature: order})
+                # case 1: ordinal features, adding to contained dict
+                else:
+                    known_order = self.values_orders[feature]  # currently known order (only with strings)
+                    known_order.update(order.contained)
 
         # checking for binary target
         y_values = unique(y)
@@ -329,10 +335,10 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
         assert len(y_values) == 2, "y must be a binary Series (int or float, not object)"
 
         # all known values for features
-        known_values = {feature: order.values() for feature, order in self.values_orders.items()}
-
+        known_values = {feature: values.values() for feature, values in self.values_orders.items()}
+        
         # checking that all unique values in X are in values_orders
-        check_new_values(X, self.ordinal_features, known_values)
+        check_new_values(x_copy, self.ordinal_features, known_values)
 
         return x_copy
 
@@ -475,7 +481,7 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
         # checking for quantitative columns
         dtypes = X[self.features].applymap(type).apply(unique)
         not_numeric = dtypes.apply(lambda u: str in u)
-        assert all(~not_numeric), f"Non-numeric features: {', '.join(not_numeric[not_numeric].index)}"
+        assert all(~not_numeric), f"Non-numeric features: {str(not_numeric[not_numeric].index)}"
 
         # checking for binary target
         y_values = unique(y)
