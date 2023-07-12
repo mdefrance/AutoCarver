@@ -332,8 +332,6 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
         """Prepares the data for bucketization, checks column types.
         Converts non-string columns into strings.
 
-        TODO: check that features dont have too many values (-> quantitative features?)
-
         Parameters
         ----------
         X : DataFrame
@@ -365,28 +363,19 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
 
         # non qualitative features detected
         if any(not_object):
+            features_to_convert = list(not_object.index[not_object])
             if self.verbose:
                 unexpected_dtypes = [typ for dtyp in dtypes[not_object] for typ in dtyp if typ != str]
                 print(
-                    f"""Non-string features: {str(list(not_object[not_object].index))}. Trying to convert them using type_discretizers.StringDiscretizer, otherwise convert them manually. Unexpected data types: {str(list(unexpected_dtypes))}."""
+                    f"""Non-string features: {str(features_to_convert)}. Trying to convert them using type_discretizers.StringDiscretizer, otherwise convert them manually. Unexpected data types: {str(list(unexpected_dtypes))}."""
                 )
 
             # converting specified features into qualitative features
-            stringer = StringDiscretizer(features=list(not_object.index[not_object]))
+            stringer = StringDiscretizer(features=features_to_convert, values_orders=self.values_orders)
             x_copy = stringer.fit_transform(x_copy)
 
-            # TODO: put this into stringdiscretizer
             # updating values_orders accordingly
-            for feature, order in stringer.values_orders.items():
-                # case 0: non-ordinal features, updating as is
-                if feature not in self.ordinal_features:
-                    self.values_orders.update({feature: order})
-                # case 1: ordinal features, adding to contained dict
-                else:
-                    known_order = self.values_orders[
-                        feature
-                    ]  # currently known order (only with strings)
-                    known_order.update(order.contained)
+            self.values_orders.update(stringer.values_orders)
 
         # checking for binary target
         y_values = unique(y)

@@ -18,21 +18,23 @@ class StringDiscretizer(GroupedListDiscretizer):
     def __init__(
         self,
         features: list[str],
+        *,
+        values_orders: dict[str, GroupedList] = None,
     ) -> None:
         """_summary_
 
         Parameters
         ----------
-        features : List[str]
+        features : list[str]
             _description_
-        copy : bool, optional
-            _description_, by default False
-        verbose : bool, optional
-            _description_, by default False
-        """
+        values_orders : dict[str, GroupedList], optional
+            _description_, by default None
+        """             
 
         self.features = features[:]
-        self.values_orders = {}
+        if values_orders is None:
+            values_orders = {}
+        self.values_orders = {feature: GroupedList(value) for feature, value in values_orders.items()}
 
     def fit(self, X: DataFrame, y: Series = None) -> None:
         """_summary_
@@ -63,8 +65,16 @@ class StringDiscretizer(GroupedListDiscretizer):
                 values_order.append(str_value)  # adding string value to the order
                 values_order.group(value, str_value)  # grouping integer value into the string value
 
-            # saving feature's values
-            self.values_orders.update({feature: values_order})
+            # updating values_orders accordingly
+            # case 0: non-ordinal features, updating as is (no order provided)
+            if feature not in self.values_orders:
+                self.values_orders.update({feature: values_order})
+            # case 1: ordinal features, adding to contained dict (order provide)
+            else:
+                # currently known order (only with strings)
+                known_order = self.values_orders[feature]  
+                known_order.update(values_order.contained)
+                self.values_orders.update({feature: known_order})
 
         # discretizing features based on each feature's values_order
         super().__init__(
@@ -78,7 +88,7 @@ class StringDiscretizer(GroupedListDiscretizer):
 
 
 class FloatDiscretizer(GroupedListDiscretizer):
-    """Converts specified columns of a DataFrame into ordered floats.
+    """TODO: Converts specified columns of a DataFrame into ordered floats.
     Last step of a Discretization pipe.
 
     - Keeps NaN inplace
