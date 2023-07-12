@@ -184,6 +184,7 @@ class AutoCarver(GroupedListDiscretizer):
 
         self.min_carved_freq = min_carved_freq
         self.min_group_size = 1
+        self.input_dtypes = {}
 
     def prepare_data(
         self,
@@ -264,6 +265,7 @@ class AutoCarver(GroupedListDiscretizer):
         x_copy = discretizer.fit_transform(x_copy, y)
         if x_test_copy is not None:
             x_test_copy = discretizer.transform(x_test_copy, y_test)
+        self.input_dtypes.update(discretizer.input_dtypes)  # saving data types
 
         # updating values_orders according to base bucketization
         self.values_orders.update(discretizer.values_orders)
@@ -296,12 +298,24 @@ class AutoCarver(GroupedListDiscretizer):
             order = labels_orders[feature]
 
             # getting best combination
-            order, xtab, xtab_test = self.get_best_combination(order, xtab, xtab_test=xtab_test)
-            if self.verbose:  # verbose if requested
-                print(xtab)
+            best_combination = self.get_best_combination(order, xtab, xtab_test=xtab_test)
 
-            # updating label_orders
-            labels_orders.update({feature: order})
+            # checking that a suitable combination has been found
+            if any(best_combination):
+                order, xtab, xtab_test = best_combination
+                if self.verbose:  # verbose if requested
+                    print(xtab)
+
+                # updating label_orders
+                labels_orders.update({feature: order})
+            
+            # no suitable combination has been found -> removing feature
+            else:
+                print(f"No robust combination for feature '{feature}' could be found. It will be ignored.")
+                self.remove_feature(feature)
+                labels_orders.pop(feature)
+                labels_orders.pop(feature)
+
 
         # converting potential labels into there respective values (quantiles)
         self.values_orders.update(
@@ -319,7 +333,7 @@ class AutoCarver(GroupedListDiscretizer):
             features=self.features,
             values_orders=self.values_orders,
             copy=self.copy,
-            input_dtypes=discretizer.input_dtypes,
+            input_dtypes=self.input_dtypes,
             output_dtype="float",
             str_nan=self.str_nan,
             verbose=self.verbose,
@@ -327,6 +341,25 @@ class AutoCarver(GroupedListDiscretizer):
         super().fit(X, y)
 
         return self
+
+    def remove_feature(self, feature: str) -> None:
+        """Removes a feature from all instances 
+
+        Parameters
+        ----------
+        feature : str
+            Column name
+        """        
+        
+        self.features.remove(feature)
+        self.values_orders.pop(feature)
+        self.input_dtypes.pop(feature)
+        if feature in self.qualitative_features:
+            self.qualitative_features.remove(feature)
+        if feature in self.ordinal_features:
+            self.ordinal_features.remove(feature)
+        if feature in self.quantitative_features:
+            self.quantitative_features.remove(feature)
 
     def get_best_combination(
         self,
@@ -362,12 +395,13 @@ class AutoCarver(GroupedListDiscretizer):
             # TODO test missing values in test
 
             # applying best_combination to order and xtabs
-            order = order_apply_combination(order, best_association["combination"])
-            xtab = xtab_apply_order(xtab, order)
-            xtab_test = xtab_apply_order(xtab_test, order)
+            if best_association is not None:
+                order = order_apply_combination(order, best_association["combination"])
+                xtab = xtab_apply_order(xtab, order)
+                xtab_test = xtab_apply_order(xtab_test, order)
 
             # grouping NaNs if requested to drop them (dropna=True)
-            if self.dropna and self.str_nan in order:
+            if self.dropna and self.str_nan in order and best_association is not None:
                 # raw ordering without nans
                 raw_order = GroupedList(order)
                 raw_order.remove(self.str_nan)
@@ -392,11 +426,14 @@ class AutoCarver(GroupedListDiscretizer):
                 )
 
                 # applying best_combination to order and xtab
-                order = order_apply_combination(order, best_association["combination"])
-                xtab = xtab_apply_order(xtab, order)
-                xtab_test = xtab_apply_order(xtab_test, order)
+                if best_association is not None:
+                    order = order_apply_combination(order, best_association["combination"])
+                    xtab = xtab_apply_order(xtab, order)
+                    xtab_test = xtab_apply_order(xtab_test, order)
 
-        return order, xtab, xtab_test
+        # checking that a suitable combination has been found
+        if best_association is not None:
+            return order, xtab, xtab_test
 
     def display_xtabs(
         self,

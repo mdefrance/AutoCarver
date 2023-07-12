@@ -78,10 +78,10 @@ def init_test_df(seed: int, size: int = 10000) -> DataFrame:
     df["Discrete_Quantitative_rarevalue"] = df["Discrete_Quantitative_lownan"].fillna(0.5)
     
     # building specific cases for qualitative_discretizer
-    df["Discrete_Qualitative"] = df["Discrete_Quantitative"]
+    df["Discrete_Qualitative_noorder"] = df["Discrete_Quantitative"]
     df["Discrete_Qualitative_highnan"] = df["Discrete_Quantitative_highnan"]
-    df["Discrete_Qualitative_lownan"] = df["Discrete_Quantitative_lownan"]
-    df["Discrete_Qualitative_rarevalue"] = df["Discrete_Quantitative_rarevalue"]
+    df["Discrete_Qualitative_lownan_noorder"] = df["Discrete_Quantitative_lownan"]
+    df["Discrete_Qualitative_rarevalue_noorder"] = df["Discrete_Quantitative_rarevalue"]
 
     return df
 

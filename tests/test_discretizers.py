@@ -90,7 +90,7 @@ def test_discretizer(x_train: DataFrame, x_test_1: DataFrame):
     """
 
     quantitative_features = ['Quantitative', 'Discrete_Quantitative_highnan', 'Discrete_Quantitative_lownan', 'Discrete_Quantitative', 'Discrete_Quantitative_rarevalue']
-    qualitative_features = ["Qualitative", "Qualitative_grouped", "Qualitative_lownan", "Qualitative_highnan", "Discrete_Qualitative", "Discrete_Qualitative_lownan", "Discrete_Qualitative_rarevalue"]
+    qualitative_features = ["Qualitative", "Qualitative_grouped", "Qualitative_lownan", "Qualitative_highnan", "Discrete_Qualitative_noorder", "Discrete_Qualitative_lownan_noorder", "Discrete_Qualitative_rarevalue_noorder"]
     ordinal_features = ["Qualitative_Ordinal", "Qualitative_Ordinal_lownan", "Discrete_Qualitative_highnan"]
     values_orders = {
         "Qualitative_Ordinal": ['Low-', 'Low', 'Low+', 'Medium-', 'Medium', 'Medium+', 'High-', 'High', 'High+'],
@@ -162,7 +162,7 @@ def test_discretizer(x_train: DataFrame, x_test_1: DataFrame):
         '3': [3.0, '3'],
         '__OTHER__': [0.5, '0.5', 6.0, '6', 5.0, '5', '__OTHER__']
     }
-    assert discretizer.values_orders["Discrete_Qualitative_rarevalue"].contained == expected, "Qualitative features with float values should be converted to string and there values stored in the values_orders"
+    assert discretizer.values_orders["Discrete_Qualitative_rarevalue_noorder"].contained == expected, "Qualitative features with float values should be converted to string and there values stored in the values_orders"
     expected = {
         '2': [2, '2'],
         '4': [4, '4'],
@@ -170,7 +170,7 @@ def test_discretizer(x_train: DataFrame, x_test_1: DataFrame):
         '3': [3, '3'],
         '__OTHER__': [7, '7', 6, '6', 5, '5', '__OTHER__']
     }
-    assert discretizer.values_orders["Discrete_Qualitative"].contained == expected, "Qualitative features with int values should be converted to string and there values stored in the values_orders"
+    assert discretizer.values_orders["Discrete_Qualitative_noorder"].contained == expected, "Qualitative features with int values should be converted to string and there values stored in the values_orders"
     expected = {
         '2': ['1', 2.0, '2'],
         '3': [3.0, '3'],
