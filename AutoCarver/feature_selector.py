@@ -1,6 +1,8 @@
+"""Tools to select the best Quantitative and Qualitative features."""
+
 from math import sqrt
 from random import shuffle
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Any, Callable, Dict, Tuple
 
 from IPython.display import display_html
 from numpy import inf, nan, ones, triu
@@ -10,7 +12,10 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from statsmodels.formula.api import ols
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
+from .discretizers.utils.base_discretizers import GroupedList, GroupedListDiscretizer
 
+# TODO: convert to groupedlistdiscretizer
+# TODO: add parameter to shut down displayed info
 class FeatureSelector(BaseEstimator, TransformerMixin):
     """A pipeline of measures to perform EDA and feature pre-selection
 
@@ -19,7 +24,7 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-    features: List[str]
+    features: list[str]
         Features on which to compute association.
     n_best, int:
         Number of features to be selected
@@ -29,7 +34,7 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
         By default, all features are used. For sample_size=0.5,
         FeatureSelector will search for the best features in
         features[:len(features)//2] and then in features[len(features)//2:]
-    measures, List[Callable]: default list().
+    measures, list[Callable]: default list().
         List of association measures to be used.
         Implemented measures are:
             [Quantitative Features]
@@ -38,7 +43,7 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
             [Qualitative Features]
              - For correlation: `chi2_measure`, `cramerv_measure`, `tschuprowt_measure`
         Ranks features based on last measure of the list.
-    filters, List[Callable]: default list().
+    filters, list[Callable]: default list().
         List of filters to be used.
         Implemented filters are:
             [Quantitative Features]
@@ -78,50 +83,77 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
 
     def __init__(
         self,
-        features: List[str],
+        features: list[str],
         n_best: int,
-        measures: List[Callable] = list(),
-        filters: List[Callable] = list(),
+        measures: list[Callable],
+        *,
+        filters: list[Callable] = None,
         sample_size: float = 1.0,
+        values_orders: dict[str, GroupedList] = None,
         copy: bool = True,
+        drop: bool = False,  # TODO
         verbose: bool = True,
         **params,
     ) -> None:
-        self.features = features[:]
+        """_summary_
+
+        Parameters
+        ----------
+        features : list[str]
+            _description_
+        n_best : int
+            _description_
+        measures : list[Callable], optional
+            _description_, by default list()
+        filters : list[Callable], optional
+            _description_, by default list()
+        sample_size : float, optional
+            _description_, by default 1.0
+        copy : bool, optional
+            _description_, by default True
+        verbose : bool, optional
+            _description_, by default True
+        """
+        print("Warning: not fully optimized for package versions greater than 4.")
+
+        self.features = list(set(features))
         self.n_best = n_best
         assert n_best <= len(features), "Must set n_best <= len(features)"
         self.best_features = features[:]
         self.sample_size = sample_size
 
-        self.measures = [dtype_measure, nans_measure, mode_measure] + measures[
-            :
-        ]
+        self.measures = [dtype_measure, nans_measure, mode_measure] + measures[:]
+        if filters is None:
+            filters = []
         self.filters = [thresh_filter] + filters[:]
         self.sort_measures = [measure.__name__ for measure in measures[::-1]]
 
+        # Values_orders from GroupedListDiscretizer
+        if values_orders is None:
+            values_orders = {}
+        self.values_orders = {feature: GroupedList(value) for feature, value in values_orders.items()}
+
+        self.drop = drop
         self.copy = copy
         self.verbose = verbose
         self.params = params
 
+        self.associations = None
+        self.filtered_associations = None
+
     def measure(self, x: Series, y: Series) -> Dict[str, Any]:
         """Measures association between x and y"""
 
-        passed = (
-            True  # measures keep going only if previous basic tests are passed
-        )
+        passed = True  # measures keep going only if previous basic tests are passed
         association = {}
 
         # iterating over each measure
         for measure in self.measures:
-            passed, association = measure(
-                passed, association, x, y, **self.params
-            )
+            passed, association = measure(passed, association, x, y, **self.params)
 
         return association
 
-    def measure_apply(
-        self, X: DataFrame, y: Series, features: List[str]
-    ) -> None:
+    def measure_apply(self, X: DataFrame, y: Series, features: list[str]) -> None:
         """Measures association between columns of X and y
 
         Parameters
@@ -133,17 +165,11 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
         """
 
         # applying association measure to each column
-        self.associations = (
-            X[features]
-            .apply(self.measure, y=y, result_type="expand", axis=0)
-            .T
-        )
+        self.associations = X[features].apply(self.measure, y=y, result_type="expand", axis=0).T
 
         # filtering non association measure (pct_zscore, pct_iqr...)
         asso_measures = [c for c in self.associations if "_measure" in c]
-        self.sort_measures = [
-            c for c in self.sort_measures if c in asso_measures
-        ]
+        self.sort_measures = [c for c in self.sort_measures if c in asso_measures]
 
         # sorting statistics if an association measure was provided
         self.associations = self.associations.sort_values(
@@ -169,29 +195,19 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
         # applying successive filters
         for filtering in self.filters:
             # ordered filtering
-            self.filtered_associations = filtering(
-                X, self.filtered_associations, **self.params
-            )
+            self.filtered_associations = filtering(X, self.filtered_associations, **self.params)
 
     def display_stats(self, association: DataFrame, caption: str) -> None:
         """EDA of fitted associations"""
 
         # appllying style
-        subset = [
-            c
-            for c in association
-            if "pct_" in c or "_measure" in c or "_filter" in c
-        ]
-        style = association.style.background_gradient(
-            cmap="coolwarm", subset=subset
-        )
+        subset = [c for c in association if "pct_" in c or "_measure" in c or "_filter" in c]
+        style = association.style.background_gradient(cmap="coolwarm", subset=subset)
         style = style.set_table_attributes("style='display:inline'")
         style = style.set_caption(caption)
         display_html(style._repr_html_(), raw=True)
 
-    def fit_features(
-        self, X: DataFrame, y: Series, features: List[str], n_best: int
-    ) -> List[str]:
+    def fit_features(self, X: DataFrame, y: Series, features: list[str], n_best: int) -> list[str]:
         """Selects the n_best features amongst the specified ones"""
 
         # initial computation of all association measures
@@ -211,16 +227,12 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
 
             # displaying filtered out association measure
             if n == 0 and self.verbose and len(self.filters) > 1:
-                self.display_stats(
-                    self.filtered_associations, "Filtered association"
-                )
+                self.display_stats(self.filtered_associations, "Filtered association")
 
         # retrieving the n_best features per each ranking
         best_features = []
         if len(self.sort_measures) > 0:
-            best_features = [
-                feature for rank in ranks for feature in rank[:n_best]
-            ]
+            best_features = [feature for rank in ranks for feature in rank[:n_best]]
             best_features = list(set(best_features))  # deduplicating
 
         return best_features
@@ -243,44 +255,51 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
             ]
 
             # adding last sample with all remaining features
-            feature_samples += [
-                self.features[chunks * (int(1 / self.sample_size) - 1) :]
-            ]
+            feature_samples += [self.features[chunks * (int(1 / self.sample_size) - 1) :]]
 
             # iterating over each feature samples
             best_features = []
             for features in feature_samples:
                 # fitting association on features
-                best_features += self.fit_features(
-                    X, y, features, int(self.n_best // 2)
-                )
+                best_features += self.fit_features(X, y, features, int(self.n_best // 2))
 
         # splitting in chunks not requested
         else:
             best_features = self.features[:]
 
         # final selection with all best_features selected
-        self.best_features = self.fit_features(
-            X, y, best_features, self.n_best
-        )
+        self.best_features = self.fit_features(X, y, best_features, self.n_best)
 
-        # dropped features
-        self.dropped_features = [
-            c for c in self.features if c not in self.best_features
+        # ordering best_features according to their rank
+        self.best_features = [
+            f for f in self.filtered_associations.index if f in self.best_features
         ]
+
+        # removing feature from values_orders
+        dropped_features = [f for f in self.associations.index if f not in self.best_features]
+        for feature in dropped_features:
+            if feature in self.values_orders:
+                self.values_orders.pop(feature)
 
         return self
 
     def transform(self, X: DataFrame, y: Series = None) -> DataFrame:
-        # copying dataset
-        Xc = X
-        if self.copy:
-            Xc.copy()
+        """Drops the non-selected columns from `features`.
 
-        # filtering out unwanted features
-        Xc = Xc.drop(self.dropped_features, axis=1)
+        Parameters
+        ----------
+        X : DataFrame
+            Contains columns named in `features`
+        y : Series, optional
+            Model target, by default None
 
-        return Xc
+        Returns
+        -------
+        DataFrame
+            `X` without non-selected columns from `features`.
+        """
+
+        return X
 
 
 # MEASURES
@@ -470,9 +489,7 @@ def iqr_measure(
         pct_iqr = outliers.mean()
 
         # updating association
-        association.update(
-            {"pct_iqr": pct_iqr, "q1": q1, "median": x.median(), "q3": q3}
-        )
+        association.update({"pct_iqr": pct_iqr, "q1": q1, "median": x.median(), "q3": q3})
 
         # Excluding feature with too frequent modes
         active = pct_iqr < params.get("thresh_outlier", 1.0)
@@ -508,9 +525,7 @@ def cramerv_measure(
     if active:
         # computing chi2
         if "chi2_measure" not in association:
-            active, association = chi2_measure(
-                active, association, x, y, **params
-            )
+            active, association = chi2_measure(active, association, x, y, **params)
 
         # numnber of observations
         n_obs = (notna(x) & notna(y)).sum()
@@ -540,9 +555,7 @@ def tschuprowt_measure(
     if active:
         # computing chi2
         if "chi2_measure" not in association:
-            active, association = chi2_measure(
-                active, association, x, y, **params
-            )
+            active, association = chi2_measure(active, association, x, y, **params)
 
         # numnber of observations
         n_obs = (notna(x) & notna(y)).sum()
@@ -592,10 +605,7 @@ def measure_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
 
     # drops rows with nans
     if "name_measure" in params:
-        associations = ranks[
-            ranks[params.get("name_measure")]
-            > params.get("thresh_measure", 0.0)
-        ]
+        associations = ranks[ranks[params.get("name_measure")] > params.get("thresh_measure", 0.0)]
 
     return associations
 
@@ -629,9 +639,7 @@ def quantitative_filter(
         corr_with_better_features = X_corr.loc[:feature, feature]
 
         # maximum correlation with a better feature
-        corr_with, worst_corr = corr_with_better_features.agg(
-            ["idxmax", "max"]
-        )
+        corr_with, worst_corr = corr_with_better_features.agg(["idxmax", "max"])
 
         # dropping the feature if it was too correlated to a better feature
         if worst_corr > params.get("thresh_corr", 1):
@@ -656,9 +664,7 @@ def quantitative_filter(
     return associations
 
 
-def spearman_filter(
-    X: DataFrame, ranks: DataFrame, **params
-) -> Dict[str, Any]:
+def spearman_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
     """Computes max Spearman between X and X (quantitative) excluding features
     that are correlated to a feature more associated with the target
     (defined by the ranks).
@@ -709,9 +715,7 @@ def vif_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
     # iterating over each column
     for i, feature in enumerate(prefered_order):
         # identifying remaining more associated features
-        better_features = [
-            f for f in prefered_order[: i + 1] if f not in dropped
-        ]
+        better_features = [f for f in prefered_order[: i + 1] if f not in dropped]
 
         X_vif = X[better_features]  # keeping only better features
         X_vif = X_vif.dropna(axis=0)  # dropping NaNs for OLS
@@ -719,9 +723,7 @@ def vif_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
         # computation of VIF
         vif = nan
         if len(better_features) > 1 and len(X_vif) > 0:
-            vif = variance_inflation_factor(
-                X_vif.values, len(better_features) - 1
-            )
+            vif = variance_inflation_factor(X_vif.values, len(better_features) - 1)
 
         # dropping the feature if it was too correlated to a better feature
         if vif > params.get("thresh_vif", inf) and notna(vif):
@@ -778,9 +780,7 @@ def qualitative_worst_corr(
             association[f"{measure}_filter"] = association.pop(measure_name)
 
             # removing temporary measures
-            association = {
-                k: v for k, v in association.items() if "_measure" not in k
-            }
+            association = {k: v for k, v in association.items() if "_measure" not in k}
 
             # updating worst known association
             worst_corr.update(association)
@@ -816,9 +816,7 @@ def qualitative_filter(
     # iterating over each feature by target association order
     for feature in prefered_order:
         # computing correlation with better features anf filtering out ranks
-        ranks, worst_corr = qualitative_worst_corr(
-            X, feature, ranks, corr_measure, **params
-        )
+        ranks, worst_corr = qualitative_worst_corr(X, feature, ranks, corr_measure, **params)
 
         # updating associations
         if worst_corr:
@@ -848,9 +846,7 @@ def cramerv_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
     return qualitative_filter(X, ranks, cramerv_measure, **params)
 
 
-def tschuprowt_filter(
-    X: DataFrame, ranks: DataFrame, **params
-) -> Dict[str, Any]:
+def tschuprowt_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
     """Computes max Tschuprow's T between X and X (qualitative) excluding
      features that are correlated to a feature more associated with the target
     (defined by the ranks).
