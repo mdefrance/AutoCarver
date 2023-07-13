@@ -76,3 +76,4 @@ def test_auto_carver(x_train: DataFrame, x_test_1: DataFrame) -> None:
         assert all(value in fitted_values for value in init_values), feature
 
     # TODO: test output 'float'
+    # TODO test missing values in test

@@ -165,59 +165,40 @@ class AutoCarver(GroupedListDiscretizer):
             _description_, by default False
         verbose : bool, optional
             _description_, by default True
-        """        
-        # copying quantitative features and checking for duplicates
-        self.quantitative_features = quantitative_features[:]
-        assert len(list(set(quantitative_features))) == len(
-            quantitative_features
-        ), "Column duplicates in quantitative_features"
-
-        # copying qualitative features and checking for duplicates
-        self.qualitative_features = qualitative_features[:]
-        assert len(list(set(qualitative_features))) == len(
-            qualitative_features
-        ), "Column duplicates in qualitative_features"
-
-        # copying ordinal features and checking for duplicates
+        """
+        # Lists of features
+        self.features = list(set(quantitative_features + qualitative_features + ordinal_features))
         if ordinal_features is None:
             ordinal_features = []
-        self.ordinal_features = ordinal_features[:]
-        assert len(list(set(ordinal_features))) == len(
-            ordinal_features
-        ), "Column duplicates in ordinal_features"
+        self.ordinal_features = list(set(ordinal_features))
 
-        # initiating values_orders
-        if values_orders is None:
-            values_orders = {}
-        self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
+        # initializing input_dtypes
+        self.input_dtypes = {feature: "str" for feature in qualitative_features + ordinal_features}
+        self.input_dtypes.update({feature: "float" for feature in quantitative_features})
 
-        # list of all features
-        self.features = list(set(quantitative_features + qualitative_features + ordinal_features))
+        # Initiating GroupedListDiscretizer
+        super().__init__(
+            features=self.features,
+            values_orders=values_orders,
+            input_dtypes=self.input_dtypes,
+            output_dtype=output_dtype,
+            str_nan=str_nan,
+            copy=copy,
+        )
 
-        # minimum frequency per base bucket
-        self.min_freq = min_freq
-        # maximum number of modality per feature
-        self.max_n_mod = max_n_mod
-        # whether or not to group NaNs with other modalities
-        self.dropna = dropna
-
-        # association measure used to find the best groups
-        measures = ["tschuprowt", "cramerv"]
-        assert (
-            sort_by in measures
-        ), f"""{sort_by} not yet implemented. Choose
-                                        from: {', '.join(measures)}."""
-        self.sort_by = sort_by
-
-        self.copy = copy
+        # class specific attributes
+        self.min_freq = min_freq  # minimum frequency per base bucket
+        self.max_n_mod = max_n_mod  # maximum number of modality per feature
+        self.dropna = dropna  # whether or not to group NaNs with other modalities
         self.verbose = verbose
-        self.str_nan = str_nan
         self.str_default = str_default
-
         self.min_carved_freq = min_carved_freq
         self.min_group_size = 1
-        self.input_dtypes = {}
-        self.output_dtype = output_dtype
+        measures = ["tschuprowt", "cramerv"]  # association measure used to find the best groups
+        assert (
+            sort_by in measures
+        ), f"""Measure '{sort_by}' not yet implemented. Choose from: {str(measures)}."""
+        self.sort_by = sort_by
 
     def prepare_data(
         self,
@@ -226,39 +207,42 @@ class AutoCarver(GroupedListDiscretizer):
         X_test: DataFrame = None,
         y_test: Series = None,
     ) -> Tuple[DataFrame, DataFrame]:
-        """Checks validity of provided data"""
+        """Checks validity of provided data
 
-        # preparing train sample
-        # checking for binary target
-        y_values = unique(y)
-        assert (0 in y_values) & (
-            1 in y_values
-        ), "y must be a binary Series (int or float, not object)"
-        assert len(y_values) == 2, "y must be a binary Series (int or float, not object)"
+        Parameters
+        ----------
+        X : DataFrame
+            _description_
+        y : Series
+            _description_
+        X_test : DataFrame, optional
+            _description_, by default None
+        y_test : Series, optional
+            _description_, by default None
 
-        # Copying DataFrame if requested
-        x_copy = X
-        if self.copy:
-            x_copy = X.copy()
-
-        # preparing test sample
-        # checking for binary target
-        if y_test is not None:
-            assert X_test is not None, "y_test was provided but X_test is missing"
-            y_values = unique(y_test)
-            assert (0 in y_values) & (
-                1 in y_values
-            ), "y_test must be a binary Series (int or float, not object)"
-            assert len(y_values) == 2, "y_test must be a binary Series (int or float, not object)"
-
-        # Copying DataFrame if requested
-        x_test_copy = X_test
-        if X_test is not None:
-            assert y_test is not None, "X_test was provided but y_test is missing"
-            if self.copy:
-                x_test_copy = X_test.copy()
+        Returns
+        -------
+        Tuple[DataFrame, DataFrame]
+            Copies of (X, X_test)
+        """
+        # Checking for binary target and copying X
+        x_copy = super().prepare_data(X, y)
+        x_test_copy = super().prepare_data(X_test, y_test)
 
         return x_copy, x_test_copy
+
+    def remove_feature(self, feature: str) -> None:
+        """Removes a feature from all instances 
+
+        Parameters
+        ----------
+        feature : str
+            Column name
+        """        
+        if feature in self.features:
+            super().remove_feature(feature)
+            if feature in self.ordinal_features:
+                self.ordinal_features.remove(feature)
 
     def fit(
         self,
@@ -307,7 +291,6 @@ class AutoCarver(GroupedListDiscretizer):
         for feature in self.features:
             if feature not in discretizer.values_orders:
                 self.remove_feature(feature)
-
 
         # converting potential quantiles into there respective labels
         labels_orders = convert_to_labels(
@@ -367,42 +350,12 @@ class AutoCarver(GroupedListDiscretizer):
             )
         )
 
-        # TODO convert to float
         # TODO pretty displaying
 
         # discretizing features based on each feature's values_order
-        super().__init__(
-            features=self.features,
-            values_orders=self.values_orders,
-            copy=self.copy,
-            input_dtypes=self.input_dtypes,
-            str_nan=self.str_nan,
-            output_dtype=self.output_dtype,
-        )
         super().fit(X, y)
 
         return self
-
-    def remove_feature(self, feature: str) -> None:
-        """Removes a feature from all instances 
-
-        Parameters
-        ----------
-        feature : str
-            Column name
-        """        
-        
-        self.features.remove(feature)
-        if feature in self.values_orders:
-            self.values_orders.pop(feature)
-        if feature in self.input_dtypes:
-            self.input_dtypes.pop(feature)
-        if feature in self.qualitative_features:
-            self.qualitative_features.remove(feature)
-        if feature in self.ordinal_features:
-            self.ordinal_features.remove(feature)
-        if feature in self.quantitative_features:
-            self.quantitative_features.remove(feature)
 
     def get_best_combination(
         self,
@@ -436,7 +389,6 @@ class AutoCarver(GroupedListDiscretizer):
                 xtab_test=raw_xtab_test,
                 verbose=self.verbose,
             )
-            # TODO test missing values in test
 
             # applying best_combination to order and xtabs
             if best_association is not None:

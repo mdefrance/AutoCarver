@@ -10,7 +10,7 @@ from pandas import DataFrame, Series, isna, notna, unique
 from sklearn.base import BaseEstimator, TransformerMixin
 
 
-def nan_unique(x: Series) -> List[Any]:
+def nan_unique(x: Series) -> list[Any]:
     """Unique non-NaN values.
 
     Parameters
@@ -33,7 +33,7 @@ def nan_unique(x: Series) -> List[Any]:
     return uniques
 
 
-def applied_to_dict_list(applied: Union[DataFrame, Series]) -> Dict[str, List[Any]]:
+def applied_to_dict_list(applied: Union[DataFrame, Series]) -> dict[str, list[Any]]:
     """Converts a DataFrame or a List in a Dict of lists
 
     Parameters
@@ -446,8 +446,8 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
     def __init__(
         self,
         features: list[str],
-        values_orders: dict[str, GroupedList],
         *,
+        values_orders: dict[str, GroupedList] = None,
         input_dtypes: Union[str, dict[str, str]] = 'str',
         output_dtype: str = 'str',
         str_nan: str = None,
@@ -459,8 +459,8 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         ----------
         features : list[str]
             List of column names to be discretized
-        values_orders : dict[str, GroupedList]
-            Per feature ordering
+        values_orders : dict[str, GroupedList], optional
+            Per feature ordering, by default None
         input_dtypes : Union[str, dict[str, str]], optional
             String of type to be considered for all features or
             Dict of column names and associated types:
@@ -475,6 +475,8 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
             Whether or not to copy the input DataFrame, by default False
         """
         self.features = list(set(features))
+        if values_orders is None:
+            values_orders = {}
         self.values_orders = {feature: GroupedList(values) for feature, values in values_orders.items()}
         self.copy = copy
 
@@ -500,7 +502,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         ]
 
         # for each feature, getting label associated to each value
-        self.labels_per_values = self.get_labels_per_values()
+        self.labels_per_values = {}  # will be initiated during fit
 
     def get_labels_per_values(self) -> dict[str, dict[Any, Any]]:
         """Creates a dict that contains, for each feature, for each value, the associated label
@@ -540,8 +542,59 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         
         return labels_per_values
 
+    def remove_feature(self, feature: str) -> None:
+        """Removes a feature from the Discretizer
+
+        Parameters
+        ----------
+        feature : str
+            Column name of the feature
+        """
+        if feature in self.features:
+            self.features.remove(feature)
+            if feature in self.qualitative_features:
+                self.qualitative_features.remove(feature)
+            if feature in self.quantitative_features:
+                self.quantitative_features.remove(feature)
+            if feature in self.values_orders:
+                self.values_orders.pop(feature)
+            if feature in self.input_dtypes:
+                self.input_dtypes.pop(feature)
+    
+    def prepare_data(self, X: DataFrame, y: Series = None) -> DataFrame:
+        """_summary_
+
+        Parameters
+        ----------
+        X : DataFrame
+            _description_
+        y : Series, optional
+            _description_, by default None
+
+        Returns
+        -------
+        DataFrame
+            _description_
+        """
+        # copying X
+        x_copy = X
+        if self.copy and X is not None:
+            missing_columns = [feature for feature in self.features if feature not in X]
+            assert len(missing_columns) == 0, f"Missing features from the provided DataFrame: {str(missing_columns)}"
+            x_copy = X.copy()
+
+        # checking for binary target
+        if y is not None:
+            y_values = unique(y)
+            assert (0 in y_values) & (
+                1 in y_values
+            ), "y must be a binary Series (int or float, not object)"
+            assert len(y_values) == 2, "y must be a binary Series (int or float, not object)"
+
+        return x_copy
+
     def fit(self, X: DataFrame, y: Series = None) -> None:
-        """Learns the known values for each feature
+        """Learns the labels associated to each value for each feature
 
         Parameters
         ----------
@@ -550,6 +603,12 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         y : Series, optional
             Model target, by default None
         """
+        # checking that all features to discretize are in values_orders
+        missing_features = [feature for feature in self.features if feature not in self.values_orders]
+        assert len(missing_features) == 0, f"Missing values_orders for following features {str(missing_features)}."
+
+        # for each feature, getting label associated to each value
+        self.labels_per_values = self.get_labels_per_values()
 
         return self
 
