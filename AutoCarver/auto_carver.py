@@ -130,10 +130,42 @@ class AutoCarver(GroupedListDiscretizer):
         sort_by: str = "tschuprowt",
         str_nan: str = "__NAN__",
         str_default: str = "__OTHER__",
+        output_dtype: str = 'float',
         dropna: bool = True,
         copy: bool = False,
         verbose: bool = True,
     ) -> None:
+        """_summary_
+
+        Parameters
+        ----------
+        quantitative_features : List[str]
+            _description_
+        qualitative_features : List[str]
+            _description_
+        min_freq : float
+            _description_
+        ordinal_features : List[str], optional
+            _description_, by default None
+        values_orders : Dict[str, GroupedList], optional
+            _description_, by default None
+        max_n_mod : int, optional
+            _description_, by default 5
+        min_carved_freq : float, optional
+            _description_, by default 0
+        str_nan : str, optional
+            _description_, by default "__NAN__"
+        str_default : str, optional
+            _description_, by default "__OTHER__"
+        output_dtype : str, optional
+            _description_, by default 'float'
+        dropna : bool, optional
+            _description_, by default True
+        copy : bool, optional
+            _description_, by default False
+        verbose : bool, optional
+            _description_, by default True
+        """        
         # copying quantitative features and checking for duplicates
         self.quantitative_features = quantitative_features[:]
         assert len(list(set(quantitative_features))) == len(
@@ -185,6 +217,7 @@ class AutoCarver(GroupedListDiscretizer):
         self.min_carved_freq = min_carved_freq
         self.min_group_size = 1
         self.input_dtypes = {}
+        self.output_dtype = output_dtype
 
     def prepare_data(
         self,
@@ -345,6 +378,7 @@ class AutoCarver(GroupedListDiscretizer):
             input_dtypes=self.input_dtypes,
             str_nan=self.str_nan,
             verbose=self.verbose,
+            output_dtype=self.output_dtype,
         )
         super().fit(X, y)
 

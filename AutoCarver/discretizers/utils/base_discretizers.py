@@ -449,6 +449,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         copy: bool = False,
         input_dtypes: Union[str, Dict[str, str]] = None,
         str_nan: str = None,
+        output_dtype: str = 'str',
         verbose: bool = False,
     ) -> None:
         """Initiates a Discretizer by dict of GroupedList
@@ -481,6 +482,8 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         if isinstance(input_dtypes, str):
             input_dtypes = {feature: input_dtypes for feature in features}
         self.input_dtypes = input_dtypes
+        self.output_dtype = output_dtype
+        self.output_labels = {}
 
         self.verbose = verbose
         self.str_nan = str_nan
@@ -538,6 +541,10 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         # transforming qualitative features
         if len(self.qualitative_features) > 0:
             x_copy = self.transform_qualitative(x_copy, y)
+            
+        # replacing values in the output dataframe
+        if self.output_dtype == 'float':
+            x_copy = x_copy.replace(self.output_labels)
 
         return x_copy
 
@@ -611,6 +618,15 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
                 if nan_value == self.str_nan:
                     X.loc[nans, feature] = self.str_nan
 
+            # output as float
+            if self.output_dtype == 'float':
+                values = labels_orders[feature]
+                if any(X[feature] == self.str_nan):  # adding str_nan if not grouped
+                    values += self.str_nan
+                self.output_labels.update({
+                    feature: {value: index for index, value in enumerate(values)}
+                })
+
         return X
 
     def transform_qualitative(self, X: DataFrame, y: Series = None) -> DataFrame:
@@ -662,10 +678,18 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
             # checking for values to group
             if len(values_to_group) > 0:
                 X[feature] = select(values_to_group, group_labels, default=X[feature])
-
-            # giving back nans
+            
+            # giving back nans (if they were note imputed in values_orders)
             if any(nans):
                 X.loc[nans, feature] = nan
+
+        # output as float
+        if self.output_dtype == 'float':
+            self.output_labels.update({
+                feature: {value: index for index, value in enumerate(values)}
+                for feature, values in self.values_orders.items()
+                if feature in self.qualitative_features
+            })               
 
         return X
 

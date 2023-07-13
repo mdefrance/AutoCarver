@@ -38,6 +38,7 @@ def test_auto_carver(x_train: DataFrame, x_test_1: DataFrame) -> None:
         min_freq=min_freq,
         max_n_mod=max_n_mod,
         sort_by='tschuprowt',
+        output_dtype='str',
         copy=True,
         verbose=False,
     )
@@ -67,3 +68,6 @@ def test_auto_carver(x_train: DataFrame, x_test_1: DataFrame) -> None:
     assert all(x_discretized[auto_carver.features].nunique() <= max_n_mod), "Too many values after carving of train sample"
     assert all(x_test_discretized[auto_carver.features].nunique() <= max_n_mod), "Too many values after carving of test sample"
     assert all(x_discretized[auto_carver.features].nunique() == x_test_discretized[auto_carver.features].nunique()), "More values in train or test samples"
+
+    # TODO: test output 'float'
+    
