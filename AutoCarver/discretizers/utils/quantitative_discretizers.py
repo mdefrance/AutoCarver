@@ -15,10 +15,10 @@ class QuantileDiscretizer(GroupedListDiscretizer):
 
     def __init__(
         self,
-        features: List[str],
+        features: list[str],
         min_freq: float,
         *,
-        values_orders: Dict[str, Any] = None,
+        values_orders: dict[str, Any] = None,
         str_nan: str = "__NAN__",
         copy: bool = False,
         verbose: bool = False,
@@ -40,19 +40,19 @@ class QuantileDiscretizer(GroupedListDiscretizer):
         verbose : bool, optional
             _description_, by default False
         """
+        # Initiating GroupedListDiscretizer
+        super().__init__(
+            features=features,
+            values_orders=values_orders,
+            input_dtypes='float',
+            output_dtype='str',
+            str_nan=str_nan,
+            copy=copy,
+        )
 
-        self.features = features[:]
         self.min_freq = min_freq
-
-        if values_orders is None:
-            values_orders = {}
-        self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
-        self.str_nan = str_nan
-
-        self.copy = copy
-        self.verbose = verbose
-
         self.q = round(1 / min_freq)  # number of quantiles
+        self.verbose = verbose
 
     def fit(self, X: DataFrame, y: Series = None) -> None:
         """_summary_
@@ -83,13 +83,6 @@ class QuantileDiscretizer(GroupedListDiscretizer):
             self.values_orders.update({feature: order})
 
         # discretizing features based on each feature's values_order
-        super().__init__(
-            features=self.features,
-            values_orders=self.values_orders,
-            copy=self.copy,
-            input_dtypes="float",
-            str_nan=self.str_nan,
-        )
         super().fit(X, y)
 
         return self

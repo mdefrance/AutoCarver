@@ -158,7 +158,7 @@ def test_grouped_list_discretizer(x_train: DataFrame, x_test_1: DataFrame, x_tes
     features = ["Qualitative_Ordinal", "Qualitative_Ordinal_lownan"]
     
     # initiating discretizer 
-    discretizer = GroupedListDiscretizer(features, values_orders, str_nan=str_nan, input_dtypes='str', copy=True)
+    discretizer = GroupedListDiscretizer(features=features, values_orders=values_orders, str_nan=str_nan, input_dtypes='str', copy=True)
     x_discretized = discretizer.fit_transform(x_train)
 
     # testing ordinal qualitative feature discretization

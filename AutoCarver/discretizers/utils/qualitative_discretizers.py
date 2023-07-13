@@ -57,16 +57,18 @@ class DefaultDiscretizer(GroupedListDiscretizer):
         verbose : bool, optional
             _description_, by default False
         """
-        self.features = features[:]
+        # Initiating GroupedListDiscretizer
+        super().__init__(
+            features=features,
+            values_orders=values_orders,
+            input_dtypes='str',
+            output_dtype='str',
+            str_nan=str_nan,
+            copy=copy,
+        )
+        
         self.min_freq = min_freq
-        if values_orders is None:
-            values_orders = {}
-        self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
-
         self.str_default = str_default
-        self.str_nan = str_nan
-
-        self.copy = copy
         self.verbose = verbose
 
     def prepare_data(self, X: DataFrame, y: Series) -> DataFrame:
@@ -84,31 +86,27 @@ class DefaultDiscretizer(GroupedListDiscretizer):
         DataFrame
             _description_
         """
+        # checking for binary target
+        x_copy = super().prepare_data(X, y)
+
         # checks and initilizes values_orders
         for feature in self.features:
             # initiating features missing from values_orders
             if feature not in self.values_orders:
-                self.values_orders.update({feature: GroupedList(nan_unique(X[feature]))})
+                self.values_orders.update({feature: GroupedList(nan_unique(x_copy[feature]))})
 
         # checking that all unique values in X are in values_orders
-        check_new_values(X, self.features, self.values_orders)
+        check_new_values(x_copy, self.features, self.values_orders)
         # checking that all unique values in values_orders are in X
-        check_missing_values(X, self.features, self.values_orders)
+        check_missing_values(x_copy, self.features, self.values_orders)
 
         # adding NANS
         for feature in self.features:
-            if any(X[feature].isna()):
+            if any(x_copy[feature].isna()):
                 self.values_orders[feature].append(self.str_nan)
 
         # filling up NaNs
-        x_copy = X[self.features].fillna(self.str_nan)
-
-        # checking for binary target
-        y_values = unique(y)
-        assert (0 in y_values) & (
-            1 in y_values
-        ), "y must be a binary Series (int or float, not object)"
-        assert len(y_values) == 2, "y must be a binary Series (int or float, not object)"
+        x_copy = x_copy[self.features].fillna(self.str_nan)
 
         return x_copy
 
@@ -124,14 +122,14 @@ class DefaultDiscretizer(GroupedListDiscretizer):
         """
         # copying dataframe and checking data before bucketization
         x_copy = self.prepare_data(X, y)
+        
+        if self.verbose:  # verbose if requested
+            print(f" - [DefaultDiscretizer] Fit {', '.join(self.features)}")
 
         # computing frequencies of each modality
         frequencies = x_copy.apply(value_counts, normalize=True, axis=0)
 
-        for n, feature in enumerate(self.features):
-            if self.verbose:  # verbose if requested
-                print(f" - [DefaultDiscretizer] Fit {feature} ({n+1}/{len(self.features)})")
-
+        for feature in self.features:
             # sorting orders based on target rates
             order = self.values_orders[feature]
 
@@ -171,12 +169,6 @@ class DefaultDiscretizer(GroupedListDiscretizer):
             self.values_orders.update({feature: order.sort_by(new_order)})
 
         # discretizing features based on each feature's values_order
-        super().__init__(
-            features=self.features,
-            values_orders=self.values_orders,
-            copy=self.copy,
-            str_nan=self.str_nan,
-        )
         super().fit(X, y)
 
         return self
@@ -233,18 +225,26 @@ class ChainedDiscretizer(GroupedListDiscretizer):
         verbose : bool, optional
             Whether or not to print information during fit, by default False
         """
+        # Initiating GroupedListDiscretizer
+        super().__init__(
+            features=features,
+            values_orders=values_orders,
+            input_dtypes='str',
+            output_dtype='str',
+            str_nan=str_nan,
+            copy=copy,
+        )
+
         self.min_freq = min_freq
-        self.features = list(set(features))
+
         self.chained_orders = [GroupedList(values) for values in chained_orders]
 
         # parameters to handle missing/unknown values
         self.remove_unknown = remove_unknown
-        self.str_nan = str_nan
 
         # known_values: all ordered values describe in each level of the chained_orders
         # starting off with first level 
         known_values = self.chained_orders[0].values()
-
         # adding each level
         for next_level in self.chained_orders[1:]:
             # highest value per group of the level
@@ -256,10 +256,6 @@ class ChainedDiscretizer(GroupedListDiscretizer):
                 known_values = known_values[:highest_index + 1] + [group] + known_values[highest_index + 1:]
         self.known_values = known_values
 
-        if values_orders is None:
-            values_orders = {}
-        self.values_orders = {feature: GroupedList(value) for feature, value in values_orders.items()}
-
         # adding known_values to each feature's order
         for feature in self.features:
             # checking for already known values of the feature
@@ -270,7 +266,7 @@ class ChainedDiscretizer(GroupedListDiscretizer):
                 order = GroupedList([])
             # checking that all values from the order are in known_values
             for value in order:
-                assert value in self.known_values, "Value {value} from feature {feature} provided in values_orders is missing from levels of chained_orders. Add value to a level of chained_orders or adapt values_orders."
+                assert value in self.known_values, f"Value {value} from feature {feature} provided in values_orders is missing from levels of chained_orders. Add value to a level of chained_orders or adapt values_orders."
             # adding known values if missing from the order
             for value in self.known_values:
                 if value not in order.values():
@@ -278,7 +274,6 @@ class ChainedDiscretizer(GroupedListDiscretizer):
             order = order.sort_by(self.known_values)
             self.values_orders.update({feature: order})
 
-        self.copy = copy
         self.verbose = verbose
 
     def prepare_data(self, X: DataFrame, y: Series = None) -> DataFrame:
@@ -393,7 +388,7 @@ class ChainedDiscretizer(GroupedListDiscretizer):
                 ), f"Order for feature '{feature}' needs to be provided for values: {str(missing)}, otherwise set remove_unknown=True"
 
             # iterating over each specified orders
-            for level_order in self.chained_orders:
+            for level_order in self.chained_orders:  # TODO replace all of this with labels_per_orders
                 # values that are frequent enough
                 to_keep = list(values[frequencies >= self.min_freq])
 
@@ -417,13 +412,6 @@ class ChainedDiscretizer(GroupedListDiscretizer):
                 frequencies = x_copy[feature].value_counts(normalize=True)
                 values, frequencies = frequencies.index, frequencies.values
 
-        super().__init__(
-            features=self.features,
-            values_orders=self.values_orders,
-            str_nan=self.str_nan,
-            copy=self.copy,
-            input_dtypes="str",
-        )
         super().fit(X, y)
 
         return self
@@ -441,12 +429,12 @@ class OrdinalDiscretizer(GroupedListDiscretizer):
 
     def __init__(
         self,
-        features: List[str],
-        values_orders: Dict[str, Any],
+        features: list[str],
+        values_orders: dict[str, GroupedList],
         min_freq: float,
         *,
         str_nan: str = "__NAN__",
-        input_dtypes: Union[str, Dict[str, str]] = None,
+        input_dtypes: Union[str, dict[str, str]] = "str",
         copy: bool = False,
         verbose: bool = False,
     ):
@@ -473,25 +461,18 @@ class OrdinalDiscretizer(GroupedListDiscretizer):
         verbose : bool, optional
             _description_, by default False
         """
+        # Initiating GroupedListDiscretizer
+        super().__init__(
+            features=features,
+            values_orders=values_orders,
+            input_dtypes=input_dtypes,
+            output_dtype='str',
+            str_nan=str_nan,
+            copy=copy,
+        )
 
-        self.features = features[:]
         self.min_freq = min_freq
-        self.values_orders = {k: GroupedList(v) for k, v in values_orders.items()}
-        self.copy = copy
         self.verbose = verbose
-        self.str_nan = str_nan
-        if input_dtypes is None:
-            input_dtypes = {feature: "str" for feature in features}
-        if isinstance(input_dtypes, str):
-            input_dtypes = {feature: input_dtypes for feature in features}
-        self.input_dtypes = input_dtypes
-
-        self.quantitative_features = [
-            feature for feature in features if input_dtypes[feature] == "float"
-        ]
-        self.qualitative_features = [
-            feature for feature in features if input_dtypes[feature] == "str"
-        ]
 
     def prepare_data(self, X: DataFrame, y: Series) -> DataFrame:
         """Called during fit step
@@ -537,8 +518,7 @@ class OrdinalDiscretizer(GroupedListDiscretizer):
         y : Series
             Model target.
         """
-        # verbose
-        if self.verbose:
+        if self.verbose:  # verbose if requested
             print(f" - [OrdinalDiscretizer] Fit {', '.join(self.features)}")
 
         # checking values orders
@@ -575,13 +555,6 @@ class OrdinalDiscretizer(GroupedListDiscretizer):
         )
 
         # discretizing features based on each feature's values_order
-        super().__init__(
-            features=self.features,
-            values_orders=self.values_orders,
-            copy=self.copy,
-            str_nan=self.str_nan,
-            input_dtypes=self.input_dtypes,
-        )
         super().fit(x_copy, y)
 
         return self
@@ -591,9 +564,9 @@ def find_common_modalities(
     df_feature: Series,
     y: Series,
     min_freq: float,
-    values_orders: Dict[str, GroupedList],
+    values_orders: dict[str, GroupedList],
     len_df: int = None,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Découpage en modalités de fréquence minimal (Cas des variables ordonnées).
 
     Fonction récursive : on prend l'échantillon et on cherche des valeurs sur-représentées
