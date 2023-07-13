@@ -224,7 +224,6 @@ class Discretizer(GroupedListDiscretizer):
             features=self.features,
             values_orders=self.values_orders,
             copy=self.copy,
-            verbose=self.verbose,
             input_dtypes=self.input_dtypes,
             str_nan=self.str_nan,
         )
@@ -576,7 +575,6 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
             self.features,
             min_freq=self.min_freq,
             values_orders=self.values_orders,
-            verbose=self.verbose,
             str_nan=self.str_nan,
             copy=False,
         )

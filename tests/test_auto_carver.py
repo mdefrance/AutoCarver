@@ -69,5 +69,10 @@ def test_auto_carver(x_train: DataFrame, x_test_1: DataFrame) -> None:
     assert all(x_test_discretized[auto_carver.features].nunique() <= max_n_mod), "Too many values after carving of test sample"
     assert all(x_discretized[auto_carver.features].nunique() == x_test_discretized[auto_carver.features].nunique()), "More values in train or test samples"
 
+    # test that all values still are in the values_orders
+    for feature in auto_carver.qualitative_features:
+        fitted_values = auto_carver.values_orders[feature].values()
+        init_values = x_train[feature].fillna('__NAN__').unique()
+        assert all(value in fitted_values for value in init_values), feature
+
     # TODO: test output 'float'
-    

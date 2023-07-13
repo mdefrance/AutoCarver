@@ -377,7 +377,6 @@ class AutoCarver(GroupedListDiscretizer):
             copy=self.copy,
             input_dtypes=self.input_dtypes,
             str_nan=self.str_nan,
-            verbose=self.verbose,
             output_dtype=self.output_dtype,
         )
         super().fit(X, y)
