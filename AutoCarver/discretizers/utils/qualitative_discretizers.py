@@ -3,6 +3,7 @@ for a binary classification model.
 """
 
 from typing import Any, Dict, List, Union
+from AutoCarver.discretizers.utils.base_discretizers import GroupedList
 
 from numpy import argmin, nan, select
 from pandas import DataFrame, Series, isna, notna, unique
@@ -18,7 +19,7 @@ from .base_discretizers import (
     target_rate,
     value_counts,
 )
-
+from .type_discretizers import StringDiscretizer
 
 class DefaultDiscretizer(GroupedListDiscretizer):
     """Groups a qualitative features' values less frequent than min_freq into a str_default string
@@ -85,7 +86,7 @@ class DefaultDiscretizer(GroupedListDiscretizer):
         """
         # checks and initilizes values_orders
         for feature in self.features:
-            # initiatind features missing from values_orders
+            # initiating features missing from values_orders
             if feature not in self.values_orders:
                 self.values_orders.update({feature: GroupedList(nan_unique(X[feature]))})
 
@@ -180,16 +181,31 @@ class DefaultDiscretizer(GroupedListDiscretizer):
 
         return self
 
+class BaseQualitativeDiscretizer(GroupedListDiscretizer):
+    """TODO: to implement to mutualize prepare_data and remove_feature across qualitative discretizers"""
+
+    def __init__(
+        self,
+        features: List[str],
+        values_orders: Dict[str, GroupedList],
+        *,
+        copy: bool = False,
+        input_dtypes: Union[str, Dict[str, str]] = None,
+        str_nan: str = None,
+        verbose: bool = False
+    ) -> None:
+        super().__init__(features, values_orders, copy=copy, input_dtypes=input_dtypes, str_nan=str_nan, verbose=verbose)
 
 class ChainedDiscretizer(GroupedListDiscretizer):
     """Chained Discretization based on a list of GroupedList."""
 
     def __init__(
         self,
-        features: List[str],
+        features: list[str],
         min_freq: float,
-        chained_orders: List[GroupedList],
+        chained_orders: list[GroupedList],
         *,
+        values_orders: dict[str, GroupedList] = None,
         remove_unknown: bool = True,
         str_nan: str = "__NAN__",
         copy: bool = False,
@@ -218,21 +234,113 @@ class ChainedDiscretizer(GroupedListDiscretizer):
             Whether or not to print information during fit, by default False
         """
         self.min_freq = min_freq
-        self.features = features[:]
-        self.chained_orders = [GroupedList(order) for order in chained_orders]
-        self.copy = copy
-        self.verbose = verbose
+        self.features = list(set(features))
+        self.chained_orders = [GroupedList(values) for values in chained_orders]
 
         # parameters to handle missing/unknown values
         self.remove_unknown = remove_unknown
         self.str_nan = str_nan
 
-        # initiating features' values orders to all possible values
-        self.known_values = list(set(v for o in self.chained_orders for v in o.values()))
-        self.values_orders = {
-            f: GroupedList(self.known_values[:] + [self.str_nan]) for f in self.features
-        }
+        # known_values: all ordered values describe in each level of the chained_orders
+        # starting off with first level 
+        known_values = self.chained_orders[0].values()
 
+        # adding each level
+        for next_level in self.chained_orders[1:]:
+            # highest value per group of the level
+            highest_ranking_value = {group: [value for value in values if value!=group][-1] for group, values in next_level.contained.items()}
+            
+            # adding next_level group to the order
+            for group, highest_value in highest_ranking_value.items():
+                highest_index = known_values.index(highest_value)
+                known_values = known_values[:highest_index + 1] + [group] + known_values[highest_index + 1:]
+        self.known_values = known_values
+
+        if values_orders is None:
+            values_orders = {}
+        self.values_orders = {feature: GroupedList(value) for feature, value in values_orders.items()}
+
+        # adding known_values to each feature's order
+        for feature in self.features:
+            # checking for already known values of the feature
+            if feature in self.values_orders:
+                order = self.values_orders[feature]
+            # no known values for the feature
+            else:
+                order = GroupedList([])
+            # checking that all values from the order are in known_values
+            for value in order:
+                assert value in self.known_values, "Value {value} from feature {feature} provided in values_orders is missing from levels of chained_orders. Add value to a level of chained_orders or adapt values_orders."
+            # adding known values if missing from the order
+            for value in self.known_values:
+                if value not in order.values():
+                    order.append(value)
+            order = order.sort_by(self.known_values)
+            self.values_orders.update({feature: order})
+
+        self.copy = copy
+        self.verbose = verbose
+
+    def prepare_data(self, X: DataFrame, y: Series = None) -> DataFrame:
+        """Prepares the data for bucketization, checks column types.
+        Converts non-string columns into strings.
+
+        Parameters
+        ----------
+        X : DataFrame
+            Dataset to be bucketized
+        y : Series
+            Model target, by default None
+
+        Returns
+        -------
+        DataFrame
+            Formatted X for bucketization
+        """
+        # copying dataframe
+        x_copy = X.copy()
+
+        # checking for ids (unique value per row)
+        frequencies = x_copy[self.features].apply(
+            lambda u: u.value_counts(normalize=True, dropna=False).drop(nan, errors='ignore').max(), axis=0
+        )
+        # for each feature, checking that at least one value is more frequent than min_freq
+        for feature in self.features:
+            if frequencies[feature] < self.min_freq:
+                print(f"For feature '{feature}', the largest modality has {frequencies[feature]:2.2%} observations which is lower than {self.min_freq:2.2%}. This feature will not be Discretized. Consider decreasing parameter min_freq or removing this feature.")
+                self.remove_feature(feature)
+
+        # checking for columns containing floats or integers even with filled nans
+        dtypes = x_copy[self.features].fillna(self.str_nan).applymap(type).apply(unique)
+        not_object = dtypes.apply(lambda u: any(typ != str for typ in u))
+
+        # non qualitative features detected
+        if any(not_object):
+            features_to_convert = list(not_object.index[not_object])
+            if self.verbose:
+                unexpected_dtypes = [typ for dtyp in dtypes[not_object] for typ in dtyp if typ != str]
+                print(
+                    f"""Non-string features: {str(features_to_convert)}. Trying to convert them using type_discretizers.StringDiscretizer, otherwise convert them manually. Unexpected data types: {str(list(unexpected_dtypes))}."""
+                )
+
+            # converting specified features into qualitative features
+            stringer = StringDiscretizer(features=features_to_convert, values_orders=self.values_orders)
+            x_copy = stringer.fit_transform(x_copy)
+
+            # updating values_orders accordingly
+            self.values_orders.update(stringer.values_orders)
+
+        # all known values for features
+        known_values = {feature: values.values() for feature, values in self.values_orders.items()}
+
+        # checking that all unique values in X are in values_orders
+        check_new_values(x_copy, self.features, known_values)
+
+        # filling nans
+        x_copy = x_copy.fillna(self.str_nan)
+
+        return x_copy
+    
     def fit(self, X: DataFrame, y: Series = None) -> None:
         """_summary_
 
@@ -249,7 +357,7 @@ class ChainedDiscretizer(GroupedListDiscretizer):
             _description_
         """
         # filling nans
-        x_copy = X[self.features].fillna(self.str_nan)
+        x_copy = self.prepare_data(X, y)
 
         # iterating over each feature
         for n, feature in enumerate(self.features):
@@ -260,60 +368,53 @@ class ChainedDiscretizer(GroupedListDiscretizer):
             frequencies = x_copy[feature].value_counts(normalize=True)
             values, frequencies = frequencies.index, frequencies.values
 
-            # checking for unknown values (values to present in an order of self.chained_orders)
-            missing = [
-                value for value in values if notna(value) and (value not in self.known_values)
-            ]
+            # adding NaNs to the order if any
+            order = self.values_orders[feature]
+            if self.str_nan in values:
+                order.append(self.str_nan)
+
+            # checking for unknown values (missing from known_values)
+            missing = [value for value in values if value not in self.known_values and value != self.str_nan]
 
             # converting unknown values to NaN
             if self.remove_unknown & (len(missing) > 0):
                 # alerting user
                 print(
-                    f"Order for feature '{feature}' was not provided for values:  {missing}, these values will be converted to '{self.str_nan}' (policy remove_unknown=True)"
+                    f"Order for feature '{feature}' was not provided for values:  {str(missing)}, these values will be converted to '{self.str_nan}' (policy remove_unknown=True)"
                 )
 
-                # adding missing valyes to the order
-                order = self.values_orders.get(feature)
+                # adding missing values to the order
                 order.update({self.str_nan: missing + order.get(self.str_nan)})
 
             # alerting user
             else:
                 assert (
                     not len(missing) > 0
-                ), f"Order for feature '{feature}' needs to be provided for values: {missing}, otherwise set remove_unknown=True"
+                ), f"Order for feature '{feature}' needs to be provided for values: {str(missing)}, otherwise set remove_unknown=True"
 
             # iterating over each specified orders
-            for order in self.chained_orders:
+            for level_order in self.chained_orders:
                 # values that are frequent enough
                 to_keep = list(values[frequencies >= self.min_freq])
 
-                # all values from the order
-                values_order = [o for v in order for o in order.get(v)]
-
                 # values from the order to group (not frequent enough or absent)
-                to_discard = [value for value in values_order if value not in to_keep]
+                values_to_group = [value for value in level_order.values() if value not in to_keep]
 
                 # values to group into discarded values
-                value_to_group = [order.get_group(value) for value in to_discard]
+                groups_value = [level_order.get_group(value) for value in values_to_group]
 
-                # values of the series to input
-                df_to_input = [
-                    x_copy[feature] == discarded for discarded in to_discard
-                ]  # identifying observation to input
+                # values of the feature to input (needed for next levels of the order)
+                df_to_input = [x_copy[feature] == discarded for discarded in values_to_group]
 
                 # inputing non frequent values
-                x_copy[feature] = select(df_to_input, value_to_group, default=x_copy[feature])
+                x_copy[feature] = select(df_to_input, groups_value, default=x_copy[feature])
 
                 # historizing in the feature's order
-                for discarded, kept in zip(to_discard, value_to_group):
+                for discarded, kept in zip(values_to_group, groups_value):
                     self.values_orders.get(feature).group(discarded, kept)
 
                 # updating frequencies of each modality for the next ordering
-                frequencies = (
-                    x_copy[feature]
-                    .value_counts(dropna=False, normalize=True)
-                    .drop(nan, errors="ignore")
-                )  # dropping nans to keep them anyways
+                frequencies = x_copy[feature].value_counts(normalize=True)
                 values, frequencies = frequencies.index, frequencies.values
 
         super().__init__(

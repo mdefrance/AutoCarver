@@ -351,7 +351,7 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
         frequencies = x_copy[self.features].apply(
             lambda u: u.value_counts(normalize=True, dropna=False).drop(nan, errors='ignore').max(), axis=0
         )
-        # for each feature, checking that at least one value 
+        # for each feature, checking that at least one value is more frequent than min_freq
         for feature in self.features:
             if frequencies[feature] < self.min_freq:
                 print(f"For feature '{feature}', the largest modality has {frequencies[feature]:2.2%} observations which is lower than {self.min_freq:2.2%}. This feature will not be Discretized. Consider decreasing parameter min_freq or removing this feature.")

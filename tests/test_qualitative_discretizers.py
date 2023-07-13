@@ -4,12 +4,101 @@ from AutoCarver.discretizers.utils.qualitative_discretizers import *
 from pytest import raises
 
 
-def test_chained_discretizer():
-    """TODO"""
-    assert False, "TODO"
+def test_chained_discretizer(x_train: DataFrame) -> None:
+    """Tests DefaultDiscretizer
+
+    Parameters
+    ----------
+    x_train : DataFrame
+        Simulated Train DataFrame
+    """
+    ordinal_features = ["Qualitative_Ordinal", "Qualitative_Ordinal_lownan"]
+    values_orders = {
+        "Qualitative_Ordinal_lownan": ['Low+', 'Medium-', 'Medium', 'Medium+', 'High-', 'High', 'High+'],
+        "Qualitative_Ordinal_highnan": ['Low-', 'Low', 'Low+', 'Medium-', 'Medium', 'Medium+', 'High-', 'High', 'High+'],
+    }
+
+    level0_to_level1 = {
+        "Lows": ['Low-', 'Low', 'Low+', 'Lows'],
+        "Mediums": ['Medium-', 'Medium', 'Medium+', 'Mediums'],
+        "Highs": ['High-', 'High', 'High+', 'Highs'],
+    }
+    level1_to_level2 = {
+        "Worst": ['Lows', 'Mediums', 'Worst'],
+        "Best": ['Highs', "Best"],
+    }
 
 
-def test_default_discretizer(x_train: DataFrame):
+    min_freq = 0.15
+
+    discretizer = ChainedDiscretizer(
+        features=ordinal_features,
+        chained_orders=[level0_to_level1, level1_to_level2],
+        min_freq=min_freq,
+        values_orders=values_orders,
+        copy=True,
+    )
+    x_discretized = discretizer.fit_transform(x_train)
+
+    expected = {'High+': ['High+'],
+    'Best': ['High', 'High-', 'Highs', 'Best'],
+    'Mediums': ['Medium+', 'Medium-', 'Mediums'],
+    'Medium': ['Medium'],
+    'Worst': ['Low+', 'Low', 'Low-', 'Lows', 'Worst']}
+    assert discretizer.values_orders['Qualitative_Ordinal'].contained == expected, "Values less frequent than min_freq should be grouped"
+    assert discretizer.values_orders['Qualitative_Ordinal'] == ['Medium', 'Mediums', 'Worst', 'High+', 'Best'], "Order of ordinal features is wrong"
+
+    expected = {'Low-': ['Low-'],
+    'Low': ['Low'],
+    'Low+': ['Low+'],
+    'Medium-': ['Medium-'],
+    'Medium': ['Medium'],
+    'Medium+': ['Medium+'],
+    'High-': ['High-'],
+    'High': ['High'],
+    'High+': ['High+']}
+    assert discretizer.values_orders['Qualitative_Ordinal_highnan'].contained == expected, "Not specified features should not be modified"
+
+    expected = {'Medium': ['Medium'],
+    'High+': ['High+'],
+    'Best': ['High', 'High-', 'Highs', 'Best'],
+    'Mediums': ['Medium+', 'Medium-', 'Mediums'],
+    'Worst': ['Low+', 'Low', 'Low-', 'Lows', 'Worst'],
+    '__NAN__': ['__NAN__']}
+    assert discretizer.values_orders['Qualitative_Ordinal_lownan'].contained == expected, "NaNs should be added to the order and missing values from the values_orders should be added (from chained_orders)"
+    assert discretizer.values_orders['Qualitative_Ordinal_lownan'] == ['Medium', 'Mediums', 'Worst', 'High+', 'Best', '__NAN__'], "Order of ordinal features is wrong"
+
+    # testing that it does not work when there is a vale in values_orders missing from chained_orders
+    with raises(AssertionError):
+        values_orders = {
+            "Qualitative_Ordinal_lownan": ['-Low', 'Low+', 'Medium-', 'Medium', 'Medium+', 'High-', 'High', 'High+'],
+            "Qualitative_Ordinal_highnan": ['Low-', 'Low', 'Low+', 'Medium-', 'Medium', 'Medium+', 'High-', 'High', 'High+'],
+        }
+
+        level0_to_level1 = {
+            "Lows": ['Low-', 'Low', 'Low+', 'Lows'],
+            "Mediums": ['Medium-', 'Medium', 'Medium+', 'Mediums'],
+            "Highs": ['High-', 'High', 'High+', 'Highs'],
+        }
+        level1_to_level2 = {
+            "Worst": ['Lows', 'Mediums', 'Worst'],
+            "Best": ['Highs', "Best"],
+        }
+
+
+        min_freq = 0.15
+
+        discretizer = ChainedDiscretizer(
+            features=ordinal_features,
+            chained_orders=[level0_to_level1, level1_to_level2],
+            min_freq=min_freq,
+            values_orders=values_orders,
+            copy=True,
+        )
+        x_discretized = discretizer.fit_transform(x_train)
+
+
+def test_default_discretizer(x_train: DataFrame) -> None:
     """Tests DefaultDiscretizer
 
     Parameters
@@ -100,7 +189,7 @@ def test_default_discretizer(x_train: DataFrame):
     assert discretizer.values_orders['Qualitative_grouped'].contained == groupedlist_grouped.contained, "Grouped values should keep there group"
 
 
-def test_ordinal_discretizer(x_train: DataFrame):
+def test_ordinal_discretizer(x_train: DataFrame) -> None:
     """Tests OrdinalDiscretizer
 
     # TODO: add tests for quantitative features

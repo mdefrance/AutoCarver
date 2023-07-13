@@ -334,6 +334,9 @@ class AutoCarver(GroupedListDiscretizer):
             )
         )
 
+        # TODO convert to float
+        # TODO pretty displaying
+
         # discretizing features based on each feature's values_order
         super().__init__(
             features=self.features,
