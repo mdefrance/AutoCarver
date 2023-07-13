@@ -2,7 +2,7 @@
 
 from math import sqrt
 from random import shuffle
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Any, Callable, Dict, Tuple
 
 from IPython.display import display_html
 from numpy import inf, nan, ones, triu
@@ -12,6 +12,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from statsmodels.formula.api import ols
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
+from .discretizers.utils.base_discretizers import GroupedList, GroupedListDiscretizer
 
 # TODO: convert to groupedlistdiscretizer
 # TODO: add parameter to shut down displayed info
@@ -23,7 +24,7 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-    features: List[str]
+    features: list[str]
         Features on which to compute association.
     n_best, int:
         Number of features to be selected
@@ -33,7 +34,7 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
         By default, all features are used. For sample_size=0.5,
         FeatureSelector will search for the best features in
         features[:len(features)//2] and then in features[len(features)//2:]
-    measures, List[Callable]: default list().
+    measures, list[Callable]: default list().
         List of association measures to be used.
         Implemented measures are:
             [Quantitative Features]
@@ -42,7 +43,7 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
             [Qualitative Features]
              - For correlation: `chi2_measure`, `cramerv_measure`, `tschuprowt_measure`
         Ranks features based on last measure of the list.
-    filters, List[Callable]: default list().
+    filters, list[Callable]: default list().
         List of filters to be used.
         Implemented filters are:
             [Quantitative Features]
@@ -82,13 +83,15 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
 
     def __init__(
         self,
-        features: List[str],
+        features: list[str],
         n_best: int,
-        measures: List[Callable],
+        measures: list[Callable],
         *,
-        filters: List[Callable] = None,
+        filters: list[Callable] = None,
         sample_size: float = 1.0,
+        values_orders: dict[str, GroupedList] = None,
         copy: bool = True,
+        drop: bool = False,  # TODO
         verbose: bool = True,
         **params,
     ) -> None:
@@ -96,13 +99,13 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        features : List[str]
+        features : list[str]
             _description_
         n_best : int
             _description_
-        measures : List[Callable], optional
+        measures : list[Callable], optional
             _description_, by default list()
-        filters : List[Callable], optional
+        filters : list[Callable], optional
             _description_, by default list()
         sample_size : float, optional
             _description_, by default 1.0
@@ -111,11 +114,12 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
         verbose : bool, optional
             _description_, by default True
         """
-        self.features = features[:]
+        print("Warning: not fully optimized for package versions greater than 4.")
+
+        self.features = list(set(features))
         self.n_best = n_best
         assert n_best <= len(features), "Must set n_best <= len(features)"
         self.best_features = features[:]
-        self.dropped_features: List[str] = []
         self.sample_size = sample_size
 
         self.measures = [dtype_measure, nans_measure, mode_measure] + measures[:]
@@ -124,6 +128,12 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
         self.filters = [thresh_filter] + filters[:]
         self.sort_measures = [measure.__name__ for measure in measures[::-1]]
 
+        # Values_orders from GroupedListDiscretizer
+        if values_orders is None:
+            values_orders = {}
+        self.values_orders = {feature: GroupedList(value) for feature, value in values_orders.items()}
+
+        self.drop = drop
         self.copy = copy
         self.verbose = verbose
         self.params = params
@@ -143,7 +153,7 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
 
         return association
 
-    def measure_apply(self, X: DataFrame, y: Series, features: List[str]) -> None:
+    def measure_apply(self, X: DataFrame, y: Series, features: list[str]) -> None:
         """Measures association between columns of X and y
 
         Parameters
@@ -197,7 +207,7 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
         style = style.set_caption(caption)
         display_html(style._repr_html_(), raw=True)
 
-    def fit_features(self, X: DataFrame, y: Series, features: List[str], n_best: int) -> List[str]:
+    def fit_features(self, X: DataFrame, y: Series, features: list[str], n_best: int) -> list[str]:
         """Selects the n_best features amongst the specified ones"""
 
         # initial computation of all association measures
@@ -265,11 +275,11 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
             f for f in self.filtered_associations.index if f in self.best_features
         ]
 
-        # ordered dropped features
-        self.dropped_features = [f for f in self.associations.index if f not in self.best_features]
-        self.dropped_features += [
-            f for f in self.features if f not in self.best_features + self.dropped_features
-        ]
+        # removing feature from values_orders
+        dropped_features = [f for f in self.associations.index if f not in self.best_features]
+        for feature in dropped_features:
+            if feature in self.values_orders:
+                self.values_orders.pop(feature)
 
         return self
 
@@ -288,15 +298,8 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
         DataFrame
             `X` without non-selected columns from `features`.
         """
-        # copying dataset
-        Xc = X
-        if self.copy:
-            Xc.copy()
 
-        # filtering out unwanted features
-        Xc = Xc.drop(self.dropped_features, axis=1)
-
-        return Xc
+        return X
 
 
 # MEASURES

@@ -43,6 +43,7 @@ class TimeDeltaConverter(BaseEstimator, TransformerMixin):
         drop : bool, optional
             _description_, by default True
         """
+        print("Warning: not tested for package version greater than 4.")
         self.features = features[:]
         self.copy = copy
         self.new_features: List[str] = []
@@ -128,6 +129,7 @@ class GroupNormalizer(BaseEstimator, TransformerMixin):
         copy : bool, optional
             _description_, by default True
         """
+        print("Warning: not tested for package version greater than 4.")
         self.features = features[:]
         self.groups = groups[:]
 
@@ -227,6 +229,7 @@ class TanhNormalizer(BaseEstimator, TransformerMixin):
         copy : bool, optional
             _description_, by default False
         """
+        print("Warning: not tested for package versions greater than 4.")
         self.features = features[:]
         self.copy = copy
 
@@ -294,6 +297,7 @@ class CrossConverter(BaseEstimator, TransformerMixin):
         copy : bool, optional
             _description_, by default True
         """
+        print("Warning: not tested for package version greater than 4.")
         self.features = features[:]
         self.copy = copy
         self.new_features: List[str] = []
