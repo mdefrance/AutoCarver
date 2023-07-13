@@ -136,7 +136,6 @@ class Discretizer(GroupedListDiscretizer):
         """
         if feature in self.features:
             super().remove_feature(feature)
-            self.features.remove(feature)
             if feature in self.ordinal_features:
                 self.ordinal_features.remove(feature)
 
