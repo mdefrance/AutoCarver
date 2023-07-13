@@ -39,6 +39,7 @@ def test_auto_carver(x_train: DataFrame, x_test_1: DataFrame) -> None:
         max_n_mod=max_n_mod,
         sort_by='tschuprowt',
         output_dtype='str',
+        dropna=True,
         copy=True,
         verbose=False,
     )
@@ -59,6 +60,7 @@ def test_auto_carver(x_train: DataFrame, x_test_1: DataFrame) -> None:
         min_freq=min_freq,
         max_n_mod=max_n_mod,
         sort_by='cramerv',
+        dropna=True,
         copy=True,
         verbose=False,
     )
@@ -74,6 +76,23 @@ def test_auto_carver(x_train: DataFrame, x_test_1: DataFrame) -> None:
         fitted_values = auto_carver.values_orders[feature].values()
         init_values = x_train[feature].fillna('__NAN__').unique()
         assert all(value in fitted_values for value in init_values), feature
+    
+    # tests with dropna=False
+    auto_carver = AutoCarver(
+        quantitative_features=quantitative_features,
+        qualitative_features=qualitative_features,
+        ordinal_features=ordinal_features,
+        values_orders=values_orders,
+        min_freq=0.06,
+        max_n_mod=max_n_mod,
+        sort_by='cramerv',
+        dropna=False,
+        copy=True,
+        verbose=False,
+    )
+    x_discretized = auto_carver.fit_transform(x_train, x_train["quali_ordinal_target"])
+
+    assert all(x_train[auto_carver.features].isna().mean()  == x_discretized[auto_carver.features].isna().mean()), "Some Nans are being dropped (grouped)"
 
     # TODO: test output 'float'
     # TODO test missing values in test

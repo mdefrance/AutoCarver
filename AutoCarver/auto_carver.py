@@ -183,6 +183,7 @@ class AutoCarver(GroupedListDiscretizer):
             input_dtypes=self.input_dtypes,
             output_dtype=output_dtype,
             str_nan=str_nan,
+            dropna=dropna,
             copy=copy,
         )
 
