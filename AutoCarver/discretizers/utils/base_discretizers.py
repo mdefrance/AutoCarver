@@ -5,7 +5,7 @@ for a binary classification model.
 from typing import Any, Dict, List, Union
 
 from json import dumps
-from numpy import array, inf, isfinite, nan, ndarray, select, sort
+from numpy import array, inf, isfinite, nan, ndarray, select, sort, floating, integer
 from pandas import DataFrame, Series, isna, notna, unique
 from sklearn.base import BaseEstimator, TransformerMixin
 
@@ -122,14 +122,22 @@ def check_missing_values(
 class GroupedList(list):
     """An ordered list that's extended with a dict."""
 
-    def __init__(self, iterable: Any = ()) -> None:
-        """An ordered list that historizes its elements' merges.
+    def __init__(self, iterable: Union[ndarray, dict, list, tuple] = (), order: list[Any] = None, content: dict[str, list[Any]] = None) -> None:
+        """An ordered list that historizes its elements' content.
 
         Parameters
         ----------
-        iterable : Any, optional
-            list, dict or GroupedList, by default ()
+        iterable : Union[ndarray, dict, list, tuple], optional
+            List-like or GroupedList, by default ()
+        order : list[Any], optional
+            Used when loading .json, ordering of values, by default None
+        content : dict[str, list[Any]], optional
+            Used when loading .json, (learned) content per value, by default None
         """
+
+        # initiating iterable from order and content # TODO: move list to an attribute?
+        if order is not None and content is not None:
+            iterable = {group: content[group] for group in order}
 
         # case -1: iterable is an array
         if isinstance(iterable, ndarray):
@@ -791,49 +799,43 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         DataFrame
             A summary of feature's values
         """
-        # getting quantitative labels
-        if any(self.quantitative_features):
-            print("converting to labels\n\n")
-            labels_orders = convert_to_labels(
-                self.features, self.quantitative_features, self.values_orders, self.str_nan, dropna=False
-            )
+        # raw label per value with output_dtype 'str'
+        raw_labels_per_values = self.get_labels_per_values(output_dtype='str')
+
         # initiating summaries
         summaries: list[dict[str, Any]] = []
         for feature in self.features:
-            init_summary = {'feature': feature}  # initiating feature summary
-            
-            # case 0: quantitative features
-            if feature in self.quantitative_features:
-                init_summary.update({'data_type': 'quantitative'})
-                # feature's modalities
-                modalities = labels_orders[feature]
-                # values included in each modality
-                content = modalities.content
-                
-                # adding nans
-                if self.values_orders[feature].contains(self.str_nan):
-                    nan_group = self.values_orders[feature].get_group(self.str_nan)
-                    content.update({nan_group: content[nan_group] + [self.str_nan]})
+            # adding each value/label 
+            for value, label in self.labels_per_values[feature].items():
+                # initiating feature summary (default value/label)
+                feature_summary = {'feature': feature, 'dtype': self.input_dtypes[feature], 'label': label, 'content': value}
 
+                # case 0: qualitative feature -> not adding floats and integers str_default
+                if feature in self.qualitative_features:
+                    if not isinstance(value, floating):  # checking for floats
+                        if not isinstance(value, integer):  # checking for ints
+                            if value != self.str_default:  # checking for str_default
+                                summaries += [feature_summary]
 
-            # case 1: quantitative features
-            else:
-                init_summary.update({'data_type': 'qualitative'})
-                # feature's modalities
-                modalities = self.values_orders[feature]
-                # values included in each modality
-                content = modalities.content
-            
-            # adding all modalities and there content
-            for modality in modalities:
-                modality_summary = {k: v for k, v in init_summary.items()}
-                modality_summary.update({"modality": modality, "values": content[modality]})
+                # case 1: quantitative feature -> take the raw label per value
+                elif feature in self.quantitative_features:
+                    feature_summary.update({'content': raw_labels_per_values[feature][value]})
+                    summaries += [feature_summary]
 
-                # case 2: when the output_dtype == 'float'
-                #if self.output_dtype == 'float':
-                #    modality_summary.update({"modality": self.output_dtype[feature][modality]})
+        # adding nans for quantitative features (when nan has been grouped)
+        for feature in self.quantitative_features:
+            # initiating feature summary (no value/label)
+            feature_summary = {'feature': feature, 'dtype': self.input_dtypes[feature]}
+            # if there are nans -> if already added it will be dropped afterwards (unique content)
+            if self.str_nan in raw_labels_per_values[feature]:
+                nan_group = self.values_orders[feature].get_group(self.str_nan)
+                feature_summary.update({'label': self.labels_per_values[feature][nan_group], 'content': self.str_nan})
+                summaries += [feature_summary]
 
-                summaries += [modality_summary]
+        # aggregating unique values per label
+        summaries = DataFrame(summaries).groupby(['feature', 'dtype', 'label'])['content'].apply(lambda u: list(unique(u)))
+        # sorting and seting index
+        summaries = summaries.reset_index().sort_values(['dtype', 'feature']).set_index(['feature', 'dtype'])
 
         return summaries
 
