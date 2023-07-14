@@ -9,6 +9,7 @@ from numpy import array, inf, isfinite, nan, ndarray, select, sort, floating, in
 from pandas import DataFrame, Series, isna, notna, unique
 from sklearn.base import BaseEstimator, TransformerMixin
 
+from .serialization import json_serialize_values_orders
 
 def nan_unique(x: Series) -> list[Any]:
     """Unique non-NaN values.
@@ -134,11 +135,7 @@ class GroupedList(list):
         content : dict[str, list[Any]], optional
             Used when loading .json, (learned) content per value, by default None
         """
-
-        # initiating iterable from order and content # TODO: move list to an attribute?
-        if order is not None and content is not None:
-            iterable = {group: content[group] for group in order}
-
+        # TODO: move list to an attribute `order`?
         # case -1: iterable is an array
         if isinstance(iterable, ndarray):
             iterable = list(iterable)
@@ -447,9 +444,7 @@ class GroupedList(list):
         return repr
 
 
-# TODO: add a summary
 # TODO: output a json
-# TODO: add a base discretizer that implements prepare_data (add reset_index ? -> add duplicate column check)
 class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
     """Discretizer that uses a dict of grouped values."""
 
@@ -776,23 +771,27 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         Returns
         -------
         str
-            _description_
+            JSON serialized GroupedListDiscretizer
         """
         # extracting content dictionnaries
-        content = {
+        json_serialized_groupedlistdiscretizer = {
             "features": self.features,
-            "values_ordres": self.values_orders,  # TODO: adapt maybe init GroupedList with {"values": values, "content": values.content} ?
+            "values_orders": json_serialize_values_orders(self.values_orders),
             "input_dtypes": self.input_dtypes,
             "output_dtype": self.output_dtype,
             "str_nan": self.str_nan,
+            "str_default": self.str_default,
+            "dropna": self.dropna,
             "copy": self.copy,
         }
-        # content_orders = {feature: {"values": values, "content": values.content} for feature, values in self.values_orders.items()}
+
         # dumping as json
-        return dumps(content)
+        return dumps(json_serialized_groupedlistdiscretizer)
     
     def summary(self) -> DataFrame:
         """Summarizes the data bucketization
+
+        TODO: add crosstabs per feature for a provided X?
 
         Returns
         -------

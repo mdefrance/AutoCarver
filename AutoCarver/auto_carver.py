@@ -14,6 +14,7 @@ from pandas import DataFrame, Series, crosstab, unique
 from scipy.stats import chi2_contingency
 from seaborn import color_palette, despine
 from tqdm import tqdm
+from json import loads
 
 from .discretizers.discretizers import Discretizer
 from .discretizers.utils.base_discretizers import (
@@ -23,6 +24,7 @@ from .discretizers.utils.base_discretizers import (
     convert_to_values,
     is_equal,
 )
+from .discretizers.utils.serialization import json_deserialize_values_orders
 
 
 # TODO: display tables
@@ -843,3 +845,30 @@ def plot_stats(stats: DataFrame) -> Tuple[Figure, Axes]:
     despine()
 
     return fig, ax
+
+def load_carver(json_serialized_auto_carver: str) -> GroupedListDiscretizer:
+    """_summary_
+
+    Parameters
+    ----------
+    json_serialized_auto_carver : str
+        _description_
+
+    Returns
+    -------
+    GroupedListDiscretizer
+        _description_
+    """
+    # loading json of auto_carver
+    json_deserialized_auto_carver = loads(json_serialized_auto_carver)
+
+    # deserializing values_orders
+    values_orders = json_deserialize_values_orders(json_deserialized_auto_carver['values_orders'])
+
+    # updating auto_carver attributes
+    json_deserialized_auto_carver.update({"values_orders": values_orders})
+
+    # initiating GroupedListDiscretizer
+    auto_carver = GroupedListDiscretizer(**json_deserialized_auto_carver)
+
+    return auto_carver
