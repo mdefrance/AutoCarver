@@ -3,7 +3,19 @@
 from AutoCarver.auto_carver import *
 from pytest import fixture
 
-def test_auto_carver(x_train: DataFrame, x_test_1: DataFrame) -> None:
+@fixture(scope="module", params=["float", "str"])
+def output_dtype(request) -> str:
+    return request.param
+
+@fixture(scope="module", params=[True, False])
+def dropna(request) -> bool:
+    return request.param
+
+@fixture(scope="module", params=["tschuprowt", "cramerv"])
+def sort_by(request) -> str:
+    return request.param
+
+def test_auto_carver(x_train: DataFrame, x_test_1: DataFrame, output_dtype: str, dropna: bool, sort_by: str) -> None:
     """Tests AutoCarver
 
     Parameters
@@ -26,7 +38,7 @@ def test_auto_carver(x_train: DataFrame, x_test_1: DataFrame) -> None:
 
 
     # minimum frequency per modality
-    min_freq = 0.02
+    min_freq = 0.06
     max_n_mod = 4
 
     # tests with 'tschuprowt' measure
@@ -37,9 +49,9 @@ def test_auto_carver(x_train: DataFrame, x_test_1: DataFrame) -> None:
         values_orders=values_orders,
         min_freq=min_freq,
         max_n_mod=max_n_mod,
-        sort_by='tschuprowt',
-        output_dtype='str',
-        dropna=True,
+        sort_by=sort_by,
+        output_dtype=output_dtype,
+        dropna=dropna,
         copy=True,
         verbose=False,
     )
@@ -51,48 +63,20 @@ def test_auto_carver(x_train: DataFrame, x_test_1: DataFrame) -> None:
     assert all(x_discretized[auto_carver.features].nunique() == x_test_discretized[auto_carver.features].nunique()), "More values in train or test samples"
 
     
-    # tests with 'cramerv' measure
-    auto_carver = AutoCarver(
-        quantitative_features=quantitative_features,
-        qualitative_features=qualitative_features,
-        ordinal_features=ordinal_features,
-        values_orders=values_orders,
-        min_freq=min_freq,
-        max_n_mod=max_n_mod,
-        sort_by='cramerv',
-        dropna=True,
-        copy=True,
-        verbose=False,
-    )
-    x_discretized = auto_carver.fit_transform(x_train, x_train["quali_ordinal_target"], X_test=x_test_1, y_test=x_test_1["quali_ordinal_target"])
-    x_test_discretized = auto_carver.transform(x_test_1)
-
-    assert all(x_discretized[auto_carver.features].nunique() <= max_n_mod), "Too many values after carving of train sample"
-    assert all(x_test_discretized[auto_carver.features].nunique() <= max_n_mod), "Too many values after carving of test sample"
-    assert all(x_discretized[auto_carver.features].nunique() == x_test_discretized[auto_carver.features].nunique()), "More values in train or test samples"
-
     # test that all values still are in the values_orders
     for feature in auto_carver.qualitative_features:
         fitted_values = auto_carver.values_orders[feature].values()
         init_values = x_train[feature].fillna('__NAN__').unique()
-        assert all(value in fitted_values for value in init_values), feature
+        assert all(value in fitted_values for value in init_values), f"Missing value in output! Some values are been dropped for qualitative feature: {feature}"
     
-    # tests with dropna=False
-    auto_carver = AutoCarver(
-        quantitative_features=quantitative_features,
-        qualitative_features=qualitative_features,
-        ordinal_features=ordinal_features,
-        values_orders=values_orders,
-        min_freq=0.06,
-        max_n_mod=max_n_mod,
-        sort_by='cramerv',
-        dropna=False,
-        copy=True,
-        verbose=False,
-    )
-    x_discretized = auto_carver.fit_transform(x_train, x_train["quali_ordinal_target"])
+    # testing output of nans
+    if not dropna:
+        assert all(x_train[auto_carver.features].isna().mean()  == x_discretized[auto_carver.features].isna().mean()), "Some Nans are being dropped (grouped) or more nans than expected"
+    else:
+        assert all(x_discretized[auto_carver.features].isna().mean() == 0), "Some Nans are not dropped (grouped)"
 
-    assert all(x_train[auto_carver.features].isna().mean()  == x_discretized[auto_carver.features].isna().mean()), "Some Nans are being dropped (grouped)"
+# def test_auto_carver_copy(x_train: DataFrame, x_test_1: DataFrame, output_dtype: str, dropna: bool, sort_by: str) -> None:
 
-    # TODO: test output 'float'
     # TODO test missing values in test
+    # TODO try with copy = False
+    # TODO: test avec chained_discretizer

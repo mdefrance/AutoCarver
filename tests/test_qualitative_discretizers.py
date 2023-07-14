@@ -45,7 +45,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
     'Mediums': ['Medium+', 'Medium-', 'Mediums'],
     'Medium': ['Medium'],
     'Worst': ['Low+', 'Low', 'Low-', 'Lows', 'Worst']}
-    assert discretizer.values_orders['Qualitative_Ordinal'].contained == expected, "Values less frequent than min_freq should be grouped"
+    assert discretizer.values_orders['Qualitative_Ordinal'].content == expected, "Values less frequent than min_freq should be grouped"
     assert discretizer.values_orders['Qualitative_Ordinal'] == ['Medium', 'Mediums', 'Worst', 'High+', 'Best'], "Order of ordinal features is wrong"
 
     expected = {'Low-': ['Low-'],
@@ -57,7 +57,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
     'High-': ['High-'],
     'High': ['High'],
     'High+': ['High+']}
-    assert discretizer.values_orders['Qualitative_Ordinal_highnan'].contained == expected, "Not specified features should not be modified"
+    assert discretizer.values_orders['Qualitative_Ordinal_highnan'].content == expected, "Not specified features should not be modified"
 
     expected = {'Medium': ['Medium'],
     'High+': ['High+'],
@@ -65,7 +65,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
     'Mediums': ['Medium+', 'Medium-', 'Mediums'],
     'Worst': ['Low+', 'Low', 'Low-', 'Lows', 'Worst'],
     '__NAN__': ['__NAN__']}
-    assert discretizer.values_orders['Qualitative_Ordinal_lownan'].contained == expected, "NaNs should be added to the order and missing values from the values_orders should be added (from chained_orders)"
+    assert discretizer.values_orders['Qualitative_Ordinal_lownan'].content == expected, "NaNs should be added to the order and missing values from the values_orders should be added (from chained_orders)"
     assert discretizer.values_orders['Qualitative_Ordinal_lownan'] == ['Medium', 'Mediums', 'Worst', 'High+', 'Best', '__NAN__'], "Order of ordinal features is wrong"
 
     # testing that it does not work when there is a vale in values_orders missing from chained_orders
@@ -154,7 +154,7 @@ def test_default_discretizer(x_train: DataFrame) -> None:
     discretizer = DefaultDiscretizer(features, min_freq, values_orders=values_orders, copy=True)
     x_discretized = discretizer.fit_transform(x_train, x_train["quali_ordinal_target"])
 
-    assert discretizer.values_orders['Qualitative_Ordinal'].contained == groupedlist_ordinal.contained, "Column names of values_orders not provided if features should not be discretized."
+    assert discretizer.values_orders['Qualitative_Ordinal'].content == groupedlist_ordinal.content, "Column names of values_orders not provided if features should not be discretized."
     quali_expected = {
         '__OTHER__': ['Category A', '__OTHER__'],
         'Category C': ['Category C'],
@@ -164,7 +164,7 @@ def test_default_discretizer(x_train: DataFrame) -> None:
     }
     quali_expected_order = ['Category D', '__OTHER__', 'Category F', 'Category C', 'Category E']
     assert discretizer.values_orders['Qualitative'] == quali_expected_order, "Incorrect ordering by target rate"
-    assert discretizer.values_orders['Qualitative'].contained == quali_expected, "Values less frequent than min_freq should be grouped into default_value"
+    assert discretizer.values_orders['Qualitative'].content == quali_expected, "Values less frequent than min_freq should be grouped into default_value"
     quali_lownan_expected = {
         '__NAN__': ['__NAN__'],
         'Category C': ['Category C'],
@@ -174,7 +174,7 @@ def test_default_discretizer(x_train: DataFrame) -> None:
     }
     quali_lownan_expected_order = ['Category D', 'Category F', 'Category C', 'Category E', '__NAN__']
     assert discretizer.values_orders['Qualitative_lownan'] == quali_lownan_expected_order, "Incorrect ordering by target rate"
-    assert discretizer.values_orders['Qualitative_lownan'].contained == quali_lownan_expected, "If any, NaN values should be put into str_nan and kept by themselves"
+    assert discretizer.values_orders['Qualitative_lownan'].content == quali_lownan_expected, "If any, NaN values should be put into str_nan and kept by themselves"
     quali_highnan_expected = {
         '__OTHER__': ['Category A', '__OTHER__'],
         'Category C': ['Category C'],
@@ -184,9 +184,9 @@ def test_default_discretizer(x_train: DataFrame) -> None:
     }
     quali_highnan_expected_order = ['Category D', '__OTHER__', 'Category C', 'Category E', '__NAN__']
     assert discretizer.values_orders['Qualitative_highnan'] == quali_highnan_expected_order, "Incorrect ordering by target rate"
-    assert discretizer.values_orders['Qualitative_highnan'].contained == quali_highnan_expected, "If any, NaN values should be put into str_nan and kept by themselves"
+    assert discretizer.values_orders['Qualitative_highnan'].content == quali_highnan_expected, "If any, NaN values should be put into str_nan and kept by themselves"
 
-    assert discretizer.values_orders['Qualitative_grouped'].contained == groupedlist_grouped.contained, "Grouped values should keep there group"
+    assert discretizer.values_orders['Qualitative_grouped'].content == groupedlist_grouped.content, "Grouped values should keep there group"
 
 
 def test_ordinal_discretizer(x_train: DataFrame) -> None:
@@ -244,8 +244,8 @@ def test_ordinal_discretizer(x_train: DataFrame) -> None:
         'High+': ['High+'],
         '__NAN__': ['__NAN__']
     }
-    assert discretizer.values_orders['Qualitative_Ordinal'].contained == expected_ordinal_01, "Missing value in order not correctly grouped"
-    assert discretizer.values_orders['Qualitative_Ordinal_lownan'].contained == expected_ordinal_lownan_01, "Missing value in order not correctly grouped or introduced nans."
+    assert discretizer.values_orders['Qualitative_Ordinal'].content == expected_ordinal_01, "Missing value in order not correctly grouped"
+    assert discretizer.values_orders['Qualitative_Ordinal_lownan'].content == expected_ordinal_lownan_01, "Missing value in order not correctly grouped or introduced nans."
 
     # minimum frequency per modality + apply(find_common_modalities) outputs a DataFrame
     min_freq = 0.08
@@ -269,5 +269,5 @@ def test_ordinal_discretizer(x_train: DataFrame) -> None:
         'High+': ['High+'],
         '__NAN__': ['__NAN__']
     }
-    assert discretizer.values_orders['Qualitative_Ordinal'].contained == expected_ordinal_08, "Values not correctly grouped"
-    assert discretizer.values_orders['Qualitative_Ordinal_lownan'].contained == expected_ordinal_lownan_08, "NaNs should stay by themselves."
+    assert discretizer.values_orders['Qualitative_Ordinal'].content == expected_ordinal_08, "Values not correctly grouped"
+    assert discretizer.values_orders['Qualitative_Ordinal_lownan'].content == expected_ordinal_lownan_08, "NaNs should stay by themselves."

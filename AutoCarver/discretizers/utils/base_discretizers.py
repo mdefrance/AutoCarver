@@ -5,7 +5,7 @@ for a binary classification model.
 from typing import Any, Dict, List, Union
 
 from json import dumps
-from numpy import array, inf, isfinite, nan, ndarray, select, sort
+from numpy import array, inf, isfinite, nan, ndarray, select, sort, floating, integer
 from pandas import DataFrame, Series, isna, notna, unique
 from sklearn.base import BaseEstimator, TransformerMixin
 
@@ -59,7 +59,7 @@ def applied_to_dict_list(applied: Union[DataFrame, Series]) -> dict[str, list[An
 
 
 # TODO: remove known_values
-def check_new_values(X: DataFrame, features: list[str], known_values: dict[str, list[Any]]) -> None:
+def check_new_values(X: DataFrame, features: list[str], known_values: dict[str, list[Any]], str_nan: str, str_default: str) -> None:
     """Checks for new, unexpected values, in X
 
     Parameters
@@ -82,6 +82,8 @@ def check_new_values(X: DataFrame, features: list[str], known_values: dict[str, 
     # checking for unexpected values for each feature
     for feature in features:
         unexpected = [val for val in uniques[feature] if val not in known_values[feature]]
+        assert str_nan not in unexpected, "It seems that your dataset has already been Discretized. AutoCarver only takes raw data as input (Discretizer included since v5.0.0). Be careful with `copy=False` not to rerun the same code twice. Ohterwise pass orders to `values_orders` or change the value of `str_nan`. "
+        assert str_default not in unexpected, "It seems that your dataset has already been Discretized. AutoCarver only takes raw data as input (Discretizer included since v5.0.0). Be careful with `copy=False` not to rerun the same code twice. Ohterwise pass orders to `values_orders` or change the value of `str_default`. "
         assert (
             len(unexpected) == 0
         ), f"Unexpected value! The ordering for values: {str(list(unexpected))} of feature '{feature}' was not provided. There might be new values in your test/dev set. Consider taking a bigger test/dev set or dropping the column {feature}."
@@ -120,26 +122,34 @@ def check_missing_values(
 class GroupedList(list):
     """An ordered list that's extended with a dict."""
 
-    def __init__(self, iterable: Any = ()) -> None:
-        """An ordered list that historizes its elements' merges.
+    def __init__(self, iterable: Union[ndarray, dict, list, tuple] = (), order: list[Any] = None, content: dict[str, list[Any]] = None) -> None:
+        """An ordered list that historizes its elements' content.
 
         Parameters
         ----------
-        iterable : Any, optional
-            list, dict or GroupedList, by default ()
+        iterable : Union[ndarray, dict, list, tuple], optional
+            List-like or GroupedList, by default ()
+        order : list[Any], optional
+            Used when loading .json, ordering of values, by default None
+        content : dict[str, list[Any]], optional
+            Used when loading .json, (learned) content per value, by default None
         """
+
+        # initiating iterable from order and content # TODO: move list to an attribute?
+        if order is not None and content is not None:
+            iterable = {group: content[group] for group in order}
 
         # case -1: iterable is an array
         if isinstance(iterable, ndarray):
             iterable = list(iterable)
 
-        # case 0: iterable is the contained dict
+        # case 0: iterable is the content dict
         if isinstance(iterable, dict):
             # storing ordered keys of the dict
             keys = list(iterable)
 
-            # storing the values contained per key
-            self.contained = dict(iterable.items())
+            # storing the values content per key
+            self.content = dict(iterable.items())
 
             # checking that all values are only present once
             all_values = [val for _, values in iterable.items() for val in values]
@@ -160,23 +170,23 @@ class GroupedList(list):
                 if key not in all_values:
                     # checking that key is missing from its values
                     if key not in iterable[key]:
-                        self.contained.update({key: self.contained[key] + [key]})
+                        self.content.update({key: self.content[key] + [key]})
                 # the key already is in another key (and its values are empty)
                 # the key as already been grouped
                 else:
-                    self.contained.pop(key)
+                    self.content.pop(key)
                     keys.remove(key)
 
             # initiating the list with those keys
             super().__init__(keys)
 
         # case 1: copying a GroupedList
-        elif hasattr(iterable, "contained"):
+        elif hasattr(iterable, "content"):
             # initiating the list with the provided list of keys
             super().__init__(iterable)
 
             # copying values associated to keys
-            self.contained = dict(iterable.contained.items())
+            self.content = dict(iterable.content.items())
 
         # case 2: initiating GroupedList from a list
         elif isinstance(iterable, list):
@@ -184,10 +194,10 @@ class GroupedList(list):
             super().__init__(iterable)
 
             # initiating the values with the provided list of keys
-            self.contained = {v: [v] for v in iterable}
+            self.content = {v: [v] for v in iterable}
 
     def get(self, key: Any) -> list[Any]:
-        """List of values contained in key
+        """List of values content in key
 
         Parameters
         ----------
@@ -197,11 +207,11 @@ class GroupedList(list):
         Returns
         -------
         list[Any]
-            Values contained in key
+            Values content in key
         """
 
         # default to fing an element
-        found = self.contained.get(key)
+        found = self.content.get(key)
 
         return found
 
@@ -222,12 +232,12 @@ class GroupedList(list):
             assert discarded in self, f"{discarded} not in list"
             assert kept in self, f"{kept} not in list"
 
-            # accessing values contained in each value
-            contained_discarded = self.contained.get(discarded)
-            contained_kept = self.contained.get(kept)
+            # accessing values content in each value
+            content_discarded = self.content.get(discarded)
+            content_kept = self.content.get(kept)
 
-            # updating contained dict
-            self.contained.update({kept: contained_discarded + contained_kept, discarded: []})
+            # updating content dict
+            self.content.update({kept: content_discarded + content_kept, discarded: []})
 
             # removing discarded from the list
             self.remove(discarded)
@@ -256,22 +266,22 @@ class GroupedList(list):
         """
 
         self += [new_value]
-        self.contained.update({new_value: [new_value]})
+        self.content.update({new_value: [new_value]})
 
-    def update(self, new_value: Dict[Any, list[Any]]) -> None:
+    def update(self, new_value: Dict[Any, list[Any]]) -> None:  # TODO: not working as expected
         """Updates the GroupedList via a dict
 
         Parameters
         ----------
         new_value : Dict[Any, list[Any]]
-            Dict of key, values to updated `contained` dict
+            Dict of key, values to updated `content` dict
         """
 
         # adding keys to the order if they are new values
         self += [key for key, _ in new_value.items() if key not in self]
 
-        # updating contained according to new_value
-        self.contained.update(new_value)
+        # updating content according to new_value
+        self.content.update(new_value)
 
     def sort(self):
         """Sorts the values of the list and dict (if any, NaNs are last).
@@ -317,7 +327,7 @@ class GroupedList(list):
             s in ordering for s in self
         ), f"Missing value from ordering: {str([v for v in self if v not in ordering])}"
 
-        # ordering the contained
+        # ordering the content
         sorted = GroupedList({k: self.get(k) for k in ordering})
 
         return sorted
@@ -331,7 +341,7 @@ class GroupedList(list):
             value to be removed
         """
         super().remove(value)
-        self.contained.pop(value)
+        self.content.pop(value)
 
     def pop(self, idx: int) -> None:
         """Pop a value from the GroupedList by index
@@ -360,7 +370,7 @@ class GroupedList(list):
 
         found = [
             key
-            for key, values in self.contained.items()
+            for key, values in self.content.items()
             if any(is_equal(value, elt) for elt in values)
         ]
 
@@ -370,7 +380,7 @@ class GroupedList(list):
         return value
 
     def values(self) -> list[Any]:
-        """All values contained in all groups
+        """All values content in all groups
 
         Returns
         -------
@@ -378,12 +388,12 @@ class GroupedList(list):
             List of all values in the GroupedList
         """
 
-        known = [value for values in self.contained.values() for value in values]
+        known = [value for values in self.content.values() for value in values]
 
         return known
 
     def contains(self, value: Any) -> bool:
-        """Checks if a value is contained in any group, also matches NaNs.
+        """Checks if a value is content in any group, also matches NaNs.
 
         Parameters
         ----------
@@ -451,8 +461,10 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         input_dtypes: Union[str, dict[str, str]] = 'str',
         output_dtype: str = 'str',
         str_nan: str = None,
+        str_default: str = None,
         dropna: bool = True,
-        copy: bool = False,
+        copy: bool = True,
+        verbose: bool = True,
     ) -> None:
         """Initiates a Discretizer by dict of GroupedList
 
@@ -495,6 +507,12 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         # whether or not to reinstate numpy nan after bucketization
         self.dropna = dropna
 
+        # string value of rare values
+        self.str_default = str_default
+
+        # whether to print info
+        self.verbose = verbose
+
         # identifying qualitative features by there type
         self.qualitative_features = [
             feature for feature in features if self.input_dtypes[feature] == "str"
@@ -508,8 +526,13 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         # for each feature, getting label associated to each value
         self.labels_per_values: dict[str, dict[Any, Any]]= {}  # will be initiated during fit
 
-    def get_labels_per_values(self) -> dict[str, dict[Any, Any]]:
+    def get_labels_per_values(self, output_dtype: str) -> dict[str, dict[Any, Any]]:
         """Creates a dict that contains, for each feature, for each value, the associated label
+
+        Parameters
+        ----------
+        output_dtype : str
+            Whether or not to convert the output to float.
 
         Returns
         -------
@@ -531,8 +554,12 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
             else:
                 labels = [value for value in values if value != self.str_nan]  # (removing str_nan)
             
-            # case 2: requested float output -> converting to integers
-            if self.output_dtype == 'float':
+            # add NaNs if there are any
+            if self.str_nan in values:
+                labels += [self.str_nan]
+                
+            # requested float output (AutoCarver) -> converting to integers
+            if output_dtype == 'float':
                 labels = [n for n, _ in enumerate(labels)]
 
             # building label per value
@@ -612,14 +639,14 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         assert len(missing_features) == 0, f"Missing values_orders for following features {str(missing_features)}."
 
         # for each feature, getting label associated to each value
-        self.labels_per_values = self.get_labels_per_values()
+        self.labels_per_values = self.get_labels_per_values(self.output_dtype)
 
         return self
 
     def transform(self, X: DataFrame, y: Series = None) -> DataFrame:
         """Groups values of features (values_orders keys) according to
         there corresponding GroupedList (values_orders values) based on
-        the `GroupedList.contained` dict.
+        the `GroupedList.content` dict.
 
         Parameters
         ----------
@@ -641,22 +668,29 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
 
         # transforming quantitative features
         if len(self.quantitative_features) > 0:
+            if self.verbose:  # verbose if requested
+                print(f" - [GroupedListDiscretizer] Transform Quantitative {str(self.quantitative_features)}")
             x_copy = self.transform_quantitative(x_copy, y)
 
         # transforming qualitative features
         if len(self.qualitative_features) > 0:
+            if self.verbose:  # verbose if requested
+                print(f" - [GroupedListDiscretizer] Transform Qualitative {str(self.qualitative_features)}")
             x_copy = self.transform_qualitative(x_copy, y)
         
         # reinstating nans
         if not self.dropna:
-            x_copy[self.features] = x_copy[self.features].replace(self.str_nan, nan)
+            for feature in self.features:
+                label_per_value = self.labels_per_values[feature]
+                if self.str_nan in label_per_value:  # checking for nans in the feature
+                    x_copy[feature] = x_copy[feature].replace(label_per_value[self.str_nan], nan)
 
         return x_copy
 
     def transform_quantitative(self, X: DataFrame, y: Series) -> DataFrame:
         """Groups values of features (values_orders keys) according to
         there corresponding GroupedList (values_orders values) based on
-        the `GroupedList.contained` dict.
+        the `GroupedList.content` dict.
 
         Parameters
         ----------
@@ -691,15 +725,11 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
                 if nan_value != self.str_nan:
                     X.loc[nans, feature] = nan_value
 
-            # removing nans from quantiles and labels (can not mix str and floats for comparison purposes)
-            if self.str_nan in feature_values:  # filtering out nans if any
-                feature_values = [value for value in feature_values if value != self.str_nan]
-
             # list of masks of values to replace with there respective group
-            values_to_group = [X[feature] <= quantile for quantile in feature_values]
+            values_to_group = [X[feature] <= value for value in feature_values if value != self.str_nan]
 
             # corressponding group for each value
-            group_labels = [[self.labels_per_values[feature][value]] * x_len for value in feature_values]
+            group_labels = [[self.labels_per_values[feature][value]] * x_len for value in feature_values if value != self.str_nan]
 
             # checking for values to group
             if len(values_to_group) > 0:
@@ -714,7 +744,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
     def transform_qualitative(self, X: DataFrame, y: Series = None) -> DataFrame:
         """Groups values of features (values_orders keys) according to
         there corresponding GroupedList (values_orders values) based on
-        the `GroupedList.contained` dict.
+        the `GroupedList.content` dict.
 
         Parameters
         ----------
@@ -733,7 +763,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
             X[self.qualitative_features] = X[self.qualitative_features].fillna(self.str_nan)
 
         # checking that all unique values in X are in values_orders
-        check_new_values(X, self.qualitative_features, {feature: values.values() for feature, values in self.values_orders.items()})
+        check_new_values(X, self.qualitative_features, {feature: values.values() for feature, values in self.values_orders.items()}, self.str_nan, self.str_default)
 
         # replacing values for there corresponding label
         X = X.replace({feature: label_per_value for feature, label_per_value in self.labels_per_values.items() if feature in self.qualitative_features})           
@@ -748,16 +778,16 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         str
             _description_
         """
-        # extracting contained dictionnaries
+        # extracting content dictionnaries
         content = {
             "features": self.features,
-            "values_ordres": self.values_orders,  # TODO: adapt maybe init GroupedList with {"values": values, "contained": values.contained} ?
+            "values_ordres": self.values_orders,  # TODO: adapt maybe init GroupedList with {"values": values, "content": values.content} ?
             "input_dtypes": self.input_dtypes,
             "output_dtype": self.output_dtype,
             "str_nan": self.str_nan,
             "copy": self.copy,
         }
-        # contained_orders = {feature: {"values": values, "contained": values.contained} for feature, values in self.values_orders.items()}
+        # content_orders = {feature: {"values": values, "content": values.content} for feature, values in self.values_orders.items()}
         # dumping as json
         return dumps(content)
     
@@ -769,49 +799,43 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         DataFrame
             A summary of feature's values
         """
-        # getting quantitative labels
-        if any(self.quantitative_features):
-            print("converting to labels\n\n")
-            labels_orders = convert_to_labels(
-                self.features, self.quantitative_features, self.values_orders, self.str_nan, dropna=False
-            )
+        # raw label per value with output_dtype 'str'
+        raw_labels_per_values = self.get_labels_per_values(output_dtype='str')
+
         # initiating summaries
         summaries: list[dict[str, Any]] = []
         for feature in self.features:
-            init_summary = {'feature': feature}  # initiating feature summary
-            
-            # case 0: quantitative features
-            if feature in self.quantitative_features:
-                init_summary.update({'data_type': 'quantitative'})
-                # feature's modalities
-                modalities = labels_orders[feature]
-                # values included in each modality
-                contained = modalities.contained
-                
-                # adding nans
-                if self.values_orders[feature].contains(self.str_nan):
-                    nan_group = self.values_orders[feature].get_group(self.str_nan)
-                    contained.update({nan_group: contained[nan_group] + [self.str_nan]})
+            # adding each value/label 
+            for value, label in self.labels_per_values[feature].items():
+                # initiating feature summary (default value/label)
+                feature_summary = {'feature': feature, 'dtype': self.input_dtypes[feature], 'label': label, 'content': value}
 
+                # case 0: qualitative feature -> not adding floats and integers str_default
+                if feature in self.qualitative_features:
+                    if not isinstance(value, floating):  # checking for floats
+                        if not isinstance(value, integer):  # checking for ints
+                            if value != self.str_default:  # checking for str_default
+                                summaries += [feature_summary]
 
-            # case 1: quantitative features
-            else:
-                init_summary.update({'data_type': 'qualitative'})
-                # feature's modalities
-                modalities = self.values_orders[feature]
-                # values included in each modality
-                contained = modalities.contained
-            
-            # adding all modalities and there content
-            for modality in modalities:
-                modality_summary = {k: v for k, v in init_summary.items()}
-                modality_summary.update({"modality": modality, "values": contained[modality]})
+                # case 1: quantitative feature -> take the raw label per value
+                elif feature in self.quantitative_features:
+                    feature_summary.update({'content': raw_labels_per_values[feature][value]})
+                    summaries += [feature_summary]
 
-                # case 2: when the output_dtype == 'float'
-                #if self.output_dtype == 'float':
-                #    modality_summary.update({"modality": self.output_dtype[feature][modality]})
+        # adding nans for quantitative features (when nan has been grouped)
+        for feature in self.quantitative_features:
+            # initiating feature summary (no value/label)
+            feature_summary = {'feature': feature, 'dtype': self.input_dtypes[feature]}
+            # if there are nans -> if already added it will be dropped afterwards (unique content)
+            if self.str_nan in raw_labels_per_values[feature]:
+                nan_group = self.values_orders[feature].get_group(self.str_nan)
+                feature_summary.update({'label': self.labels_per_values[feature][nan_group], 'content': self.str_nan})
+                summaries += [feature_summary]
 
-                summaries += [modality_summary]
+        # aggregating unique values per label
+        summaries = DataFrame(summaries).groupby(['feature', 'dtype', 'label'])['content'].apply(lambda u: list(unique(u)))
+        # sorting and seting index
+        summaries = summaries.reset_index().sort_values(['dtype', 'feature']).set_index(['feature', 'dtype'])
 
         return summaries
 
@@ -877,7 +901,7 @@ def convert_to_values(
         order = values_orders[feature]
 
         # checking for grouped modalities
-        groups_to_discard = label_orders[feature].contained
+        groups_to_discard = label_orders[feature].content
 
         # grouping the raw quantile values
         for kept_value, group_to_discard in groups_to_discard.items():

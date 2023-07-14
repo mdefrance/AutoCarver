@@ -6,3 +6,4 @@ AutoCarver.egg-info/dependency_links.txt
 AutoCarver.egg-info/top_level.txt
 AutoCarver.egg-info/SOURCES.txt
 *.coverage
+*.ipynb

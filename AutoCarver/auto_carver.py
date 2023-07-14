@@ -183,16 +183,15 @@ class AutoCarver(GroupedListDiscretizer):
             input_dtypes=self.input_dtypes,
             output_dtype=output_dtype,
             str_nan=str_nan,
+            str_default = str_default,
             dropna=dropna,
             copy=copy,
+            verbose=verbose,
         )
 
         # class specific attributes
         self.min_freq = min_freq  # minimum frequency per base bucket
         self.max_n_mod = max_n_mod  # maximum number of modality per feature
-        self.dropna = dropna  # whether or not to group NaNs with other modalities
-        self.verbose = verbose
-        self.str_default = str_default
         self.min_carved_freq = min_carved_freq
         self.min_group_size = 1
         measures = ["tschuprowt", "cramerv"]  # association measure used to find the best groups
@@ -277,7 +276,7 @@ class AutoCarver(GroupedListDiscretizer):
             values_orders=self.values_orders,
             str_nan=self.str_nan,
             str_default=self.str_default,
-            copy=False,
+            copy=True,  # copying anyways, otherwise no discretization from start to finish
             verbose=self.verbose,
         )
         x_copy = discretizer.fit_transform(x_copy, y)
@@ -309,7 +308,7 @@ class AutoCarver(GroupedListDiscretizer):
         # optimal butcketization/carving of each feature
         for n, feature in enumerate(self.features):
             if self.verbose:  # verbose if requested
-                print(f"\n---\n[AutoCarver] Fit {feature} ({n+1}/{len(self.features)})")
+                print(f"\n------\n[AutoCarver] Fit {feature} ({n+1}/{len(self.features)})\n---")
 
             # getting xtabs on train/test
             xtab = xtabs[feature]
@@ -327,7 +326,7 @@ class AutoCarver(GroupedListDiscretizer):
             if best_combination is not None:
                 order, xtab, xtab_test = best_combination
                 if self.verbose:  # verbose if requested
-                    print(xtab)
+                    print(xtab)  # TODO get the good labels
 
                 # updating label_orders
                 labels_orders.update({feature: order})
@@ -339,6 +338,8 @@ class AutoCarver(GroupedListDiscretizer):
                 if feature in labels_orders:
                     labels_orders.pop(feature)
 
+            if self.verbose:  # verbose if requested
+                print("------\n")
 
         # converting potential labels into there respective values (quantiles)
         self.values_orders.update(
