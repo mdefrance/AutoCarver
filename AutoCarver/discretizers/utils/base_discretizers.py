@@ -451,6 +451,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         input_dtypes: Union[str, dict[str, str]] = 'str',
         output_dtype: str = 'str',
         str_nan: str = None,
+        str_default: str = None,
         dropna: bool = True,
         copy: bool = False,
     ) -> None:
@@ -495,6 +496,9 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         # whether or not to reinstate numpy nan after bucketization
         self.dropna = dropna
 
+        # string value of rare values
+        self.str_default = str_default
+
         # identifying qualitative features by there type
         self.qualitative_features = [
             feature for feature in features if self.input_dtypes[feature] == "str"
@@ -508,8 +512,13 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         # for each feature, getting label associated to each value
         self.labels_per_values: dict[str, dict[Any, Any]]= {}  # will be initiated during fit
 
-    def get_labels_per_values(self) -> dict[str, dict[Any, Any]]:
+    def get_labels_per_values(self, output_dtype: str) -> dict[str, dict[Any, Any]]:
         """Creates a dict that contains, for each feature, for each value, the associated label
+
+        Parameters
+        ----------
+        output_dtype : str
+            Whether or not to convert the output to float.
 
         Returns
         -------
@@ -532,7 +541,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
                 labels = [value for value in values if value != self.str_nan]  # (removing str_nan)
             
             # case 2: requested float output -> converting to integers
-            if self.output_dtype == 'float':
+            if output_dtype == 'float':
                 labels = [n for n, _ in enumerate(labels)]
 
             # building label per value
@@ -612,7 +621,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         assert len(missing_features) == 0, f"Missing values_orders for following features {str(missing_features)}."
 
         # for each feature, getting label associated to each value
-        self.labels_per_values = self.get_labels_per_values()
+        self.labels_per_values = self.get_labels_per_values(self.output_dtype)
 
         return self
 

@@ -118,12 +118,12 @@ class Discretizer(GroupedListDiscretizer):
             input_dtypes=self.input_dtypes,
             output_dtype='str',
             str_nan=str_nan,
+            str_default = str_default,
             copy=copy,
         )
 
         # class specific attributes
         self.min_freq = min_freq
-        self.str_default = str_default
         self.verbose = verbose
     
     def remove_feature(self, feature: str) -> None:
@@ -281,7 +281,6 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
 
         # class specific attributes
         self.min_freq = min_freq
-        self.str_default = str_default
         self.verbose = verbose
 
         # Initiating GroupedListDiscretizer
@@ -291,6 +290,7 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
             input_dtypes=input_dtypes,
             output_dtype='str',
             str_nan=str_nan,
+            str_default = str_default,
             copy=copy,
         )
 

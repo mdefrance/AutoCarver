@@ -64,11 +64,11 @@ class DefaultDiscretizer(GroupedListDiscretizer):
             input_dtypes='str',
             output_dtype='str',
             str_nan=str_nan,
+            str_default = str_default,
             copy=copy,
         )
         
         self.min_freq = min_freq
-        self.str_default = str_default
         self.verbose = verbose
 
     def prepare_data(self, X: DataFrame, y: Series) -> DataFrame:

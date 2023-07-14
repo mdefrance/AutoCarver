@@ -183,6 +183,7 @@ class AutoCarver(GroupedListDiscretizer):
             input_dtypes=self.input_dtypes,
             output_dtype=output_dtype,
             str_nan=str_nan,
+            str_default = str_default,
             dropna=dropna,
             copy=copy,
         )
@@ -192,7 +193,6 @@ class AutoCarver(GroupedListDiscretizer):
         self.max_n_mod = max_n_mod  # maximum number of modality per feature
         self.dropna = dropna  # whether or not to group NaNs with other modalities
         self.verbose = verbose
-        self.str_default = str_default
         self.min_carved_freq = min_carved_freq
         self.min_group_size = 1
         measures = ["tschuprowt", "cramerv"]  # association measure used to find the best groups
