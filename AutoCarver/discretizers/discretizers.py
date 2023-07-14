@@ -349,7 +349,7 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
                 )
 
             # converting specified features into qualitative features
-            string_discretizer = StringDiscretizer(features=features_to_convert, values_orders=self.values_orders)
+            string_discretizer = StringDiscretizer(features=features_to_convert, values_orders=self.values_orders, verbose=self.verbose)
             x_copy = string_discretizer.fit_transform(x_copy)
 
             # updating values_orders accordingly
@@ -357,11 +357,9 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
 
         # all known values for features
         known_values = {feature: values.values() for feature, values in self.values_orders.items()}
-        print("known_values['Qualitative_Ordinal_lownan']", known_values['Qualitative_Ordinal_lownan'])
-        print("x_copy['Qualitative_Ordinal_lownan'].unique()", x_copy['Qualitative_Ordinal_lownan'].unique())
 
         # checking that all unique values in X are in values_orders
-        check_new_values(x_copy, self.ordinal_features, known_values)
+        check_new_values(x_copy, self.ordinal_features, known_values, self.str_nan, self.str_default)
 
         return x_copy
     

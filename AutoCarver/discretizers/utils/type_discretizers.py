@@ -21,7 +21,7 @@ class StringDiscretizer(GroupedListDiscretizer):
         values_orders: dict[str, GroupedList] = None,
         str_nan: str = '__NAN__',
         copy: bool = False,
-        verbose: bool = True,
+        verbose: bool = False,
     ) -> None:
         """_summary_
 

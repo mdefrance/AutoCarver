@@ -96,7 +96,7 @@ class DefaultDiscretizer(GroupedListDiscretizer):
                 self.values_orders.update({feature: GroupedList(nan_unique(x_copy[feature]))})
 
         # checking that all unique values in X are in values_orders
-        check_new_values(x_copy, self.features, self.values_orders)  # TODO problem here
+        check_new_values(x_copy, self.features, self.values_orders, self.str_nan, self.str_default)  # TODO problem here
         # checking that all unique values in values_orders are in X
         check_missing_values(x_copy, self.features, self.values_orders)
 
@@ -460,7 +460,7 @@ class ChainedDiscretizer(GroupedListDiscretizer):
         known_values = {feature: values.values() for feature, values in self.values_orders.items()}
 
         # checking that all unique values in X are in values_orders
-        check_new_values(x_copy, self.features, known_values)
+        check_new_values(x_copy, self.features, known_values, self.str_nan, self.str_default)
 
         # filling nans
         x_copy = x_copy.fillna(self.str_nan)

@@ -59,7 +59,7 @@ def applied_to_dict_list(applied: Union[DataFrame, Series]) -> dict[str, list[An
 
 
 # TODO: remove known_values
-def check_new_values(X: DataFrame, features: list[str], known_values: dict[str, list[Any]]) -> None:
+def check_new_values(X: DataFrame, features: list[str], known_values: dict[str, list[Any]], str_nan: str, str_default: str) -> None:
     """Checks for new, unexpected values, in X
 
     Parameters
@@ -81,9 +81,9 @@ def check_new_values(X: DataFrame, features: list[str], known_values: dict[str, 
 
     # checking for unexpected values for each feature
     for feature in features:
-        print("feature", feature)
         unexpected = [val for val in uniques[feature] if val not in known_values[feature]]
-        print("known_values[feature]", known_values[feature])
+        assert str_nan not in unexpected, "It seems that your dataset has already been Discretized. AutoCarver only takes raw data as input (Discretizer included since v5.0.0). Be careful with `copy=False` not to rerun the same code twice. Ohterwise pass orders to `values_orders` or change the value of `str_nan`. "
+        assert str_default not in unexpected, "It seems that your dataset has already been Discretized. AutoCarver only takes raw data as input (Discretizer included since v5.0.0). Be careful with `copy=False` not to rerun the same code twice. Ohterwise pass orders to `values_orders` or change the value of `str_default`. "
         assert (
             len(unexpected) == 0
         ), f"Unexpected value! The ordering for values: {str(list(unexpected))} of feature '{feature}' was not provided. There might be new values in your test/dev set. Consider taking a bigger test/dev set or dropping the column {feature}."
@@ -546,11 +546,12 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
             else:
                 labels = [value for value in values if value != self.str_nan]  # (removing str_nan)
             
-            # case 2: requested float output -> converting to integers
+            # add NaNs if there are any
+            if self.str_nan in values:
+                labels += [self.str_nan]
+                
+            # requested float output (AutoCarver) -> converting to integers
             if output_dtype == 'float':
-                # case 3: it's the output of the auto_carver and we want to keep NaNs
-                if self.str_nan in values and not self.dropna:
-                    labels += [self.str_nan]
                 labels = [n for n, _ in enumerate(labels)]
 
             # building label per value
@@ -671,7 +672,10 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         
         # reinstating nans
         if not self.dropna:
-            x_copy[self.features] = x_copy[self.features].replace(self.str_nan, nan)
+            for feature in self.features:
+                label_per_value = self.labels_per_values[feature]
+                if self.str_nan in label_per_value:  # checking for nans in the feature
+                    x_copy[feature] = x_copy[feature].replace(label_per_value[self.str_nan], nan)
 
         return x_copy
 
@@ -751,7 +755,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
             X[self.qualitative_features] = X[self.qualitative_features].fillna(self.str_nan)
 
         # checking that all unique values in X are in values_orders
-        check_new_values(X, self.qualitative_features, {feature: values.values() for feature, values in self.values_orders.items()})
+        check_new_values(X, self.qualitative_features, {feature: values.values() for feature, values in self.values_orders.items()}, self.str_nan, self.str_default)
 
         # replacing values for there corresponding label
         X = X.replace({feature: label_per_value for feature, label_per_value in self.labels_per_values.items() if feature in self.qualitative_features})           
