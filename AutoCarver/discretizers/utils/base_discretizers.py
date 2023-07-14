@@ -20,7 +20,7 @@ def nan_unique(x: Series) -> list[Any]:
 
     Returns
     -------
-    List[Any]
+    list[Any]
         List of unique non-nan values
     """
 
@@ -43,7 +43,7 @@ def applied_to_dict_list(applied: Union[DataFrame, Series]) -> dict[str, list[An
 
     Returns
     -------
-    Dict[List[Any]]
+    Dict[list[Any]]
         Dict of lists of rows values
     """
     # TODO: use this function whenever apply is used
@@ -59,16 +59,16 @@ def applied_to_dict_list(applied: Union[DataFrame, Series]) -> dict[str, list[An
 
 
 # TODO: remove known_values
-def check_new_values(X: DataFrame, features: List[str], known_values: Dict[str, List[Any]]) -> None:
+def check_new_values(X: DataFrame, features: list[str], known_values: dict[str, list[Any]]) -> None:
     """Checks for new, unexpected values, in X
 
     Parameters
     ----------
     X : DataFrame
         New DataFrame (at transform time)
-    features : List[str]
+    features : list[str]
         List of column names
-    known_values : Dict[str, List[Any]]
+    known_values : dict[str, list[Any]]
         Dict of known values per column name
     """
     # unique non-nan values in new dataframe
@@ -88,7 +88,7 @@ def check_new_values(X: DataFrame, features: List[str], known_values: Dict[str, 
 
 
 def check_missing_values(
-    X: DataFrame, features: List[str], known_values: Dict[str, List[Any]]
+    X: DataFrame, features: list[str], known_values: dict[str, list[Any]]
 ) -> None:
     """Checks for missing values from X, (unexpected values in values_orders)
 
@@ -96,9 +96,9 @@ def check_missing_values(
     ----------
     X : DataFrame
         New DataFrame (at transform time)
-    features : List[str]
+    features : list[str]
         List of column names
-    known_values : Dict[str, List[Any]]
+    known_values : dict[str, list[Any]]
         Dict of known values per column name
     """
     # unique non-nan values in new dataframe
@@ -186,7 +186,7 @@ class GroupedList(list):
             # initiating the values with the provided list of keys
             self.contained = {v: [v] for v in iterable}
 
-    def get(self, key: Any) -> List[Any]:
+    def get(self, key: Any) -> list[Any]:
         """List of values contained in key
 
         Parameters
@@ -196,7 +196,7 @@ class GroupedList(list):
 
         Returns
         -------
-        List[Any]
+        list[Any]
             Values contained in key
         """
 
@@ -232,12 +232,12 @@ class GroupedList(list):
             # removing discarded from the list
             self.remove(discarded)
 
-    def group_list(self, to_discard: List[Any], to_keep: Any) -> None:
+    def group_list(self, to_discard: list[Any], to_keep: Any) -> None:
         """Groups elements to_discard into values to_keep
 
         Parameters
         ----------
-        to_discard : List[Any]
+        to_discard : list[Any]
             Values to be grouped into the key `to_keep`.
         to_keep : Any
             Key value in which to group `to_discard` values.
@@ -258,12 +258,12 @@ class GroupedList(list):
         self += [new_value]
         self.contained.update({new_value: [new_value]})
 
-    def update(self, new_value: Dict[Any, List[Any]]) -> None:
+    def update(self, new_value: Dict[Any, list[Any]]) -> None:
         """Updates the GroupedList via a dict
 
         Parameters
         ----------
-        new_value : Dict[Any, List[Any]]
+        new_value : Dict[Any, list[Any]]
             Dict of key, values to updated `contained` dict
         """
 
@@ -295,12 +295,12 @@ class GroupedList(list):
 
         return sorted
 
-    def sort_by(self, ordering: List[Any]) -> None:
+    def sort_by(self, ordering: list[Any]) -> None:
         """Sorts the values of the list and dict according to `ordering`, if any, NaNs are the last.
 
         Parameters
         ----------
-        ordering : List[Any]
+        ordering : list[Any]
             Order used for ordering of the list of keys.
 
         Returns
@@ -369,12 +369,12 @@ class GroupedList(list):
 
         return value
 
-    def values(self) -> List[Any]:
+    def values(self) -> list[Any]:
         """All values contained in all groups
 
         Returns
         -------
-        List[Any]
+        list[Any]
             List of all values in the GroupedList
         """
 
@@ -400,7 +400,7 @@ class GroupedList(list):
 
         return any(is_equal(value, known) for known in known_values)
 
-    def get_repr(self, char_limit: int = 6) -> List[str]:
+    def get_repr(self, char_limit: int = 6) -> list[str]:
         """Returns a representative list of strings of values of groups.
 
         Parameters
@@ -410,12 +410,12 @@ class GroupedList(list):
 
         Returns
         -------
-        List[str]
+        list[str]
             List of short str representation of the keys' values
         """
 
         # initiating list of group representation
-        repr: List[str] = []
+        repr: list[str] = []
 
         # iterating over each group
         for group in self:
@@ -451,6 +451,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         input_dtypes: Union[str, dict[str, str]] = 'str',
         output_dtype: str = 'str',
         str_nan: str = None,
+        dropna: bool = True,
         copy: bool = False,
     ) -> None:
         """Initiates a Discretizer by dict of GroupedList
@@ -476,7 +477,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         """
         self.features = list(set(features))
         if values_orders is None:
-            values_orders = {}
+            values_orders: dict[str, GroupedList] = {}
         self.values_orders = {feature: GroupedList(values) for feature, values in values_orders.items()}
         self.copy = copy
 
@@ -491,6 +492,9 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         # string value of numpy.nan
         self.str_nan = str_nan
 
+        # whether or not to reinstate numpy nan after bucketization
+        self.dropna = dropna
+
         # identifying qualitative features by there type
         self.qualitative_features = [
             feature for feature in features if self.input_dtypes[feature] == "str"
@@ -502,7 +506,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         ]
 
         # for each feature, getting label associated to each value
-        self.labels_per_values = {}  # will be initiated during fit
+        self.labels_per_values: dict[str, dict[Any, Any]]= {}  # will be initiated during fit
 
     def get_labels_per_values(self) -> dict[str, dict[Any, Any]]:
         """Creates a dict that contains, for each feature, for each value, the associated label
@@ -513,7 +517,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
             Dict of labels per values per feature
         """
         # initiating dict of labels per values per feature
-        labels_per_values = {}
+        labels_per_values: dict[str, dict[Any, Any]] = {}
 
         # iterating over each feature
         for feature in self.features:
@@ -525,14 +529,14 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
                 labels = get_labels(values, self.str_nan)
             # case 1: qualitative feature -> by default, labels are values
             else:
-                labels = values[:]
+                labels = [value for value in values if value != self.str_nan]  # (removing str_nan)
             
             # case 2: requested float output -> converting to integers
             if self.output_dtype == 'float':
                 labels = [n for n, _ in enumerate(labels)]
 
             # building label per value
-            label_per_value = {}
+            label_per_value: dict[Any, Any] = {}
             for group_of_values, label in zip(values, labels):
                 for value in values.get(group_of_values):
                     label_per_value.update({value: label})
@@ -642,6 +646,10 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         # transforming qualitative features
         if len(self.qualitative_features) > 0:
             x_copy = self.transform_qualitative(x_copy, y)
+        
+        # reinstating nans
+        if not self.dropna:
+            x_copy[self.features] = x_copy[self.features].replace(self.str_nan, nan)
 
         return x_copy
 
@@ -809,12 +817,12 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
 
 
 def convert_to_labels(
-    features: List[str],
-    quantitative_features: List[str],
-    values_orders: Dict[str, GroupedList],
+    features: list[str],
+    quantitative_features: list[str],
+    values_orders: dict[str, GroupedList],
     str_nan: str,
     dropna: bool = True,
-) -> Dict[str, GroupedList]:
+) -> dict[str, GroupedList]:
     """Converts a values_orders values to labels (quantiles)"""
 
     # copying values_orders without nans
@@ -904,7 +912,7 @@ def convert_to_values(
 
 def min_value_counts(
     x: Series,
-    values_orders: Dict[str, GroupedList] = None,
+    values_orders: dict[str, GroupedList] = None,
     dropna: bool = False,
     normalize: bool = True,
 ) -> float:
@@ -914,7 +922,7 @@ def min_value_counts(
     ----------
     x : Series
         _description_
-    values_orders : Dict[str, GroupedList]
+    values_orders : dict[str, GroupedList]
         _description_
 
     Returns
@@ -1037,7 +1045,7 @@ def is_equal(a: Any, b: Any) -> bool:
     return equal
 
 
-def get_labels(quantiles: List[float], str_nan: str) -> List[str]:
+def get_labels(quantiles: list[float], str_nan: str) -> list[str]:
     """_summary_
 
     Parameters
@@ -1051,7 +1059,7 @@ def get_labels(quantiles: List[float], str_nan: str) -> List[str]:
 
     Returns
     -------
-    List[str]
+    list[str]
         _description_
     """
     # filtering out nan for formatting
@@ -1069,22 +1077,22 @@ def get_labels(quantiles: List[float], str_nan: str) -> List[str]:
 
 
 def get_quantiles_labels(
-    features: List[str], values_orders: Dict[str, GroupedList], str_nan: str
-) -> Dict[str, GroupedList]:
+    features: list[str], values_orders: dict[str, GroupedList], str_nan: str
+) -> dict[str, GroupedList]:
     """Converts a values_orders of quantiles into a values_orders of string quantiles
 
     Parameters
     ----------
-    features : List[str]
+    features : list[str]
         _description_
-    values_orders : Dict[str, GroupedList]
+    values_orders : dict[str, GroupedList]
         _description_
     str_nan : str
         _description_
 
     Returns
     -------
-    Dict[str, GroupedList]
+    dict[str, GroupedList]
         _description_
     """
     # applying quantiles formatting to orders of specified features
@@ -1101,22 +1109,22 @@ def get_quantiles_labels(
 
 
 def get_labels_quantiles(
-    features: List[str], values_orders: Dict[str, GroupedList], str_nan: str
-) -> Dict[str, GroupedList]:
+    features: list[str], values_orders: dict[str, GroupedList], str_nan: str
+) -> dict[str, GroupedList]:
     """Converts a values_orders of quantiles into a values_orders of string quantiles
 
     Parameters
     ----------
-    features : List[str]
+    features : list[str]
         _description_
-    values_orders : Dict[str, GroupedList]
+    values_orders : dict[str, GroupedList]
         _description_
     str_nan : str
         _description_
 
     Returns
     -------
-    Dict[str, GroupedList]
+    dict[str, GroupedList]
         _description_
     """
     # applying quantiles formatting to orders of specified features
@@ -1132,19 +1140,19 @@ def get_labels_quantiles(
     return labels_to_quantiles
 
 
-def format_quantiles(a_list: List[float]) -> List[str]:
+def format_quantiles(a_list: list[float]) -> list[str]:
     """Formats a list of float quantiles into a list of boundaries.
 
     Rounds quantiles to the closest power of 1000.
 
     Parameters
     ----------
-    a_list : List[float]
+    a_list : list[float]
         Sorted list of quantiles to convert into string
 
     Returns
     -------
-    List[str]
+    list[str]
         List of boundaries per quantile
     """
 
@@ -1157,7 +1165,7 @@ def format_quantiles(a_list: List[float]) -> List[str]:
     rounded_to_powers = [elt / 1000 ** (k) for elt, k in zip(a_list, closest_powers)]
 
     # computing optimal decimal per unique power of thousands
-    optimal_decimals: Dict[str, int] = {}
+    optimal_decimals: dict[str, int] = {}
     for power in unique(closest_powers):  # iterating over each power of thousands found
         # filtering on the specific power of thousands
         sub_array = array([elt for elt, p in zip(rounded_to_powers, closest_powers) if power == p])
@@ -1176,7 +1184,7 @@ def format_quantiles(a_list: List[float]) -> List[str]:
         optimal_decimals.update({power: optimal_decimal})
 
     # rounding according to each optimal_decimal
-    rounded_list: List[float] = []
+    rounded_list: list[float] = []
     for elt, power in zip(rounded_to_powers, closest_powers):
         # rounding each element
         rounded = elt  # by default None (no rounding)
@@ -1206,7 +1214,7 @@ def format_quantiles(a_list: List[float]) -> List[str]:
     # low and high bounds per quantiles
     upper_bounds = formatted_list + [nan]
     lower_bounds = [nan] + formatted_list
-    order: List[str] = []
+    order: list[str] = []
     for lower, upper in zip(lower_bounds, upper_bounds):
         if isna(lower):
             order += [f"x <= {upper}"]
