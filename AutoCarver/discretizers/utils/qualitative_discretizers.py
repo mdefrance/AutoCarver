@@ -8,8 +8,8 @@ from AutoCarver.discretizers.utils.base_discretizers import GroupedList
 from numpy import argmin, nan, select
 from pandas import DataFrame, Series, isna, notna, unique
 
+from .grouped_list import GroupedList
 from .base_discretizers import (
-    GroupedList,
     GroupedListDiscretizer,
     check_missing_values,
     check_new_values,

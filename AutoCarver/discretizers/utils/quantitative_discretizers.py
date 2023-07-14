@@ -7,7 +7,8 @@ from typing import Any, Dict, List
 from numpy import array, inf, linspace, nan, quantile
 from pandas import DataFrame, Series, isna, notna
 
-from .base_discretizers import GroupedList, GroupedListDiscretizer, applied_to_dict_list
+from .base_discretizers import GroupedListDiscretizer, applied_to_dict_list
+from .grouped_list import GroupedList
 
 
 class QuantileDiscretizer(GroupedListDiscretizer):

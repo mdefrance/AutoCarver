@@ -1,8 +1,10 @@
 """Sets of helper functions for GroupedListDiscretizer JSON serialization"""
 
-from json import dumps
+from json import dumps, loads
 from typing import Union, Any
 from numpy import floating, integer, isfinite, inf
+
+from .grouped_list import GroupedList
 
 def convert_value_to_base_type(value: Any) -> Union[str, float, int]:
     """Converts a value to python's base types (str, int, float) for JSON serialization.
@@ -93,7 +95,7 @@ def convert_values_to_numpy_types(iterable: Union[list[Union[str, int, float]], 
 
     return output
 
-def json_serialize_values_orders(values_orders: dict[str, list]) -> str:
+def json_serialize_values_orders(values_orders: dict[str, GroupedList]) -> str:
     """JSON serializes a values_orders
 
     Parameters
@@ -112,7 +114,7 @@ def json_serialize_values_orders(values_orders: dict[str, list]) -> str:
 
     return dumps(json_serialized_values_orders)
 
-def json_deserialize_values_orders(json_serialized_values_orders: str) -> dict[str, list]:
+def json_deserialize_values_orders(json_serialized_values_orders: str) -> dict[str, GroupedList]:
     """JSON serializes a values_orders
 
     Parameters

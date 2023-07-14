@@ -2,7 +2,7 @@
 for a binary classification model.
 """
 
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import numpy as np
 from IPython.display import display_html  # TODO: remove this
@@ -18,12 +18,11 @@ from json import loads
 
 from .discretizers.discretizers import Discretizer
 from .discretizers.utils.base_discretizers import (
-    GroupedList,
     GroupedListDiscretizer,
     convert_to_labels,
     convert_to_values,
-    is_equal,
 )
+from .discretizers.utils.grouped_list import is_equal, GroupedList
 from .discretizers.utils.serialization import json_deserialize_values_orders
 
 
@@ -121,12 +120,12 @@ class AutoCarver(GroupedListDiscretizer):
 
     def __init__(
         self,
-        quantitative_features: List[str],
-        qualitative_features: List[str],
+        quantitative_features: list[str],
+        qualitative_features: list[str],
         min_freq: float,
         *,
-        ordinal_features: List[str] = None,
-        values_orders: Dict[str, GroupedList] = None,
+        ordinal_features: list[str] = None,
+        values_orders: dict[str, GroupedList] = None,
         max_n_mod: int = 5,
         min_carved_freq: float = 0,  # TODO: update this parameter so that it is set according to frequency rather than number of groups
         sort_by: str = "tschuprowt",
@@ -141,15 +140,15 @@ class AutoCarver(GroupedListDiscretizer):
 
         Parameters
         ----------
-        quantitative_features : List[str]
+        quantitative_features : list[str]
             _description_
-        qualitative_features : List[str]
+        qualitative_features : list[str]
             _description_
         min_freq : float
             _description_
-        ordinal_features : List[str], optional
+        ordinal_features : list[str], optional
             _description_, by default None
-        values_orders : Dict[str, GroupedList], optional
+        values_orders : dict[str, GroupedList], optional
             _description_, by default None
         max_n_mod : int, optional
             _description_, by default 5
@@ -208,7 +207,7 @@ class AutoCarver(GroupedListDiscretizer):
         y: Series,
         X_test: DataFrame = None,
         y_test: Series = None,
-    ) -> Tuple[DataFrame, DataFrame]:
+    ) -> tuple[DataFrame, DataFrame]:
         """Checks validity of provided data
 
         Parameters
@@ -224,7 +223,7 @@ class AutoCarver(GroupedListDiscretizer):
 
         Returns
         -------
-        Tuple[DataFrame, DataFrame]
+        tuple[DataFrame, DataFrame]
             Copies of (X, X_test)
         """
         # Checking for binary target and copying X
@@ -367,7 +366,7 @@ class AutoCarver(GroupedListDiscretizer):
         xtab: DataFrame,
         *,
         xtab_test: DataFrame = None,
-    ) -> Tuple[GroupedList, DataFrame, DataFrame]:
+    ) -> tuple[GroupedList, DataFrame, DataFrame]:
         # raw ordering
         raw_order = GroupedList(order)
         if self.str_nan in raw_order:
@@ -481,8 +480,8 @@ class AutoCarver(GroupedListDiscretizer):
 
 def stats_xtab(
     xtab: DataFrame,
-    known_order: List[Any] = None,
-    known_labels: List[Any] = None,
+    known_order: list[Any] = None,
+    known_labels: list[Any] = None,
 ) -> DataFrame:
     """Computes column (target) rate per row (modality) and row frequency"""
 
@@ -548,8 +547,8 @@ def filter_nan_xtab(xtab: DataFrame, str_nan: str) -> DataFrame:
 
 
 def get_xtabs(
-    features: List[str], X: DataFrame, y: Series, labels_orders: Dict[str, GroupedList]
-) -> Dict[str, DataFrame]:
+    features: list[str], X: DataFrame, y: Series, labels_orders: dict[str, GroupedList]
+) -> dict[str, DataFrame]:
     """Computes crosstabs for specified features and ensures that the crosstab is ordered according to the known labels"""
 
     # checking for empty datasets
@@ -569,7 +568,7 @@ def get_xtabs(
     return xtabs
 
 
-def association_xtab(xtab: DataFrame, n_obs, n_mod_y) -> Dict[str, float]:
+def association_xtab(xtab: DataFrame, n_obs, n_mod_y) -> dict[str, float]:
     """Computes measures of association between feature x and feature2."""
 
     # number of values taken by the features
@@ -587,7 +586,7 @@ def association_xtab(xtab: DataFrame, n_obs, n_mod_y) -> Dict[str, float]:
     return {"cramerv": cramerv, "tschuprowt": tschuprowt}
 
 
-def vectorized_groupby_sum(xtab: DataFrame, groupby: List[str]):
+def vectorized_groupby_sum(xtab: DataFrame, groupby: list[str]):
     """Groups a crosstab by groupby and sums column values by groups"""
 
     # all indices that may be duplicated
@@ -682,11 +681,11 @@ def xtab_target_rate(xtab: DataFrame) -> DataFrame:
 
 def get_best_association(
     xtab: DataFrame,
-    combinations: List[List[str]],
+    combinations: list[list[str]],
     sort_by: str,
     xtab_test: DataFrame = None,
     verbose: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Computes associations of the xtab for each combination"""
 
     # values to groupby indices with
@@ -749,8 +748,8 @@ def get_best_association(
 
 
 def add_nan_in_combinations(
-    combinations: List[List[str]], str_nan: str, max_n_mod: int
-) -> List[List[str]]:
+    combinations: list[list[str]], str_nan: str, max_n_mod: int
+) -> list[list[str]]:
     """Adds nan to each possible group and a last group only with nan if the max_n_mod is not reached by the combination"""
 
     # iterating over each combination
@@ -778,7 +777,7 @@ def add_nan_in_combinations(
     return nan_combinations
 
 
-def order_apply_combination(order: GroupedList, combination: List[List[Any]]) -> GroupedList:
+def order_apply_combination(order: GroupedList, combination: list[list[Any]]) -> GroupedList:
     """Converts a list of combination to a GroupedList"""
 
     order_copy = GroupedList(order)
@@ -800,7 +799,7 @@ def xtab_apply_order(xtab: DataFrame, order: GroupedList) -> DataFrame:
 
     Returns
     -------
-    Dict[str, Any]
+    dict[str, Any]
         _description_
     """
     # checking for input values
@@ -813,7 +812,7 @@ def xtab_apply_order(xtab: DataFrame, order: GroupedList) -> DataFrame:
     return combi_xtab
 
 
-def plot_stats(stats: DataFrame) -> Tuple[Figure, Axes]:
+def plot_stats(stats: DataFrame) -> tuple[Figure, Axes]:
     """Barplot of the volume and target rate"""
 
     x = [0] + [elt for e in stats["frequency"].cumsum()[:-1] for elt in [e] * 2] + [1]
@@ -870,5 +869,6 @@ def load_carver(json_serialized_auto_carver: str) -> GroupedListDiscretizer:
 
     # initiating GroupedListDiscretizer
     auto_carver = GroupedListDiscretizer(**json_deserialized_auto_carver)
+    auto_carver.fit()
 
     return auto_carver
