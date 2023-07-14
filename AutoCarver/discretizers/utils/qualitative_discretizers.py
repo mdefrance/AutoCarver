@@ -379,7 +379,7 @@ class ChainedDiscretizer(GroupedListDiscretizer):
         # adding each level
         for next_level in self.chained_orders[1:]:
             # highest value per group of the level
-            highest_ranking_value = {group: [value for value in values if value!=group][-1] for group, values in next_level.contained.items()}
+            highest_ranking_value = {group: [value for value in values if value!=group][-1] for group, values in next_level.content.items()}
             
             # adding next_level group to the order
             for group, highest_value in highest_ranking_value.items():

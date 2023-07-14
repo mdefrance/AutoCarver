@@ -135,13 +135,13 @@ class GroupedList(list):
         if isinstance(iterable, ndarray):
             iterable = list(iterable)
 
-        # case 0: iterable is the contained dict
+        # case 0: iterable is the content dict
         if isinstance(iterable, dict):
             # storing ordered keys of the dict
             keys = list(iterable)
 
-            # storing the values contained per key
-            self.contained = dict(iterable.items())
+            # storing the values content per key
+            self.content = dict(iterable.items())
 
             # checking that all values are only present once
             all_values = [val for _, values in iterable.items() for val in values]
@@ -162,23 +162,23 @@ class GroupedList(list):
                 if key not in all_values:
                     # checking that key is missing from its values
                     if key not in iterable[key]:
-                        self.contained.update({key: self.contained[key] + [key]})
+                        self.content.update({key: self.content[key] + [key]})
                 # the key already is in another key (and its values are empty)
                 # the key as already been grouped
                 else:
-                    self.contained.pop(key)
+                    self.content.pop(key)
                     keys.remove(key)
 
             # initiating the list with those keys
             super().__init__(keys)
 
         # case 1: copying a GroupedList
-        elif hasattr(iterable, "contained"):
+        elif hasattr(iterable, "content"):
             # initiating the list with the provided list of keys
             super().__init__(iterable)
 
             # copying values associated to keys
-            self.contained = dict(iterable.contained.items())
+            self.content = dict(iterable.content.items())
 
         # case 2: initiating GroupedList from a list
         elif isinstance(iterable, list):
@@ -186,10 +186,10 @@ class GroupedList(list):
             super().__init__(iterable)
 
             # initiating the values with the provided list of keys
-            self.contained = {v: [v] for v in iterable}
+            self.content = {v: [v] for v in iterable}
 
     def get(self, key: Any) -> list[Any]:
-        """List of values contained in key
+        """List of values content in key
 
         Parameters
         ----------
@@ -199,11 +199,11 @@ class GroupedList(list):
         Returns
         -------
         list[Any]
-            Values contained in key
+            Values content in key
         """
 
         # default to fing an element
-        found = self.contained.get(key)
+        found = self.content.get(key)
 
         return found
 
@@ -224,12 +224,12 @@ class GroupedList(list):
             assert discarded in self, f"{discarded} not in list"
             assert kept in self, f"{kept} not in list"
 
-            # accessing values contained in each value
-            contained_discarded = self.contained.get(discarded)
-            contained_kept = self.contained.get(kept)
+            # accessing values content in each value
+            content_discarded = self.content.get(discarded)
+            content_kept = self.content.get(kept)
 
-            # updating contained dict
-            self.contained.update({kept: contained_discarded + contained_kept, discarded: []})
+            # updating content dict
+            self.content.update({kept: content_discarded + content_kept, discarded: []})
 
             # removing discarded from the list
             self.remove(discarded)
@@ -258,7 +258,7 @@ class GroupedList(list):
         """
 
         self += [new_value]
-        self.contained.update({new_value: [new_value]})
+        self.content.update({new_value: [new_value]})
 
     def update(self, new_value: Dict[Any, list[Any]]) -> None:  # TODO: not working as expected
         """Updates the GroupedList via a dict
@@ -266,14 +266,14 @@ class GroupedList(list):
         Parameters
         ----------
         new_value : Dict[Any, list[Any]]
-            Dict of key, values to updated `contained` dict
+            Dict of key, values to updated `content` dict
         """
 
         # adding keys to the order if they are new values
         self += [key for key, _ in new_value.items() if key not in self]
 
-        # updating contained according to new_value
-        self.contained.update(new_value)
+        # updating content according to new_value
+        self.content.update(new_value)
 
     def sort(self):
         """Sorts the values of the list and dict (if any, NaNs are last).
@@ -319,7 +319,7 @@ class GroupedList(list):
             s in ordering for s in self
         ), f"Missing value from ordering: {str([v for v in self if v not in ordering])}"
 
-        # ordering the contained
+        # ordering the content
         sorted = GroupedList({k: self.get(k) for k in ordering})
 
         return sorted
@@ -333,7 +333,7 @@ class GroupedList(list):
             value to be removed
         """
         super().remove(value)
-        self.contained.pop(value)
+        self.content.pop(value)
 
     def pop(self, idx: int) -> None:
         """Pop a value from the GroupedList by index
@@ -362,7 +362,7 @@ class GroupedList(list):
 
         found = [
             key
-            for key, values in self.contained.items()
+            for key, values in self.content.items()
             if any(is_equal(value, elt) for elt in values)
         ]
 
@@ -372,7 +372,7 @@ class GroupedList(list):
         return value
 
     def values(self) -> list[Any]:
-        """All values contained in all groups
+        """All values content in all groups
 
         Returns
         -------
@@ -380,12 +380,12 @@ class GroupedList(list):
             List of all values in the GroupedList
         """
 
-        known = [value for values in self.contained.values() for value in values]
+        known = [value for values in self.content.values() for value in values]
 
         return known
 
     def contains(self, value: Any) -> bool:
-        """Checks if a value is contained in any group, also matches NaNs.
+        """Checks if a value is content in any group, also matches NaNs.
 
         Parameters
         ----------
@@ -638,7 +638,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
     def transform(self, X: DataFrame, y: Series = None) -> DataFrame:
         """Groups values of features (values_orders keys) according to
         there corresponding GroupedList (values_orders values) based on
-        the `GroupedList.contained` dict.
+        the `GroupedList.content` dict.
 
         Parameters
         ----------
@@ -682,7 +682,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
     def transform_quantitative(self, X: DataFrame, y: Series) -> DataFrame:
         """Groups values of features (values_orders keys) according to
         there corresponding GroupedList (values_orders values) based on
-        the `GroupedList.contained` dict.
+        the `GroupedList.content` dict.
 
         Parameters
         ----------
@@ -736,7 +736,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
     def transform_qualitative(self, X: DataFrame, y: Series = None) -> DataFrame:
         """Groups values of features (values_orders keys) according to
         there corresponding GroupedList (values_orders values) based on
-        the `GroupedList.contained` dict.
+        the `GroupedList.content` dict.
 
         Parameters
         ----------
@@ -770,16 +770,16 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         str
             _description_
         """
-        # extracting contained dictionnaries
+        # extracting content dictionnaries
         content = {
             "features": self.features,
-            "values_ordres": self.values_orders,  # TODO: adapt maybe init GroupedList with {"values": values, "contained": values.contained} ?
+            "values_ordres": self.values_orders,  # TODO: adapt maybe init GroupedList with {"values": values, "content": values.content} ?
             "input_dtypes": self.input_dtypes,
             "output_dtype": self.output_dtype,
             "str_nan": self.str_nan,
             "copy": self.copy,
         }
-        # contained_orders = {feature: {"values": values, "contained": values.contained} for feature, values in self.values_orders.items()}
+        # content_orders = {feature: {"values": values, "content": values.content} for feature, values in self.values_orders.items()}
         # dumping as json
         return dumps(content)
     
@@ -808,12 +808,12 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
                 # feature's modalities
                 modalities = labels_orders[feature]
                 # values included in each modality
-                contained = modalities.contained
+                content = modalities.content
                 
                 # adding nans
                 if self.values_orders[feature].contains(self.str_nan):
                     nan_group = self.values_orders[feature].get_group(self.str_nan)
-                    contained.update({nan_group: contained[nan_group] + [self.str_nan]})
+                    content.update({nan_group: content[nan_group] + [self.str_nan]})
 
 
             # case 1: quantitative features
@@ -822,12 +822,12 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
                 # feature's modalities
                 modalities = self.values_orders[feature]
                 # values included in each modality
-                contained = modalities.contained
+                content = modalities.content
             
             # adding all modalities and there content
             for modality in modalities:
                 modality_summary = {k: v for k, v in init_summary.items()}
-                modality_summary.update({"modality": modality, "values": contained[modality]})
+                modality_summary.update({"modality": modality, "values": content[modality]})
 
                 # case 2: when the output_dtype == 'float'
                 #if self.output_dtype == 'float':
@@ -899,7 +899,7 @@ def convert_to_values(
         order = values_orders[feature]
 
         # checking for grouped modalities
-        groups_to_discard = label_orders[feature].contained
+        groups_to_discard = label_orders[feature].content
 
         # grouping the raw quantile values
         for kept_value, group_to_discard in groups_to_discard.items():

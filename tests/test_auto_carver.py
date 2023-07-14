@@ -79,3 +79,4 @@ def test_auto_carver(x_train: DataFrame, x_test_1: DataFrame, output_dtype: str,
 
     # TODO test missing values in test
     # TODO try with copy = False
+    # TODO: test avec chained_discretizer

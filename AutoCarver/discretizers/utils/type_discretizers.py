@@ -87,11 +87,11 @@ class StringDiscretizer(GroupedListDiscretizer):
             # case 0: non-ordinal features, updating as is (no order provided)
             if feature not in self.values_orders:
                 self.values_orders.update({feature: values_order})
-            # case 1: ordinal features, adding to contained dict (order provided)
+            # case 1: ordinal features, adding to content dict (order provided)
             else:
                 # currently known order (only with strings)
                 known_order = self.values_orders[feature]
-                known_order.update(values_order.contained)
+                known_order.update(values_order.content)
                 self.values_orders.update({feature: known_order})
 
         # discretizing features based on each feature's values_order
