@@ -81,7 +81,9 @@ def check_new_values(X: DataFrame, features: list[str], known_values: dict[str, 
 
     # checking for unexpected values for each feature
     for feature in features:
+        print("feature", feature)
         unexpected = [val for val in uniques[feature] if val not in known_values[feature]]
+        print("known_values[feature]", known_values[feature])
         assert (
             len(unexpected) == 0
         ), f"Unexpected value! The ordering for values: {str(list(unexpected))} of feature '{feature}' was not provided. There might be new values in your test/dev set. Consider taking a bigger test/dev set or dropping the column {feature}."
@@ -258,7 +260,7 @@ class GroupedList(list):
         self += [new_value]
         self.contained.update({new_value: [new_value]})
 
-    def update(self, new_value: Dict[Any, list[Any]]) -> None:
+    def update(self, new_value: Dict[Any, list[Any]]) -> None:  # TODO: not working as expected
         """Updates the GroupedList via a dict
 
         Parameters
@@ -453,7 +455,8 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         str_nan: str = None,
         str_default: str = None,
         dropna: bool = True,
-        copy: bool = False,
+        copy: bool = True,
+        verbose: bool = True,
     ) -> None:
         """Initiates a Discretizer by dict of GroupedList
 
@@ -499,6 +502,9 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         # string value of rare values
         self.str_default = str_default
 
+        # whether to print info
+        self.verbose = verbose
+
         # identifying qualitative features by there type
         self.qualitative_features = [
             feature for feature in features if self.input_dtypes[feature] == "str"
@@ -542,6 +548,9 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
             
             # case 2: requested float output -> converting to integers
             if output_dtype == 'float':
+                # case 3: it's the output of the auto_carver and we want to keep NaNs
+                if self.str_nan in values and not self.dropna:
+                    labels += [self.str_nan]
                 labels = [n for n, _ in enumerate(labels)]
 
             # building label per value
@@ -650,10 +659,14 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
 
         # transforming quantitative features
         if len(self.quantitative_features) > 0:
+            if self.verbose:  # verbose if requested
+                print(f" - [GroupedListDiscretizer] Transform Quantitative {str(self.quantitative_features)}")
             x_copy = self.transform_quantitative(x_copy, y)
 
         # transforming qualitative features
         if len(self.qualitative_features) > 0:
+            if self.verbose:  # verbose if requested
+                print(f" - [GroupedListDiscretizer] Transform Qualitative {str(self.qualitative_features)}")
             x_copy = self.transform_qualitative(x_copy, y)
         
         # reinstating nans
@@ -700,15 +713,11 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
                 if nan_value != self.str_nan:
                     X.loc[nans, feature] = nan_value
 
-            # removing nans from quantiles and labels (can not mix str and floats for comparison purposes)
-            if self.str_nan in feature_values:  # filtering out nans if any
-                feature_values = [value for value in feature_values if value != self.str_nan]
-
             # list of masks of values to replace with there respective group
-            values_to_group = [X[feature] <= quantile for quantile in feature_values]
+            values_to_group = [X[feature] <= value for value in feature_values if value != self.str_nan]
 
             # corressponding group for each value
-            group_labels = [[self.labels_per_values[feature][value]] * x_len for value in feature_values]
+            group_labels = [[self.labels_per_values[feature][value]] * x_len for value in feature_values if value != self.str_nan]
 
             # checking for values to group
             if len(values_to_group) > 0:

@@ -48,11 +48,11 @@ class QuantileDiscretizer(GroupedListDiscretizer):
             output_dtype='str',
             str_nan=str_nan,
             copy=copy,
+            verbose=verbose,
         )
 
         self.min_freq = min_freq
         self.q = round(1 / min_freq)  # number of quantiles
-        self.verbose = verbose
 
     def fit(self, X: DataFrame, y: Series = None) -> None:
         """_summary_
@@ -65,7 +65,7 @@ class QuantileDiscretizer(GroupedListDiscretizer):
             _description_, by default None
         """
         if self.verbose:  # verbose if requested
-            print(f" - [QuantileDiscretizer] Fit {', '.join(self.features)}")
+            print(f" - [QuantileDiscretizer] Fit {str(self.features)}")
 
         # computing quantiles for the feature
         quantiles = applied_to_dict_list(X[self.features].apply(find_quantiles, q=self.q, axis=0))

@@ -40,7 +40,8 @@ def test_string_discretizer(x_train: DataFrame) -> None:
     '3': [3.0, '3'],
     '1': [1.0, '1'],
     '5': [5.0, '5'],
-    '6': [6.0, '6']}
+    '6': [6.0, '6'],
+    '__NAN__': ['__NAN__']}
     assert discretizer.values_orders['Discrete_Qualitative_lownan_noorder'].contained == expected, "Not correctly converted for qualitative with integers and nans"
 
     expected = {'2': [2.0, '2'],
@@ -60,7 +61,8 @@ def test_string_discretizer(x_train: DataFrame) -> None:
     'Medium+': ['Medium+'],
     'High-': ['High-'],
     'High': ['High'],
-    'High+': ['High+']}
+    'High+': ['High+'],
+    '__NAN__': ['__NAN__']}
     assert discretizer.values_orders['Qualitative_Ordinal_lownan'].contained == expected, "No conversion for already string features"
     
     expected = {'Low-': ['Low-'],
@@ -74,5 +76,6 @@ def test_string_discretizer(x_train: DataFrame) -> None:
     'High+': ['High+']}
     assert discretizer.values_orders['Qualitative_Ordinal'].contained == expected, "No conversion for not specified featues"
 
-    expected = {'1': ['1'], '2': [2.0, '2'], '3': [3.0, '3'], '4': [4.0, '4'], '5': [5.0, '5'], '6': [6.0, '6'], '7': [7.0, '7']}
+    expected = {'1': ['1'], '2': [2.0, '2'], '3': [3.0, '3'], '4': [4.0, '4'], '5': [5.0, '5'], '6': [6.0, '6'], '7': [7.0, '7'],
+    '__NAN__': ['__NAN__']}
     assert discretizer.values_orders['Discrete_Qualitative_highnan'].contained == expected, "Original order should be kept for ordinal features"

@@ -1,7 +1,6 @@
 """Base tools to convert values into specific types.
 """
 
-from numpy import float32
 from pandas import DataFrame, Series
 
 from .base_discretizers import GroupedList, GroupedListDiscretizer, nan_unique
@@ -20,7 +19,9 @@ class StringDiscretizer(GroupedListDiscretizer):
         features: list[str],
         *,
         values_orders: dict[str, GroupedList] = None,
+        str_nan: str = '__NAN__',
         copy: bool = False,
+        verbose: bool = True,
     ) -> None:
         """_summary_
 
@@ -37,7 +38,9 @@ class StringDiscretizer(GroupedListDiscretizer):
             values_orders=values_orders,
             input_dtypes="str",
             output_dtype="str",
+            str_nan=str_nan,
             copy=copy,
+            verbose=verbose,
         )
 
     def fit(self, X: DataFrame, y: Series = None) -> None:
@@ -50,10 +53,16 @@ class StringDiscretizer(GroupedListDiscretizer):
         y : Series, optional
             _description_, by default None
         """
+        if self.verbose:  # verbose if requested
+            print(f" - [StringDiscretizer] Fit {str(self.features)}")
+
+        # checking for binary target and copying X
+        x_copy = self.prepare_data(X, y)  # X[self.features].fillna(self.str_nan)
+
         # converting each feature's value
         for feature in self.features:
             # unique feature values
-            unique_values = nan_unique(X[feature])
+            unique_values = nan_unique(x_copy[feature])
             values_order = GroupedList(unique_values)
 
             # formatting values
@@ -69,17 +78,20 @@ class StringDiscretizer(GroupedListDiscretizer):
                 if str_value not in values_order:
                     values_order.append(str_value)  # adding string value to the order
                     values_order.group(value, str_value)  # grouping integer value into the string value
+                
+            # adding str_nan
+            if any(x_copy[feature].isna()):
+                values_order.append(self.str_nan)
 
             # updating values_orders accordingly
             # case 0: non-ordinal features, updating as is (no order provided)
             if feature not in self.values_orders:
                 self.values_orders.update({feature: values_order})
-            # case 1: ordinal features, adding to contained dict (order provide)
+            # case 1: ordinal features, adding to contained dict (order provided)
             else:
                 # currently known order (only with strings)
                 known_order = self.values_orders[feature]
                 known_order.update(values_order.contained)
-
                 self.values_orders.update({feature: known_order})
 
         # discretizing features based on each feature's values_order

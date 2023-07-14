@@ -26,7 +26,7 @@ def test_auto_carver(x_train: DataFrame, x_test_1: DataFrame) -> None:
 
 
     # minimum frequency per modality
-    min_freq = 0.02
+    min_freq = 0.06
     max_n_mod = 4
 
     # tests with 'tschuprowt' measure
@@ -96,3 +96,4 @@ def test_auto_carver(x_train: DataFrame, x_test_1: DataFrame) -> None:
 
     # TODO: test output 'float'
     # TODO test missing values in test
+    # TODO try with copy = False

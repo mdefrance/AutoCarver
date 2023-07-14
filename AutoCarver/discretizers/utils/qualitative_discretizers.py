@@ -66,10 +66,10 @@ class DefaultDiscretizer(GroupedListDiscretizer):
             str_nan=str_nan,
             str_default = str_default,
             copy=copy,
+            verbose=verbose,
         )
         
         self.min_freq = min_freq
-        self.verbose = verbose
 
     def prepare_data(self, X: DataFrame, y: Series) -> DataFrame:
         """Called during fit step
@@ -96,7 +96,7 @@ class DefaultDiscretizer(GroupedListDiscretizer):
                 self.values_orders.update({feature: GroupedList(nan_unique(x_copy[feature]))})
 
         # checking that all unique values in X are in values_orders
-        check_new_values(x_copy, self.features, self.values_orders)
+        check_new_values(x_copy, self.features, self.values_orders)  # TODO problem here
         # checking that all unique values in values_orders are in X
         check_missing_values(x_copy, self.features, self.values_orders)
 
@@ -124,7 +124,7 @@ class DefaultDiscretizer(GroupedListDiscretizer):
         x_copy = self.prepare_data(X, y)
         
         if self.verbose:  # verbose if requested
-            print(f" - [DefaultDiscretizer] Fit {', '.join(self.features)}")
+            print(f" - [DefaultDiscretizer] Fit {str(self.features)}")
 
         # computing frequencies of each modality
         frequencies = x_copy.apply(value_counts, normalize=True, axis=0)
@@ -172,21 +172,151 @@ class DefaultDiscretizer(GroupedListDiscretizer):
         super().fit(X, y)
 
         return self
+    
 
-class BaseQualitativeDiscretizer(GroupedListDiscretizer):
-    """TODO: to implement to mutualize prepare_data and remove_feature across qualitative discretizers"""
+class OrdinalDiscretizer(GroupedListDiscretizer):
+    """Discretizes ordered qualitative features into groups more frequent than min_freq.
+    NaNs are left untouched.
+
+    Modality is choosen amongst the preceding and following values in the provided order.
+    The choosen modality is:
+    - the closest in target rate
+    - or the one with the lowest frequency
+    """
 
     def __init__(
         self,
-        features: List[str],
-        values_orders: Dict[str, GroupedList],
+        features: list[str],
+        values_orders: dict[str, GroupedList],
+        min_freq: float,
         *,
+        str_nan: str = "__NAN__",
+        input_dtypes: Union[str, dict[str, str]] = "str",
         copy: bool = False,
-        input_dtypes: Union[str, Dict[str, str]] = None,
-        str_nan: str = None,
-        verbose: bool = False
-    ) -> None:
-        super().__init__(features, values_orders, copy=copy, input_dtypes=input_dtypes, str_nan=str_nan, verbose=verbose)
+        verbose: bool = False,
+    ):
+        """Initializes a OrdinalDiscretizer
+
+        Parameters
+        ----------
+        features : List[str]
+            List of column names to be discretized
+        values_orders : Dict[str, Any]
+            Dict of column names (keys) and modalities' associated order (values)
+        min_freq : float
+            Minimum frequency per modality. Less frequent modalities are grouped in the closest value of the order.
+        str_nan : str, optional
+            _description_, by default None
+        input_dtypes : Union[str, Dict[str, str]], optional
+            String of type to be considered for all features or
+            Dict of column names and associated types:
+            - if 'float' uses transform_quantitative
+            - if 'str' uses transform_qualitative,
+            default 'str'
+        copy : bool, optional
+            _description_, by default False
+        verbose : bool, optional
+            _description_, by default False
+        """
+        # Initiating GroupedListDiscretizer
+        super().__init__(
+            features=features,
+            values_orders=values_orders,
+            input_dtypes=input_dtypes,
+            output_dtype='str',
+            str_nan=str_nan,
+            copy=copy,
+            verbose=verbose,
+        )
+
+        # class specific attributes
+        self.min_freq = min_freq
+
+    def prepare_data(self, X: DataFrame, y: Series) -> DataFrame:
+        """Called during fit step
+
+        Parameters
+        ----------
+        X : DataFrame
+            _description_
+        y : Series
+            _description_
+
+        Returns
+        -------
+        DataFrame
+            _description_
+        """
+        # checking for binary target and copying X
+        x_copy = super().prepare_data(X, y)
+        # adding NANS
+        for feature in self.features:
+            if any(x_copy[feature].isna()):
+                values = self.values_orders[feature]
+                if not values.contains(self.str_nan):
+                    values.append(self.str_nan)
+                    self.values_orders.update({feature: values})
+
+        # removing NaNs if any already imputed -> grouping only non-nan values
+        if self.str_nan:
+            x_copy = x_copy.replace(self.str_nan, nan)
+
+        return x_copy
+
+    def fit(self, X: DataFrame, y: Series) -> None:
+        """Learns common modalities on the training set
+
+        Parameters
+        ----------
+        X : DataFrame
+            Training set that contains columns named after `values_orders` keys.
+        y : Series
+            Model target.
+        """
+        if self.verbose:  # verbose if requested
+            print(f" - [OrdinalDiscretizer] Fit {str(self.features)}")
+
+        # checking values orders
+        x_copy = self.prepare_data(X, y)
+
+        # getting label per value
+        labels_per_values = self.get_labels_per_values(output_dtype='str')
+
+        # converting potential quantiles into there labels
+        known_orders = convert_to_labels(
+            features=self.features,
+            quantitative_features=self.quantitative_features,
+            values_orders=self.values_orders,
+            str_nan=self.str_nan,
+            dropna=True,
+        )
+
+        # grouping rare modalities for each feature
+        common_modalities = x_copy[self.features].apply(
+            find_common_modalities,
+            y=y,
+            min_freq=self.min_freq,
+            values_orders=known_orders,
+            axis=0,
+            result_type="reduce",
+        )
+
+        # converting potential labels into there respective values (quantiles)
+        self.values_orders.update(
+            convert_to_values(
+                features=self.features,
+                quantitative_features=self.quantitative_features,
+                values_orders=self.values_orders,
+                label_orders=common_modalities,
+                str_nan=self.str_nan,
+            )
+        )
+
+        # discretizing features based on each feature's values_order
+        super().fit(x_copy, y)
+
+        return self
+
 
 class ChainedDiscretizer(GroupedListDiscretizer):
     """Chained Discretization based on a list of GroupedList."""
@@ -233,6 +363,7 @@ class ChainedDiscretizer(GroupedListDiscretizer):
             output_dtype='str',
             str_nan=str_nan,
             copy=copy,
+            verbose=verbose,
         )
 
         self.min_freq = min_freq
@@ -355,9 +486,9 @@ class ChainedDiscretizer(GroupedListDiscretizer):
         x_copy = self.prepare_data(X, y)
 
         # iterating over each feature
-        for n, feature in enumerate(self.features):
-            if self.verbose:  # verbose if requested
-                print(f" - [ChainedDiscretizer] Fit {feature} ({n+1}/{len(self.features)})")
+        if self.verbose:  # verbose if requested
+            print(f" - [ChainedDiscretizer] Fit {str(self.features)}")
+        for feature in self.features:
 
             # computing frequencies of each modality
             frequencies = x_copy[feature].value_counts(normalize=True)
@@ -415,150 +546,6 @@ class ChainedDiscretizer(GroupedListDiscretizer):
         super().fit(X, y)
 
         return self
-
-
-class OrdinalDiscretizer(GroupedListDiscretizer):
-    """Discretizes ordered qualitative features into groups more frequent than min_freq.
-    NaNs are left untouched.
-
-    Modality is choosen amongst the preceding and following values in the provided order.
-    The choosen modality is:
-    - the closest in target rate
-    - or the one with the lowest frequency
-    """
-
-    def __init__(
-        self,
-        features: list[str],
-        values_orders: dict[str, GroupedList],
-        min_freq: float,
-        *,
-        str_nan: str = "__NAN__",
-        input_dtypes: Union[str, dict[str, str]] = "str",
-        copy: bool = False,
-        verbose: bool = False,
-    ):
-        """Initializes a OrdinalDiscretizer
-
-        Parameters
-        ----------
-        features : List[str]
-            List of column names to be discretized
-        values_orders : Dict[str, Any]
-            Dict of column names (keys) and modalities' associated order (values)
-        min_freq : float
-            Minimum frequency per modality. Less frequent modalities are grouped in the closest value of the order.
-        str_nan : str, optional
-            _description_, by default None
-        input_dtypes : Union[str, Dict[str, str]], optional
-            String of type to be considered for all features or
-            Dict of column names and associated types:
-            - if 'float' uses transform_quantitative
-            - if 'str' uses transform_qualitative,
-            default 'str'
-        copy : bool, optional
-            _description_, by default False
-        verbose : bool, optional
-            _description_, by default False
-        """
-        # Initiating GroupedListDiscretizer
-        super().__init__(
-            features=features,
-            values_orders=values_orders,
-            input_dtypes=input_dtypes,
-            output_dtype='str',
-            str_nan=str_nan,
-            copy=copy,
-        )
-
-        self.min_freq = min_freq
-        self.verbose = verbose
-
-    def prepare_data(self, X: DataFrame, y: Series) -> DataFrame:
-        """Called during fit step
-
-        Parameters
-        ----------
-        X : DataFrame
-            _description_
-        y : Series
-            _description_
-
-        Returns
-        -------
-        DataFrame
-            _description_
-        """
-        # adding NANS
-        for feature in self.features:
-            if any(X[feature].isna()):
-                self.values_orders[feature].append(self.str_nan)
-
-        # removing NaNs if any already imputed
-        x_copy = X
-        if self.str_nan:
-            x_copy = x_copy.replace(self.str_nan, nan)
-
-        # checking for binary target
-        y_values = unique(y)
-        assert (0 in y_values) & (
-            1 in y_values
-        ), "y must be a binary Series (int or float, not object)"
-        assert len(y_values) == 2, "y must be a binary Series (int or float, not object)"
-
-        return x_copy
-
-    def fit(self, X: DataFrame, y: Series) -> None:
-        """Learns common modalities on the training set
-
-        Parameters
-        ----------
-        X : DataFrame
-            Training set that contains columns named after `values_orders` keys.
-        y : Series
-            Model target.
-        """
-        if self.verbose:  # verbose if requested
-            print(f" - [OrdinalDiscretizer] Fit {', '.join(self.features)}")
-
-        # checking values orders
-        x_copy = self.prepare_data(X, y)
-
-        # converting potential quantiles into there labels
-        known_orders = convert_to_labels(
-            features=self.features,
-            quantitative_features=self.quantitative_features,
-            values_orders=self.values_orders,
-            str_nan=self.str_nan,
-            dropna=True,
-        )
-
-        # grouping rare modalities for each feature
-        common_modalities = x_copy[self.features].apply(
-            find_common_modalities,
-            y=y,
-            min_freq=self.min_freq,
-            values_orders=known_orders,
-            axis=0,
-            result_type="reduce",
-        )
-
-        # converting potential labels into there respective values (quantiles)
-        self.values_orders.update(
-            convert_to_values(
-                features=self.features,
-                quantitative_features=self.quantitative_features,
-                values_orders=self.values_orders,
-                label_orders=common_modalities,
-                str_nan=self.str_nan,
-            )
-        )
-
-        # discretizing features based on each feature's values_order
-        super().fit(x_copy, y)
-
-        return self
-
 
 def find_common_modalities(
     df_feature: Series,
