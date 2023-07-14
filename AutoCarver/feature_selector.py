@@ -12,7 +12,8 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from statsmodels.formula.api import ols
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
-from .discretizers.utils.base_discretizers import GroupedList, GroupedListDiscretizer
+from .discretizers.utils.base_discretizers import GroupedListDiscretizer
+from .discretizers.utils.grouped_list import GroupedList
 
 # TODO: convert to groupedlistdiscretizer
 # TODO: add parameter to shut down displayed info

@@ -3,8 +3,8 @@
 
 from pandas import DataFrame, Series
 
-from .base_discretizers import GroupedList, GroupedListDiscretizer, nan_unique
-
+from .base_discretizers import GroupedListDiscretizer, nan_unique
+from .grouped_list import GroupedList
 
 class StringDiscretizer(GroupedListDiscretizer):
     """Converts specified columns of a DataFrame into str.

@@ -2,12 +2,11 @@
 for a binary classification model.
 """
 
-from typing import Any, Dict, List, Union
+from typing import Union
 from numpy import nan
 from pandas import DataFrame, Series, unique
 
 from .utils.base_discretizers import (
-    GroupedList,
     GroupedListDiscretizer,
     check_new_values,
     min_value_counts,
@@ -16,6 +15,7 @@ from .utils.qualitative_discretizers import DefaultDiscretizer, OrdinalDiscretiz
 from .utils.quantitative_discretizers import QuantileDiscretizer
 from .utils.type_discretizers import StringDiscretizer
 
+from .utils.grouped_list import GroupedList
 
 class Discretizer(GroupedListDiscretizer):
     """Automatic discretizing of continuous, categorical and categorical ordinal features.

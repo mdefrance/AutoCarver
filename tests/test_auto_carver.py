@@ -74,6 +74,12 @@ def test_auto_carver(x_train: DataFrame, x_test_1: DataFrame, output_dtype: str,
         assert all(x_train[auto_carver.features].isna().mean()  == x_discretized[auto_carver.features].isna().mean()), "Some Nans are being dropped (grouped) or more nans than expected"
     else:
         assert all(x_discretized[auto_carver.features].isna().mean() == 0), "Some Nans are not dropped (grouped)"
+    
+    # testing json serialization
+    json_serialized_auto_carver = auto_carver.to_json()
+    loaded_carver = load_carver(json_serialized_auto_carver)
+
+    assert all(loaded_carver.summary() == auto_carver.summary()), "Non-identical AutoCarver when loading JSON"
 
 # def test_auto_carver_copy(x_train: DataFrame, x_test_1: DataFrame, output_dtype: str, dropna: bool, sort_by: str) -> None:
 
