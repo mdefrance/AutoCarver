@@ -92,6 +92,33 @@ x_test_discretized = auto_carver.transform(x_test)
 </p>
 
 
+### Storing, reusing the AutoCarver
+
+The `AutoCarver` can safely be stored and loaded as a .json file.
+
+```python
+import json
+
+# storing as json file
+with open('my_carver.json', 'w') as my_carver_json:
+    json.dump(auto_carver.to_json(), my_carver_json)
+```
+
+The stored .json, can then be used to initialize a new `base_discretizers.GroupedListDiscretizer`.
+
+```python
+from AtuoCarver.auto_carver import load_carver
+
+# loading json file
+with open('my_carver.json', 'r') as my_carver_json:
+    auto_carver = load_carver(json.load(my_carver_json))
+```
+
+
+
+
+
+
 ### Cherry picking the most target-associated features with FeatureSelector
 
 Following parameters must be set for `FeatureSelector`:
@@ -139,35 +166,6 @@ X_dev = quali_selector.transform(X_dev)
 # append the selector to the feature engineering pipeline
 pipe += [('QualiFeatureSelector', quali_selector)]
 ```
-
-
-
-### Storing, reusing the AutoCarver
-
-The `AutoCarver` can safely be stored and loaded as a .json file.
-
-```python
-import json
-
-# storing as json file
-with open('my_carver.json', 'w') as my_carver_json:
-    json.dump(auto_carver.to_json(), my_carver_json)
-```
-
-The stored .json, can then be used to initialize a new `base_discretizers.GroupedListDiscretizer`.
-
-```python
-from AtuoCarver.auto_carver import load_carver
-
-# loading json file
-with open('my_carver.json', 'r') as my_carver_json:
-    auto_carver = load_carver(json.load(my_carver_json))
-```
-
-
-
-
-
 
 
 
