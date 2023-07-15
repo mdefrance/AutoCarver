@@ -2,7 +2,6 @@
 for a binary classification model.
 """
 
-from json import loads
 from typing import Any
 
 from numpy import array, sqrt, searchsorted, add, unique, zeros
