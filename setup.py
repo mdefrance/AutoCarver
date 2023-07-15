@@ -18,6 +18,7 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/mdefrance/AutoCarver",
     project_urls={
+        "Documentation": "https://autocarver.readthedocs.io/en/latest/index.html",
         "Bug Tracker": "https://github.com/mdefrance/AutoCarver/issues"
     },
     license="MIT",

@@ -2,8 +2,9 @@ import os
 import sys
 
 # -- Path setup --------------------------------------------------------------
-sys.path.append('../AutoCarver')
-
+print(os.listdir('../../AutoCarver'))
+sys.path.append('../../AutoCarver')
+# sys.path.insert(0, os.path.abspath('../../AutoCarver'))
 
 # Configuration file for the Sphinx documentation builder.
 #

@@ -10,3 +10,6 @@ good-names = ["X", "y"]
 
 [tool.pylint.messages_control]
 disable = ["C0301", "C0103", "import-error"]
+
+[project_urls]
+Documentation = "https://autocarver.readthedocs.io/en/latest/index.html"
