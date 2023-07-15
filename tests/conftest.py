@@ -5,7 +5,7 @@ from pandas import DataFrame
 from pytest import fixture
 
 
-def init_test_df(seed: int, size: int = 10000) -> DataFrame:
+def init_df(seed: int, size: int = 10000) -> DataFrame:
     """Initializes a DataFrame used in tests
 
     Parameters
@@ -110,15 +110,85 @@ def init_test_df(seed: int, size: int = 10000) -> DataFrame:
 
 
 @fixture
-def x_train():
-    return init_test_df(123)
+def x_train() -> DataFrame:
+    """Simulates a Train sample
+
+    Returns
+    -------
+    DataFrame
+        Train sample
+    """
+    # initiating dev sample
+    return init_df(123)
 
 
 @fixture
-def x_test_1():
-    return init_test_df(1234)
+def x_dev_1() -> DataFrame:
+    """Simulates a Dev sample
+
+    Returns
+    -------
+    DataFrame
+        Dev sample
+    """
+    # initiating dev sample
+    return init_df(1234)
 
 
 @fixture
-def x_test_2():
-    return init_test_df(12345)
+def x_dev_2() -> DataFrame:
+    """Simulates a Dev sample
+
+    Returns
+    -------
+    DataFrame
+        Dev sample
+    """
+    # initiating dev sample
+    return init_df(12345)
+
+
+@fixture
+def x_dev_wrong_1(x_dev_1: DataFrame) -> DataFrame:
+    """Simulates a wrong Dev sample (unexpected modality)
+
+    Parameters
+    ----------
+    x_dev_1 : DataFrame
+        Simulated Dev sample
+
+    Returns
+    -------
+    DataFrame
+        Wrong Dev sample with unexpected modality
+    """
+    # initiating dev sample
+    x_dev = x_dev_1.copy()
+
+    # replacing a value for a unknown value 
+    x_dev["Qualitative"] = x_dev["Qualitative"].replace("Category C", "Category Y")
+
+    return x_dev
+
+
+@fixture
+def x_dev_wrong_2(x_dev_1: DataFrame) -> DataFrame:
+    """Simulates a wrong Dev sample (introduced nans)
+
+    Parameters
+    ----------
+    x_dev_1 : DataFrame
+        Simulated Dev sample
+
+    Returns
+    -------
+    DataFrame
+        Wrong Dev sample with nans
+    """
+    # initiating dev sample
+    x_dev = x_dev_1.copy()
+
+    # replacing a value for a unknown value 
+    x_dev["Qualitative"] = x_dev["Qualitative"].replace("Category C", nan)
+
+    return x_dev

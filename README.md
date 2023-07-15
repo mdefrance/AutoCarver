@@ -10,9 +10,8 @@ This is a work in progress.
 # AutoCarver
 
 **AutoCarver** is a powerful set of tools designed for binary classification problems. It offers a range of functionalities to enhance the feature engineering process and improve the performance of binary classification models. It provides:
- 1. **Discretizers**: Discretization of qualitative (ordinal or not) and quantitative features
- 2. **AutoCarver**: Bucketization of qualitative features that maximizes association with a binary target feature
- 3. **FeatureSelector**: Feature selection that maximizes association with binary target that offers control over inter-feature association.
+ 1. **AutoCarver**: Bucketization of qualitative, ordinal and quantitative features that maximizes association with a binary target
+ 2. **FeatureSelector**: Feature selection that maximizes association with binary target that offers control over inter-feature association.
 
 ## Install
 
@@ -25,11 +24,9 @@ pip install autocarver
 
 ## Quick-Start Examples
 
-### Setting up Samples, initiating Pipeline
+### Setting up Samples
 
 `AutoCarver` is able to test the robustness of buckets on a dev sample `X_dev`.
-
-One of the great advantages of the `AutoCarver` package is its seamless integration with scikit-learn pipelines, making it incredibly convenient for production-level implementations. By leveraging scikit-learn's pipeline functionality, `AutoCarver` can be effortlessly incorporated into the end-to-end machine learning workflow.
 
 ```python
 # defining training and testing sets
@@ -38,20 +35,9 @@ X_dev, y_dev = ...  # used to validate the AutoCarver's buckets and optimize the
 X_test, y_test = ...  # used to evaluate the final model's performances
 ```
 
+### Setting up features to Carve
 
-
-### Maximize target association of features' buckets with AutoCarver
-
-All features need to be discretized via a `Discretizer` so `AutoCarver` can group their modalities. Following parameters must be set for `Discretizer`:
-
-All specified features can now automatically be carved in an association maximising grouping of their modalities while reducing their number. Following parameters must be set for `AutoCarver`:
-- `values_orders`, dict of all features matched to the order of their modalities
-- `sort_by`, association measure used to find the optimal group modality combination.
-  - Use `sort_by='cramerv'` for more modalities, less robust.
-  - Use `sort_by='tschuprowt'` for more robust modalities.
-  - **Tip:** a combination of features carved with `sort_by='cramerv'` and `sort_by='tschuprowt'` can sometime prove to be better than only one of those.
-- `max_n_mod`, maximum number of modalities for the carved features (excluding `numpy.nan`). All possible combinations of less than `max_n_mod` groups of modalities will be tested. Should be set from 4 (faster) to 6 (preciser).
-- `keep_nans`, whether or not to try groupin missing values to non-missing values. Use `keep_nans=True` if you want `numpy.nan` to remain as a specific modality.
+**TODO: automatic conversion to str for qualitative features
 
 ```python
 from AutoCarver.auto_carver import AutoCarver
@@ -65,6 +51,21 @@ values_orders = {
     "Discrete_Qualitative_highnan" : ["1", "2", "3", "4", "5", "6", "7"],
 }
 target = "quali_ordinal_target"
+```
+
+### Maximize target association of features' buckets with AutoCarver
+
+All specified features can now automatically be carved in an association maximising grouping of their modalities while reducing their number. Following parameters must be set for `AutoCarver`:
+- `values_orders`, dict of all features matched to the order of their modalities
+- `sort_by`, association measure used to find the optimal group modality combination.
+  - Use `sort_by='cramerv'` for more modalities, less robust.
+  - Use `sort_by='tschuprowt'` for more robust modalities.
+  - **Tip:** a combination of features carved with `sort_by='cramerv'` and `sort_by='tschuprowt'` can sometime prove to be better than only one of those.
+- `max_n_mod`, maximum number of modalities for the carved features (excluding `numpy.nan`). All possible combinations of less than `max_n_mod` groups of modalities will be tested. Should be set from 4 (faster) to 6 (preciser).
+- `dropna`, whether or not to try grouping missing values to non-missing values. Use `keep_nans=True` if you want `numpy.nan` to remain as a specific modality.
+
+```python
+from AutoCarver.auto_carver import AutoCarver
 
 # intiating AutoCarver
 auto_carver = AutoCarver(
@@ -81,7 +82,7 @@ auto_carver = AutoCarver(
 )
 
 # fitting on training sample, a dev sample can be specified to evaluate carving robustness
-x_discretized = auto_carver.fit_transform(x_train, x_train[target], X_test=x_dev, y_test=x_dev[target])
+x_discretized = auto_carver.fit_transform(x_train, x_train[target], X_dev=x_dev, y_dev=x_dev[target])
 
 # transforming dev/test sample accordingly
 x_dev_discretized = auto_carver.transform(x_dev)
@@ -91,6 +92,33 @@ x_test_discretized = auto_carver.transform(x_test)
 <p align="left">
   <img width="500" src="/docs/auto_carver_fit.PNG" />
 </p>
+
+
+### Storing, reusing the AutoCarver
+
+The `AutoCarver` can safely be stored and loaded as a .json file.
+
+```python
+import json
+
+# storing as json file
+with open('my_carver.json', 'w') as my_carver_json:
+    json.dump(auto_carver.to_json(), my_carver_json)
+```
+
+The stored .json, can then be used to initialize a new `base_discretizers.GroupedListDiscretizer`.
+
+```python
+from AtuoCarver.auto_carver import load_carver
+
+# loading json file
+with open('my_carver.json', 'r') as my_carver_json:
+    auto_carver = load_carver(json.load(my_carver_json))
+```
+
+
+
+
 
 
 ### Cherry picking the most target-associated features with FeatureSelector
@@ -140,47 +168,6 @@ X_dev = quali_selector.transform(X_dev)
 # append the selector to the feature engineering pipeline
 pipe += [('QualiFeatureSelector', quali_selector)]
 ```
-
-
-
-### Storing, reusing the AutoCarver
-
-**TODO:** The `AutoCarver` can be stored as a .json file.
-
-```python
-import json
-
-# storing as json file
-with open('my_carver.json', 'wb') as my_carver_json:
-    json.dump({feature: values.contained for feature, values in auto_carver.values_orders.items()}, my_carver_json)
-```
-
-The stored .json, can then be used to initialize a new `base_discretizers.GroupedListDiscretizer`.
-
-```python
-from AutoCarver.discretizers.utils.base_discretizers import GroupedListDiscretizer
-
-# storing as json file
-with open('my_carver.json', 'rb') as my_carver_json:
-    values_orders = json.load(my_carver_json)
-
-# initiating AutoCarver
-auto_carver = GroupedListDiscretizer(
-    features=self.features,
-    values_orders=self.values_orders,
-    copy=self.copy,
-    input_dtypes=self.input_dtypes,
-    str_nan=self.str_nan,
-    verbose=self.verbose,
-    output_dtype=self.output_dtype,
-)
-
-```
-
-
-
-
-
 
 
 

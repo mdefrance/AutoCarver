@@ -137,14 +137,14 @@ def test_qualitative_discretizer(x_train: DataFrame):
     ), "NaNs should stay by themselves."
 
 
-def test_discretizer(x_train: DataFrame, x_test_1: DataFrame):
+def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame):
     """Tests Discretizer
 
     Parameters
     ----------
     x_train : DataFrame
         Simulated Train DataFrame
-    x_test_1 : DataFrame
+    x_dev_1 : DataFrame
         Simulated Test DataFrame
     """
 
@@ -208,7 +208,7 @@ def test_discretizer(x_train: DataFrame, x_test_1: DataFrame):
         copy=True,
     )
     x_discretized = discretizer.fit_transform(x_train, x_train["quali_ordinal_target"])
-    x_test_discretized = discretizer.transform(x_test_1)
+    x_dev_discretized = discretizer.transform(x_dev_1)
 
     assert all(
         x_discretized.Quantitative.value_counts(normalize=True) >= min_freq
@@ -301,7 +301,7 @@ def test_discretizer(x_train: DataFrame, x_test_1: DataFrame):
 
     # checking for inconsistancies in tranform
     for feature in discretizer.features:
-        test_unique = x_test_discretized[feature].unique()
+        test_unique = x_dev_discretized[feature].unique()
         train_unique = x_discretized[feature].unique()
         assert all(
             value in test_unique for value in train_unique

@@ -2,18 +2,12 @@
 for a binary classification model.
 """
 
-from json import loads
 from typing import Any
 
 from numpy import array, sqrt, searchsorted, add, unique, zeros
-from IPython.display import display_html  # TODO: remove this
-from matplotlib.axes import Axes
-from matplotlib.figure import Figure
-from matplotlib.pyplot import subplots
-from matplotlib.ticker import PercentFormatter
+from IPython.display import display_html
 from pandas import DataFrame, Series, crosstab
 from scipy.stats import chi2_contingency
-from seaborn import color_palette, despine
 from tqdm import tqdm
 
 from .discretizers.discretizers import Discretizer
@@ -26,7 +20,6 @@ from .discretizers.utils.grouped_list import GroupedList, is_equal
 from .discretizers.utils.serialization import json_deserialize_values_orders
 
 
-# TODO: display tables
 class AutoCarver(GroupedListDiscretizer):
     """Automatic carving of continuous, categorical and categorical ordinal
     features that maximizes association with a binary target.
@@ -69,7 +62,7 @@ class AutoCarver(GroupedListDiscretizer):
 
     # defining training and testing sets
     X_train, y_train = train_set, train_set[target]
-    X_test, y_test = test_set, test_set[target]
+    X_dev, y_dev = test_set, test_set[target]
 
     # specifying features to be carved
     selected_quanti = ['amount', 'distance', 'length', 'height']
@@ -87,7 +80,7 @@ class AutoCarver(GroupedListDiscretizer):
         values_orders=values_orders
     )
     X_train = discretizer.fit_transform(X_train, y_train)
-    X_test = discretizer.transform(X_test)
+    X_dev = discretizer.transform(X_dev)
 
     # storing Discretizer
     pipe = [('Discretizer', discretizer)]
@@ -101,10 +94,10 @@ class AutoCarver(GroupedListDiscretizer):
 
     # fitting on training sample
     # a test sample can be specified to evaluate carving robustness
-    X_train = auto_carver.fit_transform(X_train, y_train, X_test, y_test)
+    X_train = auto_carver.fit_transform(X_train, y_train, X_dev, y_dev)
 
     # applying transformation on test sample
-    X_test = auto_carver.transform(X_test)
+    X_dev = auto_carver.transform(X_dev)
 
     # identifying non stable/robust features
     print(auto_carver.non_viable_features)
@@ -135,6 +128,7 @@ class AutoCarver(GroupedListDiscretizer):
         dropna: bool = True,
         copy: bool = False,
         verbose: bool = True,
+        pretty_print: bool = False,
     ) -> None:
         """_summary_
 
@@ -166,6 +160,8 @@ class AutoCarver(GroupedListDiscretizer):
             _description_, by default False
         verbose : bool, optional
             _description_, by default True
+        pretty_print : bool, optional
+            _description_, by default True
         """
         # Lists of features
         self.features = list(set(quantitative_features + qualitative_features + ordinal_features))
@@ -191,7 +187,7 @@ class AutoCarver(GroupedListDiscretizer):
             str_default=str_default,
             dropna=dropna,
             copy=copy,
-            verbose=verbose,
+            verbose=bool(max(verbose, pretty_print)),
         )
 
         # class specific attributes
@@ -199,6 +195,7 @@ class AutoCarver(GroupedListDiscretizer):
         self.max_n_mod = max_n_mod  # maximum number of modality per feature
         self.min_carved_freq = min_carved_freq
         self.min_group_size = 1
+        self.pretty_print = pretty_print
         measures = ["tschuprowt", "cramerv"]  # association measure used to find the best groups
         assert (
             sort_by in measures
@@ -209,8 +206,8 @@ class AutoCarver(GroupedListDiscretizer):
         self,
         X: DataFrame,
         y: Series,
-        X_test: DataFrame = None,
-        y_test: Series = None,
+        X_dev: DataFrame = None,
+        y_dev: Series = None,
     ) -> tuple[DataFrame, DataFrame]:
         """Checks validity of provided data
 
@@ -220,21 +217,21 @@ class AutoCarver(GroupedListDiscretizer):
             _description_
         y : Series
             _description_
-        X_test : DataFrame, optional
+        X_dev : DataFrame, optional
             _description_, by default None
-        y_test : Series, optional
+        y_dev : Series, optional
             _description_, by default None
 
         Returns
         -------
         tuple[DataFrame, DataFrame]
-            Copies of (X, X_test)
+            Copies of (X, X_dev)
         """
         # Checking for binary target and copying X
         x_copy = super().prepare_data(X, y)
-        x_test_copy = super().prepare_data(X_test, y_test)
+        x_dev_copy = super().prepare_data(X_dev, y_dev)
 
-        return x_copy, x_test_copy
+        return x_copy, x_dev_copy
 
     def remove_feature(self, feature: str) -> None:
         """Removes a feature from all instances
@@ -253,8 +250,8 @@ class AutoCarver(GroupedListDiscretizer):
         self,
         X: DataFrame,
         y: Series,
-        X_test: DataFrame = None,
-        y_test: Series = None,
+        X_dev: DataFrame = None,
+        y_dev: Series = None,
     ) -> None:
         """_summary_
 
@@ -264,13 +261,13 @@ class AutoCarver(GroupedListDiscretizer):
             _description_
         y : Series
             _description_
-        X_test : DataFrame, optional
+        X_dev : DataFrame, optional
             _description_, by default None
-        y_test : Series, optional
+        y_dev : Series, optional
             _description_, by default None
         """
         # preparing datasets and checking for wrong values
-        x_copy, x_test_copy = self.prepare_data(X, y, X_test, y_test)
+        x_copy, x_dev_copy = self.prepare_data(X, y, X_dev, y_dev)
 
         # discretizing all features
         discretizer = Discretizer(
@@ -285,8 +282,8 @@ class AutoCarver(GroupedListDiscretizer):
             verbose=self.verbose,
         )
         x_copy = discretizer.fit_transform(x_copy, y)
-        if x_test_copy is not None:
-            x_test_copy = discretizer.transform(x_test_copy, y_test)
+        if x_dev_copy is not None:
+            x_dev_copy = discretizer.transform(x_dev_copy, y_dev)
         self.input_dtypes.update(discretizer.input_dtypes)  # saving data types
 
         # updating values_orders according to base bucketization
@@ -308,7 +305,7 @@ class AutoCarver(GroupedListDiscretizer):
 
         # computing crosstabs for each feature on train/test
         xtabs = get_xtabs(self.features, x_copy, y, labels_orders)
-        xtabs_test = get_xtabs(self.features, x_test_copy, y_test, labels_orders)
+        xtabs_dev = get_xtabs(self.features, x_dev_copy, y_dev, labels_orders)
 
         # optimal butcketization/carving of each feature
         all_features = self.features[:]  # necessary as features are being removed from self.features
@@ -318,21 +315,23 @@ class AutoCarver(GroupedListDiscretizer):
 
             # getting xtabs on train/test
             xtab = xtabs[feature]
-            xtab_test = xtabs_test[feature]
+            xtab_dev = xtabs_dev[feature]
             if self.verbose:  # verbose if requested
-                print(xtab)
+                print(f"\n - Raw, feature distribution")
+                print_xtabs(xtab, xtab_dev, pretty_print=self.pretty_print)
 
             # ordering
             order = labels_orders[feature]
 
             # getting best combination
-            best_combination = self.get_best_combination(order, xtab, xtab_test=xtab_test)
+            best_combination = self.get_best_combination(order, xtab, xtab_dev=xtab_dev)
 
             # checking that a suitable combination has been found
             if best_combination is not None:
-                order, xtab, xtab_test = best_combination
+                order, xtab, xtab_dev = best_combination
                 if self.verbose:  # verbose if requested
-                    print(xtab)  # TODO get the good labels
+                    print(f"\n - Carved crosstab")
+                    print_xtabs(xtab, xtab_dev, pretty_print=self.pretty_print)  # TODO get the good labels
 
                 # updating label_orders
                 labels_orders.update({feature: order})
@@ -372,7 +371,7 @@ class AutoCarver(GroupedListDiscretizer):
         order: GroupedList,
         xtab: DataFrame,
         *,
-        xtab_test: DataFrame = None,
+        xtab_dev: DataFrame = None,
     ) -> tuple[GroupedList, DataFrame, DataFrame]:
         # raw ordering
         raw_order = GroupedList(order)
@@ -381,7 +380,7 @@ class AutoCarver(GroupedListDiscretizer):
 
         # filtering out nans if requested from train/test crosstabs
         raw_xtab = filter_nan_xtab(xtab, self.str_nan)
-        raw_xtab_test = filter_nan_xtab(xtab_test, self.str_nan)
+        raw_xtab_dev = filter_nan_xtab(xtab_dev, self.str_nan)
 
         # checking for non-nan values
         best_association = None
@@ -396,7 +395,7 @@ class AutoCarver(GroupedListDiscretizer):
                 raw_xtab,
                 combinations,
                 sort_by=self.sort_by,
-                xtab_test=raw_xtab_test,
+                xtab_dev=raw_xtab_dev,
                 verbose=self.verbose,
             )
 
@@ -404,7 +403,7 @@ class AutoCarver(GroupedListDiscretizer):
             if best_association is not None:
                 order = order_apply_combination(order, best_association["combination"])
                 xtab = xtab_apply_order(xtab, order)
-                xtab_test = xtab_apply_order(xtab_test, order)
+                xtab_dev = xtab_apply_order(xtab_dev, order)
 
             # grouping NaNs if requested to drop them (dropna=True)
             if self.dropna and self.str_nan in order and best_association is not None:
@@ -414,12 +413,12 @@ class AutoCarver(GroupedListDiscretizer):
 
                 # all possible consecutive combinations
                 combinations = consecutive_combinations(
-                    raw_order, self.max_n_mod - 1, min_group_size=self.min_group_size
+                    raw_order, self.max_n_mod, min_group_size=self.min_group_size
                 )
 
                 # adding combinations with NaNs
                 nan_combinations = add_nan_in_combinations(
-                    combinations, self.str_nan, self.max_n_mod - 1
+                    combinations, self.str_nan, self.max_n_mod
                 )
 
                 # getting most associated combination
@@ -427,7 +426,7 @@ class AutoCarver(GroupedListDiscretizer):
                     xtab,
                     nan_combinations,
                     sort_by=self.sort_by,
-                    xtab_test=xtab_test,
+                    xtab_dev=xtab_dev,
                     verbose=self.verbose,
                 )
 
@@ -435,108 +434,18 @@ class AutoCarver(GroupedListDiscretizer):
                 if best_association is not None:
                     order = order_apply_combination(order, best_association["combination"])
                     xtab = xtab_apply_order(xtab, order)
-                    xtab_test = xtab_apply_order(xtab_test, order)
+                    xtab_dev = xtab_apply_order(xtab_dev, order)
 
         # checking that a suitable combination has been found
         if best_association is not None:
-            return order, xtab, xtab_test
-
-    def display_xtabs(
-        self,
-        feature: str,
-        caption: str,
-        xtab: DataFrame,
-        xtab_test: DataFrame = None,
-    ) -> None:
-        """Pretty display of frequency and target rate per modality on the same line."""
-
-        # known_order per feature
-        known_order = self.values_orders[feature]
-
-        # target rate and frequency on TRAIN
-        train_stats = stats_xtab(xtab, known_order)
-
-        # target rate and frequency on TEST
-        if xtab_test is not None:
-            test_stats = stats_xtab(xtab_test, train_stats.index, train_stats.labels)
-            test_stats = test_stats.set_index("labels")  # setting labels as indices
-
-        # setting TRAIN labels as indices
-        train_stats = train_stats.set_index("labels")
-
-        # Displaying TRAIN modality level stats
-        train_style = train_stats.style.background_gradient(cmap="coolwarm")  # color scaling
-        train_style = train_style.set_table_attributes(
-            "style='display:inline'"
-        )  # printing in notebook
-        train_style = train_style.set_caption(f"{caption} distribution on X:")  # title
-        html = train_style._repr_html_()
-
-        # adding TEST modality level stats
-        if xtab_test is not None:
-            test_style = test_stats.style.background_gradient(cmap="coolwarm")  # color scaling
-            test_style = test_style.set_table_attributes(
-                "style='display:inline'"
-            )  # printing in notebook
-            test_style = test_style.set_caption(f"{caption} distribution on X_test:")  # title
-            html += " " + test_style._repr_html_()
-
-        # displaying html of colored DataFrame
-        display_html(html, raw=True)
+            return order, xtab, xtab_dev
 
 
-def stats_xtab(
-    xtab: DataFrame,
-    known_order: list[Any] = None,
-    known_labels: list[Any] = None,
-) -> DataFrame:
-    """Computes column (target) rate per row (modality) and row frequency"""
+    
+def xtab_target_rate(xtab: DataFrame) -> DataFrame:
+    """Computes target rate per row for a binary target (column) in a crosstab"""
 
-    # target rate and frequency statistics per modality
-    stats = DataFrame(
-        {
-            # target rate per modality
-            "target_rate": xtab[1].divide(xtab.sum(axis=1)),
-            # frequency per modality
-            "frequency": xtab.sum(axis=1) / xtab.sum().sum(),
-        }
-    )
-
-    # sorting statistics
-    # case 0: default ordering based on observed target rate
-    if known_order is None:
-        order = list(stats.sort_values("target_rate", ascending=True).index)
-
-    # case 1: a known_order was provided
-    else:
-        order = known_order[:]
-
-    # modalities' labels
-    # case 0: default labels
-    if known_labels is None:
-        # accessing string representation of the GroupedList
-        if isinstance(known_order, GroupedList):
-            labels = known_order.get_repr()
-
-        # labels are the default order
-        else:
-            labels = order[:]
-
-    # case 1: known_labels were provided
-    else:
-        labels = known_labels[:]
-
-    # keeping values missing from the order at the end
-    unknown_modality = [mod for mod in xtab.index if mod not in order]
-    for mod in unknown_modality:
-        order = [c for c in order if not is_equal(c, mod)] + [mod]
-        labels = [c for c in labels if not is_equal(c, mod)] + [mod]
-
-    # sorting statistics
-    stats = stats.reindex(order, fill_value=0)
-    stats["labels"] = labels
-
-    return stats
+    return xtab[1].divide(xtab[0]).sort_values()
 
 
 def filter_nan_xtab(xtab: DataFrame, str_nan: str) -> DataFrame:
@@ -567,7 +476,7 @@ def get_xtabs(
             xtab = crosstab(X[feature], y)
 
             # reordering according to known_order
-            xtab = xtab.reindex(labels_orders[feature])  # TODO: fill nans for x_test?
+            xtab = xtab.reindex(labels_orders[feature])  # TODO: fill nans for x_dev?
 
             # storing results
             xtabs.update({feature: xtab})
@@ -690,7 +599,7 @@ def get_best_association(
     xtab: DataFrame,
     combinations: list[list[str]],
     sort_by: str,
-    xtab_test: DataFrame = None,
+    xtab_dev: DataFrame = None,
     verbose: bool = False,
 ) -> dict[str, Any]:
     """Computes associations of the xtab for each combination"""
@@ -731,7 +640,7 @@ def get_best_association(
     )
 
     # case 0: no test sample provided -> not testing for robustness
-    if xtab_test is None:
+    if xtab_dev is None:
         return associations_xtab[0]
 
     # case 1: testing viability on provided test sample
@@ -743,11 +652,11 @@ def get_best_association(
         )
 
         # grouping rows of the test crosstab
-        grouped_xtab_test = vectorized_groupby_sum(xtab_test, index_to_groupby)
+        grouped_xtab_dev = vectorized_groupby_sum(xtab_dev, index_to_groupby)
 
         # computing target rate ranks per value
         train_ranks = xtab_target_rate(xtab).index
-        test_ranks = xtab_target_rate(grouped_xtab_test).index
+        test_ranks = xtab_target_rate(grouped_xtab_dev).index
 
         # viable on test sample: grouped values have the same ranks in train/test
         if all(train_ranks == test_ranks):
@@ -818,42 +727,7 @@ def xtab_apply_order(xtab: DataFrame, order: GroupedList) -> DataFrame:
 
     return combi_xtab
 
-
-def plot_stats(stats: DataFrame) -> tuple[Figure, Axes]:
-    """Barplot of the volume and target rate"""
-
-    x = [0] + [elt for e in stats["frequency"].cumsum()[:-1] for elt in [e] * 2] + [1]
-    y2 = [elt for e in list(stats["target_rate"]) for elt in [e] * 2]
-    s = list(stats.index)
-    scaled_y2 = [(y - min(y2)) / (max(y2) - min(y2)) for y in y2]
-    c = color_palette("coolwarm", as_cmap=True)(scaled_y2)
-
-    fig, ax = subplots()
-
-    for i in range(len(stats)):
-        k = i * 2
-        ax.fill_between(x[k : k + 2], [0, 0], y2[k : k + 2], color=c[k])
-        ax.text(
-            sum(x[k : k + 2]) / 2,
-            y2[k],
-            s[i],
-            rotation=90,
-            ha="center",
-            va="bottom",
-        )
-
-    ax.xaxis.set_major_formatter(PercentFormatter(xmax=1))
-    ax.yaxis.set_major_formatter(PercentFormatter(xmax=1))
-    ax.set_xlabel("Volume")
-    ax.set_ylabel("Target rate")
-    ax.set_xlim(0, 1)
-    ax.set_ylim(0)
-    despine()
-
-    return fig, ax
-
-
-def load_carver(json_serialized_auto_carver: str) -> GroupedListDiscretizer:
+def load_carver(json_serialized_auto_carver: dict) -> GroupedListDiscretizer:
     """_summary_
 
     Parameters
@@ -866,17 +740,115 @@ def load_carver(json_serialized_auto_carver: str) -> GroupedListDiscretizer:
     GroupedListDiscretizer
         _description_
     """
-    # loading json of auto_carver
-    json_deserialized_auto_carver = loads(json_serialized_auto_carver)
-
     # deserializing values_orders
-    values_orders = json_deserialize_values_orders(json_deserialized_auto_carver["values_orders"])
+    values_orders = json_deserialize_values_orders(json_serialized_auto_carver["values_orders"])
 
     # updating auto_carver attributes
-    json_deserialized_auto_carver.update({"values_orders": values_orders})
+    json_serialized_auto_carver.update({"values_orders": values_orders})
 
     # initiating GroupedListDiscretizer
-    auto_carver = GroupedListDiscretizer(**json_deserialized_auto_carver)
+    auto_carver = GroupedListDiscretizer(**json_serialized_auto_carver)
     auto_carver.fit()
 
     return auto_carver
+
+
+def pretty_xtab(xtab: DataFrame = None) -> DataFrame:
+    """Prints a binary xtab's statistics
+
+    Parameters
+    ----------
+    xtab : Dataframe
+        A crosstab, by default None
+
+    Returns
+    -------
+    DataFrame
+        Target rate and frequency per modality
+    """
+    # checking for an xtab
+    stats = None
+    if xtab is not None:
+        # target rate and frequency statistics per modality
+        stats = DataFrame(
+            {
+                # target rate per modality
+                "target_rate": xtab[1].divide(xtab.sum(axis=1)),
+                # frequency per modality
+                "frequency": xtab.sum(axis=1) / xtab.sum().sum(),
+            }
+        )
+
+        # rounding up stats
+        stats = stats.round(3)
+
+    return stats
+
+def prettier_xtab(
+    nice_xtab: DataFrame = None,
+    caption: str = None,
+) -> str:
+    """Converts a crosstab to the HTML format, adding nice colors
+
+    Parameters
+    ----------
+    nice_xtab : DataFrame, optional
+        Target rate and frequency per modality, by default None
+    caption : str, optional
+        Title of the HTML table, by default None
+
+    Returns
+    -------
+    str
+        HTML format of the crosstab
+    """
+    """Pretty display of frequency and target rate per modality on the same line."""
+    # checking for a provided xtab
+    nicer_xtab = ''
+    if nice_xtab is not None:
+        # adding coolwarn color gradient
+        nicer_xtab = nice_xtab.style.background_gradient(cmap="coolwarm")
+
+        # printing inline notebook
+        nicer_xtab = nicer_xtab.set_table_attributes("style='display:inline'")
+
+        # adding custom caption/title
+        if caption is not None:
+            nicer_xtab = nicer_xtab.set_caption(caption)
+
+        # converting to html
+        nicer_xtab = nicer_xtab._repr_html_()
+
+    return nicer_xtab
+
+def print_xtabs(xtab: DataFrame, xtab_dev: DataFrame = None, pretty_print: bool = False) -> None:
+    """Prints crosstabs' target rates and frequencies per modality, in raw or html format
+
+    Parameters
+    ----------
+    xtab : DataFrame
+        Train crosstab
+    xtab_dev : DataFrame
+        Dev crosstab, by default None
+    pretty_print : bool, optional
+        Whether to output html or not, by default False
+    """
+    # getting pretty xtabs
+    nice_xtab = pretty_xtab(xtab)
+    nice_xtab_dev = pretty_xtab(xtab_dev)
+
+    # case 0: no pretty hmtl printing
+    if not pretty_print:
+        print(nice_xtab, '\n')
+    
+    # case 1: pretty html printing
+    else:
+        # getting prettier xtabs
+        nicer_xtab = prettier_xtab(nice_xtab, caption='X distribution')
+        nicer_xtab_dev = prettier_xtab(nice_xtab_dev, caption='X_dev distribution')
+
+        # merging outputs
+        nicer_xtabs = nicer_xtab + '    ' + nicer_xtab_dev
+        
+        # displaying html of colored DataFrame
+        display_html(nicer_xtabs, raw=True)

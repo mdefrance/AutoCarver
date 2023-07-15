@@ -1,7 +1,11 @@
-"""Set of tests for auto_carver module."""
+"""Set of tests for auto_carver module.
 
+# TODO: test avec chained_discretizer
+"""
+
+from json import dumps, loads
 from pandas import DataFrame
-from pytest import fixture
+from pytest import fixture, raises
 
 from AutoCarver.auto_carver import AutoCarver, load_carver
 
@@ -20,9 +24,12 @@ def dropna(request) -> bool:
 def sort_by(request) -> str:
     return request.param
 
+@fixture(scope="module", params=[True, False])
+def copy(request) -> bool:
+    return request.param
 
 def test_auto_carver(
-    x_train: DataFrame, x_test_1: DataFrame, output_dtype: str, dropna: bool, sort_by: str
+    x_train: DataFrame, x_dev_1: DataFrame, x_dev_wrong_1: DataFrame, x_dev_wrong_2: DataFrame, output_dtype: str, dropna: bool, sort_by: str, copy: bool
 ) -> None:
     """Tests AutoCarver
 
@@ -30,10 +37,21 @@ def test_auto_carver(
     ----------
     x_train : DataFrame
         Simulated Train DataFrame
-    x_test_1 : DataFrame
-        Simulated Test DataFrame
+    x_dev_1 : DataFrame
+        Simulated Dev DataFrame
+    x_dev_wrong_1 : DataFrame
+        Simulated wrong Dev DataFrame with unexpected modality
+    x_dev_wrong_2 : DataFrame
+        Simulated wrong Dev DataFrame with unexpected nans
+    output_dtype : str
+        Output type 'str' or 'float'
+    dropna : bool
+        Whether or note to drop nans
+    sort_by : str
+        Sorting measure 'tschuprowt' or 'cramerv'
+    copy : bool
+        Whether or not to copy the input dataset
     """
-
     quantitative_features = [
         "Quantitative",
         "Discrete_Quantitative_highnan",
@@ -90,6 +108,9 @@ def test_auto_carver(
     min_freq = 0.06
     max_n_mod = 4
 
+    # copying x_train for comparison purposes
+    raw_x_train = x_train.copy()
+
     # tests with 'tschuprowt' measure
     auto_carver = AutoCarver(
         quantitative_features=quantitative_features,
@@ -101,32 +122,32 @@ def test_auto_carver(
         sort_by=sort_by,
         output_dtype=output_dtype,
         dropna=dropna,
-        copy=True,
+        copy=copy,
         verbose=False,
     )
     x_discretized = auto_carver.fit_transform(
         x_train,
         x_train["quali_ordinal_target"],
-        X_test=x_test_1,
-        y_test=x_test_1["quali_ordinal_target"],
+        X_dev=x_dev_1,
+        y_dev=x_dev_1["quali_ordinal_target"],
     )
-    x_test_discretized = auto_carver.transform(x_test_1)
+    x_dev_discretized = auto_carver.transform(x_dev_1)
 
     assert all(
         x_discretized[auto_carver.features].nunique() <= max_n_mod
     ), "Too many values after carving of train sample"
     assert all(
-        x_test_discretized[auto_carver.features].nunique() <= max_n_mod
+        x_dev_discretized[auto_carver.features].nunique() <= max_n_mod
     ), "Too many values after carving of test sample"
     assert all(
         x_discretized[auto_carver.features].nunique()
-        == x_test_discretized[auto_carver.features].nunique()
+        == x_dev_discretized[auto_carver.features].nunique()
     ), "More values in train or test samples"
 
     # test that all values still are in the values_orders
     for feature in auto_carver.qualitative_features:
         fitted_values = auto_carver.values_orders[feature].values()
-        init_values = x_train[feature].fillna("__NAN__").unique()
+        init_values = raw_x_train[feature].fillna("__NAN__").unique()
         assert all(
             value in fitted_values for value in init_values
         ), f"Missing value in output! Some values are been dropped for qualitative feature: {feature}"
@@ -134,7 +155,7 @@ def test_auto_carver(
     # testing output of nans
     if not dropna:
         assert all(
-            x_train[auto_carver.features].isna().mean()
+            raw_x_train[auto_carver.features].isna().mean()
             == x_discretized[auto_carver.features].isna().mean()
         ), "Some Nans are being dropped (grouped) or more nans than expected"
     else:
@@ -142,17 +163,22 @@ def test_auto_carver(
             x_discretized[auto_carver.features].isna().mean() == 0
         ), "Some Nans are not dropped (grouped)"
 
+    # testing copy functionnality
+    if copy:
+        assert all(x_discretized[auto_carver.features].fillna('__NAN__') == x_train[auto_carver.features].fillna('__NAN__')), "Not copied correctly"
+
     # testing json serialization
-    json_serialized_auto_carver = auto_carver.to_json()
-    loaded_carver = load_carver(json_serialized_auto_carver)
+    json_serialized_auto_carver = dumps(auto_carver.to_json())
+    loaded_carver = load_carver(loads(json_serialized_auto_carver))
 
     assert all(
         loaded_carver.summary() == auto_carver.summary()
     ), "Non-identical AutoCarver when loading JSON"
 
-
-# def test_auto_carver_copy(x_train: DataFrame, x_test_1: DataFrame, output_dtype: str, dropna: bool, sort_by: str) -> None:
-
-# TODO test missing values in test
-# TODO try with copy = False
-# TODO: test avec chained_discretizer
+    # testing to transform dev set with unexpected modality
+    with raises(AssertionError):
+        auto_carver.transform(x_dev_wrong_1)
+        
+    # testing to transform dev set with unexpected nans
+    with raises(AssertionError):
+        auto_carver.transform(x_dev_wrong_2)
