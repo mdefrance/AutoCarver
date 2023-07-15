@@ -149,8 +149,8 @@ def x_dev_2() -> DataFrame:
 
 
 @fixture
-def x_dev_wrong(x_dev_1: DataFrame) -> DataFrame:
-    """Simulates a wrong Dev sample
+def x_dev_wrong_1(x_dev_1: DataFrame) -> DataFrame:
+    """Simulates a wrong Dev sample (unexpected modality)
 
     Parameters
     ----------
@@ -160,12 +160,35 @@ def x_dev_wrong(x_dev_1: DataFrame) -> DataFrame:
     Returns
     -------
     DataFrame
-        Wrong Dev sample
+        Wrong Dev sample with unexpected modality
     """
     # initiating dev sample
     x_dev = x_dev_1.copy()
 
     # replacing a value for a unknown value 
     x_dev["Qualitative"] = x_dev["Qualitative"].replace("Category C", "Category Y")
+
+    return x_dev
+
+
+@fixture
+def x_dev_wrong_2(x_dev_1: DataFrame) -> DataFrame:
+    """Simulates a wrong Dev sample (introduced nans)
+
+    Parameters
+    ----------
+    x_dev_1 : DataFrame
+        Simulated Dev sample
+
+    Returns
+    -------
+    DataFrame
+        Wrong Dev sample with nans
+    """
+    # initiating dev sample
+    x_dev = x_dev_1.copy()
+
+    # replacing a value for a unknown value 
+    x_dev["Qualitative"] = x_dev["Qualitative"].replace("Category C", nan)
 
     return x_dev

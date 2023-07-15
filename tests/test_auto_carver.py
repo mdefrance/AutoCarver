@@ -29,7 +29,7 @@ def copy(request) -> bool:
     return request.param
 
 def test_auto_carver(
-    x_train: DataFrame, x_dev_1: DataFrame, x_dev_wrong: DataFrame, output_dtype: str, dropna: bool, sort_by: str, copy: bool
+    x_train: DataFrame, x_dev_1: DataFrame, x_dev_wrong_1: DataFrame, x_dev_wrong_2: DataFrame, output_dtype: str, dropna: bool, sort_by: str, copy: bool
 ) -> None:
     """Tests AutoCarver
 
@@ -39,8 +39,10 @@ def test_auto_carver(
         Simulated Train DataFrame
     x_dev_1 : DataFrame
         Simulated Dev DataFrame
-    x_dev_1 : DataFrame
-        Simulated wrong Dev DataFrame
+    x_dev_wrong_1 : DataFrame
+        Simulated wrong Dev DataFrame with unexpected modality
+    x_dev_wrong_2 : DataFrame
+        Simulated wrong Dev DataFrame with unexpected nans
     output_dtype : str
         Output type 'str' or 'float'
     dropna : bool
@@ -173,5 +175,10 @@ def test_auto_carver(
         loaded_carver.summary() == auto_carver.summary()
     ), "Non-identical AutoCarver when loading JSON"
 
+    # testing to transform dev set with unexpected modality
     with raises(AssertionError):
-        x_wrong = auto_carver.transform(x_dev_wrong)
+        auto_carver.transform(x_dev_wrong_1)
+        
+    # testing to transform dev set with unexpected nans
+    with raises(AssertionError):
+        auto_carver.transform(x_dev_wrong_2)

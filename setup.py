@@ -10,7 +10,7 @@ with open(path.join(here, "README.md"), encoding="utf-8") as fh:
 
 setup(
     name="AutoCarver",
-    version="5.0.6",
+    version="5.0.7",
     author="Mario DEFRANCE",
     author_email="defrancemario@gmail.com",
     description="Automatic Bucketizing of Features with Optimal Association",
@@ -28,8 +28,7 @@ setup(
         'scikit-learn',
         'statsmodels',
         'tqdm',
-        'matplotlib',
-        'seaborn',
+        'ipython',
     ],
     packages=find_packages(),
     classifiers=[

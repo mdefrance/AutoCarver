@@ -5,14 +5,9 @@ for a binary classification model.
 from typing import Any
 
 from numpy import array, sqrt, searchsorted, add, unique, zeros
-from IPython.display import display_html  # TODO: remove this
-from matplotlib.axes import Axes
-from matplotlib.figure import Figure
-from matplotlib.pyplot import subplots
-from matplotlib.ticker import PercentFormatter
+from IPython.display import display_html
 from pandas import DataFrame, Series, crosstab
 from scipy.stats import chi2_contingency
-from seaborn import color_palette, despine
 from tqdm import tqdm
 
 from .discretizers.discretizers import Discretizer
@@ -25,7 +20,6 @@ from .discretizers.utils.grouped_list import GroupedList, is_equal
 from .discretizers.utils.serialization import json_deserialize_values_orders
 
 
-# TODO: display tables
 class AutoCarver(GroupedListDiscretizer):
     """Automatic carving of continuous, categorical and categorical ordinal
     features that maximizes association with a binary target.
@@ -134,6 +128,7 @@ class AutoCarver(GroupedListDiscretizer):
         dropna: bool = True,
         copy: bool = False,
         verbose: bool = True,
+        pretty_print: bool = False,
     ) -> None:
         """_summary_
 
@@ -165,6 +160,8 @@ class AutoCarver(GroupedListDiscretizer):
             _description_, by default False
         verbose : bool, optional
             _description_, by default True
+        pretty_print : bool, optional
+            _description_, by default True
         """
         # Lists of features
         self.features = list(set(quantitative_features + qualitative_features + ordinal_features))
@@ -190,7 +187,7 @@ class AutoCarver(GroupedListDiscretizer):
             str_default=str_default,
             dropna=dropna,
             copy=copy,
-            verbose=verbose,
+            verbose=bool(max(verbose, pretty_print)),
         )
 
         # class specific attributes
@@ -198,6 +195,7 @@ class AutoCarver(GroupedListDiscretizer):
         self.max_n_mod = max_n_mod  # maximum number of modality per feature
         self.min_carved_freq = min_carved_freq
         self.min_group_size = 1
+        self.pretty_print = pretty_print
         measures = ["tschuprowt", "cramerv"]  # association measure used to find the best groups
         assert (
             sort_by in measures
@@ -319,7 +317,8 @@ class AutoCarver(GroupedListDiscretizer):
             xtab = xtabs[feature]
             xtab_dev = xtabs_dev[feature]
             if self.verbose:  # verbose if requested
-                print(xtab)
+                print(f"\n - Raw, feature distribution")
+                print_xtabs(xtab, xtab_dev, pretty_print=self.pretty_print)
 
             # ordering
             order = labels_orders[feature]
@@ -331,7 +330,8 @@ class AutoCarver(GroupedListDiscretizer):
             if best_combination is not None:
                 order, xtab, xtab_dev = best_combination
                 if self.verbose:  # verbose if requested
-                    print(xtab)  # TODO get the good labels
+                    print(f"\n - Carved crosstab")
+                    print_xtabs(xtab, xtab_dev, pretty_print=self.pretty_print)  # TODO get the good labels
 
                 # updating label_orders
                 labels_orders.update({feature: order})
@@ -413,12 +413,12 @@ class AutoCarver(GroupedListDiscretizer):
 
                 # all possible consecutive combinations
                 combinations = consecutive_combinations(
-                    raw_order, self.max_n_mod - 1, min_group_size=self.min_group_size
+                    raw_order, self.max_n_mod, min_group_size=self.min_group_size
                 )
 
                 # adding combinations with NaNs
                 nan_combinations = add_nan_in_combinations(
-                    combinations, self.str_nan, self.max_n_mod - 1
+                    combinations, self.str_nan, self.max_n_mod
                 )
 
                 # getting most associated combination
@@ -440,102 +440,12 @@ class AutoCarver(GroupedListDiscretizer):
         if best_association is not None:
             return order, xtab, xtab_dev
 
-    def display_xtabs(
-        self,
-        feature: str,
-        caption: str,
-        xtab: DataFrame,
-        xtab_dev: DataFrame = None,
-    ) -> None:
-        """Pretty display of frequency and target rate per modality on the same line."""
 
-        # known_order per feature
-        known_order = self.values_orders[feature]
+    
+def xtab_target_rate(xtab: DataFrame) -> DataFrame:
+    """Computes target rate per row for a binary target (column) in a crosstab"""
 
-        # target rate and frequency on TRAIN
-        train_stats = stats_xtab(xtab, known_order)
-
-        # target rate and frequency on TEST
-        if xtab_dev is not None:
-            test_stats = stats_xtab(xtab_dev, train_stats.index, train_stats.labels)
-            test_stats = test_stats.set_index("labels")  # setting labels as indices
-
-        # setting TRAIN labels as indices
-        train_stats = train_stats.set_index("labels")
-
-        # Displaying TRAIN modality level stats
-        train_style = train_stats.style.background_gradient(cmap="coolwarm")  # color scaling
-        train_style = train_style.set_table_attributes(
-            "style='display:inline'"
-        )  # printing in notebook
-        train_style = train_style.set_caption(f"{caption} distribution on X:")  # title
-        html = train_style._repr_html_()
-
-        # adding TEST modality level stats
-        if xtab_dev is not None:
-            test_style = test_stats.style.background_gradient(cmap="coolwarm")  # color scaling
-            test_style = test_style.set_table_attributes(
-                "style='display:inline'"
-            )  # printing in notebook
-            test_style = test_style.set_caption(f"{caption} distribution on X_dev:")  # title
-            html += " " + test_style._repr_html_()
-
-        # displaying html of colored DataFrame
-        display_html(html, raw=True)
-
-
-def stats_xtab(
-    xtab: DataFrame,
-    known_order: list[Any] = None,
-    known_labels: list[Any] = None,
-) -> DataFrame:
-    """Computes column (target) rate per row (modality) and row frequency"""
-
-    # target rate and frequency statistics per modality
-    stats = DataFrame(
-        {
-            # target rate per modality
-            "target_rate": xtab[1].divide(xtab.sum(axis=1)),
-            # frequency per modality
-            "frequency": xtab.sum(axis=1) / xtab.sum().sum(),
-        }
-    )
-
-    # sorting statistics
-    # case 0: default ordering based on observed target rate
-    if known_order is None:
-        order = list(stats.sort_values("target_rate", ascending=True).index)
-
-    # case 1: a known_order was provided
-    else:
-        order = known_order[:]
-
-    # modalities' labels
-    # case 0: default labels
-    if known_labels is None:
-        # accessing string representation of the GroupedList
-        if isinstance(known_order, GroupedList):
-            labels = known_order.get_repr()
-
-        # labels are the default order
-        else:
-            labels = order[:]
-
-    # case 1: known_labels were provided
-    else:
-        labels = known_labels[:]
-
-    # keeping values missing from the order at the end
-    unknown_modality = [mod for mod in xtab.index if mod not in order]
-    for mod in unknown_modality:
-        order = [c for c in order if not is_equal(c, mod)] + [mod]
-        labels = [c for c in labels if not is_equal(c, mod)] + [mod]
-
-    # sorting statistics
-    stats = stats.reindex(order, fill_value=0)
-    stats["labels"] = labels
-
-    return stats
+    return xtab[1].divide(xtab[0]).sort_values()
 
 
 def filter_nan_xtab(xtab: DataFrame, str_nan: str) -> DataFrame:
@@ -817,41 +727,6 @@ def xtab_apply_order(xtab: DataFrame, order: GroupedList) -> DataFrame:
 
     return combi_xtab
 
-
-def plot_stats(stats: DataFrame) -> tuple[Figure, Axes]:
-    """Barplot of the volume and target rate"""
-
-    x = [0] + [elt for e in stats["frequency"].cumsum()[:-1] for elt in [e] * 2] + [1]
-    y2 = [elt for e in list(stats["target_rate"]) for elt in [e] * 2]
-    s = list(stats.index)
-    scaled_y2 = [(y - min(y2)) / (max(y2) - min(y2)) for y in y2]
-    c = color_palette("coolwarm", as_cmap=True)(scaled_y2)
-
-    fig, ax = subplots()
-
-    for i in range(len(stats)):
-        k = i * 2
-        ax.fill_between(x[k : k + 2], [0, 0], y2[k : k + 2], color=c[k])
-        ax.text(
-            sum(x[k : k + 2]) / 2,
-            y2[k],
-            s[i],
-            rotation=90,
-            ha="center",
-            va="bottom",
-        )
-
-    ax.xaxis.set_major_formatter(PercentFormatter(xmax=1))
-    ax.yaxis.set_major_formatter(PercentFormatter(xmax=1))
-    ax.set_xlabel("Volume")
-    ax.set_ylabel("Target rate")
-    ax.set_xlim(0, 1)
-    ax.set_ylim(0)
-    despine()
-
-    return fig, ax
-
-
 def load_carver(json_serialized_auto_carver: dict) -> GroupedListDiscretizer:
     """_summary_
 
@@ -876,3 +751,104 @@ def load_carver(json_serialized_auto_carver: dict) -> GroupedListDiscretizer:
     auto_carver.fit()
 
     return auto_carver
+
+
+def pretty_xtab(xtab: DataFrame = None) -> DataFrame:
+    """Prints a binary xtab's statistics
+
+    Parameters
+    ----------
+    xtab : Dataframe
+        A crosstab, by default None
+
+    Returns
+    -------
+    DataFrame
+        Target rate and frequency per modality
+    """
+    # checking for an xtab
+    stats = None
+    if xtab is not None:
+        # target rate and frequency statistics per modality
+        stats = DataFrame(
+            {
+                # target rate per modality
+                "target_rate": xtab[1].divide(xtab.sum(axis=1)),
+                # frequency per modality
+                "frequency": xtab.sum(axis=1) / xtab.sum().sum(),
+            }
+        )
+
+        # rounding up stats
+        stats = stats.round(3)
+
+    return stats
+
+def prettier_xtab(
+    nice_xtab: DataFrame = None,
+    caption: str = None,
+) -> str:
+    """Converts a crosstab to the HTML format, adding nice colors
+
+    Parameters
+    ----------
+    nice_xtab : DataFrame, optional
+        Target rate and frequency per modality, by default None
+    caption : str, optional
+        Title of the HTML table, by default None
+
+    Returns
+    -------
+    str
+        HTML format of the crosstab
+    """
+    """Pretty display of frequency and target rate per modality on the same line."""
+    # checking for a provided xtab
+    nicer_xtab = ''
+    if nice_xtab is not None:
+        # adding coolwarn color gradient
+        nicer_xtab = nice_xtab.style.background_gradient(cmap="coolwarm")
+
+        # printing inline notebook
+        nicer_xtab = nicer_xtab.set_table_attributes("style='display:inline'")
+
+        # adding custom caption/title
+        if caption is not None:
+            nicer_xtab = nicer_xtab.set_caption(caption)
+
+        # converting to html
+        nicer_xtab = nicer_xtab._repr_html_()
+
+    return nicer_xtab
+
+def print_xtabs(xtab: DataFrame, xtab_dev: DataFrame = None, pretty_print: bool = False) -> None:
+    """Prints crosstabs' target rates and frequencies per modality, in raw or html format
+
+    Parameters
+    ----------
+    xtab : DataFrame
+        Train crosstab
+    xtab_dev : DataFrame
+        Dev crosstab, by default None
+    pretty_print : bool, optional
+        Whether to output html or not, by default False
+    """
+    # getting pretty xtabs
+    nice_xtab = pretty_xtab(xtab)
+    nice_xtab_dev = pretty_xtab(xtab_dev)
+
+    # case 0: no pretty hmtl printing
+    if not pretty_print:
+        print(nice_xtab, '\n')
+    
+    # case 1: pretty html printing
+    else:
+        # getting prettier xtabs
+        nicer_xtab = prettier_xtab(nice_xtab, caption='X distribution')
+        nicer_xtab_dev = prettier_xtab(nice_xtab_dev, caption='X_dev distribution')
+
+        # merging outputs
+        nicer_xtabs = nicer_xtab + '    ' + nicer_xtab_dev
+        
+        # displaying html of colored DataFrame
+        display_html(nicer_xtabs, raw=True)
