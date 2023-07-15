@@ -52,10 +52,10 @@
 <li class="toctree-l3"><a class="reference internal" href="#applying-autocarver">Applying AutoCarver</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#saving-autocarver">Saving AutoCarver</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#loading-autocarver">Loading AutoCarver</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#feature-selection">Feature Selection</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#further-readings-and-in-depth-examples">Further readings and in-depth examples</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#feature-selection">Feature Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#in-depth-examples">In-depth examples</a></li>
 </ul>
 </li>
 </ul>
@@ -175,14 +175,68 @@
 </pre></div>
 </div>
 </section>
+</section>
 <section id="feature-selection">
-<h3>Feature Selection<a class="headerlink" href="#feature-selection" title="Permalink to this heading"></a></h3>
-<p>TODO</p>
+<h2>Feature Selection<a class="headerlink" href="#feature-selection" title="Permalink to this heading"></a></h2>
+<p>Following parameters must be set for <cite>FeatureSelector</cite>:</p>
+<ul>
+<li><p><cite>features</cite>, list of candidate features by column name</p></li>
+<li><p><cite>n_best</cite>, number of features to select</p></li>
+<li><p><cite>sample_size=1</cite>, size of sampled list of features speeds up computation. By default, all features are used. For sample_size=0.5, FeatureSelector will search for the best features in features[:len(features)//2] and then in features[len(features)//2:]. Should be set between ]0, 1].</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><strong>Tip:</strong> for a DataFrame of 100 000 rows, <cite>sample_size</cite> could be set such as <cite>len(features)*sample_size</cite> equals 100-200.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><cite>measures</cite>, list of <cite>FeatureSelector</cite>’s association measures to be evaluated. Ranks features based on last measure of the list.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><em>For qualitative data</em> implemented association measures are <cite>chi2_measure</cite>, <cite>cramerv_measure</cite>, <cite>tschuprowt_measure</cite></p></li>
+<li><p><em>For quantitative data</em> implemented association measures are <cite>kruskal_measure</cite>, <cite>R_measure</cite> and implemented outlier metrics are <cite>zscore_measure</cite>, <cite>iqr_measure</cite></p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><cite>filters</cite>, list of <cite>FeatureSelector</cite>’s filters used to put aside features.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><em>For qualitative data</em> implemented correlation-based filters are <cite>cramerv_filter</cite>, <cite>tschuprowt_filter</cite></p></li>
+<li><p><em>For quantitative data</em> implemented linear filters are <cite>spearman_filter</cite>, <cite>pearson_filter</cite> and <cite>vif_filter</cite> for multicolinearity filtering</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<p><strong>TODO: add by default measures and filters + add ranking according to several measures  + say that it filters out non-selected columns</strong></p>
+<p><strong>TODO; add pictures say that it does not make sense to use zscore_measure as last measure</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">AutoCarver.feature_selector</span> <span class="kn">import</span> <span class="n">FeatureSelector</span>
+<span class="kn">from</span> <span class="nn">AutoCarver.feature_selector</span> <span class="kn">import</span> <span class="n">tschuprowt_measure</span><span class="p">,</span> <span class="n">cramerv_measure</span><span class="p">,</span> <span class="n">cramerv_filter</span><span class="p">,</span> <span class="n">tschuprowt_filter</span><span class="p">,</span> <span class="n">measure_filter</span>
+
+<span class="n">features</span> <span class="o">=</span> <span class="n">auto_carver</span><span class="o">.</span><span class="n">features</span>  <span class="c1"># after AutoCarver, everything is qualitative</span>
+<span class="n">values_orders</span> <span class="o">=</span> <span class="n">auto_carver</span><span class="o">.</span><span class="n">values_orders</span>
+
+<span class="n">measures</span> <span class="o">=</span> <span class="p">[</span><span class="n">cramerv_measure</span><span class="p">,</span> <span class="n">tschuprowt_measure</span><span class="p">]</span>  <span class="c1"># measures of interest (the last one is used for ranking)</span>
+<span class="n">filters</span> <span class="o">=</span> <span class="p">[</span><span class="n">tschuprowt_filter</span><span class="p">,</span> <span class="n">measure_filter</span><span class="p">]</span>  <span class="c1"># filtering out by inter-feature correlation</span>
+
+<span class="c1"># select the best 25 most target associated qualitative features</span>
+<span class="n">quali_selector</span> <span class="o">=</span> <span class="n">FeatureSelector</span><span class="p">(</span>
+    <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span>  <span class="c1"># features to select from</span>
+    <span class="n">n_best</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span>  <span class="c1"># best 25 features</span>
+    <span class="n">values_orders</span><span class="o">=</span><span class="n">values_orders</span><span class="p">,</span>
+    <span class="n">measures</span><span class="o">=</span><span class="n">measures</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="n">filters</span><span class="p">,</span>   <span class="c1"># selected measures and filters</span>
+    <span class="n">thresh_mode</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>  <span class="c1"># filters out features with more than 90% of their mode</span>
+    <span class="n">thresh_nan</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>  <span class="c1"># filters out features with more than 90% of missing values</span>
+    <span class="n">thresh_corr</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>  <span class="c1"># filters out features with spearman greater than 0.5 with a better feature</span>
+    <span class="n">name_measure</span><span class="o">=</span><span class="s1">&#39;cramerv_measure&#39;</span><span class="p">,</span> <span class="n">thresh_measure</span><span class="o">=</span><span class="mf">0.06</span><span class="p">,</span>  <span class="c1"># filters out features with cramerv_measure lower than 0.06</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>  <span class="c1"># displays statistics</span>
+<span class="p">)</span>
+<span class="n">X_train</span> <span class="o">=</span> <span class="n">quali_selector</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+<span class="n">X_dev</span> <span class="o">=</span> <span class="n">quali_selector</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X_dev</span><span class="p">)</span>
+</pre></div>
+</div>
 </section>
-<section id="further-readings-and-in-depth-examples">
-<h3>Further readings and in-depth examples<a class="headerlink" href="#further-readings-and-in-depth-examples" title="Permalink to this heading"></a></h3>
+<section id="in-depth-examples">
+<h2>In-depth examples<a class="headerlink" href="#in-depth-examples" title="Permalink to this heading"></a></h2>
 <p>TODO: Add links to other documentations</p>
-</section>
 </section>
 </section>
 
