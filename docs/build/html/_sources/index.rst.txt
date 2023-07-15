@@ -10,6 +10,7 @@ Welcome to AutoCarver's documentation!
    :maxdepth: 1
    :caption: Contents:
 
+   about
    installation
    quick_start
    auto_carver

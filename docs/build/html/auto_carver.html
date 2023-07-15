@@ -17,6 +17,7 @@
         <script src="_static/doctools.js"></script>
         <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Discretizers" href="discretizers.html" />
@@ -44,6 +45,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">AutoCarver</a><ul>
@@ -87,89 +89,59 @@
 <h1>AutoCarver<a class="headerlink" href="#autocarver" title="Permalink to this heading"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="AutoCarver.AutoCarver">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.</span></span><span class="sig-name descname"><span class="pre">AutoCarver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">quantitative_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualitative_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ordinal_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values_orders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="discretizers.html#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.utils.grouped_list.GroupedList"><span class="pre">AutoCarver.discretizers.utils.grouped_list.GroupedList</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_n_mod</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_carved_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_by</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'tschuprowt'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">str_nan</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'__NAN__'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">str_default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'__OTHER__'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dtype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropna</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretty_print</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.AutoCarver" title="Permalink to this definition"></a></dt>
-<dd><p>Automatic carving of continuous, categorical and categorical ordinal
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.</span></span><span class="sig-name descname"><span class="pre">AutoCarver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">quantitative_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualitative_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ordinal_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values_orders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="discretizers.html#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.utils.grouped_list.GroupedList"><span class="pre">AutoCarver.discretizers.utils.grouped_list.GroupedList</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_n_mod</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_by</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'tschuprowt'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dtype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropna</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">str_nan</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'__NAN__'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">str_default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'__OTHER__'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretty_print</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.AutoCarver" title="Permalink to this definition"></a></dt>
+<dd><p>Automatic carving of continuous, discrete, categorical and ordinal
 features that maximizes association with a binary target.</p>
-<p>Modalities/values of features are carved/regrouped according to a computed
-specific order defined based on their types:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>[Qualitative features] grouped based on modality target rate.</p></li>
-<li><p>[Qualitative ordinal features] grouped based on specified modality order</p></li>
-<li><p>[Quantitative features] grouped based on the order of their values.</p></li>
-</ul>
-</div></blockquote>
-<p>Uses Tschurpow’s T to find the optimal carving (regrouping) of modalities/
-values of features.</p>
+<p>Initiates an AutoCarver.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>values_orders</strong> (<em>dict</em><em>, </em><em>default {}</em>) – Dictionnary of features and list of their respective values’ order.
-Exemple: for an <cite>age</cite> feature, <cite>values_orders</cite> could be
-<cite>{‘age’: [‘0-18’, ‘18-30’, ‘30-50’, ‘50+’]}</cite>.</p></li>
-<li><p><strong>sort_by</strong> (<em>str</em><em>, </em><em>default 'tschuprowt'</em>) – Association measure used to find the optimal group modality combination
-Implemented: [‘cramerv’, ‘tschuprowt’]</p></li>
-<li><p><strong>max_n_mod</strong> (<em>int</em><em>, </em><em>default 5</em>) – <dl class="simple">
-<dt>Maximum number of modalities for the carved features (excluding <cite>nan</cite>).</dt><dd><ul>
-<li><p>All possible combinations of less than <cite>max_n_mod</cite> groups of
-modalities will be tested.</p></li>
-</ul>
-</dd>
-</dl>
-<p>Recommandation: <cite>max_n_mod</cite> should be set from 4 (faster) to 6
-(preciser).</p>
+<li><p><strong>quantitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – List of column names of quantitative features (continuous and discrete) to be carved</p></li>
+<li><p><strong>qualitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – List of column names of qualitative features (non-ordinal) to be carved</p></li>
+<li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per grouped modalities.
+* Features whose most frequent modality is less frequent than <cite>min_freq</cite> will not be carved.
+* Sets the number of quantiles in which to discretize the continuous features.
+* Sets the minimum frequency of a quantitative feature’s modality.</p>
+<p><strong>Tip</strong>: should be set between 0.02 (slower, preciser, less robust) and 0.05 (faster, more robust)</p>
 </p></li>
-<li><p><strong>keep_nans</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether or not to group <cite>numpy.nan</cite> to other modalities/values.</p></li>
+<li><p><strong>ordinal_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of ordinal features to be carved. For those features a list of
+values has to be provided in the <cite>values_orders</cite> dict, by default None</p></li>
+<li><p><strong>values_orders</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="discretizers.html#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.GroupedList"><em>GroupedList</em></a><em>]</em><em>, </em><em>optional</em>) – Dict of feature’s column names and there associated ordering.
+If lists are passed, a GroupedList will automatically be initiated, by default None</p></li>
+<li><p><strong>max_n_mod</strong> (<em>int</em><em>, </em><em>optional</em>) – <p>Maximum number of modality per feature, by default 5</p>
+<p>All combinations of modalities for groups of modalities of sizes from 1 to <cite>max_n_mod</cite> will be tested.
+The combination with the greatest association (as defined by <cite>sort_by</cite>) will be the selected one.</p>
+<p><strong>Tip</strong>: should be set between 4 (faster, more robust) and 7 (slower, preciser, less robust)</p>
+</p></li>
+<li><p><strong>sort_by</strong> (<em>str</em><em>, </em><em>optional</em>) – <p>To be choosen amongst <cite>[“tschuprowt”, “cramerv”]</cite>, by default “tschuprowt”
+Metric to be used to perform association measure between features and target.
+* If <cite>sort_by=”tschuprowt”</cite>, Tschuprow’s T will be used as the association measure (more robust).
+* If <cite>sort_by=”cramerv”</cite>, Cramer’s V will be used as the association measure (less robust).</p>
+<p><strong>Tip</strong>: use <cite>sort_by=”tschuprowt”</cite> for more robust, or less output modalities,
+use <cite>sort_by=”cramerv”</cite> for more output modalities.</p>
+</p></li>
+<li><p><strong>output_dtype</strong> (<em>str</em><em>, </em><em>optional</em>) – To be choosen amongst <cite>[“float”, “str”]</cite>, by default “float”
+* If <cite>output_dtype=”float”</cite>, grouped modalities will be converted to there corresponding floating rank.
+* If <cite>output_dtype=”str”</cite>, a per-group modality will be set for all the modalities of a group.</p></li>
+<li><p><strong>dropna</strong> (<em>bool</em><em>, </em><em>optional</em>) – <ul>
+<li><p>If <cite>dropna=True</cite>, <cite>AutoCarver</cite> will try to group <cite>numpy.nan</cite> with other modalities.</p></li>
+<li><p>If <cite>dropna=False</cite>, <cite>AutoCarver</cite> all non-<cite>numpy.nan</cite> will be grouped, by default True</p></li>
+</ul>
+</p></li>
+<li><p><strong>str_nan</strong> (<em>str</em><em>, </em><em>optional</em>) – String representation to input <cite>numpy.nan</cite>. If <cite>dropna=False</cite>, <cite>numpy.nan</cite> will be left unchanged, by default “__NAN__”</p></li>
+<li><p><strong>str_default</strong> (<em>str</em><em>, </em><em>optional</em>) – String representation for default qualitative values, i.e. values less frequent than <cite>min_freq</cite>, by default “__OTHER__”</p></li>
+<li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <cite>copy=True</cite>, feature processing at transform is applied to a copy of the provided DataFrame, by default False</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <cite>verbose=True</cite>, prints raw Discretizers Fit and Transform steps, as long as
+information on AutoCarver’s processing and tables of target rates and frequencies for
+X, by default False</p></li>
+<li><p><strong>pretty_print</strong> (<em>bool</em><em>, </em><em>optional</em>) – <p>If <cite>pretty_print=True</cite>, adds to the verbose some HTML tables of target rates and frequencies for X and, if provided, X_dev.</p>
+<p>Overrides the value of <cite>verbose</cite>, by default False</p>
+</p></li>
 </ul>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<p>from AutoCarver import AutoCarver
-from Discretizers import Discretizer
-from sklearn.pipeline import Pipeline</p>
-<p># defining training and testing sets
-X_train, y_train = train_set, train_set[target]
-X_dev, y_dev = test_set, test_set[target]</p>
-<p># specifying features to be carved
-selected_quanti = [‘amount’, ‘distance’, ‘length’, ‘height’]
-selected_quali = [‘age’, ‘type’, ‘grade’, ‘city’]</p>
-<p># specifying orders of categorical ordinal features
-values_orders = {</p>
-<blockquote>
-<div><p>‘age’: [‘0-18’, ‘18-30’, ‘30-50’, ‘50+’],
-‘grade’: [‘A’, ‘B’, ‘C’, ‘D’, ‘J’, ‘K’, ‘NN’]</p>
-</div></blockquote>
-<p>}</p>
-<p># pre-processing of features into categorical ordinal features
-discretizer = Discretizer(</p>
-<blockquote>
-<div><p>selected_quanti, selected_quali, min_freq=0.02, q=20,
-values_orders=values_orders</p>
-</div></blockquote>
-<p>)
-X_train = discretizer.fit_transform(X_train, y_train)
-X_dev = discretizer.transform(X_dev)</p>
-<p># storing Discretizer
-pipe = [(‘Discretizer’, discretizer)]</p>
-<p># updating features’ values orders (every features are qualitative ordinal)
-values_orders = discretizer.values_orders</p>
-<p># intiating AutoCarver
-auto_carver = AutoCarver(</p>
-<blockquote>
-<div><p>values_orders, sort_by=’cramerv’, max_n_mod=5, sample_size=0.01)</p>
-</div></blockquote>
-<p># fitting on training sample
-# a test sample can be specified to evaluate carving robustness
-X_train = auto_carver.fit_transform(X_train, y_train, X_dev, y_dev)</p>
-<p># applying transformation on test sample
-X_dev = auto_carver.transform(X_dev)</p>
-<p># identifying non stable/robust features
-print(auto_carver.non_viable_features)</p>
-<p># storing fitted GroupedListDiscretizer in a sklearn.pipeline.Pipeline
-pipe += [(‘AutoCarver’, auto_carver)]
-pipe = Pipeline(pipe)</p>
-<p># applying pipe to a validation set or in production
-X_val = pipe.transform(X_val)</p>
+<p>See <a class="reference external" href="https://autocarver.readthedocs.io/en/latest/index.html">AutoCarver examples</a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="AutoCarver.AutoCarver.fit">
 <span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_dev</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_dev</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.AutoCarver.fit" title="Permalink to this definition"></a></dt>

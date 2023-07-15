@@ -4,6 +4,7 @@
 """
 
 from json import dumps, loads
+
 from pandas import DataFrame
 from pytest import fixture, raises
 
@@ -24,12 +25,21 @@ def dropna(request) -> bool:
 def sort_by(request) -> str:
     return request.param
 
+
 @fixture(scope="module", params=[True, False])
 def copy(request) -> bool:
     return request.param
 
+
 def test_auto_carver(
-    x_train: DataFrame, x_dev_1: DataFrame, x_dev_wrong_1: DataFrame, x_dev_wrong_2: DataFrame, output_dtype: str, dropna: bool, sort_by: str, copy: bool
+    x_train: DataFrame,
+    x_dev_1: DataFrame,
+    x_dev_wrong_1: DataFrame,
+    x_dev_wrong_2: DataFrame,
+    output_dtype: str,
+    dropna: bool,
+    sort_by: str,
+    copy: bool,
 ) -> None:
     """Tests AutoCarver
 
@@ -165,7 +175,10 @@ def test_auto_carver(
 
     # testing copy functionnality
     if copy:
-        assert all(x_discretized[auto_carver.features].fillna('__NAN__') == x_train[auto_carver.features].fillna('__NAN__')), "Not copied correctly"
+        assert all(
+            x_discretized[auto_carver.features].fillna("__NAN__")
+            == x_train[auto_carver.features].fillna("__NAN__")
+        ), "Not copied correctly"
 
     # testing json serialization
     json_serialized_auto_carver = dumps(auto_carver.to_json())
@@ -178,7 +191,7 @@ def test_auto_carver(
     # testing to transform dev set with unexpected modality
     with raises(AssertionError):
         auto_carver.transform(x_dev_wrong_1)
-        
+
     # testing to transform dev set with unexpected nans
     with raises(AssertionError):
         auto_carver.transform(x_dev_wrong_2)

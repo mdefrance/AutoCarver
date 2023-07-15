@@ -165,7 +165,7 @@ def x_dev_wrong_1(x_dev_1: DataFrame) -> DataFrame:
     # initiating dev sample
     x_dev = x_dev_1.copy()
 
-    # replacing a value for a unknown value 
+    # replacing a value for a unknown value
     x_dev["Qualitative"] = x_dev["Qualitative"].replace("Category C", "Category Y")
 
     return x_dev
@@ -188,7 +188,7 @@ def x_dev_wrong_2(x_dev_1: DataFrame) -> DataFrame:
     # initiating dev sample
     x_dev = x_dev_1.copy()
 
-    # replacing a value for a unknown value 
+    # replacing a value for a unknown value
     x_dev["Qualitative"] = x_dev["Qualitative"].replace("Category C", nan)
 
     return x_dev
