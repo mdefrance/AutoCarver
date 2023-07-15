@@ -2,6 +2,7 @@
 for a binary classification model.
 """
 
+from json import loads
 from typing import Any
 
 import numpy as np
@@ -10,11 +11,10 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.pyplot import subplots
 from matplotlib.ticker import PercentFormatter
-from pandas import DataFrame, Series, crosstab, unique
+from pandas import DataFrame, Series, crosstab
 from scipy.stats import chi2_contingency
 from seaborn import color_palette, despine
 from tqdm import tqdm
-from json import loads
 
 from .discretizers.discretizers import Discretizer
 from .discretizers.utils.base_discretizers import (
@@ -22,7 +22,7 @@ from .discretizers.utils.base_discretizers import (
     convert_to_labels,
     convert_to_values,
 )
-from .discretizers.utils.grouped_list import is_equal, GroupedList
+from .discretizers.utils.grouped_list import GroupedList, is_equal
 from .discretizers.utils.serialization import json_deserialize_values_orders
 
 
@@ -131,7 +131,7 @@ class AutoCarver(GroupedListDiscretizer):
         sort_by: str = "tschuprowt",
         str_nan: str = "__NAN__",
         str_default: str = "__OTHER__",
-        output_dtype: str = 'float',
+        output_dtype: str = "float",
         dropna: bool = True,
         copy: bool = False,
         verbose: bool = True,
@@ -184,7 +184,7 @@ class AutoCarver(GroupedListDiscretizer):
             input_dtypes=self.input_dtypes,
             output_dtype=output_dtype,
             str_nan=str_nan,
-            str_default = str_default,
+            str_default=str_default,
             dropna=dropna,
             copy=copy,
             verbose=verbose,
@@ -233,13 +233,13 @@ class AutoCarver(GroupedListDiscretizer):
         return x_copy, x_test_copy
 
     def remove_feature(self, feature: str) -> None:
-        """Removes a feature from all instances 
+        """Removes a feature from all instances
 
         Parameters
         ----------
         feature : str
             Column name
-        """        
+        """
         if feature in self.features:
             super().remove_feature(feature)
             if feature in self.ordinal_features:
@@ -331,10 +331,12 @@ class AutoCarver(GroupedListDiscretizer):
 
                 # updating label_orders
                 labels_orders.update({feature: order})
-            
+
             # no suitable combination has been found -> removing feature
             else:
-                print(f"No robust combination for feature '{feature}' could be found. It will be ignored. You might have to increase the size of your test sample (test sample not representative of test sample for this feature) or you should consider dropping this features.")
+                print(
+                    f"No robust combination for feature '{feature}' could be found. It will be ignored. You might have to increase the size of your test sample (test sample not representative of test sample for this feature) or you should consider dropping this features."
+                )
                 self.remove_feature(feature)
                 if feature in labels_orders:
                     labels_orders.pop(feature)
@@ -845,6 +847,7 @@ def plot_stats(stats: DataFrame) -> tuple[Figure, Axes]:
 
     return fig, ax
 
+
 def load_carver(json_serialized_auto_carver: str) -> GroupedListDiscretizer:
     """_summary_
 
@@ -862,7 +865,7 @@ def load_carver(json_serialized_auto_carver: str) -> GroupedListDiscretizer:
     json_deserialized_auto_carver = loads(json_serialized_auto_carver)
 
     # deserializing values_orders
-    values_orders = json_deserialize_values_orders(json_deserialized_auto_carver['values_orders'])
+    values_orders = json_deserialize_values_orders(json_deserialized_auto_carver["values_orders"])
 
     # updating auto_carver attributes
     json_deserialized_auto_carver.update({"values_orders": values_orders})

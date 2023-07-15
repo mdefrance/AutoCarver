@@ -6,6 +6,7 @@ from pandas import DataFrame, Series
 from .base_discretizers import GroupedListDiscretizer, nan_unique
 from .grouped_list import GroupedList
 
+
 class StringDiscretizer(GroupedListDiscretizer):
     """Converts specified columns of a DataFrame into str.
     First step of a Qualitative Discretization pipe.
@@ -19,7 +20,7 @@ class StringDiscretizer(GroupedListDiscretizer):
         features: list[str],
         *,
         values_orders: dict[str, GroupedList] = None,
-        str_nan: str = '__NAN__',
+        str_nan: str = "__NAN__",
         copy: bool = False,
         verbose: bool = False,
     ) -> None:
@@ -77,8 +78,10 @@ class StringDiscretizer(GroupedListDiscretizer):
                 # checking for string values already in the order
                 if str_value not in values_order:
                     values_order.append(str_value)  # adding string value to the order
-                    values_order.group(value, str_value)  # grouping integer value into the string value
-                
+                    values_order.group(
+                        value, str_value
+                    )  # grouping integer value into the string value
+
             # adding str_nan
             if any(x_copy[feature].isna()):
                 values_order.append(self.str_nan)

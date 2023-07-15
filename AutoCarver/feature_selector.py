@@ -15,6 +15,7 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 from .discretizers.utils.base_discretizers import GroupedListDiscretizer
 from .discretizers.utils.grouped_list import GroupedList
 
+
 # TODO: convert to groupedlistdiscretizer
 # TODO: add parameter to shut down displayed info
 class FeatureSelector(BaseEstimator, TransformerMixin):
@@ -132,7 +133,9 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
         # Values_orders from GroupedListDiscretizer
         if values_orders is None:
             values_orders = {}
-        self.values_orders = {feature: GroupedList(value) for feature, value in values_orders.items()}
+        self.values_orders = {
+            feature: GroupedList(value) for feature, value in values_orders.items()
+        }
 
         self.drop = drop
         self.copy = copy

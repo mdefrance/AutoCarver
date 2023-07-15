@@ -3,12 +3,10 @@ for a binary classification model.
 """
 
 from typing import Any, Dict, List, Union
-from AutoCarver.discretizers.utils.base_discretizers import GroupedList
 
 from numpy import argmin, nan, select
 from pandas import DataFrame, Series, isna, notna, unique
 
-from .grouped_list import GroupedList
 from .base_discretizers import (
     GroupedListDiscretizer,
     check_missing_values,
@@ -19,7 +17,9 @@ from .base_discretizers import (
     target_rate,
     value_counts,
 )
+from .grouped_list import GroupedList
 from .type_discretizers import StringDiscretizer
+
 
 class DefaultDiscretizer(GroupedListDiscretizer):
     """Groups a qualitative features' values less frequent than min_freq into a str_default string
@@ -29,10 +29,10 @@ class DefaultDiscretizer(GroupedListDiscretizer):
 
     def __init__(
         self,
-        features: List[str],
+        features: list[str],
         min_freq: float,
         *,
-        values_orders: Dict[str, GroupedList] = None,
+        values_orders: dict[str, GroupedList] = None,
         str_default: str = "__OTHER__",
         str_nan: str = "__NAN__",
         copy: bool = False,
@@ -42,11 +42,11 @@ class DefaultDiscretizer(GroupedListDiscretizer):
 
         Parameters
         ----------
-        features : List[str]
+        features : list[str]
             List of column names to be discretized
         min_freq : float
             Minimum frequency per modality. Less frequent modalities are grouped in the closest value of the order.
-        values_orders : Dict[str, GroupedList], optional
+        values_orders : dict[str, GroupedList], optional
             Dict of column names (keys) and modalities' associated order (values), by default None
         str_default : str, optional
             _description_, by default "__OTHER__"
@@ -61,14 +61,14 @@ class DefaultDiscretizer(GroupedListDiscretizer):
         super().__init__(
             features=features,
             values_orders=values_orders,
-            input_dtypes='str',
-            output_dtype='str',
+            input_dtypes="str",
+            output_dtype="str",
             str_nan=str_nan,
-            str_default = str_default,
+            str_default=str_default,
             copy=copy,
             verbose=verbose,
         )
-        
+
         self.min_freq = min_freq
 
     def prepare_data(self, X: DataFrame, y: Series) -> DataFrame:
@@ -96,7 +96,9 @@ class DefaultDiscretizer(GroupedListDiscretizer):
                 self.values_orders.update({feature: GroupedList(nan_unique(x_copy[feature]))})
 
         # checking that all unique values in X are in values_orders
-        check_new_values(x_copy, self.features, self.values_orders, self.str_nan, self.str_default)  # TODO problem here
+        check_new_values(
+            x_copy, self.features, self.values_orders, self.str_nan, self.str_default
+        )  # TODO problem here
         # checking that all unique values in values_orders are in X
         check_missing_values(x_copy, self.features, self.values_orders)
 
@@ -122,7 +124,7 @@ class DefaultDiscretizer(GroupedListDiscretizer):
         """
         # copying dataframe and checking data before bucketization
         x_copy = self.prepare_data(X, y)
-        
+
         if self.verbose:  # verbose if requested
             print(f" - [DefaultDiscretizer] Fit {str(self.features)}")
 
@@ -172,7 +174,7 @@ class DefaultDiscretizer(GroupedListDiscretizer):
         super().fit(X, y)
 
         return self
-    
+
 
 class OrdinalDiscretizer(GroupedListDiscretizer):
     """Discretizes ordered qualitative features into groups more frequent than min_freq.
@@ -199,15 +201,15 @@ class OrdinalDiscretizer(GroupedListDiscretizer):
 
         Parameters
         ----------
-        features : List[str]
+        features : list[str]
             List of column names to be discretized
-        values_orders : Dict[str, Any]
+        values_orders : dict[str, Any]
             Dict of column names (keys) and modalities' associated order (values)
         min_freq : float
             Minimum frequency per modality. Less frequent modalities are grouped in the closest value of the order.
         str_nan : str, optional
             _description_, by default None
-        input_dtypes : Union[str, Dict[str, str]], optional
+        input_dtypes : Union[str, dict[str, str]], optional
             String of type to be considered for all features or
             Dict of column names and associated types:
             - if 'float' uses transform_quantitative
@@ -223,7 +225,7 @@ class OrdinalDiscretizer(GroupedListDiscretizer):
             features=features,
             values_orders=values_orders,
             input_dtypes=input_dtypes,
-            output_dtype='str',
+            output_dtype="str",
             str_nan=str_nan,
             copy=copy,
             verbose=verbose,
@@ -278,9 +280,6 @@ class OrdinalDiscretizer(GroupedListDiscretizer):
 
         # checking values orders
         x_copy = self.prepare_data(X, y)
-
-        # getting label per value
-        labels_per_values = self.get_labels_per_values(output_dtype='str')
 
         # converting potential quantiles into there labels
         known_orders = convert_to_labels(
@@ -337,11 +336,11 @@ class ChainedDiscretizer(GroupedListDiscretizer):
 
         Parameters
         ----------
-        features : List[str]
+        features : list[str]
             Columns to be bucketized
         min_freq : float
             Minimum frequency per modality
-        chained_orders : List[GroupedList]
+        chained_orders : list[GroupedList]
             List of modality orders
         remove_unknown : bool, optional
             Whether or not to remove unknown values. If true, they are grouped
@@ -359,8 +358,8 @@ class ChainedDiscretizer(GroupedListDiscretizer):
         super().__init__(
             features=features,
             values_orders=values_orders,
-            input_dtypes='str',
-            output_dtype='str',
+            input_dtypes="str",
+            output_dtype="str",
             str_nan=str_nan,
             copy=copy,
             verbose=verbose,
@@ -374,17 +373,22 @@ class ChainedDiscretizer(GroupedListDiscretizer):
         self.remove_unknown = remove_unknown
 
         # known_values: all ordered values describe in each level of the chained_orders
-        # starting off with first level 
+        # starting off with first level
         known_values = self.chained_orders[0].values()
         # adding each level
         for next_level in self.chained_orders[1:]:
             # highest value per group of the level
-            highest_ranking_value = {group: [value for value in values if value!=group][-1] for group, values in next_level.content.items()}
-            
+            highest_ranking_value = {
+                group: [value for value in values if value != group][-1]
+                for group, values in next_level.content.items()
+            }
+
             # adding next_level group to the order
             for group, highest_value in highest_ranking_value.items():
                 highest_index = known_values.index(highest_value)
-                known_values = known_values[:highest_index + 1] + [group] + known_values[highest_index + 1:]
+                known_values = (
+                    known_values[: highest_index + 1] + [group] + known_values[highest_index + 1 :]
+                )
         self.known_values = known_values
 
         # adding known_values to each feature's order
@@ -397,7 +401,9 @@ class ChainedDiscretizer(GroupedListDiscretizer):
                 order = GroupedList([])
             # checking that all values from the order are in known_values
             for value in order:
-                assert value in self.known_values, f"Value {value} from feature {feature} provided in values_orders is missing from levels of chained_orders. Add value to a level of chained_orders or adapt values_orders."
+                assert (
+                    value in self.known_values
+                ), f"Value {value} from feature {feature} provided in values_orders is missing from levels of chained_orders. Add value to a level of chained_orders or adapt values_orders."
             # adding known values if missing from the order
             for value in self.known_values:
                 if value not in order.values():
@@ -428,12 +434,15 @@ class ChainedDiscretizer(GroupedListDiscretizer):
 
         # checking for ids (unique value per row)
         frequencies = x_copy[self.features].apply(
-            lambda u: u.value_counts(normalize=True, dropna=False).drop(nan, errors='ignore').max(), axis=0
+            lambda u: u.value_counts(normalize=True, dropna=False).drop(nan, errors="ignore").max(),
+            axis=0,
         )
         # for each feature, checking that at least one value is more frequent than min_freq
         for feature in self.features:
             if frequencies[feature] < self.min_freq:
-                print(f"For feature '{feature}', the largest modality has {frequencies[feature]:2.2%} observations which is lower than {self.min_freq:2.2%}. This feature will not be Discretized. Consider decreasing parameter min_freq or removing this feature.")
+                print(
+                    f"For feature '{feature}', the largest modality has {frequencies[feature]:2.2%} observations which is lower than {self.min_freq:2.2%}. This feature will not be Discretized. Consider decreasing parameter min_freq or removing this feature."
+                )
                 self.remove_feature(feature)
 
         # checking for columns containing floats or integers even with filled nans
@@ -444,13 +453,17 @@ class ChainedDiscretizer(GroupedListDiscretizer):
         if any(not_object):
             features_to_convert = list(not_object.index[not_object])
             if self.verbose:
-                unexpected_dtypes = [typ for dtyp in dtypes[not_object] for typ in dtyp if typ != str]
+                unexpected_dtypes = [
+                    typ for dtyp in dtypes[not_object] for typ in dtyp if typ != str
+                ]
                 print(
                     f"""Non-string features: {str(features_to_convert)}. Trying to convert them using type_discretizers.StringDiscretizer, otherwise convert them manually. Unexpected data types: {str(list(unexpected_dtypes))}."""
                 )
 
             # converting specified features into qualitative features
-            stringer = StringDiscretizer(features=features_to_convert, values_orders=self.values_orders)
+            stringer = StringDiscretizer(
+                features=features_to_convert, values_orders=self.values_orders
+            )
             x_copy = stringer.fit_transform(x_copy)
 
             # updating values_orders accordingly
@@ -466,7 +479,7 @@ class ChainedDiscretizer(GroupedListDiscretizer):
         x_copy = x_copy.fillna(self.str_nan)
 
         return x_copy
-    
+
     def fit(self, X: DataFrame, y: Series = None) -> None:
         """_summary_
 
@@ -489,7 +502,6 @@ class ChainedDiscretizer(GroupedListDiscretizer):
         if self.verbose:  # verbose if requested
             print(f" - [ChainedDiscretizer] Fit {str(self.features)}")
         for feature in self.features:
-
             # computing frequencies of each modality
             frequencies = x_copy[feature].value_counts(normalize=True)
             values, frequencies = frequencies.index, frequencies.values
@@ -500,7 +512,11 @@ class ChainedDiscretizer(GroupedListDiscretizer):
                 order.append(self.str_nan)
 
             # checking for unknown values (missing from known_values)
-            missing = [value for value in values if value not in self.known_values and value != self.str_nan]
+            missing = [
+                value
+                for value in values
+                if value not in self.known_values and value != self.str_nan
+            ]
 
             # converting unknown values to NaN
             if self.remove_unknown & (len(missing) > 0):
@@ -519,7 +535,9 @@ class ChainedDiscretizer(GroupedListDiscretizer):
                 ), f"Order for feature '{feature}' needs to be provided for values: {str(missing)}, otherwise set remove_unknown=True"
 
             # iterating over each specified orders
-            for level_order in self.chained_orders:  # TODO replace all of this with labels_per_orders
+            for (
+                level_order
+            ) in self.chained_orders:  # TODO replace all of this with labels_per_orders
                 # values that are frequent enough
                 to_keep = list(values[frequencies >= self.min_freq])
 
@@ -546,6 +564,7 @@ class ChainedDiscretizer(GroupedListDiscretizer):
         super().fit(X, y)
 
         return self
+
 
 def find_common_modalities(
     df_feature: Series,
@@ -576,7 +595,7 @@ def find_common_modalities(
 
     Returns
     -------
-    Dict[str, Any]
+    dict[str, Any]
         _description_
     """
     # getting feature's order
@@ -655,7 +674,7 @@ def series_groupy_order(series: Series, order: GroupedList) -> Series:
 
 
 def find_closest_modality(
-    idx: int, order: GroupedList, frequencies: List[float], target_rates: Series, min_freq: float
+    idx: int, order: GroupedList, frequencies: list[float], target_rates: Series, min_freq: float
 ) -> Any:
     """HELPER Finds the closest modality in terms of frequency and target rate
 

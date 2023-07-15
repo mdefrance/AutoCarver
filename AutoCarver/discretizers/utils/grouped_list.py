@@ -7,6 +7,7 @@ from typing import Any, Union
 from numpy import ndarray, sort
 from pandas import isna
 
+
 class GroupedList(list):
     """An ordered list that's extended with a dict."""
 
@@ -327,7 +328,6 @@ class GroupedList(list):
         return repr
 
 
-
 def is_equal(a: Any, b: Any) -> bool:
     """Checks if a and b are equal (NaN insensitive)
 
@@ -352,4 +352,3 @@ def is_equal(a: Any, b: Any) -> bool:
         equal = True
 
     return equal
-
