@@ -2,15 +2,16 @@
 for a binary classification model.
 """
 
+from json import dumps
 from typing import Any, Union
 
-from json import dumps
-from numpy import array, inf, isfinite, nan, select, floating, integer
+from numpy import array, floating, inf, integer, isfinite, nan, select
 from pandas import DataFrame, Series, isna, notna, unique
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from .serialization import json_serialize_values_orders
 from .grouped_list import GroupedList
+from .serialization import json_serialize_values_orders
+
 
 def nan_unique(x: Series) -> list[Any]:
     """Unique non-NaN values.
@@ -61,7 +62,13 @@ def applied_to_dict_list(applied: Union[DataFrame, Series]) -> dict[str, list[An
 
 
 # TODO: remove known_values
-def check_new_values(X: DataFrame, features: list[str], known_values: dict[str, list[Any]], str_nan: str, str_default: str) -> None:
+def check_new_values(
+    X: DataFrame,
+    features: list[str],
+    known_values: dict[str, list[Any]],
+    str_nan: str,
+    str_default: str,
+) -> None:
     """Checks for new, unexpected values, in X
 
     Parameters
@@ -84,8 +91,12 @@ def check_new_values(X: DataFrame, features: list[str], known_values: dict[str, 
     # checking for unexpected values for each feature
     for feature in features:
         unexpected = [val for val in uniques[feature] if val not in known_values[feature]]
-        assert str_nan not in unexpected, "It seems that your dataset has already been Discretized. AutoCarver only takes raw data as input (Discretizer included since v5.0.0). Be careful with `copy=False` not to rerun the same code twice. Ohterwise pass orders to `values_orders` or change the value of `str_nan`. "
-        assert str_default not in unexpected, "It seems that your dataset has already been Discretized. AutoCarver only takes raw data as input (Discretizer included since v5.0.0). Be careful with `copy=False` not to rerun the same code twice. Ohterwise pass orders to `values_orders` or change the value of `str_default`. "
+        assert (
+            str_nan not in unexpected
+        ), "It seems that your dataset has already been Discretized. AutoCarver only takes raw data as input (Discretizer included since v5.0.0). Be careful with `copy=False` not to rerun the same code twice. Ohterwise pass orders to `values_orders` or change the value of `str_nan`. "
+        assert (
+            str_default not in unexpected
+        ), "It seems that your dataset has already been Discretized. AutoCarver only takes raw data as input (Discretizer included since v5.0.0). Be careful with `copy=False` not to rerun the same code twice. Ohterwise pass orders to `values_orders` or change the value of `str_default`. "
         assert (
             len(unexpected) == 0
         ), f"Unexpected value! The ordering for values: {str(list(unexpected))} of feature '{feature}' was not provided. There might be new values in your test/dev set. Consider taking a bigger test/dev set or dropping the column {feature}."
@@ -121,7 +132,6 @@ def check_missing_values(
         ), f"Unexpected value! The ordering for values: {str(list(unexpected))} of feature '{feature}' was provided but there are not matching value in provided X. You should check 'values_orders['{feature}']' for unwanted values."
 
 
-
 # TODO: output a json
 class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
     """Discretizer that uses a dict of grouped values."""
@@ -131,8 +141,8 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         features: list[str],
         *,
         values_orders: dict[str, GroupedList] = None,
-        input_dtypes: Union[str, dict[str, str]] = 'str',
-        output_dtype: str = 'str',
+        input_dtypes: Union[str, dict[str, str]] = "str",
+        output_dtype: str = "str",
         str_nan: str = None,
         str_default: str = None,
         dropna: bool = True,
@@ -163,7 +173,9 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         self.features = list(set(features))
         if values_orders is None:
             values_orders: dict[str, GroupedList] = {}
-        self.values_orders = {feature: GroupedList(values) for feature, values in values_orders.items()}
+        self.values_orders = {
+            feature: GroupedList(values) for feature, values in values_orders.items()
+        }
         self.copy = copy
 
         # input feature types
@@ -197,7 +209,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         ]
 
         # for each feature, getting label associated to each value
-        self.labels_per_values: dict[str, dict[Any, Any]]= {}  # will be initiated during fit
+        self.labels_per_values: dict[str, dict[Any, Any]] = {}  # will be initiated during fit
 
     def get_labels_per_values(self, output_dtype: str) -> dict[str, dict[Any, Any]]:
         """Creates a dict that contains, for each feature, for each value, the associated label
@@ -226,13 +238,13 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
             # case 1: qualitative feature -> by default, labels are values
             else:
                 labels = [value for value in values if value != self.str_nan]  # (removing str_nan)
-            
+
             # add NaNs if there are any
             if self.str_nan in values:
                 labels += [self.str_nan]
-                
+
             # requested float output (AutoCarver) -> converting to integers
-            if output_dtype == 'float':
+            if output_dtype == "float":
                 labels = [n for n, _ in enumerate(labels)]
 
             # building label per value
@@ -240,10 +252,10 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
             for group_of_values, label in zip(values, labels):
                 for value in values.get(group_of_values):
                     label_per_value.update({value: label})
-            
+
             # storing in full dict
             labels_per_values.update({feature: label_per_value})
-        
+
         return labels_per_values
 
     def remove_feature(self, feature: str) -> None:
@@ -264,7 +276,9 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
                 self.values_orders.pop(feature)
             if feature in self.input_dtypes:
                 self.input_dtypes.pop(feature)
-    
+            if feature in self.labels_per_values:
+                self.labels_per_values.pop(feature)
+
     def prepare_data(self, X: DataFrame, y: Series = None) -> DataFrame:
         """_summary_
 
@@ -284,7 +298,9 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         x_copy = X
         if self.copy and X is not None:
             missing_columns = [feature for feature in self.features if feature not in X]
-            assert len(missing_columns) == 0, f"Missing features from the provided DataFrame: {str(missing_columns)}"
+            assert (
+                len(missing_columns) == 0
+            ), f"Missing features from the provided DataFrame: {str(missing_columns)}"
             x_copy = X.copy()
 
         # checking for binary target
@@ -308,8 +324,12 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
             Model target, by default None
         """
         # checking that all features to discretize are in values_orders
-        missing_features = [feature for feature in self.features if feature not in self.values_orders]
-        assert len(missing_features) == 0, f"Missing values_orders for following features {str(missing_features)}."
+        missing_features = [
+            feature for feature in self.features if feature not in self.values_orders
+        ]
+        assert (
+            len(missing_features) == 0
+        ), f"Missing values_orders for following features {str(missing_features)}."
 
         # for each feature, getting label associated to each value
         self.labels_per_values = self.get_labels_per_values(self.output_dtype)
@@ -342,15 +362,19 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         # transforming quantitative features
         if len(self.quantitative_features) > 0:
             if self.verbose:  # verbose if requested
-                print(f" - [GroupedListDiscretizer] Transform Quantitative {str(self.quantitative_features)}")
+                print(
+                    f" - [GroupedListDiscretizer] Transform Quantitative {str(self.quantitative_features)}"
+                )
             x_copy = self.transform_quantitative(x_copy, y)
 
         # transforming qualitative features
         if len(self.qualitative_features) > 0:
             if self.verbose:  # verbose if requested
-                print(f" - [GroupedListDiscretizer] Transform Qualitative {str(self.qualitative_features)}")
+                print(
+                    f" - [GroupedListDiscretizer] Transform Qualitative {str(self.qualitative_features)}"
+                )
             x_copy = self.transform_qualitative(x_copy, y)
-        
+
         # reinstating nans
         if not self.dropna:
             for feature in self.features:
@@ -390,8 +414,8 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
 
             # converting nans to there corresponding quantile (if it was grouped to a quantile)
             if any(nans):
-                assert (
-                     feature_values.contains(self.str_nan)
+                assert feature_values.contains(
+                    self.str_nan
                 ), f"Unexpected value! Missing values found for feature '{feature}' at transform step but not during fit. There might be new values in your test/dev set. Consider taking a bigger test/dev set or dropping the column {feature}."
                 nan_value = feature_values.get_group(self.str_nan)
                 # checking that nans have been grouped to a quantile otherwise they are left as numpy.nan (for comparison purposes)
@@ -399,10 +423,16 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
                     X.loc[nans, feature] = nan_value
 
             # list of masks of values to replace with there respective group
-            values_to_group = [X[feature] <= value for value in feature_values if value != self.str_nan]
+            values_to_group = [
+                X[feature] <= value for value in feature_values if value != self.str_nan
+            ]
 
             # corressponding group for each value
-            group_labels = [[self.labels_per_values[feature][value]] * x_len for value in feature_values if value != self.str_nan]
+            group_labels = [
+                [self.labels_per_values[feature][value]] * x_len
+                for value in feature_values
+                if value != self.str_nan
+            ]
 
             # checking for values to group
             if len(values_to_group) > 0:
@@ -436,14 +466,26 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
             X[self.qualitative_features] = X[self.qualitative_features].fillna(self.str_nan)
 
         # checking that all unique values in X are in values_orders
-        check_new_values(X, self.qualitative_features, {feature: values.values() for feature, values in self.values_orders.items()}, self.str_nan, self.str_default)
+        check_new_values(
+            X,
+            self.qualitative_features,
+            {feature: values.values() for feature, values in self.values_orders.items()},
+            self.str_nan,
+            self.str_default,
+        )
 
         # replacing values for there corresponding label
-        X = X.replace({feature: label_per_value for feature, label_per_value in self.labels_per_values.items() if feature in self.qualitative_features})           
+        X = X.replace(
+            {
+                feature: label_per_value
+                for feature, label_per_value in self.labels_per_values.items()
+                if feature in self.qualitative_features
+            }
+        )
 
         return X
-    
-    def to_json(self) ->  str:
+
+    def to_json(self) -> str:
         """Converts the GroupedListDiscretizer's values_orders to .json
 
         Returns
@@ -465,7 +507,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
 
         # dumping as json
         return dumps(json_serialized_groupedlistdiscretizer)
-    
+
     def summary(self) -> DataFrame:
         """Summarizes the data bucketization
 
@@ -477,48 +519,64 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
             A summary of feature's values
         """
         # raw label per value with output_dtype 'str'
-        raw_labels_per_values = self.get_labels_per_values(output_dtype='str')
+        raw_labels_per_values = self.get_labels_per_values(output_dtype="str")
 
         # initiating summaries
         summaries: list[dict[str, Any]] = []
         for feature in self.features:
-            # adding each value/label 
+            # adding each value/label
             for value, label in self.labels_per_values[feature].items():
                 # initiating feature summary (default value/label)
-                feature_summary = {'feature': feature, 'dtype': self.input_dtypes[feature], 'label': label, 'content': value}
+                feature_summary = {
+                    "feature": feature,
+                    "dtype": self.input_dtypes[feature],
+                    "label": label,
+                    "content": value,
+                }
 
                 # case 0: qualitative feature -> not adding floats and integers str_default
                 if feature in self.qualitative_features:
-                    if not isinstance(value, floating) and not isinstance(value, float):  # checking for floats
-                        if not isinstance(value, integer) and not isinstance(value, int):  # checking for ints
+                    if not isinstance(value, floating) and not isinstance(
+                        value, float
+                    ):  # checking for floats
+                        if not isinstance(value, integer) and not isinstance(
+                            value, int
+                        ):  # checking for ints
                             if value != self.str_default:  # checking for str_default
                                 summaries += [feature_summary]
 
                 # case 1: quantitative feature -> take the raw label per value
                 elif feature in self.quantitative_features:
-                    feature_summary.update({'content': raw_labels_per_values[feature][value]})
+                    feature_summary.update({"content": raw_labels_per_values[feature][value]})
                     summaries += [feature_summary]
 
         # adding nans for quantitative features (when nan has been grouped)
         for feature in self.quantitative_features:
             # initiating feature summary (no value/label)
-            feature_summary = {'feature': feature, 'dtype': self.input_dtypes[feature]}
+            feature_summary = {"feature": feature, "dtype": self.input_dtypes[feature]}
             # if there are nans -> if already added it will be dropped afterwards (unique content)
             if self.str_nan in raw_labels_per_values[feature]:
                 nan_group = self.values_orders[feature].get_group(self.str_nan)
-                feature_summary.update({'label': self.labels_per_values[feature][nan_group], 'content': self.str_nan})
+                feature_summary.update(
+                    {"label": self.labels_per_values[feature][nan_group], "content": self.str_nan}
+                )
                 summaries += [feature_summary]
 
         # aggregating unique values per label
-        summaries = DataFrame(summaries).groupby(['feature', 'dtype', 'label'])['content'].apply(lambda u: list(unique(u))).reset_index()
+        summaries = (
+            DataFrame(summaries)
+            .groupby(["feature", "dtype", "label"])["content"]
+            .apply(lambda u: list(unique(u)))
+            .reset_index()
+        )
         # sorting content
         sorted_contents: list[list[Any]] = []
-        for content in summaries['content']:
+        for content in summaries["content"]:
             content.sort(key=repr)
             sorted_contents += [content]
-        summaries['content'] = sorted_contents
+        summaries["content"] = sorted_contents
         # sorting and seting index
-        summaries = summaries.sort_values(['dtype', 'feature']).set_index(['feature', 'dtype'])
+        summaries = summaries.sort_values(["dtype", "feature"]).set_index(["feature", "dtype"])
 
         return summaries
 
@@ -560,8 +618,6 @@ def convert_to_labels(
                 order = labels_orders[feature]
                 order.append(str_nan)  # adding back nans at the end of the order
                 labels_orders.update({feature: order})
-
-
 
     return labels_orders
 

@@ -2,19 +2,19 @@
 for a binary classification model.
 """
 
+from json import loads
 from typing import Any
 
-import numpy as np
+from numpy import array, sqrt, searchsorted, add, unique, zeros
 from IPython.display import display_html  # TODO: remove this
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.pyplot import subplots
 from matplotlib.ticker import PercentFormatter
-from pandas import DataFrame, Series, crosstab, unique
+from pandas import DataFrame, Series, crosstab
 from scipy.stats import chi2_contingency
 from seaborn import color_palette, despine
 from tqdm import tqdm
-from json import loads
 
 from .discretizers.discretizers import Discretizer
 from .discretizers.utils.base_discretizers import (
@@ -22,7 +22,7 @@ from .discretizers.utils.base_discretizers import (
     convert_to_labels,
     convert_to_values,
 )
-from .discretizers.utils.grouped_list import is_equal, GroupedList
+from .discretizers.utils.grouped_list import GroupedList, is_equal
 from .discretizers.utils.serialization import json_deserialize_values_orders
 
 
@@ -131,7 +131,7 @@ class AutoCarver(GroupedListDiscretizer):
         sort_by: str = "tschuprowt",
         str_nan: str = "__NAN__",
         str_default: str = "__OTHER__",
-        output_dtype: str = 'float',
+        output_dtype: str = "float",
         dropna: bool = True,
         copy: bool = False,
         verbose: bool = True,
@@ -173,6 +173,10 @@ class AutoCarver(GroupedListDiscretizer):
             ordinal_features = []
         self.ordinal_features = list(set(ordinal_features))
 
+        # checking that qualitatitve and quantitative featues are distinct
+        assert all(quali_feature not in quantitative_features for quali_feature in qualitative_features + ordinal_features), f"A feature of `quantitative_features` also is in `qualitative_features` or `ordinal_features`. Be carreful with your inputs!"
+        assert all(quanti_feature not in qualitative_features + ordinal_features for quanti_feature in quantitative_features), f"A feature of `qualitative_features` or `ordinal_features` also is in `quantitative_features`. Be carreful with your inputs!"
+
         # initializing input_dtypes
         self.input_dtypes = {feature: "str" for feature in qualitative_features + ordinal_features}
         self.input_dtypes.update({feature: "float" for feature in quantitative_features})
@@ -184,7 +188,7 @@ class AutoCarver(GroupedListDiscretizer):
             input_dtypes=self.input_dtypes,
             output_dtype=output_dtype,
             str_nan=str_nan,
-            str_default = str_default,
+            str_default=str_default,
             dropna=dropna,
             copy=copy,
             verbose=verbose,
@@ -233,13 +237,13 @@ class AutoCarver(GroupedListDiscretizer):
         return x_copy, x_test_copy
 
     def remove_feature(self, feature: str) -> None:
-        """Removes a feature from all instances 
+        """Removes a feature from all instances
 
         Parameters
         ----------
         feature : str
             Column name
-        """        
+        """
         if feature in self.features:
             super().remove_feature(feature)
             if feature in self.ordinal_features:
@@ -307,9 +311,10 @@ class AutoCarver(GroupedListDiscretizer):
         xtabs_test = get_xtabs(self.features, x_test_copy, y_test, labels_orders)
 
         # optimal butcketization/carving of each feature
-        for n, feature in enumerate(self.features):
+        all_features = self.features[:]  # necessary as features are being removed from self.features
+        for n, feature in enumerate(all_features):
             if self.verbose:  # verbose if requested
-                print(f"\n------\n[AutoCarver] Fit {feature} ({n+1}/{len(self.features)})\n---")
+                print(f"\n------\n[AutoCarver] Fit {feature} ({n+1}/{len(all_features)})\n---")
 
             # getting xtabs on train/test
             xtab = xtabs[feature]
@@ -331,10 +336,12 @@ class AutoCarver(GroupedListDiscretizer):
 
                 # updating label_orders
                 labels_orders.update({feature: order})
-            
+
             # no suitable combination has been found -> removing feature
             else:
-                print(f"No robust combination for feature '{feature}' could be found. It will be ignored. You might have to increase the size of your test sample (test sample not representative of test sample for this feature) or you should consider dropping this features.")
+                print(
+                    f"No robust combination for feature '{feature}' could be found. It will be ignored. You might have to increase the size of your test sample (test sample not representative of test sample for this feature) or you should consider dropping this features."
+                )
                 self.remove_feature(feature)
                 if feature in labels_orders:
                     labels_orders.pop(feature)
@@ -407,12 +414,12 @@ class AutoCarver(GroupedListDiscretizer):
 
                 # all possible consecutive combinations
                 combinations = consecutive_combinations(
-                    raw_order, self.max_n_mod, min_group_size=self.min_group_size
+                    raw_order, self.max_n_mod - 1, min_group_size=self.min_group_size
                 )
 
                 # adding combinations with NaNs
                 nan_combinations = add_nan_in_combinations(
-                    combinations, self.str_nan, self.max_n_mod
+                    combinations, self.str_nan, self.max_n_mod - 1
                 )
 
                 # getting most associated combination
@@ -578,10 +585,10 @@ def association_xtab(xtab: DataFrame, n_obs, n_mod_y) -> dict[str, float]:
     chi2 = chi2_contingency(xtab)[0]
 
     # Cramer's V
-    cramerv = np.sqrt(chi2 / n_obs / (n_mod_y - 1))
+    cramerv = sqrt(chi2 / n_obs / (n_mod_y - 1))
 
     # Tschuprow's T
-    tschuprowt = np.sqrt(chi2 / n_obs / np.sqrt((n_mod_x - 1) * (n_mod_y - 1)))
+    tschuprowt = sqrt(chi2 / n_obs / sqrt((n_mod_x - 1) * (n_mod_y - 1)))
 
     return {"cramerv": cramerv, "tschuprowt": tschuprowt}
 
@@ -590,16 +597,16 @@ def vectorized_groupby_sum(xtab: DataFrame, groupby: list[str]):
     """Groups a crosstab by groupby and sums column values by groups"""
 
     # all indices that may be duplicated
-    index_values = np.array(groupby)
+    index_values = array(groupby)
 
     # all unique indices deduplicated
-    unique_indices = np.unique(index_values)
+    unique_indices = unique(index_values)
 
     # initiating summed up array with zeros
-    summed_values = np.zeros((len(unique_indices), len(xtab.columns)))
+    summed_values = zeros((len(unique_indices), len(xtab.columns)))
 
     # for each unique_index found in index_values sums xtab.Values at corresponding position in summed_values
-    np.add.at(summed_values, np.searchsorted(unique_indices, index_values), xtab.values)
+    add.at(summed_values, searchsorted(unique_indices, index_values), xtab.values)
 
     # converting back to dataframe
     grouped_xtab = DataFrame(summed_values, index=unique_indices, columns=xtab.columns)
@@ -845,6 +852,7 @@ def plot_stats(stats: DataFrame) -> tuple[Figure, Axes]:
 
     return fig, ax
 
+
 def load_carver(json_serialized_auto_carver: str) -> GroupedListDiscretizer:
     """_summary_
 
@@ -862,7 +870,7 @@ def load_carver(json_serialized_auto_carver: str) -> GroupedListDiscretizer:
     json_deserialized_auto_carver = loads(json_serialized_auto_carver)
 
     # deserializing values_orders
-    values_orders = json_deserialize_values_orders(json_deserialized_auto_carver['values_orders'])
+    values_orders = json_deserialize_values_orders(json_deserialized_auto_carver["values_orders"])
 
     # updating auto_carver attributes
     json_deserialized_auto_carver.update({"values_orders": values_orders})

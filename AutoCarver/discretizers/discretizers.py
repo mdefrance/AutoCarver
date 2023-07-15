@@ -3,19 +3,16 @@ for a binary classification model.
 """
 
 from typing import Union
+
 from numpy import nan
 from pandas import DataFrame, Series, unique
 
-from .utils.base_discretizers import (
-    GroupedListDiscretizer,
-    check_new_values,
-    min_value_counts,
-)
+from .utils.base_discretizers import GroupedListDiscretizer, check_new_values, min_value_counts
+from .utils.grouped_list import GroupedList
 from .utils.qualitative_discretizers import DefaultDiscretizer, OrdinalDiscretizer
 from .utils.quantitative_discretizers import QuantileDiscretizer
 from .utils.type_discretizers import StringDiscretizer
 
-from .utils.grouped_list import GroupedList
 
 class Discretizer(GroupedListDiscretizer):
     """Automatic discretizing of continuous, categorical and categorical ordinal features.
@@ -116,16 +113,16 @@ class Discretizer(GroupedListDiscretizer):
             features=self.features,
             values_orders=values_orders,
             input_dtypes=self.input_dtypes,
-            output_dtype='str',
+            output_dtype="str",
             str_nan=str_nan,
-            str_default = str_default,
+            str_default=str_default,
             copy=copy,
             verbose=verbose,
         )
 
         # class specific attributes
         self.min_freq = min_freq
-    
+
     def remove_feature(self, feature: str) -> None:
         """Removes a feature from the Discretizer
 
@@ -149,7 +146,7 @@ class Discretizer(GroupedListDiscretizer):
         y : Series
             _description_
         """
-        # Checking for binary target and copying X 
+        # Checking for binary target and copying X
         x_copy = self.prepare_data(X, y)
 
         # [Qualitative features] Grouping qualitative features
@@ -294,9 +291,9 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
             features=self.features,
             values_orders=values_orders,
             input_dtypes=input_dtypes,
-            output_dtype='str',
+            output_dtype="str",
             str_nan=str_nan,
-            str_default = str_default,
+            str_default=str_default,
             copy=copy,
             verbose=verbose,
         )
@@ -327,12 +324,16 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
 
         # checking for ids (unique value per row)
         frequencies = x_copy[self.features].apply(
-            lambda u: u.value_counts(normalize=True, dropna=False).drop(nan, errors='ignore').max(), axis=0
+            lambda u: u.value_counts(normalize=True, dropna=False).drop(nan, errors="ignore").max(),
+            axis=0,
         )
         # for each feature, checking that at least one value is more frequent than min_freq
-        for feature in self.features:
+        all_features = self.features[:]  # necessary as features are being removed from self.features
+        for feature in all_features:
             if frequencies[feature] < self.min_freq:
-                print(f"For feature '{feature}', the largest modality has {frequencies[feature]:2.2%} observations which is lower than {self.min_freq:2.2%}. This feature will not be Discretized. Consider decreasing parameter min_freq or removing this feature.")
+                print(
+                    f"For feature '{feature}', the largest modality has {frequencies[feature]:2.2%} observations which is lower than min_freq={self.min_freq:2.1%}. This feature will not be Discretized. Consider decreasing parameter min_freq or removing this feature."
+                )
                 self.remove_feature(feature)
 
         # checking for columns containing floats or integers even with filled nans
@@ -343,13 +344,17 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
         if any(not_object):
             features_to_convert = list(not_object.index[not_object])
             if self.verbose:
-                unexpected_dtypes = [typ for dtyp in dtypes[not_object] for typ in dtyp if typ != str]
+                unexpected_dtypes = [
+                    typ for dtyp in dtypes[not_object] for typ in dtyp if typ != str
+                ]
                 print(
                     f"""Non-string features: {str(features_to_convert)}. Trying to convert them using type_discretizers.StringDiscretizer, otherwise convert them manually. Unexpected data types: {str(list(unexpected_dtypes))}."""
                 )
 
             # converting specified features into qualitative features
-            string_discretizer = StringDiscretizer(features=features_to_convert, values_orders=self.values_orders, verbose=self.verbose)
+            string_discretizer = StringDiscretizer(
+                features=features_to_convert, values_orders=self.values_orders, verbose=self.verbose
+            )
             x_copy = string_discretizer.fit_transform(x_copy)
 
             # updating values_orders accordingly
@@ -359,10 +364,12 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
         known_values = {feature: values.values() for feature, values in self.values_orders.items()}
 
         # checking that all unique values in X are in values_orders
-        check_new_values(x_copy, self.ordinal_features, known_values, self.str_nan, self.str_default)
+        check_new_values(
+            x_copy, self.ordinal_features, known_values, self.str_nan, self.str_default
+        )
 
         return x_copy
-    
+
     def remove_feature(self, feature: str) -> None:
         """Removes a feature from the Discretizer
 
@@ -495,7 +502,7 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
             features=quantitative_features,
             values_orders=values_orders,
             input_dtypes=input_dtypes,
-            output_dtype='str',
+            output_dtype="str",
             str_nan=str_nan,
             copy=copy,
             verbose=verbose,
@@ -512,7 +519,9 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
         # checking for quantitative columns
         dtypes = x_copy[self.features].applymap(type).apply(unique)
         not_numeric = dtypes.apply(lambda u: str in u)
-        assert all(~not_numeric), f"Non-numeric features: {str(list(not_numeric[not_numeric].index))}"
+        assert all(
+            ~not_numeric
+        ), f"Non-numeric features: {str(list(not_numeric[not_numeric].index))}"
 
         return x_copy
 
@@ -529,7 +538,7 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
             values_orders=self.values_orders,
             str_nan=self.str_nan,
             copy=True,  # needs to be True so that it does not transform x_copy
-            verbose = self.verbose,
+            verbose=self.verbose,
         )
         x_copy = quantile_discretizer.fit_transform(x_copy, y)
 

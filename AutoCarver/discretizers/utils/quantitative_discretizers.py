@@ -45,8 +45,8 @@ class QuantileDiscretizer(GroupedListDiscretizer):
         super().__init__(
             features=features,
             values_orders=values_orders,
-            input_dtypes='float',
-            output_dtype='str',
+            input_dtypes="float",
+            output_dtype="str",
             str_nan=str_nan,
             copy=copy,
             verbose=verbose,
