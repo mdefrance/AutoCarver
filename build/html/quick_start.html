@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quick Start &mdash; AutoCarver 5.0.7 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Installation" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            AutoCarver
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Quick Start</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#setting-up-samples">Setting up samples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#picking-up-columns-to-carve">Picking up columns to Carve</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#using-autocarver">Using AutoCarver</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#fitting-autocarver">Fitting AutoCarver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#applying-autocarver">Applying AutoCarver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#saving-autocarver">Saving AutoCarver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#loading-autocarver">Loading AutoCarver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#feature-selection">Feature Selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#further-readings-and-in-depth-examples">Further readings and in-depth examples</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">AutoCarver</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Quick Start</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/quick_start.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="quick-start">
+<h1>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this heading"></a></h1>
+<section id="setting-up-samples">
+<h2>Setting up samples<a class="headerlink" href="#setting-up-samples" title="Permalink to this heading"></a></h2>
+<p><cite>AutoCarver</cite> is able to test the robustness of buckets on a dev sample <cite>X_dev</cite>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># defining training and testing sets</span>
+<span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># used to fit the AutoCarver and the model</span>
+<span class="n">X_dev</span><span class="p">,</span> <span class="n">y_dev</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># used to validate the AutoCarver&#39;s buckets and optimize the model&#39;s parameters/hyperparameters</span>
+<span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># used to evaluate the final model&#39;s performances</span>
+</pre></div>
+</div>
+</section>
+<section id="picking-up-columns-to-carve">
+<h2>Picking up columns to Carve<a class="headerlink" href="#picking-up-columns-to-carve" title="Permalink to this heading"></a></h2>
+<p>TODO: automatic conversion to str for qualitative features</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">quantitative_features</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Quantitative&#39;</span><span class="p">,</span> <span class="s1">&#39;Discrete_Quantitative_highnan&#39;</span><span class="p">,</span> <span class="s1">&#39;Discrete_Quantitative_lownan&#39;</span><span class="p">,</span> <span class="s1">&#39;Discrete_Quantitative&#39;</span><span class="p">,</span> <span class="s1">&#39;Discrete_Quantitative_rarevalue&#39;</span><span class="p">]</span>
+<span class="n">qualitative_features</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Qualitative&quot;</span><span class="p">,</span> <span class="s2">&quot;Qualitative_grouped&quot;</span><span class="p">,</span> <span class="s2">&quot;Qualitative_lownan&quot;</span><span class="p">,</span> <span class="s2">&quot;Qualitative_highnan&quot;</span><span class="p">,</span> <span class="s2">&quot;Discrete_Qualitative_noorder&quot;</span><span class="p">,</span> <span class="s2">&quot;Discrete_Qualitative_lownan_noorder&quot;</span><span class="p">,</span> <span class="s2">&quot;Discrete_Qualitative_rarevalue_noorder&quot;</span><span class="p">]</span>
+<span class="n">target</span> <span class="o">=</span> <span class="s2">&quot;quali_ordinal_target&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="using-autocarver">
+<h2>Using AutoCarver<a class="headerlink" href="#using-autocarver" title="Permalink to this heading"></a></h2>
+<section id="fitting-autocarver">
+<h3>Fitting AutoCarver<a class="headerlink" href="#fitting-autocarver" title="Permalink to this heading"></a></h3>
+<p>All specified features can now automatically be carved in an association maximising grouping of their modalities while reducing their number. Following parameters must be set for <cite>AutoCarver</cite>:</p>
+<ul>
+<li><p><cite>values_orders</cite>, dict of all features matched to the order of their modalities</p></li>
+<li><p><cite>max_n_mod</cite>, maximum number of modalities for the carved features (excluding <cite>numpy.nan</cite>). All possible combinations of less than <cite>max_n_mod</cite> groups of modalities will be tested. Should be set from 4 (faster) to 6 (preciser).</p></li>
+<li><p><cite>dropna</cite>, whether or not to try grouping missing values to non-missing values. Use <cite>keep_nans=True</cite> if you want <cite>numpy.nan</cite> to remain as a specific modality.</p></li>
+<li><p><cite>sort_by</cite>, association measure used to find the optimal group modality combination.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Use <cite>sort_by=’cramerv’</cite> for more modalities, less robust.</p></li>
+<li><p>Use <cite>sort_by=’tschuprowt’</cite> for more robust modalities.</p></li>
+<li><p><strong>Tip:</strong> a combination of features carved with <cite>sort_by=’cramerv’</cite> and <cite>sort_by=’tschuprowt’</cite> can sometime prove to be better than only one of those.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">AutoCarver.auto_carver</span> <span class="kn">import</span> <span class="n">AutoCarver</span>
+
+<span class="c1"># intiating AutoCarver</span>
+<span class="n">auto_carver</span> <span class="o">=</span> <span class="n">AutoCarver</span><span class="p">(</span>
+    <span class="n">quantitative_features</span><span class="o">=</span><span class="n">quantitative_features</span><span class="p">,</span>
+    <span class="n">qualitative_features</span><span class="o">=</span><span class="n">qualitative_features</span><span class="p">,</span>
+    <span class="n">min_freq</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">max_n_mod</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">sort_by</span><span class="o">=</span><span class="s1">&#39;cramerv&#39;</span><span class="p">,</span>
+    <span class="n">output_dtype</span><span class="o">=</span><span class="s1">&#39;float&#39;</span><span class="p">,</span>
+    <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># fitting on training sample, a dev sample can be specified to evaluate carving robustness</span>
+<span class="n">x_discretized</span> <span class="o">=</span> <span class="n">auto_carver</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">x_train</span><span class="p">[</span><span class="n">target</span><span class="p">],</span> <span class="n">X_dev</span><span class="o">=</span><span class="n">x_dev</span><span class="p">,</span> <span class="n">y_dev</span><span class="o">=</span><span class="n">x_dev</span><span class="p">[</span><span class="n">target</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+<section id="applying-autocarver">
+<h3>Applying AutoCarver<a class="headerlink" href="#applying-autocarver" title="Permalink to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># transforming dev/test sample accordingly</span>
+<span class="n">x_dev_discretized</span> <span class="o">=</span> <span class="n">auto_carver</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">x_dev</span><span class="p">)</span>
+<span class="n">x_test_discretized</span> <span class="o">=</span> <span class="n">auto_carver</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">x_test</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="saving-autocarver">
+<h3>Saving AutoCarver<a class="headerlink" href="#saving-autocarver" title="Permalink to this heading"></a></h3>
+<p>The <cite>AutoCarver</cite> can safely be stored as a .json file.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
+
+<span class="c1"># storing as json file</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;my_carver.json&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">my_carver_json</span><span class="p">:</span>
+    <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">auto_carver</span><span class="o">.</span><span class="n">to_json</span><span class="p">(),</span> <span class="n">my_carver_json</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="loading-autocarver">
+<h3>Loading AutoCarver<a class="headerlink" href="#loading-autocarver" title="Permalink to this heading"></a></h3>
+<p>The <cite>AutoCarver</cite> can safely be loaded from a .json file.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
+
+<span class="kn">from</span> <span class="nn">AtuoCarver.auto_carver</span> <span class="kn">import</span> <span class="n">load_carver</span>
+
+<span class="c1"># loading json file</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;my_carver.json&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">my_carver_json</span><span class="p">:</span>
+    <span class="n">auto_carver</span> <span class="o">=</span> <span class="n">load_carver</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">my_carver_json</span><span class="p">))</span>
+</pre></div>
+</div>
+</section>
+<section id="feature-selection">
+<h3>Feature Selection<a class="headerlink" href="#feature-selection" title="Permalink to this heading"></a></h3>
+<p>TODO</p>
+</section>
+<section id="further-readings-and-in-depth-examples">
+<h3>Further readings and in-depth examples<a class="headerlink" href="#further-readings-and-in-depth-examples" title="Permalink to this heading"></a></h3>
+<p>TODO: Add links to other documentations</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Mario Defrance.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
