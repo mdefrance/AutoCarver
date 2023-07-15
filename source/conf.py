@@ -1,3 +1,10 @@
+import os
+import sys
+
+# -- Path setup --------------------------------------------------------------
+sys.path.append('../AutoCarver')
+
+
 # Configuration file for the Sphinx documentation builder.
 #
 # For the full list of built-in configuration values, see the documentation:
@@ -9,7 +16,7 @@
 project = 'AutoCarver'
 copyright = '2023, Mario Defrance'
 author = 'Mario Defrance'
-release = '5.0.7'
+release = 'AutoCarver 5.0.7 - Beta Release'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -18,6 +25,8 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
     'sphinx_rtd_theme',
+    'sphinx.ext.autodoc',
+    #"sphinx.ext.autosummary",
 ]
 
 templates_path = ['_templates']

@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quick Start &mdash; AutoCarver 5.0.7 documentation</title>
+  <title>Quick Start &mdash; AutoCarver AutoCarver 5.0.7 - Beta Release documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -19,6 +19,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="AutoCarver" href="auto_carver.html" />
     <link rel="prev" title="Installation" href="installation.html" /> 
 </head>
 
@@ -58,6 +59,8 @@
 <li class="toctree-l2"><a class="reference internal" href="#in-depth-examples">In-depth examples</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="auto_carver.html">AutoCarver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="discretizers.html">Discretizers</a></li>
 </ul>
 
         </div>
@@ -124,7 +127,7 @@
 </div></blockquote>
 </li>
 </ul>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">AutoCarver.auto_carver</span> <span class="kn">import</span> <span class="n">AutoCarver</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">AutoCarver</span> <span class="kn">import</span> <span class="n">AutoCarver</span>
 
 <span class="c1"># intiating AutoCarver</span>
 <span class="n">auto_carver</span> <span class="o">=</span> <span class="n">AutoCarver</span><span class="p">(</span>
@@ -167,7 +170,7 @@
 <p>The <cite>AutoCarver</cite> can safely be loaded from a .json file.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
 
-<span class="kn">from</span> <span class="nn">AtuoCarver.auto_carver</span> <span class="kn">import</span> <span class="n">load_carver</span>
+<span class="kn">from</span> <span class="nn">AtuoCarver</span> <span class="kn">import</span> <span class="n">load_carver</span>
 
 <span class="c1"># loading json file</span>
 <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;my_carver.json&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">my_carver_json</span><span class="p">:</span>
@@ -245,6 +248,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="auto_carver.html" class="btn btn-neutral float-right" title="AutoCarver" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

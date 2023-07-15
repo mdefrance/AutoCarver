@@ -48,7 +48,7 @@ All specified features can now automatically be carved in an association maximis
 
 .. code-block:: python
 
-    from AutoCarver.auto_carver import AutoCarver
+    from AutoCarver import AutoCarver
 
     # intiating AutoCarver
     auto_carver = AutoCarver(
@@ -100,7 +100,7 @@ The `AutoCarver` can safely be loaded from a .json file.
 
     import json
 
-    from AtuoCarver.auto_carver import load_carver
+    from AtuoCarver import load_carver
 
     # loading json file
     with open('my_carver.json', 'r') as my_carver_json:

@@ -16,7 +16,7 @@ from .discretizers.utils.base_discretizers import (
     convert_to_labels,
     convert_to_values,
 )
-from .discretizers.utils.grouped_list import GroupedList, is_equal
+from .discretizers.utils.grouped_list import GroupedList
 from .discretizers.utils.serialization import json_deserialize_values_orders
 
 
@@ -127,7 +127,7 @@ class AutoCarver(GroupedListDiscretizer):
         output_dtype: str = "float",
         dropna: bool = True,
         copy: bool = False,
-        verbose: bool = True,
+        verbose: bool = False,
         pretty_print: bool = False,
     ) -> None:
         """_summary_
