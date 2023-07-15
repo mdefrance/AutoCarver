@@ -24,11 +24,9 @@ pip install autocarver
 
 ## Quick-Start Examples
 
-### Setting up Samples, initiating Pipeline
+### Setting up Samples
 
 `AutoCarver` is able to test the robustness of buckets on a dev sample `X_dev`.
-
-One of the great advantages of the `AutoCarver` package is its seamless integration with scikit-learn pipelines, making it incredibly convenient for production-level implementations. By leveraging scikit-learn's pipeline functionality, `AutoCarver` can be effortlessly incorporated into the end-to-end machine learning workflow.
 
 ```python
 # defining training and testing sets
@@ -37,20 +35,9 @@ X_dev, y_dev = ...  # used to validate the AutoCarver's buckets and optimize the
 X_test, y_test = ...  # used to evaluate the final model's performances
 ```
 
+### Setting up features to Carve
 
-
-### Maximize target association of features' buckets with AutoCarver
-
-All features need to be discretized via a `Discretizer` so `AutoCarver` can group their modalities. Following parameters must be set for `Discretizer`:
-
-All specified features can now automatically be carved in an association maximising grouping of their modalities while reducing their number. Following parameters must be set for `AutoCarver`:
-- `values_orders`, dict of all features matched to the order of their modalities
-- `sort_by`, association measure used to find the optimal group modality combination.
-  - Use `sort_by='cramerv'` for more modalities, less robust.
-  - Use `sort_by='tschuprowt'` for more robust modalities.
-  - **Tip:** a combination of features carved with `sort_by='cramerv'` and `sort_by='tschuprowt'` can sometime prove to be better than only one of those.
-- `max_n_mod`, maximum number of modalities for the carved features (excluding `numpy.nan`). All possible combinations of less than `max_n_mod` groups of modalities will be tested. Should be set from 4 (faster) to 6 (preciser).
-- `keep_nans`, whether or not to try groupin missing values to non-missing values. Use `keep_nans=True` if you want `numpy.nan` to remain as a specific modality.
+**TODO: automatic conversion to str for qualitative features
 
 ```python
 from AutoCarver.auto_carver import AutoCarver
@@ -64,6 +51,21 @@ values_orders = {
     "Discrete_Qualitative_highnan" : ["1", "2", "3", "4", "5", "6", "7"],
 }
 target = "quali_ordinal_target"
+```
+
+### Maximize target association of features' buckets with AutoCarver
+
+All specified features can now automatically be carved in an association maximising grouping of their modalities while reducing their number. Following parameters must be set for `AutoCarver`:
+- `values_orders`, dict of all features matched to the order of their modalities
+- `sort_by`, association measure used to find the optimal group modality combination.
+  - Use `sort_by='cramerv'` for more modalities, less robust.
+  - Use `sort_by='tschuprowt'` for more robust modalities.
+  - **Tip:** a combination of features carved with `sort_by='cramerv'` and `sort_by='tschuprowt'` can sometime prove to be better than only one of those.
+- `max_n_mod`, maximum number of modalities for the carved features (excluding `numpy.nan`). All possible combinations of less than `max_n_mod` groups of modalities will be tested. Should be set from 4 (faster) to 6 (preciser).
+- `dropna`, whether or not to try grouping missing values to non-missing values. Use `keep_nans=True` if you want `numpy.nan` to remain as a specific modality.
+
+```python
+from AutoCarver.auto_carver import AutoCarver
 
 # intiating AutoCarver
 auto_carver = AutoCarver(
@@ -80,7 +82,7 @@ auto_carver = AutoCarver(
 )
 
 # fitting on training sample, a dev sample can be specified to evaluate carving robustness
-x_discretized = auto_carver.fit_transform(x_train, x_train[target], X_test=x_dev, y_test=x_dev[target])
+x_discretized = auto_carver.fit_transform(x_train, x_train[target], X_dev=x_dev, y_dev=x_dev[target])
 
 # transforming dev/test sample accordingly
 x_dev_discretized = auto_carver.transform(x_dev)
