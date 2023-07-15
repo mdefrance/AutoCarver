@@ -12,125 +12,6 @@ from .grouped_list import GroupedList
 from .serialization import json_serialize_values_orders
 
 
-def nan_unique(x: Series) -> list[Any]:
-    """Unique non-NaN values.
-
-    Parameters
-    ----------
-    x : Series
-        Values to be deduplicated.
-
-    Returns
-    -------
-    list[Any]
-        List of unique non-nan values
-    """
-
-    # unique values
-    uniques = unique(x)
-
-    # filtering out nans
-    uniques = [u for u in uniques if notna(u)]
-
-    return uniques
-
-
-def applied_to_dict_list(applied: Union[DataFrame, Series]) -> dict[str, list[Any]]:
-    """Converts a DataFrame or a List in a Dict of lists
-
-    Parameters
-    ----------
-    applied : Union[DataFrame, Series]
-        Result of pandas.DataFrame.apply
-
-    Returns
-    -------
-    Dict[list[Any]]
-        Dict of lists of rows values
-    """
-    # TODO: use this function whenever apply is used
-
-    # case when it's a Series
-    converted = applied.to_dict()
-
-    # case when it's a DataFrame
-    if isinstance(applied, DataFrame):
-        converted = applied.to_dict(orient="list")
-
-    return converted
-
-
-# TODO: remove known_values
-def check_new_values(
-    X: DataFrame,
-    features: list[str],
-    known_values: dict[str, list[Any]],
-    str_nan: str,
-    str_default: str,
-) -> None:
-    """Checks for new, unexpected values, in X
-
-    Parameters
-    ----------
-    X : DataFrame
-        New DataFrame (at transform time)
-    features : list[str]
-        List of column names
-    known_values : dict[str, list[Any]]
-        Dict of known values per column name
-    """
-    # unique non-nan values in new dataframe
-    uniques = X[features].apply(
-        nan_unique,
-        axis=0,
-        result_type="expand",
-    )
-    uniques = applied_to_dict_list(uniques)
-
-    # checking for unexpected values for each feature
-    for feature in features:
-        unexpected = [val for val in uniques[feature] if val not in known_values[feature]]
-        assert (
-            str_nan not in unexpected
-        ), "It seems that your dataset has already been Discretized. AutoCarver only takes raw data as input (Discretizer included since v5.0.0). Be careful with `copy=False` not to rerun the same code twice. Ohterwise pass orders to `values_orders` or change the value of `str_nan`. "
-        assert (
-            str_default not in unexpected
-        ), "It seems that your dataset has already been Discretized. AutoCarver only takes raw data as input (Discretizer included since v5.0.0). Be careful with `copy=False` not to rerun the same code twice. Ohterwise pass orders to `values_orders` or change the value of `str_default`. "
-        assert (
-            len(unexpected) == 0
-        ), f"Unexpected value! The ordering for values: {str(list(unexpected))} of feature '{feature}' was not provided. There might be new values in your test/dev set. Consider taking a bigger test/dev set or dropping the column {feature}."
-
-
-def check_missing_values(
-    X: DataFrame, features: list[str], known_values: dict[str, list[Any]]
-) -> None:
-    """Checks for missing values from X, (unexpected values in values_orders)
-
-    Parameters
-    ----------
-    X : DataFrame
-        New DataFrame (at transform time)
-    features : list[str]
-        List of column names
-    known_values : dict[str, list[Any]]
-        Dict of known values per column name
-    """
-    # unique non-nan values in new dataframe
-    uniques = X[features].apply(
-        nan_unique,
-        axis=0,
-        result_type="expand",
-    )
-    uniques = applied_to_dict_list(uniques)
-
-    # checking for unexpected values for each feature
-    for feature in features:
-        unexpected = [val for val in known_values[feature] if val not in uniques[feature]]
-        assert (
-            len(unexpected) == 0
-        ), f"Unexpected value! The ordering for values: {str(list(unexpected))} of feature '{feature}' was provided but there are not matching value in provided X. You should check 'values_orders['{feature}']' for unwanted values."
-
-
 # TODO: output a json
 class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
     """Discretizer that uses a dict of grouped values."""
@@ -960,3 +841,122 @@ def format_quantiles(a_list: list[float]) -> list[str]:
             order += [f"{lower} < x <= {upper}"]
 
     return order
+
+
+def nan_unique(x: Series) -> list[Any]:
+    """Unique non-NaN values.
+
+    Parameters
+    ----------
+    x : Series
+        Values to be deduplicated.
+
+    Returns
+    -------
+    list[Any]
+        List of unique non-nan values
+    """
+
+    # unique values
+    uniques = unique(x)
+
+    # filtering out nans
+    uniques = [u for u in uniques if notna(u)]
+
+    return uniques
+
+
+def applied_to_dict_list(applied: Union[DataFrame, Series]) -> dict[str, list[Any]]:
+    """Converts a DataFrame or a List in a Dict of lists
+
+    Parameters
+    ----------
+    applied : Union[DataFrame, Series]
+        Result of pandas.DataFrame.apply
+
+    Returns
+    -------
+    Dict[list[Any]]
+        Dict of lists of rows values
+    """
+    # TODO: use this function whenever apply is used
+
+    # case when it's a Series
+    converted = applied.to_dict()
+
+    # case when it's a DataFrame
+    if isinstance(applied, DataFrame):
+        converted = applied.to_dict(orient="list")
+
+    return converted
+
+
+# TODO: remove known_values
+def check_new_values(
+    X: DataFrame,
+    features: list[str],
+    known_values: dict[str, list[Any]],
+    str_nan: str,
+    str_default: str,
+) -> None:
+    """Checks for new, unexpected values, in X
+
+    Parameters
+    ----------
+    X : DataFrame
+        New DataFrame (at transform time)
+    features : list[str]
+        List of column names
+    known_values : dict[str, list[Any]]
+        Dict of known values per column name
+    """
+    # unique non-nan values in new dataframe
+    uniques = X[features].apply(
+        nan_unique,
+        axis=0,
+        result_type="expand",
+    )
+    uniques = applied_to_dict_list(uniques)
+
+    # checking for unexpected values for each feature
+    for feature in features:
+        unexpected = [val for val in uniques[feature] if val not in known_values[feature]]
+        assert (
+            str_nan not in unexpected
+        ), "It seems that your dataset has already been Discretized. AutoCarver only takes raw data as input (Discretizer included since v5.0.0). Be careful with `copy=False` not to rerun the same code twice. Ohterwise pass orders to `values_orders` or change the value of `str_nan`. "
+        assert (
+            str_default not in unexpected
+        ), "It seems that your dataset has already been Discretized. AutoCarver only takes raw data as input (Discretizer included since v5.0.0). Be careful with `copy=False` not to rerun the same code twice. Ohterwise pass orders to `values_orders` or change the value of `str_default`. "
+        assert (
+            len(unexpected) == 0
+        ), f"Unexpected value! The ordering for values: {str(list(unexpected))} of feature '{feature}' was not provided. There might be new values in your test/dev set. Consider taking a bigger test/dev set or dropping the column {feature}."
+
+
+def check_missing_values(
+    X: DataFrame, features: list[str], known_values: dict[str, list[Any]]
+) -> None:
+    """Checks for missing values from X, (unexpected values in values_orders)
+
+    Parameters
+    ----------
+    X : DataFrame
+        New DataFrame (at transform time)
+    features : list[str]
+        List of column names
+    known_values : dict[str, list[Any]]
+        Dict of known values per column name
+    """
+    # unique non-nan values in new dataframe
+    uniques = X[features].apply(
+        nan_unique,
+        axis=0,
+        result_type="expand",
+    )
+    uniques = applied_to_dict_list(uniques)
+
+    # checking for unexpected values for each feature
+    for feature in features:
+        unexpected = [val for val in known_values[feature] if val not in uniques[feature]]
+        assert (
+            len(unexpected) == 0
+        ), f"Unexpected value! The ordering for values: {str(list(unexpected))} of feature '{feature}' was provided but there are not matching value in provided X. You should check 'values_orders['{feature}']' for unwanted values."

@@ -110,15 +110,62 @@ def init_df(seed: int, size: int = 10000) -> DataFrame:
 
 
 @fixture
-def x_train():
+def x_train() -> DataFrame:
+    """Simulates a Train sample
+
+    Returns
+    -------
+    DataFrame
+        Train sample
+    """
+    # initiating dev sample
     return init_df(123)
 
 
 @fixture
-def x_dev_1():
+def x_dev_1() -> DataFrame:
+    """Simulates a Dev sample
+
+    Returns
+    -------
+    DataFrame
+        Dev sample
+    """
+    # initiating dev sample
     return init_df(1234)
 
 
 @fixture
-def x_dev_2():
+def x_dev_2() -> DataFrame:
+    """Simulates a Dev sample
+
+    Returns
+    -------
+    DataFrame
+        Dev sample
+    """
+    # initiating dev sample
     return init_df(12345)
+
+
+@fixture
+def x_dev_wrong(x_dev_1: DataFrame) -> DataFrame:
+    """Simulates a wrong Dev sample
+
+    Parameters
+    ----------
+    x_dev_1 : DataFrame
+        Simulated Dev sample
+
+    Returns
+    -------
+    DataFrame
+        Wrong Dev sample
+    """
+    # initiating dev sample
+    x_dev = x_dev_1.copy()
+
+    # replacing a value for a unknown value 
+    x_dev["Qualitative"] = x_dev["Qualitative"].replace("Category C", "Category Y")
+
+    return x_dev

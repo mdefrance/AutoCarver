@@ -1,8 +1,11 @@
-"""Set of tests for auto_carver module."""
+"""Set of tests for auto_carver module.
+
+# TODO: test avec chained_discretizer
+"""
 
 from json import dumps, loads
 from pandas import DataFrame
-from pytest import fixture
+from pytest import fixture, raises
 
 from AutoCarver.auto_carver import AutoCarver, load_carver
 
@@ -26,7 +29,7 @@ def copy(request) -> bool:
     return request.param
 
 def test_auto_carver(
-    x_train: DataFrame, x_dev_1: DataFrame, output_dtype: str, dropna: bool, sort_by: str, copy: bool
+    x_train: DataFrame, x_dev_1: DataFrame, x_dev_wrong: DataFrame, output_dtype: str, dropna: bool, sort_by: str, copy: bool
 ) -> None:
     """Tests AutoCarver
 
@@ -36,6 +39,8 @@ def test_auto_carver(
         Simulated Train DataFrame
     x_dev_1 : DataFrame
         Simulated Dev DataFrame
+    x_dev_1 : DataFrame
+        Simulated wrong Dev DataFrame
     output_dtype : str
         Output type 'str' or 'float'
     dropna : bool
@@ -168,7 +173,5 @@ def test_auto_carver(
         loaded_carver.summary() == auto_carver.summary()
     ), "Non-identical AutoCarver when loading JSON"
 
-
-
-# TODO test missing values in test
-# TODO: test avec chained_discretizer
+    with raises(AssertionError):
+        x_wrong = auto_carver.transform(x_dev_wrong)
