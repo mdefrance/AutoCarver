@@ -173,6 +173,10 @@ class AutoCarver(GroupedListDiscretizer):
             ordinal_features = []
         self.ordinal_features = list(set(ordinal_features))
 
+        # checking that qualitatitve and quantitative featues are distinct
+        assert all(quali_feature not in quantitative_features for quali_feature in qualitative_features + ordinal_features), f"A feature of `quantitative_features` also is in `qualitative_features` or `ordinal_features`. Be carreful with your inputs!"
+        assert all(quanti_feature not in qualitative_features + ordinal_features for quanti_feature in quantitative_features), f"A feature of `qualitative_features` or `ordinal_features` also is in `quantitative_features`. Be carreful with your inputs!"
+
         # initializing input_dtypes
         self.input_dtypes = {feature: "str" for feature in qualitative_features + ordinal_features}
         self.input_dtypes.update({feature: "float" for feature in quantitative_features})

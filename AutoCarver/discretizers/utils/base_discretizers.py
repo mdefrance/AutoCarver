@@ -276,6 +276,8 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
                 self.values_orders.pop(feature)
             if feature in self.input_dtypes:
                 self.input_dtypes.pop(feature)
+            if feature in self.labels_per_values:
+                self.labels_per_values.pop(feature)
 
     def prepare_data(self, X: DataFrame, y: Series = None) -> DataFrame:
         """_summary_
