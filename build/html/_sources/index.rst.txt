@@ -12,6 +12,8 @@ Welcome to AutoCarver's documentation!
 
    installation
    quick_start
+   auto_carver
+   discretizers
 
 
 
