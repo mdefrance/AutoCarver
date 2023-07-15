@@ -5,7 +5,7 @@ for a binary classification model.
 from json import loads
 from typing import Any
 
-import numpy as np
+from numpy import array, sqrt, searchsorted, add, unique, zeros
 from IPython.display import display_html  # TODO: remove this
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
@@ -311,9 +311,10 @@ class AutoCarver(GroupedListDiscretizer):
         xtabs_test = get_xtabs(self.features, x_test_copy, y_test, labels_orders)
 
         # optimal butcketization/carving of each feature
-        for n, feature in enumerate(self.features):
+        all_features = self.features[:]  # necessary as features are being removed from self.features
+        for n, feature in enumerate(all_features):
             if self.verbose:  # verbose if requested
-                print(f"\n------\n[AutoCarver] Fit {feature} ({n+1}/{len(self.features)})\n---")
+                print(f"\n------\n[AutoCarver] Fit {feature} ({n+1}/{len(all_features)})\n---")
 
             # getting xtabs on train/test
             xtab = xtabs[feature]
@@ -413,12 +414,12 @@ class AutoCarver(GroupedListDiscretizer):
 
                 # all possible consecutive combinations
                 combinations = consecutive_combinations(
-                    raw_order, self.max_n_mod, min_group_size=self.min_group_size
+                    raw_order, self.max_n_mod - 1, min_group_size=self.min_group_size
                 )
 
                 # adding combinations with NaNs
                 nan_combinations = add_nan_in_combinations(
-                    combinations, self.str_nan, self.max_n_mod
+                    combinations, self.str_nan, self.max_n_mod - 1
                 )
 
                 # getting most associated combination
@@ -584,10 +585,10 @@ def association_xtab(xtab: DataFrame, n_obs, n_mod_y) -> dict[str, float]:
     chi2 = chi2_contingency(xtab)[0]
 
     # Cramer's V
-    cramerv = np.sqrt(chi2 / n_obs / (n_mod_y - 1))
+    cramerv = sqrt(chi2 / n_obs / (n_mod_y - 1))
 
     # Tschuprow's T
-    tschuprowt = np.sqrt(chi2 / n_obs / np.sqrt((n_mod_x - 1) * (n_mod_y - 1)))
+    tschuprowt = sqrt(chi2 / n_obs / sqrt((n_mod_x - 1) * (n_mod_y - 1)))
 
     return {"cramerv": cramerv, "tschuprowt": tschuprowt}
 
@@ -596,16 +597,16 @@ def vectorized_groupby_sum(xtab: DataFrame, groupby: list[str]):
     """Groups a crosstab by groupby and sums column values by groups"""
 
     # all indices that may be duplicated
-    index_values = np.array(groupby)
+    index_values = array(groupby)
 
     # all unique indices deduplicated
-    unique_indices = np.unique(index_values)
+    unique_indices = unique(index_values)
 
     # initiating summed up array with zeros
-    summed_values = np.zeros((len(unique_indices), len(xtab.columns)))
+    summed_values = zeros((len(unique_indices), len(xtab.columns)))
 
     # for each unique_index found in index_values sums xtab.Values at corresponding position in summed_values
-    np.add.at(summed_values, np.searchsorted(unique_indices, index_values), xtab.values)
+    add.at(summed_values, searchsorted(unique_indices, index_values), xtab.values)
 
     # converting back to dataframe
     grouped_xtab = DataFrame(summed_values, index=unique_indices, columns=xtab.columns)

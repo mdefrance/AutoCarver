@@ -328,10 +328,11 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
             axis=0,
         )
         # for each feature, checking that at least one value is more frequent than min_freq
-        for feature in self.features:
+        all_features = self.features[:]  # necessary as features are being removed from self.features
+        for feature in all_features:
             if frequencies[feature] < self.min_freq:
                 print(
-                    f"For feature '{feature}', the largest modality has {frequencies[feature]:2.2%} observations which is lower than {self.min_freq:2.2%}. This feature will not be Discretized. Consider decreasing parameter min_freq or removing this feature."
+                    f"For feature '{feature}', the largest modality has {frequencies[feature]:2.2%} observations which is lower than min_freq={self.min_freq:2.1%}. This feature will not be Discretized. Consider decreasing parameter min_freq or removing this feature."
                 )
                 self.remove_feature(feature)
 
