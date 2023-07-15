@@ -1,7 +1,7 @@
 """Set of tests for quantitative_discretizers module."""
 
-from pandas import DataFrame
 from numpy import inf
+from pandas import DataFrame
 
 from AutoCarver.discretizers.utils.quantitative_discretizers import QuantileDiscretizer
 

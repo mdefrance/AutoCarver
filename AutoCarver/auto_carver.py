@@ -4,8 +4,8 @@ for a binary classification model.
 
 from typing import Any
 
-from numpy import array, sqrt, searchsorted, add, unique, zeros
 from IPython.display import display_html
+from numpy import add, array, searchsorted, sqrt, unique, zeros
 from pandas import DataFrame, Series, crosstab
 from scipy.stats import chi2_contingency
 from tqdm import tqdm
@@ -16,99 +16,13 @@ from .discretizers.utils.base_discretizers import (
     convert_to_labels,
     convert_to_values,
 )
-from .discretizers.utils.grouped_list import GroupedList
+from .discretizers import GroupedList
 from .discretizers.utils.serialization import json_deserialize_values_orders
 
 
 class AutoCarver(GroupedListDiscretizer):
-    """Automatic carving of continuous, categorical and categorical ordinal
+    """Automatic carving of continuous, discrete, categorical and ordinal
     features that maximizes association with a binary target.
-
-    Modalities/values of features are carved/regrouped according to a computed
-    specific order defined based on their types:
-     - [Qualitative features] grouped based on modality target rate.
-     - [Qualitative ordinal features] grouped based on specified modality order
-     - [Quantitative features] grouped based on the order of their values.
-    Uses Tschurpow's T to find the optimal carving (regrouping) of modalities/
-    values of features.
-
-    Parameters
-    ----------
-    values_orders: dict, default {}
-        Dictionnary of features and list of their respective values' order.
-        Exemple: for an `age` feature, `values_orders` could be
-        `{'age': ['0-18', '18-30', '30-50', '50+']}`.
-
-    sort_by: str, default 'tschuprowt'
-        Association measure used to find the optimal group modality combination
-        Implemented: ['cramerv', 'tschuprowt']
-
-    max_n_mod: int, default 5
-        Maximum number of modalities for the carved features (excluding `nan`).
-         - All possible combinations of less than `max_n_mod` groups of
-           modalities will be tested.
-        Recommandation: `max_n_mod` should be set from 4 (faster) to 6
-        (preciser).
-
-    keep_nans: bool, default False
-        Whether or not to group `numpy.nan` to other modalities/values.
-
-    Examples
-    ----------
-
-    from AutoCarver import AutoCarver
-    from Discretizers import Discretizer
-    from sklearn.pipeline import Pipeline
-
-    # defining training and testing sets
-    X_train, y_train = train_set, train_set[target]
-    X_dev, y_dev = test_set, test_set[target]
-
-    # specifying features to be carved
-    selected_quanti = ['amount', 'distance', 'length', 'height']
-    selected_quali = ['age', 'type', 'grade', 'city']
-
-    # specifying orders of categorical ordinal features
-    values_orders = {
-        'age': ['0-18', '18-30', '30-50', '50+'],
-        'grade': ['A', 'B', 'C', 'D', 'J', 'K', 'NN']
-    }
-
-    # pre-processing of features into categorical ordinal features
-    discretizer = Discretizer(
-        selected_quanti, selected_quali, min_freq=0.02, q=20,
-        values_orders=values_orders
-    )
-    X_train = discretizer.fit_transform(X_train, y_train)
-    X_dev = discretizer.transform(X_dev)
-
-    # storing Discretizer
-    pipe = [('Discretizer', discretizer)]
-
-    # updating features' values orders (every features are qualitative ordinal)
-    values_orders = discretizer.values_orders
-
-    # intiating AutoCarver
-    auto_carver = AutoCarver(
-        values_orders, sort_by='cramerv', max_n_mod=5, sample_size=0.01)
-
-    # fitting on training sample
-    # a test sample can be specified to evaluate carving robustness
-    X_train = auto_carver.fit_transform(X_train, y_train, X_dev, y_dev)
-
-    # applying transformation on test sample
-    X_dev = auto_carver.transform(X_dev)
-
-    # identifying non stable/robust features
-    print(auto_carver.non_viable_features)
-
-    # storing fitted GroupedListDiscretizer in a sklearn.pipeline.Pipeline
-    pipe += [('AutoCarver', auto_carver)]
-    pipe = Pipeline(pipe)
-
-    # applying pipe to a validation set or in production
-    X_val = pipe.transform(X_val)
-
     """
 
     def __init__(
@@ -120,48 +34,90 @@ class AutoCarver(GroupedListDiscretizer):
         ordinal_features: list[str] = None,
         values_orders: dict[str, GroupedList] = None,
         max_n_mod: int = 5,
-        min_carved_freq: float = 0,  # TODO: update this parameter so that it is set according to frequency rather than number of groups
+        # min_carved_freq: float = 0,  # TODO: update this parameter so that it is set according to frequency rather than number of groups
         sort_by: str = "tschuprowt",
-        str_nan: str = "__NAN__",
-        str_default: str = "__OTHER__",
         output_dtype: str = "float",
         dropna: bool = True,
+        str_nan: str = "__NAN__",
+        str_default: str = "__OTHER__",
         copy: bool = False,
         verbose: bool = False,
         pretty_print: bool = False,
     ) -> None:
-        """_summary_
+        """ Initiates an AutoCarver.
 
         Parameters
         ----------
         quantitative_features : list[str]
-            _description_
+            List of column names of quantitative features (continuous and discrete) to be carved
+
         qualitative_features : list[str]
-            _description_
+            List of column names of qualitative features (non-ordinal) to be carved 
+
         min_freq : float
-            _description_
+            Minimum frequency per grouped modalities.
+            * Features whose most frequent modality is less frequent than `min_freq` will not be carved.
+            * Sets the number of quantiles in which to discretize the continuous features.
+            * Sets the minimum frequency of a quantitative feature's modality.
+
+            **Tip**: should be set between 0.02 (slower, preciser, less robust) and 0.05 (faster, more robust) 
+            
         ordinal_features : list[str], optional
-            _description_, by default None
+            List of column names of ordinal features to be carved. For those features a list of
+            values has to be provided in the `values_orders` dict, by default None
+
         values_orders : dict[str, GroupedList], optional
-            _description_, by default None
+            Dict of feature's column names and there associated ordering.
+            If lists are passed, a GroupedList will automatically be initiated, by default None
+
         max_n_mod : int, optional
-            _description_, by default 5
-        min_carved_freq : float, optional
-            _description_, by default 0
-        str_nan : str, optional
-            _description_, by default "__NAN__"
-        str_default : str, optional
-            _description_, by default "__OTHER__"
+            Maximum number of modality per feature, by default 5
+
+            All combinations of modalities for groups of modalities of sizes from 1 to `max_n_mod` will be tested. 
+            The combination with the greatest association (as defined by `sort_by`) will be the selected one. 
+
+            **Tip**: should be set between 4 (faster, more robust) and 7 (slower, preciser, less robust)
+
+        sort_by : str, optional
+            To be choosen amongst `["tschuprowt", "cramerv"]`, by default "tschuprowt"
+            Metric to be used to perform association measure between features and target.
+            * If `sort_by="tschuprowt"`, Tschuprow's T will be used as the association measure (more robust).
+            * If `sort_by="cramerv"`, Cramer's V will be used as the association measure (less robust).
+
+            **Tip**: use `sort_by="tschuprowt"` for more robust, or less output modalities,
+            use `sort_by="cramerv"` for more output modalities.
+
         output_dtype : str, optional
-            _description_, by default 'float'
+            To be choosen amongst `["float", "str"]`, by default "float"
+            * If `output_dtype="float"`, grouped modalities will be converted to there corresponding floating rank.
+            * If `output_dtype="str"`, a per-group modality will be set for all the modalities of a group.
+
         dropna : bool, optional
-            _description_, by default True
+            * If `dropna=True`, `AutoCarver` will try to group `numpy.nan` with other modalities.
+            * If `dropna=False`, `AutoCarver` all non-`numpy.nan` will be grouped, by default True
+
+        str_nan : str, optional
+            String representation to input `numpy.nan`. If `dropna=False`, `numpy.nan` will be left unchanged, by default "__NAN__"
+
+        str_default : str, optional
+            String representation for default qualitative values, i.e. values less frequent than `min_freq`, by default "__OTHER__"
+
         copy : bool, optional
-            _description_, by default False
+            If `copy=True`, feature processing at transform is applied to a copy of the provided DataFrame, by default False
+
         verbose : bool, optional
-            _description_, by default True
+            If `verbose=True`, prints raw Discretizers Fit and Transform steps, as long as
+            information on AutoCarver's processing and tables of target rates and frequencies for
+            X, by default False
+
         pretty_print : bool, optional
-            _description_, by default True
+            If `pretty_print=True`, adds to the verbose some HTML tables of target rates and frequencies for X and, if provided, X_dev.
+
+            Overrides the value of `verbose`, by default False
+
+        Examples
+        --------
+        See `AutoCarver examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
         """
         # Lists of features
         self.features = list(set(quantitative_features + qualitative_features + ordinal_features))
@@ -170,8 +126,14 @@ class AutoCarver(GroupedListDiscretizer):
         self.ordinal_features = list(set(ordinal_features))
 
         # checking that qualitatitve and quantitative featues are distinct
-        assert all(quali_feature not in quantitative_features for quali_feature in qualitative_features + ordinal_features), f"A feature of `quantitative_features` also is in `qualitative_features` or `ordinal_features`. Be carreful with your inputs!"
-        assert all(quanti_feature not in qualitative_features + ordinal_features for quanti_feature in quantitative_features), f"A feature of `qualitative_features` or `ordinal_features` also is in `quantitative_features`. Be carreful with your inputs!"
+        assert all(
+            quali_feature not in quantitative_features
+            for quali_feature in qualitative_features + ordinal_features
+        ), f"A feature of `quantitative_features` also is in `qualitative_features` or `ordinal_features`. Be carreful with your inputs!"
+        assert all(
+            quanti_feature not in qualitative_features + ordinal_features
+            for quanti_feature in quantitative_features
+        ), f"A feature of `qualitative_features` or `ordinal_features` also is in `quantitative_features`. Be carreful with your inputs!"
 
         # initializing input_dtypes
         self.input_dtypes = {feature: "str" for feature in qualitative_features + ordinal_features}
@@ -193,7 +155,7 @@ class AutoCarver(GroupedListDiscretizer):
         # class specific attributes
         self.min_freq = min_freq  # minimum frequency per base bucket
         self.max_n_mod = max_n_mod  # maximum number of modality per feature
-        self.min_carved_freq = min_carved_freq
+        # self.min_carved_freq = min_carved_freq
         self.min_group_size = 1
         self.pretty_print = pretty_print
         measures = ["tschuprowt", "cramerv"]  # association measure used to find the best groups
@@ -308,7 +270,9 @@ class AutoCarver(GroupedListDiscretizer):
         xtabs_dev = get_xtabs(self.features, x_dev_copy, y_dev, labels_orders)
 
         # optimal butcketization/carving of each feature
-        all_features = self.features[:]  # necessary as features are being removed from self.features
+        all_features = self.features[
+            :
+        ]  # necessary as features are being removed from self.features
         for n, feature in enumerate(all_features):
             if self.verbose:  # verbose if requested
                 print(f"\n------\n[AutoCarver] Fit {feature} ({n+1}/{len(all_features)})\n---")
@@ -331,7 +295,9 @@ class AutoCarver(GroupedListDiscretizer):
                 order, xtab, xtab_dev = best_combination
                 if self.verbose:  # verbose if requested
                     print(f"\n - Carved crosstab")
-                    print_xtabs(xtab, xtab_dev, pretty_print=self.pretty_print)  # TODO get the good labels
+                    print_xtabs(
+                        xtab, xtab_dev, pretty_print=self.pretty_print
+                    )  # TODO get the good labels
 
                 # updating label_orders
                 labels_orders.update({feature: order})
@@ -441,7 +407,6 @@ class AutoCarver(GroupedListDiscretizer):
             return order, xtab, xtab_dev
 
 
-    
 def xtab_target_rate(xtab: DataFrame) -> DataFrame:
     """Computes target rate per row for a binary target (column) in a crosstab"""
 
@@ -727,6 +692,7 @@ def xtab_apply_order(xtab: DataFrame, order: GroupedList) -> DataFrame:
 
     return combi_xtab
 
+
 def load_carver(json_serialized_auto_carver: dict) -> GroupedListDiscretizer:
     """_summary_
 
@@ -784,6 +750,7 @@ def pretty_xtab(xtab: DataFrame = None) -> DataFrame:
 
     return stats
 
+
 def prettier_xtab(
     nice_xtab: DataFrame = None,
     caption: str = None,
@@ -804,7 +771,7 @@ def prettier_xtab(
     """
     """Pretty display of frequency and target rate per modality on the same line."""
     # checking for a provided xtab
-    nicer_xtab = ''
+    nicer_xtab = ""
     if nice_xtab is not None:
         # adding coolwarn color gradient
         nicer_xtab = nice_xtab.style.background_gradient(cmap="coolwarm")
@@ -820,6 +787,7 @@ def prettier_xtab(
         nicer_xtab = nicer_xtab._repr_html_()
 
     return nicer_xtab
+
 
 def print_xtabs(xtab: DataFrame, xtab_dev: DataFrame = None, pretty_print: bool = False) -> None:
     """Prints crosstabs' target rates and frequencies per modality, in raw or html format
@@ -839,16 +807,16 @@ def print_xtabs(xtab: DataFrame, xtab_dev: DataFrame = None, pretty_print: bool 
 
     # case 0: no pretty hmtl printing
     if not pretty_print:
-        print(nice_xtab, '\n')
-    
+        print(nice_xtab, "\n")
+
     # case 1: pretty html printing
     else:
         # getting prettier xtabs
-        nicer_xtab = prettier_xtab(nice_xtab, caption='X distribution')
-        nicer_xtab_dev = prettier_xtab(nice_xtab_dev, caption='X_dev distribution')
+        nicer_xtab = prettier_xtab(nice_xtab, caption="X distribution")
+        nicer_xtab_dev = prettier_xtab(nice_xtab_dev, caption="X_dev distribution")
 
         # merging outputs
-        nicer_xtabs = nicer_xtab + '    ' + nicer_xtab_dev
-        
+        nicer_xtabs = nicer_xtab + "    " + nicer_xtab_dev
+
         # displaying html of colored DataFrame
         display_html(nicer_xtabs, raw=True)

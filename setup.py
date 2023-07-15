@@ -1,7 +1,7 @@
 from codecs import open
 from os import path
 
-from setuptools import setup,find_packages
+from setuptools import find_packages, setup
 
 here = path.abspath(path.dirname(__file__))
 
@@ -19,17 +19,17 @@ setup(
     url="https://github.com/mdefrance/AutoCarver",
     project_urls={
         "Documentation": "https://autocarver.readthedocs.io/en/latest/index.html",
-        "Bug Tracker": "https://github.com/mdefrance/AutoCarver/issues"
+        "Bug Tracker": "https://github.com/mdefrance/AutoCarver/issues",
     },
     license="MIT",
     install_requires=[
-        'pandas',
-        'numpy',
-        'scipy',
-        'scikit-learn',
-        'statsmodels',
-        'tqdm',
-        'ipython',
+        "pandas",
+        "numpy",
+        "scipy",
+        "scikit-learn",
+        "statsmodels",
+        "tqdm",
+        "ipython",
     ],
     packages=find_packages(),
     classifiers=[

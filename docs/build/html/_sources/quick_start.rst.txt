@@ -1,5 +1,5 @@
 Quick Start
-============
+===========
 
 Setting up samples
 ------------------
