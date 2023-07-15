@@ -10,7 +10,7 @@ with open(path.join(here, "README.md"), encoding="utf-8") as fh:
 
 setup(
     name="AutoCarver",
-    version="5.0.5",
+    version="5.0.6",
     author="Mario DEFRANCE",
     author_email="defrancemario@gmail.com",
     description="Automatic Bucketizing of Features with Optimal Association",
@@ -21,7 +21,16 @@ setup(
         "Bug Tracker": "https://github.com/mdefrance/AutoCarver/issues"
     },
     license="MIT",
-    # install_requires= # TODO,
+    install_requires=[
+        'pandas',
+        'numpy',
+        'scipy',
+        'scikit-learn',
+        'statsmodels',
+        'tqdm',
+        'matplotlib',
+        'seaborn',
+    ],
     packages=find_packages(),
     classifiers=[
         # ou 4 - Beta ou 5 - Production/Stable
@@ -34,5 +43,5 @@ setup(
         # "Operating System :: MacOS :: MacOS X",
         "Operating System :: Microsoft :: Windows",
     ],
-    python_requires=">=3.7",
+    python_requires=">=3.9",
 )
