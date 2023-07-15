@@ -2,7 +2,6 @@
 for a binary classification model.
 """
 
-from json import dumps
 from typing import Any, Union
 
 from numpy import array, floating, inf, integer, isfinite, nan, select
@@ -506,7 +505,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         }
 
         # dumping as json
-        return dumps(json_serialized_groupedlistdiscretizer)
+        return json_serialized_groupedlistdiscretizer
 
     def summary(self) -> DataFrame:
         """Summarizes the data bucketization

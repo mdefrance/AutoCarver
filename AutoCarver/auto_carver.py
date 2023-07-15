@@ -853,7 +853,7 @@ def plot_stats(stats: DataFrame) -> tuple[Figure, Axes]:
     return fig, ax
 
 
-def load_carver(json_serialized_auto_carver: str) -> GroupedListDiscretizer:
+def load_carver(json_serialized_auto_carver: dict) -> GroupedListDiscretizer:
     """_summary_
 
     Parameters
@@ -866,17 +866,14 @@ def load_carver(json_serialized_auto_carver: str) -> GroupedListDiscretizer:
     GroupedListDiscretizer
         _description_
     """
-    # loading json of auto_carver
-    json_deserialized_auto_carver = loads(json_serialized_auto_carver)
-
     # deserializing values_orders
-    values_orders = json_deserialize_values_orders(json_deserialized_auto_carver["values_orders"])
+    values_orders = json_deserialize_values_orders(json_serialized_auto_carver["values_orders"])
 
     # updating auto_carver attributes
-    json_deserialized_auto_carver.update({"values_orders": values_orders})
+    json_serialized_auto_carver.update({"values_orders": values_orders})
 
     # initiating GroupedListDiscretizer
-    auto_carver = GroupedListDiscretizer(**json_deserialized_auto_carver)
+    auto_carver = GroupedListDiscretizer(**json_serialized_auto_carver)
     auto_carver.fit()
 
     return auto_carver

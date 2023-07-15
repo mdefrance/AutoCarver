@@ -1,5 +1,6 @@
 """Set of tests for auto_carver module."""
 
+from json import dumps, loads
 from pandas import DataFrame
 from pytest import fixture
 
@@ -143,8 +144,8 @@ def test_auto_carver(
         ), "Some Nans are not dropped (grouped)"
 
     # testing json serialization
-    json_serialized_auto_carver = auto_carver.to_json()
-    loaded_carver = load_carver(json_serialized_auto_carver)
+    json_serialized_auto_carver = dumps(auto_carver.to_json())
+    loaded_carver = load_carver(loads(json_serialized_auto_carver))
 
     assert all(
         loaded_carver.summary() == auto_carver.summary()
