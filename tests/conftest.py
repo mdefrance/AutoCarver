@@ -5,7 +5,7 @@ from pandas import DataFrame
 from pytest import fixture
 
 
-def init_test_df(seed: int, size: int = 10000) -> DataFrame:
+def init_df(seed: int, size: int = 10000) -> DataFrame:
     """Initializes a DataFrame used in tests
 
     Parameters
@@ -111,14 +111,14 @@ def init_test_df(seed: int, size: int = 10000) -> DataFrame:
 
 @fixture
 def x_train():
-    return init_test_df(123)
+    return init_df(123)
 
 
 @fixture
-def x_test_1():
-    return init_test_df(1234)
+def x_dev_1():
+    return init_df(1234)
 
 
 @fixture
-def x_test_2():
-    return init_test_df(12345)
+def x_dev_2():
+    return init_df(12345)

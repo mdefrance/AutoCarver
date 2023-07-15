@@ -69,7 +69,7 @@ class AutoCarver(GroupedListDiscretizer):
 
     # defining training and testing sets
     X_train, y_train = train_set, train_set[target]
-    X_test, y_test = test_set, test_set[target]
+    X_dev, y_dev = test_set, test_set[target]
 
     # specifying features to be carved
     selected_quanti = ['amount', 'distance', 'length', 'height']
@@ -87,7 +87,7 @@ class AutoCarver(GroupedListDiscretizer):
         values_orders=values_orders
     )
     X_train = discretizer.fit_transform(X_train, y_train)
-    X_test = discretizer.transform(X_test)
+    X_dev = discretizer.transform(X_dev)
 
     # storing Discretizer
     pipe = [('Discretizer', discretizer)]
@@ -101,10 +101,10 @@ class AutoCarver(GroupedListDiscretizer):
 
     # fitting on training sample
     # a test sample can be specified to evaluate carving robustness
-    X_train = auto_carver.fit_transform(X_train, y_train, X_test, y_test)
+    X_train = auto_carver.fit_transform(X_train, y_train, X_dev, y_dev)
 
     # applying transformation on test sample
-    X_test = auto_carver.transform(X_test)
+    X_dev = auto_carver.transform(X_dev)
 
     # identifying non stable/robust features
     print(auto_carver.non_viable_features)
@@ -209,8 +209,8 @@ class AutoCarver(GroupedListDiscretizer):
         self,
         X: DataFrame,
         y: Series,
-        X_test: DataFrame = None,
-        y_test: Series = None,
+        X_dev: DataFrame = None,
+        y_dev: Series = None,
     ) -> tuple[DataFrame, DataFrame]:
         """Checks validity of provided data
 
@@ -220,21 +220,21 @@ class AutoCarver(GroupedListDiscretizer):
             _description_
         y : Series
             _description_
-        X_test : DataFrame, optional
+        X_dev : DataFrame, optional
             _description_, by default None
-        y_test : Series, optional
+        y_dev : Series, optional
             _description_, by default None
 
         Returns
         -------
         tuple[DataFrame, DataFrame]
-            Copies of (X, X_test)
+            Copies of (X, X_dev)
         """
         # Checking for binary target and copying X
         x_copy = super().prepare_data(X, y)
-        x_test_copy = super().prepare_data(X_test, y_test)
+        x_dev_copy = super().prepare_data(X_dev, y_dev)
 
-        return x_copy, x_test_copy
+        return x_copy, x_dev_copy
 
     def remove_feature(self, feature: str) -> None:
         """Removes a feature from all instances
@@ -253,8 +253,8 @@ class AutoCarver(GroupedListDiscretizer):
         self,
         X: DataFrame,
         y: Series,
-        X_test: DataFrame = None,
-        y_test: Series = None,
+        X_dev: DataFrame = None,
+        y_dev: Series = None,
     ) -> None:
         """_summary_
 
@@ -264,13 +264,13 @@ class AutoCarver(GroupedListDiscretizer):
             _description_
         y : Series
             _description_
-        X_test : DataFrame, optional
+        X_dev : DataFrame, optional
             _description_, by default None
-        y_test : Series, optional
+        y_dev : Series, optional
             _description_, by default None
         """
         # preparing datasets and checking for wrong values
-        x_copy, x_test_copy = self.prepare_data(X, y, X_test, y_test)
+        x_copy, x_dev_copy = self.prepare_data(X, y, X_dev, y_dev)
 
         # discretizing all features
         discretizer = Discretizer(
@@ -285,8 +285,8 @@ class AutoCarver(GroupedListDiscretizer):
             verbose=self.verbose,
         )
         x_copy = discretizer.fit_transform(x_copy, y)
-        if x_test_copy is not None:
-            x_test_copy = discretizer.transform(x_test_copy, y_test)
+        if x_dev_copy is not None:
+            x_dev_copy = discretizer.transform(x_dev_copy, y_dev)
         self.input_dtypes.update(discretizer.input_dtypes)  # saving data types
 
         # updating values_orders according to base bucketization
@@ -308,7 +308,7 @@ class AutoCarver(GroupedListDiscretizer):
 
         # computing crosstabs for each feature on train/test
         xtabs = get_xtabs(self.features, x_copy, y, labels_orders)
-        xtabs_test = get_xtabs(self.features, x_test_copy, y_test, labels_orders)
+        xtabs_dev = get_xtabs(self.features, x_dev_copy, y_dev, labels_orders)
 
         # optimal butcketization/carving of each feature
         all_features = self.features[:]  # necessary as features are being removed from self.features
@@ -318,7 +318,7 @@ class AutoCarver(GroupedListDiscretizer):
 
             # getting xtabs on train/test
             xtab = xtabs[feature]
-            xtab_test = xtabs_test[feature]
+            xtab_dev = xtabs_dev[feature]
             if self.verbose:  # verbose if requested
                 print(xtab)
 
@@ -326,11 +326,11 @@ class AutoCarver(GroupedListDiscretizer):
             order = labels_orders[feature]
 
             # getting best combination
-            best_combination = self.get_best_combination(order, xtab, xtab_test=xtab_test)
+            best_combination = self.get_best_combination(order, xtab, xtab_dev=xtab_dev)
 
             # checking that a suitable combination has been found
             if best_combination is not None:
-                order, xtab, xtab_test = best_combination
+                order, xtab, xtab_dev = best_combination
                 if self.verbose:  # verbose if requested
                     print(xtab)  # TODO get the good labels
 
@@ -372,7 +372,7 @@ class AutoCarver(GroupedListDiscretizer):
         order: GroupedList,
         xtab: DataFrame,
         *,
-        xtab_test: DataFrame = None,
+        xtab_dev: DataFrame = None,
     ) -> tuple[GroupedList, DataFrame, DataFrame]:
         # raw ordering
         raw_order = GroupedList(order)
@@ -381,7 +381,7 @@ class AutoCarver(GroupedListDiscretizer):
 
         # filtering out nans if requested from train/test crosstabs
         raw_xtab = filter_nan_xtab(xtab, self.str_nan)
-        raw_xtab_test = filter_nan_xtab(xtab_test, self.str_nan)
+        raw_xtab_dev = filter_nan_xtab(xtab_dev, self.str_nan)
 
         # checking for non-nan values
         best_association = None
@@ -396,7 +396,7 @@ class AutoCarver(GroupedListDiscretizer):
                 raw_xtab,
                 combinations,
                 sort_by=self.sort_by,
-                xtab_test=raw_xtab_test,
+                xtab_dev=raw_xtab_dev,
                 verbose=self.verbose,
             )
 
@@ -404,7 +404,7 @@ class AutoCarver(GroupedListDiscretizer):
             if best_association is not None:
                 order = order_apply_combination(order, best_association["combination"])
                 xtab = xtab_apply_order(xtab, order)
-                xtab_test = xtab_apply_order(xtab_test, order)
+                xtab_dev = xtab_apply_order(xtab_dev, order)
 
             # grouping NaNs if requested to drop them (dropna=True)
             if self.dropna and self.str_nan in order and best_association is not None:
@@ -427,7 +427,7 @@ class AutoCarver(GroupedListDiscretizer):
                     xtab,
                     nan_combinations,
                     sort_by=self.sort_by,
-                    xtab_test=xtab_test,
+                    xtab_dev=xtab_dev,
                     verbose=self.verbose,
                 )
 
@@ -435,18 +435,18 @@ class AutoCarver(GroupedListDiscretizer):
                 if best_association is not None:
                     order = order_apply_combination(order, best_association["combination"])
                     xtab = xtab_apply_order(xtab, order)
-                    xtab_test = xtab_apply_order(xtab_test, order)
+                    xtab_dev = xtab_apply_order(xtab_dev, order)
 
         # checking that a suitable combination has been found
         if best_association is not None:
-            return order, xtab, xtab_test
+            return order, xtab, xtab_dev
 
     def display_xtabs(
         self,
         feature: str,
         caption: str,
         xtab: DataFrame,
-        xtab_test: DataFrame = None,
+        xtab_dev: DataFrame = None,
     ) -> None:
         """Pretty display of frequency and target rate per modality on the same line."""
 
@@ -457,8 +457,8 @@ class AutoCarver(GroupedListDiscretizer):
         train_stats = stats_xtab(xtab, known_order)
 
         # target rate and frequency on TEST
-        if xtab_test is not None:
-            test_stats = stats_xtab(xtab_test, train_stats.index, train_stats.labels)
+        if xtab_dev is not None:
+            test_stats = stats_xtab(xtab_dev, train_stats.index, train_stats.labels)
             test_stats = test_stats.set_index("labels")  # setting labels as indices
 
         # setting TRAIN labels as indices
@@ -473,12 +473,12 @@ class AutoCarver(GroupedListDiscretizer):
         html = train_style._repr_html_()
 
         # adding TEST modality level stats
-        if xtab_test is not None:
+        if xtab_dev is not None:
             test_style = test_stats.style.background_gradient(cmap="coolwarm")  # color scaling
             test_style = test_style.set_table_attributes(
                 "style='display:inline'"
             )  # printing in notebook
-            test_style = test_style.set_caption(f"{caption} distribution on X_test:")  # title
+            test_style = test_style.set_caption(f"{caption} distribution on X_dev:")  # title
             html += " " + test_style._repr_html_()
 
         # displaying html of colored DataFrame
@@ -567,7 +567,7 @@ def get_xtabs(
             xtab = crosstab(X[feature], y)
 
             # reordering according to known_order
-            xtab = xtab.reindex(labels_orders[feature])  # TODO: fill nans for x_test?
+            xtab = xtab.reindex(labels_orders[feature])  # TODO: fill nans for x_dev?
 
             # storing results
             xtabs.update({feature: xtab})
@@ -690,7 +690,7 @@ def get_best_association(
     xtab: DataFrame,
     combinations: list[list[str]],
     sort_by: str,
-    xtab_test: DataFrame = None,
+    xtab_dev: DataFrame = None,
     verbose: bool = False,
 ) -> dict[str, Any]:
     """Computes associations of the xtab for each combination"""
@@ -731,7 +731,7 @@ def get_best_association(
     )
 
     # case 0: no test sample provided -> not testing for robustness
-    if xtab_test is None:
+    if xtab_dev is None:
         return associations_xtab[0]
 
     # case 1: testing viability on provided test sample
@@ -743,11 +743,11 @@ def get_best_association(
         )
 
         # grouping rows of the test crosstab
-        grouped_xtab_test = vectorized_groupby_sum(xtab_test, index_to_groupby)
+        grouped_xtab_dev = vectorized_groupby_sum(xtab_dev, index_to_groupby)
 
         # computing target rate ranks per value
         train_ranks = xtab_target_rate(xtab).index
-        test_ranks = xtab_target_rate(grouped_xtab_test).index
+        test_ranks = xtab_target_rate(grouped_xtab_dev).index
 
         # viable on test sample: grouped values have the same ranks in train/test
         if all(train_ranks == test_ranks):

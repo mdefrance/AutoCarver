@@ -23,7 +23,7 @@ def sort_by(request) -> str:
 
 
 def test_auto_carver(
-    x_train: DataFrame, x_test_1: DataFrame, output_dtype: str, dropna: bool, sort_by: str
+    x_train: DataFrame, x_dev_1: DataFrame, output_dtype: str, dropna: bool, sort_by: str
 ) -> None:
     """Tests AutoCarver
 
@@ -31,7 +31,7 @@ def test_auto_carver(
     ----------
     x_train : DataFrame
         Simulated Train DataFrame
-    x_test_1 : DataFrame
+    x_dev_1 : DataFrame
         Simulated Test DataFrame
     """
 
@@ -108,20 +108,20 @@ def test_auto_carver(
     x_discretized = auto_carver.fit_transform(
         x_train,
         x_train["quali_ordinal_target"],
-        X_test=x_test_1,
-        y_test=x_test_1["quali_ordinal_target"],
+        X_dev=x_dev_1,
+        y_dev=x_dev_1["quali_ordinal_target"],
     )
-    x_test_discretized = auto_carver.transform(x_test_1)
+    x_dev_discretized = auto_carver.transform(x_dev_1)
 
     assert all(
         x_discretized[auto_carver.features].nunique() <= max_n_mod
     ), "Too many values after carving of train sample"
     assert all(
-        x_test_discretized[auto_carver.features].nunique() <= max_n_mod
+        x_dev_discretized[auto_carver.features].nunique() <= max_n_mod
     ), "Too many values after carving of test sample"
     assert all(
         x_discretized[auto_carver.features].nunique()
-        == x_test_discretized[auto_carver.features].nunique()
+        == x_dev_discretized[auto_carver.features].nunique()
     ), "More values in train or test samples"
 
     # test that all values still are in the values_orders
@@ -152,7 +152,7 @@ def test_auto_carver(
     ), "Non-identical AutoCarver when loading JSON"
 
 
-# def test_auto_carver_copy(x_train: DataFrame, x_test_1: DataFrame, output_dtype: str, dropna: bool, sort_by: str) -> None:
+# def test_auto_carver_copy(x_train: DataFrame, x_dev_1: DataFrame, output_dtype: str, dropna: bool, sort_by: str) -> None:
 
 # TODO test missing values in test
 # TODO try with copy = False

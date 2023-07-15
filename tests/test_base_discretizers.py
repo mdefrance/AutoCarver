@@ -7,16 +7,16 @@ from AutoCarver.discretizers.utils.base_discretizers import GroupedListDiscretiz
 from AutoCarver.discretizers.utils.grouped_list import GroupedList
 
 # TODO: test quantitative discretization
-def test_grouped_list_discretizer(x_train: DataFrame, x_test_1: DataFrame, x_test_2: DataFrame):
+def test_grouped_list_discretizer(x_train: DataFrame, x_dev_1: DataFrame, x_dev_2: DataFrame):
     """Tests GroupedListDiscretizer
 
     Parameters
     ----------
     x_train : DataFrame
         Simulated Train DataFrame
-    x_test_1 : DataFrame
+    x_dev_1 : DataFrame
         Simulated Test DataFrame
-    x_test_2 : DataFrame
+    x_dev_2 : DataFrame
         Simulated Test DataFrame
     """
 

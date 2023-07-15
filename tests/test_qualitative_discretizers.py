@@ -287,10 +287,6 @@ def test_ordinal_discretizer(x_train: DataFrame) -> None:
     ----------
     x_train : DataFrame
         Simulated Train DataFrame
-    x_test_1 : DataFrame
-        Simulated Test DataFrame
-    x_test_2 : DataFrame
-        Simulated Test DataFrame
     """
 
     # defining values_orders
