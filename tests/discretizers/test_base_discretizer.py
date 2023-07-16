@@ -3,8 +3,8 @@
 from numpy import nan
 from pandas import DataFrame
 
-from AutoCarver.discretizers.utils.base_discretizers import BaseDiscretizer
-from AutoCarver.discretizers.utils.grouped_list import GroupedList
+from AutoCarver.discretizers import BaseDiscretizer
+from AutoCarver.discretizers import GroupedList
 
 
 # TODO: test quantitative discretization

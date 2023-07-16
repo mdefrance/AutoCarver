@@ -2,7 +2,7 @@
 
 from pytest import fixture
 
-from AutoCarver.feature_selector import *
+# from AutoCarver.feature_selector import *
 
 
 def test_feature_selector_quanti():

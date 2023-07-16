@@ -3,12 +3,8 @@
 from pandas import DataFrame
 from pytest import raises
 
-from AutoCarver.discretizers.utils.grouped_list import GroupedList
-from AutoCarver.discretizers.utils.qualitative_discretizers import (
-    ChainedDiscretizer,
-    DefaultDiscretizer,
-    OrdinalDiscretizer,
-)
+from AutoCarver.discretizers import GroupedList
+from AutoCarver.discretizers import ChainedDiscretizer, DefaultDiscretizer, OrdinalDiscretizer
 
 
 def test_chained_discretizer(x_train: DataFrame) -> None:
