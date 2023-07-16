@@ -28,7 +28,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         str_nan: str = None,
         str_default: str = None,
     ) -> None:
-        """Initiates a BaseDiscretizer.
+        """Initiates a ``BaseDiscretizer``.
 
         Parameters
         ----------
@@ -37,37 +37,37 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
 
         values_orders : dict[str, GroupedList], optional
             Dict of feature's column names and there associated ordering.
-            If lists are passed, a GroupedList will automatically be initiated, by default None
+            If lists are passed, a GroupedList will automatically be initiated, by default ``None``
 
         input_dtypes : Union[str, dict[str, str]], optional
-            Input data type, converted to a dict of the provided type for each feature, by default "str"
+            Input data type, converted to a dict of the provided type for each feature, by default ``"str"``
 
-            * If `input_dtypes="str"`, features are considered as qualitative.
-            * If `input_dtypes="float"`, features are considered as quantitative.
+            * If ``"str"``, features are considered as qualitative.
+            * If ``"float"``, features are considered as quantitative.
 
         output_dtype : str, optional
-            To be choosen amongst `["float", "str"]`, by default "str"
+            To be choosen amongst ``["float", "str"]``, by default ``"str"``
 
-            * If `output_dtype="float"`, grouped modalities will be converted to there corresponding floating rank.
-            * If `output_dtype="str"`, a per-group modality will be set for all the modalities of a group.
+            * If ``"float"``, grouped modalities will be converted to there corresponding floating rank.
+            * If ``"str"``, a per-group modality will be set for all the modalities of a group.
 
         dropna : bool, optional
-            * If `dropna=True`, ``numpy.nan`` will be attributed there label.
-            * If `dropna=False`, ``numpy.nan`` will be restored after discretization, by default True
+            * If ``True``, ``numpy.nan`` will be attributed there label.
+            * If ``False``, ``numpy.nan`` will be restored after discretization, by default ``True``
 
         copy : bool, optional
-            If `copy=True`, feature processing at transform is applied to a copy of the provided DataFrame, by default False
+            If ``True``, feature processing at transform is applied to a copy of the provided DataFrame, by default ``False``
 
         verbose : bool, optional
-            If `verbose=True`, prints raw Discretizers Fit and Transform steps, as long as
+            If ``True``, prints raw Discretizers Fit and Transform steps, as long as
             information on AutoCarver's processing and tables of target rates and frequencies for
-            X, by default False
+            X, by default ``False``
 
         str_nan : str, optional
-            String representation to input `numpy.nan`. If `dropna=False`, `numpy.nan` will be left unchanged, by default "__NAN__"
+            String representation to input ``numpy.nan``. If ``dropna=False``, ``numpy.nan`` will be left unchanged, by default ``"__NAN__"``
 
         str_default : str, optional
-            String representation for default qualitative values, i.e. values less frequent than `min_freq`, by default "__OTHER__"
+            String representation for default qualitative values, i.e. values less frequent than ``min_freq``, by default ``"__OTHER__"``
         """
         self.features = list(set(features))
         if values_orders is None:
@@ -158,7 +158,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         return labels_per_values
 
     def _remove_feature(self, feature: str) -> None:
-        """Removes a feature from all `feature` attributes
+        """Removes a feature from all ``BaseDiscretizer.feature`` attributes
 
         Parameters
         ----------
@@ -184,7 +184,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         Parameters
         ----------
         X : DataFrame
-            Dataset used to discretize. Needs to have columns has specified in `features`, by default None.
+            Dataset used to discretize. Needs to have columns has specified in ``BaseDiscretizer.features``, by default None.
 
         y : Series
             Binary target feature, by default None.
@@ -219,7 +219,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         Parameters
         ----------
         X : DataFrame
-            Contains columns named after `features` attribute, by default None
+            Contains columns named after ``BaseDiscretizer.features`` attribute, by default None
         y : Series, optional
             Model target, by default None
         """
@@ -247,7 +247,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         Parameters
         ----------
         X : DataFrame
-            Contains columns named after `features` attribute, by default None
+            Contains columns named after ``BaseDiscretizer.features`` attribute, by default None
         y : Series, optional
             Model target, by default None
 
@@ -295,7 +295,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         Parameters
         ----------
         X : DataFrame
-            Contains columns named after `features` attribute, by default None
+            Contains columns named after ``BaseDiscretizer.features`` attribute, by default None
         y : Series, optional
             Model target, by default None
 
@@ -356,7 +356,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         Parameters
         ----------
         X : DataFrame
-            Contains columns named after `features` attribute, by default None
+            Contains columns named after ``BaseDiscretizer.features`` attribute, by default None
         y : Series, optional
             Model target, by default None
 

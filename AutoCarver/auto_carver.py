@@ -24,7 +24,7 @@ class AutoCarver(BaseDiscretizer):
     """Automatic carving of continuous, discrete, categorical and ordinal
     features that maximizes association with a binary target.
 
-    Fits a ``Discretizer``. Raw data should be provided as input (not a result of ``Discretizer.transform()``).
+    First fits a :ref:`Discretizer`. Raw data should be provided as input (not a result of ``Discretizer.transform()``).
     """
 
     def __init__(
@@ -46,7 +46,7 @@ class AutoCarver(BaseDiscretizer):
         str_nan: str = "__NAN__",
         str_default: str = "__OTHER__",
     ) -> None:
-        """Initiates an AutoCarver.
+        """Initiates an ``AutoCarver``.
 
         Parameters
         ----------
@@ -59,7 +59,7 @@ class AutoCarver(BaseDiscretizer):
         min_freq : float
             Minimum frequency per grouped modalities.
 
-            * Features whose most frequent modality is less frequent than `min_freq` will not be carved.
+            * Features whose most frequent modality is less frequent than ``min_freq`` will not be carved.
             * Sets the number of quantiles in which to discretize the continuous features.
             * Sets the minimum frequency of a quantitative feature's modality.
 
@@ -67,57 +67,57 @@ class AutoCarver(BaseDiscretizer):
 
         ordinal_features : list[str], optional
             List of column names of ordinal features to be carved. For those features a list of
-            values has to be provided in the `values_orders` dict, by default None
+            values has to be provided in the ``values_orders`` dict, by default ``None``
 
         values_orders : dict[str, GroupedList], optional
             Dict of feature's column names and there associated ordering.
-            If lists are passed, a GroupedList will automatically be initiated, by default None
+            If lists are passed, a GroupedList will automatically be initiated, by default ``None``
 
         max_n_mod : int, optional
-            Maximum number of modality per feature, by default 5
+            Maximum number of modality per feature, by default ``5``
 
-            All combinations of modalities for groups of modalities of sizes from 1 to `max_n_mod` will be tested.
-            The combination with the greatest association (as defined by `sort_by`) will be the selected one.
+            All combinations of modalities for groups of modalities of sizes from 1 to ``max_n_mod`` will be tested.
+            The combination with the greatest association (as defined by ``sort_by``) will be the selected one.
 
             **Tip**: should be set between 4 (faster, more robust) and 7 (slower, preciser, less robust)
 
         sort_by : str, optional
-            To be choosen amongst `["tschuprowt", "cramerv"]`, by default "tschuprowt"
+            To be choosen amongst ``["tschuprowt", "cramerv"]``, by default ``"tschuprowt"``
             Metric to be used to perform association measure between features and target.
 
-            * If `sort_by="tschuprowt"`, Tschuprow's T will be used as the association measure (more robust).
-            * If `sort_by="cramerv"`, Cramer's V will be used as the association measure (less robust).
+            * ``"tschuprowt"``, Tschuprow's T will be used as the association measure (more robust).
+            * ``"cramerv"``, Cramer's V will be used as the association measure (less robust).
 
-            **Tip**: use `sort_by="tschuprowt"` for more robust, or less output modalities,
-            use `sort_by="cramerv"` for more output modalities.
+            **Tip**: use ``"tschuprowt"`` for more robust, or less output modalities,
+            use ``"cramerv"`` for more output modalities.
 
         output_dtype : str, optional
-            To be choosen amongst `["float", "str"]`, by default "float"
+            To be choosen amongst ``["float", "str"]``, by default ``"float"``
 
-            * If `output_dtype="float"`, grouped modalities will be converted to there corresponding floating rank.
-            * If `output_dtype="str"`, a per-group modality will be set for all the modalities of a group.
+            * ``"float"``, grouped modalities will be converted to there corresponding floating rank.
+            * ``"str"``, a per-group modality will be set for all the modalities of a group.
 
         dropna : bool, optional
-            * If `dropna=True`, `AutoCarver` will try to group `numpy.nan` with other modalities.
-            * If `dropna=False`, `AutoCarver` all non-`numpy.nan` will be grouped, by default True
+            * ``True``, ``AutoCarver`` will try to group ``numpy.nan`` with other modalities.
+            * ``False``, ``AutoCarver`` all non-``numpy.nan`` will be grouped, by default ``True``
 
         copy : bool, optional
-            If `copy=True`, feature processing at transform is applied to a copy of the provided DataFrame, by default False
+            If ``True``, feature processing at transform is applied to a copy of the provided DataFrame, by default ``False``
 
         verbose : bool, optional
-            If `verbose=True`, prints raw Discretizers Fit and Transform steps, as long as
+            If ``True``, prints raw Discretizers Fit and Transform steps, as long as
             information on AutoCarver's processing and tables of target rates and frequencies for
-            X, by default False
+            X, by default ``False``
 
         pretty_print : bool, optional
-            If `pretty_print=True`, adds to the verbose some HTML tables of target rates and frequencies for X and, if provided, X_dev.
-            Overrides the value of `verbose`, by default False
+            If ``True``, adds to the verbose some HTML tables of target rates and frequencies for X and, if provided, X_dev.
+            Overrides the value of ``verbose``, by default ``False``
 
         str_nan : str, optional
-            String representation to input `numpy.nan`. If `dropna=False`, `numpy.nan` will be left unchanged, by default "__NAN__"
+            String representation to input ``numpy.nan``. If ``dropna=False``, ``numpy.nan`` will be left unchanged, by default ``"__NAN__"``
 
         str_default : str, optional
-            String representation for default qualitative values, i.e. values less frequent than `min_freq`, by default "__OTHER__"
+            String representation for default qualitative values, i.e. values less frequent than ``min_freq``, by default ``"__OTHER__"``
 
         Examples
         --------
@@ -180,17 +180,17 @@ class AutoCarver(BaseDiscretizer):
         Parameters
         ----------
         X : DataFrame
-            Dataset used to discretize. Needs to have columns has specified in `features`.
+            Dataset used to discretize. Needs to have columns has specified in ``AutoCarver.features``.
 
         y : Series
             Binary target feature with wich the association is maximized.
 
         X_dev : DataFrame, optional
-            Dataset to evalute the robustness of discretization, by default None
+            Dataset to evalute the robustness of discretization, by default ``None``
             It should have the same distribution as X.
 
         y_dev : Series, optional
-            Binary target feature with wich the robustness of discretization is evaluated, by default None
+            Binary target feature with wich the robustness of discretization is evaluated, by default ``None``
 
         Returns
         -------
@@ -204,7 +204,7 @@ class AutoCarver(BaseDiscretizer):
         return x_copy, x_dev_copy
 
     def _remove_feature(self, feature: str) -> None:
-        """Removes a feature from all `feature` attributes
+        """Removes a feature from all ``AutoCarver.features`` attributes
 
         Parameters
         ----------
@@ -228,7 +228,7 @@ class AutoCarver(BaseDiscretizer):
         Parameters
         ----------
         X : DataFrame
-            Dataset used to discretize. Needs to have columns has specified in `features`.
+            Dataset used to discretize. Needs to have columns has specified in ``AutoCarver.features``.
 
         y : Series
             Binary target feature with wich the association is maximized.
@@ -872,13 +872,13 @@ def xtab_apply_order(xtab: DataFrame, order: GroupedList) -> DataFrame:
 def load_carver(auto_carver_json: dict) -> BaseDiscretizer:
     """Allows one to load an AutoCarver saved as a .json file.
 
-    The AutoCarver has to be saved with `json.dump(f, AutoCarver.to_json())`, otherwise there
+    The AutoCarver has to be saved with ``json.dump(f, AutoCarver.to_json())``, otherwise there
     can be no guarantee for it to be restored.
 
     Parameters
     ----------
     auto_carver_json : str
-        Loaded .json file using `json.load(f)`.
+        Loaded .json file using ``json.load(f)``.
 
     Returns
     -------

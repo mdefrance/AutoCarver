@@ -1,6 +1,8 @@
 Discretizers
 ============
 
+.. _Discretizer:
+
 Discretizer, a complete discretization pipeline
 -----------------------------------------------
 
@@ -11,11 +13,16 @@ Discretizer, a complete discretization pipeline
 Quantitative Discretizers
 -------------------------
 
+
+.. _QuantitativeDiscretizer:
+
 Complete pipeline for continuous and discrete features
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: AutoCarver.discretizers.QuantitativeDiscretizer
     :members:
+
+.. _QuantileDiscretizer:
 
 Quantile Discretizer
 ^^^^^^^^^^^^^^^^^^^^
@@ -26,11 +33,16 @@ Quantile Discretizer
 Qualitative Discretizers
 ------------------------
 
+.. _QualitativeDiscretizer:
+
 Complete pipeline for categorical and ordinal features
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: AutoCarver.discretizers.QualitativeDiscretizer
     :members:
+
+
+.. _DefaultDiscretizer:
 
 Default Discretizer
 ^^^^^^^^^^^^^^^^^^^
@@ -38,11 +50,17 @@ Default Discretizer
 .. autoclass:: AutoCarver.discretizers.DefaultDiscretizer
     :members:
 
+
+.. _OrdinalDiscretizer:
+
 Ordinal Discretizer
 ^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: AutoCarver.discretizers.OrdinalDiscretizer
     :members:
+
+
+.. _ChainedDiscretizer:
 
 Chained Discretizer
 ^^^^^^^^^^^^^^^^^^^
@@ -53,6 +71,9 @@ The defined ordering can then be passed into the ``values_orders`` parameter for
 .. autoclass:: AutoCarver.discretizers.ChainedDiscretizer
     :members:
 
+
+.. _BaseDiscretizer:
+
 Base Discretizer
 ----------------
 
@@ -62,12 +83,16 @@ All ``Discretizer`` objects (and even ``AutoCarver``) inherit from the ``BaseDis
     :members:
 
 
+.. _StringDiscretizer:
+
 String Discretizer
 ------------------
 
 .. autoclass:: AutoCarver.discretizers.StringDiscretizer
     :members:
 
+
+.. _GroupedList:
 
 GroupedList
 -----------

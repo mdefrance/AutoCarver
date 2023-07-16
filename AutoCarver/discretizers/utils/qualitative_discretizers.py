@@ -52,7 +52,7 @@ class DefaultDiscretizer(BaseDiscretizer):
         min_freq : float
             Minimum frequency per grouped modalities.
 
-            * Features whose most frequent modality is less frequent than `min_freq` will not be discretized.
+            * Features whose most frequent modality is less frequent than ``min_freq`` will not be discretized.
             * Sets the number of quantiles in which to discretize the continuous features.
             * Sets the minimum frequency of a quantitative feature's modality.
 
@@ -60,19 +60,19 @@ class DefaultDiscretizer(BaseDiscretizer):
 
         values_orders : dict[str, GroupedList], optional
             Dict of feature's column names and there associated ordering.
-            If lists are passed, a GroupedList will automatically be initiated, by default None
+            If lists are passed, a GroupedList will automatically be initiated, by default ``None``
 
         copy : bool, optional
-            If `copy=True`, feature processing at transform is applied to a copy of the provided DataFrame, by default False
+            If ``True``, feature processing at transform is applied to a copy of the provided DataFrame, by default ``False``
 
         verbose : bool, optional
-            If `verbose=True`, prints raw Discretizers Fit and Transform steps, by default False
+            If ``True``, prints raw Discretizers Fit and Transform steps, by default ``False``
 
         str_nan : str, optional
-            String representation to input `numpy.nan`. If `dropna=False`, `numpy.nan` will be left unchanged, by default "__NAN__"
+            String representation to input ``numpy.nan``. If ``dropna=False``, ``numpy.nan`` will be left unchanged, by default ``"__NAN__"``
 
         str_default : str, optional
-            String representation for default qualitative values, i.e. values less frequent than `min_freq`, by default "__OTHER__"
+            String representation for default qualitative values, i.e. values less frequent than ``min_freq``, by default ``"__OTHER__"``
         """
         # Initiating BaseDiscretizer
         super().__init__(
@@ -94,7 +94,7 @@ class DefaultDiscretizer(BaseDiscretizer):
         Parameters
         ----------
         X : DataFrame
-            Dataset used to discretize. Needs to have columns has specified in `features`.
+            Dataset used to discretize. Needs to have columns has specified in ``DefaultDiscretizer.features``.
 
         y : Series
             Binary target feature with wich the association is maximized.
@@ -136,7 +136,7 @@ class DefaultDiscretizer(BaseDiscretizer):
         Parameters
         ----------
         X : DataFrame
-            Dataset used to discretize. Needs to have columns has specified in `features`.
+            Dataset used to discretize. Needs to have columns has specified in ``DefaultDiscretizer.features``.
 
         y : Series
             Binary target feature.
@@ -202,6 +202,8 @@ class OrdinalDiscretizer(BaseDiscretizer):
     NaNs are left untouched.
 
     Only use for qualitative ordinal features.
+
+    Fisrt fits :ref:`StringDiscretizer` if neccesary.
     """
 
     def __init__(
@@ -215,7 +217,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
         verbose: bool = False,
         str_nan: str = "__NAN__",
     ):
-        """Initiates a DefaultDiscretizer.
+        """Initiates a ``OrdinalDiscretizer``.
 
         Parameters
         ----------
@@ -225,7 +227,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
         min_freq : float
             Minimum frequency per grouped modalities.
 
-            * Features whose most frequent modality is less frequent than `min_freq` will not be discretized.
+            * Features whose most frequent modality is less frequent than ``min_freq`` will not be discretized.
             * Sets the number of quantiles in which to discretize the continuous features.
             * Sets the minimum frequency of a quantitative feature's modality.
 
@@ -233,22 +235,22 @@ class OrdinalDiscretizer(BaseDiscretizer):
 
         values_orders : dict[str, GroupedList], optional
             Dict of feature's column names and there associated ordering.
-            If lists are passed, a GroupedList will automatically be initiated, by default None
+            If lists are passed, a GroupedList will automatically be initiated, by default ``None``
 
         input_dtypes : Union[str, dict[str, str]], optional
-            Input data type, converted to a dict of the provided type for each feature, by default "str"
+            Input data type, converted to a dict of the provided type for each feature, by default ``"str"``
 
-            * If `input_dtypes="str"`, features are considered as qualitative.
-            * If `input_dtypes="float"`, features are considered as quantitative.
+            * ``"str"``, features are considered as qualitative.
+            * ``'float"``, features are considered as quantitative.
 
         copy : bool, optional
-            If `copy=True`, feature processing at transform is applied to a copy of the provided DataFrame, by default False
+            If ``True``, feature processing at transform is applied to a copy of the provided DataFrame, by default ``False``
 
         verbose : bool, optional
-            If `verbose=True`, prints raw Discretizers Fit and Transform steps, by default False
+            If ``True``, prints raw Discretizers Fit and Transform steps, by default ``False``
 
         str_nan : str, optional
-            String representation to input `numpy.nan`. If `dropna=False`, `numpy.nan` will be left unchanged, by default "__NAN__"
+            String representation to input ``numpy.nan``. If ``dropna=False``, ``numpy.nan`` will be left unchanged, by default ``"__NAN__"``
         """
         # Initiating BaseDiscretizer
         super().__init__(
@@ -278,7 +280,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
         Parameters
         ----------
         X : DataFrame
-            Dataset used to discretize. Needs to have columns has specified in `features`.
+            Dataset used to discretize. Needs to have columns has specified in ``OrdinalDiscretizer.features``.
 
         y : Series
             Binary target feature.
@@ -310,7 +312,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
         Parameters
         ----------
         X : DataFrame
-            Dataset used to discretize. Needs to have columns has specified in `features`.
+            Dataset used to discretize. Needs to have columns has specified in ``OrdinalDiscretizer.features``.
 
         y : Series
             Binary target feature.
@@ -391,7 +393,7 @@ class ChainedDiscretizer(BaseDiscretizer):
         min_freq : float
             Minimum frequency per grouped modalities.
 
-            * Features whose most frequent modality is less frequent than `min_freq` will not be discretized.
+            * Features whose most frequent modality is less frequent than ``min_freq`` will not be discretized.
             * Sets the number of quantiles in which to discretize the continuous features.
             * Sets the minimum frequency of a quantitative feature's modality.
 
@@ -399,23 +401,23 @@ class ChainedDiscretizer(BaseDiscretizer):
 
         values_orders : dict[str, GroupedList], optional
             Dict of feature's column names and there associated ordering.
-            If lists are passed, a GroupedList will automatically be initiated, by default None
+            If lists are passed, a GroupedList will automatically be initiated, by default ``None``
 
         remove_unknown : bool, optional
             Whether or not to remove unknown values, by default True.
-            If ``remove_unknown=True``, unknown values are grouped into the value ``str_nan``
+            If ``True``, unknown values are grouped into the value ``str_nan``
 
         copy : bool, optional
-            If `copy=True`, feature processing at transform is applied to a copy of the provided DataFrame, by default False
+            If ``True``, feature processing at transform is applied to a copy of the provided DataFrame, by default ``False``
 
         verbose : bool, optional
-            If `verbose=True`, prints raw Discretizers Fit and Transform steps, by default False
+            If ``True``, prints raw Discretizers Fit and Transform steps, by default ``False``
 
         str_nan : str, optional
-            String representation to input `numpy.nan`. If `dropna=False`, `numpy.nan` will be left unchanged, by default "__NAN__"
+            String representation to input ``numpy.nan``. If ``dropna=False``, ``numpy.nan`` will be left unchanged, by default ``"__NAN__"``
 
         str_default : str, optional
-            String representation for default qualitative values, i.e. values less frequent than `min_freq`, by default "__OTHER__"
+            String representation for default qualitative values, i.e. values less frequent than ``min_freq``, by default ``"__OTHER__"``
         """
         # Initiating BaseDiscretizer
         super().__init__(
@@ -482,7 +484,7 @@ class ChainedDiscretizer(BaseDiscretizer):
         Parameters
         ----------
         X : DataFrame
-            Dataset used to discretize. Needs to have columns has specified in `features`.
+            Dataset used to discretize. Needs to have columns has specified in ``ChainedDiscretizer.features``.
 
         y : Series
             Binary target feature, not used, by default None.
@@ -549,7 +551,7 @@ class ChainedDiscretizer(BaseDiscretizer):
         Parameters
         ----------
         X : DataFrame
-            Dataset used to discretize. Needs to have columns has specified in `features`.
+            Dataset used to discretize. Needs to have columns has specified in ``ChainedDiscretizer.features``.
 
         y : Series
             Binary target feature, not used, by default None.
