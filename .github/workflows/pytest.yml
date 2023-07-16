@@ -26,15 +26,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      # adding requirements file for github actions
-      - name: Copy root path files
-        run: cp -r ./* $GITHUB_WORKSPACE
-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install pytest pytest-cov
-          pip install -r ../../requirements
+          pip install -r /home/runner/work/AutoCarver/AutoCarver/requirements.txt
 
       - name: Run tests
-        run: python -m pytest -v --cov tests
+        run: python -m pytest -v --cov /home/runner/work/AutoCarver/AutoCarver/tests
