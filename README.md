@@ -3,6 +3,7 @@
     <img alt="PyPI" src="https://img.shields.io/pypi/v/autocarver">
     <img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/autocarver">
     <img alt="GitHub" src="https://img.shields.io/github/license/mdefrance/autocarver">
+    <src="https://github.com/mdefrance/AutoCarver/actions/workflows/pytest.yml/badge.svg">
     <img src='https://readthedocs.org/projects/autocarver/badge/?version=latest' alt='Documentation Status' />
 </p>
 
