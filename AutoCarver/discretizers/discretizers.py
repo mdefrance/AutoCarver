@@ -104,8 +104,12 @@ class Discretizer(BaseDiscretizer):
         )
 
         # checking for missing orders
-        no_order_provided = [feature for feature in self.ordinal_features if feature not in self.values_orders]
-        assert len(no_order_provided) == 0, f"No ordering was provided for following features: {str(no_order_provided)}. Please make sure you defined ``values_orders`` correctly."
+        no_order_provided = [
+            feature for feature in self.ordinal_features if feature not in self.values_orders
+        ]
+        assert (
+            len(no_order_provided) == 0
+        ), f"No ordering was provided for following features: {str(no_order_provided)}. Please make sure you defined ``values_orders`` correctly."
 
         # class specific attributes
         self.min_freq = min_freq
@@ -289,8 +293,12 @@ class QualitativeDiscretizer(BaseDiscretizer):
         )
 
         # checking for missing orders
-        no_order_provided = [feature for feature in self.ordinal_features if feature not in self.values_orders]
-        assert len(no_order_provided) == 0, f"No ordering was provided for following features: {str(no_order_provided)}. Please make sure you defined ``values_orders`` correctly."
+        no_order_provided = [
+            feature for feature in self.ordinal_features if feature not in self.values_orders
+        ]
+        assert (
+            len(no_order_provided) == 0
+        ), f"No ordering was provided for following features: {str(no_order_provided)}. Please make sure you defined ``values_orders`` correctly."
 
         # non-ordinal qualitative features
         self.non_ordinal_features = [

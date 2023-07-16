@@ -3,8 +3,8 @@
 from random import shuffle
 from typing import Any, Callable
 
-from pandas import Series, DataFrame
 from IPython.display import display_html
+from pandas import DataFrame, Series
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from ..discretizers import GroupedList
