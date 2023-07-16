@@ -1,6 +1,6 @@
 </p>
 <p align="left">
-    <img alt="PyPI" src="https://img.shields.io/pypi/v/autocarver?style=flat-square">
+    <img alt="PyPI" src="https://img.shields.io/pypi/v/autocarver">
     <img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/autocarver?style=flat-square">
     <img alt="GitHub" src="https://img.shields.io/github/license/mdefrance/autocarver?style=flat-square">
     <img src='https://readthedocs.org/projects/autocarver/badge/?version=latest' alt='Documentation Status' />
