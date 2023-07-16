@@ -238,7 +238,7 @@ Needs to have columns has specified in <code class="docutils literal notranslate
 
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This measure is added by default</p>
+<p><code class="docutils literal notranslate"><span class="pre">kruskal_measure</span></code> is the default measure for quantitative features (i.e. when <code class="docutils literal notranslate"><span class="pre">FeatureSelector.measures=[]</span></code> and <code class="docutils literal notranslate"><span class="pre">FeatureSelector.quantitative_features</span></code> is provided).</p>
 </div>
 <dl class="py function">
 <dt class="sig sig-object py" id="AutoCarver.feature_selection.measures.R_measure">
@@ -294,7 +294,7 @@ Needs to have columns has specified in <code class="docutils literal notranslate
 
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This measure is added by default</p>
+<p><code class="docutils literal notranslate"><span class="pre">cramerv_measure</span></code> is the default measure for qualitative features (i.e. when <code class="docutils literal notranslate"><span class="pre">FeatureSelector.measures=[]</span></code> and <code class="docutils literal notranslate"><span class="pre">FeatureSelector.qualititative_features</span></code> is provided).</p>
 </div>
 <dl class="py function">
 <dt class="sig sig-object py" id="AutoCarver.feature_selection.measures.tschuprowt_measure">
@@ -321,7 +321,7 @@ Needs to have columns has specified in <code class="docutils literal notranslate
 
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This measure is evaluated by default by <code class="docutils literal notranslate"><span class="pre">FeatureSelector</span></code>. If threshold is reached, feature will automatically be dropped by <code class="docutils literal notranslate"><span class="pre">filters.thresh_filter()</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">nans_measure</span></code> is evaluated by default by <code class="docutils literal notranslate"><span class="pre">FeatureSelector</span></code>. If threshold is reached, feature will automatically be dropped by <code class="docutils literal notranslate"><span class="pre">filters.thresh_filter()</span></code>.</p>
 </div>
 <dl class="py function">
 <dt class="sig sig-object py" id="AutoCarver.feature_selection.measures.dtype_measure">
@@ -331,7 +331,7 @@ Needs to have columns has specified in <code class="docutils literal notranslate
 
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This measure is evaluated by default by <code class="docutils literal notranslate"><span class="pre">FeatureSelector</span></code>. If threshold is reached, feature will automatically be dropped by <code class="docutils literal notranslate"><span class="pre">filters.thresh_filter()</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dtype_measure</span></code> is evaluated by default by <code class="docutils literal notranslate"><span class="pre">FeatureSelector</span></code>. If threshold is reached, feature will automatically be dropped by <code class="docutils literal notranslate"><span class="pre">filters.thresh_filter()</span></code>.</p>
 </div>
 <dl class="py function">
 <dt class="sig sig-object py" id="AutoCarver.feature_selection.measures.mode_measure">
@@ -349,7 +349,7 @@ Needs to have columns has specified in <code class="docutils literal notranslate
 
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This measure is evaluated by default by <code class="docutils literal notranslate"><span class="pre">FeatureSelector</span></code>. If threshold is reached, feature will automatically be dropped by <code class="docutils literal notranslate"><span class="pre">filters.thresh_filter()</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">mode_measure</span></code> is evaluated by default by <code class="docutils literal notranslate"><span class="pre">FeatureSelector</span></code>. If threshold is reached, feature will automatically be dropped by <code class="docutils literal notranslate"><span class="pre">filters.thresh_filter()</span></code>.</p>
 </div>
 </section>
 </section>
@@ -373,6 +373,10 @@ that are correlated to a feature more associated with the target
 </dl>
 </dd></dl>
 
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">spearman_filter</span></code> is the default measure for quantitative features (i.e. when <code class="docutils literal notranslate"><span class="pre">FeatureSelector.filters=[]</span></code> and <code class="docutils literal notranslate"><span class="pre">FeatureSelector.quantititative_features</span></code> is provided).</p>
+</div>
 <dl class="py function">
 <dt class="sig sig-object py" id="AutoCarver.feature_selection.filters.pearson_filter">
 <span class="sig-prename descclassname"><span class="pre">AutoCarver.feature_selection.filters.</span></span><span class="sig-name descname"><span class="pre">pearson_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ranks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#AutoCarver.feature_selection.filters.pearson_filter" title="Permalink to this definition"></a></dt>
@@ -422,6 +426,10 @@ that are correlated to a feature more associated with the target
 </dl>
 </dd></dl>
 
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">cramerv_filter</span></code> is the default filter for qualitative features (i.e. when <code class="docutils literal notranslate"><span class="pre">FeatureSelector.filters=[]</span></code> and <code class="docutils literal notranslate"><span class="pre">FeatureSelector.qualititative_features</span></code> is provided).</p>
+</div>
 <dl class="py function">
 <dt class="sig sig-object py" id="AutoCarver.feature_selection.filters.tschuprowt_filter">
 <span class="sig-prename descclassname"><span class="pre">AutoCarver.feature_selection.filters.</span></span><span class="sig-name descname"><span class="pre">tschuprowt_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ranks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#AutoCarver.feature_selection.filters.tschuprowt_filter" title="Permalink to this definition"></a></dt>
@@ -448,7 +456,7 @@ correlated to a feature more associated with the target (defined by the <code cl
 
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This filter is used by default by <code class="docutils literal notranslate"><span class="pre">FeatureSelector</span></code>. Automatically features that did not pas <a class="reference internal" href="#measures"><span class="std std-ref">Association measures, X by y</span></a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">thresh_filter</span></code> is used by default by <code class="docutils literal notranslate"><span class="pre">FeatureSelector</span></code>. Automatically features that did not pas <a class="reference internal" href="#measures"><span class="std std-ref">Association measures, X by y</span></a>.</p>
 </div>
 <dl class="py function">
 <dt class="sig sig-object py" id="AutoCarver.feature_selection.filters.measure_filter">

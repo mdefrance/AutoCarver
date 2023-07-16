@@ -49,18 +49,18 @@ class FeatureSelector:
         measures : list[Callable], optional
             List of association measures to be used, by default ``None``.
             Ranks features based on last provided measure of the list.
-            See :ref:`Measures`. 
+            See :ref:`Measures`.
             Implemented measures are:
-                
+
             * [Quantitative Features] For association evaluation: ``kruskal_measure``, ``R_measure``
             * [Quantitative Features] For outlier detection: ``zscore_measure``, ``iqr_measure``
             * [Qualitative Features] For correlation: ``chi2_measure``, ``cramerv_measure``, ``tschuprowt_measure``
 
         filters : list[Callable], optional
             List of filters to be used, by default ``None``.
-            See :ref:`Filters`. 
+            See :ref:`Filters`.
             Implemented filters are:
-                
+
             * [Quantitative Features] For linear correlation: ``spearman_filter``, ``pearson_filter``
             * [Quantitative Features] For multicoloinearity: ``vif_filter``
             * [Qualitative Features] For correlation: ``cramerv_filter``, ``tschuprowt_filter``
@@ -76,7 +76,7 @@ class FeatureSelector:
         pretty_print : bool, optional
             If ``True``, adds to the verbose some HTML tables of target rates and frequencies for X and, if provided, X_dev.
             Overrides the value of ``verbose``, by default ``False``
-        
+
         **params
             Sets thresholds for ``measures`` and ``filters``, passed as keyword arguments.
 
@@ -110,7 +110,9 @@ class FeatureSelector:
 
         # number of features selected
         self.n_best = n_best
-        assert 0 < int(n_best // 2) <= len(self.features) + 1, "Must set 0 < n_best // 2 <= len(features)"
+        assert (
+            0 < int(n_best // 2) <= len(self.features) + 1
+        ), "Must set 0 < n_best // 2 <= len(features)"
 
         # feature sample size per iteration
         self.sample_size = sample_size
@@ -294,7 +296,8 @@ def print_associations(association: DataFrame, pretty_print: bool = False) -> No
     else:
         # finding columns with indicators to colorize
         subset = [
-            column for column in association.columns
+            column
+            for column in association.columns
             # checking for an association indicator
             if any(indic in column for indic in ["pct_", "_measure", "_filter"])
         ]

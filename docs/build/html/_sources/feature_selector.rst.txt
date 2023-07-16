@@ -21,7 +21,7 @@ Quantitative measures
 .. autofunction:: AutoCarver.feature_selection.measures.kruskal_measure
 
 .. note::
-    This measure is added by default 
+    ``kruskal_measure`` is the default measure for quantitative features (i.e. when ``FeatureSelector.measures=[]`` and ``FeatureSelector.quantitative_features`` is provided).
 
 .. autofunction:: AutoCarver.feature_selection.measures.R_measure
 
@@ -38,13 +38,10 @@ Qualitative measures
 
 .. autofunction:: AutoCarver.feature_selection.measures.chi2_measure
 
-
 .. autofunction:: AutoCarver.feature_selection.measures.cramerv_measure
 
-
 .. note::
-    This measure is added by default 
-
+    ``cramerv_measure`` is the default measure for qualitative features (i.e. when ``FeatureSelector.measures=[]`` and ``FeatureSelector.qualititative_features`` is provided).
 
 .. autofunction:: AutoCarver.feature_selection.measures.tschuprowt_measure
 
@@ -55,17 +52,17 @@ Base data information
 .. autofunction:: AutoCarver.feature_selection.measures.nans_measure
 
 .. note::
-    This measure is evaluated by default by ``FeatureSelector``. If threshold is reached, feature will automatically be dropped by ``filters.thresh_filter()``.
+    ``nans_measure`` is evaluated by default by ``FeatureSelector``. If threshold is reached, feature will automatically be dropped by ``filters.thresh_filter()``.
 
 .. autofunction:: AutoCarver.feature_selection.measures.dtype_measure
     
 .. note::
-    This measure is evaluated by default by ``FeatureSelector``. If threshold is reached, feature will automatically be dropped by ``filters.thresh_filter()``.
+    ``dtype_measure`` is evaluated by default by ``FeatureSelector``. If threshold is reached, feature will automatically be dropped by ``filters.thresh_filter()``.
 
 .. autofunction:: AutoCarver.feature_selection.measures.mode_measure
 
 .. note::
-    This measure is evaluated by default by ``FeatureSelector``. If threshold is reached, feature will automatically be dropped by ``filters.thresh_filter()``.
+    ``mode_measure`` is evaluated by default by ``FeatureSelector``. If threshold is reached, feature will automatically be dropped by ``filters.thresh_filter()``.
 
 
 .. _Filters:
@@ -77,14 +74,21 @@ Quantitative filters
 ....................
 
 .. autofunction:: AutoCarver.feature_selection.filters.spearman_filter
+    
+.. note::
+    ``spearman_filter`` is the default measure for quantitative features (i.e. when ``FeatureSelector.filters=[]`` and ``FeatureSelector.quantititative_features`` is provided).
+
 .. autofunction:: AutoCarver.feature_selection.filters.pearson_filter
 .. autofunction:: AutoCarver.feature_selection.filters.vif_filter
     
 Qualitative filters
 ...................
 
-
 .. autofunction:: AutoCarver.feature_selection.filters.cramerv_filter
+    
+.. note::
+    ``cramerv_filter`` is the default filter for qualitative features (i.e. when ``FeatureSelector.filters=[]`` and ``FeatureSelector.qualititative_features`` is provided).
+
 .. autofunction:: AutoCarver.feature_selection.filters.tschuprowt_filter
 
 Other filters
@@ -93,6 +97,6 @@ Other filters
 .. autofunction:: AutoCarver.feature_selection.filters.thresh_filter
 
 .. note::
-    This filter is used by default by ``FeatureSelector``. Automatically features that did not pas :ref:`Measures`. 
+    ``thresh_filter`` is used by default by ``FeatureSelector``. Automatically features that did not pas :ref:`Measures`. 
 
 .. autofunction:: AutoCarver.feature_selection.filters.measure_filter
