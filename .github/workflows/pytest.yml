@@ -59,6 +59,7 @@ jobs:
           cd ${{ github.workspace }}
           black --check .
           isort . --check-only
+          cd ..
           pylint autocarver --fail-under=8
           # flake8 . 
   
