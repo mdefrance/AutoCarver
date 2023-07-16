@@ -1,6 +1,20 @@
 Discretizers
 ============
 
+
+
+.. _BaseDiscretizer:
+
+Base Discretizer
+----------------
+
+.. autoclass:: AutoCarver.discretizers.BaseDiscretizer
+    :members:
+
+
+.. note::
+    All implemented Discretizers (and even ``AutoCarver``) inherit from :ref:`BaseDiscretizer`, and thus inherit its methods ``transform()``, ``fit_transform()``, ``to_json()`` and ``summary()``.
+
 .. _Discretizer:
 
 Discretizer, a complete discretization pipeline
@@ -71,18 +85,6 @@ The defined ordering can then be passed into the ``values_orders`` parameter for
 .. autoclass:: AutoCarver.discretizers.ChainedDiscretizer
     :members:
 
-
-.. _BaseDiscretizer:
-
-Base Discretizer
-----------------
-
-All ``Discretizer`` objects (and even ``AutoCarver``) inherit from the ``BaseDiscretizer``.
-
-.. autoclass:: AutoCarver.discretizers.BaseDiscretizer
-    :members:
-
-
 .. _StringDiscretizer:
 
 String Discretizer
@@ -96,6 +98,10 @@ String Discretizer
 
 GroupedList
 -----------
+
+.. note::
+    :ref:`AutoCarver` would not exist if it was not for ``GroupedList``. It allows for a complete historization of the data processing steps, thanks to its ``GroupedList.content`` dictionnary.
+    All modalities are stored inside the ``GroupedList`` and can safely be linked to there respective group label. 
 
 .. autoclass:: AutoCarver.discretizers.GroupedList
     :members:

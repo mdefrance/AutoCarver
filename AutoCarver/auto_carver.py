@@ -59,10 +59,10 @@ class AutoCarver(BaseDiscretizer):
 
             **Tip**: should be set between 0.02 (slower, preciser, less robust) and 0.05 (faster, more robust)
 
-        quantitative_features : list[str]
+        quantitative_features : list[str], optional
             List of column names of quantitative features (continuous and discrete) to be carved, by default ``None``
 
-        qualitative_features : list[str]
+        qualitative_features : list[str], optional
             List of column names of qualitative features (non-ordinal) to be carved, by default ``None``
 
         ordinal_features : list[str], optional

@@ -1,6 +1,9 @@
 About
 =====
 
+.. warning::
+   Work in progress! Sorry for the potential errors and lack of documentation.
+
 Why AutoCarver?
 ---------------
 
@@ -24,17 +27,6 @@ Key Features:
 ``AutoCarver`` is a valuable tool for data scientists and practitioners involved in binary classification problems, such as credit scoring, fraud detection, and risk assessment. By leveraging its automated feature processing capabilities, you can unlock the full potential of your data, leading to more accurate predictions, improved model explainability, and better decision-making in your classification tasks.
 
 
-
-
-
- * need for explainability with simpler modalities
- * reduce number of features (OneHotEncoder)
- * need for statistically accurate and relevant modalities (enough observation per modality)
- * Leads to the questi
-
-
-**AutoCarver** is a powerful set of tools designed for binary classification problems. It offers a range of functionalities to enhance the feature engineering process and improve the performance of a binary classification models. It provides:
- 
 It can be used to process and select features in binary classification problems:
 
 * Credit Scoring

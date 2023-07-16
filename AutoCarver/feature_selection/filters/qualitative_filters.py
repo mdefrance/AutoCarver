@@ -11,7 +11,7 @@ from ..measures import cramerv_measure, tschuprowt_measure
 def cramerv_filter(X: DataFrame, ranks: DataFrame, **params) -> dict[str, Any]:
     """Computes max Cramer's V between X and X (qualitative) excluding features
     that are correlated to a feature more associated with the target
-    (defined by the ranks).
+    (defined by the ``ranks``).
 
     Parameters
     ----------
@@ -24,9 +24,8 @@ def cramerv_filter(X: DataFrame, ranks: DataFrame, **params) -> dict[str, Any]:
 
 
 def tschuprowt_filter(X: DataFrame, ranks: DataFrame, **params) -> dict[str, Any]:
-    """Computes max Tschuprow's T between X and X (qualitative) excluding
-     features that are correlated to a feature more associated with the target
-    (defined by the ranks).
+    """Computes max Tschuprow's T between X and X (qualitative) excluding features that are
+    correlated to a feature more associated with the target (defined by the ``ranks``).
 
     Parameters
     ----------

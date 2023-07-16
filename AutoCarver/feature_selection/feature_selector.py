@@ -10,71 +10,12 @@ from .filters import cramerv_filter, spearman_filter, thresh_filter
 from .measures import cramerv_measure, dtype_measure, kruskal_measure, mode_measure, nans_measure
 
 
-# TODO: add thresh_mode, thresh_nan to the class parameters
-# TODO: add parameter to shut down displayed info
 class FeatureSelector:
-    """A pipeline of measures to perform EDA and feature pre-selection
+    """A pipeline of measures to perform a feature pre-selection that maximizes association
+    with a binary target.
 
-     - best features are the n_best of each measure
-     - selected features are stored in FeatureSelector.best_features
-
-    Parameters
-    ----------
-    features: list[str]
-        Features on which to compute association.
-    n_best, int:
-        Number of features to be selected
-    sample_size: float, default 1.
-        Should be set between ]0, 1]
-        Size of sampled list of features speeds up computation.
-        By default, all features are used. For sample_size=0.5,
-        FeatureSelector will search for the best features in
-        features[:len(features)//2] and then in features[len(features)//2:]
-    measures, list[Callable]: default list().
-        List of association measures to be used.
-        Implemented measures are:
-            [Quantitative Features]
-             - For association evaluation: `kruskal_measure`, `R_measure`
-             - For outlier detection: `zscore_measure`, `iqr_measure`
-            [Qualitative Features]
-             - For correlation: `chi2_measure`, `cramerv_measure`, `tschuprowt_measure`
-        Ranks features based on last measure of the list.
-    filters, list[Callable]: default list().
-        List of filters to be used.
-        Implemented filters are:
-            [Quantitative Features]
-             - For linear correlation: `spearman_filter`, `pearson_filter`
-             - For multicoloinearity: `vif_filter`
-            [Qualitative Features]
-             - For correlation: `cramerv_filter`, `tschuprowt_filter`
-
-    Thresholds (to be passed as kwargs)
-    ----------
-    thresh_measure, float: default 0.
-        Minimum association between target and features
-        To be used with: `measure_filter`
-    name_measure, str
-        Measure to be used for minimum association filtering
-        To be used with: `measure_filter`
-    thresh_nan, float: default 1.
-        Maximum percentage of NaNs in a feature
-        To be used with: `nans_measure`
-    thresh_mode, float: default 1.
-        Maximum percentage of the mode of a feature
-        To be used with: `mode_measure`
-    thresh_outlier, float: default 1.
-        Maximum percentage of Outliers in a feature
-        To be used with: `iqr_measure`, `zscore_measure`
-    thresh_corr, float: default 1.
-        Maximum association between features
-        To be used with: `spearman_filter`, `pearson_filter`, `cramerv_filter`, `tschuprowt_filter`
-    thresh_vif, float: default inf
-        Maximum VIF between features
-        To be used with: `vif_filter`
-    ascending, bool default False
-        According to this measure:
-         - True: Lower values of the measure are to be considered as more associated to the target
-         - False: Higher values of the measure are to be considered as more associated to the target
+    * Best features are the n_best of each measure
+    * Get your best features with ``FeatureSelector.select()``!
     """
 
     def __init__(
@@ -87,27 +28,72 @@ class FeatureSelector:
         filters: list[Callable] = None,
         sample_size: float = 1.0,
         verbose: bool = False,
-        pretty_print: bool = False,  # TODO
+        pretty_print: bool = False,
         **params,
     ) -> None:
         """Initiates a ``FeatureSelector``.
 
         Parameters
         ----------
-        features : list[str]
-            _description_
         n_best : int
-            _description_
+            Number of features to select.
+
+        quantitative_features : list[str], optional
+            List of column names of quantitative features to chose from, by default ``None``
+            Must be set if ``qualitative_features=None``.
+
+        qualitative_features : list[str], optional
+            List of column names of qualitative features to chose from, by default ``None``
+            Must be set if ``quantitative_features=None``.
+
         measures : list[Callable], optional
-            _description_, by default list()
+            List of association measures to be used, by default ``None``.
+            Ranks features based on last provided measure of the list.
+            See :ref:`Measures`.
+            Implemented measures are:
+
+            * [Quantitative Features] For association evaluation: ``kruskal_measure``, ``R_measure``
+            * [Quantitative Features] For outlier detection: ``zscore_measure``, ``iqr_measure``
+            * [Qualitative Features] For correlation: ``chi2_measure``, ``cramerv_measure``, ``tschuprowt_measure``
+
         filters : list[Callable], optional
-            _description_, by default list()
+            List of filters to be used, by default ``None``.
+            See :ref:`Filters`.
+            Implemented filters are:
+
+            * [Quantitative Features] For linear correlation: ``spearman_filter``, ``pearson_filter``
+            * [Quantitative Features] For multicoloinearity: ``vif_filter``
+            * [Qualitative Features] For correlation: ``cramerv_filter``, ``tschuprowt_filter``
+
         sample_size : float, optional
-            _description_, by default 1.0
-        copy : bool, optional
-            _description_, by default True
+            _description_, by default ``1.0``
+
         verbose : bool, optional
-            _description_, by default True
+            If ``True``, prints raw Discretizers Fit and Transform steps, as long as
+            information on AutoCarver's processing and tables of target rates and frequencies for
+            X, by default ``False``
+
+        pretty_print : bool, optional
+            If ``True``, adds to the verbose some HTML tables of target rates and frequencies for X and, if provided, X_dev.
+            Overrides the value of ``verbose``, by default ``False``
+
+        **params
+            Sets thresholds for ``measures`` and ``filters``, passed as keyword arguments.
+
+            * thresh_measure, float, minimum association between target and features, by default ``0``. To be used with: ``measure_filter``.
+            * name_measure, str, measure to be used for minimum association filtering. To be used with: ``measure_filter``.
+            * thresh_nan, float,aximum percentage of NaNs in a feature, by default ``1``. To be used with: ``nans_measure``.
+            * thresh_mode, float, maximum percentage of the mode of a feature, by default ``1``. To be used with: ``mode_measure``.
+            * thresh_outlier, float, maximum percentage of Outliers in a feature, by default ``1``. To be used with: ``iqr_measure``, ``zscore_measure``.
+            * thresh_corr, float, Maximum association between features, by default ``1``. To be used with: ``spearman_filter``, ``pearson_filter``, ``cramerv_filter``, ``tschuprowt_filter``.
+            * thresh_vif, float, maximum VIF between features, by default ``inf``. To be used with: ``vif_filter``.
+            * ascending, bool default ``False``
+                * ``True``: Lower values of the measure are to be considered as more associated to the target
+                * ``False``: Higher values of the measure are to be considered as more associated to the target
+
+        Examples
+        --------
+        See `FeatureSelector examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
         """
         # settinp up list of features
         if quantitative_features is None:
@@ -124,7 +110,9 @@ class FeatureSelector:
 
         # number of features selected
         self.n_best = n_best
-        assert n_best <= len(self.features) + 1, "Must set n_best <= len(features)"
+        assert (
+            0 < int(n_best // 2) <= len(self.features) + 1
+        ), "Must set 0 < n_best // 2 <= len(features)"
 
         # feature sample size per iteration
         self.sample_size = sample_size
@@ -154,9 +142,6 @@ class FeatureSelector:
 
         # keyword arguments
         self.params = params
-
-        self.associations = None
-        self.filtered_associations = None
 
     def _select_features(
         self, X: DataFrame, y: Series, features: list[str], n_best: int
@@ -249,7 +234,8 @@ class FeatureSelector:
         Parameters
         ----------
         X : DataFrame
-            _description_
+            Dataset used to measure association between features and target.
+            Needs to have columns has specified in ``FeatureSelector.features``.
         y : Series
             Binary target feature with wich the association is maximized.
 
@@ -286,7 +272,8 @@ class FeatureSelector:
             best_features = self.features[:]
 
         # final selection with all best_features selected
-        best_features = self._select_features(X, y, best_features, self.n_best)
+        if any(best_features):
+            best_features = self._select_features(X, y, best_features, self.n_best)
 
         return best_features
 
@@ -310,7 +297,7 @@ def print_associations(association: DataFrame, pretty_print: bool = False) -> No
         # finding columns with indicators to colorize
         subset = [
             column
-            for column in association
+            for column in association.columns
             # checking for an association indicator
             if any(indic in column for indic in ["pct_", "_measure", "_filter"])
         ]
