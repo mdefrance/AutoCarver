@@ -130,9 +130,11 @@ class AutoCarver(BaseDiscretizer):
             qualitative_features = []
         if ordinal_features is None:
             ordinal_features = []
-        assert len(quantitative_features) > 0 or len(qualitative_features) > 0 or len(ordinal_features) > 0, (
-            "No feature passed as input. Pleased provided column names to Carver by setting quantitative_features, quantitative_features or ordinal_features."
-        )
+        assert (
+            len(quantitative_features) > 0
+            or len(qualitative_features) > 0
+            or len(ordinal_features) > 0
+        ), "No feature passed as input. Pleased provided column names to Carver by setting quantitative_features, quantitative_features or ordinal_features."
         self.ordinal_features = list(set(ordinal_features))
         self.features = list(set(quantitative_features + qualitative_features + ordinal_features))
 
@@ -272,8 +274,7 @@ class AutoCarver(BaseDiscretizer):
 
         # removing dropped features
         removed_features = [
-            feature for feature in self.features
-            if feature not in discretizer.features
+            feature for feature in self.features if feature not in discretizer.features
         ]
         for feature in removed_features:
             self._remove_feature(feature)
@@ -513,7 +514,7 @@ def get_xtabs(
             xtab = crosstab(X[feature], y)
 
             # reordering according to known_order
-            xtab = xtab.reindex(labels_orders[feature])  # TODO: fill nans for x_dev?
+            xtab = xtab.reindex(labels_orders[feature])
 
             # storing results
             xtabs.update({feature: xtab})

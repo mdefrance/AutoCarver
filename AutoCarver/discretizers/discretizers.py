@@ -165,7 +165,8 @@ class Discretizer(BaseDiscretizer):
 
             # removing dropped features
             removed_features = [
-                feature for feature in self.qualitative_features
+                feature
+                for feature in self.qualitative_features
                 if feature not in qualitative_discretizer.features
             ]
             for feature in removed_features:
@@ -195,7 +196,8 @@ class Discretizer(BaseDiscretizer):
 
             # removing dropped features
             removed_features = [
-                feature for feature in self.quantitative_features
+                feature
+                for feature in self.quantitative_features
                 if feature not in quantitative_discretizer.features
             ]
             for feature in removed_features:

@@ -6,13 +6,13 @@ from typing import Any, Callable
 from IPython.display import display_html
 from pandas import DataFrame, Series
 
-from .filters import thresh_filter, cramerv_filter, spearman_filter
-from .measures import dtype_measure, mode_measure, nans_measure, cramerv_measure, kruskal_measure
+from .filters import cramerv_filter, spearman_filter, thresh_filter
+from .measures import cramerv_measure, dtype_measure, kruskal_measure, mode_measure, nans_measure
 
 
 # TODO: add thresh_mode, thresh_nan to the class parameters
 # TODO: add parameter to shut down displayed info
-class FeatureSelector():
+class FeatureSelector:
     """A pipeline of measures to perform EDA and feature pre-selection
 
      - best features are the n_best of each measure
@@ -87,10 +87,10 @@ class FeatureSelector():
         filters: list[Callable] = None,
         sample_size: float = 1.0,
         verbose: bool = False,
-        pretty_print: bool = False,  #TODO
+        pretty_print: bool = False,  # TODO
         **params,
     ) -> None:
-        """ Initiates a ``FeatureSelector``.
+        """Initiates a ``FeatureSelector``.
 
         Parameters
         ----------
@@ -114,18 +114,18 @@ class FeatureSelector():
             quantitative_features = []
         if qualitative_features is None:
             qualitative_features = []
-        assert len(quantitative_features) > 0 or len(qualitative_features) > 0, (
-            "No feature passed as input. Pleased provided column names to Carver by setting qualitative_features or quantitative_features."
-        )
-        assert (len(quantitative_features) > 0 and len(qualitative_features)==0) or (len(qualitative_features) > 0 and len(quantitative_features)==0), (
-            "Mixed quantitative and qualitative features. One only of quantitative_features and qualitative_features should be set."
-        )
+        assert (
+            len(quantitative_features) > 0 or len(qualitative_features) > 0
+        ), "No feature passed as input. Pleased provided column names to Carver by setting qualitative_features or quantitative_features."
+        assert (len(quantitative_features) > 0 and len(qualitative_features) == 0) or (
+            len(qualitative_features) > 0 and len(quantitative_features) == 0
+        ), "Mixed quantitative and qualitative features. One only of quantitative_features and qualitative_features should be set."
         self.features = list(set(qualitative_features + quantitative_features))
 
         # number of features selected
         self.n_best = n_best
         assert n_best <= len(self.features) + 1, "Must set n_best <= len(features)"
-        
+
         # feature sample size per iteration
         self.sample_size = sample_size
 
@@ -133,15 +133,15 @@ class FeatureSelector():
         if measures is None:
             if any(quantitative_features):  # quantitative feature association measure
                 measures = [kruskal_measure]
-            else:    # qualitative feature association measure
+            else:  # qualitative feature association measure
                 measures = [cramerv_measure]
         self.measures = [dtype_measure, nans_measure, mode_measure] + measures[:]
-        
+
         # initiating filters
         if filters is None:
             if any(quantitative_features):  # quantitative feature association measure
                 filters = [spearman_filter]
-            else:    # qualitative feature association measure
+            else:  # qualitative feature association measure
                 filters = [cramerv_filter]
         self.filters = [thresh_filter] + filters[:]
 
@@ -158,8 +158,9 @@ class FeatureSelector():
         self.associations = None
         self.filtered_associations = None
 
-
-    def _select_features(self, X: DataFrame, y: Series, features: list[str], n_best: int) -> list[str]:
+    def _select_features(
+        self, X: DataFrame, y: Series, features: list[str], n_best: int
+    ) -> list[str]:
         """Selects the n_best features amongst the specified ones
 
         Parameters
@@ -182,7 +183,9 @@ class FeatureSelector():
             print(f"------\n[FeatureSelector] Selecting from Features: {str(features)}\n---")
 
         # Computes association between X and y
-        initial_associations = apply_measures(X, y, measures=self.measures, features=features, **self.params)
+        initial_associations = apply_measures(
+            X, y, measures=self.measures, features=features, **self.params
+        )
 
         # sorting statistics
         measure_names = evaluated_measure_names(initial_associations, self.measure_names)
@@ -199,30 +202,38 @@ class FeatureSelector():
         for measure_name in measure_names:
             # sorting association for each measure
             associations = initial_associations.sort_values(
-                measure_name, ascending=self.params.get("ascending", False))
+                measure_name, ascending=self.params.get("ascending", False)
+            )
 
             # filtering for each measure, as each measure ranks the features differently
             filtered_association = apply_filters(
-                X, associations, filters=self.filters, **self.params)
-            
+                X, associations, filters=self.filters, **self.params
+            )
+
             # selected features for the measure
             selected_features = [
-                feature for feature in initial_associations.index
+                feature
+                for feature in initial_associations.index
                 if feature in filtered_association.index[:n_best]
             ]
 
             # saving results
-            all_best_features.update({measure_name: {
-                "selected": selected_features,
-                "association": filtered_association,   
-            }})
+            all_best_features.update(
+                {
+                    measure_name: {
+                        "selected": selected_features,
+                        "association": filtered_association,
+                    }
+                }
+            )
 
         # list of unique best_featues per measure_name
         best_features = [
             # ordering according target association
-            feature for feature in initial_associations.index
+            feature
+            for feature in initial_associations.index
             # checking that feature has been selected by a measure
-            if any(feature in all_best_features[measure]['selected'] for measure in measure_names)
+            if any(feature in all_best_features[measure]["selected"] for measure in measure_names)
         ]
 
         if self.verbose:  # displaying association measure
@@ -233,7 +244,7 @@ class FeatureSelector():
         return best_features
 
     def select(self, X: DataFrame, y: Series) -> list[str]:
-        """ Selects the ``n_best`` features of the DataFrame, by association with the binary target
+        """Selects the ``n_best`` features of the DataFrame, by association with the binary target
 
         Parameters
         ----------
@@ -278,6 +289,7 @@ class FeatureSelector():
         best_features = self._select_features(X, y, best_features, self.n_best)
 
         return best_features
+
 
 def print_associations(association: DataFrame, pretty_print: bool = False) -> None:
     """EDA of fitted associations
@@ -335,7 +347,10 @@ def feature_association(x: Series, y: Series, measures: list[Callable], **params
 
     return association
 
-def apply_measures(X: DataFrame, y: Series, measures: list[Callable], features: list[str], **params) -> DataFrame:
+
+def apply_measures(
+    X: DataFrame, y: Series, measures: list[Callable], features: list[str], **params
+) -> DataFrame:
     """Measures association between columns of X and y
 
     Parameters
@@ -359,9 +374,14 @@ def apply_measures(X: DataFrame, y: Series, measures: list[Callable], features: 
         _description_
     """
     # applying association measure to each column
-    associations = X[features].apply(feature_association, y=y, measures=measures, **params, result_type="expand", axis=0).T
+    associations = (
+        X[features]
+        .apply(feature_association, y=y, measures=measures, **params, result_type="expand", axis=0)
+        .T
+    )
 
     return associations
+
 
 def evaluated_measure_names(associations: DataFrame, measure_names: list[str]) -> list[str]:
     """_summary_
@@ -377,18 +397,20 @@ def evaluated_measure_names(associations: DataFrame, measure_names: list[str]) -
     -------
     list[str]
         _description_
-    """    
+    """
     # Getting evaluated measures (filtering out non-measures: pct_zscore, pct_iqr...)
     sort_by = [
-        measure_name 
-        for measure_name in measure_names 
-        if measure_name in associations and '_measure' in measure_name
+        measure_name
+        for measure_name in measure_names
+        if measure_name in associations and "_measure" in measure_name
     ]
 
     return sort_by
 
 
-def apply_filters(X: DataFrame, associations: DataFrame, filters: list[Callable], **params) -> DataFrame:
+def apply_filters(
+    X: DataFrame, associations: DataFrame, filters: list[Callable], **params
+) -> DataFrame:
     """Filters out too correlated features (least relevant first)
 
     Parameters
@@ -415,5 +437,5 @@ def apply_filters(X: DataFrame, associations: DataFrame, filters: list[Callable]
     filtered_associations = associations.copy()
     for filtering in filters:
         filtered_associations = filtering(X, filtered_associations, **params)
-    
+
     return filtered_associations

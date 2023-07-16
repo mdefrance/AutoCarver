@@ -32,8 +32,9 @@ def nans_measure(
         thresh_nan = params.get("thresh_nan", 0.999)
         active = pct_nan < thresh_nan
         if not active:
-            print(f"Feature {x.name} will be discarded (more than {thresh_nan:2.2%} of nans). Otherwise, set a greater value for thresh_nan.")
-
+            print(
+                f"Feature {x.name} will be discarded (more than {thresh_nan:2.2%} of nans). Otherwise, set a greater value for thresh_nan."
+            )
 
     return active, association
 
@@ -80,6 +81,8 @@ def mode_measure(
         thresh_mode = params.get("thresh_mode", 0.999)
         active = pct_mode < thresh_mode
         if not active:
-            print(f"Feature {x.name} will be discarded (more than {thresh_mode:2.2%} of its mode). Otherwise, set a greater value for thresh_mode.")
+            print(
+                f"Feature {x.name} will be discarded (more than {thresh_mode:2.2%} of its mode). Otherwise, set a greater value for thresh_mode."
+            )
 
     return active, association
