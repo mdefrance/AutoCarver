@@ -1,27 +1,98 @@
 FeatureSelector
 ===============
 
-Qualitative feature selection
-------------------------------
+.. _FeatureSelector:
 
-Implemented measures
+FeatureSelector, an association centric tool for feature pre-selection
+----------------------------------------------------------------------
+
+
+.. autoclass:: AutoCarver.feature_selection.FeatureSelector
+    :members:
+
+.. _Measures:
+
+Association measures, X by y 
+----------------------------
+
+Quantitative measures
+.....................
+
+.. autofunction:: AutoCarver.feature_selection.measures.kruskal_measure
+
+.. note::
+    This measure is added by default 
+
+.. autofunction:: AutoCarver.feature_selection.measures.R_measure
+
+Quantitative outlier Detection
+..............................
+
+.. autofunction:: AutoCarver.feature_selection.measures.zscore_measure
+
+.. autofunction:: AutoCarver.feature_selection.measures.iqr_measure
+
+
+Qualitative measures
 ....................
 
-Implemented filters
+.. autofunction:: AutoCarver.feature_selection.measures.chi2_measure
+
+
+.. autofunction:: AutoCarver.feature_selection.measures.cramerv_measure
+
+
+.. note::
+    This measure is added by default 
+
+
+.. autofunction:: AutoCarver.feature_selection.measures.tschuprowt_measure
+
+
+Base data information
+.....................
+
+.. autofunction:: AutoCarver.feature_selection.measures.nans_measure
+
+.. note::
+    This measure is evaluated by default by ``FeatureSelector``. If threshold is reached, feature will automatically be dropped by ``filters.thresh_filter()``.
+
+.. autofunction:: AutoCarver.feature_selection.measures.dtype_measure
+    
+.. note::
+    This measure is evaluated by default by ``FeatureSelector``. If threshold is reached, feature will automatically be dropped by ``filters.thresh_filter()``.
+
+.. autofunction:: AutoCarver.feature_selection.measures.mode_measure
+
+.. note::
+    This measure is evaluated by default by ``FeatureSelector``. If threshold is reached, feature will automatically be dropped by ``filters.thresh_filter()``.
+
+
+.. _Filters:
+
+Association filters, X by X 
+---------------------------
+
+Quantitative filters
+....................
+
+.. autofunction:: AutoCarver.feature_selection.filters.spearman_filter
+.. autofunction:: AutoCarver.feature_selection.filters.pearson_filter
+.. autofunction:: AutoCarver.feature_selection.filters.vif_filter
+    
+Qualitative filters
 ...................
 
 
+.. autofunction:: AutoCarver.feature_selection.filters.cramerv_filter
+.. autofunction:: AutoCarver.feature_selection.filters.tschuprowt_filter
 
-Quantitative feature selection
-------------------------------
+Other filters
+.............
 
-Implemented measures
-....................
+.. autofunction:: AutoCarver.feature_selection.filters.thresh_filter
 
-Implemented filters
-...................
+.. note::
+    This filter is used by default by ``FeatureSelector``. Automatically features that did not pas :ref:`Measures`. 
 
-
-Build your own!
----------------
-
+.. autofunction:: AutoCarver.feature_selection.filters.measure_filter
