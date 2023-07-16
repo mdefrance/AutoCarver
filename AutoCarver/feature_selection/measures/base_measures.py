@@ -29,7 +29,11 @@ def nans_measure(
         association.update({"pct_nan": pct_nan})
 
         # Excluding feature that have to many NaNs
-        active = pct_nan < params.get("thresh_nan", 1.0)
+        thresh_nan = params.get("thresh_nan", 0.999)
+        active = pct_nan < thresh_nan
+        if not active:
+            print(f"Feature {x.name} will be discarded (more than {thresh_nan:2.2%} of nans). Otherwise, set a greater value for thresh_nan.")
+
 
     return active, association
 
@@ -73,6 +77,9 @@ def mode_measure(
         association.update({"pct_mode": pct_mode, "mode": mode})
 
         # Excluding feature with too frequent modes
-        active = pct_mode < params.get("thresh_mode", 1.0)
+        thresh_mode = params.get("thresh_mode", 0.999)
+        active = pct_mode < thresh_mode
+        if not active:
+            print(f"Feature {x.name} will be discarded (more than {thresh_mode:2.2%} of its mode). Otherwise, set a greater value for thresh_mode.")
 
     return active, association

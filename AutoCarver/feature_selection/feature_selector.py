@@ -5,16 +5,14 @@ from typing import Any, Callable
 
 from IPython.display import display_html
 from pandas import DataFrame, Series
-from sklearn.base import BaseEstimator, TransformerMixin
 
-from ..discretizers import GroupedList
-from .filters import thresh_filter
-from .measures import dtype_measure, mode_measure, nans_measure
+from .filters import thresh_filter, cramerv_filter, spearman_filter
+from .measures import dtype_measure, mode_measure, nans_measure, cramerv_measure, kruskal_measure
 
 
-# TODO: convert to groupedlistdiscretizer
+# TODO: add thresh_mode, thresh_nan to the class parameters
 # TODO: add parameter to shut down displayed info
-class FeatureSelector(BaseEstimator, TransformerMixin):
+class FeatureSelector():
     """A pipeline of measures to perform EDA and feature pre-selection
 
      - best features are the n_best of each measure
@@ -81,18 +79,18 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
 
     def __init__(
         self,
-        features: list[str],
         n_best: int,
-        measures: list[Callable],
         *,
+        quantitative_features: list[str] = None,
+        qualitative_features: list[str] = None,
+        measures: list[Callable] = None,
         filters: list[Callable] = None,
         sample_size: float = 1.0,
-        copy: bool = True,
-        drop: bool = False,  # TODO
-        verbose: bool = True,
+        verbose: bool = False,
+        pretty_print: bool = False,  #TODO
         **params,
     ) -> None:
-        """_summary_
+        """ Initiates a ``FeatureSelector``.
 
         Parameters
         ----------
@@ -111,134 +109,144 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
         verbose : bool, optional
             _description_, by default True
         """
-        print("Warning: not fully optimized for package versions greater than 4.")
+        # settinp up list of features
+        if quantitative_features is None:
+            quantitative_features = []
+        if qualitative_features is None:
+            qualitative_features = []
+        assert len(quantitative_features) > 0 or len(qualitative_features) > 0, (
+            "No feature passed as input. Pleased provided column names to Carver by setting qualitative_features or quantitative_features."
+        )
+        assert (len(quantitative_features) > 0 and len(qualitative_features)==0) or (len(qualitative_features) > 0 and len(quantitative_features)==0), (
+            "Mixed quantitative and qualitative features. One only of quantitative_features and qualitative_features should be set."
+        )
+        self.features = list(set(qualitative_features + quantitative_features))
 
-        self.features = list(set(features))
+        # number of features selected
         self.n_best = n_best
-        assert n_best <= len(features), "Must set n_best <= len(features)"
-        self.best_features = features[:]
+        assert n_best <= len(self.features) + 1, "Must set n_best <= len(features)"
+        
+        # feature sample size per iteration
         self.sample_size = sample_size
 
+        # initiating measures
+        if measures is None:
+            if any(quantitative_features):  # quantitative feature association measure
+                measures = [kruskal_measure]
+            else:    # qualitative feature association measure
+                measures = [cramerv_measure]
         self.measures = [dtype_measure, nans_measure, mode_measure] + measures[:]
+        
+        # initiating filters
         if filters is None:
-            filters = []
+            if any(quantitative_features):  # quantitative feature association measure
+                filters = [spearman_filter]
+            else:    # qualitative feature association measure
+                filters = [cramerv_filter]
         self.filters = [thresh_filter] + filters[:]
-        self.sort_measures = [measure.__name__ for measure in measures[::-1]]
 
-        # Values_orders from GroupedListDiscretizer
-        if values_orders is None:
-            values_orders = {}
-        self.values_orders = {
-            feature: GroupedList(value) for feature, value in values_orders.items()
-        }
+        # names of measures to sort by
+        self.measure_names = [measure.__name__ for measure in measures[::-1]]
 
-        self.drop = drop
-        self.copy = copy
-        self.verbose = verbose
+        # wether or not to print tables
+        self.verbose = bool(max(verbose, pretty_print))
+        self.pretty_print = pretty_print
+
+        # keyword arguments
         self.params = params
 
         self.associations = None
         self.filtered_associations = None
 
-    def measure(self, x: Series, y: Series) -> dict[str, Any]:
-        """Measures association between x and y"""
 
-        passed = True  # measures keep going only if previous basic tests are passed
-        association = {}
-
-        # iterating over each measure
-        for measure in self.measures:
-            passed, association = measure(passed, association, x, y, **self.params)
-
-        return association
-
-    def measure_apply(self, X: DataFrame, y: Series, features: list[str]) -> None:
-        """Measures association between columns of X and y
+    def _select_features(self, X: DataFrame, y: Series, features: list[str], n_best: int) -> list[str]:
+        """Selects the n_best features amongst the specified ones
 
         Parameters
         ----------
-        ascending, bool default False
-            According to this measure:
-             - True: Lower values of the measure are to be considered as more associated to the target
-             - False: Higher values of the measure are to be considered as more associated to the target
+        X : DataFrame
+            _description_
+        y : Series
+            _description_
+        features : list[str]
+            _description_
+        n_best : int
+            _description_
+
+        Returns
+        -------
+        list[str]
+            _description_
         """
+        if self.verbose:  # verbose if requested
+            print(f"------\n[FeatureSelector] Selecting from Features: {str(features)}\n---")
 
-        # applying association measure to each column
-        self.associations = X[features].apply(self.measure, y=y, result_type="expand", axis=0).T
+        # Computes association between X and y
+        initial_associations = apply_measures(X, y, measures=self.measures, features=features, **self.params)
 
-        # filtering non association measure (pct_zscore, pct_iqr...)
-        asso_measures = [c for c in self.associations if "_measure" in c]
-        self.sort_measures = [c for c in self.sort_measures if c in asso_measures]
-
-        # sorting statistics if an association measure was provided
-        self.associations = self.associations.sort_values(
-            self.sort_measures, ascending=self.params.get("ascending", False)
+        # sorting statistics
+        measure_names = evaluated_measure_names(initial_associations, self.measure_names)
+        initial_associations = initial_associations.sort_values(
+            measure_names, ascending=self.params.get("ascending", False)
         )
 
-    def filter_apply(self, X: DataFrame, sort_measure: str) -> DataFrame:
-        """Filters out too correlated features (least relevant first)
+        if self.verbose:  # displaying association measure
+            print("\n - Association between X and y")
+            print_associations(initial_associations, self.pretty_print)
 
-        Parameters
-        ----------
-        ascending, bool default False
-            According to this measure:
-             - True: Lower values of the measure are to be considered as more associated to the target
-             - False: Higher values of the measure are to be considered as more associated to the target
-        """
+        # applying filtering for each measure
+        all_best_features: dict[str, Any] = {}
+        for measure_name in measure_names:
+            # sorting association for each measure
+            associations = initial_associations.sort_values(
+                measure_name, ascending=self.params.get("ascending", False))
 
-        # ordering features by sort_by
-        self.filtered_associations = self.associations.sort_values(
-            sort_measure, ascending=self.params.get("ascending", False)
-        )
+            # filtering for each measure, as each measure ranks the features differently
+            filtered_association = apply_filters(
+                X, associations, filters=self.filters, **self.params)
+            
+            # selected features for the measure
+            selected_features = [
+                feature for feature in initial_associations.index
+                if feature in filtered_association.index[:n_best]
+            ]
 
-        # applying successive filters
-        for filtering in self.filters:
-            # ordered filtering
-            self.filtered_associations = filtering(X, self.filtered_associations, **self.params)
+            # saving results
+            all_best_features.update({measure_name: {
+                "selected": selected_features,
+                "association": filtered_association,   
+            }})
 
-    def display_stats(self, association: DataFrame, caption: str) -> None:
-        """EDA of fitted associations"""
+        # list of unique best_featues per measure_name
+        best_features = [
+            # ordering according target association
+            feature for feature in initial_associations.index
+            # checking that feature has been selected by a measure
+            if any(feature in all_best_features[measure]['selected'] for measure in measure_names)
+        ]
 
-        # appllying style
-        subset = [c for c in association if "pct_" in c or "_measure" in c or "_filter" in c]
-        style = association.style.background_gradient(cmap="coolwarm", subset=subset)
-        style = style.set_table_attributes("style='display:inline'")
-        style = style.set_caption(caption)
-        display_html(style._repr_html_(), raw=True)
-
-    def fit_features(self, X: DataFrame, y: Series, features: list[str], n_best: int) -> list[str]:
-        """Selects the n_best features amongst the specified ones"""
-
-        # initial computation of all association measures
-        self.measure_apply(X, y, features)
-
-        # displaying association measure
-        if self.verbose:
-            self.display_stats(self.associations, "Raw association")
-
-        # iterating over each sort_measures
-        # useful when measures hints to specific associations
-        ranks = []
-        for n, sort_measure in enumerate(self.sort_measures):
-            # filtering by sort_measure
-            self.filter_apply(X, sort_measure)
-            ranks += [list(self.filtered_associations.index)]
-
-            # displaying filtered out association measure
-            if n == 0 and self.verbose and len(self.filters) > 1:
-                self.display_stats(self.filtered_associations, "Filtered association")
-
-        # retrieving the n_best features per each ranking
-        best_features = []
-        if len(self.sort_measures) > 0:
-            best_features = [feature for rank in ranks for feature in rank[:n_best]]
-            best_features = list(set(best_features))  # deduplicating
+        if self.verbose:  # displaying association measure
+            print("\n - Association between X and y, filtered for inter-feature assocation")
+            print_associations(initial_associations.reindex(best_features), self.pretty_print)
+            print("------\n")
 
         return best_features
 
-    def fit(self, X: DataFrame, y: Series) -> None:
-        """Selects the n_best features"""
+    def select(self, X: DataFrame, y: Series) -> list[str]:
+        """ Selects the ``n_best`` features of the DataFrame, by association with the binary target
 
+        Parameters
+        ----------
+        X : DataFrame
+            _description_
+        y : Series
+            Binary target feature with wich the association is maximized.
+
+        Returns
+        -------
+        list[str]
+            List of selected features
+        """
         # splitting features in chunks
         if self.sample_size < 1:
             # shuffling features to get random samples of features
@@ -260,42 +268,152 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
             best_features = []
             for features in feature_samples:
                 # fitting association on features
-                best_features += self.fit_features(X, y, features, int(self.n_best // 2))
+                best_features += self._select_features(X, y, features, int(self.n_best // 2))
 
         # splitting in chunks not requested
         else:
             best_features = self.features[:]
 
         # final selection with all best_features selected
-        self.best_features = self.fit_features(X, y, best_features, self.n_best)
+        best_features = self._select_features(X, y, best_features, self.n_best)
 
-        # ordering best_features according to their rank
-        self.best_features = [
-            f for f in self.filtered_associations.index if f in self.best_features
+        return best_features
+
+def print_associations(association: DataFrame, pretty_print: bool = False) -> None:
+    """EDA of fitted associations
+
+    Parameters
+    ----------
+    association : DataFrame
+        _description_
+    pretty_print : bool, optional
+        _description_, by default False
+    """
+    # printing raw DataFrame
+    if not pretty_print:
+        print(association)
+
+    # adding colors and displaying DataFrame as html
+    else:
+        # finding columns with indicators to colorize
+        subset = [
+            column
+            for column in association
+            # checking for an association indicator
+            if any(indic in column for indic in ["pct_", "_measure", "_filter"])
         ]
+        # getting prettier association table
+        nicer_association = association.style.background_gradient(cmap="coolwarm", subset=subset)
+        nicer_association = nicer_association.set_table_attributes("style='display:inline'")
 
-        # removing feature from values_orders
-        dropped_features = [f for f in self.associations.index if f not in self.best_features]
-        for feature in dropped_features:
-            if feature in self.values_orders:
-                self.values_orders.pop(feature)
+        # displaying html of colored DataFrame
+        display_html(nicer_association._repr_html_(), raw=True)
 
-        return self
 
-    def transform(self, X: DataFrame, y: Series = None) -> DataFrame:
-        """Drops the non-selected columns from `features`.
+def feature_association(x: Series, y: Series, measures: list[Callable], **params) -> dict[str, Any]:
+    """Measures association between x and y
 
-        Parameters
-        ----------
-        X : DataFrame
-            Contains columns named in `features`
-        y : Series, optional
-            Model target, by default None
+    Parameters
+    ----------
+    x : Series
+        Sample of a feature.
+    y : Series
+        Binary target feature with wich the association is evaluated.
 
-        Returns
-        -------
-        DataFrame
-            `X` without non-selected columns from `features`.
-        """
+    Returns
+    -------
+    dict[str, Any]
+        Association metrics' values
+    """
+    # measures keep going only if previous basic tests are passed
+    passed = True
+    association = {}
 
-        return X
+    # iterating over each measure
+    for measure in measures:
+        passed, association = measure(passed, association, x, y, **params)
+
+    return association
+
+def apply_measures(X: DataFrame, y: Series, measures: list[Callable], features: list[str], **params) -> DataFrame:
+    """Measures association between columns of X and y
+
+    Parameters
+    ----------
+    X : DataFrame
+        _description_
+    y : Series
+        _description_
+    features : list[str]
+        _description_
+    measure_names : list[str]
+        _description_
+    ascending, bool default False
+        According to this measure:
+            - True: Lower values of the measure are to be considered as more associated to the target
+            - False: Higher values of the measure are to be considered as more associated to the target
+
+    Returns
+    -------
+    DataFrame
+        _description_
+    """
+    # applying association measure to each column
+    associations = X[features].apply(feature_association, y=y, measures=measures, **params, result_type="expand", axis=0).T
+
+    return associations
+
+def evaluated_measure_names(associations: DataFrame, measure_names: list[str]) -> list[str]:
+    """_summary_
+
+    Parameters
+    ----------
+    associations : DataFrame
+        _description_
+    measure_names : list[str]
+        _description_
+
+    Returns
+    -------
+    list[str]
+        _description_
+    """    
+    # Getting evaluated measures (filtering out non-measures: pct_zscore, pct_iqr...)
+    sort_by = [
+        measure_name 
+        for measure_name in measure_names 
+        if measure_name in associations and '_measure' in measure_name
+    ]
+
+    return sort_by
+
+
+def apply_filters(X: DataFrame, associations: DataFrame, filters: list[Callable], **params) -> DataFrame:
+    """Filters out too correlated features (least relevant first)
+
+    Parameters
+    ----------
+    X : DataFrame
+        _description_
+    associations : DataFrame
+        _description_
+    filters : list[Callable]
+        _description_
+    measure_name : str
+        _description_
+    ascending, bool default False
+        According to this measure:
+            - True: Lower values of the measure are to be considered as more associated to the target
+            - False: Higher values of the measure are to be considered as more associated to the target
+
+    Returns
+    -------
+    DataFrame
+        _description_
+    """
+    # applying successive filters
+    filtered_associations = associations.copy()
+    for filtering in filters:
+        filtered_associations = filtering(X, filtered_associations, **params)
+    
+    return filtered_associations

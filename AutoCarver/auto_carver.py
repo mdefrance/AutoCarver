@@ -29,10 +29,10 @@ class AutoCarver(BaseDiscretizer):
 
     def __init__(
         self,
-        quantitative_features: list[str],
-        qualitative_features: list[str],
         min_freq: float,
         *,
+        quantitative_features: list[str] = None,
+        qualitative_features: list[str] = None,
         ordinal_features: list[str] = None,
         values_orders: dict[str, GroupedList] = None,
         max_n_mod: int = 5,
@@ -50,12 +50,6 @@ class AutoCarver(BaseDiscretizer):
 
         Parameters
         ----------
-        quantitative_features : list[str]
-            List of column names of quantitative features (continuous and discrete) to be carved
-
-        qualitative_features : list[str]
-            List of column names of qualitative features (non-ordinal) to be carved
-
         min_freq : float
             Minimum frequency per grouped modalities.
 
@@ -64,6 +58,12 @@ class AutoCarver(BaseDiscretizer):
             * Sets the minimum frequency of a quantitative feature's modality.
 
             **Tip**: should be set between 0.02 (slower, preciser, less robust) and 0.05 (faster, more robust)
+
+        quantitative_features : list[str]
+            List of column names of quantitative features (continuous and discrete) to be carved, by default ``None``
+
+        qualitative_features : list[str]
+            List of column names of qualitative features (non-ordinal) to be carved, by default ``None``
 
         ordinal_features : list[str], optional
             List of column names of ordinal features to be carved. For those features a list of
@@ -124,20 +124,17 @@ class AutoCarver(BaseDiscretizer):
         See `AutoCarver examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
         """
         # Lists of features
+        if quantitative_features is None:
+            quantitative_features = []
+        if qualitative_features is None:
+            qualitative_features = []
         if ordinal_features is None:
             ordinal_features = []
+        assert len(quantitative_features) > 0 or len(qualitative_features) > 0 or len(ordinal_features) > 0, (
+            "No feature passed as input. Pleased provided column names to Carver by setting quantitative_features, quantitative_features or ordinal_features."
+        )
         self.ordinal_features = list(set(ordinal_features))
         self.features = list(set(quantitative_features + qualitative_features + ordinal_features))
-
-        # checking that qualitatitve and quantitative featues are distinct
-        assert all(
-            quali_feature not in quantitative_features
-            for quali_feature in qualitative_features + ordinal_features
-        ), "A feature of `quantitative_features` also is in `qualitative_features` or `ordinal_features`. Be carreful with your inputs!"
-        assert all(
-            quanti_feature not in qualitative_features + ordinal_features
-            for quanti_feature in quantitative_features
-        ), "A feature of `qualitative_features` or `ordinal_features` also is in `quantitative_features`. Be carreful with your inputs!"
 
         # initializing input_dtypes
         self.input_dtypes = {feature: "str" for feature in qualitative_features + ordinal_features}
@@ -155,6 +152,16 @@ class AutoCarver(BaseDiscretizer):
             copy=copy,
             verbose=bool(max(verbose, pretty_print)),
         )
+
+        # checking that qualitatitve and qualitative featues are distinct
+        assert all(
+            quali_feature not in self.quantitative_features
+            for quali_feature in self.qualitative_features
+        ), "A feature of quantitative_features also is in qualitative_features or ordinal_features. Please, be carreful with your inputs!"
+        assert all(
+            quanti_feature not in self.qualitative_features
+            for quanti_feature in self.quantitative_features
+        ), "A feature of qualitative_features or ordinal_features also is in quantitative_features. Please, be carreful with your inputs!"
 
         # class specific attributes
         self.min_freq = min_freq  # minimum frequency per base bucket
@@ -264,9 +271,12 @@ class AutoCarver(BaseDiscretizer):
         self.values_orders.update(discretizer.values_orders)
 
         # removing dropped features
-        for feature in self.features:
-            if feature not in discretizer.features:
-                self._remove_feature(feature)
+        removed_features = [
+            feature for feature in self.features
+            if feature not in discretizer.features
+        ]
+        for feature in removed_features:
+            self._remove_feature(feature)
 
         # converting potential quantiles into there respective labels
         labels_orders = convert_to_labels(
@@ -282,9 +292,7 @@ class AutoCarver(BaseDiscretizer):
         xtabs_dev = get_xtabs(self.features, x_dev_copy, y_dev, labels_orders)
 
         # optimal butcketization/carving of each feature
-        all_features = self.features[
-            :
-        ]  # necessary as features are being removed from self.features
+        all_features = self.features[:]  # (features are being removed from self.features)
         for n, feature in enumerate(all_features):
             if self.verbose:  # verbose if requested
                 print(f"\n------\n[AutoCarver] Fit {feature} ({n+1}/{len(all_features)})\n---")
@@ -293,7 +301,7 @@ class AutoCarver(BaseDiscretizer):
             xtab = xtabs[feature]
             xtab_dev = xtabs_dev[feature]
             if self.verbose:  # verbose if requested
-                print("\n - Raw feature distribution")
+                print("\n - [AutoCarver] Raw feature distribution")
                 print_xtabs(xtab, xtab_dev, pretty_print=self.pretty_print)
 
             # ordering
@@ -306,7 +314,7 @@ class AutoCarver(BaseDiscretizer):
             if best_combination is not None:
                 order, xtab, xtab_dev = best_combination
                 if self.verbose:  # verbose if requested
-                    print("\n - Carved feature distribution")
+                    print("\n - [AutoCarver] Carved feature distribution")
                     print_xtabs(
                         xtab, xtab_dev, pretty_print=self.pretty_print
                     )  # TODO get the good labels
@@ -317,7 +325,7 @@ class AutoCarver(BaseDiscretizer):
             # no suitable combination has been found -> removing feature
             else:
                 print(
-                    f"No robust combination for feature '{feature}' could be found. It will be ignored. You might have to increase the size of your test sample (test sample not representative of test sample for this feature) or you should consider dropping this features."
+                    f" - [AutoCarver] No robust combination for feature '{feature}' could be found. It will be ignored. You might have to increase the size of your test sample (test sample not representative of test sample for this feature) or you should consider dropping this features."
                 )
                 self._remove_feature(feature)
                 if feature in labels_orders:
