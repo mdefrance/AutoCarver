@@ -103,6 +103,14 @@ class Discretizer(BaseDiscretizer):
             verbose=verbose,
         )
 
+        # checking for missing orders
+        no_order_provided = [
+            feature for feature in self.ordinal_features if feature not in self.values_orders
+        ]
+        assert (
+            len(no_order_provided) == 0
+        ), f"No ordering was provided for following features: {str(no_order_provided)}. Please make sure you defined ``values_orders`` correctly."
+
         # class specific attributes
         self.min_freq = min_freq
 
@@ -157,7 +165,7 @@ class Discretizer(BaseDiscretizer):
 
             # removing dropped features
             for feature in self.qualitative_features:
-                if feature not in qualitative_discretizer.values_orders:
+                if feature not in qualitative_discretizer.features:
                     self._remove_feature(feature)
             if self.verbose:  # verbose if requested
                 print("------\n")
@@ -183,7 +191,7 @@ class Discretizer(BaseDiscretizer):
 
             # removing dropped features
             for feature in self.quantitative_features:
-                if feature not in quantitative_discretizer.values_orders:
+                if feature not in quantitative_discretizer.features:
                     self._remove_feature(feature)
             if self.verbose:  # verbose if requested
                 print("------\n")
@@ -284,6 +292,14 @@ class QualitativeDiscretizer(BaseDiscretizer):
             verbose=verbose,
         )
 
+        # checking for missing orders
+        no_order_provided = [
+            feature for feature in self.ordinal_features if feature not in self.values_orders
+        ]
+        assert (
+            len(no_order_provided) == 0
+        ), f"No ordering was provided for following features: {str(no_order_provided)}. Please make sure you defined ``values_orders`` correctly."
+
         # non-ordinal qualitative features
         self.non_ordinal_features = [
             feature for feature in self.qualitative_features if feature not in self.ordinal_features
@@ -314,9 +330,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
             axis=0,
         )
         # for each feature, checking that at least one value is more frequent than min_freq
-        all_features = self.features[
-            :
-        ]  # necessary as features are being removed from self.features
+        all_features = self.features[:]  # features are being removed from self.features
         for feature in all_features:
             if frequencies[feature] < self.min_freq:
                 print(

@@ -3,10 +3,10 @@
 from pandas import DataFrame
 from pytest import raises
 
-from AutoCarver.discretizers.utils.grouped_list import GroupedList
-from AutoCarver.discretizers.utils.qualitative_discretizers import (
+from AutoCarver.discretizers import (
     ChainedDiscretizer,
     DefaultDiscretizer,
+    GroupedList,
     OrdinalDiscretizer,
 )
 

@@ -130,7 +130,6 @@ def test_auto_carver(
 
     min_freq = 0.15
 
-
     chained_discretizer = ChainedDiscretizer(
         qualitative_features=chained_features,
         chained_orders=[level0_to_level1, level1_to_level2],
@@ -144,7 +143,6 @@ def test_auto_carver(
     # minimum frequency per modality
     min_freq = 0.06
     max_n_mod = 4
-
 
     # tests with 'tschuprowt' measure
     auto_carver = AutoCarver(

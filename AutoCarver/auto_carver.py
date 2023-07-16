@@ -265,7 +265,7 @@ class AutoCarver(BaseDiscretizer):
 
         # removing dropped features
         for feature in self.features:
-            if feature not in discretizer.values_orders:
+            if feature not in discretizer.features:
                 self._remove_feature(feature)
 
         # converting potential quantiles into there respective labels

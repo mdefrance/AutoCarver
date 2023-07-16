@@ -9,13 +9,40 @@ on:
       - main
 
 jobs:
-  test:
+  pytest_light:
+    runs-on: ubuntu-latest
+
+    # runs only on push
+    if: ${{ github.event_name == 'push' }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov
+          pip install -r ${{ github.workspace }}/requirements.txt
+
+      - name: Run tests
+        run: python -m pytest -v --cov ${{ github.workspace }}/tests
+
+  pytest:
     strategy:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
         python-version: ['3.9', '3.10', '3.11']
 
     runs-on: ${{ matrix.os }}
+
+    # runs only on pull_request
+    if: ${{ github.event_name == 'pull_request' }}
 
     steps:
       - name: Checkout Repository
@@ -34,3 +61,31 @@ jobs:
 
       - name: Run tests
         run: python -m pytest -v --cov ${{ github.workspace }}/tests
+  
+  pylint:
+    
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install black isort pylint flake8
+          pip install -r ${{ github.workspace }}/requirements.txt
+
+      - name: Run lint
+        run: |
+          cd ${{ github.workspace }}
+          black --check .
+          isort . --check-only
+          pylint $(find . -name "*.py" | xargs) --fail-under=8
+          # flake8 . 
+  
