@@ -496,17 +496,18 @@ class ChainedDiscretizer(BaseDiscretizer):
         x_copy = X.copy()
 
         # checking for ids (unique value per row)
-        frequencies = x_copy[self.features].apply(
+        max_frequencies = x_copy[self.features].apply(
             lambda u: u.value_counts(normalize=True, dropna=False).drop(nan, errors="ignore").max(),
             axis=0,
         )
         # for each feature, checking that at least one value is more frequent than min_freq
-        for feature in self.features:
-            if frequencies[feature] < self.min_freq:
+        all_features = self.features[:]
+        for feature in all_features:
+            if max_frequencies[feature] < self.min_freq:
                 print(
-                    f"For feature '{feature}', the largest modality has {frequencies[feature]:2.2%} observations which is lower than {self.min_freq:2.2%}. This feature will not be Discretized. Consider decreasing parameter min_freq or removing this feature."
+                    f" - [ChainedDiscretizer] For feature '{feature}', the largest modality has {max_frequencies[feature]:2.2%} observations which is lower than {self.min_freq:2.2%}. This feature will not be Discretized. Consider decreasing parameter min_freq or removing this feature."
                 )
-                self._remove_feature(feature)
+                super()._remove_feature(feature)
 
         # checking for columns containing floats or integers even with filled nans
         dtypes = x_copy[self.features].fillna(self.str_nan).applymap(type).apply(unique)
@@ -520,7 +521,7 @@ class ChainedDiscretizer(BaseDiscretizer):
                     typ for dtyp in dtypes[not_object] for typ in dtyp if typ != str
                 ]
                 print(
-                    f"""Non-string features: {str(features_to_convert)}. Trying to convert them using type_discretizers.StringDiscretizer, otherwise convert them manually. Unexpected data types: {str(list(unexpected_dtypes))}."""
+                    f""" - [ChainedDiscretizer] Non-string features: {str(features_to_convert)}. Trying to convert them using type_discretizers.StringDiscretizer, otherwise convert them manually. Unexpected data types: {str(list(unexpected_dtypes))}."""
                 )
 
             # converting specified features into qualitative features
@@ -581,7 +582,7 @@ class ChainedDiscretizer(BaseDiscretizer):
             if self.remove_unknown & (len(missing) > 0):
                 # alerting user
                 print(
-                    f"Order for feature '{feature}' was not provided for values:  {str(missing)}, these values will be converted to '{self.str_nan}' (policy remove_unknown=True)"
+                    f" - [ChainedDiscretizer] Order for feature '{feature}' was not provided for values:  {str(missing)}, these values will be converted to '{self.str_nan}' (policy remove_unknown=True)"
                 )
 
                 # adding missing values to the order

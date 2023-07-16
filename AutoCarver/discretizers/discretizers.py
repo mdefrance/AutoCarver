@@ -164,9 +164,14 @@ class Discretizer(BaseDiscretizer):
             self.values_orders.update(qualitative_discretizer.values_orders)
 
             # removing dropped features
-            for feature in self.qualitative_features:
-                if feature not in qualitative_discretizer.features:
-                    self._remove_feature(feature)
+            removed_features = [
+                feature
+                for feature in self.qualitative_features
+                if feature not in qualitative_discretizer.features
+            ]
+            for feature in removed_features:
+                self._remove_feature(feature)
+
             if self.verbose:  # verbose if requested
                 print("------\n")
 
@@ -190,9 +195,14 @@ class Discretizer(BaseDiscretizer):
             self.values_orders.update(quantitative_discretizer.values_orders)
 
             # removing dropped features
-            for feature in self.quantitative_features:
-                if feature not in quantitative_discretizer.features:
-                    self._remove_feature(feature)
+            removed_features = [
+                feature
+                for feature in self.quantitative_features
+                if feature not in quantitative_discretizer.features
+            ]
+            for feature in removed_features:
+                self._remove_feature(feature)
+
             if self.verbose:  # verbose if requested
                 print("------\n")
 
@@ -325,16 +335,16 @@ class QualitativeDiscretizer(BaseDiscretizer):
         x_copy = super()._prepare_data(X, y)
 
         # checking for ids (unique value per row)
-        frequencies = x_copy[self.features].apply(
+        max_frequencies = x_copy[self.features].apply(
             lambda u: u.value_counts(normalize=True, dropna=False).drop(nan, errors="ignore").max(),
             axis=0,
         )
         # for each feature, checking that at least one value is more frequent than min_freq
         all_features = self.features[:]  # features are being removed from self.features
         for feature in all_features:
-            if frequencies[feature] < self.min_freq:
+            if max_frequencies[feature] < self.min_freq:
                 print(
-                    f"For feature '{feature}', the largest modality has {frequencies[feature]:2.2%} observations which is lower than min_freq={self.min_freq:2.1%}. This feature will not be Discretized. Consider decreasing parameter min_freq or removing this feature."
+                    f" - [QualitatitveDiscretizer] For feature '{feature}', the largest modality has {max_frequencies[feature]:2.2%} observations which is lower than min_freq={self.min_freq:2.1%}. This feature will not be Discretized. Consider decreasing parameter min_freq or removing this feature."
                 )
                 self._remove_feature(feature)
 
@@ -350,7 +360,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
                     typ for dtyp in dtypes[not_object] for typ in dtyp if typ != str
                 ]
                 print(
-                    f"""Non-string features: {str(features_to_convert)}. Trying to convert them using type_discretizers.StringDiscretizer, otherwise convert them manually. Unexpected data types: {str(list(unexpected_dtypes))}."""
+                    f""" - [QualitatitveDiscretizer] Non-string features: {str(features_to_convert)}. Trying to convert them using type_discretizers.StringDiscretizer, otherwise convert them manually. Unexpected data types: {str(list(unexpected_dtypes))}."""
                 )
 
             # converting specified features into qualitative features
