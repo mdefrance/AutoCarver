@@ -1,6 +1,4 @@
 """Set of tests for auto_carver module.
-
-# TODO: test avec chained_discretizer
 """
 
 from json import dumps, loads
@@ -8,7 +6,8 @@ from json import dumps, loads
 from pandas import DataFrame
 from pytest import fixture, raises
 
-from AutoCarver.auto_carver import AutoCarver, load_carver
+from AutoCarver import AutoCarver, load_carver
+from AutoCarver.discretizers import ChainedDiscretizer
 
 
 @fixture(scope="module", params=["float", "str"])
@@ -62,6 +61,10 @@ def test_auto_carver(
     copy : bool
         Whether or not to copy the input dataset
     """
+    # copying x_train for comparison purposes
+    raw_x_train = x_train.copy()
+
+    # list of feaures
     quantitative_features = [
         "Quantitative",
         "Discrete_Quantitative_highnan",
@@ -113,13 +116,35 @@ def test_auto_carver(
         ],
         "Discrete_Qualitative_highnan": ["1", "2", "3", "4", "5", "6", "7"],
     }
+    chained_features = ["Qualitative_Ordinal", "Qualitative_Ordinal_lownan"]
+
+    level0_to_level1 = {
+        "Lows": ["Low-", "Low", "Low+", "Lows"],
+        "Mediums": ["Medium-", "Medium", "Medium+", "Mediums"],
+        "Highs": ["High-", "High", "High+", "Highs"],
+    }
+    level1_to_level2 = {
+        "Worst": ["Lows", "Mediums", "Worst"],
+        "Best": ["Highs", "Best"],
+    }
+
+    min_freq = 0.15
+
+
+    chained_discretizer = ChainedDiscretizer(
+        qualitative_features=chained_features,
+        chained_orders=[level0_to_level1, level1_to_level2],
+        min_freq=min_freq,
+        values_orders=values_orders,
+        copy=copy,
+    )
+    x_discretized = chained_discretizer.fit_transform(x_train)
+    values_orders.update(chained_discretizer.values_orders)
 
     # minimum frequency per modality
     min_freq = 0.06
     max_n_mod = 4
 
-    # copying x_train for comparison purposes
-    raw_x_train = x_train.copy()
 
     # tests with 'tschuprowt' measure
     auto_carver = AutoCarver(

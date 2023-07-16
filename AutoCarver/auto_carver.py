@@ -24,7 +24,7 @@ class AutoCarver(BaseDiscretizer):
     """Automatic carving of continuous, discrete, categorical and ordinal
     features that maximizes association with a binary target.
 
-    Applies ``Discretizer``, data should not be given raw.
+    Fits a ``Discretizer``. Raw data should be provided as input (not a result of ``Discretizer.transform()``).
     """
 
     def __init__(

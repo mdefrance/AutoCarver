@@ -15,6 +15,8 @@ Welcome to AutoCarver's documentation!
    quick_start
    auto_carver
    discretizers
+   feature_selector
+   examples
 
 
 

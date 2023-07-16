@@ -53,10 +53,15 @@
 <li class="toctree-l3"><a class="reference internal" href="#AutoCarver.AutoCarver.fit"><code class="docutils literal notranslate"><span class="pre">AutoCarver.fit()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#AutoCarver.AutoCarver.transform"><code class="docutils literal notranslate"><span class="pre">transform()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#AutoCarver.AutoCarver.summary"><code class="docutils literal notranslate"><span class="pre">summary()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#AutoCarver.AutoCarver.to_json"><code class="docutils literal notranslate"><span class="pre">to_json()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#AutoCarver.load_carver"><code class="docutils literal notranslate"><span class="pre">load_carver()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="discretizers.html">Discretizers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="feature_selector.html">FeatureSelector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 </ul>
 
         </div>
@@ -164,6 +169,58 @@ It should have the same distribution as X.</p></li>
 </dl>
 </dd></dl>
 
+</dd></dl>
+
+<p><code class="docutils literal notranslate"><span class="pre">AutoCarver</span></code> inherits from <code class="docutils literal notranslate"><span class="pre">BaseDiscretizer</span></code> that implements <code class="docutils literal notranslate"><span class="pre">transform()</span></code>, <code class="docutils literal notranslate"><span class="pre">fit_transform()</span></code>, <code class="docutils literal notranslate"><span class="pre">to_json()</span></code> and <code class="docutils literal notranslate"><span class="pre">summary()</span></code>.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="AutoCarver.AutoCarver.transform">
+<span class="sig-prename descclassname"><span class="pre">AutoCarver.AutoCarver.</span></span><span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#AutoCarver.AutoCarver.transform" title="Permalink to this definition"></a></dt>
+<dd><p>Applies discretization using a dict of GroupedList to transform a DataFrame’s columns whatever there <code class="docutils literal notranslate"><span class="pre">input_dtypes</span></code>.</p>
+<p>Groups values of features (keys of <code class="docutils literal notranslate"><span class="pre">values_orders</span></code>) according to there <code class="docutils literal notranslate"><span class="pre">GroupedList</span></code> (defined in <code class="docutils literal notranslate"><span class="pre">values_orders</span></code>) by
+reading the historized merges inside the <code class="docutils literal notranslate"><span class="pre">GroupedList.content</span></code> dict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>DataFrame</em>) – Contains columns named after <cite>features</cite> attribute, by default None</p></li>
+<li><p><strong>y</strong> (<em>Series</em><em>, </em><em>optional</em>) – Model target, by default None</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Discretized X.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="AutoCarver.AutoCarver.summary">
+<span class="sig-prename descclassname"><span class="pre">AutoCarver.AutoCarver.</span></span><span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#AutoCarver.AutoCarver.summary" title="Permalink to this definition"></a></dt>
+<dd><p>Summarizes the data discretization process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A summary of features’ values per modalities.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="AutoCarver.AutoCarver.to_json">
+<span class="sig-prename descclassname"><span class="pre">AutoCarver.AutoCarver.</span></span><span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#AutoCarver.AutoCarver.to_json" title="Permalink to this definition"></a></dt>
+<dd><p>Converts the BaseDiscretizer’s values_orders to .json format.</p>
+<p>To be used with <code class="docutils literal notranslate"><span class="pre">json.dump</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>JSON serialized BaseDiscretizer</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">

@@ -237,10 +237,12 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X: DataFrame, y: Series = None) -> DataFrame:
-        """Applies discretization using a dict of GroupedList to transform a DataFrame's columns whatever there ``input_dtypes``.
+        """Applies discretization to a DataFrame's columns. 
 
-        Groups values of features (keys of ``values_orders``) according to there ``GroupedList`` (defined in ``values_orders``) by
-        reading the historized merges inside the ``GroupedList.content`` dict.
+        * For each feature's modality, the associated group label is attributed as definid by ``values_orders``.
+        * If ``output_dtype="float"``, converts labels into floats.
+        * Data types are matched as ``input_dtypes=="str"`` for qualitative features and ``input_dtypes=="float"`` for quantitative ones.
+        * If ``copye=True``, the input DataFrame will be copied.
 
         Parameters
         ----------
@@ -265,7 +267,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
                 print(
                     f" - [BaseDiscretizer] Transform Quantitative {str(self.quantitative_features)}"
                 )
-            x_copy = self.transform_quantitative(x_copy, y)
+            x_copy = self._transform_quantitative(x_copy, y)
 
         # transforming qualitative features
         if len(self.qualitative_features) > 0:
@@ -273,7 +275,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
                 print(
                     f" - [BaseDiscretizer] Transform Qualitative {str(self.qualitative_features)}"
                 )
-            x_copy = self.transform_qualitative(x_copy, y)
+            x_copy = self._transform_qualitative(x_copy, y)
 
         # reinstating nans
         if not self.dropna:
@@ -284,8 +286,11 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
 
         return x_copy
 
-    def transform_quantitative(self, X: DataFrame, y: Series) -> DataFrame:
-        """Applies discretization using a dict of GroupedList to transform a DataFrame's Quantitative columns (as defined by ``input_dtypes=="float"``).
+    def _transform_quantitative(self, X: DataFrame, y: Series) -> DataFrame:
+        """Applies discretization to a DataFrame's Quantitative columns. 
+
+        * Data types are matched as ``input_dtypes=="str"`` for qualitative features and ``input_dtypes=="float"`` for quantitative ones.
+        * If ``copye=True``, the input DataFrame will be copied.
 
         Parameters
         ----------
@@ -342,8 +347,11 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
 
         return X
 
-    def transform_qualitative(self, X: DataFrame, y: Series = None) -> DataFrame:
-        """Applies discretization using a dict of GroupedList to transform a DataFrame's Qualitative columns (as defined by ``input_dtypes=="str"``).
+    def _transform_qualitative(self, X: DataFrame, y: Series = None) -> DataFrame:
+        """Applies discretization to a DataFrame's Qualitative columns. 
+
+        * Data types are matched as ``input_dtypes=="str"`` for qualitative features and ``input_dtypes=="float"`` for quantitative ones.
+        * If ``copye=True``, the input DataFrame will be copied.
 
         Parameters
         ----------
