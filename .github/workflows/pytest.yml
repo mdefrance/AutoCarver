@@ -57,7 +57,6 @@ jobs:
       - name: Run lint
         run: |
           cd ${{ github.workspace }}
-          cd ..
           black --check .
           isort . --check-only
           pylint autocarver --fail-under=8
