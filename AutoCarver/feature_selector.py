@@ -2,7 +2,7 @@
 
 from math import sqrt
 from random import shuffle
-from typing import Any, Callable, Dict, Tuple
+from typing import Any, Callable, Tuple
 
 from IPython.display import display_html
 from numpy import inf, nan, ones, triu
@@ -12,7 +12,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from statsmodels.formula.api import ols
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
-from .discretizers.utils.base_discretizers import GroupedListDiscretizer
+from .discretizers.utils.base_discretizers import BaseDiscretizer
 from .discretizers.utils.grouped_list import GroupedList
 
 
@@ -145,7 +145,7 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
         self.associations = None
         self.filtered_associations = None
 
-    def measure(self, x: Series, y: Series) -> Dict[str, Any]:
+    def measure(self, x: Series, y: Series) -> dict[str, Any]:
         """Measures association between x and y"""
 
         passed = True  # measures keep going only if previous basic tests are passed
@@ -309,11 +309,11 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
 # MEASURES
 def nans_measure(
     active: bool,
-    association: Dict[str, Any],
+    association: dict[str, Any],
     x: Series,
     y: Series = None,
     **params,
-) -> Tuple[bool, Dict[str, Any]]:
+) -> tuple[bool, dict[str, Any]]:
     """Measure of the percentage of NaNs
 
     Parameters
@@ -338,11 +338,11 @@ def nans_measure(
 
 def dtype_measure(
     active: bool,
-    association: Dict[str, Any],
+    association: dict[str, Any],
     x: Series,
     y: Series = None,
     **params,
-) -> Tuple[bool, Dict[str, Any]]:
+) -> tuple[bool, dict[str, Any]]:
     """Gets dtype"""
 
     # updating association
@@ -353,11 +353,11 @@ def dtype_measure(
 
 def mode_measure(
     active: bool,
-    association: Dict[str, Any],
+    association: dict[str, Any],
     x: Series,
     y: Series = None,
     **params,
-) -> Tuple[bool, Dict[str, Any]]:
+) -> tuple[bool, dict[str, Any]]:
     """Measure of the percentage of the Mode
 
     Parameters
@@ -381,8 +381,8 @@ def mode_measure(
 
 
 def kruskal_measure(
-    active: bool, association: Dict[str, Any], x: Series, y: Series, **params
-) -> Tuple[bool, Dict[str, Any]]:
+    active: bool, association: dict[str, Any], x: Series, y: Series, **params
+) -> tuple[bool, dict[str, Any]]:
     """Kruskal-Wallis statistic between x (quantitative) and y (binary)"""
 
     # check that previous steps where passed
@@ -400,8 +400,8 @@ def kruskal_measure(
 
 
 def R_measure(
-    active: bool, association: Dict[str, Any], x: Series, y: Series, **params
-) -> Tuple[bool, Dict[str, Any]]:
+    active: bool, association: dict[str, Any], x: Series, y: Series, **params
+) -> tuple[bool, dict[str, Any]]:
     """R of the linear regression of x (quantitative) by y (binary)"""
 
     # check that previous steps where passed
@@ -426,11 +426,11 @@ def R_measure(
 
 def zscore_measure(
     active: bool,
-    association: Dict[str, Any],
+    association: dict[str, Any],
     x: Series,
     y: Series = None,
     **params,
-) -> Tuple[bool, Dict[str, Any]]:
+) -> tuple[bool, dict[str, Any]]:
     """Computes outliers based on the z-score
 
     Parameters
@@ -468,11 +468,11 @@ def zscore_measure(
 
 def iqr_measure(
     active: bool,
-    association: Dict[str, Any],
+    association: dict[str, Any],
     x: Series,
     y: Series = None,
     **params,
-) -> Tuple[bool, Dict[str, Any]]:
+) -> tuple[bool, dict[str, Any]]:
     """Computes outliers based on the inter-quartile range
 
     Parameters
@@ -502,8 +502,8 @@ def iqr_measure(
 
 
 def chi2_measure(
-    active: bool, association: Dict[str, Any], x: Series, y: Series, **params
-) -> Tuple[bool, Dict[str, Any]]:
+    active: bool, association: dict[str, Any], x: Series, y: Series, **params
+) -> tuple[bool, dict[str, Any]]:
     """Chi2 Measure between two Series of qualitative features"""
 
     # check that previous steps where passed
@@ -521,8 +521,8 @@ def chi2_measure(
 
 
 def cramerv_measure(
-    active: bool, association: Dict[str, Any], x: Series, y: Series, **params
-) -> Tuple[bool, Dict[str, Any]]:
+    active: bool, association: dict[str, Any], x: Series, y: Series, **params
+) -> tuple[bool, dict[str, Any]]:
     """Carmer's V between two Series of qualitative features"""
 
     # check that previous steps where passed
@@ -551,8 +551,8 @@ def cramerv_measure(
 
 
 def tschuprowt_measure(
-    active: bool, association: Dict[str, Any], x: Series, y: Series, **params
-) -> Tuple[bool, Dict[str, Any]]:
+    active: bool, association: dict[str, Any], x: Series, y: Series, **params
+) -> tuple[bool, dict[str, Any]]:
     """Tschuprow's T between two Series of qualitative features"""
 
     # check that previous steps where passed
@@ -583,7 +583,7 @@ def tschuprowt_measure(
 
 
 # FILTERS
-def thresh_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
+def thresh_filter(X: DataFrame, ranks: DataFrame, **params) -> dict[str, Any]:
     """Filters out missing association measure (did not pass a threshold)"""
 
     # drops rows with nans
@@ -592,7 +592,7 @@ def thresh_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
     return associations
 
 
-def measure_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
+def measure_filter(X: DataFrame, ranks: DataFrame, **params) -> dict[str, Any]:
     """Filters out specified measure's lower ranks than threshold
 
     Parameters
@@ -616,7 +616,7 @@ def measure_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
 
 def quantitative_filter(
     X: DataFrame, ranks: DataFrame, corr_measure: str, **params
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Computes max association between X and X (quantitative) excluding features
     that are correlated to a feature more associated with the target
     (defined by the ranks).
@@ -668,7 +668,7 @@ def quantitative_filter(
     return associations
 
 
-def spearman_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
+def spearman_filter(X: DataFrame, ranks: DataFrame, **params) -> dict[str, Any]:
     """Computes max Spearman between X and X (quantitative) excluding features
     that are correlated to a feature more associated with the target
     (defined by the ranks).
@@ -683,7 +683,7 @@ def spearman_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
     return quantitative_filter(X, ranks, "spearman", **params)
 
 
-def pearson_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
+def pearson_filter(X: DataFrame, ranks: DataFrame, **params) -> dict[str, Any]:
     """Computes max Pearson between X and X (quantitative) excluding features
     that are correlated to a feature more associated with the target
     (defined by the ranks).
@@ -698,7 +698,7 @@ def pearson_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
     return quantitative_filter(X, ranks, "pearson", **params)
 
 
-def vif_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
+def vif_filter(X: DataFrame, ranks: DataFrame, **params) -> dict[str, Any]:
     """Computes Variance Inflation Factor (multicolinearity)
 
     Parameters
@@ -800,7 +800,7 @@ def qualitative_worst_corr(
 
 def qualitative_filter(
     X: DataFrame, ranks: DataFrame, corr_measure: Callable, **params
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Computes max association between X and X (qualitative) excluding features
     that are correlated to a feature more associated with the target
     (defined by the ranks).
@@ -835,7 +835,7 @@ def qualitative_filter(
     return associations
 
 
-def cramerv_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
+def cramerv_filter(X: DataFrame, ranks: DataFrame, **params) -> dict[str, Any]:
     """Computes max Cramer's V between X and X (qualitative) excluding features
     that are correlated to a feature more associated with the target
     (defined by the ranks).
@@ -850,7 +850,7 @@ def cramerv_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
     return qualitative_filter(X, ranks, cramerv_measure, **params)
 
 
-def tschuprowt_filter(X: DataFrame, ranks: DataFrame, **params) -> Dict[str, Any]:
+def tschuprowt_filter(X: DataFrame, ranks: DataFrame, **params) -> dict[str, Any]:
     """Computes max Tschuprow's T between X and X (qualitative) excluding
      features that are correlated to a feature more associated with the target
     (defined by the ranks).

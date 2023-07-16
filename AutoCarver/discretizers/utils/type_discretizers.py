@@ -3,39 +3,50 @@
 
 from pandas import DataFrame, Series
 
-from .base_discretizers import GroupedListDiscretizer, nan_unique
+from .base_discretizers import BaseDiscretizer, nan_unique
 from .grouped_list import GroupedList
 
 
-class StringDiscretizer(GroupedListDiscretizer):
-    """Converts specified columns of a DataFrame into str.
-    First step of a Qualitative Discretization pipe.
+class StringDiscretizer(BaseDiscretizer):
+    """Converts specified columns of a DataFrame into strings.
+    First step of a Qualitative discretization pipeline.
 
-    - Keeps NaN inplace
-    - Converts floats of int to int
+    * Keeps NaN inplace
+    * Converts floats of int to int
     """
 
     def __init__(
         self,
-        features: list[str],
+        qualitative_features: list[str],
         *,
         values_orders: dict[str, GroupedList] = None,
-        str_nan: str = "__NAN__",
         copy: bool = False,
         verbose: bool = False,
+        str_nan: str = "__NAN__",
     ) -> None:
-        """_summary_
+        """Initiates a StringDiscretizer.
 
         Parameters
         ----------
-        features : list[str]
-            _description_
+        qualitative_features : list[str]
+            List of column names of qualitative features (non-ordinal) to be discretized
+
         values_orders : dict[str, GroupedList], optional
-            _description_, by default None
+            Dict of feature's column names and there associated ordering.
+            If lists are passed, a GroupedList will automatically be initiated, by default None
+
+        copy : bool, optional
+            If `copy=True`, feature processing at transform is applied to a copy of the provided DataFrame, by default False
+
+        verbose : bool, optional
+            If `verbose=True`, prints raw Discretizers Fit and Transform steps, by default False
+
+        str_nan : str, optional
+            String representation to input `numpy.nan`. If `dropna=False`, `numpy.nan` will be left unchanged, by default "__NAN__"
         """
-        # Initiating GroupedListDiscretizer
+        # Initiating BaseDiscretizer
         super().__init__(
-            features=features,
+            features=qualitative_features,
             values_orders=values_orders,
             input_dtypes="str",
             output_dtype="str",
@@ -45,20 +56,21 @@ class StringDiscretizer(GroupedListDiscretizer):
         )
 
     def fit(self, X: DataFrame, y: Series = None) -> None:
-        """_summary_
+        """Finds simple buckets of modalities of X.
 
         Parameters
         ----------
         X : DataFrame
-            _description_
-        y : Series, optional
-            _description_, by default None
+            Dataset used to discretize. Needs to have columns has specified in `features`.
+
+        y : Series
+            Binary target feature, not used, by default None.
         """
         if self.verbose:  # verbose if requested
             print(f" - [StringDiscretizer] Fit {str(self.features)}")
 
         # checking for binary target and copying X
-        x_copy = self.prepare_data(X, y)  # X[self.features].fillna(self.str_nan)
+        x_copy = self._prepare_data(X, y)  # X[self.features].fillna(self.str_nan)
 
         # converting each feature's value
         for feature in self.features:

@@ -51,7 +51,8 @@ def test_string_discretizer(x_train: DataFrame) -> None:
     }
 
     discretizer = StringDiscretizer(
-        features=list(set(ordinal_features + qualitative_features)), values_orders=values_orders
+        qualitative_features=list(set(ordinal_features + qualitative_features)),
+        values_orders=values_orders,
     )
     x_discretized = discretizer.fit_transform(x_train)
 

@@ -1,4 +1,4 @@
-"""Sets of helper functions for GroupedListDiscretizer JSON serialization"""
+"""Sets of helper functions for BaseDiscretizer JSON serialization"""
 
 from json import dumps, loads
 from typing import Any, Union

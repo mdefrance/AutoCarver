@@ -3,7 +3,7 @@
 from numpy import inf
 from pandas import DataFrame
 
-from AutoCarver.discretizers import discretizers
+from AutoCarver.discretizers import Discretizer, QualitativeDiscretizer, QuantitativeDiscretizer
 
 
 def test_quantitative_discretizer(x_train: DataFrame):
@@ -24,7 +24,7 @@ def test_quantitative_discretizer(x_train: DataFrame):
     ]
     min_freq = 0.1
 
-    discretizer = discretizers.QuantitativeDiscretizer(features, min_freq=min_freq)
+    discretizer = QuantitativeDiscretizer(quantitative_features=features, min_freq=min_freq)
     x_discretized = discretizer.fit_transform(x_train, x_train["quali_ordinal_target"])
 
     assert (
@@ -86,9 +86,9 @@ def test_qualitative_discretizer(x_train: DataFrame):
 
     min_freq = 0.1
 
-    discretizer = discretizers.QualitativeDiscretizer(
-        features,
-        min_freq,
+    discretizer = QualitativeDiscretizer(
+        qualitative_features=features,
+        min_freq=min_freq,
         ordinal_features=ordinal_features,
         values_orders=values_orders,
         copy=True,
@@ -199,7 +199,7 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame):
     min_freq = 0.1
 
     # discretizing features
-    discretizer = discretizers.Discretizer(
+    discretizer = Discretizer(
         quantitative_features=quantitative_features,
         qualitative_features=qualitative_features,
         ordinal_features=ordinal_features,

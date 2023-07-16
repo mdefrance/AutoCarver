@@ -9,7 +9,7 @@ from pandas import isna
 
 
 class GroupedList(list):
-    """An ordered list that's extended with a dict."""
+    """An ordered list that's extended with a per-value content dict."""
 
     def __init__(self, iterable: Union[ndarray, dict, list, tuple] = ()) -> None:
         """An ordered list that historizes its elements' content.

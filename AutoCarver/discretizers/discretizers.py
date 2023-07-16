@@ -7,15 +7,17 @@ from typing import Union
 from numpy import nan
 from pandas import DataFrame, Series, unique
 
-from .utils.base_discretizers import GroupedListDiscretizer, check_new_values, min_value_counts
+from .utils.base_discretizers import BaseDiscretizer, check_new_values, min_value_counts
 from .utils.grouped_list import GroupedList
 from .utils.qualitative_discretizers import DefaultDiscretizer, OrdinalDiscretizer
 from .utils.quantitative_discretizers import QuantileDiscretizer
 from .utils.type_discretizers import StringDiscretizer
 
 
-class Discretizer(GroupedListDiscretizer):
-    """Automatic discretizing of continuous, discrete, categorical and ordinal features.
+class Discretizer(BaseDiscretizer):
+    """Automatic discretization pipeline of continuous, discrete, categorical and ordinal features.
+
+    Pipeline steps: QuantitativeDiscretizer, QualitativeDiscretizer
 
     Modalities/values of features are grouped according to there respective orders:
 
@@ -37,7 +39,7 @@ class Discretizer(GroupedListDiscretizer):
         str_nan: str = "__NAN__",
         str_default: str = "__OTHER__",
     ) -> None:
-        """ Initiates a Discretizer (pipeline).
+        """Initiates a Discretizer (pipeline).
 
         Parameters
         ----------
@@ -45,16 +47,17 @@ class Discretizer(GroupedListDiscretizer):
             List of column names of quantitative features (continuous and discrete) to be dicretized
 
         qualitative_features : list[str]
-            List of column names of qualitative features (non-ordinal) to be discretized 
+            List of column names of qualitative features (non-ordinal) to be discretized
 
         min_freq : float
             Minimum frequency per grouped modalities.
+
             * Features whose most frequent modality is less frequent than `min_freq` will not be discretized.
             * Sets the number of quantiles in which to discretize the continuous features.
             * Sets the minimum frequency of a quantitative feature's modality.
 
-            **Tip**: should be set between 0.02 (slower, preciser, less robust) and 0.05 (faster, more robust) 
-            
+            **Tip**: should be set between 0.02 (slower, preciser, less robust) and 0.05 (faster, more robust)
+
         ordinal_features : list[str], optional
             List of column names of ordinal features to be discretized. For those features a list of values has to be provided in the `values_orders` dict, by default None
 
@@ -88,7 +91,7 @@ class Discretizer(GroupedListDiscretizer):
         self.input_dtypes = {feature: "str" for feature in qualitative_features + ordinal_features}
         self.input_dtypes.update({feature: "float" for feature in quantitative_features})
 
-        # Initiating GroupedListDiscretizer
+        # Initiating BaseDiscretizer
         super().__init__(
             features=self.features,
             values_orders=values_orders,
@@ -103,31 +106,32 @@ class Discretizer(GroupedListDiscretizer):
         # class specific attributes
         self.min_freq = min_freq
 
-    def remove_feature(self, feature: str) -> None:
-        """Removes a feature from the Discretizer
+    def _remove_feature(self, feature: str) -> None:
+        """Removes a feature from all `feature` attributes
 
         Parameters
         ----------
         feature : str
-            Column name of the feature
+            Column name of the feature to remove
         """
         if feature in self.features:
-            super().remove_feature(feature)
+            super()._remove_feature(feature)
             if feature in self.ordinal_features:
                 self.ordinal_features.remove(feature)
 
     def fit(self, X: DataFrame, y: Series) -> None:
-        """_summary_
+        """Finds relevant buckets of modalities of X to provide the best association with y.
 
         Parameters
         ----------
         X : DataFrame
-            _description_
+            Dataset used to discretize. Needs to have columns has specified in `features`.
+
         y : Series
-            _description_
+            Binary target feature.
         """
         # Checking for binary target and copying X
-        x_copy = self.prepare_data(X, y)
+        x_copy = self._prepare_data(X, y)
 
         # [Qualitative features] Grouping qualitative features
         if len(self.qualitative_features) > 0:
@@ -154,7 +158,7 @@ class Discretizer(GroupedListDiscretizer):
             # removing dropped features
             for feature in self.qualitative_features:
                 if feature not in qualitative_discretizer.values_orders:
-                    self.remove_feature(feature)
+                    self._remove_feature(feature)
             if self.verbose:  # verbose if requested
                 print("------\n")
 
@@ -180,7 +184,7 @@ class Discretizer(GroupedListDiscretizer):
             # removing dropped features
             for feature in self.quantitative_features:
                 if feature not in quantitative_discretizer.values_orders:
-                    self.remove_feature(feature)
+                    self._remove_feature(feature)
             if self.verbose:  # verbose if requested
                 print("------\n")
 
@@ -190,11 +194,13 @@ class Discretizer(GroupedListDiscretizer):
         return self
 
 
-class QualitativeDiscretizer(GroupedListDiscretizer):
-    """Automatic discretizing of categorical and ordinal features.
+class QualitativeDiscretizer(BaseDiscretizer):
+    """Automatic discretiziation pipeline of categorical and ordinal features.
+
+    Pipeline steps: DefaultDiscretizer, OrdinalDiscretizer
 
     Modalities/values of features are grouped according to there respective orders:
-    
+
     * [Qualitative features] order based on modality target rate.
     * [Ordinal features] user-specified order.
     """
@@ -212,21 +218,22 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
         str_nan: str = "__NAN__",
         str_default: str = "__OTHER__",
     ) -> None:
-        """ Initiates a QualitativeDiscretizer (pipeline).
+        """Initiates a QualitativeDiscretizer (pipeline).
 
         Parameters
         ----------
         qualitative_features : list[str]
-            List of column names of qualitative features (non-ordinal) to be discretized 
+            List of column names of qualitative features (non-ordinal) to be discretized
 
         min_freq : float
             Minimum frequency per grouped modalities.
+
             * Features whose most frequent modality is less frequent than `min_freq` will not be discretized.
             * Sets the number of quantiles in which to discretize the continuous features.
             * Sets the minimum frequency of a quantitative feature's modality.
 
-            **Tip**: should be set between 0.02 (slower, preciser, less robust) and 0.05 (faster, more robust) 
-            
+            **Tip**: should be set between 0.02 (slower, preciser, less robust) and 0.05 (faster, more robust)
+
         ordinal_features : list[str], optional
             List of column names of ordinal features to be discretized. For those features a list of values has to be provided in the `values_orders` dict, by default None
 
@@ -236,6 +243,7 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
 
         input_dtypes : Union[str, dict[str, str]], optional
             Input data type, converted to a dict of the provided type for each feature, by default "str"
+
             * If `input_dtypes="str"`, features are considered as qualitative.
             * If `input_dtypes="float"`, features are considered as quantitative.
 
@@ -264,7 +272,7 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
         # class specific attributes
         self.min_freq = min_freq
 
-        # Initiating GroupedListDiscretizer
+        # Initiating BaseDiscretizer
         super().__init__(
             features=self.features,
             values_orders=values_orders,
@@ -281,24 +289,24 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
             feature for feature in self.qualitative_features if feature not in self.ordinal_features
         ]
 
-    def prepare_data(self, X: DataFrame, y: Series = None) -> DataFrame:
-        """Prepares the data for bucketization, checks column types.
-        Converts non-string columns into strings.
+    def _prepare_data(self, X: DataFrame, y: Series = None) -> DataFrame:
+        """Validates format and content of X and y. Converts non-string columns into strings.
 
         Parameters
         ----------
         X : DataFrame
-            Dataset to be bucketized
+            Dataset used to discretize. Needs to have columns has specified in `features`.
+
         y : Series
-            Model target, by default None
+            Binary target feature with wich the association is maximized.
 
         Returns
         -------
         DataFrame
-            Formatted X for bucketization
+            A formatted copy of X
         """
         # checking for binary target, copying X
-        x_copy = super().prepare_data(X, y)
+        x_copy = super()._prepare_data(X, y)
 
         # checking for ids (unique value per row)
         frequencies = x_copy[self.features].apply(
@@ -314,7 +322,7 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
                 print(
                     f"For feature '{feature}', the largest modality has {frequencies[feature]:2.2%} observations which is lower than min_freq={self.min_freq:2.1%}. This feature will not be Discretized. Consider decreasing parameter min_freq or removing this feature."
                 )
-                self.remove_feature(feature)
+                self._remove_feature(feature)
 
         # checking for columns containing floats or integers even with filled nans
         dtypes = x_copy[self.features].fillna(self.str_nan).applymap(type).apply(unique)
@@ -333,7 +341,9 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
 
             # converting specified features into qualitative features
             string_discretizer = StringDiscretizer(
-                features=features_to_convert, values_orders=self.values_orders, verbose=self.verbose
+                qualitative_features=features_to_convert,
+                values_orders=self.values_orders,
+                verbose=self.verbose,
             )
             x_copy = string_discretizer.fit_transform(x_copy)
 
@@ -350,44 +360,39 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
 
         return x_copy
 
-    def remove_feature(self, feature: str) -> None:
-        """Removes a feature from the Discretizer
+    def _remove_feature(self, feature: str) -> None:
+        """Removes a feature from all `feature` attributes
 
         Parameters
         ----------
         feature : str
-            Column name of the feature
+            Column name of the feature to remove
         """
         if feature in self.features:
-            super().remove_feature(feature)
+            super()._remove_feature(feature)
             if feature in self.ordinal_features:
                 self.ordinal_features.remove(feature)
             if feature in self.non_ordinal_features:
                 self.non_ordinal_features.remove(feature)
 
     def fit(self, X: DataFrame, y: Series) -> None:
-        """Learning TRAIN distribution
+        """Finds relevant buckets of modalities of X to provide the best association with y.
 
         Parameters
         ----------
         X : DataFrame
-            _description_
+            Dataset used to discretize. Needs to have columns has specified in `features`.
+
         y : Series
-            _description_
-
-        Returns
-        -------
-        _type_
-            _description_
+            Binary target feature.
         """
-
         # checking data before bucketization
-        x_copy = self.prepare_data(X, y)
+        x_copy = self._prepare_data(X, y)
 
         # [Qualitative ordinal features] Grouping rare values into closest common one
         if len(self.ordinal_features) > 0:
             ordinal_discretizer = OrdinalDiscretizer(
-                features=self.ordinal_features,
+                ordinal_features=self.ordinal_features,
                 values_orders=self.values_orders,
                 min_freq=self.min_freq,
                 verbose=self.verbose,
@@ -402,7 +407,7 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
         # [Qualitative non-ordinal features] Grouping rare values into str_default '__OTHER__'
         if len(self.non_ordinal_features) > 0:
             default_discretizer = DefaultDiscretizer(
-                features=self.non_ordinal_features,
+                qualitative_features=self.non_ordinal_features,
                 min_freq=self.min_freq,
                 values_orders=self.values_orders,
                 str_nan=self.str_nan,
@@ -421,13 +426,14 @@ class QualitativeDiscretizer(GroupedListDiscretizer):
         return self
 
 
-class QuantitativeDiscretizer(GroupedListDiscretizer):
-    """Automatic discretizing of continuous and discrete features.
+class QuantitativeDiscretizer(BaseDiscretizer):
+    """Automatic discretization pipeline of continuous and discrete features.
+
+    Pipeline steps: QuantileDiscretizer, OrdinalDiscretizer
 
     Modalities/values of features are grouped according to there respective orders:
-    
-     * [Quantitative features] real order of the values.
 
+     * [Quantitative features] real order of the values.
     """
 
     def __init__(
@@ -441,7 +447,7 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
         copy: bool = False,
         str_nan: str = "__NAN__",
     ) -> None:
-        """ Initiates a Discretizer (pipeline).
+        """Initiates a Discretizer (pipeline).
 
         Parameters
         ----------
@@ -450,6 +456,7 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
 
         min_freq : float
             Minimum frequency per grouped modalities.
+
             * Features whose most frequent modality is less frequent than `min_freq` will not be discretized.
             * Sets the number of quantiles in which to discretize the continuous features.
             * Sets the minimum frequency of a quantitative feature's modality.
@@ -462,6 +469,7 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
 
         input_dtypes : Union[str, dict[str, str]], optional
             Input data type, converted to a dict of the provided type for each feature, by default "str"
+
             * If `input_dtypes="str"`, features are considered as qualitative.
             * If `input_dtypes="float"`, features are considered as quantitative.
 
@@ -478,7 +486,7 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
         --------
         See `AutoCarver examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
         """
-        # Initiating GroupedListDiscretizer
+        # Initiating BaseDiscretizer
         super().__init__(
             features=quantitative_features,
             values_orders=values_orders,
@@ -492,10 +500,24 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
         # class specific attributes
         self.min_freq = min_freq
 
-    def prepare_data(self, X: DataFrame, y: Series) -> DataFrame:
-        """Checking data for bucketization"""
+    def _prepare_data(self, X: DataFrame, y: Series) -> DataFrame:
+        """Validates format and content of X and y.
+
+        Parameters
+        ----------
+        X : DataFrame
+            Dataset used to discretize. Needs to have columns has specified in `features`.
+
+        y : Series
+            Binary target feature with wich the association is maximized.
+
+        Returns
+        -------
+        DataFrame
+            A formatted copy of X
+        """
         # checking for binary target and copying X
-        x_copy = super().prepare_data(X, y)
+        x_copy = super()._prepare_data(X, y)
 
         # checking for quantitative columns
         dtypes = x_copy[self.features].applymap(type).apply(unique)
@@ -507,14 +529,22 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
         return x_copy
 
     def fit(self, X: DataFrame, y: Series) -> None:
-        """Learning TRAIN distribution"""
+        """Finds relevant buckets of modalities of X to provide the best association with y.
 
+        Parameters
+        ----------
+        X : DataFrame
+            Dataset used to discretize. Needs to have columns has specified in `features`.
+
+        y : Series
+            Binary target feature.
+        """
         # checking data before bucketization
-        x_copy = self.prepare_data(X, y)
+        x_copy = self._prepare_data(X, y)
 
         # [Quantitative features] Grouping values into quantiles
         quantile_discretizer = QuantileDiscretizer(
-            self.features,
+            quantitative_features=self.features,
             min_freq=self.min_freq,
             values_orders=self.values_orders,
             str_nan=self.str_nan,
@@ -542,7 +572,7 @@ class QuantitativeDiscretizer(GroupedListDiscretizer):
         # Grouping rare modalities
         if len(has_rare) > 0:
             ordinal_discretizer = OrdinalDiscretizer(
-                has_rare,
+                ordinal_features=has_rare,
                 min_freq=self.min_freq,
                 values_orders=self.values_orders,
                 str_nan=self.str_nan,

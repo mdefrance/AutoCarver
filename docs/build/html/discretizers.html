@@ -49,47 +49,56 @@
 <li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="auto_carver.html">AutoCarver</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Discretizers</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#id1">Discretizers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#discretizer-a-complete-discretization-pipeline">Discretizer, a complete discretization pipeline</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#AutoCarver.discretizers.Discretizer"><code class="docutils literal notranslate"><span class="pre">Discretizer</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.Discretizer.fit"><code class="docutils literal notranslate"><span class="pre">Discretizer.fit()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.Discretizer.remove_feature"><code class="docutils literal notranslate"><span class="pre">Discretizer.remove_feature()</span></code></a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#quantitative-discretizers">Quantitative Discretizers</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#AutoCarver.discretizers.QuantitativeDiscretizer"><code class="docutils literal notranslate"><span class="pre">QuantitativeDiscretizer</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.QuantitativeDiscretizer.fit"><code class="docutils literal notranslate"><span class="pre">QuantitativeDiscretizer.fit()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.QuantitativeDiscretizer.prepare_data"><code class="docutils literal notranslate"><span class="pre">QuantitativeDiscretizer.prepare_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#complete-pipeline-for-continuous-and-discrete-features">Complete pipeline for continuous and discrete features</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.QuantitativeDiscretizer"><code class="docutils literal notranslate"><span class="pre">QuantitativeDiscretizer</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#quantile-discretizer">Quantile Discretizer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.QuantileDiscretizer"><code class="docutils literal notranslate"><span class="pre">QuantileDiscretizer</span></code></a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#qualitative-discretizers">Qualitative Discretizers</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#AutoCarver.discretizers.QualitativeDiscretizer"><code class="docutils literal notranslate"><span class="pre">QualitativeDiscretizer</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.QualitativeDiscretizer.fit"><code class="docutils literal notranslate"><span class="pre">QualitativeDiscretizer.fit()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.QualitativeDiscretizer.prepare_data"><code class="docutils literal notranslate"><span class="pre">QualitativeDiscretizer.prepare_data()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.QualitativeDiscretizer.remove_feature"><code class="docutils literal notranslate"><span class="pre">QualitativeDiscretizer.remove_feature()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#complete-pipeline-for-categorical-and-ordinal-features">Complete pipeline for categorical and ordinal features</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.QualitativeDiscretizer"><code class="docutils literal notranslate"><span class="pre">QualitativeDiscretizer</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#default-discretizer">Default Discretizer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.DefaultDiscretizer"><code class="docutils literal notranslate"><span class="pre">DefaultDiscretizer</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#ordinal-discretizer">Ordinal Discretizer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.OrdinalDiscretizer"><code class="docutils literal notranslate"><span class="pre">OrdinalDiscretizer</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#chained-discretizer">Chained Discretizer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.ChainedDiscretizer"><code class="docutils literal notranslate"><span class="pre">ChainedDiscretizer</span></code></a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#base-discretizers">Base Discretizers</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#AutoCarver.discretizers.GroupedListDiscretizer"><code class="docutils literal notranslate"><span class="pre">GroupedListDiscretizer</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.GroupedListDiscretizer.fit"><code class="docutils literal notranslate"><span class="pre">GroupedListDiscretizer.fit()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.GroupedListDiscretizer.get_labels_per_values"><code class="docutils literal notranslate"><span class="pre">GroupedListDiscretizer.get_labels_per_values()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.GroupedListDiscretizer.prepare_data"><code class="docutils literal notranslate"><span class="pre">GroupedListDiscretizer.prepare_data()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.GroupedListDiscretizer.remove_feature"><code class="docutils literal notranslate"><span class="pre">GroupedListDiscretizer.remove_feature()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.GroupedListDiscretizer.summary"><code class="docutils literal notranslate"><span class="pre">GroupedListDiscretizer.summary()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.GroupedListDiscretizer.to_json"><code class="docutils literal notranslate"><span class="pre">GroupedListDiscretizer.to_json()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.GroupedListDiscretizer.transform"><code class="docutils literal notranslate"><span class="pre">GroupedListDiscretizer.transform()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.GroupedListDiscretizer.transform_qualitative"><code class="docutils literal notranslate"><span class="pre">GroupedListDiscretizer.transform_qualitative()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.GroupedListDiscretizer.transform_quantitative"><code class="docutils literal notranslate"><span class="pre">GroupedListDiscretizer.transform_quantitative()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#base-discretizer">Base Discretizer</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#AutoCarver.discretizers.BaseDiscretizer"><code class="docutils literal notranslate"><span class="pre">BaseDiscretizer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.BaseDiscretizer.fit"><code class="docutils literal notranslate"><span class="pre">BaseDiscretizer.fit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.BaseDiscretizer.summary"><code class="docutils literal notranslate"><span class="pre">BaseDiscretizer.summary()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.BaseDiscretizer.to_json"><code class="docutils literal notranslate"><span class="pre">BaseDiscretizer.to_json()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.BaseDiscretizer.transform"><code class="docutils literal notranslate"><span class="pre">BaseDiscretizer.transform()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.BaseDiscretizer.transform_qualitative"><code class="docutils literal notranslate"><span class="pre">BaseDiscretizer.transform_qualitative()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.BaseDiscretizer.transform_quantitative"><code class="docutils literal notranslate"><span class="pre">BaseDiscretizer.transform_quantitative()</span></code></a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#type-discretizers">Type Discretizers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#string-discretizer">String Discretizer</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#AutoCarver.discretizers.StringDiscretizer"><code class="docutils literal notranslate"><span class="pre">StringDiscretizer</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.StringDiscretizer.fit"><code class="docutils literal notranslate"><span class="pre">StringDiscretizer.fit()</span></code></a></li>
 </ul>
@@ -145,12 +154,13 @@
              
   <section id="discretizers">
 <h1>Discretizers<a class="headerlink" href="#discretizers" title="Permalink to this heading"></a></h1>
-<section id="id1">
-<h2>Discretizers<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h2>
+<section id="discretizer-a-complete-discretization-pipeline">
+<h2>Discretizer, a complete discretization pipeline<a class="headerlink" href="#discretizer-a-complete-discretization-pipeline" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="AutoCarver.discretizers.Discretizer">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.</span></span><span class="sig-name descname"><span class="pre">Discretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">quantitative_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualitative_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ordinal_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values_orders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.utils.grouped_list.GroupedList"><span class="pre">AutoCarver.discretizers.utils.grouped_list.GroupedList</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">str_nan</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'__NAN__'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">str_default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'__OTHER__'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.Discretizer" title="Permalink to this definition"></a></dt>
-<dd><p>Automatic discretizing of continuous, discrete, categorical and ordinal features.</p>
+<dd><p>Automatic discretization pipeline of continuous, discrete, categorical and ordinal features.</p>
+<p>Pipeline steps: QuantitativeDiscretizer, QualitativeDiscretizer</p>
 <p>Modalities/values of features are grouped according to there respective orders:</p>
 <ul class="simple">
 <li><p>[Qualitative features] order based on modality target rate.</p></li>
@@ -163,10 +173,12 @@
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>quantitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – List of column names of quantitative features (continuous and discrete) to be dicretized</p></li>
 <li><p><strong>qualitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – List of column names of qualitative features (non-ordinal) to be discretized</p></li>
-<li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per grouped modalities.
-* Features whose most frequent modality is less frequent than <cite>min_freq</cite> will not be discretized.
-* Sets the number of quantiles in which to discretize the continuous features.
-* Sets the minimum frequency of a quantitative feature’s modality.</p>
+<li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per grouped modalities.</p>
+<ul>
+<li><p>Features whose most frequent modality is less frequent than <cite>min_freq</cite> will not be discretized.</p></li>
+<li><p>Sets the number of quantiles in which to discretize the continuous features.</p></li>
+<li><p>Sets the minimum frequency of a quantitative feature’s modality.</p></li>
+</ul>
 <p><strong>Tip</strong>: should be set between 0.02 (slower, preciser, less robust) and 0.05 (faster, more robust)</p>
 </p></li>
 <li><p><strong>ordinal_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of ordinal features to be discretized. For those features a list of values has to be provided in the <cite>values_orders</cite> dict, by default None</p></li>
@@ -184,24 +196,13 @@ If lists are passed, a GroupedList will automatically be initiated, by default N
 <dl class="py method">
 <dt class="sig sig-object py" id="AutoCarver.discretizers.Discretizer.fit">
 <span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.Discretizer.fit" title="Permalink to this definition"></a></dt>
-<dd><p>_summary_</p>
+<dd><p>Finds relevant buckets of modalities of X to provide the best association with y.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>DataFrame</em>) – _description_</p></li>
-<li><p><strong>y</strong> (<em>Series</em>) – _description_</p></li>
+<li><p><strong>X</strong> (<em>DataFrame</em>) – Dataset used to discretize. Needs to have columns has specified in <cite>features</cite>.</p></li>
+<li><p><strong>y</strong> (<em>Series</em>) – Binary target feature.</p></li>
 </ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="AutoCarver.discretizers.Discretizer.remove_feature">
-<span class="sig-name descname"><span class="pre">remove_feature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.Discretizer.remove_feature" title="Permalink to this definition"></a></dt>
-<dd><p>Removes a feature from the Discretizer</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>feature</strong> (<em>str</em>) – Column name of the feature</p>
 </dd>
 </dl>
 </dd></dl>
@@ -211,10 +212,13 @@ If lists are passed, a GroupedList will automatically be initiated, by default N
 </section>
 <section id="quantitative-discretizers">
 <h2>Quantitative Discretizers<a class="headerlink" href="#quantitative-discretizers" title="Permalink to this heading"></a></h2>
+<section id="complete-pipeline-for-continuous-and-discrete-features">
+<h3>Complete pipeline for continuous and discrete features<a class="headerlink" href="#complete-pipeline-for-continuous-and-discrete-features" title="Permalink to this heading"></a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="AutoCarver.discretizers.QuantitativeDiscretizer">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.</span></span><span class="sig-name descname"><span class="pre">QuantitativeDiscretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">quantitative_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values_orders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.utils.grouped_list.GroupedList"><span class="pre">AutoCarver.discretizers.utils.grouped_list.GroupedList</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_dtypes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">str_nan</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'__NAN__'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.QuantitativeDiscretizer" title="Permalink to this definition"></a></dt>
-<dd><p>Automatic discretizing of continuous and discrete features.</p>
+<dd><p>Automatic discretization pipeline of continuous and discrete features.</p>
+<p>Pipeline steps: QuantileDiscretizer, OrdinalDiscretizer</p>
 <p>Modalities/values of features are grouped according to there respective orders:</p>
 <blockquote>
 <div><ul class="simple">
@@ -226,17 +230,22 @@ If lists are passed, a GroupedList will automatically be initiated, by default N
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>quantitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – List of column names of quantitative features (continuous and discrete) to be dicretized</p></li>
-<li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per grouped modalities.
-* Features whose most frequent modality is less frequent than <cite>min_freq</cite> will not be discretized.
-* Sets the number of quantiles in which to discretize the continuous features.
-* Sets the minimum frequency of a quantitative feature’s modality.</p>
+<li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per grouped modalities.</p>
+<ul>
+<li><p>Features whose most frequent modality is less frequent than <cite>min_freq</cite> will not be discretized.</p></li>
+<li><p>Sets the number of quantiles in which to discretize the continuous features.</p></li>
+<li><p>Sets the minimum frequency of a quantitative feature’s modality.</p></li>
+</ul>
 <p><strong>Tip</strong>: should be set between 0.02 (slower, preciser, less robust) and 0.05 (faster, more robust)</p>
 </p></li>
 <li><p><strong>values_orders</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.GroupedList"><em>GroupedList</em></a><em>]</em><em>, </em><em>optional</em>) – Dict of feature’s column names and there associated ordering.
 If lists are passed, a GroupedList will automatically be initiated, by default None</p></li>
-<li><p><strong>input_dtypes</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Input data type, converted to a dict of the provided type for each feature, by default “str”
-* If <cite>input_dtypes=”str”</cite>, features are considered as qualitative.
-* If <cite>input_dtypes=”float”</cite>, features are considered as quantitative.</p></li>
+<li><p><strong>input_dtypes</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – <p>Input data type, converted to a dict of the provided type for each feature, by default “str”</p>
+<ul>
+<li><p>If <cite>input_dtypes=”str”</cite>, features are considered as qualitative.</p></li>
+<li><p>If <cite>input_dtypes=”float”</cite>, features are considered as quantitative.</p></li>
+</ul>
+</p></li>
 <li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <cite>copy=True</cite>, feature processing at transform is applied to a copy of the provided DataFrame, by default False</p></li>
 <li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <cite>verbose=True</cite>, prints raw Discretizers Fit and Transform steps, by default False</p></li>
 <li><p><strong>str_nan</strong> (<em>str</em><em>, </em><em>optional</em>) – String representation to input <cite>numpy.nan</cite>. If <cite>dropna=False</cite>, <cite>numpy.nan</cite> will be left unchanged, by default “__NAN__”</p></li>
@@ -248,24 +257,83 @@ If lists are passed, a GroupedList will automatically be initiated, by default N
 <dl class="py method">
 <dt class="sig sig-object py" id="AutoCarver.discretizers.QuantitativeDiscretizer.fit">
 <span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.QuantitativeDiscretizer.fit" title="Permalink to this definition"></a></dt>
-<dd><p>Learning TRAIN distribution</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="AutoCarver.discretizers.QuantitativeDiscretizer.prepare_data">
-<span class="sig-name descname"><span class="pre">prepare_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.QuantitativeDiscretizer.prepare_data" title="Permalink to this definition"></a></dt>
-<dd><p>Checking data for bucketization</p>
+<dd><p>Finds relevant buckets of modalities of X to provide the best association with y.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>DataFrame</em>) – Dataset used to discretize. Needs to have columns has specified in <cite>features</cite>.</p></li>
+<li><p><strong>y</strong> (<em>Series</em>) – Binary target feature.</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
 
 </section>
+<section id="quantile-discretizer">
+<h3>Quantile Discretizer<a class="headerlink" href="#quantile-discretizer" title="Permalink to this heading"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="AutoCarver.discretizers.QuantileDiscretizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.</span></span><span class="sig-name descname"><span class="pre">QuantileDiscretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">quantitative_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values_orders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">str_nan</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'__NAN__'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.QuantileDiscretizer" title="Permalink to this definition"></a></dt>
+<dd><p>Automatic discretizing of continuous and discrete features, building simple groups of quantiles of values.</p>
+<p>Quantile discretization creates a lot of modalities (for example: 100 modalities for <code class="docutils literal notranslate"><span class="pre">min_freq=0.01</span></code>).
+Set <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> with caution.</p>
+<p>The number of quantiles depends on overrepresented modalities and nans:</p>
+<ul class="simple">
+<li><p>Values more frequent than <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> are set as there own modalities.</p></li>
+<li><p>Other values are cut in quantiles using <code class="docutils literal notranslate"><span class="pre">numpy.quantile</span></code>.</p></li>
+<li><p>The number of quantiles is set as <code class="docutils literal notranslate"><span class="pre">(1-freq_of_frequent_modalities)/(min_freq)</span></code>.</p></li>
+<li><p>Nans are considered as a modality (and are taken into account in <code class="docutils literal notranslate"><span class="pre">freq_of_frequent_modalities</span></code>).</p></li>
+</ul>
+<p>Initiates a QuantileDiscretizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>quantitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – List of column names of quantitative features (continuous and discrete) to be dicretized</p></li>
+<li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per grouped modalities.</p>
+<ul>
+<li><p>Features whose most frequent modality is less frequent than <cite>min_freq</cite> will not be discretized.</p></li>
+<li><p>Sets the number of quantiles in which to discretize the continuous features.</p></li>
+<li><p>Sets the minimum frequency of a quantitative feature’s modality.</p></li>
+</ul>
+<p><strong>Tip</strong>: should be set between 0.02 (slower, preciser, less robust) and 0.05 (faster, more robust)</p>
+</p></li>
+<li><p><strong>values_orders</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.GroupedList"><em>GroupedList</em></a><em>]</em><em>, </em><em>optional</em>) – Dict of feature’s column names and there associated ordering.
+If lists are passed, a GroupedList will automatically be initiated, by default None</p></li>
+<li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <cite>copy=True</cite>, feature processing at transform is applied to a copy of the provided DataFrame, by default False</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <cite>verbose=True</cite>, prints raw Discretizers Fit and Transform steps, by default False</p></li>
+<li><p><strong>str_nan</strong> (<em>str</em><em>, </em><em>optional</em>) – String representation to input <cite>numpy.nan</cite>. If <cite>dropna=False</cite>, <cite>numpy.nan</cite> will be left unchanged, by default “__NAN__”</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoCarver.discretizers.QuantileDiscretizer.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.QuantileDiscretizer.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Finds simple buckets of modalities of X.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>DataFrame</em>) – Dataset used to discretize. Needs to have columns has specified in <cite>features</cite>.</p></li>
+<li><p><strong>y</strong> (<em>Series</em>) – Binary target feature, not used, by default None</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
 <section id="qualitative-discretizers">
 <h2>Qualitative Discretizers<a class="headerlink" href="#qualitative-discretizers" title="Permalink to this heading"></a></h2>
+<section id="complete-pipeline-for-categorical-and-ordinal-features">
+<h3>Complete pipeline for categorical and ordinal features<a class="headerlink" href="#complete-pipeline-for-categorical-and-ordinal-features" title="Permalink to this heading"></a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="AutoCarver.discretizers.QualitativeDiscretizer">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.</span></span><span class="sig-name descname"><span class="pre">QualitativeDiscretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">qualitative_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ordinal_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values_orders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.utils.grouped_list.GroupedList"><span class="pre">AutoCarver.discretizers.utils.grouped_list.GroupedList</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_dtypes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'str'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">str_nan</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'__NAN__'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">str_default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'__OTHER__'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.QualitativeDiscretizer" title="Permalink to this definition"></a></dt>
-<dd><p>Automatic discretizing of categorical and ordinal features.</p>
+<dd><p>Automatic discretiziation pipeline of categorical and ordinal features.</p>
+<p>Pipeline steps: DefaultDiscretizer, OrdinalDiscretizer</p>
 <p>Modalities/values of features are grouped according to there respective orders:</p>
 <ul class="simple">
 <li><p>[Qualitative features] order based on modality target rate.</p></li>
@@ -276,18 +344,23 @@ If lists are passed, a GroupedList will automatically be initiated, by default N
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>qualitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – List of column names of qualitative features (non-ordinal) to be discretized</p></li>
-<li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per grouped modalities.
-* Features whose most frequent modality is less frequent than <cite>min_freq</cite> will not be discretized.
-* Sets the number of quantiles in which to discretize the continuous features.
-* Sets the minimum frequency of a quantitative feature’s modality.</p>
+<li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per grouped modalities.</p>
+<ul>
+<li><p>Features whose most frequent modality is less frequent than <cite>min_freq</cite> will not be discretized.</p></li>
+<li><p>Sets the number of quantiles in which to discretize the continuous features.</p></li>
+<li><p>Sets the minimum frequency of a quantitative feature’s modality.</p></li>
+</ul>
 <p><strong>Tip</strong>: should be set between 0.02 (slower, preciser, less robust) and 0.05 (faster, more robust)</p>
 </p></li>
 <li><p><strong>ordinal_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of ordinal features to be discretized. For those features a list of values has to be provided in the <cite>values_orders</cite> dict, by default None</p></li>
 <li><p><strong>values_orders</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.GroupedList"><em>GroupedList</em></a><em>]</em><em>, </em><em>optional</em>) – Dict of feature’s column names and there associated ordering.
 If lists are passed, a GroupedList will automatically be initiated, by default None</p></li>
-<li><p><strong>input_dtypes</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Input data type, converted to a dict of the provided type for each feature, by default “str”
-* If <cite>input_dtypes=”str”</cite>, features are considered as qualitative.
-* If <cite>input_dtypes=”float”</cite>, features are considered as quantitative.</p></li>
+<li><p><strong>input_dtypes</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – <p>Input data type, converted to a dict of the provided type for each feature, by default “str”</p>
+<ul>
+<li><p>If <cite>input_dtypes=”str”</cite>, features are considered as qualitative.</p></li>
+<li><p>If <cite>input_dtypes=”float”</cite>, features are considered as quantitative.</p></li>
+</ul>
+</p></li>
 <li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <cite>copy=True</cite>, feature processing at transform is applied to a copy of the provided DataFrame, by default False</p></li>
 <li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <cite>verbose=True</cite>, prints raw Discretizers Fit and Transform steps, by default False</p></li>
 <li><p><strong>str_nan</strong> (<em>str</em><em>, </em><em>optional</em>) – String representation to input <cite>numpy.nan</cite>. If <cite>dropna=False</cite>, <cite>numpy.nan</cite> will be left unchanged, by default “__NAN__”</p></li>
@@ -300,51 +373,13 @@ If lists are passed, a GroupedList will automatically be initiated, by default N
 <dl class="py method">
 <dt class="sig sig-object py" id="AutoCarver.discretizers.QualitativeDiscretizer.fit">
 <span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.QualitativeDiscretizer.fit" title="Permalink to this definition"></a></dt>
-<dd><p>Learning TRAIN distribution</p>
+<dd><p>Finds relevant buckets of modalities of X to provide the best association with y.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>DataFrame</em>) – _description_</p></li>
-<li><p><strong>y</strong> (<em>Series</em>) – _description_</p></li>
+<li><p><strong>X</strong> (<em>DataFrame</em>) – Dataset used to discretize. Needs to have columns has specified in <cite>features</cite>.</p></li>
+<li><p><strong>y</strong> (<em>Series</em>) – Binary target feature.</p></li>
 </ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>_description_</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>_type_</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="AutoCarver.discretizers.QualitativeDiscretizer.prepare_data">
-<span class="sig-name descname"><span class="pre">prepare_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.QualitativeDiscretizer.prepare_data" title="Permalink to this definition"></a></dt>
-<dd><p>Prepares the data for bucketization, checks column types.
-Converts non-string columns into strings.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>DataFrame</em>) – Dataset to be bucketized</p></li>
-<li><p><strong>y</strong> (<em>Series</em>) – Model target, by default None</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Formatted X for bucketization</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>DataFrame</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="AutoCarver.discretizers.QualitativeDiscretizer.remove_feature">
-<span class="sig-name descname"><span class="pre">remove_feature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.QualitativeDiscretizer.remove_feature" title="Permalink to this definition"></a></dt>
-<dd><p>Removes a feature from the Discretizer</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>feature</strong> (<em>str</em>) – Column name of the feature</p>
 </dd>
 </dl>
 </dd></dl>
@@ -352,32 +387,205 @@ Converts non-string columns into strings.</p>
 </dd></dl>
 
 </section>
-<section id="base-discretizers">
-<h2>Base Discretizers<a class="headerlink" href="#base-discretizers" title="Permalink to this heading"></a></h2>
+<section id="default-discretizer">
+<h3>Default Discretizer<a class="headerlink" href="#default-discretizer" title="Permalink to this heading"></a></h3>
 <dl class="py class">
-<dt class="sig sig-object py" id="AutoCarver.discretizers.GroupedListDiscretizer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.</span></span><span class="sig-name descname"><span class="pre">GroupedListDiscretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values_orders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.utils.grouped_list.GroupedList"><span class="pre">AutoCarver.discretizers.utils.grouped_list.GroupedList</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_dtypes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'str'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dtype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'str'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">str_nan</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">str_default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropna</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.GroupedListDiscretizer" title="Permalink to this definition"></a></dt>
-<dd><p>Discretizer that uses a dict of grouped values.</p>
-<p>Initiates a Discretizer by dict of GroupedList</p>
+<dt class="sig sig-object py" id="AutoCarver.discretizers.DefaultDiscretizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.</span></span><span class="sig-name descname"><span class="pre">DefaultDiscretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">qualitative_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values_orders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.utils.grouped_list.GroupedList"><span class="pre">AutoCarver.discretizers.utils.grouped_list.GroupedList</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">str_default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'__OTHER__'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">str_nan</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'__NAN__'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.DefaultDiscretizer" title="Permalink to this definition"></a></dt>
+<dd><p>Automatic discretization of categorical features, building simple groups frequent enough.</p>
+<p>Groups a qualitative features’ values less frequent than <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> into a <code class="docutils literal notranslate"><span class="pre">str_default</span></code> string.</p>
+<p>NaNs are left untouched.</p>
+<p>Only use for qualitative non-ordinal features.</p>
+<p>Initiates a DefaultDiscretizer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – List of column names to be discretized</p></li>
-<li><p><strong>values_orders</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.GroupedList"><em>GroupedList</em></a><em>]</em><em>, </em><em>optional</em>) – Per feature ordering, by default None</p></li>
-<li><p><strong>input_dtypes</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – String of type to be considered for all features or
-Dict of column names and associated types:
-- if ‘float’ uses transform_quantitative
-- if ‘str’ uses transform_qualitative,
-by default ‘str’</p></li>
-<li><p><strong>output_dtype</strong> (<em>str</em><em>, </em><em>optional</em>) – _description_, by default ‘str’</p></li>
-<li><p><strong>str_nan</strong> (<em>str</em><em>, </em><em>optional</em>) – Default string value attributed to nan, by default None</p></li>
-<li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to copy the input DataFrame, by default False</p></li>
+<li><p><strong>qualitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – List of column names of qualitative features (non-ordinal) to be discretized</p></li>
+<li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per grouped modalities.</p>
+<ul>
+<li><p>Features whose most frequent modality is less frequent than <cite>min_freq</cite> will not be discretized.</p></li>
+<li><p>Sets the number of quantiles in which to discretize the continuous features.</p></li>
+<li><p>Sets the minimum frequency of a quantitative feature’s modality.</p></li>
+</ul>
+<p><strong>Tip</strong>: should be set between 0.02 (slower, preciser, less robust) and 0.05 (faster, more robust)</p>
+</p></li>
+<li><p><strong>values_orders</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.GroupedList"><em>GroupedList</em></a><em>]</em><em>, </em><em>optional</em>) – Dict of feature’s column names and there associated ordering.
+If lists are passed, a GroupedList will automatically be initiated, by default None</p></li>
+<li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <cite>copy=True</cite>, feature processing at transform is applied to a copy of the provided DataFrame, by default False</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <cite>verbose=True</cite>, prints raw Discretizers Fit and Transform steps, by default False</p></li>
+<li><p><strong>str_nan</strong> (<em>str</em><em>, </em><em>optional</em>) – String representation to input <cite>numpy.nan</cite>. If <cite>dropna=False</cite>, <cite>numpy.nan</cite> will be left unchanged, by default “__NAN__”</p></li>
+<li><p><strong>str_default</strong> (<em>str</em><em>, </em><em>optional</em>) – String representation for default qualitative values, i.e. values less frequent than <cite>min_freq</cite>, by default “__OTHER__”</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
-<dt class="sig sig-object py" id="AutoCarver.discretizers.GroupedListDiscretizer.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.GroupedListDiscretizer.fit" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="AutoCarver.discretizers.DefaultDiscretizer.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.DefaultDiscretizer.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Finds simple buckets of modalities of X.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>DataFrame</em>) – Dataset used to discretize. Needs to have columns has specified in <cite>features</cite>.</p></li>
+<li><p><strong>y</strong> (<em>Series</em>) – Binary target feature.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="ordinal-discretizer">
+<h3>Ordinal Discretizer<a class="headerlink" href="#ordinal-discretizer" title="Permalink to this heading"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="AutoCarver.discretizers.OrdinalDiscretizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.</span></span><span class="sig-name descname"><span class="pre">OrdinalDiscretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ordinal_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values_orders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.utils.grouped_list.GroupedList"><span class="pre">AutoCarver.discretizers.utils.grouped_list.GroupedList</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_dtypes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'str'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">str_nan</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'__NAN__'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.OrdinalDiscretizer" title="Permalink to this definition"></a></dt>
+<dd><p>Automatic discretization of ordinal features, grouping less frequent modalities with the
+closest modlity in target rate or by frequency.</p>
+<p>NaNs are left untouched.</p>
+<p>Only use for qualitative ordinal features.</p>
+<p>Initiates a DefaultDiscretizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ordinal_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – List of column names of ordinal features to be discretized. For those features a list of values has to be provided in the <cite>values_orders</cite> dict.</p></li>
+<li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per grouped modalities.</p>
+<ul>
+<li><p>Features whose most frequent modality is less frequent than <cite>min_freq</cite> will not be discretized.</p></li>
+<li><p>Sets the number of quantiles in which to discretize the continuous features.</p></li>
+<li><p>Sets the minimum frequency of a quantitative feature’s modality.</p></li>
+</ul>
+<p><strong>Tip</strong>: should be set between 0.02 (slower, preciser, less robust) and 0.05 (faster, more robust)</p>
+</p></li>
+<li><p><strong>values_orders</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.GroupedList"><em>GroupedList</em></a><em>]</em><em>, </em><em>optional</em>) – Dict of feature’s column names and there associated ordering.
+If lists are passed, a GroupedList will automatically be initiated, by default None</p></li>
+<li><p><strong>input_dtypes</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – <p>Input data type, converted to a dict of the provided type for each feature, by default “str”</p>
+<ul>
+<li><p>If <cite>input_dtypes=”str”</cite>, features are considered as qualitative.</p></li>
+<li><p>If <cite>input_dtypes=”float”</cite>, features are considered as quantitative.</p></li>
+</ul>
+</p></li>
+<li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <cite>copy=True</cite>, feature processing at transform is applied to a copy of the provided DataFrame, by default False</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <cite>verbose=True</cite>, prints raw Discretizers Fit and Transform steps, by default False</p></li>
+<li><p><strong>str_nan</strong> (<em>str</em><em>, </em><em>optional</em>) – String representation to input <cite>numpy.nan</cite>. If <cite>dropna=False</cite>, <cite>numpy.nan</cite> will be left unchanged, by default “__NAN__”</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoCarver.discretizers.OrdinalDiscretizer.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.OrdinalDiscretizer.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Finds simple buckets of modalities of X.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>DataFrame</em>) – Dataset used to discretize. Needs to have columns has specified in <cite>features</cite>.</p></li>
+<li><p><strong>y</strong> (<em>Series</em>) – Binary target feature.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="chained-discretizer">
+<h3>Chained Discretizer<a class="headerlink" href="#chained-discretizer" title="Permalink to this heading"></a></h3>
+<p>This Discretizer can be used prior to using <code class="docutils literal notranslate"><span class="pre">AutoCarver</span></code> or <code class="docutils literal notranslate"><span class="pre">Discretizer</span></code> to simplify modalities more intelligently.
+The defined ordering can then be passed into the <code class="docutils literal notranslate"><span class="pre">values_orders</span></code> parameter for further discretization.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="AutoCarver.discretizers.ChainedDiscretizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.</span></span><span class="sig-name descname"><span class="pre">ChainedDiscretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">qualitative_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chained_orders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.utils.grouped_list.GroupedList"><span class="pre">AutoCarver.discretizers.utils.grouped_list.GroupedList</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values_orders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.utils.grouped_list.GroupedList"><span class="pre">AutoCarver.discretizers.utils.grouped_list.GroupedList</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_unknown</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">str_nan</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'__NAN__'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.ChainedDiscretizer" title="Permalink to this definition"></a></dt>
+<dd><p>Automatic discretization of categorical features, joining rare modalities into higher
+level groups.</p>
+<p>For each provided <code class="docutils literal notranslate"><span class="pre">GroupedList</span></code> from <code class="docutils literal notranslate"><span class="pre">chained_orders</span></code>, values less frequent than
+<code class="docutils literal notranslate"><span class="pre">min_freq</span></code> are grouped in there respective group, as defined by <code class="docutils literal notranslate"><span class="pre">GroupedList</span></code>.</p>
+<p>Initiates a ChainedDiscretizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>qualitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – List of column names of qualitative features (non-ordinal) to be discretized</p></li>
+<li><p><strong>chained_orders</strong> (<em>list</em><em>[</em><a class="reference internal" href="#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.GroupedList"><em>GroupedList</em></a><em>]</em>) – A list of interlocked higher level groups for each modalities of each ordianl feature.
+Values of <code class="docutils literal notranslate"><span class="pre">chained_orders[0]</span></code> have to be grouped in <code class="docutils literal notranslate"><span class="pre">chained_order[1]</span></code> etc.</p></li>
+<li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per grouped modalities.</p>
+<ul>
+<li><p>Features whose most frequent modality is less frequent than <cite>min_freq</cite> will not be discretized.</p></li>
+<li><p>Sets the number of quantiles in which to discretize the continuous features.</p></li>
+<li><p>Sets the minimum frequency of a quantitative feature’s modality.</p></li>
+</ul>
+<p><strong>Tip</strong>: should be set between 0.02 (slower, preciser, less robust) and 0.05 (faster, more robust)</p>
+</p></li>
+<li><p><strong>values_orders</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.GroupedList"><em>GroupedList</em></a><em>]</em><em>, </em><em>optional</em>) – Dict of feature’s column names and there associated ordering.
+If lists are passed, a GroupedList will automatically be initiated, by default None</p></li>
+<li><p><strong>remove_unknown</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to remove unknown values, by default True.
+If <code class="docutils literal notranslate"><span class="pre">remove_unknown=True</span></code>, unknown values are grouped into the value <code class="docutils literal notranslate"><span class="pre">str_nan</span></code></p></li>
+<li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <cite>copy=True</cite>, feature processing at transform is applied to a copy of the provided DataFrame, by default False</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <cite>verbose=True</cite>, prints raw Discretizers Fit and Transform steps, by default False</p></li>
+<li><p><strong>str_nan</strong> (<em>str</em><em>, </em><em>optional</em>) – String representation to input <cite>numpy.nan</cite>. If <cite>dropna=False</cite>, <cite>numpy.nan</cite> will be left unchanged, by default “__NAN__”</p></li>
+<li><p><strong>str_default</strong> (<em>str</em><em>, </em><em>optional</em>) – String representation for default qualitative values, i.e. values less frequent than <cite>min_freq</cite>, by default “__OTHER__”</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoCarver.discretizers.ChainedDiscretizer.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.ChainedDiscretizer.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Finds simple buckets of modalities of X.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>DataFrame</em>) – Dataset used to discretize. Needs to have columns has specified in <cite>features</cite>.</p></li>
+<li><p><strong>y</strong> (<em>Series</em>) – Binary target feature, not used, by default None.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+<section id="base-discretizer">
+<h2>Base Discretizer<a class="headerlink" href="#base-discretizer" title="Permalink to this heading"></a></h2>
+<p>All <code class="docutils literal notranslate"><span class="pre">Discretizer</span></code> objects (and even <code class="docutils literal notranslate"><span class="pre">AutoCarver</span></code>) inherit from the <code class="docutils literal notranslate"><span class="pre">BaseDiscretizer</span></code>.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="AutoCarver.discretizers.BaseDiscretizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.</span></span><span class="sig-name descname"><span class="pre">BaseDiscretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values_orders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.utils.grouped_list.GroupedList"><span class="pre">AutoCarver.discretizers.utils.grouped_list.GroupedList</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_dtypes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'str'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dtype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'str'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropna</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">str_nan</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">str_default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.BaseDiscretizer" title="Permalink to this definition"></a></dt>
+<dd><p>Applies discretization using a dict of GroupedList to transform a DataFrame’s columns.</p>
+<p>Initiates a BaseDiscretizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – List of column names of features (continuous, discrete, categorical or ordinal) to be dicretized</p></li>
+<li><p><strong>values_orders</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.GroupedList"><em>GroupedList</em></a><em>]</em><em>, </em><em>optional</em>) – Dict of feature’s column names and there associated ordering.
+If lists are passed, a GroupedList will automatically be initiated, by default None</p></li>
+<li><p><strong>input_dtypes</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – <p>Input data type, converted to a dict of the provided type for each feature, by default “str”</p>
+<ul>
+<li><p>If <cite>input_dtypes=”str”</cite>, features are considered as qualitative.</p></li>
+<li><p>If <cite>input_dtypes=”float”</cite>, features are considered as quantitative.</p></li>
+</ul>
+</p></li>
+<li><p><strong>output_dtype</strong> (<em>str</em><em>, </em><em>optional</em>) – <p>To be choosen amongst <cite>[“float”, “str”]</cite>, by default “str”</p>
+<ul>
+<li><p>If <cite>output_dtype=”float”</cite>, grouped modalities will be converted to there corresponding floating rank.</p></li>
+<li><p>If <cite>output_dtype=”str”</cite>, a per-group modality will be set for all the modalities of a group.</p></li>
+</ul>
+</p></li>
+<li><p><strong>dropna</strong> (<em>bool</em><em>, </em><em>optional</em>) – <ul>
+<li><p>If <cite>dropna=True</cite>, <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code> will be attributed there label.</p></li>
+<li><p>If <cite>dropna=False</cite>, <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code> will be restored after discretization, by default True</p></li>
+</ul>
+</p></li>
+<li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <cite>copy=True</cite>, feature processing at transform is applied to a copy of the provided DataFrame, by default False</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <cite>verbose=True</cite>, prints raw Discretizers Fit and Transform steps, as long as
+information on AutoCarver’s processing and tables of target rates and frequencies for
+X, by default False</p></li>
+<li><p><strong>str_nan</strong> (<em>str</em><em>, </em><em>optional</em>) – String representation to input <cite>numpy.nan</cite>. If <cite>dropna=False</cite>, <cite>numpy.nan</cite> will be left unchanged, by default “__NAN__”</p></li>
+<li><p><strong>str_default</strong> (<em>str</em><em>, </em><em>optional</em>) – String representation for default qualitative values, i.e. values less frequent than <cite>min_freq</cite>, by default “__OTHER__”</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoCarver.discretizers.BaseDiscretizer.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.BaseDiscretizer.fit" title="Permalink to this definition"></a></dt>
 <dd><p>Learns the labels associated to each value for each feature</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -390,61 +598,12 @@ by default ‘str’</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="AutoCarver.discretizers.GroupedListDiscretizer.get_labels_per_values">
-<span class="sig-name descname"><span class="pre">get_labels_per_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_dtype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#AutoCarver.discretizers.GroupedListDiscretizer.get_labels_per_values" title="Permalink to this definition"></a></dt>
-<dd><p>Creates a dict that contains, for each feature, for each value, the associated label</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>output_dtype</strong> (<em>str</em>) – Whether or not to convert the output to float.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Dict of labels per values per feature</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>dict[str, dict[Any, Any]]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="AutoCarver.discretizers.GroupedListDiscretizer.prepare_data">
-<span class="sig-name descname"><span class="pre">prepare_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.GroupedListDiscretizer.prepare_data" title="Permalink to this definition"></a></dt>
-<dd><p>_summary_</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>DataFrame</em>) – _description_</p></li>
-<li><p><strong>y</strong> (<em>Series</em><em>, </em><em>optional</em>) – _description_, by default None</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>_description_</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>DataFrame</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="AutoCarver.discretizers.GroupedListDiscretizer.remove_feature">
-<span class="sig-name descname"><span class="pre">remove_feature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.GroupedListDiscretizer.remove_feature" title="Permalink to this definition"></a></dt>
-<dd><p>Removes a feature from the Discretizer</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>feature</strong> (<em>str</em>) – Column name of the feature</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="AutoCarver.discretizers.GroupedListDiscretizer.summary">
-<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.GroupedListDiscretizer.summary" title="Permalink to this definition"></a></dt>
-<dd><p>Summarizes the data bucketization</p>
-<p>TODO: add crosstabs per feature for a provided X?</p>
+<dt class="sig sig-object py" id="AutoCarver.discretizers.BaseDiscretizer.summary">
+<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.BaseDiscretizer.summary" title="Permalink to this definition"></a></dt>
+<dd><p>Summarizes the data discretization process.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>A summary of feature’s values</p>
+<dd class="field-odd"><p>A summary of features’ values per modalities.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>DataFrame</p>
@@ -453,12 +612,13 @@ by default ‘str’</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="AutoCarver.discretizers.GroupedListDiscretizer.to_json">
-<span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.GroupedListDiscretizer.to_json" title="Permalink to this definition"></a></dt>
-<dd><p>Converts the GroupedListDiscretizer’s values_orders to .json</p>
+<dt class="sig sig-object py" id="AutoCarver.discretizers.BaseDiscretizer.to_json">
+<span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.BaseDiscretizer.to_json" title="Permalink to this definition"></a></dt>
+<dd><p>Converts the BaseDiscretizer’s values_orders to .json format.</p>
+<p>To be used with <code class="docutils literal notranslate"><span class="pre">json.dump</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>JSON serialized GroupedListDiscretizer</p>
+<dd class="field-odd"><p>JSON serialized BaseDiscretizer</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>str</p>
@@ -467,20 +627,20 @@ by default ‘str’</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="AutoCarver.discretizers.GroupedListDiscretizer.transform">
-<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.GroupedListDiscretizer.transform" title="Permalink to this definition"></a></dt>
-<dd><p>Groups values of features (values_orders keys) according to
-there corresponding GroupedList (values_orders values) based on
-the <cite>GroupedList.content</cite> dict.</p>
+<dt class="sig sig-object py" id="AutoCarver.discretizers.BaseDiscretizer.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.BaseDiscretizer.transform" title="Permalink to this definition"></a></dt>
+<dd><p>Applies discretization using a dict of GroupedList to transform a DataFrame’s columns whatever there <code class="docutils literal notranslate"><span class="pre">input_dtypes</span></code>.</p>
+<p>Groups values of features (keys of <code class="docutils literal notranslate"><span class="pre">values_orders</span></code>) according to there <code class="docutils literal notranslate"><span class="pre">GroupedList</span></code> (defined in <code class="docutils literal notranslate"><span class="pre">values_orders</span></code>) by
+reading the historized merges inside the <code class="docutils literal notranslate"><span class="pre">GroupedList.content</span></code> dict.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>DataFrame</em>) – Contains columns named after <cite>features</cite> attribute</p></li>
+<li><p><strong>X</strong> (<em>DataFrame</em>) – Contains columns named after <cite>features</cite> attribute, by default None</p></li>
 <li><p><strong>y</strong> (<em>Series</em><em>, </em><em>optional</em>) – Model target, by default None</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>_description_</p>
+<dd class="field-even"><p>Discretized X.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>DataFrame</p>
@@ -489,20 +649,18 @@ the <cite>GroupedList.content</cite> dict.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="AutoCarver.discretizers.GroupedListDiscretizer.transform_qualitative">
-<span class="sig-name descname"><span class="pre">transform_qualitative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.GroupedListDiscretizer.transform_qualitative" title="Permalink to this definition"></a></dt>
-<dd><p>Groups values of features (values_orders keys) according to
-there corresponding GroupedList (values_orders values) based on
-the <cite>GroupedList.content</cite> dict.</p>
+<dt class="sig sig-object py" id="AutoCarver.discretizers.BaseDiscretizer.transform_qualitative">
+<span class="sig-name descname"><span class="pre">transform_qualitative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.BaseDiscretizer.transform_qualitative" title="Permalink to this definition"></a></dt>
+<dd><p>Applies discretization using a dict of GroupedList to transform a DataFrame’s Qualitative columns (as defined by <code class="docutils literal notranslate"><span class="pre">input_dtypes==&quot;str&quot;</span></code>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>DataFrame</em>) – Contains columns named after <cite>values_orders</cite> keys</p></li>
+<li><p><strong>X</strong> (<em>DataFrame</em>) – Contains columns named after <cite>features</cite> attribute, by default None</p></li>
 <li><p><strong>y</strong> (<em>Series</em><em>, </em><em>optional</em>) – Model target, by default None</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>_description_</p>
+<dd class="field-even"><p>Discretized X.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>DataFrame</p>
@@ -511,20 +669,18 @@ the <cite>GroupedList.content</cite> dict.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="AutoCarver.discretizers.GroupedListDiscretizer.transform_quantitative">
-<span class="sig-name descname"><span class="pre">transform_quantitative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.GroupedListDiscretizer.transform_quantitative" title="Permalink to this definition"></a></dt>
-<dd><p>Groups values of features (values_orders keys) according to
-there corresponding GroupedList (values_orders values) based on
-the <cite>GroupedList.content</cite> dict.</p>
+<dt class="sig sig-object py" id="AutoCarver.discretizers.BaseDiscretizer.transform_quantitative">
+<span class="sig-name descname"><span class="pre">transform_quantitative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.BaseDiscretizer.transform_quantitative" title="Permalink to this definition"></a></dt>
+<dd><p>Applies discretization using a dict of GroupedList to transform a DataFrame’s Quantitative columns (as defined by <code class="docutils literal notranslate"><span class="pre">input_dtypes==&quot;float&quot;</span></code>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>DataFrame</em>) – Contains columns named after <cite>values_orders</cite> keys</p></li>
+<li><p><strong>X</strong> (<em>DataFrame</em>) – Contains columns named after <cite>features</cite> attribute, by default None</p></li>
 <li><p><strong>y</strong> (<em>Series</em><em>, </em><em>optional</em>) – Model target, by default None</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>_description_</p>
+<dd class="field-even"><p>Discretized X.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>DataFrame</p>
@@ -535,35 +691,39 @@ the <cite>GroupedList.content</cite> dict.</p>
 </dd></dl>
 
 </section>
-<section id="type-discretizers">
-<h2>Type Discretizers<a class="headerlink" href="#type-discretizers" title="Permalink to this heading"></a></h2>
+<section id="string-discretizer">
+<h2>String Discretizer<a class="headerlink" href="#string-discretizer" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="AutoCarver.discretizers.StringDiscretizer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.</span></span><span class="sig-name descname"><span class="pre">StringDiscretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values_orders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.utils.grouped_list.GroupedList"><span class="pre">AutoCarver.discretizers.utils.grouped_list.GroupedList</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">str_nan</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'__NAN__'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.StringDiscretizer" title="Permalink to this definition"></a></dt>
-<dd><p>Converts specified columns of a DataFrame into str.
-First step of a Qualitative Discretization pipe.</p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.</span></span><span class="sig-name descname"><span class="pre">StringDiscretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">qualitative_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values_orders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.utils.grouped_list.GroupedList"><span class="pre">AutoCarver.discretizers.utils.grouped_list.GroupedList</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">str_nan</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'__NAN__'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.StringDiscretizer" title="Permalink to this definition"></a></dt>
+<dd><p>Converts specified columns of a DataFrame into strings.
+First step of a Qualitative discretization pipeline.</p>
 <ul class="simple">
 <li><p>Keeps NaN inplace</p></li>
 <li><p>Converts floats of int to int</p></li>
 </ul>
-<p>_summary_</p>
+<p>Initiates a StringDiscretizer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – _description_</p></li>
-<li><p><strong>values_orders</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.GroupedList"><em>GroupedList</em></a><em>]</em><em>, </em><em>optional</em>) – _description_, by default None</p></li>
+<li><p><strong>qualitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – List of column names of qualitative features (non-ordinal) to be discretized</p></li>
+<li><p><strong>values_orders</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.GroupedList"><em>GroupedList</em></a><em>]</em><em>, </em><em>optional</em>) – Dict of feature’s column names and there associated ordering.
+If lists are passed, a GroupedList will automatically be initiated, by default None</p></li>
+<li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <cite>copy=True</cite>, feature processing at transform is applied to a copy of the provided DataFrame, by default False</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <cite>verbose=True</cite>, prints raw Discretizers Fit and Transform steps, by default False</p></li>
+<li><p><strong>str_nan</strong> (<em>str</em><em>, </em><em>optional</em>) – String representation to input <cite>numpy.nan</cite>. If <cite>dropna=False</cite>, <cite>numpy.nan</cite> will be left unchanged, by default “__NAN__”</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="AutoCarver.discretizers.StringDiscretizer.fit">
 <span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.StringDiscretizer.fit" title="Permalink to this definition"></a></dt>
-<dd><p>_summary_</p>
+<dd><p>Finds simple buckets of modalities of X.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>DataFrame</em>) – _description_</p></li>
-<li><p><strong>y</strong> (<em>Series</em><em>, </em><em>optional</em>) – _description_, by default None</p></li>
+<li><p><strong>X</strong> (<em>DataFrame</em>) – Dataset used to discretize. Needs to have columns has specified in <cite>features</cite>.</p></li>
+<li><p><strong>y</strong> (<em>Series</em>) – Binary target feature, not used, by default None.</p></li>
 </ul>
 </dd>
 </dl>
@@ -577,7 +737,7 @@ First step of a Qualitative Discretization pipe.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="AutoCarver.discretizers.GroupedList">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.</span></span><span class="sig-name descname"><span class="pre">GroupedList</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iterable</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.GroupedList" title="Permalink to this definition"></a></dt>
-<dd><p>An ordered list that’s extended with a dict.</p>
+<dd><p>An ordered list that’s extended with a per-value content dict.</p>
 <p>An ordered list that historizes its elements’ content.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
