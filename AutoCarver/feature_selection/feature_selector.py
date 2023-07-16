@@ -3,6 +3,7 @@
 from random import shuffle
 from typing import Any, Callable
 
+from pandas import Series, DataFrame
 from IPython.display import display_html
 from sklearn.base import BaseEstimator, TransformerMixin
 
@@ -86,7 +87,6 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
         *,
         filters: list[Callable] = None,
         sample_size: float = 1.0,
-        values_orders: dict[str, GroupedList] = None,
         copy: bool = True,
         drop: bool = False,  # TODO
         verbose: bool = True,

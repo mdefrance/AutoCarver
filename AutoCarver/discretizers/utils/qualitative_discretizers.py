@@ -261,6 +261,10 @@ class OrdinalDiscretizer(BaseDiscretizer):
             verbose=verbose,
         )
 
+        # checking for missong orders
+        no_order_provided = [feature for feature in self.features if feature not in self.values_orders]
+        assert len(no_order_provided) == 0, f"No ordering was provided for following features: {str(no_order_provided)}. Please make sure you defined ``values_orders`` correctly."
+
         # class specific attributes
         self.min_freq = min_freq
 
