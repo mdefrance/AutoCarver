@@ -12,9 +12,8 @@ from .grouped_list import GroupedList
 from .serialization import json_serialize_values_orders
 
 
-# TODO: output a json
-class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
-    """Discretizer that uses a dict of grouped values."""
+class BaseDiscretizer(BaseEstimator, TransformerMixin):
+    """Applies discretization using a dict of GroupedList to transform a DataFrame's columns."""
 
     def __init__(
         self,
@@ -23,32 +22,52 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         values_orders: dict[str, GroupedList] = None,
         input_dtypes: Union[str, dict[str, str]] = "str",
         output_dtype: str = "str",
-        str_nan: str = None,
-        str_default: str = None,
         dropna: bool = True,
         copy: bool = True,
         verbose: bool = True,
+        str_nan: str = None,
+        str_default: str = None,
     ) -> None:
-        """Initiates a Discretizer by dict of GroupedList
+        """Initiates a BaseDiscretizer.
 
         Parameters
         ----------
         features : list[str]
-            List of column names to be discretized
+            List of column names of features (continuous, discrete, categorical or ordinal) to be dicretized
+
         values_orders : dict[str, GroupedList], optional
-            Per feature ordering, by default None
+            Dict of feature's column names and there associated ordering.
+            If lists are passed, a GroupedList will automatically be initiated, by default None
+
         input_dtypes : Union[str, dict[str, str]], optional
-            String of type to be considered for all features or
-            Dict of column names and associated types:
-            - if 'float' uses transform_quantitative
-            - if 'str' uses transform_qualitative,
-            by default 'str'
+            Input data type, converted to a dict of the provided type for each feature, by default "str"
+
+            * If `input_dtypes="str"`, features are considered as qualitative.
+            * If `input_dtypes="float"`, features are considered as quantitative.
+
         output_dtype : str, optional
-            _description_, by default 'str'
-        str_nan : str, optional
-            Default string value attributed to nan, by default None
+            To be choosen amongst `["float", "str"]`, by default "str"
+
+            * If `output_dtype="float"`, grouped modalities will be converted to there corresponding floating rank.
+            * If `output_dtype="str"`, a per-group modality will be set for all the modalities of a group.
+
+        dropna : bool, optional
+            * If `dropna=True`, ``numpy.nan`` will be attributed there label.
+            * If `dropna=False`, ``numpy.nan`` will be restored after discretization, by default True
+
         copy : bool, optional
-            Whether or not to copy the input DataFrame, by default False
+            If `copy=True`, feature processing at transform is applied to a copy of the provided DataFrame, by default False
+
+        verbose : bool, optional
+            If `verbose=True`, prints raw Discretizers Fit and Transform steps, as long as
+            information on AutoCarver's processing and tables of target rates and frequencies for
+            X, by default False
+
+        str_nan : str, optional
+            String representation to input `numpy.nan`. If `dropna=False`, `numpy.nan` will be left unchanged, by default "__NAN__"
+
+        str_default : str, optional
+            String representation for default qualitative values, i.e. values less frequent than `min_freq`, by default "__OTHER__"
         """
         self.features = list(set(features))
         if values_orders is None:
@@ -91,7 +110,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         # for each feature, getting label associated to each value
         self.labels_per_values: dict[str, dict[Any, Any]] = {}  # will be initiated during fit
 
-    def get_labels_per_values(self, output_dtype: str) -> dict[str, dict[Any, Any]]:
+    def _get_labels_per_values(self, output_dtype: str) -> dict[str, dict[Any, Any]]:
         """Creates a dict that contains, for each feature, for each value, the associated label
 
         Parameters
@@ -138,13 +157,13 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
 
         return labels_per_values
 
-    def remove_feature(self, feature: str) -> None:
-        """Removes a feature from the Discretizer
+    def _remove_feature(self, feature: str) -> None:
+        """Removes a feature from all `feature` attributes
 
         Parameters
         ----------
         feature : str
-            Column name of the feature
+            Column name of the feature to remove
         """
         if feature in self.features:
             self.features.remove(feature)
@@ -159,20 +178,21 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
             if feature in self.labels_per_values:
                 self.labels_per_values.pop(feature)
 
-    def prepare_data(self, X: DataFrame, y: Series = None) -> DataFrame:
-        """_summary_
+    def _prepare_data(self, X: DataFrame, y: Series = None) -> DataFrame:
+        """Validates format and content of X and y.
 
         Parameters
         ----------
         X : DataFrame
-            _description_
-        y : Series, optional
-            _description_, by default None
+            Dataset used to discretize. Needs to have columns has specified in `features`, by default None.
+
+        y : Series
+            Binary target feature, by default None.
 
         Returns
         -------
         DataFrame
-            _description_
+            A formatted copy of X
         """
         # copying X
         x_copy = X
@@ -212,28 +232,28 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         ), f"Missing values_orders for following features {str(missing_features)}."
 
         # for each feature, getting label associated to each value
-        self.labels_per_values = self.get_labels_per_values(self.output_dtype)
+        self.labels_per_values = self._get_labels_per_values(self.output_dtype)
 
         return self
 
     def transform(self, X: DataFrame, y: Series = None) -> DataFrame:
-        """Groups values of features (values_orders keys) according to
-        there corresponding GroupedList (values_orders values) based on
-        the `GroupedList.content` dict.
+        """Applies discretization using a dict of GroupedList to transform a DataFrame's columns whatever there ``input_dtypes``.
+
+        Groups values of features (keys of ``values_orders``) according to there ``GroupedList`` (defined in ``values_orders``) by
+        reading the historized merges inside the ``GroupedList.content`` dict.
 
         Parameters
         ----------
         X : DataFrame
-            Contains columns named after `features` attribute
+            Contains columns named after `features` attribute, by default None
         y : Series, optional
             Model target, by default None
 
         Returns
         -------
         DataFrame
-            _description_
+            Discretized X.
         """
-
         # copying dataframes
         x_copy = X
         if self.copy:
@@ -243,7 +263,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         if len(self.quantitative_features) > 0:
             if self.verbose:  # verbose if requested
                 print(
-                    f" - [GroupedListDiscretizer] Transform Quantitative {str(self.quantitative_features)}"
+                    f" - [BaseDiscretizer] Transform Quantitative {str(self.quantitative_features)}"
                 )
             x_copy = self.transform_quantitative(x_copy, y)
 
@@ -251,7 +271,7 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         if len(self.qualitative_features) > 0:
             if self.verbose:  # verbose if requested
                 print(
-                    f" - [GroupedListDiscretizer] Transform Qualitative {str(self.qualitative_features)}"
+                    f" - [BaseDiscretizer] Transform Qualitative {str(self.qualitative_features)}"
                 )
             x_copy = self.transform_qualitative(x_copy, y)
 
@@ -265,21 +285,19 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         return x_copy
 
     def transform_quantitative(self, X: DataFrame, y: Series) -> DataFrame:
-        """Groups values of features (values_orders keys) according to
-        there corresponding GroupedList (values_orders values) based on
-        the `GroupedList.content` dict.
+        """Applies discretization using a dict of GroupedList to transform a DataFrame's Quantitative columns (as defined by ``input_dtypes=="float"``).
 
         Parameters
         ----------
         X : DataFrame
-            Contains columns named after `values_orders` keys
+            Contains columns named after `features` attribute, by default None
         y : Series, optional
             Model target, by default None
 
         Returns
         -------
         DataFrame
-            _description_
+            Discretized X.
         """
         # dataset length
         x_len = X.shape[0]
@@ -325,21 +343,19 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         return X
 
     def transform_qualitative(self, X: DataFrame, y: Series = None) -> DataFrame:
-        """Groups values of features (values_orders keys) according to
-        there corresponding GroupedList (values_orders values) based on
-        the `GroupedList.content` dict.
+        """Applies discretization using a dict of GroupedList to transform a DataFrame's Qualitative columns (as defined by ``input_dtypes=="str"``).
 
         Parameters
         ----------
         X : DataFrame
-            Contains columns named after `values_orders` keys
+            Contains columns named after `features` attribute, by default None
         y : Series, optional
             Model target, by default None
 
         Returns
         -------
         DataFrame
-            _description_
+            Discretized X.
         """
         # filling up nans with specified value
         if self.str_nan:
@@ -366,12 +382,14 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         return X
 
     def to_json(self) -> str:
-        """Converts the GroupedListDiscretizer's values_orders to .json
+        """Converts the BaseDiscretizer's values_orders to .json format.
+
+        To be used with ``json.dump``.
 
         Returns
         -------
         str
-            JSON serialized GroupedListDiscretizer
+            JSON serialized BaseDiscretizer
         """
         # extracting content dictionnaries
         json_serialized_groupedlistdiscretizer = {
@@ -388,18 +406,17 @@ class GroupedListDiscretizer(BaseEstimator, TransformerMixin):
         # dumping as json
         return json_serialized_groupedlistdiscretizer
 
+    # TODO: add crosstabs per feature for a provided X?
     def summary(self) -> DataFrame:
-        """Summarizes the data bucketization
-
-        TODO: add crosstabs per feature for a provided X?
+        """Summarizes the data discretization process.
 
         Returns
         -------
         DataFrame
-            A summary of feature's values
+            A summary of features' values per modalities.
         """
         # raw label per value with output_dtype 'str'
-        raw_labels_per_values = self.get_labels_per_values(output_dtype="str")
+        raw_labels_per_values = self._get_labels_per_values(output_dtype="str")
 
         # initiating summaries
         summaries: list[dict[str, Any]] = []
@@ -468,8 +485,26 @@ def convert_to_labels(
     str_nan: str,
     dropna: bool = True,
 ) -> dict[str, GroupedList]:
-    """Converts a values_orders values to labels (quantiles)"""
+    """Converts a values_orders values (quantiles) to labels
 
+    Parameters
+    ----------
+    features : list[str]
+        _description_
+    quantitative_features : list[str]
+        _description_
+    values_orders : dict[str, GroupedList]
+        _description_
+    str_nan : str
+        _description_
+    dropna : bool, optional
+        _description_, by default True
+
+    Returns
+    -------
+    dict[str, GroupedList]
+        _description_
+    """
     # copying values_orders without nans
     labels_orders = {
         feature: GroupedList([value for value in values_orders[feature] if value != str_nan])
@@ -509,6 +544,26 @@ def convert_to_values(
     label_orders: dict[str, GroupedList],
     str_nan: str,
 ):
+    """Converts a values_orders labels to values (quantiles)
+
+    Parameters
+    ----------
+    features : list[str]
+        _description_
+    quantitative_features : list[str]
+        _description_
+    values_orders : dict[str, GroupedList]
+        _description_
+    label_orders : dict[str, GroupedList]
+        _description_
+    str_nan : str
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     # for quantitative features getting labels per quantile
     if any(quantitative_features):
         # getting quantile per group "name"
@@ -565,8 +620,12 @@ def min_value_counts(
     ----------
     x : Series
         _description_
-    values_orders : dict[str, GroupedList]
-        _description_
+    values_orders : dict[str, GroupedList], optional
+        _description_, by default None
+    dropna : bool, optional
+        _description_, by default False
+    normalize : bool, optional
+        _description_, by default True
 
     Returns
     -------

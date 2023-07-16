@@ -1,5 +1,5 @@
 from .discretizers import Discretizer, QualitativeDiscretizer, QuantitativeDiscretizer
-from .utils.base_discretizers import GroupedListDiscretizer
+from .utils.base_discretizers import BaseDiscretizer
 from .utils.grouped_list import GroupedList
 from .utils.qualitative_discretizers import (
     ChainedDiscretizer,

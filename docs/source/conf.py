@@ -2,9 +2,11 @@ import os
 import sys
 
 # -- Path setup --------------------------------------------------------------
-print(os.listdir("../../AutoCarver"))
-sys.path.append("../../AutoCarver")
-# sys.path.insert(0, os.path.abspath('../../AutoCarver'))
+path = "../../"
+print(os.listdir(path))
+sys.path.insert(0, path)
+
+import AutoCarver
 
 # Configuration file for the Sphinx documentation builder.
 #
@@ -32,7 +34,7 @@ extensions = [
 
 templates_path = ["_templates"]
 exclude_patterns = []
-autoclass_content = 'both'
+autoclass_content = "both"
 highlight_language = "python"
 
 # -- Options for HTML output -------------------------------------------------

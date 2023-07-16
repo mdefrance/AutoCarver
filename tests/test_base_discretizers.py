@@ -3,13 +3,13 @@
 from numpy import nan
 from pandas import DataFrame
 
-from AutoCarver.discretizers.utils.base_discretizers import GroupedListDiscretizer
+from AutoCarver.discretizers.utils.base_discretizers import BaseDiscretizer
 from AutoCarver.discretizers.utils.grouped_list import GroupedList
 
 
 # TODO: test quantitative discretization
 def test_grouped_list_discretizer(x_train: DataFrame, x_dev_1: DataFrame, x_dev_2: DataFrame):
-    """Tests GroupedListDiscretizer
+    """Tests BaseDiscretizer
 
     Parameters
     ----------
@@ -45,7 +45,7 @@ def test_grouped_list_discretizer(x_train: DataFrame, x_dev_1: DataFrame, x_dev_
     features = ["Qualitative_Ordinal", "Qualitative_Ordinal_lownan"]
 
     # initiating discretizer
-    discretizer = GroupedListDiscretizer(
+    discretizer = BaseDiscretizer(
         features=features,
         values_orders=values_orders,
         str_nan=str_nan,

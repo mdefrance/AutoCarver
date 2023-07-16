@@ -10,19 +10,21 @@ from pandas import DataFrame, Series, crosstab
 from scipy.stats import chi2_contingency
 from tqdm import tqdm
 
+from .discretizers import GroupedList
 from .discretizers.discretizers import Discretizer
 from .discretizers.utils.base_discretizers import (
-    GroupedListDiscretizer,
+    BaseDiscretizer,
     convert_to_labels,
     convert_to_values,
 )
-from .discretizers import GroupedList
 from .discretizers.utils.serialization import json_deserialize_values_orders
 
 
-class AutoCarver(GroupedListDiscretizer):
+class AutoCarver(BaseDiscretizer):
     """Automatic carving of continuous, discrete, categorical and ordinal
     features that maximizes association with a binary target.
+
+    Applies ``Discretizer``, data should not be given raw.
     """
 
     def __init__(
@@ -38,13 +40,13 @@ class AutoCarver(GroupedListDiscretizer):
         sort_by: str = "tschuprowt",
         output_dtype: str = "float",
         dropna: bool = True,
-        str_nan: str = "__NAN__",
-        str_default: str = "__OTHER__",
         copy: bool = False,
         verbose: bool = False,
         pretty_print: bool = False,
+        str_nan: str = "__NAN__",
+        str_default: str = "__OTHER__",
     ) -> None:
-        """ Initiates an AutoCarver.
+        """Initiates an AutoCarver.
 
         Parameters
         ----------
@@ -52,16 +54,17 @@ class AutoCarver(GroupedListDiscretizer):
             List of column names of quantitative features (continuous and discrete) to be carved
 
         qualitative_features : list[str]
-            List of column names of qualitative features (non-ordinal) to be carved 
+            List of column names of qualitative features (non-ordinal) to be carved
 
         min_freq : float
             Minimum frequency per grouped modalities.
+
             * Features whose most frequent modality is less frequent than `min_freq` will not be carved.
             * Sets the number of quantiles in which to discretize the continuous features.
             * Sets the minimum frequency of a quantitative feature's modality.
 
-            **Tip**: should be set between 0.02 (slower, preciser, less robust) and 0.05 (faster, more robust) 
-            
+            **Tip**: should be set between 0.02 (slower, preciser, less robust) and 0.05 (faster, more robust)
+
         ordinal_features : list[str], optional
             List of column names of ordinal features to be carved. For those features a list of
             values has to be provided in the `values_orders` dict, by default None
@@ -73,14 +76,15 @@ class AutoCarver(GroupedListDiscretizer):
         max_n_mod : int, optional
             Maximum number of modality per feature, by default 5
 
-            All combinations of modalities for groups of modalities of sizes from 1 to `max_n_mod` will be tested. 
-            The combination with the greatest association (as defined by `sort_by`) will be the selected one. 
+            All combinations of modalities for groups of modalities of sizes from 1 to `max_n_mod` will be tested.
+            The combination with the greatest association (as defined by `sort_by`) will be the selected one.
 
             **Tip**: should be set between 4 (faster, more robust) and 7 (slower, preciser, less robust)
 
         sort_by : str, optional
             To be choosen amongst `["tschuprowt", "cramerv"]`, by default "tschuprowt"
             Metric to be used to perform association measure between features and target.
+
             * If `sort_by="tschuprowt"`, Tschuprow's T will be used as the association measure (more robust).
             * If `sort_by="cramerv"`, Cramer's V will be used as the association measure (less robust).
 
@@ -89,18 +93,13 @@ class AutoCarver(GroupedListDiscretizer):
 
         output_dtype : str, optional
             To be choosen amongst `["float", "str"]`, by default "float"
+
             * If `output_dtype="float"`, grouped modalities will be converted to there corresponding floating rank.
             * If `output_dtype="str"`, a per-group modality will be set for all the modalities of a group.
 
         dropna : bool, optional
             * If `dropna=True`, `AutoCarver` will try to group `numpy.nan` with other modalities.
             * If `dropna=False`, `AutoCarver` all non-`numpy.nan` will be grouped, by default True
-
-        str_nan : str, optional
-            String representation to input `numpy.nan`. If `dropna=False`, `numpy.nan` will be left unchanged, by default "__NAN__"
-
-        str_default : str, optional
-            String representation for default qualitative values, i.e. values less frequent than `min_freq`, by default "__OTHER__"
 
         copy : bool, optional
             If `copy=True`, feature processing at transform is applied to a copy of the provided DataFrame, by default False
@@ -112,8 +111,13 @@ class AutoCarver(GroupedListDiscretizer):
 
         pretty_print : bool, optional
             If `pretty_print=True`, adds to the verbose some HTML tables of target rates and frequencies for X and, if provided, X_dev.
-
             Overrides the value of `verbose`, by default False
+
+        str_nan : str, optional
+            String representation to input `numpy.nan`. If `dropna=False`, `numpy.nan` will be left unchanged, by default "__NAN__"
+
+        str_default : str, optional
+            String representation for default qualitative values, i.e. values less frequent than `min_freq`, by default "__OTHER__"
 
         Examples
         --------
@@ -129,17 +133,17 @@ class AutoCarver(GroupedListDiscretizer):
         assert all(
             quali_feature not in quantitative_features
             for quali_feature in qualitative_features + ordinal_features
-        ), f"A feature of `quantitative_features` also is in `qualitative_features` or `ordinal_features`. Be carreful with your inputs!"
+        ), "A feature of `quantitative_features` also is in `qualitative_features` or `ordinal_features`. Be carreful with your inputs!"
         assert all(
             quanti_feature not in qualitative_features + ordinal_features
             for quanti_feature in quantitative_features
-        ), f"A feature of `qualitative_features` or `ordinal_features` also is in `quantitative_features`. Be carreful with your inputs!"
+        ), "A feature of `qualitative_features` or `ordinal_features` also is in `quantitative_features`. Be carreful with your inputs!"
 
         # initializing input_dtypes
         self.input_dtypes = {feature: "str" for feature in qualitative_features + ordinal_features}
         self.input_dtypes.update({feature: "float" for feature in quantitative_features})
 
-        # Initiating GroupedListDiscretizer
+        # Initiating BaseDiscretizer
         super().__init__(
             features=self.features,
             values_orders=values_orders,
@@ -164,25 +168,29 @@ class AutoCarver(GroupedListDiscretizer):
         ), f"""Measure '{sort_by}' not yet implemented. Choose from: {str(measures)}."""
         self.sort_by = sort_by
 
-    def prepare_data(
+    def _prepare_data(
         self,
         X: DataFrame,
         y: Series,
         X_dev: DataFrame = None,
         y_dev: Series = None,
     ) -> tuple[DataFrame, DataFrame]:
-        """Checks validity of provided data
+        """Validates format and content of X and y.
 
         Parameters
         ----------
         X : DataFrame
-            _description_
+            Dataset used to discretize. Needs to have columns has specified in `features`.
+
         y : Series
-            _description_
+            Binary target feature with wich the association is maximized.
+
         X_dev : DataFrame, optional
-            _description_, by default None
+            Dataset to evalute the robustness of discretization, by default None
+            It should have the same distribution as X.
+
         y_dev : Series, optional
-            _description_, by default None
+            Binary target feature with wich the robustness of discretization is evaluated, by default None
 
         Returns
         -------
@@ -190,21 +198,21 @@ class AutoCarver(GroupedListDiscretizer):
             Copies of (X, X_dev)
         """
         # Checking for binary target and copying X
-        x_copy = super().prepare_data(X, y)
-        x_dev_copy = super().prepare_data(X_dev, y_dev)
+        x_copy = super()._prepare_data(X, y)
+        x_dev_copy = super()._prepare_data(X_dev, y_dev)
 
         return x_copy, x_dev_copy
 
-    def remove_feature(self, feature: str) -> None:
-        """Removes a feature from all instances
+    def _remove_feature(self, feature: str) -> None:
+        """Removes a feature from all `feature` attributes
 
         Parameters
         ----------
         feature : str
-            Column name
+            Column name of the feature to remove
         """
         if feature in self.features:
-            super().remove_feature(feature)
+            super()._remove_feature(feature)
             if feature in self.ordinal_features:
                 self.ordinal_features.remove(feature)
 
@@ -215,21 +223,25 @@ class AutoCarver(GroupedListDiscretizer):
         X_dev: DataFrame = None,
         y_dev: Series = None,
     ) -> None:
-        """_summary_
+        """Finds the combination of modalities of X that provides the best association with y.
 
         Parameters
         ----------
         X : DataFrame
-            _description_
+            Dataset used to discretize. Needs to have columns has specified in `features`.
+
         y : Series
-            _description_
+            Binary target feature with wich the association is maximized.
+
         X_dev : DataFrame, optional
-            _description_, by default None
+            Dataset to evalute the robustness of discretization, by default None
+            It should have the same distribution as X.
+
         y_dev : Series, optional
-            _description_, by default None
+            Binary target feature with wich the robustness of discretization is evaluated, by default None
         """
         # preparing datasets and checking for wrong values
-        x_copy, x_dev_copy = self.prepare_data(X, y, X_dev, y_dev)
+        x_copy, x_dev_copy = self._prepare_data(X, y, X_dev, y_dev)
 
         # discretizing all features
         discretizer = Discretizer(
@@ -254,7 +266,7 @@ class AutoCarver(GroupedListDiscretizer):
         # removing dropped features
         for feature in self.features:
             if feature not in discretizer.values_orders:
-                self.remove_feature(feature)
+                self._remove_feature(feature)
 
         # converting potential quantiles into there respective labels
         labels_orders = convert_to_labels(
@@ -281,20 +293,20 @@ class AutoCarver(GroupedListDiscretizer):
             xtab = xtabs[feature]
             xtab_dev = xtabs_dev[feature]
             if self.verbose:  # verbose if requested
-                print(f"\n - Raw, feature distribution")
+                print("\n - Raw feature distribution")
                 print_xtabs(xtab, xtab_dev, pretty_print=self.pretty_print)
 
             # ordering
             order = labels_orders[feature]
 
             # getting best combination
-            best_combination = self.get_best_combination(order, xtab, xtab_dev=xtab_dev)
+            best_combination = self._get_best_combination(order, xtab, xtab_dev=xtab_dev)
 
             # checking that a suitable combination has been found
             if best_combination is not None:
                 order, xtab, xtab_dev = best_combination
                 if self.verbose:  # verbose if requested
-                    print(f"\n - Carved crosstab")
+                    print("\n - Carved feature distribution")
                     print_xtabs(
                         xtab, xtab_dev, pretty_print=self.pretty_print
                     )  # TODO get the good labels
@@ -307,7 +319,7 @@ class AutoCarver(GroupedListDiscretizer):
                 print(
                     f"No robust combination for feature '{feature}' could be found. It will be ignored. You might have to increase the size of your test sample (test sample not representative of test sample for this feature) or you should consider dropping this features."
                 )
-                self.remove_feature(feature)
+                self._remove_feature(feature)
                 if feature in labels_orders:
                     labels_orders.pop(feature)
 
@@ -325,20 +337,34 @@ class AutoCarver(GroupedListDiscretizer):
             )
         )
 
-        # TODO pretty displaying
-
         # discretizing features based on each feature's values_order
         super().fit(X, y)
 
         return self
 
-    def get_best_combination(
+    def _get_best_combination(
         self,
         order: GroupedList,
         xtab: DataFrame,
         *,
         xtab_dev: DataFrame = None,
     ) -> tuple[GroupedList, DataFrame, DataFrame]:
+        """_summary_
+
+        Parameters
+        ----------
+        order : GroupedList
+            _description_
+        xtab : DataFrame
+            _description_
+        xtab_dev : DataFrame, optional
+            _description_, by default None
+
+        Returns
+        -------
+        tuple[GroupedList, DataFrame, DataFrame]
+            _description_
+        """
         # raw ordering
         raw_order = GroupedList(order)
         if self.str_nan in raw_order:
@@ -408,14 +434,36 @@ class AutoCarver(GroupedListDiscretizer):
 
 
 def xtab_target_rate(xtab: DataFrame) -> DataFrame:
-    """Computes target rate per row for a binary target (column) in a crosstab"""
+    """Computes target rate per row for a binary target (column) in a crosstab
 
+    Parameters
+    ----------
+    xtab : DataFrame
+        _description_
+
+    Returns
+    -------
+    DataFrame
+        _description_
+    """
     return xtab[1].divide(xtab[0]).sort_values()
 
 
 def filter_nan_xtab(xtab: DataFrame, str_nan: str) -> DataFrame:
-    """Filters out nans from the crosstab"""
+    """Filters out nans from the crosstab
 
+    Parameters
+    ----------
+    xtab : DataFrame
+        _description_
+    str_nan : str
+        _description_
+
+    Returns
+    -------
+    DataFrame
+        _description_
+    """
     # cehcking for values in crosstab
     filtered_xtab = None
     if xtab is not None:
@@ -430,8 +478,24 @@ def filter_nan_xtab(xtab: DataFrame, str_nan: str) -> DataFrame:
 def get_xtabs(
     features: list[str], X: DataFrame, y: Series, labels_orders: dict[str, GroupedList]
 ) -> dict[str, DataFrame]:
-    """Computes crosstabs for specified features and ensures that the crosstab is ordered according to the known labels"""
+    """Computes crosstabs for specified features and ensures that the crosstab is ordered according to the known labels
 
+    Parameters
+    ----------
+    features : list[str]
+        _description_
+    X : DataFrame
+        _description_
+    y : Series
+        _description_
+    labels_orders : dict[str, GroupedList]
+        _description_
+
+    Returns
+    -------
+    dict[str, DataFrame]
+        _description_
+    """
     # checking for empty datasets
     xtabs = {feature: None for feature in features}
     if X is not None:
@@ -449,9 +513,25 @@ def get_xtabs(
     return xtabs
 
 
-def association_xtab(xtab: DataFrame, n_obs, n_mod_y) -> dict[str, float]:
-    """Computes measures of association between feature x and feature2."""
+def association_xtab(xtab: DataFrame, n_obs: int, n_mod_y: int) -> dict[str, float]:
+    """Computes measures of association between feature and target by crosstab.
 
+    Parameters
+    ----------
+    xtab : DataFrame
+        Crosstab between feature and target.
+
+    n_obs : int
+        Sample total size.
+
+    n_mod_y : int
+        Number of modality of the target (and minimum number of modality).
+
+    Returns
+    -------
+    dict[str, float]
+        Cramer's V and Tschuprow's as a dict.
+    """
     # number of values taken by the features
     n_mod_x = xtab.shape[0]
 
@@ -467,9 +547,21 @@ def association_xtab(xtab: DataFrame, n_obs, n_mod_y) -> dict[str, float]:
     return {"cramerv": cramerv, "tschuprowt": tschuprowt}
 
 
-def vectorized_groupby_sum(xtab: DataFrame, groupby: list[str]):
-    """Groups a crosstab by groupby and sums column values by groups"""
+def vectorized_groupby_sum(xtab: DataFrame, groupby: list[str]) -> DataFrame:
+    """Groups a crosstab by groupby and sums column values by groups
 
+    Parameters
+    ----------
+    xtab : DataFrame
+        _description_
+    groupby : list[str]
+        _description_
+
+    Returns
+    -------
+    DataFrame
+        _description_
+    """
     # all indices that may be duplicated
     index_values = array(groupby)
 
@@ -488,9 +580,32 @@ def vectorized_groupby_sum(xtab: DataFrame, groupby: list[str]):
     return grouped_xtab
 
 
-def combinations_at_index(start_idx, order, nb_remaining_groups, min_group_size=1):
-    """Gets all possible combinations of sizes up to the last element of a list"""
+def combinations_at_index(
+    start_idx: int, order: list[Any], nb_remaining_groups: int, min_group_size: int = 1
+) -> tuple[list[Any], int, int]:
+    """Gets all possible combinations of sizes up to the last element of a list
 
+    Parameters
+    ----------
+    start_idx : int
+        _description_
+    order : list[Any]
+        _description_
+    nb_remaining_groups : int
+        _description_
+    min_group_size : int, optional
+        _description_, by default 1
+
+    Returns
+    -------
+    tuple[list[Any], int, int]
+        _description_
+
+    Yields
+    ------
+    Iterator[tuple[list[Any], int, int]]
+        _description_
+    """
     # iterating over each possible length of groups
     for size in range(min_group_size, len(order) + 1):
         next_idx = start_idx + size  # index from which to start the next group
@@ -504,16 +619,38 @@ def combinations_at_index(start_idx, order, nb_remaining_groups, min_group_size=
 
 
 def consecutive_combinations(
-    raw_order,
-    max_group_size,
-    min_group_size=1,
-    nb_remaining_group=None,
-    current_combination=None,
-    next_index=None,
-    all_combinations=None,
-):
-    """Computes all possible combinations of values of order up to max_group_size."""
+    raw_order: list[Any],
+    max_group_size: int,
+    min_group_size: int = 1,
+    nb_remaining_group: int = None,
+    current_combination: list[Any] = None,
+    next_index: int = None,
+    all_combinations: list[list[Any]] = None,
+) -> list[list[Any]]:
+    """Computes all possible combinations of values of order up to max_group_size.
 
+    Parameters
+    ----------
+    raw_order : list[Any]
+        _description_
+    max_group_size : int
+        _description_
+    min_group_size : int, optional
+        _description_, by default 1
+    nb_remaining_group : int, optional
+        _description_, by default None
+    current_combination : list[Any], optional
+        _description_, by default None
+    next_index : int, optional
+        _description_, by default None
+    all_combinations : list[list[Any]], optional
+        _description_, by default None
+
+    Returns
+    -------
+    list[list[Any]]
+        _description_
+    """
     # initiating recursive attributes
     if current_combination is None:
         current_combination = []
@@ -554,12 +691,6 @@ def consecutive_combinations(
     return all_combinations
 
 
-def xtab_target_rate(xtab: DataFrame) -> DataFrame:
-    """Computes target rate per row for a binary target (column) in a crosstab"""
-
-    return xtab[1].divide(xtab[0]).sort_values()
-
-
 def get_best_association(
     xtab: DataFrame,
     combinations: list[list[str]],
@@ -567,7 +698,26 @@ def get_best_association(
     xtab_dev: DataFrame = None,
     verbose: bool = False,
 ) -> dict[str, Any]:
-    """Computes associations of the xtab for each combination"""
+    """Computes associations of the xtab for each combination
+
+    Parameters
+    ----------
+    xtab : DataFrame
+        _description_
+    combinations : list[list[str]]
+        _description_
+    sort_by : str
+        _description_
+    xtab_dev : DataFrame, optional
+        _description_, by default None
+    verbose : bool, optional
+        _description_, by default False
+
+    Returns
+    -------
+    dict[str, Any]
+        _description_
+    """
 
     # values to groupby indices with
     indices_to_groupby = [
@@ -631,8 +781,22 @@ def get_best_association(
 def add_nan_in_combinations(
     combinations: list[list[str]], str_nan: str, max_n_mod: int
 ) -> list[list[str]]:
-    """Adds nan to each possible group and a last group only with nan if the max_n_mod is not reached by the combination"""
+    """Adds nan to each possible group and a last group only with nan if the max_n_mod is not reached by the combination
 
+    Parameters
+    ----------
+    combinations : list[list[str]]
+        _description_
+    str_nan : str
+        _description_
+    max_n_mod : int
+        _description_
+
+    Returns
+    -------
+    list[list[str]]
+        _description_
+    """
     # iterating over each combination
     nan_combinations = []
     for combination in combinations:
@@ -659,8 +823,20 @@ def add_nan_in_combinations(
 
 
 def order_apply_combination(order: GroupedList, combination: list[list[Any]]) -> GroupedList:
-    """Converts a list of combination to a GroupedList"""
+    """Converts a list of combination to a GroupedList
 
+    Parameters
+    ----------
+    order : GroupedList
+        _description_
+    combination : list[list[Any]]
+        _description_
+
+    Returns
+    -------
+    GroupedList
+        _description_
+    """
     order_copy = GroupedList(order)
     for combi in combination:
         order_copy.group_list(combi, combi[0])
@@ -681,7 +857,7 @@ def xtab_apply_order(xtab: DataFrame, order: GroupedList) -> DataFrame:
     Returns
     -------
     dict[str, Any]
-        _description_
+        Orderd crosstab.
     """
     # checking for input values
     combi_xtab = None
@@ -693,27 +869,30 @@ def xtab_apply_order(xtab: DataFrame, order: GroupedList) -> DataFrame:
     return combi_xtab
 
 
-def load_carver(json_serialized_auto_carver: dict) -> GroupedListDiscretizer:
-    """_summary_
+def load_carver(auto_carver_json: dict) -> BaseDiscretizer:
+    """Allows one to load an AutoCarver saved as a .json file.
+
+    The AutoCarver has to be saved with `json.dump(f, AutoCarver.to_json())`, otherwise there
+    can be no guarantee for it to be restored.
 
     Parameters
     ----------
-    json_serialized_auto_carver : str
-        _description_
+    auto_carver_json : str
+        Loaded .json file using `json.load(f)`.
 
     Returns
     -------
-    GroupedListDiscretizer
-        _description_
+    BaseDiscretizer
+        A fitted AutoCarver.
     """
     # deserializing values_orders
-    values_orders = json_deserialize_values_orders(json_serialized_auto_carver["values_orders"])
+    values_orders = json_deserialize_values_orders(auto_carver_json["values_orders"])
 
     # updating auto_carver attributes
-    json_serialized_auto_carver.update({"values_orders": values_orders})
+    auto_carver_json.update({"values_orders": values_orders})
 
-    # initiating GroupedListDiscretizer
-    auto_carver = GroupedListDiscretizer(**json_serialized_auto_carver)
+    # initiating BaseDiscretizer
+    auto_carver = BaseDiscretizer(**auto_carver_json)
     auto_carver.fit()
 
     return auto_carver

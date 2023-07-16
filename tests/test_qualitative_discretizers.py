@@ -56,7 +56,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
     min_freq = 0.15
 
     discretizer = ChainedDiscretizer(
-        features=ordinal_features,
+        qualitative_features=ordinal_features,
         chained_orders=[level0_to_level1, level1_to_level2],
         min_freq=min_freq,
         values_orders=values_orders,
@@ -156,7 +156,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
         min_freq = 0.15
 
         discretizer = ChainedDiscretizer(
-            features=ordinal_features,
+            qualitative_features=ordinal_features,
             chained_orders=[level0_to_level1, level1_to_level2],
             min_freq=min_freq,
             values_orders=values_orders,
@@ -204,7 +204,9 @@ def test_default_discretizer(x_train: DataFrame) -> None:
     min_freq = 0.02
     # unwanted value in values_orders
     with raises(AssertionError):
-        discretizer = DefaultDiscretizer(features, min_freq, values_orders=values_orders, copy=True)
+        discretizer = DefaultDiscretizer(
+            qualitative_features=features, min_freq=min_freq, values_orders=values_orders, copy=True
+        )
         x_discretized = discretizer.fit_transform(x_train, x_train["quali_ordinal_target"])
 
     # correct feature ordering
@@ -216,7 +218,9 @@ def test_default_discretizer(x_train: DataFrame) -> None:
         "Qualitative_Ordinal": groupedlist_ordinal,
     }
 
-    discretizer = DefaultDiscretizer(features, min_freq, values_orders=values_orders, copy=True)
+    discretizer = DefaultDiscretizer(
+        qualitative_features=features, min_freq=min_freq, values_orders=values_orders, copy=True
+    )
     x_discretized = discretizer.fit_transform(x_train, x_train["quali_ordinal_target"])
 
     assert (
@@ -312,7 +316,9 @@ def test_ordinal_discretizer(x_train: DataFrame) -> None:
     min_freq = 0.01
 
     # discretizing features
-    discretizer = OrdinalDiscretizer(features, values_orders, min_freq, copy=True)
+    discretizer = OrdinalDiscretizer(
+        ordinal_features=features, min_freq=min_freq, values_orders=values_orders, copy=True
+    )
     discretizer.fit_transform(x_train, x_train["quali_ordinal_target"])
 
     expected_ordinal_01 = {
@@ -345,7 +351,9 @@ def test_ordinal_discretizer(x_train: DataFrame) -> None:
     min_freq = 0.08
 
     # discretizing features
-    discretizer = OrdinalDiscretizer(features, values_orders, min_freq, copy=True)
+    discretizer = OrdinalDiscretizer(
+        ordinal_features=features, min_freq=min_freq, values_orders=values_orders, copy=True
+    )
     discretizer.fit_transform(x_train, x_train["quali_ordinal_target"])
 
     expected_ordinal_08 = {
