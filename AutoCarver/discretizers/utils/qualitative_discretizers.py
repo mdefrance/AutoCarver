@@ -430,11 +430,9 @@ class ChainedDiscretizer(BaseDiscretizer):
             verbose=verbose,
         )
 
+        # class specific attributes
         self.min_freq = min_freq
-
         self.chained_orders = [GroupedList(values) for values in chained_orders]
-
-        # parameters to handle missing/unknown values
         self.remove_unknown = remove_unknown
 
         # known_values: all ordered values describe in each level of the chained_orders

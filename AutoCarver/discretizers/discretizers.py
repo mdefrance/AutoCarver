@@ -82,10 +82,10 @@ class Discretizer(BaseDiscretizer):
         See `AutoCarver examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
         """
         # Lists of features per type
-        self.features = list(set(quantitative_features + qualitative_features + ordinal_features))
         if ordinal_features is None:
             ordinal_features = []
         self.ordinal_features = list(set(ordinal_features))
+        self.features = list(set(quantitative_features + qualitative_features + ordinal_features))
 
         # initializing input_dtypes
         self.input_dtypes = {feature: "str" for feature in qualitative_features + ordinal_features}
@@ -272,10 +272,10 @@ class QualitativeDiscretizer(BaseDiscretizer):
         See `AutoCarver examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
         """
         # Lists of features
-        self.features = list(set(qualitative_features + ordinal_features))
         if ordinal_features is None:
             ordinal_features = []
         self.ordinal_features = list(set(ordinal_features))
+        self.features = list(set(qualitative_features + ordinal_features))
 
         # class specific attributes
         self.min_freq = min_freq

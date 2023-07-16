@@ -124,10 +124,10 @@ class AutoCarver(BaseDiscretizer):
         See `AutoCarver examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
         """
         # Lists of features
-        self.features = list(set(quantitative_features + qualitative_features + ordinal_features))
         if ordinal_features is None:
             ordinal_features = []
         self.ordinal_features = list(set(ordinal_features))
+        self.features = list(set(quantitative_features + qualitative_features + ordinal_features))
 
         # checking that qualitatitve and quantitative featues are distinct
         assert all(
