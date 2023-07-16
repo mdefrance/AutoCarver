@@ -59,7 +59,6 @@ jobs:
           cd ${{ github.workspace }}
           black --check .
           isort . --check-only
-          cd ..
-          pylint autocarver --fail-under=8
+          pylint $(find autocarver -name "*.py" | xargs) --fail-under=8
           # flake8 . 
   
