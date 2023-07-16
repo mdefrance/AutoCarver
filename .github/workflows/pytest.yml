@@ -34,6 +34,3 @@ jobs:
 
       - name: Run tests
         run: python -m pytest -v --cov ${{ github.workspace }}/tests
-
-      - name: Display Job ID
-        run: echo "Job ID: ${{ github.job }}"
