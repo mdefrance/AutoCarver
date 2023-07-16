@@ -1,3 +1,5 @@
+""" Loads Discretization tools."""
+
 from .discretizers import Discretizer, QualitativeDiscretizer, QuantitativeDiscretizer
 from .utils.base_discretizers import BaseDiscretizer
 from .utils.grouped_list import GroupedList

@@ -237,7 +237,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X: DataFrame, y: Series = None) -> DataFrame:
-        """Applies discretization to a DataFrame's columns. 
+        """Applies discretization to a DataFrame's columns.
 
         * For each feature's modality, the associated group label is attributed as definid by ``values_orders``.
         * If ``output_dtype="float"``, converts labels into floats.
@@ -287,7 +287,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         return x_copy
 
     def _transform_quantitative(self, X: DataFrame, y: Series) -> DataFrame:
-        """Applies discretization to a DataFrame's Quantitative columns. 
+        """Applies discretization to a DataFrame's Quantitative columns.
 
         * Data types are matched as ``input_dtypes=="str"`` for qualitative features and ``input_dtypes=="float"`` for quantitative ones.
         * If ``copye=True``, the input DataFrame will be copied.
@@ -348,7 +348,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         return X
 
     def _transform_qualitative(self, X: DataFrame, y: Series = None) -> DataFrame:
-        """Applies discretization to a DataFrame's Qualitative columns. 
+        """Applies discretization to a DataFrame's Qualitative columns.
 
         * Data types are matched as ``input_dtypes=="str"`` for qualitative features and ``input_dtypes=="float"`` for quantitative ones.
         * If ``copye=True``, the input DataFrame will be copied.
