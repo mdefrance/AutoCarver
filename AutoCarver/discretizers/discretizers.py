@@ -17,7 +17,7 @@ from .utils.type_discretizers import StringDiscretizer
 class Discretizer(BaseDiscretizer):
     """Automatic discretization pipeline of continuous, discrete, categorical and ordinal features.
 
-    Pipeline steps: QuantitativeDiscretizer, QualitativeDiscretizer
+    Pipeline steps: :ref:`QuantitativeDiscretizer`, :ref:`QualitativeDiscretizer`.
 
     Modalities/values of features are grouped according to there respective orders:
 
@@ -39,7 +39,7 @@ class Discretizer(BaseDiscretizer):
         str_nan: str = "__NAN__",
         str_default: str = "__OTHER__",
     ) -> None:
-        """Initiates a Discretizer (pipeline).
+        """Initiates a ``Discretizer`` (pipeline).
 
         Parameters
         ----------
@@ -82,10 +82,10 @@ class Discretizer(BaseDiscretizer):
         See `AutoCarver examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
         """
         # Lists of features per type
-        self.features = list(set(quantitative_features + qualitative_features + ordinal_features))
         if ordinal_features is None:
             ordinal_features = []
         self.ordinal_features = list(set(ordinal_features))
+        self.features = list(set(quantitative_features + qualitative_features + ordinal_features))
 
         # initializing input_dtypes
         self.input_dtypes = {feature: "str" for feature in qualitative_features + ordinal_features}
@@ -205,7 +205,7 @@ class Discretizer(BaseDiscretizer):
 class QualitativeDiscretizer(BaseDiscretizer):
     """Automatic discretiziation pipeline of categorical and ordinal features.
 
-    Pipeline steps: DefaultDiscretizer, OrdinalDiscretizer
+    Pipeline steps: :ref:`DefaultDiscretizer`, :ref:`StringDiscretizer`, :ref:`OrdinalDiscretizer`.
 
     Modalities/values of features are grouped according to there respective orders:
 
@@ -226,7 +226,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
         str_nan: str = "__NAN__",
         str_default: str = "__OTHER__",
     ) -> None:
-        """Initiates a QualitativeDiscretizer (pipeline).
+        """Initiates a ``QualitativeDiscretizer`` (pipeline).
 
         Parameters
         ----------
@@ -236,46 +236,46 @@ class QualitativeDiscretizer(BaseDiscretizer):
         min_freq : float
             Minimum frequency per grouped modalities.
 
-            * Features whose most frequent modality is less frequent than `min_freq` will not be discretized.
+            * Features whose most frequent modality is less frequent than ``min_freq`` will not be discretized.
             * Sets the number of quantiles in which to discretize the continuous features.
             * Sets the minimum frequency of a quantitative feature's modality.
 
             **Tip**: should be set between 0.02 (slower, preciser, less robust) and 0.05 (faster, more robust)
 
         ordinal_features : list[str], optional
-            List of column names of ordinal features to be discretized. For those features a list of values has to be provided in the `values_orders` dict, by default None
+            List of column names of ordinal features to be discretized. For those features a list of values has to be provided in the ``values_orders`` dict, by default ``None``
 
         values_orders : dict[str, GroupedList], optional
             Dict of feature's column names and there associated ordering.
-            If lists are passed, a GroupedList will automatically be initiated, by default None
+            If lists are passed, a GroupedList will automatically be initiated, by default ``None``
 
         input_dtypes : Union[str, dict[str, str]], optional
-            Input data type, converted to a dict of the provided type for each feature, by default "str"
+            Input data type, converted to a dict of the provided type for each feature, by default ``"str"``
 
-            * If `input_dtypes="str"`, features are considered as qualitative.
-            * If `input_dtypes="float"`, features are considered as quantitative.
+            * If ``"str"``, features are considered as qualitative.
+            * If ``"float"``, features are considered as quantitative.
 
         copy : bool, optional
-            If `copy=True`, feature processing at transform is applied to a copy of the provided DataFrame, by default False
+            If ``True``, feature processing at transform is applied to a copy of the provided DataFrame, by default ``False``
 
         verbose : bool, optional
-            If `verbose=True`, prints raw Discretizers Fit and Transform steps, by default False
+            If ``True``, prints raw Discretizers Fit and Transform steps, by default ``False``
 
         str_nan : str, optional
-            String representation to input `numpy.nan`. If `dropna=False`, `numpy.nan` will be left unchanged, by default "__NAN__"
+            String representation to input ``numpy.nan``. If ``dropna=False``, ``numpy.nan`` will be left unchanged, by default ``"__NAN__"``
 
         str_default : str, optional
-            String representation for default qualitative values, i.e. values less frequent than `min_freq`, by default "__OTHER__"
+            String representation for default qualitative values, i.e. values less frequent than ``min_freq``, by default ``"__OTHER__"``
 
         Examples
         --------
         See `AutoCarver examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
         """
         # Lists of features
-        self.features = list(set(qualitative_features + ordinal_features))
         if ordinal_features is None:
             ordinal_features = []
         self.ordinal_features = list(set(ordinal_features))
+        self.features = list(set(qualitative_features + ordinal_features))
 
         # class specific attributes
         self.min_freq = min_freq
@@ -311,7 +311,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
         Parameters
         ----------
         X : DataFrame
-            Dataset used to discretize. Needs to have columns has specified in `features`.
+            Dataset used to discretize. Needs to have columns has specified in ``QualitativeDiscretizer.features``.
 
         y : Series
             Binary target feature with wich the association is maximized.
@@ -395,7 +395,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
         Parameters
         ----------
         X : DataFrame
-            Dataset used to discretize. Needs to have columns has specified in `features`.
+            Dataset used to discretize. Needs to have columns has specified in ``QualitativeDiscretizer.features``.
 
         y : Series
             Binary target feature.
@@ -443,7 +443,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
 class QuantitativeDiscretizer(BaseDiscretizer):
     """Automatic discretization pipeline of continuous and discrete features.
 
-    Pipeline steps: QuantileDiscretizer, OrdinalDiscretizer
+    Pipeline steps: :ref:`QuantileDiscretizer`, :ref:`OrdinalDiscretizer`
 
     Modalities/values of features are grouped according to there respective orders:
 
@@ -461,7 +461,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         copy: bool = False,
         str_nan: str = "__NAN__",
     ) -> None:
-        """Initiates a Discretizer (pipeline).
+        """Initiates a ``QuantitativeDiscretizer`` (pipeline).
 
         Parameters
         ----------
@@ -471,7 +471,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         min_freq : float
             Minimum frequency per grouped modalities.
 
-            * Features whose most frequent modality is less frequent than `min_freq` will not be discretized.
+            * Features whose most frequent modality is less frequent than ``min_freq`` will not be discretized.
             * Sets the number of quantiles in which to discretize the continuous features.
             * Sets the minimum frequency of a quantitative feature's modality.
 
@@ -479,22 +479,22 @@ class QuantitativeDiscretizer(BaseDiscretizer):
 
         values_orders : dict[str, GroupedList], optional
             Dict of feature's column names and there associated ordering.
-            If lists are passed, a GroupedList will automatically be initiated, by default None
+            If lists are passed, a GroupedList will automatically be initiated, by default ``None``
 
         input_dtypes : Union[str, dict[str, str]], optional
-            Input data type, converted to a dict of the provided type for each feature, by default "str"
+            Input data type, converted to a dict of the provided type for each feature, by default ``"str"``
 
-            * If `input_dtypes="str"`, features are considered as qualitative.
-            * If `input_dtypes="float"`, features are considered as quantitative.
+            * If ``"str"``, features are considered as qualitative.
+            * If ``"float"``, features are considered as quantitative.
 
         copy : bool, optional
-            If `copy=True`, feature processing at transform is applied to a copy of the provided DataFrame, by default False
+            If ``True``, feature processing at transform is applied to a copy of the provided DataFrame, by default ``False``
 
         verbose : bool, optional
-            If `verbose=True`, prints raw Discretizers Fit and Transform steps, by default False
+            If ``True``, prints raw Discretizers Fit and Transform steps, by default ``False``
 
         str_nan : str, optional
-            String representation to input `numpy.nan`. If `dropna=False`, `numpy.nan` will be left unchanged, by default "__NAN__"
+            String representation to input ``numpy.nan``. If ``dropna=False``, ``numpy.nan`` will be left unchanged, by default ``"__NAN__"``
 
         Examples
         --------
@@ -520,7 +520,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         Parameters
         ----------
         X : DataFrame
-            Dataset used to discretize. Needs to have columns has specified in `features`.
+            Dataset used to discretize. Needs to have columns has specified in ``QuantitativeDiscretizer.features``.
 
         y : Series
             Binary target feature with wich the association is maximized.
@@ -548,7 +548,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         Parameters
         ----------
         X : DataFrame
-            Dataset used to discretize. Needs to have columns has specified in `features`.
+            Dataset used to discretize. Needs to have columns has specified in ``QuantitativeDiscretizer.features``.
 
         y : Series
             Binary target feature.

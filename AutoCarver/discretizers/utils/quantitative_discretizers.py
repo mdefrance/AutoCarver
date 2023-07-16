@@ -53,16 +53,16 @@ class QuantileDiscretizer(BaseDiscretizer):
 
         values_orders : dict[str, GroupedList], optional
             Dict of feature's column names and there associated ordering.
-            If lists are passed, a GroupedList will automatically be initiated, by default None
+            If lists are passed, a GroupedList will automatically be initiated, by default ``None``
 
         copy : bool, optional
-            If `copy=True`, feature processing at transform is applied to a copy of the provided DataFrame, by default False
+            If ``True``, feature processing at transform is applied to a copy of the provided DataFrame, by default ``False``
 
         verbose : bool, optional
-            If `verbose=True`, prints raw Discretizers Fit and Transform steps, by default False
+            If ``True``, prints raw Discretizers Fit and Transform steps, by default ``False``
 
         str_nan : str, optional
-            String representation to input `numpy.nan`. If `dropna=False`, `numpy.nan` will be left unchanged, by default "__NAN__"
+            String representation to input ``numpy.nan``. If ``dropna=False``, ``numpy.nan`` will be left unchanged, by default ``"__NAN__"``
         """
         # Initiating BaseDiscretizer
         super().__init__(
@@ -84,7 +84,7 @@ class QuantileDiscretizer(BaseDiscretizer):
         Parameters
         ----------
         X : DataFrame
-            Dataset used to discretize. Needs to have columns has specified in `features`.
+            Dataset used to discretize. Needs to have columns has specified in ``QuantileDiscretizer.features``.
 
         y : Series
             Binary target feature, not used, by default None

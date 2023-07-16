@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  pytest_light:
+  pytest_push:
     runs-on: ubuntu-latest
 
     # runs only on push
