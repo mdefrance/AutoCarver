@@ -8,7 +8,7 @@ FeatureSelector, an association centric tool for feature pre-selection
 
 
 .. autoclass:: AutoCarver.feature_selection.FeatureSelector
-    :members:
+    :members: select
 
 .. _Measures:
 

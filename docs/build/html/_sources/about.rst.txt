@@ -7,7 +7,7 @@ About
 Why AutoCarver?
 ---------------
 
-**AutoCarver** is a powerful Python package designed to address the fundamental question: What's the best processing for my model's features?
+**AutoCarver** is a powerful Python package designed to address the fundamental question  What's the best processing for my model's features?
 
 It offers an automated and optimized approach to processing and engineering your data, resulting in improved model performance, enhanced explainability, and reduced feature dimensionality.
 As of today, this set of tools is available for binary classification problems only.
@@ -26,67 +26,6 @@ Key Features:
 
 ``AutoCarver`` is a valuable tool for data scientists and practitioners involved in binary classification problems, such as credit scoring, fraud detection, and risk assessment. By leveraging its automated feature processing capabilities, you can unlock the full potential of your data, leading to more accurate predictions, improved model explainability, and better decision-making in your classification tasks.
 
-
-It can be used to process and select features in binary classification problems:
-
-* Credit Scoring
-
-* Fraud Detection
-
-* Drift Detection
-
-* Churn Detection and Prevention
-
-* Palability Score
-
-
-
-Feature Discretization
-......................
-
-Discretizers are the base of AutoCarver (it is one itself).
-
-
-Quantitative feature discretization
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-works for continuous and discrete quantitative features
-
-A two step process:
-
- 1. QuantileDiscretizer:
- 
- * Cuts by quantiles
-
- * All values from -inf to inf covered
-
- * Over-represented values are left by themselves
-
- * outputs an ordinal qualitative feature
-
-2.
-
- * OrdinalDiscretizer: 
-
-
-
-Qualitative Discretizer
-^^^^^^^^^^^^^^^^^^^^^^^
-
-AutoCarver
-..........
-
- 1. **AutoCarver**: Bucketization of qualitative, ordinal, discrete and quantitative features that maximizes association with a binary target
-
- * vectorized groupby sum
- * on crosstabs
- * all consecutive combinations
-
-
-FeatureSelector
-...............
-
- 2. **FeatureSelector**: Feature selection that maximizes association with binary target that offers control over inter-feature association
 
 
 Performances

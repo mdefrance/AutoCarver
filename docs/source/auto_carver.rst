@@ -7,9 +7,7 @@ AutoCarver, automated, fast paced data processing
 -------------------------------------------------  
 
 .. autoclass:: AutoCarver.AutoCarver
-    :members:
-
-.. autofunction:: AutoCarver.AutoCarver.transform
+    :members: fit, transform, fit_transform
 
 .. autofunction:: AutoCarver.AutoCarver.summary
 

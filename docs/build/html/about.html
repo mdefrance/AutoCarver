@@ -46,16 +46,7 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">About</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#why-autocarver">Why AutoCarver?</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#feature-discretization">Feature Discretization</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#quantitative-feature-discretization">Quantitative feature discretization</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#qualitative-discretizer">Qualitative Discretizer</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#autocarver">AutoCarver</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#featureselector">FeatureSelector</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="#why-autocarver">Why AutoCarver?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#performances">Performances</a></li>
 </ul>
 </li>
@@ -99,7 +90,7 @@
 </div>
 <section id="why-autocarver">
 <h2>Why AutoCarver?<a class="headerlink" href="#why-autocarver" title="Permalink to this heading"></a></h2>
-<p><strong>AutoCarver</strong> is a powerful Python package designed to address the fundamental question: What’s the best processing for my model’s features?</p>
+<p><strong>AutoCarver</strong> is a powerful Python package designed to address the fundamental question  What’s the best processing for my model’s features?</p>
 <p>It offers an automated and optimized approach to processing and engineering your data, resulting in improved model performance, enhanced explainability, and reduced feature dimensionality.
 As of today, this set of tools is available for binary classification problems only.</p>
 <p>Key Features:</p>
@@ -111,64 +102,6 @@ As of today, this set of tools is available for binary classification problems o
 <li><p><strong>Robustness Testing</strong>: <code class="docutils literal notranslate"><span class="pre">AutoCarver</span></code> goes beyond feature processing by assessing the robustness of the selected modalities. It performs tests to evaluate the stability and consistency of the chosen features across different datasets or subsets, ensuring their reliability in various scenarios.</p></li>
 </ol>
 <p><code class="docutils literal notranslate"><span class="pre">AutoCarver</span></code> is a valuable tool for data scientists and practitioners involved in binary classification problems, such as credit scoring, fraud detection, and risk assessment. By leveraging its automated feature processing capabilities, you can unlock the full potential of your data, leading to more accurate predictions, improved model explainability, and better decision-making in your classification tasks.</p>
-<p>It can be used to process and select features in binary classification problems:</p>
-<ul class="simple">
-<li><p>Credit Scoring</p></li>
-<li><p>Fraud Detection</p></li>
-<li><p>Drift Detection</p></li>
-<li><p>Churn Detection and Prevention</p></li>
-<li><p>Palability Score</p></li>
-</ul>
-<section id="feature-discretization">
-<h3>Feature Discretization<a class="headerlink" href="#feature-discretization" title="Permalink to this heading"></a></h3>
-<p>Discretizers are the base of AutoCarver (it is one itself).</p>
-<section id="quantitative-feature-discretization">
-<h4>Quantitative feature discretization<a class="headerlink" href="#quantitative-feature-discretization" title="Permalink to this heading"></a></h4>
-<p>works for continuous and discrete quantitative features</p>
-<p>A two step process:</p>
-<blockquote>
-<div><ol class="arabic simple">
-<li><p>QuantileDiscretizer:</p></li>
-</ol>
-<ul class="simple">
-<li><p>Cuts by quantiles</p></li>
-<li><p>All values from -inf to inf covered</p></li>
-<li><p>Over-represented values are left by themselves</p></li>
-<li><p>outputs an ordinal qualitative feature</p></li>
-</ul>
-</div></blockquote>
-<ol class="arabic simple" start="2">
-<li><ul class="simple">
-<li><p>OrdinalDiscretizer:</p></li>
-</ul>
-</li>
-</ol>
-</section>
-<section id="qualitative-discretizer">
-<h4>Qualitative Discretizer<a class="headerlink" href="#qualitative-discretizer" title="Permalink to this heading"></a></h4>
-</section>
-</section>
-<section id="autocarver">
-<h3>AutoCarver<a class="headerlink" href="#autocarver" title="Permalink to this heading"></a></h3>
-<blockquote>
-<div><ol class="arabic simple">
-<li><p><strong>AutoCarver</strong>: Bucketization of qualitative, ordinal, discrete and quantitative features that maximizes association with a binary target</p></li>
-</ol>
-<ul class="simple">
-<li><p>vectorized groupby sum</p></li>
-<li><p>on crosstabs</p></li>
-<li><p>all consecutive combinations</p></li>
-</ul>
-</div></blockquote>
-</section>
-<section id="featureselector">
-<h3>FeatureSelector<a class="headerlink" href="#featureselector" title="Permalink to this heading"></a></h3>
-<blockquote>
-<div><ol class="arabic simple" start="2">
-<li><p><strong>FeatureSelector</strong>: Feature selection that maximizes association with binary target that offers control over inter-feature association</p></li>
-</ol>
-</div></blockquote>
-</section>
 </section>
 <section id="performances">
 <h2>Performances<a class="headerlink" href="#performances" title="Permalink to this heading"></a></h2>
