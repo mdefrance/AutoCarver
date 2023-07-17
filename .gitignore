@@ -7,5 +7,5 @@ AutoCarver.egg-info/top_level.txt
 AutoCarver.egg-info/SOURCES.txt
 *.coverage
 *.json
-test_package.ipynb
+*.ipynb
 *.ipynb_checkpoints
