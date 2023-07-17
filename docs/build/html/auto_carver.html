@@ -52,9 +52,10 @@
 <li class="toctree-l2"><a class="reference internal" href="#autocarver-automated-fast-paced-data-processing">AutoCarver, automated, fast paced data processing</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#AutoCarver.AutoCarver"><code class="docutils literal notranslate"><span class="pre">AutoCarver</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#AutoCarver.AutoCarver.fit"><code class="docutils literal notranslate"><span class="pre">AutoCarver.fit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.AutoCarver.fit_transform"><code class="docutils literal notranslate"><span class="pre">AutoCarver.fit_transform()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.AutoCarver.transform"><code class="docutils literal notranslate"><span class="pre">AutoCarver.transform()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#AutoCarver.AutoCarver.transform"><code class="docutils literal notranslate"><span class="pre">transform()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#AutoCarver.AutoCarver.summary"><code class="docutils literal notranslate"><span class="pre">summary()</span></code></a></li>
 </ul>
 </li>
@@ -177,11 +178,32 @@ It should have the same distribution as X.</p></li>
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoCarver.AutoCarver.fit_transform">
+<span class="sig-name descname"><span class="pre">fit_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">fit_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.AutoCarver.fit_transform" title="Permalink to this definition"></a></dt>
+<dd><p>Fit to data, then transform it.</p>
+<p>Fits transformer to <cite>X</cite> and <cite>y</cite> with optional parameters <cite>fit_params</cite>
+and returns a transformed version of <cite>X</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>array-like</em><em> of </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – Input samples.</p></li>
+<li><p><strong>y</strong> (<em>array-like</em><em> of </em><em>shape</em><em> (</em><em>n_samples</em><em>,</em><em>) or </em><em>(</em><em>n_samples</em><em>, </em><em>n_outputs</em><em>)</em><em>,                 </em><em>default=None</em>) – Target values (None for unsupervised transformations).</p></li>
+<li><p><strong>**fit_params</strong> (<em>dict</em>) – Additional fit parameters.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>X_new</strong> – Transformed array.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray array of shape (n_samples, n_features_new)</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="py function">
+<dl class="py method">
 <dt class="sig sig-object py" id="AutoCarver.AutoCarver.transform">
-<span class="sig-prename descclassname"><span class="pre">AutoCarver.AutoCarver.</span></span><span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#AutoCarver.AutoCarver.transform" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#AutoCarver.AutoCarver.transform" title="Permalink to this definition"></a></dt>
 <dd><p>Applies discretization to a DataFrame’s columns.</p>
 <ul class="simple">
 <li><p>For each feature’s modality, the associated group label is attributed as definid by <code class="docutils literal notranslate"><span class="pre">values_orders</span></code>.</p></li>
@@ -203,6 +225,8 @@ It should have the same distribution as X.</p></li>
 <dd class="field-odd"><p>DataFrame</p>
 </dd>
 </dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py function">

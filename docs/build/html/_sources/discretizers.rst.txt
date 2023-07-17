@@ -9,7 +9,7 @@ Base Discretizer
 ----------------
 
 .. autoclass:: AutoCarver.discretizers.BaseDiscretizer
-    :members:
+    :members: fit, transform, fit_transform, to_json, summary
 
 
 .. note::

@@ -53,6 +53,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#base-discretizer">Base Discretizer</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#AutoCarver.discretizers.BaseDiscretizer"><code class="docutils literal notranslate"><span class="pre">BaseDiscretizer</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.BaseDiscretizer.fit"><code class="docutils literal notranslate"><span class="pre">BaseDiscretizer.fit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.BaseDiscretizer.fit_transform"><code class="docutils literal notranslate"><span class="pre">BaseDiscretizer.fit_transform()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.BaseDiscretizer.summary"><code class="docutils literal notranslate"><span class="pre">BaseDiscretizer.summary()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.BaseDiscretizer.to_json"><code class="docutils literal notranslate"><span class="pre">BaseDiscretizer.to_json()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#AutoCarver.discretizers.BaseDiscretizer.transform"><code class="docutils literal notranslate"><span class="pre">BaseDiscretizer.transform()</span></code></a></li>
@@ -204,6 +205,29 @@ X, by default <code class="docutils literal notranslate"><span class="pre">False
 <li><p><strong>X</strong> (<em>DataFrame</em>) – Contains columns named after <code class="docutils literal notranslate"><span class="pre">BaseDiscretizer.features</span></code> attribute, by default None</p></li>
 <li><p><strong>y</strong> (<em>Series</em><em>, </em><em>optional</em>) – Model target, by default None</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoCarver.discretizers.BaseDiscretizer.fit_transform">
+<span class="sig-name descname"><span class="pre">fit_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">fit_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.BaseDiscretizer.fit_transform" title="Permalink to this definition"></a></dt>
+<dd><p>Fit to data, then transform it.</p>
+<p>Fits transformer to <cite>X</cite> and <cite>y</cite> with optional parameters <cite>fit_params</cite>
+and returns a transformed version of <cite>X</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>array-like</em><em> of </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – Input samples.</p></li>
+<li><p><strong>y</strong> (<em>array-like</em><em> of </em><em>shape</em><em> (</em><em>n_samples</em><em>,</em><em>) or </em><em>(</em><em>n_samples</em><em>, </em><em>n_outputs</em><em>)</em><em>,                 </em><em>default=None</em>) – Target values (None for unsupervised transformations).</p></li>
+<li><p><strong>**fit_params</strong> (<em>dict</em>) – Additional fit parameters.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>X_new</strong> – Transformed array.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray array of shape (n_samples, n_features_new)</p>
 </dd>
 </dl>
 </dd></dl>

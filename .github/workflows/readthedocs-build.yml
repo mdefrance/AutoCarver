@@ -1,14 +1,13 @@
 name: ReadTheDocs Build
 
 on:
-  workflow_dispatch
-#  push:
-#    branches:
-#      - main
+  push:
+    branches:
+      - main
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Repository
