@@ -374,7 +374,7 @@ class ChainedDiscretizer(BaseDiscretizer):
         chained_orders: list[GroupedList],
         *,
         values_orders: dict[str, GroupedList] = None,
-        unknown_handling: str = 'raise',
+        unknown_handling: str = "raise",
         copy: bool = False,
         verbose: bool = False,
         str_nan: str = "__NAN__",
@@ -405,7 +405,7 @@ class ChainedDiscretizer(BaseDiscretizer):
 
         unknown_handling : str, optional
             Whether or not to remove unknown values, by default ``'raise'``.
-            
+
             * ``'raise'``, unknown values raise an ``AssertionError``.
             * ``'drop'``, unknown values are grouped with ``str_nan``.
 
@@ -435,7 +435,10 @@ class ChainedDiscretizer(BaseDiscretizer):
         # class specific attributes
         self.min_freq = min_freq
         self.chained_orders = [GroupedList(values) for values in chained_orders]
-        assert unknown_handling in ["drop", "raise"], "Wrong value for attribute unknown_handling. Choose from ['drop', 'raise']."
+        assert unknown_handling in [
+            "drop",
+            "raise",
+        ], "Wrong value for attribute unknown_handling. Choose from ['drop', 'raise']."
         self.unknown_handling = unknown_handling
 
         # known_values: all ordered values describe in each level of the chained_orders
@@ -548,14 +551,15 @@ class ChainedDiscretizer(BaseDiscretizer):
 
             # checking for unknown values (missing from known_values)
             unknown_values = [
-                value for value in x_copy[feature].unique()
+                value
+                for value in x_copy[feature].unique()
                 if value not in self.known_values and value != self.str_nan
             ]
 
             # converting unknown values to NaN
             if len(unknown_values) > 0:
                 # raising an error
-                if self.unknown_handling == 'raise':
+                if self.unknown_handling == "raise":
                     assert (
                         not len(unknown_values) > 0
                     ), f"Order for feature '{feature}' needs to be provided for values: {str(unknown_values)}, otherwise set remove_unknown='drop' (policy remove_unknown='raise')"

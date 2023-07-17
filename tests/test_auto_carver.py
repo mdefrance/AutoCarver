@@ -135,7 +135,7 @@ def test_auto_carver(
         chained_orders=[level0_to_level1, level1_to_level2],
         min_freq=min_freq,
         values_orders=values_orders,
-        unknown_handling='drop',
+        unknown_handling="drop",
         copy=copy,
     )
     x_discretized = chained_discretizer.fit_transform(x_train)
