@@ -311,6 +311,14 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         if self.copy:
             x_copy = X.copy()
 
+        # applying default discretization for concerned features
+        for feature in self.features:
+            known_values = self.values_orders[feature].values()
+            if self.str_default in known_values:
+                known_values_index = x_copy[feature].isin(known_values)
+                nans = (x_copy[feature].isna()) | (x_copy[feature] == self.str_nan)
+                x_copy.loc[(~known_values_index) & (~nans), feature] = self.str_default
+
         # transforming quantitative features
         if len(self.quantitative_features) > 0:
             if self.verbose:  # verbose if requested

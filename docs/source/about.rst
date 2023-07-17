@@ -26,12 +26,24 @@ Key Features:
 
 ``AutoCarver`` is a valuable tool for data scientists and practitioners involved in binary classification problems, such as credit scoring, fraud detection, and risk assessment. By leveraging its automated feature processing capabilities, you can unlock the full potential of your data, leading to more accurate predictions, improved model explainability, and better decision-making in your classification tasks.
 
+Functionnal summary
+-------------------
+
+``AutoCarver`` pvovides the following functionnalities.
+
+
+.. csv-table::
+   :header: min_freq, max_n_mod, X.shape[0], len(features), Execution Time
+
+
+   0.01, 5, 100000000, 15, 0.001
+   0.02, 4, 100000000, 15, 0.001
 
 
 Performances
 ------------
 
-Execution time has been measured for several values of the key paramaters of `AutoCarver`.
+Execution time has been measured for several values of the key paramaters of ``AutoCarver``.
 
 
 .. csv-table::
