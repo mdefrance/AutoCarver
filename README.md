@@ -7,7 +7,10 @@
     <img src='https://readthedocs.org/projects/autocarver/badge/?version=latest' alt='Documentation Status' />
 </p>
 
-This is a work in progress.
+
+# ReadTheDocs
+
+Go check out the brand new package documentation at [ReadTheDocs](https://autocarver.readthedocs.io/en/latest/index.html)!
 
 # AutoCarver
 
@@ -39,7 +42,3 @@ AutoCarver can be installed from [PyPI](https://pypi.org/project/AutoCarver):
 pip install autocarver
 </pre>
 
-
-## ReadTheDocs
-
-Go check out the brand new package documentation at [ReadTheDocs](https://autocarver.readthedocs.io/en/latest/index.html)!
