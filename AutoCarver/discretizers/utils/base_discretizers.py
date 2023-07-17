@@ -368,7 +368,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         # filling up nans with specified value
         if self.str_nan:
             X[self.qualitative_features] = X[self.qualitative_features].fillna(self.str_nan)
-
+            
         # checking that all unique values in X are in values_orders
         check_new_values(
             X,

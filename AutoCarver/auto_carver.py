@@ -40,6 +40,7 @@ class AutoCarver(BaseDiscretizer):
         sort_by: str = "tschuprowt",
         output_dtype: str = "float",
         dropna: bool = True,
+        unknown_handling: str= "raises",
         copy: bool = False,
         verbose: bool = False,
         pretty_print: bool = False,
@@ -168,7 +169,7 @@ class AutoCarver(BaseDiscretizer):
         # class specific attributes
         self.min_freq = min_freq  # minimum frequency per base bucket
         self.max_n_mod = max_n_mod  # maximum number of modality per feature
-        # self.min_carved_freq = min_carved_freq
+        # self.min_carved_freq = min_carved_freq  # TODO
         self.min_group_size = 1
         self.pretty_print = pretty_print
         measures = ["tschuprowt", "cramerv"]  # association measure used to find the best groups
@@ -176,6 +177,9 @@ class AutoCarver(BaseDiscretizer):
             sort_by in measures
         ), f"""Measure '{sort_by}' not yet implemented. Choose from: {str(measures)}."""
         self.sort_by = sort_by
+
+        assert unknown_handling in ["drop", "raises", "best", "worst"], "Wrong value for attribute unknown_handling. Choose from ['drop', 'raises', 'best', 'worst']."
+        self.unknown_handling = unknown_handling
 
     def _prepare_data(
         self,
@@ -261,6 +265,7 @@ class AutoCarver(BaseDiscretizer):
             values_orders=self.values_orders,
             str_nan=self.str_nan,
             str_default=self.str_default,
+            # unknwon_handling=self.unknown_handling,  # TODO
             copy=True,  # copying anyways, otherwise no discretization from start to finish
             verbose=self.verbose,
         )

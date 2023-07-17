@@ -77,22 +77,25 @@ class GroupedList(list):
             # initiating the values with the provided list of keys
             self.content = {v: [v] for v in iterable}
 
-    def get(self, key: Any) -> list[Any]:
+    def get(self, key: Any, default: Any = None) -> list[Any]:
         """List of values content in key
 
         Parameters
         ----------
         key : Any
             Group.
+        default : Any, optional
+            Value to return if key was not found, by default None
 
         Returns
         -------
         list[Any]
             Values content in key
         """
-
         # default to fing an element
-        found = self.content.get(key)
+        if default is None:
+            default_value = []
+        found = self.content.get(key, default_value)
 
         return found
 
