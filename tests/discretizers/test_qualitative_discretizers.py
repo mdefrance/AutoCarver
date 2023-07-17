@@ -19,7 +19,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
     x_train : DataFrame
         Simulated Train DataFrame
     """
-    ordinal_features = ["Qualitative_Ordinal", "Qualitative_Ordinal_lownan"]
+    chained_features = ["Qualitative_Ordinal", "Qualitative_Ordinal_lownan"]
     values_orders = {
         "Qualitative_Ordinal_lownan": [
             "Low+",
@@ -56,7 +56,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
     min_freq = 0.15
 
     discretizer = ChainedDiscretizer(
-        qualitative_features=ordinal_features,
+        qualitative_features=chained_features,
         chained_orders=[level0_to_level1, level1_to_level2],
         min_freq=min_freq,
         values_orders=values_orders,
@@ -156,7 +156,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
         min_freq = 0.15
 
         discretizer = ChainedDiscretizer(
-            qualitative_features=ordinal_features,
+            qualitative_features=chained_features,
             chained_orders=[level0_to_level1, level1_to_level2],
             min_freq=min_freq,
             values_orders=values_orders,

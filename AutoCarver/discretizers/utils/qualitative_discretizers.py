@@ -374,7 +374,7 @@ class ChainedDiscretizer(BaseDiscretizer):
         chained_orders: list[GroupedList],
         *,
         values_orders: dict[str, GroupedList] = None,
-        remove_unknown: bool = True,
+        unknown_handling: str = "raise",
         copy: bool = False,
         verbose: bool = False,
         str_nan: str = "__NAN__",
@@ -403,9 +403,11 @@ class ChainedDiscretizer(BaseDiscretizer):
             Dict of feature's column names and there associated ordering.
             If lists are passed, a GroupedList will automatically be initiated, by default ``None``
 
-        remove_unknown : bool, optional
-            Whether or not to remove unknown values, by default True.
-            If ``True``, unknown values are grouped into the value ``str_nan``
+        unknown_handling : str, optional
+            Whether or not to remove unknown values, by default ``'raise'``.
+
+            * ``'raise'``, unknown values raise an ``AssertionError``.
+            * ``'drop'``, unknown values are grouped with ``str_nan``.
 
         copy : bool, optional
             If ``True``, feature processing at transform is applied to a copy of the provided DataFrame, by default ``False``
@@ -433,7 +435,11 @@ class ChainedDiscretizer(BaseDiscretizer):
         # class specific attributes
         self.min_freq = min_freq
         self.chained_orders = [GroupedList(values) for values in chained_orders]
-        self.remove_unknown = remove_unknown
+        assert unknown_handling in [
+            "drop",
+            "raise",
+        ], "Wrong value for attribute unknown_handling. Choose from ['drop', 'raise']."
+        self.unknown_handling = unknown_handling
 
         # known_values: all ordered values describe in each level of the chained_orders
         # starting off with first level
@@ -533,14 +539,57 @@ class ChainedDiscretizer(BaseDiscretizer):
             # updating values_orders accordingly
             self.values_orders.update(stringer.values_orders)
 
+        # filling nans
+        x_copy = x_copy.fillna(self.str_nan)
+
+        # adding nans and unknown values
+        for feature in self.features:
+            # adding NaNs to the order if any
+            order = self.values_orders[feature]
+            if any(x_copy[feature] == self.str_nan):
+                order.append(self.str_nan)
+
+            # checking for unknown values (missing from known_values)
+            unknown_values = [
+                value
+                for value in x_copy[feature].unique()
+                if value not in self.known_values and value != self.str_nan
+            ]
+
+            # converting unknown values to NaN
+            if len(unknown_values) > 0:
+                # raising an error
+                if self.unknown_handling == "raise":
+                    assert (
+                        not len(unknown_values) > 0
+                    ), f"Order for feature '{feature}' needs to be provided for values: {str(unknown_values)}, otherwise set remove_unknown='drop' (policy remove_unknown='raise')"
+
+                # dropping unknown value
+                else:  # unknown_handling='drop'
+                    # alerting user
+                    print(
+                        f" - [ChainedDiscretizer] Order for feature '{feature}' was not provided for values:  {str(unknown_values)}, these values will be converted to '{self.str_nan}' (policy remove_unknown='drop')"
+                    )
+
+                    # adding nan to the order if not already present
+                    if self.str_nan not in order:
+                        order.append(self.str_nan)
+
+                    # adding unknown to the order
+                    for unknown_value in unknown_values:
+                        order.append(unknown_value)
+                        # grouping unknown value with str_nan
+                        order.group(unknown_value, self.str_nan)
+                        x_copy[feature] = x_copy[feature].replace(unknown_value, self.str_nan)
+
+            # updating values_orders accordingly
+            self.values_orders.update({feature: order})
+
         # all known values for features
         known_values = {feature: values.values() for feature, values in self.values_orders.items()}
 
         # checking that all unique values in X are in values_orders
         check_new_values(x_copy, self.features, known_values, self.str_nan, self.str_default)
-
-        # filling nans
-        x_copy = x_copy.fillna(self.str_nan)
 
         return x_copy
 
@@ -558,46 +607,19 @@ class ChainedDiscretizer(BaseDiscretizer):
         # filling nans
         x_copy = self._prepare_data(X, y)
 
-        # iterating over each feature
         if self.verbose:  # verbose if requested
             print(f" - [ChainedDiscretizer] Fit {str(self.features)}")
+
+        # iterating over each feature
         for feature in self.features:
             # computing frequencies of each modality
             frequencies = x_copy[feature].value_counts(normalize=True)
-            values, frequencies = frequencies.index, frequencies.values
-
-            # adding NaNs to the order if any
-            order = self.values_orders[feature]
-            if self.str_nan in values:
-                order.append(self.str_nan)
-
-            # checking for unknown values (missing from known_values)
-            missing = [
-                value
-                for value in values
-                if value not in self.known_values and value != self.str_nan
-            ]
-
-            # converting unknown values to NaN
-            if self.remove_unknown & (len(missing) > 0):
-                # alerting user
-                print(
-                    f" - [ChainedDiscretizer] Order for feature '{feature}' was not provided for values:  {str(missing)}, these values will be converted to '{self.str_nan}' (policy remove_unknown=True)"
-                )
-
-                # adding missing values to the order
-                order.update({self.str_nan: missing + order.get(self.str_nan)})
-
-            # alerting user
-            else:
-                assert (
-                    not len(missing) > 0
-                ), f"Order for feature '{feature}' needs to be provided for values: {str(missing)}, otherwise set remove_unknown=True"
 
             # iterating over each specified orders
-            for (
-                level_order
-            ) in self.chained_orders:  # TODO replace all of this with labels_per_orders
+            # TODO replace all of this with labels_per_orders
+            for level_order in self.chained_orders:
+                values, frequencies = frequencies.index, frequencies.values
+
                 # values that are frequent enough
                 to_keep = list(values[frequencies >= self.min_freq])
 
@@ -619,7 +641,6 @@ class ChainedDiscretizer(BaseDiscretizer):
 
                 # updating frequencies of each modality for the next ordering
                 frequencies = x_copy[feature].value_counts(normalize=True)
-                values, frequencies = frequencies.index, frequencies.values
 
         super().fit(X, y)
 

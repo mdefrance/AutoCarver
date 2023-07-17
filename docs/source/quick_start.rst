@@ -83,7 +83,7 @@ The `AutoCarver` can safely be loaded from a .json file.
 
     import json
 
-    from AtuoCarver import load_carver
+    from AutoCarver import load_carver
 
     # loading json file
     with open('my_carver.json', 'r') as my_carver_json:
@@ -94,7 +94,7 @@ Feature Selection
 
 .. code-block:: python
 
-    from AutoCarver.feature_selector import feature_selector
+    from AutoCarver.feature_selection import FeatureSelector
 
     # select the best 25 most target associated qualitative features
     feature_selector = FeatureSelector(
