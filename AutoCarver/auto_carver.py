@@ -135,7 +135,7 @@ class AutoCarver(BaseDiscretizer):
             len(quantitative_features) > 0
             or len(qualitative_features) > 0
             or len(ordinal_features) > 0
-        ), "No feature passed as input. Pleased provided column names to Carver by setting quantitative_features, quantitative_features or ordinal_features."
+        ), " - [AutoCarver] No feature passed as input. Pleased provided column names to Carver by setting quantitative_features, quantitative_features or ordinal_features."
         self.ordinal_features = list(set(ordinal_features))
         self.features = list(set(quantitative_features + qualitative_features + ordinal_features))
 
@@ -160,11 +160,11 @@ class AutoCarver(BaseDiscretizer):
         assert all(
             quali_feature not in self.quantitative_features
             for quali_feature in self.qualitative_features
-        ), "A feature of quantitative_features also is in qualitative_features or ordinal_features. Please, be carreful with your inputs!"
+        ), " - [AutoCarver] A feature of quantitative_features also is in qualitative_features or ordinal_features. Please, be carreful with your inputs!"
         assert all(
             quanti_feature not in self.qualitative_features
             for quanti_feature in self.quantitative_features
-        ), "A feature of qualitative_features or ordinal_features also is in quantitative_features. Please, be carreful with your inputs!"
+        ), " - [AutoCarver] A feature of qualitative_features or ordinal_features also is in quantitative_features. Please, be carreful with your inputs!"
 
         # class specific attributes
         self.min_freq = min_freq  # minimum frequency per base bucket
@@ -175,7 +175,7 @@ class AutoCarver(BaseDiscretizer):
         measures = ["tschuprowt", "cramerv"]  # association measure used to find the best groups
         assert (
             sort_by in measures
-        ), f"""Measure '{sort_by}' not yet implemented. Choose from: {str(measures)}."""
+        ), f""" - [AutoCarver] Measure '{sort_by}' not yet implemented. Choose from: {str(measures)}."""
         self.sort_by = sort_by
 
         assert unknown_handling in [
@@ -183,7 +183,7 @@ class AutoCarver(BaseDiscretizer):
             "raises",
             "best",
             "worst",
-        ], "Wrong value for attribute unknown_handling. Choose from ['drop', 'raises', 'best', 'worst']."
+        ], " - [AutoCarver] Wrong value for attribute unknown_handling. Choose from ['drop', 'raises', 'best', 'worst']."
         self.unknown_handling = unknown_handling
 
     def _prepare_data(

@@ -32,6 +32,8 @@ def copy(request) -> bool:
 
 def test_auto_carver(
     x_train: DataFrame,
+    x_train_wrong_1: DataFrame,
+    x_train_wrong_2: DataFrame,
     x_dev_1: DataFrame,
     x_dev_wrong_1: DataFrame,
     x_dev_wrong_2: DataFrame,
@@ -46,6 +48,10 @@ def test_auto_carver(
     ----------
     x_train : DataFrame
         Simulated Train DataFrame
+    x_train_wrong_1 : DataFrame
+        Simulated Train DataFrame with unknown values (without nans)
+    x_train_wrong_2 : DataFrame
+        Simulated Train DataFrame with unknown values (with nans)
     x_dev_1 : DataFrame
         Simulated Dev DataFrame
     x_dev_wrong_1 : DataFrame
@@ -142,7 +148,7 @@ def test_auto_carver(
     values_orders.update(chained_discretizer.values_orders)
 
     # minimum frequency per modality
-    min_freq = 0.06
+    min_freq = 0.1
     max_n_mod = 4
 
     # tests with 'tschuprowt' measure
@@ -160,8 +166,8 @@ def test_auto_carver(
         verbose=False,
     )
     x_discretized = auto_carver.fit_transform(
-        x_train,
-        x_train["quali_ordinal_target"],
+        x_discretized,
+        x_discretized["quali_ordinal_target"],
         X_dev=x_dev_1,
         y_dev=x_dev_1["quali_ordinal_target"],
     )
@@ -219,3 +225,112 @@ def test_auto_carver(
     # testing to transform dev set with unexpected nans
     with raises(AssertionError):
         auto_carver.transform(x_dev_wrong_2)
+
+    # testing with unknown values in chained discretizer
+    chained_features = ["Qualitative_Ordinal", "Qualitative_Ordinal_lownan"]
+    values_orders = {
+        "Qualitative_Ordinal_lownan": [
+            "Low+",
+            "Medium-",
+            "Medium",
+            "Medium+",
+            "High-",
+            "High",
+            "High+",
+        ],
+        "Qualitative_Ordinal_highnan": [
+            "Low-",
+            "Low",
+            "Low+",
+            "Medium-",
+            "Medium",
+            "Medium+",
+            "High-",
+            "High",
+            "High+",
+        ],
+        "Discrete_Qualitative_highnan": ["1", "2", "3", "4", "5", "6", "7"],
+    }
+
+    level0_to_level1 = {
+        "Lows": ["Low-", "Low", "Low+", "Lows"],
+        "Mediums": ["Medium-", "Medium", "Medium+", "Mediums"],
+        "Highs": ["High-", "High", "High+", "Highs"],
+        "ALONE": ["ALONE"],
+    }
+    level1_to_level2 = {
+        "Worst": ["Lows", "Mediums", "Worst"],
+        "Best": ["Highs", "Best"],
+        "BEST": ["ALONE", "BEST"],
+    }
+
+    min_freq = 0.15
+    max_n_mod = 4
+    chained_discretizer = ChainedDiscretizer(
+        qualitative_features=chained_features,
+        chained_orders=[level0_to_level1, level1_to_level2],
+        min_freq=min_freq,
+        values_orders=values_orders,
+        unknown_handling="drop",
+        copy=True,
+    )
+    x_discretized = chained_discretizer.fit_transform(
+        x_train_wrong_2, x_train_wrong_2["quali_ordinal_target"]
+    )
+    values_orders.update(chained_discretizer.values_orders)
+
+    auto_carver = AutoCarver(
+        quantitative_features=quantitative_features,
+        qualitative_features=qualitative_features,
+        ordinal_features=ordinal_features,
+        values_orders=values_orders,
+        min_freq=min_freq,
+        max_n_mod=max_n_mod,
+        sort_by=sort_by,
+        output_dtype=output_dtype,
+        dropna=dropna,
+        copy=copy,
+        verbose=False,
+    )
+    x_discretized = auto_carver.fit_transform(x_discretized, x_discretized["quali_ordinal_target"])
+
+    if not dropna and sort_by == "cramerv":
+        expected = {
+            "Mediums": [
+                "Low+",
+                "Low",
+                "Low-",
+                "Lows",
+                "Worst",
+                "Medium+",
+                "Medium",
+                "Medium-",
+                "Mediums",
+            ],
+            "High+": ["High", "High-", "Highs", "Best", "ALONE", "BEST", "High+"],
+            "__NAN__": ["unknown", "__NAN__"],
+        }
+        print(auto_carver.values_orders["Qualitative_Ordinal_lownan"].content)
+        assert (
+            auto_carver.values_orders["Qualitative_Ordinal_lownan"].content == expected
+        ), "Unknown modalities should be kept in the order"
+    elif dropna and sort_by == "tschuprowt":
+        expected = {
+            "Mediums": [
+                "Low+",
+                "Low",
+                "Low-",
+                "Lows",
+                "Worst",
+                "Medium+",
+                "Medium",
+                "Medium-",
+                "Mediums",
+            ],
+            "High+": ["High", "High-", "Highs", "Best", "ALONE", "BEST", "High+"],
+            "__NAN__": ["unknown", "__NAN__"],
+        }
+        print(auto_carver.values_orders["Qualitative_Ordinal_lownan"].content)
+        assert (
+            auto_carver.values_orders["Qualitative_Ordinal_lownan"].content == expected
+        ), "Unknown modalities should be kept in the order"

@@ -110,6 +110,9 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         # for each feature, getting label associated to each value
         self.labels_per_values: dict[str, dict[Any, Any]] = {}  # will be initiated during fit
 
+        # check if the discretizer has already been fitted
+        self.is_fitted = False
+
     def _get_labels_per_values(self, output_dtype: str) -> dict[str, dict[Any, Any]]:
         """Creates a dict that contains, for each feature, for each value, the associated label
 
@@ -194,24 +197,68 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         DataFrame
             A formatted copy of X
         """
-        # copying X
+        # checking for previous fits of the discretizer that could cause unwanted errors
+        assert (
+            not self.is_fitted
+        ), " - [BaseDiscretizer] This Discretizer has already been fitted. Fitting it anew could break established orders. Please initialize a new one."
+
+        # checking for input columns
         x_copy = X
-        if self.copy and X is not None:
+        if X is not None:
             missing_columns = [feature for feature in self.features if feature not in X]
             assert (
                 len(missing_columns) == 0
-            ), f"Missing features from the provided DataFrame: {str(missing_columns)}"
-            x_copy = X.copy()
+            ), f" - [BaseDiscretizer] Missing features from the provided DataFrame: {str(missing_columns)}"
+
+            # copying X
+            x_copy = X
+            if self.copy:
+                x_copy = X.copy()
 
         # checking for binary target
         if y is not None:
             y_values = unique(y)
             assert (0 in y_values) & (
                 1 in y_values
-            ), "y must be a binary Series (int or float, not object)"
-            assert len(y_values) == 2, "y must be a binary Series (int or float, not object)"
+            ), " - [BaseDiscretizer] y must be a binary Series (int or float, not object)"
+            assert (
+                len(y_values) == 2
+            ), " - [BaseDiscretizer] y must be a binary Series (int or float, not object)"
 
         return x_copy
+
+    def _check_new_values(self, X: DataFrame, features: list[str]) -> None:
+        """Checks for new, unexpected values, in X
+
+        Parameters
+        ----------
+        X : DataFrame
+            New DataFrame (at transform time)
+        features : list[str]
+            List of column names
+        """
+        # unique non-nan values in new dataframe
+        uniques = X[features].apply(
+            nan_unique,
+            axis=0,
+            result_type="expand",
+        )
+        uniques = applied_to_dict_list(uniques)
+
+        # checking for unexpected values for each feature
+        for feature in features:
+            unexpected = [
+                val for val in uniques[feature] if val not in self.values_orders[feature].values()
+            ]
+            assert (
+                self.str_nan not in unexpected
+            ), " - [BaseDiscretizer] It seems that your dataset has already been Discretized. AutoCarver only takes raw data as input (Discretizer included since v5.0.0). Be careful with `copy=False` not to rerun the same code twice. Ohterwise pass orders to `values_orders` or change the value of `str_nan`. "
+            assert (
+                self.str_default not in unexpected
+            ), " - [BaseDiscretizer] It seems that your dataset has already been Discretized. AutoCarver only takes raw data as input (Discretizer included since v5.0.0). Be careful with `copy=False` not to rerun the same code twice. Ohterwise pass orders to `values_orders` or change the value of `str_default`. "
+            assert (
+                len(unexpected) == 0
+            ), f" - [BaseDiscretizer] Unexpected value! The ordering for values: {str(list(unexpected))} of feature '{feature}' was not provided. There might be new values in your test/dev set. Consider taking a bigger test/dev set or dropping the column {feature}."
 
     def fit(self, X: DataFrame = None, y: Series = None) -> None:
         """Learns the labels associated to each value for each feature
@@ -229,10 +276,13 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         ]
         assert (
             len(missing_features) == 0
-        ), f"Missing values_orders for following features {str(missing_features)}."
+        ), f" - [BaseDiscretizer] Missing values_orders for following features {str(missing_features)}."
 
         # for each feature, getting label associated to each value
         self.labels_per_values = self._get_labels_per_values(self.output_dtype)
+
+        # setting fitted as True to raise alerts
+        self.is_fitted = True
 
         return self
 
@@ -319,7 +369,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             if any(nans):
                 assert feature_values.contains(
                     self.str_nan
-                ), f"Unexpected value! Missing values found for feature '{feature}' at transform step but not during fit. There might be new values in your test/dev set. Consider taking a bigger test/dev set or dropping the column {feature}."
+                ), f" - [BaseDiscretizer] Unexpected value! Missing values found for feature '{feature}' at transform step but not during fit. There might be new values in your test/dev set. Consider taking a bigger test/dev set or dropping the column {feature}."
                 nan_value = feature_values.get_group(self.str_nan)
                 # checking that nans have been grouped to a quantile otherwise they are left as numpy.nan (for comparison purposes)
                 if nan_value != self.str_nan:
@@ -370,13 +420,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             X[self.qualitative_features] = X[self.qualitative_features].fillna(self.str_nan)
 
         # checking that all unique values in X are in values_orders
-        check_new_values(
-            X,
-            self.qualitative_features,
-            {feature: values.values() for feature, values in self.values_orders.items()},
-            self.str_nan,
-            self.str_default,
-        )
+        self._check_new_values(X, features=self.qualitative_features)
 
         # replacing values for there corresponding label
         X = X.replace(
@@ -956,47 +1000,6 @@ def applied_to_dict_list(applied: Union[DataFrame, Series]) -> dict[str, list[An
         converted = applied.to_dict(orient="list")
 
     return converted
-
-
-# TODO: remove known_values
-def check_new_values(
-    X: DataFrame,
-    features: list[str],
-    known_values: dict[str, list[Any]],
-    str_nan: str,
-    str_default: str,
-) -> None:
-    """Checks for new, unexpected values, in X
-
-    Parameters
-    ----------
-    X : DataFrame
-        New DataFrame (at transform time)
-    features : list[str]
-        List of column names
-    known_values : dict[str, list[Any]]
-        Dict of known values per column name
-    """
-    # unique non-nan values in new dataframe
-    uniques = X[features].apply(
-        nan_unique,
-        axis=0,
-        result_type="expand",
-    )
-    uniques = applied_to_dict_list(uniques)
-
-    # checking for unexpected values for each feature
-    for feature in features:
-        unexpected = [val for val in uniques[feature] if val not in known_values[feature]]
-        assert (
-            str_nan not in unexpected
-        ), "It seems that your dataset has already been Discretized. AutoCarver only takes raw data as input (Discretizer included since v5.0.0). Be careful with `copy=False` not to rerun the same code twice. Ohterwise pass orders to `values_orders` or change the value of `str_nan`. "
-        assert (
-            str_default not in unexpected
-        ), "It seems that your dataset has already been Discretized. AutoCarver only takes raw data as input (Discretizer included since v5.0.0). Be careful with `copy=False` not to rerun the same code twice. Ohterwise pass orders to `values_orders` or change the value of `str_default`. "
-        assert (
-            len(unexpected) == 0
-        ), f"Unexpected value! The ordering for values: {str(list(unexpected))} of feature '{feature}' was not provided. There might be new values in your test/dev set. Consider taking a bigger test/dev set or dropping the column {feature}."
 
 
 def check_missing_values(
