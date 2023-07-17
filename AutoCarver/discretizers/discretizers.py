@@ -7,7 +7,7 @@ from typing import Union
 from numpy import nan
 from pandas import DataFrame, Series, unique
 
-from .utils.base_discretizers import BaseDiscretizer, check_new_values, min_value_counts
+from .utils.base_discretizers import BaseDiscretizer, min_value_counts
 from .utils.grouped_list import GroupedList
 from .utils.qualitative_discretizers import DefaultDiscretizer, OrdinalDiscretizer
 from .utils.quantitative_discretizers import QuantileDiscretizer
@@ -109,7 +109,7 @@ class Discretizer(BaseDiscretizer):
         ]
         assert (
             len(no_order_provided) == 0
-        ), f"No ordering was provided for following features: {str(no_order_provided)}. Please make sure you defined ``values_orders`` correctly."
+        ), f" - [Discretizer] No ordering was provided for following features: {str(no_order_provided)}. Please make sure you defined ``values_orders`` correctly."
 
         # class specific attributes
         self.min_freq = min_freq
@@ -308,7 +308,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
         ]
         assert (
             len(no_order_provided) == 0
-        ), f"No ordering was provided for following features: {str(no_order_provided)}. Please make sure you defined ``values_orders`` correctly."
+        ), f" - [QualitativeDiscretizer] No ordering was provided for following features: {str(no_order_provided)}. Please make sure you defined ``values_orders`` correctly."
 
         # non-ordinal qualitative features
         self.non_ordinal_features = [
@@ -374,13 +374,8 @@ class QualitativeDiscretizer(BaseDiscretizer):
             # updating values_orders accordingly
             self.values_orders.update(string_discretizer.values_orders)
 
-        # all known values for features
-        known_values = {feature: values.values() for feature, values in self.values_orders.items()}
-
         # checking that all unique values in X are in values_orders
-        check_new_values(
-            x_copy, self.ordinal_features, known_values, self.str_nan, self.str_default
-        )
+        self._check_new_values(x_copy, features=self.ordinal_features)
 
         return x_copy
 
@@ -548,7 +543,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         not_numeric = dtypes.apply(lambda u: str in u)
         assert all(
             ~not_numeric
-        ), f"Non-numeric features: {str(list(not_numeric[not_numeric].index))}"
+        ), f" - [QuantitativeDiscretizer] Non-numeric features: {str(list(not_numeric[not_numeric].index))} in provided quantitative_features. Please check your inputs."
 
         return x_copy
 

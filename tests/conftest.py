@@ -123,6 +123,54 @@ def x_train() -> DataFrame:
 
 
 @fixture
+def x_train_wrong_1(x_train: DataFrame) -> DataFrame:
+    """Simulates a Train sample with unknown values (without nans)
+
+    Parameters
+    ----------
+    x_train : DataFrame
+        Simulated Train sample
+
+    Returns
+    -------
+    DataFrame
+        Train sample with unknown values (without nans)
+    """
+    # initiating dev sample
+    x_wrong_1 = x_train.copy()
+
+    # adding some unknown values
+    x_wrong_1["Qualitative_Ordinal"] = x_wrong_1["Qualitative_Ordinal"].replace("Medium", "unknown")
+
+    return x_wrong_1
+
+
+@fixture
+def x_train_wrong_2(x_train: DataFrame) -> DataFrame:
+    """Simulates a Train sample with unknown values (with nans)
+
+    Parameters
+    ----------
+    x_train : DataFrame
+        Simulated Train sample
+
+    Returns
+    -------
+    DataFrame
+        Train sample with unknown values (with nans)
+    """
+    # initiating dev sample
+    x_wrong_2 = x_train.copy()
+
+    # adding some unknown values
+    x_wrong_2["Qualitative_Ordinal_lownan"] = x_wrong_2["Qualitative_Ordinal_lownan"].replace(
+        "Medium", "unknown"
+    )
+
+    return x_wrong_2
+
+
+@fixture
 def x_dev_1() -> DataFrame:
     """Simulates a Dev sample
 

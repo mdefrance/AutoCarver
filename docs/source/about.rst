@@ -7,7 +7,7 @@ About
 Why AutoCarver?
 ---------------
 
-**AutoCarver** is a powerful Python package designed to address the fundamental question  What's the best processing for my model's features?
+**AutoCarver** is a powerful Python package designed to address the fundamental question of *What's the best processing for my model's features?*
 
 It offers an automated and optimized approach to processing and engineering your data, resulting in improved model performance, enhanced explainability, and reduced feature dimensionality.
 As of today, this set of tools is available for binary classification problems only.
