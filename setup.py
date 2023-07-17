@@ -10,10 +10,10 @@ with open(path.join(here, "README.md"), encoding="utf-8") as fh:
 
 setup(
     name="AutoCarver",
-    version="5.1.6",
+    version="5.1.7",
     author="Mario DEFRANCE",
     author_email="defrancemario@gmail.com",
-    description="Automatic Bucketizing of Features with Optimal Association",
+    description="Automatic Discretization of Features with Optimal Target Association",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/mdefrance/AutoCarver",

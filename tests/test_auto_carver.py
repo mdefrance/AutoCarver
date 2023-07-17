@@ -37,6 +37,7 @@ def test_auto_carver(
     x_dev_1: DataFrame,
     x_dev_wrong_1: DataFrame,
     x_dev_wrong_2: DataFrame,
+    x_dev_wrong_3: DataFrame,
     output_dtype: str,
     dropna: bool,
     sort_by: str,
@@ -218,13 +219,16 @@ def test_auto_carver(
         loaded_carver.summary() == auto_carver.summary()
     ), "Non-identical AutoCarver when loading JSON"
 
-    # testing to transform dev set with unexpected modality
-    with raises(AssertionError):
-        auto_carver.transform(x_dev_wrong_1)
+    # testing to transform dev set with unexpected modality for a feature that passed through DefaultDiscretizer
+    auto_carver.transform(x_dev_wrong_1)
 
-    # testing to transform dev set with unexpected nans
+    # testing to transform dev set with unexpected nans for a feature that passed through DefaultDiscretizer
     with raises(AssertionError):
         auto_carver.transform(x_dev_wrong_2)
+
+    # testing to transform dev set with unexpected modality for a feature that did not pass through DefaultDiscretizer
+    with raises(AssertionError):
+        auto_carver.transform(x_dev_wrong_3)
 
     # testing with unknown values in chained discretizer
     chained_features = ["Qualitative_Ordinal", "Qualitative_Ordinal_lownan"]
