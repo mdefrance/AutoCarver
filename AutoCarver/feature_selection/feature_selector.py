@@ -3,11 +3,18 @@
 from random import shuffle
 from typing import Any, Callable
 
-from IPython.display import display_html
 from pandas import DataFrame, Series
 
 from .filters import cramerv_filter, spearman_filter, thresh_filter
 from .measures import cramerv_measure, dtype_measure, kruskal_measure, mode_measure, nans_measure
+
+# trying to import extra dependencies
+try:
+    from IPython.display import display_html
+except ImportError:
+    _has_idisplay = False
+else:
+    _has_idisplay = True
 
 
 class FeatureSelector:
@@ -138,7 +145,14 @@ class FeatureSelector:
 
         # wether or not to print tables
         self.verbose = bool(max(verbose, pretty_print))
-        self.pretty_print = pretty_print
+        if pretty_print:
+            if _has_idisplay:  # checking for installed dependencies
+                self.pretty_print = pretty_print
+            else:
+                self.verbose = True
+                print(
+                    "Package not found: ipython. Defaulting to verbose=True. Install extra dependencies with pip install autocarver[jupyter]"
+                )
 
         # keyword arguments
         self.params = params

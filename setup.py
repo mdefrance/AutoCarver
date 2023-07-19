@@ -29,8 +29,12 @@ setup(
         "scikit-learn",
         "statsmodels",
         "tqdm",
-        "ipython",
     ],
+    extras_require={
+        "jupyter": [
+            "ipython",
+        ]
+    },
     packages=find_packages(),
     classifiers=[
         # ou 4 - Beta ou 5 - Production/Stable
