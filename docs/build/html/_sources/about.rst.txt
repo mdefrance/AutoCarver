@@ -36,34 +36,46 @@ I. Data Preparation: conversion to ordinal data buckets
 
 **AutoCarver** implements :ref:`Discretizer`. It provides the following Data Preparation tools: 
 
-.. csv-table::
-   :header:
-
-   Discretizer, Data type, Processing 
-
-   :ref:`QuantileDiscretizer`, Quantitative discrete/continuous, 1. Over-represented values are set as there own modality. 2. Automatic quantile bucketization of under-represented values. 3. Modalities are ordered by default real number ordering.
-   :ref:`OrdinalDiscretizer`, Qualitative ordinal, 1. Under-represented modalities are grouped to the closest modality (according to provided ranking, by target rate). 2. Modalities are ordered according to provided modality ranking.
-   :ref:`DefaultDiscretizer`, Qualitative categorical, 1. Under-represented modalities are grouped into a default value 2. Modalities are ordered by target rate.
++------------------------------------+-------------------------------------------------------------------------+
+| Discretizer                        | Data Processing                                                         |
++====================================+=========================================================================+
+| :ref:`QuantileDiscretizer`:        | Over-represented values are set as there own modality                   |
+|                                    |                                                                         |
+| Continuous Data                    | Automatic quantile bucketization of under-represented values            |
+|                                    |                                                                         |
+| Discrete Data                      | Modalities are ordered by default real number ordering                  |
+|                                    |                                                                         |
++------------------------------------+-------------------------------------------------------------------------+
+| :ref:`OrdinalDiscretizer`:         | Under-represented modalities are grouped with the closest modality      |
+|                                    |                                                                         |
+| Ordinal Data                       | Modalities are ordered according to provided modality ranking           |
+|                                    |                                                                         |
++------------------------------------+-------------------------------------------------------------------------+
+| :ref:`DefaultDiscretizer`:         | Under-represented modalities are grouped into a default value           |
+|                                    |                                                                         |
+| Categorical Data                   | Modalities are ordered by target rate                                   |
+|                                    |                                                                         |
++------------------------------------+-------------------------------------------------------------------------+
 
 .. note::
 
-   * Values are considered over-represented or under-represented based on the cross package, user defined, attribute ``min_freq``.
+   * Representativity threshold of modalities if user selected (``min_freq`` attribute).
    * At this step, if any, NaNs are set as set as there own, non-ordered, modality.
-   * This step greatly reduces the number of possible combinations between feature modalities and enhances modalities' relevancy.
+   * Helps improve modality relevancy and reduces the set of possible combinations to test from.
    * These steps are all included in the ``AutoCarver`` pipeline.
 
-II. Data Optimization: bucket association maximization
-......................................................
+II. Data Optimization: maximization of bucket association
+.........................................................
 
 The core of **AutoCarver** is :ref:`AutoCarver`. It consists of the following Data Optimization steps: 
 
-   1. Identifying the most associated combination from all ordered combinations of non-NaN modalities.
+   1. Identifying the most associated combination from all ordered combinations of modalities.
    2. Testing all combinations of NaNs grouped to one of those modalities.
 
 .. note::
 
-   * The user defines the maximum number of modality per processed feature (``max_n_mod`` attribute).
-   * The user can choose not to group NaNs to leave them by themselves (``dropna`` attribute).
+   * The user chooses the maximum number of modality per feature (``max_n_mod`` attribute).
+   * The user chooses whether or not to group NaNs to other values (``dropna`` attribute).
 
 III. (Optional) Data Selection: model feature pre-selection
 ...........................................................
@@ -83,7 +95,7 @@ III. (Optional) Data Selection: model feature pre-selection
 Performances
 ------------
 
-Execution time has been measured for several values of the key paramaters of **AutoCarver**
+Execution time has been measured for several values of key paramaters of **AutoCarver**
 
 
 .. csv-table::

@@ -94,7 +94,7 @@ class AutoCarver(BaseDiscretizer):
             Metric to be used to perform association measure between features and target.
 
             * ``"tschuprowt"``, Tschuprow's T will be used as the association measure (more robust).
-            * ``"cramerv"``, Cramer's V will be used as the association measure (less robust).
+            * ``"cramerv"``, Cramér's V will be used as the association measure (less robust).
 
             **Tip**: use ``"tschuprowt"`` for more robust, or less output modalities,
             use ``"cramerv"`` for more output modalities.
@@ -547,7 +547,7 @@ def get_xtabs(
     return xtabs
 
 
-def association_xtab(xtab: DataFrame, n_obs: int, n_mod_y: int) -> dict[str, float]:
+def association_xtab(xtab: DataFrame, n_obs: int) -> dict[str, float]:
     """Computes measures of association between feature and target by crosstab.
 
     Parameters
@@ -558,13 +558,10 @@ def association_xtab(xtab: DataFrame, n_obs: int, n_mod_y: int) -> dict[str, flo
     n_obs : int
         Sample total size.
 
-    n_mod_y : int
-        Number of modality of the target (and minimum number of modality).
-
     Returns
     -------
     dict[str, float]
-        Cramer's V and Tschuprow's as a dict.
+        Cramér's V and Tschuprow's as a dict.
     """
     # number of values taken by the features
     n_mod_x = xtab.shape[0]
@@ -572,11 +569,11 @@ def association_xtab(xtab: DataFrame, n_obs: int, n_mod_y: int) -> dict[str, flo
     # Chi2 statistic
     chi2 = chi2_contingency(xtab)[0]
 
-    # Cramer's V
-    cramerv = sqrt(chi2 / n_obs / (n_mod_y - 1))
+    # Cramér's V
+    cramerv = sqrt(chi2 / n_obs)
 
     # Tschuprow's T
-    tschuprowt = sqrt(chi2 / n_obs / sqrt((n_mod_x - 1) * (n_mod_y - 1)))
+    tschuprowt = cramerv / sqrt(sqrt(n_mod_x - 1))
 
     return {"cramerv": cramerv, "tschuprowt": tschuprowt}
 
@@ -771,7 +768,7 @@ def get_best_association(
     n_obs = xtab.sum().sum()  # number of observation
     n_mod_y = len(xtab.columns)  # number of modalities and minimum number of modalities
     associations_xtab = [
-        association_xtab(grouped_xtab, n_obs, n_mod_y)
+        association_xtab(grouped_xtab, n_obs)
         for grouped_xtab in tqdm(grouped_xtabs, disable=not verbose, desc="Computing associations")
     ]
 

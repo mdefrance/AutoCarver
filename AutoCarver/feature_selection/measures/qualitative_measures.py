@@ -11,7 +11,7 @@ from scipy.stats import chi2_contingency
 def chi2_measure(
     active: bool, association: dict[str, Any], x: Series, y: Series, **params
 ) -> tuple[bool, dict[str, Any]]:
-    """Chi2 Measure between two Series of qualitative features"""
+    """Wrapper for `scipy.stats.chi2_contingency <https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chi2_contingency.html>`_'s statistic on the x by y crosstab."""
 
     # check that previous steps where passed
     if active:
@@ -30,7 +30,7 @@ def chi2_measure(
 def cramerv_measure(
     active: bool, association: dict[str, Any], x: Series, y: Series, **params
 ) -> tuple[bool, dict[str, Any]]:
-    """Carmer's V between two Series of qualitative features"""
+    """Carmer's V between x and y."""
 
     # check that previous steps where passed
     if active:
@@ -38,7 +38,7 @@ def cramerv_measure(
         if "chi2_measure" not in association:
             active, association = chi2_measure(active, association, x, y, **params)
 
-        # numnber of observations
+        # number of observations
         n_obs = (notna(x) & notna(y)).sum()
 
         # number of values taken by the features
