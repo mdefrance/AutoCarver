@@ -114,16 +114,16 @@ class DefaultDiscretizer(BaseDiscretizer):
         # checking that all unique values in X are in values_orders
         self._check_new_values(x_copy, features=self.qualitative_features)
 
-        # checking that all unique values in values_orders are in X
-        # check_missing_values(x_copy, self.qualitative_features, self.values_orders)
-
         # adding NANS
         for feature in self.qualitative_features:
+            order = self.values_orders[feature]
             if any(x_copy[feature].isna()):
-                self.values_orders[feature].append(self.str_nan)
+                if self.str_nan not in order.values():
+                    order.append(self.str_nan)
+                    self.values_orders.update({feature: order})
 
         # filling up NaNs
-        x_copy = x_copy[self.qualitative_features].fillna(self.str_nan)
+        x_copy[self.qualitative_features] = x_copy[self.qualitative_features].fillna(self.str_nan)
 
         return x_copy
 
@@ -182,6 +182,11 @@ class DefaultDiscretizer(BaseDiscretizer):
 
             # new ordering according to target rate
             new_order = list(target_rates[feature])
+
+            # checking for default but no value observed, enable to group this modality, raising error
+            assert (self.str_default in order and self.str_default in new_order) or (
+                self.str_default not in order and self.str_default not in new_order
+            ), f"Some values from values_orders['{feature}'] are never observed. Can not fit a distribution without any observation. Please remove following values {str([value for value in order.content[self.str_default] if value != self.str_default])} from values_orders['{feature}']."
 
             # leaving NaNs at the end of the list
             if self.str_nan in new_order:
@@ -419,9 +424,6 @@ class ChainedDiscretizer(BaseDiscretizer):
 
         str_nan : str, optional
             String representation to input ``numpy.nan``. If ``dropna=False``, ``numpy.nan`` will be left unchanged, by default ``"__NAN__"``
-
-        str_default : str, optional
-            String representation for default qualitative values, i.e. values less frequent than ``min_freq``, by default ``"__OTHER__"``
         """
         # Initiating BaseDiscretizer
         super().__init__(
@@ -569,15 +571,11 @@ class ChainedDiscretizer(BaseDiscretizer):
             self.values_orders.update(stringer.values_orders)
 
         # filling nans
-        x_copy = x_copy.fillna(self.str_nan)
+        x_copy[self.features] = x_copy[self.features].fillna(self.str_nan)
 
         # adding nans and unknown values
         for feature in self.features:
-            # adding NaNs to the order if any
             order = self.values_orders[feature]
-            if any(x_copy[feature] == self.str_nan):
-                order.append(self.str_nan)
-
             # checking for unknown values (missing from known_values)
             unknown_values = [
                 value
@@ -600,19 +598,24 @@ class ChainedDiscretizer(BaseDiscretizer):
                         f" - [ChainedDiscretizer] Order for feature '{feature}' was not provided for values:  {str(unknown_values)}, these values will be converted to '{self.str_nan}' (policy unknown_handling='drop')"
                     )
 
-                    # adding nan to the order if not already present
-                    if self.str_nan not in order:
-                        order.append(self.str_nan)
-
                     # adding unknown to the order
                     for unknown_value in unknown_values:
                         order.append(unknown_value)
+                        order.append(self.str_nan)
                         # grouping unknown value with str_nan
                         order.group(unknown_value, self.str_nan)
-                        x_copy[feature] = x_copy[feature].replace(unknown_value, self.str_nan)
 
             # updating values_orders accordingly
             self.values_orders.update({feature: order})
+
+        # adding up NAN for all features of values_orders for seamless integration
+        # when GroupedList._tranform_qualitative is called nans are replaced by str_nan
+        for feature, order in self.values_orders.items():
+            # adding NaNs to the order if any
+            if any(x_copy[feature].isna()) or any(x_copy[feature] == self.str_nan):
+                if self.str_nan not in order:
+                    order.append(self.str_nan)
+                    self.values_orders.update({feature: order})
 
         # checking that all unique values in X are in values_orders
         self._check_new_values(x_copy, features=self.features)
@@ -646,7 +649,9 @@ class ChainedDiscretizer(BaseDiscretizer):
                 values, frequencies = frequencies.index, frequencies.values
 
                 # values that are frequent enough
-                to_keep = list(values[frequencies >= self.min_freq])
+                to_keep = list(values[frequencies >= self.min_freq]) + [
+                    self.str_nan,
+                ]
 
                 # values from the order to group (not frequent enough or absent)
                 values_to_group = [value for value in level_order.values() if value not in to_keep]

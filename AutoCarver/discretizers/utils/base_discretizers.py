@@ -251,12 +251,6 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
                 val for val in uniques[feature] if val not in self.values_orders[feature].values()
             ]
             assert (
-                self.str_nan not in unexpected
-            ), " - [BaseDiscretizer] It seems that your dataset has already been Discretized. AutoCarver only takes raw data as input (Discretizer included since v5.0.0). Be careful with `copy=False` not to rerun the same code twice. Ohterwise pass orders to `values_orders` or change the value of `str_nan`. "
-            assert (
-                self.str_default not in unexpected
-            ), " - [BaseDiscretizer] It seems that your dataset has already been Discretized. AutoCarver only takes raw data as input (Discretizer included since v5.0.0). Be careful with `copy=False` not to rerun the same code twice. Ohterwise pass orders to `values_orders` or change the value of `str_default`. "
-            assert (
                 len(unexpected) == 0
             ), f" - [BaseDiscretizer] Unexpected value! The ordering for values: {str(list(unexpected))} of feature '{feature}' was not provided. There might be new values in your test/dev set. Consider taking a bigger test/dev set or dropping the column {feature}."
 
@@ -423,7 +417,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         DataFrame
             Discretized X.
         """
-        # filling up nans with specified value
+        # filling up nans from features that have some
         if self.str_nan:
             X[self.qualitative_features] = X[self.qualitative_features].fillna(self.str_nan)
 
@@ -467,6 +461,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         return json_serialized_groupedlistdiscretizer
 
     # TODO: add crosstabs per feature for a provided X?
+    # TODO: change str_nan for str(nan)
     def summary(self) -> DataFrame:
         """Summarizes the data discretization process.
 
