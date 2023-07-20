@@ -16,12 +16,13 @@
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/sphinx_highlight.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Discretizers" href="discretizers.html" />
-    <link rel="prev" title="Quick Start" href="quick_start.html" /> 
+    <link rel="next" title="FeatureSelector" href="feature_selector.html" />
+    <link rel="prev" title="Discretizers" href="discretizers.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -48,8 +49,9 @@
 <li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="discretizers.html">Discretizers</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">AutoCarver</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#autocarver-automated-fast-paced-data-processing">AutoCarver, automated, fast paced data processing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#autocarver-the-automated-fast-paced-data-processing-pipeline">AutoCarver, the automated, fast paced data processing pipeline</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#AutoCarver.AutoCarver"><code class="docutils literal notranslate"><span class="pre">AutoCarver</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#AutoCarver.AutoCarver.fit"><code class="docutils literal notranslate"><span class="pre">AutoCarver.fit()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#AutoCarver.AutoCarver.fit_transform"><code class="docutils literal notranslate"><span class="pre">AutoCarver.fit_transform()</span></code></a></li>
@@ -66,7 +68,6 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="discretizers.html">Discretizers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="feature_selector.html">FeatureSelector</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 </ul>
@@ -97,8 +98,23 @@
              
   <section id="autocarver">
 <h1>AutoCarver<a class="headerlink" href="#autocarver" title="Permalink to this heading"></a></h1>
-<section id="autocarver-automated-fast-paced-data-processing">
-<span id="id1"></span><h2>AutoCarver, automated, fast paced data processing<a class="headerlink" href="#autocarver-automated-fast-paced-data-processing" title="Permalink to this heading"></a></h2>
+<p>The core of <strong>AutoCarver</strong> consists of the following Data Optimization steps:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Identifying the most associated combination from all ordered combinations of modalities.</p></li>
+<li><p>Testing all combinations of NaNs grouped to one of those modalities.</p></li>
+</ol>
+</div></blockquote>
+<p>At the basis of <strong>AutoCarver</strong>’s’ built-in association measures lays <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.crosstab.html">pandas.crosstab</a>.
+It is computed only once per feature <span class="math notranslate nohighlight">\(x\)</span> against the binary target <span class="math notranslate nohighlight">\(y\)</span>.
+The crosstab between <span class="math notranslate nohighlight">\(y\)</span> and each possible combination of modalities of <span class="math notranslate nohighlight">\(x\)</span> is then obtained via a vectorized, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ufunc.at.html">numpy.add</a>. powered, implementation of <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.groupby.html">pandas.groupby</a>.</p>
+<p><strong>AutoCarver</strong> takes advantage of <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chi2_contingency.html">scipy.stats.chi2_contingency</a> to perform association measuring.
+It gives Pearson’s <span class="math notranslate nohighlight">\(\chi^2\)</span> statistics computed from crosstabs.</p>
+<p>Cramér’s V can then be computed using <span class="math notranslate nohighlight">\(V=\sqrt{\frac{\chi^2}{n}}\)</span> where <span class="math notranslate nohighlight">\(n\)</span> is the number of observation (computed as the sum of rows and columns of the crosstab).
+This implementation has been simplified taking into account the binary target <span class="math notranslate nohighlight">\(y\)</span> to improve performances.</p>
+<p>Finally, Tschuprow’s T is computed using <span class="math notranslate nohighlight">\(T=\frac{V}{\sqrt{\sqrt{n_x-1}}}\)</span> where <span class="math notranslate nohighlight">\(n_x\)</span> is the per-combination number of modalities.</p>
+<section id="autocarver-the-automated-fast-paced-data-processing-pipeline">
+<span id="id1"></span><h2>AutoCarver, the automated, fast paced data processing pipeline<a class="headerlink" href="#autocarver-the-automated-fast-paced-data-processing-pipeline" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="AutoCarver.AutoCarver">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.</span></span><span class="sig-name descname"><span class="pre">AutoCarver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantitative_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualitative_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ordinal_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values_orders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="discretizers.html#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.utils.grouped_list.GroupedList"><span class="pre">AutoCarver.discretizers.utils.grouped_list.GroupedList</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_n_mod</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_by</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'tschuprowt'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dtype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropna</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unknown_handling</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'raises'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretty_print</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">str_nan</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'__NAN__'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">str_default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'__OTHER__'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.AutoCarver" title="Permalink to this definition"></a></dt>
@@ -132,7 +148,7 @@ The combination with the greatest association (as defined by <code class="docuti
 Metric to be used to perform association measure between features and target.</p>
 <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">&quot;tschuprowt&quot;</span></code>, Tschuprow’s T will be used as the association measure (more robust).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;cramerv&quot;</span></code>, Cramer’s V will be used as the association measure (less robust).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;cramerv&quot;</span></code>, Cramér’s V will be used as the association measure (less robust).</p></li>
 </ul>
 <p><strong>Tip</strong>: use <code class="docutils literal notranslate"><span class="pre">&quot;tschuprowt&quot;</span></code> for more robust, or less output modalities,
 use <code class="docutils literal notranslate"><span class="pre">&quot;cramerv&quot;</span></code> for more output modalities.</p>
@@ -287,8 +303,8 @@ can be no guarantee for it to be restored.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="quick_start.html" class="btn btn-neutral float-left" title="Quick Start" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="discretizers.html" class="btn btn-neutral float-right" title="Discretizers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="discretizers.html" class="btn btn-neutral float-left" title="Discretizers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="feature_selector.html" class="btn btn-neutral float-right" title="FeatureSelector" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

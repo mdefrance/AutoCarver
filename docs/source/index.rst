@@ -13,8 +13,8 @@ Welcome to AutoCarver's documentation!
    about
    installation
    quick_start
-   auto_carver
    discretizers
+   auto_carver
    feature_selector
    examples
 

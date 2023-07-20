@@ -1,15 +1,36 @@
 AutoCarver
 ==========
 
+The core of **AutoCarver** consists of the following Data Optimization steps: 
+
+   1. Identifying the most associated combination from all ordered combinations of modalities.
+   2. Testing all combinations of NaNs grouped to one of those modalities.
+
+At the basis of **AutoCarver**'s' built-in association measures lays `pandas.crosstab <https://pandas.pydata.org/docs/reference/api/pandas.crosstab.html>`_.
+It is computed only once per feature :math:`x` against the binary target :math:`y`.
+The crosstab between :math:`y` and each possible combination of modalities of :math:`x` is then obtained via a vectorized, `numpy.add <https://numpy.org/doc/stable/reference/generated/numpy.ufunc.at.html>`_. powered, implementation of `pandas.groupby <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.groupby.html>`_.
+
+**AutoCarver** takes advantage of `scipy.stats.chi2_contingency <https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chi2_contingency.html>`_ to perform association measuring.
+It gives Pearson's :math:`\chi^2` statistics computed from crosstabs.
+
+Cramér's V can then be computed using :math:`V=\sqrt{\frac{\chi^2}{n}}` where :math:`n` is the number of observation (computed as the sum of rows and columns of the crosstab).
+This implementation has been simplified taking into account the binary target :math:`y` to improve performances.
+
+Finally, Tschuprow's T is computed using :math:`T=\frac{V}{\sqrt{\sqrt{n_x-1}}}` where :math:`n_x` is the per-combination number of modalities.
+
+
+
 .. _AutoCarver:
 
-AutoCarver, automated, fast paced data processing
--------------------------------------------------  
+AutoCarver, the automated, fast paced data processing pipeline
+--------------------------------------------------------------
 
 .. autoclass:: AutoCarver.AutoCarver
     :members: fit, transform, fit_transform
 
 .. autofunction:: AutoCarver.AutoCarver.summary
+
+
 
 AutoCarver saving and loading
 -----------------------------
