@@ -34,11 +34,22 @@ Key Features:
 ``AutoCarver`` is a valuable tool for data scientists and practitioners involved in binary classification problems, such as credit scoring, fraud detection, and risk assessment. By leveraging its automated feature processing capabilities, you can unlock the full potential of your data, leading to more accurate predictions, improved model explainability, and better decision-making in your classification tasks.
 
 
-## Install
+# Install
 
-AutoCarver can be installed from [PyPI](https://pypi.org/project/AutoCarver):
+**AutoCarver** can be installed from [PyPI](https://pypi.org/project/AutoCarver):
+
+## Minimal install
+
+To install the base features (without vizualization tools), use the following:
 
 <pre>
 pip install autocarver
 </pre>
 
+## Unabling pretty printing
+
+To enable ``pretty_print`` features (nice colorful html tables in jupyter), use the following:
+
+<pre>
+pip install autocarver[jupyter]
+</pre>

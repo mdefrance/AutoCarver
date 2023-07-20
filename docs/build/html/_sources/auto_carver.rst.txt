@@ -3,8 +3,12 @@ AutoCarver
 
 .. _AutoCarver:
 
-AutoCarver, automated, fast paced data processing
--------------------------------------------------  
+AutoCarver, the automated, fast paced data processing pipeline
+--------------------------------------------------------------
+
+.. note::
+    
+    ``AutoCarver`` takes advantage of vectorized groupby on crosstab to gratly improve the combination selection process. 
 
 .. autoclass:: AutoCarver.AutoCarver
     :members: fit, transform, fit_transform
