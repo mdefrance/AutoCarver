@@ -4,7 +4,6 @@ for a binary classification model.
 
 from typing import Any
 
-from IPython.display import display_html
 from numpy import add, array, searchsorted, sqrt, unique, zeros
 from pandas import DataFrame, Series, crosstab
 from scipy.stats import chi2_contingency
@@ -18,6 +17,14 @@ from .discretizers.utils.base_discretizers import (
     convert_to_values,
 )
 from .discretizers.utils.serialization import json_deserialize_values_orders
+
+# trying to import extra dependencies
+try:
+    from IPython.display import display_html
+except ImportError:
+    _has_idisplay = False
+else:
+    _has_idisplay = True
 
 
 class AutoCarver(BaseDiscretizer):
@@ -171,7 +178,15 @@ class AutoCarver(BaseDiscretizer):
         self.max_n_mod = max_n_mod  # maximum number of modality per feature
         # self.min_carved_freq = min_carved_freq  # TODO
         self.min_group_size = 1
-        self.pretty_print = pretty_print
+        if pretty_print:
+            if _has_idisplay:  # checking for installed dependencies
+                self.pretty_print = pretty_print
+            else:
+                self.verbose = True
+                print(
+                    "Package not found: ipython. Defaulting to verbose=True. Install extra dependencies with pip install autocarver[jupyter]"
+                )
+
         measures = ["tschuprowt", "cramerv"]  # association measure used to find the best groups
         assert (
             sort_by in measures

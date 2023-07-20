@@ -374,6 +374,14 @@ class QualitativeDiscretizer(BaseDiscretizer):
             # updating values_orders accordingly
             self.values_orders.update(string_discretizer.values_orders)
 
+        # adding known nans at training
+        for feature in self.features:
+            if feature in self.values_orders:
+                order = self.values_orders[feature]
+                if any(x_copy[feature].isna()) and (self.str_nan not in order):
+                    order.append(self.str_nan)
+                    self.values_orders.update({feature: order})
+
         # checking that all unique values in X are in values_orders
         self._check_new_values(x_copy, features=self.ordinal_features)
 
@@ -408,11 +416,26 @@ class QualitativeDiscretizer(BaseDiscretizer):
         # checking data before bucketization
         x_copy = self._prepare_data(X, y)
 
+        # Base discretization (useful if already discretized)
+        base_discretizer = BaseDiscretizer(
+            features=[feature for feature in self.features if feature in self.values_orders],
+            values_orders=self.values_orders,
+            input_dtypes="str",
+            output_dtype="str",
+            dropna=False,
+            copy=True,
+            verbose=self.verbose,
+            str_nan="__NAN__",
+            str_default="__OTHER__",
+        )
+        x_copy = base_discretizer.fit_transform(x_copy, y)
+
         # [Qualitative ordinal features] Grouping rare values into closest common one
         if len(self.ordinal_features) > 0:
             ordinal_discretizer = OrdinalDiscretizer(
                 ordinal_features=self.ordinal_features,
                 values_orders=self.values_orders,
+                input_dtypes=self.input_dtypes,
                 min_freq=self.min_freq,
                 verbose=self.verbose,
                 str_nan=self.str_nan,

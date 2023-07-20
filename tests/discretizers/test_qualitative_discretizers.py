@@ -104,10 +104,11 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
         "High-": ["High-"],
         "High": ["High"],
         "High+": ["High+"],
+        "__NAN__": ["__NAN__"],
     }
     assert (
         discretizer.values_orders["Qualitative_Ordinal_highnan"].content == expected
-    ), "Not specified features should not be modified"
+    ), "Not specified features should not be modified, expect for there NaNS"
 
     expected = {
         "Medium": ["Medium"],
@@ -530,7 +531,6 @@ def test_ordinal_discretizer(x_train: DataFrame) -> None:
     x_train : DataFrame
         Simulated Train DataFrame
     """
-
     # defining values_orders
     order = ["Low-", "Low", "Low+", "Medium-", "Medium", "Medium+", "High-", "High", "High+"]
     # ordering for base qualitative ordinal feature
