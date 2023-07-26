@@ -26,7 +26,7 @@ Key Features:
 
 **AutoCarver** is a valuable tool for data scientists and practitioners involved in binary classification problems, such as credit scoring, fraud detection, and risk assessment. By leveraging its automated feature processing capabilities, you can unlock the full potential of your data, leading to more accurate predictions, improved model explainability, and better decision-making in your classification tasks.
 
-Under the hood feature overlook
+Under the hood feature overview
 -------------------------------
 
 **AutoCarver** is a two step pipeline. 
@@ -82,7 +82,7 @@ III. (Optional) Data Selection: model feature pre-selection
 
 **AutoCarver** implements :ref:`FeatureSelector`. It consists of the following Data Selection steps: 
 
-   1. Measuring association with binary target and ranking of features accordingly.
+   1. Measuring association with a binary target and ranking features accordingly.
    2. Filtering out features too asociated to a better ranked feature.
 
 .. note::

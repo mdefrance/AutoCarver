@@ -47,7 +47,7 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">About</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#why-autocarver">Why AutoCarver?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#under-the-hood-feature-overlook">Under the hood feature overlook</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#under-the-hood-feature-overview">Under the hood feature overview</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#i-data-preparation-conversion-to-ordinal-data-buckets">I. Data Preparation: conversion to ordinal data buckets</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#ii-data-optimization-maximization-of-bucket-association">II. Data Optimization: maximization of bucket association</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#iii-optional-data-selection-model-feature-pre-selection">III. (Optional) Data Selection: model feature pre-selection</a></li>
@@ -109,8 +109,8 @@ As of today, this set of tools is available for binary classification problems o
 </ol>
 <p><strong>AutoCarver</strong> is a valuable tool for data scientists and practitioners involved in binary classification problems, such as credit scoring, fraud detection, and risk assessment. By leveraging its automated feature processing capabilities, you can unlock the full potential of your data, leading to more accurate predictions, improved model explainability, and better decision-making in your classification tasks.</p>
 </section>
-<section id="under-the-hood-feature-overlook">
-<h2>Under the hood feature overlook<a class="headerlink" href="#under-the-hood-feature-overlook" title="Permalink to this heading"></a></h2>
+<section id="under-the-hood-feature-overview">
+<h2>Under the hood feature overview<a class="headerlink" href="#under-the-hood-feature-overview" title="Permalink to this heading"></a></h2>
 <p><strong>AutoCarver</strong> is a two step pipeline.</p>
 <section id="i-data-preparation-conversion-to-ordinal-data-buckets">
 <h3>I. Data Preparation: conversion to ordinal data buckets<a class="headerlink" href="#i-data-preparation-conversion-to-ordinal-data-buckets" title="Permalink to this heading"></a></h3>
@@ -179,7 +179,7 @@ As of today, this set of tools is available for binary classification problems o
 <p><strong>AutoCarver</strong> implements <a class="reference internal" href="feature_selector.html#id1"><span class="std std-ref">FeatureSelector, an association centric tool for feature pre-selection</span></a>. It consists of the following Data Selection steps:</p>
 <blockquote>
 <div><ol class="arabic simple">
-<li><p>Measuring association with binary target and ranking of features accordingly.</p></li>
+<li><p>Measuring association with a binary target and ranking features accordingly.</p></li>
 <li><p>Filtering out features too asociated to a better ranked feature.</p></li>
 </ol>
 </div></blockquote>
