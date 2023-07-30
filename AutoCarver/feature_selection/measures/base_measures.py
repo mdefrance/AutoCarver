@@ -1,88 +1,145 @@
 """ Base measures that defines Quantitative and Qualitative features.
 """
-from typing import Any
+from typing import Any, Callable
 
 from pandas import Series
 
 
-def nans_measure(
+def make_measure(
+    measure: Callable,
     active: bool,
     association: dict[str, Any],
     x: Series,
+    y: Series,
+    **kwargs,
+) -> tuple[bool, dict[str, Any]]:
+    """Wrapper to make measures from base metrics
+
+    Parameters
+    ----------
+    measure : Callable
+        _description_
+    active : bool
+        _description_
+    association : dict[str, Any]
+        _description_
+    x : Series
+        Feature to measure
+    y : Series
+        Binary target feature
+
+    Returns
+    -------
+    tuple[bool, dict[str, Any]]
+        _description_
+    """
+    # check that previous steps where passed for computational optimization
+    if active:
+        # use the measure
+        active, measurement = measure(x, y, **kwargs)
+
+        # update association table
+        association.update(measurement)
+
+    return active, association
+
+
+def nans_measure(
+    x: Series,
     y: Series = None,
-    **params,
+    thresh_nan: float = 0.999,
+    **kwargs,
 ) -> tuple[bool, dict[str, Any]]:
     """Measure of the percentage of NaNs
 
     Parameters
     ----------
-    thresh_nan, float: default 1.
-      Maximum percentage of NaNs in a feature
+    x : Series
+        Feature to measure
+    y : Series, optional
+        Binary target feature, by default ``None``
+    thresh_nan : float, optional
+        Maximum percentage of NaNs in a feature, by default ``0.999``
+
+    Returns
+    -------
+    tuple[bool, dict[str, Any]]
+        Whether or not there are to many NaNs and the percentage of NaNs
     """
+    nans = x.isnull()  # ckecking for nans
+    pct_nan = nans.mean()  # Computing percentage of nans
 
-    # whether or not tests where passed
-    if active:
-        nans = x.isnull()  # ckecking for nans
-        pct_nan = nans.mean()  # Computing percentage of nans
+    # updating association
+    measurement = {"pct_nan": pct_nan}
 
-        # updating association
-        association.update({"pct_nan": pct_nan})
+    # Excluding feature that have to many NaNs
+    active = pct_nan < thresh_nan
+    if not active:
+        print(
+            f"Feature {x.name} will be discarded (more than {thresh_nan:2.2%} of nans). Otherwise, set a greater value for thresh_nan."
+        )
 
-        # Excluding feature that have to many NaNs
-        thresh_nan = params.get("thresh_nan", 0.999)
-        active = pct_nan < thresh_nan
-        if not active:
-            print(
-                f"Feature {x.name} will be discarded (more than {thresh_nan:2.2%} of nans). Otherwise, set a greater value for thresh_nan."
-            )
-
-    return active, association
+    return active, measurement
 
 
 def dtype_measure(
-    active: bool,
-    association: dict[str, Any],
     x: Series,
     y: Series = None,
-    **params,
+    **kwargs,
 ) -> tuple[bool, dict[str, Any]]:
-    """Gets dtype"""
+    """Feature's dtype
 
-    # updating association
-    association.update({"dtype": x.dtype})
+    Parameters
+    ----------
+    x : Series
+        Feature to measure
+    y : Series, optional
+        Binary target feature, by default ``None``
 
-    return active, association
+    Returns
+    -------
+    tuple[bool, dict[str, Any]]
+        True and the feature's dtype
+    """
+    # getting dtype
+    measurement = {"dtype": x.dtype}
+
+    return True, measurement
 
 
 def mode_measure(
-    active: bool,
-    association: dict[str, Any],
     x: Series,
     y: Series = None,
-    **params,
+    thresh_mode: float = 0.999,
+    **kwargs,
 ) -> tuple[bool, dict[str, Any]]:
     """Measure of the percentage of the Mode
 
     Parameters
     ----------
-    thresh_mode, float: default 1.
-      Maximum percentage of the mode of a feature
+    x : Series
+        Feature to measure
+    y : Series, optional
+        Binary target feature, by default ``None``
+    thresh_mode : float, optional
+        Maximum percentage of a feature's mode, by default ``0.999``
+
+    Returns
+    -------
+    tuple[bool, dict[str, Any]]
+        Whether or not the mode is overrepresented and the percentage of mode
     """
+    mode = x.mode(dropna=True).values[0]  # computing mode
+    pct_mode = (x == mode).mean()  # Computing percentage of the mode
 
-    # whether or not tests where passed
-    if active:
-        mode = x.mode(dropna=True).values[0]  # computing mode
-        pct_mode = (x == mode).mean()  # Computing percentage of the mode
+    # updating association
+    measurement = {"pct_mode": pct_mode, "mode": mode}
 
-        # updating association
-        association.update({"pct_mode": pct_mode, "mode": mode})
+    # Excluding feature with too frequent modes
+    active = pct_mode < thresh_mode
+    if not active:
+        print(
+            f"Feature {x.name} will be discarded (more than {thresh_mode:2.2%} of its mode). Otherwise, set a greater value for thresh_mode."
+        )
 
-        # Excluding feature with too frequent modes
-        thresh_mode = params.get("thresh_mode", 0.999)
-        active = pct_mode < thresh_mode
-        if not active:
-            print(
-                f"Feature {x.name} will be discarded (more than {thresh_mode:2.2%} of its mode). Otherwise, set a greater value for thresh_mode."
-            )
-
-    return active, association
+    return active, measurement
