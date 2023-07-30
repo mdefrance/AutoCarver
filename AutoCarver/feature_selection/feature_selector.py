@@ -5,8 +5,15 @@ from typing import Any, Callable
 
 from pandas import DataFrame, Series
 
-from .filters import cramerv_filter, spearman_filter, thresh_filter
-from .measures import cramerv_measure, dtype_measure, kruskal_measure, mode_measure, nans_measure
+from .filters import spearman_filter, thresh_filter, tschuprowt_filter
+from .measures import (
+    dtype_measure,
+    kruskal_measure,
+    make_measure,
+    mode_measure,
+    nans_measure,
+    tschuprowt_measure,
+)
 
 # trying to import extra dependencies
 try:
@@ -33,10 +40,10 @@ class FeatureSelector:
         qualitative_features: list[str] = None,
         measures: list[Callable] = None,
         filters: list[Callable] = None,
-        sample_size: float = 1.0,
+        colsample: float = 1.0,
         verbose: bool = False,
         pretty_print: bool = False,
-        **params,
+        **kwargs,
     ) -> None:
         """Initiates a ``FeatureSelector``.
 
@@ -59,21 +66,26 @@ class FeatureSelector:
             See :ref:`Measures`.
             Implemented measures are:
 
-            * [Quantitative Features] For association evaluation: ``kruskal_measure``, ``R_measure``
+            * [Quantitative Features] For association evaluation: ``kruskal_measure`` (default), ``R_measure``
             * [Quantitative Features] For outlier detection: ``zscore_measure``, ``iqr_measure``
-            * [Qualitative Features] For correlation: ``chi2_measure``, ``cramerv_measure``, ``tschuprowt_measure``
+            * [Qualitative Features] For association evaluation: ``chi2_measure``, ``cramerv_measure``, ``tschuprowt_measure`` (default)
 
         filters : list[Callable], optional
             List of filters to be used, by default ``None``.
             See :ref:`Filters`.
             Implemented filters are:
 
-            * [Quantitative Features] For linear correlation: ``spearman_filter``, ``pearson_filter``
-            * [Quantitative Features] For multicoloinearity: ``vif_filter``
-            * [Qualitative Features] For correlation: ``cramerv_filter``, ``tschuprowt_filter``
+            * [Quantitative Features] For linear correlation: ``spearman_filter`` (default), ``pearson_filter``
+            * [Qualitative Features] For correlation: ``cramerv_filter``, ``tschuprowt_filter`` (default)
 
-        sample_size : float, optional
-            _description_, by default ``1.0``
+        colsample : float, optional
+            Size of sampled list of features for sped up computation, between 0 and 1, by default ``1.0``
+            By default, all features are used.
+
+            For colsample=0.5, FeatureSelector will search for the best features in
+            ``features[:len(features)//2]`` and then in ``features[len(features)//2:]``.
+
+            **Tip:** for better performance, should be set such as ``len(features)//2 < 200``.
 
         verbose : bool, optional
             If ``True``, prints raw Discretizers Fit and Transform steps, as long as
@@ -84,19 +96,8 @@ class FeatureSelector:
             If ``True``, adds to the verbose some HTML tables of target rates and frequencies for X and, if provided, X_dev.
             Overrides the value of ``verbose``, by default ``False``
 
-        **params
+        **kwargs
             Sets thresholds for ``measures`` and ``filters``, passed as keyword arguments.
-
-            * thresh_measure, float, minimum association between target and features, by default ``0``. To be used with: ``measure_filter``.
-            * name_measure, str, measure to be used for minimum association filtering. To be used with: ``measure_filter``.
-            * thresh_nan, float,aximum percentage of NaNs in a feature, by default ``1``. To be used with: ``nans_measure``.
-            * thresh_mode, float, maximum percentage of the mode of a feature, by default ``1``. To be used with: ``mode_measure``.
-            * thresh_outlier, float, maximum percentage of Outliers in a feature, by default ``1``. To be used with: ``iqr_measure``, ``zscore_measure``.
-            * thresh_corr, float, Maximum association between features, by default ``1``. To be used with: ``spearman_filter``, ``pearson_filter``, ``cramerv_filter``, ``tschuprowt_filter``.
-            * thresh_vif, float, maximum VIF between features, by default ``inf``. To be used with: ``vif_filter``.
-            * ascending, bool default ``False``
-                * ``True``: Lower values of the measure are to be considered as more associated to the target
-                * ``False``: Higher values of the measure are to be considered as more associated to the target
 
         Examples
         --------
@@ -122,14 +123,14 @@ class FeatureSelector:
         ), "Must set 0 < n_best // 2 <= len(features)"
 
         # feature sample size per iteration
-        self.sample_size = sample_size
+        self.colsample = colsample
 
         # initiating measures
         if measures is None:
             if any(quantitative_features):  # quantitative feature association measure
                 measures = [kruskal_measure]
             else:  # qualitative feature association measure
-                measures = [cramerv_measure]
+                measures = [tschuprowt_measure]
         self.measures = [dtype_measure, nans_measure, mode_measure] + measures[:]
 
         # initiating filters
@@ -137,7 +138,7 @@ class FeatureSelector:
             if any(quantitative_features):  # quantitative feature association measure
                 filters = [spearman_filter]
             else:  # qualitative feature association measure
-                filters = [cramerv_filter]
+                filters = [tschuprowt_filter]
         self.filters = [thresh_filter] + filters[:]
 
         # names of measures to sort by
@@ -155,7 +156,7 @@ class FeatureSelector:
                 )
 
         # keyword arguments
-        self.params = params
+        self.kwargs = kwargs
 
     def _select_features(
         self, X: DataFrame, y: Series, features: list[str], n_best: int
@@ -183,14 +184,12 @@ class FeatureSelector:
 
         # Computes association between X and y
         initial_associations = apply_measures(
-            X, y, measures=self.measures, features=features, **self.params
+            X, y, measures=self.measures, features=features, **self.kwargs
         )
 
         # sorting statistics
         measure_names = evaluated_measure_names(initial_associations, self.measure_names)
-        initial_associations = initial_associations.sort_values(
-            measure_names, ascending=self.params.get("ascending", False)
-        )
+        initial_associations = initial_associations.sort_values(measure_names, ascending=False)
 
         if self.verbose:  # displaying association measure
             print("\n - Association between X and y")
@@ -200,13 +199,11 @@ class FeatureSelector:
         all_best_features: dict[str, Any] = {}
         for measure_name in measure_names:
             # sorting association for each measure
-            associations = initial_associations.sort_values(
-                measure_name, ascending=self.params.get("ascending", False)
-            )
+            associations = initial_associations.sort_values(measure_name, ascending=False)
 
             # filtering for each measure, as each measure ranks the features differently
             filtered_association = apply_filters(
-                X, associations, filters=self.filters, **self.params
+                X, associations, filters=self.filters, **self.kwargs
             )
 
             # selected features for the measure
@@ -259,21 +256,21 @@ class FeatureSelector:
             List of selected features
         """
         # splitting features in chunks
-        if self.sample_size < 1:
+        if self.colsample < 1:
             # shuffling features to get random samples of features
             shuffle(self.features)
 
             # number of features per sample
-            chunks = int(len(self.features) // (1 / self.sample_size))
+            chunks = int(len(self.features) // (1 / self.colsample))
 
             # splitting feature list in samples
             feature_samples = [
                 self.features[chunks * i : chunks * (i + 1)]
-                for i in range(int(1 / self.sample_size) - 1)
+                for i in range(int(1 / self.colsample) - 1)
             ]
 
             # adding last sample with all remaining features
-            feature_samples += [self.features[chunks * (int(1 / self.sample_size) - 1) :]]
+            feature_samples += [self.features[chunks * (int(1 / self.colsample) - 1) :]]
 
             # iterating over each feature samples
             best_features = []
@@ -323,7 +320,7 @@ def print_associations(association: DataFrame, pretty_print: bool = False) -> No
         display_html(nicer_association._repr_html_(), raw=True)
 
 
-def feature_association(x: Series, y: Series, measures: list[Callable], **params) -> dict[str, Any]:
+def feature_association(x: Series, y: Series, measures: list[Callable], **kwargs) -> dict[str, Any]:
     """Measures association between x and y
 
     Parameters
@@ -344,13 +341,15 @@ def feature_association(x: Series, y: Series, measures: list[Callable], **params
 
     # iterating over each measure
     for measure in measures:
-        passed, association = measure(passed, association, x, y, **params)
+        passed, association = make_measure(
+            measure, passed, association, x, y, **kwargs, **association
+        )
 
     return association
 
 
 def apply_measures(
-    X: DataFrame, y: Series, measures: list[Callable], features: list[str], **params
+    X: DataFrame, y: Series, measures: list[Callable], features: list[str], **kwargs
 ) -> DataFrame:
     """Measures association between columns of X and y
 
@@ -364,10 +363,6 @@ def apply_measures(
         _description_
     measure_names : list[str]
         _description_
-    ascending, bool default False
-        According to this measure:
-            - True: Lower values of the measure are to be considered as more associated to the target
-            - False: Higher values of the measure are to be considered as more associated to the target
 
     Returns
     -------
@@ -377,7 +372,7 @@ def apply_measures(
     # applying association measure to each column
     associations = (
         X[features]
-        .apply(feature_association, y=y, measures=measures, **params, result_type="expand", axis=0)
+        .apply(feature_association, y=y, measures=measures, **kwargs, result_type="expand", axis=0)
         .T
     )
 
@@ -410,7 +405,7 @@ def evaluated_measure_names(associations: DataFrame, measure_names: list[str]) -
 
 
 def apply_filters(
-    X: DataFrame, associations: DataFrame, filters: list[Callable], **params
+    X: DataFrame, associations: DataFrame, filters: list[Callable], **kwargs
 ) -> DataFrame:
     """Filters out too correlated features (least relevant first)
 
@@ -424,10 +419,6 @@ def apply_filters(
         _description_
     measure_name : str
         _description_
-    ascending, bool default False
-        According to this measure:
-            - True: Lower values of the measure are to be considered as more associated to the target
-            - False: Higher values of the measure are to be considered as more associated to the target
 
     Returns
     -------
@@ -437,6 +428,6 @@ def apply_filters(
     # applying successive filters
     filtered_associations = associations.copy()
     for filtering in filters:
-        filtered_associations = filtering(X, filtered_associations, **params)
+        filtered_associations = filtering(X, filtered_associations, **kwargs)
 
     return filtered_associations

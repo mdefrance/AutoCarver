@@ -22,7 +22,7 @@ Finally, Tschuprow's T is computed using :math:`T=\frac{V}{\sqrt{\sqrt{n_x-1}}}`
 
 .. _AutoCarver:
 
-AutoCarver, the automated, fast paced data processing pipeline
+AutoCarver, the automated, fast-paced data processing pipeline
 --------------------------------------------------------------
 
 .. autoclass:: AutoCarver.AutoCarver

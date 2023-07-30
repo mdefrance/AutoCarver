@@ -150,8 +150,8 @@ As of today, this set of tools is available for binary classification problems o
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ul class="simple">
-<li><p>Representativity threshold of modalities if user selected (<code class="docutils literal notranslate"><span class="pre">min_freq</span></code> attribute).</p></li>
-<li><p>At this step, if any, NaNs are set as set as there own, non-ordered, modality.</p></li>
+<li><p>Representativity threshold of modalities is user selected (<code class="docutils literal notranslate"><span class="pre">min_freq</span></code> attribute).</p></li>
+<li><p>At this step, if any, NaNs are set as there own modality (no given order).</p></li>
 <li><p>Helps improve modality relevancy and reduces the set of possible combinations to test from.</p></li>
 <li><p>These steps are all included in the <code class="docutils literal notranslate"><span class="pre">AutoCarver</span></code> pipeline.</p></li>
 </ul>
@@ -159,7 +159,7 @@ As of today, this set of tools is available for binary classification problems o
 </section>
 <section id="ii-data-optimization-maximization-of-bucket-association">
 <h3>II. Data Optimization: maximization of bucket association<a class="headerlink" href="#ii-data-optimization-maximization-of-bucket-association" title="Permalink to this heading"></a></h3>
-<p>The core of <strong>AutoCarver</strong> is <a class="reference internal" href="auto_carver.html#id1"><span class="std std-ref">AutoCarver, the automated, fast paced data processing pipeline</span></a>. It consists of the following Data Optimization steps:</p>
+<p>The core of <strong>AutoCarver</strong> is <a class="reference internal" href="auto_carver.html#id1"><span class="std std-ref">AutoCarver, the automated, fast-paced data processing pipeline</span></a>. It consists of the following Data Optimization steps:</p>
 <blockquote>
 <div><ol class="arabic simple">
 <li><p>Identifying the most associated combination from all ordered combinations of modalities.</p></li>

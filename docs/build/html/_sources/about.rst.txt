@@ -59,8 +59,8 @@ I. Data Preparation: conversion to ordinal data buckets
 
 .. note::
 
-   * Representativity threshold of modalities if user selected (``min_freq`` attribute).
-   * At this step, if any, NaNs are set as set as there own, non-ordered, modality.
+   * Representativity threshold of modalities is user selected (``min_freq`` attribute).
+   * At this step, if any, NaNs are set as there own modality (no given order).
    * Helps improve modality relevancy and reduces the set of possible combinations to test from.
    * These steps are all included in the ``AutoCarver`` pipeline.
 

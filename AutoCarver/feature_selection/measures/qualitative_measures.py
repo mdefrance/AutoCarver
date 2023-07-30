@@ -9,81 +9,138 @@ from scipy.stats import chi2_contingency
 
 
 def chi2_measure(
-    active: bool, association: dict[str, Any], x: Series, y: Series, **params
+    x: Series,
+    y: Series,
+    thresh_chi2: float = 0,
+    **kwargs,
 ) -> tuple[bool, dict[str, Any]]:
-    """Wrapper for `scipy.stats.chi2_contingency <https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chi2_contingency.html>`_'s statistic on the x by y crosstab."""
+    """Wrapper for `scipy.stats.chi2_contingency <https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chi2_contingency.html>`_.
+    Computes Chi2 statistic on the ``x`` by ``y`` `pandas.crosstab <https://pandas.pydata.org/docs/reference/api/pandas.crosstab.html>`_.
 
-    # check that previous steps where passed
-    if active:
-        # computing crosstab between x and y
-        xtab = crosstab(x, y)
+    Parameters
+    ----------
+    x : Series
+        Feature to measure
+    y : Series
+        Binary target feature
+    thresh_chi2 : float, optional
+        Minimum Chi2 association, by default ``0``
 
-        # Chi2 statistic
-        chi2 = chi2_contingency(xtab)[0]
+    Returns
+    -------
+    tuple[bool, dict[str, Any]]
+        Whether ``x`` is sufficiently associated to ``y`` and Pearson's chi2 between ``x`` and ``y``.
+    """
+    # computing crosstab between x and y
+    xtab = crosstab(x, y)
 
-        # updating association
-        association.update({"chi2_measure": chi2})
+    # Chi2 statistic
+    chi2 = chi2_contingency(xtab)[0]
 
-    return active, association
+    # updating association
+    measurement = {"chi2_statistic": chi2}
+
+    # Excluding features not associated enough
+    active = chi2 < thresh_chi2
+
+    return active, measurement
 
 
 def cramerv_measure(
-    active: bool, association: dict[str, Any], x: Series, y: Series, **params
+    x: Series,
+    y: Series,
+    thresh_cramerv: float = 0,
+    chi2_statistic: float = None,
+    **kwargs,
 ) -> tuple[bool, dict[str, Any]]:
-    """Carmer's V between x and y."""
+    """Computes Carmér's V between ``x`` and ``y`` from ``chi2_measure``.
 
-    # check that previous steps where passed
-    if active:
-        # computing chi2
-        if "chi2_measure" not in association:
-            active, association = chi2_measure(active, association, x, y, **params)
+    Parameters
+    ----------
+    x : Series
+        Feature to measure
+    y : Series
+        Binary target feature
+    thresh_cramerv : float, optional
+        Minimum Cramér's V association, by default ``0``
+    chi2_statistic : float, optional
+        Pearson's chi2 between ``x`` and ``y``, by default ``None``
 
-        # number of observations
-        n_obs = (notna(x) & notna(y)).sum()
+    Returns
+    -------
+    tuple[bool, dict[str, Any]]
+        Whether ``x`` is sufficiently associated to ``y`` and Carmér's V between ``x`` and ``y``.
+    """
+    # Chi2 statistic
+    if chi2_statistic is None:
+        _, measurement = chi2_measure(x, y, **kwargs)
+        chi2_statistic = measurement.get("chi2_statistic")
 
-        # number of values taken by the features
-        n_mod_x, n_mod_y = x.nunique(), y.nunique()
-        min_n_mod = min(n_mod_x, n_mod_y)
+    # number of observations
+    n_obs = (notna(x) & notna(y)).sum()
 
-        # Chi2 statistic
-        chi2 = association.get("chi2_measure")
+    # number of values taken by the features
+    n_mod_x, n_mod_y = x.nunique(), y.nunique()
+    min_n_mod = min(n_mod_x, n_mod_y)
 
-        # Cramer's V
-        cramerv = sqrt(chi2 / n_obs / (min_n_mod - 1))
+    # Cramér's V
+    cramerv = sqrt(chi2_statistic / n_obs / (min_n_mod - 1))
 
-        # updating association
-        association.update({"cramerv_measure": cramerv})
+    # updating association
+    measurement.update({"cramerv_measure": cramerv})
 
-    return active, association
+    # Excluding features not associated enough
+    active = cramerv < thresh_cramerv
+
+    return active, measurement
 
 
 def tschuprowt_measure(
-    active: bool, association: dict[str, Any], x: Series, y: Series, **params
+    x: Series,
+    y: Series,
+    thresh_tschuprowt: float = 0,
+    chi2_statistic: float = None,
+    **kwargs,
 ) -> tuple[bool, dict[str, Any]]:
-    """Tschuprow's T between two Series of qualitative features"""
+    """Computes Tschuprow's T between ``x`` and ``y`` from ``chi2_measure``.
 
-    # check that previous steps where passed
-    if active:
-        # computing chi2
-        if "chi2_measure" not in association:
-            active, association = chi2_measure(active, association, x, y, **params)
+    Parameters
+    ----------
+    x : Series
+        Feature to measure
+    y : Series
+        Binary target feature
+    thresh_tschuprowt : float, optional
+        Minimum Tschuprow's T association, by default ``0``
+    chi2_statistic : float, optional
+        Pearson's chi2 between ``x`` and ``y``, by default ``None``
 
-        # numnber of observations
-        n_obs = (notna(x) & notna(y)).sum()
+    Returns
+    -------
+    tuple[bool, dict[str, Any]]
+        Whether ``x`` is sufficiently associated to ``y`` and Tschuprow's T between ``x`` and ``y``.
+    """
+    # Chi2 statistic
+    if chi2_statistic is None:
+        _, measurement = chi2_measure(x, y, **kwargs)
+        chi2_statistic = measurement.get("chi2_statistic")
 
-        # number of values taken by the features
-        n_mod_x, n_mod_y = x.nunique(), y.nunique()
+    # number of observations
+    n_obs = (notna(x) & notna(y)).sum()
 
-        # Chi2 statistic
-        chi2 = association.get("chi2_measure")
+    # number of values taken by the features
+    n_mod_x, n_mod_y = x.nunique(), y.nunique()
 
-        # Tschuprow's T
-        dof_mods = sqrt((n_mod_x - 1) * (n_mod_y - 1))
-        tschuprowt = 0
-        if dof_mods > 0:
-            tschuprowt = sqrt(chi2 / n_obs / dof_mods)
+    # Tschuprow's T
+    dof_mods = sqrt((n_mod_x - 1) * (n_mod_y - 1))
+    tschuprowt = 0
+    if dof_mods > 0:
+        tschuprowt = sqrt(chi2_statistic / n_obs / dof_mods)
 
-        # updating association
-        association.update({"tschuprowt_measure": tschuprowt})
+    # updating association
+    measurement.update({"tschuprowt_measure": tschuprowt})
 
-    return active, association
+    # Excluding features not associated enough
+    active = tschuprowt < thresh_tschuprowt
+
+    return active, measurement

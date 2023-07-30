@@ -11,29 +11,29 @@ It consists of the following Data Selection steps:
 
 By default, quantitative features are:
 
- * Ranked according to Kurskal-Wallis' test statistic.
- * Filtered according to Spearman correlation coefficient
+ * Ranked according to Kurskal-Wallis' :math:`H` test statistic
+ * Filtered according to Spearman's :math:`\rho` correlation coefficient
 
 By default, qualitative features are:
 
- * Ranked according to Cramer's V
- * Filtered according to Cramer's V
+ * Ranked according to Tschuprow's :math:`T`
+ * Filtered according to Tschuprow's :math:`T`
 
 In general, associations are computed according to the provided data types of :math:`x` and :math:`y`:
 
-+-----------------------+---------------------------------------------------------------------+-------------------------------+
-| :math:`x` \\ :math:`y`| Qualitatitve                                                        | Quantitative                  |
-+-----------------------+---------------------------------------------------------------------+-------------------------------+
-| Qualitative           | Pearson's :math:`\chi^2`, Cramér's :math:`V`, Tschuprow's :math:`T` | Kruskal-Wallis, R coefficient |
-+-----------------------+---------------------------------------------------------------------+-------------------------------+
-| Quantitative          | Kruskal-Wallis, R coefficient                                       | Spearman, Pearson             |
-+-----------------------+---------------------------------------------------------------------+-------------------------------+
++-----------------------+---------------------------------------------------------------------+--------------------------------------------------+
+| :math:`x` \\ :math:`y`| Qualitatitve                                                        | Quantitative                                     |
++-----------------------+---------------------------------------------------------------------+--------------------------------------------------+
+| Qualitative           | Pearson's :math:`\chi^2`, Cramér's :math:`V`, Tschuprow's :math:`T` | Kruskal-Wallis' :math:`H`, :math:`R` coefficient |
++-----------------------+---------------------------------------------------------------------+--------------------------------------------------+
+| Quantitative          | Kruskal-Wallis' :math:`H`, :math:`R` coefficient                    | Pearson's :math:`r`, Spearman's :math:`\rho`     |
++-----------------------+---------------------------------------------------------------------+--------------------------------------------------+
 
 See :ref:`Measures` and :ref:`Filters`, for details on measures and filters' implementation.
 
 .. note::
 
-    Additionnal measure/filter specific parameters can be added as keayword arguments.
+    Additionnal measure/filter specific parameters can be added as keyword arguments.
 
 .. _FeatureSelector:
 
@@ -52,19 +52,21 @@ Association measures, X by y
 Quantitative measures
 .....................
 
-Kruskal-Wallis :math:`H` test statistic
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Kruskal-Wallis' :math:`H` test statistic
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For a quantititative feature :math:`x`, the association with a binary target :math:`y` is computed using `scipy.stats.kruskal <https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.kruskal.html>`_.
+For a quantitative feature :math:`x`, the corresponding rank feature :math:`x_r` is the sorted sample of :math:`x` such that any :math:`i` in :math:`(1, n-1)` verifies :math:`x_r^i \leq x_r^{i+1}`, where :math:`n` is the number of observations.
 
-Kruskal-Wallis :math:`H` test statistic, as known as one-way ANOVA on ranks, allows one to check that two features originate from the same disctribution.
+The association with a binary target :math:`y` is computed using `scipy.stats.kruskal <https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.kruskal.html>`_.
+
+Kruskal-Wallis' :math:`H` test statistic, as known as one-way ANOVA on ranks, allows one to check that two features originate from the same disctribution.
 It is used to determine whether or not :math:`x` is distributed the same when :math:`y=1` compared to when :math:`y=0`.
 It is computed using the following formula:
 
 
 .. math::
 
-    H= (n-1) \frac{ \sum_{i=1}^{n_y}{ n_{y=i} (\bar{x_r^{i.}} - \bar{x_r}) } } { \sum_{i=1}^{n_y}{ \sum_{j=1}^{n_{y=i}}{ (x_r^{ij} - \bar{x_r}) } } }
+    H = (n-1) \frac{ \sum_{i=1}^{n_y}{ n_{y=i} (\bar{x_r^{i.}} - \bar{x_r}) } } { \sum_{i=1}^{n_y}{ \sum_{j=1}^{n_{y=i}}{ (x_r^{ij} - \bar{x_r}) } } }
 
 
 
@@ -79,9 +81,6 @@ where:
  * :math:`\bar{x_r}=\sum_{i=1}^{n_y}{\sum_{j=1}^{n_{y=i}}}` is the sample mean of :math:`x_r`
 
 
-
-
-
 .. autofunction:: AutoCarver.feature_selection.measures.kruskal_measure
 
 .. note::
@@ -93,6 +92,33 @@ where:
 
 Coefficient of determination :math:`R`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 
+For a binary feature :math:`y` and a quantitative feature :math:`x` the following linear regression model is fitted using `statsmodels.formula.api.ols <https://www.statsmodels.org/dev/generated/statsmodels.formula.api.ols.html>`_:
+
+.. math::
+
+    x = \alpha + \beta y + \epsilon
+
+where:
+ * :math:`\alpha` and :math:`\beta` are the coefficient of the linear regression model
+ * :math:`\epsilon` is the residual of the linear regression model 
+
+The determination coefficient, often denoted as :math:`R^2`, is a statistical measure that quantifies the goodness of fit of a linear regression model.
+In this specific case, it is equal to the square of Pearson's :math:`r` correlation coefficient between :math:`x` and :math:`y`.
+It is computed with the following formula:
+
+.. math::
+
+    R = \sqrt{ 1 - \frac{ SS_{res} }{ SS_{tot} } }
+
+
+where:
+
+ * :math:`n` is the number of observations
+ * :math:`SS_{res} = \sum_{i=1}^n{(x_i - \alpha - \beta y_i)^2} = \sum_{i=1}^n{\epsilon_i^2}` is the residual sum of squares
+ * :math:`SS_{tot} = \sum_{i=1}^n{(x_i - \bar{x})^2}` is the total sum of squares
+ * :math:`\bar{x}=\sum_{i=1}^{n}{x_i}` is the sample mean of :math:`x`
+
 
 
 .. autofunction:: AutoCarver.feature_selection.measures.R_measure
@@ -101,14 +127,53 @@ Coefficient of determination :math:`R`
 
 
 
-Quantitative outlier Detection
+Quantitative Outlier Detection
 ..............................
+
+
+Standard score
+^^^^^^^^^^^^^^
+
+Standard score can be applied as a measure of deviation to determine outlier.
+For a feature :math:`x` it is computed for any oservation :math:`x_i` as follows:
+
+.. math::
+
+    z_i = \frac{x_i - \bar{x}}{S}
+
+where:
+
+ * :math:`n` is the number of observations
+ * :math:`\bar{x}=\frac{1}{n}\sum_{j=1}^n{x_j}` is the sample mean of :math:`x`
+ * :math:`S=\sqrt{\frac{1}{n-1}\sum_{j=1}^n{(x_j - \bar{x})^2}}` is the sample standard deviation of :math:`x`
 
 .. autofunction:: AutoCarver.feature_selection.measures.zscore_measure
 
 
 
 
+
+Interquartile range
+^^^^^^^^^^^^^^^^^^^
+
+Interquartile range is widely used as an outlier detection metric.
+For a feature :math:`x` it is computed as follows:
+
+.. math::
+
+    IQR = Q_3 - Q_1
+
+where:
+
+ * :math:`Q_1` is the 25th percentile of the :math:`x`
+ * :math:`Q_3` is the 75th percentile of the :math:`x`
+
+
+Any observation :math:`x_i` of feature :math:`x`, can be considered an outlier if it does not verify:
+
+.. math::
+
+    Q1 - 1.5 IQR \leq x_i \leq Q3 + 1.5 IQR
 
 .. autofunction:: AutoCarver.feature_selection.measures.iqr_measure
 
@@ -138,8 +203,8 @@ where:
  * :math:`n_x` is the number of modalities of :math:`x`
  * :math:`n_y` is the number of modalities of :math:`y`
  * :math:`n_{ij}` is the number of observations that take modality :math:`i` of :math:`x` and modality :math:`j` of :math:`y`
- * :math:`n_{i.}=\sum_{i=1}^{n_x}` is the total number of observations that take modality :math:`i` of :math:`x`
- * :math:`n_{.j}=\sum_{j=1}^{n_y}` is the total number of observations that take modality :math:`j` of :math:`y`
+ * :math:`n_{i.}=\sum_{i=1}^{n_x}n_{ij}` is the total number of observations that take modality :math:`i` of :math:`x`
+ * :math:`n_{.j}=\sum_{j=1}^{n_y}n_{ij}` is the total number of observations that take modality :math:`j` of :math:`y`
 
 .. autofunction:: AutoCarver.feature_selection.measures.chi2_measure
 
@@ -197,17 +262,17 @@ Base data information
 .. autofunction:: AutoCarver.feature_selection.measures.nans_measure
 
 .. note::
-    ``nans_measure`` is evaluated by default by ``FeatureSelector``. If threshold is reached, feature will automatically be dropped by ``filters.thresh_filter()``.
+    ``nans_measure`` is evaluated by default by ``FeatureSelector``. If threshold is reached, feature will automatically be dropped.
 
 .. autofunction:: AutoCarver.feature_selection.measures.dtype_measure
     
 .. note::
-    ``dtype_measure`` is evaluated by default by ``FeatureSelector``. If threshold is reached, feature will automatically be dropped by ``filters.thresh_filter()``.
+    ``dtype_measure`` is evaluated by default by ``FeatureSelector``. If threshold is reached, feature will automatically be dropped.
 
 .. autofunction:: AutoCarver.feature_selection.measures.mode_measure
 
 .. note::
-    ``mode_measure`` is evaluated by default by ``FeatureSelector``. If threshold is reached, feature will automatically be dropped by ``filters.thresh_filter()``.
+    ``mode_measure`` is evaluated by default by ``FeatureSelector``. If threshold is reached, feature will automatically be dropped.
 
 
 
@@ -350,17 +415,3 @@ where:
 
 .. autofunction:: AutoCarver.feature_selection.filters.tschuprowt_filter
 
-
-
-
-
-
-Other filters
-.............
-
-.. autofunction:: AutoCarver.feature_selection.filters.thresh_filter
-
-.. note::
-    ``thresh_filter`` is used by default by ``FeatureSelector``. Automatically features that did not pas :ref:`Measures`. 
-
-.. autofunction:: AutoCarver.feature_selection.filters.measure_filter
