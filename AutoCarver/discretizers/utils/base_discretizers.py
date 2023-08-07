@@ -215,16 +215,6 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             if self.copy:
                 x_copy = X.copy()
 
-        # checking for binary target
-        if y is not None:
-            y_values = unique(y)
-            assert (0 in y_values) & (
-                1 in y_values
-            ), " - [BaseDiscretizer] y must be a binary Series (int or float, not object)"
-            assert (
-                len(y_values) == 2
-            ), " - [BaseDiscretizer] y must be a binary Series (int or float, not object)"
-
         return x_copy
 
     def _check_new_values(self, X: DataFrame, features: list[str]) -> None:
