@@ -144,19 +144,13 @@ def find_quantiles(
     list[float]
         _description_
     """
-    # initialisation de la taille total du dataframe
+    # getting dataset size
     if len_df is None:
         len_df = len(df_feature)
 
-    # initialisation de la liste des quantiles
+    # initiating liust of quantiles
     if quantiles is None:
         quantiles = []
-
-    # calcul du nombre d'occurences de chaque valeur
-    frequencies = (
-        df_feature.value_counts(dropna=False, normalize=False).drop(nan, errors="ignore") / len_df
-    )  # dropping nans to keep them anyways
-    values, frequencies = array(frequencies.index), array(frequencies.values)
 
     # case 1: no observation, all values have been attributed there corresponding modality
     if len(df_feature) == 0:
@@ -171,26 +165,32 @@ def find_quantiles(
             quantiles=quantiles,
         )
 
+    # frequencies per known value
+    frequencies = (
+        df_feature.value_counts(dropna=False, normalize=False).drop(nan, errors="ignore") / len_df
+    )
+    values, frequencies = array(frequencies.index), array(frequencies.values)
+
     # case 3 : there are no missing values
     # case 3.1 : there is an over-populated value
     if any(frequencies > 1 / q):
-        # identification de la valeur sur-représentée
+        # identifying over-represented modality
         frequent_value = values[frequencies.argmax()]
 
-        # ajout de la valeur fréquente à la liste des quantiles
+        # adding over-represented modality to the list of quantiles
         quantiles += [frequent_value]
 
-        # calcul des quantiles pour les parties inférieures et supérieures
+        # computing quantiles on smaller and greater values
         quantiles_inf = find_quantiles(df_feature[df_feature < frequent_value], q, len_df=len_df)
         quantiles_sup = find_quantiles(df_feature[df_feature > frequent_value], q, len_df=len_df)
 
         return quantiles_inf + quantiles + quantiles_sup
 
     # case 3.2 : there is no over-populated value
-    # nouveau nombre de quantile en prenant en compte les classes déjà constituées
+    # reducing the size of quantiles by frequencies of over-represented modalities
     new_q = max(round(len(df_feature) / len_df * q), 1)
 
-    # calcul des quantiles sur le dataframe
+    # cutting values into quantiles if there are enough of them
     if new_q > 1:
         quantiles += list(
             quantile(
@@ -200,7 +200,7 @@ def find_quantiles(
             )
         )
 
-    # case when there are no enough observations to compute quantiles
+    # not enough values observed, grouping all remaining values into a quantile
     else:
         quantiles += [max(df_feature.values)]
 

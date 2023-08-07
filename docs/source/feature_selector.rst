@@ -55,7 +55,9 @@ Quantitative measures
 Kruskal-Wallis' :math:`H` test statistic
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For a quantitative feature :math:`x`, the corresponding rank feature :math:`x_r` is the sorted sample of :math:`x` such that any :math:`i` in :math:`(1, n-1)` verifies :math:`x_r^i \leq x_r^{i+1}`, where :math:`n` is the number of observations.
+
+For a quantitative feature :math:`x`, the corresponding order feature :math:`x_o` is the sorted sample of :math:`x` such that any :math:`i` in :math:`(1, n-1)` verifies :math:`x_o^i \leq x_o^{i+1}`, where :math:`n` is the number of observations. For the same feature :math:`x`, the corresponding rank :math:`x_r` is the index of :math:`x`'s values in :math:`x_o`.
+
 
 The association with a binary target :math:`y` is computed using `scipy.stats.kruskal <https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.kruskal.html>`_.
 
@@ -66,7 +68,7 @@ It is computed using the following formula:
 
 .. math::
 
-    H = (n-1) \frac{ \sum_{i=1}^{n_y}{ n_{y=i} (\bar{x_r^{i.}} - \bar{x_r}) } } { \sum_{i=1}^{n_y}{ \sum_{j=1}^{n_{y=i}}{ (x_r^{ij} - \bar{x_r}) } } }
+    H = (n-1) \frac{ \sum_{i=1}^{n_y}{ n_{y=i} (\bar{x_r^{i.}} - \bar{x_r})^2 } } { \sum_{i=1}^{n_y}{ \sum_{j=1}^{n_{y=i}}{ (x_r^{ij} - \bar{x_r})^2 } } }
 
 
 
@@ -320,7 +322,7 @@ Spearman's :math:`\rho`
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 
-For a quantitative feature :math:`x`, the corresponding rank feature :math:`x_r` is the sorted sample of :math:`x` such that any :math:`i` in :math:`(1, n-1)` verifies :math:`x_r^i \leq x_r^{i+1}`, where :math:`n` is the number of observations.
+For a quantitative feature :math:`x`, the corresponding order feature :math:`x_o` is the sorted sample of :math:`x` such that any :math:`i` in :math:`(1, n-1)` verifies :math:`x_o^i \leq x_o^{i+1}`, where :math:`n` is the number of observations. For the same feature :math:`x`, the corresponding rank :math:`x_r` is the index of :math:`x`'s values in :math:`x_o`.
 
 Spearman's :math:`\rho` is Pearson's :math:`r` computed on the rank features. As so, Spearman's :math:`\rho` is computed with the following formula:
 
