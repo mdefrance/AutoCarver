@@ -145,7 +145,7 @@ class DefaultDiscretizer(BaseDiscretizer):
             print(f" - [DefaultDiscretizer] Fit {str(self.qualitative_features)}")
 
         # computing frequencies of each modality
-        frequencies = x_copy[self.qualitative_features].apply(value_counts, normalize=True, axis=0)
+        frequencies = x_copy.apply(value_counts, normalize=True, axis=0)
 
         for feature in self.qualitative_features:
             # sorting orders based on target rates
@@ -174,9 +174,7 @@ class DefaultDiscretizer(BaseDiscretizer):
                 self.values_orders.update({feature: order})
 
         # computing target rate per modality for ordering
-        target_rates = x_copy[self.qualitative_features].apply(
-            target_rate, y=y, ascending=True, axis=0
-        )
+        target_rates = x_copy.apply(target_rate, y=y, ascending=True, axis=0)
 
         # sorting orders based on target rates
         for feature in self.qualitative_features:
