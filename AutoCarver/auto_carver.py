@@ -276,10 +276,10 @@ class AutoCarver(BaseDiscretizer):
             assert (
                 not not_numeric
             ), " - [AutoCarver] y must be a continuous Series (int or float, not object)"
-            pct_y = len(y_values) / len(y)
-            assert (
-                pct_y > 0.01
-            ), f" - [AutoCarver] y must be a continuous or binary Series (not implemented for multiclass, only {pct_y:2.2%} distinct values)"
+            # pct_y = len(y_values) / len(y)  # TODO: remove this when asking which type of classif
+            # assert (
+            #     pct_y > 0.01
+            # ), f" - [AutoCarver] y must be a continuous or binary Series (not implemented for multiclass, only {pct_y:2.2%} distinct values)"
 
             # setting up helper functions to be used in autocarver
             helpers = {
@@ -295,7 +295,7 @@ class AutoCarver(BaseDiscretizer):
             measures = ["kruskal"]
             assert (
                 self.sort_by in measures
-            ), f""" - [AutoCarver] Measure '{self.sort_by}' not implemented for a binary target. Choose from: {str(measures)}."""
+            ), f""" - [AutoCarver] Measure '{self.sort_by}' not implemented for a continuous target. Choose from: {str(measures)}."""
 
         return x_copy, x_dev_copy, helpers
 

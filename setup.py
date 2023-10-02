@@ -10,7 +10,7 @@ with open(path.join(here, "README.md"), encoding="utf-8") as fh:
 
 setup(
     name="AutoCarver",
-    version="5.2.1",
+    version="5.2.2",
     author="Mario DEFRANCE",
     author_email="defrancemario@gmail.com",
     description="Automatic Discretization of Features with Optimal Target Association",
