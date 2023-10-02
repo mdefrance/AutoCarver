@@ -205,7 +205,9 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         x_copy = X
         if X is not None:
             # checking for X's type
-            assert isinstance(X, DataFrame), f"X must be a pandas.DataFrame, instead {type(X)} was passed"
+            assert isinstance(
+                X, DataFrame
+            ), f"X must be a pandas.DataFrame, instead {type(X)} was passed"
 
             # checking for input columns
             missing_columns = [feature for feature in self.features if feature not in X]
@@ -220,7 +222,9 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
 
             if y is not None:
                 # checking for y's type
-                assert isinstance(y, Series), f"y must be a pandas.Series, instead {type(y)} was passed"
+                assert isinstance(
+                    y, Series
+                ), f"y must be a pandas.Series, instead {type(y)} was passed"
 
                 # checking indices
                 assert all(y.index == X.index), f"X and y must have the same indices."
