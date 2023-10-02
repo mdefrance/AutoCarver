@@ -44,15 +44,16 @@ class AutoCarver(BaseDiscretizer):
         ordinal_features: list[str] = None,
         values_orders: dict[str, GroupedList] = None,
         max_n_mod: int = 5,
-        # min_carved_freq: float = 0,  # TODO: update this parameter so that it is set according to frequency rather than number of groups
         output_dtype: str = "float",
         dropna: bool = True,
-        unknown_handling: str = "raises",
         copy: bool = False,
         verbose: bool = False,
         pretty_print: bool = False,
-        str_nan: str = "__NAN__",
-        str_default: str = "__OTHER__",
+        **kwargs,
+        # min_carved_freq: float = 0,  # TODO: update this parameter so that it is set according to frequency rather than number of groups
+        # unknown_handling: str = "raises",  # TODO: add parameter to remove unknown values whatsoever
+        # str_nan: str = "__NAN__",
+        # str_default: str = "__OTHER__",
     ) -> None:
         """Initiates an ``AutoCarver``.
 
@@ -122,11 +123,8 @@ class AutoCarver(BaseDiscretizer):
             If ``True``, adds to the verbose some HTML tables of target rates and frequencies for X and, if provided, X_dev.
             Overrides the value of ``verbose``, by default ``False``
 
-        str_nan : str, optional
-            String representation to input ``numpy.nan``. If ``dropna=False``, ``numpy.nan`` will be left unchanged, by default ``"__NAN__"``
-
-        str_default : str, optional
-            String representation for default qualitative values, i.e. values less frequent than ``min_freq``, by default ``"__OTHER__"``
+        **kwargs
+            Pass values for ``str_default``and ``str_nan`` of ``Discretizer`` (default string values).
 
         Examples
         --------
@@ -157,8 +155,8 @@ class AutoCarver(BaseDiscretizer):
             values_orders=values_orders,
             input_dtypes=self.input_dtypes,
             output_dtype=output_dtype,
-            str_nan=str_nan,
-            str_default=str_default,
+            str_nan=kwargs.get("str_nan", "__NAN__"),
+            str_default=kwargs.get("str_default", "__OTHER__"),
             dropna=dropna,
             copy=copy,
             verbose=bool(max(verbose, pretty_print)),
@@ -197,14 +195,6 @@ class AutoCarver(BaseDiscretizer):
             sort_by in measures
         ), f""" - [AutoCarver] Measure '{sort_by}' not yet implemented. Choose from: {str(measures)}."""
         self.sort_by = sort_by
-
-        assert unknown_handling in [
-            "drop",
-            "raises",
-            "best",
-            "worst",
-        ], " - [AutoCarver] Wrong value for attribute unknown_handling. Choose from ['drop', 'raises', 'best', 'worst']."
-        self.unknown_handling = unknown_handling
 
     def _prepare_data(
         self,
@@ -276,10 +266,10 @@ class AutoCarver(BaseDiscretizer):
             assert (
                 not not_numeric
             ), " - [AutoCarver] y must be a continuous Series (int or float, not object)"
-            # pct_y = len(y_values) / len(y)  # TODO: remove this when asking which type of classif
-            # assert (
-            #     pct_y > 0.01
-            # ), f" - [AutoCarver] y must be a continuous or binary Series (not implemented for multiclass, only {pct_y:2.2%} distinct values)"
+            pct_y = len(y_values) / len(y)
+            assert (
+                pct_y > 0.01
+            ), f" - [AutoCarver] y must be a continuous or binary Series (not implemented for multiclass, only {pct_y:2.2%} distinct values)"
 
             # setting up helper functions to be used in autocarver
             helpers = {
@@ -295,7 +285,7 @@ class AutoCarver(BaseDiscretizer):
             measures = ["kruskal"]
             assert (
                 self.sort_by in measures
-            ), f""" - [AutoCarver] Measure '{self.sort_by}' not implemented for a continuous target. Choose from: {str(measures)}."""
+            ), f""" - [AutoCarver] Measure '{self.sort_by}' not implemented for a binary target. Choose from: {str(measures)}."""
 
         return x_copy, x_dev_copy, helpers
 
@@ -349,7 +339,6 @@ class AutoCarver(BaseDiscretizer):
             values_orders=self.values_orders,
             str_nan=self.str_nan,
             str_default=self.str_default,
-            # unknwon_handling=self.unknown_handling,  # TODO
             copy=True,  # copying anyways, otherwise no discretization from start to finish
             verbose=self.verbose,
         )
@@ -393,7 +382,12 @@ class AutoCarver(BaseDiscretizer):
             if self.verbose:  # verbose if requested
                 print("\n - [AutoCarver] Raw feature distribution")
                 # TODO: get the good labels
-                print_xagg(xagg, xagg_dev=xagg_dev, pretty_print=self.pretty_print, **helpers)
+                print_xagg(
+                    xagg,
+                    xagg_dev=xagg_dev,
+                    pretty_print=self.pretty_print,
+                    printer=helpers["printer"],
+                )
 
             # ordering
             order = labels_orders[feature]
@@ -407,7 +401,12 @@ class AutoCarver(BaseDiscretizer):
                 if self.verbose:  # verbose if requested
                     print("\n - [AutoCarver] Carved feature distribution")
                     # TODO: get the good labels
-                    print_xagg(xagg, xagg_dev=xagg_dev, pretty_print=self.pretty_print, **helpers)
+                    print_xagg(
+                        xagg,
+                        xagg_dev=xagg_dev,
+                        pretty_print=self.pretty_print,
+                        printer=helpers["printer"],
+                    )
 
                 # updating label_orders
                 labels_orders.update({feature: order})
@@ -1195,7 +1194,6 @@ def print_xagg(
     printer: Callable,
     xagg_dev: DataFrame = None,
     pretty_print: bool = False,
-    **kwargs,
 ) -> None:
     """Prints crosstabs' target rates and frequencies per modality, in raw or html format
 
