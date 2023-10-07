@@ -28,7 +28,7 @@ else:
     _has_idisplay = True
 
 
-class AutoCarver(BaseDiscretizer):
+class BaseCarver(BaseDiscretizer):
     """Automatic carving of continuous, discrete, categorical and ordinal
     features that maximizes association with a binary or continuous target.
 
@@ -50,13 +50,14 @@ class AutoCarver(BaseDiscretizer):
         copy: bool = False,
         verbose: bool = False,
         pretty_print: bool = False,
+        features_casting: dict[str, list[str]] = None,
         **kwargs,
         # min_carved_freq: float = 0,  # TODO: update this parameter so that it is set according to frequency rather than number of groups
         # unknown_handling: str = "raises",  # TODO: add parameter to remove unknown values whatsoever
         # str_nan: str = "__NAN__",
         # str_default: str = "__OTHER__",
     ) -> None:
-        """Initiates an ``AutoCarver``.
+        """Initiates a ``BaseCarver``.
 
         Parameters
         ----------
@@ -124,6 +125,10 @@ class AutoCarver(BaseDiscretizer):
             If ``True``, adds to the verbose some HTML tables of target rates and frequencies for X and, if provided, X_dev.
             Overrides the value of ``verbose``, by default ``False``
 
+        features_casting : dict[str, list[str]], optional
+            By default ``None``, target is considered as continuous or binary.
+            Multiclass target: Dict of raw DataFrame columns associated to the names of copies that will be created. 
+
         **kwargs
             Pass values for ``str_default``and ``str_nan`` of ``Discretizer`` (default string values).
 
@@ -131,23 +136,12 @@ class AutoCarver(BaseDiscretizer):
         --------
         See `AutoCarver examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
         """
-        # Lists of features
-        if quantitative_features is None:
-            quantitative_features = []
-        if qualitative_features is None:
-            qualitative_features = []
-        if ordinal_features is None:
-            ordinal_features = []
-        assert (
-            len(quantitative_features) > 0
-            or len(qualitative_features) > 0
-            or len(ordinal_features) > 0
-        ), (
-            " - [AutoCarver] No feature passed as input. Pleased provided column names to Carver "
-            "by setting quantitative_features, quantitative_features or ordinal_features."
+        # setting Carver's features
+        self._set_features(
+            quantitative_features=quantitative_features,
+            qualitative_features=qualitative_features,
+            ordinal_features=ordinal_features
         )
-        self.ordinal_features = list(set(ordinal_features))
-        self.features = list(set(quantitative_features + qualitative_features + ordinal_features))
 
         # initializing input_dtypes
         self.input_dtypes = {feature: "str" for feature in qualitative_features + ordinal_features}
@@ -164,28 +158,28 @@ class AutoCarver(BaseDiscretizer):
             dropna=dropna,
             copy=copy,
             verbose=bool(max(verbose, pretty_print)),
+            features_casting=features_casting,
         )
 
-        # checking that qualitatitve and qualitative featues are distinct
+        # checking that qualitatitve and quantitative features are distinct
         assert all(
             quali_feature not in self.quantitative_features
             for quali_feature in self.qualitative_features
         ), (
-            " - [AutoCarver] A feature of quantitative_features also is in qualitative_features "
+            " - [BaseCarver] One of quantitative_features is also in qualitative_features "
             "or ordinal_features. Please, be carreful with your inputs!"
         )
         assert all(
             quanti_feature not in self.qualitative_features
             for quanti_feature in self.quantitative_features
         ), (
-            " - [AutoCarver] A feature of qualitative_features or ordinal_features also is in "
+            " - [BaseCarver] One of qualitative_features or ordinal_features is also in "
             "quantitative_features. Please, be carreful with your inputs!"
         )
 
         # class specific attributes
         self.min_freq = min_freq  # minimum frequency per base bucket
         self.max_n_mod = max_n_mod  # maximum number of modality per feature
-        # self.min_carved_freq = min_carved_freq  # TODO
         self.min_group_size = 1
         self.pretty_print = False
         if pretty_print:
@@ -198,16 +192,29 @@ class AutoCarver(BaseDiscretizer):
                     "Install extra dependencies with pip install autocarver[jupyter]"
                 )
 
-        measures = [
-            "tschuprowt",
-            "cramerv",
-            "kruskal",
-        ]  # association measure used to find the best groups
-        assert sort_by in measures, (
-            f" - [AutoCarver] Measure '{sort_by}' not yet implemented. "
-            f"Choose from: {str(measures)}."
+    def _set_features(
+        quantitative_features: list[str] = None,
+        qualitative_features: list[str] = None,
+        ordinal_features: list[str] = None,
+    ):
+        """Sets the features of the Carver"""
+        # Lists of features
+        if quantitative_features is None:
+            quantitative_features = []
+        if qualitative_features is None:
+            qualitative_features = []
+        if ordinal_features is None:
+            ordinal_features = []
+        assert (
+            len(quantitative_features) > 0
+            or len(qualitative_features) > 0
+            or len(ordinal_features) > 0
+        ), (
+            " - [BaseCarver] No feature passed as input. Pleased provided column names to Carver "
+            "by setting quantitative_features, quantitative_features or ordinal_features."
         )
-        self.sort_by = sort_by
+        self.ordinal_features = list(set(ordinal_features))
+        self.features = list(set(quantitative_features + qualitative_features + ordinal_features))
 
     def _prepare_data(
         self,
@@ -215,13 +222,13 @@ class AutoCarver(BaseDiscretizer):
         y: Series,
         X_dev: DataFrame = None,
         y_dev: Series = None,
-    ) -> tuple[DataFrame, DataFrame, dict[str, Callable]]:
+    ) -> tuple[DataFrame, DataFrame]:
         """Validates format and content of X and y.
 
         Parameters
         ----------
         X : DataFrame
-            Dataset used to discretize. Needs to have columns has specified in ``AutoCarver.features``.
+            Dataset used to discretize. Needs to have columns has specified in ``BaseCarver.features``.
 
         y : Series
             Binary target feature with wich the association is maximized.
@@ -235,73 +242,44 @@ class AutoCarver(BaseDiscretizer):
 
         Returns
         -------
-        tuple[DataFrame, DataFrame, dict[str, Callable]]
-            Copies of (X, X_dev) and helpers to be used according to target type
+        tuple[DataFrame, DataFrame]
+            Copies of (X, X_dev)
         """
         # Checking for binary target and copying X
         x_copy = super()._prepare_data(X, y)
         x_dev_copy = super()._prepare_data(X_dev, y_dev)
 
         # checking for not provided y
-        assert y is not None, f" - [AutoCarver] y must be provided {y}"
+        assert y is not None, f" - [BaseCarver] y must be provided {y}"
 
-        # checking for binary target
-        y_values = unique(y)
-        is_binary = len(y_values) == 2
-        # case 0: binary target, checking values
-        if is_binary:
-            assert (0 in y_values) & (1 in y_values), (
-                " - [AutoCarver] y must be a binary Series (int or float, not object)"
-            )
-            assert len(y_values) == 2, (
-                " - [AutoCarver] y must be a binary Series (int or float, not object)"
-            )
+        return x_copy, x_dev_copy
 
-            # setting up helper functions to be used in autocarver
-            helpers = {
-                "aggregator": get_xtabs,
-                "grouper": xtab_grouper,
-                "association_measure": association_xtab,
-                "target_rate": xtab_target_rate,
-                "combination_formatter": xtab_combination_formatter,
-                "printer": pretty_xtab,
-            }
+    def _aggregator():
+        """ HELPER: get_xtabs or get_yvals"""
+        pass
 
-            # checking for a corresponding sorting measure
-            measures = ["tschuprowt", "cramerv"]
-            assert self.sort_by in measures, (
-            	f" - [AutoCarver] Measure '{self.sort_by}' not implemented for a binary target. "
-                f"Choose from: {str(measures)}."
-            )
+    def _grouper():
+        """ HELPER: xtab_grouper or yval_grouper"""
+        pass
 
-        # case 1: continuous target, checking values
-        else:
-            not_numeric = str in y.apply(type).unique()
-            assert not not_numeric, (
-                " - [AutoCarver] y must be a continuous Series (int or float, not object)"
-            )
+    def _association_measure():
+        """ HELPER: association_xtab or association_yval"""
+        pass
 
-            # setting up helper functions to be used in autocarver
-            helpers = {
-                "aggregator": get_yvals,
-                "grouper": yval_grouper,
-                "association_measure": association_yval,
-                "target_rate": yval_target_rate,
-                "combination_formatter": yval_combination_formatter,
-                "printer": pretty_yval,
-            }
+    def _target_rate():
+        """ HELPER: xtab_target_rate or yval_target_rate"""
+        pass
 
-            # checking for a corresponding sorting measure
-            measures = ["kruskal"]
-            assert self.sort_by in measures, (
-                f" - [AutoCarver] Measure '{self.sort_by}' not implemented for a continuous target"
-                f". Choose from: {str(measures)}."
-            )
+    def _combination_formatter():
+        """ HELPER: xtab_combination_formatter or yval_combination_formatter"""
+        pass
 
-        return x_copy, x_dev_copy, helpers
+    def _printer():
+        """ HELPER: pretty_xtab or pretty_yval"""
+        pass
 
     def _remove_feature(self, feature: str) -> None:
-        """Removes a feature from all ``AutoCarver.features`` attributes
+        """Removes a feature from all ``BaseCarver.features`` attributes
 
         Parameters
         ----------
@@ -326,20 +304,20 @@ class AutoCarver(BaseDiscretizer):
         Parameters
         ----------
         X : DataFrame
-            Dataset used to discretize. Needs to have columns has specified in ``AutoCarver.features``.
+            Dataset used to discretize. Needs to have columns has specified in ``BaseCarver.features``.
 
         y : Series
-            Binary target feature with wich the association is maximized.
+            Target feature with wich the association is maximized.
 
         X_dev : DataFrame, optional
             Dataset to evalute the robustness of discretization, by default None
             It should have the same distribution as X.
 
         y_dev : Series, optional
-            Binary target feature with wich the robustness of discretization is evaluated, by default None
+            Target feature with wich the robustness of discretization is evaluated, by default None
         """
         # preparing datasets and checking for wrong values
-        x_copy, x_dev_copy, helpers = self._prepare_data(X, y, X_dev, y_dev)
+        x_copy, x_dev_copy = self._prepare_data(X, y, X_dev, y_dev)
 
         # discretizing all features
         discretizer = Discretizer(
@@ -378,45 +356,45 @@ class AutoCarver(BaseDiscretizer):
         )
 
         # computing crosstabs for each feature on train/test
-        xaggs = helpers["aggregator"](self.features, x_copy, y, labels_orders)
-        xaggs_dev = helpers["aggregator"](self.features, x_dev_copy, y_dev, labels_orders)
+        xaggs = self._aggregator(self.features, x_copy, y, labels_orders)
+        xaggs_dev = self._aggregator(self.features, x_dev_copy, y_dev, labels_orders)
 
         # optimal butcketization/carving of each feature
         all_features = self.features[:]  # (features are being removed from self.features)
         for n, feature in enumerate(all_features):
             if self.verbose:  # verbose if requested
-                print(f"\n------\n[AutoCarver] Fit {feature} ({n+1}/{len(all_features)})\n---")
+                print(f"\n------\n[BaseCarver] Fit {feature} ({n+1}/{len(all_features)})\n---")
 
             # getting xtabs on train/test
             xagg = xaggs[feature]
             xagg_dev = xaggs_dev[feature]
             if self.verbose:  # verbose if requested
-                print("\n - [AutoCarver] Raw feature distribution")
+                print("\n - [BaseCarver] Raw feature distribution")
                 # TODO: get the good labels
                 print_xagg(
                     xagg,
                     xagg_dev=xagg_dev,
                     pretty_print=self.pretty_print,
-                    printer=helpers["printer"],
+                    printer=self._printer,
                 )
 
             # ordering
             order = labels_orders[feature]
 
             # getting best combination
-            best_combination = self._get_best_combination(order, xagg, helpers, xagg_dev=xagg_dev)
+            best_combination = self._get_best_combination(order, xagg, xagg_dev=xagg_dev)
 
             # checking that a suitable combination has been found
             if best_combination is not None:
                 order, xagg, xagg_dev = best_combination
                 if self.verbose:  # verbose if requested
-                    print("\n - [AutoCarver] Carved feature distribution")
+                    print("\n - [BaseCarver] Carved feature distribution")
                     # TODO: get the good labels
                     print_xagg(
                         xagg,
                         xagg_dev=xagg_dev,
                         pretty_print=self.pretty_print,
-                        printer=helpers["printer"],
+                        printer=self._printer,
                     )
 
                 # updating label_orders
@@ -425,7 +403,7 @@ class AutoCarver(BaseDiscretizer):
             # no suitable combination has been found -> removing feature
             else:
                 print(
-                    f" - [AutoCarver] No robust combination for feature '{feature}' could be found. It will be ignored. You might have to increase the size of your test sample (test sample not representative of test sample for this feature) or you should consider dropping this features."
+                    f" - [BaseCarver] No robust combination for feature '{feature}' could be found. It will be ignored. You might have to increase the size of your test sample (test sample not representative of test sample for this feature) or you should consider dropping this features."
                 )
                 self._remove_feature(feature)
                 if feature in labels_orders:
@@ -492,13 +470,10 @@ class AutoCarver(BaseDiscretizer):
             )
 
             # getting most associated combination
-            best_association = get_best_association(
+            best_association = self.get_best_association(
                 raw_xagg,
                 combinations,
-                sort_by=self.sort_by,
                 xagg_dev=raw_xagg_dev,
-                verbose=self.verbose,
-                **helpers,
             )
 
             # applying best_combination to order and xtabs
@@ -524,13 +499,10 @@ class AutoCarver(BaseDiscretizer):
                 )
 
                 # getting most associated combination
-                best_association = get_best_association(
+                best_association = self.get_best_association(
                     xagg,
                     nan_combinations,
-                    sort_by=self.sort_by,
                     xagg_dev=xagg_dev,
-                    verbose=self.verbose,
-                    **helpers,
                 )
 
                 # applying best_combination to order and xtab
@@ -543,37 +515,82 @@ class AutoCarver(BaseDiscretizer):
         if best_association is not None:
             return order, xagg, xagg_dev
 
+    def get_best_association(
+    	self,
+        xagg: Union[Series, DataFrame],
+        combinations: list[list[str]],
+        *,
+        xagg_dev: Union[Series, DataFrame] = None,
+    ) -> dict[str, Any]:
+        """Computes associations of the tab for each combination
 
-def xtab_target_rate(xtab: DataFrame) -> DataFrame:
-    """Computes target rate per row for a binary target (column) in a crosstab
+        Parameters
+        ----------
+        xagg : Union[Series, DataFrame]
+            _description_
+        combinations : list[list[str]]
+            _description_
+        xagg_dev : Union[Series, DataFrame], optional
+            _description_, by default None
 
-    Parameters
-    ----------
-    xtab : DataFrame
-        _description_
+        Returns
+        -------
+        dict[str, Any]
+            _description_
+        """
+        # values to groupby indices with
+        indices_to_groupby = [self._combination_formatter(combination) for combination in combinations]
 
-    Returns
-    -------
-    DataFrame
-        _description_
-    """
-    return xtab[1].divide(xtab.sum(axis=0)).sort_values()
+        # grouping tab by its indices
+        grouped_xaggs = [
+            self._grouper(xagg, index_to_groupby)
+            for index_to_groupby in tqdm(
+                indices_to_groupby, disable=not self.verbose, desc="Grouping modalities   "
+            )
+        ]
 
+        # computing associations for each tabs
+        n_obs = xagg.apply(sum).sum()  # number of observations for xtabs
+        associations_xagg = [
+            self._association_measure(grouped_xagg, n_obs=n_obs)
+            for grouped_xagg in tqdm(grouped_xaggs, disable=not self.verbose, desc="Computing associations")
+        ]
 
-def yval_target_rate(yval: Series) -> Series:
-    """Computes target rate per row for a binary target (column) in a crosstab
+        # adding corresponding combination to the association
+        for combination, index_to_groupby, association, grouped_xagg in zip(
+            combinations, indices_to_groupby, associations_xagg, grouped_xaggs
+        ):
+            association.update(
+                {"combination": combination, "index_to_groupby": index_to_groupby, "xagg": grouped_xagg}
+            )
 
-    Parameters
-    ----------
-    yval : Series
-        _description_
+        # sorting associations according to specified metric
+        associations_xagg = (
+            DataFrame(associations_xagg).sort_values(self.sort_by, ascending=False).to_dict(orient="records")
+        )
 
-    Returns
-    -------
-    Series
-        _description_
-    """
-    return yval.apply(mean).sort_values()
+        # case 0: no test sample provided -> not testing for robustness
+        if xagg_dev is None:
+            return associations_xagg[0]
+
+        # case 1: testing viability on provided test sample
+        for association in tqdm(associations_xagg, disable=not self.verbose, desc="Testing robustness    "):
+            # needed parameters
+            index_to_groupby, xagg = (
+                association["index_to_groupby"],
+                association["xagg"],
+            )
+
+            # grouping rows of the test crosstab
+            grouped_xagg_dev = self._grouper(xagg_dev, index_to_groupby)
+
+            # computing target rate ranks per value
+            train_ranks = self._target_rate(xagg).index
+            test_ranks = self._target_rate(grouped_xagg_dev).index
+
+            # viable on test sample: grouped values have the same ranks in train/test
+            if all(train_ranks == test_ranks):
+                return association
 
 
 def filter_nan(xagg: Union[Series, DataFrame], str_nan: str) -> DataFrame:
@@ -600,170 +617,6 @@ def filter_nan(xagg: Union[Series, DataFrame], str_nan: str) -> DataFrame:
             filtered_xagg = xagg.drop(str_nan, axis=0)
 
     return filtered_xagg
-
-
-def get_xtabs(
-    features: list[str], X: DataFrame, y: Series, labels_orders: dict[str, GroupedList]
-) -> dict[str, DataFrame]:
-    """Computes crosstabs for specified features and ensures that the crosstab is ordered according to the known labels
-
-    Parameters
-    ----------
-    features : list[str]
-        _description_
-    X : DataFrame
-        _description_
-    y : Series
-        _description_
-    labels_orders : dict[str, GroupedList]
-        _description_
-
-    Returns
-    -------
-    dict[str, DataFrame]
-        _description_
-    """
-    # checking for empty datasets
-    xtabs = {feature: None for feature in features}
-    if X is not None:
-        # crosstab for each feature
-        for feature in features:
-            # computing crosstab with str_nan
-            xtab = crosstab(X[feature], y)
-
-            # reordering according to known_order
-            xtab = xtab.reindex(labels_orders[feature])
-
-            # storing results
-            xtabs.update({feature: xtab})
-
-    return xtabs
-
-
-def get_yvals(
-    features: list[str], X: DataFrame, y: Series, labels_orders: dict[str, GroupedList]
-) -> dict[str, DataFrame]:
-    """Computes y values for modalities of specified features and ensures the ordering according to the known labels
-
-    Parameters
-    ----------
-    features : list[str]
-        _description_
-    X : DataFrame
-        _description_
-    y : Series
-        _description_
-    labels_orders : dict[str, GroupedList]
-        _description_
-
-    Returns
-    -------
-    dict[str, DataFrame]
-        _description_
-    """
-    # checking for empty datasets
-    yvals = {feature: None for feature in features}
-    if X is not None:
-        # crosstab for each feature
-        for feature in features:
-            # computing crosstab with str_nan
-            yval = y.groupby(X[feature]).apply(lambda u: list(u))
-
-            # reordering according to known_order
-            yval = yval.reindex(labels_orders[feature])
-
-            # storing results
-            yvals.update({feature: yval})
-
-    return yvals
-
-
-def association_xtab(xtab: DataFrame, n_obs: int) -> dict[str, float]:
-    """Computes measures of association between feature and target by crosstab.
-
-    Parameters
-    ----------
-    xtab : DataFrame
-        Crosstab between feature and target.
-
-    n_obs : int
-        Sample total size.
-
-    Returns
-    -------
-    dict[str, float]
-        Cramér's V and Tschuprow's as a dict.
-    """
-    # number of values taken by the features
-    n_mod_x = xtab.shape[0]
-
-    # Chi2 statistic
-    chi2 = chi2_contingency(xtab)[0]
-
-    # Cramér's V
-    cramerv = sqrt(chi2 / n_obs)
-
-    # Tschuprow's T
-    tschuprowt = cramerv / sqrt(sqrt(n_mod_x - 1))
-
-    return {"cramerv": cramerv, "tschuprowt": tschuprowt}
-
-
-def association_yval(yval: Series, **kwargs) -> dict[str, float]:
-    """Computes measures of association between feature and quantitative target.
-
-    Parameters
-    ----------
-    yval : DataFrame
-        Values taken by y for each of x's modalities.
-
-    Returns
-    -------
-    dict[str, float]
-        Kruskal-Wallis' H as a dict.
-    """
-    # Kruskal-Wallis' H
-    return {"kruskal": kruskal(*tuple(yval.values))[0]}
-
-
-def yval_grouper(yval: Series, groupby: dict[str:str]) -> Series:
-    grouped_yval = yval.groupby(groupby).sum()
-
-    return grouped_yval
-
-
-def xtab_grouper(xtab: DataFrame, groupby: list[str]) -> DataFrame:
-    """Groups a crosstab by groupby and sums column values by groups (vectorized)
-
-    Parameters
-    ----------
-    xtab : DataFrame
-        _description_
-    groupby : list[str]
-        _description_
-
-    Returns
-    -------
-    DataFrame
-        _description_
-    """
-    # all indices that may be duplicated
-    index_values = array(groupby)
-
-    # all unique indices deduplicated
-    unique_indices = unique(index_values)
-
-    # initiating summed up array with zeros
-    summed_values = zeros((len(unique_indices), len(xtab.columns)))
-
-    # for each unique_index found in index_values sums xtab.Values at corresponding position in summed_values
-    add.at(summed_values, searchsorted(unique_indices, index_values), xtab.values)
-
-    # converting back to dataframe
-    grouped_xtab = DataFrame(summed_values, index=unique_indices, columns=xtab.columns)
-
-    return grouped_xtab
-
 
 def combinations_at_index(
     start_idx: int, order: list[Any], nb_remaining_groups: int, min_group_size: int = 1
@@ -875,107 +728,6 @@ def consecutive_combinations(
 
     return all_combinations
 
-
-def xtab_combination_formatter(combination: list[list[str]]) -> list[str]:
-    formatted_combination = [
-        value for values in ([group[0]] * len(group) for group in combination) for value in values
-    ]
-
-    return formatted_combination
-
-
-def yval_combination_formatter(combination: list[list[str]]) -> dict[str, str]:
-    formatted_combination = {modal: group[0] for group in combination for modal in group}
-
-    return formatted_combination
-
-
-def get_best_association(
-    xagg: Union[Series, DataFrame],
-    combinations: list[list[str]],
-    sort_by: str,
-    *,
-    xagg_dev: Union[Series, DataFrame] = None,
-    verbose: bool = False,
-    grouper: Callable = xtab_grouper,
-    combination_formatter: Callable = xtab_combination_formatter,
-    association_measure: Callable = association_xtab,
-    target_rate: Callable = xtab_target_rate,
-    **kwargs,
-) -> dict[str, Any]:
-    """Computes associations of the tab for each combination
-
-    Parameters
-    ----------
-    xagg : Union[Series, DataFrame]
-        _description_
-    combinations : list[list[str]]
-        _description_
-    sort_by : str
-        _description_
-    xagg_dev : Union[Series, DataFrame], optional
-        _description_, by default None
-    verbose : bool, optional
-        _description_, by default False
-
-    Returns
-    -------
-    dict[str, Any]
-        _description_
-    """
-    # values to groupby indices with
-    indices_to_groupby = [combination_formatter(combination) for combination in combinations]
-
-    # grouping tab by its indices
-    grouped_xaggs = [
-        grouper(xagg, index_to_groupby)
-        for index_to_groupby in tqdm(
-            indices_to_groupby, disable=not verbose, desc="Grouping modalities   "
-        )
-    ]
-
-    # computing associations for each tabs
-    n_obs = xagg.apply(sum).sum()  # number of observations for xtabs
-    associations_xagg = [
-        association_measure(grouped_xagg, n_obs=n_obs)
-        for grouped_xagg in tqdm(grouped_xaggs, disable=not verbose, desc="Computing associations")
-    ]
-
-    # adding corresponding combination to the association
-    for combination, index_to_groupby, association, grouped_xagg in zip(
-        combinations, indices_to_groupby, associations_xagg, grouped_xaggs
-    ):
-        association.update(
-            {"combination": combination, "index_to_groupby": index_to_groupby, "xagg": grouped_xagg}
-        )
-
-    # sorting associations according to specified metric
-    associations_xagg = (
-        DataFrame(associations_xagg).sort_values(sort_by, ascending=False).to_dict(orient="records")
-    )
-
-    # case 0: no test sample provided -> not testing for robustness
-    if xagg_dev is None:
-        return associations_xagg[0]
-
-    # case 1: testing viability on provided test sample
-    for association in tqdm(associations_xagg, disable=not verbose, desc="Testing robustness    "):
-        # needed parameters
-        index_to_groupby, xagg = (
-            association["index_to_groupby"],
-            association["xagg"],
-        )
-
-        # grouping rows of the test crosstab
-        grouped_xagg_dev = grouper(xagg_dev, index_to_groupby)
-
-        # computing target rate ranks per value
-        train_ranks = target_rate(xagg).index
-        test_ranks = target_rate(grouped_xagg_dev).index
-
-        # viable on test sample: grouped values have the same ranks in train/test
-        if all(train_ranks == test_ranks):
-            return association
 
 
 def add_nan_in_combinations(
@@ -1097,69 +849,6 @@ def load_carver(auto_carver_json: dict) -> BaseDiscretizer:
 
     return auto_carver
 
-
-def pretty_xtab(xtab: DataFrame = None) -> DataFrame:
-    """Prints a binary xtab's statistics
-
-    Parameters
-    ----------
-    xtab : Dataframe
-        A crosstab, by default None
-
-    Returns
-    -------
-    DataFrame
-        Target rate and frequency per modality
-    """
-    # checking for an xtab
-    stats = None
-    if xtab is not None:
-        # target rate and frequency statistics per modality
-        stats = DataFrame(
-            {
-                # target rate per modality
-                "target_rate": xtab[1].divide(xtab.sum(axis=1)),
-                # frequency per modality
-                "frequency": xtab.sum(axis=1) / xtab.sum().sum(),
-            }
-        )
-
-        # rounding up stats
-        stats = stats.round(3)
-
-    return stats
-
-
-def pretty_yval(yval: Series = None) -> DataFrame:
-    """Prints a continuous yval's statistics
-
-    Parameters
-    ----------
-    yval : Series
-        A series of values of y by modalities of x, by default None
-
-    Returns
-    -------
-    DataFrame
-        Target rate and frequency per modality
-    """
-    # checking for an xtab
-    stats = None
-    if yval is not None:
-        # target rate and frequency statistics per modality
-        stats = DataFrame(
-            {
-                # target rate per modality
-                "target_rate": yval.apply(mean),
-                # frequency per modality
-                "frequency": yval.apply(len) / yval.apply(len).sum(),
-            }
-        )
-
-        # rounding up stats
-        stats = stats.round(3)
-
-    return stats
 
 
 def prettier_xagg(
