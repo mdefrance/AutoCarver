@@ -8,6 +8,7 @@ from numpy import add, array, mean, searchsorted, sqrt, unique, zeros
 from pandas import DataFrame, Series, crosstab
 from scipy.stats import chi2_contingency, kruskal
 from tqdm import tqdm
+from warnings import warn
 
 from .discretizers import GroupedList
 from .discretizers.discretizers import Discretizer
@@ -141,7 +142,10 @@ class AutoCarver(BaseDiscretizer):
             len(quantitative_features) > 0
             or len(qualitative_features) > 0
             or len(ordinal_features) > 0
-        ), " - [AutoCarver] No feature passed as input. Pleased provided column names to Carver by setting quantitative_features, quantitative_features or ordinal_features."
+        ), (
+            " - [AutoCarver] No feature passed as input. Pleased provided column names to Carver "
+            "by setting quantitative_features, quantitative_features or ordinal_features."
+        )
         self.ordinal_features = list(set(ordinal_features))
         self.features = list(set(quantitative_features + qualitative_features + ordinal_features))
 
@@ -177,13 +181,15 @@ class AutoCarver(BaseDiscretizer):
         self.max_n_mod = max_n_mod  # maximum number of modality per feature
         # self.min_carved_freq = min_carved_freq  # TODO
         self.min_group_size = 1
+        self.pretty_print = False
         if pretty_print:
             if _has_idisplay:  # checking for installed dependencies
                 self.pretty_print = pretty_print
             else:
                 self.verbose = True
-                print(
-                    "Package not found: ipython. Defaulting to verbose=True. Install extra dependencies with pip install autocarver[jupyter]"
+                warn(
+                    "Package not found: ipython. Defaulting to verbose=True. "
+                    "Install extra dependencies with pip install autocarver[jupyter]"
                 )
 
         measures = [
@@ -191,9 +197,10 @@ class AutoCarver(BaseDiscretizer):
             "cramerv",
             "kruskal",
         ]  # association measure used to find the best groups
-        assert (
-            sort_by in measures
-        ), f""" - [AutoCarver] Measure '{sort_by}' not yet implemented. Choose from: {str(measures)}."""
+        assert sort_by in measures, (
+            f" - [AutoCarver] Measure '{sort_by}' not yet implemented. "
+            f"Choose from: {str(measures)}."
+        )
         self.sort_by = sort_by
 
     def _prepare_data(
@@ -229,8 +236,8 @@ class AutoCarver(BaseDiscretizer):
         x_copy = super()._prepare_data(X, y)
         x_dev_copy = super()._prepare_data(X_dev, y_dev)
 
-        # checking for nans in the target
-        assert not any(y.isna()), " - [AutoCarver] y should not contain numpy.nan"
+        # checking for not provided y
+        assert y is not None, f" - [AutoCarver] y must be provided {y}"
 
         # checking for binary target
         y_values = unique(y)
@@ -256,20 +263,17 @@ class AutoCarver(BaseDiscretizer):
 
             # checking for a corresponding sorting measure
             measures = ["tschuprowt", "cramerv"]
-            assert (
-                self.sort_by in measures
-            ), f""" - [AutoCarver] Measure '{self.sort_by}' not implemented for a binary target. Choose from: {str(measures)}."""
+            assert self.sort_by in measures, (
+            	f" - [AutoCarver] Measure '{self.sort_by}' not implemented for a binary target. "
+                f"Choose from: {str(measures)}."
+            )
 
         # case 1: continuous target, checking values
         else:
             not_numeric = str in y.apply(type).unique()
-            assert (
-                not not_numeric
-            ), " - [AutoCarver] y must be a continuous Series (int or float, not object)"
-            pct_y = len(y_values) / len(y)
-            assert (
-                pct_y > 0.01
-            ), f" - [AutoCarver] y must be a continuous or binary Series (not implemented for multiclass, only {pct_y:2.2%} distinct values)"
+            assert not not_numeric, (
+                " - [AutoCarver] y must be a continuous Series (int or float, not object)"
+            )
 
             # setting up helper functions to be used in autocarver
             helpers = {
@@ -283,9 +287,10 @@ class AutoCarver(BaseDiscretizer):
 
             # checking for a corresponding sorting measure
             measures = ["kruskal"]
-            assert (
-                self.sort_by in measures
-            ), f""" - [AutoCarver] Measure '{self.sort_by}' not implemented for a binary target. Choose from: {str(measures)}."""
+            assert self.sort_by in measures, (
+                f" - [AutoCarver] Measure '{self.sort_by}' not implemented for a continuous target"
+                f". Choose from: {str(measures)}."
+            )
 
         return x_copy, x_dev_copy, helpers
 

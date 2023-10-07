@@ -567,7 +567,7 @@ class ChainedDiscretizer(BaseDiscretizer):
             stringer = StringDiscretizer(
                 qualitative_features=features_to_convert, values_orders=self.values_orders
             )
-            x_copy = stringer.fit_transform(x_copy)
+            x_copy = stringer.fit_transform(x_copy, y)
 
             # updating values_orders accordingly
             self.values_orders.update(stringer.values_orders)

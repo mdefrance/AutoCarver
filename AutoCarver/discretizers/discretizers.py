@@ -369,7 +369,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
                 values_orders=self.values_orders,
                 verbose=self.verbose,
             )
-            x_copy = string_discretizer.fit_transform(x_copy)
+            x_copy = string_discretizer.fit_transform(x_copy, y)
 
             # updating values_orders accordingly
             self.values_orders.update(string_discretizer.values_orders)

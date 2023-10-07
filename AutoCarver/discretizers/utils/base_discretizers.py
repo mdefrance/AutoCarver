@@ -27,6 +27,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         verbose: bool = True,
         str_nan: str = None,
         str_default: str = None,
+        features_casting: dict[str, list[str]] = None,
     ) -> None:
         """Initiates a ``BaseDiscretizer``.
 
@@ -68,7 +69,12 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
 
         str_default : str, optional
             String representation for default qualitative values, i.e. values less frequent than ``min_freq``, by default ``"__OTHER__"``
+
+        features_casting : dict[str, list[str]], optional
+            By default ``None``, target is considered as continuous or binary.
+            Multiclass target: Dict of raw DataFrame columns associated to the names of copies that will be created. 
         """
+        # features and values
         self.features = list(set(features))
         if values_orders is None:
             values_orders: dict[str, GroupedList] = {}
@@ -112,6 +118,11 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
 
         # check if the discretizer has already been fitted
         self.is_fitted = False
+
+        # target classes multiclass vs binary vs continuous
+        if features_casting is None:
+            features_casting: list[Any] = {feature: [feature] for feature in self.features}
+        self.features_casting = {feature: casting[:] for feature, casting in features_casting.items()}
 
     def _get_labels_per_values(self, output_dtype: str) -> dict[str, dict[Any, Any]]:
         """Creates a dict that contains, for each feature, for each value, the associated label
@@ -181,6 +192,41 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             if feature in self.labels_per_values:
                 self.labels_per_values.pop(feature)
 
+            # getting corresponding raw_feature
+            raw_feature = next(raw_feature for raw_feature, casting in self.features_casting.items() if feature in casting)
+            casting = self.features_casting.get(raw_feature)
+            # removing feature from casting
+            casting.remove(feature)
+            self.features_casting.update({raw_feature: casting})
+            # removing raw feature if there are no more casting for it
+            if len(self.features_casting.get(raw_feature)) == 0:
+                self.features_casting.pop(raw_feature)
+
+    def _cast_features(self, X: DataFrame) -> DataFrame:
+        """ Casts the features of a DataFrame using features_casting to duplicate columns
+
+        Parameters
+        ----------
+        X : DataFrame
+            Dataset used to discretize. Needs to have columns has specified in ``BaseDiscretizer.features``, by default None.
+
+        Returns
+        -------
+        DataFrame
+            A formatted X
+        """
+        # for binary/continuous targets
+        if all(len(casting) == 1 for casting in self.features_casting.values()):
+            X.rename(columns={feature: casting[0] for feature, casting in self.features_casting.items()}, inplace=True)
+
+        # for multiclass targets
+        else:
+            for feature, casting in self.features_casting.items():
+                # duplicating feature
+                X[casting] = X.loc[:, feature]
+
+        return X
+
     def _prepare_data(self, X: DataFrame, y: Series = None) -> DataFrame:
         """Validates format and content of X and y.
 
@@ -197,39 +243,42 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         DataFrame
             A formatted copy of X
         """
-        # checking for previous fits of the discretizer that could cause unwanted errors
-        assert (
-            not self.is_fitted
-        ), " - [BaseDiscretizer] This Discretizer has already been fitted. Fitting it anew could break established orders. Please initialize a new one."
-
         x_copy = X
         if X is not None:
             # checking for X's type
             assert isinstance(
                 X, DataFrame
-            ), f"X must be a pandas.DataFrame, instead {type(X)} was passed"
-
-            # checking for input columns
-            missing_columns = [feature for feature in self.features if feature not in X]
-            assert (
-                len(missing_columns) == 0
-            ), f" - [BaseDiscretizer] Missing features from the provided DataFrame: {str(missing_columns)}"
+            ), f" - [BaseDiscretizer] X must be a pandas.DataFrame, instead {type(X)} was passed"
 
             # copying X
             x_copy = X
             if self.copy:
                 x_copy = X.copy()
 
+            # casting features for multiclass targets
+            x_copy = self._cast_features(x_copy)
+
+            # checking for input columns
+            missing_columns = [feature for feature in self.features if feature not in x_copy]
+            assert (
+                len(missing_columns) == 0
+            ), f" - [BaseDiscretizer] Missing features from the provided DataFrame: {str(missing_columns)}"
+
             if y is not None:
                 # checking for y's type
                 assert isinstance(
                     y, Series
-                ), f"y must be a pandas.Series, instead {type(y)} was passed"
+                ), f" - [BaseDiscretizer] y must be a pandas.Series, instead {type(y)} was passed"
+
+                # checking for nans in the target
+                assert not any(y.isna()), " - [BaseDiscretizer] y should not contain numpy.nan"
 
                 # checking indices
-                assert all(y.index == X.index), f"X and y must have the same indices."
+                assert all(y.index == X.index), f" - [BaseDiscretizer] X and y must have the same indices."
 
         return x_copy
+
+    __prepare_data = _prepare_data  # private copy
 
     def _check_new_values(self, X: DataFrame, features: list[str]) -> None:
         """Checks for new, unexpected values, in X
@@ -248,15 +297,46 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             result_type="expand",
         )
         uniques = applied_to_dict_list(uniques)
+        if "Qualitative" in uniques:
+            print("\n\n\n--------\nqualitative uniques before replace", uniques["Qualitative"], "\n\n\n--------\n")
+
+        # replacing unknwon values if there was a default discretization
+        X.replace(
+            {
+                feature: {
+                    val: self.str_default
+                    for val in uniques[feature] 
+                    if val not in self.values_orders[feature].values()
+                    and val != self.str_nan
+                    and self.str_default in self.values_orders[feature].values()
+                }
+                for feature in features
+            }, inplace=True
+        )
+        # updating unique non-nan values in new dataframe
+        uniques = X[features].apply(
+            nan_unique,
+            axis=0,
+            result_type="expand",
+        )
+        uniques = applied_to_dict_list(uniques)
+        if "Qualitative" in uniques:
+            print("\n\n\n--------\nqualitative uniques after replace", uniques["Qualitative"], "\n\n\n--------\n")
 
         # checking for unexpected values for each feature
         for feature in features:
+            # unexpected values for this feature
             unexpected = [
                 val for val in uniques[feature] if val not in self.values_orders[feature].values()
             ]
-            assert (
-                len(unexpected) == 0
-            ), f" - [BaseDiscretizer] Unexpected value! The ordering for values: {str(list(unexpected))} of feature '{feature}' was not provided. There might be new values in your test/dev set. Consider taking a bigger test/dev set or dropping the column {feature}."
+            assert len(unexpected) == 0, (
+                " - [BaseDiscretizer] Unexpected value! The ordering for values: "
+                f"{str(list(unexpected))} of feature '{feature}' was not provided. "
+                "There might be new values in your test/dev set. Consider taking a bigger "
+                f"test/dev set or dropping the column {feature}."
+            )
+
+        return X
 
     def fit(self, X: DataFrame = None, y: Series = None) -> None:
         """Learns the labels associated to each value for each feature
@@ -268,13 +348,20 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         y : Series, optional
             Model target, by default None
         """
+        # checking for previous fits of the discretizer that could cause unwanted errors
+        assert not self.is_fitted, (
+            " - [BaseDiscretizer] This Discretizer has already been fitted. "
+            "Fitting it anew could break established orders. Please initialize a new one."
+        )
+
         # checking that all features to discretize are in values_orders
         missing_features = [
             feature for feature in self.features if feature not in self.values_orders
         ]
-        assert (
-            len(missing_features) == 0
-        ), f" - [BaseDiscretizer] Missing values_orders for following features {str(missing_features)}."
+        assert len(missing_features) == 0, (
+            " - [BaseDiscretizer] Missing values_orders for following features "
+            f"{str(missing_features)}."
+        )
 
         # for each feature, getting label associated to each value
         self.labels_per_values = self._get_labels_per_values(self.output_dtype)
@@ -304,18 +391,8 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         DataFrame
             Discretized X.
         """
-        # copying dataframes
-        x_copy = X
-        if self.copy:
-            x_copy = X.copy()
-
-        # applying default discretization for concerned features
-        for feature in self.features:
-            known_values = self.values_orders[feature].values()
-            if self.str_default in known_values:
-                known_values_index = x_copy[feature].isin(known_values)
-                nans = (x_copy[feature].isna()) | (x_copy[feature] == self.str_nan)
-                x_copy.loc[(~known_values_index) & (~nans), feature] = self.str_default
+        # copying dataframes and casting for multiclass
+        x_copy = self.__prepare_data(X, y)
 
         # transforming quantitative features
         if len(self.quantitative_features) > 0:
@@ -426,7 +503,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             X[self.qualitative_features] = X[self.qualitative_features].fillna(self.str_nan)
 
         # checking that all unique values in X are in values_orders
-        self._check_new_values(X, features=self.qualitative_features)
+        X = self._check_new_values(X, features=self.qualitative_features)
 
         # replacing values for there corresponding label
         X = X.replace(
@@ -450,7 +527,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             JSON serialized BaseDiscretizer
         """
         # extracting content dictionnaries
-        json_serialized_groupedlistdiscretizer = {
+        json_serialized_base_discretizer = {
             "features": self.features,
             "values_orders": json_serialize_values_orders(self.values_orders),
             "input_dtypes": self.input_dtypes,
@@ -462,7 +539,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         }
 
         # dumping as json
-        return json_serialized_groupedlistdiscretizer
+        return json_serialized_base_discretizer
 
     # TODO: add crosstabs per feature for a provided X?
     # TODO: change str_nan for str(nan)
