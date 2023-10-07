@@ -28,7 +28,7 @@ else:
     _has_idisplay = True
 
 
-class MulticlassCarver(BinaryCarver):
+class MulticlassCarver(BaseCarver):
     """Automatic carving of continuous, discrete, categorical and ordinal
     features that maximizes association with a binary or continuous target.
 
@@ -133,7 +133,19 @@ class MulticlassCarver(BinaryCarver):
             qualitative_features=qualitative_features,
             ordinal_features=ordinal_features
         )
-
+        self.min_freq = min_freq
+        self.sort_by = sort_by
+        self.quantitative_features = quantitative_features
+        self.qualitative_features = qualitative_features
+        self.ordinal_features = ordinal_features
+        self.values_orders = values_orders
+        self.max_n_mod = max_n_mod
+        self.output_dtype = output_dtype
+        self.dropna = dropna
+        self.copy = copy
+        self.verbose = verbose
+        self.pretty_print = pretty_print
+        self.kwargs = kwargs
 
     def _prepare_data(
         self,
@@ -177,158 +189,6 @@ class MulticlassCarver(BinaryCarver):
 
         return x_copy, x_dev_copy
 
-    def _aggregator(  # TODO: not needed if inherited from BinaryCarver
-        features: list[str], X: DataFrame, y: Series, labels_orders: dict[str, GroupedList]
-    ) -> dict[str, DataFrame]:
-        """Computes crosstabs for specified features and ensures that the crosstab is ordered according to the known labels
-
-        Parameters
-        ----------
-        features : list[str]
-            _description_
-        X : DataFrame
-            _description_
-        y : Series
-            _description_
-        labels_orders : dict[str, GroupedList]
-            _description_
-
-        Returns
-        -------
-        dict[str, DataFrame]
-            _description_
-        """
-        # checking for empty datasets
-        xtabs = {feature: None for feature in features}
-        if X is not None:
-            # crosstab for each feature
-            for feature in features:
-                # computing crosstab with str_nan
-                xtab = crosstab(X[feature], y)
-
-                # reordering according to known_order
-                xtab = xtab.reindex(labels_orders[feature])
-
-                # storing results
-                xtabs.update({feature: xtab})
-
-        return xtabs
-
-
-    def _grouper(xtab: DataFrame, groupby: list[str]) -> DataFrame:  # TODO: not needed if inherited from BinaryCarver
-        """Groups a crosstab by groupby and sums column values by groups (vectorized)
-
-        Parameters
-        ----------
-        xtab : DataFrame
-            _description_
-        groupby : list[str]
-            _description_
-
-        Returns
-        -------
-        DataFrame
-            _description_
-        """
-        # all indices that may be duplicated
-        index_values = array(groupby)
-
-        # all unique indices deduplicated
-        unique_indices = unique(index_values)
-
-        # initiating summed up array with zeros
-        summed_values = zeros((len(unique_indices), len(xtab.columns)))
-
-        # for each unique_index found in index_values sums xtab.Values at corresponding position in summed_values
-        add.at(summed_values, searchsorted(unique_indices, index_values), xtab.values)
-
-        # converting back to dataframe
-        grouped_xtab = DataFrame(summed_values, index=unique_indices, columns=xtab.columns)
-
-        return grouped_xtab
-
-    def _association_measure(xtab: DataFrame, n_obs: int) -> dict[str, float]:  # TODO: not needed if inherited from BinaryCarver
-        """Computes measures of association between feature and target by crosstab.
-
-        Parameters
-        ----------
-        xtab : DataFrame
-            Crosstab between feature and target.
-
-        n_obs : int
-            Sample total size.
-
-        Returns
-        -------
-        dict[str, float]
-            Cramér's V and Tschuprow's as a dict.
-        """
-        # number of values taken by the features
-        n_mod_x = xtab.shape[0]
-
-        # Chi2 statistic
-        chi2 = chi2_contingency(xtab)[0]
-
-        # Cramér's V
-        cramerv = sqrt(chi2 / n_obs)
-
-        # Tschuprow's T
-        tschuprowt = cramerv / sqrt(sqrt(n_mod_x - 1))
-
-        return {"cramerv": cramerv, "tschuprowt": tschuprowt}
-
-    def _target_rate(xtab: DataFrame) -> DataFrame:  # TODO: not needed if inherited from BinaryCarver
-        """Computes target rate per row for a binary target (column) in a crosstab
-
-        Parameters
-        ----------
-        xtab : DataFrame
-            _description_
-
-        Returns
-        -------
-        DataFrame
-            _description_
-        """
-        return xtab[1].divide(xtab.sum(axis=0)).sort_values()
-
-    def _combination_formatter(combination: list[list[str]]) -> list[str]:  # TODO: not needed if inherited from BinaryCarver
-        formatted_combination = [
-            value for values in ([group[0]] * len(group) for group in combination) for value in values
-        ]
-
-        return formatted_combination
-
-    def _printer(xtab: DataFrame = None) -> DataFrame:  # TODO: not needed if inherited from BinaryCarver
-        """Prints a binary xtab's statistics
-
-        Parameters
-        ----------
-        xtab : Dataframe
-            A crosstab, by default None
-
-        Returns
-        -------
-        DataFrame
-            Target rate and frequency per modality
-        """
-        # checking for an xtab
-        stats = None
-        if xtab is not None:
-            # target rate and frequency statistics per modality
-            stats = DataFrame(
-                {
-                    # target rate per modality
-                    "target_rate": xtab[1].divide(xtab.sum(axis=1)),
-                    # frequency per modality
-                    "frequency": xtab.sum(axis=1) / xtab.sum().sum(),
-                }
-            )
-
-            # rounding up stats
-            stats = stats.round(3)
-
-        return stats
 
     def fit(
         self,
@@ -365,7 +225,11 @@ class MulticlassCarver(BinaryCarver):
         self.features_casting = {feature: f"{feature}_".join(y_classes) for feature in self.features}
 
         # iterating over each class minus one
-        for y_class in y_classes[:
+        for y_class in y_classes[:-1]:
+            # identifying this y_class
+            target_class = (y == y_class).astype(int)
+            if y_dev is not None:
+                target_class_dev = (y_dev == y_class).astype(int)
 
             # training BinaryCarver
             binary_carver = BinaryCarver(
@@ -381,31 +245,16 @@ class MulticlassCarver(BinaryCarver):
                 copy = self.copy,
                 verbose = self.verbose,
                 pretty_print = self.pretty_print,
-                features_casting = self.features_casting,
+                # features_casting = self.features_casting,  # TODO: remove this from BinaryCarver/ContinuousCarver
                 **self.kwargs
             )
 
-        features_casting
+            binary_carver.fit(x_copy, target_class, X_dev=x_dev_copy, y_dev=target_class_dev)
 
-        # Initiating BaseCarver
-        super().__init__(
-            min_freq = self.min_freq,
-            sort_by = self.sort_by,
-            quantitative_features = self.quantitative_features,
-            qualitative_features = self.qualitative_features,
-            ordinal_features = self.ordinal_features,
-            values_orders = self.values_orders,
-            max_n_mod = self.max_n_mod,
-            output_dtype = self.output_dtype,
-            dropna = self.dropna,
-            copy = self.copy,
-            verbose = self.verbose,
-            pretty_print = self.pretty_print,
-            features_casting = self.features_casting,
-            **self.kwargs
-        )
+            # update valyes orders accordingly ?
+
 
         # Fitting BaseCarver
-        super().fit(X, y, X_dev, y_dev)
+        # super().fit(X, y, X_dev, y_dev)
 
         return self
