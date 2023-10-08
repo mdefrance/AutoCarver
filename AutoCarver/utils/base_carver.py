@@ -4,20 +4,11 @@ for a binary classification model.
 
 from typing import Any, Callable, Union
 
-from numpy import add, array, mean, searchsorted, sqrt, unique, zeros
-from pandas import DataFrame, Series, crosstab
-from scipy.stats import chi2_contingency, kruskal
+from pandas import DataFrame, Series
 from tqdm import tqdm
 from warnings import warn
 
-from .discretizers import GroupedList
-from .discretizers.discretizers import Discretizer
-from .discretizers.utils.base_discretizers import (
-    BaseDiscretizer,
-    convert_to_labels,
-    convert_to_values,
-)
-from .discretizers.utils.serialization import json_deserialize_values_orders
+from ..auto_carver import BaseDiscretizer, GroupedList, convert_to_labels, Discretizer, convert_to_values, json_deserialize_values_orders
 
 # trying to import extra dependencies
 try:
@@ -193,6 +184,7 @@ class BaseCarver(BaseDiscretizer):
                 )
 
     def _set_features(
+        self,
         quantitative_features: list[str] = None,
         qualitative_features: list[str] = None,
         ordinal_features: list[str] = None,

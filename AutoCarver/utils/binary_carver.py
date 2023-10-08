@@ -2,31 +2,14 @@
 for a binary classification model.
 """
 
-from typing import Any, Callable, Union
+from typing import Callable
 
-from numpy import add, array, mean, searchsorted, sqrt, unique, zeros
+from numpy import add, array, searchsorted, sqrt, unique, zeros
 from pandas import DataFrame, Series, crosstab
-from scipy.stats import chi2_contingency, kruskal
-from tqdm import tqdm
-from warnings import warn
+from scipy.stats import chi2_contingency
 
-from .discretizers import GroupedList
-from .discretizers.discretizers import Discretizer
-from .discretizers.utils.base_discretizers import (
-    BaseDiscretizer,
-    convert_to_labels,
-    convert_to_values,
-)
-from .discretizers.utils.serialization import json_deserialize_values_orders
-
-# trying to import extra dependencies
-try:
-    from IPython.display import display_html
-except ImportError:
-    _has_idisplay = False
-else:
-    _has_idisplay = True
-
+from .base_carver import BaseCarver
+from ..auto_carver import GroupedList
 
 class BinaryCarver(BaseCarver):
     """Automatic carving of continuous, discrete, categorical and ordinal
@@ -139,7 +122,7 @@ class BinaryCarver(BaseCarver):
 
         # association measure used to find the best groups for binary targets
         implemented_measures = ["tschuprowt", "cramerv"]  
-        assert sort_by in measures, (
+        assert sort_by in implemented_measures, (
             f" - [BinaryCarver] Measure '{sort_by}' not yet implemented for binary targets. "
             f"Choose from: {str(implemented_measures)}."
         )

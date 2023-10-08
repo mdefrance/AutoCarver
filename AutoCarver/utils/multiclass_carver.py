@@ -2,31 +2,14 @@
 for a binary classification model.
 """
 
-from typing import Any, Callable, Union
+from typing import Callable
 
-from numpy import add, array, mean, searchsorted, sqrt, unique, zeros, sort
-from pandas import DataFrame, Series, crosstab
-from scipy.stats import chi2_contingency, kruskal
-from tqdm import tqdm
-from warnings import warn
+from numpy import unique, sort
+from pandas import DataFrame, Series
 
-from .discretizers import GroupedList
-from .discretizers.discretizers import Discretizer
-from .discretizers.utils.base_discretizers import (
-    BaseDiscretizer,
-    convert_to_labels,
-    convert_to_values,
-)
-from .discretizers.utils.serialization import json_deserialize_values_orders
-
-# trying to import extra dependencies
-try:
-    from IPython.display import display_html
-except ImportError:
-    _has_idisplay = False
-else:
-    _has_idisplay = True
-
+from .base_carver import BaseCarver
+from .binary_carver import BinaryCarver
+from ..auto_carver import GroupedList
 
 class MulticlassCarver(BaseCarver):
     """Automatic carving of continuous, discrete, categorical and ordinal
