@@ -100,16 +100,6 @@ class ContinuousCarver(BaseCarver):
         --------
         See `AutoCarver examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
         """
-        # setting Carver's features
-        super()._set_features(
-            quantitative_features=quantitative_features,
-            qualitative_features=qualitative_features,
-            ordinal_features=ordinal_features
-        )
-
-        # setting features_casting for continuous target
-        features_casting = {feature: [feature] for feature in self.features}
-
         # association measure used to find the best groups for continuous targets
         assert "sort_by" in kwargs, (
             " - [ContinuousCarver] Cannot set 'sort_by' attribute. "
@@ -130,7 +120,6 @@ class ContinuousCarver(BaseCarver):
             copy = copy,
             verbose = verbose,
             pretty_print = pretty_print,
-            features_casting = features_casting,
             **kwargs
         )
 
@@ -179,7 +168,7 @@ class ContinuousCarver(BaseCarver):
         return x_copy, x_dev_copy
 
     def _aggregator(
-        features: list[str], X: DataFrame, y: Series, labels_orders: dict[str, GroupedList]
+        self, features: list[str], X: DataFrame, y: Series, labels_orders: dict[str, GroupedList]
     ) -> dict[str, DataFrame]:
         """Computes y values for modalities of specified features and ensures the ordering according to the known labels
 
@@ -215,12 +204,12 @@ class ContinuousCarver(BaseCarver):
 
         return yvals
 
-    def _grouper(yval: Series, groupby: dict[str:str]) -> Series:
+    def _grouper(self, yval: Series, groupby: dict[str:str]) -> Series:
         grouped_yval = yval.groupby(groupby).sum()
 
         return grouped_yval
 
-    def _association_measure(yval: Series, **kwargs) -> dict[str, float]:
+    def _association_measure(self, yval: Series, **kwargs) -> dict[str, float]:
         """Computes measures of association between feature and quantitative target.
 
         Parameters
@@ -236,7 +225,7 @@ class ContinuousCarver(BaseCarver):
         # Kruskal-Wallis' H
         return {"kruskal": kruskal(*tuple(yval.values))[0]}
 
-    def _target_rate(yval: Series) -> Series:
+    def _target_rate(self, yval: Series) -> Series:
         """Computes target rate per row for a binary target (column) in a crosstab
 
         Parameters
@@ -251,12 +240,12 @@ class ContinuousCarver(BaseCarver):
         """
         return yval.apply(mean).sort_values()
 
-    def _combination_formatter(combination: list[list[str]]) -> dict[str, str]:
+    def _combination_formatter(self, combination: list[list[str]]) -> dict[str, str]:
         formatted_combination = {modal: group[0] for group in combination for modal in group}
 
         return formatted_combination
 
-    def _printer(yval: Series = None) -> DataFrame:
+    def _printer(self, yval: Series = None) -> DataFrame:
         """Prints a continuous yval's statistics
 
         Parameters

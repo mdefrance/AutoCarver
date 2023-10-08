@@ -110,16 +110,6 @@ class BinaryCarver(BaseCarver):
         --------
         See `AutoCarver examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
         """
-        # setting Carver's features
-        super()._set_features(
-            quantitative_features=quantitative_features,
-            qualitative_features=qualitative_features,
-            ordinal_features=ordinal_features
-        )
-
-        # setting features_casting for continuous target
-        features_casting = {feature: [feature] for feature in self.features}
-
         # association measure used to find the best groups for binary targets
         implemented_measures = ["tschuprowt", "cramerv"]  
         assert sort_by in implemented_measures, (
@@ -141,7 +131,6 @@ class BinaryCarver(BaseCarver):
             copy = copy,
             verbose = verbose,
             pretty_print = pretty_print,
-            features_casting = features_casting,
             **kwargs
         )
 
@@ -189,7 +178,7 @@ class BinaryCarver(BaseCarver):
         return x_copy, x_dev_copy
 
     def _aggregator(
-        features: list[str], X: DataFrame, y: Series, labels_orders: dict[str, GroupedList]
+        self, features: list[str], X: DataFrame, y: Series, labels_orders: dict[str, GroupedList]
     ) -> dict[str, DataFrame]:
         """Computes crosstabs for specified features and ensures that the crosstab is ordered according to the known labels
 
@@ -226,7 +215,7 @@ class BinaryCarver(BaseCarver):
         return xtabs
 
 
-    def _grouper(xtab: DataFrame, groupby: list[str]) -> DataFrame:
+    def _grouper(self, xtab: DataFrame, groupby: list[str]) -> DataFrame:
         """Groups a crosstab by groupby and sums column values by groups (vectorized)
 
         Parameters
@@ -258,7 +247,7 @@ class BinaryCarver(BaseCarver):
 
         return grouped_xtab
 
-    def _association_measure(xtab: DataFrame, n_obs: int) -> dict[str, float]:
+    def _association_measure(self, xtab: DataFrame, n_obs: int) -> dict[str, float]:
         """Computes measures of association between feature and target by crosstab.
 
         Parameters
@@ -288,7 +277,7 @@ class BinaryCarver(BaseCarver):
 
         return {"cramerv": cramerv, "tschuprowt": tschuprowt}
 
-    def _target_rate(xtab: DataFrame) -> DataFrame:
+    def _target_rate(self, xtab: DataFrame) -> DataFrame:
         """Computes target rate per row for a binary target (column) in a crosstab
 
         Parameters
@@ -303,14 +292,14 @@ class BinaryCarver(BaseCarver):
         """
         return xtab[1].divide(xtab.sum(axis=0)).sort_values()
 
-    def _combination_formatter(combination: list[list[str]]) -> list[str]:
+    def _combination_formatter(self, combination: list[list[str]]) -> list[str]:
         formatted_combination = [
             value for values in ([group[0]] * len(group) for group in combination) for value in values
         ]
 
         return formatted_combination
 
-    def _printer(xtab: DataFrame = None) -> DataFrame:
+    def _printer(self, xtab: DataFrame = None) -> DataFrame:
         """Prints a binary xtab's statistics
 
         Parameters
@@ -370,6 +359,6 @@ class BinaryCarver(BaseCarver):
         x_copy, x_dev_copy = self._prepare_data(X, y, X_dev, y_dev)
 
         # Fitting BaseCarver
-        super().fit(X, y, X_dev, y_dev)
+        super().fit(x_copy, y, X_dev=x_dev_copy, y_dev=y_dev)
 
         return self

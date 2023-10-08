@@ -127,12 +127,23 @@ class BaseCarver(BaseDiscretizer):
         --------
         See `AutoCarver examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
         """
-        # setting Carver's features
-        self._set_features(
-            quantitative_features=quantitative_features,
-            qualitative_features=qualitative_features,
-            ordinal_features=ordinal_features
+        # Lists of features
+        if quantitative_features is None:
+            quantitative_features = []
+        if qualitative_features is None:
+            qualitative_features = []
+        if ordinal_features is None:
+            ordinal_features = []
+        assert (
+            len(quantitative_features) > 0
+            or len(qualitative_features) > 0
+            or len(ordinal_features) > 0
+        ), (
+            " - [BaseCarver] No feature passed as input. Pleased provided column names to Carver "
+            "by setting quantitative_features, quantitative_features or ordinal_features."
         )
+        self.ordinal_features = list(set(ordinal_features))
+        self.features = list(set(quantitative_features + qualitative_features + ordinal_features))
 
         # initializing input_dtypes
         self.input_dtypes = {feature: "str" for feature in qualitative_features + ordinal_features}
@@ -171,6 +182,7 @@ class BaseCarver(BaseDiscretizer):
         # class specific attributes
         self.min_freq = min_freq  # minimum frequency per base bucket
         self.max_n_mod = max_n_mod  # maximum number of modality per feature
+        self.sort_by = sort_by
         self.min_group_size = 1
         self.pretty_print = False
         if pretty_print:
@@ -182,31 +194,6 @@ class BaseCarver(BaseDiscretizer):
                     "Package not found: ipython. Defaulting to verbose=True. "
                     "Install extra dependencies with pip install autocarver[jupyter]"
                 )
-
-    def _set_features(
-        self,
-        quantitative_features: list[str] = None,
-        qualitative_features: list[str] = None,
-        ordinal_features: list[str] = None,
-    ):
-        """Sets the features of the Carver"""
-        # Lists of features
-        if quantitative_features is None:
-            quantitative_features = []
-        if qualitative_features is None:
-            qualitative_features = []
-        if ordinal_features is None:
-            ordinal_features = []
-        assert (
-            len(quantitative_features) > 0
-            or len(qualitative_features) > 0
-            or len(ordinal_features) > 0
-        ), (
-            " - [BaseCarver] No feature passed as input. Pleased provided column names to Carver "
-            "by setting quantitative_features, quantitative_features or ordinal_features."
-        )
-        self.ordinal_features = list(set(ordinal_features))
-        self.features = list(set(quantitative_features + qualitative_features + ordinal_features))
 
     def _prepare_data(
         self,
@@ -424,7 +411,6 @@ class BaseCarver(BaseDiscretizer):
         self,
         order: GroupedList,
         xagg: DataFrame,
-        helpers: dict[str, Callable],
         *,
         xagg_dev: DataFrame = None,
     ) -> tuple[GroupedList, DataFrame, DataFrame]:

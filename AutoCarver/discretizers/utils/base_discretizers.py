@@ -297,8 +297,6 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             result_type="expand",
         )
         uniques = applied_to_dict_list(uniques)
-        if "Qualitative" in uniques:
-            print("\n\n\n--------\nqualitative uniques before replace", uniques["Qualitative"], "\n\n\n--------\n")
 
         # replacing unknwon values if there was a default discretization
         X.replace(
@@ -320,8 +318,6 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             result_type="expand",
         )
         uniques = applied_to_dict_list(uniques)
-        if "Qualitative" in uniques:
-            print("\n\n\n--------\nqualitative uniques after replace", uniques["Qualitative"], "\n\n\n--------\n")
 
         # checking for unexpected values for each feature
         for feature in features:

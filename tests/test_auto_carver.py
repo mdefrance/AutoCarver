@@ -6,7 +6,7 @@ from json import dumps, loads
 from pandas import DataFrame
 from pytest import fixture, raises
 
-from AutoCarver import AutoCarver, load_carver
+from AutoCarver import load_carver, BinaryCarver
 from AutoCarver.discretizers import ChainedDiscretizer
 
 
@@ -30,7 +30,7 @@ def copy(request) -> bool:
     return request.param
 
 
-def test_auto_carver(
+def test_binary_carver(
     x_train: DataFrame,
     x_train_wrong_1: DataFrame,
     x_train_wrong_2: DataFrame,
@@ -43,7 +43,7 @@ def test_auto_carver(
     sort_by: str,
     copy: bool,
 ) -> None:
-    """Tests AutoCarver
+    """Tests BinaryCarver
 
     Parameters
     ----------
@@ -153,7 +153,7 @@ def test_auto_carver(
     max_n_mod = 4
 
     # tests with 'tschuprowt' measure
-    auto_carver = AutoCarver(
+    auto_carver = BinaryCarver(
         quantitative_features=quantitative_features,
         qualitative_features=qualitative_features,
         ordinal_features=ordinal_features,
@@ -283,7 +283,7 @@ def test_auto_carver(
     )
     values_orders.update(chained_discretizer.values_orders)
 
-    auto_carver = AutoCarver(
+    auto_carver = BinaryCarver(
         quantitative_features=quantitative_features,
         qualitative_features=qualitative_features,
         ordinal_features=ordinal_features,

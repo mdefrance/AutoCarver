@@ -110,25 +110,29 @@ class MulticlassCarver(BaseCarver):
         --------
         See `AutoCarver examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
         """
-        # setting Carver's features
-        super()._set_features(
-            quantitative_features=quantitative_features,
-            qualitative_features=qualitative_features,
-            ordinal_features=ordinal_features
+        # association measure used to find the best groups for multiclass targets
+        implemented_measures = ["tschuprowt", "cramerv"]  
+        assert sort_by in implemented_measures, (
+            f" - [MulticlassCarver] Measure '{sort_by}' not yet implemented for multiclass targets"
+            f". Choose from: {str(implemented_measures)}."
         )
-        self.min_freq = min_freq
-        self.sort_by = sort_by
-        self.quantitative_features = quantitative_features
-        self.qualitative_features = qualitative_features
-        self.ordinal_features = ordinal_features
-        self.values_orders = values_orders
-        self.max_n_mod = max_n_mod
-        self.output_dtype = output_dtype
-        self.dropna = dropna
-        self.copy = copy
-        self.verbose = verbose
-        self.pretty_print = pretty_print
-        self.kwargs = kwargs
+
+        # Initiating BaseCarver
+        super().__init__(
+            min_freq = min_freq,
+            sort_by = sort_by,
+            quantitative_features = quantitative_features,
+            qualitative_features = qualitative_features,
+            ordinal_features = ordinal_features,
+            values_orders = values_orders,
+            max_n_mod = max_n_mod,
+            output_dtype = output_dtype,
+            dropna = dropna,
+            copy = copy,
+            verbose = verbose,
+            pretty_print = pretty_print,
+            **kwargs
+        )
 
     def _prepare_data(
         self,
@@ -160,7 +164,7 @@ class MulticlassCarver(BaseCarver):
             Copies of (X, X_dev) and helpers to be used according to target type
         """
         # Checking for binary target and copying X
-        x_copy, x_dev_copy = super().super()._prepare_data(X, y, X_dev=X_dev, y_dev=y_dev)  # TODO: should inherit from BaseCarver
+        x_copy, x_dev_copy = super()._prepare_data(X, y, X_dev=X_dev, y_dev=y_dev)
 
         # multiclass target, checking values
         y_values = unique(y)
@@ -168,7 +172,18 @@ class MulticlassCarver(BaseCarver):
             " - [MulticlassCarver] provided y is binary, consider using BinaryCarver instead."
         )
 
-        # TODO: check that classes of y are classes of y_dev
+        # check that classes of y are classes of y_dev
+        if y_dev is not None:
+            unique_y_dev = y_dev.unique()
+            unique_y = y.unique()
+            assert all(mod_y in unique_y_dev for mod_y in unique_y), (
+                "- [MulticlassCarver] Some classes of y are missing from y_dev: "
+                f"{str([mod_y for mod_y in unique_y if mod_y not in unique_y_dev])}"
+            )
+            assert all(mod_y_dev in unique_y for mod_y_dev in unique_y_dev), (
+                "- [MulticlassCarver] Some classes of y_dev are missing from y: "
+                f"{str([mod_y_dev for mod_y_dev in unique_y_dev if mod_y_dev not in unique_y])}"
+            )
 
         return x_copy, x_dev_copy
 
