@@ -2,7 +2,7 @@
 for a binary classification model.
 """
 
-from typing import Callable
+from typing import Any, Callable
 
 from pandas import DataFrame, Series, unique
 
@@ -34,7 +34,7 @@ class MulticlassCarver(BaseCarver):
         pretty_print: bool = False,
         **kwargs,
     ) -> None:
-        """Initiates a ``BinaryCarver``.
+        """Initiates a ``MulticlassCarver``.
 
         Parameters
         ----------
@@ -116,7 +116,7 @@ class MulticlassCarver(BaseCarver):
             f". Choose from: {str(implemented_measures)}."
         )
 
-        # Initiating BaseCarver
+        # Initiating BinaryCarver
         super().__init__(
             min_freq = min_freq,
             sort_by = sort_by,
@@ -132,7 +132,8 @@ class MulticlassCarver(BaseCarver):
             pretty_print = pretty_print,
             **kwargs
         )
-        self.kwargs = kwargs
+        self.str_nan = kwargs.get("str_nan", "__NAN__"),
+        self.str_default = kwargs.get("str_default", "__OTHER__"),
 
     def _prepare_data(
         self,
@@ -223,10 +224,15 @@ class MulticlassCarver(BaseCarver):
         x_copy, y_copy, x_dev_copy, y_dev_copy = self._prepare_data(X, y, X_dev, y_dev)
         
         # getting distinct y classes
-        y_classes = sorted(list(y_copy.unique()))[:-1]  # removing one of the classes
+        y_classes = sorted(list(y_copy.unique()))[1:]  # removing one of the classes
 
-        # features castings
-        self.features_casting = {feature: f"{feature}_".join(y_classes) for feature in self.features}
+        # copying raw values_orders (contains previous discretizations)
+        raw_values_orders = {feature: order for feature, order in self.values_orders.items()}
+
+        # inititing casted features input_dtypes and values_orders
+        casted_values_orders: dict[str, GroupedList] = {}
+        casted_input_dtypes: dict[str, str] = {}
+        casted_features = {feature: [] for feature in self.features}
 
         # iterating over each class minus one
         for y_class in y_classes:
@@ -235,33 +241,63 @@ class MulticlassCarver(BaseCarver):
             if y_dev is not None:
                 target_class_dev = (y_dev_copy == y_class).astype(int)
 
-            # updating features accordingly
-            quantitative_features = [f"{feature}_{y_class}" for feature in self.quantitative_features]
-            qualitative_features = [f"{feature}_{y_class}" for feature in self.qualitative_features]
-            ordinal_features = [f"{feature}_{y_class}" for feature in self.ordinal_features]
-
-            # training BinaryCarver
+            # initiating BinaryCarver for y_class
             binary_carver = BinaryCarver(
                 min_freq = self.min_freq,
                 sort_by = self.sort_by,
-                quantitative_features = quantitative_features,
-                qualitative_features = qualitative_features,
-                ordinal_features = ordinal_features,
-                values_orders = self.values_orders,
+                quantitative_features = self.quantitative_features,
+                qualitative_features = self.qualitative_features,
+                ordinal_features = self.ordinal_features,
+                values_orders = raw_values_orders,
                 max_n_mod = self.max_n_mod,
                 output_dtype = self.output_dtype,
                 dropna = self.dropna,
-                copy = self.copy,
+                copy = True,  # copying x to keep raw columns as is
                 verbose = self.verbose,
                 pretty_print = self.pretty_print,
-                **self.kwargs
+                str_nan=self.str_nan,
+                str_default=self.str_default,
             )
-
+    
+            # fitting BinaryCarver for y_class
             binary_carver.fit(x_copy, target_class, X_dev=x_dev_copy, y_dev=target_class_dev)
+ 
+            # renaming BinaryCarver's fitted values_orders/input_dtype/output_dtype for y_class
+            casted_values_orders.update(dict_append_class(binary_carver.values_orders, y_class))
+            casted_input_dtypes.update(dict_append_class(binary_carver.input_dtypes, y_class))
+            for feature in binary_carver.features:
+                # feature only present in binary_carver.feature if not removed
+                casted_features.update(
+                    {
+                        feature: casted_features.get(feature) + [append_class(feature, y_class)]
+                    }
+                )
 
-            self.values_orders.update(binary_carver.values_orders)
+        # initiating BaseDiscretizer with features_casting
+        base_discretizer = BaseDiscretizer.__init__(
+            features=[feature for castings in casted_features.values() for feature in castings],
+            values_orders=casted_values_orders,
+            input_dtypes=casted_input_dtypes,
+            output_dtype=self.output_dtype,
+            str_nan=self.kwargs.get("str_nan", "__NAN__"),
+            str_default=self.kwargs.get("str_default", "__OTHER__"),
+            dropna=self.dropna,
+            copy=self.copy,
+            verbose=bool(max(self.verbose, self.pretty_print)),
+            features_casting=casted_features
+        )
 
-        # Fitting BaseCarver
-        BaseDiscretizer.fit(x_copy, y, X_dev=x_dev_copy, y_dev=y_dev)
+        # fitting BaseDiscretizer
+        BaseDiscretizer.fit(x_copy, y)
 
         return self
+
+def append_class(string: str, to_append: str):
+    """ add the to_append string to a string"""
+    
+    return f"{string}_{to_append}"
+
+def dict_append_class(dic: dict[str, Any], to_append: str):
+    """ add the to_append string to all keys if dic"""
+    
+    return {append_class(feature, to_append): values for feature, values in dic.items()}

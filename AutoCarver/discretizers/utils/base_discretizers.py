@@ -392,18 +392,10 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
 
         # transforming quantitative features
         if len(self.quantitative_features) > 0:
-            if self.verbose:  # verbose if requested
-                print(
-                    f" - [BaseDiscretizer] Transform Quantitative {str(self.quantitative_features)}"
-                )
             x_copy = self._transform_quantitative(x_copy, y)
 
         # transforming qualitative features
         if len(self.qualitative_features) > 0:
-            if self.verbose:  # verbose if requested
-                print(
-                    f" - [BaseDiscretizer] Transform Qualitative {str(self.qualitative_features)}"
-                )
             x_copy = self._transform_qualitative(x_copy, y)
 
         # reinstating nans

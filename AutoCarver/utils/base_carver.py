@@ -48,7 +48,6 @@ class BaseCarver(BaseDiscretizer):
         copy: bool = False,
         verbose: bool = False,
         pretty_print: bool = False,
-        features_casting: dict[str, list[str]] = None,
         **kwargs,
         # min_carved_freq: float = 0,  # TODO: update this parameter so that it is set according to frequency rather than number of groups
         # unknown_handling: str = "raises",  # TODO: add parameter to remove unknown values whatsoever
@@ -123,10 +122,6 @@ class BaseCarver(BaseDiscretizer):
             If ``True``, adds to the verbose some HTML tables of target rates and frequencies for X and, if provided, X_dev.
             Overrides the value of ``verbose``, by default ``False``
 
-        features_casting : dict[str, list[str]], optional
-            By default ``None``, target is considered as continuous or binary.
-            Multiclass target: Dict of raw DataFrame columns associated to the names of copies that will be created. 
-
         **kwargs
             Pass values for ``str_default``and ``str_nan`` of ``Discretizer`` (default string values).
 
@@ -167,7 +162,6 @@ class BaseCarver(BaseDiscretizer):
             dropna=dropna,
             copy=copy,
             verbose=bool(max(verbose, pretty_print)),
-            features_casting=features_casting,
         )
 
         # checking that qualitatitve and quantitative features are distinct
