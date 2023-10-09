@@ -4,12 +4,11 @@ for a binary classification model.
 
 from typing import Callable
 
-from numpy import unique, sort
-from pandas import DataFrame, Series
+from pandas import DataFrame, Series, unique
 
 from .base_carver import BaseCarver
 from .binary_carver import BinaryCarver
-from ..auto_carver import GroupedList
+from ..discretizers import GroupedList, BaseDiscretizer
 
 class MulticlassCarver(BaseCarver):
     """Automatic carving of continuous, discrete, categorical and ordinal
@@ -133,6 +132,7 @@ class MulticlassCarver(BaseCarver):
             pretty_print = pretty_print,
             **kwargs
         )
+        self.kwargs = kwargs
 
     def _prepare_data(
         self,
@@ -166,14 +166,20 @@ class MulticlassCarver(BaseCarver):
         # Checking for binary target and copying X
         x_copy, x_dev_copy = super()._prepare_data(X, y, X_dev=X_dev, y_dev=y_dev)
 
+        # converting target as str
+        y_copy = y.astype(str)
+
         # multiclass target, checking values
-        y_values = unique(y)
+        y_values = unique(y_copy)
         assert len(y_values) > 2, (
             " - [MulticlassCarver] provided y is binary, consider using BinaryCarver instead."
         )
 
-        # check that classes of y are classes of y_dev
         if y_dev is not None:
+            # converting target as str
+            y_dev_copy = y_dev.astype(str)
+
+            # check that classes of y are classes of y_dev
             unique_y_dev = y_dev.unique()
             unique_y = y.unique()
             assert all(mod_y in unique_y_dev for mod_y in unique_y), (
@@ -185,7 +191,7 @@ class MulticlassCarver(BaseCarver):
                 f"{str([mod_y_dev for mod_y_dev in unique_y_dev if mod_y_dev not in unique_y])}"
             )
 
-        return x_copy, x_dev_copy
+        return x_copy, y_copy, x_dev_copy, y_dev_copy
 
 
     def fit(
@@ -214,28 +220,33 @@ class MulticlassCarver(BaseCarver):
             Multiclass target feature with wich the robustness of discretization is evaluated, by default None
         """
         # preparing datasets and checking for wrong values
-        x_copy, x_dev_copy = self._prepare_data(X, y, X_dev, y_dev)
+        x_copy, y_copy, x_dev_copy, y_dev_copy = self._prepare_data(X, y, X_dev, y_dev)
         
         # getting distinct y classes
-        y_classes = sort(list(map(str, y.unique())))
+        y_classes = sorted(list(y_copy.unique()))[:-1]  # removing one of the classes
 
         # features castings
         self.features_casting = {feature: f"{feature}_".join(y_classes) for feature in self.features}
 
         # iterating over each class minus one
-        for y_class in y_classes[:-1]:
+        for y_class in y_classes:
             # identifying this y_class
-            target_class = (y == y_class).astype(int)
+            target_class = (y_copy == y_class).astype(int)
             if y_dev is not None:
-                target_class_dev = (y_dev == y_class).astype(int)
+                target_class_dev = (y_dev_copy == y_class).astype(int)
+
+            # updating features accordingly
+            quantitative_features = [f"{feature}_{y_class}" for feature in self.quantitative_features]
+            qualitative_features = [f"{feature}_{y_class}" for feature in self.qualitative_features]
+            ordinal_features = [f"{feature}_{y_class}" for feature in self.ordinal_features]
 
             # training BinaryCarver
             binary_carver = BinaryCarver(
                 min_freq = self.min_freq,
                 sort_by = self.sort_by,
-                quantitative_features = self.quantitative_features,
-                qualitative_features = self.qualitative_features,
-                ordinal_features = self.ordinal_features,
+                quantitative_features = quantitative_features,
+                qualitative_features = qualitative_features,
+                ordinal_features = ordinal_features,
                 values_orders = self.values_orders,
                 max_n_mod = self.max_n_mod,
                 output_dtype = self.output_dtype,
@@ -243,16 +254,14 @@ class MulticlassCarver(BaseCarver):
                 copy = self.copy,
                 verbose = self.verbose,
                 pretty_print = self.pretty_print,
-                # features_casting = self.features_casting,  # TODO: remove this from BinaryCarver/ContinuousCarver
                 **self.kwargs
             )
 
             binary_carver.fit(x_copy, target_class, X_dev=x_dev_copy, y_dev=target_class_dev)
 
-            # update valyes orders accordingly ?
-
+            self.values_orders.update(binary_carver.values_orders)
 
         # Fitting BaseCarver
-        # super().fit(X, y, X_dev, y_dev)
+        BaseDiscretizer.fit(x_copy, y, X_dev=x_dev_copy, y_dev=y_dev)
 
         return self

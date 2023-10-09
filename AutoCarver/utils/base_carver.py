@@ -8,7 +8,14 @@ from pandas import DataFrame, Series
 from tqdm import tqdm
 from warnings import warn
 
-from ..auto_carver import BaseDiscretizer, GroupedList, convert_to_labels, Discretizer, convert_to_values, json_deserialize_values_orders
+from ..discretizers import GroupedList
+from ..discretizers.discretizers import Discretizer
+from ..discretizers.utils.base_discretizers import (
+    BaseDiscretizer,
+    convert_to_labels,
+    convert_to_values,
+)
+from ..discretizers.utils.serialization import json_deserialize_values_orders
 
 # trying to import extra dependencies
 try:

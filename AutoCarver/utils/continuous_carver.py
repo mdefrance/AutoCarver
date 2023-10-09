@@ -9,7 +9,7 @@ from pandas import DataFrame, Series
 from scipy.stats import kruskal
 
 from .base_carver import BaseCarver
-from ..auto_carver import GroupedList
+from ..discretizers import GroupedList
 
 
 
@@ -305,7 +305,7 @@ class ContinuousCarver(BaseCarver):
         x_copy, x_dev_copy, helpers = self._prepare_data(X, y, X_dev, y_dev)
 
         # Fitting BaseCarver
-        super().fit(X, y, X_dev, y_dev)
+        super().fit(x_copy, y, X_dev=x_dev_copy, y_dev=y_dev)
 
         return self
 

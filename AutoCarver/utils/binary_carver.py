@@ -4,12 +4,12 @@ for a binary classification model.
 
 from typing import Callable
 
-from numpy import add, array, searchsorted, sqrt, unique, zeros
-from pandas import DataFrame, Series, crosstab
+from numpy import add, array, searchsorted, sqrt, zeros
+from pandas import DataFrame, Series, crosstab, unique
 from scipy.stats import chi2_contingency
 
 from .base_carver import BaseCarver
-from ..auto_carver import GroupedList
+from ..discretizers import GroupedList
 
 class BinaryCarver(BaseCarver):
     """Automatic carving of continuous, discrete, categorical and ordinal
