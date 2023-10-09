@@ -4,8 +4,8 @@ for a binary classification model.
 
 from typing import Callable
 
-from numpy import add, array, searchsorted, sqrt, zeros
-from pandas import DataFrame, Series, crosstab, unique
+from numpy import add, array, searchsorted, sqrt, unique, zeros
+from pandas import DataFrame, Series, crosstab
 from scipy.stats import chi2_contingency
 
 from .base_carver import BaseCarver
