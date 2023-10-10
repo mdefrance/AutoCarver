@@ -1,5 +1,5 @@
 """Tool to build optimized buckets out of Quantitative and Qualitative features
-for a binary classification model.
+for any task.
 """
 
 from typing import Any, Callable, Union

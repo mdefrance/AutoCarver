@@ -1,5 +1,5 @@
 """Tool to build optimized buckets out of Quantitative and Qualitative features
-for a binary classification model.
+for a continuous regression tasks.
 """
 
 from typing import Callable
@@ -101,7 +101,7 @@ class ContinuousCarver(BaseCarver):
         See `AutoCarver examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
         """
         # association measure used to find the best groups for continuous targets
-        assert "sort_by" in kwargs, (
+        assert ("sort_by" not in kwargs) or (kwargs.get("sort_by") != "kruskal") , (
             " - [ContinuousCarver] Cannot set 'sort_by' attribute. "
             "Only 'kruskal' measure is implemented for continuous targets."
         )
@@ -129,7 +129,7 @@ class ContinuousCarver(BaseCarver):
         y: Series,
         X_dev: DataFrame = None,
         y_dev: Series = None,
-    ) -> tuple[DataFrame, DataFrame, dict[str, Callable]]:
+    ) -> tuple[DataFrame, DataFrame]:
         """Validates format and content of X and y.
 
         Parameters
@@ -149,8 +149,8 @@ class ContinuousCarver(BaseCarver):
 
         Returns
         -------
-        tuple[DataFrame, DataFrame, dict[str, Callable]]
-            Copies of (X, X_dev) and helpers to be used according to target type
+        tuple[DataFrame, DataFrame]
+            Copies of (X, X_dev) to be used according to target type
         """
         # Checking for binary target and copying X
         x_copy, x_dev_copy = super()._prepare_data(X, y, X_dev=X_dev, y_dev=y_dev)
@@ -302,7 +302,7 @@ class ContinuousCarver(BaseCarver):
             Binary target feature with wich the robustness of discretization is evaluated, by default None
         """
         # preparing datasets and checking for wrong values
-        x_copy, x_dev_copy, helpers = self._prepare_data(X, y, X_dev, y_dev)
+        x_copy, x_dev_copy = self._prepare_data(X, y, X_dev, y_dev)
 
         # Fitting BaseCarver
         super().fit(x_copy, y, X_dev=x_dev_copy, y_dev=y_dev)

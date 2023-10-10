@@ -1,4 +1,4 @@
-"""Set of tests for binary_carver module.
+"""Set of tests for continuous_carver module.
 """
 
 from json import dumps, loads
@@ -6,16 +6,12 @@ from json import dumps, loads
 from pandas import DataFrame
 from pytest import fixture, raises
 
-from AutoCarver import load_carver, BinaryCarver, MulticlassCarver, ContinuousCarver
+from AutoCarver import load_carver, ContinuousCarver
 from AutoCarver.discretizers import ChainedDiscretizer
 
 
-@fixture(scope="module", params=["tschuprowt", "cramerv"])
-def sort_by(request) -> str:
-    return request.param
 
-
-def test_binary_carver(
+def test_continuous_carver(
     x_train: DataFrame,
     x_train_wrong_1: DataFrame,
     x_train_wrong_2: DataFrame,
@@ -25,10 +21,9 @@ def test_binary_carver(
     x_dev_wrong_3: DataFrame,
     output_dtype: str,
     dropna: bool,
-    sort_by: str,
     copy: bool,
 ) -> None:
-    """Tests BinaryCarver
+    """Tests ContinuousCarver
 
     Parameters
     ----------
@@ -48,8 +43,6 @@ def test_binary_carver(
         Output type 'str' or 'float'
     dropna : bool
         Whether or note to drop nans
-    sort_by : str
-        Sorting measure 'tschuprowt' or 'cramerv'
     copy : bool
         Whether or not to copy the input dataset
     """
@@ -138,14 +131,13 @@ def test_binary_carver(
     max_n_mod = 4
 
     # tests with 'tschuprowt' measure
-    auto_carver = BinaryCarver(
+    auto_carver = ContinuousCarver(
         quantitative_features=quantitative_features,
         qualitative_features=qualitative_features,
         ordinal_features=ordinal_features,
         values_orders=values_orders,
         min_freq=min_freq,
         max_n_mod=max_n_mod,
-        sort_by=sort_by,
         output_dtype=output_dtype,
         dropna=dropna,
         copy=copy,
@@ -153,9 +145,9 @@ def test_binary_carver(
     )
     x_discretized = auto_carver.fit_transform(
         x_train,
-        x_train["binary_target"],
+        x_train["continuous_target"],
         X_dev=x_dev_1,
-        y_dev=x_dev_1["binary_target"],
+        y_dev=x_dev_1["continuous_target"],
     )
     x_dev_discretized = auto_carver.transform(x_dev_1)
 
@@ -264,28 +256,27 @@ def test_binary_carver(
         copy=True,
     )
     x_discretized = chained_discretizer.fit_transform(
-        x_train_wrong_2, x_train_wrong_2["binary_target"]
+        x_train_wrong_2, x_train_wrong_2["continuous_target"]
     )
     values_orders.update(chained_discretizer.values_orders)
 
-    auto_carver = BinaryCarver(
+    auto_carver = ContinuousCarver(
         quantitative_features=quantitative_features,
         qualitative_features=qualitative_features,
         ordinal_features=ordinal_features,
         values_orders=values_orders,
         min_freq=min_freq,
         max_n_mod=max_n_mod,
-        sort_by=sort_by,
         output_dtype=output_dtype,
         dropna=dropna,
         copy=copy,
         verbose=False,
     )
     x_discretized = auto_carver.fit_transform(
-        x_train_wrong_2, x_train_wrong_2["binary_target"]
+        x_train_wrong_2, x_train_wrong_2["continuous_target"]
     )
 
-    if not dropna and sort_by == "cramerv":
+    if not dropna:
         expected = {
             "Mediums": [
                 "Low+",
@@ -305,7 +296,7 @@ def test_binary_carver(
             auto_carver.values_orders["Qualitative_Ordinal_lownan"].content == expected
         ), "Unknown modalities should be kept in the order"
 
-    elif dropna and sort_by == "tschuprowt":
+    elif dropna:
         expected = {
             "Mediums": [
                 "Low+",
