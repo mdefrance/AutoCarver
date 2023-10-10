@@ -400,7 +400,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
         x_discretized = discretizer.fit_transform(x_train)
 
 
-def test_default_discretizer(x_train: DataFrame) -> None:
+def test_default_discretizer(x_train: DataFrame, target: str) -> None:
     """Tests DefaultDiscretizer
 
     Parameters
@@ -442,7 +442,7 @@ def test_default_discretizer(x_train: DataFrame) -> None:
         discretizer = DefaultDiscretizer(
             qualitative_features=features, min_freq=min_freq, values_orders=values_orders, copy=True
         )
-        x_discretized = discretizer.fit_transform(x_train, x_train["quali_ordinal_target"])
+        x_discretized = discretizer.fit_transform(x_train, x_train[target])
 
     # correct feature ordering
     groupedlist_grouped.group("Category B", "Category D")
@@ -456,7 +456,7 @@ def test_default_discretizer(x_train: DataFrame) -> None:
     discretizer = DefaultDiscretizer(
         qualitative_features=features, min_freq=min_freq, values_orders=values_orders, copy=True
     )
-    x_discretized = discretizer.fit_transform(x_train, x_train["quali_ordinal_target"])
+    x_discretized = discretizer.fit_transform(x_train, x_train[target])
 
     assert (
         discretizer.values_orders["Qualitative_Ordinal"].content == groupedlist_ordinal.content
@@ -521,7 +521,7 @@ def test_default_discretizer(x_train: DataFrame) -> None:
     ), "Grouped values should keep there group"
 
 
-def test_ordinal_discretizer(x_train: DataFrame) -> None:
+def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:
     """Tests OrdinalDiscretizer
 
     # TODO: add tests for quantitative features
@@ -553,7 +553,7 @@ def test_ordinal_discretizer(x_train: DataFrame) -> None:
     discretizer = OrdinalDiscretizer(
         ordinal_features=features, min_freq=min_freq, values_orders=values_orders, copy=True
     )
-    discretizer.fit_transform(x_train, x_train["quali_ordinal_target"])
+    discretizer.fit_transform(x_train, x_train[target])
 
     expected_ordinal_01 = {
         "Low-": ["Low", "Low-"],
@@ -588,7 +588,7 @@ def test_ordinal_discretizer(x_train: DataFrame) -> None:
     discretizer = OrdinalDiscretizer(
         ordinal_features=features, min_freq=min_freq, values_orders=values_orders, copy=True
     )
-    discretizer.fit_transform(x_train, x_train["quali_ordinal_target"])
+    discretizer.fit_transform(x_train, x_train[target])
 
     expected_ordinal_08 = {
         "Low+": ["Low-", "Low", "Low+"],

@@ -5,7 +5,7 @@ from pandas import DataFrame
 from AutoCarver.feature_selection import FeatureSelector
 
 
-def test_feature_selector(x_train: DataFrame) -> None:
+def test_feature_selector(x_train: DataFrame, target: str) -> None:
     """Tests FeatureSelector
 
     Parameters
@@ -41,7 +41,7 @@ def test_feature_selector(x_train: DataFrame) -> None:
         n_best=5,
         qualitative_features=qualitative_features + ordinal_features,
     )
-    best_features = quali_selector.select(x_train, x_train["quali_ordinal_target"])
+    best_features = quali_selector.select(x_train, x_train[target])
 
     expected = [
         "Qualitative_Ordinal_lownan",
@@ -57,7 +57,7 @@ def test_feature_selector(x_train: DataFrame) -> None:
         n_best=5,
         quantitative_features=quantitative_features,
     )
-    best_features = quanti_selector.select(x_train, x_train["quali_ordinal_target"])
+    best_features = quanti_selector.select(x_train, x_train[target])
 
     expected = [
         "Discrete_Quantitative_highnan",

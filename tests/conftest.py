@@ -73,9 +73,16 @@ def init_df(seed: int, size: int = 10000) -> DataFrame:
     }
     df = DataFrame(data)
 
-    df["quali_ordinal_target"] = df["Binary"].apply(
+    # binary target
+    df["binary_target"] = df["Binary"].apply(
         lambda u: random.choice([0, 1], p=[1 - (u * 1 / 3), (u * 1 / 3)])
     )
+
+    # continuous target
+    df["continuous_target"] = random.rand(size) * 10000
+
+    # multiclass target
+    df["multiclass_target"] = random.choice([0, 1, 2], df.shape[0], p=[0.3, 0.2, 0.5])
 
     # building specific cases for base_discretizer
     df["Qualitative_Ordinal_lownan"] = df["Qualitative_Ordinal"].replace("Low-", nan)
@@ -263,3 +270,7 @@ def x_dev_wrong_3(x_dev_1: DataFrame) -> DataFrame:
     x_dev["Qualitative_Ordinal"] = x_dev["Qualitative_Ordinal"].replace("Low-", "--Low")
 
     return x_dev
+
+@fixture(params=["continuous_target", "binary_target"])
+def target(request) -> str:
+    return request.param

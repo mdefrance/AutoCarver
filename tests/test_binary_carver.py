@@ -2,11 +2,12 @@
 """
 
 from json import dumps, loads
+from typing import Union
 
 from pandas import DataFrame
 from pytest import fixture, raises
 
-from AutoCarver import load_carver, BinaryCarver
+from AutoCarver import load_carver, BinaryCarver, MulticlassCarver, ContinuousCarver
 from AutoCarver.discretizers import ChainedDiscretizer
 
 
@@ -168,9 +169,9 @@ def test_binary_carver(
     )
     x_discretized = auto_carver.fit_transform(
         x_train,
-        x_train["quali_ordinal_target"],
+        x_train["binary_target"],
         X_dev=x_dev_1,
-        y_dev=x_dev_1["quali_ordinal_target"],
+        y_dev=x_dev_1["binary_target"],
     )
     x_dev_discretized = auto_carver.transform(x_dev_1)
 
@@ -279,7 +280,7 @@ def test_binary_carver(
         copy=True,
     )
     x_discretized = chained_discretizer.fit_transform(
-        x_train_wrong_2, x_train_wrong_2["quali_ordinal_target"]
+        x_train_wrong_2, x_train_wrong_2["binary_target"]
     )
     values_orders.update(chained_discretizer.values_orders)
 
@@ -297,7 +298,7 @@ def test_binary_carver(
         verbose=False,
     )
     x_discretized = auto_carver.fit_transform(
-        x_train_wrong_2, x_train_wrong_2["quali_ordinal_target"]
+        x_train_wrong_2, x_train_wrong_2["binary_target"]
     )
 
     if not dropna and sort_by == "cramerv":
