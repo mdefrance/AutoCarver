@@ -85,11 +85,13 @@ def qualitative_filter(
         if worst_corr:
             associations += [worst_corr]
 
-    # formatting ouput to DataFrame
-    associations = DataFrame(associations).set_index("feature")
+    # checking for some selected features
+    if len(associations) > 0:
+        # formatting ouput to DataFrame
+        associations = DataFrame(associations).set_index("feature")
 
-    # applying filter on association
-    associations = ranks.join(associations, how="right")
+        # applying filter on association
+        associations = ranks.join(associations, how="right")
 
     return associations
 

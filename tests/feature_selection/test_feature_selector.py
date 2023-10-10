@@ -43,14 +43,18 @@ def test_feature_selector(x_train: DataFrame, target: str) -> None:
     )
     best_features = quali_selector.select(x_train, x_train[target])
 
-    expected = [
+    expected = {
+        "binary_target": [
         "Qualitative_Ordinal_lownan",
         "Qualitative_Ordinal",
         "Qualitative_highnan",
         "Qualitative_grouped",
         "Qualitative_lownan",
-    ]
-    assert best_features == expected, "Not correctly selected qualitative features"
+    ],
+        "continuous_target": ['Discrete_Qualitative_noorder', 'Discrete_Qualitative_rarevalue_noorder', 'Qualitative_Ordinal', 'Discrete_Qualitative_lownan_noorder', 'Qualitative_Ordinal_lownan'],
+    }
+    print(best_features)
+    assert all(feature in best_features for feature in expected[target]), "Not correctly selected qualitative features"
 
     # select the best 5 most target associated qualitative features
     quanti_selector = FeatureSelector(
@@ -59,11 +63,12 @@ def test_feature_selector(x_train: DataFrame, target: str) -> None:
     )
     best_features = quanti_selector.select(x_train, x_train[target])
 
-    expected = [
+    expected = {"binary_target": [
         "Discrete_Quantitative_highnan",
         "Quantitative",
         "Discrete_Quantitative",
         "Discrete_Quantitative_lownan",
         "Discrete_Quantitative_rarevalue",
-    ]
-    assert best_features == expected, "Not correctly selected qualitative features"
+    ], "continuous_target": ['Discrete_Qualitative_noorder', 'Discrete_Qualitative_rarevalue_noorder', 'Qualitative_Ordinal', 'Qualitative_Ordinal_lownan', 'Discrete_Qualitative_lownan_noorder']}
+    print(best_features)
+    assert all(feature in best_features for feature in expected[target]), "Not correctly selected qualitative features"

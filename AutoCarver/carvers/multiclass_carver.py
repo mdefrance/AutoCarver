@@ -177,6 +177,7 @@ class MulticlassCarver(BaseCarver):
             " - [MulticlassCarver] provided y is binary, consider using BinaryCarver instead."
         )
 
+        y_dev_copy = y_dev
         if y_dev is not None:
             # converting target as str
             y_dev_copy = y_dev.astype(str)
@@ -242,7 +243,8 @@ class MulticlassCarver(BaseCarver):
 
             # identifying this y_class
             target_class = (y_copy == y_class).astype(int)
-            if y_dev is not None:
+            target_class_dev = None
+            if y_dev_copy is not None:
                 target_class_dev = (y_dev_copy == y_class).astype(int)
 
             # initiating BinaryCarver for y_class
@@ -295,7 +297,7 @@ class MulticlassCarver(BaseCarver):
         )
 
         # fitting BaseDiscretizer
-        BaseDiscretizer.fit(self, x_copy, y)
+        BaseDiscretizer.fit(self, x_copy, y_copy)
 
         return self
 
