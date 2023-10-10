@@ -216,14 +216,13 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             A formatted X
         """
         # for binary/continuous targets
-        if all(len(casting) == 1 for casting in self.features_casting.values()):
-            X.rename(columns={feature: casting[0] for feature, casting in self.features_casting.items()}, inplace=True)
+        if all(len(feature_casting) == 1 for feature_casting in self.features_casting.values()):
+            X.rename(columns={feature: feature_casting[0] for feature, feature_casting in self.features_casting.items()}, inplace=True)
 
         # for multiclass targets
         else:
-            for feature, casting in self.features_casting.items():
-                # duplicating feature
-                X[casting] = X.loc[:, feature]
+            # duplicating features
+            X = X.assign(**{casted_feature: X[feature] for feature, feature_casting in self.features_casting.items() for casted_feature in feature_casting})
 
         return X
 

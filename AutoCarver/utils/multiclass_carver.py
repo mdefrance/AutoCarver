@@ -280,7 +280,8 @@ class MulticlassCarver(BaseCarver):
                 print("---------\n")
 
         # initiating BaseDiscretizer with features_casting
-        base_discretizer = BaseDiscretizer(
+        BaseDiscretizer.__init__(
+            self,
             features=[feature for castings in casted_features.values() for feature in castings],
             values_orders=casted_values_orders,
             input_dtypes=casted_input_dtypes,
@@ -294,7 +295,7 @@ class MulticlassCarver(BaseCarver):
         )
 
         # fitting BaseDiscretizer
-        base_discretizer.fit(x_copy, y)
+        BaseDiscretizer.fit(self, x_copy, y)
 
         return self
 
