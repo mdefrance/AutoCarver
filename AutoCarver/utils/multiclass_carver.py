@@ -132,6 +132,7 @@ class MulticlassCarver(BaseCarver):
             pretty_print = pretty_print,
             **kwargs
         )
+        self.kwargs = kwargs
         self.str_nan = kwargs.get("str_nan", "__NAN__"),
         self.str_default = kwargs.get("str_default", "__OTHER__"),
 
@@ -235,7 +236,10 @@ class MulticlassCarver(BaseCarver):
         casted_features = {feature: [] for feature in self.features}
 
         # iterating over each class minus one
-        for y_class in y_classes:
+        for n, y_class in enumerate(y_classes):
+            if self.verbose:  # verbose if requested
+                print(f"\n---------\n[MulticlassCarver] Fit y={y_class} ({n+1}/{len(y_classes)})\n------")
+
             # identifying this y_class
             target_class = (y_copy == y_class).astype(int)
             if y_dev is not None:
@@ -255,8 +259,7 @@ class MulticlassCarver(BaseCarver):
                 copy = True,  # copying x to keep raw columns as is
                 verbose = self.verbose,
                 pretty_print = self.pretty_print,
-                str_nan=self.str_nan,
-                str_default=self.str_default,
+                **self.kwargs,
             )
     
             # fitting BinaryCarver for y_class
@@ -273,8 +276,11 @@ class MulticlassCarver(BaseCarver):
                     }
                 )
 
+            if self.verbose:  # verbose if requested
+                print("---------\n")
+
         # initiating BaseDiscretizer with features_casting
-        base_discretizer = BaseDiscretizer.__init__(
+        base_discretizer = BaseDiscretizer(
             features=[feature for castings in casted_features.values() for feature in castings],
             values_orders=casted_values_orders,
             input_dtypes=casted_input_dtypes,
@@ -288,7 +294,7 @@ class MulticlassCarver(BaseCarver):
         )
 
         # fitting BaseDiscretizer
-        BaseDiscretizer.fit(x_copy, y)
+        base_discretizer.fit(x_copy, y)
 
         return self
 
