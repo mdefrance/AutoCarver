@@ -210,7 +210,7 @@ class FeatureSelector:
             selected_features = [
                 feature
                 for feature in initial_associations.index
-                if feature in filtered_association.index[:n_best]
+                if (len(filtered_association) > 0) and (feature in filtered_association.index[:n_best])
             ]
 
             # saving results
