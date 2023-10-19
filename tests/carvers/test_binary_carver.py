@@ -23,6 +23,13 @@ def test_binary_carver(
     x_dev_wrong_1: DataFrame,
     x_dev_wrong_2: DataFrame,
     x_dev_wrong_3: DataFrame,
+    quantitative_features: list[str],
+    qualitative_features: list[str],
+    ordinal_features: list[str],
+    values_orders: dict[str, list[str]],
+    chained_features: list[str],
+    level0_to_level1: dict[str, list[str]],
+    level1_to_level2: dict[str, list[str]],
     output_dtype: str,
     dropna: bool,
     sort_by: str,
@@ -44,6 +51,22 @@ def test_binary_carver(
         Simulated wrong Dev DataFrame with unexpected modality
     x_dev_wrong_2 : DataFrame
         Simulated wrong Dev DataFrame with unexpected nans
+    x_dev_wrong_3 : DataFrame
+        Simulated wrong Dev DataFrame
+    quantitative_features : list[str]
+        List of quantitative raw features to be carved
+    qualitative_features : list[str]
+        List of qualitative raw features to be carved
+    ordinal_features : list[str]
+        List of ordinal raw features to be carved
+    values_orders : dict[str, list[str]]
+        values_orders of raw features to be carved
+    chained_features : list[str]
+        List of chained raw features to be chained
+    level0_to_level1 : dict[str, list[str]]
+        Chained orders level0 to level1 of features to be chained
+    level1_to_level2 : dict[str, list[str]]
+        Chained orders level1 to level2 of features to be chained
     output_dtype : str
         Output type 'str' or 'float'
     dropna : bool
@@ -56,69 +79,7 @@ def test_binary_carver(
     # copying x_train for comparison purposes
     raw_x_train = x_train.copy()
 
-    # list of feaures
-    quantitative_features = [
-        "Quantitative",
-        "Discrete_Quantitative_highnan",
-        "Discrete_Quantitative_lownan",
-        "Discrete_Quantitative",
-        "Discrete_Quantitative_rarevalue",
-        "one",
-        "one_nan",
-    ]
-    qualitative_features = [
-        "Qualitative",
-        "Qualitative_grouped",
-        "Qualitative_lownan",
-        "Qualitative_highnan",
-        "Discrete_Qualitative_noorder",
-        "Discrete_Qualitative_lownan_noorder",
-        "Discrete_Qualitative_rarevalue_noorder",
-        "nan",
-        "ones",
-        "ones_nan",
-    ]
-    ordinal_features = [
-        "Qualitative_Ordinal",
-        "Qualitative_Ordinal_lownan",
-        "Discrete_Qualitative_highnan",
-    ]
-    values_orders = {
-        "Qualitative_Ordinal": [
-            "Low-",
-            "Low",
-            "Low+",
-            "Medium-",
-            "Medium",
-            "Medium+",
-            "High-",
-            "High",
-            "High+",
-        ],
-        "Qualitative_Ordinal_lownan": [
-            "Low-",
-            "Low",
-            "Low+",
-            "Medium-",
-            "Medium",
-            "Medium+",
-            "High-",
-            "High",
-            "High+",
-        ],
-        "Discrete_Qualitative_highnan": ["1", "2", "3", "4", "5", "6", "7"],
-    }
-    chained_features = ["Qualitative_Ordinal", "Qualitative_Ordinal_lownan"]
-
-    level0_to_level1 = {
-        "Lows": ["Low-", "Low", "Low+", "Lows"],
-        "Mediums": ["Medium-", "Medium", "Medium+", "Mediums"],
-        "Highs": ["High-", "High", "High+", "Highs"],
-    }
-    level1_to_level2 = {
-        "Worst": ["Lows", "Mediums", "Worst"],
-        "Best": ["Highs", "Best"],
-    }
+    target = "binary_target"
 
     min_freq = 0.15
 
@@ -153,22 +114,31 @@ def test_binary_carver(
     )
     x_discretized = auto_carver.fit_transform(
         x_train,
-        x_train["binary_target"],
+        x_train[target],
         X_dev=x_dev_1,
-        y_dev=x_dev_1["binary_target"],
+        y_dev=x_dev_1[target],
     )
     x_dev_discretized = auto_carver.transform(x_dev_1)
 
+    # testing that attributes where correctly used
     assert all(
         x_discretized[auto_carver.features].nunique() <= max_n_mod
-    ), "Too many values after carving of train sample"
+    ), "Too many buckets after carving of train sample"
     assert all(
         x_dev_discretized[auto_carver.features].nunique() <= max_n_mod
-    ), "Too many values after carving of test sample"
+    ), "Too many buckets after carving of test sample"
+
+    # testing for differences between train and dev
     assert all(
         x_discretized[auto_carver.features].nunique()
         == x_dev_discretized[auto_carver.features].nunique()
-    ), "More values in train or test samples"
+    ), "More buckets in train or test samples"
+    for feature in auto_carver.features:
+        train_target_rate = x_discretized.groupby(feature)[target].mean().sort_values()
+        dev_target_rate = x_dev_discretized.groupby(feature)[target].mean().sort_values()
+        assert all(
+            train_target_rate.index == dev_target_rate.index
+        ), f"Not robust feature {feature} was not dropped, or robustness test not working"
 
     # test that all values still are in the values_orders
     for feature in auto_carver.qualitative_features:
@@ -263,9 +233,7 @@ def test_binary_carver(
         unknown_handling="drop",
         copy=True,
     )
-    x_discretized = chained_discretizer.fit_transform(
-        x_train_wrong_2, x_train_wrong_2["binary_target"]
-    )
+    x_discretized = chained_discretizer.fit_transform(x_train_wrong_2, x_train_wrong_2[target])
     values_orders.update(chained_discretizer.values_orders)
 
     auto_carver = BinaryCarver(
@@ -281,7 +249,7 @@ def test_binary_carver(
         copy=copy,
         verbose=False,
     )
-    x_discretized = auto_carver.fit_transform(x_train_wrong_2, x_train_wrong_2["binary_target"])
+    x_discretized = auto_carver.fit_transform(x_train_wrong_2, x_train_wrong_2[target])
 
     if not dropna and sort_by == "cramerv":
         expected = {

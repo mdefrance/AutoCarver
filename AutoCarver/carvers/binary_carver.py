@@ -3,10 +3,13 @@ for a binary classification tasks.
 """
 
 from typing import Callable
+from warnings import warn
 
 from numpy import add, array, searchsorted, sqrt, unique, zeros
 from pandas import DataFrame, Series, crosstab
 from scipy.stats import chi2_contingency
+
+from AutoCarver.discretizers import GroupedList
 
 from ..discretizers import GroupedList
 from .base_carver import BaseCarver
@@ -290,7 +293,7 @@ class BinaryCarver(BaseCarver):
         DataFrame
             _description_
         """
-        return xtab[1].divide(xtab.sum(axis=0)).sort_values()
+        return xtab[1].divide(xtab.sum(axis=1)).sort_values()
 
     def _combination_formatter(self, combination: list[list[str]]) -> list[str]:
         formatted_combination = [
@@ -364,3 +367,10 @@ class BinaryCarver(BaseCarver):
         super().fit(x_copy, y, X_dev=x_dev_copy, y_dev=y_dev)
 
         return self
+
+class AutoCarver(BinaryCarver):
+
+    def __init__(self, min_freq: float, sort_by: str, *, quantitative_features: list[str] = None, qualitative_features: list[str] = None, ordinal_features: list[str] = None, values_orders: dict[str, GroupedList] = None, max_n_mod: int = 5, output_dtype: str = "float", dropna: bool = True, copy: bool = False, verbose: bool = False, pretty_print: bool = False, **kwargs) -> None:
+        
+        warn("AutoCarver will be deprecated, please use BinaryCarver instead.", FutureWarning)
+        super().__init__(min_freq, sort_by, quantitative_features=quantitative_features, qualitative_features=qualitative_features, ordinal_features=ordinal_features, values_orders=values_orders, max_n_mod=max_n_mod, output_dtype=output_dtype, dropna=dropna, copy=copy, verbose=verbose, pretty_print=pretty_print, **kwargs)

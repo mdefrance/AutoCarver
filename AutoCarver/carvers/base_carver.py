@@ -572,16 +572,15 @@ class BaseCarver(BaseDiscretizer):
                 association["xagg"],
             )
 
-            # grouping rows of the test crosstab
+            # grouping rows of the dev crosstab
             grouped_xagg_dev = self._grouper(xagg_dev, index_to_groupby)
 
             # computing target rate ranks per value
             train_ranks = self._target_rate(grouped_xagg).index
-            test_ranks = self._target_rate(grouped_xagg_dev).index
+            dev_ranks = self._target_rate(grouped_xagg_dev).index
 
             # viable on test sample: grouped values have the same ranks in train/test
-            if all(train_ranks == test_ranks):
-            	print(train_ranks, test_ranks)
+            if all(train_ranks == dev_ranks):
                 return association
 
 
