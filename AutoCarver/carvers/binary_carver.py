@@ -8,8 +8,9 @@ from numpy import add, array, searchsorted, sqrt, unique, zeros
 from pandas import DataFrame, Series, crosstab
 from scipy.stats import chi2_contingency
 
-from .base_carver import BaseCarver
 from ..discretizers import GroupedList
+from .base_carver import BaseCarver
+
 
 class BinaryCarver(BaseCarver):
     """Automatic carving of continuous, discrete, categorical and ordinal
@@ -111,7 +112,7 @@ class BinaryCarver(BaseCarver):
         See `AutoCarver examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
         """
         # association measure used to find the best groups for binary targets
-        implemented_measures = ["tschuprowt", "cramerv"]  
+        implemented_measures = ["tschuprowt", "cramerv"]
         assert sort_by in implemented_measures, (
             f" - [BinaryCarver] Measure '{sort_by}' not yet implemented for binary targets. "
             f"Choose from: {str(implemented_measures)}."
@@ -119,19 +120,19 @@ class BinaryCarver(BaseCarver):
 
         # Initiating BaseCarver
         super().__init__(
-            min_freq = min_freq,
-            sort_by = sort_by,
-            quantitative_features = quantitative_features,
-            qualitative_features = qualitative_features,
-            ordinal_features = ordinal_features,
-            values_orders = values_orders,
-            max_n_mod = max_n_mod,
-            output_dtype = output_dtype,
-            dropna = dropna,
-            copy = copy,
-            verbose = verbose,
-            pretty_print = pretty_print,
-            **kwargs
+            min_freq=min_freq,
+            sort_by=sort_by,
+            quantitative_features=quantitative_features,
+            qualitative_features=qualitative_features,
+            ordinal_features=ordinal_features,
+            values_orders=values_orders,
+            max_n_mod=max_n_mod,
+            output_dtype=output_dtype,
+            dropna=dropna,
+            copy=copy,
+            verbose=verbose,
+            pretty_print=pretty_print,
+            **kwargs,
         )
 
     def _prepare_data(
@@ -168,12 +169,12 @@ class BinaryCarver(BaseCarver):
 
         # binary target, checking values
         y_values = unique(y)
-        assert (0 in y_values) & (1 in y_values), (
-            " - [BinaryCarver] y must be a binary Series (int or float, not object)"
-        )
-        assert len(y_values) == 2, (
-            " - [BinaryCarver] y must be a binary Series (int or float, not object)"
-        )
+        assert (0 in y_values) & (
+            1 in y_values
+        ), " - [BinaryCarver] y must be a binary Series (int or float, not object)"
+        assert (
+            len(y_values) == 2
+        ), " - [BinaryCarver] y must be a binary Series (int or float, not object)"
 
         return x_copy, x_dev_copy
 
@@ -213,7 +214,6 @@ class BinaryCarver(BaseCarver):
                 xtabs.update({feature: xtab})
 
         return xtabs
-
 
     def _grouper(self, xtab: DataFrame, groupby: list[str]) -> DataFrame:
         """Groups a crosstab by groupby and sums column values by groups (vectorized)
@@ -294,7 +294,9 @@ class BinaryCarver(BaseCarver):
 
     def _combination_formatter(self, combination: list[list[str]]) -> list[str]:
         formatted_combination = [
-            value for values in ([group[0]] * len(group) for group in combination) for value in values
+            value
+            for values in ([group[0]] * len(group) for group in combination)
+            for value in values
         ]
 
         return formatted_combination

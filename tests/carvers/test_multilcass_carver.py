@@ -6,7 +6,7 @@ from json import dumps, loads
 from pandas import DataFrame
 from pytest import fixture, raises
 
-from AutoCarver import load_carver, MulticlassCarver
+from AutoCarver import MulticlassCarver, load_carver
 from AutoCarver.discretizers import ChainedDiscretizer
 
 
@@ -184,8 +184,7 @@ def test_multiclass_carver(
         renamed_raw_x_train = raw_x_train[[feature[:-2] for feature in auto_carver.features]]
         renamed_raw_x_train.columns = auto_carver.features
         assert all(
-            renamed_raw_x_train.isna().mean()
-            == x_discretized[auto_carver.features].isna().mean()
+            renamed_raw_x_train.isna().mean() == x_discretized[auto_carver.features].isna().mean()
         ), "Some Nans are being dropped (grouped) or more nans than expected"
     else:
         assert all(
@@ -286,9 +285,7 @@ def test_multiclass_carver(
         copy=copy,
         verbose=False,
     )
-    x_discretized = auto_carver.fit_transform(
-        x_train_wrong_2, x_train_wrong_2["multiclass_target"]
-    )
+    x_discretized = auto_carver.fit_transform(x_train_wrong_2, x_train_wrong_2["multiclass_target"])
 
     if not dropna and sort_by == "cramerv":
         expected = {
@@ -312,8 +309,21 @@ def test_multiclass_carver(
 
     elif dropna and sort_by == "tschuprowt":
         expected = {
-            "Mediums": ['Medium+', 'Medium', 'Medium-', 'Mediums'],
-            "High+": ['High', 'High-', 'Highs', 'Best', 'ALONE', 'BEST', 'Low+', 'Low', 'Low-', 'Lows', 'Worst', 'High+'],
+            "Mediums": ["Medium+", "Medium", "Medium-", "Mediums"],
+            "High+": [
+                "High",
+                "High-",
+                "Highs",
+                "Best",
+                "ALONE",
+                "BEST",
+                "Low+",
+                "Low",
+                "Low-",
+                "Lows",
+                "Worst",
+                "High+",
+            ],
             "__NAN__": ["unknown", "__NAN__"],
         }
         assert (

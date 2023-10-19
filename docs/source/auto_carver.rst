@@ -62,16 +62,16 @@ For two combinations of modalities of :math:`x`, a higher :math:`H` value indica
 AutoCarver, the automated, fast-paced data processing pipeline
 --------------------------------------------------------------
 
-.. autoclass:: AutoCarver.AutoCarver
+.. autoclass:: AutoCarver.BinaryCarver
     :members: fit, transform, fit_transform
 
-.. autofunction:: AutoCarver.AutoCarver.summary
+.. autofunction:: AutoCarver.BinaryCarver.summary
 
 
 
 AutoCarver saving and loading
 -----------------------------
 
-.. autofunction:: AutoCarver.AutoCarver.to_json
+.. autofunction:: AutoCarver.BinaryCarver.to_json
 
 .. autofunction:: AutoCarver.load_carver

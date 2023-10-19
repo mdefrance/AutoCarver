@@ -3,10 +3,10 @@ for any task.
 """
 
 from typing import Any, Callable, Union
+from warnings import warn
 
 from pandas import DataFrame, Series
 from tqdm import tqdm
-from warnings import warn
 
 from ..discretizers import GroupedList
 from ..discretizers.discretizers import Discretizer
@@ -235,27 +235,27 @@ class BaseCarver(BaseDiscretizer):
         return x_copy, x_dev_copy
 
     def _aggregator():
-        """ HELPER: get_xtabs or get_yvals"""
+        """HELPER: get_xtabs or get_yvals"""
         pass
 
     def _grouper():
-        """ HELPER: xtab_grouper or yval_grouper"""
+        """HELPER: xtab_grouper or yval_grouper"""
         pass
 
     def _association_measure():
-        """ HELPER: association_xtab or association_yval"""
+        """HELPER: association_xtab or association_yval"""
         pass
 
     def _target_rate():
-        """ HELPER: xtab_target_rate or yval_target_rate"""
+        """HELPER: xtab_target_rate or yval_target_rate"""
         pass
 
     def _combination_formatter():
-        """ HELPER: xtab_combination_formatter or yval_combination_formatter"""
+        """HELPER: xtab_combination_formatter or yval_combination_formatter"""
         pass
 
     def _printer():
-        """ HELPER: pretty_xtab or pretty_yval"""
+        """HELPER: pretty_xtab or pretty_yval"""
         pass
 
     def _remove_feature(self, feature: str) -> None:
@@ -495,7 +495,7 @@ class BaseCarver(BaseDiscretizer):
             return order, xagg, xagg_dev
 
     def get_best_association(
-    	self,
+        self,
         xagg: Union[Series, DataFrame],
         combinations: list[list[str]],
         *,
@@ -518,7 +518,9 @@ class BaseCarver(BaseDiscretizer):
             _description_
         """
         # values to groupby indices with
-        indices_to_groupby = [self._combination_formatter(combination) for combination in combinations]
+        indices_to_groupby = [
+            self._combination_formatter(combination) for combination in combinations
+        ]
 
         # grouping tab by its indices
         grouped_xaggs = [
@@ -532,7 +534,9 @@ class BaseCarver(BaseDiscretizer):
         n_obs = xagg.apply(sum).sum()  # number of observations for xtabs
         associations_xagg = [
             self._association_measure(grouped_xagg, n_obs=n_obs)
-            for grouped_xagg in tqdm(grouped_xaggs, disable=not self.verbose, desc="Computing associations")
+            for grouped_xagg in tqdm(
+                grouped_xaggs, disable=not self.verbose, desc="Computing associations"
+            )
         ]
 
         # adding corresponding combination to the association
@@ -540,12 +544,18 @@ class BaseCarver(BaseDiscretizer):
             combinations, indices_to_groupby, associations_xagg, grouped_xaggs
         ):
             association.update(
-                {"combination": combination, "index_to_groupby": index_to_groupby, "xagg": grouped_xagg}
+                {
+                    "combination": combination,
+                    "index_to_groupby": index_to_groupby,
+                    "xagg": grouped_xagg,
+                }
             )
 
         # sorting associations according to specified metric
         associations_xagg = (
-            DataFrame(associations_xagg).sort_values(self.sort_by, ascending=False).to_dict(orient="records")
+            DataFrame(associations_xagg)
+            .sort_values(self.sort_by, ascending=False)
+            .to_dict(orient="records")
         )
 
         # case 0: no test sample provided -> not testing for robustness
@@ -553,9 +563,11 @@ class BaseCarver(BaseDiscretizer):
             return associations_xagg[0]
 
         # case 1: testing viability on provided test sample
-        for association in tqdm(associations_xagg, disable=not self.verbose, desc="Testing robustness    "):
+        for association in tqdm(
+            associations_xagg, disable=not self.verbose, desc="Testing robustness    "
+        ):
             # needed parameters
-            index_to_groupby, xagg = (
+            index_to_groupby, grouped_xagg = (
                 association["index_to_groupby"],
                 association["xagg"],
             )
@@ -564,11 +576,12 @@ class BaseCarver(BaseDiscretizer):
             grouped_xagg_dev = self._grouper(xagg_dev, index_to_groupby)
 
             # computing target rate ranks per value
-            train_ranks = self._target_rate(xagg).index
+            train_ranks = self._target_rate(grouped_xagg).index
             test_ranks = self._target_rate(grouped_xagg_dev).index
 
             # viable on test sample: grouped values have the same ranks in train/test
             if all(train_ranks == test_ranks):
+            	print(train_ranks, test_ranks)
                 return association
 
 
@@ -596,6 +609,7 @@ def filter_nan(xagg: Union[Series, DataFrame], str_nan: str) -> DataFrame:
             filtered_xagg = xagg.drop(str_nan, axis=0)
 
     return filtered_xagg
+
 
 def combinations_at_index(
     start_idx: int, order: list[Any], nb_remaining_groups: int, min_group_size: int = 1
@@ -706,7 +720,6 @@ def consecutive_combinations(
         )
 
     return all_combinations
-
 
 
 def add_nan_in_combinations(
@@ -827,7 +840,6 @@ def load_carver(auto_carver_json: dict) -> BaseDiscretizer:
     auto_carver.fit()
 
     return auto_carver
-
 
 
 def prettier_xagg(

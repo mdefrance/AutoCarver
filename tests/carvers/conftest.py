@@ -2,6 +2,7 @@
 
 from pytest import fixture
 
+
 @fixture(scope="module", params=["float", "str"])
 def output_dtype(request) -> str:
     return request.param

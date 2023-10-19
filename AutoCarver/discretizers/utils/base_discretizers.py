@@ -72,7 +72,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
 
         features_casting : dict[str, list[str]], optional
             By default ``None``, target is considered as continuous or binary.
-            Multiclass target: Dict of raw DataFrame columns associated to the names of copies that will be created. 
+            Multiclass target: Dict of raw DataFrame columns associated to the names of copies that will be created.
         """
         # features and values
         self.features = list(set(features))
@@ -122,7 +122,9 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         # target classes multiclass vs binary vs continuous
         if features_casting is None:
             features_casting: list[Any] = {feature: [feature] for feature in self.features}
-        self.features_casting = {feature: casting[:] for feature, casting in features_casting.items()}
+        self.features_casting = {
+            feature: casting[:] for feature, casting in features_casting.items()
+        }
 
     def _get_labels_per_values(self, output_dtype: str) -> dict[str, dict[Any, Any]]:
         """Creates a dict that contains, for each feature, for each value, the associated label
@@ -193,7 +195,11 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
                 self.labels_per_values.pop(feature)
 
             # getting corresponding raw_feature
-            raw_feature = next(raw_feature for raw_feature, casting in self.features_casting.items() if feature in casting)
+            raw_feature = next(
+                raw_feature
+                for raw_feature, casting in self.features_casting.items()
+                if feature in casting
+            )
             casting = self.features_casting.get(raw_feature)
             # removing feature from casting
             casting.remove(feature)
@@ -203,7 +209,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
                 self.features_casting.pop(raw_feature)
 
     def _cast_features(self, X: DataFrame) -> DataFrame:
-        """ Casts the features of a DataFrame using features_casting to duplicate columns
+        """Casts the features of a DataFrame using features_casting to duplicate columns
 
         Parameters
         ----------
@@ -217,12 +223,24 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         """
         # for binary/continuous targets
         if all(len(feature_casting) == 1 for feature_casting in self.features_casting.values()):
-            X.rename(columns={feature: feature_casting[0] for feature, feature_casting in self.features_casting.items()}, inplace=True)
+            X.rename(
+                columns={
+                    feature: feature_casting[0]
+                    for feature, feature_casting in self.features_casting.items()
+                },
+                inplace=True,
+            )
 
         # for multiclass targets
         else:
             # duplicating features
-            X = X.assign(**{casted_feature: X[feature] for feature, feature_casting in self.features_casting.items() for casted_feature in feature_casting})
+            X = X.assign(
+                **{
+                    casted_feature: X[feature]
+                    for feature, feature_casting in self.features_casting.items()
+                    for casted_feature in feature_casting
+                }
+            )
 
         return X
 
@@ -273,7 +291,9 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
                 assert not any(y.isna()), " - [BaseDiscretizer] y should not contain numpy.nan"
 
                 # checking indices
-                assert all(y.index == X.index), f" - [BaseDiscretizer] X and y must have the same indices."
+                assert all(
+                    y.index == X.index
+                ), f" - [BaseDiscretizer] X and y must have the same indices."
 
         return x_copy
 
@@ -302,13 +322,14 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             {
                 feature: {
                     val: self.str_default
-                    for val in uniques[feature] 
+                    for val in uniques[feature]
                     if val not in self.values_orders[feature].values()
                     and val != self.str_nan
                     and self.str_default in self.values_orders[feature].values()
                 }
                 for feature in features
-            }, inplace=True
+            },
+            inplace=True,
         )
         # updating unique non-nan values in new dataframe
         uniques = X[features].apply(

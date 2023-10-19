@@ -464,7 +464,7 @@ def test_default_discretizer(x_train: DataFrame, target: str) -> None:
 
     quali_expected_order = {
         "binary_target": ["Category D", "__OTHER__", "Category F", "Category C", "Category E"],
-        "continuous_target": ['__OTHER__', 'Category C', 'Category E', 'Category F', 'Category D'],
+        "continuous_target": ["__OTHER__", "Category C", "Category E", "Category F", "Category D"],
     }
     assert (
         discretizer.values_orders["Qualitative"] == quali_expected_order[target]
@@ -481,18 +481,20 @@ def test_default_discretizer(x_train: DataFrame, target: str) -> None:
         discretizer.values_orders["Qualitative"].content == quali_expected
     ), "Values less frequent than min_freq should be grouped into default_value"
 
-    quali_lownan_expected_order = {"binary_target": [
-        "Category D",
-        "Category F",
-        "Category C",
-        "Category E",
-        "__NAN__",
-    ], "continuous_target": ['Category C', 'Category E', 'Category F', 'Category D', '__NAN__']}
+    quali_lownan_expected_order = {
+        "binary_target": [
+            "Category D",
+            "Category F",
+            "Category C",
+            "Category E",
+            "__NAN__",
+        ],
+        "continuous_target": ["Category C", "Category E", "Category F", "Category D", "__NAN__"],
+    }
     assert (
         discretizer.values_orders["Qualitative_lownan"] == quali_lownan_expected_order[target]
     ), "Incorrect ordering by target rate"
 
-    
     quali_lownan_expected = {
         "__NAN__": ["__NAN__"],
         "Category C": ["Category C"],
@@ -504,13 +506,16 @@ def test_default_discretizer(x_train: DataFrame, target: str) -> None:
         discretizer.values_orders["Qualitative_lownan"].content == quali_lownan_expected
     ), "If any, NaN values should be put into str_nan and kept by themselves"
 
-    quali_highnan_expected_order = {"binary_target": [
-        "Category D",
-        "__OTHER__",
-        "Category C",
-        "Category E",
-        "__NAN__",
-    ], "continuous_target": ['__OTHER__', 'Category C', 'Category E', 'Category D', '__NAN__']}
+    quali_highnan_expected_order = {
+        "binary_target": [
+            "Category D",
+            "__OTHER__",
+            "Category C",
+            "Category E",
+            "__NAN__",
+        ],
+        "continuous_target": ["__OTHER__", "Category C", "Category E", "Category D", "__NAN__"],
+    }
     assert (
         discretizer.values_orders["Qualitative_highnan"] == quali_highnan_expected_order[target]
     ), "Incorrect ordering by target rate"

@@ -8,9 +8,8 @@ from numpy import mean, unique
 from pandas import DataFrame, Series
 from scipy.stats import kruskal
 
-from .base_carver import BaseCarver
 from ..discretizers import GroupedList
-
+from .base_carver import BaseCarver
 
 
 class ContinuousCarver(BaseCarver):
@@ -101,26 +100,26 @@ class ContinuousCarver(BaseCarver):
         See `AutoCarver examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
         """
         # association measure used to find the best groups for continuous targets
-        assert ("sort_by" not in kwargs) or (kwargs.get("sort_by") != "kruskal") , (
+        assert ("sort_by" not in kwargs) or (kwargs.get("sort_by") != "kruskal"), (
             " - [ContinuousCarver] Cannot set 'sort_by' attribute. "
             "Only 'kruskal' measure is implemented for continuous targets."
         )
 
         # Initiating BaseCarver
         super().__init__(
-            min_freq = min_freq,
-            sort_by = "kruskal",
-            quantitative_features = quantitative_features,
-            qualitative_features = qualitative_features,
-            ordinal_features = ordinal_features,
-            values_orders = values_orders,
-            max_n_mod = max_n_mod,
-            output_dtype = output_dtype,
-            dropna = dropna,
-            copy = copy,
-            verbose = verbose,
-            pretty_print = pretty_print,
-            **kwargs
+            min_freq=min_freq,
+            sort_by="kruskal",
+            quantitative_features=quantitative_features,
+            qualitative_features=qualitative_features,
+            ordinal_features=ordinal_features,
+            values_orders=values_orders,
+            max_n_mod=max_n_mod,
+            output_dtype=output_dtype,
+            dropna=dropna,
+            copy=copy,
+            verbose=verbose,
+            pretty_print=pretty_print,
+            **kwargs,
         )
 
     def _prepare_data(
@@ -157,13 +156,13 @@ class ContinuousCarver(BaseCarver):
 
         # continuous target, checking values
         y_values = unique(y)
-        assert len(y_values) > 2, (
-            " - [ContinuousCarver] provided y is binary, consider using BinaryCarver instead."
-        )
+        assert (
+            len(y_values) > 2
+        ), " - [ContinuousCarver] provided y is binary, consider using BinaryCarver instead."
         not_numeric = str in y.apply(type).unique()
-        assert not not_numeric, (
-            " - [ContinuousCarver] y must be a continuous Series (int or float, not object)"
-        )
+        assert (
+            not not_numeric
+        ), " - [ContinuousCarver] y must be a continuous Series (int or float, not object)"
 
         return x_copy, x_dev_copy
 
@@ -308,4 +307,3 @@ class ContinuousCarver(BaseCarver):
         super().fit(x_copy, y, X_dev=x_dev_copy, y_dev=y_dev)
 
         return self
-
