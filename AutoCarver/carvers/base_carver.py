@@ -250,9 +250,20 @@ class BaseCarver(BaseDiscretizer):
         """HELPER: xtab_target_rate or yval_target_rate"""
         pass
 
-    def _combination_formatter():
-        """HELPER: xtab_combination_formatter or yval_combination_formatter"""
-        pass
+    def _combination_formatter(self, combination: list[list[str]]) -> dict[str, str]:
+        """ Attributes the first element of a group to all elements of a group
+
+        Parameters
+        ----------
+        combination : list[list[str]]
+            _description_
+
+        Returns
+        -------
+        dict[str, str]
+            _description_
+        """        
+        return {modal: group[0] for group in combination for modal in group}
 
     def _printer():
         """HELPER: pretty_xtab or pretty_yval"""
@@ -483,6 +494,7 @@ class BaseCarver(BaseDiscretizer):
                     nan_combinations,
                     xagg_dev=xagg_dev,
                 )
+                # print("\nbest_association\n", best_association, "\n")
 
                 # applying best_combination to order and xtab
                 if best_association is not None:
@@ -517,7 +529,7 @@ class BaseCarver(BaseDiscretizer):
         dict[str, Any]
             _description_
         """
-        # values to groupby indices with
+        # values to groupby indices with  # TODO: !!!!!!!!!! not working as expected with nans
         indices_to_groupby = [
             self._combination_formatter(combination) for combination in combinations
         ]
@@ -581,6 +593,13 @@ class BaseCarver(BaseDiscretizer):
 
             # viable on test sample: grouped values have the same ranks in train/test
             if all(train_ranks == dev_ranks):
+                print("association\n", association, "\n")
+                print("xagg\n", xagg,'\n')
+                print("grouped_xagg\n", grouped_xagg,'\n')
+                print("xagg_dev\n", xagg_dev,'\n')
+                print("grouped_xagg_dev\n", grouped_xagg_dev,'\n')
+                print("train_ranks\n", train_ranks,'\n')
+                print("dev_ranks\n", dev_ranks,'\n')
                 return association
 
 

@@ -204,9 +204,25 @@ class ContinuousCarver(BaseCarver):
         return yvals
 
     def _grouper(self, yval: Series, groupby: dict[str:str]) -> Series:
-        grouped_yval = yval.groupby(groupby).sum()
+        """ Groups values of y
 
-        return grouped_yval
+        Parameters
+        ----------
+        yval : Series
+            _description_
+        groupby : _type_
+            _description_
+
+        Returns
+        -------
+        Series
+            _description_
+        """
+        # TODO: try to convert this to the vectorial version like BinaryCarver
+        return yval.groupby(groupby).sum()
+
+    # def _combination_formatter(self, combination: list[list[str]]) -> dict[str, str]:
+    #     return {modal: group[0] for group in combination for modal in group}
 
     def _association_measure(self, yval: Series, **kwargs) -> dict[str, float]:
         """Computes measures of association between feature and quantitative target.
@@ -238,11 +254,6 @@ class ContinuousCarver(BaseCarver):
             _description_
         """
         return yval.apply(mean).sort_values()
-
-    def _combination_formatter(self, combination: list[list[str]]) -> dict[str, str]:
-        formatted_combination = {modal: group[0] for group in combination for modal in group}
-
-        return formatted_combination
 
     def _printer(self, yval: Series = None) -> DataFrame:
         """Prints a continuous yval's statistics

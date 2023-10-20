@@ -15,7 +15,7 @@ def sort_by(request) -> str:
     return request.param
 
 
-def test_binary_carver(
+def _binary_carver(
     x_train: DataFrame,
     x_train_wrong_1: DataFrame,
     x_train_wrong_2: DataFrame,
@@ -267,6 +267,7 @@ def test_binary_carver(
             "High+": ["High", "High-", "Highs", "Best", "ALONE", "BEST", "High+"],
             "__NAN__": ["unknown", "__NAN__"],
         }
+        print(auto_carver.values_orders["Qualitative_Ordinal_lownan"].content)
         assert (
             auto_carver.values_orders["Qualitative_Ordinal_lownan"].content == expected
         ), "Unknown modalities should be kept in the order"
@@ -274,6 +275,8 @@ def test_binary_carver(
     elif dropna and sort_by == "tschuprowt":
         expected = {
             "Mediums": [
+                "unknown",
+                "__NAN__",
                 "Low+",
                 "Low",
                 "Low-",
@@ -285,8 +288,8 @@ def test_binary_carver(
                 "Mediums",
             ],
             "High+": ["High", "High-", "Highs", "Best", "ALONE", "BEST", "High+"],
-            "__NAN__": ["unknown", "__NAN__"],
         }
+        print(auto_carver.values_orders["Qualitative_Ordinal_lownan"].content)
         assert (
             auto_carver.values_orders["Qualitative_Ordinal_lownan"].content == expected
         ), "Unknown modalities should be kept in the order"

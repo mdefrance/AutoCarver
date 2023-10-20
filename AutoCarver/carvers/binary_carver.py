@@ -218,6 +218,30 @@ class BinaryCarver(BaseCarver):
 
         return xtabs
 
+    # def _combination_formatter(self, combination: list[list[str]]) -> list[str]:
+    #     """ Attributes the first element of a group to all elements of a group
+
+    #     Parameters
+    #     ----------
+    #     combination : list[list[str]]
+    #         _description_
+
+    #     Returns
+    #     -------
+    #     list[str]
+    #         _description_
+    #     """
+    #     return {
+    #         value: group[0]
+    #         for group in combination
+    #         for value in group
+    #     }
+        # return [
+        #     value
+        #     for values in ([group[0]] * len(group) for group in combination)
+        #     for value in values
+        # ]
+
     def _grouper(self, xtab: DataFrame, groupby: list[str]) -> DataFrame:
         """Groups a crosstab by groupby and sums column values by groups (vectorized)
 
@@ -234,7 +258,7 @@ class BinaryCarver(BaseCarver):
             _description_
         """
         # all indices that may be duplicated
-        index_values = array(groupby)
+        index_values = array([groupby.get(index_value, index_value) for index_value in xtab.index])
 
         # all unique indices deduplicated
         unique_indices = unique(index_values)
@@ -246,9 +270,7 @@ class BinaryCarver(BaseCarver):
         add.at(summed_values, searchsorted(unique_indices, index_values), xtab.values)
 
         # converting back to dataframe
-        grouped_xtab = DataFrame(summed_values, index=unique_indices, columns=xtab.columns)
-
-        return grouped_xtab
+        return DataFrame(summed_values, index=unique_indices, columns=xtab.columns)
 
     def _association_measure(self, xtab: DataFrame, n_obs: int) -> dict[str, float]:
         """Computes measures of association between feature and target by crosstab.
@@ -294,15 +316,6 @@ class BinaryCarver(BaseCarver):
             _description_
         """
         return xtab[1].divide(xtab.sum(axis=1)).sort_values()
-
-    def _combination_formatter(self, combination: list[list[str]]) -> list[str]:
-        formatted_combination = [
-            value
-            for values in ([group[0]] * len(group) for group in combination)
-            for value in values
-        ]
-
-        return formatted_combination
 
     def _printer(self, xtab: DataFrame = None) -> DataFrame:
         """Prints a binary xtab's statistics

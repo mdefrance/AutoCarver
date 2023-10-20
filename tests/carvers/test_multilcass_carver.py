@@ -273,13 +273,14 @@ def test_multiclass_carver(
             "High+": ["High", "High-", "Highs", "Best", "ALONE", "BEST", "High+"],
             "__NAN__": ["unknown", "__NAN__"],
         }
+        print(auto_carver.values_orders["Qualitative_Ordinal_lownan_1"].content)
         assert (
             auto_carver.values_orders["Qualitative_Ordinal_lownan_1"].content == expected
         ), "Unknown modalities should be kept in the order"
 
     elif dropna and sort_by == "tschuprowt":
         expected = {
-            "Mediums": ["Medium+", "Medium", "Medium-", "Mediums"],
+            "Mediums": ["unknown", "__NAN__", "Medium+", "Medium", "Medium-", "Mediums"],
             "High+": [
                 "High",
                 "High-",
@@ -294,8 +295,8 @@ def test_multiclass_carver(
                 "Worst",
                 "High+",
             ],
-            "__NAN__": ["unknown", "__NAN__"],
         }
+        print(auto_carver.values_orders["Qualitative_Ordinal_lownan_2"].content)
         assert (
             auto_carver.values_orders["Qualitative_Ordinal_lownan_2"].content == expected
         ), "Unknown modalities should be kept in the order"

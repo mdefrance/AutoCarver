@@ -60,7 +60,7 @@ def test_feature_selector(x_train: DataFrame, target: str) -> None:
         ],
     }
     assert all(
-        list(feature in best_features for feature in expected[target])
+        feature in best_features for feature in expected[target]
     ), "Not correctly selected qualitative features"
 
     # select the best 5 most target associated qualitative features
@@ -81,5 +81,5 @@ def test_feature_selector(x_train: DataFrame, target: str) -> None:
         "continuous_target": [],
     }
     assert all(
-        list(feature in best_features for feature in expected[target])
+        feature in best_features for feature in expected[target]
     ), "Not correctly selected qualitative features"

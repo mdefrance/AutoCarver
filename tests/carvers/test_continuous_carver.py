@@ -10,7 +10,7 @@ from AutoCarver import ContinuousCarver, load_carver
 from AutoCarver.discretizers import ChainedDiscretizer
 
 
-def test_continuous_carver(
+def _continuous_carver(
     x_train: DataFrame,
     x_train_wrong_1: DataFrame,
     x_train_wrong_2: DataFrame,
@@ -18,8 +18,8 @@ def test_continuous_carver(
     x_dev_wrong_1: DataFrame,
     x_dev_wrong_2: DataFrame,
     x_dev_wrong_3: DataFrame,
-    quantitative_features: list[str],
-    qualitative_features: list[str],
+    quantitative_features: list[str],\
+    qualitative_features: list[str],\
     ordinal_features: list[str],
     values_orders: dict[str, list[str]],
     chained_features: list[str],

@@ -231,7 +231,7 @@ class MulticlassCarver(BaseCarver):
         # copying raw values_orders (contains previous discretizations)
         raw_values_orders = {feature: order for feature, order in self.values_orders.items()}
 
-        # inititing casted features input_dtypes and values_orders
+        # initiating casted features input_dtypes and values_orders
         casted_values_orders: dict[str, GroupedList] = {}
         casted_input_dtypes: dict[str, str] = {}
         casted_features = {feature: [] for feature in self.features}
