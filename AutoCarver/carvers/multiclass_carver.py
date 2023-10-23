@@ -13,9 +13,10 @@ from .binary_carver import BinaryCarver
 
 class MulticlassCarver(BaseCarver):
     """Automatic carving of continuous, discrete, categorical and ordinal
-    features that maximizes association with a binary or continuous target.
+    features that maximizes association with a multiclass target.
 
-    First fits a :ref:`Discretizer`. Raw data should be provided as input (not a result of ``Discretizer.transform()``).
+    - First fits a :ref:`Discretizer`.
+    - Fits :ref:`BinaryCarver` for all-1 of the classes taken by :math:`y`.
     """
 
     def __init__(
@@ -28,6 +29,7 @@ class MulticlassCarver(BaseCarver):
         ordinal_features: list[str] = None,
         values_orders: dict[str, GroupedList] = None,
         max_n_mod: int = 5,
+        min_freq_mod: float = None,
         output_dtype: str = "float",
         dropna: bool = True,
         copy: bool = False,
@@ -80,6 +82,9 @@ class MulticlassCarver(BaseCarver):
             The combination with the greatest association (as defined by ``sort_by``) will be the selected one.
 
             **Tip**: should be set between 4 (faster, more robust) and 7 (slower, preciser, less robust)
+
+        min_freq_mod : float
+            Minimum frequency per final modality, by default ``None`` for min_freq
 
         output_dtype : str, optional
             To be choosen amongst ``["float", "str"]``, by default ``"float"``

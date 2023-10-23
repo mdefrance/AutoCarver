@@ -101,6 +101,9 @@ class BaseCarver(BaseDiscretizer):
 
             **Tip**: should be set between 4 (faster, more robust) and 7 (slower, preciser, less robust)
 
+        min_freq_mod : float
+            Minimum frequency per final modality, by default ``None`` for min_freq
+
         output_dtype : str, optional
             To be choosen amongst ``["float", "str"]``, by default ``"float"``
 

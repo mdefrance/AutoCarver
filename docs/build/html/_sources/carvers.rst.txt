@@ -6,15 +6,12 @@ The core of **AutoCarver** consists of the following Data Optimization steps:
    1. Identifying the most associated combination from all ordered combinations of modalities.
    2. Testing all combinations of NaNs grouped to one of those modalities.
 
-**AutoCarver** optimizes association with the two following target types:
+**AutoCarver** can optimize association for all target types: binary, multiclass or continuous.
 
- * Binary target for classification models
- * Continuous target for regression models
+.. _BinaryCarver:
 
-
-
-Binary target for classification models
----------------------------------------
+Binary Classification
+---------------------
 
 In **AutoCarver** a binary target consists of a column :math:`y` that only contains :math:`0` and :math:`1` (no ``str``).
 
@@ -39,10 +36,6 @@ For two combinations of modalities of :math:`x`, a higher :math:`T` or :math:`V`
 	* For more details, see :ref:`Chi2`, :ref:`Cramerv` and :ref:`Tschuprowt`.
 
 
-.. _BinaryCarver:
-
-AutoCarver, the automated, fast-paced data processing pipeline
---------------------------------------------------------------
 
 .. autoclass:: AutoCarver.BinaryCarver
     :members: fit, transform, fit_transform
@@ -50,8 +43,10 @@ AutoCarver, the automated, fast-paced data processing pipeline
 .. autofunction:: AutoCarver.BinaryCarver.summary
 
 
-Continuous target for regression models
----------------------------------------
+.. _ContinuousCarver:
+
+Continuous Regression
+---------------------
 
 In **AutoCarver** a continuous target consists of a column :math:`y` that contains values from :math:`-\inf` to :math:`+\inf` (no ``str``).
 
@@ -68,20 +63,19 @@ For two combinations of modalities of :math:`x`, a higher :math:`H` value indica
 	* Make sure to set ``AutoCarver.sort_by="kruskal"`` to use **AutoCarver** for continuous targets.
 	* For more details, see :ref:`Kruskal`.
 
-.. _ContinuousCarver:
-
-AutoCarver, the automated, fast-paced data processing pipeline
---------------------------------------------------------------
 
 .. autoclass:: AutoCarver.ContinuousCarver
     :members: fit, transform, fit_transform
 
 .. autofunction:: AutoCarver.ContinuousCarver.summary
 
+
+
+
 .. _MulticlassCarver:
 
-AutoCarver, the automated, fast-paced data processing pipeline
---------------------------------------------------------------
+Multilclass Classification
+--------------------------
 
 .. autoclass:: AutoCarver.MulticlassCarver
     :members: fit, transform, fit_transform

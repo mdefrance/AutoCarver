@@ -32,6 +32,7 @@ class BinaryCarver(BaseCarver):
         ordinal_features: list[str] = None,
         values_orders: dict[str, GroupedList] = None,
         max_n_mod: int = 5,
+        min_freq_mod: float = None,
         output_dtype: str = "float",
         dropna: bool = True,
         copy: bool = False,
@@ -84,6 +85,9 @@ class BinaryCarver(BaseCarver):
             The combination with the greatest association (as defined by ``sort_by``) will be the selected one.
 
             **Tip**: should be set between 4 (faster, more robust) and 7 (slower, preciser, less robust)
+
+        min_freq_mod : float
+            Minimum frequency per final modality, by default ``None`` for min_freq
 
         output_dtype : str, optional
             To be choosen amongst ``["float", "str"]``, by default ``"float"``
