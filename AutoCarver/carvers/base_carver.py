@@ -43,6 +43,7 @@ class BaseCarver(BaseDiscretizer):
         ordinal_features: list[str] = None,
         values_orders: dict[str, GroupedList] = None,
         max_n_mod: int = 5,
+        min_freq_mod: float = None,
         output_dtype: str = "float",
         dropna: bool = True,
         copy: bool = False,
@@ -183,8 +184,10 @@ class BaseCarver(BaseDiscretizer):
         # class specific attributes
         self.min_freq = min_freq  # minimum frequency per base bucket
         self.max_n_mod = max_n_mod  # maximum number of modality per feature
+        if min_freq_mod is None:
+            min_freq_mod = min_freq
+        self.min_freq_mod = min_freq_mod  # minimum frequency per final bucket
         self.sort_by = sort_by
-        self.min_group_size = 1
         self.pretty_print = False
         if pretty_print:
             if _has_idisplay:  # checking for installed dependencies
@@ -456,7 +459,7 @@ class BaseCarver(BaseDiscretizer):
         if raw_xagg.shape[0] > 1:
             # all possible consecutive combinations
             combinations = consecutive_combinations(
-                raw_order, self.max_n_mod, min_group_size=self.min_group_size
+                raw_order, self.max_n_mod, min_group_size=1
             )
 
             # getting most associated combination
@@ -480,7 +483,7 @@ class BaseCarver(BaseDiscretizer):
 
                 # all possible consecutive combinations
                 combinations = consecutive_combinations(
-                    raw_order, self.max_n_mod, min_group_size=self.min_group_size
+                    raw_order, self.max_n_mod, min_group_size=1
                 )
 
                 # adding combinations with NaNs
@@ -494,7 +497,6 @@ class BaseCarver(BaseDiscretizer):
                     nan_combinations,
                     xagg_dev=xagg_dev,
                 )
-                # print("\nbest_association\n", best_association, "\n")
 
                 # applying best_combination to order and xtab
                 if best_association is not None:
@@ -570,11 +572,7 @@ class BaseCarver(BaseDiscretizer):
             .to_dict(orient="records")
         )
 
-        # case 0: no test sample provided -> not testing for robustness
-        if xagg_dev is None:
-            return associations_xagg[0]
-
-        # case 1: testing viability on provided test sample
+        # testing viability
         for association in tqdm(
             associations_xagg, disable=not self.verbose, desc="Testing robustness    "
         ):
@@ -584,23 +582,35 @@ class BaseCarver(BaseDiscretizer):
                 association["xagg"],
             )
 
-            # grouping rows of the dev crosstab
-            grouped_xagg_dev = self._grouper(xagg_dev, index_to_groupby)
+            # computing target rate and frequency per value
+            train_rates = self._printer(grouped_xagg)
+            
+            # viable on train sample:
+            # - target rates are distinct for all modalities
+            # - minimum frequency is reached for all modalities
+            if (
+                all(train_rates["frequency"] >= self.min_freq_mod)
+                and len(train_rates) == train_rates["target_rate"].nunique()
+            ):
+                # case 0: no test sample provided -> not testing for robustness
+                if xagg_dev is None:
+                    return association
+                
+                # grouping rows of the dev crosstab
+                grouped_xagg_dev = self._grouper(xagg_dev, index_to_groupby)
 
-            # computing target rate ranks per value
-            train_ranks = self._target_rate(grouped_xagg).index
-            dev_ranks = self._target_rate(grouped_xagg_dev).index
-
-            # viable on test sample: grouped values have the same ranks in train/test
-            if all(train_ranks == dev_ranks):
-                print("association\n", association, "\n")
-                print("xagg\n", xagg,'\n')
-                print("grouped_xagg\n", grouped_xagg,'\n')
-                print("xagg_dev\n", xagg_dev,'\n')
-                print("grouped_xagg_dev\n", grouped_xagg_dev,'\n')
-                print("train_ranks\n", train_ranks,'\n')
-                print("dev_ranks\n", dev_ranks,'\n')
-                return association
+                dev_rates = self._printer(grouped_xagg_dev)
+                
+                # case 1: testing viability on provided dev sample
+                # - grouped values have the same ranks in train/test
+                # - target rates are distinct for all modalities
+                # - minimum frequency is reached for all modalities
+                if (
+                    all(train_rates.sort_values("target_rate").index == dev_rates.sort_values("target_rate").index)
+                    and all(dev_rates["frequency"] >= self.min_freq_mod)
+                    and len(dev_rates) == dev_rates["target_rate"].nunique()
+                ):
+                    return association
 
 
 def filter_nan(xagg: Union[Series, DataFrame], str_nan: str) -> DataFrame:

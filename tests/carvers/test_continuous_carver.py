@@ -10,7 +10,7 @@ from AutoCarver import ContinuousCarver, load_carver
 from AutoCarver.discretizers import ChainedDiscretizer
 
 
-def _continuous_carver(
+def test_continuous_carver(
     x_train: DataFrame,
     x_train_wrong_1: DataFrame,
     x_train_wrong_2: DataFrame,

@@ -218,30 +218,6 @@ class BinaryCarver(BaseCarver):
 
         return xtabs
 
-    # def _combination_formatter(self, combination: list[list[str]]) -> list[str]:
-    #     """ Attributes the first element of a group to all elements of a group
-
-    #     Parameters
-    #     ----------
-    #     combination : list[list[str]]
-    #         _description_
-
-    #     Returns
-    #     -------
-    #     list[str]
-    #         _description_
-    #     """
-    #     return {
-    #         value: group[0]
-    #         for group in combination
-    #         for value in group
-    #     }
-        # return [
-        #     value
-        #     for values in ([group[0]] * len(group) for group in combination)
-        #     for value in values
-        # ]
-
     def _grouper(self, xtab: DataFrame, groupby: list[str]) -> DataFrame:
         """Groups a crosstab by groupby and sums column values by groups (vectorized)
 
@@ -345,6 +321,7 @@ class BinaryCarver(BaseCarver):
 
             # rounding up stats
             stats = stats.round(3)
+            # TODO: remove digits from the table
 
         return stats
 

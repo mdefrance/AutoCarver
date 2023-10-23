@@ -221,9 +221,6 @@ class ContinuousCarver(BaseCarver):
         # TODO: try to convert this to the vectorial version like BinaryCarver
         return yval.groupby(groupby).sum()
 
-    # def _combination_formatter(self, combination: list[list[str]]) -> dict[str, str]:
-    #     return {modal: group[0] for group in combination for modal in group}
-
     def _association_measure(self, yval: Series, **kwargs) -> dict[str, float]:
         """Computes measures of association between feature and quantitative target.
 
@@ -241,7 +238,7 @@ class ContinuousCarver(BaseCarver):
         return {"kruskal": kruskal(*tuple(yval.values))[0]}
 
     def _target_rate(self, yval: Series) -> Series:
-        """Computes target rate per row for a binary target (column) in a crosstab
+        """Computes target average per group for a continuous target
 
         Parameters
         ----------
@@ -282,7 +279,7 @@ class ContinuousCarver(BaseCarver):
             )
 
             # rounding up stats
-            stats = stats.round(3)
+            # stats = stats.round(3)
 
         return stats
 

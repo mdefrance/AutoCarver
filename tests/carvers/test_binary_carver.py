@@ -6,7 +6,7 @@ from json import dumps, loads
 from pandas import DataFrame
 from pytest import fixture, raises
 
-from AutoCarver import BinaryCarver, ContinuousCarver, MulticlassCarver, load_carver
+from AutoCarver import BinaryCarver, load_carver
 from AutoCarver.discretizers import ChainedDiscretizer
 
 
@@ -14,8 +14,12 @@ from AutoCarver.discretizers import ChainedDiscretizer
 def sort_by(request) -> str:
     return request.param
 
+@fixture(scope="module", params=[None, 0.12])
+def min_freq_mod(request) -> float:
+    return request.param
 
-def _binary_carver(
+
+def test_binary_carver(
     x_train: DataFrame,
     x_train_wrong_1: DataFrame,
     x_train_wrong_2: DataFrame,
@@ -30,6 +34,7 @@ def _binary_carver(
     chained_features: list[str],
     level0_to_level1: dict[str, list[str]],
     level1_to_level2: dict[str, list[str]],
+    min_freq_mod: float,
     output_dtype: str,
     dropna: bool,
     sort_by: str,
@@ -67,6 +72,8 @@ def _binary_carver(
         Chained orders level0 to level1 of features to be chained
     level1_to_level2 : dict[str, list[str]]
         Chained orders level1 to level2 of features to be chained
+    min_freq_mod : float
+        Minimum frequency per carved modalities
     output_dtype : str
         Output type 'str' or 'float'
     dropna : bool
@@ -108,6 +115,7 @@ def _binary_carver(
         max_n_mod=max_n_mod,
         sort_by=sort_by,
         output_dtype=output_dtype,
+        min_freq_mod=min_freq_mod,
         dropna=dropna,
         copy=copy,
         verbose=False,
@@ -139,6 +147,12 @@ def _binary_carver(
         assert all(
             train_target_rate.index == dev_target_rate.index
         ), f"Not robust feature {feature} was not dropped, or robustness test not working"
+
+        # checking for final modalities less frequent than min_freq_mod
+        train_frequency = x_discretized[feature].value_counts(normalize=True, dropna=False)
+        assert not any(train_frequency.values < auto_carver.min_freq_mod), "Some modalities are less frequent than min_freq_mod in train"
+        dev_frequency = x_dev_discretized[feature].value_counts(normalize=True, dropna=False)
+        assert not any(dev_frequency.values < auto_carver.min_freq_mod), "Some modalities are less frequent than min_freq_mod in dev"
 
     # test that all values still are in the values_orders
     for feature in auto_carver.qualitative_features:
