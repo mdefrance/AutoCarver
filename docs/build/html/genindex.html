@@ -46,7 +46,7 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="discretizers.html">Discretizers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="auto_carver.html">AutoCarver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="carvers.html">AutoCarver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="feature_selector.html">FeatureSelector</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 </ul>
@@ -106,16 +106,18 @@
       <li><a href="discretizers.html#AutoCarver.discretizers.GroupedList.append">append() (AutoCarver.discretizers.GroupedList method)</a>
 </li>
   </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="auto_carver.html#AutoCarver.AutoCarver">AutoCarver (class in AutoCarver)</a>
-</li>
-  </ul></td>
 </tr></table>
 
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="carvers.html#AutoCarver.BaseCarver">BaseCarver (class in AutoCarver)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="discretizers.html#AutoCarver.discretizers.BaseDiscretizer">BaseDiscretizer (class in AutoCarver.discretizers)</a>
+</li>
+      <li><a href="carvers.html#AutoCarver.BinaryCarver">BinaryCarver (class in AutoCarver)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -127,9 +129,11 @@
 </li>
       <li><a href="feature_selector.html#AutoCarver.feature_selection.measures.chi2_measure">chi2_measure() (in module AutoCarver.feature_selection.measures)</a>
 </li>
+      <li><a href="discretizers.html#AutoCarver.discretizers.GroupedList.contains">contains() (AutoCarver.discretizers.GroupedList method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="discretizers.html#AutoCarver.discretizers.GroupedList.contains">contains() (AutoCarver.discretizers.GroupedList method)</a>
+      <li><a href="carvers.html#AutoCarver.ContinuousCarver">ContinuousCarver (class in AutoCarver)</a>
 </li>
       <li><a href="feature_selector.html#AutoCarver.feature_selection.filters.cramerv_filter">cramerv_filter() (in module AutoCarver.feature_selection.filters)</a>
 </li>
@@ -157,9 +161,13 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="feature_selector.html#AutoCarver.feature_selection.FeatureSelector">FeatureSelector (class in AutoCarver.feature_selection)</a>
 </li>
-      <li><a href="auto_carver.html#AutoCarver.AutoCarver.fit">fit() (AutoCarver.AutoCarver method)</a>
+      <li><a href="carvers.html#AutoCarver.BaseCarver.fit">fit() (AutoCarver.BaseCarver method)</a>
 
       <ul>
+        <li><a href="carvers.html#AutoCarver.BinaryCarver.fit">(AutoCarver.BinaryCarver method)</a>
+</li>
+        <li><a href="carvers.html#AutoCarver.ContinuousCarver.fit">(AutoCarver.ContinuousCarver method)</a>
+</li>
         <li><a href="discretizers.html#AutoCarver.discretizers.BaseDiscretizer.fit">(AutoCarver.discretizers.BaseDiscretizer method)</a>
 </li>
         <li><a href="discretizers.html#AutoCarver.discretizers.ChainedDiscretizer.fit">(AutoCarver.discretizers.ChainedDiscretizer method)</a>
@@ -178,13 +186,21 @@
 </li>
         <li><a href="discretizers.html#AutoCarver.discretizers.StringDiscretizer.fit">(AutoCarver.discretizers.StringDiscretizer method)</a>
 </li>
+        <li><a href="carvers.html#AutoCarver.MulticlassCarver.fit">(AutoCarver.MulticlassCarver method)</a>
+</li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="auto_carver.html#AutoCarver.AutoCarver.fit_transform">fit_transform() (AutoCarver.AutoCarver method)</a>
+      <li><a href="carvers.html#AutoCarver.BaseCarver.fit_transform">fit_transform() (AutoCarver.BaseCarver method)</a>
 
       <ul>
+        <li><a href="carvers.html#AutoCarver.BinaryCarver.fit_transform">(AutoCarver.BinaryCarver method)</a>
+</li>
+        <li><a href="carvers.html#AutoCarver.ContinuousCarver.fit_transform">(AutoCarver.ContinuousCarver method)</a>
+</li>
         <li><a href="discretizers.html#AutoCarver.discretizers.BaseDiscretizer.fit_transform">(AutoCarver.discretizers.BaseDiscretizer method)</a>
+</li>
+        <li><a href="carvers.html#AutoCarver.MulticlassCarver.fit_transform">(AutoCarver.MulticlassCarver method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -229,7 +245,7 @@
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="auto_carver.html#AutoCarver.load_carver">load_carver() (in module AutoCarver)</a>
+      <li><a href="carvers.html#AutoCarver.load_carver">load_carver() (in module AutoCarver)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -238,6 +254,10 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="feature_selector.html#AutoCarver.feature_selection.measures.mode_measure">mode_measure() (in module AutoCarver.feature_selection.measures)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="carvers.html#AutoCarver.MulticlassCarver">MulticlassCarver (class in AutoCarver)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -305,16 +325,22 @@
 </li>
       <li><a href="discretizers.html#AutoCarver.discretizers.GroupedList.sort_by">sort_by() (AutoCarver.discretizers.GroupedList method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="feature_selector.html#AutoCarver.feature_selection.filters.spearman_filter">spearman_filter() (in module AutoCarver.feature_selection.filters)</a>
 </li>
       <li><a href="discretizers.html#AutoCarver.discretizers.StringDiscretizer">StringDiscretizer (class in AutoCarver.discretizers)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="discretizers.html#AutoCarver.discretizers.BaseDiscretizer.summary">summary() (AutoCarver.discretizers.BaseDiscretizer method)</a>
 
       <ul>
-        <li><a href="auto_carver.html#AutoCarver.AutoCarver.summary">(in module AutoCarver.AutoCarver)</a>
+        <li><a href="carvers.html#AutoCarver.BaseCarver.summary">(in module AutoCarver.BaseCarver)</a>
+</li>
+        <li><a href="carvers.html#AutoCarver.BinaryCarver.summary">(in module AutoCarver.BinaryCarver)</a>
+</li>
+        <li><a href="carvers.html#AutoCarver.ContinuousCarver.summary">(in module AutoCarver.ContinuousCarver)</a>
+</li>
+        <li><a href="carvers.html#AutoCarver.MulticlassCarver.summary">(in module AutoCarver.MulticlassCarver)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -326,13 +352,19 @@
       <li><a href="discretizers.html#AutoCarver.discretizers.BaseDiscretizer.to_json">to_json() (AutoCarver.discretizers.BaseDiscretizer method)</a>
 
       <ul>
-        <li><a href="auto_carver.html#AutoCarver.AutoCarver.to_json">(in module AutoCarver.AutoCarver)</a>
+        <li><a href="carvers.html#AutoCarver.BinaryCarver.to_json">(in module AutoCarver.BinaryCarver)</a>
 </li>
       </ul></li>
-      <li><a href="auto_carver.html#AutoCarver.AutoCarver.transform">transform() (AutoCarver.AutoCarver method)</a>
+      <li><a href="carvers.html#AutoCarver.BaseCarver.transform">transform() (AutoCarver.BaseCarver method)</a>
 
       <ul>
+        <li><a href="carvers.html#AutoCarver.BinaryCarver.transform">(AutoCarver.BinaryCarver method)</a>
+</li>
+        <li><a href="carvers.html#AutoCarver.ContinuousCarver.transform">(AutoCarver.ContinuousCarver method)</a>
+</li>
         <li><a href="discretizers.html#AutoCarver.discretizers.BaseDiscretizer.transform">(AutoCarver.discretizers.BaseDiscretizer method)</a>
+</li>
+        <li><a href="carvers.html#AutoCarver.MulticlassCarver.transform">(AutoCarver.MulticlassCarver method)</a>
 </li>
       </ul></li>
   </ul></td>

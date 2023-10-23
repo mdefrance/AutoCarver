@@ -100,7 +100,7 @@ GroupedList
 -----------
 
 .. note::
-    :ref:`AutoCarver` would not exist if it was not for ``GroupedList``. It allows for a complete historization of the data processing steps, thanks to its ``GroupedList.content`` dictionnary.
+    **AutoCarver** would not exist without ``GroupedList``. It allows for a complete historization of the data processing steps, thanks to its ``GroupedList.content`` dictionnary.
     All modalities are stored inside the ``GroupedList`` and can safely be linked to there respective group label. 
 
 .. autoclass:: AutoCarver.discretizers.GroupedList

@@ -52,21 +52,26 @@ Association measures, X by y
 Quantitative measures
 .....................
 
+
+.. _Kruskal:
+
 Kruskal-Wallis' :math:`H` test statistic
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For a quantitative feature :math:`x`, the corresponding rank feature :math:`x_r` is the sorted sample of :math:`x` such that any :math:`i` in :math:`(1, n-1)` verifies :math:`x_r^i \leq x_r^{i+1}`, where :math:`n` is the number of observations.
+
+For a quantitative feature :math:`x`, the corresponding order feature :math:`x_o` is the sorted sample of :math:`x` such that any :math:`i` in :math:`(1, n-1)` verifies :math:`x_o^i \leq x_o^{i+1}`, where :math:`n` is the number of observations. For the same feature :math:`x`, the corresponding rank :math:`x_r` is the index of :math:`x`'s values in :math:`x_o`.
+
 
 The association with a binary target :math:`y` is computed using `scipy.stats.kruskal <https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.kruskal.html>`_.
 
-Kruskal-Wallis' :math:`H` test statistic, as known as one-way ANOVA on ranks, allows one to check that two features originate from the same disctribution.
+Kruskal-Wallis' :math:`H` test statistic, as known as one-way ANOVA on ranks, allows one to check that two samples originate from the same distribution.
 It is used to determine whether or not :math:`x` is distributed the same when :math:`y=1` compared to when :math:`y=0`.
 It is computed using the following formula:
 
 
 .. math::
 
-    H = (n-1) \frac{ \sum_{i=1}^{n_y}{ n_{y=i} (\bar{x_r^{i.}} - \bar{x_r}) } } { \sum_{i=1}^{n_y}{ \sum_{j=1}^{n_{y=i}}{ (x_r^{ij} - \bar{x_r}) } } }
+    H = (n-1) \frac{ \sum_{i=1}^{n_y}{ n_{y=i} (\bar{x_r^{i.}} - \bar{x_r})^2 } } { \sum_{i=1}^{n_y}{ \sum_{j=1}^{n_{y=i}}{ (x_r^{ij} - \bar{x_r})^2 } } }
 
 
 
@@ -97,11 +102,11 @@ For a binary feature :math:`y` and a quantitative feature :math:`x` the followin
 
 .. math::
 
-    x = \alpha + \beta y + \eta
+    x = \alpha + \beta y + \epsilon
 
 where:
  * :math:`\alpha` and :math:`\beta` are the coefficient of the linear regression model
- * :math:`\eta` is the residual of the linear regression model 
+ * :math:`\epsilon` is the residual of the linear regression model 
 
 The determination coefficient, often denoted as :math:`R^2`, is a statistical measure that quantifies the goodness of fit of a linear regression model.
 In this specific case, it is equal to the square of Pearson's :math:`r` correlation coefficient between :math:`x` and :math:`y`.
@@ -115,7 +120,7 @@ It is computed with the following formula:
 where:
 
  * :math:`n` is the number of observations
- * :math:`SS_{res} = \sum_{i=1}^n{(x_i - \alpha - \beta y_i)^2} = \sum_{i=1}^n{\eta_i^2}` is the residual sum of squares
+ * :math:`SS_{res} = \sum_{i=1}^n{(x_i - \alpha - \beta y_i)^2} = \sum_{i=1}^n{\epsilon_i^2}` is the residual sum of squares
  * :math:`SS_{tot} = \sum_{i=1}^n{(x_i - \bar{x})^2}` is the total sum of squares
  * :math:`\bar{x}=\sum_{i=1}^{n}{x_i}` is the sample mean of :math:`x`
 
@@ -127,7 +132,7 @@ where:
 
 
 
-Quantitative outlier Detection
+Quantitative Outlier Detection
 ..............................
 
 
@@ -165,8 +170,8 @@ For a feature :math:`x` it is computed as follows:
 
 where:
 
- * :math:`Q_1` is 25th percentile of the :math:`x`
- * :math:`Q_3` is 75th percentile of the :math:`x`
+ * :math:`Q_1` is the 25th percentile of the :math:`x`
+ * :math:`Q_3` is the 75th percentile of the :math:`x`
 
 
 Any observation :math:`x_i` of feature :math:`x`, can be considered an outlier if it does not verify:
@@ -184,6 +189,9 @@ Any observation :math:`x_i` of feature :math:`x`, can be considered an outlier i
 
 Qualitative measures
 ....................
+
+
+.. _chi2:
 
 Pearson's :math:`\chi^2` test statistic
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -203,12 +211,13 @@ where:
  * :math:`n_x` is the number of modalities of :math:`x`
  * :math:`n_y` is the number of modalities of :math:`y`
  * :math:`n_{ij}` is the number of observations that take modality :math:`i` of :math:`x` and modality :math:`j` of :math:`y`
- * :math:`n_{i.}=\sum_{i=1}^{n_x}` is the total number of observations that take modality :math:`i` of :math:`x`
- * :math:`n_{.j}=\sum_{j=1}^{n_y}` is the total number of observations that take modality :math:`j` of :math:`y`
+ * :math:`n_{i.}=\sum_{i=1}^{n_x}n_{ij}` is the total number of observations that take modality :math:`i` of :math:`x`
+ * :math:`n_{.j}=\sum_{j=1}^{n_y}n_{ij}` is the total number of observations that take modality :math:`j` of :math:`y`
 
 .. autofunction:: AutoCarver.feature_selection.measures.chi2_measure
 
 
+.. _Cramerv:
 
 Cramér's :math:`V`
 ^^^^^^^^^^^^^^^^^^
@@ -231,6 +240,7 @@ where:
     ``cramerv_measure`` is the default measure for qualitative features (i.e. when ``FeatureSelector.measures=[]`` and ``FeatureSelector.qualititative_features`` is provided).
 
 
+.. _Tschuprowt:
 
 Tschuprow's :math:`T`
 ^^^^^^^^^^^^^^^^^^^^^
@@ -320,7 +330,7 @@ Spearman's :math:`\rho`
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 
-For a quantitative feature :math:`x`, the corresponding rank feature :math:`x_r` is the sorted sample of :math:`x` such that any :math:`i` in :math:`(1, n-1)` verifies :math:`x_r^i \leq x_r^{i+1}`, where :math:`n` is the number of observations.
+For a quantitative feature :math:`x`, the corresponding order feature :math:`x_o` is the sorted sample of :math:`x` such that any :math:`i` in :math:`(1, n-1)` verifies :math:`x_o^i \leq x_o^{i+1}`, where :math:`n` is the number of observations. For the same feature :math:`x`, the corresponding rank :math:`x_r` is the index of :math:`x`'s values in :math:`x_o`.
 
 Spearman's :math:`\rho` is Pearson's :math:`r` computed on the rank features. As so, Spearman's :math:`\rho` is computed with the following formula:
 

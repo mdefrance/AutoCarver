@@ -39,6 +39,17 @@ For two combinations of modalities of :math:`x`, a higher :math:`T` or :math:`V`
 	* For more details, see :ref:`Chi2`, :ref:`Cramerv` and :ref:`Tschuprowt`.
 
 
+.. _BinaryCarver:
+
+AutoCarver, the automated, fast-paced data processing pipeline
+--------------------------------------------------------------
+
+.. autoclass:: AutoCarver.BinaryCarver
+    :members: fit, transform, fit_transform
+
+.. autofunction:: AutoCarver.BinaryCarver.summary
+
+
 Continuous target for regression models
 ---------------------------------------
 
@@ -57,16 +68,37 @@ For two combinations of modalities of :math:`x`, a higher :math:`H` value indica
 	* Make sure to set ``AutoCarver.sort_by="kruskal"`` to use **AutoCarver** for continuous targets.
 	* For more details, see :ref:`Kruskal`.
 
-.. _AutoCarver:
+.. _ContinuousCarver:
 
 AutoCarver, the automated, fast-paced data processing pipeline
 --------------------------------------------------------------
 
-.. autoclass:: AutoCarver.BinaryCarver
+.. autoclass:: AutoCarver.ContinuousCarver
     :members: fit, transform, fit_transform
 
-.. autofunction:: AutoCarver.BinaryCarver.summary
+.. autofunction:: AutoCarver.ContinuousCarver.summary
 
+.. _MulticlassCarver:
+
+AutoCarver, the automated, fast-paced data processing pipeline
+--------------------------------------------------------------
+
+.. autoclass:: AutoCarver.MulticlassCarver
+    :members: fit, transform, fit_transform
+
+.. autofunction:: AutoCarver.MulticlassCarver.summary
+
+
+
+.. _BaseCarver:
+
+AutoCarver, the automated, fast-paced data processing pipeline
+--------------------------------------------------------------
+
+.. autoclass:: AutoCarver.BaseCarver
+    :members: fit, transform, fit_transform
+
+.. autofunction:: AutoCarver.BaseCarver.summary
 
 
 AutoCarver saving and loading

@@ -65,7 +65,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#coefficient-of-determination-r">Coefficient of determination <span class="math notranslate nohighlight">\(R\)</span></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#quantitative-outlier-detection">Quantitative outlier Detection</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#quantitative-outlier-detection">Quantitative Outlier Detection</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#standard-score">Standard score</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#interquartile-range">Interquartile range</a></li>
 </ul>
@@ -222,24 +222,7 @@ information on AutoCarver’s processing and tables of target rates and frequenc
 X, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
 <li><p><strong>pretty_print</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, adds to the verbose some HTML tables of target rates and frequencies for X and, if provided, X_dev.
 Overrides the value of <code class="docutils literal notranslate"><span class="pre">verbose</span></code>, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
-<li><p><strong>**kwargs</strong> – <p>Sets thresholds for <code class="docutils literal notranslate"><span class="pre">measures</span></code> and <code class="docutils literal notranslate"><span class="pre">filters</span></code>, passed as keyword arguments, with default measures:</p>
-<ul>
-<li><p>thresh_measure, float, minimum association between target and features, by default <code class="docutils literal notranslate"><span class="pre">0</span></code>. To be used with: <code class="docutils literal notranslate"><span class="pre">measure_filter</span></code>.</p></li>
-<li><p>name_measure, str, measure to be used for minimum association filtering. To be used with: <code class="docutils literal notranslate"><span class="pre">measure_filter</span></code>.</p></li>
-<li><p>thresh_nan, float,aximum percentage of NaNs in a feature, by default <code class="docutils literal notranslate"><span class="pre">1</span></code>. To be used with: <code class="docutils literal notranslate"><span class="pre">nans_measure</span></code>.</p></li>
-<li><p>thresh_mode, float, maximum percentage of the mode of a feature, by default <code class="docutils literal notranslate"><span class="pre">1</span></code>. To be used with: <code class="docutils literal notranslate"><span class="pre">mode_measure</span></code>.</p></li>
-<li><p>thresh_outlier, float, maximum percentage of Outliers in a feature, by default <code class="docutils literal notranslate"><span class="pre">1</span></code>. To be used with: <code class="docutils literal notranslate"><span class="pre">iqr_measure</span></code>, <code class="docutils literal notranslate"><span class="pre">zscore_measure</span></code>.</p></li>
-<li><p>thresh_corr, float, Maximum association between features, by default <code class="docutils literal notranslate"><span class="pre">1</span></code>. To be used with: <code class="docutils literal notranslate"><span class="pre">spearman_filter</span></code>, <code class="docutils literal notranslate"><span class="pre">pearson_filter</span></code>, <code class="docutils literal notranslate"><span class="pre">cramerv_filter</span></code>, <code class="docutils literal notranslate"><span class="pre">tschuprowt_filter</span></code>.</p></li>
-<li><dl class="simple">
-<dt>ascending, bool default <code class="docutils literal notranslate"><span class="pre">False</span></code></dt><dd><ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>: Lower values of the measure are to be considered as more associated to the target</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">False</span></code>: Higher values of the measure are to be considered as more associated to the target</p></li>
-</ul>
-</dd>
-</dl>
-</li>
-</ul>
-</p></li>
+<li><p><strong>**kwargs</strong> – Sets thresholds for <code class="docutils literal notranslate"><span class="pre">measures</span></code> and <code class="docutils literal notranslate"><span class="pre">filters</span></code>, passed as keyword arguments.</p></li>
 </ul>
 </dd>
 </dl>
@@ -274,14 +257,14 @@ Needs to have columns has specified in <code class="docutils literal notranslate
 <section id="quantitative-measures">
 <h3>Quantitative measures<a class="headerlink" href="#quantitative-measures" title="Permalink to this heading"></a></h3>
 <section id="kruskal-wallis-h-test-statistic">
-<h4>Kruskal-Wallis’ <span class="math notranslate nohighlight">\(H\)</span> test statistic<a class="headerlink" href="#kruskal-wallis-h-test-statistic" title="Permalink to this heading"></a></h4>
-<p>For a quantitative feature <span class="math notranslate nohighlight">\(x\)</span>, the corresponding rank feature <span class="math notranslate nohighlight">\(x_r\)</span> is the sorted sample of <span class="math notranslate nohighlight">\(x\)</span> such that any <span class="math notranslate nohighlight">\(i\)</span> in <span class="math notranslate nohighlight">\((1, n-1)\)</span> verifies <span class="math notranslate nohighlight">\(x_r^i \leq x_r^{i+1}\)</span>, where <span class="math notranslate nohighlight">\(n\)</span> is the number of observations.</p>
+<span id="kruskal"></span><h4>Kruskal-Wallis’ <span class="math notranslate nohighlight">\(H\)</span> test statistic<a class="headerlink" href="#kruskal-wallis-h-test-statistic" title="Permalink to this heading"></a></h4>
+<p>For a quantitative feature <span class="math notranslate nohighlight">\(x\)</span>, the corresponding order feature <span class="math notranslate nohighlight">\(x_o\)</span> is the sorted sample of <span class="math notranslate nohighlight">\(x\)</span> such that any <span class="math notranslate nohighlight">\(i\)</span> in <span class="math notranslate nohighlight">\((1, n-1)\)</span> verifies <span class="math notranslate nohighlight">\(x_o^i \leq x_o^{i+1}\)</span>, where <span class="math notranslate nohighlight">\(n\)</span> is the number of observations. For the same feature <span class="math notranslate nohighlight">\(x\)</span>, the corresponding rank <span class="math notranslate nohighlight">\(x_r\)</span> is the index of <span class="math notranslate nohighlight">\(x\)</span>’s values in <span class="math notranslate nohighlight">\(x_o\)</span>.</p>
 <p>The association with a binary target <span class="math notranslate nohighlight">\(y\)</span> is computed using <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.kruskal.html">scipy.stats.kruskal</a>.</p>
-<p>Kruskal-Wallis’ <span class="math notranslate nohighlight">\(H\)</span> test statistic, as known as one-way ANOVA on ranks, allows one to check that two features originate from the same disctribution.
+<p>Kruskal-Wallis’ <span class="math notranslate nohighlight">\(H\)</span> test statistic, as known as one-way ANOVA on ranks, allows one to check that two samples originate from the same distribution.
 It is used to determine whether or not <span class="math notranslate nohighlight">\(x\)</span> is distributed the same when <span class="math notranslate nohighlight">\(y=1\)</span> compared to when <span class="math notranslate nohighlight">\(y=0\)</span>.
 It is computed using the following formula:</p>
 <div class="math notranslate nohighlight">
-\[H = (n-1) \frac{ \sum_{i=1}^{n_y}{ n_{y=i} (\bar{x_r^{i.}} - \bar{x_r}) } } { \sum_{i=1}^{n_y}{ \sum_{j=1}^{n_{y=i}}{ (x_r^{ij} - \bar{x_r}) } } }\]</div>
+\[H = (n-1) \frac{ \sum_{i=1}^{n_y}{ n_{y=i} (\bar{x_r^{i.}} - \bar{x_r})^2 } } { \sum_{i=1}^{n_y}{ \sum_{j=1}^{n_{y=i}}{ (x_r^{ij} - \bar{x_r})^2 } } }\]</div>
 <p>where:</p>
 <blockquote>
 <div><ul class="simple">
@@ -324,11 +307,11 @@ It is computed using the following formula:</p>
 <h4>Coefficient of determination <span class="math notranslate nohighlight">\(R\)</span><a class="headerlink" href="#coefficient-of-determination-r" title="Permalink to this heading"></a></h4>
 <p>For a binary feature <span class="math notranslate nohighlight">\(y\)</span> and a quantitative feature <span class="math notranslate nohighlight">\(x\)</span> the following linear regression model is fitted using <a class="reference external" href="https://www.statsmodels.org/dev/generated/statsmodels.formula.api.ols.html">statsmodels.formula.api.ols</a>:</p>
 <div class="math notranslate nohighlight">
-\[x = \alpha + \beta y + \eta\]</div>
+\[x = \alpha + \beta y + \epsilon\]</div>
 <dl class="simple">
 <dt>where:</dt><dd><ul class="simple">
 <li><p><span class="math notranslate nohighlight">\(\alpha\)</span> and <span class="math notranslate nohighlight">\(\beta\)</span> are the coefficient of the linear regression model</p></li>
-<li><p><span class="math notranslate nohighlight">\(\eta\)</span> is the residual of the linear regression model</p></li>
+<li><p><span class="math notranslate nohighlight">\(\epsilon\)</span> is the residual of the linear regression model</p></li>
 </ul>
 </dd>
 </dl>
@@ -341,7 +324,7 @@ It is computed with the following formula:</p>
 <blockquote>
 <div><ul class="simple">
 <li><p><span class="math notranslate nohighlight">\(n\)</span> is the number of observations</p></li>
-<li><p><span class="math notranslate nohighlight">\(SS_{res} = \sum_{i=1}^n{(x_i - \alpha - \beta y_i)^2} = \sum_{i=1}^n{\eta_i^2}\)</span> is the residual sum of squares</p></li>
+<li><p><span class="math notranslate nohighlight">\(SS_{res} = \sum_{i=1}^n{(x_i - \alpha - \beta y_i)^2} = \sum_{i=1}^n{\epsilon_i^2}\)</span> is the residual sum of squares</p></li>
 <li><p><span class="math notranslate nohighlight">\(SS_{tot} = \sum_{i=1}^n{(x_i - \bar{x})^2}\)</span> is the total sum of squares</p></li>
 <li><p><span class="math notranslate nohighlight">\(\bar{x}=\sum_{i=1}^{n}{x_i}\)</span> is the sample mean of <span class="math notranslate nohighlight">\(x\)</span></p></li>
 </ul>
@@ -370,7 +353,7 @@ It is computed with the following formula:</p>
 </section>
 </section>
 <section id="quantitative-outlier-detection">
-<h3>Quantitative outlier Detection<a class="headerlink" href="#quantitative-outlier-detection" title="Permalink to this heading"></a></h3>
+<h3>Quantitative Outlier Detection<a class="headerlink" href="#quantitative-outlier-detection" title="Permalink to this heading"></a></h3>
 <section id="standard-score">
 <h4>Standard score<a class="headerlink" href="#standard-score" title="Permalink to this heading"></a></h4>
 <p>Standard score can be applied as a measure of deviation to determine outlier.
@@ -416,8 +399,8 @@ For a feature <span class="math notranslate nohighlight">\(x\)</span> it is comp
 <p>where:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><span class="math notranslate nohighlight">\(Q_1\)</span> is 25th percentile of the <span class="math notranslate nohighlight">\(x\)</span></p></li>
-<li><p><span class="math notranslate nohighlight">\(Q_3\)</span> is 75th percentile of the <span class="math notranslate nohighlight">\(x\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(Q_1\)</span> is the 25th percentile of the <span class="math notranslate nohighlight">\(x\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(Q_3\)</span> is the 75th percentile of the <span class="math notranslate nohighlight">\(x\)</span></p></li>
 </ul>
 </div></blockquote>
 <p>Any observation <span class="math notranslate nohighlight">\(x_i\)</span> of feature <span class="math notranslate nohighlight">\(x\)</span>, can be considered an outlier if it does not verify:</p>
@@ -449,7 +432,7 @@ For a feature <span class="math notranslate nohighlight">\(x\)</span> it is comp
 <section id="qualitative-measures">
 <h3>Qualitative measures<a class="headerlink" href="#qualitative-measures" title="Permalink to this heading"></a></h3>
 <section id="pearson-s-chi-2-test-statistic">
-<h4>Pearson’s <span class="math notranslate nohighlight">\(\chi^2\)</span> test statistic<a class="headerlink" href="#pearson-s-chi-2-test-statistic" title="Permalink to this heading"></a></h4>
+<span id="chi2"></span><h4>Pearson’s <span class="math notranslate nohighlight">\(\chi^2\)</span> test statistic<a class="headerlink" href="#pearson-s-chi-2-test-statistic" title="Permalink to this heading"></a></h4>
 <p>For a qualititative feature <span class="math notranslate nohighlight">\(x\)</span>, the association with a qualitative binary target <span class="math notranslate nohighlight">\(y\)</span> is computed based on the <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.crosstab.html">pandas.crosstab</a>.</p>
 <p>Pearson’s <span class="math notranslate nohighlight">\(\chi^2\)</span> test statistic is then computed using <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chi2_contingency.html">scipy.stats.chi2_contingency</a> to perform association measuring.
 The formula is the following:</p>
@@ -462,8 +445,8 @@ The formula is the following:</p>
 <li><p><span class="math notranslate nohighlight">\(n_x\)</span> is the number of modalities of <span class="math notranslate nohighlight">\(x\)</span></p></li>
 <li><p><span class="math notranslate nohighlight">\(n_y\)</span> is the number of modalities of <span class="math notranslate nohighlight">\(y\)</span></p></li>
 <li><p><span class="math notranslate nohighlight">\(n_{ij}\)</span> is the number of observations that take modality <span class="math notranslate nohighlight">\(i\)</span> of <span class="math notranslate nohighlight">\(x\)</span> and modality <span class="math notranslate nohighlight">\(j\)</span> of <span class="math notranslate nohighlight">\(y\)</span></p></li>
-<li><p><span class="math notranslate nohighlight">\(n_{i.}=\sum_{i=1}^{n_x}\)</span> is the total number of observations that take modality <span class="math notranslate nohighlight">\(i\)</span> of <span class="math notranslate nohighlight">\(x\)</span></p></li>
-<li><p><span class="math notranslate nohighlight">\(n_{.j}=\sum_{j=1}^{n_y}\)</span> is the total number of observations that take modality <span class="math notranslate nohighlight">\(j\)</span> of <span class="math notranslate nohighlight">\(y\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(n_{i.}=\sum_{i=1}^{n_x}n_{ij}\)</span> is the total number of observations that take modality <span class="math notranslate nohighlight">\(i\)</span> of <span class="math notranslate nohighlight">\(x\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(n_{.j}=\sum_{j=1}^{n_y}n_{ij}\)</span> is the total number of observations that take modality <span class="math notranslate nohighlight">\(j\)</span> of <span class="math notranslate nohighlight">\(y\)</span></p></li>
 </ul>
 </div></blockquote>
 <dl class="py function">
@@ -490,7 +473,7 @@ Computes Chi2 statistic on the <code class="docutils literal notranslate"><span 
 
 </section>
 <section id="cramer-s-v">
-<h4>Cramér’s <span class="math notranslate nohighlight">\(V\)</span><a class="headerlink" href="#cramer-s-v" title="Permalink to this heading"></a></h4>
+<span id="cramerv"></span><h4>Cramér’s <span class="math notranslate nohighlight">\(V\)</span><a class="headerlink" href="#cramer-s-v" title="Permalink to this heading"></a></h4>
 <p>Based on Pearson’s <span class="math notranslate nohighlight">\(\chi^2\)</span>, Cramér’s <span class="math notranslate nohighlight">\(V\)</span> is computed using the following formula:</p>
 <div class="math notranslate nohighlight">
 \[V=\sqrt{\frac{\chi^2}{n\min(n_x-1, n_y-1)}}\]</div>
@@ -530,7 +513,7 @@ Computes Chi2 statistic on the <code class="docutils literal notranslate"><span 
 </div>
 </section>
 <section id="tschuprow-s-t">
-<h4>Tschuprow’s <span class="math notranslate nohighlight">\(T\)</span><a class="headerlink" href="#tschuprow-s-t" title="Permalink to this heading"></a></h4>
+<span id="tschuprowt"></span><h4>Tschuprow’s <span class="math notranslate nohighlight">\(T\)</span><a class="headerlink" href="#tschuprow-s-t" title="Permalink to this heading"></a></h4>
 <p>Based on Pearson’s <span class="math notranslate nohighlight">\(\chi^2\)</span>, Tschuprow’s <span class="math notranslate nohighlight">\(T\)</span> is computed using the following formula:</p>
 <div class="math notranslate nohighlight">
 \[T=\sqrt{\frac{\chi^2}{n\sqrt{(n_x-1)(n_y-1)}}}\]</div>
@@ -691,7 +674,7 @@ are excluded (according to provided <code class="docutils literal notranslate"><
 </section>
 <section id="spearman-s-rho">
 <h4>Spearman’s <span class="math notranslate nohighlight">\(\rho\)</span><a class="headerlink" href="#spearman-s-rho" title="Permalink to this heading"></a></h4>
-<p>For a quantitative feature <span class="math notranslate nohighlight">\(x\)</span>, the corresponding rank feature <span class="math notranslate nohighlight">\(x_r\)</span> is the sorted sample of <span class="math notranslate nohighlight">\(x\)</span> such that any <span class="math notranslate nohighlight">\(i\)</span> in <span class="math notranslate nohighlight">\((1, n-1)\)</span> verifies <span class="math notranslate nohighlight">\(x_r^i \leq x_r^{i+1}\)</span>, where <span class="math notranslate nohighlight">\(n\)</span> is the number of observations.</p>
+<p>For a quantitative feature <span class="math notranslate nohighlight">\(x\)</span>, the corresponding order feature <span class="math notranslate nohighlight">\(x_o\)</span> is the sorted sample of <span class="math notranslate nohighlight">\(x\)</span> such that any <span class="math notranslate nohighlight">\(i\)</span> in <span class="math notranslate nohighlight">\((1, n-1)\)</span> verifies <span class="math notranslate nohighlight">\(x_o^i \leq x_o^{i+1}\)</span>, where <span class="math notranslate nohighlight">\(n\)</span> is the number of observations. For the same feature <span class="math notranslate nohighlight">\(x\)</span>, the corresponding rank <span class="math notranslate nohighlight">\(x_r\)</span> is the index of <span class="math notranslate nohighlight">\(x\)</span>’s values in <span class="math notranslate nohighlight">\(x_o\)</span>.</p>
 <p>Spearman’s <span class="math notranslate nohighlight">\(\rho\)</span> is Pearson’s <span class="math notranslate nohighlight">\(r\)</span> computed on the rank features. As so, Spearman’s <span class="math notranslate nohighlight">\(\rho\)</span> is computed with the following formula:</p>
 <div class="math notranslate nohighlight">
 \[\rho=r_{x_{1_{r}}x_{2_{r}}}\]</div>

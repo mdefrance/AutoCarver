@@ -67,7 +67,7 @@ I. Data Preparation: conversion to ordinal data buckets
 II. Data Optimization: maximization of bucket association
 .........................................................
 
-The core of **AutoCarver** is :ref:`AutoCarver`. It consists of the following Data Optimization steps: 
+The core of **AutoCarver** is :ref:`BaseCarver`. It consists of the following Data Optimization steps: 
 
    1. Identifying the most associated combination from all ordered combinations of modalities.
    2. Testing all combinations of NaNs grouped to one of those modalities.
