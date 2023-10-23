@@ -14,10 +14,6 @@ from AutoCarver.discretizers import ChainedDiscretizer
 def sort_by(request) -> str:
     return request.param
 
-@fixture(scope="module", params=[None, 0.12])
-def min_freq_mod(request) -> float:
-    return request.param
-
 
 def test_binary_carver(
     x_train: DataFrame,
@@ -149,10 +145,10 @@ def test_binary_carver(
         ), f"Not robust feature {feature} was not dropped, or robustness test not working"
 
         # checking for final modalities less frequent than min_freq_mod
-        train_frequency = x_discretized[feature].value_counts(normalize=True, dropna=False)
-        assert not any(train_frequency.values < auto_carver.min_freq_mod), "Some modalities are less frequent than min_freq_mod in train"
-        dev_frequency = x_dev_discretized[feature].value_counts(normalize=True, dropna=False)
-        assert not any(dev_frequency.values < auto_carver.min_freq_mod), "Some modalities are less frequent than min_freq_mod in dev"
+        train_frequency = x_discretized[feature].value_counts(normalize=True, dropna=True)
+        assert not any(train_frequency.values < auto_carver.min_freq_mod), f"Some modalities of {feature} are less frequent than min_freq_mod in train"
+        dev_frequency = x_dev_discretized[feature].value_counts(normalize=True, dropna=True)
+        assert not any(dev_frequency.values < auto_carver.min_freq_mod), f"Some modalities {feature} are less frequent than min_freq_mod in dev"
 
     # test that all values still are in the values_orders
     for feature in auto_carver.qualitative_features:
@@ -257,6 +253,7 @@ def test_binary_carver(
         values_orders=values_orders,
         min_freq=min_freq,
         max_n_mod=max_n_mod,
+        min_freq_mod=min_freq_mod,
         sort_by=sort_by,
         output_dtype=output_dtype,
         dropna=dropna,

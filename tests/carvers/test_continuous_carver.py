@@ -25,6 +25,7 @@ def test_continuous_carver(
     chained_features: list[str],
     level0_to_level1: dict[str, list[str]],
     level1_to_level2: dict[str, list[str]],
+    min_freq_mod: float,
     output_dtype: str,
     dropna: bool,
     copy: bool,
@@ -61,6 +62,8 @@ def test_continuous_carver(
         Chained orders level0 to level1 of features to be chained
     level1_to_level2 : dict[str, list[str]]
         Chained orders level1 to level2 of features to be chained
+    min_freq_mod : float
+        Minimum frequency per carved modalities
     output_dtype : str
         Output type 'str' or 'float'
     dropna : bool
@@ -101,6 +104,7 @@ def test_continuous_carver(
         min_freq=min_freq,
         max_n_mod=max_n_mod,
         output_dtype=output_dtype,
+        min_freq_mod=min_freq_mod,
         dropna=dropna,
         copy=copy,
         verbose=False,
@@ -132,6 +136,13 @@ def test_continuous_carver(
         assert all(
             train_target_rate.index == dev_target_rate.index
         ), f"Not robust feature {feature} was not dropped, or robustness test not working"
+
+        # checking for final modalities less frequent than min_freq_mod
+        train_frequency = x_discretized[feature].value_counts(normalize=True, dropna=True)
+        assert not any(train_frequency.values < auto_carver.min_freq_mod), f"Some modalities of {feature} are less frequent than min_freq_mod in train"
+        dev_frequency = x_dev_discretized[feature].value_counts(normalize=True, dropna=True)
+        assert not any(dev_frequency.values < auto_carver.min_freq_mod), f"Some modalities {feature} are less frequent than min_freq_mod in dev"
+
 
     # test that all values still are in the values_orders
     for feature in auto_carver.qualitative_features:
@@ -236,6 +247,7 @@ def test_continuous_carver(
         values_orders=values_orders,
         min_freq=min_freq,
         max_n_mod=max_n_mod,
+        min_freq_mod=min_freq_mod,
         output_dtype=output_dtype,
         dropna=dropna,
         copy=copy,

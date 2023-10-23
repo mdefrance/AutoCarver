@@ -108,3 +108,8 @@ def sort_by(request) -> str:
 @fixture(scope="module", params=[True, False])
 def copy(request) -> bool:
     return request.param
+
+
+@fixture(scope="module", params=[None, 0.12])
+def min_freq_mod(request) -> float:
+    return request.param

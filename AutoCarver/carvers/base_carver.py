@@ -596,9 +596,10 @@ class BaseCarver(BaseDiscretizer):
                 if xagg_dev is None:
                     return association
                 
-                # grouping rows of the dev crosstab
+                # grouping the dev sample per modality
                 grouped_xagg_dev = self._grouper(xagg_dev, index_to_groupby)
 
+                # computing target rate and frequency per modality
                 dev_rates = self._printer(grouped_xagg_dev)
                 
                 # case 1: testing viability on provided dev sample
@@ -610,6 +611,10 @@ class BaseCarver(BaseDiscretizer):
                     and all(dev_rates["frequency"] >= self.min_freq_mod)
                     and len(dev_rates) == dev_rates["target_rate"].nunique()
                 ):
+                    print("\n\n train_rates\n", train_rates,"\n")
+                    # print("\n\n grouped_xagg\n", grouped_xagg,"\n")
+                    print("\n\n dev_rates\n", dev_rates,"\n")
+                    # print("\n\n grouped_xagg_dev\n", grouped_xagg_dev,"\n")
                     return association
 
 

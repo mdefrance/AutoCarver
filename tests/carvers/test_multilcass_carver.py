@@ -30,6 +30,7 @@ def test_multiclass_carver(
     chained_features: list[str],
     level0_to_level1: dict[str, list[str]],
     level1_to_level2: dict[str, list[str]],
+    min_freq_mod: float,
     output_dtype: str,
     dropna: bool,
     sort_by: str,
@@ -67,6 +68,8 @@ def test_multiclass_carver(
         Chained orders level0 to level1 of features to be chained
     level1_to_level2 : dict[str, list[str]]
         Chained orders level1 to level2 of features to be chained
+    min_freq_mod : float
+        Minimum frequency per carved modalities
     output_dtype : str
         Output type 'str' or 'float'
     dropna : bool
@@ -107,6 +110,7 @@ def test_multiclass_carver(
         min_freq=min_freq,
         max_n_mod=max_n_mod,
         sort_by=sort_by,
+        min_freq_mod=min_freq_mod,
         output_dtype=output_dtype,
         dropna=dropna,
         copy=copy,
@@ -251,6 +255,7 @@ def test_multiclass_carver(
         max_n_mod=max_n_mod,
         sort_by=sort_by,
         output_dtype=output_dtype,
+        min_freq_mod=min_freq_mod,
         dropna=dropna,
         copy=copy,
         verbose=False,
@@ -273,7 +278,6 @@ def test_multiclass_carver(
             "High+": ["High", "High-", "Highs", "Best", "ALONE", "BEST", "High+"],
             "__NAN__": ["unknown", "__NAN__"],
         }
-        print(auto_carver.values_orders["Qualitative_Ordinal_lownan_1"].content)
         assert (
             auto_carver.values_orders["Qualitative_Ordinal_lownan_1"].content == expected
         ), "Unknown modalities should be kept in the order"
@@ -296,7 +300,6 @@ def test_multiclass_carver(
                 "High+",
             ],
         }
-        print(auto_carver.values_orders["Qualitative_Ordinal_lownan_2"].content)
         assert (
             auto_carver.values_orders["Qualitative_Ordinal_lownan_2"].content == expected
         ), "Unknown modalities should be kept in the order"
