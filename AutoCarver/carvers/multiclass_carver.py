@@ -1,5 +1,5 @@
 """Tool to build optimized buckets out of Quantitative and Qualitative features
-for a multiclass classification tasks.
+for multiclass classification tasks.
 """
 
 from typing import Any, Callable
@@ -7,22 +7,20 @@ from typing import Any, Callable
 from pandas import DataFrame, Series, unique
 
 from ..discretizers import BaseDiscretizer, GroupedList
-from .base_carver import BaseCarver
+from .base_carver import BaseCarver, extend_docstring
 from .binary_carver import BinaryCarver
 
 
 class MulticlassCarver(BaseCarver):
     """Automatic carving of continuous, discrete, categorical and ordinal
     features that maximizes association with a multiclass target.
-
-    - First fits a :ref:`Discretizer`.
-    - Fits :ref:`BinaryCarver` for all-1 of the classes taken by :math:`y`.
     """
 
+    @extend_docstring(BinaryCarver.__init__)
     def __init__(
         self,
-        min_freq: float,
         sort_by: str,
+        min_freq: float,
         *,
         quantitative_features: list[str] = None,
         qualitative_features: list[str] = None,
@@ -34,87 +32,8 @@ class MulticlassCarver(BaseCarver):
         dropna: bool = True,
         copy: bool = False,
         verbose: bool = False,
-        pretty_print: bool = False,
         **kwargs,
     ) -> None:
-        """Initiates a ``MulticlassCarver``.
-
-        Parameters
-        ----------
-        min_freq : float
-            Minimum frequency per grouped modalities.
-
-            * Features whose most frequent modality is less frequent than ``min_freq`` will not be carved.
-            * Sets the number of quantiles in which to discretize the continuous features.
-            * Sets the minimum frequency of a quantitative feature's modality.
-
-            **Tip**: should be set between 0.02 (slower, preciser, less robust) and 0.05 (faster, more robust)
-
-        sort_by : str
-            To be choosen amongst ``["tschuprowt", "cramerv", "kruskal"]``
-            Metric to be used to perform association measure between features and target.
-
-            * Binary target: use ``"tschuprowt"``, for Tschuprow's T.
-            * Binary target: use ``"cramerv"``, for Cramér's V.
-            * Continuous target: use ``"kruskal"``, for Kruskal-Wallis' H test statistic.
-
-            **Tip**: use ``"tschuprowt"`` for more robust, or less output modalities,
-            use ``"cramerv"`` for more output modalities.
-
-        quantitative_features : list[str], optional
-            List of column names of quantitative features (continuous and discrete) to be carved, by default ``None``
-
-        qualitative_features : list[str], optional
-            List of column names of qualitative features (non-ordinal) to be carved, by default ``None``
-
-        ordinal_features : list[str], optional
-            List of column names of ordinal features to be carved. For those features a list of
-            values has to be provided in the ``values_orders`` dict, by default ``None``
-
-        values_orders : dict[str, GroupedList], optional
-            Dict of feature's column names and there associated ordering.
-            If lists are passed, a GroupedList will automatically be initiated, by default ``None``
-
-        max_n_mod : int, optional
-            Maximum number of modality per feature, by default ``5``
-
-            All combinations of modalities for groups of modalities of sizes from 1 to ``max_n_mod`` will be tested.
-            The combination with the greatest association (as defined by ``sort_by``) will be the selected one.
-
-            **Tip**: should be set between 4 (faster, more robust) and 7 (slower, preciser, less robust)
-
-        min_freq_mod : float
-            Minimum frequency per final modality, by default ``None`` for min_freq
-
-        output_dtype : str, optional
-            To be choosen amongst ``["float", "str"]``, by default ``"float"``
-
-            * ``"float"``, grouped modalities will be converted to there corresponding floating rank.
-            * ``"str"``, a per-group modality will be set for all the modalities of a group.
-
-        dropna : bool, optional
-            * ``True``, ``AutoCarver`` will try to group ``numpy.nan`` with other modalities.
-            * ``False``, ``AutoCarver`` all non-``numpy.nan`` will be grouped, by default ``True``
-
-        copy : bool, optional
-            If ``True``, feature processing at transform is applied to a copy of the provided DataFrame, by default ``False``
-
-        verbose : bool, optional
-            If ``True``, prints raw Discretizers Fit and Transform steps, as long as
-            information on AutoCarver's processing and tables of target rates and frequencies for
-            X, by default ``False``
-
-        pretty_print : bool, optional
-            If ``True``, adds to the verbose some HTML tables of target rates and frequencies for X and, if provided, X_dev.
-            Overrides the value of ``verbose``, by default ``False``
-
-        **kwargs
-            Pass values for ``str_default``and ``str_nan`` of ``Discretizer`` (default string values).
-
-        Examples
-        --------
-        See `AutoCarver examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
-        """
         # association measure used to find the best groups for multiclass targets
         implemented_measures = ["tschuprowt", "cramerv"]
         assert sort_by in implemented_measures, (
@@ -131,16 +50,14 @@ class MulticlassCarver(BaseCarver):
             ordinal_features=ordinal_features,
             values_orders=values_orders,
             max_n_mod=max_n_mod,
+            min_freq_mod=min_freq_mod,
             output_dtype=output_dtype,
             dropna=dropna,
             copy=copy,
             verbose=verbose,
-            pretty_print=pretty_print,
             **kwargs,
         )
         self.kwargs = kwargs
-        self.str_nan = (kwargs.get("str_nan", "__NAN__"),)
-        self.str_default = (kwargs.get("str_default", "__OTHER__"),)
 
     def _prepare_data(
         self,
@@ -202,6 +119,7 @@ class MulticlassCarver(BaseCarver):
 
         return x_copy, y_copy, x_dev_copy, y_dev_copy
 
+    @extend_docstring(BinaryCarver.fit)
     def fit(
         self,
         X: DataFrame,
@@ -210,23 +128,6 @@ class MulticlassCarver(BaseCarver):
         X_dev: DataFrame = None,
         y_dev: Series = None,
     ) -> None:
-        """Finds the combination of modalities of X that provides the best association with y.
-
-        Parameters
-        ----------
-        X : DataFrame
-            Dataset used to discretize. Needs to have columns has specified in ``AutoCarver.features``.
-
-        y : Series
-            Multiclass target feature with wich the association is maximized.
-
-        X_dev : DataFrame, optional
-            Dataset to evalute the robustness of discretization, by default None
-            It should have the same distribution as X.
-
-        y_dev : Series, optional
-            Multiclass target feature with wich the robustness of discretization is evaluated, by default None
-        """
         # preparing datasets and checking for wrong values
         x_copy, y_copy, x_dev_copy, y_dev_copy = self._prepare_data(X, y, X_dev, y_dev)
 
@@ -267,7 +168,6 @@ class MulticlassCarver(BaseCarver):
                 dropna=self.dropna,
                 copy=True,  # copying x to keep raw columns as is
                 verbose=self.verbose,
-                pretty_print=self.pretty_print,
                 **self.kwargs,
             )
 
@@ -297,7 +197,7 @@ class MulticlassCarver(BaseCarver):
             str_default=self.kwargs.get("str_default", "__OTHER__"),
             dropna=self.dropna,
             copy=self.copy,
-            verbose=bool(max(self.verbose, self.pretty_print)),
+            verbose=self.verbose,
             features_casting=casted_features,
         )
 

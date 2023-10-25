@@ -20,7 +20,7 @@
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="AutoCarver" href="auto_carver.html" />
+    <link rel="next" title="Carvers" href="carvers.html" />
     <link rel="prev" title="Quick Start" href="quick_start.html" /> 
 </head>
 
@@ -125,7 +125,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="auto_carver.html">AutoCarver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="carvers.html">Carvers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="feature_selector.html">FeatureSelector</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 </ul>
@@ -251,11 +251,11 @@ and returns a transformed version of <cite>X</cite>.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="AutoCarver.discretizers.BaseDiscretizer.to_json">
 <span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.BaseDiscretizer.to_json" title="Permalink to this definition"></a></dt>
-<dd><p>Converts the BaseDiscretizer’s values_orders to .json format.</p>
+<dd><p>Converts to .json format.</p>
 <p>To be used with <code class="docutils literal notranslate"><span class="pre">json.dump</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>JSON serialized BaseDiscretizer</p>
+<dd class="field-odd"><p>JSON serialized object</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>str</p>
@@ -267,17 +267,12 @@ and returns a transformed version of <cite>X</cite>.</p>
 <dt class="sig sig-object py" id="AutoCarver.discretizers.BaseDiscretizer.transform">
 <span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.BaseDiscretizer.transform" title="Permalink to this definition"></a></dt>
 <dd><p>Applies discretization to a DataFrame’s columns.</p>
-<ul class="simple">
-<li><p>For each feature’s modality, the associated group label is attributed as definid by <code class="docutils literal notranslate"><span class="pre">values_orders</span></code>.</p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">output_dtype=&quot;float&quot;</span></code>, converts labels into floats.</p></li>
-<li><p>Data types are matched as <code class="docutils literal notranslate"><span class="pre">input_dtypes==&quot;str&quot;</span></code> for qualitative features and <code class="docutils literal notranslate"><span class="pre">input_dtypes==&quot;float&quot;</span></code> for quantitative ones.</p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">copye=True</span></code>, the input DataFrame will be copied.</p></li>
-</ul>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>DataFrame</em>) – Contains columns named after <code class="docutils literal notranslate"><span class="pre">BaseDiscretizer.features</span></code> attribute, by default None</p></li>
-<li><p><strong>y</strong> (<em>Series</em><em>, </em><em>optional</em>) – Model target, by default None</p></li>
+<li><p><strong>X</strong> (<em>DataFrame</em>) – Dataset to be carved.
+Needs to have columns has specified in <code class="docutils literal notranslate"><span class="pre">features</span></code> attribute.</p></li>
+<li><p><strong>y</strong> (<em>Series</em><em>, </em><em>optional</em>) – Target, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -945,7 +940,7 @@ All modalities are stored inside the <code class="docutils literal notranslate">
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="quick_start.html" class="btn btn-neutral float-left" title="Quick Start" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="auto_carver.html" class="btn btn-neutral float-right" title="AutoCarver" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="carvers.html" class="btn btn-neutral float-right" title="Carvers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

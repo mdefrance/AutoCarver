@@ -138,8 +138,16 @@ def test_multiclass_carver(
         == x_dev_discretized[auto_carver.features].nunique()
     ), "More buckets in train or test samples"
     for feature in auto_carver.features:
-        train_target_rate = x_discretized.groupby(feature)[target].apply(lambda u: (u==int(feature[-1])).mean()).sort_values()
-        dev_target_rate = x_dev_discretized.groupby(feature)[target].apply(lambda u: (u==int(feature[-1])).mean()).sort_values()
+        train_target_rate = (
+            x_discretized.groupby(feature)[target]
+            .apply(lambda u: (u == int(feature[-1])).mean())
+            .sort_values()
+        )
+        dev_target_rate = (
+            x_dev_discretized.groupby(feature)[target]
+            .apply(lambda u: (u == int(feature[-1])).mean())
+            .sort_values()
+        )
         assert all(
             train_target_rate.index == dev_target_rate.index
         ), f"Not robust feature {feature} was not dropped, or robustness test not working, \n {train_target_rate} \n {dev_target_rate} \n"
@@ -241,9 +249,7 @@ def test_multiclass_carver(
         unknown_handling="drop",
         copy=True,
     )
-    x_discretized = chained_discretizer.fit_transform(
-        x_train_wrong_2, x_train_wrong_2[target]
-    )
+    x_discretized = chained_discretizer.fit_transform(x_train_wrong_2, x_train_wrong_2[target])
     values_orders.update(chained_discretizer.values_orders)
 
     auto_carver = MulticlassCarver(

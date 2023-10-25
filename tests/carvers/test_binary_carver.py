@@ -146,9 +146,13 @@ def test_binary_carver(
 
         # checking for final modalities less frequent than min_freq_mod
         train_frequency = x_discretized[feature].value_counts(normalize=True, dropna=True)
-        assert not any(train_frequency.values < auto_carver.min_freq_mod), f"Some modalities of {feature} are less frequent than min_freq_mod in train"
+        assert not any(
+            train_frequency.values < auto_carver.min_freq_mod
+        ), f"Some modalities of {feature} are less frequent than min_freq_mod in train"
         dev_frequency = x_dev_discretized[feature].value_counts(normalize=True, dropna=True)
-        assert not any(dev_frequency.values < auto_carver.min_freq_mod), f"Some modalities {feature} are less frequent than min_freq_mod in dev"
+        assert not any(
+            dev_frequency.values < auto_carver.min_freq_mod
+        ), f"Some modalities {feature} are less frequent than min_freq_mod in dev"
 
     # test that all values still are in the values_orders
     for feature in auto_carver.qualitative_features:

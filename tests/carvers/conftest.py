@@ -2,9 +2,10 @@
 
 from pytest import fixture
 
+
 @fixture
 def quantitative_features() -> list[str]:
-    """ List of quantitative raw features to be carved"""
+    """List of quantitative raw features to be carved"""
     return [
         "Quantitative",
         "Discrete_Quantitative_highnan",
@@ -15,9 +16,10 @@ def quantitative_features() -> list[str]:
         "one_nan",
     ]
 
+
 @fixture
 def qualitative_features() -> list[str]:
-    """ List of qualitative raw features to be carved"""
+    """List of qualitative raw features to be carved"""
     return [
         "Qualitative",
         "Qualitative_grouped",
@@ -31,18 +33,20 @@ def qualitative_features() -> list[str]:
         "ones_nan",
     ]
 
+
 @fixture
 def ordinal_features() -> list[str]:
-    """ List of ordinal raw features to be carved"""
+    """List of ordinal raw features to be carved"""
     return [
         "Qualitative_Ordinal",
         "Qualitative_Ordinal_lownan",
         "Discrete_Qualitative_highnan",
     ]
 
+
 @fixture
 def values_orders() -> dict[str, list[str]]:
-    """ values_orders of raw features to be carved"""
+    """values_orders of raw features to be carved"""
     return {
         "Qualitative_Ordinal": [
             "Low-",
@@ -69,26 +73,31 @@ def values_orders() -> dict[str, list[str]]:
         "Discrete_Qualitative_highnan": ["1", "2", "3", "4", "5", "6", "7"],
     }
 
+
 @fixture
 def chained_features() -> list[str]:
-    """ List of chained raw features to be chained"""
+    """List of chained raw features to be chained"""
     return ["Qualitative_Ordinal", "Qualitative_Ordinal_lownan"]
+
 
 @fixture
 def level0_to_level1() -> dict[str, list[str]]:
-    """ Chained orders level0 to level1 of features to be chained"""
+    """Chained orders level0 to level1 of features to be chained"""
     return {
         "Lows": ["Low-", "Low", "Low+", "Lows"],
         "Mediums": ["Medium-", "Medium", "Medium+", "Mediums"],
         "Highs": ["High-", "High", "High+", "Highs"],
     }
+
+
 @fixture
 def level1_to_level2() -> dict[str, list[str]]:
-    """ Chained orders level1 to level2 of features to be chained"""
+    """Chained orders level1 to level2 of features to be chained"""
     return {
         "Worst": ["Lows", "Mediums", "Worst"],
         "Best": ["Highs", "Best"],
     }
+
 
 @fixture(scope="module", params=["float", "str"])
 def output_dtype(request) -> str:

@@ -390,23 +390,24 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
     def transform(self, X: DataFrame, y: Series = None) -> DataFrame:
         """Applies discretization to a DataFrame's columns.
 
-        * For each feature's modality, the associated group label is attributed as definid by ``values_orders``.
-        * If ``output_dtype="float"``, converts labels into floats.
-        * Data types are matched as ``input_dtypes=="str"`` for qualitative features and ``input_dtypes=="float"`` for quantitative ones.
-        * If ``copye=True``, the input DataFrame will be copied.
-
         Parameters
         ----------
         X : DataFrame
-            Contains columns named after ``BaseDiscretizer.features`` attribute, by default None
+            Dataset to be carved.
+            Needs to have columns has specified in ``features`` attribute.
         y : Series, optional
-            Model target, by default None
+            Target, by default ``None``
 
         Returns
         -------
         DataFrame
             Discretized X.
         """
+        # * For each feature's value, the associated group label is attributed (as definid by ``values_orders``).
+        # * If ``output_dtype="float"``, converts labels into floats.
+        # * Data types are matched as ``input_dtypes=="str"`` for qualitative features and ``input_dtypes=="float"`` for quantitative ones.
+        # * If ``copy=True``, the input DataFrame will be copied.
+
         # copying dataframes and casting for multiclass
         x_copy = self.__prepare_data(X, y)
 
@@ -525,14 +526,14 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         return X
 
     def to_json(self) -> str:
-        """Converts the BaseDiscretizer's values_orders to .json format.
+        """Converts to .json format.
 
         To be used with ``json.dump``.
 
         Returns
         -------
         str
-            JSON serialized BaseDiscretizer
+            JSON serialized object
         """
         # extracting content dictionnaries
         json_serialized_base_discretizer = {

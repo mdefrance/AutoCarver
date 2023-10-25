@@ -26,17 +26,30 @@ else:
     _has_idisplay = True
 
 
+class extend_docstring:
+    def __init__(self, method):
+        self.doc = method.__doc__
+
+    def __call__(self, function):
+        if self.doc is not None:
+            doc = function.__doc__
+            function.__doc__ = self.doc
+            if doc is not None:
+                function.__doc__ = doc + function.__doc__
+        return function
+
+
 class BaseCarver(BaseDiscretizer):
     """Automatic carving of continuous, discrete, categorical and ordinal
     features that maximizes association with a binary or continuous target.
 
-    First fits a :ref:`Discretizer`. Raw data should be provided as input (not a result of ``Discretizer.transform()``).
+    First fits a :class:`Discretizer`. Raw data should be provided as input (not a result of ``Discretizer.transform()``).
     """
 
     def __init__(
         self,
-        min_freq: float,
         sort_by: str,
+        min_freq: float,
         *,
         quantitative_features: list[str] = None,
         qualitative_features: list[str] = None,
@@ -48,17 +61,9 @@ class BaseCarver(BaseDiscretizer):
         dropna: bool = True,
         copy: bool = False,
         verbose: bool = False,
-        pretty_print: bool = False,
         **kwargs,
-        # min_carved_freq: float = 0,  # TODO: update this parameter so that it is set according to frequency rather than number of groups
-        # unknown_handling: str = "raises",  # TODO: add parameter to remove unknown values whatsoever
-        # str_nan: str = "__NAN__",
-        # str_default: str = "__OTHER__",
     ) -> None:
-        """Initiates a ``BaseCarver``.
-
-        Parameters
-        ----------
+        """
         min_freq : float
             Minimum frequency per grouped modalities.
 
@@ -67,17 +72,6 @@ class BaseCarver(BaseDiscretizer):
             * Sets the minimum frequency of a quantitative feature's modality.
 
             **Tip**: should be set between 0.02 (slower, preciser, less robust) and 0.05 (faster, more robust)
-
-        sort_by : str
-            To be choosen amongst ``["tschuprowt", "cramerv", "kruskal"]``
-            Metric to be used to perform association measure between features and target.
-
-            * Binary target: use ``"tschuprowt"``, for Tschuprow's T.
-            * Binary target: use ``"cramerv"``, for Cramér's V.
-            * Continuous target: use ``"kruskal"``, for Kruskal-Wallis' H test statistic.
-
-            **Tip**: use ``"tschuprowt"`` for more robust, or less output modalities,
-            use ``"cramerv"`` for more output modalities.
 
         quantitative_features : list[str], optional
             List of column names of quantitative features (continuous and discrete) to be carved, by default ``None``
@@ -91,17 +85,17 @@ class BaseCarver(BaseDiscretizer):
 
         values_orders : dict[str, GroupedList], optional
             Dict of feature's column names and there associated ordering.
-            If lists are passed, a GroupedList will automatically be initiated, by default ``None``
+            If lists are passed, a :class:`GroupedList` will automatically be initiated, by default ``None``
 
         max_n_mod : int, optional
             Maximum number of modality per feature, by default ``5``
 
             All combinations of modalities for groups of modalities of sizes from 1 to ``max_n_mod`` will be tested.
-            The combination with the greatest association (as defined by ``sort_by``) will be the selected one.
+            The combination with the best association will be selected.
 
             **Tip**: should be set between 4 (faster, more robust) and 7 (slower, preciser, less robust)
 
-        min_freq_mod : float
+        min_freq_mod : float, optional
             Minimum frequency per final modality, by default ``None`` for min_freq
 
         output_dtype : str, optional
@@ -111,23 +105,20 @@ class BaseCarver(BaseDiscretizer):
             * ``"str"``, a per-group modality will be set for all the modalities of a group.
 
         dropna : bool, optional
-            * ``True``, ``AutoCarver`` will try to group ``numpy.nan`` with other modalities.
-            * ``False``, ``AutoCarver`` all non-``numpy.nan`` will be grouped, by default ``True``
+            * ``True``, try to group ``numpy.nan`` with other modalities.
+            * ``False``, all non-``numpy.nan`` will be grouped, by default ``True``
 
         copy : bool, optional
             If ``True``, feature processing at transform is applied to a copy of the provided DataFrame, by default ``False``
 
         verbose : bool, optional
-            If ``True``, prints raw Discretizers Fit and Transform steps, as long as
-            information on AutoCarver's processing and tables of target rates and frequencies for
-            X, by default ``False``
+            * ``True``, without IPython installed: prints raw Discretizers and AutoCarver Fit steps for X, by default ``False``
+            * ``True``, with IPython installed: adds HTML tables of target rates and frequencies for X and X_dev.
 
-        pretty_print : bool, optional
-            If ``True``, adds to the verbose some HTML tables of target rates and frequencies for X and, if provided, X_dev.
-            Overrides the value of ``verbose``, by default ``False``
+            **Tip**: IPython displaying can be turned off by setting ``pretty_print=False``.
 
         **kwargs
-            Pass values for ``str_default``and ``str_nan`` of ``Discretizer`` (default string values).
+            Pass values for ``str_default`` and ``str_nan`` (default string values), as long as ``pretty_print`` to turn off IPython.
 
         Examples
         --------
@@ -165,7 +156,7 @@ class BaseCarver(BaseDiscretizer):
             str_default=kwargs.get("str_default", "__OTHER__"),
             dropna=dropna,
             copy=copy,
-            verbose=bool(max(verbose, pretty_print)),
+            verbose=bool(max(verbose, kwargs.get("pretty_print", False))),
         )
 
         # checking that qualitatitve and quantitative features are distinct
@@ -192,13 +183,12 @@ class BaseCarver(BaseDiscretizer):
         self.min_freq_mod = min_freq_mod  # minimum frequency per final bucket
         self.sort_by = sort_by
         self.pretty_print = False
-        if pretty_print:
+        if self.verbose and kwargs.get("pretty_print", True):
             if _has_idisplay:  # checking for installed dependencies
-                self.pretty_print = pretty_print
+                self.pretty_print = True
             else:
-                self.verbose = True
                 warn(
-                    "Package not found: ipython. Defaulting to verbose=True. "
+                    "Package not found: IPython. Defaulting to raw verbose. "
                     "Install extra dependencies with pip install autocarver[jupyter]"
                 )
 
@@ -257,7 +247,7 @@ class BaseCarver(BaseDiscretizer):
         pass
 
     def _combination_formatter(self, combination: list[list[str]]) -> dict[str, str]:
-        """ Attributes the first element of a group to all elements of a group
+        """Attributes the first element of a group to all elements of a group
 
         Parameters
         ----------
@@ -268,7 +258,7 @@ class BaseCarver(BaseDiscretizer):
         -------
         dict[str, str]
             _description_
-        """        
+        """
         return {modal: group[0] for group in combination for modal in group}
 
     def _printer():
@@ -301,17 +291,19 @@ class BaseCarver(BaseDiscretizer):
         Parameters
         ----------
         X : DataFrame
-            Dataset used to discretize. Needs to have columns has specified in ``BaseCarver.features``.
+            Training dataset, to determine features' optimal carving.
+            Needs to have columns has specified in ``features`` attribute.
 
         y : Series
-            Target feature with wich the association is maximized.
+            Target with wich the association is maximized.
 
         X_dev : DataFrame, optional
-            Dataset to evalute the robustness of discretization, by default None
-            It should have the same distribution as X.
+            Development dataset, to evaluate robustness of carved features, by default ``None``
+            Should have the same distribution as X.
 
         y_dev : Series, optional
-            Target feature with wich the robustness of discretization is evaluated, by default None
+            Target of the development dataset, by default ``None``
+            Should have the same distribution as y.
         """
         # preparing datasets and checking for wrong values
         x_copy, x_dev_copy = self._prepare_data(X, y, X_dev, y_dev)
@@ -461,9 +453,7 @@ class BaseCarver(BaseDiscretizer):
         best_association = None
         if raw_xagg.shape[0] > 1:
             # all possible consecutive combinations
-            combinations = consecutive_combinations(
-                raw_order, self.max_n_mod, min_group_size=1
-            )
+            combinations = consecutive_combinations(raw_order, self.max_n_mod, min_group_size=1)
 
             # getting most associated combination
             best_association = self.get_best_association(
@@ -485,9 +475,7 @@ class BaseCarver(BaseDiscretizer):
                 raw_order.remove(self.str_nan)
 
                 # all possible consecutive combinations
-                combinations = consecutive_combinations(
-                    raw_order, self.max_n_mod, min_group_size=1
-                )
+                combinations = consecutive_combinations(raw_order, self.max_n_mod, min_group_size=1)
 
                 # adding combinations with NaNs
                 nan_combinations = add_nan_in_combinations(
@@ -587,7 +575,7 @@ class BaseCarver(BaseDiscretizer):
 
             # computing target rate and frequency per value
             train_rates = self._printer(grouped_xagg)
-            
+
             # viable on train sample:
             # - target rates are distinct for all modalities
             # - minimum frequency is reached for all modalities
@@ -598,26 +586,25 @@ class BaseCarver(BaseDiscretizer):
                 # case 0: no test sample provided -> not testing for robustness
                 if xagg_dev is None:
                     return association
-                
+
                 # grouping the dev sample per modality
                 grouped_xagg_dev = self._grouper(xagg_dev, index_to_groupby)
 
                 # computing target rate and frequency per modality
                 dev_rates = self._printer(grouped_xagg_dev)
-                
+
                 # case 1: testing viability on provided dev sample
                 # - grouped values have the same ranks in train/test
                 # - target rates are distinct for all modalities
                 # - minimum frequency is reached for all modalities
                 if (
-                    all(train_rates.sort_values("target_rate").index == dev_rates.sort_values("target_rate").index)
+                    all(
+                        train_rates.sort_values("target_rate").index
+                        == dev_rates.sort_values("target_rate").index
+                    )
                     and all(dev_rates["frequency"] >= self.min_freq_mod)
                     and len(dev_rates) == dev_rates["target_rate"].nunique()
                 ):
-                    print("\n\n train_rates\n", train_rates,"\n")
-                    # print("\n\n grouped_xagg\n", grouped_xagg,"\n")
-                    print("\n\n dev_rates\n", dev_rates,"\n")
-                    # print("\n\n grouped_xagg_dev\n", grouped_xagg_dev,"\n")
                     return association
 
 
