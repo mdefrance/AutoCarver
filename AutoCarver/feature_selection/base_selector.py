@@ -113,30 +113,35 @@ class BaseSelector:
 
         # initiating measures
         if isinstance(measures, list):
-            assert (
-                isinstance(input_dtypes, str)
-            ), (
+            assert isinstance(input_dtypes, str), (
                 " - [BaseSelector] Provide a unique input data type corresponding to the provided "
                 "list of measures: input_dtypes='str' or input_dtypes='float'"
             )
             measures = {input_dtypes: measures}
         # adding default measures
-        self.measures = {dtype: [dtype_measure, nans_measure, mode_measure] + requested_measures[:] for dtype, requested_measures in measures.items()}
+        self.measures = {
+            dtype: [dtype_measure, nans_measure, mode_measure] + requested_measures[:]
+            for dtype, requested_measures in measures.items()
+        }
 
         # initiating filters
         if isinstance(filters, list):
-            assert (
-                isinstance(input_dtypes, str)
-            ), (
+            assert isinstance(input_dtypes, str), (
                 " - [BaseSelector] Provide a unique input data type corresponding to the provided "
                 "list of measures: input_dtypes='str' or input_dtypes='float'"
             )
             filters = {input_dtypes: filters[:]}
         # adding default filter
-        self.filters = {dtype: [thresh_filter] + requested_filters[:] for dtype, requested_filters in filters.items()}
+        self.filters = {
+            dtype: [thresh_filter] + requested_filters[:]
+            for dtype, requested_filters in filters.items()
+        }
 
         # names of measures to sort by
-        self.measure_names = {dtype: [measure.__name__ for measure in requested_measures[::-1]] for dtype, requested_measures in self.measures.items()}
+        self.measure_names = {
+            dtype: [measure.__name__ for measure in requested_measures[::-1]]
+            for dtype, requested_measures in self.measures.items()
+        }
 
         # wether or not to print tables
         self.verbose = bool(max(verbose, kwargs.get("pretty_print", False)))
@@ -155,10 +160,14 @@ class BaseSelector:
         self.kwargs = kwargs
 
     def _select_features(
-        self, X: DataFrame, y: Series, features: list[str], n_best: int, dtype: str,
+        self,
+        X: DataFrame,
+        y: Series,
+        features: list[str],
+        n_best: int,
+        dtype: str,
     ) -> list[str]:
-        """Selects the n_best features amongst the specified ones
-        """
+        """Selects the n_best features amongst the specified ones"""
         if self.verbose:  # verbose if requested
             print(f"------\n[FeatureSelector] Selecting from Features: {str(features)}\n---")
 
@@ -214,7 +223,9 @@ class BaseSelector:
         ]
 
         if self.verbose:  # displaying association measure
-            print("\n - [FeatureSelector] Association between X and y, filtered for inter-feature assocation")
+            print(
+                "\n - [FeatureSelector] Association between X and y, filtered for inter-feature assocation"
+            )
             print_associations(initial_associations.reindex(best_features), self.pretty_print)
             print("------\n")
 
@@ -244,10 +255,10 @@ class BaseSelector:
                     print(f"------\n[FeatureSelector] Selecting from Quantitative Features\n---")
                 else:
                     print(f"------\n[FeatureSelector] Selecting from Qualitative Features\n---")
-            
+
             # getting features of the specific data type
             features = [feature for feature in self.features if self.input_dtypes[feature] == dtype]
-            
+
             # splitting features in chunks
             if self.colsample < 1:
                 # shuffling features to get random samples of features
@@ -269,7 +280,9 @@ class BaseSelector:
                 best_features = []
                 for feature_sample in feature_samples:
                     # fitting association on features
-                    best_features += self._select_features(X, y, feature_sample, int(self.n_best // 2), dtype)
+                    best_features += self._select_features(
+                        X, y, feature_sample, int(self.n_best // 2), dtype
+                    )
 
             # splitting in chunks not requested
             else:
@@ -281,9 +294,13 @@ class BaseSelector:
                 all_best_features += best_features
                 if self.verbose:  # verbose if requested
                     if dtype == "float":
-                        print(f"------\n[FeatureSelector] Selected Quantitative Features: {str(features)}\n---")
+                        print(
+                            f"------\n[FeatureSelector] Selected Quantitative Features: {str(features)}\n---"
+                        )
                     else:
-                        print(f"------\n[FeatureSelector] Selected Qualitative Features: {str(features)}\n---")
+                        print(
+                            f"------\n[FeatureSelector] Selected Qualitative Features: {str(features)}\n---"
+                        )
 
         return all_best_features
 

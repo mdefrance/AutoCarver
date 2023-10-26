@@ -154,7 +154,6 @@ class FeatureSelector:
                     UserWarning,
                 )
 
-
         # keyword arguments
         self.kwargs = kwargs
 
@@ -234,7 +233,9 @@ class FeatureSelector:
         ]
 
         if self.verbose:  # displaying association measure
-            print("\n - [FeatureSelector] Association between X and y, filtered for inter-feature assocation")
+            print(
+                "\n - [FeatureSelector] Association between X and y, filtered for inter-feature assocation"
+            )
             print_associations(initial_associations.reindex(best_features), self.pretty_print)
             print("------\n")
 

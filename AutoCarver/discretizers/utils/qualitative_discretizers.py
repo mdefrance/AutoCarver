@@ -243,9 +243,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
         no_order_provided = [
             feature for feature in self.features if feature not in self.values_orders
         ]
-        assert (
-            len(no_order_provided) == 0
-        ), (
+        assert len(no_order_provided) == 0, (
             " - [OrdinalDiscretizer] No ordering was provided for following features:"
             f" {str(no_order_provided)}. Please make sure you defined ``values_orders`` correctly."
         )

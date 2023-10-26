@@ -6,6 +6,7 @@ from warnings import warn
 
 from pandas import DataFrame, Series
 
+from .base_selector import BaseSelector
 from .filters import spearman_filter, thresh_filter, tschuprowt_filter
 from .measures import (
     dtype_measure,
@@ -15,7 +16,6 @@ from .measures import (
     nans_measure,
     tschuprowt_measure,
 )
-from .base_selector import BaseSelector
 
 # trying to import extra dependencies
 try:
@@ -122,7 +122,6 @@ class QualitativeSelector(BaseSelector):
             **kwargs,
         )
 
-
     def _select_features(
         self, X: DataFrame, y: Series, features: list[str], n_best: int
     ) -> list[str]:
@@ -199,7 +198,9 @@ class QualitativeSelector(BaseSelector):
         ]
 
         if self.verbose:  # displaying association measure
-            print("\n - [FeatureSelector] Association between X and y, filtered for inter-feature assocation")
+            print(
+                "\n - [FeatureSelector] Association between X and y, filtered for inter-feature assocation"
+            )
             print_associations(initial_associations.reindex(best_features), self.pretty_print)
             print("------\n")
 
