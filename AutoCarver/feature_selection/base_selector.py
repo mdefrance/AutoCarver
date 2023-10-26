@@ -36,25 +36,48 @@ class BaseSelector:
     def __init__(
         self,
         n_best: int,
-        features: list[str],
+        quantitative_features: list[str] = None,
+        qualitative_features: list[str] = None,
         *,
-        input_dtypes: Union(str, dict[str, str]) = "float",  # TODO
         measures: Union(list[Callable], dict[str, list[Callable]]) = None,
         filters: Union(list[Callable], dict[str, list[Callable]]) = None,
         colsample: float = 1.0,
         verbose: bool = False,
         **kwargs,
     ) -> None:
+        # measures : list[Callable], optional
+        #     List of association measures to be used, by default ``None``.
+        #     Ranks features based on last provided measure of the list.
+        #     See :ref:`Measures`.
+        #     Implemented measures are:
+
+        #     * [Quantitative Features] For association evaluation: ``kruskal_measure`` (default), ``R_measure``
+        #     * [Quantitative Features] For outlier detection: ``zscore_measure``, ``iqr_measure``
+        #     * [Qualitative Features] For association evaluation: ``chi2_measure``, ``cramerv_measure``, ``tschuprowt_measure`` (default)
+
+        # filters : list[Callable], optional
+        #     List of filters to be used, by default ``None``.
+        #     See :ref:`Filters`.
+        #     Implemented filters are:
+
+        #     * [Quantitative Features] For linear correlation: ``spearman_filter`` (default), ``pearson_filter``
+        #     * [Qualitative Features] For correlation: ``cramerv_filter``, ``tschuprowt_filter`` (default)
+        
         """
         Parameters
         ----------
         n_best : int
             Number of features to select.
 
-        features : list[str], optional
-            List of column names to chose from, by default ``None``
+        quantitative_features : list[str]
+            List of column names of quantitative features to chose from, by default ``None``
+            Must be set if ``qualitative_features=None``.
 
-        measures : list[Callable], optional
+        qualitative_features : list[str]
+            List of column names of qualitative features to chose from, by default ``None``
+            Must be set if ``quantitative_features=None``.
+
+        quantitative_measures : list[Callable], optional
             List of association measures to be used, by default ``None``.
             Ranks features based on last provided measure of the list.
             See :ref:`Measures`.
@@ -64,7 +87,25 @@ class BaseSelector:
             * [Quantitative Features] For outlier detection: ``zscore_measure``, ``iqr_measure``
             * [Qualitative Features] For association evaluation: ``chi2_measure``, ``cramerv_measure``, ``tschuprowt_measure`` (default)
 
-        filters : list[Callable], optional
+        qualitative_measures : list[Callable], optional
+            List of association measures to be used, by default ``None``.
+            Ranks features based on last provided measure of the list.
+            See :ref:`Measures`.
+            Implemented measures are:
+
+            * [Quantitative Features] For association evaluation: ``kruskal_measure`` (default), ``R_measure``
+            * [Quantitative Features] For outlier detection: ``zscore_measure``, ``iqr_measure``
+            * [Qualitative Features] For association evaluation: ``chi2_measure``, ``cramerv_measure``, ``tschuprowt_measure`` (default)
+
+        quantitative_filters : list[Callable], optional
+            List of filters to be used, by default ``None``.
+            See :ref:`Filters`.
+            Implemented filters are:
+
+            * [Quantitative Features] For linear correlation: ``spearman_filter`` (default), ``pearson_filter``
+            * [Qualitative Features] For correlation: ``cramerv_filter``, ``tschuprowt_filter`` (default)
+
+        qualitative_filters : list[Callable], optional
             List of filters to be used, by default ``None``.
             See :ref:`Filters`.
             Implemented filters are:
@@ -94,8 +135,22 @@ class BaseSelector:
         --------
         See `FeatureSelector examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
         """
-        # setting up features
-        self.features = list(set(features))
+        # settinp up list of features
+        if quantitative_features is None:
+            quantitative_features = []
+        self.quantitative_features = list(set(quantitative_features))
+        if qualitative_features is None:
+            qualitative_features = []
+        self.qualitative_features = list(set(qualitative_features))
+        assert (
+            len(quantitative_features) > 0 or len(qualitative_features) > 0
+        ), (
+            "No feature passed as input. Pleased provided column names to Carver by setting "
+            "qualitative_features or quantitative_features."
+        )
+        self.features = list(set(self.qualitative_features + self.quantitative_features))
+        self.input_dtypes = {"float": self.quantitative_features, "str": self.qualitative_features}
+
 
         # number of features selected
         self.n_best = n_best
@@ -106,31 +161,12 @@ class BaseSelector:
         # feature sample size per iteration
         self.colsample = colsample
 
-        # checking for unique input_dtypes (str)
-        if isinstance(input_dtypes, str):
-            input_dtypes = {feature: input_dtypes for feature in features}
-        self.input_dtypes = input_dtypes
-
-        # initiating measures
-        if isinstance(measures, list):
-            assert isinstance(input_dtypes, str), (
-                " - [BaseSelector] Provide a unique input data type corresponding to the provided "
-                "list of measures: input_dtypes='str' or input_dtypes='float'"
-            )
-            measures = {input_dtypes: measures}
         # adding default measures
         self.measures = {
             dtype: [dtype_measure, nans_measure, mode_measure] + requested_measures[:]
             for dtype, requested_measures in measures.items()
         }
 
-        # initiating filters
-        if isinstance(filters, list):
-            assert isinstance(input_dtypes, str), (
-                " - [BaseSelector] Provide a unique input data type corresponding to the provided "
-                "list of measures: input_dtypes='str' or input_dtypes='float'"
-            )
-            filters = {input_dtypes: filters[:]}
         # adding default filter
         self.filters = {
             dtype: [thresh_filter] + requested_filters[:]

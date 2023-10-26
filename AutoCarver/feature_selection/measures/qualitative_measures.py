@@ -2,23 +2,24 @@
 """
 
 from math import sqrt
-from typing import Any
+from typing import Any, Callable
 
 from pandas import Series, crosstab, notna
 from scipy.stats import chi2_contingency
 
+# X continue y continue distance correlation
+# X binaire y continue kruskal y, x
+# X multiclass y continue kruskal y, x
 
 # X continue y binaire kruskal x, y
-# X continue y multiclass kruskal x, y
-# X continue y continue 
-
 # X binaire y binaire cramerv/tschurpowt x, y
-# X binaire y multiclass cramerv/tschurpowt x, y
-# X binaire y continue kruskal y, x
-
 # X multiclass y binaire cramerv/tschurpowt x, y
+
+
+# X continue y multiclass kruskal x, y
+# X binaire y multiclass cramerv/tschurpowt x, y
 # X multiclass y multiclass cramerv/tschurpowt x, y
-# X multiclass y continue kruskal y, x
+
 
 def chi2_measure(
     x: Series,
