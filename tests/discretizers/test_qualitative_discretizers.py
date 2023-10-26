@@ -4,8 +4,8 @@ from pandas import DataFrame
 from pytest import raises
 
 from AutoCarver.discretizers import (
-    ChainedDiscretizer,
     CategoricalDiscretizer,
+    ChainedDiscretizer,
     GroupedList,
     OrdinalDiscretizer,
 )
