@@ -7,11 +7,11 @@ from typing import Any
 from numpy import array, inf, linspace, nan, quantile
 from pandas import DataFrame, Series, isna, notna
 
-from .base_discretizers import BaseDiscretizer, applied_to_dict_list
+from .base_discretizers import BaseDiscretizer, applied_to_dict_list, extend_docstring
 from .grouped_list import GroupedList
 
 
-class QuantileDiscretizer(BaseDiscretizer):
+class ContinuousDiscretizer(BaseDiscretizer):
     """Automatic discretizing of continuous and discrete features, building simple groups of quantiles of values.
 
     Quantile discretization creates a lot of modalities (for example: 100 modalities for ``min_freq=0.01``).
@@ -25,6 +25,7 @@ class QuantileDiscretizer(BaseDiscretizer):
     * Nans are considered as a modality (and are taken into account in ``freq_of_frequent_modalities``).
     """
 
+    @extend_docstring(BaseDiscretizer.__init__)
     def __init__(
         self,
         quantitative_features: list[str],
@@ -35,8 +36,7 @@ class QuantileDiscretizer(BaseDiscretizer):
         verbose: bool = False,
         str_nan: str = "__NAN__",
     ) -> None:
-        """Initiates a QuantileDiscretizer.
-
+        """
         Parameters
         ----------
         quantitative_features : list[str]
@@ -45,24 +45,11 @@ class QuantileDiscretizer(BaseDiscretizer):
         min_freq : float
             Minimum frequency per grouped modalities.
 
-            * Features whose most frequent modality is less frequent than `min_freq` will not be discretized.
+            * Features whose most frequent modality is less frequent than ``min_freq`` will not be discretized.
             * Sets the number of quantiles in which to discretize the continuous features.
             * Sets the minimum frequency of a quantitative feature's modality.
 
-            **Tip**: should be set between 0.02 (slower, preciser, less robust) and 0.05 (faster, more robust)
-
-        values_orders : dict[str, GroupedList], optional
-            Dict of feature's column names and there associated ordering.
-            If lists are passed, a GroupedList will automatically be initiated, by default ``None``
-
-        copy : bool, optional
-            If ``True``, feature processing at transform is applied to a copy of the provided DataFrame, by default ``False``
-
-        verbose : bool, optional
-            If ``True``, prints raw Discretizers Fit and Transform steps, by default ``False``
-
-        str_nan : str, optional
-            String representation to input ``numpy.nan``. If ``dropna=False``, ``numpy.nan`` will be left unchanged, by default ``"__NAN__"``
+            **Tip**: should be set between ``0.02`` (slower, preciser, less robust) and ``0.05`` (faster, more robust)
         """
         # Initiating BaseDiscretizer
         super().__init__(
@@ -78,19 +65,10 @@ class QuantileDiscretizer(BaseDiscretizer):
         self.min_freq = min_freq
         self.q = round(1 / min_freq)  # number of quantiles
 
+    @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series = None) -> None:
-        """Finds simple buckets of modalities of X.
-
-        Parameters
-        ----------
-        X : DataFrame
-            Dataset used to discretize. Needs to have columns has specified in ``QuantileDiscretizer.features``.
-
-        y : Series
-            Binary target feature, not used, by default None
-        """
         if self.verbose:  # verbose if requested
-            print(f" - [QuantileDiscretizer] Fit {str(self.quantitative_features)}")
+            print(f" - [ContinuousDiscretizer] Fit {str(self.quantitative_features)}")
 
         # computing quantiles for the feature
         quantiles = applied_to_dict_list(

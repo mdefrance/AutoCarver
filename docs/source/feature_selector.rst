@@ -52,6 +52,9 @@ Association measures, X by y
 Quantitative measures
 .....................
 
+
+.. _Kruskal:
+
 Kruskal-Wallis' :math:`H` test statistic
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -61,7 +64,7 @@ For a quantitative feature :math:`x`, the corresponding order feature :math:`x_o
 
 The association with a binary target :math:`y` is computed using `scipy.stats.kruskal <https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.kruskal.html>`_.
 
-Kruskal-Wallis' :math:`H` test statistic, as known as one-way ANOVA on ranks, allows one to check that two features originate from the same disctribution.
+Kruskal-Wallis' :math:`H` test statistic, as known as one-way ANOVA on ranks, allows one to check that two samples originate from the same distribution.
 It is used to determine whether or not :math:`x` is distributed the same when :math:`y=1` compared to when :math:`y=0`.
 It is computed using the following formula:
 
@@ -187,6 +190,9 @@ Any observation :math:`x_i` of feature :math:`x`, can be considered an outlier i
 Qualitative measures
 ....................
 
+
+.. _chi2:
+
 Pearson's :math:`\chi^2` test statistic
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -211,6 +217,7 @@ where:
 .. autofunction:: AutoCarver.feature_selection.measures.chi2_measure
 
 
+.. _Cramerv:
 
 Cramér's :math:`V`
 ^^^^^^^^^^^^^^^^^^
@@ -233,6 +240,7 @@ where:
     ``cramerv_measure`` is the default measure for qualitative features (i.e. when ``FeatureSelector.measures=[]`` and ``FeatureSelector.qualititative_features`` is provided).
 
 
+.. _Tschuprowt:
 
 Tschuprow's :math:`T`
 ^^^^^^^^^^^^^^^^^^^^^

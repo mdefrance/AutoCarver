@@ -26,6 +26,10 @@ Key Features:
 
 **AutoCarver** is a valuable tool for data scientists and practitioners involved in binary classification or regression problems, such as credit scoring, fraud detection, and risk assessment. By leveraging its automated feature processing capabilities, you can unlock the full potential of your data, leading to more accurate predictions, improved model explainability, and better decision-making in your classification tasks.
 
+
+
+
+
 Under the hood feature overview
 -------------------------------
 
@@ -39,7 +43,7 @@ I. Data Preparation: conversion to ordinal data buckets
 +------------------------------------+-------------------------------------------------------------------------+
 | Discretizer                        | Data Processing                                                         |
 +====================================+=========================================================================+
-| :ref:`QuantileDiscretizer`:        | Over-represented values are set as there own modality                   |
+| :ref:`ContinuousDiscretizer`:      | Over-represented values are set as there own modality                   |
 |                                    |                                                                         |
 | Continuous Data                    | Automatic quantile bucketization of under-represented values            |
 |                                    |                                                                         |
@@ -51,7 +55,7 @@ I. Data Preparation: conversion to ordinal data buckets
 | Ordinal Data                       | Modalities are ordered according to provided modality ranking           |
 |                                    |                                                                         |
 +------------------------------------+-------------------------------------------------------------------------+
-| :ref:`DefaultDiscretizer`:         | Under-represented modalities are grouped into a default value           |
+| :ref:`CategoricalDiscretizer`:     | Under-represented modalities are grouped into a default value           |
 |                                    |                                                                         |
 | Categorical Data                   | Modalities are ordered by target rate                                   |
 |                                    |                                                                         |
@@ -60,14 +64,16 @@ I. Data Preparation: conversion to ordinal data buckets
 .. note::
 
    * Representativity threshold of modalities is user selected (``min_freq`` attribute).
-   * At this step, if any, NaNs are set as there own modality (no given order).
+   * At this step, if any, ``numpy.nan`` are set as there own modality (no given order).
    * Helps improve modality relevancy and reduces the set of possible combinations to test from.
-   * These steps are all included in the ``AutoCarver`` pipeline.
+   * Included in all carving pipelines: :class:`BinaryCarver`, :class:`MulticlassCarver`, :class:`ContinuousCarver`.
+
+
 
 II. Data Optimization: maximization of bucket association
 .........................................................
 
-The core of **AutoCarver** is :ref:`AutoCarver`. It consists of the following Data Optimization steps: 
+The core of **AutoCarver** resides in the following Data Optimization steps: 
 
    1. Identifying the most associated combination from all ordered combinations of modalities.
    2. Testing all combinations of NaNs grouped to one of those modalities.
@@ -76,6 +82,8 @@ The core of **AutoCarver** is :ref:`AutoCarver`. It consists of the following Da
 
    * The user chooses the maximum number of modality per feature (``max_n_mod`` attribute).
    * The user chooses whether or not to group NaNs to other values (``dropna`` attribute).
+
+
 
 III. (Optional) Data Selection: model feature pre-selection
 ...........................................................
@@ -92,15 +100,15 @@ III. (Optional) Data Selection: model feature pre-selection
    * See :ref:`Measures` and :ref:`Filters`.
 
 
-Performances
-------------
+.. Performances
+.. ------------
 
-Execution time has been measured for several values of key paramaters of **AutoCarver**
-
-
-.. csv-table::
-   :header: min_freq, max_n_mod, X.shape[0], len(features), Execution Time
+.. Execution time has been measured for several values of key paramaters of **AutoCarver**
 
 
-   0.01, 5, 100000000, 15, 0.001
-   0.02, 4, 100000000, 15, 0.001
+.. .. csv-table::
+..    :header: min_freq, max_n_mod, X.shape[0], len(features), Execution Time
+
+
+..    0.01, 5, 100000000, 15, 0.001
+..    0.02, 4, 100000000, 15, 0.001

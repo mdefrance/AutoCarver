@@ -3,11 +3,11 @@
 from numpy import inf
 from pandas import DataFrame
 
-from AutoCarver.discretizers import QuantileDiscretizer
+from AutoCarver.discretizers import ContinuousDiscretizer
 
 
 def test_quantile_discretizer(x_train: DataFrame):
-    """Tests QuantileDiscretizer
+    """Tests ContinuousDiscretizer
 
     Parameters
     ----------
@@ -24,7 +24,7 @@ def test_quantile_discretizer(x_train: DataFrame):
     ]
     min_freq = 0.1
 
-    discretizer = QuantileDiscretizer(features, min_freq, copy=True)
+    discretizer = ContinuousDiscretizer(features, min_freq, copy=True)
     x_discretized = discretizer.fit_transform(x_train)
 
     assert all(

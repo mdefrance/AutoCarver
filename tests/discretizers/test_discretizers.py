@@ -6,7 +6,7 @@ from pandas import DataFrame
 from AutoCarver.discretizers import Discretizer, QualitativeDiscretizer, QuantitativeDiscretizer
 
 
-def test_quantitative_discretizer(x_train: DataFrame):
+def test_quantitative_discretizer(x_train: DataFrame, target: str):
     """Tests QuantitativeDiscretizer
 
     Parameters
@@ -25,7 +25,7 @@ def test_quantitative_discretizer(x_train: DataFrame):
     min_freq = 0.1
 
     discretizer = QuantitativeDiscretizer(quantitative_features=features, min_freq=min_freq)
-    x_discretized = discretizer.fit_transform(x_train, x_train["quali_ordinal_target"])
+    x_discretized = discretizer.fit_transform(x_train, x_train[target])
 
     assert (
         "__NAN__" in discretizer.values_orders["Discrete_Quantitative_lownan"]
@@ -48,7 +48,7 @@ def test_quantitative_discretizer(x_train: DataFrame):
     ], "Rare values should be grouped to the closest one (OrdinalDiscretizer)"
 
 
-def test_qualitative_discretizer(x_train: DataFrame):
+def test_qualitative_discretizer(x_train: DataFrame, target: str):
     """Tests QualitativeDiscretizer
 
     Parameters
@@ -94,7 +94,7 @@ def test_qualitative_discretizer(x_train: DataFrame):
         copy=True,
         verbose=True,
     )
-    x_discretized = discretizer.fit_transform(x_train, x_train["quali_ordinal_target"])
+    x_discretized = discretizer.fit_transform(x_train, x_train[target])
 
     quali_expected = {
         "__OTHER__": ["Category A", "Category D", "Category F", "__OTHER__"],
@@ -137,7 +137,7 @@ def test_qualitative_discretizer(x_train: DataFrame):
     ), "NaNs should stay by themselves."
 
 
-def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame):
+def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
     """Tests Discretizer
 
     Parameters
@@ -207,7 +207,7 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame):
         min_freq=min_freq,
         copy=True,
     )
-    x_discretized = discretizer.fit_transform(x_train, x_train["quali_ordinal_target"])
+    x_discretized = discretizer.fit_transform(x_train, x_train[target])
     x_dev_discretized = discretizer.transform(x_dev_1)
 
     assert all(

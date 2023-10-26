@@ -3,7 +3,7 @@
 
 from pandas import DataFrame, Series
 
-from .base_discretizers import BaseDiscretizer, nan_unique
+from .base_discretizers import BaseDiscretizer, extend_docstring, nan_unique
 from .grouped_list import GroupedList
 
 
@@ -15,6 +15,7 @@ class StringDiscretizer(BaseDiscretizer):
     * Converts floats of int to int
     """
 
+    @extend_docstring(BaseDiscretizer.__init__)
     def __init__(
         self,
         qualitative_features: list[str],
@@ -24,25 +25,11 @@ class StringDiscretizer(BaseDiscretizer):
         verbose: bool = False,
         str_nan: str = "__NAN__",
     ) -> None:
-        """Initiates a StringDiscretizer.
-
+        """
         Parameters
         ----------
         qualitative_features : list[str]
             List of column names of qualitative features (non-ordinal) to be discretized
-
-        values_orders : dict[str, GroupedList], optional
-            Dict of feature's column names and there associated ordering.
-            If lists are passed, a GroupedList will automatically be initiated, by default None
-
-        copy : bool, optional
-            If `copy=True`, feature processing at transform is applied to a copy of the provided DataFrame, by default False
-
-        verbose : bool, optional
-            If `verbose=True`, prints raw Discretizers Fit and Transform steps, by default False
-
-        str_nan : str, optional
-            String representation to input `numpy.nan`. If `dropna=False`, `numpy.nan` will be left unchanged, by default "__NAN__"
         """
         # Initiating BaseDiscretizer
         super().__init__(
@@ -55,17 +42,8 @@ class StringDiscretizer(BaseDiscretizer):
             verbose=verbose,
         )
 
+    @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series = None) -> None:
-        """Finds simple buckets of modalities of X.
-
-        Parameters
-        ----------
-        X : DataFrame
-            Dataset used to discretize. Needs to have columns has specified in `features`.
-
-        y : Series
-            Binary target feature, not used, by default None.
-        """
         if self.verbose:  # verbose if requested
             print(f" - [StringDiscretizer] Fit {str(self.features)}")
 

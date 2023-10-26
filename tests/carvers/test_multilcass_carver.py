@@ -1,4 +1,4 @@
-"""Set of tests for auto_carver module.
+"""Set of tests for multiclass_carver module.
 """
 
 from json import dumps, loads
@@ -6,18 +6,8 @@ from json import dumps, loads
 from pandas import DataFrame
 from pytest import fixture, raises
 
-from AutoCarver import AutoCarver, load_carver
+from AutoCarver import MulticlassCarver, load_carver
 from AutoCarver.discretizers import ChainedDiscretizer
-
-
-@fixture(scope="module", params=["float", "str"])
-def output_dtype(request) -> str:
-    return request.param
-
-
-@fixture(scope="module", params=[True, False])
-def dropna(request) -> bool:
-    return request.param
 
 
 @fixture(scope="module", params=["tschuprowt", "cramerv"])
@@ -25,12 +15,7 @@ def sort_by(request) -> str:
     return request.param
 
 
-@fixture(scope="module", params=[True, False])
-def copy(request) -> bool:
-    return request.param
-
-
-def test_auto_carver(
+def test_multiclass_carver(
     x_train: DataFrame,
     x_train_wrong_1: DataFrame,
     x_train_wrong_2: DataFrame,
@@ -38,12 +23,20 @@ def test_auto_carver(
     x_dev_wrong_1: DataFrame,
     x_dev_wrong_2: DataFrame,
     x_dev_wrong_3: DataFrame,
+    quantitative_features: list[str],
+    qualitative_features: list[str],
+    ordinal_features: list[str],
+    values_orders: dict[str, list[str]],
+    chained_features: list[str],
+    level0_to_level1: dict[str, list[str]],
+    level1_to_level2: dict[str, list[str]],
+    min_freq_mod: float,
     output_dtype: str,
     dropna: bool,
     sort_by: str,
     copy: bool,
 ) -> None:
-    """Tests AutoCarver
+    """Tests MulticlassCarver
 
     Parameters
     ----------
@@ -59,6 +52,24 @@ def test_auto_carver(
         Simulated wrong Dev DataFrame with unexpected modality
     x_dev_wrong_2 : DataFrame
         Simulated wrong Dev DataFrame with unexpected nans
+    x_dev_wrong_3 : DataFrame
+        Simulated wrong Dev DataFrame
+    quantitative_features : list[str]
+        List of quantitative raw features to be carved
+    qualitative_features : list[str]
+        List of qualitative raw features to be carved
+    ordinal_features : list[str]
+        List of ordinal raw features to be carved
+    values_orders : dict[str, list[str]]
+        values_orders of raw features to be carved
+    chained_features : list[str]
+        List of chained raw features to be chained
+    level0_to_level1 : dict[str, list[str]]
+        Chained orders level0 to level1 of features to be chained
+    level1_to_level2 : dict[str, list[str]]
+        Chained orders level1 to level2 of features to be chained
+    min_freq_mod : float
+        Minimum frequency per carved modalities
     output_dtype : str
         Output type 'str' or 'float'
     dropna : bool
@@ -71,69 +82,7 @@ def test_auto_carver(
     # copying x_train for comparison purposes
     raw_x_train = x_train.copy()
 
-    # list of feaures
-    quantitative_features = [
-        "Quantitative",
-        "Discrete_Quantitative_highnan",
-        "Discrete_Quantitative_lownan",
-        "Discrete_Quantitative",
-        "Discrete_Quantitative_rarevalue",
-        "one",
-        "one_nan",
-    ]
-    qualitative_features = [
-        "Qualitative",
-        "Qualitative_grouped",
-        "Qualitative_lownan",
-        "Qualitative_highnan",
-        "Discrete_Qualitative_noorder",
-        "Discrete_Qualitative_lownan_noorder",
-        "Discrete_Qualitative_rarevalue_noorder",
-        "nan",
-        "ones",
-        "ones_nan",
-    ]
-    ordinal_features = [
-        "Qualitative_Ordinal",
-        "Qualitative_Ordinal_lownan",
-        "Discrete_Qualitative_highnan",
-    ]
-    values_orders = {
-        "Qualitative_Ordinal": [
-            "Low-",
-            "Low",
-            "Low+",
-            "Medium-",
-            "Medium",
-            "Medium+",
-            "High-",
-            "High",
-            "High+",
-        ],
-        "Qualitative_Ordinal_lownan": [
-            "Low-",
-            "Low",
-            "Low+",
-            "Medium-",
-            "Medium",
-            "Medium+",
-            "High-",
-            "High",
-            "High+",
-        ],
-        "Discrete_Qualitative_highnan": ["1", "2", "3", "4", "5", "6", "7"],
-    }
-    chained_features = ["Qualitative_Ordinal", "Qualitative_Ordinal_lownan"]
-
-    level0_to_level1 = {
-        "Lows": ["Low-", "Low", "Low+", "Lows"],
-        "Mediums": ["Medium-", "Medium", "Medium+", "Mediums"],
-        "Highs": ["High-", "High", "High+", "Highs"],
-    }
-    level1_to_level2 = {
-        "Worst": ["Lows", "Mediums", "Worst"],
-        "Best": ["Highs", "Best"],
-    }
+    target = "multiclass_target"
 
     min_freq = 0.15
 
@@ -153,7 +102,7 @@ def test_auto_carver(
     max_n_mod = 4
 
     # tests with 'tschuprowt' measure
-    auto_carver = AutoCarver(
+    auto_carver = MulticlassCarver(
         quantitative_features=quantitative_features,
         qualitative_features=qualitative_features,
         ordinal_features=ordinal_features,
@@ -161,6 +110,7 @@ def test_auto_carver(
         min_freq=min_freq,
         max_n_mod=max_n_mod,
         sort_by=sort_by,
+        min_freq_mod=min_freq_mod,
         output_dtype=output_dtype,
         dropna=dropna,
         copy=copy,
@@ -168,36 +118,55 @@ def test_auto_carver(
     )
     x_discretized = auto_carver.fit_transform(
         x_train,
-        x_train["quali_ordinal_target"],
+        x_train[target],
         X_dev=x_dev_1,
-        y_dev=x_dev_1["quali_ordinal_target"],
+        y_dev=x_dev_1[target],
     )
     x_dev_discretized = auto_carver.transform(x_dev_1)
 
+    # testing that attributes where correctly used
     assert all(
         x_discretized[auto_carver.features].nunique() <= max_n_mod
-    ), "Too many values after carving of train sample"
+    ), "Too many buckets after carving of train sample"
     assert all(
         x_dev_discretized[auto_carver.features].nunique() <= max_n_mod
-    ), "Too many values after carving of test sample"
+    ), "Too many buckets after carving of test sample"
+
+    # testing for differences between train and dev
     assert all(
         x_discretized[auto_carver.features].nunique()
         == x_dev_discretized[auto_carver.features].nunique()
-    ), "More values in train or test samples"
+    ), "More buckets in train or test samples"
+    for feature in auto_carver.features:
+        train_target_rate = (
+            x_discretized.groupby(feature)[target]
+            .apply(lambda u: (u == int(feature[-1])).mean())
+            .sort_values()
+        )
+        dev_target_rate = (
+            x_dev_discretized.groupby(feature)[target]
+            .apply(lambda u: (u == int(feature[-1])).mean())
+            .sort_values()
+        )
+        assert all(
+            train_target_rate.index == dev_target_rate.index
+        ), f"Not robust feature {feature} was not dropped, or robustness test not working, \n {train_target_rate} \n {dev_target_rate} \n"
 
     # test that all values still are in the values_orders
     for feature in auto_carver.qualitative_features:
         fitted_values = auto_carver.values_orders[feature].values()
-        init_values = raw_x_train[feature].fillna("__NAN__").unique()
+        raw_feature_name = feature[:-2]
+        init_values = raw_x_train[raw_feature_name].fillna("__NAN__").unique()
         assert all(
             value in fitted_values for value in init_values
         ), f"Missing value in output! Some values are been dropped for qualitative feature: {feature}"
 
     # testing output of nans
     if not dropna:
+        renamed_raw_x_train = raw_x_train[[feature[:-2] for feature in auto_carver.features]]
+        renamed_raw_x_train.columns = auto_carver.features
         assert all(
-            raw_x_train[auto_carver.features].isna().mean()
-            == x_discretized[auto_carver.features].isna().mean()
+            renamed_raw_x_train.isna().mean() == x_discretized[auto_carver.features].isna().mean()
         ), "Some Nans are being dropped (grouped) or more nans than expected"
     else:
         assert all(
@@ -206,9 +175,11 @@ def test_auto_carver(
 
     # testing copy functionnality
     if copy:
+        renamed_x_train = x_train[[feature[:-2] for feature in auto_carver.features]].copy()
+        renamed_x_train.columns = auto_carver.features
         assert all(
             x_discretized[auto_carver.features].fillna("__NAN__")
-            == x_train[auto_carver.features].fillna("__NAN__")
+            == renamed_x_train.fillna("__NAN__")
         ), "Not copied correctly"
 
     # testing json serialization
@@ -278,12 +249,10 @@ def test_auto_carver(
         unknown_handling="drop",
         copy=True,
     )
-    x_discretized = chained_discretizer.fit_transform(
-        x_train_wrong_2, x_train_wrong_2["quali_ordinal_target"]
-    )
+    x_discretized = chained_discretizer.fit_transform(x_train_wrong_2, x_train_wrong_2[target])
     values_orders.update(chained_discretizer.values_orders)
 
-    auto_carver = AutoCarver(
+    auto_carver = MulticlassCarver(
         quantitative_features=quantitative_features,
         qualitative_features=qualitative_features,
         ordinal_features=ordinal_features,
@@ -292,13 +261,12 @@ def test_auto_carver(
         max_n_mod=max_n_mod,
         sort_by=sort_by,
         output_dtype=output_dtype,
+        min_freq_mod=min_freq_mod,
         dropna=dropna,
         copy=copy,
         verbose=False,
     )
-    x_discretized = auto_carver.fit_transform(
-        x_train_wrong_2, x_train_wrong_2["quali_ordinal_target"]
-    )
+    x_discretized = auto_carver.fit_transform(x_train_wrong_2, x_train_wrong_2[target])
 
     if not dropna and sort_by == "cramerv":
         expected = {
@@ -317,25 +285,27 @@ def test_auto_carver(
             "__NAN__": ["unknown", "__NAN__"],
         }
         assert (
-            auto_carver.values_orders["Qualitative_Ordinal_lownan"].content == expected
+            auto_carver.values_orders["Qualitative_Ordinal_lownan_1"].content == expected
         ), "Unknown modalities should be kept in the order"
 
     elif dropna and sort_by == "tschuprowt":
         expected = {
-            "Mediums": [
+            "Mediums": ["unknown", "__NAN__", "Medium+", "Medium", "Medium-", "Mediums"],
+            "High+": [
+                "High",
+                "High-",
+                "Highs",
+                "Best",
+                "ALONE",
+                "BEST",
                 "Low+",
                 "Low",
                 "Low-",
                 "Lows",
                 "Worst",
-                "Medium+",
-                "Medium",
-                "Medium-",
-                "Mediums",
+                "High+",
             ],
-            "High+": ["High", "High-", "Highs", "Best", "ALONE", "BEST", "High+"],
-            "__NAN__": ["unknown", "__NAN__"],
         }
         assert (
-            auto_carver.values_orders["Qualitative_Ordinal_lownan"].content == expected
+            auto_carver.values_orders["Qualitative_Ordinal_lownan_2"].content == expected
         ), "Unknown modalities should be kept in the order"

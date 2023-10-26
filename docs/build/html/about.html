@@ -53,13 +53,12 @@
 <li class="toctree-l3"><a class="reference internal" href="#iii-optional-data-selection-model-feature-pre-selection">III. (Optional) Data Selection: model feature pre-selection</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#performances">Performances</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="discretizers.html">Discretizers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="auto_carver.html">AutoCarver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="carvers.html">Carvers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="feature_selector.html">FeatureSelector</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 </ul>
@@ -98,16 +97,16 @@
 <h2>Why AutoCarver?<a class="headerlink" href="#why-autocarver" title="Permalink to this heading"></a></h2>
 <p><strong>AutoCarver</strong> is a powerful Python package designed to address the fundamental question of <em>What’s the best processing for my model’s features?</em></p>
 <p>It offers an automated and optimized approach to processing and engineering your data, resulting in improved model performance, enhanced explainability, and reduced feature dimensionality.
-As of today, this set of tools is available for binary classification problems only.</p>
+As of today, this set of tools is available for binary classification and regression problems only.</p>
 <p>Key Features:</p>
 <ol class="arabic simple">
-<li><p><strong>Data Processing and Engineering</strong>: <strong>AutoCarver</strong> performs automatic bucketization and carving of a DataFrame’s columns to maximize their correlation with a binary target variable. By leveraging advanced techniques, it optimizes the preprocessing steps for your data, leading to enhanced predictive accuracy.</p></li>
-<li><p><strong>Improved Model Explainability</strong>: <strong>AutoCarver</strong> aids in understanding the relationship between the processed features and the target variable. By uncovering meaningful patterns and interactions, it provides valuable insights into the underlying data dynamics, enhancing the interpretability of your binary classification models.</p></li>
+<li><p><strong>Data Processing and Engineering</strong>: <strong>AutoCarver</strong> performs automatic bucketization and carving of a DataFrame’s columns to maximize their correlation with a target variable. By leveraging advanced techniques, it optimizes the preprocessing steps for your data, leading to enhanced predictive accuracy.</p></li>
+<li><p><strong>Improved Model Explainability</strong>: <strong>AutoCarver</strong> aids in understanding the relationship between the processed features and the target variable. By uncovering meaningful patterns and interactions, it provides valuable insights into the underlying data dynamics, enhancing the interpretability of your models.</p></li>
 <li><p><strong>Reduced Feature Dimensionality</strong>: <strong>AutoCarver</strong> excels at reducing feature dimensionality, especially in scenarios involving one-hot encoding. It identifies and preserves only the most statistically relevant modalities, ensuring that your models focus on the most informative aspects of the data while eliminating noise and redundancy.</p></li>
-<li><p><strong>Statistical Accuracy and Relevance</strong>: <strong>AutoCarver</strong> incorporates statistical techniques to ensure that the selected modalities have a sufficient number of observations, minimizing the risk of drawing conclusions based on insufficient data. This helps maintain the reliability and validity of your binary classification models.</p></li>
+<li><p><strong>Statistical Accuracy and Relevance</strong>: <strong>AutoCarver</strong> incorporates statistical techniques to ensure that the selected modalities have a sufficient number of observations, minimizing the risk of drawing conclusions based on insufficient data. This helps maintain the reliability and validity of your models.</p></li>
 <li><p><strong>Robustness Testing</strong>: <strong>AutoCarver</strong> goes beyond feature processing by assessing the robustness of the selected modalities. It performs tests to evaluate the stability and consistency of the chosen features across different datasets or subsets, ensuring their reliability in various scenarios.</p></li>
 </ol>
-<p><strong>AutoCarver</strong> is a valuable tool for data scientists and practitioners involved in binary classification problems, such as credit scoring, fraud detection, and risk assessment. By leveraging its automated feature processing capabilities, you can unlock the full potential of your data, leading to more accurate predictions, improved model explainability, and better decision-making in your classification tasks.</p>
+<p><strong>AutoCarver</strong> is a valuable tool for data scientists and practitioners involved in binary classification or regression problems, such as credit scoring, fraud detection, and risk assessment. By leveraging its automated feature processing capabilities, you can unlock the full potential of your data, leading to more accurate predictions, improved model explainability, and better decision-making in your classification tasks.</p>
 </section>
 <section id="under-the-hood-feature-overview">
 <h2>Under the hood feature overview<a class="headerlink" href="#under-the-hood-feature-overview" title="Permalink to this heading"></a></h2>
@@ -122,7 +121,7 @@ As of today, this set of tools is available for binary classification problems o
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><a class="reference internal" href="discretizers.html#quantilediscretizer"><span class="std std-ref">Quantile Discretizer</span></a>:</p>
+<tr class="row-even"><td><p><a class="reference internal" href="discretizers.html#continuousdiscretizer"><span class="std std-ref">Continuous Discretizer</span></a>:</p>
 <p>Continuous Data</p>
 <p>Discrete Data</p>
 </td>
@@ -138,7 +137,7 @@ As of today, this set of tools is available for binary classification problems o
 <p>Modalities are ordered according to provided modality ranking</p>
 </td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="discretizers.html#defaultdiscretizer"><span class="std std-ref">Default Discretizer</span></a>:</p>
+<tr class="row-even"><td><p><a class="reference internal" href="discretizers.html#categoricaldiscretizer"><span class="std std-ref">Categorical Discretizer</span></a>:</p>
 <p>Categorical Data</p>
 </td>
 <td><p>Under-represented modalities are grouped into a default value</p>
@@ -151,15 +150,15 @@ As of today, this set of tools is available for binary classification problems o
 <p class="admonition-title">Note</p>
 <ul class="simple">
 <li><p>Representativity threshold of modalities is user selected (<code class="docutils literal notranslate"><span class="pre">min_freq</span></code> attribute).</p></li>
-<li><p>At this step, if any, NaNs are set as there own modality (no given order).</p></li>
+<li><p>At this step, if any, <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code> are set as there own modality (no given order).</p></li>
 <li><p>Helps improve modality relevancy and reduces the set of possible combinations to test from.</p></li>
-<li><p>These steps are all included in the <code class="docutils literal notranslate"><span class="pre">AutoCarver</span></code> pipeline.</p></li>
+<li><p>Included in all carving pipelines: <code class="xref py py-class docutils literal notranslate"><span class="pre">BinaryCarver</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">MulticlassCarver</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ContinuousCarver</span></code>.</p></li>
 </ul>
 </div>
 </section>
 <section id="ii-data-optimization-maximization-of-bucket-association">
 <h3>II. Data Optimization: maximization of bucket association<a class="headerlink" href="#ii-data-optimization-maximization-of-bucket-association" title="Permalink to this heading"></a></h3>
-<p>The core of <strong>AutoCarver</strong> is <a class="reference internal" href="auto_carver.html#id1"><span class="std std-ref">AutoCarver, the automated, fast-paced data processing pipeline</span></a>. It consists of the following Data Optimization steps:</p>
+<p>The core of <strong>AutoCarver</strong> resides in the following Data Optimization steps:</p>
 <blockquote>
 <div><ol class="arabic simple">
 <li><p>Identifying the most associated combination from all ordered combinations of modalities.</p></li>
@@ -179,7 +178,7 @@ As of today, this set of tools is available for binary classification problems o
 <p><strong>AutoCarver</strong> implements <a class="reference internal" href="feature_selector.html#id1"><span class="std std-ref">FeatureSelector, an association centric tool for feature pre-selection</span></a>. It consists of the following Data Selection steps:</p>
 <blockquote>
 <div><ol class="arabic simple">
-<li><p>Measuring association with a binary target and ranking features accordingly.</p></li>
+<li><p>Measuring association with a binary or continuous target and ranking features accordingly.</p></li>
 <li><p>Filtering out features too asociated to a better ranked feature.</p></li>
 </ol>
 </div></blockquote>
@@ -192,34 +191,6 @@ As of today, this set of tools is available for binary classification problems o
 </ul>
 </div>
 </section>
-</section>
-<section id="performances">
-<h2>Performances<a class="headerlink" href="#performances" title="Permalink to this heading"></a></h2>
-<p>Execution time has been measured for several values of key paramaters of <strong>AutoCarver</strong></p>
-<table class="docutils align-default">
-<thead>
-<tr class="row-odd"><th class="head"><p>min_freq</p></th>
-<th class="head"><p>max_n_mod</p></th>
-<th class="head"><p>X.shape[0]</p></th>
-<th class="head"><p>len(features)</p></th>
-<th class="head"><p>Execution Time</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>0.01</p></td>
-<td><p>5</p></td>
-<td><p>100000000</p></td>
-<td><p>15</p></td>
-<td><p>0.001</p></td>
-</tr>
-<tr class="row-odd"><td><p>0.02</p></td>
-<td><p>4</p></td>
-<td><p>100000000</p></td>
-<td><p>15</p></td>
-<td><p>0.001</p></td>
-</tr>
-</tbody>
-</table>
 </section>
 </section>
 

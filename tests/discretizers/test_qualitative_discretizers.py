@@ -4,15 +4,15 @@ from pandas import DataFrame
 from pytest import raises
 
 from AutoCarver.discretizers import (
+    CategoricalDiscretizer,
     ChainedDiscretizer,
-    DefaultDiscretizer,
     GroupedList,
     OrdinalDiscretizer,
 )
 
 
 def test_chained_discretizer(x_train: DataFrame) -> None:
-    """Tests DefaultDiscretizer
+    """Tests CategoricalDiscretizer
 
     Parameters
     ----------
@@ -400,8 +400,8 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
         x_discretized = discretizer.fit_transform(x_train)
 
 
-def test_default_discretizer(x_train: DataFrame) -> None:
-    """Tests DefaultDiscretizer
+def test_default_discretizer(x_train: DataFrame, target: str) -> None:
+    """Tests CategoricalDiscretizer
 
     Parameters
     ----------
@@ -439,10 +439,10 @@ def test_default_discretizer(x_train: DataFrame) -> None:
     min_freq = 0.02
     # unwanted value in values_orders
     with raises(AssertionError):
-        discretizer = DefaultDiscretizer(
+        discretizer = CategoricalDiscretizer(
             qualitative_features=features, min_freq=min_freq, values_orders=values_orders, copy=True
         )
-        x_discretized = discretizer.fit_transform(x_train, x_train["quali_ordinal_target"])
+        x_discretized = discretizer.fit_transform(x_train, x_train[target])
 
     # correct feature ordering
     groupedlist_grouped.group("Category B", "Category D")
@@ -453,14 +453,23 @@ def test_default_discretizer(x_train: DataFrame) -> None:
         "Qualitative_Ordinal": groupedlist_ordinal,
     }
 
-    discretizer = DefaultDiscretizer(
+    discretizer = CategoricalDiscretizer(
         qualitative_features=features, min_freq=min_freq, values_orders=values_orders, copy=True
     )
-    x_discretized = discretizer.fit_transform(x_train, x_train["quali_ordinal_target"])
+    x_discretized = discretizer.fit_transform(x_train, x_train[target])
 
     assert (
         discretizer.values_orders["Qualitative_Ordinal"].content == groupedlist_ordinal.content
     ), "Column names of values_orders not provided if features should not be discretized."
+
+    quali_expected_order = {
+        "binary_target": ["Category D", "__OTHER__", "Category F", "Category C", "Category E"],
+        "continuous_target": ["__OTHER__", "Category C", "Category E", "Category F", "Category D"],
+    }
+    assert (
+        discretizer.values_orders["Qualitative"] == quali_expected_order[target]
+    ), "Incorrect ordering by target rate"
+
     quali_expected = {
         "__OTHER__": ["Category A", "__OTHER__"],
         "Category C": ["Category C"],
@@ -468,13 +477,24 @@ def test_default_discretizer(x_train: DataFrame) -> None:
         "Category E": ["Category E"],
         "Category D": ["Category D"],
     }
-    quali_expected_order = ["Category D", "__OTHER__", "Category F", "Category C", "Category E"]
-    assert (
-        discretizer.values_orders["Qualitative"] == quali_expected_order
-    ), "Incorrect ordering by target rate"
     assert (
         discretizer.values_orders["Qualitative"].content == quali_expected
     ), "Values less frequent than min_freq should be grouped into default_value"
+
+    quali_lownan_expected_order = {
+        "binary_target": [
+            "Category D",
+            "Category F",
+            "Category C",
+            "Category E",
+            "__NAN__",
+        ],
+        "continuous_target": ["Category C", "Category E", "Category F", "Category D", "__NAN__"],
+    }
+    assert (
+        discretizer.values_orders["Qualitative_lownan"] == quali_lownan_expected_order[target]
+    ), "Incorrect ordering by target rate"
+
     quali_lownan_expected = {
         "__NAN__": ["__NAN__"],
         "Category C": ["Category C"],
@@ -482,19 +502,24 @@ def test_default_discretizer(x_train: DataFrame) -> None:
         "Category E": ["Category E"],
         "Category D": ["Category D"],
     }
-    quali_lownan_expected_order = [
-        "Category D",
-        "Category F",
-        "Category C",
-        "Category E",
-        "__NAN__",
-    ]
-    assert (
-        discretizer.values_orders["Qualitative_lownan"] == quali_lownan_expected_order
-    ), "Incorrect ordering by target rate"
     assert (
         discretizer.values_orders["Qualitative_lownan"].content == quali_lownan_expected
     ), "If any, NaN values should be put into str_nan and kept by themselves"
+
+    quali_highnan_expected_order = {
+        "binary_target": [
+            "Category D",
+            "__OTHER__",
+            "Category C",
+            "Category E",
+            "__NAN__",
+        ],
+        "continuous_target": ["__OTHER__", "Category C", "Category E", "Category D", "__NAN__"],
+    }
+    assert (
+        discretizer.values_orders["Qualitative_highnan"] == quali_highnan_expected_order[target]
+    ), "Incorrect ordering by target rate"
+
     quali_highnan_expected = {
         "__OTHER__": ["Category A", "__OTHER__"],
         "Category C": ["Category C"],
@@ -502,16 +527,6 @@ def test_default_discretizer(x_train: DataFrame) -> None:
         "Category E": ["Category E"],
         "Category D": ["Category D"],
     }
-    quali_highnan_expected_order = [
-        "Category D",
-        "__OTHER__",
-        "Category C",
-        "Category E",
-        "__NAN__",
-    ]
-    assert (
-        discretizer.values_orders["Qualitative_highnan"] == quali_highnan_expected_order
-    ), "Incorrect ordering by target rate"
     assert (
         discretizer.values_orders["Qualitative_highnan"].content == quali_highnan_expected
     ), "If any, NaN values should be put into str_nan and kept by themselves"
@@ -521,7 +536,7 @@ def test_default_discretizer(x_train: DataFrame) -> None:
     ), "Grouped values should keep there group"
 
 
-def test_ordinal_discretizer(x_train: DataFrame) -> None:
+def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:
     """Tests OrdinalDiscretizer
 
     # TODO: add tests for quantitative features
@@ -553,7 +568,7 @@ def test_ordinal_discretizer(x_train: DataFrame) -> None:
     discretizer = OrdinalDiscretizer(
         ordinal_features=features, min_freq=min_freq, values_orders=values_orders, copy=True
     )
-    discretizer.fit_transform(x_train, x_train["quali_ordinal_target"])
+    discretizer.fit_transform(x_train, x_train[target])
 
     expected_ordinal_01 = {
         "Low-": ["Low", "Low-"],
@@ -588,7 +603,7 @@ def test_ordinal_discretizer(x_train: DataFrame) -> None:
     discretizer = OrdinalDiscretizer(
         ordinal_features=features, min_freq=min_freq, values_orders=values_orders, copy=True
     )
-    discretizer.fit_transform(x_train, x_train["quali_ordinal_target"])
+    discretizer.fit_transform(x_train, x_train[target])
 
     expected_ordinal_08 = {
         "Low+": ["Low-", "Low", "Low+"],

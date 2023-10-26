@@ -19,56 +19,60 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         self,
         features: list[str],
         *,
-        values_orders: dict[str, GroupedList] = None,
+        values_orders: dict[str, GroupedList] = None,  #
         input_dtypes: Union[str, dict[str, str]] = "str",
         output_dtype: str = "str",
         dropna: bool = True,
-        copy: bool = True,
-        verbose: bool = True,
-        str_nan: str = None,
+        copy: bool = True,  #
+        verbose: bool = True,  #
+        str_nan: str = None,  #
         str_default: str = None,
+        features_casting: dict[str, list[str]] = None,
     ) -> None:
-        """Initiates a ``BaseDiscretizer``.
+        # features : list[str]
+        #     List of column names of features (continuous, discrete, categorical or ordinal) to be dicretized
 
-        Parameters
-        ----------
-        features : list[str]
-            List of column names of features (continuous, discrete, categorical or ordinal) to be dicretized
+        # input_dtypes : Union[str, dict[str, str]], optional
+        #     Input data type, converted to a dict of the provided type for each feature, by default ``"str"``
 
+        #     * If ``"str"``, features are considered as qualitative.
+        #     * If ``"float"``, features are considered as quantitative.
+
+        # output_dtype : str, optional
+        #     To be choosen amongst ``["float", "str"]``, by default ``"str"``
+
+        #     * If ``"float"``, grouped modalities will be converted to there corresponding floating rank.
+        #     * If ``"str"``, a per-group modality will be set for all the modalities of a group.
+
+        # dropna : bool, optional
+        #     * If ``True``, ``numpy.nan`` will be attributed there label.
+        #     * If ``False``, ``numpy.nan`` will be restored after discretization, by default ``True``
+
+        # str_default : str, optional
+        #     String representation for default qualitative values, i.e. values less frequent than ``min_freq``, by default ``"__OTHER__"``
+
+        # features_casting : dict[str, list[str]], optional
+        #     By default ``None``, target is considered as continuous or binary.
+        #     Multiclass target: Dict of raw DataFrame columns associated to the names of copies that will be created.
+        """
         values_orders : dict[str, GroupedList], optional
-            Dict of feature's column names and there associated ordering.
-            If lists are passed, a GroupedList will automatically be initiated, by default ``None``
-
-        input_dtypes : Union[str, dict[str, str]], optional
-            Input data type, converted to a dict of the provided type for each feature, by default ``"str"``
-
-            * If ``"str"``, features are considered as qualitative.
-            * If ``"float"``, features are considered as quantitative.
-
-        output_dtype : str, optional
-            To be choosen amongst ``["float", "str"]``, by default ``"str"``
-
-            * If ``"float"``, grouped modalities will be converted to there corresponding floating rank.
-            * If ``"str"``, a per-group modality will be set for all the modalities of a group.
-
-        dropna : bool, optional
-            * If ``True``, ``numpy.nan`` will be attributed there label.
-            * If ``False``, ``numpy.nan`` will be restored after discretization, by default ``True``
+            Dict of column names and there associated ordering.
+            If lists are passed, a :class:`GroupedList` will automatically be initiated, by default ``None``
 
         copy : bool, optional
-            If ``True``, feature processing at transform is applied to a copy of the provided DataFrame, by default ``False``
+            If ``True``, applies transform to a copy of the provided DataFrame, by default ``False``
 
         verbose : bool, optional
-            If ``True``, prints raw Discretizers Fit and Transform steps, as long as
-            information on AutoCarver's processing and tables of target rates and frequencies for
-            X, by default ``False``
+            If ``True``, prints raw Discretizers Fit and Transform steps, by default ``False``
 
         str_nan : str, optional
             String representation to input ``numpy.nan``. If ``dropna=False``, ``numpy.nan`` will be left unchanged, by default ``"__NAN__"``
 
-        str_default : str, optional
-            String representation for default qualitative values, i.e. values less frequent than ``min_freq``, by default ``"__OTHER__"``
+        Examples
+        --------
+        See `AutoCarver examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
         """
+        # features and values
         self.features = list(set(features))
         if values_orders is None:
             values_orders: dict[str, GroupedList] = {}
@@ -112,6 +116,13 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
 
         # check if the discretizer has already been fitted
         self.is_fitted = False
+
+        # target classes multiclass vs binary vs continuous
+        if features_casting is None:
+            features_casting: list[Any] = {feature: [feature] for feature in self.features}
+        self.features_casting = {
+            feature: casting[:] for feature, casting in features_casting.items()
+        }
 
     def _get_labels_per_values(self, output_dtype: str) -> dict[str, dict[Any, Any]]:
         """Creates a dict that contains, for each feature, for each value, the associated label
@@ -181,6 +192,56 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             if feature in self.labels_per_values:
                 self.labels_per_values.pop(feature)
 
+            # getting corresponding raw_feature
+            raw_feature = next(
+                raw_feature
+                for raw_feature, casting in self.features_casting.items()
+                if feature in casting
+            )
+            casting = self.features_casting.get(raw_feature)
+            # removing feature from casting
+            casting.remove(feature)
+            self.features_casting.update({raw_feature: casting})
+            # removing raw feature if there are no more casting for it
+            if len(self.features_casting.get(raw_feature)) == 0:
+                self.features_casting.pop(raw_feature)
+
+    def _cast_features(self, X: DataFrame) -> DataFrame:
+        """Casts the features of a DataFrame using features_casting to duplicate columns
+
+        Parameters
+        ----------
+        X : DataFrame
+            Dataset used to discretize. Needs to have columns has specified in ``BaseDiscretizer.features``, by default None.
+
+        Returns
+        -------
+        DataFrame
+            A formatted X
+        """
+        # for binary/continuous targets
+        if all(len(feature_casting) == 1 for feature_casting in self.features_casting.values()):
+            X.rename(
+                columns={
+                    feature: feature_casting[0]
+                    for feature, feature_casting in self.features_casting.items()
+                },
+                inplace=True,
+            )
+
+        # for multiclass targets
+        else:
+            # duplicating features
+            X = X.assign(
+                **{
+                    casted_feature: X[feature]
+                    for feature, feature_casting in self.features_casting.items()
+                    for casted_feature in feature_casting
+                }
+            )
+
+        return X
+
     def _prepare_data(self, X: DataFrame, y: Series = None) -> DataFrame:
         """Validates format and content of X and y.
 
@@ -197,39 +258,44 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         DataFrame
             A formatted copy of X
         """
-        # checking for previous fits of the discretizer that could cause unwanted errors
-        assert (
-            not self.is_fitted
-        ), " - [BaseDiscretizer] This Discretizer has already been fitted. Fitting it anew could break established orders. Please initialize a new one."
-
         x_copy = X
         if X is not None:
             # checking for X's type
             assert isinstance(
                 X, DataFrame
-            ), f"X must be a pandas.DataFrame, instead {type(X)} was passed"
-
-            # checking for input columns
-            missing_columns = [feature for feature in self.features if feature not in X]
-            assert (
-                len(missing_columns) == 0
-            ), f" - [BaseDiscretizer] Missing features from the provided DataFrame: {str(missing_columns)}"
+            ), f" - [BaseDiscretizer] X must be a pandas.DataFrame, instead {type(X)} was passed"
 
             # copying X
             x_copy = X
             if self.copy:
                 x_copy = X.copy()
 
+            # casting features for multiclass targets
+            x_copy = self._cast_features(x_copy)
+
+            # checking for input columns
+            missing_columns = [feature for feature in self.features if feature not in x_copy]
+            assert (
+                len(missing_columns) == 0
+            ), f" - [BaseDiscretizer] Missing features from the provided DataFrame: {str(missing_columns)}"
+
             if y is not None:
                 # checking for y's type
                 assert isinstance(
                     y, Series
-                ), f"y must be a pandas.Series, instead {type(y)} was passed"
+                ), f" - [BaseDiscretizer] y must be a pandas.Series, instead {type(y)} was passed"
+
+                # checking for nans in the target
+                assert not any(y.isna()), " - [BaseDiscretizer] y should not contain numpy.nan"
 
                 # checking indices
-                assert all(y.index == X.index), f"X and y must have the same indices."
+                assert all(
+                    y.index == X.index
+                ), f" - [BaseDiscretizer] X and y must have the same indices."
 
         return x_copy
+
+    __prepare_data = _prepare_data  # private copy
 
     def _check_new_values(self, X: DataFrame, features: list[str]) -> None:
         """Checks for new, unexpected values, in X
@@ -249,32 +315,69 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         )
         uniques = applied_to_dict_list(uniques)
 
+        # replacing unknwon values if there was a default discretization
+        X.replace(
+            {
+                feature: {
+                    val: self.str_default
+                    for val in uniques[feature]
+                    if val not in self.values_orders[feature].values()
+                    and val != self.str_nan
+                    and self.str_default in self.values_orders[feature].values()
+                }
+                for feature in features
+            },
+            inplace=True,
+        )
+        # updating unique non-nan values in new dataframe
+        uniques = X[features].apply(
+            nan_unique,
+            axis=0,
+            result_type="expand",
+        )
+        uniques = applied_to_dict_list(uniques)
+
         # checking for unexpected values for each feature
         for feature in features:
+            # unexpected values for this feature
             unexpected = [
                 val for val in uniques[feature] if val not in self.values_orders[feature].values()
             ]
-            assert (
-                len(unexpected) == 0
-            ), f" - [BaseDiscretizer] Unexpected value! The ordering for values: {str(list(unexpected))} of feature '{feature}' was not provided. There might be new values in your test/dev set. Consider taking a bigger test/dev set or dropping the column {feature}."
+            assert len(unexpected) == 0, (
+                " - [BaseDiscretizer] Unexpected value! The ordering for values: "
+                f"{str(list(unexpected))} of feature '{feature}' was not provided. "
+                "There might be new values in your test/dev set. Consider taking a bigger "
+                f"test/dev set or dropping the column {feature}."
+            )
+
+        return X
 
     def fit(self, X: DataFrame = None, y: Series = None) -> None:
-        """Learns the labels associated to each value for each feature
+        """Learns simple discretization of values of X according to values of y.
 
         Parameters
         ----------
         X : DataFrame
-            Contains columns named after ``BaseDiscretizer.features`` attribute, by default None
-        y : Series, optional
-            Model target, by default None
+            Training dataset, to determine features' optimal carving
+            Needs to have columns has specified in ``features`` attribute.
+
+        y : Series
+            Target with wich the association is maximized.
         """
+        # checking for previous fits of the discretizer that could cause unwanted errors
+        assert not self.is_fitted, (
+            " - [BaseDiscretizer] This Discretizer has already been fitted. "
+            "Fitting it anew could break established orders. Please initialize a new one."
+        )
+
         # checking that all features to discretize are in values_orders
         missing_features = [
             feature for feature in self.features if feature not in self.values_orders
         ]
-        assert (
-            len(missing_features) == 0
-        ), f" - [BaseDiscretizer] Missing values_orders for following features {str(missing_features)}."
+        assert len(missing_features) == 0, (
+            " - [BaseDiscretizer] Missing values_orders for following features "
+            f"{str(missing_features)}."
+        )
 
         # for each feature, getting label associated to each value
         self.labels_per_values = self._get_labels_per_values(self.output_dtype)
@@ -287,50 +390,33 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
     def transform(self, X: DataFrame, y: Series = None) -> DataFrame:
         """Applies discretization to a DataFrame's columns.
 
-        * For each feature's modality, the associated group label is attributed as definid by ``values_orders``.
-        * If ``output_dtype="float"``, converts labels into floats.
-        * Data types are matched as ``input_dtypes=="str"`` for qualitative features and ``input_dtypes=="float"`` for quantitative ones.
-        * If ``copye=True``, the input DataFrame will be copied.
-
         Parameters
         ----------
         X : DataFrame
-            Contains columns named after ``BaseDiscretizer.features`` attribute, by default None
+            Dataset to be carved.
+            Needs to have columns has specified in ``features`` attribute.
         y : Series, optional
-            Model target, by default None
+            Target, by default ``None``
 
         Returns
         -------
         DataFrame
             Discretized X.
         """
-        # copying dataframes
-        x_copy = X
-        if self.copy:
-            x_copy = X.copy()
+        # * For each feature's value, the associated group label is attributed (as definid by ``values_orders``).
+        # * If ``output_dtype="float"``, converts labels into floats.
+        # * Data types are matched as ``input_dtypes=="str"`` for qualitative features and ``input_dtypes=="float"`` for quantitative ones.
+        # * If ``copy=True``, the input DataFrame will be copied.
 
-        # applying default discretization for concerned features
-        for feature in self.features:
-            known_values = self.values_orders[feature].values()
-            if self.str_default in known_values:
-                known_values_index = x_copy[feature].isin(known_values)
-                nans = (x_copy[feature].isna()) | (x_copy[feature] == self.str_nan)
-                x_copy.loc[(~known_values_index) & (~nans), feature] = self.str_default
+        # copying dataframes and casting for multiclass
+        x_copy = self.__prepare_data(X, y)
 
         # transforming quantitative features
         if len(self.quantitative_features) > 0:
-            if self.verbose:  # verbose if requested
-                print(
-                    f" - [BaseDiscretizer] Transform Quantitative {str(self.quantitative_features)}"
-                )
             x_copy = self._transform_quantitative(x_copy, y)
 
         # transforming qualitative features
         if len(self.qualitative_features) > 0:
-            if self.verbose:  # verbose if requested
-                print(
-                    f" - [BaseDiscretizer] Transform Qualitative {str(self.qualitative_features)}"
-                )
             x_copy = self._transform_qualitative(x_copy, y)
 
         # reinstating nans
@@ -426,7 +512,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             X[self.qualitative_features] = X[self.qualitative_features].fillna(self.str_nan)
 
         # checking that all unique values in X are in values_orders
-        self._check_new_values(X, features=self.qualitative_features)
+        X = self._check_new_values(X, features=self.qualitative_features)
 
         # replacing values for there corresponding label
         X = X.replace(
@@ -440,17 +526,17 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         return X
 
     def to_json(self) -> str:
-        """Converts the BaseDiscretizer's values_orders to .json format.
+        """Converts to .json format.
 
         To be used with ``json.dump``.
 
         Returns
         -------
         str
-            JSON serialized BaseDiscretizer
+            JSON serialized object
         """
         # extracting content dictionnaries
-        json_serialized_groupedlistdiscretizer = {
+        json_serialized_base_discretizer = {
             "features": self.features,
             "values_orders": json_serialize_values_orders(self.values_orders),
             "input_dtypes": self.input_dtypes,
@@ -462,7 +548,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         }
 
         # dumping as json
-        return json_serialized_groupedlistdiscretizer
+        return json_serialized_base_discretizer
 
     # TODO: add crosstabs per feature for a provided X?
     # TODO: change str_nan for str(nan)
@@ -544,26 +630,7 @@ def convert_to_labels(
     str_nan: str,
     dropna: bool = True,
 ) -> dict[str, GroupedList]:
-    """Converts a values_orders values (quantiles) to labels
-
-    Parameters
-    ----------
-    features : list[str]
-        _description_
-    quantitative_features : list[str]
-        _description_
-    values_orders : dict[str, GroupedList]
-        _description_
-    str_nan : str
-        _description_
-    dropna : bool, optional
-        _description_, by default True
-
-    Returns
-    -------
-    dict[str, GroupedList]
-        _description_
-    """
+    """Converts a values_orders values (quantiles) to labels"""
     # copying values_orders without nans
     labels_orders = {
         feature: GroupedList([value for value in values_orders[feature] if value != str_nan])
@@ -602,27 +669,8 @@ def convert_to_values(
     values_orders: dict[str, GroupedList],
     label_orders: dict[str, GroupedList],
     str_nan: str,
-):
-    """Converts a values_orders labels to values (quantiles)
-
-    Parameters
-    ----------
-    features : list[str]
-        _description_
-    quantitative_features : list[str]
-        _description_
-    values_orders : dict[str, GroupedList]
-        _description_
-    label_orders : dict[str, GroupedList]
-        _description_
-    str_nan : str
-        _description_
-
-    Returns
-    -------
-    _type_
-        _description_
-    """
+) -> dict[str, Any]:
+    """Converts a values_orders labels to values (quantiles)"""
     # for quantitative features getting labels per quantile
     if any(quantitative_features):
         # getting quantile per group "name"
@@ -1037,3 +1085,18 @@ def check_missing_values(
         assert (
             len(unexpected) == 0
         ), f"Unexpected value! The ordering for values: {str(list(unexpected))} of feature '{feature}' was provided but there are not matching value in provided X. You should check 'values_orders['{feature}']' for unwanted values."
+
+
+class extend_docstring:
+    """Used to extend a Child's method docstring with the Parent's method docstring"""
+
+    def __init__(self, method):
+        self.doc = method.__doc__
+
+    def __call__(self, function):
+        if self.doc is not None:
+            doc = function.__doc__
+            function.__doc__ = self.doc
+            if doc is not None:
+                function.__doc__ = doc + function.__doc__
+        return function
