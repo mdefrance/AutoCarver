@@ -6,7 +6,8 @@ from typing import Any
 
 from numpy import nan
 from pandas import DataFrame, Series
-from scipy.stats import kruskal
+from scipy.stats import kruskal, spearmanr, pearsonr
+from scipy.spatial.distance import correlation
 from statsmodels.formula.api import ols
 
 
@@ -16,14 +17,14 @@ def kruskal_measure(
     thresh_kruskal: float = 0,
     **kwargs,
 ) -> tuple[bool, dict[str, Any]]:
-    """Kruskal-Wallis' test statistic between ``x`` when ``y==1`` and ``x`` when ``y==0``.
+    """Kruskal-Wallis' test statistic between ``x`` for each value taken by ``y``.
 
     Parameters
     ----------
     x : Series
-        Feature to measure
-    y : Series, optional
-        Binary target feature
+        Quantitative feature
+    y : Series
+        Qualitative target feature
     thresh_kruskal : float, optional
         Minimum Kruskal-Wallis association, by default ``0``
 
@@ -34,8 +35,11 @@ def kruskal_measure(
     """
     nans = x.isnull()  # ckecking for nans
 
+    # getting y values
+    y_values = y.unique()
+
     # computation of Kruskal-Wallis statistic
-    kw = kruskal(x[(~nans) & (y == 0)], x[(~nans) & (y == 1)])
+    kw = kruskal(*tuple(x[(~nans) & (y == y_value)] for y_value in y_values))
 
     # updating association
     active, measurement = False, {"kruskal_measure": nan}
@@ -59,8 +63,8 @@ def R_measure(
     Parameters
     ----------
     x : Series
-        Feature to measure
-    y : Series, optional
+        Quantitative feature
+    y : Series
         Binary target feature
     thresh_R : float, optional
         Minimum R association, by default ``0``
@@ -90,6 +94,119 @@ def R_measure(
     return active, measurement
 
 
+def pearson_measure(
+    x: Series,
+    y: Series,
+    thresh_pearson: float = 0,
+    **kwargs,
+) -> tuple[bool, dict[str, Any]]:
+    """Pearson's linear correlation coefficient between ``x`` and ``y``.
+
+    Parameters
+    ----------
+    x : Series
+        Quantitative feature
+    y : Series
+        Quantitative target feature
+    thresh_pearson : float, optional
+        Minimum r association, by default ``0``
+
+    Returns
+    -------
+    tuple[bool, dict[str, Any]]
+        Whether ``x`` is sufficiently associated to ``y`` and Pearson's r
+    """
+    nans = x.isnull()  # ckecking for nans
+
+    # computing spearman's r
+    r = pearsonr(x[~nans], y[~nans])
+
+    # updating association
+    active, measurement = False, {"pearson_measure": nan}
+    if r:
+        measurement = {"pearson_measure": r}
+
+        # Excluding features not associated enough
+        active = r < thresh_pearson
+
+    return active, measurement
+
+
+def spearman_measure(
+    x: Series,
+    y: Series,
+    thresh_spearman: float = 0,
+    **kwargs,
+) -> tuple[bool, dict[str, Any]]:
+    """Spearman's rank correlation coefficient between ``x`` and ``y``.
+
+    Parameters
+    ----------
+    x : Series
+        Quantitative feature
+    y : Series
+        Quantitative target feature
+    thresh_spearman : float, optional
+        Minimum rho association, by default ``0``
+
+    Returns
+    -------
+    tuple[bool, dict[str, Any]]
+        Whether ``x`` is sufficiently associated to ``y`` and Spearman's rho
+    """
+    nans = x.isnull()  # ckecking for nans
+
+    # computing spearman's r
+    rho = spearmanr(x[~nans], y[~nans])
+
+    # updating association
+    active, measurement = False, {"spearman_measure": nan}
+    if rho:
+        measurement = {"spearman_measure": rho}
+
+        # Excluding features not associated enough
+        active = rho < thresh_spearman
+
+    return active, measurement
+
+def distance_measure(
+    x: Series,
+    y: Series,
+    thresh_distance: float = 0,
+    **kwargs,
+) -> tuple[bool, dict[str, Any]]:
+    """Distance correlation between ``x`` and ``y``.
+
+    Parameters
+    ----------
+    x : Series
+        Quantitative feature
+    y : Series
+        Quantitative target feature
+    thresh_distance : float, optional
+        Minimum rho association, by default ``0``
+
+    Returns
+    -------
+    tuple[bool, dict[str, Any]]
+        Whether ``x`` is sufficiently associated to ``y`` and Distance Correlation
+    """
+    nans = x.isnull()  # ckecking for nans
+
+    # computing spearman's r
+    d_corr = correlation(x[~nans], y[~nans])
+
+    # updating association
+    active, measurement = False, {"distance_measure": nan}
+    if d_corr:
+        measurement = {"distance_measure": d_corr}
+
+        # Excluding features not associated enough
+        active = d_corr < thresh_distance
+
+    return active, measurement
+
+
 def zscore_measure(
     x: Series,
     y: Series = None,
@@ -101,9 +218,9 @@ def zscore_measure(
     Parameters
     ----------
     x : Series
-        Feature to measure
+        Quantitative feature
     y : Series, optional
-        Binary target feature, by default ``None``
+        Any target feature, by default ``None``
     thresh_outlier : float, optional
         Maximum percentage of Outliers in a feature, by default ``1.0``
 
@@ -146,9 +263,9 @@ def iqr_measure(
     Parameters
     ----------
     x : Series
-        Feature to measure
+        Quantitative feature
     y : Series, optional
-        Binary target feature, by default ``None``
+        Any target feature, by default ``None``
     thresh_outlier : float, optional
         Maximum percentage of Outliers in a feature, by default ``1.0``
 
