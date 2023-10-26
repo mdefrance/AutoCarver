@@ -1,12 +1,12 @@
-"""Set of tests for FeatureSelector module."""
+"""Set of tests for RegressionSelector module."""
 
 from pandas import DataFrame
 
-from AutoCarver.feature_selection import FeatureSelector
+from AutoCarver.selectors import RegressionSelector
 
 
-def test_feature_selector(x_train: DataFrame) -> None:
-    """Tests FeatureSelector
+def test_regression_selector(x_train: DataFrame) -> None:
+    """Tests RegressionSelector
 
     Parameters
     ----------
@@ -39,7 +39,7 @@ def test_feature_selector(x_train: DataFrame) -> None:
     ]
 
     # select the best 5 most target associated qualitative features
-    quali_selector = FeatureSelector(
+    quali_selector = RegressionSelector(
         n_best=5,
         qualitative_features=qualitative_features + ordinal_features,
     )
@@ -66,7 +66,7 @@ def test_feature_selector(x_train: DataFrame) -> None:
     ), "Not correctly selected qualitative features"
 
     # select the best 5 most target associated qualitative features
-    quanti_selector = FeatureSelector(
+    quanti_selector = RegressionSelector(
         n_best=5,
         quantitative_features=quantitative_features,
     )

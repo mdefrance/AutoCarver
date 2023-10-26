@@ -1,4 +1,4 @@
-"""Set of tests for FeatureSelector module."""
+"""Set of tests for ClassificationSelector module."""
 
 from pandas import DataFrame
 
@@ -6,7 +6,7 @@ from AutoCarver.selectors import ClassificationSelector
 
 
 def test_classification_selector(x_train: DataFrame) -> None:
-    """Tests FeatureSelector
+    """Tests ClassificationSelector
 
     Parameters
     ----------
@@ -39,7 +39,7 @@ def test_classification_selector(x_train: DataFrame) -> None:
     ]
 
     # select the best 5 most target associated qualitative features
-    quali_selector = FeatureSelector(
+    quali_selector = ClassificationSelector(
         n_best=5,
         qualitative_features=qualitative_features + ordinal_features,
     )
@@ -66,7 +66,7 @@ def test_classification_selector(x_train: DataFrame) -> None:
     ), "Not correctly selected qualitative features"
 
     # select the best 5 most target associated qualitative features
-    quanti_selector = FeatureSelector(
+    quanti_selector = ClassificationSelector(
         n_best=5,
         quantitative_features=quantitative_features,
     )
