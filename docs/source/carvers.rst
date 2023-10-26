@@ -1,7 +1,7 @@
 Carvers
 =======
 
-The core of **AutoCarver** resides the following Data Optimization steps: 
+The core of **AutoCarver** resides in the following Data Optimization steps: 
 
    1. Identifying the most associated combination from all ordered combinations of modalities.
    2. Testing all combinations of NaNs grouped to one of those modalities.

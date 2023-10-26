@@ -19,60 +19,58 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         self,
         features: list[str],
         *,
-        values_orders: dict[str, GroupedList] = None,
+        values_orders: dict[str, GroupedList] = None,  #
         input_dtypes: Union[str, dict[str, str]] = "str",
         output_dtype: str = "str",
         dropna: bool = True,
-        copy: bool = True,
-        verbose: bool = True,
-        str_nan: str = None,
+        copy: bool = True,  #
+        verbose: bool = True,  #
+        str_nan: str = None,  #
         str_default: str = None,
         features_casting: dict[str, list[str]] = None,
     ) -> None:
-        """Initiates a ``BaseDiscretizer``.
+        # features : list[str]
+        #     List of column names of features (continuous, discrete, categorical or ordinal) to be dicretized
 
-        Parameters
-        ----------
-        features : list[str]
-            List of column names of features (continuous, discrete, categorical or ordinal) to be dicretized
+        # input_dtypes : Union[str, dict[str, str]], optional
+        #     Input data type, converted to a dict of the provided type for each feature, by default ``"str"``
 
+        #     * If ``"str"``, features are considered as qualitative.
+        #     * If ``"float"``, features are considered as quantitative.
+
+        # output_dtype : str, optional
+        #     To be choosen amongst ``["float", "str"]``, by default ``"str"``
+
+        #     * If ``"float"``, grouped modalities will be converted to there corresponding floating rank.
+        #     * If ``"str"``, a per-group modality will be set for all the modalities of a group.
+
+        # dropna : bool, optional
+        #     * If ``True``, ``numpy.nan`` will be attributed there label.
+        #     * If ``False``, ``numpy.nan`` will be restored after discretization, by default ``True``
+
+        # str_default : str, optional
+        #     String representation for default qualitative values, i.e. values less frequent than ``min_freq``, by default ``"__OTHER__"``
+
+        # features_casting : dict[str, list[str]], optional
+        #     By default ``None``, target is considered as continuous or binary.
+        #     Multiclass target: Dict of raw DataFrame columns associated to the names of copies that will be created.
+        """
         values_orders : dict[str, GroupedList], optional
-            Dict of feature's column names and there associated ordering.
-            If lists are passed, a GroupedList will automatically be initiated, by default ``None``
-
-        input_dtypes : Union[str, dict[str, str]], optional
-            Input data type, converted to a dict of the provided type for each feature, by default ``"str"``
-
-            * If ``"str"``, features are considered as qualitative.
-            * If ``"float"``, features are considered as quantitative.
-
-        output_dtype : str, optional
-            To be choosen amongst ``["float", "str"]``, by default ``"str"``
-
-            * If ``"float"``, grouped modalities will be converted to there corresponding floating rank.
-            * If ``"str"``, a per-group modality will be set for all the modalities of a group.
-
-        dropna : bool, optional
-            * If ``True``, ``numpy.nan`` will be attributed there label.
-            * If ``False``, ``numpy.nan`` will be restored after discretization, by default ``True``
+            Dict of column names and there associated ordering.
+            If lists are passed, a :class:`GroupedList` will automatically be initiated, by default ``None``
 
         copy : bool, optional
-            If ``True``, feature processing at transform is applied to a copy of the provided DataFrame, by default ``False``
+            If ``True``, applies transform to a copy of the provided DataFrame, by default ``False``
 
         verbose : bool, optional
-            If ``True``, prints raw Discretizers Fit and Transform steps, as long as
-            information on AutoCarver's processing and tables of target rates and frequencies for
-            X, by default ``False``
+            If ``True``, prints raw Discretizers Fit and Transform steps, by default ``False``
 
         str_nan : str, optional
             String representation to input ``numpy.nan``. If ``dropna=False``, ``numpy.nan`` will be left unchanged, by default ``"__NAN__"``
 
-        str_default : str, optional
-            String representation for default qualitative values, i.e. values less frequent than ``min_freq``, by default ``"__OTHER__"``
-
-        features_casting : dict[str, list[str]], optional
-            By default ``None``, target is considered as continuous or binary.
-            Multiclass target: Dict of raw DataFrame columns associated to the names of copies that will be created.
+        Examples
+        --------
+        See `AutoCarver examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
         """
         # features and values
         self.features = list(set(features))
@@ -355,14 +353,16 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         return X
 
     def fit(self, X: DataFrame = None, y: Series = None) -> None:
-        """Learns the labels associated to each value for each feature
+        """Learns simple discretization of values of X according to values of y.
 
         Parameters
         ----------
         X : DataFrame
-            Contains columns named after ``BaseDiscretizer.features`` attribute, by default None
-        y : Series, optional
-            Model target, by default None
+            Training dataset, to determine features' optimal carving
+            Needs to have columns has specified in ``features`` attribute.
+
+        y : Series
+            Target with wich the association is maximized.
         """
         # checking for previous fits of the discretizer that could cause unwanted errors
         assert not self.is_fitted, (
@@ -630,26 +630,7 @@ def convert_to_labels(
     str_nan: str,
     dropna: bool = True,
 ) -> dict[str, GroupedList]:
-    """Converts a values_orders values (quantiles) to labels
-
-    Parameters
-    ----------
-    features : list[str]
-        _description_
-    quantitative_features : list[str]
-        _description_
-    values_orders : dict[str, GroupedList]
-        _description_
-    str_nan : str
-        _description_
-    dropna : bool, optional
-        _description_, by default True
-
-    Returns
-    -------
-    dict[str, GroupedList]
-        _description_
-    """
+    """Converts a values_orders values (quantiles) to labels"""
     # copying values_orders without nans
     labels_orders = {
         feature: GroupedList([value for value in values_orders[feature] if value != str_nan])
@@ -688,27 +669,8 @@ def convert_to_values(
     values_orders: dict[str, GroupedList],
     label_orders: dict[str, GroupedList],
     str_nan: str,
-):
-    """Converts a values_orders labels to values (quantiles)
-
-    Parameters
-    ----------
-    features : list[str]
-        _description_
-    quantitative_features : list[str]
-        _description_
-    values_orders : dict[str, GroupedList]
-        _description_
-    label_orders : dict[str, GroupedList]
-        _description_
-    str_nan : str
-        _description_
-
-    Returns
-    -------
-    _type_
-        _description_
-    """
+) -> dict[str, Any]:
+    """Converts a values_orders labels to values (quantiles)"""
     # for quantitative features getting labels per quantile
     if any(quantitative_features):
         # getting quantile per group "name"
@@ -1123,3 +1085,18 @@ def check_missing_values(
         assert (
             len(unexpected) == 0
         ), f"Unexpected value! The ordering for values: {str(list(unexpected))} of feature '{feature}' was provided but there are not matching value in provided X. You should check 'values_orders['{feature}']' for unwanted values."
+
+
+class extend_docstring:
+    """Used to extend a Child's method docstring with the Parent's method docstring"""
+
+    def __init__(self, method):
+        self.doc = method.__doc__
+
+    def __call__(self, function):
+        if self.doc is not None:
+            doc = function.__doc__
+            function.__doc__ = self.doc
+            if doc is not None:
+                function.__doc__ = doc + function.__doc__
+        return function

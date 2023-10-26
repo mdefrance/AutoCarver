@@ -12,7 +12,8 @@ from scipy.stats import chi2_contingency
 from AutoCarver.discretizers import GroupedList
 
 from ..discretizers import GroupedList
-from .base_carver import BaseCarver, extend_docstring
+from ..discretizers.utils.base_discretizers import extend_docstring
+from .base_carver import BaseCarver
 
 
 class BinaryCarver(BaseCarver):
@@ -298,10 +299,10 @@ class AutoCarver(BinaryCarver):
         pretty_print: bool = False,
         **kwargs,
     ) -> None:
-        warn("AutoCarver will be deprecated, please use BinaryCarver instead.", FutureWarning)
+        warn("AutoCarver will be deprecated, please use BinaryCarver instead.", DeprecationWarning)
         super().__init__(
-            min_freq,
             sort_by,
+            min_freq,
             quantitative_features=quantitative_features,
             qualitative_features=qualitative_features,
             ordinal_features=ordinal_features,

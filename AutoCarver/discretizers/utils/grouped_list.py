@@ -12,12 +12,11 @@ class GroupedList(list):
     """An ordered list that's extended with a per-value content dict."""
 
     def __init__(self, iterable: Union[ndarray, dict, list, tuple] = ()) -> None:
-        """An ordered list that historizes its elements' content.
-
+        """
         Parameters
         ----------
         iterable : Union[ndarray, dict, list, tuple], optional
-            List-like or GroupedList, by default ()
+            List-like or :class:`GroupedList`, by default ``()``
         """
         # TODO: move list to an attribute `order`?
         # case -1: iterable is an array

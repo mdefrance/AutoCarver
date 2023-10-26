@@ -5,7 +5,7 @@ from pandas import DataFrame
 from AutoCarver.feature_selection import FeatureSelector
 
 
-def test_feature_selector(x_train: DataFrame, target: str) -> None:
+def test_feature_selector(x_train: DataFrame) -> None:
     """Tests FeatureSelector
 
     Parameters
@@ -13,6 +13,8 @@ def test_feature_selector(x_train: DataFrame, target: str) -> None:
     x_train : DataFrame
         Simulated Train DataFrame
     """
+
+    target = "binary_target"
 
     quantitative_features = [
         "Quantitative",

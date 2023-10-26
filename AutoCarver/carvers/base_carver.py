@@ -26,19 +26,6 @@ else:
     _has_idisplay = True
 
 
-class extend_docstring:
-    def __init__(self, method):
-        self.doc = method.__doc__
-
-    def __call__(self, function):
-        if self.doc is not None:
-            doc = function.__doc__
-            function.__doc__ = self.doc
-            if doc is not None:
-                function.__doc__ = doc + function.__doc__
-        return function
-
-
 class BaseCarver(BaseDiscretizer):
     """Automatic carving of continuous, discrete, categorical and ordinal
     features that maximizes association with a binary or continuous target.
@@ -391,8 +378,12 @@ class BaseCarver(BaseDiscretizer):
 
             # no suitable combination has been found -> removing feature
             else:
-                print(
-                    f" - [BaseCarver] No robust combination for feature '{feature}' could be found. It will be ignored. You might have to increase the size of your test sample (test sample not representative of test sample for this feature) or you should consider dropping this features."
+                warn(
+                    f" - [BaseCarver] No robust combination for feature '{feature}' could be found"
+                    ". It will be ignored. You might have to increase the size of your dev sample"
+                    " (dev sample not representative of dev sample for this feature) or you"
+                    " should consider dropping this features.",
+                    UserWarning,
                 )
                 self._remove_feature(feature)
                 if feature in labels_orders:
@@ -887,7 +878,7 @@ def prettier_xagg(
     # checking for a provided xtab
     nicer_xagg = ""
     if nice_xagg is not None:
-        # adding coolwarn color gradient
+        # adding coolwarm color gradient
         nicer_xagg = nice_xagg.style.background_gradient(cmap="coolwarm")
 
         # printing inline notebook

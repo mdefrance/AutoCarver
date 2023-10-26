@@ -53,7 +53,6 @@
 <li class="toctree-l3"><a class="reference internal" href="#iii-optional-data-selection-model-feature-pre-selection">III. (Optional) Data Selection: model feature pre-selection</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#performances">Performances</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
@@ -122,7 +121,7 @@ As of today, this set of tools is available for binary classification and regres
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><a class="reference internal" href="discretizers.html#quantilediscretizer"><span class="std std-ref">Quantile Discretizer</span></a>:</p>
+<tr class="row-even"><td><p><a class="reference internal" href="discretizers.html#continuousdiscretizer"><span class="std std-ref">Continuous Discretizer</span></a>:</p>
 <p>Continuous Data</p>
 <p>Discrete Data</p>
 </td>
@@ -138,7 +137,7 @@ As of today, this set of tools is available for binary classification and regres
 <p>Modalities are ordered according to provided modality ranking</p>
 </td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="discretizers.html#defaultdiscretizer"><span class="std std-ref">Default Discretizer</span></a>:</p>
+<tr class="row-even"><td><p><a class="reference internal" href="discretizers.html#categoricaldiscretizer"><span class="std std-ref">Categorical Discretizer</span></a>:</p>
 <p>Categorical Data</p>
 </td>
 <td><p>Under-represented modalities are grouped into a default value</p>
@@ -151,15 +150,15 @@ As of today, this set of tools is available for binary classification and regres
 <p class="admonition-title">Note</p>
 <ul class="simple">
 <li><p>Representativity threshold of modalities is user selected (<code class="docutils literal notranslate"><span class="pre">min_freq</span></code> attribute).</p></li>
-<li><p>At this step, if any, NaNs are set as there own modality (no given order).</p></li>
+<li><p>At this step, if any, <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code> are set as there own modality (no given order).</p></li>
 <li><p>Helps improve modality relevancy and reduces the set of possible combinations to test from.</p></li>
-<li><p>These steps are all included in the <code class="docutils literal notranslate"><span class="pre">AutoCarver</span></code> pipeline.</p></li>
+<li><p>Included in all carving pipelines: <code class="xref py py-class docutils literal notranslate"><span class="pre">BinaryCarver</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">MulticlassCarver</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ContinuousCarver</span></code>.</p></li>
 </ul>
 </div>
 </section>
 <section id="ii-data-optimization-maximization-of-bucket-association">
 <h3>II. Data Optimization: maximization of bucket association<a class="headerlink" href="#ii-data-optimization-maximization-of-bucket-association" title="Permalink to this heading"></a></h3>
-<p>The core of <strong>AutoCarver</strong> is <a class="reference internal" href="carvers.html#basecarver"><span class="std std-ref">AutoCarver, the automated, fast-paced data processing pipeline</span></a>. It consists of the following Data Optimization steps:</p>
+<p>The core of <strong>AutoCarver</strong> resides in the following Data Optimization steps:</p>
 <blockquote>
 <div><ol class="arabic simple">
 <li><p>Identifying the most associated combination from all ordered combinations of modalities.</p></li>
@@ -192,34 +191,6 @@ As of today, this set of tools is available for binary classification and regres
 </ul>
 </div>
 </section>
-</section>
-<section id="performances">
-<h2>Performances<a class="headerlink" href="#performances" title="Permalink to this heading"></a></h2>
-<p>Execution time has been measured for several values of key paramaters of <strong>AutoCarver</strong></p>
-<table class="docutils align-default">
-<thead>
-<tr class="row-odd"><th class="head"><p>min_freq</p></th>
-<th class="head"><p>max_n_mod</p></th>
-<th class="head"><p>X.shape[0]</p></th>
-<th class="head"><p>len(features)</p></th>
-<th class="head"><p>Execution Time</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>0.01</p></td>
-<td><p>5</p></td>
-<td><p>100000000</p></td>
-<td><p>15</p></td>
-<td><p>0.001</p></td>
-</tr>
-<tr class="row-odd"><td><p>0.02</p></td>
-<td><p>4</p></td>
-<td><p>100000000</p></td>
-<td><p>15</p></td>
-<td><p>0.001</p></td>
-</tr>
-</tbody>
-</table>
 </section>
 </section>
 
