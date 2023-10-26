@@ -245,7 +245,10 @@ class OrdinalDiscretizer(BaseDiscretizer):
         ]
         assert (
             len(no_order_provided) == 0
-        ), f" - [OrdinalDiscretizer] No ordering was provided for following features: {str(no_order_provided)}. Please make sure you defined ``values_orders`` correctly."
+        ), (
+            " - [OrdinalDiscretizer] No ordering was provided for following features:"
+            f" {str(no_order_provided)}. Please make sure you defined ``values_orders`` correctly."
+        )
 
         # class specific attributes
         self.min_freq = min_freq
@@ -489,10 +492,10 @@ class ChainedDiscretizer(BaseDiscretizer):
         for feature in all_features:
             if max_frequencies[feature] < self.min_freq:
                 warn(
-                    f" - [ChainedDiscretizer] For feature '{feature}', the largest modality has "
-                    f"{max_frequencies[feature]:2.2%} observations which is lower than "
-                    "{self.min_freq:2.2%}. This feature will not be Discretized. Consider "
-                    "decreasing parameter min_freq or removing this feature.",
+                    f" - [ChainedDiscretizer] For feature '{feature}', the largest modality"
+                    f" has {max_frequencies[feature]:2.2%} observations which is lower than "
+                    "min_freq={self.min_freq:2.2%}. This feature will not be Discretized. Consider"
+                    " decreasing parameter min_freq or removing this feature.",
                     UserWarning,
                 )
                 super()._remove_feature(feature)
