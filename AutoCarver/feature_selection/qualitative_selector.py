@@ -6,6 +6,7 @@ from warnings import warn
 
 from pandas import DataFrame, Series
 
+from .base_selector import BaseSelector
 from .filters import spearman_filter, thresh_filter, tschuprowt_filter
 from .measures import (
     dtype_measure,
@@ -25,7 +26,7 @@ else:
     _has_idisplay = True
 
 
-class FeatureSelector:
+class QualitativeSelector(BaseSelector):
     """A pipeline of measures to perform a feature pre-selection that maximizes association
     with a binary target.
 
@@ -36,9 +37,8 @@ class FeatureSelector:
     def __init__(
         self,
         n_best: int,
+        qualitative_features: list[str],
         *,
-        quantitative_features: list[str] = None,
-        qualitative_features: list[str] = None,
         measures: list[Callable] = None,
         filters: list[Callable] = None,
         colsample: float = 1.0,
@@ -100,62 +100,27 @@ class FeatureSelector:
         --------
         See `FeatureSelector examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
         """
-        # settinp up list of features
-        if quantitative_features is None:
-            quantitative_features = []
-        if qualitative_features is None:
-            qualitative_features = []
-        assert (
-            len(quantitative_features) > 0 or len(qualitative_features) > 0
-        ), "No feature passed as input. Pleased provided column names to Carver by setting qualitative_features or quantitative_features."
-        assert (len(quantitative_features) > 0 and len(qualitative_features) == 0) or (
-            len(qualitative_features) > 0 and len(quantitative_features) == 0
-        ), "Mixed quantitative and qualitative features. One only of quantitative_features and qualitative_features should be set."
-        self.features = list(set(qualitative_features + quantitative_features))
-
-        # number of features selected
-        self.n_best = n_best
-        assert (
-            0 < int(n_best // 2) <= len(self.features) + 1
-        ), "Must set 0 < n_best // 2 <= len(features)"
-
-        # feature sample size per iteration
-        self.colsample = colsample
-
-        # initiating measures
+        # default measure
         if measures is None:
-            if any(quantitative_features):  # quantitative feature association measure
-                measures = [kruskal_measure]
-            else:  # qualitative feature association measure
-                measures = [tschuprowt_measure]
-        self.measures = [dtype_measure, nans_measure, mode_measure] + measures[:]
+            measures = [kruskal_measure]
+            measures = [tschuprowt_measure]
 
-        # initiating filters
+        # default filter
         if filters is None:
-            if any(quantitative_features):  # quantitative feature association measure
-                filters = [spearman_filter]
-            else:  # qualitative feature association measure
-                filters = [tschuprowt_filter]
-        self.filters = [thresh_filter] + filters[:]
+            filters = [spearman_filter]
+            filters = [tschuprowt_filter]
 
-        # names of measures to sort by
-        self.measure_names = [measure.__name__ for measure in measures[::-1]]
-
-        # wether or not to print tables
-        self.verbose = bool(max(verbose, kwargs.get("pretty_print", False)))
-        self.pretty_print = False
-        if self.verbose and kwargs.get("pretty_print", True):
-            if _has_idisplay:  # checking for installed dependencies
-                self.pretty_print = True
-            else:
-                warn(
-                    "Package not found: IPython. Defaulting to raw verbose. "
-                    "Install extra dependencies with pip install autocarver[jupyter]",
-                    UserWarning,
-                )
-
-        # keyword arguments
-        self.kwargs = kwargs
+        # initiating BaseSelector with the corresponding list of measures
+        super().__init__(
+            n_best,
+            features=qualitative_features,
+            input_dtypes="str",
+            measures=measures,
+            filters=filters,
+            colsample=colsample,
+            verbose=verbose,
+            **kwargs,
+        )
 
     def _select_features(
         self, X: DataFrame, y: Series, features: list[str], n_best: int
