@@ -6,15 +6,8 @@ from warnings import warn
 
 from pandas import DataFrame, Series
 
-from .filters import spearman_filter, thresh_filter, tschuprowt_filter
-from .measures import (
-    dtype_measure,
-    kruskal_measure,
-    make_measure,
-    mode_measure,
-    nans_measure,
-    tschuprowt_measure,
-)
+from .filters import thresh_filter
+from .measures import dtype_measure, make_measure, mode_measure, nans_measure
 
 # trying to import extra dependencies
 try:

@@ -2,10 +2,10 @@
 
 from pandas import DataFrame
 
-from AutoCarver.feature_selection import FeatureSelector
+from AutoCarver.selectors import ClassificationSelector
 
 
-def test_feature_selector(x_train: DataFrame) -> None:
+def test_classification_selector(x_train: DataFrame) -> None:
     """Tests FeatureSelector
 
     Parameters

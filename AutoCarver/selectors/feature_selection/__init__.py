@@ -1,3 +1,4 @@
 """ Loads feature selection tools."""
 
-from .feature_selector import FeatureSelector
+from .classification_selector import ClassificationSelector
+from .regression_selector import RegressionSelector
