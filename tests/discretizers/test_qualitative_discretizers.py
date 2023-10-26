@@ -5,14 +5,14 @@ from pytest import raises
 
 from AutoCarver.discretizers import (
     ChainedDiscretizer,
-    DefaultDiscretizer,
+    CategoricalDiscretizer,
     GroupedList,
     OrdinalDiscretizer,
 )
 
 
 def test_chained_discretizer(x_train: DataFrame) -> None:
-    """Tests DefaultDiscretizer
+    """Tests CategoricalDiscretizer
 
     Parameters
     ----------
@@ -401,7 +401,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
 
 
 def test_default_discretizer(x_train: DataFrame, target: str) -> None:
-    """Tests DefaultDiscretizer
+    """Tests CategoricalDiscretizer
 
     Parameters
     ----------
@@ -439,7 +439,7 @@ def test_default_discretizer(x_train: DataFrame, target: str) -> None:
     min_freq = 0.02
     # unwanted value in values_orders
     with raises(AssertionError):
-        discretizer = DefaultDiscretizer(
+        discretizer = CategoricalDiscretizer(
             qualitative_features=features, min_freq=min_freq, values_orders=values_orders, copy=True
         )
         x_discretized = discretizer.fit_transform(x_train, x_train[target])
@@ -453,7 +453,7 @@ def test_default_discretizer(x_train: DataFrame, target: str) -> None:
         "Qualitative_Ordinal": groupedlist_ordinal,
     }
 
-    discretizer = DefaultDiscretizer(
+    discretizer = CategoricalDiscretizer(
         qualitative_features=features, min_freq=min_freq, values_orders=values_orders, copy=True
     )
     x_discretized = discretizer.fit_transform(x_train, x_train[target])
