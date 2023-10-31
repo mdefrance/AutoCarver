@@ -185,7 +185,7 @@ def distance_measure(
     y : Series
         Quantitative target feature
     thresh_distance : float, optional
-        Minimum rho association, by default ``0``
+        Minimum distance association, by default ``0``
 
     Returns
     -------
@@ -211,7 +211,7 @@ def distance_measure(
 def zscore_measure(
     x: Series,
     y: Series = None,
-    thresh_outlier: float = 1.0,
+    thresh_zscore: float = 1.0,
     **kwargs,
 ) -> tuple[bool, dict[str, Any]]:
     """Computes outliers percentage based on the z-score
@@ -222,7 +222,7 @@ def zscore_measure(
         Quantitative feature
     y : Series, optional
         Any target feature, by default ``None``
-    thresh_outlier : float, optional
+    thresh_zscore : float, optional
         Maximum percentage of Outliers in a feature, by default ``1.0``
 
     Returns
@@ -248,7 +248,7 @@ def zscore_measure(
     }
 
     # Excluding feature with too frequent modes
-    active = pct_zscore < thresh_outlier
+    active = pct_zscore < thresh_zscore
 
     return active, measurement
 
@@ -256,7 +256,7 @@ def zscore_measure(
 def iqr_measure(
     x: Series,
     y: Series = None,
-    thresh_outlier: float = 1.0,
+    thresh_iqr: float = 1.0,
     **kwargs,
 ) -> tuple[bool, dict[str, Any]]:
     """Computes outliers percentage based on the interquartile range
@@ -267,7 +267,7 @@ def iqr_measure(
         Quantitative feature
     y : Series, optional
         Any target feature, by default ``None``
-    thresh_outlier : float, optional
+    thresh_iqr : float, optional
         Maximum percentage of Outliers in a feature, by default ``1.0``
 
     Returns
@@ -288,6 +288,6 @@ def iqr_measure(
     measurement = {"pct_iqr": pct_iqr, "q1": q1, "median": x.median(), "q3": q3}
 
     # Excluding feature with too frequent modes
-    active = pct_iqr < thresh_outlier
+    active = pct_iqr < thresh_iqr
 
     return active, measurement

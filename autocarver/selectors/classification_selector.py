@@ -12,10 +12,9 @@ from .measures.quantitative_measures import kruskal_measure
 
 class ClassificationSelector(BaseSelector):
     """A pipeline of measures to perform a feature pre-selection that maximizes association
-    with a binary target.
+    with a qualitative target.
 
-    * Best features are the n_best of each measure
-    * Get your best features with ``ClassificationSelector.select()``!
+    Get your best features with ``ClassificationSelector.select()``!
     """
 
     @extend_docstring(BaseSelector.__init__)

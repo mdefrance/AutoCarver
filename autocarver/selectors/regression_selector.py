@@ -12,10 +12,9 @@ from .measures.quantitative_measures import distance_measure, kruskal_measure
 
 class RegressionSelector(BaseSelector):
     """A pipeline of measures to perform a feature pre-selection that maximizes association
-    with a continuous target.
+    with a quantitative target.
 
-    * Best features are the n_best of each measure
-    * Get your best features with ``RegressionSelector.select()``!
+    Get your best features with ``RegressionSelector.select()``!
     """
 
     @extend_docstring(BaseSelector.__init__)

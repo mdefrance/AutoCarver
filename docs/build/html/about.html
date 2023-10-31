@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>About &mdash; AutoCarver AutoCarver 5.0.7 - Beta Release documentation</title>
+  <title>About &mdash; AutoCarver Beta Release documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -32,9 +32,13 @@
 
           
           
-          <a href="index.html" class="icon icon-home">
-            AutoCarver
+          <a href="index.html">
+            
+              <img src="_static/auto_carver_symbol_xsmall.png" class="logo" alt="Logo"/>
           </a>
+              <div class="version">
+                5.3.1
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -43,23 +47,24 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">About</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#why-autocarver">Why AutoCarver?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#under-the-hood-feature-overview">Under the hood feature overview</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#i-data-preparation-conversion-to-ordinal-data-buckets">I. Data Preparation: conversion to ordinal data buckets</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#ii-data-optimization-maximization-of-bucket-association">II. Data Optimization: maximization of bucket association</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#iii-optional-data-selection-model-feature-pre-selection">III. (Optional) Data Selection: model feature pre-selection</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="#under-the-hood-feature-overview">Under the hood feature overview</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="discretizers.html">Discretizers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="carvers.html">Carvers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="feature_selector.html">FeatureSelector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="selectors.html">Selectors</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 </ul>
 
@@ -113,11 +118,11 @@ As of today, this set of tools is available for binary classification and regres
 <p><strong>AutoCarver</strong> is a two step pipeline.</p>
 <section id="i-data-preparation-conversion-to-ordinal-data-buckets">
 <h3>I. Data Preparation: conversion to ordinal data buckets<a class="headerlink" href="#i-data-preparation-conversion-to-ordinal-data-buckets" title="Permalink to this heading"></a></h3>
-<p><strong>AutoCarver</strong> implements <a class="reference internal" href="discretizers.html#discretizer"><span class="std std-ref">Discretizer, a complete discretization pipeline</span></a>. It provides the following Data Preparation tools:</p>
+<p><strong>AutoCarver</strong> implements <a class="reference internal" href="discretizers.html#discretizers"><span class="std std-ref">Discretizers</span></a>, They provide the following Data Preparation tools:</p>
 <table class="docutils align-default">
 <thead>
-<tr class="row-odd"><th class="head"><p>Discretizer</p></th>
-<th class="head"><p>Data Processing</p></th>
+<tr class="row-odd"><th class="head"><p>Discretizer / Data Type</p></th>
+<th class="head"><p>Data Preparation</p></th>
 </tr>
 </thead>
 <tbody>
@@ -158,13 +163,21 @@ As of today, this set of tools is available for binary classification and regres
 </section>
 <section id="ii-data-optimization-maximization-of-bucket-association">
 <h3>II. Data Optimization: maximization of bucket association<a class="headerlink" href="#ii-data-optimization-maximization-of-bucket-association" title="Permalink to this heading"></a></h3>
-<p>The core of <strong>AutoCarver</strong> resides in the following Data Optimization steps:</p>
+<p>The core of <strong>AutoCarver</strong> resides in its <a class="reference internal" href="carvers.html#carvers"><span class="std std-ref">Carvers</span></a>, they provide the following Data Optimization steps:</p>
 <blockquote>
 <div><ol class="arabic simple">
 <li><p>Identifying the most associated combination from all ordered combinations of modalities.</p></li>
 <li><p>Testing all combinations of NaNs grouped to one of those modalities.</p></li>
 </ol>
 </div></blockquote>
+<dl class="simple">
+<dt>Target-specific tools allow for association optimization per desired task:</dt><dd><ul class="simple">
+<li><p><a class="reference internal" href="carvers.html#binarycarver"><span class="std std-ref">Binary Classification</span></a></p></li>
+<li><p><a class="reference internal" href="carvers.html#multiclasscarver"><span class="std std-ref">Multilclass Classification</span></a></p></li>
+<li><p><a class="reference internal" href="carvers.html#continuouscarver"><span class="std std-ref">Continuous Regression</span></a></p></li>
+</ul>
+</dd>
+</dl>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ul class="simple">
@@ -175,19 +188,26 @@ As of today, this set of tools is available for binary classification and regres
 </section>
 <section id="iii-optional-data-selection-model-feature-pre-selection">
 <h3>III. (Optional) Data Selection: model feature pre-selection<a class="headerlink" href="#iii-optional-data-selection-model-feature-pre-selection" title="Permalink to this heading"></a></h3>
-<p><strong>AutoCarver</strong> implements <a class="reference internal" href="feature_selector.html#id1"><span class="std std-ref">FeatureSelector, an association centric tool for feature pre-selection</span></a>. It consists of the following Data Selection steps:</p>
+<p><strong>AutoCarver</strong> implements <a class="reference internal" href="selectors.html#selectors"><span class="std std-ref">Selectors</span></a>, they provide the following, association-centric, Data Selection steps:</p>
 <blockquote>
 <div><ol class="arabic simple">
 <li><p>Measuring association with a binary or continuous target and ranking features accordingly.</p></li>
 <li><p>Filtering out features too asociated to a better ranked feature.</p></li>
 </ol>
 </div></blockquote>
+<p>It allows one to select features:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Whatever there type: quantitative or qualitative</p></li>
+<li><p>Whatever the optimization task: <a class="reference internal" href="selectors.html#classificationselector"><span class="std std-ref">Classification tasks</span></a> or <a class="reference internal" href="selectors.html#regressionselector"><span class="std std-ref">Regression tasks</span></a></p></li>
+</ul>
+</div></blockquote>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ul class="simple">
 <li><p>The user defines the inter-feature correlation thresholds.</p></li>
 <li><p>This step is available for both qualitative and quantitative features (discretized or not).</p></li>
-<li><p>See <a class="reference internal" href="feature_selector.html#measures"><span class="std std-ref">Association measures, X by y</span></a> and <a class="reference internal" href="feature_selector.html#filters"><span class="std std-ref">Association filters, X by X</span></a>.</p></li>
+<li><p>See <a class="reference internal" href="selectors.html#measures"><span class="std std-ref">Association measures, X by y</span></a> and <a class="reference internal" href="selectors.html#filters"><span class="std std-ref">Association filters, X by X</span></a>.</p></li>
 </ul>
 </div>
 </section>

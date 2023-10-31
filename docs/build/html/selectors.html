@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Selectors &mdash; AutoCarver Beta Release documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Examples" href="examples.html" />
+    <link rel="prev" title="Carvers" href="carvers.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/auto_carver_symbol_xsmall.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                5.3.1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="discretizers.html">Discretizers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="carvers.html">Carvers</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Selectors</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#classification-tasks">Classification tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#regression-tasks">Regression tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#association-measures-x-by-y">Association measures, X by y</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#association-filters-x-by-x">Association filters, X by X</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">AutoCarver</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Selectors</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/selectors.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="selectors">
+<span id="id1"></span><h1>Selectors<a class="headerlink" href="#selectors" title="Permalink to this heading"></a></h1>
+<p><strong>AutoCarver</strong> implements <strong>Selectors</strong>, they provide the following, association-centric, Data Selection steps:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Measuring association with a target and ranking features accordingly.</p></li>
+<li><p>Filtering out features too asociated to a better ranked feature.</p></li>
+</ol>
+</div></blockquote>
+<p>It allows one to select features:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Whatever there type: quantitative or qualitative</p></li>
+<li><p>Whatever the optimization task: <a class="reference internal" href="#classificationselector"><span class="std std-ref">Classification tasks</span></a> or <a class="reference internal" href="#regressionselector"><span class="std std-ref">Regression tasks</span></a></p></li>
+</ul>
+</div></blockquote>
+<p>By default, quantitative features are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Ranked according to <a class="reference internal" href="#kruskal"><span class="std std-ref">Kruskal-Wallis’ H test statistic</span></a></p></li>
+<li><p>Filtered according to <a class="reference internal" href="#spearman-filter"><span class="std std-ref">Spearman’s rho correlation coefficient</span></a></p></li>
+</ul>
+</div></blockquote>
+<p>By default, qualitative features are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Ranked according to <a class="reference internal" href="#tschuprowt"><span class="std std-ref">Tschuprow’s T</span></a></p></li>
+<li><p>Filtered according to <a class="reference internal" href="#tschuprowt-filter"><span class="std std-ref">Tschuprow’s T</span></a></p></li>
+</ul>
+</div></blockquote>
+<p>In general, associations are computed according to the provided data types of <span class="math notranslate nohighlight">\(x\)</span> and <span class="math notranslate nohighlight">\(y\)</span>:</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(x\)</span> \ <span class="math notranslate nohighlight">\(y\)</span></p></td>
+<td><p>Qualitatitve</p></td>
+<td><p>Quantitative</p></td>
+</tr>
+<tr class="row-even"><td><p>Qualitative</p></td>
+<td><p>Pearson’s <span class="math notranslate nohighlight">\(\chi^2\)</span>, Cramér’s <span class="math notranslate nohighlight">\(V\)</span>, Tschuprow’s <span class="math notranslate nohighlight">\(T\)</span></p></td>
+<td><p>Kruskal-Wallis’ <span class="math notranslate nohighlight">\(H\)</span>, <span class="math notranslate nohighlight">\(R\)</span> coefficient</p></td>
+</tr>
+<tr class="row-odd"><td><p>Quantitative</p></td>
+<td><p>Kruskal-Wallis’ <span class="math notranslate nohighlight">\(H\)</span>, <span class="math notranslate nohighlight">\(R\)</span> coefficient</p></td>
+<td><p>Pearson’s <span class="math notranslate nohighlight">\(r\)</span>, Spearman’s <span class="math notranslate nohighlight">\(\rho\)</span></p></td>
+</tr>
+</tbody>
+</table>
+<p>See <a class="reference internal" href="#measures"><span class="std std-ref">Association measures, X by y</span></a> and <a class="reference internal" href="#filters"><span class="std std-ref">Association filters, X by X</span></a>, for details on measures and filters’ implementation.</p>
+<section id="classification-tasks">
+<span id="classificationselector"></span><h2>Classification tasks<a class="headerlink" href="#classification-tasks" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="AutoCarver.selectors.ClassificationSelector">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.selectors.</span></span><span class="sig-name descname"><span class="pre">ClassificationSelector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_best</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualitative_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantitative_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantitative_measures</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualitative_measures</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantitative_filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualitative_filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colsample</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.selectors.ClassificationSelector" title="Permalink to this definition"></a></dt>
+<dd><p>A pipeline of measures to perform a feature pre-selection that maximizes association
+with a qualitative target.</p>
+<p>Get your best features with <code class="docutils literal notranslate"><span class="pre">ClassificationSelector.select()</span></code>!</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_best</strong> (<em>int</em>) – <p>Number of features to select.</p>
+<ul>
+<li><p>Best features are the <code class="docutils literal notranslate"><span class="pre">n_best</span></code> of each provided data types (set in <code class="docutils literal notranslate"><span class="pre">quantitative_features</span></code> and/or <code class="docutils literal notranslate"><span class="pre">qualitative_features</span></code>)</p></li>
+<li><p>Best features are the <code class="docutils literal notranslate"><span class="pre">n_best</span></code> for each provided measures (set in <code class="docutils literal notranslate"><span class="pre">quantitative_measures</span></code> and/or <code class="docutils literal notranslate"><span class="pre">qualitative_measures</span></code>)</p></li>
+</ul>
+</p></li>
+<li><p><strong>quantitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – List of column names of quantitative features to chose from, by default <code class="docutils literal notranslate"><span class="pre">None</span></code>.
+Must be set if <code class="docutils literal notranslate"><span class="pre">qualitative_features=None</span></code>.</p></li>
+<li><p><strong>qualitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – List of column names of qualitative features to chose from, by default <code class="docutils literal notranslate"><span class="pre">None</span></code>.
+Must be set if <code class="docutils literal notranslate"><span class="pre">quantitative_features=None</span></code>.</p></li>
+<li><p><strong>quantitative_measures</strong> (<em>list</em><em>[</em><em>Callable</em><em>]</em><em>, </em><em>optional</em>) – <p>List of association measures to be used for <code class="docutils literal notranslate"><span class="pre">quantitative_features</span></code>.
+<a class="reference internal" href="#measures"><span class="std std-ref">Implemented measures</span></a> are:</p>
+<ul>
+<li><p>For association evaluation: <a class="reference internal" href="#kruskal"><span class="std std-ref">Kruskal-Wallis’ H</span></a> (default), <a class="reference internal" href="#r"><span class="std std-ref">Coefficient of determination R</span></a></p></li>
+<li><p>For outlier detection: <a class="reference internal" href="#zscore"><span class="std std-ref">Standard score</span></a>, <a class="reference internal" href="#iqr"><span class="std std-ref">Interquartile range</span></a></p></li>
+</ul>
+</p></li>
+<li><p><strong>qualitative_measures</strong> (<em>list</em><em>[</em><em>Callable</em><em>]</em><em>, </em><em>optional</em>) – <p>List of association measures to be used for <code class="docutils literal notranslate"><span class="pre">qualitative_features</span></code>.
+<a class="reference internal" href="#measures"><span class="std std-ref">Implemented measures</span></a> are:</p>
+<ul>
+<li><p>For association evaluation: <a class="reference internal" href="#chi2"><span class="std std-ref">Pearson’s chi²</span></a>, <a class="reference internal" href="#cramerv"><span class="std std-ref">Cramér’s V</span></a>, <a class="reference internal" href="#tschuprowt"><span class="std std-ref">Tschuprow’s T</span></a> (default)</p></li>
+</ul>
+</p></li>
+<li><p><strong>quantitative_filters</strong> (<em>list</em><em>[</em><em>Callable</em><em>]</em><em>, </em><em>optional</em>) – <p>List of filters to be used for <code class="docutils literal notranslate"><span class="pre">quantitative_features</span></code>.
+<a class="reference internal" href="#filters"><span class="std std-ref">Implemented filters</span></a> are:</p>
+<ul>
+<li><p>For linear correlation: <a class="reference internal" href="#pearson-filter"><span class="std std-ref">Pearson’s r</span></a>, <a class="reference internal" href="#spearman-filter"><span class="std std-ref">Spearman’s rho</span></a> (default)</p></li>
+</ul>
+</p></li>
+<li><p><strong>qualitative_filters</strong> (<em>list</em><em>[</em><em>Callable</em><em>]</em><em>, </em><em>optional</em>) – <p>List of filters to be used for <code class="docutils literal notranslate"><span class="pre">qualitative_features</span></code>.
+<a class="reference internal" href="#filters"><span class="std std-ref">Implemented filters</span></a> are:</p>
+<ul>
+<li><p>For correlation: <a class="reference internal" href="#cramerv-filter"><span class="std std-ref">Cramér’s V</span></a>, <a class="reference internal" href="#tschuprowt-filter"><span class="std std-ref">Tschuprow’s T</span></a> (default)</p></li>
+</ul>
+</p></li>
+<li><p><strong>colsample</strong> (<em>float</em><em>, </em><em>optional</em>) – <p>Size of sampled list of features for sped up computation, between 0 and 1, by default <code class="docutils literal notranslate"><span class="pre">1.0</span></code>
+By default, all features are used.</p>
+<p>For colsample=0.5, FeatureSelector will search for the best features in
+<code class="docutils literal notranslate"><span class="pre">features[:len(features)//2]</span></code> and then in <code class="docutils literal notranslate"><span class="pre">features[len(features)//2:]</span></code>.</p>
+<p><strong>Tip:</strong> for better performance, should be set such as <code class="docutils literal notranslate"><span class="pre">len(features)//2</span> <span class="pre">&lt;</span> <span class="pre">200</span></code>.</p>
+</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – <ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, without IPython installed: prints raw feature selection steps for X, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, with IPython installed: adds HTML tables to the output.</p></li>
+</ul>
+<p><strong>Tip</strong>: IPython displaying can be turned off by setting <code class="docutils literal notranslate"><span class="pre">pretty_print=False</span></code>.</p>
+</p></li>
+<li><p><strong>**kwargs</strong> – Allows one to set thresholds for provided <code class="docutils literal notranslate"><span class="pre">quantitative_measures</span></code>/<code class="docutils literal notranslate"><span class="pre">qualitative_measures</span></code> and <code class="docutils literal notranslate"><span class="pre">quantitative_filters</span></code>/<code class="docutils literal notranslate"><span class="pre">qualitative_filters</span></code> (see <a class="reference internal" href="#measures"><span class="std std-ref">Association measures, X by y</span></a> and <a class="reference internal" href="#filters"><span class="std std-ref">Association filters, X by X</span></a>) passed as keyword arguments.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>See <a class="reference external" href="https://autocarver.readthedocs.io/en/latest/index.html">Selectors examples</a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoCarver.selectors.ClassificationSelector.select">
+<span class="sig-name descname"><span class="pre">select</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#AutoCarver.selectors.ClassificationSelector.select" title="Permalink to this definition"></a></dt>
+<dd><p>Selects the <code class="docutils literal notranslate"><span class="pre">n_best</span></code> features of the DataFrame, by association with the target</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>DataFrame</em>) – Dataset to determine optimal features.
+Needs to have columns has specified in <code class="docutils literal notranslate"><span class="pre">features</span></code> attribute.</p></li>
+<li><p><strong>y</strong> (<em>Series</em>) – Target with wich the association is evaluated.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of selected features</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="regression-tasks">
+<span id="regressionselector"></span><h2>Regression tasks<a class="headerlink" href="#regression-tasks" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="AutoCarver.selectors.RegressionSelector">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.selectors.</span></span><span class="sig-name descname"><span class="pre">RegressionSelector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_best</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualitative_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantitative_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantitative_measures</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualitative_measures</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantitative_filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualitative_filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colsample</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.selectors.RegressionSelector" title="Permalink to this definition"></a></dt>
+<dd><p>A pipeline of measures to perform a feature pre-selection that maximizes association
+with a quantitative target.</p>
+<p>Get your best features with <code class="docutils literal notranslate"><span class="pre">RegressionSelector.select()</span></code>!</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_best</strong> (<em>int</em>) – <p>Number of features to select.</p>
+<ul>
+<li><p>Best features are the <code class="docutils literal notranslate"><span class="pre">n_best</span></code> of each provided data types (set in <code class="docutils literal notranslate"><span class="pre">quantitative_features</span></code> and/or <code class="docutils literal notranslate"><span class="pre">qualitative_features</span></code>)</p></li>
+<li><p>Best features are the <code class="docutils literal notranslate"><span class="pre">n_best</span></code> for each provided measures (set in <code class="docutils literal notranslate"><span class="pre">quantitative_measures</span></code> and/or <code class="docutils literal notranslate"><span class="pre">qualitative_measures</span></code>)</p></li>
+</ul>
+</p></li>
+<li><p><strong>quantitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – List of column names of quantitative features to chose from, by default <code class="docutils literal notranslate"><span class="pre">None</span></code>.
+Must be set if <code class="docutils literal notranslate"><span class="pre">qualitative_features=None</span></code>.</p></li>
+<li><p><strong>qualitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – List of column names of qualitative features to chose from, by default <code class="docutils literal notranslate"><span class="pre">None</span></code>.
+Must be set if <code class="docutils literal notranslate"><span class="pre">quantitative_features=None</span></code>.</p></li>
+<li><p><strong>quantitative_measures</strong> (<em>list</em><em>[</em><em>Callable</em><em>]</em><em>, </em><em>optional</em>) – <p>List of association measures to be used for <code class="docutils literal notranslate"><span class="pre">quantitative_features</span></code>.
+<a class="reference internal" href="#measures"><span class="std std-ref">Implemented measures</span></a> are:</p>
+<ul>
+<li><p>For association evaluation: <a class="reference internal" href="#kruskal"><span class="std std-ref">Kruskal-Wallis’ H</span></a> (default), <a class="reference internal" href="#r"><span class="std std-ref">Coefficient of determination R</span></a></p></li>
+<li><p>For outlier detection: <a class="reference internal" href="#zscore"><span class="std std-ref">Standard score</span></a>, <a class="reference internal" href="#iqr"><span class="std std-ref">Interquartile range</span></a></p></li>
+</ul>
+</p></li>
+<li><p><strong>qualitative_measures</strong> (<em>list</em><em>[</em><em>Callable</em><em>]</em><em>, </em><em>optional</em>) – <p>List of association measures to be used for <code class="docutils literal notranslate"><span class="pre">qualitative_features</span></code>.
+<a class="reference internal" href="#measures"><span class="std std-ref">Implemented measures</span></a> are:</p>
+<ul>
+<li><p>For association evaluation: <a class="reference internal" href="#chi2"><span class="std std-ref">Pearson’s chi²</span></a>, <a class="reference internal" href="#cramerv"><span class="std std-ref">Cramér’s V</span></a>, <a class="reference internal" href="#tschuprowt"><span class="std std-ref">Tschuprow’s T</span></a> (default)</p></li>
+</ul>
+</p></li>
+<li><p><strong>quantitative_filters</strong> (<em>list</em><em>[</em><em>Callable</em><em>]</em><em>, </em><em>optional</em>) – <p>List of filters to be used for <code class="docutils literal notranslate"><span class="pre">quantitative_features</span></code>.
+<a class="reference internal" href="#filters"><span class="std std-ref">Implemented filters</span></a> are:</p>
+<ul>
+<li><p>For linear correlation: <a class="reference internal" href="#pearson-filter"><span class="std std-ref">Pearson’s r</span></a>, <a class="reference internal" href="#spearman-filter"><span class="std std-ref">Spearman’s rho</span></a> (default)</p></li>
+</ul>
+</p></li>
+<li><p><strong>qualitative_filters</strong> (<em>list</em><em>[</em><em>Callable</em><em>]</em><em>, </em><em>optional</em>) – <p>List of filters to be used for <code class="docutils literal notranslate"><span class="pre">qualitative_features</span></code>.
+<a class="reference internal" href="#filters"><span class="std std-ref">Implemented filters</span></a> are:</p>
+<ul>
+<li><p>For correlation: <a class="reference internal" href="#cramerv-filter"><span class="std std-ref">Cramér’s V</span></a>, <a class="reference internal" href="#tschuprowt-filter"><span class="std std-ref">Tschuprow’s T</span></a> (default)</p></li>
+</ul>
+</p></li>
+<li><p><strong>colsample</strong> (<em>float</em><em>, </em><em>optional</em>) – <p>Size of sampled list of features for sped up computation, between 0 and 1, by default <code class="docutils literal notranslate"><span class="pre">1.0</span></code>
+By default, all features are used.</p>
+<p>For colsample=0.5, FeatureSelector will search for the best features in
+<code class="docutils literal notranslate"><span class="pre">features[:len(features)//2]</span></code> and then in <code class="docutils literal notranslate"><span class="pre">features[len(features)//2:]</span></code>.</p>
+<p><strong>Tip:</strong> for better performance, should be set such as <code class="docutils literal notranslate"><span class="pre">len(features)//2</span> <span class="pre">&lt;</span> <span class="pre">200</span></code>.</p>
+</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – <ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, without IPython installed: prints raw feature selection steps for X, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, with IPython installed: adds HTML tables to the output.</p></li>
+</ul>
+<p><strong>Tip</strong>: IPython displaying can be turned off by setting <code class="docutils literal notranslate"><span class="pre">pretty_print=False</span></code>.</p>
+</p></li>
+<li><p><strong>**kwargs</strong> – Allows one to set thresholds for provided <code class="docutils literal notranslate"><span class="pre">quantitative_measures</span></code>/<code class="docutils literal notranslate"><span class="pre">qualitative_measures</span></code> and <code class="docutils literal notranslate"><span class="pre">quantitative_filters</span></code>/<code class="docutils literal notranslate"><span class="pre">qualitative_filters</span></code> (see <a class="reference internal" href="#measures"><span class="std std-ref">Association measures, X by y</span></a> and <a class="reference internal" href="#filters"><span class="std std-ref">Association filters, X by X</span></a>) passed as keyword arguments.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>See <a class="reference external" href="https://autocarver.readthedocs.io/en/latest/index.html">Selectors examples</a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoCarver.selectors.RegressionSelector.select">
+<span class="sig-name descname"><span class="pre">select</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#AutoCarver.selectors.RegressionSelector.select" title="Permalink to this definition"></a></dt>
+<dd><p>Selects the <code class="docutils literal notranslate"><span class="pre">n_best</span></code> features of the DataFrame, by association with the target</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>DataFrame</em>) – Dataset to determine optimal features.
+Needs to have columns has specified in <code class="docutils literal notranslate"><span class="pre">features</span></code> attribute.</p></li>
+<li><p><strong>y</strong> (<em>Series</em>) – Target with wich the association is evaluated.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of selected features</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="association-measures-x-by-y">
+<span id="measures"></span><h2>Association measures, X by y<a class="headerlink" href="#association-measures-x-by-y" title="Permalink to this heading"></a></h2>
+<section id="quantitative-measures">
+<h3>Quantitative measures<a class="headerlink" href="#quantitative-measures" title="Permalink to this heading"></a></h3>
+<section id="distance-correlation">
+<span id="distance"></span><h4>Distance Correlation<a class="headerlink" href="#distance-correlation" title="Permalink to this heading"></a></h4>
+<p>For two <strong>quantitative</strong> features <span class="math notranslate nohighlight">\(x\)</span> and <span class="math notranslate nohighlight">\(y\)</span>, the Distance Correlation can be computed using the following formula:</p>
+<div class="math notranslate nohighlight">
+\[1 - \frac{ (x - \bar{x}) (y - \bar{y}) } { ||x - \bar{x}||_2 ||y - \bar{y}||_2  }\]</div>
+<p>where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(n_x\)</span> is the number of observations of <span class="math notranslate nohighlight">\(x\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(n_y\)</span> is the number of observations of <span class="math notranslate nohighlight">\(y\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(\bar{y}=\sum_{i=1}^{n_y}{y_{i}}\)</span> is the sample mean of <span class="math notranslate nohighlight">\(y\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(\bar{x}=\sum_{i=1}^{n_x}{x_{i}}\)</span> is the sample mean of <span class="math notranslate nohighlight">\(x\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(||x - \bar{x}||_2 = \sqrt{ \sum_{i=1}^{n_x}{  (x_i - \bar{x})^2 } }\)</span> is the euclidean norm of <span class="math notranslate nohighlight">\(x\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(||y - \bar{y}||_2 = \sqrt{ \sum_{i=1}^{n_x}{  (y_i - \bar{y})^2 } }\)</span> is the euclidean norm of <span class="math notranslate nohighlight">\(y\)</span></p></li>
+</ul>
+</div></blockquote>
+<p>The Distance Correlation is computed using <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.correlation.html">scipy.spatial.distance.correlation</a>.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.distance_measure">
+<span class="sig-prename descclassname"><span class="pre">AutoCarver.selectors.measures.</span></span><span class="sig-name descname"><span class="pre">distance_measure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresh_distance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#AutoCarver.selectors.measures.distance_measure" title="Permalink to this definition"></a></dt>
+<dd><p>Distance correlation between <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>Series</em>) – Quantitative feature</p></li>
+<li><p><strong>y</strong> (<em>Series</em>) – Quantitative target feature</p></li>
+<li><p><strong>thresh_distance</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum distance association, by default <code class="docutils literal notranslate"><span class="pre">0</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Whether <code class="docutils literal notranslate"><span class="pre">x</span></code> is sufficiently associated to <code class="docutils literal notranslate"><span class="pre">y</span></code> and Distance Correlation</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[bool, dict[str, Any]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">distance_measure</span></code> is the default measure for quantitative features in regression tasks (i.e. when <code class="docutils literal notranslate"><span class="pre">RegressionSelector.quantitative_filters=None</span></code> and <code class="docutils literal notranslate"><span class="pre">RegressionSelector.quantitative_features</span></code> is provided).</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">thresh_distance</span></code> is reached, feature will automatically be dropped.</p></li>
+</ul>
+</div>
+</section>
+<section id="kruskal-wallis-h-test-statistic">
+<span id="kruskal"></span><h4>Kruskal-Wallis’ <span class="math notranslate nohighlight">\(H\)</span> test statistic<a class="headerlink" href="#kruskal-wallis-h-test-statistic" title="Permalink to this heading"></a></h4>
+<p>For a <strong>quantitative</strong> feature <span class="math notranslate nohighlight">\(x\)</span>, the corresponding order feature <span class="math notranslate nohighlight">\(x_o\)</span> is the sorted sample of <span class="math notranslate nohighlight">\(x\)</span> such that any <span class="math notranslate nohighlight">\(i\)</span> in <span class="math notranslate nohighlight">\((1, n-1)\)</span> verifies <span class="math notranslate nohighlight">\(x_o^i \leq x_o^{i+1}\)</span>, where <span class="math notranslate nohighlight">\(n\)</span> is the number of observations. For the same feature <span class="math notranslate nohighlight">\(x\)</span>, the corresponding rank <span class="math notranslate nohighlight">\(x_r\)</span> is the index of <span class="math notranslate nohighlight">\(x\)</span>’s values in <span class="math notranslate nohighlight">\(x_o\)</span>.</p>
+<p>The association with a <strong>qualitative</strong> target <span class="math notranslate nohighlight">\(y\)</span> is computed using <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.kruskal.html">scipy.stats.kruskal</a>.</p>
+<p>Kruskal-Wallis’ <span class="math notranslate nohighlight">\(H\)</span> test statistic, as known as one-way ANOVA on ranks, allows one to check that two samples originate from the same distribution.
+It is used to determine whether or not <span class="math notranslate nohighlight">\(x\)</span> is distributed the same when <span class="math notranslate nohighlight">\(y=y_0\)</span> to <span class="math notranslate nohighlight">\(y=y_{n_y-1}\)</span> where <span class="math notranslate nohighlight">\(n_y\)</span> is the number of modalities taken by <span class="math notranslate nohighlight">\(y\)</span>.
+It is computed using the following formula:</p>
+<div class="math notranslate nohighlight">
+\[H = (n-1) \frac{ \sum_{i=1}^{n_y}{ n_{y=i} (\bar{x_r^{i.}} - \bar{x_r})^2 } } { \sum_{i=1}^{n_y}{ \sum_{j=1}^{n_{y=i}}{ (x_r^{ij} - \bar{x_r})^2 } } }\]</div>
+<p>where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(n\)</span> is the number of observations</p></li>
+<li><p><span class="math notranslate nohighlight">\(n_y\)</span> is the number of modalities of <span class="math notranslate nohighlight">\(y\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(n_{y=i}\)</span> is the number of observations taking <span class="math notranslate nohighlight">\(y\)</span>’s <span class="math notranslate nohighlight">\(i\)</span> th modality</p></li>
+<li><p><span class="math notranslate nohighlight">\(x_r\)</span> is the ranked version of <span class="math notranslate nohighlight">\(x\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(x_r^{ij}\)</span> is the <span class="math notranslate nohighlight">\(j\)</span> th observation of <span class="math notranslate nohighlight">\(x_r\)</span> when <span class="math notranslate nohighlight">\(y\)</span> takes its <span class="math notranslate nohighlight">\(i\)</span> th modality</p></li>
+<li><p><span class="math notranslate nohighlight">\(\bar{x_r^{i.}}=\sum_{j=1}^{n_{y=i}}x_r^{ij}\)</span> is the sample mean of <span class="math notranslate nohighlight">\(x_r\)</span> when <span class="math notranslate nohighlight">\(y\)</span> takes its <span class="math notranslate nohighlight">\(i\)</span> th modality</p></li>
+<li><p><span class="math notranslate nohighlight">\(\bar{x_r}=\sum_{i=1}^{n_y}{\sum_{j=1}^{n_{y=i}}}x_r^{ij}\)</span> is the sample mean of <span class="math notranslate nohighlight">\(x_r\)</span></p></li>
+</ul>
+</div></blockquote>
+<dl class="py function">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.kruskal_measure">
+<span class="sig-prename descclassname"><span class="pre">AutoCarver.selectors.measures.</span></span><span class="sig-name descname"><span class="pre">kruskal_measure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresh_kruskal</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#AutoCarver.selectors.measures.kruskal_measure" title="Permalink to this definition"></a></dt>
+<dd><p>Kruskal-Wallis’ test statistic between <code class="docutils literal notranslate"><span class="pre">x</span></code> for each value taken by <code class="docutils literal notranslate"><span class="pre">y</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>Series</em>) – Quantitative feature</p></li>
+<li><p><strong>y</strong> (<em>Series</em>) – Qualitative target feature</p></li>
+<li><p><strong>thresh_kruskal</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum Kruskal-Wallis association, by default <code class="docutils literal notranslate"><span class="pre">0</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Whether <code class="docutils literal notranslate"><span class="pre">x</span></code> is sufficiently associated to <code class="docutils literal notranslate"><span class="pre">y</span></code> and Kruskal-Wallis’ test statistic</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[bool, dict[str, Any]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">kruskal_measure</span></code> is the default measure for quantitative features in classification tasks (i.e. when <code class="docutils literal notranslate"><span class="pre">ClassificationSelector.quantitative_filters=None</span></code> and <code class="docutils literal notranslate"><span class="pre">ClassificationSelector.quantitative_features</span></code> is provided).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">kruskal_measure</span></code> is the default measure for qualitative features in regression tasks (i.e. when <code class="docutils literal notranslate"><span class="pre">RegressionSelector.qualitative_filters=None</span></code> and <code class="docutils literal notranslate"><span class="pre">RegressionSelector.qualitative_features</span></code> is provided).</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">thresh_kruskal</span></code> is reached, feature will automatically be dropped.</p></li>
+</ul>
+</div>
+</section>
+<section id="coefficient-of-determination-r">
+<span id="r"></span><h4>Coefficient of determination <span class="math notranslate nohighlight">\(R\)</span><a class="headerlink" href="#coefficient-of-determination-r" title="Permalink to this heading"></a></h4>
+<p>For a <strong>binary</strong> feature <span class="math notranslate nohighlight">\(y\)</span> and a <strong>quantitative</strong> feature <span class="math notranslate nohighlight">\(x\)</span> the following linear regression model is fitted using <a class="reference external" href="https://www.statsmodels.org/dev/generated/statsmodels.formula.api.ols.html">statsmodels.formula.api.ols</a>:</p>
+<div class="math notranslate nohighlight">
+\[x = \alpha + \beta y + \epsilon\]</div>
+<dl class="simple">
+<dt>where:</dt><dd><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\alpha\)</span> and <span class="math notranslate nohighlight">\(\beta\)</span> are the coefficient of the linear regression model</p></li>
+<li><p><span class="math notranslate nohighlight">\(\epsilon\)</span> is the residual of the linear regression model</p></li>
+</ul>
+</dd>
+</dl>
+<p>The determination coefficient, often denoted as <span class="math notranslate nohighlight">\(R^2\)</span>, is a statistical measure that quantifies the goodness of fit of a linear regression model.
+In this specific case, it is equal to the square of Pearson’s <span class="math notranslate nohighlight">\(r\)</span> correlation coefficient between <span class="math notranslate nohighlight">\(x\)</span> and <span class="math notranslate nohighlight">\(y\)</span>.
+It is computed with the following formula:</p>
+<div class="math notranslate nohighlight">
+\[R = \sqrt{ 1 - \frac{ SS_{res} }{ SS_{tot} } }\]</div>
+<p>where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(n\)</span> is the number of observations</p></li>
+<li><p><span class="math notranslate nohighlight">\(SS_{res} = \sum_{i=1}^n{(x_i - \alpha - \beta y_i)^2} = \sum_{i=1}^n{\epsilon_i^2}\)</span> is the residual sum of squares</p></li>
+<li><p><span class="math notranslate nohighlight">\(SS_{tot} = \sum_{i=1}^n{(x_i - \bar{x})^2}\)</span> is the total sum of squares</p></li>
+<li><p><span class="math notranslate nohighlight">\(\bar{x}=\sum_{i=1}^{n}{x_i}\)</span> is the sample mean of <span class="math notranslate nohighlight">\(x\)</span></p></li>
+</ul>
+</div></blockquote>
+<dl class="py function">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.R_measure">
+<span class="sig-prename descclassname"><span class="pre">AutoCarver.selectors.measures.</span></span><span class="sig-name descname"><span class="pre">R_measure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresh_R</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#AutoCarver.selectors.measures.R_measure" title="Permalink to this definition"></a></dt>
+<dd><p>Square root of the coefficient of determination of linear regression model of <code class="docutils literal notranslate"><span class="pre">x</span></code> by <code class="docutils literal notranslate"><span class="pre">y</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>Series</em>) – Quantitative feature</p></li>
+<li><p><strong>y</strong> (<em>Series</em>) – Binary target feature</p></li>
+<li><p><strong>thresh_R</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum R association, by default <code class="docutils literal notranslate"><span class="pre">0</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Whether <code class="docutils literal notranslate"><span class="pre">x</span></code> is sufficiently associated to <code class="docutils literal notranslate"><span class="pre">y</span></code> and the square root of the determination coefficient</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[bool, dict[str, Any]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">thresh_R</span></code> is reached, feature will automatically be dropped.</p>
+</div>
+</section>
+<section id="outlier-detection-standard-score">
+<span id="zscore"></span><h4>Outlier Detection: Standard score<a class="headerlink" href="#outlier-detection-standard-score" title="Permalink to this heading"></a></h4>
+<p>Standard score can be applied as a measure of deviation to determine outlier for <strong>quantitative</strong> features.
+For a feature <span class="math notranslate nohighlight">\(x\)</span> it is computed for any oservation <span class="math notranslate nohighlight">\(x_i\)</span> as follows:</p>
+<div class="math notranslate nohighlight">
+\[z_i = \frac{x_i - \bar{x}}{S}\]</div>
+<p>where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(n\)</span> is the number of observations</p></li>
+<li><p><span class="math notranslate nohighlight">\(\bar{x}=\frac{1}{n}\sum_{j=1}^n{x_j}\)</span> is the sample mean of <span class="math notranslate nohighlight">\(x\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(S=\sqrt{\frac{1}{n-1}\sum_{j=1}^n{(x_j - \bar{x})^2}}\)</span> is the sample standard deviation of <span class="math notranslate nohighlight">\(x\)</span></p></li>
+</ul>
+</div></blockquote>
+<dl class="py function">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.zscore_measure">
+<span class="sig-prename descclassname"><span class="pre">AutoCarver.selectors.measures.</span></span><span class="sig-name descname"><span class="pre">zscore_measure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresh_zscore</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#AutoCarver.selectors.measures.zscore_measure" title="Permalink to this definition"></a></dt>
+<dd><p>Computes outliers percentage based on the z-score</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>Series</em>) – Quantitative feature</p></li>
+<li><p><strong>y</strong> (<em>Series</em><em>, </em><em>optional</em>) – Any target feature, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>thresh_zscore</strong> (<em>float</em><em>, </em><em>optional</em>) – Maximum percentage of Outliers in a feature, by default <code class="docutils literal notranslate"><span class="pre">1.0</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Whether or not there are too many outliers and the outlier measurement</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[bool, dict[str, Any]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">thresh_zscore</span></code> is reached, feature will automatically be dropped.</p>
+</div>
+</section>
+<section id="outlier-detection-interquartile-range">
+<span id="iqr"></span><h4>Outlier Detection: Interquartile range<a class="headerlink" href="#outlier-detection-interquartile-range" title="Permalink to this heading"></a></h4>
+<p>Interquartile range is widely used as an outlier detection metric for <strong>quantitative</strong> features.
+For a feature <span class="math notranslate nohighlight">\(x\)</span> it is computed as follows:</p>
+<div class="math notranslate nohighlight">
+\[IQR = Q_3 - Q_1\]</div>
+<p>where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(Q_1\)</span> is the 25th percentile of the <span class="math notranslate nohighlight">\(x\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(Q_3\)</span> is the 75th percentile of the <span class="math notranslate nohighlight">\(x\)</span></p></li>
+</ul>
+</div></blockquote>
+<p>Any observation <span class="math notranslate nohighlight">\(x_i\)</span> of feature <span class="math notranslate nohighlight">\(x\)</span>, can be considered an outlier if it does not verify:</p>
+<div class="math notranslate nohighlight">
+\[Q1 - 1.5 IQR \leq x_i \leq Q3 + 1.5 IQR\]</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.iqr_measure">
+<span class="sig-prename descclassname"><span class="pre">AutoCarver.selectors.measures.</span></span><span class="sig-name descname"><span class="pre">iqr_measure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresh_iqr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#AutoCarver.selectors.measures.iqr_measure" title="Permalink to this definition"></a></dt>
+<dd><p>Computes outliers percentage based on the interquartile range</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>Series</em>) – Quantitative feature</p></li>
+<li><p><strong>y</strong> (<em>Series</em><em>, </em><em>optional</em>) – Any target feature, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>thresh_iqr</strong> (<em>float</em><em>, </em><em>optional</em>) – Maximum percentage of Outliers in a feature, by default <code class="docutils literal notranslate"><span class="pre">1.0</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Whether or not there are too many outliers and the outlier measurement</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[bool, dict[str, Any]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">thresh_iqr</span></code> is reached, feature will automatically be dropped.</p>
+</div>
+</section>
+</section>
+<section id="qualitative-measures">
+<h3>Qualitative measures<a class="headerlink" href="#qualitative-measures" title="Permalink to this heading"></a></h3>
+<section id="pearson-s-chi-2-test-statistic">
+<span id="chi2"></span><h4>Pearson’s <span class="math notranslate nohighlight">\(\chi^2\)</span> test statistic<a class="headerlink" href="#pearson-s-chi-2-test-statistic" title="Permalink to this heading"></a></h4>
+<p>For a <strong>qualititative</strong> feature <span class="math notranslate nohighlight">\(x\)</span>, the association with a <strong>qualitative</strong> target <span class="math notranslate nohighlight">\(y\)</span> is computed based on the <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.crosstab.html">pandas.crosstab</a>.</p>
+<p>Pearson’s <span class="math notranslate nohighlight">\(\chi^2\)</span> test statistic is then computed using <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chi2_contingency.html">scipy.stats.chi2_contingency</a> to perform association measuring.
+The formula is the following:</p>
+<div class="math notranslate nohighlight">
+\[\chi^2=\sum_{i=1}^{n_x}{\sum_{j=1}^{n_y}{\frac{(n_{ij} - \frac{n_{i.}n_{.j}}{n})^2}{\frac{n_{i.}n_{.j}}{n}}}}\]</div>
+<p>where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(n\)</span> is the number of observations</p></li>
+<li><p><span class="math notranslate nohighlight">\(n_x\)</span> is the number of modalities of <span class="math notranslate nohighlight">\(x\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(n_y\)</span> is the number of modalities of <span class="math notranslate nohighlight">\(y\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(n_{ij}\)</span> is the number of observations that take modality <span class="math notranslate nohighlight">\(i\)</span> of <span class="math notranslate nohighlight">\(x\)</span> and modality <span class="math notranslate nohighlight">\(j\)</span> of <span class="math notranslate nohighlight">\(y\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(n_{i.}=\sum_{i=1}^{n_x}n_{ij}\)</span> is the total number of observations that take modality <span class="math notranslate nohighlight">\(i\)</span> of <span class="math notranslate nohighlight">\(x\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(n_{.j}=\sum_{j=1}^{n_y}n_{ij}\)</span> is the total number of observations that take modality <span class="math notranslate nohighlight">\(j\)</span> of <span class="math notranslate nohighlight">\(y\)</span></p></li>
+</ul>
+</div></blockquote>
+<dl class="py function">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.chi2_measure">
+<span class="sig-prename descclassname"><span class="pre">AutoCarver.selectors.measures.</span></span><span class="sig-name descname"><span class="pre">chi2_measure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresh_chi2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#AutoCarver.selectors.measures.chi2_measure" title="Permalink to this definition"></a></dt>
+<dd><p>Wrapper for <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chi2_contingency.html">scipy.stats.chi2_contingency</a>.
+Computes Chi2 statistic on the <code class="docutils literal notranslate"><span class="pre">x</span></code> by <code class="docutils literal notranslate"><span class="pre">y</span></code> <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.crosstab.html">pandas.crosstab</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>Series</em>) – Qualitative feature</p></li>
+<li><p><strong>y</strong> (<em>Series</em>) – Qualitative target feature</p></li>
+<li><p><strong>thresh_chi2</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum Chi2 association, by default <code class="docutils literal notranslate"><span class="pre">0</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Whether <code class="docutils literal notranslate"><span class="pre">x</span></code> is sufficiently associated to <code class="docutils literal notranslate"><span class="pre">y</span></code> and Pearson’s chi2 between <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[bool, dict[str, Any]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">thresh_chi2</span></code> is reached, feature will automatically be dropped.</p>
+</div>
+</section>
+<section id="cramer-s-v">
+<span id="cramerv"></span><h4>Cramér’s <span class="math notranslate nohighlight">\(V\)</span><a class="headerlink" href="#cramer-s-v" title="Permalink to this heading"></a></h4>
+<p>Based on Pearson’s <span class="math notranslate nohighlight">\(\chi^2\)</span>, Cramér’s <span class="math notranslate nohighlight">\(V\)</span> is computed using the following formula:</p>
+<div class="math notranslate nohighlight">
+\[V=\sqrt{\frac{\chi^2}{n\min(n_x-1, n_y-1)}}\]</div>
+<p>where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(n\)</span> is the number of observations</p></li>
+<li><p><span class="math notranslate nohighlight">\(n_x\)</span> is the number of modalities of <span class="math notranslate nohighlight">\(x\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(n_y\)</span> is the number of modalities of <span class="math notranslate nohighlight">\(y\)</span></p></li>
+</ul>
+</div></blockquote>
+<dl class="py function">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.cramerv_measure">
+<span class="sig-prename descclassname"><span class="pre">AutoCarver.selectors.measures.</span></span><span class="sig-name descname"><span class="pre">cramerv_measure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresh_cramerv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chi2_statistic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#AutoCarver.selectors.measures.cramerv_measure" title="Permalink to this definition"></a></dt>
+<dd><p>Computes Carmér’s V between <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code> from <code class="docutils literal notranslate"><span class="pre">chi2_measure</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>Series</em>) – Qualitative feature</p></li>
+<li><p><strong>y</strong> (<em>Series</em>) – Qualitative target feature</p></li>
+<li><p><strong>thresh_cramerv</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum Cramér’s V association, by default <code class="docutils literal notranslate"><span class="pre">0</span></code></p></li>
+<li><p><strong>chi2_statistic</strong> (<em>float</em><em>, </em><em>optional</em>) – Pearson’s chi2 between <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code>, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Whether <code class="docutils literal notranslate"><span class="pre">x</span></code> is sufficiently associated to <code class="docutils literal notranslate"><span class="pre">y</span></code> and Carmér’s V between <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[bool, dict[str, Any]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">thresh_cramerv</span></code> is reached, feature will automatically be dropped.</p>
+</div>
+</section>
+<section id="tschuprow-s-t">
+<span id="tschuprowt"></span><h4>Tschuprow’s <span class="math notranslate nohighlight">\(T\)</span><a class="headerlink" href="#tschuprow-s-t" title="Permalink to this heading"></a></h4>
+<p>Based on Pearson’s <span class="math notranslate nohighlight">\(\chi^2\)</span>, Tschuprow’s <span class="math notranslate nohighlight">\(T\)</span> is computed using the following formula:</p>
+<div class="math notranslate nohighlight">
+\[T=\sqrt{\frac{\chi^2}{n\sqrt{(n_x-1)(n_y-1)}}}\]</div>
+<p>where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(n\)</span> is the number of observations</p></li>
+<li><p><span class="math notranslate nohighlight">\(n_x\)</span> is the number of modalities of <span class="math notranslate nohighlight">\(x\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(n_y\)</span> is the number of modalities of <span class="math notranslate nohighlight">\(y\)</span></p></li>
+</ul>
+</div></blockquote>
+<dl class="py function">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.tschuprowt_measure">
+<span class="sig-prename descclassname"><span class="pre">AutoCarver.selectors.measures.</span></span><span class="sig-name descname"><span class="pre">tschuprowt_measure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresh_tschuprowt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chi2_statistic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#AutoCarver.selectors.measures.tschuprowt_measure" title="Permalink to this definition"></a></dt>
+<dd><p>Computes Tschuprow’s T between <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code> from <code class="docutils literal notranslate"><span class="pre">chi2_measure</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>Series</em>) – Feature to measure</p></li>
+<li><p><strong>y</strong> (<em>Series</em>) – Binary target feature</p></li>
+<li><p><strong>thresh_tschuprowt</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum Tschuprow’s T association, by default <code class="docutils literal notranslate"><span class="pre">0</span></code></p></li>
+<li><p><strong>chi2_statistic</strong> (<em>float</em><em>, </em><em>optional</em>) – Pearson’s chi2 between <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code>, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Whether <code class="docutils literal notranslate"><span class="pre">x</span></code> is sufficiently associated to <code class="docutils literal notranslate"><span class="pre">y</span></code> and Tschuprow’s T between <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[bool, dict[str, Any]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">tschuprowt_measure</span></code> is the default measure for qualitative features in classification tasks (i.e. when <code class="docutils literal notranslate"><span class="pre">ClassificationSelector.qualitative_filters=None</span></code> and <code class="docutils literal notranslate"><span class="pre">ClassificationSelector.qualitative_features</span></code> is provided).</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">thresh_tschuprowt</span></code> is reached, feature will automatically be dropped.</p></li>
+</ul>
+</div>
+</section>
+</section>
+<section id="base-data-information">
+<h3>Base data information<a class="headerlink" href="#base-data-information" title="Permalink to this heading"></a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Those measures are performed by default and don’t need to be added in the attributes.</p>
+</div>
+<section id="missing-values">
+<h4>Missing values<a class="headerlink" href="#missing-values" title="Permalink to this heading"></a></h4>
+<dl class="py function">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.nans_measure">
+<span class="sig-prename descclassname"><span class="pre">AutoCarver.selectors.measures.</span></span><span class="sig-name descname"><span class="pre">nans_measure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresh_nan</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.999</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#AutoCarver.selectors.measures.nans_measure" title="Permalink to this definition"></a></dt>
+<dd><p>Measure of the percentage of NaNs</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>Series</em>) – Feature to measure</p></li>
+<li><p><strong>y</strong> (<em>Series</em><em>, </em><em>optional</em>) – Binary target feature, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>thresh_nan</strong> (<em>float</em><em>, </em><em>optional</em>) – Maximum percentage of NaNs in a feature, by default <code class="docutils literal notranslate"><span class="pre">0.999</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Whether or not there are to many NaNs and the percentage of NaNs</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[bool, dict[str, Any]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">nans_measure</span></code> is evaluated by default in all <strong>Selectors</strong>.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">thresh_nan</span></code> is reached, feature will automatically be dropped.</p></li>
+</ul>
+</div>
+</section>
+<section id="data-types">
+<h4>Data types<a class="headerlink" href="#data-types" title="Permalink to this heading"></a></h4>
+<dl class="py function">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.dtype_measure">
+<span class="sig-prename descclassname"><span class="pre">AutoCarver.selectors.measures.</span></span><span class="sig-name descname"><span class="pre">dtype_measure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#AutoCarver.selectors.measures.dtype_measure" title="Permalink to this definition"></a></dt>
+<dd><p>Feature’s dtype</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>Series</em>) – Feature to measure</p></li>
+<li><p><strong>y</strong> (<em>Series</em><em>, </em><em>optional</em>) – Binary target feature, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True and the feature’s dtype</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[bool, dict[str, Any]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">dtype_measure</span></code> is evaluated by default in all <strong>Selectors</strong>.</p>
+</div>
+</section>
+<section id="mode">
+<h4>Mode<a class="headerlink" href="#mode" title="Permalink to this heading"></a></h4>
+<dl class="py function">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.mode_measure">
+<span class="sig-prename descclassname"><span class="pre">AutoCarver.selectors.measures.</span></span><span class="sig-name descname"><span class="pre">mode_measure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresh_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.999</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#AutoCarver.selectors.measures.mode_measure" title="Permalink to this definition"></a></dt>
+<dd><p>Measure of the percentage of the Mode</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>Series</em>) – Feature to measure</p></li>
+<li><p><strong>y</strong> (<em>Series</em><em>, </em><em>optional</em>) – Binary target feature, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>thresh_mode</strong> (<em>float</em><em>, </em><em>optional</em>) – Maximum percentage of a feature’s mode, by default <code class="docutils literal notranslate"><span class="pre">0.999</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Whether or not the mode is overrepresented and the percentage of mode</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[bool, dict[str, Any]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">mode_measure</span></code> is evaluated by default in all <strong>Selectors</strong>.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">thresh_mode</span></code> is reached, feature will automatically be dropped.</p></li>
+</ul>
+</div>
+</section>
+</section>
+</section>
+<section id="association-filters-x-by-x">
+<span id="filters"></span><h2>Association filters, X by X<a class="headerlink" href="#association-filters-x-by-x" title="Permalink to this heading"></a></h2>
+<section id="quantitative-filters">
+<h3>Quantitative filters<a class="headerlink" href="#quantitative-filters" title="Permalink to this heading"></a></h3>
+<section id="pearson-s-r">
+<span id="pearson-filter"></span><h4>Pearson’s <span class="math notranslate nohighlight">\(r\)</span><a class="headerlink" href="#pearson-s-r" title="Permalink to this heading"></a></h4>
+<p>For a <strong>quantititative</strong> feature <span class="math notranslate nohighlight">\(x_1\)</span>, the association with a <strong>quantitative</strong> feature <span class="math notranslate nohighlight">\(x_2\)</span> is computed using <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.corr.html">pandas.DataFrame.corr</a>.</p>
+<p>Pearson’s <span class="math notranslate nohighlight">\(r\)</span>, as known as the bivariate correlation, is a measure of linear correlation between quantitative features.
+It is computed using the following formula:</p>
+<div class="math notranslate nohighlight">
+\[r_{x_1x_2}= \frac{\sum_{i=1}^{n}{(x_1^i-\bar{x_1})(x_2^i-\bar{x_2})}}{\sqrt{\sum_{i=1}^{n}{(x_1^i-\bar{x_1})^2}}  \sqrt{\sum_{i=1}^{n}{(x_2^i-\bar{x_2})^2}}}\]</div>
+<p>where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(n\)</span> is the number of observations</p></li>
+<li><p><span class="math notranslate nohighlight">\(x_1^i\)</span> is the <span class="math notranslate nohighlight">\(i\)</span> th observation of <span class="math notranslate nohighlight">\(x_1\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(x_2^i\)</span> is the <span class="math notranslate nohighlight">\(i\)</span> th observation of <span class="math notranslate nohighlight">\(x_2\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(\bar{x_1}=\frac{1}{n}\sum_{i=1}^n{x_1^i}\)</span> is the sample mean of <span class="math notranslate nohighlight">\(x_1\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(\bar{x_2}=\frac{1}{n}\sum_{i=1}^n{x_2^i}\)</span> is the sample mean of <span class="math notranslate nohighlight">\(x_2\)</span></p></li>
+</ul>
+</div></blockquote>
+<dl class="py function">
+<dt class="sig sig-object py" id="AutoCarver.selectors.filters.pearson_filter">
+<span class="sig-prename descclassname"><span class="pre">AutoCarver.selectors.filters.</span></span><span class="sig-name descname"><span class="pre">pearson_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ranks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresh_corr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#AutoCarver.selectors.filters.pearson_filter" title="Permalink to this definition"></a></dt>
+<dd><p>Computes maximum Pearson’s r between X and X (quantitative).
+Features too correlated to a feature more associated with the target
+are excluded (according to provided <code class="docutils literal notranslate"><span class="pre">ranks</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>DataFrame</em>) – Contains columns named after <code class="docutils literal notranslate"><span class="pre">ranks</span></code>’s index (feature names)</p></li>
+<li><p><strong>ranks</strong> (<em>DataFrame</em>) – Ranked features as index of the association table</p></li>
+<li><p><strong>thresh_corr</strong> (<em>float</em><em>, </em><em>optional</em>) – Maximum Pearson’s r bewteen features, by default <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Maximum Pearson’s r with a better feature</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict[str, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">thresh_corr</span></code> is reached, feature will automatically be dropped.</p>
+</div>
+</section>
+<section id="spearman-s-rho">
+<span id="spearman-filter"></span><h4>Spearman’s <span class="math notranslate nohighlight">\(\rho\)</span><a class="headerlink" href="#spearman-s-rho" title="Permalink to this heading"></a></h4>
+<p>For a <strong>quantitative</strong> feature <span class="math notranslate nohighlight">\(x\)</span>, the corresponding order feature <span class="math notranslate nohighlight">\(x_o\)</span> is the sorted sample of <span class="math notranslate nohighlight">\(x\)</span> such that any <span class="math notranslate nohighlight">\(i\)</span> in <span class="math notranslate nohighlight">\((1, n-1)\)</span> verifies <span class="math notranslate nohighlight">\(x_o^i \leq x_o^{i+1}\)</span>, where <span class="math notranslate nohighlight">\(n\)</span> is the number of observations. For the same feature <span class="math notranslate nohighlight">\(x\)</span>, the corresponding rank <span class="math notranslate nohighlight">\(x_r\)</span> is the index of <span class="math notranslate nohighlight">\(x\)</span>’s values in <span class="math notranslate nohighlight">\(x_o\)</span>.</p>
+<p>Spearman’s <span class="math notranslate nohighlight">\(\rho\)</span> is Pearson’s <span class="math notranslate nohighlight">\(r\)</span> computed on the rank features. As so, Spearman’s <span class="math notranslate nohighlight">\(\rho\)</span> is computed with the following formula:</p>
+<div class="math notranslate nohighlight">
+\[\rho=r_{x_{1_{r}}x_{2_{r}}}\]</div>
+<p>where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(x_{1_{r}}\)</span> is the ranked version of <span class="math notranslate nohighlight">\(x_1\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(x_{2_{r}}\)</span> is the ranked version of <span class="math notranslate nohighlight">\(x_2\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(r_{x_{1_{r}}x_{2_{r}}}\)</span> is Pearson’s <span class="math notranslate nohighlight">\(r\)</span> linear correlation coefficient between <span class="math notranslate nohighlight">\(x_{1_{r}}\)</span> and <span class="math notranslate nohighlight">\(x_{2_{r}}\)</span></p></li>
+</ul>
+</div></blockquote>
+<dl class="py function">
+<dt class="sig sig-object py" id="AutoCarver.selectors.filters.spearman_filter">
+<span class="sig-prename descclassname"><span class="pre">AutoCarver.selectors.filters.</span></span><span class="sig-name descname"><span class="pre">spearman_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ranks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresh_corr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#AutoCarver.selectors.filters.spearman_filter" title="Permalink to this definition"></a></dt>
+<dd><p>Computes maximum Spearman’s rho between X and X (quantitative).
+Features too correlated to a feature more associated with the target
+are excluded (according to provided <code class="docutils literal notranslate"><span class="pre">ranks</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>DataFrame</em>) – Contains columns named after <code class="docutils literal notranslate"><span class="pre">ranks</span></code>’s index (feature names)</p></li>
+<li><p><strong>ranks</strong> (<em>DataFrame</em>) – Ranked features as index of the association table</p></li>
+<li><p><strong>thresh_corr</strong> (<em>float</em><em>, </em><em>optional</em>) – Maximum Spearman’s rho bewteen features, by default <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Maximum Spearman’s rho with a better features</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict[str, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">spearman_filter</span></code> is the default filter for quantitative features (i.e. when <code class="docutils literal notranslate"><span class="pre">quantitative_filters=None</span></code> and <code class="docutils literal notranslate"><span class="pre">quantitative_features</span></code> is provided).</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">thresh_corr</span></code> is reached, feature will automatically be dropped.</p></li>
+</ul>
+</div>
+</section>
+</section>
+<section id="qualitative-filters">
+<h3>Qualitative filters<a class="headerlink" href="#qualitative-filters" title="Permalink to this heading"></a></h3>
+<section id="cramerv-filter">
+<span id="id5"></span><h4>Cramér’s <span class="math notranslate nohighlight">\(V\)</span><a class="headerlink" href="#cramerv-filter" title="Permalink to this heading"></a></h4>
+<p>For a <strong>qualititative</strong> feature <span class="math notranslate nohighlight">\(x_1\)</span>, the association with a <strong>qualitative</strong> feature <span class="math notranslate nohighlight">\(x_2\)</span> is computed based on the <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.crosstab.html">pandas.crosstab</a>.</p>
+<p>Pearson’s <span class="math notranslate nohighlight">\(\chi^2\)</span> statistics is then computed using <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chi2_contingency.html">scipy.stats.chi2_contingency</a> to perform association measuring.
+The formula is the following:</p>
+<div class="math notranslate nohighlight">
+\[\chi^2=\sum_{i=1}^{n_{x_1}}{\sum_{j=1}^{n_{x_2}}{\frac{(n_{ij} - \frac{n_{i.}n_{.j}}{n})^2}{\frac{n_{i.}n_{.j}}{n}}}}\]</div>
+<p>where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(n\)</span> is the number of observations</p></li>
+<li><p><span class="math notranslate nohighlight">\(n_{x_1}\)</span> is the number of modalities of <span class="math notranslate nohighlight">\(x_1\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(n_{x_2}\)</span> is the number of modalities of <span class="math notranslate nohighlight">\(x_2\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(n_{ij}\)</span> is the number of observations that take modality <span class="math notranslate nohighlight">\(i\)</span> of <span class="math notranslate nohighlight">\(x_1\)</span> and modality <span class="math notranslate nohighlight">\(j\)</span> of <span class="math notranslate nohighlight">\(x_2\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(n_{i.}=\sum_{i=1}^{n_{x_1}}\)</span> is the total number of observations that take modality <span class="math notranslate nohighlight">\(i\)</span> of <span class="math notranslate nohighlight">\(x_1\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(n_{.j}=\sum_{j=1}^{n_{x_2}}\)</span> is the total number of observations that take modality <span class="math notranslate nohighlight">\(j\)</span> of <span class="math notranslate nohighlight">\(x_2\)</span></p></li>
+</ul>
+</div></blockquote>
+<p>Based on Pearson’s <span class="math notranslate nohighlight">\(\chi^2\)</span>, Cramér’s <span class="math notranslate nohighlight">\(V\)</span> is computed using the following formula:</p>
+<div class="math notranslate nohighlight">
+\[V=\sqrt{ \frac{ \chi^2 }{ n\min(n_{x_1}-1, n_{x_2}-1) } }\]</div>
+<p>where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(n\)</span> is the number of observations</p></li>
+<li><p><span class="math notranslate nohighlight">\(n_{x_1}\)</span> is the number of modalities of <span class="math notranslate nohighlight">\(x_1\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(n_{x_2}\)</span> is the number of modalities of <span class="math notranslate nohighlight">\(x_2\)</span></p></li>
+</ul>
+</div></blockquote>
+<dl class="py function">
+<dt class="sig sig-object py" id="AutoCarver.selectors.filters.cramerv_filter">
+<span class="sig-prename descclassname"><span class="pre">AutoCarver.selectors.filters.</span></span><span class="sig-name descname"><span class="pre">cramerv_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ranks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresh_corr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#AutoCarver.selectors.filters.cramerv_filter" title="Permalink to this definition"></a></dt>
+<dd><p>Computes maximum Cramer’s V between <code class="docutils literal notranslate"><span class="pre">X</span></code> and <code class="docutils literal notranslate"><span class="pre">X</span></code> (qualitative).
+Features too correlated to a feature more associated with the target
+are excluded (according to provided <code class="docutils literal notranslate"><span class="pre">ranks</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>DataFrame</em>) – Contains columns named after <code class="docutils literal notranslate"><span class="pre">ranks</span></code>’s index (feature names)</p></li>
+<li><p><strong>ranks</strong> (<em>DataFrame</em>) – Ranked features as index of the association table</p></li>
+<li><p><strong>thresh_corr</strong> (<em>float</em><em>, </em><em>optional</em>) – Maximum Cramér’s V bewteen features, by default <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Maximum Cramér’s V with a better feature</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict[str, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">thresh_corr</span></code> is reached, feature will automatically be dropped.</p>
+</div>
+</section>
+<section id="tschuprowt-filter">
+<span id="id8"></span><h4>Tschuprow’s <span class="math notranslate nohighlight">\(T\)</span><a class="headerlink" href="#tschuprowt-filter" title="Permalink to this heading"></a></h4>
+<p>Based on Pearson’s <span class="math notranslate nohighlight">\(\chi^2\)</span>, Tschuprow’s <span class="math notranslate nohighlight">\(T\)</span> is computed using the following formula:</p>
+<div class="math notranslate nohighlight">
+\[T=\sqrt{\frac{\chi^2}{n\sqrt{(n_{x_1}-1)(n_{x_2}-1)}}}\]</div>
+<p>where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(n\)</span> is the number of observations</p></li>
+<li><p><span class="math notranslate nohighlight">\(n_{x_1}\)</span> is the number of modalities of <span class="math notranslate nohighlight">\(x_1\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(n_{x_2}\)</span> is the number of modalities of <span class="math notranslate nohighlight">\(x_2\)</span></p></li>
+</ul>
+</div></blockquote>
+<dl class="py function">
+<dt class="sig sig-object py" id="AutoCarver.selectors.filters.tschuprowt_filter">
+<span class="sig-prename descclassname"><span class="pre">AutoCarver.selectors.filters.</span></span><span class="sig-name descname"><span class="pre">tschuprowt_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ranks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresh_corr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#AutoCarver.selectors.filters.tschuprowt_filter" title="Permalink to this definition"></a></dt>
+<dd><p>Computes max Tschuprow’s T between X and X (qualitative).
+Features too correlated to a feature more associated with the target
+are excluded (according to provided <code class="docutils literal notranslate"><span class="pre">ranks</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>DataFrame</em>) – Contains columns named after <code class="docutils literal notranslate"><span class="pre">ranks</span></code>’s index (feature names)</p></li>
+<li><p><strong>ranks</strong> (<em>DataFrame</em>) – Ranked features as index of the association table</p></li>
+<li><p><strong>thresh_corr</strong> (<em>float</em><em>, </em><em>optional</em>) – Maximum Tschuprow’s T bewteen features, by default <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Maximum Tschuprow’s T with a better feature</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict[str, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">tschuprowt_filter</span></code> is the default filter for qualitative features (i.e. when <code class="docutils literal notranslate"><span class="pre">qualitative_filters=None</span></code> and <code class="docutils literal notranslate"><span class="pre">qualititative_features</span></code> is provided).</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">thresh_corr</span></code> is reached, feature will automatically be dropped.</p></li>
+</ul>
+</div>
+</section>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="carvers.html" class="btn btn-neutral float-left" title="Carvers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="examples.html" class="btn btn-neutral float-right" title="Examples" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Mario Defrance.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

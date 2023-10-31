@@ -1,7 +1,9 @@
+.. _Discretizers:
+
 Discretizers
 ============
 
-**AutoCarver** implements :ref:`Discretizer`. It provides the following Data Preparation tools: 
+**AutoCarver** implements **Discretizers**. It provides the following Data Preparation tools: 
 
 +------------------------------------+-------------------------------------------------------------------------+
 | Discretizer / Data Type            | Data Preparation                                                        |

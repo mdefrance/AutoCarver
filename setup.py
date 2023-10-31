@@ -9,9 +9,6 @@ with open(path.join(here, "README.md"), encoding="utf-8") as fh:
     long_description = "\\n" + fh.read()
 
 setup(
-    name="AutoCarver",
-    version="5.3.1",
-    author="Mario DEFRANCE",
     author_email="defrancemario@gmail.com",
     description="Automatic Discretization of Features with Optimal Target Association",
     long_description=long_description,
