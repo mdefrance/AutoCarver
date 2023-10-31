@@ -61,7 +61,7 @@ jobs:
 
       - name: Activate virtual environment
         run: |
-          if ["${{ runner.os }}" == "windows"] 
+          if ("${{ runner.os }}" == "windows") 
           then 
             source venv/Scripts/activate
           else
