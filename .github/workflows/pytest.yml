@@ -61,11 +61,11 @@ jobs:
 
       - name: Activate virtual environment
         run: |
-          if [ "${runner.os}" == "Linux" ]; then 
+          if [ "${{ runner.os }}" == "Linux" ]; then 
             source venv/bin/activate
-          elif [ "${runner.os}" == "Windows" ]; then 
+          elif [ "${{ runner.os }}" == "Windows" ]; then 
             source venv/Scripts/activate
-          elif [ "${runner.os}" == "macOS" ]; then 
+          elif [ "${{ runner.os }}" == "macOS" ]; then 
             source venv/bin/activate
           fi
 
