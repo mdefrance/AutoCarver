@@ -2,7 +2,7 @@
 
 from pandas import DataFrame
 
-from AutoCarver.selectors import RegressionSelector
+# from AutoCarver.selectors import RegressionSelector
 
 
 def _regression_selector(
