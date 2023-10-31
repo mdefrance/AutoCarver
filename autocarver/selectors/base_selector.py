@@ -4,6 +4,7 @@ from random import shuffle
 from typing import Any, Callable, Union
 from warnings import warn
 
+from numpy import unique
 from pandas import DataFrame, Series
 
 from .filters import thresh_filter
@@ -32,8 +33,8 @@ class BaseSelector:
         quantitative_features: list[str] = None,
         qualitative_features: list[str] = None,
         *,
-        measures: Union(list[Callable], dict[str, list[Callable]]) = None,
-        filters: Union(list[Callable], dict[str, list[Callable]]) = None,
+        measures: Union[list[Callable], dict[str, list[Callable]]] = None,
+        filters: Union[list[Callable], dict[str, list[Callable]]] = None,
         colsample: float = 1.0,
         verbose: bool = False,
         **kwargs,
@@ -278,7 +279,7 @@ class BaseSelector:
         """
         # iterating over each type of feature
         all_best_features = []
-        for dtype in self.input_dtypes.values().unique():
+        for dtype in unique(list(self.input_dtypes.keys())):
             if self.verbose:  # verbose if requested
                 if dtype == "float":
                     print(f"------\n[FeatureSelector] Selecting from Quantitative Features\n---")
@@ -286,7 +287,7 @@ class BaseSelector:
                     print(f"------\n[FeatureSelector] Selecting from Qualitative Features\n---")
 
             # getting features of the specific data type
-            features = [feature for feature in self.features if self.input_dtypes[feature] == dtype]
+            features = self.input_dtypes[dtype][:]
 
             # splitting features in chunks
             if self.colsample < 1:

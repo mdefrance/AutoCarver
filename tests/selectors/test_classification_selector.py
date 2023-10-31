@@ -1,87 +1,67 @@
 """Set of tests for ClassificationSelector module."""
 
 from pandas import DataFrame
+from pytest import FixtureRequest, fixture
 
 from AutoCarver.selectors import ClassificationSelector
 
 
-def test_classification_selector(x_train: DataFrame) -> None:
+@fixture(params=["binary_target", "multiclass_target"])
+def target(request: type[FixtureRequest]) -> str:
+    return request.param
+
+
+def test_classification_selector(x_train: DataFrame, target: str, quantitative_features: list[str], qualitative_features: list[str], ordinal_features: list[str], n_best: int) -> None:
     """Tests ClassificationSelector
 
     Parameters
     ----------
     x_train : DataFrame
         Simulated Train DataFrame
+    target: str
+        Target feature
+    quantitative_features : list[str]
+        List of quantitative raw features to be carved
+    qualitative_features : list[str]
+        List of qualitative raw features to be carved
+    ordinal_features : list[str]
+        List of ordinal raw features to be carved
+    n_best: int
+        Number of features to be selected
     """
 
-    target = "binary_target"
-
-    quantitative_features = [
-        "Quantitative",
-        "Discrete_Quantitative_highnan",
-        "Discrete_Quantitative_lownan",
-        "Discrete_Quantitative",
-        "Discrete_Quantitative_rarevalue",
-    ]
-    qualitative_features = [
-        "Qualitative",
-        "Qualitative_grouped",
-        "Qualitative_lownan",
-        "Qualitative_highnan",
-        "Discrete_Qualitative_noorder",
-        "Discrete_Qualitative_lownan_noorder",
-        "Discrete_Qualitative_rarevalue_noorder",
-    ]
-    ordinal_features = [
-        "Qualitative_Ordinal",
-        "Qualitative_Ordinal_lownan",
-        "Discrete_Qualitative_highnan",
-    ]
-
-    # select the best 5 most target associated qualitative features
-    quali_selector = ClassificationSelector(
-        n_best=5,
+    # select the n_best most target associated qualitative features
+    feature_selector = ClassificationSelector(
+        n_best=n_best,
         qualitative_features=qualitative_features + ordinal_features,
-    )
-    best_features = quali_selector.select(x_train, x_train[target])
-
-    expected = {
-        "binary_target": [
-            "Qualitative_Ordinal_lownan",
-            "Qualitative_Ordinal",
-            "Qualitative_highnan",
-            "Qualitative_grouped",
-            "Qualitative_lownan",
-        ],
-        "continuous_target": [
-            "Discrete_Qualitative_rarevalue_noorder",
-            "Discrete_Qualitative_noorder",
-            "Qualitative_Ordinal",
-            "Discrete_Qualitative_lownan_noorder",
-            "Discrete_Qualitative_highnan",
-        ],
-    }
-    assert all(
-        feature in best_features for feature in expected[target]
-    ), "Not correctly selected qualitative features"
-
-    # select the best 5 most target associated qualitative features
-    quanti_selector = ClassificationSelector(
-        n_best=5,
         quantitative_features=quantitative_features,
+        verbose=False,
     )
-    best_features = quanti_selector.select(x_train, x_train[target])
-
+    best_features = feature_selector.select(x_train, x_train[target])
+    
+    # checking that the right features where selected
     expected = {
-        "binary_target": [
-            "Discrete_Quantitative_highnan",
-            "Quantitative",
-            "Discrete_Quantitative",
-            "Discrete_Quantitative_lownan",
-            "Discrete_Quantitative_rarevalue",
-        ],
-        "continuous_target": [],
+        3: {
+            "binary_target": [
+                'Discrete_Quantitative_highnan', 'Quantitative', 'Discrete_Quantitative', 'Qualitative_Ordinal_lownan', 'Qualitative_Ordinal', 'Qualitative_highnan',
+            ],
+            "multiclass_target": [
+                'Discrete_Quantitative_rarevalue', 'Discrete_Quantitative_highnan', 'Quantitative', 'Discrete_Qualitative_highnan', 'Discrete_Qualitative_rarevalue_noorder', 'Discrete_Qualitative_noorder',
+            ],
+        },
+        5: {
+            "binary_target": [
+                'Discrete_Quantitative_highnan', 'Quantitative', 'Discrete_Quantitative', 'Discrete_Quantitative_lownan', 'Discrete_Quantitative_rarevalue', 'Qualitative_Ordinal_lownan', 'Qualitative_Ordinal', 'Qualitative_highnan', 'Qualitative_grouped', 'Qualitative_lownan',
+            ],
+            "multiclass_target": [
+                'Discrete_Quantitative_rarevalue', 'Discrete_Quantitative_highnan', 'Quantitative', 'Discrete_Quantitative_lownan', 'Discrete_Quantitative', 'Discrete_Qualitative_highnan', 'Discrete_Qualitative_noorder', 'Discrete_Qualitative_rarevalue_noorder', 'Qualitative_Ordinal', 'Qualitative_Ordinal_lownan',
+            ],
+        },
     }
     assert all(
-        feature in best_features for feature in expected[target]
-    ), "Not correctly selected qualitative features"
+        feature in best_features for feature in expected[n_best][target]
+    ) and all(
+        feature in expected[n_best][target] for feature in best_features
+    ), "Not correctly selected features"
+    # checking for correctly selected number of features -> not possible 
+    # assert len(list(feature for feature in best_features if feature in quantitative_features)) <= n_best

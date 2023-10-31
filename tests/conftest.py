@@ -2,7 +2,7 @@
 
 from numpy import arange, nan, random
 from pandas import DataFrame
-from pytest import fixture
+from pytest import FixtureRequest, fixture
 
 
 def init_df(seed: int, size: int = 10000) -> DataFrame:
@@ -273,5 +273,5 @@ def x_dev_wrong_3(x_dev_1: DataFrame) -> DataFrame:
 
 
 @fixture(params=["continuous_target", "binary_target"])
-def target(request) -> str:
+def target(request: type[FixtureRequest]) -> str:
     return request.param
