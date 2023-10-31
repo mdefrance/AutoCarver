@@ -27,11 +27,13 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest pytest-cov
+          pip install -r ${{ github.workspace }}/tests/requirements.txt
           pip install -r ${{ github.workspace }}/requirements.txt
 
       - name: Run tests
-        run: python -m pytest -v --cov ${{ github.workspace }}/tests
+        run: |
+          cd ${{ github.workspace }}
+          python -m pytest -v --cov /tests
 
   pytest:
     strategy:
@@ -56,11 +58,13 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest pytest-cov
+          pip install -r ${{ github.workspace }}/tests/requirements.txt
           pip install -r ${{ github.workspace }}/requirements.txt
 
       - name: Run tests
-        run: python -m pytest -v --cov ${{ github.workspace }}/tests
+        run: |
+          cd ${{ github.workspace }}
+          python -m pytest -v --cov /tests
   
   pylint:
     
@@ -78,7 +82,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install black isort pylint flake8
+          pip install -r ${{ github.workspace }}/tests/requirements.txt
           pip install -r ${{ github.workspace }}/requirements.txt
 
       - name: Run lint

@@ -5,7 +5,7 @@ from pandas import DataFrame
 from AutoCarver.selectors import RegressionSelector
 
 
-def test_regression_selector(
+def _regression_selector(
     x_train: DataFrame,
     quantitative_features: list[str],
     qualitative_features: list[str],

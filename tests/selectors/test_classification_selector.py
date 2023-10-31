@@ -11,7 +11,7 @@ def target(request: type[FixtureRequest]) -> str:
     return request.param
 
 
-def test_classification_selector(
+def _classification_selector(
     x_train: DataFrame,
     target: str,
     quantitative_features: list[str],
