@@ -6,8 +6,8 @@ from pandas import Series
 
 
 def reverse_xy(measure: Callable):
-    """ Reverses places of x and y in measure"""
-    
+    """Reverses places of x and y in measure"""
+
     def reversed_measure(
         y: Series,
         x: Series,
@@ -17,6 +17,7 @@ def reverse_xy(measure: Callable):
         return measure(y, x, **kwargs)
 
     return reversed_measure
+
 
 def make_measure(
     measure: Callable,

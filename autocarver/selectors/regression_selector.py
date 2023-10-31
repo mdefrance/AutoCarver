@@ -4,11 +4,10 @@ from typing import Callable
 
 from ..discretizers import extend_docstring
 from .base_selector import BaseSelector
-from .filters.quantitative_filters import spearman_filter
 from .filters.qualitative_filters import tschuprowt_filter
+from .filters.quantitative_filters import spearman_filter
 from .measures.base_measures import reverse_xy
-from .measures.quantitative_measures import kruskal_measure, distance_measure
-
+from .measures.quantitative_measures import distance_measure, kruskal_measure
 
 
 class RegressionSelector(BaseSelector):

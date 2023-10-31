@@ -5,7 +5,13 @@ from pandas import DataFrame
 from AutoCarver.selectors import RegressionSelector
 
 
-def test_regression_selector(x_train: DataFrame, quantitative_features: list[str], qualitative_features: list[str], ordinal_features: list[str], n_best: int) -> None:
+def test_regression_selector(
+    x_train: DataFrame,
+    quantitative_features: list[str],
+    qualitative_features: list[str],
+    ordinal_features: list[str],
+    n_best: int,
+) -> None:
     """Tests RegressionSelector
 
     Parameters
@@ -35,17 +41,21 @@ def test_regression_selector(x_train: DataFrame, quantitative_features: list[str
 
     expected = {
         3: [
-            'Discrete_Quantitative_highnan', 'Discrete_Quantitative', 'Discrete_Quantitative_lownan',
+            "Discrete_Quantitative_highnan",
+            "Discrete_Quantitative",
+            "Discrete_Quantitative_lownan",
         ],
         5: [
-            'Discrete_Quantitative_highnan', 'Discrete_Quantitative', 'Discrete_Quantitative_lownan', 'Discrete_Quantitative_rarevalue', 'Quantitative',
+            "Discrete_Quantitative_highnan",
+            "Discrete_Quantitative",
+            "Discrete_Quantitative_lownan",
+            "Discrete_Quantitative_rarevalue",
+            "Quantitative",
         ],
     }
     print(best_features)
-    assert all(
-        feature in best_features for feature in expected[n_best]
-    ) and all(
+    assert all(feature in best_features for feature in expected[n_best]) and all(
         feature in expected[n_best] for feature in best_features
     ), "Not correctly selected features"
-    # checking for correctly selected number of features -> not possible 
+    # checking for correctly selected number of features -> not possible
     # assert len(list(feature for feature in best_features if feature in quantitative_features)) <= n_best

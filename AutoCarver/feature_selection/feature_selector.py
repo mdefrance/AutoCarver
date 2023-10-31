@@ -3,11 +3,11 @@
 from typing import Callable
 from warnings import warn
 
-from ..selectors import ClassificationSelector
 from ..discretizers import GroupedList, extend_docstring
+from ..selectors import ClassificationSelector
+
 
 class FeatureSelector(ClassificationSelector):
-    
     @extend_docstring(ClassificationSelector.__init__)
     def __init__(
         self,
@@ -21,7 +21,10 @@ class FeatureSelector(ClassificationSelector):
         verbose: bool = False,
         **kwargs,
     ) -> None:
-        warn("feature_selection.FeatureSelector will be deprecated, please use selectors.ClassificationSelector instead.", DeprecationWarning)
+        warn(
+            "feature_selection.FeatureSelector will be deprecated, please use selectors.ClassificationSelector instead.",
+            DeprecationWarning,
+        )
         quantitative_measures = None
         if any(quantitative_features):
             quantitative_measures = measures[:]
@@ -48,6 +51,3 @@ class FeatureSelector(ClassificationSelector):
             verbose=verbose,
             **kwargs,
         )
-
-
-

@@ -6,8 +6,8 @@ from typing import Any
 
 from numpy import nan
 from pandas import DataFrame, Series
-from scipy.stats import kruskal, spearmanr, pearsonr
 from scipy.spatial.distance import correlation
+from scipy.stats import kruskal, pearsonr, spearmanr
 from statsmodels.formula.api import ols
 
 
@@ -169,6 +169,7 @@ def spearman_measure(
 
     return active, measurement
 
+
 def distance_measure(
     x: Series,
     y: Series,
@@ -290,4 +291,3 @@ def iqr_measure(
     active = pct_iqr < thresh_outlier
 
     return active, measurement
-

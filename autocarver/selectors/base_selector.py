@@ -56,7 +56,7 @@ class BaseSelector:
 
         #     * [Quantitative Features] For linear correlation: ``spearman_filter`` (default), ``pearson_filter``
         #     * [Qualitative Features] For correlation: ``cramerv_filter``, ``tschuprowt_filter`` (default)
-        
+
         """
         Parameters
         ----------
@@ -136,15 +136,12 @@ class BaseSelector:
         if qualitative_features is None:
             qualitative_features = []
         self.qualitative_features = list(set(qualitative_features))
-        assert (
-            len(quantitative_features) > 0 or len(qualitative_features) > 0
-        ), (
+        assert len(quantitative_features) > 0 or len(qualitative_features) > 0, (
             "No feature passed as input. Pleased provided column names to Carver by setting "
             "qualitative_features or quantitative_features."
         )
         self.features = list(set(self.qualitative_features + self.quantitative_features))
         self.input_dtypes = {"float": self.quantitative_features, "str": self.qualitative_features}
-
 
         # number of features selected
         self.n_best = n_best
