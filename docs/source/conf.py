@@ -53,10 +53,8 @@ html_theme_options = {
 html_logo = "artwork/auto_carver_symbol_small.png"
 
 
-
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
-
 
 
 
