@@ -65,7 +65,7 @@ jobs:
         run: |
           cd ${{ github.workspace }}
           ls -l
-          python -m pytest -v /tests
+          python -m pytest -v tests
   
   pylint:
     
