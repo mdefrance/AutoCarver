@@ -1,6 +1,6 @@
+import configparser
 import os
 import sys
-import configparser
 
 # -- Path setup --------------------------------------------------------------
 path = "../../"
@@ -9,10 +9,9 @@ sys.path.insert(0, path)
 
 import AutoCarver
 
-
 # Read metadata from setup.cfg
 config = configparser.ConfigParser()
-config.read('../../setup.cfg')  # Provide the correct path to your setup.cfg
+config.read("../../setup.cfg")  # Provide the correct path to your setup.cfg
 
 
 # Configuration file for the Sphinx documentation builder.
@@ -23,10 +22,10 @@ config.read('../../setup.cfg')  # Provide the correct path to your setup.cfg
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = config['metadata']['name']
+project = config["metadata"]["name"]
 copyright = "2023, Mario Defrance"
-author = config['metadata']['author']
-version = config['metadata']['version']
+author = config["metadata"]["author"]
+version = config["metadata"]["version"]
 release = "Beta Release"
 
 # Theme options are theme-specific and customize the look and feel of a theme
@@ -55,9 +54,6 @@ html_logo = "artwork/auto_carver_symbol_small.png"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
-
-
-
 
 
 extensions = [
