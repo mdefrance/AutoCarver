@@ -30,10 +30,11 @@ jobs:
           pip install -r ${{ github.workspace }}/tests/requirements.txt
           pip install -r ${{ github.workspace }}/requirements.txt
 
+      - name: Set PYTHONPATH
+        run: export PYTHONPATH=$PYTHONPATH:${{ github.workspace }}
+
       - name: Run tests
-        run: |
-          cd ${{ github.workspace }}
-          python -m pytest -v --cov tests/
+        run: python -m pytest -v --cov tests/
 
   pytest:
     strategy:
@@ -61,11 +62,11 @@ jobs:
           pip install -r ${{ github.workspace }}/requirements.txt
           pip install -r ${{ github.workspace }}/tests/requirements.txt
 
+      - name: Set PYTHONPATH
+        run: export PYTHONPATH=$PYTHONPATH:${{ github.workspace }}
+
       - name: Run tests
-        run: |
-          cd ${{ github.workspace }}
-          ls -l
-          python -m pytest -v tests/
+        run: python -m pytest -v --cov tests/
   
   pylint:
     
