@@ -33,7 +33,7 @@ jobs:
       - name: Run tests
         run: |
           cd ${{ github.workspace }}
-          python -m pytest -v --cov /tests
+          python -m pytest -v --cov tests/
 
   pytest:
     strategy:
@@ -65,7 +65,7 @@ jobs:
         run: |
           cd ${{ github.workspace }}
           ls -l
-          python -m pytest -v tests
+          python -m pytest -v tests/
   
   pylint:
     
