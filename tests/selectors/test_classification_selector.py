@@ -3,7 +3,7 @@
 from pandas import DataFrame
 from pytest import FixtureRequest, fixture
 
-# from AutoCarver.selectors import ClassificationSelector
+from AutoCarver.selectors import ClassificationSelector
 
 
 @fixture(params=["binary_target", "multiclass_target"])
@@ -11,7 +11,7 @@ def target(request: type[FixtureRequest]) -> str:
     return request.param
 
 
-def _classification_selector(
+def test_classification_selector(
     x_train: DataFrame,
     target: str,
     quantitative_features: list[str],

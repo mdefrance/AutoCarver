@@ -1,4 +1,4 @@
-"""Tools to select the best Quantitative and Qualitative features."""
+"""Tools to select the best Quantitative and Qualitative features for a Classification task."""
 
 from typing import Callable
 
