@@ -70,6 +70,7 @@ jobs:
           pip install -r ${{ github.workspace }}/requirements.txt
           pip install -r ${{ github.workspace }}/tests/requirements.txt
           pip install ${{ github.workspace }}
+          pip list
           python -m pytest -v --cov ${{ github.workspace }}/tests/
   
   pylint:

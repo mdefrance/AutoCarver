@@ -3,6 +3,17 @@
 from pandas import DataFrame
 from pytest import FixtureRequest, fixture
 
+
+import pip
+
+def list_installed_packages():
+    installed_packages = pip.get_installed_distributions()
+    for package in installed_packages:
+        print(package)
+
+list_installed_packages()
+
+from AutoCarver import selectors
 from AutoCarver.selectors import ClassificationSelector
 
 

@@ -2,6 +2,16 @@
 
 from pandas import DataFrame
 
+import pip
+
+def list_installed_packages():
+    installed_packages = pip.get_installed_distributions()
+    for package in installed_packages:
+        print(package)
+
+list_installed_packages()
+
+
 from AutoCarver.selectors import RegressionSelector
 
 
