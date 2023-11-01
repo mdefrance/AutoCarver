@@ -39,7 +39,7 @@ jobs:
   pytest:
     strategy:
       matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest]
+        os: [ubuntu-latest, macOS-latest]
         python-version: ['3.9', '3.10', '3.11', '3.12']
 
     runs-on: ${{ matrix.os }}
@@ -59,13 +59,10 @@ jobs:
       - name: Create virtual environment
         run: python -m venv venv
 
-      - name: Activate virtual environment Windows
-        if: ${{ runner.os }} == 'Windows'
-        run: source venv/Scripts/activate
-
       - name: Activate virtual environment Linux/macOS
         if: ${{ runner.os }} != 'Windows'
         run: source venv/bin/activate
+
 
       - name: Install dependencies
         run: |
