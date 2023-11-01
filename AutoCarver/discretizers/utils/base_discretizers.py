@@ -70,7 +70,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
 
         Examples
         --------
-        See `Discretizers examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
+        See `AutoCarver examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
         """
         # features and values
         self.features = list(set(features))
