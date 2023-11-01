@@ -59,14 +59,13 @@ jobs:
       - name: Create virtual environment
         run: python -m venv venv
 
-      - name: Activate virtual environment
-        run: |
-          if ("${{ runner.os }}" == "windows") 
-          then 
-            source venv/Scripts/activate
-          else
-            source venv/bin/activate
-          fi
+      - name: Activate virtual environment Windows
+        if: ${{ runner.os }} == 'Windows'
+        run: source venv/Scripts/activate
+
+      - name: Activate virtual environment Linux/macOS
+        if: ${{ runner.os }} != 'Windows'
+        run: source venv/bin/activate
 
       - name: Install dependencies
         run: |
