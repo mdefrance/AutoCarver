@@ -32,4 +32,3 @@ jobs:
           release_name: Release ${{ steps.extract_tag_name.outputs.tag_name }}
           draft: false
           prerelease: false
-          token: ${{ env.GITHUB_TOKEN }}
