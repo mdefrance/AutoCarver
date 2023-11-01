@@ -331,7 +331,6 @@ class QualitativeDiscretizer(BaseDiscretizer):
                     UserWarning,
                 )
 
-
             # converting specified features into qualitative features
             string_discretizer = StringDiscretizer(
                 qualitative_features=features_to_convert,
