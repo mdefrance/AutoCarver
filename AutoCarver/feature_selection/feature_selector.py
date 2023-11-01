@@ -2,7 +2,6 @@
 
 from random import shuffle
 from typing import Any, Callable
-from warnings import warn
 
 from pandas import DataFrame, Series
 
@@ -43,6 +42,7 @@ class FeatureSelector:
         filters: list[Callable] = None,
         colsample: float = 1.0,
         verbose: bool = False,
+        pretty_print: bool = False,
         **kwargs,
     ) -> None:
         """Initiates a ``FeatureSelector``.
@@ -88,13 +88,16 @@ class FeatureSelector:
             **Tip:** for better performance, should be set such as ``len(features)//2 < 200``.
 
         verbose : bool, optional
-            * ``True``, without IPython installed: prints raw feature selection steps for X, by default ``False``
-            * ``True``, with IPython installed: adds HTML tables to the output.
+            If ``True``, prints raw Discretizers Fit and Transform steps, as long as
+            information on AutoCarver's processing and tables of target rates and frequencies for
+            X, by default ``False``
 
-            **Tip**: IPython displaying can be turned off by setting ``pretty_print=False``.
+        pretty_print : bool, optional
+            If ``True``, adds to the verbose some HTML tables of target rates and frequencies for X and, if provided, X_dev.
+            Overrides the value of ``verbose``, by default ``False``
 
         **kwargs
-            Sets thresholds for ``measures`` and ``filters``, as long as ``pretty_print``, passed as keyword arguments.
+            Sets thresholds for ``measures`` and ``filters``, passed as keyword arguments.
 
         Examples
         --------
@@ -142,16 +145,14 @@ class FeatureSelector:
         self.measure_names = [measure.__name__ for measure in measures[::-1]]
 
         # wether or not to print tables
-        self.verbose = bool(max(verbose, kwargs.get("pretty_print", False)))
-        self.pretty_print = False
-        if self.verbose and kwargs.get("pretty_print", True):
+        self.verbose = bool(max(verbose, pretty_print))
+        if pretty_print:
             if _has_idisplay:  # checking for installed dependencies
-                self.pretty_print = True
+                self.pretty_print = pretty_print
             else:
-                warn(
-                    "Package not found: IPython. Defaulting to raw verbose. "
-                    "Install extra dependencies with pip install autocarver[jupyter]",
-                    UserWarning,
+                self.verbose = True
+                print(
+                    "Package not found: ipython. Defaulting to verbose=True. Install extra dependencies with pip install autocarver[jupyter]"
                 )
 
         # keyword arguments
@@ -191,7 +192,7 @@ class FeatureSelector:
         initial_associations = initial_associations.sort_values(measure_names, ascending=False)
 
         if self.verbose:  # displaying association measure
-            print("\n - [FeatureSelector] Association between X and y")
+            print("\n - Association between X and y")
             print_associations(initial_associations, self.pretty_print)
 
         # applying filtering for each measure
@@ -233,9 +234,7 @@ class FeatureSelector:
         ]
 
         if self.verbose:  # displaying association measure
-            print(
-                "\n - [FeatureSelector] Association between X and y, filtered for inter-feature assocation"
-            )
+            print("\n - Association between X and y, filtered for inter-feature assocation")
             print_associations(initial_associations.reindex(best_features), self.pretty_print)
             print("------\n")
 
