@@ -70,12 +70,7 @@ jobs:
           pip install -r ${{ github.workspace }}/requirements.txt
           pip install -r ${{ github.workspace }}/tests/requirements.txt
           pip install ${{ github.workspace }}
-
-      - name: Set PYTHONPATH
-        run: export PYTHONPATH=$PYTHONPATH:${{ github.workspace }}
-
-      - name: Run tests
-        run: python -m pytest -v --cov tests/
+          python -m pytest -v --cov ${{ github.workspace }}/tests/
   
   pylint:
     
