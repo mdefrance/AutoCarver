@@ -25,9 +25,4 @@ jobs:
       - name: Build ReadTheDocs Latest
         run: |
           curl -X POST\
-           -H "Authorization: Token ${{ secrets.READTHEDOCS_API_TOKEN }}" https://readthedocs.org/api/v3/projects/autocarver/versions/latest/builds/
-
-      - name: Build ReadTheDocs Latest
-        run: |
-          curl -X POST\
-          -H "Authorization: Token ${{ secrets.READTHEDOCS_API_TOKEN }}" https://readthedocs.org/api/v3/projects/autocarver/versions/${{ steps.extract_tag_name.outputs.tag_name }}/builds/
+           -H "Authorization: Token ${{ secrets.READTHEDOCS_API_TOKEN }}" https://readthedocs.org/api/v3/projects/AutoCarver/versions/latest/builds/
