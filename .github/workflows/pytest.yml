@@ -29,12 +29,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r ${{ github.workspace }}/tests/requirements.txt
           pip install -r ${{ github.workspace }}/requirements.txt
+          pip install ${{ github.workspace }}
 
       - name: Set PYTHONPATH
         run: export PYTHONPATH=$PYTHONPATH:${{ github.workspace }}
 
       - name: Run tests
-        run: python -m pytest -v --cov tests/
+        run: pytest -v --cov ${{ github.workspace }}/tests/
 
   pytest:
     strategy:
