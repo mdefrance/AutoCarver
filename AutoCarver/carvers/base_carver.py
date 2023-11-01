@@ -176,7 +176,8 @@ class BaseCarver(BaseDiscretizer):
             else:
                 warn(
                     "Package not found: IPython. Defaulting to raw verbose. "
-                    "Install extra dependencies with pip install autocarver[jupyter]"
+                    "Install extra dependencies with pip install autocarver[jupyter]",
+                    UserWarning,
                 )
 
     def _prepare_data(
@@ -918,6 +919,8 @@ def print_xagg(
     # case 0: no pretty hmtl printing
     if not pretty_print:
         print(nice_xagg, "\n")
+        if xagg_dev is not None:
+            print("X_dev distribution\n", nice_xagg_dev, "\n")
 
     # case 1: pretty html printing
     else:

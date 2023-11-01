@@ -3,6 +3,7 @@ for a binary classification model.
 """
 
 from typing import Union
+from warnings import warn
 
 from numpy import nan
 from pandas import DataFrame, Series, unique
@@ -302,8 +303,12 @@ class QualitativeDiscretizer(BaseDiscretizer):
         all_features = self.features[:]  # features are being removed from self.features
         for feature in all_features:
             if max_frequencies[feature] < self.min_freq:
-                print(
-                    f" - [QualitatitveDiscretizer] For feature '{feature}', the largest modality has {max_frequencies[feature]:2.2%} observations which is lower than min_freq={self.min_freq:2.1%}. This feature will not be Discretized. Consider decreasing parameter min_freq or removing this feature."
+                warn(
+                    f" - [QualitativeDiscretizer] For feature '{feature}', the largest modality"
+                    f" has {max_frequencies[feature]:2.2%} observations which is lower than "
+                    "min_freq={self.min_freq:2.2%}. This feature will not be Discretized. Consider"
+                    " decreasing parameter min_freq or removing this feature.",
+                    UserWarning,
                 )
                 self._remove_feature(feature)
 
@@ -318,9 +323,14 @@ class QualitativeDiscretizer(BaseDiscretizer):
                 unexpected_dtypes = [
                     typ for dtyp in dtypes[not_object] for typ in dtyp if typ != str
                 ]
-                print(
-                    f""" - [QualitatitveDiscretizer] Non-string features: {str(features_to_convert)}. Trying to convert them using type_discretizers.StringDiscretizer, otherwise convert them manually. Unexpected data types: {str(list(unexpected_dtypes))}."""
+                warn(
+                    f" - [QualitativeDiscretizer] Non-string features: {str(features_to_convert)}"
+                    ". Trying to convert them using type_discretizers.StringDiscretizer, "
+                    "otherwise convert them manually. "
+                    f"Unexpected data types: {str(list(unexpected_dtypes))}.",
+                    UserWarning,
                 )
+
 
             # converting specified features into qualitative features
             string_discretizer = StringDiscretizer(
