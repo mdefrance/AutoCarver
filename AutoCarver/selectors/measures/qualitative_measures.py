@@ -2,10 +2,23 @@
 """
 
 from math import sqrt
-from typing import Any
+from typing import Any, Callable
 
 from pandas import Series, crosstab, notna
 from scipy.stats import chi2_contingency
+
+# X continue y continue distance correlation
+# X binaire y continue kruskal y, x
+# X multiclass y continue kruskal y, x
+
+# X continue y binaire kruskal x, y
+# X binaire y binaire cramerv/tschurpowt x, y
+# X multiclass y binaire cramerv/tschurpowt x, y
+
+
+# X continue y multiclass kruskal x, y
+# X binaire y multiclass cramerv/tschurpowt x, y
+# X multiclass y multiclass cramerv/tschurpowt x, y
 
 
 def chi2_measure(
@@ -20,9 +33,9 @@ def chi2_measure(
     Parameters
     ----------
     x : Series
-        Feature to measure
+        Qualitative feature
     y : Series
-        Binary target feature
+        Qualitative target feature
     thresh_chi2 : float, optional
         Minimum Chi2 association, by default ``0``
 
@@ -58,9 +71,9 @@ def cramerv_measure(
     Parameters
     ----------
     x : Series
-        Feature to measure
+        Qualitative feature
     y : Series
-        Binary target feature
+        Qualitative target feature
     thresh_cramerv : float, optional
         Minimum Cramér's V association, by default ``0``
     chi2_statistic : float, optional

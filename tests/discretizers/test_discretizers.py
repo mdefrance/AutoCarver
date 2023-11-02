@@ -13,6 +13,8 @@ def test_quantitative_discretizer(x_train: DataFrame, target: str):
     ----------
     x_train : DataFrame
         Simulated Train DataFrame
+    target: str
+        Target feature
     """
 
     features = [
@@ -55,6 +57,8 @@ def test_qualitative_discretizer(x_train: DataFrame, target: str):
     ----------
     x_train : DataFrame
         Simulated Train DataFrame
+    target: str
+        Target feature
     """
 
     features = ["Qualitative", "Qualitative_grouped", "Qualitative_lownan", "Qualitative_highnan"]
@@ -146,6 +150,8 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
         Simulated Train DataFrame
     x_dev_1 : DataFrame
         Simulated Test DataFrame
+    target: str
+        Target feature
     """
 
     quantitative_features = [
