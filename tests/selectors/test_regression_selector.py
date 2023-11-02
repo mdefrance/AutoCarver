@@ -1,87 +1,62 @@
-"""Set of tests for FeatureSelector module."""
+"""Set of tests for RegressionSelector module."""
 
 from pandas import DataFrame
 
-from AutoCarver.feature_selection import FeatureSelector
+from AutoCarver import BinaryCarver
+from AutoCarver.selectors import RegressionSelector
 
 
-def test_feature_selector(x_train: DataFrame) -> None:
-    """Tests FeatureSelector
+def test_regression_selector(
+    x_train: DataFrame,
+    quantitative_features: list[str],
+    qualitative_features: list[str],
+    ordinal_features: list[str],
+    n_best: int,
+) -> None:
+    """Tests RegressionSelector
 
     Parameters
     ----------
     x_train : DataFrame
         Simulated Train DataFrame
+    quantitative_features : list[str]
+        List of quantitative raw features to be carved
+    qualitative_features : list[str]
+        List of qualitative raw features to be carved
+    ordinal_features : list[str]
+        List of ordinal raw features to be carved
+    n_best: int
+        Number of features to be selected
     """
 
-    target = "binary_target"
+    target = "continuous_target"
 
-    quantitative_features = [
-        "Quantitative",
-        "Discrete_Quantitative_highnan",
-        "Discrete_Quantitative_lownan",
-        "Discrete_Quantitative",
-        "Discrete_Quantitative_rarevalue",
-    ]
-    qualitative_features = [
-        "Qualitative",
-        "Qualitative_grouped",
-        "Qualitative_lownan",
-        "Qualitative_highnan",
-        "Discrete_Qualitative_noorder",
-        "Discrete_Qualitative_lownan_noorder",
-        "Discrete_Qualitative_rarevalue_noorder",
-    ]
-    ordinal_features = [
-        "Qualitative_Ordinal",
-        "Qualitative_Ordinal_lownan",
-        "Discrete_Qualitative_highnan",
-    ]
-
-    # select the best 5 most target associated qualitative features
-    quali_selector = FeatureSelector(
-        n_best=5,
+    # select the n_best most target associated qualitative features
+    feature_selector = RegressionSelector(
+        n_best=n_best,
         qualitative_features=qualitative_features + ordinal_features,
-    )
-    best_features = quali_selector.select(x_train, x_train[target])
-
-    expected = {
-        "binary_target": [
-            "Qualitative_Ordinal_lownan",
-            "Qualitative_Ordinal",
-            "Qualitative_highnan",
-            "Qualitative_grouped",
-            "Qualitative_lownan",
-        ],
-        "continuous_target": [
-            "Discrete_Qualitative_rarevalue_noorder",
-            "Discrete_Qualitative_noorder",
-            "Qualitative_Ordinal",
-            "Discrete_Qualitative_lownan_noorder",
-            "Discrete_Qualitative_highnan",
-        ],
-    }
-    assert all(
-        feature in best_features for feature in expected[target]
-    ), "Not correctly selected qualitative features"
-
-    # select the best 5 most target associated qualitative features
-    quanti_selector = FeatureSelector(
-        n_best=5,
         quantitative_features=quantitative_features,
+        verbose=False,
     )
-    best_features = quanti_selector.select(x_train, x_train[target])
+    best_features = feature_selector.select(x_train, x_train[target])
 
     expected = {
-        "binary_target": [
+        3: [
             "Discrete_Quantitative_highnan",
-            "Quantitative",
+            "Discrete_Quantitative",
+            "Discrete_Quantitative_lownan",
+        ],
+        5: [
+            "Discrete_Quantitative_highnan",
             "Discrete_Quantitative",
             "Discrete_Quantitative_lownan",
             "Discrete_Quantitative_rarevalue",
+            "Quantitative",
         ],
-        "continuous_target": [],
     }
-    assert all(
-        feature in best_features for feature in expected[target]
-    ), "Not correctly selected qualitative features"
+    print(best_features)
+    assert all(feature in best_features for feature in expected[n_best]) and all(
+        feature in expected[n_best] for feature in best_features
+    ), "Not correctly selected features"
+    # checking for correctly selected number of features -> not possible
+    # assert len(list(feature for feature in best_features if feature in quantitative_features)) <= n_best
