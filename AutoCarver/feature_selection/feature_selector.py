@@ -25,19 +25,23 @@ class FeatureSelector(ClassificationSelector):
             "feature_selection.FeatureSelector will be deprecated, please use selectors.ClassificationSelector instead.",
             DeprecationWarning,
         )
+        # corresponding measures and filters
         quantitative_measures = None
-        if any(quantitative_features):
-            quantitative_measures = measures[:]
         qualitative_measures = None
-        if any(qualitative_measures):
-            qualitative_measures = measures[:]
+        if measures is not None:
+            if (quantitative_features is not None) and any(quantitative_features):
+                quantitative_measures = measures[:]
+            elif (qualitative_features is not None) and any(qualitative_features):
+                qualitative_measures = measures[:]
 
         quantitative_filters = None
-        if any(quantitative_features):
-            quantitative_filters = filters[:]
         qualitative_filters = None
-        if any(qualitative_filters):
-            qualitative_filters = filters[:]
+        if filters is not None:
+            if (quantitative_features is not None) and any(quantitative_features):
+                quantitative_filters = filters[:]
+            elif (qualitative_features is not None) and any(qualitative_features):
+                qualitative_filters = filters[:]
+
         # initiating BaseSelector with the corresponding list of measures
         super().__init__(
             n_best=n_best,
