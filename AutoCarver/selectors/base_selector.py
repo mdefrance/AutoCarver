@@ -1,19 +1,14 @@
 """Tools to select the best Quantitative and Qualitative features."""
 
 from random import shuffle
-from typing import Any, Callable
+from typing import Any, Callable, Union
+from warnings import warn
 
+from numpy import unique
 from pandas import DataFrame, Series
 
-from .filters import spearman_filter, thresh_filter, tschuprowt_filter
-from .measures import (
-    dtype_measure,
-    kruskal_measure,
-    make_measure,
-    mode_measure,
-    nans_measure,
-    tschuprowt_measure,
-)
+from .filters import thresh_filter
+from .measures import dtype_measure, make_measure, mode_measure, nans_measure
 
 # trying to import extra dependencies
 try:
@@ -24,7 +19,7 @@ else:
     _has_idisplay = True
 
 
-class FeatureSelector:
+class BaseSelector:
     """A pipeline of measures to perform a feature pre-selection that maximizes association
     with a binary target.
 
@@ -35,48 +30,74 @@ class FeatureSelector:
     def __init__(
         self,
         n_best: int,
-        *,
         quantitative_features: list[str] = None,
         qualitative_features: list[str] = None,
-        measures: list[Callable] = None,
-        filters: list[Callable] = None,
+        *,
+        measures: Union[list[Callable], dict[str, list[Callable]]] = None,
+        filters: Union[list[Callable], dict[str, list[Callable]]] = None,
         colsample: float = 1.0,
         verbose: bool = False,
-        pretty_print: bool = False,
         **kwargs,
     ) -> None:
-        """Initiates a ``FeatureSelector``.
+        # measures : list[Callable], optional
+        #     List of association measures to be used, by default ``None``.
+        #     Ranks features based on last provided measure of the list.
+        #     See :ref:`Measures`.
+        #     Implemented measures are:
 
+        #     * [Quantitative Features] For association evaluation: ``kruskal_measure`` (default), ``R_measure``
+        #     * [Quantitative Features] For outlier detection: ``zscore_measure``, ``iqr_measure``
+        #     * [Qualitative Features] For association evaluation: ``chi2_measure``, ``cramerv_measure``, ``tschuprowt_measure`` (default)
+
+        # filters : list[Callable], optional
+        #     List of filters to be used, by default ``None``.
+        #     See :ref:`Filters`.
+        #     Implemented filters are:
+
+        #     * [Quantitative Features] For linear correlation: ``spearman_filter`` (default), ``pearson_filter``
+        #     * [Qualitative Features] For correlation: ``cramerv_filter``, ``tschuprowt_filter`` (default)
+
+        """
         Parameters
         ----------
         n_best : int
             Number of features to select.
 
-        quantitative_features : list[str], optional
-            List of column names of quantitative features to chose from, by default ``None``
+            * Best features are the ``n_best`` of each provided data types (set in ``quantitative_features`` and/or ``qualitative_features``)
+            * Best features are the ``n_best`` for each provided measures (set in ``quantitative_measures`` and/or ``qualitative_measures``)
+
+        quantitative_features : list[str]
+            List of column names of quantitative features to chose from, by default ``None``.
             Must be set if ``qualitative_features=None``.
 
-        qualitative_features : list[str], optional
-            List of column names of qualitative features to chose from, by default ``None``
+        qualitative_features : list[str]
+            List of column names of qualitative features to chose from, by default ``None``.
             Must be set if ``quantitative_features=None``.
 
-        measures : list[Callable], optional
-            List of association measures to be used, by default ``None``.
-            Ranks features based on last provided measure of the list.
-            See :ref:`Measures`.
-            Implemented measures are:
+        quantitative_measures : list[Callable], optional
+            List of association measures to be used for ``quantitative_features``.
+            :ref:`Implemented measures <Measures>` are:
 
-            * [Quantitative Features] For association evaluation: ``kruskal_measure`` (default), ``R_measure``
-            * [Quantitative Features] For outlier detection: ``zscore_measure``, ``iqr_measure``
-            * [Qualitative Features] For association evaluation: ``chi2_measure``, ``cramerv_measure``, ``tschuprowt_measure`` (default)
+            * For association evaluation: :ref:`Kruskal-Wallis' H <kruskal>` (default), :ref:`R`
+            * For outlier detection: :ref:`Standard score <zscore>`, :ref:`Interquartile range <iqr>`
 
-        filters : list[Callable], optional
-            List of filters to be used, by default ``None``.
-            See :ref:`Filters`.
-            Implemented filters are:
+        qualitative_measures : list[Callable], optional
+            List of association measures to be used for ``qualitative_features``.
+            :ref:`Implemented measures <Measures>` are:
 
-            * [Quantitative Features] For linear correlation: ``spearman_filter`` (default), ``pearson_filter``
-            * [Qualitative Features] For correlation: ``cramerv_filter``, ``tschuprowt_filter`` (default)
+            * For association evaluation: :ref:`Pearson's chi² <chi2>`, :ref:`cramerv`, :ref:`tschuprowt` (default)
+
+        quantitative_filters : list[Callable], optional
+            List of filters to be used for ``quantitative_features``.
+            :ref:`Implemented filters <Filters>` are:
+
+            * For linear correlation: :ref:`pearson_filter`, :ref:`Spearman's rho <spearman_filter>` (default)
+
+        qualitative_filters : list[Callable], optional
+            List of filters to be used for ``qualitative_features``.
+            :ref:`Implemented filters <Filters>` are:
+
+            * For correlation: :ref:`cramerv_filter`, :ref:`tschuprowt_filter` (default)
 
         colsample : float, optional
             Size of sampled list of features for sped up computation, between 0 and 1, by default ``1.0``
@@ -88,33 +109,31 @@ class FeatureSelector:
             **Tip:** for better performance, should be set such as ``len(features)//2 < 200``.
 
         verbose : bool, optional
-            If ``True``, prints raw Discretizers Fit and Transform steps, as long as
-            information on AutoCarver's processing and tables of target rates and frequencies for
-            X, by default ``False``
+            * ``True``, without IPython installed: prints raw feature selection steps for X, by default ``False``
+            * ``True``, with IPython installed: adds HTML tables to the output.
 
-        pretty_print : bool, optional
-            If ``True``, adds to the verbose some HTML tables of target rates and frequencies for X and, if provided, X_dev.
-            Overrides the value of ``verbose``, by default ``False``
+            **Tip**: IPython displaying can be turned off by setting ``pretty_print=False``.
 
         **kwargs
-            Sets thresholds for ``measures`` and ``filters``, passed as keyword arguments.
+            Allows one to set thresholds for provided ``quantitative_measures``/``qualitative_measures`` and ``quantitative_filters``/``qualitative_filters`` (see :ref:`Measures` and :ref:`Filters`) passed as keyword arguments.
 
         Examples
         --------
-        See `FeatureSelector examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
+        See `Selectors examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
         """
         # settinp up list of features
         if quantitative_features is None:
             quantitative_features = []
+        self.quantitative_features = list(set(quantitative_features))
         if qualitative_features is None:
             qualitative_features = []
-        assert (
-            len(quantitative_features) > 0 or len(qualitative_features) > 0
-        ), "No feature passed as input. Pleased provided column names to Carver by setting qualitative_features or quantitative_features."
-        assert (len(quantitative_features) > 0 and len(qualitative_features) == 0) or (
-            len(qualitative_features) > 0 and len(quantitative_features) == 0
-        ), "Mixed quantitative and qualitative features. One only of quantitative_features and qualitative_features should be set."
-        self.features = list(set(qualitative_features + quantitative_features))
+        self.qualitative_features = list(set(qualitative_features))
+        assert len(quantitative_features) > 0 or len(qualitative_features) > 0, (
+            "No feature passed as input. Pleased provided column names to Carver by setting "
+            "qualitative_features or quantitative_features."
+        )
+        self.features = list(set(self.qualitative_features + self.quantitative_features))
+        self.input_dtypes = {"float": self.quantitative_features, "str": self.qualitative_features}
 
         # number of features selected
         self.n_best = n_best
@@ -125,74 +144,63 @@ class FeatureSelector:
         # feature sample size per iteration
         self.colsample = colsample
 
-        # initiating measures
-        if measures is None:
-            if any(quantitative_features):  # quantitative feature association measure
-                measures = [kruskal_measure]
-            else:  # qualitative feature association measure
-                measures = [tschuprowt_measure]
-        self.measures = [dtype_measure, nans_measure, mode_measure] + measures[:]
+        # adding default measures
+        self.measures = {
+            dtype: [dtype_measure, nans_measure, mode_measure] + requested_measures[:]
+            for dtype, requested_measures in measures.items()
+        }
 
-        # initiating filters
-        if filters is None:
-            if any(quantitative_features):  # quantitative feature association measure
-                filters = [spearman_filter]
-            else:  # qualitative feature association measure
-                filters = [tschuprowt_filter]
-        self.filters = [thresh_filter] + filters[:]
+        # adding default filter
+        self.filters = {
+            dtype: [thresh_filter] + requested_filters[:]
+            for dtype, requested_filters in filters.items()
+        }
 
         # names of measures to sort by
-        self.measure_names = [measure.__name__ for measure in measures[::-1]]
+        self.measure_names = {
+            dtype: [measure.__name__ for measure in requested_measures[::-1]]
+            for dtype, requested_measures in self.measures.items()
+        }
 
         # wether or not to print tables
-        self.verbose = bool(max(verbose, pretty_print))
-        if pretty_print:
+        self.verbose = bool(max(verbose, kwargs.get("pretty_print", False)))
+        self.pretty_print = False
+        if self.verbose and kwargs.get("pretty_print", True):
             if _has_idisplay:  # checking for installed dependencies
-                self.pretty_print = pretty_print
+                self.pretty_print = True
             else:
-                self.verbose = True
-                print(
-                    "Package not found: ipython. Defaulting to verbose=True. Install extra dependencies with pip install autocarver[jupyter]"
+                warn(
+                    "Package not found: IPython. Defaulting to raw verbose. "
+                    "Install extra dependencies with pip install autocarver[jupyter]",
+                    UserWarning,
                 )
 
         # keyword arguments
         self.kwargs = kwargs
 
     def _select_features(
-        self, X: DataFrame, y: Series, features: list[str], n_best: int
+        self,
+        X: DataFrame,
+        y: Series,
+        features: list[str],
+        n_best: int,
+        dtype: str,
     ) -> list[str]:
-        """Selects the n_best features amongst the specified ones
-
-        Parameters
-        ----------
-        X : DataFrame
-            _description_
-        y : Series
-            _description_
-        features : list[str]
-            _description_
-        n_best : int
-            _description_
-
-        Returns
-        -------
-        list[str]
-            _description_
-        """
+        """Selects the n_best features amongst the specified ones"""
         if self.verbose:  # verbose if requested
             print(f"------\n[FeatureSelector] Selecting from Features: {str(features)}\n---")
 
         # Computes association between X and y
         initial_associations = apply_measures(
-            X, y, measures=self.measures, features=features, **self.kwargs
+            X, y, measures=self.measures[dtype], features=features, **self.kwargs
         )
 
         # sorting statistics
-        measure_names = evaluated_measure_names(initial_associations, self.measure_names)
+        measure_names = evaluated_measure_names(initial_associations, self.measure_names[dtype])
         initial_associations = initial_associations.sort_values(measure_names, ascending=False)
 
         if self.verbose:  # displaying association measure
-            print("\n - Association between X and y")
+            print("\n - [FeatureSelector] Association between X and y")
             print_associations(initial_associations, self.pretty_print)
 
         # applying filtering for each measure
@@ -203,7 +211,7 @@ class FeatureSelector:
 
             # filtering for each measure, as each measure ranks the features differently
             filtered_association = apply_filters(
-                X, associations, filters=self.filters, **self.kwargs
+                X, associations, filters=self.filters[dtype], **self.kwargs
             )
 
             # selected features for the measure
@@ -234,60 +242,87 @@ class FeatureSelector:
         ]
 
         if self.verbose:  # displaying association measure
-            print("\n - Association between X and y, filtered for inter-feature assocation")
+            print(
+                "\n - [FeatureSelector] Association between X and y, filtered for inter-feature assocation"
+            )
             print_associations(initial_associations.reindex(best_features), self.pretty_print)
             print("------\n")
 
         return best_features
 
     def select(self, X: DataFrame, y: Series) -> list[str]:
-        """Selects the ``n_best`` features of the DataFrame, by association with the binary target
+        """Selects the ``n_best`` features of the DataFrame, by association with the target
 
         Parameters
         ----------
         X : DataFrame
-            Dataset used to measure association between features and target.
-            Needs to have columns has specified in ``FeatureSelector.features``.
+            Dataset to determine optimal features.
+            Needs to have columns has specified in ``features`` attribute.
+
         y : Series
-            Binary target feature with wich the association is maximized.
+            Target with wich the association is evaluated.
 
         Returns
         -------
         list[str]
             List of selected features
         """
-        # splitting features in chunks
-        if self.colsample < 1:
-            # shuffling features to get random samples of features
-            shuffle(self.features)
+        # iterating over each type of feature
+        all_best_features = []
+        for dtype in unique(list(self.input_dtypes.keys())):
+            if self.verbose:  # verbose if requested
+                if dtype == "float":
+                    print(f"------\n[FeatureSelector] Selecting from Quantitative Features\n---")
+                else:
+                    print(f"------\n[FeatureSelector] Selecting from Qualitative Features\n---")
 
-            # number of features per sample
-            chunks = int(len(self.features) // (1 / self.colsample))
+            # getting features of the specific data type
+            features = self.input_dtypes[dtype][:]
 
-            # splitting feature list in samples
-            feature_samples = [
-                self.features[chunks * i : chunks * (i + 1)]
-                for i in range(int(1 / self.colsample) - 1)
-            ]
+            # splitting features in chunks
+            if self.colsample < 1:
+                # shuffling features to get random samples of features
+                shuffle(features)
 
-            # adding last sample with all remaining features
-            feature_samples += [self.features[chunks * (int(1 / self.colsample) - 1) :]]
+                # number of features per sample
+                chunks = int(len(self.features) // (1 / self.colsample))
 
-            # iterating over each feature samples
-            best_features = []
-            for features in feature_samples:
-                # fitting association on features
-                best_features += self._select_features(X, y, features, int(self.n_best // 2))
+                # splitting feature list in samples
+                feature_samples = [
+                    features[chunks * i : chunks * (i + 1)]
+                    for i in range(int(1 / self.colsample) - 1)
+                ]
 
-        # splitting in chunks not requested
-        else:
-            best_features = self.features[:]
+                # adding last sample with all remaining features
+                feature_samples += [features[chunks * (int(1 / self.colsample) - 1) :]]
 
-        # final selection with all best_features selected
-        if any(best_features):
-            best_features = self._select_features(X, y, best_features, self.n_best)
+                # iterating over each feature samples
+                best_features = []
+                for feature_sample in feature_samples:
+                    # fitting association on features
+                    best_features += self._select_features(
+                        X, y, feature_sample, int(self.n_best // 2), dtype
+                    )
 
-        return best_features
+            # splitting in chunks not requested
+            else:
+                best_features = features[:]
+
+            # final selection with all best_features selected
+            if any(best_features):
+                best_features = self._select_features(X, y, best_features, self.n_best, dtype)
+                all_best_features += best_features
+                if self.verbose:  # verbose if requested
+                    if dtype == "float":
+                        print(
+                            f"------\n[FeatureSelector] Selected Quantitative Features: {str(features)}\n---"
+                        )
+                    else:
+                        print(
+                            f"------\n[FeatureSelector] Selected Qualitative Features: {str(features)}\n---"
+                        )
+
+        return all_best_features
 
 
 def print_associations(association: DataFrame, pretty_print: bool = False) -> None:

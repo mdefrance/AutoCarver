@@ -5,6 +5,20 @@ from typing import Any, Callable
 from pandas import Series
 
 
+def reverse_xy(measure: Callable):
+    """Reverses places of x and y in measure"""
+
+    def reversed_measure(
+        y: Series,
+        x: Series,
+        **kwargs,
+    ) -> tuple[bool, dict[str, Any]]:
+        """Reversed version of the measure"""
+        return measure(y, x, **kwargs)
+
+    return reversed_measure
+
+
 def make_measure(
     measure: Callable,
     active: bool,
