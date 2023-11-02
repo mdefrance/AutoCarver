@@ -1,3 +1,3 @@
-""" Loads feature selection tools."""
+""" Initiates the old FeatureSelector"""
 
 from .feature_selector import FeatureSelector
