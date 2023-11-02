@@ -1,7 +1,9 @@
+.. _Carvers:
+
 Carvers
 =======
 
-The core of **AutoCarver** resides in the following Data Optimization steps: 
+The core of **AutoCarver** resides in its **Carvers**, they provide the following Data Optimization steps: 
 
    1. Identifying the most associated combination from all ordered combinations of modalities.
    2. Testing all combinations of NaNs grouped to one of those modalities.
@@ -49,7 +51,7 @@ For two combinations of modalities of :math:`x`, a higher :math:`T` or :math:`V`
 Multilclass Classification
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Within :class:`MulticlassCarver`, a multiclass target consists of a column :math:`y` that contains several values :math:`y_0` to :math:`y_{n_y}` where :math:`n_y>2` is the number of values taken by :math:`y`.
+Within :class:`MulticlassCarver`, a multiclass target consists of a column :math:`y` that contains several values :math:`y_0` to :math:`y_{n_y}` where :math:`n_y>2` is the number of modalities taken by :math:`y`.
 
 For values :math:`y_0` to :math:`y_{n_y-1}` of :math:`y`, an indicator feature is built: :math:`Y_0 = \mathbb{1}_{y=y_0}` to :math:`Y_{n_y-1} = \mathbb{1}_{y=y_{n_y-1}}`.
 
