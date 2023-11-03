@@ -17,7 +17,7 @@
 
 # ReadTheDocs
 
-Go check out the package documentation at [ReadTheDocs](https://autocarver.readthedocs.io/en/latest/index.html)!
+Check out the package documentation on [ReadTheDocs](https://autocarver.readthedocs.io/en/latest/index.html)!
 
 # Install
 

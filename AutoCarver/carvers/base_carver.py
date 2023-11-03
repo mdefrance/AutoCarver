@@ -179,6 +179,9 @@ class BaseCarver(BaseDiscretizer):
                     "Install extra dependencies with pip install autocarver[jupyter]",
                     UserWarning,
                 )
+        
+        # historizing everything
+        self.history = {feature: [] for feature in self.features}
 
     def _prepare_data(
         self,
@@ -265,6 +268,8 @@ class BaseCarver(BaseDiscretizer):
             super()._remove_feature(feature)
             if feature in self.ordinal_features:
                 self.ordinal_features.remove(feature)
+            if feature in self.history:
+                self.history[feature] += [{"removed": True}]
 
     def fit(
         self,
@@ -336,6 +341,7 @@ class BaseCarver(BaseDiscretizer):
         xaggs = self._aggregator(self.features, x_copy, y, labels_orders)
         xaggs_dev = self._aggregator(self.features, x_dev_copy, y_dev, labels_orders)
 
+
         # optimal butcketization/carving of each feature
         all_features = self.features[:]  # (features are being removed from self.features)
         for n, feature in enumerate(all_features):
@@ -345,8 +351,12 @@ class BaseCarver(BaseDiscretizer):
             # getting xtabs on train/test
             xagg = xaggs[feature]
             xagg_dev = xaggs_dev[feature]
+            self.history[feature] += [{"raw_train_association": self._association_measure(xagg, n_obs=xagg.apply(sum).sum())}]
+            if xagg_dev is not None:
+                self.history[feature] += [{"raw_dev_association": self._association_measure(xagg_dev, n_obs=xagg_dev.apply(sum).sum())}]
+
             if self.verbose:  # verbose if requested
-                print("\n - [BaseCarver] Raw feature distribution")
+                print("\n - [BaseCarver] Raw distribution")
                 # TODO: get the good labels
                 print_xagg(
                     xagg,
@@ -359,13 +369,13 @@ class BaseCarver(BaseDiscretizer):
             order = labels_orders[feature]
 
             # getting best combination
-            best_combination = self._get_best_combination(order, xagg, xagg_dev=xagg_dev)
+            best_combination = self._get_best_combination(feature, order, xagg, xagg_dev=xagg_dev)
 
             # checking that a suitable combination has been found
             if best_combination is not None:
                 order, xagg, xagg_dev = best_combination
                 if self.verbose:  # verbose if requested
-                    print("\n - [BaseCarver] Carved feature distribution")
+                    print("\n - [BaseCarver] Carved distribution")
                     # TODO: get the good labels
                     print_xagg(
                         xagg,
@@ -411,6 +421,7 @@ class BaseCarver(BaseDiscretizer):
 
     def _get_best_combination(
         self,
+        feature: str,
         order: GroupedList,
         xagg: DataFrame,
         *,
@@ -448,7 +459,8 @@ class BaseCarver(BaseDiscretizer):
             combinations = consecutive_combinations(raw_order, self.max_n_mod, min_group_size=1)
 
             # getting most associated combination
-            best_association = self.get_best_association(
+            best_association = self._get_best_association(
+                feature,
                 raw_xagg,
                 combinations,
                 xagg_dev=raw_xagg_dev,
@@ -459,6 +471,7 @@ class BaseCarver(BaseDiscretizer):
                 order = order_apply_combination(order, best_association["combination"])
                 xagg = xagg_apply_order(xagg, order)
                 xagg_dev = xagg_apply_order(xagg_dev, order)
+                self.history[feature] += [{"best_association": best_association}]
 
             # grouping NaNs if requested to drop them (dropna=True)
             if self.dropna and self.str_nan in order and best_association is not None:
@@ -475,7 +488,8 @@ class BaseCarver(BaseDiscretizer):
                 )
 
                 # getting most associated combination
-                best_association = self.get_best_association(
+                best_association = self._get_best_association(
+                    feature,
                     xagg,
                     nan_combinations,
                     xagg_dev=xagg_dev,
@@ -486,13 +500,15 @@ class BaseCarver(BaseDiscretizer):
                     order = order_apply_combination(order, best_association["combination"])
                     xagg = xagg_apply_order(xagg, order)
                     xagg_dev = xagg_apply_order(xagg_dev, order)
+                    self.history[feature] += [{"best_association_with_nan": best_association}]
 
         # checking that a suitable combination has been found
         if best_association is not None:
             return order, xagg, xagg_dev
 
-    def get_best_association(
+    def _get_best_association(
         self,
+        feature: str,
         xagg: Union[Series, DataFrame],
         combinations: list[list[str]],
         *,
@@ -556,8 +572,8 @@ class BaseCarver(BaseDiscretizer):
         )
 
         # testing viability
-        for association in tqdm(
-            associations_xagg, disable=not self.verbose, desc="Testing robustness    "
+        for n_combination, association in tqdm(
+            enumerate(associations_xagg), total=len(associations_xagg), disable=not self.verbose, desc="Testing robustness    "
         ):
             # needed parameters
             index_to_groupby, grouped_xagg = (
@@ -577,6 +593,17 @@ class BaseCarver(BaseDiscretizer):
             ):
                 # case 0: no test sample provided -> not testing for robustness
                 if xagg_dev is None:
+                    # historizing reasons of viability
+                    self.history[feature] += [{
+                        "combination": index_to_groupby,
+                        self.sort_by: association[self.sort_by],
+                        "viable": True,
+                        "viable_message": (
+                            "Combination stable on X"
+                        )}]
+                    # storing less associated combinations in history
+                    self.history[feature] += [{"combination": associations["index_to_groupby"], self.sort_by: associations[self.sort_by]} for associations in associations_xagg[n_combination+1:]]  # TODO: ajouter le reste
+
                     return association
 
                 # grouping the dev sample per modality
@@ -587,8 +614,8 @@ class BaseCarver(BaseDiscretizer):
 
                 # case 1: testing viability on provided dev sample
                 # - grouped values have the same ranks in train/test
-                # - target rates are distinct for all modalities
                 # - minimum frequency is reached for all modalities
+                # - target rates are distinct for all modalities
                 if (
                     all(
                         train_rates.sort_values("target_rate").index
@@ -597,7 +624,41 @@ class BaseCarver(BaseDiscretizer):
                     and all(dev_rates["frequency"] >= self.min_freq_mod)
                     and len(dev_rates) == dev_rates["target_rate"].nunique()
                 ):
+                    # historizing reasons of viability
+                    self.history[feature] += [{
+                        "combination": index_to_groupby,
+                        self.sort_by: association[self.sort_by],
+                        "viable": True,
+                        "viable_message": (
+                            "Combination stable on X and X_dev"
+                        )}]
+                    # storing less associated combinations in history
+                    self.history[feature] += [{"combination": associations["index_to_groupby"], self.sort_by: associations[self.sort_by]} for associations in associations_xagg[n_combination+1:]]  # TODO: ajouter le reste
+
                     return association
+                
+                # historizing reasons of non-viability
+                else:
+                    self.history[feature] += [{
+                        "combination": index_to_groupby,
+                        self.sort_by: association[self.sort_by],
+                        "viable": False,
+                        "viable_message": (
+                            "On X_dev: non-distinct target rates per grouped modality or a "
+                            f"grouped modality is less frequent than min_freq_mod={self.min_freq_mod}"
+                            "or target rates per modality are not ranked the same between X and X_dev"
+                        )}]
+                    
+            # historizing reasons of non-viability
+            else:
+                self.history[feature] += [{
+                    "combination": index_to_groupby,
+                    self.sort_by: association[self.sort_by],
+                    "viable": False,
+                    "viable_message": (
+                        "On X: non-distinct target rates per grouped modality or a "
+                        f"grouped modality is less frequent than min_freq_mod={self.min_freq_mod}"
+                    )}]
 
 
 def filter_nan(xagg: Union[Series, DataFrame], str_nan: str) -> DataFrame:
