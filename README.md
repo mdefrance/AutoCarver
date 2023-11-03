@@ -1,7 +1,7 @@
 
 </p>
 <p align="center">
-    <img alt="AutoCarver Logo" src="docs/source/artwork/auto_carver_symbol_small.png" width="25%">
+    <img alt="AutoCarver Logo" src="https://raw.githubusercontent.com/mdefrance/AutoCarver/main/docs/source/artwork/auto_carver_symbol_small.png" width="25%">
 </p>
 
 
