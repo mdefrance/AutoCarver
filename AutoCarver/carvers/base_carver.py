@@ -499,9 +499,7 @@ class BaseCarver(BaseDiscretizer):
                 raw_order.remove(self.str_nan)
 
                 # adding combinations with NaNs
-                combinations = nan_combinations(
-                    raw_order, self.str_nan, self.max_n_mod, 1
-                )
+                combinations = nan_combinations(raw_order, self.str_nan, self.max_n_mod, 1)
 
                 # getting most associated combination
                 best_association, order = self._get_best_association(
@@ -965,7 +963,10 @@ def consecutive_combinations(
 
 
 def nan_combinations(
-    raw_order: GroupedList, str_nan: str, max_n_mod: int, min_group_size: int,
+    raw_order: GroupedList,
+    str_nan: str,
+    max_n_mod: int,
+    min_group_size: int,
 ) -> list[list[str]]:
     """All consecutive combinatios of non-nans with added nan to each possible group and a last
       group only with nan if the max_n_mod is not reached by the combination
