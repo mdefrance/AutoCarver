@@ -221,22 +221,6 @@ class BaseCarver(BaseDiscretizer):
 
         return x_copy, x_dev_copy
 
-    def _aggregator():
-        """HELPER: get_xtabs or get_yvals"""
-        pass
-
-    def _grouper():
-        """HELPER: xtab_grouper or yval_grouper"""
-        pass
-
-    def _association_measure():
-        """HELPER: association_xtab or association_yval"""
-        pass
-
-    def _target_rate():
-        """HELPER: xtab_target_rate or yval_target_rate"""
-        pass
-
     def _combination_formatter(self, combination: list[list[str]]) -> dict[str, str]:
         """Attributes the first element of a group to all elements of a group
 
@@ -251,10 +235,6 @@ class BaseCarver(BaseDiscretizer):
             _description_
         """
         return {modal: group[0] for group in combination for modal in group}
-
-    def _printer():
-        """HELPER: pretty_xtab or pretty_yval"""
-        pass
 
     def _remove_feature(self, feature: str) -> None:
         """Removes a feature from all ``BaseCarver.features`` attributes
@@ -393,27 +373,32 @@ class BaseCarver(BaseDiscretizer):
         # getting xtabs on train/test
         xagg = xaggs[feature]
         xagg_dev = xaggs_dev[feature]
-        self.history[feature] += [{
-            "combination": format_for_history({modality: modality for modality in xagg.index}, self.values_orders[feature]), 
-            self.sort_by: self._association_measure(xagg, n_obs=xagg.apply(sum).sum())[self.sort_by], 
-            "raw": True
-        }]
 
-        if self.verbose:  # verbose if requested
-            print("\n - [BaseCarver] Raw distribution")
-            # TODO: get the good labels
-            print_xagg(
-                xagg,
-                xagg_dev=xagg_dev,
-                pretty_print=self.pretty_print,
-                printer=self._printer,
-            )
+        # checking that the feature has at least 2 modalities
+        best_combination = None
+        if len(xagg.index) > 1:
+            # historizing raw combination
+            raw_association = {
+                "combination": {modality: modality for modality in xagg.index},
+                self.sort_by: self._association_measure(xagg, n_obs=xagg.apply(sum).sum())[self.sort_by],
+            }
+            self._historize_viability_test(feature, None, raw_association, viability_message="Raw X distribution")
 
-        # ordering
-        order = labels_orders[feature]
+            if self.verbose:  # verbose if requested
+                print("\n - [BaseCarver] Raw distribution")
+                # TODO: get the good labels
+                print_xagg(
+                    xagg,
+                    xagg_dev=xagg_dev,
+                    pretty_print=self.pretty_print,
+                    printer=self._printer,
+                )
 
-        # getting best combination
-        best_combination = self._get_best_combination(feature, order, xagg, xagg_dev=xagg_dev)
+            # ordering
+            order = labels_orders[feature]
+
+            # getting best combination
+            best_combination = self._get_best_combination(feature, order, xagg, xagg_dev=xagg_dev)
 
         # checking that a suitable combination has been found
         if best_combination is not None:
@@ -692,50 +677,34 @@ class BaseCarver(BaseDiscretizer):
         association_value : float
             _description_
         """ 
-        self.history[feature] += [{
-            "combination": format_for_history(association["index_to_groupby"], self.values_orders[feature]),
-            self.sort_by: association[self.sort_by],
-            "viability": viability,
-            "viability_message": self._get_viability_message(**viability_msg_params)
-        }]
-                
-    def _get_viability_message(self, viability_message: str = None, min_freq_train: bool = True, distinct_rates_train: bool = True, ranks_train_dev: bool = True, min_freq_dev: bool = True, distinct_rates_dev: bool = True) -> list[str]:
-        """Messages associated to each failed viability test
-
-        Parameters
-        ----------
-        min_freq_train : bool, optional
-            _description_, by default True
-        distinct_rates_train : bool, optional
-            _description_, by default True
-        ranks_train_dev : bool, optional
-            _description_, by default True
-        min_freq_dev : bool, optional
-            _description_, by default True
-        distinct_rates_dev : bool, optional
-            _description_, by default True
-
-        Returns
-        -------
-        list[str]
-            _description_
-        """
+        # Messages associated to each failed viability test
         messages = []
-        if not viability_message:
-            if not ranks_train_dev:
+        if not viability_msg_params.get("viability_message"):
+            if not viability_msg_params.get("ranks_train_dev"):
                 messages += ["X_dev: target rates per modality are not ranked the same between X and X_dev"]
-            if not min_freq_dev:
+            if not viability_msg_params.get("min_freq_dev"):
                 messages += [f"X_dev: grouped modality is less frequent than min_freq_mod={self.min_freq_mod}"]
-            if not distinct_rates_dev:
+            if not viability_msg_params.get("distinct_rates_dev"):
                 messages += ["X_dev: non-distinct target rates per grouped modality"]
-            if not min_freq_train:
+            if not viability_msg_params.get("min_freq_train"):
                 messages += [f"X: grouped modality is less frequent than min_freq_mod={self.min_freq_mod}"]
-            if not distinct_rates_train:
+            if not viability_msg_params.get("distinct_rates_train"):
                 messages += ["X: non-distinct target rates per grouped modality"]
         else:
-            meassages += [viability_message]
-        
-        return messages
+            messages += [viability_msg_params.get("viability_message")]
+            
+        # Formats a combination for historization
+        combi = association["index_to_groupby"]
+        order = self.values_orders[feature]
+        formatted_combi = [[value for modality in combi.keys() for value in order.get(modality) if combi[modality] == group] for group in unique(list(combi.values()))]
+
+        # historizing test results
+        self.history[feature] += [{
+            "combination": formatted_combi,
+            self.sort_by: association[self.sort_by],
+            "viability": viability,
+            "viability_message": messages
+        }]
     
     def get_history(self, feature: str = None) -> DataFrame:
         """_summary_
@@ -768,23 +737,6 @@ class BaseCarver(BaseDiscretizer):
         # history["combination"] = history["combination"].apply(format_for_history)
 
         return history
-        
-def format_for_history(combi: dict[str, str], order: GroupedList) -> list[list[str]]:
-    """ Formats a combination for historization
-
-    Parameters
-    ----------
-    combi : dict[str, str]
-        _description_
-
-    Returns
-    -------
-    list[list[str]]
-        _description_
-    """
-    return [[value for modality in combi.keys() for value in order.get(modality) if combi[modality] == group] for group in unique(list(combi.values()))]
-
-
 
 
 def filter_nan(xagg: Union[Series, DataFrame], str_nan: str) -> DataFrame:
