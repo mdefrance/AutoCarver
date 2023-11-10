@@ -379,7 +379,7 @@ class BaseCarver(BaseDiscretizer):
         if len(xagg.index) > 1:
             # historizing raw combination
             raw_association = {
-                "combination": {modality: modality for modality in xagg.index},
+                "index_to_groupby": {modality: modality for modality in xagg.index},
                 self.sort_by: self._association_measure(xagg, n_obs=xagg.apply(sum).sum())[self.sort_by],
             }
             self._historize_viability_test(feature, None, raw_association, viability_message="Raw X distribution")
