@@ -181,7 +181,7 @@ class BaseCarver(BaseDiscretizer):
                 )
 
         # historizing everything
-        self.history = {feature: [] for feature in self.features}
+        self._history = {feature: [] for feature in self.features}
 
     def _prepare_data(
         self,
@@ -248,8 +248,8 @@ class BaseCarver(BaseDiscretizer):
             super()._remove_feature(feature)
             if feature in self.ordinal_features:
                 self.ordinal_features.remove(feature)
-            if feature in self.history:
-                self.history[feature] += [{"removed": True}]
+            if feature in self._history:
+                self._history[feature] += [{"removed": True}]
 
     def fit(
         self,
@@ -789,7 +789,7 @@ class BaseCarver(BaseDiscretizer):
         ]
 
         # historizing test results
-        self.history[feature] += [
+        self._history[feature] += [
             {
                 "combination": formatted_combi,
                 self.sort_by: association[self.sort_by],
@@ -798,7 +798,7 @@ class BaseCarver(BaseDiscretizer):
             }
         ]
 
-    def get_history(self, feature: str = None) -> DataFrame:
+    def history(self, feature: str = None) -> DataFrame:
         """_summary_
 
         Parameters
@@ -813,13 +813,13 @@ class BaseCarver(BaseDiscretizer):
         """
         # getting feature's history
         if feature is not None:
-            history = DataFrame(self.history[feature])
+            history = DataFrame(self._history[feature])
 
         # getting all features' history
         else:
             history = []
-            for feature in self.history.keys():
-                feature_histories = self.history[feature]
+            for feature in self._history.keys():
+                feature_histories = self._history[feature]
                 for feature_history in feature_histories:
                     feature_history.update({"feature": feature})
                 history += [feature_histories]
