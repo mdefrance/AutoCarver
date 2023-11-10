@@ -5,7 +5,7 @@ for any task.
 from typing import Any, Callable, Union
 from warnings import warn
 
-from pandas import DataFrame, Series
+from pandas import DataFrame, Series, unique
 from tqdm import tqdm
 
 from ..discretizers import GroupedList
@@ -345,60 +345,12 @@ class BaseCarver(BaseDiscretizer):
         # optimal butcketization/carving of each feature
         all_features = self.features[:]  # (features are being removed from self.features)
         for n, feature in enumerate(all_features):
+
             if self.verbose:  # verbose if requested
                 print(f"\n------\n[BaseCarver] Fit {feature} ({n+1}/{len(all_features)})\n---")
 
-            # getting xtabs on train/test
-            xagg = xaggs[feature]
-            xagg_dev = xaggs_dev[feature]
-            self.history[feature] += [{"raw_train_association": self._association_measure(xagg, n_obs=xagg.apply(sum).sum())}]
-            if xagg_dev is not None:
-                self.history[feature] += [{"raw_dev_association": self._association_measure(xagg_dev, n_obs=xagg_dev.apply(sum).sum())}]
-
-            if self.verbose:  # verbose if requested
-                print("\n - [BaseCarver] Raw distribution")
-                # TODO: get the good labels
-                print_xagg(
-                    xagg,
-                    xagg_dev=xagg_dev,
-                    pretty_print=self.pretty_print,
-                    printer=self._printer,
-                )
-
-            # ordering
-            order = labels_orders[feature]
-
-            # getting best combination
-            best_combination = self._get_best_combination(feature, order, xagg, xagg_dev=xagg_dev)
-
-            # checking that a suitable combination has been found
-            if best_combination is not None:
-                order, xagg, xagg_dev = best_combination
-                if self.verbose:  # verbose if requested
-                    print("\n - [BaseCarver] Carved distribution")
-                    # TODO: get the good labels
-                    print_xagg(
-                        xagg,
-                        xagg_dev=xagg_dev,
-                        pretty_print=self.pretty_print,
-                        printer=self._printer,
-                    )
-
-                # updating label_orders
-                labels_orders.update({feature: order})
-
-            # no suitable combination has been found -> removing feature
-            else:
-                warn(
-                    f" - [BaseCarver] No robust combination for feature '{feature}' could be found"
-                    ". It will be ignored. You might have to increase the size of your dev sample"
-                    " (dev sample not representative of dev sample for this feature) or you"
-                    " should consider dropping this features.",
-                    UserWarning,
-                )
-                self._remove_feature(feature)
-                if feature in labels_orders:
-                    labels_orders.pop(feature)
+            # carving the feature
+            labels_orders = self._carve_feature(feature=feature, xaggs=xaggs, xaggs_dev=xaggs_dev)
 
             if self.verbose:  # verbose if requested
                 print("------\n")
@@ -418,6 +370,81 @@ class BaseCarver(BaseDiscretizer):
         super().fit(X, y)
 
         return self
+
+    def _carve_feature(self, feature: str, xaggs: dict[str, Union[Series, DataFrame]], xaggs_dev: dict[str, Union[Series, DataFrame]], labels_orders: dict[str, GroupedList]) -> dict[str, GroupedList]:
+        """Carves a feature into buckets that maximize association with the target
+
+        Parameters
+        ----------
+        feature : str
+            _description_
+        xaggs : dict[str, Union[Series, DataFrame]]
+            _description_
+        xaggs_dev : dict[str, Union[Series, DataFrame]]
+            _description_
+        labels_orders : dict[str, GroupedList]
+            _description_
+
+        Returns
+        -------
+        dict[str, GroupedList]
+            _description_
+        """
+        # getting xtabs on train/test
+        xagg = xaggs[feature]
+        xagg_dev = xaggs_dev[feature]
+        self.history[feature] += [{
+            "combination": format_for_history({modality: modality for modality in xagg.index}, self.values_orders[feature]), 
+            self.sort_by: self._association_measure(xagg, n_obs=xagg.apply(sum).sum())[self.sort_by], 
+            "raw": True
+        }]
+
+        if self.verbose:  # verbose if requested
+            print("\n - [BaseCarver] Raw distribution")
+            # TODO: get the good labels
+            print_xagg(
+                xagg,
+                xagg_dev=xagg_dev,
+                pretty_print=self.pretty_print,
+                printer=self._printer,
+            )
+
+        # ordering
+        order = labels_orders[feature]
+
+        # getting best combination
+        best_combination = self._get_best_combination(feature, order, xagg, xagg_dev=xagg_dev)
+
+        # checking that a suitable combination has been found
+        if best_combination is not None:
+            order, xagg, xagg_dev = best_combination
+            if self.verbose:  # verbose if requested
+                print("\n - [BaseCarver] Carved distribution")
+                # TODO: get the good labels
+                print_xagg(
+                    xagg,
+                    xagg_dev=xagg_dev,
+                    pretty_print=self.pretty_print,
+                    printer=self._printer,
+                )
+
+            # updating label_orders
+            labels_orders.update({feature: order})
+
+        # no suitable combination has been found -> removing feature
+        else:
+            warn(
+                f" - [BaseCarver] No robust combination for feature '{feature}' could be found"
+                ". It will be ignored. You might have to increase the size of your dev sample"
+                " (dev sample not representative of dev sample for this feature) or you"
+                " should consider dropping this features.",
+                UserWarning,
+            )
+            self._remove_feature(feature)
+            if feature in labels_orders:
+                labels_orders.pop(feature)
+        
+        return labels_orders
 
     def _get_best_combination(
         self,
@@ -471,7 +498,6 @@ class BaseCarver(BaseDiscretizer):
                 order = order_apply_combination(order, best_association["combination"])
                 xagg = xagg_apply_order(xagg, order)
                 xagg_dev = xagg_apply_order(xagg_dev, order)
-                self.history[feature] += [{"best_association": best_association}]
 
             # grouping NaNs if requested to drop them (dropna=True)
             if self.dropna and self.str_nan in order and best_association is not None:
@@ -500,7 +526,6 @@ class BaseCarver(BaseDiscretizer):
                     order = order_apply_combination(order, best_association["combination"])
                     xagg = xagg_apply_order(xagg, order)
                     xagg_dev = xagg_apply_order(xagg_dev, order)
-                    self.history[feature] += [{"best_association_with_nan": best_association}]
 
         # checking that a suitable combination has been found
         if best_association is not None:
@@ -571,94 +596,195 @@ class BaseCarver(BaseDiscretizer):
             .to_dict(orient="records")
         )
 
-        # testing viability
+        return self._test_viability()
+    
+    def _test_viability(self, feature: str, associations_xagg: list[dict[str, Any]], xagg_dev: Union[Series, DataFrame]) -> dict[str, Any]:
+        """Tests the viability of all possible combinations onto xagg_dev
+
+        Parameters
+        ----------
+        feature : str
+            _description_
+        associations_xagg : list[dict[str, Any]]
+            _description_
+        xagg_dev : Union[Series, DataFrame]
+            _description_
+
+        Returns
+        -------
+        dict[str, Any]
+            _description_
+        """  
+        # testing viability of all combinations
         for n_combination, association in tqdm(
             enumerate(associations_xagg), total=len(associations_xagg), disable=not self.verbose, desc="Testing robustness    "
         ):
-            # needed parameters
-            index_to_groupby, grouped_xagg = (
-                association["index_to_groupby"],
-                association["xagg"],
-            )
-
             # computing target rate and frequency per value
-            train_rates = self._printer(grouped_xagg)
+            train_rates = self._printer(association["xagg"])
 
-            # viable on train sample:
+            # viability on train sample:
             # - target rates are distinct for all modalities
+            distinct_rates_train = len(train_rates) == train_rates["target_rate"].nunique()
             # - minimum frequency is reached for all modalities
-            if (
-                all(train_rates["frequency"] >= self.min_freq_mod)
-                and len(train_rates) == train_rates["target_rate"].nunique()
-            ):
+            min_freq_train = all(train_rates["frequency"] >= self.min_freq_mod)
+
+            # checking for viability on train
+            if min_freq_train and distinct_rates_train:
                 # case 0: no test sample provided -> not testing for robustness
                 if xagg_dev is None:
-                    # historizing reasons of viability
-                    self.history[feature] += [{
-                        "combination": index_to_groupby,
-                        self.sort_by: association[self.sort_by],
-                        "viable": True,
-                        "viable_message": (
-                            "Combination stable on X"
-                        )}]
+                    # historizing viable combination
+                    self._historize_viability_test(feature, True, association, viability_message="Combination stable on X")
+                    
                     # storing less associated combinations in history
-                    self.history[feature] += [{"combination": associations["index_to_groupby"], self.sort_by: associations[self.sort_by]} for associations in associations_xagg[n_combination+1:]]  # TODO: ajouter le reste
+                    for association_not_tested in associations_xagg[n_combination + 1:]:
+                        self._historize_viability_test(feature, None, association_not_tested, viability_message="Not tested")
 
                     return association
 
+                # case 1: test sample provided -> testing robustness
                 # grouping the dev sample per modality
-                grouped_xagg_dev = self._grouper(xagg_dev, index_to_groupby)
+                grouped_xagg_dev = self._grouper(xagg_dev, association["index_to_groupby"])
 
                 # computing target rate and frequency per modality
                 dev_rates = self._printer(grouped_xagg_dev)
 
-                # case 1: testing viability on provided dev sample
+                # viability on dev sample:
                 # - grouped values have the same ranks in train/test
+                ranks_train_dev = all(
+                    train_rates.sort_values("target_rate").index
+                    == dev_rates.sort_values("target_rate").index
+                )
                 # - minimum frequency is reached for all modalities
+                min_freq_dev = all(dev_rates["frequency"] >= self.min_freq_mod)
                 # - target rates are distinct for all modalities
-                if (
-                    all(
-                        train_rates.sort_values("target_rate").index
-                        == dev_rates.sort_values("target_rate").index
-                    )
-                    and all(dev_rates["frequency"] >= self.min_freq_mod)
-                    and len(dev_rates) == dev_rates["target_rate"].nunique()
-                ):
-                    # historizing reasons of viability
-                    self.history[feature] += [{
-                        "combination": index_to_groupby,
-                        self.sort_by: association[self.sort_by],
-                        "viable": True,
-                        "viable_message": (
-                            "Combination stable on X and X_dev"
-                        )}]
+                distinct_rates_dev = len(dev_rates) == dev_rates["target_rate"].nunique()
+
+                # checking for viability on dev
+                if ranks_train_dev and min_freq_dev and distinct_rates_dev:
+                    # historizing viable combination
+                    self._historize_viability_test(feature, True, association, viability_message="Combination robust between X and X_dev")
+                    
                     # storing less associated combinations in history
-                    self.history[feature] += [{"combination": associations["index_to_groupby"], self.sort_by: associations[self.sort_by]} for associations in associations_xagg[n_combination+1:]]  # TODO: ajouter le reste
+                    for association_not_tested in associations_xagg[n_combination + 1:]:
+                        self._historize_viability_test(feature, None, association_not_tested, viability_message="Not tested")
 
                     return association
                 
                 # historizing reasons of non-viability
                 else:
-                    self.history[feature] += [{
-                        "combination": index_to_groupby,
-                        self.sort_by: association[self.sort_by],
-                        "viable": False,
-                        "viable_message": (
-                            "On X_dev: non-distinct target rates per grouped modality or a "
-                            f"grouped modality is less frequent than min_freq_mod={self.min_freq_mod}"
-                            "or target rates per modality are not ranked the same between X and X_dev"
-                        )}]
+                    self._historize_viability_test(feature, False, association, ranks_train_dev=ranks_train_dev, min_freq_dev=min_freq_dev, distinct_rates_dev=distinct_rates_dev)
                     
             # historizing reasons of non-viability
             else:
-                self.history[feature] += [{
-                    "combination": index_to_groupby,
-                    self.sort_by: association[self.sort_by],
-                    "viable": False,
-                    "viable_message": (
-                        "On X: non-distinct target rates per grouped modality or a "
-                        f"grouped modality is less frequent than min_freq_mod={self.min_freq_mod}"
-                    )}]
+                self._historize_viability_test(feature, False, association, min_freq_train=min_freq_train, distinct_rates_train=distinct_rates_train)
+    
+    def _historize_viability_test(self, feature: str, viability: bool, association: dict[Any], **viability_msg_params) -> None:
+        """historizes the viability tests results for specified feature
+
+        Parameters
+        ----------
+        feature : str
+            _description_
+        viability : bool
+            _description_
+        index_to_groupby : list[list[Any]]
+            _description_
+        association_value : float
+            _description_
+        """ 
+        self.history[feature] += [{
+            "combination": format_for_history(association["index_to_groupby"], self.values_orders[feature]),
+            self.sort_by: association[self.sort_by],
+            "viability": viability,
+            "viability_message": self._get_viability_message(**viability_msg_params)
+        }]
+                
+    def _get_viability_message(self, viability_message: str = None, min_freq_train: bool = True, distinct_rates_train: bool = True, ranks_train_dev: bool = True, min_freq_dev: bool = True, distinct_rates_dev: bool = True) -> list[str]:
+        """Messages associated to each failed viability test
+
+        Parameters
+        ----------
+        min_freq_train : bool, optional
+            _description_, by default True
+        distinct_rates_train : bool, optional
+            _description_, by default True
+        ranks_train_dev : bool, optional
+            _description_, by default True
+        min_freq_dev : bool, optional
+            _description_, by default True
+        distinct_rates_dev : bool, optional
+            _description_, by default True
+
+        Returns
+        -------
+        list[str]
+            _description_
+        """
+        messages = []
+        if not viability_message:
+            if not ranks_train_dev:
+                messages += ["X_dev: target rates per modality are not ranked the same between X and X_dev"]
+            if not min_freq_dev:
+                messages += [f"X_dev: grouped modality is less frequent than min_freq_mod={self.min_freq_mod}"]
+            if not distinct_rates_dev:
+                messages += ["X_dev: non-distinct target rates per grouped modality"]
+            if not min_freq_train:
+                messages += [f"X: grouped modality is less frequent than min_freq_mod={self.min_freq_mod}"]
+            if not distinct_rates_train:
+                messages += ["X: non-distinct target rates per grouped modality"]
+        else:
+            meassages += [viability_message]
+        
+        return messages
+    
+    def get_history(self, feature: str = None) -> DataFrame:
+        """_summary_
+
+        Parameters
+        ----------
+        feature : str, optional
+            _description_, by default None
+
+        Returns
+        -------
+        DataFrame
+            _description_
+        """
+        # getting feature's history
+        if feature is not None:
+            history = DataFrame(self.history[feature])
+
+        # getting all features' history
+        else:
+            history = []
+            for feature in self.history.keys():
+                feature_histories = self.history[feature]
+                for feature_history in feature_histories:
+                    feature_history.update({"feature": feature})
+                history += [feature_histories]
+            history = DataFrame(history).set_index("feature")
+        
+        # formatting combinations
+        # history["combination"] = history["combination"].apply(format_for_history)
+
+        return history
+        
+def format_for_history(combi: dict[str, str], order: GroupedList) -> list[list[str]]:
+    """ Formats a combination for historization
+
+    Parameters
+    ----------
+    combi : dict[str, str]
+        _description_
+
+    Returns
+    -------
+    list[list[str]]
+        _description_
+    """
+    return [[value for modality in combi.keys() for value in order.get(modality) if combi[modality] == group] for group in unique(list(combi.values()))]
+
+
 
 
 def filter_nan(xagg: Union[Series, DataFrame], str_nan: str) -> DataFrame:
