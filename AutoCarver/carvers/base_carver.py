@@ -350,7 +350,7 @@ class BaseCarver(BaseDiscretizer):
                 print(f"\n------\n[BaseCarver] Fit {feature} ({n+1}/{len(all_features)})\n---")
 
             # carving the feature
-            labels_orders = self._carve_feature(feature=feature, xaggs=xaggs, xaggs_dev=xaggs_dev)
+            labels_orders = self._carve_feature(feature, xaggs, xaggs_dev, labels_orders)
 
             if self.verbose:  # verbose if requested
                 print("------\n")
