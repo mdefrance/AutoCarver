@@ -596,7 +596,7 @@ class BaseCarver(BaseDiscretizer):
             .to_dict(orient="records")
         )
 
-        return self._test_viability()
+        return self._test_viability(feature, associations_xagg, xagg_dev)
     
     def _test_viability(self, feature: str, associations_xagg: list[dict[str, Any]], xagg_dev: Union[Series, DataFrame]) -> dict[str, Any]:
         """Tests the viability of all possible combinations onto xagg_dev
