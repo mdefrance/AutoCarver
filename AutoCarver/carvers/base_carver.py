@@ -498,20 +498,17 @@ class BaseCarver(BaseDiscretizer):
                 raw_order = GroupedList(order)
                 raw_order.remove(self.str_nan)
 
-                # all possible consecutive combinations
-                combinations = consecutive_combinations(raw_order, self.max_n_mod, min_group_size=1)
-
                 # adding combinations with NaNs
-                nan_combinations = add_nan_in_combinations(
-                    combinations, self.str_nan, self.max_n_mod
+                combinations = nan_combinations(
+                    raw_order, self.str_nan, self.max_n_mod, 1
                 )
 
                 # getting most associated combination
-                best_association = self._get_best_association(
+                best_association, order = self._get_best_association(
                     feature,
                     order,
                     xagg,
-                    nan_combinations,
+                    combinations,
                     xagg_dev=xagg_dev,
                 )
 
@@ -813,22 +810,21 @@ class BaseCarver(BaseDiscretizer):
         """
         # getting feature's history
         if feature is not None:
-            history = DataFrame(self._history[feature])
+            histo = self._history[feature]
 
         # getting all features' history
         else:
-            history = []
+            histo = []
             for feature in self._history.keys():
                 feature_histories = self._history[feature]
                 for feature_history in feature_histories:
                     feature_history.update({"feature": feature})
-                history += [feature_histories]
-            history = DataFrame(history).set_index("feature")
+                histo += feature_histories
 
         # formatting combinations
         # history["combination"] = history["combination"].apply(format_for_history)
 
-        return history
+        return DataFrame(histo)
 
 
 def filter_nan(xagg: Union[Series, DataFrame], str_nan: str) -> DataFrame:
@@ -968,18 +964,21 @@ def consecutive_combinations(
     return all_combinations
 
 
-def add_nan_in_combinations(
-    combinations: list[list[str]], str_nan: str, max_n_mod: int
+def nan_combinations(
+    raw_order: GroupedList, str_nan: str, max_n_mod: int, min_group_size: int,
 ) -> list[list[str]]:
-    """Adds nan to each possible group and a last group only with nan if the max_n_mod is not reached by the combination
+    """All consecutive combinatios of non-nans with added nan to each possible group and a last
+      group only with nan if the max_n_mod is not reached by the combination
 
     Parameters
     ----------
-    combinations : list[list[str]]
+    raw_order : GroupedList
         _description_
     str_nan : str
         _description_
     max_n_mod : int
+        _description_
+    min_group_size : int
         _description_
 
     Returns
@@ -987,6 +986,8 @@ def add_nan_in_combinations(
     list[list[str]]
         _description_
     """
+    # all possible consecutive combinations
+    combinations = consecutive_combinations(raw_order, max_n_mod, min_group_size=1)
     # iterating over each combination
     nan_combinations = []
     for combination in combinations:
