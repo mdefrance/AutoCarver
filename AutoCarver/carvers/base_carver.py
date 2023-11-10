@@ -381,6 +381,9 @@ class BaseCarver(BaseDiscretizer):
         # checking that the feature has at least 2 modalities
         best_combination = None
         if len(xagg.index) > 1:
+            # ordering
+            order = labels_orders[feature]
+
             # historizing raw combination
             raw_association = {
                 "index_to_groupby": {modality: modality for modality in xagg.index},
@@ -389,7 +392,7 @@ class BaseCarver(BaseDiscretizer):
                 ],
             }
             self._historize_viability_test(
-                feature, None, raw_association, viability_message="Raw X distribution"
+                feature, None, raw_association, order, viability_message="Raw X distribution"
             )
 
             if self.verbose:  # verbose if requested
@@ -401,9 +404,6 @@ class BaseCarver(BaseDiscretizer):
                     pretty_print=self.pretty_print,
                     printer=self._printer,
                 )
-
-            # ordering
-            order = labels_orders[feature]
 
             # getting best combination
             best_combination = self._get_best_combination(feature, order, xagg, xagg_dev=xagg_dev)
@@ -479,8 +479,9 @@ class BaseCarver(BaseDiscretizer):
             combinations = consecutive_combinations(raw_order, self.max_n_mod, min_group_size=1)
 
             # getting most associated combination
-            best_association = self._get_best_association(
+            best_association, order = self._get_best_association(
                 feature,
+                order,
                 raw_xagg,
                 combinations,
                 xagg_dev=raw_xagg_dev,
@@ -488,7 +489,6 @@ class BaseCarver(BaseDiscretizer):
 
             # applying best_combination to order and xtabs
             if best_association is not None:
-                order = order_apply_combination(order, best_association["combination"])
                 xagg = xagg_apply_order(xagg, order)
                 xagg_dev = xagg_apply_order(xagg_dev, order)
 
@@ -509,6 +509,7 @@ class BaseCarver(BaseDiscretizer):
                 # getting most associated combination
                 best_association = self._get_best_association(
                     feature,
+                    order,
                     xagg,
                     nan_combinations,
                     xagg_dev=xagg_dev,
@@ -516,7 +517,6 @@ class BaseCarver(BaseDiscretizer):
 
                 # applying best_combination to order and xtab
                 if best_association is not None:
-                    order = order_apply_combination(order, best_association["combination"])
                     xagg = xagg_apply_order(xagg, order)
                     xagg_dev = xagg_apply_order(xagg_dev, order)
 
@@ -527,17 +527,22 @@ class BaseCarver(BaseDiscretizer):
     def _get_best_association(
         self,
         feature: str,
+        order: GroupedList,
         xagg: Union[Series, DataFrame],
         combinations: list[list[str]],
         *,
         xagg_dev: Union[Series, DataFrame] = None,
-    ) -> dict[str, Any]:
+    ) -> tuple[dict[str, Any], GroupedList]:
         """Computes associations of the tab for each combination
 
         Parameters
         ----------
+        feature : str
+            feature to measure association with
         xagg : Union[Series, DataFrame]
             _description_
+        order : GroupedList
+            order of the feature
         combinations : list[list[str]]
             _description_
         xagg_dev : Union[Series, DataFrame], optional
@@ -545,10 +550,10 @@ class BaseCarver(BaseDiscretizer):
 
         Returns
         -------
-        dict[str, Any]
-            _description_
+        tuple[dict[str, Any], GroupedList]
+            best viable association and associated modality order
         """
-        # values to groupby indices with  # TODO: !!!!!!!!!! not working as expected with nans
+        # values to groupby indices with
         indices_to_groupby = [
             self._combination_formatter(combination) for combination in combinations
         ]
@@ -589,11 +594,19 @@ class BaseCarver(BaseDiscretizer):
             .to_dict(orient="records")
         )
 
-        return self._test_viability(feature, associations_xagg, xagg_dev)
+        # testing viability of combination
+        best_association = self._test_viability(feature, order, associations_xagg, xagg_dev)
+
+        # applying best_combination to order and xtab
+        if best_association is not None:
+            order = order_apply_combination(order, best_association["combination"])
+
+        return best_association, order
 
     def _test_viability(
         self,
         feature: str,
+        order: GroupedList,
         associations_xagg: list[dict[str, Any]],
         xagg_dev: Union[Series, DataFrame],
     ) -> dict[str, Any]:
@@ -603,6 +616,8 @@ class BaseCarver(BaseDiscretizer):
         ----------
         feature : str
             _description_
+        order : GroupedList
+            order of the feature
         associations_xagg : list[dict[str, Any]]
             _description_
         xagg_dev : Union[Series, DataFrame]
@@ -635,13 +650,21 @@ class BaseCarver(BaseDiscretizer):
                 if xagg_dev is None:
                     # historizing viable combination
                     self._historize_viability_test(
-                        feature, True, association, viability_message="Combination stable on X"
+                        feature,
+                        True,
+                        association,
+                        order,
+                        viability_message="Combination stable on X",
                     )
 
                     # storing less associated combinations in history
                     for association_not_tested in associations_xagg[n_combination + 1 :]:
                         self._historize_viability_test(
-                            feature, None, association_not_tested, viability_message="Not tested"
+                            feature,
+                            None,
+                            association_not_tested,
+                            order,
+                            viability_message="Not tested",
                         )
 
                     return association
@@ -671,13 +694,18 @@ class BaseCarver(BaseDiscretizer):
                         feature,
                         True,
                         association,
+                        order,
                         viability_message="Combination robust between X and X_dev",
                     )
 
                     # storing less associated combinations in history
                     for association_not_tested in associations_xagg[n_combination + 1 :]:
                         self._historize_viability_test(
-                            feature, None, association_not_tested, viability_message="Not tested"
+                            feature,
+                            None,
+                            association_not_tested,
+                            order,
+                            viability_message="Not tested",
                         )
 
                     return association
@@ -688,6 +716,7 @@ class BaseCarver(BaseDiscretizer):
                         feature,
                         False,
                         association,
+                        order,
                         ranks_train_dev=ranks_train_dev,
                         min_freq_dev=min_freq_dev,
                         distinct_rates_dev=distinct_rates_dev,
@@ -699,51 +728,56 @@ class BaseCarver(BaseDiscretizer):
                     feature,
                     False,
                     association,
+                    order,
                     min_freq_train=min_freq_train,
                     distinct_rates_train=distinct_rates_train,
                 )
 
     def _historize_viability_test(
-        self, feature: str, viability: bool, association: dict[Any], **viability_msg_params
+        self,
+        feature: str,
+        viability: bool,
+        association: dict[Any],
+        order: GroupedList,
+        **viability_msg_params,
     ) -> None:
         """historizes the viability tests results for specified feature
 
         Parameters
         ----------
         feature : str
-            _description_
+            feature for which to historize the combination
         viability : bool
-            _description_
-        index_to_groupby : list[list[Any]]
-            _description_
-        association_value : float
-            _description_
+            result of viability test
+        order : GroupedList
+            order of the modalities and there respective groups
+        association : dict[Any]
+            index_to_groupby and self.sort_by values
+        viability_msg_params : dict
+            kwargs to determine the viability message
         """
         # Messages associated to each failed viability test
         messages = []
         if not viability_msg_params.get("viability_message"):
             if not viability_msg_params.get("ranks_train_dev"):
-                messages += [
-                    "X_dev: target rates per modality are not ranked the same between X and X_dev"
-                ]
+                messages += ["X_dev: inversion of target rates per modality"]
             if not viability_msg_params.get("min_freq_dev"):
                 messages += [
-                    f"X_dev: grouped modality is less frequent than min_freq_mod={self.min_freq_mod}"
+                    f"X_dev: non-representative modality less (min_freq_mod={self.min_freq_mod})"
                 ]
             if not viability_msg_params.get("distinct_rates_dev"):
-                messages += ["X_dev: non-distinct target rates per grouped modality"]
+                messages += ["X_dev: non-distinct target rates per modality"]
             if not viability_msg_params.get("min_freq_train"):
                 messages += [
-                    f"X: grouped modality is less frequent than min_freq_mod={self.min_freq_mod}"
+                    f"X: non-representative modality less (min_freq_mod={self.min_freq_mod})"
                 ]
             if not viability_msg_params.get("distinct_rates_train"):
-                messages += ["X: non-distinct target rates per grouped modality"]
+                messages += ["X: non-distinct target rates per modality"]
         else:
             messages += [viability_msg_params.get("viability_message")]
 
         # Formats a combination for historization
         combi = association["index_to_groupby"]
-        order = self.values_orders[feature]
         formatted_combi = [
             [
                 value
