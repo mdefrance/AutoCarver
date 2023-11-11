@@ -961,58 +961,8 @@ def format_quantiles(a_list: list[float]) -> list[str]:
     list[str]
         List of boundaries per quantile
     """
-
-    # finding the closest power of thousands for each element
-    closest_powers = [
-        next((k for k in range(-3, 4) if abs(elt) / 100 // 1000 ** (k) < 10)) for elt in a_list
-    ]
-
-    # rounding elements to the closest power of thousands
-    rounded_to_powers = [elt / 1000 ** (k) for elt, k in zip(a_list, closest_powers)]
-
-    # computing optimal decimal per unique power of thousands
-    optimal_decimals: dict[str, int] = {}
-    for power in unique(closest_powers):  # iterating over each power of thousands found
-        # filtering on the specific power of thousands
-        sub_array = array([elt for elt, p in zip(rounded_to_powers, closest_powers) if power == p])
-
-        # number of distinct values
-        n_uniques = sub_array.shape[0]
-
-        # computing the first rounding decimal that allows for distinction of
-        # each values when rounded, by default None (no rounding)
-        optimal_decimal = next(
-            (k for k in range(1, 10) if len(unique(sub_array.round(k))) == n_uniques),
-            None,
-        )
-
-        # storing in the dict
-        optimal_decimals.update({power: optimal_decimal})
-
-    # rounding according to each optimal_decimal
-    rounded_list: list[float] = []
-    for elt, power in zip(rounded_to_powers, closest_powers):
-        # rounding each element
-        rounded = elt  # by default None (no rounding)
-        optimal_decimal = optimal_decimals.get(power)
-        if optimal_decimal:  # checking that the optimal decimal exists
-            rounded = round(elt, optimal_decimal)
-
-        # adding the rounded number to the list
-        rounded_list += [rounded]
-
-    # dict of suffixes per power of thousands
-    suffixes = {-3: "n", -2: "mi", -1: "m", 0: "", 1: "K", 2: "M", 3: "B"}
-
-    # adding the suffixes
-    formatted_list = [
-        f"{elt: 1.1f}{suffixes[power]}" for elt, power in zip(rounded_list, closest_powers)
-    ]
-
-    # keeping zeros
-    formatted_list = [
-        rounded if raw != 0 else f"{raw: 1.1f}" for rounded, raw in zip(formatted_list, a_list)
-    ]
+    # scientific formatting
+    formatted_list = [f"{number:.3e}" for number in a_list]
 
     # stripping whitespaces
     formatted_list = [string.strip() for string in formatted_list]
