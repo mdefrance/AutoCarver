@@ -550,16 +550,28 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         # dumping as json
         return json_serialized_base_discretizer
 
-    # TODO: add crosstabs per feature for a provided X?
-    # TODO: change str_nan for str(nan)
-    def summary(self) -> DataFrame:
+    def summary(self, feature: str = None) -> DataFrame:
         """Summarizes the data discretization process.
+
+        By default:
+
+            * Modality``str_default="__OTHER__"`` is generated for features that contain non-representative modalities.
+            * Modality``str_nan="__NAN__"`` is generated for features that contain ``numpy.nan``.
 
         Returns
         -------
         DataFrame
             A summary of features' values per modalities.
         """
+        # storing requested feature for later
+        requested_feature = None
+        if feature is not None:
+            requested_feature = feature[:]
+            assert requested_feature in self.features, (
+                f"Discretization of feature {requested_feature} was not "
+                "requested or it has been dropped."
+            )
+
         # raw label per value with output_dtype 'str'
         raw_labels_per_values = self._get_labels_per_values(output_dtype="str")
 
@@ -619,6 +631,11 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         summaries["content"] = sorted_contents
         # sorting and seting index
         summaries = summaries.sort_values(["dtype", "feature"]).set_index(["feature", "dtype"])
+
+        # getting requested feature
+        print("requested_feature", requested_feature)
+        if requested_feature is not None:
+            summaries = summaries.loc[requested_feature]
 
         return summaries
 
