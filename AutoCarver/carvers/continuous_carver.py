@@ -42,7 +42,7 @@ class ContinuousCarver(BaseCarver):
         ----------
         """
         # association measure used to find the best groups for continuous targets
-        assert ("sort_by" not in kwargs) or (kwargs.get("sort_by") != "kruskal"), (
+        assert ("sort_by" in kwargs and kwargs.get("sort_by") == "kruskal") or ("sort_by" not in kwargs), (
             " - [ContinuousCarver] Cannot set 'sort_by' attribute. "
             "Only 'kruskal' measure is implemented for continuous targets."
         )
