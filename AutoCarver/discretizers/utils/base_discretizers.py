@@ -555,8 +555,8 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
 
         By default:
 
-            * Modality``str_default="__OTHER__"`` is generated for features that contain non-representative modalities.
-            * Modality``str_nan="__NAN__"`` is generated for features that contain ``numpy.nan``.
+            * Modality ``str_default="__OTHER__"`` is generated for features that contain non-representative modalities.
+            * Modality ``str_nan="__NAN__"`` is generated for features that contain ``numpy.nan``.
 
         Parameters
         ----------

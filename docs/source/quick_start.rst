@@ -20,7 +20,7 @@ In the following quick start example, we will consider a binary classification p
 
     target = "binary_target"
 
-Hence the use of :class:`BinaryCarver` in following code blocks.
+Hence the use of :class:`BinaryCarver` and :class:`ClassificationSelector` in following code blocks.
 
 
 

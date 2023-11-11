@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; AutoCarver AutoCarver 5.0.7 - Beta Release documentation</title>
+  <title>Index &mdash; AutoCarver Beta Release documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -29,9 +29,13 @@
 
           
           
-          <a href="index.html" class="icon icon-home">
-            AutoCarver
+          <a href="index.html">
+            
+              <img src="_static/auto_carver_symbol_small.png" class="logo" alt="Logo"/>
           </a>
+              <div class="version">
+                5.4.1
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -40,14 +44,20 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="discretizers.html">Discretizers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="carvers.html">Carvers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="feature_selector.html">FeatureSelector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="selectors.html">Selectors</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 </ul>
 
@@ -84,6 +94,7 @@
  | <a href="#D"><strong>D</strong></a>
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
+ | <a href="#H"><strong>H</strong></a>
  | <a href="#I"><strong>I</strong></a>
  | <a href="#K"><strong>K</strong></a>
  | <a href="#L"><strong>L</strong></a>
@@ -123,19 +134,21 @@
 </li>
       <li><a href="discretizers.html#AutoCarver.discretizers.ChainedDiscretizer">ChainedDiscretizer (class in AutoCarver.discretizers)</a>
 </li>
-      <li><a href="feature_selector.html#AutoCarver.feature_selection.measures.chi2_measure">chi2_measure() (in module AutoCarver.feature_selection.measures)</a>
+      <li><a href="selectors.html#AutoCarver.selectors.measures.chi2_measure">chi2_measure() (in module AutoCarver.selectors.measures)</a>
 </li>
-      <li><a href="discretizers.html#AutoCarver.discretizers.GroupedList.contains">contains() (AutoCarver.discretizers.GroupedList method)</a>
+      <li><a href="selectors.html#AutoCarver.selectors.ClassificationSelector">ClassificationSelector (class in AutoCarver.selectors)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="discretizers.html#AutoCarver.discretizers.GroupedList.contains">contains() (AutoCarver.discretizers.GroupedList method)</a>
+</li>
       <li><a href="carvers.html#AutoCarver.ContinuousCarver">ContinuousCarver (class in AutoCarver)</a>
 </li>
       <li><a href="discretizers.html#AutoCarver.discretizers.ContinuousDiscretizer">ContinuousDiscretizer (class in AutoCarver.discretizers)</a>
 </li>
-      <li><a href="feature_selector.html#AutoCarver.feature_selection.filters.cramerv_filter">cramerv_filter() (in module AutoCarver.feature_selection.filters)</a>
+      <li><a href="selectors.html#AutoCarver.selectors.filters.cramerv_filter">cramerv_filter() (in module AutoCarver.selectors.filters)</a>
 </li>
-      <li><a href="feature_selector.html#AutoCarver.feature_selection.measures.cramerv_measure">cramerv_measure() (in module AutoCarver.feature_selection.measures)</a>
+      <li><a href="selectors.html#AutoCarver.selectors.measures.cramerv_measure">cramerv_measure() (in module AutoCarver.selectors.measures)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -147,7 +160,9 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="feature_selector.html#AutoCarver.feature_selection.measures.dtype_measure">dtype_measure() (in module AutoCarver.feature_selection.measures)</a>
+      <li><a href="selectors.html#AutoCarver.selectors.measures.distance_measure">distance_measure() (in module AutoCarver.selectors.measures)</a>
+</li>
+      <li><a href="selectors.html#AutoCarver.selectors.measures.dtype_measure">dtype_measure() (in module AutoCarver.selectors.measures)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -155,8 +170,6 @@
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="feature_selector.html#AutoCarver.feature_selection.FeatureSelector">FeatureSelector (class in AutoCarver.feature_selection)</a>
-</li>
       <li><a href="carvers.html#AutoCarver.BinaryCarver.fit">fit() (AutoCarver.BinaryCarver method)</a>
 
       <ul>
@@ -230,10 +243,24 @@
   </ul></td>
 </tr></table>
 
+<h2 id="H">H</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="carvers.html#AutoCarver.BinaryCarver.history">history() (AutoCarver.BinaryCarver method)</a>
+
+      <ul>
+        <li><a href="carvers.html#AutoCarver.ContinuousCarver.history">(AutoCarver.ContinuousCarver method)</a>
+</li>
+        <li><a href="carvers.html#AutoCarver.MulticlassCarver.history">(AutoCarver.MulticlassCarver method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
 <h2 id="I">I</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="feature_selector.html#AutoCarver.feature_selection.measures.iqr_measure">iqr_measure() (in module AutoCarver.feature_selection.measures)</a>
+      <li><a href="selectors.html#AutoCarver.selectors.measures.iqr_measure">iqr_measure() (in module AutoCarver.selectors.measures)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -241,7 +268,7 @@
 <h2 id="K">K</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="feature_selector.html#AutoCarver.feature_selection.measures.kruskal_measure">kruskal_measure() (in module AutoCarver.feature_selection.measures)</a>
+      <li><a href="selectors.html#AutoCarver.selectors.measures.kruskal_measure">kruskal_measure() (in module AutoCarver.selectors.measures)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -257,7 +284,7 @@
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="feature_selector.html#AutoCarver.feature_selection.measures.mode_measure">mode_measure() (in module AutoCarver.feature_selection.measures)</a>
+      <li><a href="selectors.html#AutoCarver.selectors.measures.mode_measure">mode_measure() (in module AutoCarver.selectors.measures)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -269,7 +296,7 @@
 <h2 id="N">N</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="feature_selector.html#AutoCarver.feature_selection.measures.nans_measure">nans_measure() (in module AutoCarver.feature_selection.measures)</a>
+      <li><a href="selectors.html#AutoCarver.selectors.measures.nans_measure">nans_measure() (in module AutoCarver.selectors.measures)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -285,7 +312,7 @@
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="feature_selector.html#AutoCarver.feature_selection.filters.pearson_filter">pearson_filter() (in module AutoCarver.feature_selection.filters)</a>
+      <li><a href="selectors.html#AutoCarver.selectors.filters.pearson_filter">pearson_filter() (in module AutoCarver.selectors.filters)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -309,10 +336,12 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="feature_selector.html#AutoCarver.feature_selection.measures.R_measure">R_measure() (in module AutoCarver.feature_selection.measures)</a>
+      <li><a href="selectors.html#AutoCarver.selectors.measures.R_measure">R_measure() (in module AutoCarver.selectors.measures)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="selectors.html#AutoCarver.selectors.RegressionSelector">RegressionSelector (class in AutoCarver.selectors)</a>
+</li>
       <li><a href="discretizers.html#AutoCarver.discretizers.GroupedList.remove">remove() (AutoCarver.discretizers.GroupedList method)</a>
 </li>
   </ul></td>
@@ -321,13 +350,17 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="feature_selector.html#AutoCarver.feature_selection.FeatureSelector.select">select() (AutoCarver.feature_selection.FeatureSelector method)</a>
+      <li><a href="selectors.html#AutoCarver.selectors.ClassificationSelector.select">select() (AutoCarver.selectors.ClassificationSelector method)</a>
+
+      <ul>
+        <li><a href="selectors.html#AutoCarver.selectors.RegressionSelector.select">(AutoCarver.selectors.RegressionSelector method)</a>
 </li>
+      </ul></li>
       <li><a href="discretizers.html#AutoCarver.discretizers.GroupedList.sort">sort() (AutoCarver.discretizers.GroupedList method)</a>
 </li>
       <li><a href="discretizers.html#AutoCarver.discretizers.GroupedList.sort_by">sort_by() (AutoCarver.discretizers.GroupedList method)</a>
 </li>
-      <li><a href="feature_selector.html#AutoCarver.feature_selection.filters.spearman_filter">spearman_filter() (in module AutoCarver.feature_selection.filters)</a>
+      <li><a href="selectors.html#AutoCarver.selectors.filters.spearman_filter">spearman_filter() (in module AutoCarver.selectors.filters)</a>
 </li>
       <li><a href="discretizers.html#AutoCarver.discretizers.StringDiscretizer">StringDiscretizer (class in AutoCarver.discretizers)</a>
 </li>
@@ -413,9 +446,9 @@
         <li><a href="carvers.html#AutoCarver.MulticlassCarver.transform">(AutoCarver.MulticlassCarver method)</a>
 </li>
       </ul></li>
-      <li><a href="feature_selector.html#AutoCarver.feature_selection.filters.tschuprowt_filter">tschuprowt_filter() (in module AutoCarver.feature_selection.filters)</a>
+      <li><a href="selectors.html#AutoCarver.selectors.filters.tschuprowt_filter">tschuprowt_filter() (in module AutoCarver.selectors.filters)</a>
 </li>
-      <li><a href="feature_selector.html#AutoCarver.feature_selection.measures.tschuprowt_measure">tschuprowt_measure() (in module AutoCarver.feature_selection.measures)</a>
+      <li><a href="selectors.html#AutoCarver.selectors.measures.tschuprowt_measure">tschuprowt_measure() (in module AutoCarver.selectors.measures)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -439,7 +472,7 @@
 <h2 id="Z">Z</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="feature_selector.html#AutoCarver.feature_selection.measures.zscore_measure">zscore_measure() (in module AutoCarver.feature_selection.measures)</a>
+      <li><a href="selectors.html#AutoCarver.selectors.measures.zscore_measure">zscore_measure() (in module AutoCarver.selectors.measures)</a>
 </li>
   </ul></td>
 </tr></table>
