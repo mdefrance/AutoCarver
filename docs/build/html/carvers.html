@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Carvers &mdash; AutoCarver AutoCarver 5.0.7 - Beta Release documentation</title>
+  <title>Carvers &mdash; AutoCarver Beta Release documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -21,7 +21,7 @@
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="FeatureSelector" href="feature_selector.html" />
+    <link rel="next" title="Selectors" href="selectors.html" />
     <link rel="prev" title="Discretizers" href="discretizers.html" /> 
 </head>
 
@@ -33,9 +33,13 @@
 
           
           
-          <a href="index.html" class="icon icon-home">
-            AutoCarver
+          <a href="index.html">
+            
+              <img src="_static/auto_carver_symbol_small.png" class="logo" alt="Logo"/>
           </a>
+              <div class="version">
+                5.4.1
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -44,39 +48,25 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul class="current">
+              <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="discretizers.html">Discretizers</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Carvers</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#classification-tasks">Classification tasks</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#binary-classification">Binary Classification</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.BinaryCarver"><code class="docutils literal notranslate"><span class="pre">BinaryCarver</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#classification-tasks">Classification tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#regression-tasks">Regression tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#saving-and-loading">Saving and loading</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#multilclass-classification">Multilclass Classification</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.MulticlassCarver"><code class="docutils literal notranslate"><span class="pre">MulticlassCarver</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="selectors.html">Selectors</a></li>
 </ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#regression-tasks">Regression tasks</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#continuous-regression">Continuous Regression</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#AutoCarver.ContinuousCarver"><code class="docutils literal notranslate"><span class="pre">ContinuousCarver</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#saving-and-loading">Saving and loading</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#AutoCarver.BaseCarver.to_json"><code class="docutils literal notranslate"><span class="pre">to_json()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#AutoCarver.load_carver"><code class="docutils literal notranslate"><span class="pre">load_carver()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="feature_selector.html">FeatureSelector</a></li>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 </ul>
 
@@ -105,8 +95,8 @@
            <div itemprop="articleBody">
              
   <section id="carvers">
-<h1>Carvers<a class="headerlink" href="#carvers" title="Permalink to this heading"></a></h1>
-<p>The core of <strong>AutoCarver</strong> resides in the following Data Optimization steps:</p>
+<span id="id1"></span><h1>Carvers<a class="headerlink" href="#carvers" title="Permalink to this heading"></a></h1>
+<p>The core of <strong>AutoCarver</strong> resides in its <strong>Carvers</strong>, they provide the following Data Optimization steps:</p>
 <blockquote>
 <div><ol class="arabic simple">
 <li><p>Identifying the most associated combination from all ordered combinations of modalities.</p></li>
@@ -145,8 +135,8 @@ features that maximizes association with a binary target.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>sort_by</strong> (<em>str</em>) – <p>Metric to be used to perform association measure between features and target.</p>
 <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;tschuprowt&quot;</span></code>, for <a class="reference internal" href="feature_selector.html#tschuprowt"><span class="std std-ref">Tschuprow’s T</span></a>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;cramerv&quot;</span></code>, for <a class="reference internal" href="feature_selector.html#cramerv"><span class="std std-ref">Cramér’s V</span></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;tschuprowt&quot;</span></code>, for <a class="reference internal" href="selectors.html#tschuprowt"><span class="std std-ref">Tschuprow’s T</span></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;cramerv&quot;</span></code>, for <a class="reference internal" href="selectors.html#cramerv"><span class="std std-ref">Cramér’s V</span></a>.</p></li>
 </ul>
 <p><strong>Tip</strong>: use <code class="docutils literal notranslate"><span class="pre">&quot;tschuprowt&quot;</span></code> for more robust, or less output modalities,
 use <code class="docutils literal notranslate"><span class="pre">&quot;cramerv&quot;</span></code> for more output modalities.</p>
@@ -189,7 +179,8 @@ The combination with the best association will be selected.</p>
 </ul>
 <p><strong>Tip</strong>: IPython displaying can be turned off by setting <code class="docutils literal notranslate"><span class="pre">pretty_print=False</span></code>.</p>
 </p></li>
-<li><p><strong>**kwargs</strong> – Pass values for <code class="docutils literal notranslate"><span class="pre">str_default</span></code> and <code class="docutils literal notranslate"><span class="pre">str_nan</span></code> (default string values), as long as <code class="docutils literal notranslate"><span class="pre">pretty_print</span></code> to turn off IPython.</p></li>
+<li><p><strong>**kwargs</strong> – Pass values for <code class="docutils literal notranslate"><span class="pre">str_default</span></code> and <code class="docutils literal notranslate"><span class="pre">str_nan</span></code> (default string values),
+as long as <code class="docutils literal notranslate"><span class="pre">pretty_print</span></code> to turn off IPython.</p></li>
 </ul>
 </dd>
 </dl>
@@ -238,15 +229,50 @@ and returns a transformed version of <cite>X</cite>.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="AutoCarver.BinaryCarver.summary">
-<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#AutoCarver.BinaryCarver.summary" title="Permalink to this definition"></a></dt>
-<dd><p>Summarizes the data discretization process.</p>
+<dt class="sig sig-object py" id="AutoCarver.BinaryCarver.history">
+<span class="sig-name descname"><span class="pre">history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#AutoCarver.BinaryCarver.history" title="Permalink to this definition"></a></dt>
+<dd><p>Historic of tested combinations and there association with the target.</p>
+<p>By default:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Modality <code class="docutils literal notranslate"><span class="pre">str_default=&quot;__OTHER__&quot;</span></code> is generated for features that contain non-representative modalities.</p></li>
+<li><p>Modality <code class="docutils literal notranslate"><span class="pre">str_nan=&quot;__NAN__&quot;</span></code> is generated for features that contain <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code>.</p></li>
+<li><p>Whatever the value of <code class="docutils literal notranslate"><span class="pre">dropna</span></code>, the association is computed for non-missing values.</p></li>
+</ul>
+</div></blockquote>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>A summary of features’ values per modalities.</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>feature</strong> (<em>str</em><em>, </em><em>optional</em>) – Specify for which feature to return the history, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>DataFrame</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Historic of features’ tested combinations.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoCarver.BinaryCarver.summary">
+<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#AutoCarver.BinaryCarver.summary" title="Permalink to this definition"></a></dt>
+<dd><p>Summarizes the data discretization process.</p>
+<p>By default:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Modality <code class="docutils literal notranslate"><span class="pre">str_default=&quot;__OTHER__&quot;</span></code> is generated for features that contain non-representative modalities.</p></li>
+<li><p>Modality <code class="docutils literal notranslate"><span class="pre">str_nan=&quot;__NAN__&quot;</span></code> is generated for features that contain <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code>.</p></li>
+</ul>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>feature</strong> (<em>str</em><em>, </em><em>optional</em>) – Specify for which feature to return the summary, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A summary of features’ values per modalities.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>DataFrame</p>
 </dd>
 </dl>
 </dd></dl>
@@ -292,7 +318,7 @@ Needs to have columns has specified in <code class="docutils literal notranslate
 </section>
 <section id="multilclass-classification">
 <span id="multiclasscarver"></span><h3>Multilclass Classification<a class="headerlink" href="#multilclass-classification" title="Permalink to this heading"></a></h3>
-<p>Within <code class="xref py py-class docutils literal notranslate"><span class="pre">MulticlassCarver</span></code>, a multiclass target consists of a column <span class="math notranslate nohighlight">\(y\)</span> that contains several values <span class="math notranslate nohighlight">\(y_0\)</span> to <span class="math notranslate nohighlight">\(y_{n_y}\)</span> where <span class="math notranslate nohighlight">\(n_y&gt;2\)</span> is the number of values taken by <span class="math notranslate nohighlight">\(y\)</span>.</p>
+<p>Within <code class="xref py py-class docutils literal notranslate"><span class="pre">MulticlassCarver</span></code>, a multiclass target consists of a column <span class="math notranslate nohighlight">\(y\)</span> that contains several values <span class="math notranslate nohighlight">\(y_0\)</span> to <span class="math notranslate nohighlight">\(y_{n_y}\)</span> where <span class="math notranslate nohighlight">\(n_y&gt;2\)</span> is the number of modalities taken by <span class="math notranslate nohighlight">\(y\)</span>.</p>
 <p>For values <span class="math notranslate nohighlight">\(y_0\)</span> to <span class="math notranslate nohighlight">\(y_{n_y-1}\)</span> of <span class="math notranslate nohighlight">\(y\)</span>, an indicator feature is built: <span class="math notranslate nohighlight">\(Y_0 = \mathbb{1}_{y=y_0}\)</span> to <span class="math notranslate nohighlight">\(Y_{n_y-1} = \mathbb{1}_{y=y_{n_y-1}}\)</span>.</p>
 <p><code class="xref py py-class docutils literal notranslate"><span class="pre">MulticlassCarver</span></code> repeatedly applies <code class="xref py py-class docutils literal notranslate"><span class="pre">BinaryCarver</span></code> for features <span class="math notranslate nohighlight">\(Y_0\)</span> to <span class="math notranslate nohighlight">\(Y_{n_y-1}\)</span>. Thus, the same association measure are implemented: Tschuprow’s <span class="math notranslate nohighlight">\(T\)</span> and Cramér’s <span class="math notranslate nohighlight">\(V\)</span>.</p>
 <p>For two combinations of modalities of a feature <span class="math notranslate nohighlight">\(x\)</span>, a higher <span class="math notranslate nohighlight">\(T\)</span> or <span class="math notranslate nohighlight">\(V\)</span> value indicates a stronger relationship with the binary target <span class="math notranslate nohighlight">\(Y\)</span>.</p>
@@ -306,8 +332,8 @@ features that maximizes association with a multiclass target.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>sort_by</strong> (<em>str</em>) – <p>Metric to be used to perform association measure between features and target.</p>
 <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;tschuprowt&quot;</span></code>, for <a class="reference internal" href="feature_selector.html#tschuprowt"><span class="std std-ref">Tschuprow’s T</span></a>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;cramerv&quot;</span></code>, for <a class="reference internal" href="feature_selector.html#cramerv"><span class="std std-ref">Cramér’s V</span></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;tschuprowt&quot;</span></code>, for <a class="reference internal" href="selectors.html#tschuprowt"><span class="std std-ref">Tschuprow’s T</span></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;cramerv&quot;</span></code>, for <a class="reference internal" href="selectors.html#cramerv"><span class="std std-ref">Cramér’s V</span></a>.</p></li>
 </ul>
 <p><strong>Tip</strong>: use <code class="docutils literal notranslate"><span class="pre">&quot;tschuprowt&quot;</span></code> for more robust, or less output modalities,
 use <code class="docutils literal notranslate"><span class="pre">&quot;cramerv&quot;</span></code> for more output modalities.</p>
@@ -350,7 +376,8 @@ The combination with the best association will be selected.</p>
 </ul>
 <p><strong>Tip</strong>: IPython displaying can be turned off by setting <code class="docutils literal notranslate"><span class="pre">pretty_print=False</span></code>.</p>
 </p></li>
-<li><p><strong>**kwargs</strong> – Pass values for <code class="docutils literal notranslate"><span class="pre">str_default</span></code> and <code class="docutils literal notranslate"><span class="pre">str_nan</span></code> (default string values), as long as <code class="docutils literal notranslate"><span class="pre">pretty_print</span></code> to turn off IPython.</p></li>
+<li><p><strong>**kwargs</strong> – Pass values for <code class="docutils literal notranslate"><span class="pre">str_default</span></code> and <code class="docutils literal notranslate"><span class="pre">str_nan</span></code> (default string values),
+as long as <code class="docutils literal notranslate"><span class="pre">pretty_print</span></code> to turn off IPython.</p></li>
 </ul>
 </dd>
 </dl>
@@ -399,15 +426,50 @@ and returns a transformed version of <cite>X</cite>.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="AutoCarver.MulticlassCarver.summary">
-<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#AutoCarver.MulticlassCarver.summary" title="Permalink to this definition"></a></dt>
-<dd><p>Summarizes the data discretization process.</p>
+<dt class="sig sig-object py" id="AutoCarver.MulticlassCarver.history">
+<span class="sig-name descname"><span class="pre">history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#AutoCarver.MulticlassCarver.history" title="Permalink to this definition"></a></dt>
+<dd><p>Historic of tested combinations and there association with the target.</p>
+<p>By default:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Modality <code class="docutils literal notranslate"><span class="pre">str_default=&quot;__OTHER__&quot;</span></code> is generated for features that contain non-representative modalities.</p></li>
+<li><p>Modality <code class="docutils literal notranslate"><span class="pre">str_nan=&quot;__NAN__&quot;</span></code> is generated for features that contain <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code>.</p></li>
+<li><p>Whatever the value of <code class="docutils literal notranslate"><span class="pre">dropna</span></code>, the association is computed for non-missing values.</p></li>
+</ul>
+</div></blockquote>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>A summary of features’ values per modalities.</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>feature</strong> (<em>str</em><em>, </em><em>optional</em>) – Specify for which feature to return the history, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>DataFrame</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Historic of features’ tested combinations.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoCarver.MulticlassCarver.summary">
+<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#AutoCarver.MulticlassCarver.summary" title="Permalink to this definition"></a></dt>
+<dd><p>Summarizes the data discretization process.</p>
+<p>By default:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Modality <code class="docutils literal notranslate"><span class="pre">str_default=&quot;__OTHER__&quot;</span></code> is generated for features that contain non-representative modalities.</p></li>
+<li><p>Modality <code class="docutils literal notranslate"><span class="pre">str_nan=&quot;__NAN__&quot;</span></code> is generated for features that contain <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code>.</p></li>
+</ul>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>feature</strong> (<em>str</em><em>, </em><em>optional</em>) – Specify for which feature to return the summary, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A summary of features’ values per modalities.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>DataFrame</p>
 </dd>
 </dl>
 </dd></dl>
@@ -466,7 +528,7 @@ It is used to determine whether or not <span class="math notranslate nohighlight
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.</span></span><span class="sig-name descname"><span class="pre">ContinuousCarver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantitative_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualitative_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ordinal_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values_orders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="discretizers.html#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.utils.grouped_list.GroupedList"><span class="pre">AutoCarver.discretizers.utils.grouped_list.GroupedList</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_n_mod</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq_mod</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dtype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropna</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.ContinuousCarver" title="Permalink to this definition"></a></dt>
 <dd><p>Automatic carving of continuous, discrete, categorical and ordinal
 features that maximizes association with a continuous target.</p>
-<p>For continuous targets, <a class="reference internal" href="feature_selector.html#kruskal"><span class="std std-ref">Kruskal-Wallis’ H test statistic</span></a> is used as association measure to sort combinations.</p>
+<p>For continuous targets, <a class="reference internal" href="selectors.html#kruskal"><span class="std std-ref">Kruskal-Wallis’ H test statistic</span></a> is used as association measure to sort combinations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -508,7 +570,8 @@ The combination with the best association will be selected.</p>
 </ul>
 <p><strong>Tip</strong>: IPython displaying can be turned off by setting <code class="docutils literal notranslate"><span class="pre">pretty_print=False</span></code>.</p>
 </p></li>
-<li><p><strong>**kwargs</strong> – Pass values for <code class="docutils literal notranslate"><span class="pre">str_default</span></code> and <code class="docutils literal notranslate"><span class="pre">str_nan</span></code> (default string values), as long as <code class="docutils literal notranslate"><span class="pre">pretty_print</span></code> to turn off IPython.</p></li>
+<li><p><strong>**kwargs</strong> – Pass values for <code class="docutils literal notranslate"><span class="pre">str_default</span></code> and <code class="docutils literal notranslate"><span class="pre">str_nan</span></code> (default string values),
+as long as <code class="docutils literal notranslate"><span class="pre">pretty_print</span></code> to turn off IPython.</p></li>
 </ul>
 </dd>
 </dl>
@@ -557,15 +620,50 @@ and returns a transformed version of <cite>X</cite>.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="AutoCarver.ContinuousCarver.summary">
-<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#AutoCarver.ContinuousCarver.summary" title="Permalink to this definition"></a></dt>
-<dd><p>Summarizes the data discretization process.</p>
+<dt class="sig sig-object py" id="AutoCarver.ContinuousCarver.history">
+<span class="sig-name descname"><span class="pre">history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#AutoCarver.ContinuousCarver.history" title="Permalink to this definition"></a></dt>
+<dd><p>Historic of tested combinations and there association with the target.</p>
+<p>By default:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Modality <code class="docutils literal notranslate"><span class="pre">str_default=&quot;__OTHER__&quot;</span></code> is generated for features that contain non-representative modalities.</p></li>
+<li><p>Modality <code class="docutils literal notranslate"><span class="pre">str_nan=&quot;__NAN__&quot;</span></code> is generated for features that contain <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code>.</p></li>
+<li><p>Whatever the value of <code class="docutils literal notranslate"><span class="pre">dropna</span></code>, the association is computed for non-missing values.</p></li>
+</ul>
+</div></blockquote>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>A summary of features’ values per modalities.</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>feature</strong> (<em>str</em><em>, </em><em>optional</em>) – Specify for which feature to return the history, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>DataFrame</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Historic of features’ tested combinations.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoCarver.ContinuousCarver.summary">
+<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#AutoCarver.ContinuousCarver.summary" title="Permalink to this definition"></a></dt>
+<dd><p>Summarizes the data discretization process.</p>
+<p>By default:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Modality <code class="docutils literal notranslate"><span class="pre">str_default=&quot;__OTHER__&quot;</span></code> is generated for features that contain non-representative modalities.</p></li>
+<li><p>Modality <code class="docutils literal notranslate"><span class="pre">str_nan=&quot;__NAN__&quot;</span></code> is generated for features that contain <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code>.</p></li>
+</ul>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>feature</strong> (<em>str</em><em>, </em><em>optional</em>) – Specify for which feature to return the summary, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A summary of features’ values per modalities.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>DataFrame</p>
 </dd>
 </dl>
 </dd></dl>
@@ -654,7 +752,7 @@ can be no guarantee for it to be restored.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="discretizers.html" class="btn btn-neutral float-left" title="Discretizers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="feature_selector.html" class="btn btn-neutral float-right" title="FeatureSelector" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="selectors.html" class="btn btn-neutral float-right" title="Selectors" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

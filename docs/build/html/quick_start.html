@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quick Start &mdash; AutoCarver AutoCarver 5.0.7 - Beta Release documentation</title>
+  <title>Quick Start &mdash; AutoCarver Beta Release documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -32,9 +32,13 @@
 
           
           
-          <a href="index.html" class="icon icon-home">
-            AutoCarver
+          <a href="index.html">
+            
+              <img src="_static/auto_carver_symbol_small.png" class="logo" alt="Logo"/>
           </a>
+              <div class="version">
+                5.4.1
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -43,27 +47,26 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Quick Start</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#setting-up-samples">Setting up samples</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#picking-up-columns-to-carve">Picking up columns to Carve</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#using-autocarver">Using AutoCarver</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#fitting-autocarver">Fitting AutoCarver</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#applying-autocarver">Applying AutoCarver</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#saving-autocarver">Saving AutoCarver</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#loading-autocarver">Loading AutoCarver</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="#setting-things-up">Setting things up</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#using-autocarver">Using AutoCarver</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#feature-selection">Feature Selection</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#in-depth-examples">In-depth examples</a></li>
 </ul>
 </li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="discretizers.html">Discretizers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="carvers.html">Carvers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="feature_selector.html">FeatureSelector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="selectors.html">Selectors</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 </ul>
 
@@ -93,58 +96,76 @@
              
   <section id="quick-start">
 <h1>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this heading"></a></h1>
-<section id="setting-up-samples">
-<h2>Setting up samples<a class="headerlink" href="#setting-up-samples" title="Permalink to this heading"></a></h2>
-<p><cite>AutoCarver</cite> is able to test the robustness of buckets on a dev sample <cite>X_dev</cite>.</p>
+<section id="setting-things-up">
+<h2>Setting things up<a class="headerlink" href="#setting-things-up" title="Permalink to this heading"></a></h2>
+<section id="target-type-and-carver-selection">
+<h3>Target type and Carver selection<a class="headerlink" href="#target-type-and-carver-selection" title="Permalink to this heading"></a></h3>
+<p>Depending on one’s desired modelling task, several Carvers are implemented:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="carvers.html#binarycarver"><span class="std std-ref">Binary Classification</span></a></p></li>
+<li><p><a class="reference internal" href="carvers.html#multiclasscarver"><span class="std std-ref">Multilclass Classification</span></a></p></li>
+<li><p><a class="reference internal" href="carvers.html#continuouscarver"><span class="std std-ref">Continuous Regression</span></a></p></li>
+</ul>
+</div></blockquote>
+<p>In the following quick start example, we will consider a binary classification problem:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">target</span> <span class="o">=</span> <span class="s2">&quot;binary_target&quot;</span>
+</pre></div>
+</div>
+<p>Hence the use of <code class="xref py py-class docutils literal notranslate"><span class="pre">BinaryCarver</span></code> and <code class="xref py py-class docutils literal notranslate"><span class="pre">ClassificationSelector</span></code> in following code blocks.</p>
+</section>
+<section id="data-sampling">
+<h3>Data Sampling<a class="headerlink" href="#data-sampling" title="Permalink to this heading"></a></h3>
+<p><strong>AutoCarver</strong> unables testing for robustness of carved modalities on <code class="docutils literal notranslate"><span class="pre">X_dev</span></code> while maximizing the association between <code class="docutils literal notranslate"><span class="pre">X_train</span></code> and <code class="docutils literal notranslate"><span class="pre">y_train</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># defining training and testing sets</span>
-<span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># used to fit the AutoCarver and the model</span>
-<span class="n">X_dev</span><span class="p">,</span> <span class="n">y_dev</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># used to validate the AutoCarver&#39;s buckets and optimize the model&#39;s parameters/hyperparameters</span>
-<span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># used to evaluate the final model&#39;s performances</span>
+<span class="n">train_set</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># used to fit the AutoCarver and the model</span>
+<span class="n">dev_set</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># used to validate the AutoCarver&#39;s buckets and optimize the model&#39;s parameters/hyperparameters</span>
+<span class="n">test_set</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># used to evaluate the final model&#39;s performances</span>
 </pre></div>
 </div>
 </section>
 <section id="picking-up-columns-to-carve">
-<h2>Picking up columns to Carve<a class="headerlink" href="#picking-up-columns-to-carve" title="Permalink to this heading"></a></h2>
+<h3>Picking up columns to Carve<a class="headerlink" href="#picking-up-columns-to-carve" title="Permalink to this heading"></a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">quantitative_features</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Quantitative&#39;</span><span class="p">,</span> <span class="s1">&#39;Discrete_Quantitative_highnan&#39;</span><span class="p">,</span> <span class="s1">&#39;Discrete_Quantitative_lownan&#39;</span><span class="p">,</span> <span class="s1">&#39;Discrete_Quantitative&#39;</span><span class="p">,</span> <span class="s1">&#39;Discrete_Quantitative_rarevalue&#39;</span><span class="p">]</span>
 <span class="n">qualitative_features</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Qualitative&quot;</span><span class="p">,</span> <span class="s2">&quot;Qualitative_grouped&quot;</span><span class="p">,</span> <span class="s2">&quot;Qualitative_lownan&quot;</span><span class="p">,</span> <span class="s2">&quot;Qualitative_highnan&quot;</span><span class="p">,</span> <span class="s2">&quot;Discrete_Qualitative_noorder&quot;</span><span class="p">,</span> <span class="s2">&quot;Discrete_Qualitative_lownan_noorder&quot;</span><span class="p">,</span> <span class="s2">&quot;Discrete_Qualitative_rarevalue_noorder&quot;</span><span class="p">]</span>
-<span class="n">target</span> <span class="o">=</span> <span class="s2">&quot;quali_ordinal_target&quot;</span>
 </pre></div>
 </div>
 <p>Qualitative features will automatically be converted to <code class="docutils literal notranslate"><span class="pre">str</span></code> if necessary.
 Ordinal features can be added, alongside there expected ordering. See <a class="reference internal" href="examples.html#id1"><span class="std std-ref">Credit Scoring Example</span></a>.</p>
 </section>
+</section>
 <section id="using-autocarver">
 <h2>Using AutoCarver<a class="headerlink" href="#using-autocarver" title="Permalink to this heading"></a></h2>
 <section id="fitting-autocarver">
 <h3>Fitting AutoCarver<a class="headerlink" href="#fitting-autocarver" title="Permalink to this heading"></a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">AutoCarver</span> <span class="kn">import</span> <span class="n">AutoCarver</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">AutoCarver</span> <span class="kn">import</span> <span class="n">BinaryCarver</span>
 
 <span class="c1"># intiating AutoCarver</span>
-<span class="n">auto_carver</span> <span class="o">=</span> <span class="n">AutoCarver</span><span class="p">(</span>
+<span class="n">auto_carver</span> <span class="o">=</span> <span class="n">BinaryCarver</span><span class="p">(</span>
     <span class="n">quantitative_features</span><span class="o">=</span><span class="n">quantitative_features</span><span class="p">,</span>
     <span class="n">qualitative_features</span><span class="o">=</span><span class="n">qualitative_features</span><span class="p">,</span>
     <span class="n">min_freq</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span>  <span class="c1"># minimum frequency per modality</span>
     <span class="n">max_n_mod</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>  <span class="c1"># maximum number of modality per Carved feature</span>
-    <span class="n">sort_by</span><span class="o">=</span><span class="s1">&#39;cramerv&#39;</span><span class="p">,</span>  <span class="c1"># measure used to select the best combination of modalities</span>
-    <span class="n">pretty_print</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># showing statistics</span>
+    <span class="n">sort_by</span><span class="o">=</span><span class="s1">&#39;tschuprowt&#39;</span><span class="p">,</span>  <span class="c1"># measure used to select the best combination of modalities</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># showing statistics</span>
 <span class="p">)</span>
 
 <span class="c1"># fitting on training sample, a dev sample can be specified to evaluate carving robustness</span>
-<span class="n">x_discretized</span> <span class="o">=</span> <span class="n">auto_carver</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">x_train</span><span class="p">[</span><span class="n">target</span><span class="p">],</span> <span class="n">X_dev</span><span class="o">=</span><span class="n">x_dev</span><span class="p">,</span> <span class="n">y_dev</span><span class="o">=</span><span class="n">x_dev</span><span class="p">[</span><span class="n">target</span><span class="p">])</span>
+<span class="n">x_discretized</span> <span class="o">=</span> <span class="n">auto_carver</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">train_set</span><span class="p">,</span> <span class="n">train_set</span><span class="p">[</span><span class="n">target</span><span class="p">],</span> <span class="n">X_dev</span><span class="o">=</span><span class="n">dev_set</span><span class="p">,</span> <span class="n">y_dev</span><span class="o">=</span><span class="n">dev_set</span><span class="p">[</span><span class="n">target</span><span class="p">])</span>
 </pre></div>
 </div>
 </section>
 <section id="applying-autocarver">
 <h3>Applying AutoCarver<a class="headerlink" href="#applying-autocarver" title="Permalink to this heading"></a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># transforming dev/test sample accordingly</span>
-<span class="n">x_dev_discretized</span> <span class="o">=</span> <span class="n">auto_carver</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">x_dev</span><span class="p">)</span>
-<span class="n">x_test_discretized</span> <span class="o">=</span> <span class="n">auto_carver</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">x_test</span><span class="p">)</span>
+<span class="n">dev_set_discretized</span> <span class="o">=</span> <span class="n">auto_carver</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">dev_set</span><span class="p">)</span>
+<span class="n">test_set_discretized</span> <span class="o">=</span> <span class="n">auto_carver</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">tes_set</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="saving-autocarver">
 <h3>Saving AutoCarver<a class="headerlink" href="#saving-autocarver" title="Permalink to this heading"></a></h3>
-<p>The <cite>AutoCarver</cite> can safely be stored as a .json file.</p>
+<p>All Carvers can safely be stored as a <code class="docutils literal notranslate"><span class="pre">.json</span></code> file.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
 
 <span class="c1"># storing as json file</span>
@@ -169,15 +190,15 @@ Ordinal features can be added, alongside there expected ordering. See <a class="
 </section>
 <section id="feature-selection">
 <h2>Feature Selection<a class="headerlink" href="#feature-selection" title="Permalink to this heading"></a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">AutoCarver.feature_selection</span> <span class="kn">import</span> <span class="n">FeatureSelector</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">AutoCarver.selectors</span> <span class="kn">import</span> <span class="n">ClassificationSelector</span>
 
 <span class="c1"># select the best 25 most target associated qualitative features</span>
-<span class="n">feature_selector</span> <span class="o">=</span> <span class="n">FeatureSelector</span><span class="p">(</span>
+<span class="n">feature_selector</span> <span class="o">=</span> <span class="n">ClassificationSelector</span><span class="p">(</span>
     <span class="n">qualitative_features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span>  <span class="c1"># features to select from</span>
     <span class="n">n_best</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span>  <span class="c1"># number of features to select</span>
-    <span class="n">pretty_print</span><span class="o">=</span><span class="kc">True</span>  <span class="c1"># displays statistics</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># displays statistics</span>
 <span class="p">)</span>
-<span class="n">best_features</span> <span class="o">=</span> <span class="n">feature_selector</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+<span class="n">best_features</span> <span class="o">=</span> <span class="n">feature_selector</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">train_set_discretized</span><span class="p">,</span> <span class="n">train_set_discretized</span><span class="p">[</span><span class="n">target</span><span class="p">])</span>
 </pre></div>
 </div>
 </section>

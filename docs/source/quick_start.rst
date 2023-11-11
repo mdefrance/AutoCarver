@@ -20,7 +20,7 @@ In the following quick start example, we will consider a binary classification p
 
     target = "binary_target"
 
-Hence the use of :class:`BinaryCarver` in following code blocks.
+Hence the use of :class:`BinaryCarver` and :class:`ClassificationSelector` in following code blocks.
 
 
 
@@ -124,13 +124,13 @@ Feature Selection
 
 .. code-block:: python
 
-    from AutoCarver.feature_selection import FeatureSelector
+    from AutoCarver.selectors import ClassificationSelector
 
     # select the best 25 most target associated qualitative features
-    feature_selector = FeatureSelector(
+    feature_selector = ClassificationSelector(
         qualitative_features=features,  # features to select from
         n_best=25,  # number of features to select
-        verbose=True  # displays statistics
+        verbose=True,  # displays statistics
     )
     best_features = feature_selector.select(train_set_discretized, train_set_discretized[target])
 

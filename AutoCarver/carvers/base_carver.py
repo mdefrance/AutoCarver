@@ -5,7 +5,7 @@ for any task.
 from typing import Any, Callable, Union
 from warnings import warn
 
-from pandas import DataFrame, Series
+from pandas import DataFrame, Series, unique
 from tqdm import tqdm
 
 from ..discretizers import GroupedList
@@ -105,7 +105,8 @@ class BaseCarver(BaseDiscretizer):
             **Tip**: IPython displaying can be turned off by setting ``pretty_print=False``.
 
         **kwargs
-            Pass values for ``str_default`` and ``str_nan`` (default string values), as long as ``pretty_print`` to turn off IPython.
+            Pass values for ``str_default`` and ``str_nan`` (default string values),
+            as long as ``pretty_print`` to turn off IPython.
 
         Examples
         --------
@@ -123,7 +124,7 @@ class BaseCarver(BaseDiscretizer):
             or len(qualitative_features) > 0
             or len(ordinal_features) > 0
         ), (
-            " - [BaseCarver] No feature passed as input. Pleased provided column names to Carver "
+            " - [AutoCarver] No feature passed as input. Pleased provided column names to Carver "
             "by setting quantitative_features, quantitative_features or ordinal_features."
         )
         self.ordinal_features = list(set(ordinal_features))
@@ -151,14 +152,14 @@ class BaseCarver(BaseDiscretizer):
             quali_feature not in self.quantitative_features
             for quali_feature in self.qualitative_features
         ), (
-            " - [BaseCarver] One of quantitative_features is also in qualitative_features "
+            " - [AutoCarver] One of quantitative_features is also in qualitative_features "
             "or ordinal_features. Please, be carreful with your inputs!"
         )
         assert all(
             quanti_feature not in self.qualitative_features
             for quanti_feature in self.quantitative_features
         ), (
-            " - [BaseCarver] One of qualitative_features or ordinal_features is also in "
+            " - [AutoCarver] One of qualitative_features or ordinal_features is also in "
             "quantitative_features. Please, be carreful with your inputs!"
         )
 
@@ -179,6 +180,9 @@ class BaseCarver(BaseDiscretizer):
                     "Install extra dependencies with pip install autocarver[jupyter]",
                     UserWarning,
                 )
+
+        # historizing everything
+        self._history = {feature: [] for feature in self.features}
 
     def _prepare_data(
         self,
@@ -214,25 +218,9 @@ class BaseCarver(BaseDiscretizer):
         x_dev_copy = super()._prepare_data(X_dev, y_dev)
 
         # checking for not provided y
-        assert y is not None, f" - [BaseCarver] y must be provided {y}"
+        assert y is not None, f" - [AutoCarver] y must be provided {y}"
 
         return x_copy, x_dev_copy
-
-    def _aggregator():
-        """HELPER: get_xtabs or get_yvals"""
-        pass
-
-    def _grouper():
-        """HELPER: xtab_grouper or yval_grouper"""
-        pass
-
-    def _association_measure():
-        """HELPER: association_xtab or association_yval"""
-        pass
-
-    def _target_rate():
-        """HELPER: xtab_target_rate or yval_target_rate"""
-        pass
 
     def _combination_formatter(self, combination: list[list[str]]) -> dict[str, str]:
         """Attributes the first element of a group to all elements of a group
@@ -249,10 +237,6 @@ class BaseCarver(BaseDiscretizer):
         """
         return {modal: group[0] for group in combination for modal in group}
 
-    def _printer():
-        """HELPER: pretty_xtab or pretty_yval"""
-        pass
-
     def _remove_feature(self, feature: str) -> None:
         """Removes a feature from all ``BaseCarver.features`` attributes
 
@@ -265,6 +249,8 @@ class BaseCarver(BaseDiscretizer):
             super()._remove_feature(feature)
             if feature in self.ordinal_features:
                 self.ordinal_features.remove(feature)
+            if feature in self._history:
+                self._history[feature] += [{"removed": True}]
 
     def fit(
         self,
@@ -340,77 +326,133 @@ class BaseCarver(BaseDiscretizer):
         all_features = self.features[:]  # (features are being removed from self.features)
         for n, feature in enumerate(all_features):
             if self.verbose:  # verbose if requested
-                print(f"\n------\n[BaseCarver] Fit {feature} ({n+1}/{len(all_features)})\n---")
+                print(f"\n------\n[AutoCarver] Fit {feature} ({n+1}/{len(all_features)})\n---")
 
-            # getting xtabs on train/test
-            xagg = xaggs[feature]
-            xagg_dev = xaggs_dev[feature]
-            if self.verbose:  # verbose if requested
-                print("\n - [BaseCarver] Raw feature distribution")
-                # TODO: get the good labels
-                print_xagg(
-                    xagg,
-                    xagg_dev=xagg_dev,
-                    pretty_print=self.pretty_print,
-                    printer=self._printer,
-                )
-
-            # ordering
-            order = labels_orders[feature]
-
-            # getting best combination
-            best_combination = self._get_best_combination(order, xagg, xagg_dev=xagg_dev)
-
-            # checking that a suitable combination has been found
-            if best_combination is not None:
-                order, xagg, xagg_dev = best_combination
-                if self.verbose:  # verbose if requested
-                    print("\n - [BaseCarver] Carved feature distribution")
-                    # TODO: get the good labels
-                    print_xagg(
-                        xagg,
-                        xagg_dev=xagg_dev,
-                        pretty_print=self.pretty_print,
-                        printer=self._printer,
-                    )
-
-                # updating label_orders
-                labels_orders.update({feature: order})
-
-            # no suitable combination has been found -> removing feature
-            else:
-                warn(
-                    f" - [BaseCarver] No robust combination for feature '{feature}' could be found"
-                    ". It will be ignored. You might have to increase the size of your dev sample"
-                    " (dev sample not representative of dev sample for this feature) or you"
-                    " should consider dropping this features.",
-                    UserWarning,
-                )
-                self._remove_feature(feature)
-                if feature in labels_orders:
-                    labels_orders.pop(feature)
+            # carving the feature
+            labels_orders = self._carve_feature(feature, xaggs, xaggs_dev, labels_orders)
 
             if self.verbose:  # verbose if requested
                 print("------\n")
-
-        # converting potential labels into there respective values (quantiles)
-        self.values_orders.update(
-            convert_to_values(
-                features=self.features,
-                quantitative_features=self.quantitative_features,
-                values_orders=self.values_orders,
-                label_orders=labels_orders,
-                str_nan=self.str_nan,
-            )
-        )
 
         # discretizing features based on each feature's values_order
         super().fit(X, y)
 
         return self
 
+    def _carve_feature(
+        self,
+        feature: str,
+        xaggs: dict[str, Union[Series, DataFrame]],
+        xaggs_dev: dict[str, Union[Series, DataFrame]],
+        labels_orders: dict[str, GroupedList],
+    ) -> dict[str, GroupedList]:
+        """Carves a feature into buckets that maximize association with the target
+
+        Parameters
+        ----------
+        feature : str
+            _description_
+        xaggs : dict[str, Union[Series, DataFrame]]
+            _description_
+        xaggs_dev : dict[str, Union[Series, DataFrame]]
+            _description_
+        labels_orders : dict[str, GroupedList]
+            _description_
+
+        Returns
+        -------
+        dict[str, GroupedList]
+            _description_
+        """
+        # getting xtabs on train/test
+        xagg = xaggs[feature]
+        xagg_dev = xaggs_dev[feature]
+
+        # checking that the feature has at least 2 modalities
+        best_combination = None
+        if len(xagg.index) > 1:
+            # ordering
+            order = labels_orders[feature]
+
+            # historizing raw combination
+            raw_association = {
+                "index_to_groupby": {modality: modality for modality in xagg.index},
+                self.sort_by: self._association_measure(xagg, n_obs=xagg.apply(sum).sum())[
+                    self.sort_by
+                ],
+            }
+            self._historize_viability_test(feature, raw_association, order)
+
+            # verbose
+            self._print_xagg(
+                xagg=self._index_mapper(feature, labels_orders, xagg),
+                xagg_dev=self._index_mapper(feature, labels_orders, xagg_dev),
+                message="Raw distribution",
+            )
+
+            # getting best combination
+            best_combination = self._get_best_combination(feature, order, xagg, xagg_dev=xagg_dev)
+
+        # checking that a suitable combination has been found
+        if best_combination is not None:
+            order, xagg, xagg_dev = best_combination
+            # updating orders accordingly
+            labels_orders = self._update_orders(feature, order, labels_orders)
+
+            # verbose
+            self._print_xagg(
+                xagg=self._index_mapper(feature, labels_orders, xagg),
+                xagg_dev=self._index_mapper(feature, labels_orders, xagg_dev),
+                message="Carved distribution",
+            )
+
+        # no suitable combination has been found -> removing feature
+        else:
+            warn(
+                f" - [AutoCarver] No robust combination for feature '{feature}' could be found"
+                ". It will be ignored. You might have to increase the size of your dev sample"
+                " (dev sample not representative of dev sample for this feature) or you"
+                " should consider dropping this features.",
+                UserWarning,
+            )
+            self._remove_feature(feature)
+            if feature in labels_orders:
+                labels_orders.pop(feature)
+
+        return labels_orders
+
+    def _update_orders(
+        self, feature: str, new_order: GroupedList, labels_orders: dict[str, GroupedList]
+    ) -> dict[str, GroupedList]:
+        """updates values_orders and labels_orders accoding to the new order for specified feature"""
+
+        # updating label_orders
+        labels_orders.update({feature: new_order})
+
+        # updating values_orders
+        self.values_orders.update(
+            convert_to_values(
+                features=[feature],
+                quantitative_features=[feature] if feature in self.quantitative_features else [],
+                values_orders=self.values_orders,
+                label_orders=labels_orders,
+                str_nan=self.str_nan,
+            )
+        )
+        # updating labels
+        labels_orders = convert_to_labels(
+            features=self.features,
+            quantitative_features=self.quantitative_features,
+            values_orders=self.values_orders,
+            str_nan=self.str_nan,
+            dropna=False,
+        )
+
+        return labels_orders
+
     def _get_best_combination(
         self,
+        feature: str,
         order: GroupedList,
         xagg: DataFrame,
         *,
@@ -448,7 +490,9 @@ class BaseCarver(BaseDiscretizer):
             combinations = consecutive_combinations(raw_order, self.max_n_mod, min_group_size=1)
 
             # getting most associated combination
-            best_association = self.get_best_association(
+            best_association, order = self._get_best_association(
+                feature,
+                order,
                 raw_xagg,
                 combinations,
                 xagg_dev=raw_xagg_dev,
@@ -456,7 +500,6 @@ class BaseCarver(BaseDiscretizer):
 
             # applying best_combination to order and xtabs
             if best_association is not None:
-                order = order_apply_combination(order, best_association["combination"])
                 xagg = xagg_apply_order(xagg, order)
                 xagg_dev = xagg_apply_order(xagg_dev, order)
 
@@ -466,24 +509,21 @@ class BaseCarver(BaseDiscretizer):
                 raw_order = GroupedList(order)
                 raw_order.remove(self.str_nan)
 
-                # all possible consecutive combinations
-                combinations = consecutive_combinations(raw_order, self.max_n_mod, min_group_size=1)
-
                 # adding combinations with NaNs
-                nan_combinations = add_nan_in_combinations(
-                    combinations, self.str_nan, self.max_n_mod
-                )
+                combinations = nan_combinations(raw_order, self.str_nan, self.max_n_mod, 1)
 
                 # getting most associated combination
-                best_association = self.get_best_association(
+                best_association, order = self._get_best_association(
+                    feature,
+                    order,
                     xagg,
-                    nan_combinations,
+                    combinations,
                     xagg_dev=xagg_dev,
+                    dropna=True,
                 )
 
                 # applying best_combination to order and xtab
                 if best_association is not None:
-                    order = order_apply_combination(order, best_association["combination"])
                     xagg = xagg_apply_order(xagg, order)
                     xagg_dev = xagg_apply_order(xagg_dev, order)
 
@@ -491,19 +531,26 @@ class BaseCarver(BaseDiscretizer):
         if best_association is not None:
             return order, xagg, xagg_dev
 
-    def get_best_association(
+    def _get_best_association(
         self,
+        feature: str,
+        order: GroupedList,
         xagg: Union[Series, DataFrame],
         combinations: list[list[str]],
         *,
         xagg_dev: Union[Series, DataFrame] = None,
-    ) -> dict[str, Any]:
+        dropna: bool = False,
+    ) -> tuple[dict[str, Any], GroupedList]:
         """Computes associations of the tab for each combination
 
         Parameters
         ----------
+        feature : str
+            feature to measure association with
         xagg : Union[Series, DataFrame]
             _description_
+        order : GroupedList
+            order of the feature
         combinations : list[list[str]]
             _description_
         xagg_dev : Union[Series, DataFrame], optional
@@ -511,10 +558,10 @@ class BaseCarver(BaseDiscretizer):
 
         Returns
         -------
-        dict[str, Any]
-            _description_
+        tuple[dict[str, Any], GroupedList]
+            best viable association and associated modality order
         """
-        # values to groupby indices with  # TODO: !!!!!!!!!! not working as expected with nans
+        # values to groupby indices with
         indices_to_groupby = [
             self._combination_formatter(combination) for combination in combinations
         ]
@@ -555,49 +602,350 @@ class BaseCarver(BaseDiscretizer):
             .to_dict(orient="records")
         )
 
-        # testing viability
-        for association in tqdm(
-            associations_xagg, disable=not self.verbose, desc="Testing robustness    "
+        # testing viability of combination
+        best_association = self._test_viability(feature, order, associations_xagg, xagg_dev, dropna)
+
+        # applying best_combination to order and xtab
+        if best_association is not None:
+            order = order_apply_combination(order, best_association["combination"])
+
+        return best_association, order
+
+    def _test_viability(
+        self,
+        feature: str,
+        order: GroupedList,
+        associations_xagg: list[dict[str, Any]],
+        xagg_dev: Union[Series, DataFrame],
+        dropna: bool,
+    ) -> dict[str, Any]:
+        """Tests the viability of all possible combinations onto xagg_dev
+
+        Parameters
+        ----------
+        feature : str
+            _description_
+        order : GroupedList
+            order of the feature
+        associations_xagg : list[dict[str, Any]]
+            _description_
+        xagg_dev : Union[Series, DataFrame]
+            _description_
+
+        Returns
+        -------
+        dict[str, Any]
+            _description_
+        """
+        # testing viability of all combinations
+        (
+            best_association,
+            train_viable,
+            dev_viable,
+            distinct_rates_train,
+            min_freq_train,
+            ranks_train_dev,
+            min_freq_dev,
+            distinct_rates_dev,
+        ) = (None,) * 8
+        for n_combination, association in tqdm(
+            enumerate(associations_xagg),
+            total=len(associations_xagg),
+            disable=not self.verbose,
+            desc="Testing robustness    ",
         ):
-            # needed parameters
-            index_to_groupby, grouped_xagg = (
-                association["index_to_groupby"],
-                association["xagg"],
-            )
-
             # computing target rate and frequency per value
-            train_rates = self._printer(grouped_xagg)
+            train_rates = self._printer(association["xagg"])
 
-            # viable on train sample:
+            # viability on train sample:
             # - target rates are distinct for all modalities
+            distinct_rates_train = len(train_rates) == train_rates["target_rate"].nunique()
             # - minimum frequency is reached for all modalities
-            if (
-                all(train_rates["frequency"] >= self.min_freq_mod)
-                and len(train_rates) == train_rates["target_rate"].nunique()
-            ):
+            min_freq_train = all(train_rates["frequency"] >= self.min_freq_mod)
+
+            # checking for viability on train
+            train_viable = min_freq_train and distinct_rates_train
+            if train_viable:
                 # case 0: no test sample provided -> not testing for robustness
                 if xagg_dev is None:
-                    return association
+                    best_association = association  # found best viable combination
 
-                # grouping the dev sample per modality
-                grouped_xagg_dev = self._grouper(xagg_dev, index_to_groupby)
+                # case 1: test sample provided -> testing robustness
+                else:
+                    # grouping the dev sample per modality
+                    grouped_xagg_dev = self._grouper(xagg_dev, association["index_to_groupby"])
 
-                # computing target rate and frequency per modality
-                dev_rates = self._printer(grouped_xagg_dev)
+                    # computing target rate and frequency per modality
+                    dev_rates = self._printer(grouped_xagg_dev)
 
-                # case 1: testing viability on provided dev sample
-                # - grouped values have the same ranks in train/test
-                # - target rates are distinct for all modalities
-                # - minimum frequency is reached for all modalities
-                if (
-                    all(
+                    # viability on dev sample:
+                    # - grouped values have the same ranks in train/test
+                    ranks_train_dev = all(
                         train_rates.sort_values("target_rate").index
                         == dev_rates.sort_values("target_rate").index
                     )
-                    and all(dev_rates["frequency"] >= self.min_freq_mod)
-                    and len(dev_rates) == dev_rates["target_rate"].nunique()
-                ):
-                    return association
+                    # - minimum frequency is reached for all modalities
+                    min_freq_dev = all(dev_rates["frequency"] >= self.min_freq_mod)
+                    # - target rates are distinct for all modalities
+                    distinct_rates_dev = len(dev_rates) == dev_rates["target_rate"].nunique()
+
+                    # checking for viability on dev
+                    dev_viable = ranks_train_dev and min_freq_dev and distinct_rates_dev
+                    if dev_viable:
+                        best_association = association  # found best viable combination
+
+            # historizing combinations and tests
+            self._historize_viability_test(
+                feature=feature,
+                association=association,
+                order=order,
+                n_combination=n_combination,
+                associations_xagg=associations_xagg,
+                train_viable=train_viable,
+                dev_viable=dev_viable,
+                dropna=dropna,
+                distinct_rates_train=distinct_rates_train,
+                min_freq_train=min_freq_train,
+                ranks_train_dev=ranks_train_dev,
+                min_freq_dev=min_freq_dev,
+                distinct_rates_dev=distinct_rates_dev,
+            )
+
+            # best combination found: breaking the loop on combinations
+            if best_association is not None:
+                break
+
+        return best_association
+
+    def _historize_viability_test(
+        self,
+        feature: str,
+        association: dict[Any],
+        order: GroupedList,
+        n_combination: int = None,
+        associations_xagg: list[dict[str, Any]] = None,
+        train_viable: bool = None,
+        dev_viable: bool = None,
+        dropna: bool = False,
+        **viability_msg_params,
+    ) -> None:
+        """historizes the viability tests results for specified feature
+
+        Parameters
+        ----------
+        feature : str
+            feature for which to historize the combination
+        viability : bool
+            result of viability test
+        order : GroupedList
+            order of the modalities and there respective groups
+        association : dict[Any]
+            index_to_groupby and self.sort_by values
+        viability_msg_params : dict
+            kwargs to determine the viability message
+        """
+        # Messages associated to each failed viability test
+        messages = []
+        if not viability_msg_params.get("ranks_train_dev"):
+            messages += ["X_dev: inversion of target rates per modality"]
+        if not viability_msg_params.get("min_freq_dev"):
+            messages += [
+                f"X_dev: non-representative modality (min_freq_mod={self.min_freq_mod:2.2%})"
+            ]
+        if not viability_msg_params.get("distinct_rates_dev"):
+            messages += ["X_dev: non-distinct target rates per modality"]
+        if not viability_msg_params.get("min_freq_train"):
+            messages += [f"X: non-representative modality (min_freq_mod={self.min_freq_mod:2.2%})"]
+        if not viability_msg_params.get("distinct_rates_train"):
+            messages += ["X: non-distinct target rates per modality"]
+
+        # viability has been checked on train
+        viability = None
+        if train_viable is not None:
+            # viability on train
+            viability = train_viable
+            if train_viable:
+                # viability has been checked on dev
+                if dev_viable is not None:
+                    # viability on dev
+                    viability = dev_viable
+                    if dev_viable:
+                        messages = ["Combination robust between X and X_dev"]
+                else:  # no x_dev provided
+                    messages = ["Combination viable on X"]
+        else:
+            messages = ["Raw X distribution"]
+
+        # viability not checked for following less associated combinations
+        associations_not_checked = []
+        if viability:
+            associations_not_checked = associations_xagg[n_combination + 1 :]
+
+        # storing combination and adding not tested combinations to the set to be historized
+        associations_to_historize = [association] + associations_not_checked
+        messages_to_historize = [messages] + [["Not checked"]] * len(associations_not_checked)
+        viability_to_historize = [viability] + [None] * len(associations_not_checked)
+
+        # historizing all combinations
+        for asso, msg, viab in zip(
+            associations_to_historize, messages_to_historize, viability_to_historize
+        ):
+            # Formats a combination for historization
+            combi = asso["index_to_groupby"]
+            formatted_combi = [
+                [
+                    value
+                    for modality in combi.keys()
+                    for group_modality in order.get(modality, modality)
+                    for value in self.values_orders[feature].get(group_modality, group_modality)
+                    if combi[modality] == final_group
+                ]
+                for final_group in unique(list(combi.values()))
+            ]
+
+            # historizing test results
+            self._history[feature] += [
+                {
+                    "combination": formatted_combi,
+                    self.sort_by: asso[self.sort_by],
+                    "viability": viab,
+                    "viability_message": msg,
+                    "grouping_nan": dropna,
+                }
+            ]
+
+    def history(self, feature: str = None) -> DataFrame:
+        """Historic of tested combinations and there association with the target.
+
+        By default:
+
+            * Modality ``str_default="__OTHER__"`` is generated for features that contain non-representative modalities.
+            * Modality ``str_nan="__NAN__"`` is generated for features that contain ``numpy.nan``.
+            * Whatever the value of ``dropna``, the association is computed for non-missing values.
+
+        Parameters
+        ----------
+        feature : str, optional
+            Specify for which feature to return the history, by default ``None``
+
+        Returns
+        -------
+        DataFrame
+            Historic of features' tested combinations.
+        """
+        # getting feature's history
+        if feature is not None:
+            assert (
+                feature in self._history.keys()
+            ), f"Carving of feature {feature} was not requested."
+            histo = self._history[feature]
+
+        # getting all features' history
+        else:
+            histo = []
+            for feature in self._history.keys():
+                feature_histories = self._history[feature]
+                for feature_history in feature_histories:
+                    feature_history.update({"feature": feature})
+                histo += feature_histories
+
+        # formatting combinations
+        # history["combination"] = history["combination"].apply(format_for_history)
+
+        return DataFrame(histo)
+
+    def _index_mapper(
+        self, feature: str, labels_orders: dict[str, GroupedList], xtab: DataFrame = None
+    ) -> DataFrame:
+        """Prints a binary xtab's statistics
+
+        Parameters
+        ----------
+        order_get : Callable
+            Ordering of modalities used to map indices
+        xtab : Dataframe
+            A crosstab, by default None
+
+        Returns
+        -------
+        DataFrame
+            Target rate and frequency per modality
+        """
+        # checking for an xtab
+        mapped_xtab = None
+        if xtab is not None:
+            # copying initial xtab
+            mapped_xtab = xtab.copy()
+
+            # for qualitative features -> mapping with values_orders.content
+            if feature in self.qualitative_features:
+                mapped_index = [
+                    self.values_orders[feature].get(idx, idx) for idx in mapped_xtab.index
+                ]
+                # removing str_default
+                mapped_index = [
+                    [str(idx) for idx in mapped_idx if idx != self.str_default]
+                    for mapped_idx in mapped_index
+                ]
+                mapped_index = [
+                    mapped_idx[-1] + " to " + mapped_idx[0]
+                    if len(mapped_idx) > 2
+                    else mapped_idx[0]
+                    if len(mapped_idx) == 0
+                    else ", ".join(mapped_idx)
+                    for mapped_idx in mapped_index
+                ]
+            # for quantitative features -> mapping with labels_orders.keys
+            else:
+                mapped_index = labels_orders[feature][:]
+
+            # modifying indices based on provided order
+            mapped_xtab.index = mapped_index
+
+        return mapped_xtab
+
+    def _print_xagg(
+        self,
+        xagg: DataFrame,
+        message: str,
+        *,
+        xagg_dev: DataFrame = None,
+    ) -> None:
+        """Prints crosstabs' target rates and frequencies per modality, in raw or html format
+
+        Parameters
+        ----------
+        xagg : DataFrame
+            Train crosstab
+        xagg_dev : DataFrame
+            Dev crosstab, by default None
+        pretty_print : bool, optional
+            Whether to output html or not, by default False
+        """
+        if self.verbose:  # verbose if requested
+            print(f"\n - [AutoCarver] {message}")
+
+            # getting pretty xtabs
+            nice_xagg = self._printer(xagg)
+            nice_xagg_dev = self._printer(xagg_dev)
+
+            # case 0: no pretty hmtl printing
+            if not self.pretty_print:
+                print(nice_xagg, "\n")
+                if xagg_dev is not None:
+                    print("X_dev distribution\n", nice_xagg_dev, "\n")
+
+            # case 1: pretty html printing
+            else:
+                # getting prettier xtabs
+                nicer_xagg = prettier_xagg(nice_xagg, caption="X distribution")
+                nicer_xagg_dev = prettier_xagg(nice_xagg_dev, caption="X_dev distribution")
+
+                # merging outputs
+                nicer_xaggs = nicer_xagg + "    " + nicer_xagg_dev
+
+                # displaying html of colored DataFrame
+                display_html(nicer_xaggs, raw=True)
 
 
 def filter_nan(xagg: Union[Series, DataFrame], str_nan: str) -> DataFrame:
@@ -737,18 +1085,24 @@ def consecutive_combinations(
     return all_combinations
 
 
-def add_nan_in_combinations(
-    combinations: list[list[str]], str_nan: str, max_n_mod: int
+def nan_combinations(
+    raw_order: GroupedList,
+    str_nan: str,
+    max_n_mod: int,
+    min_group_size: int,
 ) -> list[list[str]]:
-    """Adds nan to each possible group and a last group only with nan if the max_n_mod is not reached by the combination
+    """All consecutive combinatios of non-nans with added nan to each possible group and a last
+      group only with nan if the max_n_mod is not reached by the combination
 
     Parameters
     ----------
-    combinations : list[list[str]]
+    raw_order : GroupedList
         _description_
     str_nan : str
         _description_
     max_n_mod : int
+        _description_
+    min_group_size : int
         _description_
 
     Returns
@@ -756,6 +1110,8 @@ def add_nan_in_combinations(
     list[list[str]]
         _description_
     """
+    # all possible consecutive combinations
+    combinations = consecutive_combinations(raw_order, max_n_mod, min_group_size=1)
     # iterating over each combination
     nan_combinations = []
     for combination in combinations:
@@ -893,43 +1249,3 @@ def prettier_xagg(
         nicer_xagg = nicer_xagg._repr_html_()
 
     return nicer_xagg
-
-
-def print_xagg(
-    xagg: DataFrame,
-    printer: Callable,
-    xagg_dev: DataFrame = None,
-    pretty_print: bool = False,
-) -> None:
-    """Prints crosstabs' target rates and frequencies per modality, in raw or html format
-
-    Parameters
-    ----------
-    xagg : DataFrame
-        Train crosstab
-    xagg_dev : DataFrame
-        Dev crosstab, by default None
-    pretty_print : bool, optional
-        Whether to output html or not, by default False
-    """
-    # getting pretty xtabs
-    nice_xagg = printer(xagg)
-    nice_xagg_dev = printer(xagg_dev)
-
-    # case 0: no pretty hmtl printing
-    if not pretty_print:
-        print(nice_xagg, "\n")
-        if xagg_dev is not None:
-            print("X_dev distribution\n", nice_xagg_dev, "\n")
-
-    # case 1: pretty html printing
-    else:
-        # getting prettier xtabs
-        nicer_xagg = prettier_xagg(nice_xagg, caption="X distribution")
-        nicer_xagg_dev = prettier_xagg(nice_xagg_dev, caption="X_dev distribution")
-
-        # merging outputs
-        nicer_xaggs = nicer_xagg + "    " + nicer_xagg_dev
-
-        # displaying html of colored DataFrame
-        display_html(nicer_xaggs, raw=True)

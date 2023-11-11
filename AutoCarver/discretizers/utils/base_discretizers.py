@@ -550,16 +550,33 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         # dumping as json
         return json_serialized_base_discretizer
 
-    # TODO: add crosstabs per feature for a provided X?
-    # TODO: change str_nan for str(nan)
-    def summary(self) -> DataFrame:
+    def summary(self, feature: str = None) -> DataFrame:
         """Summarizes the data discretization process.
+
+        By default:
+
+            * Modality ``str_default="__OTHER__"`` is generated for features that contain non-representative modalities.
+            * Modality ``str_nan="__NAN__"`` is generated for features that contain ``numpy.nan``.
+
+        Parameters
+        ----------
+        feature : str, optional
+            Specify for which feature to return the summary, by default ``None``
 
         Returns
         -------
         DataFrame
             A summary of features' values per modalities.
         """
+        # storing requested feature for later
+        requested_feature = None
+        if feature is not None:
+            requested_feature = feature[:]
+            assert requested_feature in self.features, (
+                f"Discretization of feature {requested_feature} was not "
+                "requested or it has been dropped."
+            )
+
         # raw label per value with output_dtype 'str'
         raw_labels_per_values = self._get_labels_per_values(output_dtype="str")
 
@@ -568,29 +585,31 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         for feature in self.features:
             # adding each value/label
             for value, label in self.labels_per_values[feature].items():
-                # initiating feature summary (default value/label)
-                feature_summary = {
-                    "feature": feature,
-                    "dtype": self.input_dtypes[feature],
-                    "label": label,
-                    "content": value,
-                }
+                # checking that nan where dropped
+                if not (not self.dropna and value == self.str_nan):
+                    # initiating feature summary (default value/label)
+                    feature_summary = {
+                        "feature": feature,
+                        "dtype": self.input_dtypes[feature],
+                        "label": label,
+                        "content": value,
+                    }
 
-                # case 0: qualitative feature -> not adding floats and integers str_default
-                if feature in self.qualitative_features:
-                    if not isinstance(value, floating) and not isinstance(
-                        value, float
-                    ):  # checking for floats
-                        if not isinstance(value, integer) and not isinstance(
-                            value, int
-                        ):  # checking for ints
-                            if value != self.str_default:  # checking for str_default
-                                summaries += [feature_summary]
+                    # case 0: qualitative feature -> not adding floats and integers str_default
+                    if feature in self.qualitative_features:
+                        if not isinstance(value, floating) and not isinstance(
+                            value, float
+                        ):  # checking for floats
+                            if not isinstance(value, integer) and not isinstance(
+                                value, int
+                            ):  # checking for ints
+                                if value != self.str_default:  # checking for str_default
+                                    summaries += [feature_summary]
 
-                # case 1: quantitative feature -> take the raw label per value
-                elif feature in self.quantitative_features:
-                    feature_summary.update({"content": raw_labels_per_values[feature][value]})
-                    summaries += [feature_summary]
+                    # case 1: quantitative feature -> take the raw label per value
+                    elif feature in self.quantitative_features:
+                        feature_summary.update({"content": raw_labels_per_values[feature][value]})
+                        summaries += [feature_summary]
 
         # adding nans for quantitative features (when nan has been grouped)
         for feature in self.quantitative_features:
@@ -619,6 +638,10 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         summaries["content"] = sorted_contents
         # sorting and seting index
         summaries = summaries.sort_values(["dtype", "feature"]).set_index(["feature", "dtype"])
+
+        # getting requested feature
+        if requested_feature is not None:
+            summaries = summaries.loc[requested_feature]
 
         return summaries
 
@@ -938,58 +961,8 @@ def format_quantiles(a_list: list[float]) -> list[str]:
     list[str]
         List of boundaries per quantile
     """
-
-    # finding the closest power of thousands for each element
-    closest_powers = [
-        next((k for k in range(-3, 4) if abs(elt) / 100 // 1000 ** (k) < 10)) for elt in a_list
-    ]
-
-    # rounding elements to the closest power of thousands
-    rounded_to_powers = [elt / 1000 ** (k) for elt, k in zip(a_list, closest_powers)]
-
-    # computing optimal decimal per unique power of thousands
-    optimal_decimals: dict[str, int] = {}
-    for power in unique(closest_powers):  # iterating over each power of thousands found
-        # filtering on the specific power of thousands
-        sub_array = array([elt for elt, p in zip(rounded_to_powers, closest_powers) if power == p])
-
-        # number of distinct values
-        n_uniques = sub_array.shape[0]
-
-        # computing the first rounding decimal that allows for distinction of
-        # each values when rounded, by default None (no rounding)
-        optimal_decimal = next(
-            (k for k in range(1, 10) if len(unique(sub_array.round(k))) == n_uniques),
-            None,
-        )
-
-        # storing in the dict
-        optimal_decimals.update({power: optimal_decimal})
-
-    # rounding according to each optimal_decimal
-    rounded_list: list[float] = []
-    for elt, power in zip(rounded_to_powers, closest_powers):
-        # rounding each element
-        rounded = elt  # by default None (no rounding)
-        optimal_decimal = optimal_decimals.get(power)
-        if optimal_decimal:  # checking that the optimal decimal exists
-            rounded = round(elt, optimal_decimal)
-
-        # adding the rounded number to the list
-        rounded_list += [rounded]
-
-    # dict of suffixes per power of thousands
-    suffixes = {-3: "n", -2: "mi", -1: "m", 0: "", 1: "K", 2: "M", 3: "B"}
-
-    # adding the suffixes
-    formatted_list = [
-        f"{elt: 1.1f}{suffixes[power]}" for elt, power in zip(rounded_list, closest_powers)
-    ]
-
-    # keeping zeros
-    formatted_list = [
-        rounded if raw != 0 else f"{raw: 1.1f}" for rounded, raw in zip(formatted_list, a_list)
-    ]
+    # scientific formatting
+    formatted_list = [f"{number:.3e}" for number in a_list]
 
     # stripping whitespaces
     formatted_list = [string.strip() for string in formatted_list]
