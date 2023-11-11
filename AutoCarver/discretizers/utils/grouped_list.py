@@ -92,8 +92,12 @@ class GroupedList(list):
             Values content in key
         """
         # default to fing an element
-        if default is None:
-            default_value = []
+        default_value = []
+        if default is not None:
+            if isinstance(default, list):
+                default_value = default
+            else:
+                default_value = [default]
         found = self.content.get(key, default_value)
 
         return found
