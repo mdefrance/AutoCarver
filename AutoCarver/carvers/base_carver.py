@@ -884,7 +884,7 @@ class BaseCarver(BaseDiscretizer):
                 ]
                 # removing str_default
                 mapped_index = [
-                    [idx for idx in mapped_idx if idx != self.str_default]
+                    [str(idx) for idx in mapped_idx if idx != self.str_default]
                     for mapped_idx in mapped_index
                 ]
                 mapped_index = [
