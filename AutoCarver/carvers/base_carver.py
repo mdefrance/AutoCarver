@@ -749,11 +749,13 @@ class BaseCarver(BaseDiscretizer):
         if not viability_msg_params.get("ranks_train_dev"):
             messages += ["X_dev: inversion of target rates per modality"]
         if not viability_msg_params.get("min_freq_dev"):
-            messages += [f"X_dev: non-representative modality (min_freq_mod={self.min_freq_mod})"]
+            messages += [
+                f"X_dev: non-representative modality (min_freq_mod={self.min_freq_mod:2.2%})"
+            ]
         if not viability_msg_params.get("distinct_rates_dev"):
             messages += ["X_dev: non-distinct target rates per modality"]
         if not viability_msg_params.get("min_freq_train"):
-            messages += [f"X: non-representative modality (min_freq_mod={self.min_freq_mod})"]
+            messages += [f"X: non-representative modality (min_freq_mod={self.min_freq_mod:2.2%})"]
         if not viability_msg_params.get("distinct_rates_train"):
             messages += ["X: non-distinct target rates per modality"]
 

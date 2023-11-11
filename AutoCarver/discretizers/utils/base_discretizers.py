@@ -558,6 +558,11 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             * Modality``str_default="__OTHER__"`` is generated for features that contain non-representative modalities.
             * Modality``str_nan="__NAN__"`` is generated for features that contain ``numpy.nan``.
 
+        Parameters
+        ----------
+        feature : str, optional
+            Specify for which feature to return the summary, by default ``None``
+
         Returns
         -------
         DataFrame
@@ -580,29 +585,31 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         for feature in self.features:
             # adding each value/label
             for value, label in self.labels_per_values[feature].items():
-                # initiating feature summary (default value/label)
-                feature_summary = {
-                    "feature": feature,
-                    "dtype": self.input_dtypes[feature],
-                    "label": label,
-                    "content": value,
-                }
+                # checking that nan where dropped
+                if not (not self.dropna and value == self.str_nan):
+                    # initiating feature summary (default value/label)
+                    feature_summary = {
+                        "feature": feature,
+                        "dtype": self.input_dtypes[feature],
+                        "label": label,
+                        "content": value,
+                    }
 
-                # case 0: qualitative feature -> not adding floats and integers str_default
-                if feature in self.qualitative_features:
-                    if not isinstance(value, floating) and not isinstance(
-                        value, float
-                    ):  # checking for floats
-                        if not isinstance(value, integer) and not isinstance(
-                            value, int
-                        ):  # checking for ints
-                            if value != self.str_default:  # checking for str_default
-                                summaries += [feature_summary]
+                    # case 0: qualitative feature -> not adding floats and integers str_default
+                    if feature in self.qualitative_features:
+                        if not isinstance(value, floating) and not isinstance(
+                            value, float
+                        ):  # checking for floats
+                            if not isinstance(value, integer) and not isinstance(
+                                value, int
+                            ):  # checking for ints
+                                if value != self.str_default:  # checking for str_default
+                                    summaries += [feature_summary]
 
-                # case 1: quantitative feature -> take the raw label per value
-                elif feature in self.quantitative_features:
-                    feature_summary.update({"content": raw_labels_per_values[feature][value]})
-                    summaries += [feature_summary]
+                    # case 1: quantitative feature -> take the raw label per value
+                    elif feature in self.quantitative_features:
+                        feature_summary.update({"content": raw_labels_per_values[feature][value]})
+                        summaries += [feature_summary]
 
         # adding nans for quantitative features (when nan has been grouped)
         for feature in self.quantitative_features:
@@ -633,7 +640,6 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         summaries = summaries.sort_values(["dtype", "feature"]).set_index(["feature", "dtype"])
 
         # getting requested feature
-        print("requested_feature", requested_feature)
         if requested_feature is not None:
             summaries = summaries.loc[requested_feature]
 
