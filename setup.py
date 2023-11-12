@@ -6,7 +6,7 @@ from setuptools import find_packages, setup
 here = path.abspath(path.dirname(__file__))
 
 with open(path.join(here, "README.md"), encoding="utf-8") as fh:
-    long_description = "\\n" + fh.read()
+    long_description = fh.read()
 
 setup(
     author_email="defrancemario@gmail.com",
@@ -35,6 +35,7 @@ setup(
     packages=find_packages(),
     classifiers=[
         # ou 4 - Beta ou 5 - Production/Stable
+        # "Development Status :: 5 - Production/Stable",
         "Development Status :: 4 - Beta",
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3.9",

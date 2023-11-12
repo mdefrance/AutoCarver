@@ -313,23 +313,25 @@ class QualitativeDiscretizer(BaseDiscretizer):
                 self._remove_feature(feature)
 
         # checking for columns containing floats or integers even with filled nans
-        dtypes = x_copy[self.features].fillna(self.str_nan).applymap(type).apply(unique)
+        dtypes = (
+            x_copy[self.features]
+            .fillna(self.str_nan)
+            .applymap(type)
+            .apply(unique, result_type="reduce")
+        )
         not_object = dtypes.apply(lambda u: any(typ != str for typ in u))
 
         # non qualitative features detected
         if any(not_object):
             features_to_convert = list(not_object.index[not_object])
-            if self.verbose:
-                unexpected_dtypes = [
-                    typ for dtyp in dtypes[not_object] for typ in dtyp if typ != str
-                ]
-                warn(
-                    f" - [QualitativeDiscretizer] Non-string features: {str(features_to_convert)}"
-                    ". Trying to convert them using type_discretizers.StringDiscretizer, "
-                    "otherwise convert them manually. "
-                    f"Unexpected data types: {str(list(unexpected_dtypes))}.",
-                    UserWarning,
-                )
+            unexpected_dtypes = [typ for dtyp in dtypes[not_object] for typ in dtyp if typ != str]
+            warn(
+                f" - [QualitativeDiscretizer] Non-string features: {str(features_to_convert)}"
+                ". Trying to convert them using type_discretizers.StringDiscretizer, "
+                "otherwise convert them manually. "
+                f"Unexpected data types: {str(list(unexpected_dtypes))}.",
+                UserWarning,
+            )
 
             # converting specified features into qualitative features
             string_discretizer = StringDiscretizer(
@@ -504,7 +506,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         x_copy = super()._prepare_data(X, y)
 
         # checking for quantitative columns
-        dtypes = x_copy[self.features].applymap(type).apply(unique)
+        dtypes = x_copy[self.features].applymap(type).apply(unique, result_type="reduce")
         not_numeric = dtypes.apply(lambda u: str in u)
         assert all(
             ~not_numeric
