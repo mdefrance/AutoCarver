@@ -38,7 +38,7 @@
               <img src="_static/auto_carver_symbol_small.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                5.4.1
+                5.4.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -189,9 +189,9 @@ Must be set if <code class="docutils literal notranslate"><span class="pre">quan
 <li><p>For correlation: <a class="reference internal" href="#cramerv-filter"><span class="std std-ref">Cramér’s V</span></a>, <a class="reference internal" href="#tschuprowt-filter"><span class="std std-ref">Tschuprow’s T</span></a> (default)</p></li>
 </ul>
 </p></li>
-<li><p><strong>colsample</strong> (<em>float</em><em>, </em><em>optional</em>) – <p>Size of sampled list of features for sped up computation, between 0 and 1, by default <code class="docutils literal notranslate"><span class="pre">1.0</span></code>
+<li><p><strong>colsample</strong> (<em>float</em><em>, </em><em>optional</em>) – <p>Size of sampled list of features for sped up computation, between <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">1</span></code>, by default <code class="docutils literal notranslate"><span class="pre">1.0</span></code>
 By default, all features are used.</p>
-<p>For colsample=0.5, FeatureSelector will search for the best features in
+<p>For <code class="docutils literal notranslate"><span class="pre">colsample=0.5</span></code>, Selector will search for the best features in
 <code class="docutils literal notranslate"><span class="pre">features[:len(features)//2]</span></code> and then in <code class="docutils literal notranslate"><span class="pre">features[len(features)//2:]</span></code>.</p>
 <p><strong>Tip:</strong> for better performance, should be set such as <code class="docutils literal notranslate"><span class="pre">len(features)//2</span> <span class="pre">&lt;</span> <span class="pre">200</span></code>.</p>
 </p></li>
@@ -277,9 +277,9 @@ Must be set if <code class="docutils literal notranslate"><span class="pre">quan
 <li><p>For correlation: <a class="reference internal" href="#cramerv-filter"><span class="std std-ref">Cramér’s V</span></a>, <a class="reference internal" href="#tschuprowt-filter"><span class="std std-ref">Tschuprow’s T</span></a> (default)</p></li>
 </ul>
 </p></li>
-<li><p><strong>colsample</strong> (<em>float</em><em>, </em><em>optional</em>) – <p>Size of sampled list of features for sped up computation, between 0 and 1, by default <code class="docutils literal notranslate"><span class="pre">1.0</span></code>
+<li><p><strong>colsample</strong> (<em>float</em><em>, </em><em>optional</em>) – <p>Size of sampled list of features for sped up computation, between <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">1</span></code>, by default <code class="docutils literal notranslate"><span class="pre">1.0</span></code>
 By default, all features are used.</p>
-<p>For colsample=0.5, FeatureSelector will search for the best features in
+<p>For <code class="docutils literal notranslate"><span class="pre">colsample=0.5</span></code>, Selector will search for the best features in
 <code class="docutils literal notranslate"><span class="pre">features[:len(features)//2]</span></code> and then in <code class="docutils literal notranslate"><span class="pre">features[len(features)//2:]</span></code>.</p>
 <p><strong>Tip:</strong> for better performance, should be set such as <code class="docutils literal notranslate"><span class="pre">len(features)//2</span> <span class="pre">&lt;</span> <span class="pre">200</span></code>.</p>
 </p></li>

@@ -38,7 +38,7 @@
               <img src="_static/auto_carver_symbol_small.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                5.4.1
+                5.4.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -158,18 +158,18 @@ If lists are passed, a <code class="xref py py-class docutils literal notranslat
 <li><p><strong>max_n_mod</strong> (<em>int</em><em>, </em><em>optional</em>) – <p>Maximum number of modality per feature, by default <code class="docutils literal notranslate"><span class="pre">5</span></code></p>
 <p>All combinations of modalities for groups of modalities of sizes from 1 to <code class="docutils literal notranslate"><span class="pre">max_n_mod</span></code> will be tested.
 The combination with the best association will be selected.</p>
-<p><strong>Tip</strong>: should be set between 4 (faster, more robust) and 7 (slower, preciser, less robust)</p>
+<p><strong>Tip</strong>: should be set between <code class="docutils literal notranslate"><span class="pre">3</span></code> (faster, more robust) and <code class="docutils literal notranslate"><span class="pre">7</span></code> (slower, preciser, less robust)</p>
 </p></li>
-<li><p><strong>min_freq_mod</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum frequency per final modality, by default <code class="docutils literal notranslate"><span class="pre">None</span></code> for min_freq</p></li>
+<li><p><strong>min_freq_mod</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum frequency per final modality, by default <code class="docutils literal notranslate"><span class="pre">None</span></code> for <code class="docutils literal notranslate"><span class="pre">min_freq/2</span></code></p></li>
 <li><p><strong>output_dtype</strong> (<em>str</em><em>, </em><em>optional</em>) – <p>To be choosen amongst <code class="docutils literal notranslate"><span class="pre">[&quot;float&quot;,</span> <span class="pre">&quot;str&quot;]</span></code>, by default <code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code></p>
 <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code>, grouped modalities will be converted to there corresponding floating rank.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;str&quot;</span></code>, a per-group modality will be set for all the modalities of a group.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code>, sets the rank of modalities as label.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;str&quot;</span></code>, sets one modality of group as label.</p></li>
 </ul>
 </p></li>
 <li><p><strong>dropna</strong> (<em>bool</em><em>, </em><em>optional</em>) – <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, try to group <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code> with other modalities.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">False</span></code>, all non-<code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code> will be grouped, by default <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">False</span></code>, <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code> are ignored (not grouped), by default <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
 </ul>
 </p></li>
 <li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, feature processing at transform is applied to a copy of the provided DataFrame, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
@@ -355,18 +355,18 @@ If lists are passed, a <code class="xref py py-class docutils literal notranslat
 <li><p><strong>max_n_mod</strong> (<em>int</em><em>, </em><em>optional</em>) – <p>Maximum number of modality per feature, by default <code class="docutils literal notranslate"><span class="pre">5</span></code></p>
 <p>All combinations of modalities for groups of modalities of sizes from 1 to <code class="docutils literal notranslate"><span class="pre">max_n_mod</span></code> will be tested.
 The combination with the best association will be selected.</p>
-<p><strong>Tip</strong>: should be set between 4 (faster, more robust) and 7 (slower, preciser, less robust)</p>
+<p><strong>Tip</strong>: should be set between <code class="docutils literal notranslate"><span class="pre">3</span></code> (faster, more robust) and <code class="docutils literal notranslate"><span class="pre">7</span></code> (slower, preciser, less robust)</p>
 </p></li>
-<li><p><strong>min_freq_mod</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum frequency per final modality, by default <code class="docutils literal notranslate"><span class="pre">None</span></code> for min_freq</p></li>
+<li><p><strong>min_freq_mod</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum frequency per final modality, by default <code class="docutils literal notranslate"><span class="pre">None</span></code> for <code class="docutils literal notranslate"><span class="pre">min_freq/2</span></code></p></li>
 <li><p><strong>output_dtype</strong> (<em>str</em><em>, </em><em>optional</em>) – <p>To be choosen amongst <code class="docutils literal notranslate"><span class="pre">[&quot;float&quot;,</span> <span class="pre">&quot;str&quot;]</span></code>, by default <code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code></p>
 <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code>, grouped modalities will be converted to there corresponding floating rank.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;str&quot;</span></code>, a per-group modality will be set for all the modalities of a group.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code>, sets the rank of modalities as label.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;str&quot;</span></code>, sets one modality of group as label.</p></li>
 </ul>
 </p></li>
 <li><p><strong>dropna</strong> (<em>bool</em><em>, </em><em>optional</em>) – <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, try to group <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code> with other modalities.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">False</span></code>, all non-<code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code> will be grouped, by default <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">False</span></code>, <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code> are ignored (not grouped), by default <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
 </ul>
 </p></li>
 <li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, feature processing at transform is applied to a copy of the provided DataFrame, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
@@ -549,18 +549,18 @@ If lists are passed, a <code class="xref py py-class docutils literal notranslat
 <li><p><strong>max_n_mod</strong> (<em>int</em><em>, </em><em>optional</em>) – <p>Maximum number of modality per feature, by default <code class="docutils literal notranslate"><span class="pre">5</span></code></p>
 <p>All combinations of modalities for groups of modalities of sizes from 1 to <code class="docutils literal notranslate"><span class="pre">max_n_mod</span></code> will be tested.
 The combination with the best association will be selected.</p>
-<p><strong>Tip</strong>: should be set between 4 (faster, more robust) and 7 (slower, preciser, less robust)</p>
+<p><strong>Tip</strong>: should be set between <code class="docutils literal notranslate"><span class="pre">3</span></code> (faster, more robust) and <code class="docutils literal notranslate"><span class="pre">7</span></code> (slower, preciser, less robust)</p>
 </p></li>
-<li><p><strong>min_freq_mod</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum frequency per final modality, by default <code class="docutils literal notranslate"><span class="pre">None</span></code> for min_freq</p></li>
+<li><p><strong>min_freq_mod</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum frequency per final modality, by default <code class="docutils literal notranslate"><span class="pre">None</span></code> for <code class="docutils literal notranslate"><span class="pre">min_freq/2</span></code></p></li>
 <li><p><strong>output_dtype</strong> (<em>str</em><em>, </em><em>optional</em>) – <p>To be choosen amongst <code class="docutils literal notranslate"><span class="pre">[&quot;float&quot;,</span> <span class="pre">&quot;str&quot;]</span></code>, by default <code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code></p>
 <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code>, grouped modalities will be converted to there corresponding floating rank.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;str&quot;</span></code>, a per-group modality will be set for all the modalities of a group.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code>, sets the rank of modalities as label.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;str&quot;</span></code>, sets one modality of group as label.</p></li>
 </ul>
 </p></li>
 <li><p><strong>dropna</strong> (<em>bool</em><em>, </em><em>optional</em>) – <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, try to group <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code> with other modalities.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">False</span></code>, all non-<code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code> will be grouped, by default <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">False</span></code>, <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code> are ignored (not grouped), by default <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
 </ul>
 </p></li>
 <li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, feature processing at transform is applied to a copy of the provided DataFrame, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>

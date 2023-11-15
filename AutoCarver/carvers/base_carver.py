@@ -80,20 +80,20 @@ class BaseCarver(BaseDiscretizer):
             All combinations of modalities for groups of modalities of sizes from 1 to ``max_n_mod`` will be tested.
             The combination with the best association will be selected.
 
-            **Tip**: should be set between 4 (faster, more robust) and 7 (slower, preciser, less robust)
+            **Tip**: should be set between ``3`` (faster, more robust) and ``7`` (slower, preciser, less robust)
 
         min_freq_mod : float, optional
-            Minimum frequency per final modality, by default ``None`` for min_freq
+            Minimum frequency per final modality, by default ``None`` for ``min_freq/2``
 
         output_dtype : str, optional
             To be choosen amongst ``["float", "str"]``, by default ``"float"``
 
-            * ``"float"``, grouped modalities will be converted to there corresponding floating rank.
-            * ``"str"``, a per-group modality will be set for all the modalities of a group.
+            * ``"float"``, sets the rank of modalities as label.
+            * ``"str"``, sets one modality of group as label.
 
         dropna : bool, optional
             * ``True``, try to group ``numpy.nan`` with other modalities.
-            * ``False``, all non-``numpy.nan`` will be grouped, by default ``True``
+            * ``False``, ``numpy.nan`` are ignored (not grouped), by default ``True``
 
         copy : bool, optional
             If ``True``, feature processing at transform is applied to a copy of the provided DataFrame, by default ``False``
@@ -167,7 +167,7 @@ class BaseCarver(BaseDiscretizer):
         self.min_freq = min_freq  # minimum frequency per base bucket
         self.max_n_mod = max_n_mod  # maximum number of modality per feature
         if min_freq_mod is None:
-            min_freq_mod = min_freq
+            min_freq_mod = min_freq / 2
         self.min_freq_mod = min_freq_mod  # minimum frequency per final bucket
         self.sort_by = sort_by
         self.pretty_print = False

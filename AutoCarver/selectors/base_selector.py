@@ -24,7 +24,7 @@ class BaseSelector:
     with a binary target.
 
     * Best features are the n_best of each measure
-    * Get your best features with ``FeatureSelector.select()``!
+    * Get your best features with ``Selector.select()``!
     """
 
     def __init__(
@@ -100,10 +100,10 @@ class BaseSelector:
             * For correlation: :ref:`cramerv_filter`, :ref:`tschuprowt_filter` (default)
 
         colsample : float, optional
-            Size of sampled list of features for sped up computation, between 0 and 1, by default ``1.0``
+            Size of sampled list of features for sped up computation, between ``0`` and ``1``, by default ``1.0``
             By default, all features are used.
 
-            For colsample=0.5, FeatureSelector will search for the best features in
+            For ``colsample=0.5``, Selector will search for the best features in
             ``features[:len(features)//2]`` and then in ``features[len(features)//2:]``.
 
             **Tip:** for better performance, should be set such as ``len(features)//2 < 200``.
@@ -138,8 +138,8 @@ class BaseSelector:
         # number of features selected
         self.n_best = n_best
         assert (
-            0 < int(n_best // 2) <= len(self.features) + 1
-        ), "Must set 0 < n_best // 2 <= len(features)"
+            0 < int(self.n_best) <= len(self.features) + 1
+        ), "Must set 0 < n_best <= len(features)"
 
         # feature sample size per iteration
         self.colsample = colsample
@@ -188,7 +188,10 @@ class BaseSelector:
     ) -> list[str]:
         """Selects the n_best features amongst the specified ones"""
         if self.verbose:  # verbose if requested
-            print(f"------\n[FeatureSelector] Selecting from Features: {str(features)}\n---")
+            data_type = "quantitative"
+            if dtype != "float":
+                data_type = "qualitative"
+            print(f"------\n[Selector] Selecting from {data_type} features: {str(features)}\n---")
 
         # Computes association between X and y
         initial_associations = apply_measures(
@@ -199,9 +202,8 @@ class BaseSelector:
         measure_names = evaluated_measure_names(initial_associations, self.measure_names[dtype])
         initial_associations = initial_associations.sort_values(measure_names, ascending=False)
 
-        if self.verbose:  # displaying association measure
-            print("\n - [FeatureSelector] Association between X and y")
-            print_associations(initial_associations, self.pretty_print)
+        # displaying non-filterd associations
+        self._print_associations(association=initial_associations)
 
         # applying filtering for each measure
         all_best_features: dict[str, Any] = {}
@@ -241,12 +243,11 @@ class BaseSelector:
             if any(feature in all_best_features[measure]["selected"] for measure in measure_names)
         ]
 
-        if self.verbose:  # displaying association measure
-            print(
-                "\n - [FeatureSelector] Association between X and y, filtered for inter-feature assocation"
-            )
-            print_associations(initial_associations.reindex(best_features), self.pretty_print)
-            print("------\n")
+        # displaying association measure
+        self._print_associations(
+            association=initial_associations.reindex(best_features),
+            message=", filtered for inter-feature assocation",
+        )
 
         return best_features
 
@@ -270,12 +271,6 @@ class BaseSelector:
         # iterating over each type of feature
         all_best_features = []
         for dtype in unique(list(self.input_dtypes.keys())):
-            if self.verbose:  # verbose if requested
-                if dtype == "float":
-                    print(f"------\n[FeatureSelector] Selecting from Quantitative Features\n---")
-                else:
-                    print(f"------\n[FeatureSelector] Selecting from Qualitative Features\n---")
-
             # getting features of the specific data type
             features = self.input_dtypes[dtype][:]
 
@@ -313,47 +308,49 @@ class BaseSelector:
                 best_features = self._select_features(X, y, best_features, self.n_best, dtype)
                 all_best_features += best_features
                 if self.verbose:  # verbose if requested
-                    if dtype == "float":
-                        print(
-                            f"------\n[FeatureSelector] Selected Quantitative Features: {str(features)}\n---"
-                        )
-                    else:
-                        print(
-                            f"------\n[FeatureSelector] Selected Qualitative Features: {str(features)}\n---"
-                        )
+                    data_type = "quantitative"
+                    if dtype != "float":
+                        data_type = "qualitative"
+                    print(f"\n - [Selector] Selected {data_type} features: {str(best_features)}")
+                    print("------\n")
 
         return all_best_features
 
+    def _print_associations(self, association: DataFrame, message: str = "") -> None:
+        """EDA of fitted associations
 
-def print_associations(association: DataFrame, pretty_print: bool = False) -> None:
-    """EDA of fitted associations
+        Parameters
+        ----------
+        association : DataFrame
+            _description_
+        pretty_print : bool, optional
+            _description_, by default False
+        """
+        # checking for verbose
+        if self.verbose:
+            print(f"\n - [Selector] Association between X and y{message}")
 
-    Parameters
-    ----------
-    association : DataFrame
-        _description_
-    pretty_print : bool, optional
-        _description_, by default False
-    """
-    # printing raw DataFrame
-    if not pretty_print:
-        print(association)
+            # printing raw DataFrame
+            if not self.pretty_print:
+                print(association)
 
-    # adding colors and displaying DataFrame as html
-    else:
-        # finding columns with indicators to colorize
-        subset = [
-            column
-            for column in association.columns
-            # checking for an association indicator
-            if any(indic in column for indic in ["pct_", "_measure", "_filter"])
-        ]
-        # getting prettier association table
-        nicer_association = association.style.background_gradient(cmap="coolwarm", subset=subset)
-        nicer_association = nicer_association.set_table_attributes("style='display:inline'")
+            # adding colors and displaying DataFrame as html
+            else:
+                # finding columns with indicators to colorize
+                subset = [
+                    column
+                    for column in association.columns
+                    # checking for an association indicator
+                    if any(indic in column for indic in ["pct_", "_measure", "_filter"])
+                ]
+                # getting prettier association table
+                nicer_association = association.style.background_gradient(
+                    cmap="coolwarm", subset=subset
+                )
+                nicer_association = nicer_association.set_table_attributes("style='display:inline'")
 
-        # displaying html of colored DataFrame
-        display_html(nicer_association._repr_html_(), raw=True)
+                # displaying html of colored DataFrame
+                display_html(nicer_association._repr_html_(), raw=True)
 
 
 def feature_association(x: Series, y: Series, measures: list[Callable], **kwargs) -> dict[str, Any]:
