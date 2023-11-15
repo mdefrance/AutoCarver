@@ -903,7 +903,7 @@ def get_quantiles_labels(
     for feature in features:
         quantiles = list(values_orders[feature])
         labels = get_labels(quantiles, str_nan)
-        
+
         # associates quantiles to their respective labels
         quantiles_to_labels.update(
             {feature: {quantile: alias for quantile, alias in zip(quantiles, labels)}}

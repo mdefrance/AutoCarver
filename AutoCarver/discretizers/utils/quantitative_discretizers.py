@@ -122,7 +122,7 @@ def find_quantiles(
     list[float]
         _description_
     """
-    
+
     # getting dataset size
     if len_df is None:
         len_df = len(df_feature)
@@ -144,14 +144,12 @@ def find_quantiles(
             quantiles=quantiles,
         )
 
-
     # frequencies per known value
     frequencies = (
         df_feature.value_counts(dropna=False, normalize=False).drop(nan, errors="ignore") / len_df
     )
     values, frequencies = array(frequencies.index), array(frequencies.values)
 
-        
     # case 3 : there are no missing values
     # case 3.1 : there is an over-populated value
     if any(frequencies >= 1 / q):

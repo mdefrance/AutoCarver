@@ -1248,7 +1248,7 @@ def prettier_xagg(
         # adding custom caption/title
         if caption is not None:
             nicer_xagg = nicer_xagg.set_caption(caption)
-        
+
         # converting to html
         nicer_xagg = nicer_xagg._repr_html_()
 
