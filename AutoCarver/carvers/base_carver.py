@@ -80,7 +80,7 @@ class BaseCarver(BaseDiscretizer):
             All combinations of modalities for groups of modalities of sizes from 1 to ``max_n_mod`` will be tested.
             The combination with the best association will be selected.
 
-            **Tip**: should be set between 4 (faster, more robust) and 7 (slower, preciser, less robust)
+            **Tip**: should be set between ``3`` (faster, more robust) and ``7`` (slower, preciser, less robust)
 
         min_freq_mod : float, optional
             Minimum frequency per final modality, by default ``None`` for min_freq
