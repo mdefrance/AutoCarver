@@ -37,7 +37,7 @@
               <img src="_static/auto_carver_symbol_small.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                5.4.1
+                5.4.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -131,7 +131,7 @@
 </pre></div>
 </div>
 <p>Qualitative features will automatically be converted to <code class="docutils literal notranslate"><span class="pre">str</span></code> if necessary.
-Ordinal features can be added, alongside there expected ordering. See <a class="reference internal" href="examples.html#id1"><span class="std std-ref">Credit Scoring Example</span></a>.</p>
+Ordinal features can be added, alongside there expected ordering. See <a class="reference internal" href="examples.html#id1"><span class="std std-ref">Carvers Examples</span></a>.</p>
 </section>
 </section>
 <section id="using-autocarver">
@@ -165,7 +165,7 @@ Ordinal features can be added, alongside there expected ordering. See <a class="
 </section>
 <section id="saving-autocarver">
 <h3>Saving AutoCarver<a class="headerlink" href="#saving-autocarver" title="Permalink to this heading"></a></h3>
-<p>All Carvers can safely be stored as a <code class="docutils literal notranslate"><span class="pre">.json</span></code> file.</p>
+<p>All <strong>Carvers</strong> can safely be stored as a <code class="docutils literal notranslate"><span class="pre">.json</span></code> file.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
 
 <span class="c1"># storing as json file</span>
@@ -176,7 +176,7 @@ Ordinal features can be added, alongside there expected ordering. See <a class="
 </section>
 <section id="loading-autocarver">
 <h3>Loading AutoCarver<a class="headerlink" href="#loading-autocarver" title="Permalink to this heading"></a></h3>
-<p>The <cite>AutoCarver</cite> can safely be loaded from a .json file.</p>
+<p><strong>Carvers</strong> can safely be loaded from a .json file.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
 
 <span class="kn">from</span> <span class="nn">AutoCarver</span> <span class="kn">import</span> <span class="n">load_carver</span>
@@ -194,7 +194,7 @@ Ordinal features can be added, alongside there expected ordering. See <a class="
 
 <span class="c1"># select the best 25 most target associated qualitative features</span>
 <span class="n">feature_selector</span> <span class="o">=</span> <span class="n">ClassificationSelector</span><span class="p">(</span>
-    <span class="n">qualitative_features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span>  <span class="c1"># features to select from</span>
+    <span class="n">qualitative_features</span><span class="o">=</span><span class="n">qualitative_features</span> <span class="o">+</span> <span class="n">quantitative_features</span><span class="p">,</span>  <span class="c1"># features to select from</span>
     <span class="n">n_best</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span>  <span class="c1"># number of features to select</span>
     <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># displays statistics</span>
 <span class="p">)</span>
@@ -204,7 +204,7 @@ Ordinal features can be added, alongside there expected ordering. See <a class="
 </section>
 <section id="in-depth-examples">
 <h2>In-depth examples<a class="headerlink" href="#in-depth-examples" title="Permalink to this heading"></a></h2>
-<p>See <a class="reference internal" href="examples.html#id1"><span class="std std-ref">Credit Scoring Example</span></a>.</p>
+<p>See <a class="reference internal" href="examples.html#id1"><span class="std std-ref">Carvers Examples</span></a>.</p>
 </section>
 </section>
 

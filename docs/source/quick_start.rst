@@ -91,7 +91,7 @@ Applying AutoCarver
 Saving AutoCarver
 ^^^^^^^^^^^^^^^^^
 
-All Carvers can safely be stored as a ``.json`` file.
+All **Carvers** can safely be stored as a ``.json`` file.
 
 .. code-block:: python
 
@@ -105,7 +105,7 @@ All Carvers can safely be stored as a ``.json`` file.
 Loading AutoCarver
 ^^^^^^^^^^^^^^^^^^
 
-The `AutoCarver` can safely be loaded from a .json file.
+**Carvers** can safely be loaded from a .json file.
 
 .. code-block:: python
 
@@ -128,7 +128,7 @@ Feature Selection
 
     # select the best 25 most target associated qualitative features
     feature_selector = ClassificationSelector(
-        qualitative_features=features,  # features to select from
+        qualitative_features=qualitative_features + quantitative_features,  # features to select from
         n_best=25,  # number of features to select
         verbose=True,  # displays statistics
     )
