@@ -638,16 +638,8 @@ class BaseCarver(BaseDiscretizer):
             _description_
         """
         # testing viability of all combinations
-        (
-            best_association,
-            train_viable,
-            dev_viable,
-            distinct_rates_train,
-            min_freq_train,
-            ranks_train_dev,
-            min_freq_dev,
-            distinct_rates_dev,
-        ) = (None,) * 8
+        best_association, train_viable, dev_viable = (None,) * 3
+        test_results: dict[str, bool] = {}
         for n_combination, association in tqdm(
             enumerate(associations_xagg),
             total=len(associations_xagg),
@@ -658,13 +650,23 @@ class BaseCarver(BaseDiscretizer):
             train_rates = self._printer(association["xagg"])
 
             # viability on train sample:
-            # - target rates are distinct for all modalities
-            distinct_rates_train = len(train_rates) == train_rates["target_rate"].nunique()
+            # - target rates are distinct for consecutive modalities
+            target_rates_train = list(train_rates["target_rate"])
+            distinct_rates_train = all(
+                rate != target_rates_train[i + 1] for i, rate in enumerate(target_rates_train[:-1])
+            )
             # - minimum frequency is reached for all modalities
             min_freq_train = all(train_rates["frequency"] >= self.min_freq_mod)
 
             # checking for viability on train
             train_viable = min_freq_train and distinct_rates_train
+            test_results.update(
+                {
+                    "train_viable": train_viable,
+                    "min_freq_train": min_freq_train,
+                    "distinct_rates_train": distinct_rates_train,
+                }
+            )
             if train_viable:
                 # case 0: no test sample provided -> not testing for robustness
                 if xagg_dev is None:
@@ -687,10 +689,21 @@ class BaseCarver(BaseDiscretizer):
                     # - minimum frequency is reached for all modalities
                     min_freq_dev = all(dev_rates["frequency"] >= self.min_freq_mod)
                     # - target rates are distinct for all modalities
-                    distinct_rates_dev = len(dev_rates) == dev_rates["target_rate"].nunique()
+                    target_rates_dev = list(train_rates["target_rate"])
+                    distinct_rates_dev = all(
+                        rate != target_rates_dev[i + 1]
+                        for i, rate in enumerate(target_rates_dev[:-1])
+                    )
 
                     # checking for viability on dev
                     dev_viable = ranks_train_dev and min_freq_dev and distinct_rates_dev
+                    test_results.update(
+                        {
+                            "dev_viable": dev_viable,
+                            "min_freq_dev": min_freq_dev,
+                            "distinct_rates_dev": distinct_rates_dev,
+                        }
+                    )
                     if dev_viable:
                         best_association = association  # found best viable combination
 
@@ -701,14 +714,8 @@ class BaseCarver(BaseDiscretizer):
                 order=order,
                 n_combination=n_combination,
                 associations_xagg=associations_xagg,
-                train_viable=train_viable,
-                dev_viable=dev_viable,
                 dropna=dropna,
-                distinct_rates_train=distinct_rates_train,
-                min_freq_train=min_freq_train,
-                ranks_train_dev=ranks_train_dev,
-                min_freq_dev=min_freq_dev,
-                distinct_rates_dev=distinct_rates_dev,
+                **test_results,
             )
 
             # best combination found: breaking the loop on combinations
@@ -746,18 +753,18 @@ class BaseCarver(BaseDiscretizer):
         """
         # Messages associated to each failed viability test
         messages = []
-        if not viability_msg_params.get("ranks_train_dev"):
+        if not viability_msg_params.get("ranks_train_dev", True):
             messages += ["X_dev: inversion of target rates per modality"]
-        if not viability_msg_params.get("min_freq_dev"):
+        if not viability_msg_params.get("min_freq_dev", True):
             messages += [
                 f"X_dev: non-representative modality (min_freq_mod={self.min_freq_mod:2.2%})"
             ]
-        if not viability_msg_params.get("distinct_rates_dev"):
-            messages += ["X_dev: non-distinct target rates per modality"]
-        if not viability_msg_params.get("min_freq_train"):
+        if not viability_msg_params.get("distinct_rates_dev", True):
+            messages += ["X_dev: non-distinct target rates per consecutive modalities"]
+        if not viability_msg_params.get("min_freq_train", True):
             messages += [f"X: non-representative modality (min_freq_mod={self.min_freq_mod:2.2%})"]
-        if not viability_msg_params.get("distinct_rates_train"):
-            messages += ["X: non-distinct target rates per modality"]
+        if not viability_msg_params.get("distinct_rates_train", True):
+            messages += ["X: non-distinct target rates per consecutive modalities"]
 
         # viability has been checked on train
         viability = None
