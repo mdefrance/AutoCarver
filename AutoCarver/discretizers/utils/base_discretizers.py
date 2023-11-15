@@ -663,7 +663,7 @@ def convert_to_labels(
     # for quantitative features getting labels per quantile
     if any(quantitative_features):
         # getting group "name" per quantile
-        quantiles_labels = get_quantiles_labels(quantitative_features, values_orders, str_nan)
+        quantiles_labels, _ = get_quantiles_labels(quantitative_features, values_orders, str_nan)
 
         # applying alliases to known orders
         for feature in quantitative_features:
@@ -697,7 +697,7 @@ def convert_to_values(
     # for quantitative features getting labels per quantile
     if any(quantitative_features):
         # getting quantile per group "name"
-        labels_to_quantiles = get_labels_quantiles(quantitative_features, values_orders, str_nan)
+        _, labels_to_quantiles = get_quantiles_labels(quantitative_features, values_orders, str_nan)
 
     # updating feature orders (that keeps NaNs and quantiles)
     for feature in features:
@@ -868,13 +868,8 @@ def get_labels(quantiles: list[float], str_nan: str) -> list[str]:
     list[str]
         _description_
     """
-    # filtering out nan for formatting
-    if str_nan in quantiles:
-        quantiles = [val for val in quantiles if val != str_nan]
-
-    # filtering out inf for formatting
-    if inf in quantiles:
-        quantiles = [val for val in quantiles if isfinite(val)]
+    # filtering out nan and inf for formatting
+    quantiles = [val for val in quantiles if val != str_nan and isfinite(val)]
 
     # converting quantiles in string
     labels = format_quantiles(quantiles)
@@ -884,7 +879,7 @@ def get_labels(quantiles: list[float], str_nan: str) -> list[str]:
 
 def get_quantiles_labels(
     features: list[str], values_orders: dict[str, GroupedList], str_nan: str
-) -> dict[str, GroupedList]:
+) -> tuple[dict[str, GroupedList], dict[str, GroupedList]]:
     """Converts a values_orders of quantiles into a values_orders of string quantiles
 
     Parameters
@@ -903,47 +898,21 @@ def get_quantiles_labels(
     """
     # applying quantiles formatting to orders of specified features
     quantiles_to_labels = {}
-    for feature in features:
-        quantiles = list(values_orders[feature])
-        labels = get_labels(quantiles, str_nan)
-        # associates quantiles to their respective labels
-        quantiles_to_labels.update(
-            {feature: {quantile: alias for quantile, alias in zip(quantiles, labels)}}
-        )
-
-    return quantiles_to_labels
-
-
-def get_labels_quantiles(
-    features: list[str], values_orders: dict[str, GroupedList], str_nan: str
-) -> dict[str, GroupedList]:
-    """Converts a values_orders of quantiles into a values_orders of string quantiles
-
-    Parameters
-    ----------
-    features : list[str]
-        _description_
-    values_orders : dict[str, GroupedList]
-        _description_
-    str_nan : str
-        _description_
-
-    Returns
-    -------
-    dict[str, GroupedList]
-        _description_
-    """
-    # applying quantiles formatting to orders of specified features
     labels_to_quantiles = {}
     for feature in features:
         quantiles = list(values_orders[feature])
         labels = get_labels(quantiles, str_nan)
+        
+        # associates quantiles to their respective labels
+        quantiles_to_labels.update(
+            {feature: {quantile: alias for quantile, alias in zip(quantiles, labels)}}
+        )
         # associates quantiles to their respective labels
         labels_to_quantiles.update(
             {feature: {alias: quantile for quantile, alias in zip(quantiles, labels)}}
         )
 
-    return labels_to_quantiles
+    return quantiles_to_labels, labels_to_quantiles
 
 
 def format_quantiles(a_list: list[float]) -> list[str]:
