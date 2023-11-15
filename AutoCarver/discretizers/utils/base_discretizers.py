@@ -539,6 +539,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         json_serialized_base_discretizer = {
             "features": self.features,
             "values_orders": json_serialize_values_orders(self.values_orders),
+            "features_casting": self.features_casting,
             "input_dtypes": self.input_dtypes,
             "output_dtype": self.output_dtype,
             "str_nan": self.str_nan,
