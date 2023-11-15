@@ -58,7 +58,7 @@ class BaseCarver(BaseDiscretizer):
             * Sets the number of quantiles in which to discretize the continuous features.
             * Sets the minimum frequency of a quantitative feature's modality.
 
-            **Tip**: should be set between 0.02 (slower, preciser, less robust) and 0.05 (faster, more robust)
+            **Tip**: should be set between ``0.01`` (slower, preciser, less robust) and ``0.2`` (faster, more robust)
 
         quantitative_features : list[str], optional
             List of column names of quantitative features (continuous and discrete) to be carved, by default ``None``
@@ -1235,6 +1235,10 @@ def prettier_xagg(
     # checking for a provided xtab
     nicer_xagg = ""
     if nice_xagg is not None:
+        # checking for non unique indices
+        if any(nice_xagg.index.duplicated()):
+            nice_xagg.reset_index(inplace=True)
+
         # adding coolwarm color gradient
         nicer_xagg = nice_xagg.style.background_gradient(cmap="coolwarm")
 
@@ -1244,7 +1248,7 @@ def prettier_xagg(
         # adding custom caption/title
         if caption is not None:
             nicer_xagg = nicer_xagg.set_caption(caption)
-
+        
         # converting to html
         nicer_xagg = nicer_xagg._repr_html_()
 
