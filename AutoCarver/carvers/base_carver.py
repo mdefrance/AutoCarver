@@ -2,9 +2,10 @@
 for any task.
 """
 
-from typing import Any, Callable, Union
+from typing import Any, Union
 from warnings import warn
 
+from numpy import isclose
 from pandas import DataFrame, Series, unique
 from tqdm import tqdm
 
@@ -651,9 +652,8 @@ class BaseCarver(BaseDiscretizer):
 
             # viability on train sample:
             # - target rates are distinct for consecutive modalities
-            target_rates_train = list(train_rates["target_rate"])
-            distinct_rates_train = all(
-                rate != target_rates_train[i + 1] for i, rate in enumerate(target_rates_train[:-1])
+            distinct_rates_train = not any(
+                isclose(train_rates["target_rate"][1:], train_rates["target_rate"].shift(1)[1:])
             )
             # - minimum frequency is reached for all modalities
             min_freq_train = all(train_rates["frequency"] >= self.min_freq_mod)
@@ -689,10 +689,8 @@ class BaseCarver(BaseDiscretizer):
                     # - minimum frequency is reached for all modalities
                     min_freq_dev = all(dev_rates["frequency"] >= self.min_freq_mod)
                     # - target rates are distinct for all modalities
-                    target_rates_dev = list(train_rates["target_rate"])
-                    distinct_rates_dev = all(
-                        rate != target_rates_dev[i + 1]
-                        for i, rate in enumerate(target_rates_dev[:-1])
+                    distinct_rates_dev = not any(
+                        isclose(dev_rates["target_rate"][1:], dev_rates["target_rate"].shift(1)[1:])
                     )
 
                     # checking for viability on dev
@@ -933,6 +931,7 @@ class BaseCarver(BaseDiscretizer):
             print(f"\n - [AutoCarver] {message}")
 
             # getting pretty xtabs
+            # TODO: remove digits from dataframes
             nice_xagg = self._printer(xagg)
             nice_xagg_dev = self._printer(xagg_dev)
 
