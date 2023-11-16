@@ -122,6 +122,7 @@ def find_quantiles(
     list[float]
         _description_
     """
+
     # getting dataset size
     if len_df is None:
         len_df = len(df_feature)
@@ -151,7 +152,7 @@ def find_quantiles(
 
     # case 3 : there are no missing values
     # case 3.1 : there is an over-populated value
-    if any(frequencies > 1 / q):
+    if any(frequencies >= 1 / q):
         # identifying over-represented modality
         frequent_value = values[frequencies.argmax()]
 

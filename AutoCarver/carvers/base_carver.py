@@ -2,9 +2,10 @@
 for any task.
 """
 
-from typing import Any, Callable, Union
+from typing import Any, Union
 from warnings import warn
 
+from numpy import isclose
 from pandas import DataFrame, Series, unique
 from tqdm import tqdm
 
@@ -58,7 +59,7 @@ class BaseCarver(BaseDiscretizer):
             * Sets the number of quantiles in which to discretize the continuous features.
             * Sets the minimum frequency of a quantitative feature's modality.
 
-            **Tip**: should be set between 0.02 (slower, preciser, less robust) and 0.05 (faster, more robust)
+            **Tip**: should be set between ``0.01`` (slower, preciser, less robust) and ``0.2`` (faster, more robust)
 
         quantitative_features : list[str], optional
             List of column names of quantitative features (continuous and discrete) to be carved, by default ``None``
@@ -638,16 +639,8 @@ class BaseCarver(BaseDiscretizer):
             _description_
         """
         # testing viability of all combinations
-        (
-            best_association,
-            train_viable,
-            dev_viable,
-            distinct_rates_train,
-            min_freq_train,
-            ranks_train_dev,
-            min_freq_dev,
-            distinct_rates_dev,
-        ) = (None,) * 8
+        best_association, train_viable, dev_viable = (None,) * 3
+        test_results: dict[str, bool] = {}
         for n_combination, association in tqdm(
             enumerate(associations_xagg),
             total=len(associations_xagg),
@@ -658,13 +651,22 @@ class BaseCarver(BaseDiscretizer):
             train_rates = self._printer(association["xagg"])
 
             # viability on train sample:
-            # - target rates are distinct for all modalities
-            distinct_rates_train = len(train_rates) == train_rates["target_rate"].nunique()
+            # - target rates are distinct for consecutive modalities
+            distinct_rates_train = not any(
+                isclose(train_rates["target_rate"][1:], train_rates["target_rate"].shift(1)[1:])
+            )
             # - minimum frequency is reached for all modalities
             min_freq_train = all(train_rates["frequency"] >= self.min_freq_mod)
 
             # checking for viability on train
             train_viable = min_freq_train and distinct_rates_train
+            test_results.update(
+                {
+                    "train_viable": train_viable,
+                    "min_freq_train": min_freq_train,
+                    "distinct_rates_train": distinct_rates_train,
+                }
+            )
             if train_viable:
                 # case 0: no test sample provided -> not testing for robustness
                 if xagg_dev is None:
@@ -687,10 +689,19 @@ class BaseCarver(BaseDiscretizer):
                     # - minimum frequency is reached for all modalities
                     min_freq_dev = all(dev_rates["frequency"] >= self.min_freq_mod)
                     # - target rates are distinct for all modalities
-                    distinct_rates_dev = len(dev_rates) == dev_rates["target_rate"].nunique()
+                    distinct_rates_dev = not any(
+                        isclose(dev_rates["target_rate"][1:], dev_rates["target_rate"].shift(1)[1:])
+                    )
 
                     # checking for viability on dev
                     dev_viable = ranks_train_dev and min_freq_dev and distinct_rates_dev
+                    test_results.update(
+                        {
+                            "dev_viable": dev_viable,
+                            "min_freq_dev": min_freq_dev,
+                            "distinct_rates_dev": distinct_rates_dev,
+                        }
+                    )
                     if dev_viable:
                         best_association = association  # found best viable combination
 
@@ -701,14 +712,8 @@ class BaseCarver(BaseDiscretizer):
                 order=order,
                 n_combination=n_combination,
                 associations_xagg=associations_xagg,
-                train_viable=train_viable,
-                dev_viable=dev_viable,
                 dropna=dropna,
-                distinct_rates_train=distinct_rates_train,
-                min_freq_train=min_freq_train,
-                ranks_train_dev=ranks_train_dev,
-                min_freq_dev=min_freq_dev,
-                distinct_rates_dev=distinct_rates_dev,
+                **test_results,
             )
 
             # best combination found: breaking the loop on combinations
@@ -746,18 +751,18 @@ class BaseCarver(BaseDiscretizer):
         """
         # Messages associated to each failed viability test
         messages = []
-        if not viability_msg_params.get("ranks_train_dev"):
+        if not viability_msg_params.get("ranks_train_dev", True):
             messages += ["X_dev: inversion of target rates per modality"]
-        if not viability_msg_params.get("min_freq_dev"):
+        if not viability_msg_params.get("min_freq_dev", True):
             messages += [
                 f"X_dev: non-representative modality (min_freq_mod={self.min_freq_mod:2.2%})"
             ]
-        if not viability_msg_params.get("distinct_rates_dev"):
-            messages += ["X_dev: non-distinct target rates per modality"]
-        if not viability_msg_params.get("min_freq_train"):
+        if not viability_msg_params.get("distinct_rates_dev", True):
+            messages += ["X_dev: non-distinct target rates per consecutive modalities"]
+        if not viability_msg_params.get("min_freq_train", True):
             messages += [f"X: non-representative modality (min_freq_mod={self.min_freq_mod:2.2%})"]
-        if not viability_msg_params.get("distinct_rates_train"):
-            messages += ["X: non-distinct target rates per modality"]
+        if not viability_msg_params.get("distinct_rates_train", True):
+            messages += ["X: non-distinct target rates per consecutive modalities"]
 
         # viability has been checked on train
         viability = None
@@ -926,6 +931,7 @@ class BaseCarver(BaseDiscretizer):
             print(f"\n - [AutoCarver] {message}")
 
             # getting pretty xtabs
+            # TODO: remove digits from dataframes
             nice_xagg = self._printer(xagg)
             nice_xagg_dev = self._printer(xagg_dev)
 
@@ -1235,6 +1241,10 @@ def prettier_xagg(
     # checking for a provided xtab
     nicer_xagg = ""
     if nice_xagg is not None:
+        # checking for non unique indices
+        if any(nice_xagg.index.duplicated()):
+            nice_xagg.reset_index(inplace=True)
+
         # adding coolwarm color gradient
         nicer_xagg = nice_xagg.style.background_gradient(cmap="coolwarm")
 

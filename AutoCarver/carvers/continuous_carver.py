@@ -42,12 +42,12 @@ class ContinuousCarver(BaseCarver):
         ----------
         """
         # association measure used to find the best groups for continuous targets
-        assert ("sort_by" in kwargs and kwargs.get("sort_by") == "kruskal") or (
-            "sort_by" not in kwargs
-        ), (
-            " - [ContinuousCarver] Cannot set 'sort_by' attribute. "
-            "Only 'kruskal' measure is implemented for continuous targets."
-        )
+        if "sort_by" in kwargs:
+            assert kwargs.get("sort_by") == "kruskal", (
+                f" - [ContinuousCarver] Measure '{kwargs.get('sort_by')}' not yet implemented for "
+                "continuous targets. Only 'kruskal' measure is implemented for continuous targets."
+            )
+            kwargs.pop("sort_by")
 
         # Initiating BaseCarver
         super().__init__(
@@ -221,9 +221,6 @@ class ContinuousCarver(BaseCarver):
                     "frequency": yval.apply(len) / yval.apply(len).sum(),
                 }
             )
-
-            # rounding up stats
-            # stats = stats.round(3)
 
         return stats
 

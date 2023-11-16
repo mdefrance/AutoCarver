@@ -256,10 +256,6 @@ class BinaryCarver(BaseCarver):
                 }
             )
 
-            # rounding up stats
-            stats = stats.round(3)
-            # TODO: remove digits from the table
-
         return stats
 
     @extend_docstring(BaseCarver.fit)
