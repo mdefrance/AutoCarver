@@ -314,10 +314,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
 
         # checking for columns containing floats or integers even with filled nans
         dtypes = (
-            x_copy[self.features]
-            .fillna(self.str_nan)
-            .map(type)
-            .apply(unique, result_type="reduce")
+            x_copy[self.features].fillna(self.str_nan).map(type).apply(unique, result_type="reduce")
         )
         not_object = dtypes.apply(lambda u: any(typ != str for typ in u))
 
