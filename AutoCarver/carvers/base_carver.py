@@ -805,7 +805,7 @@ class BaseCarver(BaseDiscretizer):
                     for value in self.values_orders[feature].get(group_modality, group_modality)
                     if combi[modality] == final_group
                 ]
-                for final_group in unique(list(combi.values()))
+                for final_group in unique(combi.values())
             ]
 
             # historizing test results

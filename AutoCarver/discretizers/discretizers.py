@@ -316,7 +316,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
         dtypes = (
             x_copy[self.features]
             .fillna(self.str_nan)
-            .applymap(type)
+            .map(type)
             .apply(unique, result_type="reduce")
         )
         not_object = dtypes.apply(lambda u: any(typ != str for typ in u))
@@ -506,7 +506,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         x_copy = super()._prepare_data(X, y)
 
         # checking for quantitative columns
-        dtypes = x_copy[self.features].applymap(type).apply(unique, result_type="reduce")
+        dtypes = x_copy[self.features].map(type).apply(unique, result_type="reduce")
         not_numeric = dtypes.apply(lambda u: str in u)
         assert all(
             ~not_numeric
