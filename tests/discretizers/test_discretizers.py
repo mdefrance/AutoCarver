@@ -39,6 +39,7 @@ def test_quantitative_discretizer(x_train: DataFrame, target: str):
         1.0,
         2.0,
         3.0,
+        4.0,
         inf,
         "__NAN__",
     ], "NaNs should not be grouped whatsoever"
@@ -46,6 +47,7 @@ def test_quantitative_discretizer(x_train: DataFrame, target: str):
         1.0,
         2.0,
         3.0,
+        4.0,
         inf,
     ], "Rare values should be grouped to the closest one (OrdinalDiscretizer)"
 
@@ -223,6 +225,7 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
         1.0,
         2.0,
         3.0,
+        4.0,
         inf,
         "__NAN__",
     ], "NaNs should not be grouped whatsoever"
@@ -230,6 +233,7 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
         1.0,
         2.0,
         3.0,
+        4.0,
         inf,
     ], "Rare values should be grouped to the closest one (OrdinalDiscretizer)"
 

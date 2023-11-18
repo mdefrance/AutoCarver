@@ -547,7 +547,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         if len(has_rare) > 0:
             ordinal_discretizer = OrdinalDiscretizer(
                 ordinal_features=has_rare,
-                min_freq=self.min_freq,
+                min_freq=q_min_freq,
                 values_orders=self.values_orders,
                 str_nan=self.str_nan,
                 copy=False,
