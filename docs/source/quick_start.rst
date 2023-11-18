@@ -47,7 +47,7 @@ Picking up columns to Carve
     qualitative_features = ["Qualitative", "Qualitative_grouped", "Qualitative_lownan", "Qualitative_highnan", "Discrete_Qualitative_noorder", "Discrete_Qualitative_lownan_noorder", "Discrete_Qualitative_rarevalue_noorder"]
 
 Qualitative features will automatically be converted to ``str`` if necessary.
-Ordinal features can be added, alongside there expected ordering. See :ref:`Examples`.
+Ordinal features can be added, alongside there expected ordering.
 
 
 
@@ -134,8 +134,3 @@ Feature Selection
     )
     best_features = feature_selector.select(train_set_discretized, train_set_discretized[target])
 
-
-In-depth examples
------------------
-
-See :ref:`Examples`.
