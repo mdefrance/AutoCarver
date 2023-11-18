@@ -945,7 +945,9 @@ class BaseCarver(BaseDiscretizer):
             else:
                 # getting prettier xtabs
                 nicer_xagg = prettier_xagg(nice_xagg, caption="X distribution")
-                nicer_xagg_dev = prettier_xagg(nice_xagg_dev, caption="X_dev distribution", hide_index=True)
+                nicer_xagg_dev = prettier_xagg(
+                    nice_xagg_dev, caption="X_dev distribution", hide_index=True
+                )
 
                 # merging outputs
                 nicer_xaggs = nicer_xagg + "          " + nicer_xagg_dev
@@ -1260,7 +1262,7 @@ def prettier_xagg(
         # adding custom caption/title
         if caption is not None:
             nicer_xagg = nicer_xagg.set_caption(caption)
-        
+
         # hiding index for dev
         if hide_index:
             nicer_xagg.hide(axis="index")

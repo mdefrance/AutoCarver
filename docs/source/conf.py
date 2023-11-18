@@ -1,5 +1,6 @@
 import configparser
 import os
+import shutil
 import sys
 
 # -- Path setup --------------------------------------------------------------
@@ -7,7 +8,48 @@ path = "../../"
 print(os.listdir(path))
 sys.path.insert(0, path)
 
+from inspect import getsourcefile
+
 import AutoCarver
+
+# make copy of notebooks in docs folder, as they must be here for sphinx to
+# pick them up properly.
+# NOTEBOOKS_DIR = os.path.abspath("example_notebooks")
+# if os.path.exists(NOTEBOOKS_DIR):
+#     import warnings
+
+#     warnings.warn("example_notebooks directory exists, replacing...")
+#     shutil.rmtree(NOTEBOOKS_DIR)
+# shutil.copytree(os.path.abspath("./examples"), NOTEBOOKS_DIR)
+# if os.path.exists(NOTEBOOKS_DIR + "/local_scratch"):
+#     shutil.rmtree(NOTEBOOKS_DIR + "/local_scratch")
+
+
+
+# Get path to directory containing this file, conf.py.
+DOCS_DIRECTORY = os.path.dirname(os.path.abspath(getsourcefile(lambda: 0)))
+
+
+def ensure_pandoc_installed(_):
+    import pypandoc
+
+    # Download pandoc if necessary. If pandoc is already installed and on
+    # the PATH, the installed version will be used. Otherwise, we will
+    # download a copy of pandoc into docs/bin/ and add that to our PATH.
+    pandoc_dir = os.path.join(DOCS_DIRECTORY, "bin")
+    # Add dir containing pandoc binary to the PATH environment variable
+    if pandoc_dir not in os.environ["PATH"].split(os.pathsep):
+        os.environ["PATH"] += os.pathsep + pandoc_dir
+    pypandoc.ensure_pandoc_installed(
+        # quiet=True,
+        targetfolder=pandoc_dir,
+        delete_installer=True,
+    )
+
+
+def setup(app):
+    app.connect("builder-inited", ensure_pandoc_installed)
+
 
 # Read metadata from setup.cfg
 config = configparser.ConfigParser()
@@ -62,6 +104,7 @@ extensions = [
     "sphinx_rtd_theme",
     "sphinx.ext.autodoc",
     # "sphinx.ext.autosummary",
+    "nbsphinx",
 ]
 templates_path = ["_templates"]
 exclude_patterns = []
