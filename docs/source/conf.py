@@ -25,7 +25,6 @@ import AutoCarver
 #     shutil.rmtree(NOTEBOOKS_DIR + "/local_scratch")
 
 
-
 # Get path to directory containing this file, conf.py.
 DOCS_DIRECTORY = os.path.dirname(os.path.abspath(getsourcefile(lambda: 0)))
 
