@@ -15,12 +15,11 @@ def reverse_xy(measure: Callable):
     ) -> tuple[bool, dict[str, Any]]:
         """Reversed version of the measure"""
         return measure(y, x, **kwargs)
-    
+
     # setting name of passed measure
     reversed_measure.__name__ = measure.__name__
-    
-    return reversed_measure
 
+    return reversed_measure
 
 
 def make_measure(
