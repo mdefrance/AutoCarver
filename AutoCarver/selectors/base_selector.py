@@ -343,11 +343,16 @@ class BaseSelector:
                     # checking for an association indicator
                     if any(indic in column for indic in ["pct_", "_measure", "_filter"])
                 ]
-                # getting prettier association table
+
+                # adding coolwarm color gradient
                 nicer_association = association.style.background_gradient(
                     cmap="coolwarm", subset=subset
                 )
+                # printing inline notebook
                 nicer_association = nicer_association.set_table_attributes("style='display:inline'")
+
+                # lower precision
+                nicer_association = nicer_association.format(precision=4)
 
                 # displaying html of colored DataFrame
                 display_html(nicer_association._repr_html_(), raw=True)

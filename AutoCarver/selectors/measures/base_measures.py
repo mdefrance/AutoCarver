@@ -9,8 +9,8 @@ def reverse_xy(measure: Callable):
     """Reverses places of x and y in measure"""
 
     def reversed_measure(
-        y: Series,
         x: Series,
+        y: Series,
         **kwargs,
     ) -> tuple[bool, dict[str, Any]]:
         """Reversed version of the measure"""

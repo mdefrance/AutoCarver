@@ -31,9 +31,10 @@ def kruskal_measure(
     Returns
     -------
     tuple[bool, dict[str, Any]]
-        Whether ``x`` is sufficiently associated to ``y`` and Kruskal-Wallis' test statistic
+        Whether ``x`` is sufficiently associated to ``y`` and Kruskal-Wallis' H test statistic
     """
-    nans = x.isnull()  # ckecking for nans
+    # ckecking for nans
+    nans = x.isnull()
 
     # getting y values
     y_values = y.unique()
