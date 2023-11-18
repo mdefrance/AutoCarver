@@ -45,6 +45,9 @@ def test_regression_selector(
             "Discrete_Quantitative_highnan",
             "Discrete_Quantitative",
             "Discrete_Quantitative_lownan",
+            "Qualitative_Ordinal",
+            "Discrete_Qualitative_noorder",
+            "Discrete_Qualitative_rarevalue_noorder",
         ],
         5: [
             "Discrete_Quantitative_highnan",
@@ -52,9 +55,13 @@ def test_regression_selector(
             "Discrete_Quantitative_lownan",
             "Discrete_Quantitative_rarevalue",
             "Quantitative",
+            "Qualitative_Ordinal",
+            "Discrete_Qualitative_noorder",
+            "Discrete_Qualitative_rarevalue_noorder",
+            "Qualitative",
+            "Qualitative_grouped",
         ],
     }
-    print(best_features)
     assert all(feature in best_features for feature in expected[n_best]) and all(
         feature in expected[n_best] for feature in best_features
     ), "Not correctly selected features"

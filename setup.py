@@ -20,7 +20,7 @@ setup(
     },
     license="MIT",
     install_requires=[
-        "pandas",
+        "pandas>=2.1",
         "numpy",
         "scipy",
         "scikit-learn",
@@ -30,6 +30,7 @@ setup(
     extras_require={
         "jupyter": [
             "ipython",
+            "matplotlib",
         ]
     },
     packages=find_packages(),

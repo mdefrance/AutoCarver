@@ -26,5 +26,7 @@ Welcome to AutoCarver's documentation!
    :maxdepth: 1
    :caption: Examples
 
-   examples
+   carvers_examples
+   discretizers_examples
+   selectors_examples
 

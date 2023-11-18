@@ -6,7 +6,7 @@ from typing import Any, Union
 from warnings import warn
 
 from numpy import isclose
-from pandas import DataFrame, Series, unique
+from pandas import DataFrame, Series
 from tqdm import tqdm
 
 from ..discretizers import GroupedList
@@ -699,6 +699,7 @@ class BaseCarver(BaseDiscretizer):
                         {
                             "dev_viable": dev_viable,
                             "min_freq_dev": min_freq_dev,
+                            "ranks_train_dev": ranks_train_dev,
                             "distinct_rates_dev": distinct_rates_dev,
                         }
                     )
@@ -805,7 +806,7 @@ class BaseCarver(BaseDiscretizer):
                     for value in self.values_orders[feature].get(group_modality, group_modality)
                     if combi[modality] == final_group
                 ]
-                for final_group in unique(list(combi.values()))
+                for final_group in Series(combi.values()).unique()
             ]
 
             # historizing test results
@@ -931,7 +932,6 @@ class BaseCarver(BaseDiscretizer):
             print(f"\n - [AutoCarver] {message}")
 
             # getting pretty xtabs
-            # TODO: remove digits from dataframes
             nice_xagg = self._printer(xagg)
             nice_xagg_dev = self._printer(xagg_dev)
 
@@ -945,10 +945,12 @@ class BaseCarver(BaseDiscretizer):
             else:
                 # getting prettier xtabs
                 nicer_xagg = prettier_xagg(nice_xagg, caption="X distribution")
-                nicer_xagg_dev = prettier_xagg(nice_xagg_dev, caption="X_dev distribution")
+                nicer_xagg_dev = prettier_xagg(
+                    nice_xagg_dev, caption="X_dev distribution", hide_index=True
+                )
 
                 # merging outputs
-                nicer_xaggs = nicer_xagg + "    " + nicer_xagg_dev
+                nicer_xaggs = nicer_xagg + "          " + nicer_xagg_dev
 
                 # displaying html of colored DataFrame
                 display_html(nicer_xaggs, raw=True)
@@ -1222,6 +1224,7 @@ def load_carver(auto_carver_json: dict) -> BaseDiscretizer:
 def prettier_xagg(
     nice_xagg: DataFrame = None,
     caption: str = None,
+    hide_index: bool = False,
 ) -> str:
     """Converts a crosstab to the HTML format, adding nice colors
 
@@ -1231,6 +1234,8 @@ def prettier_xagg(
         Target rate and frequency per modality, by default None
     caption : str, optional
         Title of the HTML table, by default None
+    hide_index : bool, optional
+        Whether or not to hide the index (for dev distribution)
 
     Returns
     -------
@@ -1251,9 +1256,16 @@ def prettier_xagg(
         # printing inline notebook
         nicer_xagg = nicer_xagg.set_table_attributes("style='display:inline'")
 
+        # lower precision
+        nicer_xagg = nicer_xagg.format(precision=4)
+
         # adding custom caption/title
         if caption is not None:
             nicer_xagg = nicer_xagg.set_caption(caption)
+
+        # hiding index for dev
+        if hide_index:
+            nicer_xagg.hide(axis="index")
 
         # converting to html
         nicer_xagg = nicer_xagg._repr_html_()

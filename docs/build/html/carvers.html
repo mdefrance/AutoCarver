@@ -16,7 +16,9 @@
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/sphinx_highlight.js"></script>
-        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
@@ -38,7 +40,7 @@
               <img src="_static/auto_carver_symbol_small.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                5.4.3
+                5.4.5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -67,7 +69,9 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Examples</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="carvers_examples.html">Carvers Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="discretizers_examples.html">Discretizers Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="selectors_examples.html">Selectors Examples</a></li>
 </ul>
 
         </div>
@@ -147,7 +151,7 @@ use <code class="docutils literal notranslate"><span class="pre">&quot;cramerv&q
 <li><p>Sets the number of quantiles in which to discretize the continuous features.</p></li>
 <li><p>Sets the minimum frequency of a quantitative feature’s modality.</p></li>
 </ul>
-<p><strong>Tip</strong>: should be set between 0.02 (slower, preciser, less robust) and 0.05 (faster, more robust)</p>
+<p><strong>Tip</strong>: should be set between <code class="docutils literal notranslate"><span class="pre">0.01</span></code> (slower, preciser, less robust) and <code class="docutils literal notranslate"><span class="pre">0.2</span></code> (faster, more robust)</p>
 </p></li>
 <li><p><strong>quantitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of quantitative features (continuous and discrete) to be carved, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 <li><p><strong>qualitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of qualitative features (non-ordinal) to be carved, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
@@ -344,7 +348,7 @@ use <code class="docutils literal notranslate"><span class="pre">&quot;cramerv&q
 <li><p>Sets the number of quantiles in which to discretize the continuous features.</p></li>
 <li><p>Sets the minimum frequency of a quantitative feature’s modality.</p></li>
 </ul>
-<p><strong>Tip</strong>: should be set between 0.02 (slower, preciser, less robust) and 0.05 (faster, more robust)</p>
+<p><strong>Tip</strong>: should be set between <code class="docutils literal notranslate"><span class="pre">0.01</span></code> (slower, preciser, less robust) and <code class="docutils literal notranslate"><span class="pre">0.2</span></code> (faster, more robust)</p>
 </p></li>
 <li><p><strong>quantitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of quantitative features (continuous and discrete) to be carved, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 <li><p><strong>qualitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of qualitative features (non-ordinal) to be carved, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
@@ -538,7 +542,7 @@ features that maximizes association with a continuous target.</p>
 <li><p>Sets the number of quantiles in which to discretize the continuous features.</p></li>
 <li><p>Sets the minimum frequency of a quantitative feature’s modality.</p></li>
 </ul>
-<p><strong>Tip</strong>: should be set between 0.02 (slower, preciser, less robust) and 0.05 (faster, more robust)</p>
+<p><strong>Tip</strong>: should be set between <code class="docutils literal notranslate"><span class="pre">0.01</span></code> (slower, preciser, less robust) and <code class="docutils literal notranslate"><span class="pre">0.2</span></code> (faster, more robust)</p>
 </p></li>
 <li><p><strong>quantitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of quantitative features (continuous and discrete) to be carved, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 <li><p><strong>qualitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of qualitative features (non-ordinal) to be carved, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>

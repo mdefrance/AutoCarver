@@ -314,10 +314,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
 
         # checking for columns containing floats or integers even with filled nans
         dtypes = (
-            x_copy[self.features]
-            .fillna(self.str_nan)
-            .applymap(type)
-            .apply(unique, result_type="reduce")
+            x_copy[self.features].fillna(self.str_nan).map(type).apply(unique, result_type="reduce")
         )
         not_object = dtypes.apply(lambda u: any(typ != str for typ in u))
 
@@ -506,7 +503,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         x_copy = super()._prepare_data(X, y)
 
         # checking for quantitative columns
-        dtypes = x_copy[self.features].applymap(type).apply(unique, result_type="reduce")
+        dtypes = x_copy[self.features].map(type).apply(unique, result_type="reduce")
         not_numeric = dtypes.apply(lambda u: str in u)
         assert all(
             ~not_numeric
@@ -550,7 +547,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         if len(has_rare) > 0:
             ordinal_discretizer = OrdinalDiscretizer(
                 ordinal_features=has_rare,
-                min_freq=self.min_freq,
+                min_freq=q_min_freq,
                 values_orders=self.values_orders,
                 str_nan=self.str_nan,
                 copy=False,

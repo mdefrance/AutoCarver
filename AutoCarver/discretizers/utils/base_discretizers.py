@@ -825,33 +825,6 @@ def target_rate(x: Series, y: Series, dropna: bool = True, ascending=True) -> di
     return rates.to_dict()
 
 
-def nunique(x: Series, dropna=False) -> int:
-    """Computes number of unique modalities
-
-    Parameters
-    ----------
-    x : Series
-        _description_
-    dropna : bool, optional
-        _description_, by default False
-
-    Returns
-    -------
-    int
-        _description_
-    """
-
-    uniques = unique(x)
-    n = len(uniques)
-
-    # removing nans
-    if dropna:
-        if any(isna(uniques)):
-            n -= 1
-
-    return n
-
-
 def get_labels(quantiles: list[float], str_nan: str) -> list[str]:
     """_summary_
 

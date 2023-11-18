@@ -499,7 +499,7 @@ class ChainedDiscretizer(BaseDiscretizer):
                 super()._remove_feature(feature)
 
         # checking for columns containing floats or integers even with filled nans
-        dtypes = x_copy[self.features].fillna(self.str_nan).applymap(type).apply(unique)
+        dtypes = x_copy[self.features].fillna(self.str_nan).map(type).apply(unique)
         not_object = dtypes.apply(lambda u: any(typ != str for typ in u))
 
         # non qualitative features detected

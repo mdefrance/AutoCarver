@@ -162,7 +162,7 @@ class ContinuousCarver(BaseCarver):
         Series
             _description_
         """
-        # TODO: try to convert this to the vectorial version like BinaryCarver
+        # TODO: convert this to the vectorial version like BinaryCarver
         return yval.groupby(groupby).sum()
 
     def _association_measure(self, yval: Series, **kwargs) -> dict[str, float]:
