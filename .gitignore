@@ -1,4 +1,3 @@
-
 *.gz
 *.pyc
 AutoCarver.egg-info/PKG-INFO
@@ -10,3 +9,4 @@ AutoCarver.egg-info/SOURCES.txt
 # *.ipynb
 *.ipynb_checkpoints
 test_package.ipynb
+*.exe
