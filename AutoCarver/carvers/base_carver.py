@@ -49,7 +49,7 @@ class BaseCarver(BaseDiscretizer):
         dropna: bool = True,
         copy: bool = False,
         verbose: bool = False,
-        **kwargs,
+        **kwargs: dict,
     ) -> None:
         """
         min_freq : float
@@ -105,7 +105,7 @@ class BaseCarver(BaseDiscretizer):
 
             **Tip**: IPython displaying can be turned off by setting ``pretty_print=False``
 
-        **kwargs
+        **kwargs: dict
             Pass values for ``str_default`` and ``str_nan`` (default string values),
             as long as ``pretty_print`` to turn off IPython
         """

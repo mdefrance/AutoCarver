@@ -38,7 +38,7 @@ class Discretizer(BaseDiscretizer):
         values_orders: dict[str, GroupedList] = None,
         copy: bool = False,
         verbose: bool = False,
-        **kwargs,
+        **kwargs: dict,
     ) -> None:
         """
         Parameters
@@ -205,7 +205,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
         input_dtypes: Union[str, dict[str, str]] = "str",
         copy: bool = False,
         verbose: bool = False,
-        **kwargs,
+        **kwargs: dict,
     ) -> None:
         """
         Parameters
@@ -437,7 +437,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         input_dtypes: Union[str, dict[str, str]] = "float",
         verbose: bool = False,
         copy: bool = False,
-        **kwargs,
+        **kwargs: dict,
     ) -> None:
         """
         Parameters

@@ -41,7 +41,7 @@ class BinaryCarver(BaseCarver):
         dropna: bool = True,
         copy: bool = False,
         verbose: bool = False,
-        **kwargs,
+        **kwargs: dict,
     ) -> None:
         """
         Parameters
@@ -297,7 +297,7 @@ class AutoCarver(BinaryCarver):
         copy: bool = False,
         verbose: bool = False,
         pretty_print: bool = False,
-        **kwargs,
+        **kwargs: dict,
     ) -> None:
         warn("AutoCarver will be deprecated, please use BinaryCarver instead.", DeprecationWarning)
         super().__init__(

@@ -65,7 +65,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         verbose : bool, optional
             If ``True``, prints raw Discretizers Fit and Transform steps, by default ``False``
 
-        **kwargs
+        **kwargs: dict
             Pass values for ``str_default`` and ``str_nan`` (default string values)
 
         Examples
@@ -263,7 +263,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             # checking for X's type
             assert isinstance(
                 X, DataFrame
-            ), f" - [BaseDiscretizer] X must be a pandas.DataFrame, instead {type(X)} was passed"
+            ), f" - [Discretizer] X must be a pandas.DataFrame, instead {type(X)} was passed"
 
             # copying X
             x_copy = X
@@ -277,21 +277,21 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             missing_columns = [feature for feature in self.features if feature not in x_copy]
             assert (
                 len(missing_columns) == 0
-            ), f" - [BaseDiscretizer] Missing features from the provided DataFrame: {str(missing_columns)}"
+            ), f" - [Discretizer] Missing features from the provided DataFrame: {str(missing_columns)}"
 
             if y is not None:
                 # checking for y's type
                 assert isinstance(
                     y, Series
-                ), f" - [BaseDiscretizer] y must be a pandas.Series, instead {type(y)} was passed"
+                ), f" - [Discretizer] y must be a pandas.Series, instead {type(y)} was passed"
 
                 # checking for nans in the target
-                assert not any(y.isna()), " - [BaseDiscretizer] y should not contain numpy.nan"
+                assert not any(y.isna()), " - [Discretizer] y should not contain numpy.nan"
 
                 # checking indices
                 assert all(
                     y.index == X.index
-                ), f" - [BaseDiscretizer] X and y must have the same indices."
+                ), f" - [Discretizer] X and y must have the same indices."
 
         return x_copy
 
@@ -344,7 +344,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
                 val for val in uniques[feature] if val not in self.values_orders[feature].values()
             ]
             assert len(unexpected) == 0, (
-                " - [BaseDiscretizer] Unexpected value! The ordering for values: "
+                " - [Discretizer] Unexpected value! The ordering for values: "
                 f"{str(list(unexpected))} of feature '{feature}' was not provided. "
                 "There might be new values in your test/dev set. Consider taking a bigger "
                 f"test/dev set or dropping the column {feature}."
@@ -366,7 +366,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         """
         # checking for previous fits of the discretizer that could cause unwanted errors
         assert not self.is_fitted, (
-            " - [BaseDiscretizer] This Discretizer has already been fitted. "
+            " - [Discretizer] This Discretizer has already been fitted. "
             "Fitting it anew could break established orders. Please initialize a new one."
         )
 
@@ -375,7 +375,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             feature for feature in self.features if feature not in self.values_orders
         ]
         assert len(missing_features) == 0, (
-            " - [BaseDiscretizer] Missing values_orders for following features "
+            " - [Discretizer] Missing values_orders for following features "
             f"{str(missing_features)}."
         )
 
@@ -461,7 +461,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             if any(nans):
                 assert feature_values.contains(
                     self.str_nan
-                ), f" - [BaseDiscretizer] Unexpected value! Missing values found for feature '{feature}' at transform step but not during fit. There might be new values in your test/dev set. Consider taking a bigger test/dev set or dropping the column {feature}."
+                ), f" - [Discretizer] Unexpected value! Missing values found for feature '{feature}' at transform step but not during fit. There might be new values in your test/dev set. Consider taking a bigger test/dev set or dropping the column {feature}."
                 nan_value = feature_values.get_group(self.str_nan)
                 # checking that nans have been grouped to a quantile otherwise they are left as numpy.nan (for comparison purposes)
                 if nan_value != self.str_nan:

@@ -40,7 +40,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
         values_orders: dict[str, GroupedList] = None,
         copy: bool = False,
         verbose: bool = False,
-        **kwargs,
+        **kwargs: dict,
     ) -> None:
         """
         Parameters
@@ -201,7 +201,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
         input_dtypes: Union[str, dict[str, str]] = "str",
         copy: bool = False,
         verbose: bool = False,
-        **kwargs,
+        **kwargs: dict,
     ):
         """
         Parameters
@@ -342,7 +342,7 @@ class ChainedDiscretizer(BaseDiscretizer):
         unknown_handling: str = "raise",
         copy: bool = False,
         verbose: bool = False,
-        **kwargs,
+        **kwargs: dict,
     ) -> None:
         """
         Parameters

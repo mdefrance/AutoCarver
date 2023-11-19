@@ -23,7 +23,7 @@ class StringDiscretizer(BaseDiscretizer):
         values_orders: dict[str, GroupedList] = None,
         copy: bool = False,
         verbose: bool = False,
-        **kwargs,
+        **kwargs: dict,
     ) -> None:
         """
         Parameters

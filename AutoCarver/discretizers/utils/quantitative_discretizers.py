@@ -34,7 +34,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
         values_orders: dict[str, Any] = None,
         copy: bool = False,
         verbose: bool = False,
-        **kwargs,
+        **kwargs: dict,
     ) -> None:
         """
         Parameters
