@@ -15,8 +15,8 @@ from ..discretizers.utils.base_discretizers import (
     BaseDiscretizer,
     convert_to_labels,
     convert_to_values,
+    load_discretizer,
 )
-from ..discretizers.utils.serialization import json_deserialize_values_orders
 
 # trying to import extra dependencies
 try:
@@ -1204,17 +1204,7 @@ def load_carver(auto_carver_json: dict) -> BaseDiscretizer:
     BaseDiscretizer
         A fitted AutoCarver.
     """
-    # deserializing values_orders
-    values_orders = json_deserialize_values_orders(auto_carver_json["values_orders"])
-
-    # updating auto_carver attributes
-    auto_carver_json.update({"values_orders": values_orders})
-
-    # initiating BaseDiscretizer
-    auto_carver = BaseDiscretizer(**auto_carver_json)
-    auto_carver.fit()
-
-    return auto_carver
+    return load_discretizer(auto_carver_json)
 
 
 def prettier_xagg(

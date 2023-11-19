@@ -4,12 +4,12 @@ for a binary classification model.
 
 from typing import Any, Union
 
-from numpy import array, floating, inf, integer, isfinite, nan, select
+from numpy import floating, integer, isfinite, nan, select
 from pandas import DataFrame, Series, isna, notna, unique
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from .grouped_list import GroupedList
-from .serialization import json_serialize_values_orders
+from .serialization import json_deserialize_values_orders, json_serialize_values_orders
 
 
 class BaseDiscretizer(BaseEstimator, TransformerMixin):
@@ -1016,3 +1016,32 @@ class extend_docstring:
             if doc is not None:
                 function.__doc__ = doc + function.__doc__
         return function
+
+
+def load_discretizer(discretizer_json: dict) -> BaseDiscretizer:
+    """Allows one to load a Discretizer saved as a .json file.
+
+    The Discretizer has to be saved with ``json.dump(f, Discretizer.to_json())``, otherwise there
+    can be no guarantee for it to be restored.
+
+    Parameters
+    ----------
+    discretizer_json : str
+        Loaded .json file using ``json.load(f)``.
+
+    Returns
+    -------
+    BaseDiscretizer
+        A fitted Discretizer.
+    """
+    # deserializing values_orders
+    values_orders = json_deserialize_values_orders(discretizer_json["values_orders"])
+
+    # updating auto_carver attributes
+    discretizer_json.update({"values_orders": values_orders})
+
+    # initiating BaseDiscretizer
+    discretizer = BaseDiscretizer(**discretizer_json)
+    discretizer.fit()
+
+    return discretizer

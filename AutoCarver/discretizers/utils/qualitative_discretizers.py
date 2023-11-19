@@ -674,7 +674,7 @@ def find_common_modalities(
     # case 2.1: there are underrepresented modalities/values
     while any(frequencies < min_freq) & (len(frequencies) > 1):
         # updating per-group target rate per modality/value
-        target_rates = series_groupy_order(init_target_rates, order) / frequencies / len_df
+        target_rates = series_groupby_order(init_target_rates, order) / frequencies / len_df
 
         # identifying the underrepresented value
         discarded_idx = argmin(frequencies)
@@ -693,13 +693,13 @@ def find_common_modalities(
         order.group(discarded_value, kept_value)
 
         # removing discarded_value from frequencies
-        frequencies = series_groupy_order(init_frequencies, order).fillna(0)
+        frequencies = series_groupby_order(init_frequencies, order).fillna(0)
 
     # case 2.2 : no underrepresented value
     return order
 
 
-def series_groupy_order(series: Series, order: GroupedList) -> Series:
+def series_groupby_order(series: Series, order: GroupedList) -> Series:
     """Groups a series according to groups specified in the order
 
     Parameters
@@ -757,7 +757,7 @@ def find_closest_modality(
         # previous modality's volume and target rate
         previous_freq, previous_target = frequencies[idx - 1], target_rates[idx - 1]
 
-        # current modality's volume and target rate
+        # current modality's target rate
         current_target = target_rates[idx]
 
         # next modality's volume and target rate
