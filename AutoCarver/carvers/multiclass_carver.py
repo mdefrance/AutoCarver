@@ -15,7 +15,7 @@ from .binary_carver import BinaryCarver
 class MulticlassCarver(BaseCarver):
     """Automatic carving of continuous, discrete, categorical and ordinal
     features that maximizes association with a multiclass target.
-    
+
     Examples
     --------
     `Multiclass Classification Example <https://autocarver.readthedocs.io/en/latest/examples/MulticlassClassification/multiclass_classification_example.html>`_
@@ -39,9 +39,8 @@ class MulticlassCarver(BaseCarver):
         verbose: bool = False,
         **kwargs,
     ) -> None:
-        """
-        """
-        
+        """ """
+
         # association measure used to find the best groups for multiclass targets
         implemented_measures = ["tschuprowt", "cramerv"]
         assert sort_by in implemented_measures, (
