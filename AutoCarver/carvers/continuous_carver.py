@@ -39,7 +39,7 @@ class ContinuousCarver(BaseCarver):
         dropna: bool = True,
         copy: bool = False,
         verbose: bool = False,
-        **kwargs,
+        **kwargs: dict,
     ) -> None:
         """
         Parameters
