@@ -131,3 +131,12 @@ GroupedList
 
 .. autoclass:: AutoCarver.discretizers.GroupedList
     :members:
+
+
+
+Saving and loading
+------------------
+
+.. autofunction:: AutoCarver.discretizers.BaseDiscretizer.to_json
+
+.. autofunction:: AutoCarver.discretizers.load_discretizer

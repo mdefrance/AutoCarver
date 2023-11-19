@@ -38,8 +38,7 @@ class Discretizer(BaseDiscretizer):
         values_orders: dict[str, GroupedList] = None,
         copy: bool = False,
         verbose: bool = False,
-        str_nan: str = "__NAN__",
-        str_default: str = "__OTHER__",
+        **kwargs: dict,
     ) -> None:
         """
         Parameters
@@ -61,9 +60,6 @@ class Discretizer(BaseDiscretizer):
 
         ordinal_features : list[str], optional
             List of column names of ordinal features to be discretized. For those features a list of values has to be provided in the ``values_orders`` dict, by default ``None``
-
-        str_default : str, optional
-            String representation for default qualitative values, i.e. values less frequent than ``min_freq``, by default ``"__OTHER__"``
         """
         # Lists of features per type
         if ordinal_features is None:
@@ -81,8 +77,8 @@ class Discretizer(BaseDiscretizer):
             values_orders=values_orders,
             input_dtypes=self.input_dtypes,
             output_dtype="str",
-            str_nan=str_nan,
-            str_default=str_default,
+            str_nan=kwargs.get("str_nan", "__NAN__"),
+            str_default=kwargs.get("str_default", "__OTHER__"),
             copy=copy,
             verbose=verbose,
         )
@@ -209,8 +205,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
         input_dtypes: Union[str, dict[str, str]] = "str",
         copy: bool = False,
         verbose: bool = False,
-        str_nan: str = "__NAN__",
-        str_default: str = "__OTHER__",
+        **kwargs: dict,
     ) -> None:
         """
         Parameters
@@ -236,10 +231,6 @@ class QualitativeDiscretizer(BaseDiscretizer):
 
             * If ``"str"``, features are considered as qualitative.
             * If ``"float"``, features are considered as quantitative.
-
-        str_default : str, optional
-            String representation for default qualitative values, i.e. values less frequent than ``min_freq``, by default ``"__OTHER__"``
-
         """
         # Lists of features
         if ordinal_features is None:
@@ -256,8 +247,8 @@ class QualitativeDiscretizer(BaseDiscretizer):
             values_orders=values_orders,
             input_dtypes=input_dtypes,
             output_dtype="str",
-            str_nan=str_nan,
-            str_default=str_default,
+            str_nan=kwargs.get("str_nan", "__NAN__"),
+            str_default=kwargs.get("str_default", "__OTHER__"),
             copy=copy,
             verbose=verbose,
         )
@@ -446,7 +437,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         input_dtypes: Union[str, dict[str, str]] = "float",
         verbose: bool = False,
         copy: bool = False,
-        str_nan: str = "__NAN__",
+        **kwargs: dict,
     ) -> None:
         """
         Parameters
@@ -475,7 +466,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
             values_orders=values_orders,
             input_dtypes=input_dtypes,
             output_dtype="str",
-            str_nan=str_nan,
+            str_nan=kwargs.get("str_nan", "__NAN__"),
             copy=copy,
             verbose=verbose,
         )

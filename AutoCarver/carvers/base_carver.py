@@ -15,8 +15,8 @@ from ..discretizers.utils.base_discretizers import (
     BaseDiscretizer,
     convert_to_labels,
     convert_to_values,
+    load_discretizer,
 )
-from ..discretizers.utils.serialization import json_deserialize_values_orders
 
 # trying to import extra dependencies
 try:
@@ -49,7 +49,7 @@ class BaseCarver(BaseDiscretizer):
         dropna: bool = True,
         copy: bool = False,
         verbose: bool = False,
-        **kwargs,
+        **kwargs: dict,
     ) -> None:
         """
         min_freq : float
@@ -101,17 +101,13 @@ class BaseCarver(BaseDiscretizer):
 
         verbose : bool, optional
             * ``True``, without IPython installed: prints raw Discretizers and AutoCarver Fit steps for X, by default ``False``
-            * ``True``, with IPython installed: adds HTML tables of target rates and frequencies for X and X_dev.
+            * ``True``, with IPython installed: adds HTML tables of target rates and frequencies for X and X_dev
 
-            **Tip**: IPython displaying can be turned off by setting ``pretty_print=False``.
+            **Tip**: IPython displaying can be turned off by setting ``pretty_print=False``
 
-        **kwargs
+        **kwargs: dict
             Pass values for ``str_default`` and ``str_nan`` (default string values),
-            as long as ``pretty_print`` to turn off IPython.
-
-        Examples
-        --------
-        See `AutoCarver examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
+            as long as ``pretty_print`` to turn off IPython
         """
         # Lists of features
         if quantitative_features is None:
@@ -1208,17 +1204,7 @@ def load_carver(auto_carver_json: dict) -> BaseDiscretizer:
     BaseDiscretizer
         A fitted AutoCarver.
     """
-    # deserializing values_orders
-    values_orders = json_deserialize_values_orders(auto_carver_json["values_orders"])
-
-    # updating auto_carver attributes
-    auto_carver_json.update({"values_orders": values_orders})
-
-    # initiating BaseDiscretizer
-    auto_carver = BaseDiscretizer(**auto_carver_json)
-    auto_carver.fit()
-
-    return auto_carver
+    return load_discretizer(auto_carver_json)
 
 
 def prettier_xagg(

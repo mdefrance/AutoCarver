@@ -19,6 +19,10 @@ from .base_carver import BaseCarver
 class BinaryCarver(BaseCarver):
     """Automatic carving of continuous, discrete, categorical and ordinal
     features that maximizes association with a binary target.
+
+    Examples
+    --------
+    `Binary Classification Example <https://autocarver.readthedocs.io/en/latest/examples/BinaryClassification/binary_classification_example.html>`_
     """
 
     @extend_docstring(BaseCarver.__init__)
@@ -37,7 +41,7 @@ class BinaryCarver(BaseCarver):
         dropna: bool = True,
         copy: bool = False,
         verbose: bool = False,
-        **kwargs,
+        **kwargs: dict,
     ) -> None:
         """
         Parameters
@@ -293,7 +297,7 @@ class AutoCarver(BinaryCarver):
         copy: bool = False,
         verbose: bool = False,
         pretty_print: bool = False,
-        **kwargs,
+        **kwargs: dict,
     ) -> None:
         warn("AutoCarver will be deprecated, please use BinaryCarver instead.", DeprecationWarning)
         super().__init__(

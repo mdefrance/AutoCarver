@@ -40,8 +40,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
         values_orders: dict[str, GroupedList] = None,
         copy: bool = False,
         verbose: bool = False,
-        str_default: str = "__OTHER__",
-        str_nan: str = "__NAN__",
+        **kwargs: dict,
     ) -> None:
         """
         Parameters
@@ -57,9 +56,6 @@ class CategoricalDiscretizer(BaseDiscretizer):
             * Sets the minimum frequency of a quantitative feature's modality.
 
             **Tip**: should be set between ``0.02`` (slower, preciser, less robust) and ``0.05`` (faster, more robust)
-
-        str_default : str, optional
-            String representation for default qualitative values, i.e. values less frequent than ``min_freq``, by default ``"__OTHER__"``
         """
         # Initiating BaseDiscretizer
         super().__init__(
@@ -67,8 +63,8 @@ class CategoricalDiscretizer(BaseDiscretizer):
             values_orders=values_orders,
             input_dtypes="str",
             output_dtype="str",
-            str_nan=str_nan,
-            str_default=str_default,
+            str_nan=kwargs.get("str_nan", "__NAN__"),
+            str_default=kwargs.get("str_default", "__OTHER__"),
             copy=copy,
             verbose=verbose,
         )
@@ -205,7 +201,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
         input_dtypes: Union[str, dict[str, str]] = "str",
         copy: bool = False,
         verbose: bool = False,
-        str_nan: str = "__NAN__",
+        **kwargs: dict,
     ):
         """
         Parameters
@@ -234,7 +230,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
             values_orders=values_orders,
             input_dtypes=input_dtypes,
             output_dtype="str",
-            str_nan=str_nan,
+            str_nan=kwargs.get("str_nan", "__NAN__"),
             copy=copy,
             verbose=verbose,
         )
@@ -346,7 +342,7 @@ class ChainedDiscretizer(BaseDiscretizer):
         unknown_handling: str = "raise",
         copy: bool = False,
         verbose: bool = False,
-        str_nan: str = "__NAN__",
+        **kwargs: dict,
     ) -> None:
         """
         Parameters
@@ -379,7 +375,7 @@ class ChainedDiscretizer(BaseDiscretizer):
             values_orders=values_orders,
             input_dtypes="str",
             output_dtype="str",
-            str_nan=str_nan,
+            str_nan=kwargs.get("str_nan", "__NAN__"),
             dropna=False,
             copy=copy,
             verbose=verbose,
@@ -678,7 +674,7 @@ def find_common_modalities(
     # case 2.1: there are underrepresented modalities/values
     while any(frequencies < min_freq) & (len(frequencies) > 1):
         # updating per-group target rate per modality/value
-        target_rates = series_groupy_order(init_target_rates, order) / frequencies / len_df
+        target_rates = series_groupby_order(init_target_rates, order) / frequencies / len_df
 
         # identifying the underrepresented value
         discarded_idx = argmin(frequencies)
@@ -697,13 +693,13 @@ def find_common_modalities(
         order.group(discarded_value, kept_value)
 
         # removing discarded_value from frequencies
-        frequencies = series_groupy_order(init_frequencies, order).fillna(0)
+        frequencies = series_groupby_order(init_frequencies, order).fillna(0)
 
     # case 2.2 : no underrepresented value
     return order
 
 
-def series_groupy_order(series: Series, order: GroupedList) -> Series:
+def series_groupby_order(series: Series, order: GroupedList) -> Series:
     """Groups a series according to groups specified in the order
 
     Parameters
@@ -761,7 +757,7 @@ def find_closest_modality(
         # previous modality's volume and target rate
         previous_freq, previous_target = frequencies[idx - 1], target_rates[idx - 1]
 
-        # current modality's volume and target rate
+        # current modality's target rate
         current_target = target_rates[idx]
 
         # next modality's volume and target rate

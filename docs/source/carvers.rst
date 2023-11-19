@@ -89,7 +89,7 @@ For two combinations of modalities of :math:`x`, a higher :math:`H` value indica
 
 
 
-Saving and loading
+Saving and Loading
 ------------------
 
 .. autofunction:: AutoCarver.BaseCarver.to_json

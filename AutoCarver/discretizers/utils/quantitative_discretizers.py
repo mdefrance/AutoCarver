@@ -14,7 +14,7 @@ from .grouped_list import GroupedList
 class ContinuousDiscretizer(BaseDiscretizer):
     """Automatic discretizing of continuous and discrete features, building simple groups of quantiles of values.
 
-    Quantile discretization creates a lot of modalities (for example: 100 modalities for ``min_freq=0.01``).
+    Quantile discretization creates a lot of modalities (for example: up to 100 modalities for ``min_freq=0.01``).
     Set ``min_freq`` with caution.
 
     The number of quantiles depends on overrepresented modalities and nans:
@@ -34,7 +34,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
         values_orders: dict[str, Any] = None,
         copy: bool = False,
         verbose: bool = False,
-        str_nan: str = "__NAN__",
+        **kwargs: dict,
     ) -> None:
         """
         Parameters
@@ -57,7 +57,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
             values_orders=values_orders,
             input_dtypes="float",
             output_dtype="str",
-            str_nan=str_nan,
+            str_nan=kwargs.get("str_nan", "__NAN__"),
             copy=copy,
             verbose=verbose,
         )
