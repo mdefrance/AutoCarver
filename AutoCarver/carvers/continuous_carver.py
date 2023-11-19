@@ -18,6 +18,10 @@ class ContinuousCarver(BaseCarver):
     features that maximizes association with a continuous target.
 
     For continuous targets, :ref:`Kruskal` is used as association measure to sort combinations.
+
+    Examples
+    --------
+    `Continuous Regression Example <https://autocarver.readthedocs.io/en/latest/examples/MulticlassClassification/multiclass_classification_example.html>`_
     """
 
     @extend_docstring(BaseCarver.__init__)

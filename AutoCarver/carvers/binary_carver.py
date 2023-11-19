@@ -19,6 +19,10 @@ from .base_carver import BaseCarver
 class BinaryCarver(BaseCarver):
     """Automatic carving of continuous, discrete, categorical and ordinal
     features that maximizes association with a binary target.
+
+    Examples
+    --------
+    `Binary Classification Example <https://autocarver.readthedocs.io/en/latest/examples/BinaryClassification/binary_classification_example.html>`_
     """
 
     @extend_docstring(BaseCarver.__init__)

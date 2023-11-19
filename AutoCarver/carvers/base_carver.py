@@ -108,10 +108,6 @@ class BaseCarver(BaseDiscretizer):
         **kwargs
             Pass values for ``str_default`` and ``str_nan`` (default string values),
             as long as ``pretty_print`` to turn off IPython.
-
-        Examples
-        --------
-        See `AutoCarver examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
         """
         # Lists of features
         if quantitative_features is None:
