@@ -34,7 +34,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
         values_orders: dict[str, Any] = None,
         copy: bool = False,
         verbose: bool = False,
-        str_nan: str = "__NAN__",
+        **kwargs,
     ) -> None:
         """
         Parameters
@@ -57,7 +57,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
             values_orders=values_orders,
             input_dtypes="float",
             output_dtype="str",
-            str_nan=str_nan,
+            str_nan=kwargs.get("str_nan", "__NAN__"),
             copy=copy,
             verbose=verbose,
         )

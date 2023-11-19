@@ -101,13 +101,13 @@ class BaseCarver(BaseDiscretizer):
 
         verbose : bool, optional
             * ``True``, without IPython installed: prints raw Discretizers and AutoCarver Fit steps for X, by default ``False``
-            * ``True``, with IPython installed: adds HTML tables of target rates and frequencies for X and X_dev.
+            * ``True``, with IPython installed: adds HTML tables of target rates and frequencies for X and X_dev
 
-            **Tip**: IPython displaying can be turned off by setting ``pretty_print=False``.
+            **Tip**: IPython displaying can be turned off by setting ``pretty_print=False``
 
         **kwargs
             Pass values for ``str_default`` and ``str_nan`` (default string values),
-            as long as ``pretty_print`` to turn off IPython.
+            as long as ``pretty_print`` to turn off IPython
         """
         # Lists of features
         if quantitative_features is None:

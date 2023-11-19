@@ -40,8 +40,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
         values_orders: dict[str, GroupedList] = None,
         copy: bool = False,
         verbose: bool = False,
-        str_default: str = "__OTHER__",
-        str_nan: str = "__NAN__",
+        **kwargs,
     ) -> None:
         """
         Parameters
@@ -57,9 +56,6 @@ class CategoricalDiscretizer(BaseDiscretizer):
             * Sets the minimum frequency of a quantitative feature's modality.
 
             **Tip**: should be set between ``0.02`` (slower, preciser, less robust) and ``0.05`` (faster, more robust)
-
-        str_default : str, optional
-            String representation for default qualitative values, i.e. values less frequent than ``min_freq``, by default ``"__OTHER__"``
         """
         # Initiating BaseDiscretizer
         super().__init__(
@@ -67,8 +63,8 @@ class CategoricalDiscretizer(BaseDiscretizer):
             values_orders=values_orders,
             input_dtypes="str",
             output_dtype="str",
-            str_nan=str_nan,
-            str_default=str_default,
+            str_nan=kwargs.get("str_nan", "__NAN__"),
+            str_default=kwargs.get("str_default", "__OTHER__"),
             copy=copy,
             verbose=verbose,
         )
@@ -205,7 +201,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
         input_dtypes: Union[str, dict[str, str]] = "str",
         copy: bool = False,
         verbose: bool = False,
-        str_nan: str = "__NAN__",
+        **kwargs,
     ):
         """
         Parameters
@@ -234,7 +230,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
             values_orders=values_orders,
             input_dtypes=input_dtypes,
             output_dtype="str",
-            str_nan=str_nan,
+            str_nan=kwargs.get("str_nan", "__NAN__"),
             copy=copy,
             verbose=verbose,
         )
@@ -346,7 +342,7 @@ class ChainedDiscretizer(BaseDiscretizer):
         unknown_handling: str = "raise",
         copy: bool = False,
         verbose: bool = False,
-        str_nan: str = "__NAN__",
+        **kwargs,
     ) -> None:
         """
         Parameters
@@ -379,7 +375,7 @@ class ChainedDiscretizer(BaseDiscretizer):
             values_orders=values_orders,
             input_dtypes="str",
             output_dtype="str",
-            str_nan=str_nan,
+            str_nan=kwargs.get("str_nan", "__NAN__"),
             dropna=False,
             copy=copy,
             verbose=verbose,

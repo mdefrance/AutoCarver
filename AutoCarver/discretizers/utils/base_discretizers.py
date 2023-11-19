@@ -65,8 +65,8 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         verbose : bool, optional
             If ``True``, prints raw Discretizers Fit and Transform steps, by default ``False``
 
-        str_nan : str, optional
-            String representation to input ``numpy.nan``. If ``dropna=False``, ``numpy.nan`` will be left unchanged, by default ``"__NAN__"``
+        **kwargs
+            Pass values for ``str_default`` and ``str_nan`` (default string values)
 
         Examples
         --------
