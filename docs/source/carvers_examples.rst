@@ -7,26 +7,32 @@ These examples explain how to use task specific **Carvers**.
 Binary Classification Example
 -----------------------------
 
+Example of the Titanic survival classification.
+
 .. toctree::
     :glob:
     :maxdepth: 1
 
-    examples/BinaryClassification/binary_classification_example
+    examples/Carvers/BinaryClassification/binary_classification_example
 
 Multiclass Classification Example
 ---------------------------------
 
+Example of the Iris type classification.
+
 .. toctree::
     :glob:
     :maxdepth: 1
 
-    examples/MulticlassClassification/multiclass_classification_example
+    examples/Carvers/MulticlassClassification/multiclass_classification_example
 
 Continuous Regression Example
 -----------------------------
 
+Example of the California House Prices regression.
+
 .. toctree::
     :glob:
     :maxdepth: 1
 
-    examples/ContinuousRegression/continuous_regression_example
+    examples/Carvers/ContinuousRegression/continuous_regression_example

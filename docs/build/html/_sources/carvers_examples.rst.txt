@@ -11,7 +11,7 @@ Binary Classification Example
     :glob:
     :maxdepth: 1
 
-    examples/BinaryClassification/binary_classification_example
+    examples/Carvers/BinaryClassification/binary_classification_example
 
 Multiclass Classification Example
 ---------------------------------
@@ -20,7 +20,7 @@ Multiclass Classification Example
     :glob:
     :maxdepth: 1
 
-    examples/MulticlassClassification/multiclass_classification_example
+    examples/Carvers/MulticlassClassification/multiclass_classification_example
 
 Continuous Regression Example
 -----------------------------
@@ -29,4 +29,4 @@ Continuous Regression Example
     :glob:
     :maxdepth: 1
 
-    examples/ContinuousRegression/continuous_regression_example
+    examples/Carvers/ContinuousRegression/continuous_regression_example
