@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About &mdash; AutoCarver Beta Release documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/nbsphinx-code-cells.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Selectors Examples" href="../../../selectors_examples.html" />
+    <link rel="prev" title="Discretizers Examples" href="../../../discretizers_examples.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/auto_carver_symbol_small.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                5.4.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quick_start.html">Quick Start</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../discretizers.html">Discretizers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../carvers.html">Carvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../selectors.html">Selectors</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../carvers_examples.html">Carvers Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../discretizers_examples.html">Discretizers Examples</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../discretizers_examples.html#complete-discretization-pipeline-example">Complete Discretization Pipeline Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../selectors_examples.html">Selectors Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">AutoCarver</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../discretizers_examples.html">Discretizers Examples</a></li>
+      <li class="breadcrumb-item active">About</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/examples/Discretizers/CompletePipeline/Discretizer.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="About">
+<h1>About<a class="headerlink" href="#About" title="Permalink to this heading"></a></h1>
+<p>Welcome to this notebook where we will explore the Census Adult Income dataset, a rich source of socio-economic information derived from the 1994 U.S. Census Bureau database. Our focus in this analysis is on employing a robust Python data discretization pipeline: <strong>Discretizer</strong>. This versatile tool is able to discretize various types of data, both quantitative and qualitative, making it an ideal companion for preprocessing tasks.</p>
+<p>Data discretization is a crucial step in preparing datasets for machine learning models. It involves transforming continuous or categorical variables into discrete bins, allowing for improved interpretability, handling non-linearity, and addressing potential outliers. The <strong>Discretizer</strong> we will employ is designed to handle a diverse range of data types, including quantitative variables such as age and education level, as well as qualitative variables like marital status and occupation.</p>
+<p>Throughout this notebook, we will delve into the intricacies of the Census Adult Income dataset, exploring the distribution of features and employing the Discretizer to discretize the data effectively. By the end of this preprocessing journey, we aim to create a dataset that is well-suited for subsequent machine learning tasks, enabling the development of robust models for predicting income levels based on socio-economic attributes.</p>
+<p>Let’s embark on this exploration and witness the power of <strong>Discretizer</strong> in preparing our data for insightful analysis and accurate modeling.</p>
+</section>
+<section id="Setting-things-up">
+<h1>Setting things up<a class="headerlink" href="#Setting-things-up" title="Permalink to this heading"></a></h1>
+<section id="Installation">
+<h2>Installation<a class="headerlink" href="#Installation" title="Permalink to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">pip</span> install autocarver
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Census-Data">
+<h2>Census Data<a class="headerlink" href="#Census-Data" title="Permalink to this heading"></a></h2>
+<p>In this example notebook, we will use the Census dataset.</p>
+<p>The Census Adult Income dataset, commonly referred to as the “Adult” dataset, is a well-known dataset in the realm of machine learning and data analysis. It is frequently used for tasks related to classification and predictive modeling. The dataset is derived from the 1994 U.S. Census Bureau database and contains a diverse set of features that aim to predict whether an individual earns more than $50,000 annually, making it a binary classification problem.</p>
+<p>The features in the Adult dataset include demographic information such as age, education level, marital status, occupation, and work-related details like hours worked per week. The primary objective when working with this dataset is typically to build a predictive model capable of discerning between individuals with annual incomes above and below the $50,000 threshold.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ucimlrepo</span> <span class="kn">import</span> <span class="n">fetch_ucirepo</span>
+
+<span class="c1"># fetch dataset</span>
+<span class="n">adult</span> <span class="o">=</span> <span class="n">fetch_ucirepo</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="c1"># data (as pandas dataframes)</span>
+<span class="n">adult_data</span> <span class="o">=</span> <span class="n">adult</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">features</span>
+<span class="n">adult_data</span> <span class="o">=</span> <span class="n">adult_data</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">adult</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span>
+
+<span class="c1"># Display the first few rows of the dataset</span>
+<span class="n">adult_data</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>age</th>
+      <th>workclass</th>
+      <th>fnlwgt</th>
+      <th>education</th>
+      <th>education-num</th>
+      <th>marital-status</th>
+      <th>occupation</th>
+      <th>relationship</th>
+      <th>race</th>
+      <th>sex</th>
+      <th>capital-gain</th>
+      <th>capital-loss</th>
+      <th>hours-per-week</th>
+      <th>native-country</th>
+      <th>income</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>39</td>
+      <td>State-gov</td>
+      <td>77516</td>
+      <td>Bachelors</td>
+      <td>13</td>
+      <td>Never-married</td>
+      <td>Adm-clerical</td>
+      <td>Not-in-family</td>
+      <td>White</td>
+      <td>Male</td>
+      <td>2174</td>
+      <td>0</td>
+      <td>40</td>
+      <td>United-States</td>
+      <td>&lt;=50K</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>50</td>
+      <td>Self-emp-not-inc</td>
+      <td>83311</td>
+      <td>Bachelors</td>
+      <td>13</td>
+      <td>Married-civ-spouse</td>
+      <td>Exec-managerial</td>
+      <td>Husband</td>
+      <td>White</td>
+      <td>Male</td>
+      <td>0</td>
+      <td>0</td>
+      <td>13</td>
+      <td>United-States</td>
+      <td>&lt;=50K</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>38</td>
+      <td>Private</td>
+      <td>215646</td>
+      <td>HS-grad</td>
+      <td>9</td>
+      <td>Divorced</td>
+      <td>Handlers-cleaners</td>
+      <td>Not-in-family</td>
+      <td>White</td>
+      <td>Male</td>
+      <td>0</td>
+      <td>0</td>
+      <td>40</td>
+      <td>United-States</td>
+      <td>&lt;=50K</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>53</td>
+      <td>Private</td>
+      <td>234721</td>
+      <td>11th</td>
+      <td>7</td>
+      <td>Married-civ-spouse</td>
+      <td>Handlers-cleaners</td>
+      <td>Husband</td>
+      <td>Black</td>
+      <td>Male</td>
+      <td>0</td>
+      <td>0</td>
+      <td>40</td>
+      <td>United-States</td>
+      <td>&lt;=50K</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>28</td>
+      <td>Private</td>
+      <td>338409</td>
+      <td>Bachelors</td>
+      <td>13</td>
+      <td>Married-civ-spouse</td>
+      <td>Prof-specialty</td>
+      <td>Wife</td>
+      <td>Black</td>
+      <td>Female</td>
+      <td>0</td>
+      <td>0</td>
+      <td>40</td>
+      <td>Cuba</td>
+      <td>&lt;=50K</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+</section>
+<section id="Target-type">
+<h2>Target type<a class="headerlink" href="#Target-type" title="Permalink to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">target</span> <span class="o">=</span> <span class="s2">&quot;income&quot;</span>
+
+<span class="c1"># cleaning target</span>
+<span class="n">adult_data</span><span class="p">[</span><span class="n">target</span><span class="p">]</span> <span class="o">=</span> <span class="n">adult_data</span><span class="p">[</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">u</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
+
+<span class="n">adult_data</span><span class="p">[</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">dropna</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+income
+&lt;=50K    37155
+&gt;50K     11687
+Name: count, dtype: int64
+</pre></div></div>
+</div>
+<p>The target <code class="docutils literal notranslate"><span class="pre">&quot;income&quot;</span></code> is a binary target of type <code class="docutils literal notranslate"><span class="pre">str</span></code> used in a classification task.</p>
+</section>
+<section id="Data-Sampling">
+<h2>Data Sampling<a class="headerlink" href="#Data-Sampling" title="Permalink to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">train_test_split</span>
+
+<span class="c1"># stratified sampling by target</span>
+<span class="n">train_set</span><span class="p">,</span> <span class="n">dev_set</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">adult_data</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.20</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">stratify</span><span class="o">=</span><span class="n">adult_data</span><span class="p">[</span><span class="n">target</span><span class="p">])</span>
+
+<span class="c1"># checking target rate per dataset</span>
+<span class="n">train_set</span><span class="p">[</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">dev_set</span><span class="p">[</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+c:\Users\defra\.conda\envs\py39\lib\site-packages\sklearn\utils\validation.py:605: FutureWarning: is_sparse is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.SparseDtype)` instead.
+  if is_sparse(pd_dtype):
+c:\Users\defra\.conda\envs\py39\lib\site-packages\sklearn\utils\validation.py:614: FutureWarning: is_sparse is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.SparseDtype)` instead.
+  if is_sparse(pd_dtype) or not is_extension_array_dtype(pd_dtype):
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(income
+ &lt;=50K    0.76073
+ &gt;50K     0.23927
+ Name: proportion, dtype: float64,
+ income
+ &lt;=50K    0.760672
+ &gt;50K     0.239328
+ Name: proportion, dtype: float64)
+</pre></div></div>
+</div>
+</section>
+<section id="Picking-up-columns-to-Discretize">
+<h2>Picking up columns to Discretize<a class="headerlink" href="#Picking-up-columns-to-Discretize" title="Permalink to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">train_set</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>age</th>
+      <th>workclass</th>
+      <th>fnlwgt</th>
+      <th>education</th>
+      <th>education-num</th>
+      <th>marital-status</th>
+      <th>occupation</th>
+      <th>relationship</th>
+      <th>race</th>
+      <th>sex</th>
+      <th>capital-gain</th>
+      <th>capital-loss</th>
+      <th>hours-per-week</th>
+      <th>native-country</th>
+      <th>income</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>34495</th>
+      <td>37</td>
+      <td>Private</td>
+      <td>193106</td>
+      <td>Bachelors</td>
+      <td>13</td>
+      <td>Never-married</td>
+      <td>Sales</td>
+      <td>Not-in-family</td>
+      <td>White</td>
+      <td>Female</td>
+      <td>0</td>
+      <td>0</td>
+      <td>30</td>
+      <td>United-States</td>
+      <td>&lt;=50K</td>
+    </tr>
+    <tr>
+      <th>18591</th>
+      <td>56</td>
+      <td>Self-emp-inc</td>
+      <td>216636</td>
+      <td>12th</td>
+      <td>8</td>
+      <td>Married-civ-spouse</td>
+      <td>Exec-managerial</td>
+      <td>Husband</td>
+      <td>White</td>
+      <td>Male</td>
+      <td>0</td>
+      <td>1651</td>
+      <td>40</td>
+      <td>United-States</td>
+      <td>&lt;=50K</td>
+    </tr>
+    <tr>
+      <th>12562</th>
+      <td>53</td>
+      <td>Private</td>
+      <td>126977</td>
+      <td>HS-grad</td>
+      <td>9</td>
+      <td>Separated</td>
+      <td>Craft-repair</td>
+      <td>Not-in-family</td>
+      <td>White</td>
+      <td>Male</td>
+      <td>0</td>
+      <td>0</td>
+      <td>35</td>
+      <td>United-States</td>
+      <td>&lt;=50K</td>
+    </tr>
+    <tr>
+      <th>552</th>
+      <td>72</td>
+      <td>Private</td>
+      <td>205343</td>
+      <td>11th</td>
+      <td>7</td>
+      <td>Widowed</td>
+      <td>Adm-clerical</td>
+      <td>Unmarried</td>
+      <td>White</td>
+      <td>Female</td>
+      <td>0</td>
+      <td>0</td>
+      <td>40</td>
+      <td>United-States</td>
+      <td>&lt;=50K</td>
+    </tr>
+    <tr>
+      <th>3479</th>
+      <td>46</td>
+      <td>State-gov</td>
+      <td>106705</td>
+      <td>Masters</td>
+      <td>14</td>
+      <td>Never-married</td>
+      <td>Exec-managerial</td>
+      <td>Not-in-family</td>
+      <td>White</td>
+      <td>Female</td>
+      <td>0</td>
+      <td>0</td>
+      <td>38</td>
+      <td>United-States</td>
+      <td>&lt;=50K</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">n</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+<span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">train_set</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;education-num&quot;</span><span class="p">)[</span><span class="s2">&quot;education&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">u</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="n">u</span><span class="o">.</span><span class="n">unique</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1">&quot;, &#39;</span><span class="p">):</span>
+    <span class="n">n</span> <span class="o">+=</span> <span class="n">f</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&#34;Preschool&#34;, &#34;1st-4th&#34;, &#34;5th-6th&#34;, &#34;7th-8th&#34;, &#34;9th&#34;, &#34;10th&#34;, &#34;11th&#34;, &#34;12th&#34;, &#34;HS-grad&#34;, &#34;Some-college&#34;, &#34;Assoc-voc&#34;, &#34;Assoc-acdm&#34;, &#34;Bachelors&#34;, &#34;Masters&#34;, &#34;Prof-school&#34;, &#34;Doctorate&#34;,
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># column data types</span>
+<span class="n">train_set</span><span class="o">.</span><span class="n">dtypes</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+age                int64
+workclass         object
+fnlwgt             int64
+education         object
+education-num      int64
+marital-status    object
+occupation        object
+relationship      object
+race              object
+sex               object
+capital-gain       int64
+capital-loss       int64
+hours-per-week     int64
+native-country    object
+income            object
+dtype: object
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">n</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+<span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">train_set</span><span class="p">:</span>
+    <span class="n">n</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="n">f</span><span class="si">}</span><span class="s1">&quot;, &#39;</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&#34;age&#34;, &#34;workclass&#34;, &#34;fnlwgt&#34;, &#34;education&#34;, &#34;education-num&#34;, &#34;marital-status&#34;, &#34;occupation&#34;, &#34;relationship&#34;, &#34;race&#34;, &#34;sex&#34;, &#34;capital-gain&#34;, &#34;capital-loss&#34;, &#34;hours-per-week&#34;, &#34;native-country&#34;, &#34;income&#34;,
+</pre></div></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;education&quot;</span></code> is the only qualitative ordinal feature. It will be added to the list of <code class="docutils literal notranslate"><span class="pre">ordinal_features</span></code> and <code class="docutils literal notranslate"><span class="pre">values_orders</span></code> has to be set.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;sex&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;marital-status&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;occupation&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;relationship&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;race&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;native-country&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;workclass&quot;</span></code> are quantitative categorical features. Those features will be added to the list of <code class="docutils literal notranslate"><span class="pre">qualitative_features</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;capital-gain&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;capital-loss&quot;</span></code> are quantitative continuous features, whilst <code class="docutils literal notranslate"><span class="pre">&quot;education-num&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Age&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;hours-per-week&quot;</span></code> can be considered as quantitative discrete features. Those features will be added to the list of <code class="docutils literal notranslate"><span class="pre">quantitative_features</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;fnlwgt&quot;</span></code> is the weighting column. It is not currently usable in <strong>AutoCarver</strong></p></li>
+</ul>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># lists of features per data type</span>
+<span class="n">quantitative_features</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;capital-gain&quot;</span><span class="p">,</span> <span class="s2">&quot;capital-loss&quot;</span><span class="p">,</span> <span class="s2">&quot;education-num&quot;</span><span class="p">,</span> <span class="s2">&quot;hours-per-week&quot;</span><span class="p">,</span> <span class="s2">&quot;age&quot;</span><span class="p">]</span>
+<span class="n">qualitative_features</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;sex&quot;</span><span class="p">,</span> <span class="s2">&quot;workclass&quot;</span><span class="p">,</span> <span class="s2">&quot;marital-status&quot;</span><span class="p">,</span> <span class="s2">&quot;occupation&quot;</span><span class="p">,</span> <span class="s2">&quot;relationship&quot;</span><span class="p">,</span> <span class="s2">&quot;race&quot;</span><span class="p">,</span> <span class="s2">&quot;native-country&quot;</span><span class="p">,</span> <span class="s2">&quot;income&quot;</span><span class="p">]</span>
+<span class="n">ordinal_features</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;education&quot;</span><span class="p">]</span>
+<span class="n">weighting</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;fnlwgt&quot;</span><span class="p">]</span>
+
+<span class="c1"># user-specified ordering for ordinal features</span>
+<span class="n">values_orders</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;education&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Preschool&quot;</span><span class="p">,</span> <span class="s2">&quot;1st-4th&quot;</span><span class="p">,</span> <span class="s2">&quot;5th-6th&quot;</span><span class="p">,</span> <span class="s2">&quot;7th-8th&quot;</span><span class="p">,</span> <span class="s2">&quot;9th&quot;</span><span class="p">,</span> <span class="s2">&quot;10th&quot;</span><span class="p">,</span> <span class="s2">&quot;11th&quot;</span><span class="p">,</span> <span class="s2">&quot;12th&quot;</span><span class="p">,</span> <span class="s2">&quot;HS-grad&quot;</span><span class="p">,</span> <span class="s2">&quot;Some-college&quot;</span><span class="p">,</span> <span class="s2">&quot;Assoc-voc&quot;</span><span class="p">,</span> <span class="s2">&quot;Assoc-acdm&quot;</span><span class="p">,</span> <span class="s2">&quot;Bachelors&quot;</span><span class="p">,</span> <span class="s2">&quot;Masters&quot;</span><span class="p">,</span> <span class="s2">&quot;Prof-school&quot;</span><span class="p">,</span> <span class="s2">&quot;Doctorate&quot;</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+<section id="Using-Discretizer">
+<h1>Using Discretizer<a class="headerlink" href="#Using-Discretizer" title="Permalink to this heading"></a></h1>
+<section id="Discretizer-Settings">
+<h2>Discretizer Settings<a class="headerlink" href="#Discretizer-Settings" title="Permalink to this heading"></a></h2>
+<section id="Representativness-of-modalities">
+<h3>Representativness of modalities<a class="headerlink" href="#Representativness-of-modalities" title="Permalink to this heading"></a></h3>
+<p>The attribute <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> allows one to choose the minimum frequency per basic modalities. It is used by <strong>Discretizers</strong>:</p>
+<ul class="simple">
+<li><p>For quantitative features, it defines the number of quantiles to initialy discretize the features with.</p></li>
+<li><p>For qualitative features, it defines the threshold under which a modality is grouped to either a default value or its closest modality.</p></li>
+</ul>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">min_freq</span> <span class="o">=</span> <span class="mf">0.05</span>
+</pre></div>
+</div>
+</div>
+<p><strong>Tip:</strong> should be set between <code class="docutils literal notranslate"><span class="pre">0.01</span></code> (slower, preciser, less robust) and <code class="docutils literal notranslate"><span class="pre">0.2</span></code> (faster, more robust)</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../../../discretizers_examples.html" class="btn btn-neutral float-left" title="Discretizers Examples" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../../selectors_examples.html" class="btn btn-neutral float-right" title="Selectors Examples" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Mario Defrance.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

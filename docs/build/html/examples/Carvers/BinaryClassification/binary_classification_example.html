@@ -104,13 +104,100 @@
 <h1>Setting things up<a class="headerlink" href="#Setting-things-up" title="Permalink to this heading"></a></h1>
 <section id="Installation">
 <h2>Installation<a class="headerlink" href="#Installation" title="Permalink to this heading"></a></h2>
-<div class="nbinput nblast docutils container">
+<div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">pip</span> install AutoCarver[jupyter]
 </pre></div>
 </div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Collecting AutoCarver[jupyter]
+  Downloading AutoCarver-5.4.6-py3-none-any.whl (69 kB)
+     ---------------------------------------- 0.0/69.2 kB ? eta -:--:--
+     ----- ---------------------------------- 10.2/69.2 kB ? eta -:--:--
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ----------------------- --------------- 41.0/69.2 kB 25.9 kB/s eta 0:00:02
+     ----------------------- --------------- 41.0/69.2 kB 25.9 kB/s eta 0:00:02
+     ----------------------- --------------- 41.0/69.2 kB 25.9 kB/s eta 0:00:02
+     ----------------------- --------------- 41.0/69.2 kB 25.9 kB/s eta 0:00:02
+     ----------------------- --------------- 41.0/69.2 kB 25.9 kB/s eta 0:00:02
+     ----------------------- --------------- 41.0/69.2 kB 25.9 kB/s eta 0:00:02
+     ----------------------- --------------- 41.0/69.2 kB 25.9 kB/s eta 0:00:02
+     ----------------------- --------------- 41.0/69.2 kB 25.9 kB/s eta 0:00:02
+     ----------------------- --------------- 41.0/69.2 kB 25.9 kB/s eta 0:00:02
+     --------------------------------------- 69.2/69.2 kB 37.0 kB/s eta 0:00:00
+Requirement already satisfied: pandas&gt;=2.1 in c:\users\defra\.conda\envs\py39\lib\site-packages (from AutoCarver[jupyter]) (2.1.3)
+Requirement already satisfied: numpy in c:\users\defra\.conda\envs\py39\lib\site-packages (from AutoCarver[jupyter]) (1.24.2)
+Requirement already satisfied: scipy in c:\users\defra\.conda\envs\py39\lib\site-packages (from AutoCarver[jupyter]) (1.10.1)
+Requirement already satisfied: statsmodels in c:\users\defra\.conda\envs\py39\lib\site-packages (from AutoCarver[jupyter]) (0.14.0)
+Requirement already satisfied: scikit-learn in c:\users\defra\.conda\envs\py39\lib\site-packages (from AutoCarver[jupyter]) (1.2.2)
+Requirement already satisfied: tqdm in c:\users\defra\.conda\envs\py39\lib\site-packages (from AutoCarver[jupyter]) (4.65.0)
+Requirement already satisfied: ipython in c:\users\defra\.conda\envs\py39\lib\site-packages (from AutoCarver[jupyter]) (8.11.0)
+Requirement already satisfied: matplotlib in c:\users\defra\.conda\envs\py39\lib\site-packages (from AutoCarver[jupyter]) (3.7.1)
+Requirement already satisfied: tzdata&gt;=2022.1 in c:\users\defra\.conda\envs\py39\lib\site-packages (from pandas&gt;=2.1-&gt;AutoCarver[jupyter]) (2023.3)
+Requirement already satisfied: pytz&gt;=2020.1 in c:\users\defra\.conda\envs\py39\lib\site-packages (from pandas&gt;=2.1-&gt;AutoCarver[jupyter]) (2022.7.1)
+Requirement already satisfied: python-dateutil&gt;=2.8.2 in c:\users\defra\.conda\envs\py39\lib\site-packages (from pandas&gt;=2.1-&gt;AutoCarver[jupyter]) (2.8.2)
+Requirement already satisfied: pygments&gt;=2.4.0 in c:\users\defra\.conda\envs\py39\lib\site-packages (from ipython-&gt;AutoCarver[jupyter]) (2.14.0)
+Requirement already satisfied: matplotlib-inline in c:\users\defra\.conda\envs\py39\lib\site-packages (from ipython-&gt;AutoCarver[jupyter]) (0.1.6)
+Requirement already satisfied: colorama in c:\users\defra\.conda\envs\py39\lib\site-packages (from ipython-&gt;AutoCarver[jupyter]) (0.4.6)
+Requirement already satisfied: pickleshare in c:\users\defra\.conda\envs\py39\lib\site-packages (from ipython-&gt;AutoCarver[jupyter]) (0.7.5)
+Requirement already satisfied: traitlets&gt;=5 in c:\users\defra\.conda\envs\py39\lib\site-packages (from ipython-&gt;AutoCarver[jupyter]) (5.9.0)
+Requirement already satisfied: backcall in c:\users\defra\.conda\envs\py39\lib\site-packages (from ipython-&gt;AutoCarver[jupyter]) (0.2.0)
+Requirement already satisfied: prompt-toolkit!=3.0.37,&lt;3.1.0,&gt;=3.0.30 in c:\users\defra\.conda\envs\py39\lib\site-packages (from ipython-&gt;AutoCarver[jupyter]) (3.0.38)
+Requirement already satisfied: decorator in c:\users\defra\.conda\envs\py39\lib\site-packages (from ipython-&gt;AutoCarver[jupyter]) (5.1.1)
+Requirement already satisfied: stack-data in c:\users\defra\.conda\envs\py39\lib\site-packages (from ipython-&gt;AutoCarver[jupyter]) (0.6.2)
+Requirement already satisfied: jedi&gt;=0.16 in c:\users\defra\.conda\envs\py39\lib\site-packages (from ipython-&gt;AutoCarver[jupyter]) (0.18.2)
+Requirement already satisfied: kiwisolver&gt;=1.0.1 in c:\users\defra\.conda\envs\py39\lib\site-packages (from matplotlib-&gt;AutoCarver[jupyter]) (1.4.4)
+Requirement already satisfied: contourpy&gt;=1.0.1 in c:\users\defra\.conda\envs\py39\lib\site-packages (from matplotlib-&gt;AutoCarver[jupyter]) (1.0.7)
+Requirement already satisfied: importlib-resources&gt;=3.2.0 in c:\users\defra\.conda\envs\py39\lib\site-packages (from matplotlib-&gt;AutoCarver[jupyter]) (5.12.0)
+Requirement already satisfied: packaging&gt;=20.0 in c:\users\defra\.conda\envs\py39\lib\site-packages (from matplotlib-&gt;AutoCarver[jupyter]) (23.0)
+Requirement already satisfied: fonttools&gt;=4.22.0 in c:\users\defra\.conda\envs\py39\lib\site-packages (from matplotlib-&gt;AutoCarver[jupyter]) (4.39.1)
+Requirement already satisfied: cycler&gt;=0.10 in c:\users\defra\.conda\envs\py39\lib\site-packages (from matplotlib-&gt;AutoCarver[jupyter]) (0.11.0)
+Requirement already satisfied: pyparsing&gt;=2.3.1 in c:\users\defra\.conda\envs\py39\lib\site-packages (from matplotlib-&gt;AutoCarver[jupyter]) (3.0.9)
+Requirement already satisfied: pillow&gt;=6.2.0 in c:\users\defra\.conda\envs\py39\lib\site-packages (from matplotlib-&gt;AutoCarver[jupyter]) (9.4.0)
+Requirement already satisfied: joblib&gt;=1.1.1 in c:\users\defra\.conda\envs\py39\lib\site-packages (from scikit-learn-&gt;AutoCarver[jupyter]) (1.2.0)
+Requirement already satisfied: threadpoolctl&gt;=2.0.0 in c:\users\defra\.conda\envs\py39\lib\site-packages (from scikit-learn-&gt;AutoCarver[jupyter]) (3.1.0)
+Requirement already satisfied: patsy&gt;=0.5.2 in c:\users\defra\.conda\envs\py39\lib\site-packages (from statsmodels-&gt;AutoCarver[jupyter]) (0.5.3)
+Requirement already satisfied: zipp&gt;=3.1.0 in c:\users\defra\.conda\envs\py39\lib\site-packages (from importlib-resources&gt;=3.2.0-&gt;matplotlib-&gt;AutoCarver[jupyter]) (3.15.0)
+Requirement already satisfied: parso&lt;0.9.0,&gt;=0.8.0 in c:\users\defra\.conda\envs\py39\lib\site-packages (from jedi&gt;=0.16-&gt;ipython-&gt;AutoCarver[jupyter]) (0.8.3)
+Requirement already satisfied: six in c:\users\defra\.conda\envs\py39\lib\site-packages (from patsy&gt;=0.5.2-&gt;statsmodels-&gt;AutoCarver[jupyter]) (1.16.0)
+Requirement already satisfied: wcwidth in c:\users\defra\.conda\envs\py39\lib\site-packages (from prompt-toolkit!=3.0.37,&lt;3.1.0,&gt;=3.0.30-&gt;ipython-&gt;AutoCarver[jupyter]) (0.2.6)
+Requirement already satisfied: asttokens&gt;=2.1.0 in c:\users\defra\.conda\envs\py39\lib\site-packages (from stack-data-&gt;ipython-&gt;AutoCarver[jupyter]) (2.2.1)
+Requirement already satisfied: pure-eval in c:\users\defra\.conda\envs\py39\lib\site-packages (from stack-data-&gt;ipython-&gt;AutoCarver[jupyter]) (0.2.2)
+Requirement already satisfied: executing&gt;=1.2.0 in c:\users\defra\.conda\envs\py39\lib\site-packages (from stack-data-&gt;ipython-&gt;AutoCarver[jupyter]) (1.2.0)
+Installing collected packages: AutoCarver
+Successfully installed AutoCarver-5.4.6
+Note: you may need to restart the kernel to use updated packages.
+</pre></div></div>
 </div>
 </section>
 <section id="Titanic-Data">
@@ -475,9 +562,9 @@ Pclass
 Name: count, dtype: int64
 </pre></div></div>
 </div>
-<p>The feature <code class="docutils literal notranslate"><span class="pre">&quot;Pclass&quot;</span></code> is of type <code class="docutils literal notranslate"><span class="pre">&quot;int64&quot;</span></code>, but it can be considered a qualitative ordinal feature rather than a quantitative discrete feature (ranking of named passenger classes). Thus we will add it to the list of <code class="docutils literal notranslate"><span class="pre">ordinal_features</span></code> and set the ordering of its values in <code class="docutils literal notranslate"><span class="pre">values_orders</span></code> (string values).</p>
+<p>The feature <code class="docutils literal notranslate"><span class="pre">&quot;Pclass&quot;</span></code> is of type <code class="docutils literal notranslate"><span class="pre">&quot;int64&quot;</span></code>, but it can be considered a qualitative ordinal feature rather than a quantitative discrete feature (socio-economic status). Thus we will add it to the list of <code class="docutils literal notranslate"><span class="pre">ordinal_features</span></code> and set the ordering of its values in <code class="docutils literal notranslate"><span class="pre">values_orders</span></code> (string values).</p>
 <p><code class="docutils literal notranslate"><span class="pre">&quot;Sex&quot;</span></code> is the only quantitative categorical feature, it’s added to the list of <code class="docutils literal notranslate"><span class="pre">qualitative_features</span></code>.</p>
-<p><code class="docutils literal notranslate"><span class="pre">&quot;Age&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;Fare&quot;</span></code> are quantitative continuous features, whilst <code class="docutils literal notranslate"><span class="pre">&quot;Siblings/Spouses</span> <span class="pre">Aboard&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Parents/Children</span> <span class="pre">Aboard&quot;</span></code> can be considered as quantitative discrete features. Those four features will be added to the list of <code class="docutils literal notranslate"><span class="pre">quantitative_features</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;Fare&quot;</span></code> is the only quantitative continuous features, whilst <code class="docutils literal notranslate"><span class="pre">&quot;Age&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Siblings/Spouses</span> <span class="pre">Aboard&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;Parents/Children</span> <span class="pre">Aboard&quot;</span></code> can be considered as quantitative discrete features. Those four features will be added to the list of <code class="docutils literal notranslate"><span class="pre">quantitative_features</span></code>.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
@@ -575,7 +662,7 @@ Name: count, dtype: int64
 <p>The attribute <code class="docutils literal notranslate"><span class="pre">output_dtype</span></code> allows one to choose the output type:</p>
 <ul class="simple">
 <li><p>Use <code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code> for integer output (default)</p></li>
-<li><p>Use <code class="docutils literal notranslate"><span class="pre">&quot;str&quot;</span></code> for strin output</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">&quot;str&quot;</span></code> for string output</p></li>
 </ul>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:

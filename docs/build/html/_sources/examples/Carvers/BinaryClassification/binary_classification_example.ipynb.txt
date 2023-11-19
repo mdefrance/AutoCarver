@@ -4,13 +4,10 @@
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "# Setting things up"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
+    "\n",
+    "\n",
+    "\n",
+    "# Setting things up\n",
     "## Installation"
    ]
   },
@@ -18,7 +15,94 @@
    "cell_type": "code",
    "execution_count": 1,
    "metadata": {},
-   "outputs": [],
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Collecting AutoCarver[jupyter]\n",
+      "  Downloading AutoCarver-5.4.6-py3-none-any.whl (69 kB)\n",
+      "     ---------------------------------------- 0.0/69.2 kB ? eta -:--:--\n",
+      "     ----- ---------------------------------- 10.2/69.2 kB ? eta -:--:--\n",
+      "     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01\n",
+      "     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01\n",
+      "     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01\n",
+      "     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01\n",
+      "     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01\n",
+      "     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01\n",
+      "     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01\n",
+      "     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01\n",
+      "     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01\n",
+      "     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01\n",
+      "     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01\n",
+      "     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01\n",
+      "     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01\n",
+      "     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01\n",
+      "     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01\n",
+      "     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01\n",
+      "     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01\n",
+      "     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01\n",
+      "     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01\n",
+      "     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01\n",
+      "     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01\n",
+      "     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01\n",
+      "     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01\n",
+      "     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01\n",
+      "     ----------------------- --------------- 41.0/69.2 kB 25.9 kB/s eta 0:00:02\n",
+      "     ----------------------- --------------- 41.0/69.2 kB 25.9 kB/s eta 0:00:02\n",
+      "     ----------------------- --------------- 41.0/69.2 kB 25.9 kB/s eta 0:00:02\n",
+      "     ----------------------- --------------- 41.0/69.2 kB 25.9 kB/s eta 0:00:02\n",
+      "     ----------------------- --------------- 41.0/69.2 kB 25.9 kB/s eta 0:00:02\n",
+      "     ----------------------- --------------- 41.0/69.2 kB 25.9 kB/s eta 0:00:02\n",
+      "     ----------------------- --------------- 41.0/69.2 kB 25.9 kB/s eta 0:00:02\n",
+      "     ----------------------- --------------- 41.0/69.2 kB 25.9 kB/s eta 0:00:02\n",
+      "     ----------------------- --------------- 41.0/69.2 kB 25.9 kB/s eta 0:00:02\n",
+      "     --------------------------------------- 69.2/69.2 kB 37.0 kB/s eta 0:00:00\n",
+      "Requirement already satisfied: pandas>=2.1 in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from AutoCarver[jupyter]) (2.1.3)\n",
+      "Requirement already satisfied: numpy in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from AutoCarver[jupyter]) (1.24.2)\n",
+      "Requirement already satisfied: scipy in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from AutoCarver[jupyter]) (1.10.1)\n",
+      "Requirement already satisfied: statsmodels in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from AutoCarver[jupyter]) (0.14.0)\n",
+      "Requirement already satisfied: scikit-learn in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from AutoCarver[jupyter]) (1.2.2)\n",
+      "Requirement already satisfied: tqdm in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from AutoCarver[jupyter]) (4.65.0)\n",
+      "Requirement already satisfied: ipython in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from AutoCarver[jupyter]) (8.11.0)\n",
+      "Requirement already satisfied: matplotlib in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from AutoCarver[jupyter]) (3.7.1)\n",
+      "Requirement already satisfied: tzdata>=2022.1 in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from pandas>=2.1->AutoCarver[jupyter]) (2023.3)\n",
+      "Requirement already satisfied: pytz>=2020.1 in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from pandas>=2.1->AutoCarver[jupyter]) (2022.7.1)\n",
+      "Requirement already satisfied: python-dateutil>=2.8.2 in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from pandas>=2.1->AutoCarver[jupyter]) (2.8.2)\n",
+      "Requirement already satisfied: pygments>=2.4.0 in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from ipython->AutoCarver[jupyter]) (2.14.0)\n",
+      "Requirement already satisfied: matplotlib-inline in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from ipython->AutoCarver[jupyter]) (0.1.6)\n",
+      "Requirement already satisfied: colorama in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from ipython->AutoCarver[jupyter]) (0.4.6)\n",
+      "Requirement already satisfied: pickleshare in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from ipython->AutoCarver[jupyter]) (0.7.5)\n",
+      "Requirement already satisfied: traitlets>=5 in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from ipython->AutoCarver[jupyter]) (5.9.0)\n",
+      "Requirement already satisfied: backcall in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from ipython->AutoCarver[jupyter]) (0.2.0)\n",
+      "Requirement already satisfied: prompt-toolkit!=3.0.37,<3.1.0,>=3.0.30 in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from ipython->AutoCarver[jupyter]) (3.0.38)\n",
+      "Requirement already satisfied: decorator in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from ipython->AutoCarver[jupyter]) (5.1.1)\n",
+      "Requirement already satisfied: stack-data in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from ipython->AutoCarver[jupyter]) (0.6.2)\n",
+      "Requirement already satisfied: jedi>=0.16 in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from ipython->AutoCarver[jupyter]) (0.18.2)\n",
+      "Requirement already satisfied: kiwisolver>=1.0.1 in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from matplotlib->AutoCarver[jupyter]) (1.4.4)\n",
+      "Requirement already satisfied: contourpy>=1.0.1 in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from matplotlib->AutoCarver[jupyter]) (1.0.7)\n",
+      "Requirement already satisfied: importlib-resources>=3.2.0 in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from matplotlib->AutoCarver[jupyter]) (5.12.0)\n",
+      "Requirement already satisfied: packaging>=20.0 in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from matplotlib->AutoCarver[jupyter]) (23.0)\n",
+      "Requirement already satisfied: fonttools>=4.22.0 in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from matplotlib->AutoCarver[jupyter]) (4.39.1)\n",
+      "Requirement already satisfied: cycler>=0.10 in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from matplotlib->AutoCarver[jupyter]) (0.11.0)\n",
+      "Requirement already satisfied: pyparsing>=2.3.1 in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from matplotlib->AutoCarver[jupyter]) (3.0.9)\n",
+      "Requirement already satisfied: pillow>=6.2.0 in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from matplotlib->AutoCarver[jupyter]) (9.4.0)\n",
+      "Requirement already satisfied: joblib>=1.1.1 in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from scikit-learn->AutoCarver[jupyter]) (1.2.0)\n",
+      "Requirement already satisfied: threadpoolctl>=2.0.0 in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from scikit-learn->AutoCarver[jupyter]) (3.1.0)\n",
+      "Requirement already satisfied: patsy>=0.5.2 in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from statsmodels->AutoCarver[jupyter]) (0.5.3)\n",
+      "Requirement already satisfied: zipp>=3.1.0 in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from importlib-resources>=3.2.0->matplotlib->AutoCarver[jupyter]) (3.15.0)\n",
+      "Requirement already satisfied: parso<0.9.0,>=0.8.0 in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from jedi>=0.16->ipython->AutoCarver[jupyter]) (0.8.3)\n",
+      "Requirement already satisfied: six in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from patsy>=0.5.2->statsmodels->AutoCarver[jupyter]) (1.16.0)\n",
+      "Requirement already satisfied: wcwidth in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from prompt-toolkit!=3.0.37,<3.1.0,>=3.0.30->ipython->AutoCarver[jupyter]) (0.2.6)\n",
+      "Requirement already satisfied: asttokens>=2.1.0 in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from stack-data->ipython->AutoCarver[jupyter]) (2.2.1)\n",
+      "Requirement already satisfied: pure-eval in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from stack-data->ipython->AutoCarver[jupyter]) (0.2.2)\n",
+      "Requirement already satisfied: executing>=1.2.0 in c:\\users\\defra\\.conda\\envs\\py39\\lib\\site-packages (from stack-data->ipython->AutoCarver[jupyter]) (1.2.0)\n",
+      "Installing collected packages: AutoCarver\n",
+      "Successfully installed AutoCarver-5.4.6\n",
+      "Note: you may need to restart the kernel to use updated packages.\n"
+     ]
+    }
+   ],
    "source": [
     "%pip install AutoCarver[jupyter]"
    ]
@@ -471,11 +555,11 @@
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "The feature ``\"Pclass\"`` is of type ``\"int64\"``, but it can be considered a qualitative ordinal feature rather than a quantitative discrete feature (ranking of named passenger classes). Thus we will add it to the list of ``ordinal_features`` and set the ordering of its values in ``values_orders`` (string values). \n",
+    "The feature ``\"Pclass\"`` is of type ``\"int64\"``, but it can be considered a qualitative ordinal feature rather than a quantitative discrete feature (socio-economic status). Thus we will add it to the list of ``ordinal_features`` and set the ordering of its values in ``values_orders`` (string values). \n",
     "\n",
     "``\"Sex\"`` is the only quantitative categorical feature, it's added to the list of ``qualitative_features``.\n",
     "\n",
-    "``\"Age\"`` and ``\"Fare\"`` are quantitative continuous features, whilst ``\"Siblings/Spouses Aboard\"``, ``\"Parents/Children Aboard\"`` can be considered as quantitative discrete features. Those four features will be added to the list of ``quantitative_features``."
+    "``\"Fare\"`` is the only quantitative continuous features, whilst ``\"Age\"``, ``\"Siblings/Spouses Aboard\"`` and ``\"Parents/Children Aboard\"`` can be considered as quantitative discrete features. Those four features will be added to the list of ``quantitative_features``."
    ]
   },
   {
@@ -631,7 +715,7 @@
     "The attribute ``output_dtype`` allows one to choose the output type:\n",
     "\n",
     "* Use ``\"float\"`` for integer output (default)\n",
-    "* Use ``\"str\"`` for strin output"
+    "* Use ``\"str\"`` for string output"
    ]
   },
   {
