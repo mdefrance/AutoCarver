@@ -110,7 +110,7 @@
 <section id="Installation">
 <h2>Installation<a class="headerlink" href="#Installation" title="Permalink to this heading"></a></h2>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">pip</span> install autocarver
@@ -124,7 +124,7 @@
 <p>The Census Adult Income dataset, commonly referred to as the “Adult” dataset, is a well-known dataset in the realm of machine learning and data analysis. It is frequently used for tasks related to classification and predictive modeling. The dataset is derived from the 1994 U.S. Census Bureau database and contains a diverse set of features that aim to predict whether an individual earns more than $50,000 annually, making it a binary classification problem.</p>
 <p>The features in the Adult dataset include demographic information such as age, education level, marital status, occupation, and work-related details like hours worked per week. The primary objective when working with this dataset is typically to build a predictive model capable of discerning between individuals with annual incomes above and below the $50,000 threshold.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ucimlrepo</span> <span class="kn">import</span> <span class="n">fetch_ucirepo</span>
@@ -142,7 +142,7 @@
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -280,7 +280,7 @@
 <section id="Target-type">
 <h2>Target type<a class="headerlink" href="#Target-type" title="Permalink to this heading"></a></h2>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">target</span> <span class="o">=</span> <span class="s2">&quot;income&quot;</span>
@@ -288,28 +288,32 @@
 <span class="c1"># cleaning target</span>
 <span class="n">adult_data</span><span class="p">[</span><span class="n">target</span><span class="p">]</span> <span class="o">=</span> <span class="n">adult_data</span><span class="p">[</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">u</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
 
+<span class="c1"># conversion to 0/1</span>
+<span class="n">adult_data</span><span class="p">[</span><span class="n">target</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">adult_data</span><span class="p">[</span><span class="n">target</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;&gt;50K&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+<span class="c1"># target rate</span>
 <span class="n">adult_data</span><span class="p">[</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">dropna</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 income
-&lt;=50K    37155
-&gt;50K     11687
+0    37155
+1    11687
 Name: count, dtype: int64
 </pre></div></div>
 </div>
-<p>The target <code class="docutils literal notranslate"><span class="pre">&quot;income&quot;</span></code> is a binary target of type <code class="docutils literal notranslate"><span class="pre">str</span></code> used in a classification task.</p>
+<p>The target <code class="docutils literal notranslate"><span class="pre">&quot;income&quot;</span></code> is a binary target used in a classification task.</p>
 </section>
 <section id="Data-Sampling">
 <h2>Data Sampling<a class="headerlink" href="#Data-Sampling" title="Permalink to this heading"></a></h2>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">train_test_split</span>
@@ -318,7 +322,7 @@ Name: count, dtype: int64
 <span class="n">train_set</span><span class="p">,</span> <span class="n">dev_set</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">adult_data</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.20</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">stratify</span><span class="o">=</span><span class="n">adult_data</span><span class="p">[</span><span class="n">target</span><span class="p">])</span>
 
 <span class="c1"># checking target rate per dataset</span>
-<span class="n">train_set</span><span class="p">[</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">dev_set</span><span class="p">[</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">train_set</span><span class="p">[</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">dev_set</span><span class="p">[</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -334,26 +338,19 @@ c:\Users\defra\.conda\envs\py39\lib\site-packages\sklearn\utils\validation.py:61
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-(income
- &lt;=50K    0.76073
- &gt;50K     0.23927
- Name: proportion, dtype: float64,
- income
- &lt;=50K    0.760672
- &gt;50K     0.239328
- Name: proportion, dtype: float64)
+(0.23927008420136667, 0.23932848807452145)
 </pre></div></div>
 </div>
 </section>
 <section id="Picking-up-columns-to-Discretize">
 <h2>Picking up columns to Discretize<a class="headerlink" href="#Picking-up-columns-to-Discretize" title="Permalink to this heading"></a></h2>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">train_set</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
@@ -361,7 +358,7 @@ c:\Users\defra\.conda\envs\py39\lib\site-packages\sklearn\utils\validation.py:61
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -417,7 +414,7 @@ c:\Users\defra\.conda\envs\py39\lib\site-packages\sklearn\utils\validation.py:61
       <td>0</td>
       <td>30</td>
       <td>United-States</td>
-      <td>&lt;=50K</td>
+      <td>0</td>
     </tr>
     <tr>
       <th>18591</th>
@@ -435,7 +432,7 @@ c:\Users\defra\.conda\envs\py39\lib\site-packages\sklearn\utils\validation.py:61
       <td>1651</td>
       <td>40</td>
       <td>United-States</td>
-      <td>&lt;=50K</td>
+      <td>0</td>
     </tr>
     <tr>
       <th>12562</th>
@@ -453,7 +450,7 @@ c:\Users\defra\.conda\envs\py39\lib\site-packages\sklearn\utils\validation.py:61
       <td>0</td>
       <td>35</td>
       <td>United-States</td>
-      <td>&lt;=50K</td>
+      <td>0</td>
     </tr>
     <tr>
       <th>552</th>
@@ -471,7 +468,7 @@ c:\Users\defra\.conda\envs\py39\lib\site-packages\sklearn\utils\validation.py:61
       <td>0</td>
       <td>40</td>
       <td>United-States</td>
-      <td>&lt;=50K</td>
+      <td>0</td>
     </tr>
     <tr>
       <th>3479</th>
@@ -489,33 +486,14 @@ c:\Users\defra\.conda\envs\py39\lib\site-packages\sklearn\utils\validation.py:61
       <td>0</td>
       <td>38</td>
       <td>United-States</td>
-      <td>&lt;=50K</td>
+      <td>0</td>
     </tr>
   </tbody>
 </table>
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">n</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-<span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">train_set</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;education-num&quot;</span><span class="p">)[</span><span class="s2">&quot;education&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">u</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="n">u</span><span class="o">.</span><span class="n">unique</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1">&quot;, &#39;</span><span class="p">):</span>
-    <span class="n">n</span> <span class="o">+=</span> <span class="n">f</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-&#34;Preschool&#34;, &#34;1st-4th&#34;, &#34;5th-6th&#34;, &#34;7th-8th&#34;, &#34;9th&#34;, &#34;10th&#34;, &#34;11th&#34;, &#34;12th&#34;, &#34;HS-grad&#34;, &#34;Some-college&#34;, &#34;Assoc-voc&#34;, &#34;Assoc-acdm&#34;, &#34;Bachelors&#34;, &#34;Masters&#34;, &#34;Prof-school&#34;, &#34;Doctorate&#34;,
-</pre></div></div>
-</div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># column data types</span>
@@ -524,7 +502,7 @@ c:\Users\defra\.conda\envs\py39\lib\site-packages\sklearn\utils\validation.py:61
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -543,27 +521,8 @@ capital-gain       int64
 capital-loss       int64
 hours-per-week     int64
 native-country    object
-income            object
+income             int32
 dtype: object
-</pre></div></div>
-</div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">n</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-<span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">train_set</span><span class="p">:</span>
-    <span class="n">n</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="n">f</span><span class="si">}</span><span class="s1">&quot;, &#39;</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-&#34;age&#34;, &#34;workclass&#34;, &#34;fnlwgt&#34;, &#34;education&#34;, &#34;education-num&#34;, &#34;marital-status&#34;, &#34;occupation&#34;, &#34;relationship&#34;, &#34;race&#34;, &#34;sex&#34;, &#34;capital-gain&#34;, &#34;capital-loss&#34;, &#34;hours-per-week&#34;, &#34;native-country&#34;, &#34;income&#34;,
 </pre></div></div>
 </div>
 <ul class="simple">
@@ -573,12 +532,12 @@ dtype: object
 <li><p><code class="docutils literal notranslate"><span class="pre">&quot;fnlwgt&quot;</span></code> is the weighting column. It is not currently usable in <strong>AutoCarver</strong></p></li>
 </ul>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># lists of features per data type</span>
 <span class="n">quantitative_features</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;capital-gain&quot;</span><span class="p">,</span> <span class="s2">&quot;capital-loss&quot;</span><span class="p">,</span> <span class="s2">&quot;education-num&quot;</span><span class="p">,</span> <span class="s2">&quot;hours-per-week&quot;</span><span class="p">,</span> <span class="s2">&quot;age&quot;</span><span class="p">]</span>
-<span class="n">qualitative_features</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;sex&quot;</span><span class="p">,</span> <span class="s2">&quot;workclass&quot;</span><span class="p">,</span> <span class="s2">&quot;marital-status&quot;</span><span class="p">,</span> <span class="s2">&quot;occupation&quot;</span><span class="p">,</span> <span class="s2">&quot;relationship&quot;</span><span class="p">,</span> <span class="s2">&quot;race&quot;</span><span class="p">,</span> <span class="s2">&quot;native-country&quot;</span><span class="p">,</span> <span class="s2">&quot;income&quot;</span><span class="p">]</span>
+<span class="n">qualitative_features</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;sex&quot;</span><span class="p">,</span> <span class="s2">&quot;workclass&quot;</span><span class="p">,</span> <span class="s2">&quot;marital-status&quot;</span><span class="p">,</span> <span class="s2">&quot;occupation&quot;</span><span class="p">,</span> <span class="s2">&quot;relationship&quot;</span><span class="p">,</span> <span class="s2">&quot;race&quot;</span><span class="p">,</span> <span class="s2">&quot;native-country&quot;</span><span class="p">]</span>
 <span class="n">ordinal_features</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;education&quot;</span><span class="p">]</span>
 <span class="n">weighting</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;fnlwgt&quot;</span><span class="p">]</span>
 
@@ -603,15 +562,930 @@ dtype: object
 <li><p>For qualitative features, it defines the threshold under which a modality is grouped to either a default value or its closest modality.</p></li>
 </ul>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">min_freq</span> <span class="o">=</span> <span class="mf">0.05</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">min_freq</span> <span class="o">=</span> <span class="mf">0.02</span>
 </pre></div>
 </div>
 </div>
 <p><strong>Tip:</strong> should be set between <code class="docutils literal notranslate"><span class="pre">0.01</span></code> (slower, preciser, less robust) and <code class="docutils literal notranslate"><span class="pre">0.2</span></code> (faster, more robust)</p>
 </section>
+</section>
+<section id="Fitting-Discretizer">
+<h2>Fitting Discretizer<a class="headerlink" href="#Fitting-Discretizer" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>First, all qualitative features are discretized using <code class="docutils literal notranslate"><span class="pre">QualitativeDiscretizer</span></code>:</p>
+<ol class="arabic simple">
+<li><p>(Optionaly) Using <code class="docutils literal notranslate"><span class="pre">StringDiscretizer</span></code> to convert them to <code class="docutils literal notranslate"><span class="pre">str</span></code> if not already the case</p></li>
+<li><p>For qualitative ordinal features: using <code class="docutils literal notranslate"><span class="pre">OrdinalDiscretizer</span></code> for under-represented values (less frequent than <code class="docutils literal notranslate"><span class="pre">min_freq=0.05</span></code>) to be grouped with its closest modality</p></li>
+<li><p>For qualitative categorical features: using <code class="docutils literal notranslate"><span class="pre">CategoricalDiscretizer</span></code> for under-represented values (less frequent than <code class="docutils literal notranslate"><span class="pre">min_freq=0.05</span></code>) to be grouped with a default value (<code class="docutils literal notranslate"><span class="pre">str_default=&quot;__OTHER__&quot;</span></code>)</p></li>
+</ol>
+</li>
+<li><p>Second, all quantitative features are discretized using <code class="docutils literal notranslate"><span class="pre">QuantitativeDiscretizer</span></code>:</p>
+<ol class="arabic simple">
+<li><p>Using <code class="docutils literal notranslate"><span class="pre">ContinuousDiscretizer</span></code> for quantile discretization that keeps track of over-represented values (more frequent than <code class="docutils literal notranslate"><span class="pre">min_freq=0.05</span></code>)</p></li>
+<li><p>Using <code class="docutils literal notranslate"><span class="pre">OrdinalDiscretizer</span></code> for any remaining under-represented values (less frequent than <code class="docutils literal notranslate"><span class="pre">min_freq/2=0.025</span></code>) to be grouped with its closest modality</p></li>
+</ol>
+</li>
+</ul>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">AutoCarver.discretizers</span> <span class="kn">import</span> <span class="n">Discretizer</span>
+
+<span class="c1"># intiating AutoCarver</span>
+<span class="n">discretizer</span> <span class="o">=</span> <span class="n">Discretizer</span><span class="p">(</span>
+    <span class="n">quantitative_features</span><span class="o">=</span><span class="n">quantitative_features</span><span class="p">,</span>
+    <span class="n">qualitative_features</span><span class="o">=</span><span class="n">qualitative_features</span><span class="p">,</span>
+    <span class="n">ordinal_features</span><span class="o">=</span><span class="n">ordinal_features</span><span class="p">,</span>
+    <span class="n">values_orders</span><span class="o">=</span><span class="n">values_orders</span><span class="p">,</span>
+    <span class="n">min_freq</span><span class="o">=</span><span class="n">min_freq</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># showing statistics</span>
+    <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># whether or not to return a copy of the input dataset</span>
+<span class="p">)</span>
+
+<span class="c1"># fitting on training sample</span>
+<span class="n">train_set_processed</span> <span class="o">=</span> <span class="n">discretizer</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">train_set</span><span class="p">,</span> <span class="n">train_set</span><span class="p">[</span><span class="n">target</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+------
+[Discretizer] Fit Qualitative Features
+---
+ - [OrdinalDiscretizer] Fit [&#39;education&#39;]
+ - [CategoricalDiscretizer] Fit [&#39;workclass&#39;, &#39;occupation&#39;, &#39;marital-status&#39;, &#39;race&#39;, &#39;native-country&#39;, &#39;relationship&#39;, &#39;sex&#39;]
+------
+
+------
+[Discretizer] Fit Quantitative Features
+---
+ - [ContinuousDiscretizer] Fit [&#39;capital-loss&#39;, &#39;hours-per-week&#39;, &#39;capital-gain&#39;, &#39;education-num&#39;, &#39;age&#39;]
+ - [OrdinalDiscretizer] Fit [&#39;capital-loss&#39;, &#39;hours-per-week&#39;, &#39;capital-gain&#39;, &#39;education-num&#39;, &#39;age&#39;]
+------
+
+</pre></div></div>
+</div>
+</section>
+<section id="Discretizer-Analysis">
+<h2>Discretizer Analysis<a class="headerlink" href="#Discretizer-Analysis" title="Permalink to this heading"></a></h2>
+<section id="Quantitative-Continuous-Feature">
+<h3>Quantitative Continuous Feature<a class="headerlink" href="#Quantitative-Continuous-Feature" title="Permalink to this heading"></a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Discretization Summary</span>
+<span class="n">feature</span> <span class="o">=</span> <span class="s2">&quot;capital-gain&quot;</span>
+<span class="n">discretizer</span><span class="o">.</span><span class="n">summary</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>label</th>
+      <th>content</th>
+    </tr>
+    <tr>
+      <th>dtype</th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>float</th>
+      <td>0.000e+00 &lt; x &lt;= 3.411e+03</td>
+      <td>[0.000e+00 &lt; x &lt;= 3.411e+03]</td>
+    </tr>
+    <tr>
+      <th>float</th>
+      <td>1.355e+04 &lt; x</td>
+      <td>[1.355e+04 &lt; x]</td>
+    </tr>
+    <tr>
+      <th>float</th>
+      <td>3.411e+03 &lt; x &lt;= 7.298e+03</td>
+      <td>[3.411e+03 &lt; x &lt;= 7.298e+03]</td>
+    </tr>
+    <tr>
+      <th>float</th>
+      <td>7.298e+03 &lt; x &lt;= 1.355e+04</td>
+      <td>[7.298e+03 &lt; x &lt;= 1.355e+04]</td>
+    </tr>
+    <tr>
+      <th>float</th>
+      <td>x &lt;= 0.000e+00</td>
+      <td>[x &lt;= 0.000e+00]</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Not discretized distribution</span>
+<span class="n">stats</span> <span class="o">=</span> <span class="n">train_set</span><span class="p">[</span><span class="n">feature</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">dropna</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Over-represented values of </span><span class="si">{</span><span class="n">feature</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">stats</span><span class="p">[</span><span class="n">stats</span> <span class="o">&gt;=</span> <span class="n">min_freq</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Over-represented values of capital-gain:
+ capital-gain
+0    0.918358
+Name: proportion, dtype: float64
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Discretized distribution</span>
+<span class="n">disc_stats</span> <span class="o">=</span> <span class="n">train_set_processed</span><span class="p">[</span><span class="n">feature</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">dropna</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Discretized distribution of </span><span class="si">{</span><span class="n">feature</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">disc_stats</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Discretized distribution of capital-gain:
+ capital-gain
+x &lt;= 0.000e+00                0.918358
+3.411e+03 &lt; x &lt;= 7.298e+03    0.026847
+0.000e+00 &lt; x &lt;= 3.411e+03    0.020474
+1.355e+04 &lt; x                 0.019835
+7.298e+03 &lt; x &lt;= 1.355e+04    0.014486
+Name: proportion, dtype: float64
+</pre></div></div>
+</div>
+<p>For quantitative continuous feature <code class="docutils literal notranslate"><span class="pre">capital-gain</span></code>:</p>
+<ul class="simple">
+<li><p>An over-represented value has been identified and kept by itself: value <code class="docutils literal notranslate"><span class="pre">0</span></code> represents 91.8% of observed data (more than <code class="docutils literal notranslate"><span class="pre">min_freq=0.02</span></code>)</p></li>
+<li><p>Remaining 8.2% of values have been discretized in quantiles of sizes 2% (as specified with <code class="docutils literal notranslate"><span class="pre">min_freq=0.02</span></code>)</p></li>
+</ul>
+</section>
+<section id="Quantitative-Discrete-Feature">
+<h3>Quantitative Discrete Feature<a class="headerlink" href="#Quantitative-Discrete-Feature" title="Permalink to this heading"></a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Discretization Summary</span>
+<span class="n">feature</span> <span class="o">=</span> <span class="s2">&quot;hours-per-week&quot;</span>
+<span class="n">discretizer</span><span class="o">.</span><span class="n">summary</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>label</th>
+      <th>content</th>
+    </tr>
+    <tr>
+      <th>dtype</th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>float</th>
+      <td>1.000e+01 &lt; x &lt;= 1.500e+01</td>
+      <td>[1.000e+01 &lt; x &lt;= 1.500e+01]</td>
+    </tr>
+    <tr>
+      <th>float</th>
+      <td>1.500e+01 &lt; x &lt;= 2.000e+01</td>
+      <td>[1.500e+01 &lt; x &lt;= 2.000e+01]</td>
+    </tr>
+    <tr>
+      <th>float</th>
+      <td>2.000e+01 &lt; x &lt;= 2.500e+01</td>
+      <td>[2.000e+01 &lt; x &lt;= 2.500e+01]</td>
+    </tr>
+    <tr>
+      <th>float</th>
+      <td>2.500e+01 &lt; x &lt;= 3.000e+01</td>
+      <td>[2.500e+01 &lt; x &lt;= 3.000e+01]</td>
+    </tr>
+    <tr>
+      <th>float</th>
+      <td>3.000e+01 &lt; x &lt;= 3.400e+01</td>
+      <td>[3.000e+01 &lt; x &lt;= 3.400e+01]</td>
+    </tr>
+    <tr>
+      <th>float</th>
+      <td>3.400e+01 &lt; x &lt;= 3.500e+01</td>
+      <td>[3.400e+01 &lt; x &lt;= 3.500e+01]</td>
+    </tr>
+    <tr>
+      <th>float</th>
+      <td>3.500e+01 &lt; x &lt;= 3.900e+01</td>
+      <td>[3.500e+01 &lt; x &lt;= 3.900e+01]</td>
+    </tr>
+    <tr>
+      <th>float</th>
+      <td>3.900e+01 &lt; x &lt;= 4.000e+01</td>
+      <td>[3.900e+01 &lt; x &lt;= 4.000e+01]</td>
+    </tr>
+    <tr>
+      <th>float</th>
+      <td>4.000e+01 &lt; x &lt;= 4.400e+01</td>
+      <td>[4.000e+01 &lt; x &lt;= 4.400e+01]</td>
+    </tr>
+    <tr>
+      <th>float</th>
+      <td>4.400e+01 &lt; x &lt;= 4.500e+01</td>
+      <td>[4.400e+01 &lt; x &lt;= 4.500e+01]</td>
+    </tr>
+    <tr>
+      <th>float</th>
+      <td>4.500e+01 &lt; x &lt;= 4.900e+01</td>
+      <td>[4.500e+01 &lt; x &lt;= 4.900e+01]</td>
+    </tr>
+    <tr>
+      <th>float</th>
+      <td>4.900e+01 &lt; x &lt;= 5.400e+01</td>
+      <td>[4.900e+01 &lt; x &lt;= 5.400e+01]</td>
+    </tr>
+    <tr>
+      <th>float</th>
+      <td>5.400e+01 &lt; x &lt;= 5.500e+01</td>
+      <td>[5.400e+01 &lt; x &lt;= 5.500e+01]</td>
+    </tr>
+    <tr>
+      <th>float</th>
+      <td>5.500e+01 &lt; x &lt;= 6.000e+01</td>
+      <td>[5.500e+01 &lt; x &lt;= 6.000e+01]</td>
+    </tr>
+    <tr>
+      <th>float</th>
+      <td>6.000e+01 &lt; x &lt;= 7.000e+01</td>
+      <td>[6.000e+01 &lt; x &lt;= 7.000e+01]</td>
+    </tr>
+    <tr>
+      <th>float</th>
+      <td>7.000e+01 &lt; x</td>
+      <td>[7.000e+01 &lt; x]</td>
+    </tr>
+    <tr>
+      <th>float</th>
+      <td>x &lt;= 1.000e+01</td>
+      <td>[x &lt;= 1.000e+01]</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Not discretized distribution</span>
+<span class="n">stats</span> <span class="o">=</span> <span class="n">train_set</span><span class="p">[</span><span class="n">feature</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">dropna</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Over-represented values of </span><span class="si">{</span><span class="n">feature</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">stats</span><span class="p">[</span><span class="n">stats</span> <span class="o">&gt;=</span> <span class="n">min_freq</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Over-represented values of hours-per-week:
+ hours-per-week
+40    0.464976
+50    0.086965
+45    0.056970
+60    0.044993
+35    0.039567
+20    0.037084
+30    0.034730
+55    0.021959
+Name: proportion, dtype: float64
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Discretized distribution</span>
+<span class="n">disc_stats</span> <span class="o">=</span> <span class="n">train_set_processed</span><span class="p">[</span><span class="n">feature</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">dropna</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Discretized distribution of </span><span class="si">{</span><span class="n">feature</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">disc_stats</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Discretized distribution of hours-per-week:
+ hours-per-week
+3.900e+01 &lt; x &lt;= 4.000e+01    0.464976
+4.900e+01 &lt; x &lt;= 5.400e+01    0.093901
+4.400e+01 &lt; x &lt;= 4.500e+01    0.056970
+5.500e+01 &lt; x &lt;= 6.000e+01    0.049267
+1.500e+01 &lt; x &lt;= 2.000e+01    0.046835
+2.500e+01 &lt; x &lt;= 3.000e+01    0.039669
+3.400e+01 &lt; x &lt;= 3.500e+01    0.039567
+2.000e+01 &lt; x &lt;= 2.500e+01    0.029816
+3.500e+01 &lt; x &lt;= 3.900e+01    0.027948
+x &lt;= 1.000e+01                0.023367
+5.400e+01 &lt; x &lt;= 5.500e+01    0.021959
+4.500e+01 &lt; x &lt;= 4.900e+01    0.020884
+1.000e+01 &lt; x &lt;= 1.500e+01    0.019911
+4.000e+01 &lt; x &lt;= 4.400e+01    0.019169
+6.000e+01 &lt; x &lt;= 7.000e+01    0.018504
+7.000e+01 &lt; x                 0.016072
+3.000e+01 &lt; x &lt;= 3.400e+01    0.011184
+Name: proportion, dtype: float64
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># values between 50 and 55 hours per week are under-represented</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Observed data for </span><span class="si">{</span><span class="n">feature</span><span class="si">}</span><span class="s2"> values strictly between 50 and 55: </span><span class="si">{</span><span class="n">train_set</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;50&lt;`</span><span class="si">{</span><span class="n">feature</span><span class="si">}</span><span class="s1">`&lt;55&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">train_set</span><span class="p">)</span><span class="si">:</span><span class="s2">.2%</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Observed data for hours-per-week values strictly between 50 and 55: 0.69%
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Target rate for </span><span class="si">{</span><span class="n">feature</span><span class="si">}</span><span class="s2"> values equal to 50: </span><span class="si">{</span><span class="n">train_set</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;`</span><span class="si">{</span><span class="n">feature</span><span class="si">}</span><span class="s1">`==50&#39;</span><span class="p">)[</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.2%</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Target rate for </span><span class="si">{</span><span class="n">feature</span><span class="si">}</span><span class="s2"> values strictly between 50 and 55: </span><span class="si">{</span><span class="n">train_set</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;50&lt;`</span><span class="si">{</span><span class="n">feature</span><span class="si">}</span><span class="s1">`&lt;55&#39;</span><span class="p">)[</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.2%</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Target rate for </span><span class="si">{</span><span class="n">feature</span><span class="si">}</span><span class="s2"> values equal to 55: </span><span class="si">{</span><span class="n">train_set</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;`</span><span class="si">{</span><span class="n">feature</span><span class="si">}</span><span class="s1">`==55&#39;</span><span class="p">)[</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.2%</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Target rate for hours-per-week values equal to 50: 44.29%
+Target rate for hours-per-week values strictly between 50 and 55: 32.10%
+Target rate for hours-per-week values equal to 55: 47.32%
+</pre></div></div>
+</div>
+<p>For quantitative discrete feature <code class="docutils literal notranslate"><span class="pre">hours-per-week</span></code>:</p>
+<ul class="simple">
+<li><p>Some over-represented values have been identified:</p>
+<ul>
+<li><p>values <code class="docutils literal notranslate"><span class="pre">20</span></code>, <code class="docutils literal notranslate"><span class="pre">30</span></code>, <code class="docutils literal notranslate"><span class="pre">35</span></code>, <code class="docutils literal notranslate"><span class="pre">40</span></code>, <code class="docutils literal notranslate"><span class="pre">45</span></code>, <code class="docutils literal notranslate"><span class="pre">50</span></code>, <code class="docutils literal notranslate"><span class="pre">55</span></code> and <code class="docutils literal notranslate"><span class="pre">60</span></code> each represent more than 2.0% of observed data (more than <code class="docutils literal notranslate"><span class="pre">min_freq=0.02</span></code>)</p></li>
+<li><p>they are kept as their own modality</p></li>
+</ul>
+</li>
+<li><p>Some under-represented values have been identified:</p>
+<ul>
+<li><p>values between <code class="docutils literal notranslate"><span class="pre">50</span></code> and <code class="docutils literal notranslate"><span class="pre">55</span></code> represent only 0.7% of observed data, which is not enough to make a whole quantile out of (at least <code class="docutils literal notranslate"><span class="pre">min_freq/2=0.01</span></code>).</p></li>
+<li><p>hence there grouping with there closest modality, <code class="docutils literal notranslate"><span class="pre">50</span></code>, in terms of target rate (32.1% is closer to 44.3% than to 47.3%)</p></li>
+</ul>
+</li>
+<li><p>Remaining values have been discretized in quantiles of sizes 2% (as specified with <code class="docutils literal notranslate"><span class="pre">min_freq=0.02</span></code>)</p></li>
+</ul>
+</section>
+</section>
+<section id="Qualitative-Categorical-Feature">
+<h2>Qualitative Categorical Feature<a class="headerlink" href="#Qualitative-Categorical-Feature" title="Permalink to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Discretization Summary</span>
+<span class="n">feature</span> <span class="o">=</span> <span class="s2">&quot;workclass&quot;</span>
+<span class="n">discretizer</span><span class="o">.</span><span class="n">summary</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>label</th>
+      <th>content</th>
+    </tr>
+    <tr>
+      <th>dtype</th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>str</th>
+      <td>?</td>
+      <td>[?]</td>
+    </tr>
+    <tr>
+      <th>str</th>
+      <td>Federal-gov</td>
+      <td>[Federal-gov]</td>
+    </tr>
+    <tr>
+      <th>str</th>
+      <td>Local-gov</td>
+      <td>[Local-gov]</td>
+    </tr>
+    <tr>
+      <th>str</th>
+      <td>Private</td>
+      <td>[Private]</td>
+    </tr>
+    <tr>
+      <th>str</th>
+      <td>Self-emp-inc</td>
+      <td>[Self-emp-inc]</td>
+    </tr>
+    <tr>
+      <th>str</th>
+      <td>Self-emp-not-inc</td>
+      <td>[Self-emp-not-inc]</td>
+    </tr>
+    <tr>
+      <th>str</th>
+      <td>State-gov</td>
+      <td>[State-gov]</td>
+    </tr>
+    <tr>
+      <th>str</th>
+      <td>__NAN__</td>
+      <td>[__NAN__]</td>
+    </tr>
+    <tr>
+      <th>str</th>
+      <td>__OTHER__</td>
+      <td>[Never-worked, Without-pay]</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Not discretized distribution</span>
+<span class="n">stats</span> <span class="o">=</span> <span class="n">train_set</span><span class="p">[</span><span class="n">feature</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">dropna</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Over-represented values of </span><span class="si">{</span><span class="n">feature</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">stats</span><span class="p">[</span><span class="n">stats</span> <span class="o">&gt;=</span> <span class="n">min_freq</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Under-represented values of </span><span class="si">{</span><span class="n">feature</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">stats</span><span class="p">[</span><span class="n">stats</span> <span class="o">&lt;</span> <span class="n">min_freq</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Over-represented values of workclass:
+ workclass
+Private             0.708568
+Self-emp-not-inc    0.080096
+Local-gov           0.066181
+State-gov           0.040622
+?                   0.038221
+Self-emp-inc        0.035584
+Federal-gov         0.030023
+Name: proportion, dtype: float64
+
+Under-represented values of workclass:
+ workclass
+Without-pay     0.000496
+Never-worked    0.000209
+Name: proportion, dtype: float64
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Discretized distribution</span>
+<span class="n">disc_stats</span> <span class="o">=</span> <span class="n">train_set_processed</span><span class="p">[</span><span class="n">feature</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">dropna</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Discretized distribution of </span><span class="si">{</span><span class="n">feature</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">disc_stats</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Discretized distribution of workclass:
+ workclass
+Private             0.694623
+Self-emp-not-inc    0.078520
+Local-gov           0.064879
+State-gov           0.039823
+?                   0.037468
+Self-emp-inc        0.034883
+Federal-gov         0.029432
+__NAN__             0.019681
+__OTHER__           0.000691
+Name: proportion, dtype: float64
+</pre></div></div>
+</div>
+<p>For qualitative categorical feature <code class="docutils literal notranslate"><span class="pre">workclass</span></code>:</p>
+<ul class="simple">
+<li><p>Some over-represented categories have been identified:</p>
+<ul>
+<li><p>categories <code class="docutils literal notranslate"><span class="pre">&quot;Private&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Self-emp-not-inc&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Local-gov&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;State-gov&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;?&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Self-emp-inc&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;Federal-gov&quot;</span></code>, each represent more than 2.0% of observed data (more than <code class="docutils literal notranslate"><span class="pre">min_freq=0.02</span></code>)</p></li>
+<li><p>they are kept as their own modality</p></li>
+</ul>
+</li>
+<li><p>Some under-represented categories have been identified:</p>
+<ul>
+<li><p>categories <code class="docutils literal notranslate"><span class="pre">&quot;Never-worked&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;Without-pay&quot;</span></code>, each represent less than 2.0% of observed data (less than <code class="docutils literal notranslate"><span class="pre">min_freq=0.02</span></code>)</p></li>
+<li><p>they are grouped in the default value <code class="docutils literal notranslate"><span class="pre">str_default=&quot;__OTHER__&quot;</span></code></p></li>
+</ul>
+</li>
+<li><p>Missing values are left by themselves whatsoever (nan value <code class="docutils literal notranslate"><span class="pre">str_nan=&quot;__NAN__&quot;</span></code>)</p></li>
+</ul>
+</section>
+<section id="Qualitative-Ordinal-Feature">
+<h2>Qualitative Ordinal Feature<a class="headerlink" href="#Qualitative-Ordinal-Feature" title="Permalink to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Discretization Summary</span>
+<span class="n">feature</span> <span class="o">=</span> <span class="s2">&quot;education&quot;</span>
+<span class="n">discretizer</span><span class="o">.</span><span class="n">summary</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>label</th>
+      <th>content</th>
+    </tr>
+    <tr>
+      <th>dtype</th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>str</th>
+      <td>10th</td>
+      <td>[10th]</td>
+    </tr>
+    <tr>
+      <th>str</th>
+      <td>11th</td>
+      <td>[11th, 12th]</td>
+    </tr>
+    <tr>
+      <th>str</th>
+      <td>7th-8th</td>
+      <td>[1st-4th, 5th-6th, 7th-8th, 9th, Preschool]</td>
+    </tr>
+    <tr>
+      <th>str</th>
+      <td>Assoc-acdm</td>
+      <td>[Assoc-acdm]</td>
+    </tr>
+    <tr>
+      <th>str</th>
+      <td>Assoc-voc</td>
+      <td>[Assoc-voc]</td>
+    </tr>
+    <tr>
+      <th>str</th>
+      <td>Bachelors</td>
+      <td>[Bachelors]</td>
+    </tr>
+    <tr>
+      <th>str</th>
+      <td>HS-grad</td>
+      <td>[HS-grad]</td>
+    </tr>
+    <tr>
+      <th>str</th>
+      <td>Masters</td>
+      <td>[Masters]</td>
+    </tr>
+    <tr>
+      <th>str</th>
+      <td>Prof-school</td>
+      <td>[Doctorate, Prof-school]</td>
+    </tr>
+    <tr>
+      <th>str</th>
+      <td>Some-college</td>
+      <td>[Some-college]</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Not discretized distribution</span>
+<span class="n">stats</span> <span class="o">=</span> <span class="n">train_set</span><span class="p">[</span><span class="n">feature</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">dropna</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Over-represented values of </span><span class="si">{</span><span class="n">feature</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">stats</span><span class="p">[</span><span class="n">stats</span> <span class="o">&gt;=</span> <span class="n">min_freq</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Under-represented values of </span><span class="si">{</span><span class="n">feature</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">stats</span><span class="p">[</span><span class="n">stats</span> <span class="o">&lt;</span> <span class="n">min_freq</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Over-represented values of education:
+ education
+HS-grad         0.322013
+Some-college    0.223658
+Bachelors       0.163259
+Masters         0.054539
+Assoc-voc       0.042408
+11th            0.037136
+Assoc-acdm      0.033348
+10th            0.028357
+Name: proportion, dtype: float64
+
+Under-represented values of education:
+ education
+7th-8th        0.019348
+Prof-school    0.016738
+9th            0.015637
+12th           0.013616
+Doctorate      0.011978
+5th-6th        0.010928
+1st-4th        0.005451
+Preschool      0.001587
+Name: proportion, dtype: float64
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">discretizer</span><span class="o">.</span><span class="n">values_orders</span><span class="p">[</span><span class="n">feature</span><span class="p">]</span><span class="o">.</span><span class="n">content</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;7th-8th&#39;: [&#39;9th&#39;, &#39;5th-6th&#39;, &#39;1st-4th&#39;, &#39;Preschool&#39;, &#39;7th-8th&#39;],
+ &#39;10th&#39;: [&#39;10th&#39;],
+ &#39;11th&#39;: [&#39;12th&#39;, &#39;11th&#39;],
+ &#39;HS-grad&#39;: [&#39;HS-grad&#39;],
+ &#39;Some-college&#39;: [&#39;Some-college&#39;],
+ &#39;Assoc-voc&#39;: [&#39;Assoc-voc&#39;],
+ &#39;Assoc-acdm&#39;: [&#39;Assoc-acdm&#39;],
+ &#39;Bachelors&#39;: [&#39;Bachelors&#39;],
+ &#39;Masters&#39;: [&#39;Masters&#39;],
+ &#39;Prof-school&#39;: [&#39;Doctorate&#39;, &#39;Prof-school&#39;]}
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Discretized distribution</span>
+<span class="n">disc_stats</span> <span class="o">=</span> <span class="n">train_set_processed</span><span class="p">[</span><span class="n">feature</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">dropna</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Discretized distribution of </span><span class="si">{</span><span class="n">feature</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">disc_stats</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Discretized distribution of education:
+ education
+HS-grad         0.322013
+Some-college    0.223658
+Bachelors       0.163259
+Masters         0.054539
+7th-8th         0.052952
+11th            0.050751
+Assoc-voc       0.042408
+Assoc-acdm      0.033348
+Prof-school     0.028715
+10th            0.028357
+Name: proportion, dtype: float64
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Provided ordering:&quot;</span><span class="p">,</span> <span class="n">values_orders</span><span class="p">[</span><span class="n">feature</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Provided ordering: [&#39;Preschool&#39;, &#39;1st-4th&#39;, &#39;5th-6th&#39;, &#39;7th-8th&#39;, &#39;9th&#39;, &#39;10th&#39;, &#39;11th&#39;, &#39;12th&#39;, &#39;HS-grad&#39;, &#39;Some-college&#39;, &#39;Assoc-voc&#39;, &#39;Assoc-acdm&#39;, &#39;Bachelors&#39;, &#39;Masters&#39;, &#39;Prof-school&#39;, &#39;Doctorate&#39;]
+</pre></div></div>
+</div>
+<p>For qualitative ordinal feature <code class="docutils literal notranslate"><span class="pre">education</span></code>:</p>
+<ul class="simple">
+<li><p>Some over-represented categories have been identified:</p>
+<ul>
+<li><p>categories <code class="docutils literal notranslate"><span class="pre">&quot;10th&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;11th&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;HS-grad&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Some-college&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Assoc-voc&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Assoc-acdm&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Bachelors&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;Masters&quot;</span></code> each represent more than 2.0% of observed data (more than <code class="docutils literal notranslate"><span class="pre">min_freq=0.02</span></code>)</p></li>
+<li><p>they are kept as their own modality</p></li>
+</ul>
+</li>
+<li><p>Some under-represented categories have been identified:</p>
+<ul>
+<li><p>categories <code class="docutils literal notranslate"><span class="pre">&quot;Preschool&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;1st-4th&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;5th-6th&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;7th-8th&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;9th&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;12th&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Prof-school&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;Doctorate&quot;</span></code> each represent less than 2.0% of observed data (less than <code class="docutils literal notranslate"><span class="pre">min_freq=0.02</span></code>)</p></li>
+<li><p>starting from the least represented category, they are grouped with there respective closest modality:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;Preschool&quot;</span></code> is grouped with <code class="docutils literal notranslate"><span class="pre">&quot;1st-4th&quot;</span></code> as it is the only available modality in the specified order (see definition of <code class="docutils literal notranslate"><span class="pre">values_orders</span></code>)</p></li>
+<li><p>In the same manner they are then grouped successively with <code class="docutils literal notranslate"><span class="pre">&quot;5th-6th&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;7th-8th&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;9th&quot;</span></code></p></li>
+<li><p>Same goes for <code class="docutils literal notranslate"><span class="pre">&quot;12th&quot;</span></code> with <code class="docutils literal notranslate"><span class="pre">&quot;11th&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;Prof-school&quot;</span></code> with <code class="docutils literal notranslate"><span class="pre">&quot;Doctorate&quot;</span></code></p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>Missing values are left by themselves (nan value <code class="docutils literal notranslate"><span class="pre">str_nan=&quot;__NAN__&quot;</span></code>)</p></li>
+</ul>
+</section>
+<section id="Saving-and-Loading-Discretizer">
+<h2>Saving and Loading Discretizer<a class="headerlink" href="#Saving-and-Loading-Discretizer" title="Permalink to this heading"></a></h2>
+<section id="Saving">
+<h3>Saving<a class="headerlink" href="#Saving" title="Permalink to this heading"></a></h3>
+<p>All <strong>Discretizers</strong> can safely be stored as a .json file.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
+
+<span class="c1"># storing as json file</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;discretizer.json&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">my_discretizer_json</span><span class="p">:</span>
+    <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">discretizer</span><span class="o">.</span><span class="n">to_json</span><span class="p">(),</span> <span class="n">my_discretizer_json</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Loading">
+<h3>Loading<a class="headerlink" href="#Loading" title="Permalink to this heading"></a></h3>
+<p><strong>Carvers</strong> can safely be loaded from a .json file.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
+
+<span class="kn">from</span> <span class="nn">AutoCarver.discretizers</span> <span class="kn">import</span> <span class="n">load_discretizer</span>
+
+<span class="c1"># loading json file</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;discretizer.json&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">my_discretizer_json</span><span class="p">:</span>
+    <span class="n">discretizer</span> <span class="o">=</span> <span class="n">load_discretizer</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">my_discretizer_json</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+<section id="Applying-Discretizer">
+<h2>Applying Discretizer<a class="headerlink" href="#Applying-Discretizer" title="Permalink to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dev_set_processed</span> <span class="o">=</span> <span class="n">discretizer</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">dev_set</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="What's-next?">
+<h2>What’s next?<a class="headerlink" href="#What's-next?" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>Thanks to <strong>Discretizers</strong> all of your features are now quantitative ordinal features with representative enough modalities!</p></li>
+<li><p><strong>Discretizers</strong> are directly integrated in <strong>Carvers</strong></p></li>
+<li><p><strong>Carvers</strong> make good use of this discretization step to find out the most target associated consecutive combination of modalities, so make sure to check out <a class="reference external" href="https://autocarver.readthedocs.io/en/latest/carvers_examples.html">Carvers Examples</a>!</p></li>
+</ul>
+</section>
+<section id="Well-done!">
+<h2>Well done!<a class="headerlink" href="#Well-done!" title="Permalink to this heading"></a></h2>
+<p>You have successfully navigated the intricacies of feature discretization using the AutoCarver package, creating a dataset with finely tuned discrete representations that enhance the interpretability and effectiveness of your features.</p>
+<p>Your meticulous approach to discretizing both quantitative and qualitative attributes, utilizing the QuantitativeDiscretizer and QualitativeDiscretizer components, showcases your commitment to preparing data for meaningful analysis and modeling.</p>
+<p>We appreciate your trust in the AutoCarver package, and we hope that the discretized features contribute to the success of your machine learning endeavors. As you move forward with your analyses and predictive modeling tasks, may the insights gained from this well-crafted dataset lead to impactful and informed decisions.</p>
+<p>Thank you for choosing AutoCarver as your companion in the data preprocessing journey. Your dedication to refining and optimizing your datasets reflects a commitment to excellence in data science. We look forward to being part of your future data adventures and wish you continued success in your endeavors.</p>
 </section>
 </section>
 

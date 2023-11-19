@@ -20,7 +20,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 1,
    "metadata": {},
    "outputs": [],
    "source": [
@@ -42,7 +42,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 1,
+   "execution_count": 3,
    "metadata": {},
    "outputs": [
     {
@@ -201,7 +201,7 @@
        "4             0             0              40           Cuba  <=50K  "
       ]
      },
-     "execution_count": 1,
+     "execution_count": 3,
      "metadata": {},
      "output_type": "execute_result"
     }
@@ -229,19 +229,19 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 5,
+   "execution_count": 4,
    "metadata": {},
    "outputs": [
     {
      "data": {
       "text/plain": [
        "income\n",
-       "<=50K    37155\n",
-       ">50K     11687\n",
+       "0    37155\n",
+       "1    11687\n",
        "Name: count, dtype: int64"
       ]
      },
-     "execution_count": 5,
+     "execution_count": 4,
      "metadata": {},
      "output_type": "execute_result"
     }
@@ -252,6 +252,10 @@
     "# cleaning target\n",
     "adult_data[target] = adult_data[target].apply(lambda u: u.replace(\".\", \"\"))\n",
     "\n",
+    "# conversion to 0/1\n",
+    "adult_data[target] = (adult_data[target] == \">50K\").astype(int)\n",
+    "\n",
+    "# target rate\n",
     "adult_data[target].value_counts(dropna=False)"
    ]
   },
@@ -259,7 +263,7 @@
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "The target ``\"income\"`` is a binary target of type ``str`` used in a classification task."
+    "The target ``\"income\"`` is a binary target used in a classification task."
    ]
   },
   {
@@ -271,7 +275,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 13,
+   "execution_count": 5,
    "metadata": {},
    "outputs": [
     {
@@ -287,17 +291,10 @@
     {
      "data": {
       "text/plain": [
-       "(income\n",
-       " <=50K    0.76073\n",
-       " >50K     0.23927\n",
-       " Name: proportion, dtype: float64,\n",
-       " income\n",
-       " <=50K    0.760672\n",
-       " >50K     0.239328\n",
-       " Name: proportion, dtype: float64)"
+       "(0.23927008420136667, 0.23932848807452145)"
       ]
      },
-     "execution_count": 13,
+     "execution_count": 5,
      "metadata": {},
      "output_type": "execute_result"
     }
@@ -309,7 +306,7 @@
     "train_set, dev_set = train_test_split(adult_data, test_size=0.20, random_state=42, stratify=adult_data[target])\n",
     "\n",
     "# checking target rate per dataset\n",
-    "train_set[target].value_counts(normalize=True), dev_set[target].value_counts(normalize=True)"
+    "train_set[target].mean(), dev_set[target].mean()"
    ]
   },
   {
@@ -321,7 +318,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 14,
+   "execution_count": 6,
    "metadata": {},
    "outputs": [
     {
@@ -379,7 +376,7 @@
        "      <td>0</td>\n",
        "      <td>30</td>\n",
        "      <td>United-States</td>\n",
-       "      <td>&lt;=50K</td>\n",
+       "      <td>0</td>\n",
        "    </tr>\n",
        "    <tr>\n",
        "      <th>18591</th>\n",
@@ -397,7 +394,7 @@
        "      <td>1651</td>\n",
        "      <td>40</td>\n",
        "      <td>United-States</td>\n",
-       "      <td>&lt;=50K</td>\n",
+       "      <td>0</td>\n",
        "    </tr>\n",
        "    <tr>\n",
        "      <th>12562</th>\n",
@@ -415,7 +412,7 @@
        "      <td>0</td>\n",
        "      <td>35</td>\n",
        "      <td>United-States</td>\n",
-       "      <td>&lt;=50K</td>\n",
+       "      <td>0</td>\n",
        "    </tr>\n",
        "    <tr>\n",
        "      <th>552</th>\n",
@@ -433,7 +430,7 @@
        "      <td>0</td>\n",
        "      <td>40</td>\n",
        "      <td>United-States</td>\n",
-       "      <td>&lt;=50K</td>\n",
+       "      <td>0</td>\n",
        "    </tr>\n",
        "    <tr>\n",
        "      <th>3479</th>\n",
@@ -451,7 +448,7 @@
        "      <td>0</td>\n",
        "      <td>38</td>\n",
        "      <td>United-States</td>\n",
-       "      <td>&lt;=50K</td>\n",
+       "      <td>0</td>\n",
        "    </tr>\n",
        "  </tbody>\n",
        "</table>\n",
@@ -472,15 +469,15 @@
        "552               Widowed     Adm-clerical      Unmarried  White  Female   \n",
        "3479        Never-married  Exec-managerial  Not-in-family  White  Female   \n",
        "\n",
-       "       capital-gain  capital-loss  hours-per-week native-country income  \n",
-       "34495             0             0              30  United-States  <=50K  \n",
-       "18591             0          1651              40  United-States  <=50K  \n",
-       "12562             0             0              35  United-States  <=50K  \n",
-       "552               0             0              40  United-States  <=50K  \n",
-       "3479              0             0              38  United-States  <=50K  "
+       "       capital-gain  capital-loss  hours-per-week native-country  income  \n",
+       "34495             0             0              30  United-States       0  \n",
+       "18591             0          1651              40  United-States       0  \n",
+       "12562             0             0              35  United-States       0  \n",
+       "552               0             0              40  United-States       0  \n",
+       "3479              0             0              38  United-States       0  "
       ]
      },
-     "execution_count": 14,
+     "execution_count": 6,
      "metadata": {},
      "output_type": "execute_result"
     }
@@ -491,27 +488,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 23,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\"Preschool\", \"1st-4th\", \"5th-6th\", \"7th-8th\", \"9th\", \"10th\", \"11th\", \"12th\", \"HS-grad\", \"Some-college\", \"Assoc-voc\", \"Assoc-acdm\", \"Bachelors\", \"Masters\", \"Prof-school\", \"Doctorate\", \n"
-     ]
-    }
-   ],
-   "source": [
-    "n = \"\"\n",
-    "for f in train_set.groupby(\"education-num\")[\"education\"].apply(lambda u: f'\"{u.unique()[0]}\", '):\n",
-    "    n += f\n",
-    "print(n)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 16,
+   "execution_count": 7,
    "metadata": {},
    "outputs": [
     {
@@ -531,11 +508,11 @@
        "capital-loss       int64\n",
        "hours-per-week     int64\n",
        "native-country    object\n",
-       "income            object\n",
+       "income             int32\n",
        "dtype: object"
       ]
      },
-     "execution_count": 16,
+     "execution_count": 7,
      "metadata": {},
      "output_type": "execute_result"
     }
@@ -543,26 +520,6 @@
    "source": [
     "# column data types\n",
     "train_set.dtypes"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 19,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\"age\", \"workclass\", \"fnlwgt\", \"education\", \"education-num\", \"marital-status\", \"occupation\", \"relationship\", \"race\", \"sex\", \"capital-gain\", \"capital-loss\", \"hours-per-week\", \"native-country\", \"income\", \n"
-     ]
-    }
-   ],
-   "source": [
-    "n = ''\n",
-    "for f in train_set:\n",
-    "    n += f'\"{f}\", '\n",
-    "print(n)"
    ]
   },
   {
@@ -580,13 +537,13 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 24,
+   "execution_count": 8,
    "metadata": {},
    "outputs": [],
    "source": [
     "# lists of features per data type\n",
     "quantitative_features = [\"capital-gain\", \"capital-loss\", \"education-num\", \"hours-per-week\", \"age\"]\n",
-    "qualitative_features = [\"sex\", \"workclass\", \"marital-status\", \"occupation\", \"relationship\", \"race\", \"native-country\", \"income\"]\n",
+    "qualitative_features = [\"sex\", \"workclass\", \"marital-status\", \"occupation\", \"relationship\", \"race\", \"native-country\"]\n",
     "ordinal_features = [\"education\"]\n",
     "weighting = [\"fnlwgt\"]\n",
     "\n",
@@ -613,11 +570,11 @@
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 9,
    "metadata": {},
    "outputs": [],
    "source": [
-    "min_freq = 0.05"
+    "min_freq = 0.02"
    ]
   },
   {
@@ -630,7 +587,1052 @@
   {
    "cell_type": "markdown",
    "metadata": {},
-   "source": []
+   "source": [
+    "## Fitting Discretizer"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "* First, all qualitative features are discretized using ``QualitativeDiscretizer``:\n",
+    "    1. (Optionaly) Using ``StringDiscretizer`` to convert them to ``str`` if not already the case\n",
+    "    2. For qualitative ordinal features: using ``OrdinalDiscretizer`` for under-represented values (less frequent than ``min_freq=0.05``) to be grouped with its closest modality\n",
+    "    3. For qualitative categorical features: using ``CategoricalDiscretizer`` for under-represented values (less frequent than ``min_freq=0.05``) to be grouped with a default value (``str_default=\"__OTHER__\"``)\n",
+    "\n",
+    "* Second, all quantitative features are discretized using ``QuantitativeDiscretizer``:\n",
+    "    1. Using ``ContinuousDiscretizer`` for quantile discretization that keeps track of over-represented values (more frequent than ``min_freq=0.05``)\n",
+    "    2. Using ``OrdinalDiscretizer`` for any remaining under-represented values (less frequent than ``min_freq/2=0.025``) to be grouped with its closest modality"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "------\n",
+      "[Discretizer] Fit Qualitative Features\n",
+      "---\n",
+      " - [OrdinalDiscretizer] Fit ['education']\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " - [CategoricalDiscretizer] Fit ['workclass', 'occupation', 'marital-status', 'race', 'native-country', 'relationship', 'sex']\n",
+      "------\n",
+      "\n",
+      "------\n",
+      "[Discretizer] Fit Quantitative Features\n",
+      "---\n",
+      " - [ContinuousDiscretizer] Fit ['capital-loss', 'hours-per-week', 'capital-gain', 'education-num', 'age']\n",
+      " - [OrdinalDiscretizer] Fit ['capital-loss', 'hours-per-week', 'capital-gain', 'education-num', 'age']\n",
+      "------\n",
+      "\n"
+     ]
+    }
+   ],
+   "source": [
+    "from AutoCarver.discretizers import Discretizer\n",
+    "\n",
+    "# intiating AutoCarver\n",
+    "discretizer = Discretizer(\n",
+    "    quantitative_features=quantitative_features,\n",
+    "    qualitative_features=qualitative_features,\n",
+    "    ordinal_features=ordinal_features,\n",
+    "    values_orders=values_orders,\n",
+    "    min_freq=min_freq,\n",
+    "    verbose=True,  # showing statistics\n",
+    "    copy=True,  # whether or not to return a copy of the input dataset\n",
+    ")\n",
+    "\n",
+    "# fitting on training sample\n",
+    "train_set_processed = discretizer.fit_transform(train_set, train_set[target])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Discretizer Analysis\n",
+    "### Quantitative Continuous Feature"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>label</th>\n",
+       "      <th>content</th>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>dtype</th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>float</th>\n",
+       "      <td>0.000e+00 &lt; x &lt;= 3.411e+03</td>\n",
+       "      <td>[0.000e+00 &lt; x &lt;= 3.411e+03]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>float</th>\n",
+       "      <td>1.355e+04 &lt; x</td>\n",
+       "      <td>[1.355e+04 &lt; x]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>float</th>\n",
+       "      <td>3.411e+03 &lt; x &lt;= 7.298e+03</td>\n",
+       "      <td>[3.411e+03 &lt; x &lt;= 7.298e+03]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>float</th>\n",
+       "      <td>7.298e+03 &lt; x &lt;= 1.355e+04</td>\n",
+       "      <td>[7.298e+03 &lt; x &lt;= 1.355e+04]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>float</th>\n",
+       "      <td>x &lt;= 0.000e+00</td>\n",
+       "      <td>[x &lt;= 0.000e+00]</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "                            label                       content\n",
+       "dtype                                                          \n",
+       "float  0.000e+00 < x <= 3.411e+03  [0.000e+00 < x <= 3.411e+03]\n",
+       "float               1.355e+04 < x               [1.355e+04 < x]\n",
+       "float  3.411e+03 < x <= 7.298e+03  [3.411e+03 < x <= 7.298e+03]\n",
+       "float  7.298e+03 < x <= 1.355e+04  [7.298e+03 < x <= 1.355e+04]\n",
+       "float              x <= 0.000e+00              [x <= 0.000e+00]"
+      ]
+     },
+     "execution_count": 11,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# Discretization Summary\n",
+    "feature = \"capital-gain\"\n",
+    "discretizer.summary(feature)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Over-represented values of capital-gain:\n",
+      " capital-gain\n",
+      "0    0.918358\n",
+      "Name: proportion, dtype: float64\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Not discretized distribution\n",
+    "stats = train_set[feature].value_counts(dropna=True, normalize=True)\n",
+    "print(f\"Over-represented values of {feature}:\\n\", stats[stats >= min_freq])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Discretized distribution of capital-gain:\n",
+      " capital-gain\n",
+      "x <= 0.000e+00                0.918358\n",
+      "3.411e+03 < x <= 7.298e+03    0.026847\n",
+      "0.000e+00 < x <= 3.411e+03    0.020474\n",
+      "1.355e+04 < x                 0.019835\n",
+      "7.298e+03 < x <= 1.355e+04    0.014486\n",
+      "Name: proportion, dtype: float64\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Discretized distribution\n",
+    "disc_stats = train_set_processed[feature].value_counts(dropna=True, normalize=True)\n",
+    "print(f\"Discretized distribution of {feature}:\\n\", disc_stats)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "For quantitative continuous feature ``capital-gain``:\n",
+    "\n",
+    "* An over-represented value has been identified and kept by itself: value ``0`` represents 91.8% of observed data (more than ``min_freq=0.02``)\n",
+    "* Remaining 8.2% of values have been discretized in quantiles of sizes 2% (as specified with ``min_freq=0.02``)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Quantitative Discrete Feature"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>label</th>\n",
+       "      <th>content</th>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>dtype</th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>float</th>\n",
+       "      <td>1.000e+01 &lt; x &lt;= 1.500e+01</td>\n",
+       "      <td>[1.000e+01 &lt; x &lt;= 1.500e+01]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>float</th>\n",
+       "      <td>1.500e+01 &lt; x &lt;= 2.000e+01</td>\n",
+       "      <td>[1.500e+01 &lt; x &lt;= 2.000e+01]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>float</th>\n",
+       "      <td>2.000e+01 &lt; x &lt;= 2.500e+01</td>\n",
+       "      <td>[2.000e+01 &lt; x &lt;= 2.500e+01]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>float</th>\n",
+       "      <td>2.500e+01 &lt; x &lt;= 3.000e+01</td>\n",
+       "      <td>[2.500e+01 &lt; x &lt;= 3.000e+01]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>float</th>\n",
+       "      <td>3.000e+01 &lt; x &lt;= 3.400e+01</td>\n",
+       "      <td>[3.000e+01 &lt; x &lt;= 3.400e+01]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>float</th>\n",
+       "      <td>3.400e+01 &lt; x &lt;= 3.500e+01</td>\n",
+       "      <td>[3.400e+01 &lt; x &lt;= 3.500e+01]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>float</th>\n",
+       "      <td>3.500e+01 &lt; x &lt;= 3.900e+01</td>\n",
+       "      <td>[3.500e+01 &lt; x &lt;= 3.900e+01]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>float</th>\n",
+       "      <td>3.900e+01 &lt; x &lt;= 4.000e+01</td>\n",
+       "      <td>[3.900e+01 &lt; x &lt;= 4.000e+01]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>float</th>\n",
+       "      <td>4.000e+01 &lt; x &lt;= 4.400e+01</td>\n",
+       "      <td>[4.000e+01 &lt; x &lt;= 4.400e+01]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>float</th>\n",
+       "      <td>4.400e+01 &lt; x &lt;= 4.500e+01</td>\n",
+       "      <td>[4.400e+01 &lt; x &lt;= 4.500e+01]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>float</th>\n",
+       "      <td>4.500e+01 &lt; x &lt;= 4.900e+01</td>\n",
+       "      <td>[4.500e+01 &lt; x &lt;= 4.900e+01]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>float</th>\n",
+       "      <td>4.900e+01 &lt; x &lt;= 5.400e+01</td>\n",
+       "      <td>[4.900e+01 &lt; x &lt;= 5.400e+01]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>float</th>\n",
+       "      <td>5.400e+01 &lt; x &lt;= 5.500e+01</td>\n",
+       "      <td>[5.400e+01 &lt; x &lt;= 5.500e+01]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>float</th>\n",
+       "      <td>5.500e+01 &lt; x &lt;= 6.000e+01</td>\n",
+       "      <td>[5.500e+01 &lt; x &lt;= 6.000e+01]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>float</th>\n",
+       "      <td>6.000e+01 &lt; x &lt;= 7.000e+01</td>\n",
+       "      <td>[6.000e+01 &lt; x &lt;= 7.000e+01]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>float</th>\n",
+       "      <td>7.000e+01 &lt; x</td>\n",
+       "      <td>[7.000e+01 &lt; x]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>float</th>\n",
+       "      <td>x &lt;= 1.000e+01</td>\n",
+       "      <td>[x &lt;= 1.000e+01]</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "                            label                       content\n",
+       "dtype                                                          \n",
+       "float  1.000e+01 < x <= 1.500e+01  [1.000e+01 < x <= 1.500e+01]\n",
+       "float  1.500e+01 < x <= 2.000e+01  [1.500e+01 < x <= 2.000e+01]\n",
+       "float  2.000e+01 < x <= 2.500e+01  [2.000e+01 < x <= 2.500e+01]\n",
+       "float  2.500e+01 < x <= 3.000e+01  [2.500e+01 < x <= 3.000e+01]\n",
+       "float  3.000e+01 < x <= 3.400e+01  [3.000e+01 < x <= 3.400e+01]\n",
+       "float  3.400e+01 < x <= 3.500e+01  [3.400e+01 < x <= 3.500e+01]\n",
+       "float  3.500e+01 < x <= 3.900e+01  [3.500e+01 < x <= 3.900e+01]\n",
+       "float  3.900e+01 < x <= 4.000e+01  [3.900e+01 < x <= 4.000e+01]\n",
+       "float  4.000e+01 < x <= 4.400e+01  [4.000e+01 < x <= 4.400e+01]\n",
+       "float  4.400e+01 < x <= 4.500e+01  [4.400e+01 < x <= 4.500e+01]\n",
+       "float  4.500e+01 < x <= 4.900e+01  [4.500e+01 < x <= 4.900e+01]\n",
+       "float  4.900e+01 < x <= 5.400e+01  [4.900e+01 < x <= 5.400e+01]\n",
+       "float  5.400e+01 < x <= 5.500e+01  [5.400e+01 < x <= 5.500e+01]\n",
+       "float  5.500e+01 < x <= 6.000e+01  [5.500e+01 < x <= 6.000e+01]\n",
+       "float  6.000e+01 < x <= 7.000e+01  [6.000e+01 < x <= 7.000e+01]\n",
+       "float               7.000e+01 < x               [7.000e+01 < x]\n",
+       "float              x <= 1.000e+01              [x <= 1.000e+01]"
+      ]
+     },
+     "execution_count": 14,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# Discretization Summary\n",
+    "feature = \"hours-per-week\"\n",
+    "discretizer.summary(feature)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Over-represented values of hours-per-week:\n",
+      " hours-per-week\n",
+      "40    0.464976\n",
+      "50    0.086965\n",
+      "45    0.056970\n",
+      "60    0.044993\n",
+      "35    0.039567\n",
+      "20    0.037084\n",
+      "30    0.034730\n",
+      "55    0.021959\n",
+      "Name: proportion, dtype: float64\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Not discretized distribution\n",
+    "stats = train_set[feature].value_counts(dropna=True, normalize=True)\n",
+    "print(f\"Over-represented values of {feature}:\\n\", stats[stats >= min_freq])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Discretized distribution of hours-per-week:\n",
+      " hours-per-week\n",
+      "3.900e+01 < x <= 4.000e+01    0.464976\n",
+      "4.900e+01 < x <= 5.400e+01    0.093901\n",
+      "4.400e+01 < x <= 4.500e+01    0.056970\n",
+      "5.500e+01 < x <= 6.000e+01    0.049267\n",
+      "1.500e+01 < x <= 2.000e+01    0.046835\n",
+      "2.500e+01 < x <= 3.000e+01    0.039669\n",
+      "3.400e+01 < x <= 3.500e+01    0.039567\n",
+      "2.000e+01 < x <= 2.500e+01    0.029816\n",
+      "3.500e+01 < x <= 3.900e+01    0.027948\n",
+      "x <= 1.000e+01                0.023367\n",
+      "5.400e+01 < x <= 5.500e+01    0.021959\n",
+      "4.500e+01 < x <= 4.900e+01    0.020884\n",
+      "1.000e+01 < x <= 1.500e+01    0.019911\n",
+      "4.000e+01 < x <= 4.400e+01    0.019169\n",
+      "6.000e+01 < x <= 7.000e+01    0.018504\n",
+      "7.000e+01 < x                 0.016072\n",
+      "3.000e+01 < x <= 3.400e+01    0.011184\n",
+      "Name: proportion, dtype: float64\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Discretized distribution\n",
+    "disc_stats = train_set_processed[feature].value_counts(dropna=True, normalize=True)\n",
+    "print(f\"Discretized distribution of {feature}:\\n\", disc_stats)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Observed data for hours-per-week values strictly between 50 and 55: 0.69%\n"
+     ]
+    }
+   ],
+   "source": [
+    "# values between 50 and 55 hours per week are under-represented\n",
+    "print(f\"Observed data for {feature} values strictly between 50 and 55: {train_set.query(f'50<`{feature}`<55').shape[0] / len(train_set):.2%}\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Target rate for hours-per-week values equal to 50: 44.29%\n",
+      "Target rate for hours-per-week values strictly between 50 and 55: 32.10%\n",
+      "Target rate for hours-per-week values equal to 55: 47.32%\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(f\"Target rate for {feature} values equal to 50: {train_set.query(f'`{feature}`==50')[target].mean():.2%}\")\n",
+    "print(f\"Target rate for {feature} values strictly between 50 and 55: {train_set.query(f'50<`{feature}`<55')[target].mean():.2%}\")\n",
+    "print(f\"Target rate for {feature} values equal to 55: {train_set.query(f'`{feature}`==55')[target].mean():.2%}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "For quantitative discrete feature ``hours-per-week``:\n",
+    "\n",
+    "* Some over-represented values have been identified:\n",
+    "    * values ``20``, ``30``, ``35``, ``40``, ``45``, ``50``, ``55`` and ``60`` each represent more than 2.0% of observed data (more than ``min_freq=0.02``)\n",
+    "    * they are kept as their own modality\n",
+    "* Some under-represented values have been identified:\n",
+    "    * values between ``50`` and ``55`` represent only 0.7% of observed data, which is not enough to make a whole quantile out of (at least ``min_freq/2=0.01``). \n",
+    "    * hence there grouping with there closest modality, ``50``, in terms of target rate (32.1% is closer to 44.3% than to 47.3%)\n",
+    "* Remaining values have been discretized in quantiles of sizes 2% (as specified with ``min_freq=0.02``)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Qualitative Categorical Feature "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>label</th>\n",
+       "      <th>content</th>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>dtype</th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>str</th>\n",
+       "      <td>?</td>\n",
+       "      <td>[?]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>str</th>\n",
+       "      <td>Federal-gov</td>\n",
+       "      <td>[Federal-gov]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>str</th>\n",
+       "      <td>Local-gov</td>\n",
+       "      <td>[Local-gov]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>str</th>\n",
+       "      <td>Private</td>\n",
+       "      <td>[Private]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>str</th>\n",
+       "      <td>Self-emp-inc</td>\n",
+       "      <td>[Self-emp-inc]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>str</th>\n",
+       "      <td>Self-emp-not-inc</td>\n",
+       "      <td>[Self-emp-not-inc]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>str</th>\n",
+       "      <td>State-gov</td>\n",
+       "      <td>[State-gov]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>str</th>\n",
+       "      <td>__NAN__</td>\n",
+       "      <td>[__NAN__]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>str</th>\n",
+       "      <td>__OTHER__</td>\n",
+       "      <td>[Never-worked, Without-pay]</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "                  label                      content\n",
+       "dtype                                               \n",
+       "str                   ?                          [?]\n",
+       "str         Federal-gov                [Federal-gov]\n",
+       "str           Local-gov                  [Local-gov]\n",
+       "str             Private                    [Private]\n",
+       "str        Self-emp-inc               [Self-emp-inc]\n",
+       "str    Self-emp-not-inc           [Self-emp-not-inc]\n",
+       "str           State-gov                  [State-gov]\n",
+       "str             __NAN__                    [__NAN__]\n",
+       "str           __OTHER__  [Never-worked, Without-pay]"
+      ]
+     },
+     "execution_count": 19,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# Discretization Summary\n",
+    "feature = \"workclass\"\n",
+    "discretizer.summary(feature)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 20,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Over-represented values of workclass:\n",
+      " workclass\n",
+      "Private             0.708568\n",
+      "Self-emp-not-inc    0.080096\n",
+      "Local-gov           0.066181\n",
+      "State-gov           0.040622\n",
+      "?                   0.038221\n",
+      "Self-emp-inc        0.035584\n",
+      "Federal-gov         0.030023\n",
+      "Name: proportion, dtype: float64\n",
+      "\n",
+      "Under-represented values of workclass:\n",
+      " workclass\n",
+      "Without-pay     0.000496\n",
+      "Never-worked    0.000209\n",
+      "Name: proportion, dtype: float64\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Not discretized distribution\n",
+    "stats = train_set[feature].value_counts(dropna=True, normalize=True)\n",
+    "print(f\"Over-represented values of {feature}:\\n\", stats[stats >= min_freq])\n",
+    "print(f\"\\nUnder-represented values of {feature}:\\n\", stats[stats < min_freq])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 21,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Discretized distribution of workclass:\n",
+      " workclass\n",
+      "Private             0.694623\n",
+      "Self-emp-not-inc    0.078520\n",
+      "Local-gov           0.064879\n",
+      "State-gov           0.039823\n",
+      "?                   0.037468\n",
+      "Self-emp-inc        0.034883\n",
+      "Federal-gov         0.029432\n",
+      "__NAN__             0.019681\n",
+      "__OTHER__           0.000691\n",
+      "Name: proportion, dtype: float64\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Discretized distribution\n",
+    "disc_stats = train_set_processed[feature].value_counts(dropna=True, normalize=True)\n",
+    "print(f\"Discretized distribution of {feature}:\\n\", disc_stats)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "For qualitative categorical feature ``workclass``:\n",
+    "\n",
+    "* Some over-represented categories have been identified:\n",
+    "    * categories ``\"Private\"``, ``\"Self-emp-not-inc\"``, ``\"Local-gov\"``, ``\"State-gov\"``, ``\"?\"``, ``\"Self-emp-inc\"`` and ``\"Federal-gov\"``,  each represent more than 2.0% of observed data (more than ``min_freq=0.02``)\n",
+    "    * they are kept as their own modality\n",
+    "* Some under-represented categories have been identified: \n",
+    "    * categories ``\"Never-worked\"`` and ``\"Without-pay\"``,  each represent less than 2.0% of observed data (less than ``min_freq=0.02``)\n",
+    "    * they are grouped in the default value ``str_default=\"__OTHER__\"``\n",
+    "* Missing values are left by themselves whatsoever (nan value ``str_nan=\"__NAN__\"``)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Qualitative Ordinal Feature"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 22,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>label</th>\n",
+       "      <th>content</th>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>dtype</th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>str</th>\n",
+       "      <td>10th</td>\n",
+       "      <td>[10th]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>str</th>\n",
+       "      <td>11th</td>\n",
+       "      <td>[11th, 12th]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>str</th>\n",
+       "      <td>7th-8th</td>\n",
+       "      <td>[1st-4th, 5th-6th, 7th-8th, 9th, Preschool]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>str</th>\n",
+       "      <td>Assoc-acdm</td>\n",
+       "      <td>[Assoc-acdm]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>str</th>\n",
+       "      <td>Assoc-voc</td>\n",
+       "      <td>[Assoc-voc]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>str</th>\n",
+       "      <td>Bachelors</td>\n",
+       "      <td>[Bachelors]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>str</th>\n",
+       "      <td>HS-grad</td>\n",
+       "      <td>[HS-grad]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>str</th>\n",
+       "      <td>Masters</td>\n",
+       "      <td>[Masters]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>str</th>\n",
+       "      <td>Prof-school</td>\n",
+       "      <td>[Doctorate, Prof-school]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>str</th>\n",
+       "      <td>Some-college</td>\n",
+       "      <td>[Some-college]</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "              label                                      content\n",
+       "dtype                                                           \n",
+       "str            10th                                       [10th]\n",
+       "str            11th                                 [11th, 12th]\n",
+       "str         7th-8th  [1st-4th, 5th-6th, 7th-8th, 9th, Preschool]\n",
+       "str      Assoc-acdm                                 [Assoc-acdm]\n",
+       "str       Assoc-voc                                  [Assoc-voc]\n",
+       "str       Bachelors                                  [Bachelors]\n",
+       "str         HS-grad                                    [HS-grad]\n",
+       "str         Masters                                    [Masters]\n",
+       "str     Prof-school                     [Doctorate, Prof-school]\n",
+       "str    Some-college                               [Some-college]"
+      ]
+     },
+     "execution_count": 22,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# Discretization Summary\n",
+    "feature = \"education\"\n",
+    "discretizer.summary(feature)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 23,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Over-represented values of education:\n",
+      " education\n",
+      "HS-grad         0.322013\n",
+      "Some-college    0.223658\n",
+      "Bachelors       0.163259\n",
+      "Masters         0.054539\n",
+      "Assoc-voc       0.042408\n",
+      "11th            0.037136\n",
+      "Assoc-acdm      0.033348\n",
+      "10th            0.028357\n",
+      "Name: proportion, dtype: float64\n",
+      "\n",
+      "Under-represented values of education:\n",
+      " education\n",
+      "7th-8th        0.019348\n",
+      "Prof-school    0.016738\n",
+      "9th            0.015637\n",
+      "12th           0.013616\n",
+      "Doctorate      0.011978\n",
+      "5th-6th        0.010928\n",
+      "1st-4th        0.005451\n",
+      "Preschool      0.001587\n",
+      "Name: proportion, dtype: float64\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Not discretized distribution\n",
+    "stats = train_set[feature].value_counts(dropna=True, normalize=True)\n",
+    "print(f\"Over-represented values of {feature}:\\n\", stats[stats >= min_freq])\n",
+    "print(f\"\\nUnder-represented values of {feature}:\\n\", stats[stats < min_freq])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 24,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{'7th-8th': ['9th', '5th-6th', '1st-4th', 'Preschool', '7th-8th'],\n",
+       " '10th': ['10th'],\n",
+       " '11th': ['12th', '11th'],\n",
+       " 'HS-grad': ['HS-grad'],\n",
+       " 'Some-college': ['Some-college'],\n",
+       " 'Assoc-voc': ['Assoc-voc'],\n",
+       " 'Assoc-acdm': ['Assoc-acdm'],\n",
+       " 'Bachelors': ['Bachelors'],\n",
+       " 'Masters': ['Masters'],\n",
+       " 'Prof-school': ['Doctorate', 'Prof-school']}"
+      ]
+     },
+     "execution_count": 24,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "discretizer.values_orders[feature].content"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 25,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Discretized distribution of education:\n",
+      " education\n",
+      "HS-grad         0.322013\n",
+      "Some-college    0.223658\n",
+      "Bachelors       0.163259\n",
+      "Masters         0.054539\n",
+      "7th-8th         0.052952\n",
+      "11th            0.050751\n",
+      "Assoc-voc       0.042408\n",
+      "Assoc-acdm      0.033348\n",
+      "Prof-school     0.028715\n",
+      "10th            0.028357\n",
+      "Name: proportion, dtype: float64\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Discretized distribution\n",
+    "disc_stats = train_set_processed[feature].value_counts(dropna=True, normalize=True)\n",
+    "print(f\"Discretized distribution of {feature}:\\n\", disc_stats)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 26,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Provided ordering: ['Preschool', '1st-4th', '5th-6th', '7th-8th', '9th', '10th', '11th', '12th', 'HS-grad', 'Some-college', 'Assoc-voc', 'Assoc-acdm', 'Bachelors', 'Masters', 'Prof-school', 'Doctorate']\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(\"Provided ordering:\", values_orders[feature])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "For qualitative ordinal feature ``education``:\n",
+    "\n",
+    "* Some over-represented categories have been identified:\n",
+    "    * categories ``\"10th\"``, ``\"11th\"``, ``\"HS-grad\"``, ``\"Some-college\"``, ``\"Assoc-voc\"``, ``\"Assoc-acdm\"``, ``\"Bachelors\"`` and ``\"Masters\"`` each represent more than 2.0% of observed data (more than ``min_freq=0.02``)\n",
+    "    * they are kept as their own modality\n",
+    "* Some under-represented categories have been identified:\n",
+    "    * categories ``\"Preschool\"``, ``\"1st-4th\"``, ``\"5th-6th\"``, ``\"7th-8th\"``, ``\"9th\"``, ``\"12th\"``, ``\"Prof-school\"`` and ``\"Doctorate\"``  each represent less than 2.0% of observed data (less than ``min_freq=0.02``)\n",
+    "    * starting from the least represented category, they are grouped with there respective closest modality: \n",
+    "        - ``\"Preschool\"`` is grouped with ``\"1st-4th\"`` as it is the only available modality in the specified order (see definition of ``values_orders``)\n",
+    "        - In the same manner they are then grouped successively with ``\"5th-6th\"``, ``\"7th-8th\"`` and ``\"9th\"``\n",
+    "        - Same goes for ``\"12th\"`` with  ``\"11th\"`` and ``\"Prof-school\"`` with ``\"Doctorate\"``\n",
+    "* Missing values are left by themselves (nan value ``str_nan=\"__NAN__\"``)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Saving and Loading Discretizer\n",
+    "### Saving\n",
+    "\n",
+    "All **Discretizers** can safely be stored as a .json file."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 27,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import json\n",
+    "\n",
+    "# storing as json file\n",
+    "with open('discretizer.json', 'w') as my_discretizer_json:\n",
+    "    json.dump(discretizer.to_json(), my_discretizer_json)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Loading\n",
+    "\n",
+    "**Carvers** can safely be loaded from a .json file."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 28,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import json\n",
+    "\n",
+    "from AutoCarver.discretizers import load_discretizer\n",
+    "\n",
+    "# loading json file\n",
+    "with open('discretizer.json', 'r') as my_discretizer_json:\n",
+    "    discretizer = load_discretizer(json.load(my_discretizer_json))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Applying Discretizer"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 30,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "dev_set_processed = discretizer.transform(dev_set)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## What's next?\n",
+    "\n",
+    "* Thanks to **Discretizers** all of your features are now quantitative ordinal features with representative enough modalities!\n",
+    "* **Discretizers** are directly integrated in **Carvers**\n",
+    "* **Carvers** make good use of this discretization step to find out the most target associated consecutive combination of modalities, so make sure to check out [Carvers Examples](https://autocarver.readthedocs.io/en/latest/carvers_examples.html)!\n",
+    "\n",
+    "## Well done!\n",
+    "\n",
+    "You have successfully navigated the intricacies of feature discretization using the AutoCarver package, creating a dataset with finely tuned discrete representations that enhance the interpretability and effectiveness of your features.\n",
+    "\n",
+    "Your meticulous approach to discretizing both quantitative and qualitative attributes, utilizing the QuantitativeDiscretizer and QualitativeDiscretizer components, showcases your commitment to preparing data for meaningful analysis and modeling.\n",
+    "\n",
+    "We appreciate your trust in the AutoCarver package, and we hope that the discretized features contribute to the success of your machine learning endeavors. As you move forward with your analyses and predictive modeling tasks, may the insights gained from this well-crafted dataset lead to impactful and informed decisions.\n",
+    "\n",
+    "Thank you for choosing AutoCarver as your companion in the data preprocessing journey. Your dedication to refining and optimizing your datasets reflects a commitment to excellence in data science. We look forward to being part of your future data adventures and wish you continued success in your endeavors."
+   ]
   }
  ],
  "metadata": {
