@@ -40,7 +40,7 @@
               <img src="_static/auto_carver_symbol_small.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                5.4.6
+                5.4.7
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -62,7 +62,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Carvers</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#classification-tasks">Classification tasks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#regression-tasks">Regression tasks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#saving-and-loading">Saving and loading</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#saving-and-loading">Saving and Loading</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="selectors.html">Selectors</a></li>
@@ -317,6 +317,27 @@ Needs to have columns has specified in <code class="docutils literal notranslate
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoCarver.BinaryCarver.update_discretizer">
+<span class="sig-name descname"><span class="pre">update_discretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discarded_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kept_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.BinaryCarver.update_discretizer" title="Permalink to this definition"></a></dt>
+<dd><p>Allows one to update the discretization groups</p>
+<p>Use with caution: no viability checks are performed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>feature</strong> (<em>str</em>) – Specify for which feature to update the discritezer</p></li>
+<li><p><strong>mode</strong> (<em>str</em>) – <ul>
+<li><p>For <code class="docutils literal notranslate"><span class="pre">mode=&quot;replace&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">discarded_value</span></code> will be replaced by <code class="docutils literal notranslate"><span class="pre">kept_value</span></code></p></li>
+<li><p>For <code class="docutils literal notranslate"><span class="pre">mode=&quot;group&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">discarded_value</span></code> will be grouped with <code class="docutils literal notranslate"><span class="pre">kept_value</span></code></p></li>
+</ul>
+</p></li>
+<li><p><strong>discarded_value</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>float</em><em>]</em>) – A group value that won’t exist after completion</p></li>
+<li><p><strong>new_value</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>float</em><em>]</em>) – A group value that will persist after completion</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -510,6 +531,27 @@ Needs to have columns has specified in <code class="docutils literal notranslate
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoCarver.MulticlassCarver.update_discretizer">
+<span class="sig-name descname"><span class="pre">update_discretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discarded_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kept_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.MulticlassCarver.update_discretizer" title="Permalink to this definition"></a></dt>
+<dd><p>Allows one to update the discretization groups</p>
+<p>Use with caution: no viability checks are performed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>feature</strong> (<em>str</em>) – Specify for which feature to update the discritezer</p></li>
+<li><p><strong>mode</strong> (<em>str</em>) – <ul>
+<li><p>For <code class="docutils literal notranslate"><span class="pre">mode=&quot;replace&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">discarded_value</span></code> will be replaced by <code class="docutils literal notranslate"><span class="pre">kept_value</span></code></p></li>
+<li><p>For <code class="docutils literal notranslate"><span class="pre">mode=&quot;group&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">discarded_value</span></code> will be grouped with <code class="docutils literal notranslate"><span class="pre">kept_value</span></code></p></li>
+</ul>
+</p></li>
+<li><p><strong>discarded_value</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>float</em><em>]</em>) – A group value that won’t exist after completion</p></li>
+<li><p><strong>new_value</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>float</em><em>]</em>) – A group value that will persist after completion</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -708,12 +750,33 @@ Needs to have columns has specified in <code class="docutils literal notranslate
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoCarver.ContinuousCarver.update_discretizer">
+<span class="sig-name descname"><span class="pre">update_discretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discarded_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kept_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.ContinuousCarver.update_discretizer" title="Permalink to this definition"></a></dt>
+<dd><p>Allows one to update the discretization groups</p>
+<p>Use with caution: no viability checks are performed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>feature</strong> (<em>str</em>) – Specify for which feature to update the discritezer</p></li>
+<li><p><strong>mode</strong> (<em>str</em>) – <ul>
+<li><p>For <code class="docutils literal notranslate"><span class="pre">mode=&quot;replace&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">discarded_value</span></code> will be replaced by <code class="docutils literal notranslate"><span class="pre">kept_value</span></code></p></li>
+<li><p>For <code class="docutils literal notranslate"><span class="pre">mode=&quot;group&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">discarded_value</span></code> will be grouped with <code class="docutils literal notranslate"><span class="pre">kept_value</span></code></p></li>
+</ul>
+</p></li>
+<li><p><strong>discarded_value</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>float</em><em>]</em>) – A group value that won’t exist after completion</p></li>
+<li><p><strong>new_value</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>float</em><em>]</em>) – A group value that will persist after completion</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </section>
 </section>
 <section id="saving-and-loading">
-<h2>Saving and loading<a class="headerlink" href="#saving-and-loading" title="Permalink to this heading"></a></h2>
+<h2>Saving and Loading<a class="headerlink" href="#saving-and-loading" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="AutoCarver.BaseCarver.to_json">
 <span class="sig-prename descclassname"><span class="pre">AutoCarver.BaseCarver.</span></span><span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#AutoCarver.BaseCarver.to_json" title="Permalink to this definition"></a></dt>

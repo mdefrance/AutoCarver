@@ -38,7 +38,7 @@
               <img src="_static/auto_carver_symbol_small.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                5.4.6
+                5.4.7
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -61,7 +61,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#quantitative-data">Quantitative Data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#qualitative-data">Qualitative Data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#groupedlist">GroupedList</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#saving-and-loading">Saving and loading</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#saving-and-loading">Saving and Loading</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="carvers.html">Carvers</a></li>
@@ -1355,8 +1355,8 @@ All modalities are stored inside the <code class="xref py py-class docutils lite
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>discarded</strong> (<em>Any</em>) – Value to be grouped into the key <cite>to_keep</cite>.</p></li>
-<li><p><strong>kept</strong> (<em>Any</em>) – Key value in which to group <cite>discarded</cite>.</p></li>
+<li><p><strong>discarded</strong> (<em>Any</em>) – Value to be grouped into the key <code class="docutils literal notranslate"><span class="pre">kept</span></code>.</p></li>
+<li><p><strong>kept</strong> (<em>Any</em>) – Key value in which to group <code class="docutils literal notranslate"><span class="pre">discarded</span></code>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1369,8 +1369,8 @@ All modalities are stored inside the <code class="xref py py-class docutils lite
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>to_discard</strong> (<em>list</em><em>[</em><em>Any</em><em>]</em>) – Values to be grouped into the key <cite>to_keep</cite>.</p></li>
-<li><p><strong>to_keep</strong> (<em>Any</em>) – Key value in which to group <cite>to_discard</cite> values.</p></li>
+<li><p><strong>to_discard</strong> (<em>list</em><em>[</em><em>Any</em><em>]</em>) – Values to be grouped into the key <code class="docutils literal notranslate"><span class="pre">to_keep</span></code>.</p></li>
+<li><p><strong>to_keep</strong> (<em>Any</em>) – Key value in which to group <code class="docutils literal notranslate"><span class="pre">to_discard</span></code> values.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1399,6 +1399,20 @@ All modalities are stored inside the <code class="xref py py-class docutils lite
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="AutoCarver.discretizers.GroupedList.replace_group_leader">
+<span class="sig-name descname"><span class="pre">replace_group_leader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group_leader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_member</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.GroupedList.replace_group_leader" title="Permalink to this definition"></a></dt>
+<dd><p>Replaces a group_leader by one of its group_members</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>group_leader</strong> (<em>Any</em>) – One of the list’s values (<code class="docutils literal notranslate"><span class="pre">GroupedList.content.keys()</span></code>)</p></li>
+<li><p><strong>group_member</strong> (<em>Any</em>) – One of the dict’s values for specified group_leader (<code class="docutils literal notranslate"><span class="pre">GroupedList.content[group_leader]</span></code>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="AutoCarver.discretizers.GroupedList.sort">
 <span class="sig-name descname"><span class="pre">sort</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.GroupedList.sort" title="Permalink to this definition"></a></dt>
 <dd><p>Sorts the values of the list and dict (if any, NaNs are last).</p>
@@ -1415,7 +1429,7 @@ All modalities are stored inside the <code class="xref py py-class docutils lite
 <dl class="py method">
 <dt class="sig sig-object py" id="AutoCarver.discretizers.GroupedList.sort_by">
 <span class="sig-name descname"><span class="pre">sort_by</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ordering</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.GroupedList.sort_by" title="Permalink to this definition"></a></dt>
-<dd><p>Sorts the values of the list and dict according to <cite>ordering</cite>, if any, NaNs are the last.</p>
+<dd><p>Sorts the values of the list and dict according to <code class="docutils literal notranslate"><span class="pre">ordering</span></code>, if any, NaNs are the last.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>ordering</strong> (<em>list</em><em>[</em><em>Any</em><em>]</em>) – Order used for ordering of the list of keys.</p>
@@ -1435,7 +1449,7 @@ All modalities are stored inside the <code class="xref py py-class docutils lite
 <dd><p>Updates the GroupedList via a dict</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>new_value</strong> (<em>dict</em><em>[</em><em>Any</em><em>, </em><em>list</em><em>[</em><em>Any</em><em>]</em><em>]</em>) – Dict of key, values to updated <cite>content</cite> dict</p>
+<dd class="field-odd"><p><strong>new_value</strong> (<em>dict</em><em>[</em><em>Any</em><em>, </em><em>list</em><em>[</em><em>Any</em><em>]</em><em>]</em>) – Dict of key, values to updated <code class="docutils literal notranslate"><span class="pre">content</span></code> dict</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1458,7 +1472,7 @@ All modalities are stored inside the <code class="xref py py-class docutils lite
 
 </section>
 <section id="saving-and-loading">
-<h2>Saving and loading<a class="headerlink" href="#saving-and-loading" title="Permalink to this heading"></a></h2>
+<h2>Saving and Loading<a class="headerlink" href="#saving-and-loading" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="AutoCarver.discretizers.BaseDiscretizer.to_json">
 <span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.BaseDiscretizer.</span></span><span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.BaseDiscretizer.to_json" title="Permalink to this definition"></a></dt>

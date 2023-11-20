@@ -134,7 +134,7 @@ GroupedList
 
 
 
-Saving and loading
+Saving and Loading
 ------------------
 
 .. autofunction:: AutoCarver.discretizers.BaseDiscretizer.to_json
