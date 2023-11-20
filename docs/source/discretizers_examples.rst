@@ -13,4 +13,4 @@ Example using the Census dataset.
     :glob:
     :maxdepth: 1
 
-    examples/Discretizers/CompletePipeline/Discretizer
+    examples/Discretizers/CompletePipeline/discretizer_example

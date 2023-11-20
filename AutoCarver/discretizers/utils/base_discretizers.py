@@ -3,8 +3,9 @@ for a binary classification model.
 """
 
 from typing import Any, Union
+from warnings import warn
 
-from numpy import floating, integer, isfinite, nan, select
+from numpy import floating, integer, isfinite, isnan, nan, select
 from pandas import DataFrame, Series, isna, notna, unique
 from sklearn.base import BaseEstimator, TransformerMixin
 
@@ -28,6 +29,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         str_nan: str = None,  #
         str_default: str = None,
         features_casting: dict[str, list[str]] = None,
+        features_dropna: dict[str, bool] = None,
     ) -> None:
         # features : list[str]
         #     List of column names of features (continuous, discrete, categorical or ordinal) to be dicretized
@@ -94,6 +96,9 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
 
         # whether or not to reinstate numpy nan after bucketization
         self.dropna = dropna
+        if features_dropna is None:
+            features_dropna = {feature: self.dropna for feature in self.features}
+        self.features_dropna = features_dropna
 
         # string value of rare values
         self.str_default = str_default
@@ -191,6 +196,8 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
                 self.input_dtypes.pop(feature)
             if feature in self.labels_per_values:
                 self.labels_per_values.pop(feature)
+            if feature in self.features_dropna:
+                self.features_dropna.pop(feature)
 
             # getting corresponding raw_feature
             raw_feature = next(
@@ -420,10 +427,11 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             x_copy = self._transform_qualitative(x_copy, y)
 
         # reinstating nans
-        if not self.dropna:
-            for feature in self.features:
+        for feature, dropna in self.features_dropna.items():
+            if not dropna:  # checking whether we should have dropped nans or not
                 label_per_value = self.labels_per_values[feature]
-                if self.str_nan in label_per_value:  # checking for nans in the feature
+                # checking that nans were grouped
+                if self.str_nan in label_per_value:
                     x_copy[feature] = x_copy[feature].replace(label_per_value[self.str_nan], nan)
 
         return x_copy
@@ -545,6 +553,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             "str_nan": self.str_nan,
             "str_default": self.str_default,
             "dropna": self.dropna,
+            "features_dropna": self.features_dropna,
             "copy": self.copy,
         }
 
@@ -570,12 +579,11 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             A summary of features' values per modalities.
         """
         # storing requested feature for later
-        requested_feature = None
+        requested_features = self.features[:]
         if feature is not None:
-            requested_feature = feature[:]
-            assert requested_feature in self.features, (
-                f"Discretization of feature {requested_feature} was not "
-                "requested or it has been dropped."
+            requested_features = [feature]
+            assert feature in self.features, (
+                f"Discretization of feature {feature} was not " "requested or it has been dropped."
             )
 
         # raw label per value with output_dtype 'str'
@@ -583,7 +591,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
 
         # initiating summaries
         summaries: list[dict[str, Any]] = []
-        for feature in self.features:
+        for feature in requested_features:
             # adding each value/label
             for value, label in self.labels_per_values[feature].items():
                 # checking that nan where dropped
@@ -640,11 +648,84 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         # sorting and seting index
         summaries = summaries.sort_values(["dtype", "feature"]).set_index(["feature", "dtype"])
 
-        # getting requested feature
-        if requested_feature is not None:
-            summaries = summaries.loc[requested_feature]
-
         return summaries
+
+    def update_discretizer(
+        self,
+        feature: str,
+        mode: str,
+        discarded_value: Union[str, float],
+        kept_value: Union[str, float],
+    ) -> None:
+        """Allows one to update the discretization groups
+
+        Use with caution: no viability checks are performed.
+
+        Parameters
+        ----------
+        feature : str
+            Specify for which feature to update the discritezer
+        mode : str
+            * For ``mode="replace"``, ``discarded_value`` will be replaced by ``kept_value``
+            * For ``mode="group"``, ``discarded_value`` will be grouped with ``kept_value``
+        discarded_value : Union[str, float]
+            A group value that won't exist after completion
+        new_value : Union[str, float]
+            A group value that will persist after completion
+        """
+        # checking for mode
+        assert mode in ["group", "replace"], " - [Discretizer] Choose mode in ['group', 'replace']"
+
+        # checking for nans
+        if isnan(discarded_value):
+            discarded_value = self.str_nan
+            self.features_dropna[feature] = True
+        assert not isnan(
+            kept_value
+        ), " - [Discretizer] missing values can only be grouped with an existing modality"
+
+        # copying values_orders
+        values_orders = {k: v for k, v in self.values_orders.items()}
+        order = values_orders[feature]
+
+        # checking that discarded_value is not already in new_value
+        if order.get_group(discarded_value) == kept_value:
+            warn(
+                f" - [Discretizer] {discarded_value} is already grouped within {kept_value}",
+                UserWarning,
+            )
+
+        # otherwise, proceeding
+        else:
+            # adding kept_value if it does not exists yet
+            if not order.contains(kept_value):
+                order.append(kept_value)
+
+            # grouping discarded value in kept_value
+            if mode == "group":
+                # adding discarded_value if it does not exists yet
+                if not order.contains(discarded_value):
+                    order.append(discarded_value)
+                # grouping discarded_value with kept_value
+                order.group(discarded_value, kept_value)
+
+            # replacing group leader if requested
+            elif mode == "replace":
+                # grouping kept_value with discarded_value
+                order.group(kept_value, discarded_value)
+
+                # checking that kept_value is in discarded_value
+                assert order.get_group(kept_value) == discarded_value, (
+                    f" - [Discretizer] Can not proceed! {kept_value} already is a "
+                    f"member of another group ({order.get_group(kept_value)})"
+                )
+
+                # replacing group leader
+                order.replace_group_leader(discarded_value, kept_value)
+
+            # updating Carver values_orders and labels_per_values
+            self.values_orders.update({feature: order})
+            self.labels_per_values = self._get_labels_per_values(self.output_dtype)
 
 
 def convert_to_labels(

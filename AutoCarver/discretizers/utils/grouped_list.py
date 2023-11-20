@@ -35,7 +35,7 @@ class GroupedList(list):
             all_values = [val for _, values in iterable.items() for val in values]
             assert len(list(set(all_values))) == len(
                 all_values
-            ), "A value is present in several keys (groups)"
+            ), " - [GroupedList] A value is present in several keys (groups)"
 
             # adding key to itself if it's not present in an other key
             keys_copy = keys[:]  # copying initial keys
@@ -108,16 +108,16 @@ class GroupedList(list):
         Parameters
         ----------
         discarded : Any
-            Value to be grouped into the key `to_keep`.
+            Value to be grouped into the key ``kept``.
         kept : Any
-            Key value in which to group `discarded`.
+            Key value in which to group ``discarded``.
         """
 
         # checking that those values are distinct
         if not is_equal(discarded, kept):
             # checking that those values exist in the list
-            assert discarded in self, f"{discarded} not in list"
-            assert kept in self, f"{kept} not in list"
+            assert discarded in self, f" - [GroupedList] {discarded} not in list"
+            assert kept in self, f" - [GroupedList] {kept} not in list"
 
             # accessing values content in each value
             content_discarded = self.content.get(discarded)
@@ -135,9 +135,9 @@ class GroupedList(list):
         Parameters
         ----------
         to_discard : list[Any]
-            Values to be grouped into the key `to_keep`.
+            Values to be grouped into the key ``to_keep``.
         to_keep : Any
-            Key value in which to group `to_discard` values.
+            Key value in which to group ``to_discard`` values.
         """
 
         for discarded, kept in zip(to_discard, [to_keep] * len(to_discard)):
@@ -161,7 +161,7 @@ class GroupedList(list):
         Parameters
         ----------
         new_value : dict[Any, list[Any]]
-            Dict of key, values to updated `content` dict
+            Dict of key, values to updated ``content`` dict
         """
 
         # adding keys to the order if they are new values
@@ -193,7 +193,7 @@ class GroupedList(list):
         return sorted
 
     def sort_by(self, ordering: list[Any]) -> None:
-        """Sorts the values of the list and dict according to `ordering`, if any, NaNs are the last.
+        """Sorts the values of the list and dict according to ``ordering``, if any, NaNs are the last.
 
         Parameters
         ----------
@@ -209,10 +209,10 @@ class GroupedList(list):
         # checking that all values are given an order
         assert all(
             o in self for o in ordering
-        ), f"Unknown values in ordering: {str([v for v in ordering if v not in self])}"
+        ), f" - [GroupedList] Unknown values in ordering: {str([v for v in ordering if v not in self])}"
         assert all(
             s in ordering for s in self
-        ), f"Missing value from ordering: {str([v for v in self if v not in ordering])}"
+        ), f" - [GroupedList] Missing value from ordering: {str([v for v in self if v not in ordering])}"
 
         # ordering the content
         sorted = GroupedList({k: self.get(k) for k in ordering})
@@ -274,10 +274,7 @@ class GroupedList(list):
         list[Any]
             List of all values in the GroupedList
         """
-
-        known = [value for values in self.content.values() for value in values]
-
-        return known
+        return [value for values in self.content.values() for value in values]
 
     def contains(self, value: Any) -> bool:
         """Checks if a value is content in any group, also matches NaNs.
@@ -292,10 +289,7 @@ class GroupedList(list):
         bool
             Whether the value is in the GroupedList
         """
-
-        known_values = self.values()
-
-        return any(is_equal(value, known) for known in known_values)
+        return any(is_equal(value, known) for known in self.values())
 
     def get_repr(self, char_limit: int = 6) -> list[str]:
         """Returns a representative list of strings of values of groups.
@@ -332,6 +326,32 @@ class GroupedList(list):
                 repr += [f"{values[-1]}"[:char_limit] + " to " + f"{values[0]}"[:char_limit]]
 
         return repr
+
+    def replace_group_leader(self, group_leader: Any, group_member: Any) -> None:
+        """Replaces a group_leader by one of its group_members
+
+        Parameters
+        ----------
+        group_leader : Any
+            One of the list's values (``GroupedList.content.keys()``)
+        group_member : Any
+            One of the dict's values for specified group_leader (``GroupedList.content[group_leader]``)
+        """
+        # checking that group_member is in group_leader
+        assert (
+            group_member in self.content[group_leader]
+        ), f" - [GroupedList] {group_member} is not in {group_leader}"
+
+        # replacing in the list
+        group_idx = self.index(group_leader)
+        self[group_idx] = group_member
+
+        # replacing in the dict
+        self.content.update({group_member: self.content[group_leader][:]})
+        self.content.pop(group_leader)
+
+        # sorting things up
+        self.sort_by(self)
 
 
 def is_equal(a: Any, b: Any) -> bool:
