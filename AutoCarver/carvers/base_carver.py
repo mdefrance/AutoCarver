@@ -884,7 +884,9 @@ class BaseCarver(BaseDiscretizer):
                 ]
                 # removing str_default and deduplicating for features converted to str
                 mapped_index = [
-                    list(set(str(idx) for n, idx in enumerate(mapped_idx) if idx != self.str_default))
+                    list(
+                        set(str(idx) for n, idx in enumerate(mapped_idx) if idx != self.str_default)
+                    )
                     for mapped_idx in mapped_index
                 ]
                 mapped_index = [
