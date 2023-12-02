@@ -882,9 +882,9 @@ class BaseCarver(BaseDiscretizer):
                 mapped_index = [
                     self.values_orders[feature].get(idx, idx) for idx in mapped_xtab.index
                 ]
-                # removing str_default
+                # removing str_default and deduplicating for features converted to str
                 mapped_index = [
-                    [str(idx) for idx in mapped_idx if idx != self.str_default]
+                    list(set(str(idx) for n, idx in enumerate(mapped_idx) if idx != self.str_default))
                     for mapped_idx in mapped_index
                 ]
                 mapped_index = [
