@@ -122,10 +122,24 @@ class BaseCarver(BaseDiscretizer):
             or len(ordinal_features) > 0
         ), (
             " - [AutoCarver] No feature passed as input. Pleased provided column names to Carver "
-            "by setting quantitative_features, quantitative_features or ordinal_features."
+            "by setting quantitative_features, qualitative_features or ordinal_features."
         )
         self.ordinal_features = list(set(ordinal_features))
         self.features = list(set(quantitative_features + qualitative_features + ordinal_features))
+
+        # checking that qualitatitve and quantitative features are distinct
+        msg = (
+            " - [AutoCarver] One of provided features is both in quantitative_features and in qual"
+            "itative_features or ordinal_features. Please, be careful with your inputs!"
+        )
+        assert all(
+            quali_feature not in quantitative_features
+            for quali_feature in (qualitative_features + ordinal_features)
+        ), msg
+        assert all(
+            quanti_feature not in (qualitative_features + ordinal_features)
+            for quanti_feature in quantitative_features
+        ), msg
 
         # initializing input_dtypes
         self.input_dtypes = {feature: "str" for feature in qualitative_features + ordinal_features}
@@ -142,22 +156,6 @@ class BaseCarver(BaseDiscretizer):
             dropna=dropna,
             copy=copy,
             verbose=bool(max(verbose, kwargs.get("pretty_print", False))),
-        )
-
-        # checking that qualitatitve and quantitative features are distinct
-        assert all(
-            quali_feature not in self.quantitative_features
-            for quali_feature in self.qualitative_features
-        ), (
-            " - [AutoCarver] One of quantitative_features is also in qualitative_features "
-            "or ordinal_features. Please, be carreful with your inputs!"
-        )
-        assert all(
-            quanti_feature not in self.qualitative_features
-            for quanti_feature in self.quantitative_features
-        ), (
-            " - [AutoCarver] One of qualitative_features or ordinal_features is also in "
-            "quantitative_features. Please, be carreful with your inputs!"
         )
 
         # class specific attributes
@@ -884,9 +882,11 @@ class BaseCarver(BaseDiscretizer):
                 mapped_index = [
                     self.values_orders[feature].get(idx, idx) for idx in mapped_xtab.index
                 ]
-                # removing str_default
+                # removing str_default and deduplicating for features converted to str
                 mapped_index = [
-                    [str(idx) for idx in mapped_idx if idx != self.str_default]
+                    list(
+                        set(str(idx) for n, idx in enumerate(mapped_idx) if idx != self.str_default)
+                    )
                     for mapped_idx in mapped_index
                 ]
                 mapped_index = [

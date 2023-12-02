@@ -282,9 +282,10 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
 
             # checking for input columns
             missing_columns = [feature for feature in self.features if feature not in x_copy]
-            assert (
-                len(missing_columns) == 0
-            ), f" - [Discretizer] Missing features from the provided DataFrame: {str(missing_columns)}"
+            assert len(missing_columns) == 0, (
+                f" - [Discretizer] Requested discretization of {str(missing_columns)} but those"
+                " columns are missing from provided X. Please check your inputs! "
+            )
 
             if y is not None:
                 # checking for y's type
@@ -467,9 +468,12 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
 
             # converting nans to there corresponding quantile (if it was grouped to a quantile)
             if any(nans):
-                assert feature_values.contains(
-                    self.str_nan
-                ), f" - [Discretizer] Unexpected value! Missing values found for feature '{feature}' at transform step but not during fit. There might be new values in your test/dev set. Consider taking a bigger test/dev set or dropping the column {feature}."
+                assert feature_values.contains(self.str_nan), (
+                    " - [Discretizer] Unexpected value! Missing values found for feature "
+                    f"'{feature}' at transform step but not during fit. There might be new values "
+                    "in your test/dev set. Consider taking a bigger test/dev set or dropping the "
+                    f"column {feature}."
+                )
                 nan_value = feature_values.get_group(self.str_nan)
                 # checking that nans have been grouped to a quantile otherwise they are left as numpy.nan (for comparison purposes)
                 if nan_value != self.str_nan:
