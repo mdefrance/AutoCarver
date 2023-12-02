@@ -4,8 +4,8 @@ for a binary classification model.
 
 from typing import Any
 
-from numpy import array, inf, linspace, nan, quantile
-from pandas import DataFrame, Series, isna, notna
+from numpy import array, digitize, in1d, inf, isnan, linspace, nan, quantile, sort, unique
+from pandas import DataFrame, Series
 
 from .base_discretizers import BaseDiscretizer, applied_to_dict_list, extend_docstring
 from .grouped_list import GroupedList
@@ -70,18 +70,16 @@ class ContinuousDiscretizer(BaseDiscretizer):
         if self.verbose:  # verbose if requested
             print(f" - [ContinuousDiscretizer] Fit {str(self.quantitative_features)}")
 
-        # computing quantiles for the feature
-        quantiles = applied_to_dict_list(
-            X[self.quantitative_features].apply(find_quantiles, q=self.q, axis=0)
-        )
-
         # storing ordering
         for feature in self.quantitative_features:
+            # getting quantiles for specified feature
+            quantiles = find_quantiles(X[feature].values, q=self.q)
+
             # Converting to a groupedlist
-            order = GroupedList(quantiles[feature] + [inf])
+            order = GroupedList(quantiles + [inf])
 
             # adding NANs if ther are any
-            if any(isna(X[feature])):
+            if any(X[feature].isna()):
                 order.append(self.str_nan)
 
             # storing into the values_orders
@@ -94,7 +92,42 @@ class ContinuousDiscretizer(BaseDiscretizer):
 
 
 def find_quantiles(
-    df_feature: Series,
+    df_feature: array,
+    q: int,
+) -> list[float]:
+    """Finds quantiles of a Series recursively.
+
+    * Values more frequent than ``min_freq`` are set as there own modalities.
+    * Other values are cut in quantiles using ``numpy.quantile``.
+    * The number of quantiles is set as ``(1-freq_of_frequent_modalities)/(min_freq)``.
+    * Nans are considered as a modality (and are taken into account in ``freq_of_frequent_modalities``).
+
+    Parameters
+    ----------
+    df_feature : Series
+        _description_
+    q : int
+        _description_
+
+    Returns
+    -------
+    list[float]
+        _description_
+    """
+    return list(
+        sort(
+            np_find_quantiles(
+                df_feature[~isnan(df_feature)],  # getting rid of missing values
+                q,
+                len_df=len(df_feature),  # getting raw dataset size
+                quantiles=[],  # initiating list of quantiles
+            )
+        )
+    )
+
+
+def np_find_quantiles(
+    df_feature: array,
     q: int,
     len_df: int = None,
     quantiles: list[float] = None,
@@ -122,58 +155,38 @@ def find_quantiles(
     list[float]
         _description_
     """
-
-    # getting dataset size
-    if len_df is None:
-        len_df = len(df_feature)
-
-    # initiating liust of quantiles
-    if quantiles is None:
-        quantiles = []
-
     # case 1: no observation, all values have been attributed there corresponding modality
-    if len(df_feature) == 0:
+    if df_feature.shape[0] == 0:
         return quantiles
 
-    # case 2: there are missing values
-    if any(isna(df_feature)):
-        return find_quantiles(
-            df_feature[notna(df_feature)],
-            q,
-            len_df=len_df,
-            quantiles=quantiles,
-        )
-
     # frequencies per known value
-    frequencies = (
-        df_feature.value_counts(dropna=False, normalize=False).drop(nan, errors="ignore") / len_df
-    )
-    values, frequencies = array(frequencies.index), array(frequencies.values)
+    values, frequencies = unique(df_feature, return_counts=True)
 
     # case 3 : there are no missing values
     # case 3.1 : there is an over-populated value
-    if any(frequencies >= 1 / q):
+    if any(frequencies >= len_df / q):
         # identifying over-represented modality
-        frequent_value = values[frequencies.argmax()]
-
-        # adding over-represented modality to the list of quantiles
-        quantiles += [frequent_value]
+        frequent_values = values[frequencies >= len_df / q]
 
         # computing quantiles on smaller and greater values
-        quantiles_inf = find_quantiles(df_feature[df_feature < frequent_value], q, len_df=len_df)
-        quantiles_sup = find_quantiles(df_feature[df_feature > frequent_value], q, len_df=len_df)
+        sub_indices = digitize(df_feature, frequent_values, right=False)
+        for i in range(0, len(frequent_values) + 1):
+            quantiles += np_find_quantiles(
+                df_feature[(sub_indices == i) & (~in1d(df_feature, frequent_values))], q, len_df, []
+            )
 
-        return quantiles_inf + quantiles + quantiles_sup
+        # adding over-represented modality to the list of quantiles
+        return quantiles + list(frequent_values)
 
     # case 3.2 : there is no over-populated value
     # reducing the size of quantiles by frequencies of over-represented modalities
-    new_q = max(round(len(df_feature) / len_df * q), 1)
+    new_q = round(len(df_feature) / len_df * q)
 
     # cutting values into quantiles if there are enough of them
     if new_q > 1:
         quantiles += list(
             quantile(
-                df_feature.values,
+                df_feature,
                 linspace(0, 1, new_q + 1)[1:-1],
                 method="lower",
             )
@@ -181,6 +194,6 @@ def find_quantiles(
 
     # not enough values observed, grouping all remaining values into a quantile
     else:
-        quantiles += [max(df_feature.values)]
+        quantiles += [max(df_feature)]
 
     return quantiles
