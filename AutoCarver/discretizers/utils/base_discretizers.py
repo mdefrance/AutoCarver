@@ -824,44 +824,6 @@ def convert_to_values(
     return values_orders
 
 
-def min_value_counts(
-    x: Series,
-    values_orders: dict[str, GroupedList] = None,
-    dropna: bool = False,
-    normalize: bool = True,
-) -> float:
-    """Minimum of modalities' frequencies.
-
-    Parameters
-    ----------
-    x : Series
-        _description_
-    values_orders : dict[str, GroupedList], optional
-        _description_, by default None
-    dropna : bool, optional
-        _description_, by default False
-    normalize : bool, optional
-        _description_, by default True
-
-    Returns
-    -------
-    float
-        _description_
-    """
-    # modality frequency
-    values = x.value_counts(dropna=dropna, normalize=normalize)
-
-    # setting indices
-    order = values_orders.get(x.name)
-    if order is not None:
-        values = values.reindex(order).fillna(0)
-
-    # minimal frequency
-    min_values = values.values.min()
-
-    return min_values
-
-
 def value_counts(x: Series, dropna: bool = False, normalize: bool = True) -> dict:
     """Counts the values of each modality of a series into a dictionnary
 
