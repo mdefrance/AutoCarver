@@ -1,14 +1,13 @@
 """Tools to build simple buckets out of Quantitative and Qualitative features
 for a binary classification model.
 """
-
 from typing import Union
 from warnings import warn
 
 from numpy import nan
-from pandas import DataFrame, Series, unique
+from pandas import DataFrame, Series, unique, notna
 
-from .utils.base_discretizers import BaseDiscretizer, extend_docstring, min_value_counts
+from .utils.base_discretizers import BaseDiscretizer, extend_docstring
 from .utils.grouped_list import GroupedList
 from .utils.qualitative_discretizers import CategoricalDiscretizer, OrdinalDiscretizer
 from .utils.quantitative_discretizers import ContinuousDiscretizer
@@ -524,9 +523,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         # [Quantitative features] Grouping rare quantiles into closest common one
         #  -> can exist because of overrepresented values (values more frequent than min_freq)
         # searching for features with rare quantiles: computing min frequency per feature
-        frequencies = x_copy[self.features].apply(
-            min_value_counts, values_orders=self.values_orders, axis=0
-        )
+        frequencies = x_copy[self.features].apply(min_value_counts, axis=0)
 
         # minimal frequency of a quantile
         q_min_freq = self.min_freq / 2
@@ -554,3 +551,31 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         super().fit(X, y)
 
         return self
+
+
+def min_value_counts(
+    x: Series,
+    dropna: bool = False,
+    normalize: bool = True,
+) -> float:
+    """Minimum of modalities' frequencies.
+
+    Parameters
+    ----------
+    x : Series
+        _description_
+    dropna : bool, optional
+        _description_, by default False
+    normalize : bool, optional
+        _description_, by default True
+
+    Returns
+    -------
+    float
+        _description_
+    """
+    # modality frequency
+    values = x.value_counts(dropna=dropna, normalize=normalize)
+
+    # minimal frequency
+    return values.values.min()
