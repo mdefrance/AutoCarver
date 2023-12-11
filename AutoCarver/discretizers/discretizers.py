@@ -5,7 +5,7 @@ from typing import Union
 from warnings import warn
 
 from numpy import nan
-from pandas import DataFrame, Series, unique, notna
+from pandas import DataFrame, Series, notna, unique
 
 from .utils.base_discretizers import BaseDiscretizer, extend_docstring
 from .utils.grouped_list import GroupedList
