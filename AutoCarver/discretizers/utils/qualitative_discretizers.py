@@ -24,7 +24,8 @@ from .type_discretizers import StringDiscretizer
 class CategoricalDiscretizer(BaseDiscretizer):
     """Automatic discretization of categorical features, building simple groups frequent enough.
 
-    Groups a qualitative features' values less frequent than ``min_freq`` into a ``str_default`` string.
+    Groups a qualitative features' values less frequent than ``min_freq`` into a ``str_default``
+    string.
 
     NaNs are left untouched.
 
@@ -55,7 +56,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
             * Sets the number of quantiles in which to discretize the continuous features.
             * Sets the minimum frequency of a quantitative feature's modality.
 
-            **Tip**: should be set between ``0.02`` (slower, preciser, less robust) and ``0.05`` (faster, more robust)
+            **Tip**: set between ``0.02`` (slower, less robust) and ``0.05`` (faster, more robust)
         """
         # Initiating BaseDiscretizer
         super().__init__(
@@ -77,7 +78,8 @@ class CategoricalDiscretizer(BaseDiscretizer):
         Parameters
         ----------
         X : DataFrame
-            Dataset used to discretize. Needs to have columns has specified in ``CategoricalDiscretizer.features``.
+            Dataset used to discretize. Needs to have columns has specified in
+            ``CategoricalDiscretizer.features``.
 
         y : Series
             Binary target feature with wich the association is maximized.
@@ -161,11 +163,15 @@ class CategoricalDiscretizer(BaseDiscretizer):
             # new ordering according to target rate
             new_order = list(target_rates[feature])
 
-            # checking for default but no value observed, enable to group this modality, raising error
+            # checking for default but no value observed, enable to group this modal, raising error
             assert (self.str_default in order and self.str_default in new_order) or (
                 self.str_default not in order and self.str_default not in new_order
-            ), f"Some values from values_orders['{feature}'] are never observed. Can not fit a distribution without any observation. Please remove following values {str([value for value in order.content[self.str_default] if value != self.str_default])} from values_orders['{feature}']."
-
+            ), (
+                f"Some values from values_orders['{feature}'] are never observed. Can not fit a "
+                f"distribution without any observation. Please remove following values "
+                f"{str([value for value in order.content[self.str_default] if value != self.str_default])}"
+                f" from values_orders['{feature}']."
+            )
             # leaving NaNs at the end of the list
             if self.str_nan in new_order:
                 new_order.remove(self.str_nan)
@@ -207,19 +213,22 @@ class OrdinalDiscretizer(BaseDiscretizer):
         Parameters
         ----------
         ordinal_features : list[str]
-            List of column names of ordinal features to be discretized. For those features a list of values has to be provided in the ``values_orders`` dict.
+            List of column names of ordinal features to be discretized. For those features a list
+            of values has to be provided in the ``values_orders`` dict.
 
         min_freq : float
             Minimum frequency per grouped modalities.
 
-            * Features whose most frequent modality is less frequent than ``min_freq`` will not be discretized.
+            * Features whose most frequent modality is less frequent than ``min_freq`` won't be discretized.
             * Sets the number of quantiles in which to discretize the continuous features.
             * Sets the minimum frequency of a quantitative feature's modality.
 
-            **Tip**: should be set between ``0.02`` (slower, preciser, less robust) and ``0.05`` (faster, more robust)
+            **Tip**: should be set between ``0.02`` (slower, preciser, less robust) and ``0.05``
+            (faster, more robust)
 
         input_dtypes : Union[str, dict[str, str]], optional
-            Input data type, converted to a dict of the provided type for each feature, by default ``"str"``
+            Input data type, converted to a dict of the provided type for each feature,
+            by default ``"str"``
 
             * ``"str"``, features are considered as qualitative.
             * ``'float"``, features are considered as quantitative.
@@ -349,7 +358,7 @@ class ChainedDiscretizer(BaseDiscretizer):
             List of column names of qualitative features (non-ordinal) to be discretized
 
         chained_orders : list[GroupedList]
-            A list of interlocked higher level groups for each modalities of each ordianl feature.
+            A list of interlocked higher level groups for each modalities of each ordinal feature.
             Values of ``chained_orders[0]`` have to be grouped in ``chained_order[1]`` etc.
 
         min_freq : float
@@ -359,7 +368,7 @@ class ChainedDiscretizer(BaseDiscretizer):
             * Sets the number of quantiles in which to discretize the continuous features.
             * Sets the minimum frequency of a quantitative feature's modality.
 
-            **Tip**: should be set between ``0.02`` (slower, preciser, less robust) and ``0.05`` (faster, more robust)
+            **Tip**: set between ``0.02`` (slower, less robust) and ``0.05`` (faster, more robust)
 
         unknown_handling : str, optional
             Whether or not to remove unknown values, by default ``'raise'``.
