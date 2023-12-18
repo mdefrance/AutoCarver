@@ -48,7 +48,7 @@ jobs:
       #----------------------------------------------
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --no-root --dev-dependency --dependency --all-extras
+        run: poetry install --no-interaction --no-root --with tests
       #----------------------------------------------
       # installing AutoCarver
       #----------------------------------------------
@@ -59,6 +59,15 @@ jobs:
         run: |
           source .venv/bin/activate
           pytest -v --cov ${{ github.workspace }}/tests/
+      
+      - name: Pylint
+        run: |
+          cd ${{ github.workspace }}
+          source .venv/bin/activate
+          black --check .
+          isort . --check-only
+          pylint $(find . -name "*.py" | xargs) --fail-under=8
+          # flake8 . 
 
   pytest_pull:
     strategy:
@@ -97,7 +106,7 @@ jobs:
           path: ~/.cache
           key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
       - name: Install dependencies
-        run: poetry install --no-interaction --no-root --dev-dependency --dependency --all-extras
+        run: poetry install --no-interaction --no-root --with tests
       - name: Install AutoCarver
         run: poetry install --no-interaction
 
@@ -110,44 +119,4 @@ jobs:
           pytest -v --cov ${{ github.workspace }}/tests/
         if: runner.os != 'Windows'
           
-  
-  pylint:
-    
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-      - name: Set up Python
-        id: setup-python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-      
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-          installer-parallel: true
-      - name: Load cached venv
-        id: cached-poetry-dependencies
-        uses: actions/cache@v3
-        with:
-          path: .venv
-          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
-      - name: Install dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --no-root --dev-dependency --dependency --all-extras
-      - name: Install project
-        run: poetry install --no-interaction
-
-      - name: Run lint
-        run: |
-          cd ${{ github.workspace }}
-          source .venv/bin/activate
-          black --check .
-          isort . --check-only
-          pylint $(find . -name "*.py" | xargs) --fail-under=8
-          # flake8 . 
   
