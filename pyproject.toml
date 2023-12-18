@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "autocarver"
+name = "AutoCarver"
 version = "5.4.9"
 description = "Automatic Discretization of Features with Optimal Target Association"
 authors = ["Mario DEFRANCE"]
