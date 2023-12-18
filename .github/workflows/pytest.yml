@@ -53,7 +53,7 @@ jobs:
       # installing AutoCarver
       #----------------------------------------------
       - name: Install project
-        run: poetry install --no-interaction
+        run: poetry install --no-interaction --only-root
 
       - name: Run tests
         run: |
@@ -108,7 +108,7 @@ jobs:
       - name: Install dependencies
         run: poetry install --no-interaction --no-root --all-extras
       - name: Install AutoCarver
-        run: poetry install --no-interaction
+        run: poetry install --no-interaction --only-root
 
       - run: |
           source .venv/scripts/activate
