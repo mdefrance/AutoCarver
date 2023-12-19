@@ -2651,11 +2651,11 @@ docs = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.link
 testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-ignore-flaky", "pytest-mypy (>=0.9.1)", "pytest-ruff"]
 
 [extras]
-docs = []
+docs = ["nbsphinx", "pypandoc", "sphinx", "sphinx-rtd-theme", "toml"]
 jupyter = ["ipython", "matplotlib"]
-tests = []
+tests = ["Flake8-pyproject", "black", "flake8", "isort", "pylint", "pytest", "pytest-cov"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9, <=3.12"
-content-hash = "ff88bf61a8365d41437820f33d9a23fa0628ff523ce896d89120b78ef3d7c5b7"
+content-hash = "dd05c6873aac309eb10002b9655d7ea22b7ec44f1e4777d92b29085bbcd7bfb1"

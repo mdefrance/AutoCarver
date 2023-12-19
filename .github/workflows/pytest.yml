@@ -48,7 +48,9 @@ jobs:
       #----------------------------------------------
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction -E tests -E docs -E jupyter
+        run: poetry install --no-interaction --no-root --all-extras
+      - name: Install AutoCarver
+        run: poetry install --no-interaction --only-root
 
       - name: Run tests
         run: |
@@ -101,7 +103,10 @@ jobs:
           path: ~/.cache
           key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
       - name: Install AutoCarver
-        run: poetry install --no-interaction -E tests -E docs -E jupyter
+        if: steps.cached-pip-wheels.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root --all-extras
+      - name: Install AutoCarver
+        run: poetry install --no-interaction --only-root
 
       - run: |
           source $VENV
