@@ -50,7 +50,7 @@ jobs:
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root --all-extras
       - name: Install AutoCarver
-        run: poetry install --no-interaction --only-root
+        run: poetry install --no-interaction --only-root --all-extras
 
       - name: Run tests
         run: |
@@ -106,7 +106,7 @@ jobs:
         if: steps.cached-pip-wheels.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root --all-extras
       - name: Install AutoCarver
-        run: poetry install --no-interaction --only-root
+        run: poetry install --no-interaction --only-root --all-extras
 
       - run: |
           source $VENV
