@@ -1,21 +1,23 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quick Start &mdash; AutoCarver Beta Release documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>Quick Start &mdash; autocarver Beta release documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="_static/jquery.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=39f3c58d"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="author" title="About these documents" href="about.html" />
@@ -38,7 +40,7 @@
               <img src="_static/auto_carver_symbol_small.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                5.4.7
+                5.4.9
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -78,7 +80,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">AutoCarver</a>
+          <a href="index.html">autocarver</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -97,11 +99,11 @@
            <div itemprop="articleBody">
              
   <section id="quick-start">
-<h1>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this heading"></a></h1>
+<h1>Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading"></a></h1>
 <section id="setting-things-up">
-<h2>Setting things up<a class="headerlink" href="#setting-things-up" title="Permalink to this heading"></a></h2>
+<h2>Setting things up<a class="headerlink" href="#setting-things-up" title="Link to this heading"></a></h2>
 <section id="target-type-and-carver-selection">
-<h3>Target type and Carver selection<a class="headerlink" href="#target-type-and-carver-selection" title="Permalink to this heading"></a></h3>
+<h3>Target type and Carver selection<a class="headerlink" href="#target-type-and-carver-selection" title="Link to this heading"></a></h3>
 <p>Depending on one’s desired modelling task, several Carvers are implemented:</p>
 <blockquote>
 <div><ul class="simple">
@@ -117,7 +119,7 @@
 <p>Hence the use of <code class="xref py py-class docutils literal notranslate"><span class="pre">BinaryCarver</span></code> and <code class="xref py py-class docutils literal notranslate"><span class="pre">ClassificationSelector</span></code> in following code blocks.</p>
 </section>
 <section id="data-sampling">
-<h3>Data Sampling<a class="headerlink" href="#data-sampling" title="Permalink to this heading"></a></h3>
+<h3>Data Sampling<a class="headerlink" href="#data-sampling" title="Link to this heading"></a></h3>
 <p><strong>AutoCarver</strong> unables testing for robustness of carved modalities on <code class="docutils literal notranslate"><span class="pre">X_dev</span></code> while maximizing the association between <code class="docutils literal notranslate"><span class="pre">X_train</span></code> and <code class="docutils literal notranslate"><span class="pre">y_train</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># defining training and testing sets</span>
 <span class="n">train_set</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># used to fit the AutoCarver and the model</span>
@@ -127,7 +129,7 @@
 </div>
 </section>
 <section id="picking-up-columns-to-carve">
-<h3>Picking up columns to Carve<a class="headerlink" href="#picking-up-columns-to-carve" title="Permalink to this heading"></a></h3>
+<h3>Picking up columns to Carve<a class="headerlink" href="#picking-up-columns-to-carve" title="Link to this heading"></a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">quantitative_features</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Quantitative&#39;</span><span class="p">,</span> <span class="s1">&#39;Discrete_Quantitative_highnan&#39;</span><span class="p">,</span> <span class="s1">&#39;Discrete_Quantitative_lownan&#39;</span><span class="p">,</span> <span class="s1">&#39;Discrete_Quantitative&#39;</span><span class="p">,</span> <span class="s1">&#39;Discrete_Quantitative_rarevalue&#39;</span><span class="p">]</span>
 <span class="n">qualitative_features</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Qualitative&quot;</span><span class="p">,</span> <span class="s2">&quot;Qualitative_grouped&quot;</span><span class="p">,</span> <span class="s2">&quot;Qualitative_lownan&quot;</span><span class="p">,</span> <span class="s2">&quot;Qualitative_highnan&quot;</span><span class="p">,</span> <span class="s2">&quot;Discrete_Qualitative_noorder&quot;</span><span class="p">,</span> <span class="s2">&quot;Discrete_Qualitative_lownan_noorder&quot;</span><span class="p">,</span> <span class="s2">&quot;Discrete_Qualitative_rarevalue_noorder&quot;</span><span class="p">]</span>
 </pre></div>
@@ -137,9 +139,9 @@ Ordinal features can be added, alongside there expected ordering.</p>
 </section>
 </section>
 <section id="using-autocarver">
-<h2>Using AutoCarver<a class="headerlink" href="#using-autocarver" title="Permalink to this heading"></a></h2>
+<h2>Using AutoCarver<a class="headerlink" href="#using-autocarver" title="Link to this heading"></a></h2>
 <section id="fitting-autocarver">
-<h3>Fitting AutoCarver<a class="headerlink" href="#fitting-autocarver" title="Permalink to this heading"></a></h3>
+<h3>Fitting AutoCarver<a class="headerlink" href="#fitting-autocarver" title="Link to this heading"></a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">AutoCarver</span> <span class="kn">import</span> <span class="n">BinaryCarver</span>
 
 <span class="c1"># intiating AutoCarver</span>
@@ -158,7 +160,7 @@ Ordinal features can be added, alongside there expected ordering.</p>
 </div>
 </section>
 <section id="applying-autocarver">
-<h3>Applying AutoCarver<a class="headerlink" href="#applying-autocarver" title="Permalink to this heading"></a></h3>
+<h3>Applying AutoCarver<a class="headerlink" href="#applying-autocarver" title="Link to this heading"></a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># transforming dev/test sample accordingly</span>
 <span class="n">dev_set_discretized</span> <span class="o">=</span> <span class="n">auto_carver</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">dev_set</span><span class="p">)</span>
 <span class="n">test_set_discretized</span> <span class="o">=</span> <span class="n">auto_carver</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">tes_set</span><span class="p">)</span>
@@ -166,7 +168,7 @@ Ordinal features can be added, alongside there expected ordering.</p>
 </div>
 </section>
 <section id="saving-autocarver">
-<h3>Saving AutoCarver<a class="headerlink" href="#saving-autocarver" title="Permalink to this heading"></a></h3>
+<h3>Saving AutoCarver<a class="headerlink" href="#saving-autocarver" title="Link to this heading"></a></h3>
 <p>All <strong>Carvers</strong> can safely be stored as a <code class="docutils literal notranslate"><span class="pre">.json</span></code> file.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
 
@@ -177,7 +179,7 @@ Ordinal features can be added, alongside there expected ordering.</p>
 </div>
 </section>
 <section id="loading-autocarver">
-<h3>Loading AutoCarver<a class="headerlink" href="#loading-autocarver" title="Permalink to this heading"></a></h3>
+<h3>Loading AutoCarver<a class="headerlink" href="#loading-autocarver" title="Link to this heading"></a></h3>
 <p><strong>Carvers</strong> can safely be loaded from a .json file.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
 
@@ -191,7 +193,7 @@ Ordinal features can be added, alongside there expected ordering.</p>
 </section>
 </section>
 <section id="feature-selection">
-<h2>Feature Selection<a class="headerlink" href="#feature-selection" title="Permalink to this heading"></a></h2>
+<h2>Feature Selection<a class="headerlink" href="#feature-selection" title="Link to this heading"></a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">AutoCarver.selectors</span> <span class="kn">import</span> <span class="n">ClassificationSelector</span>
 
 <span class="c1"># select the best 25 most target associated qualitative features</span>

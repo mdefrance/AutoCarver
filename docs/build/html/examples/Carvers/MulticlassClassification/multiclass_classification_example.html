@@ -1,22 +1,24 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Setting things up &mdash; AutoCarver Beta Release documentation</title>
-      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../../../_static/nbsphinx-code-cells.css" type="text/css" />
+  <title>Setting things up &mdash; autocarver Beta release documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/nbsphinx-code-cells.css?v=2aa19091" />
+
+  
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="../../../_static/jquery.js"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
-        <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/sphinx_highlight.js"></script>
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=39f3c58d"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
         <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -41,7 +43,7 @@
               <img src="../../../_static/auto_carver_symbol_small.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                5.4.7
+                5.4.9
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -65,14 +67,14 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Examples</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../../carvers_examples.html">Carvers Examples</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../../../carvers_examples.html#binary-classification-example">Binary Classification Example</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="../../../carvers_examples.html#multiclass-classification-example">Multiclass Classification Example</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../carvers_examples.html#continuous-regression-example">Continuous Regression Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../carvers_examples.html">Carvers Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../discretizers_examples.html">Discretizers Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../selectors_examples.html">Selectors Examples</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../../selectors_examples.html#binary-classification-example">Binary Classification Example</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../../selectors_examples.html#multiclass-classification-example">Multiclass Classification Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../selectors_examples.html#continuous-regression-example">Continuous Regression Example</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../../discretizers_examples.html">Discretizers Examples</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../selectors_examples.html">Selectors Examples</a></li>
 </ul>
 
         </div>
@@ -81,7 +83,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../../index.html">AutoCarver</a>
+          <a href="../../../index.html">autocarver</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -101,9 +103,9 @@
            <div itemprop="articleBody">
              
   <section id="Setting-things-up">
-<h1>Setting things up<a class="headerlink" href="#Setting-things-up" title="Permalink to this heading"></a></h1>
+<h1>Setting things up<a class="headerlink" href="#Setting-things-up" title="Link to this heading"></a></h1>
 <section id="About-this-notebook">
-<h2>About this notebook<a class="headerlink" href="#About-this-notebook" title="Permalink to this heading"></a></h2>
+<h2>About this notebook<a class="headerlink" href="#About-this-notebook" title="Link to this heading"></a></h2>
 <p>In this notebook, we embark on a journey to refine the Iris Dataset for optimal performance in multiclass classification tasks, leveraging the capabilities of the <code class="docutils literal notranslate"><span class="pre">MulticlassCarver</span></code> pipeline. Recognized for its association-maximizing discretization, <code class="docutils literal notranslate"><span class="pre">MulticlassCarver</span></code> is a versatile Python tool that gracefully handles diverse data types—be they quantitative or qualitative. Our specific objective is to prepare the dataset for multiclass classification, illuminating the distinctive
 characteristics of Iris flower species.</p>
 <p>The Iris Dataset, a classic in the realm of machine learning, presents features such as sepal and petal dimensions for three different Iris species. By employing <code class="docutils literal notranslate"><span class="pre">MulticlassCarver</span></code>, our goal is to discretize both quantitative and qualitative features seamlessly, tailoring them for effective representation in our multiclass classification models.</p>
@@ -112,7 +114,7 @@ characteristics of Iris flower species.</p>
 <p>Let’s dive in and uncover the potential of <code class="docutils literal notranslate"><span class="pre">MulticlassCarver</span></code> in transforming the Iris Dataset for optimal predictive modeling.</p>
 </section>
 <section id="Installation">
-<h2>Installation<a class="headerlink" href="#Installation" title="Permalink to this heading"></a></h2>
+<h2>Installation<a class="headerlink" href="#Installation" title="Link to this heading"></a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -123,7 +125,7 @@ characteristics of Iris flower species.</p>
 </div>
 </section>
 <section id="Iris-Data">
-<h2>Iris Data<a class="headerlink" href="#Iris-Data" title="Permalink to this heading"></a></h2>
+<h2>Iris Data<a class="headerlink" href="#Iris-Data" title="Link to this heading"></a></h2>
 <p>In this example notebook, we will use the Iris dataset.</p>
 <p>The Iris dataset is a classic and widely used dataset in the field of machine learning and pattern recognition. It was introduced by the British biologist and statistician Sir Ronald A. Fisher in 1936 and has since become a benchmark dataset for various classification and clustering tasks.</p>
 <p>The dataset consists of measurements from 150 iris flowers, belonging to three different species: setosa, versicolor, and virginica. Four features are included for each flower: sepal length, sepal width, petal length, and petal width, all measured in centimeters.</p>
@@ -223,7 +225,7 @@ characteristics of Iris flower species.</p>
 </div>
 </section>
 <section id="Target-type-and-Carver-selection">
-<h2>Target type and Carver selection<a class="headerlink" href="#Target-type-and-Carver-selection" title="Permalink to this heading"></a></h2>
+<h2>Target type and Carver selection<a class="headerlink" href="#Target-type-and-Carver-selection" title="Link to this heading"></a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
@@ -250,7 +252,7 @@ Name: count, dtype: int64
 <p>The target <code class="docutils literal notranslate"><span class="pre">&quot;iris_type&quot;</span></code> is a multiclass target of type <code class="docutils literal notranslate"><span class="pre">str</span></code> used in a classification task. Hence we will use <code class="docutils literal notranslate"><span class="pre">AutoCarver.MulticlassCarver</span></code> and <code class="docutils literal notranslate"><span class="pre">AutoCarver.selectors.ClassificationSelector</span></code> in following code blocks.</p>
 </section>
 <section id="Data-Sampling">
-<h2>Data Sampling<a class="headerlink" href="#Data-Sampling" title="Permalink to this heading"></a></h2>
+<h2>Data Sampling<a class="headerlink" href="#Data-Sampling" title="Link to this heading"></a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
@@ -302,7 +304,7 @@ c:\Users\defra\.conda\envs\py39\lib\site-packages\sklearn\utils\validation.py:61
 </div>
 </section>
 <section id="Picking-up-columns-to-Carve">
-<h2>Picking up columns to Carve<a class="headerlink" href="#Picking-up-columns-to-Carve" title="Permalink to this heading"></a></h2>
+<h2>Picking up columns to Carve<a class="headerlink" href="#Picking-up-columns-to-Carve" title="Link to this heading"></a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
@@ -443,11 +445,11 @@ dtype: object
 </section>
 </section>
 <section id="Using-AutoCarver">
-<h1>Using AutoCarver<a class="headerlink" href="#Using-AutoCarver" title="Permalink to this heading"></a></h1>
+<h1>Using AutoCarver<a class="headerlink" href="#Using-AutoCarver" title="Link to this heading"></a></h1>
 <section id="AutoCarver-settings">
-<h2>AutoCarver settings<a class="headerlink" href="#AutoCarver-settings" title="Permalink to this heading"></a></h2>
+<h2>AutoCarver settings<a class="headerlink" href="#AutoCarver-settings" title="Link to this heading"></a></h2>
 <section id="Representativness-of-modalities">
-<h3>Representativness of modalities<a class="headerlink" href="#Representativness-of-modalities" title="Permalink to this heading"></a></h3>
+<h3>Representativness of modalities<a class="headerlink" href="#Representativness-of-modalities" title="Link to this heading"></a></h3>
 <p>The attribute <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> allows one to choose the minimum frequency per basic modalities. It is used by <strong>Discretizers</strong>:</p>
 <ul class="simple">
 <li><p>For quantitative features, it defines the number of quantiles to initialy discretize the features with.</p></li>
@@ -464,7 +466,7 @@ dtype: object
 <p><strong>Tip:</strong> should be set between <code class="docutils literal notranslate"><span class="pre">0.01</span></code> (slower, preciser, less robust) and <code class="docutils literal notranslate"><span class="pre">0.2</span></code> (faster, more robust)</p>
 </section>
 <section id="Desired-number-of-modalities">
-<h3>Desired number of modalities<a class="headerlink" href="#Desired-number-of-modalities" title="Permalink to this heading"></a></h3>
+<h3>Desired number of modalities<a class="headerlink" href="#Desired-number-of-modalities" title="Link to this heading"></a></h3>
 <p>The attribute <code class="docutils literal notranslate"><span class="pre">max_n_mod</span></code> allows one to choose the maximum number of modalities per carved feature. It is used by <strong>Carvers</strong> has the upper limit of number of modalities per consecutive combination of modalities.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
@@ -477,7 +479,7 @@ dtype: object
 <p><strong>Tip:</strong> should be set between <code class="docutils literal notranslate"><span class="pre">3</span></code> (faster, more robust) and <code class="docutils literal notranslate"><span class="pre">7</span></code> (slower, preciser, less robust)</p>
 </section>
 <section id="Association-metric">
-<h3>Association metric<a class="headerlink" href="#Association-metric" title="Permalink to this heading"></a></h3>
+<h3>Association metric<a class="headerlink" href="#Association-metric" title="Link to this heading"></a></h3>
 <p>The attribute <code class="docutils literal notranslate"><span class="pre">sort_by</span></code> allows one to choose the association metric used to sort combinations. Combinations of grouped modalities are ranked according to the specified modalities and the best ranked viable combination is returned by <strong>Carvers</strong>.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
@@ -491,7 +493,7 @@ dtype: object
 <p><strong>Tip:</strong> use <code class="docutils literal notranslate"><span class="pre">&quot;tschuprowt&quot;</span></code> for more robust, or less output modalities, use <code class="docutils literal notranslate"><span class="pre">&quot;cramerv&quot;</span></code> for more output modalities.</p>
 </section>
 <section id="Grouping-NaNs">
-<h3>Grouping NaNs<a class="headerlink" href="#Grouping-NaNs" title="Permalink to this heading"></a></h3>
+<h3>Grouping NaNs<a class="headerlink" href="#Grouping-NaNs" title="Link to this heading"></a></h3>
 <p>The attribute <code class="docutils literal notranslate"><span class="pre">dropna</span></code> allows one to choose whether or not <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code> should be grouped with another modality. If set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, <strong>Carvers</strong> will first find the most suitable combination of non-NaN values, and then test out all possible combinations with <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code>.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
@@ -503,9 +505,9 @@ dtype: object
 </div>
 </section>
 <section id="Optional-attributes">
-<h3>Optional attributes<a class="headerlink" href="#Optional-attributes" title="Permalink to this heading"></a></h3>
+<h3>Optional attributes<a class="headerlink" href="#Optional-attributes" title="Link to this heading"></a></h3>
 <section id="Minimal-frequency-per-carved-modality">
-<h4>Minimal frequency per carved modality<a class="headerlink" href="#Minimal-frequency-per-carved-modality" title="Permalink to this heading"></a></h4>
+<h4>Minimal frequency per carved modality<a class="headerlink" href="#Minimal-frequency-per-carved-modality" title="Link to this heading"></a></h4>
 <p>The attribute <code class="docutils literal notranslate"><span class="pre">min_freq_mod</span></code> allows one to choose the minimum frequency per output modality. It is used by <strong>Carvers</strong> in viability tests to put aside combinations that are not frequent enough in train or dev sets. By default, it is set to <code class="docutils literal notranslate"><span class="pre">min_freq/2</span></code>.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
@@ -517,7 +519,7 @@ dtype: object
 </div>
 </section>
 <section id="Type-of-output-carved-features">
-<h4>Type of output carved features<a class="headerlink" href="#Type-of-output-carved-features" title="Permalink to this heading"></a></h4>
+<h4>Type of output carved features<a class="headerlink" href="#Type-of-output-carved-features" title="Link to this heading"></a></h4>
 <p>The attribute <code class="docutils literal notranslate"><span class="pre">output_dtype</span></code> allows one to choose the output type:</p>
 <ul class="simple">
 <li><p>Use <code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code> for integer output (default)</p></li>
@@ -535,7 +537,7 @@ dtype: object
 </section>
 </section>
 <section id="Fitting-AutoCarver">
-<h2>Fitting AutoCarver<a class="headerlink" href="#Fitting-AutoCarver" title="Permalink to this heading"></a></h2>
+<h2>Fitting AutoCarver<a class="headerlink" href="#Fitting-AutoCarver" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><p>First, all quantitative features are discretized:</p>
 <ol class="arabic simple">
@@ -3224,9 +3226,9 @@ c:\Users\defra\Desktop\git\PROJECTS\AutoCarver\docs\source\examples\MulticlassCl
 </div>
 </section>
 <section id="AutoCarver-analysis">
-<h2>AutoCarver analysis<a class="headerlink" href="#AutoCarver-analysis" title="Permalink to this heading"></a></h2>
+<h2>AutoCarver analysis<a class="headerlink" href="#AutoCarver-analysis" title="Link to this heading"></a></h2>
 <section id="Carving-Summary">
-<h3>Carving Summary<a class="headerlink" href="#Carving-Summary" title="Permalink to this heading"></a></h3>
+<h3>Carving Summary<a class="headerlink" href="#Carving-Summary" title="Link to this heading"></a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
@@ -3412,7 +3414,7 @@ c:\Users\defra\Desktop\git\PROJECTS\AutoCarver\docs\source\examples\MulticlassCl
 </div>
 </section>
 <section id="Detailed-overview-of-tested-combinations">
-<h3>Detailed overview of tested combinations<a class="headerlink" href="#Detailed-overview-of-tested-combinations" title="Permalink to this heading"></a></h3>
+<h3>Detailed overview of tested combinations<a class="headerlink" href="#Detailed-overview-of-tested-combinations" title="Link to this heading"></a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
@@ -3651,9 +3653,9 @@ c:\Users\defra\Desktop\git\PROJECTS\AutoCarver\docs\source\examples\MulticlassCl
 </section>
 </section>
 <section id="Saving-and-Loading-AutoCarver">
-<h2>Saving and Loading AutoCarver<a class="headerlink" href="#Saving-and-Loading-AutoCarver" title="Permalink to this heading"></a></h2>
+<h2>Saving and Loading AutoCarver<a class="headerlink" href="#Saving-and-Loading-AutoCarver" title="Link to this heading"></a></h2>
 <section id="Saving">
-<h3>Saving<a class="headerlink" href="#Saving" title="Permalink to this heading"></a></h3>
+<h3>Saving<a class="headerlink" href="#Saving" title="Link to this heading"></a></h3>
 <p>All <strong>Carvers</strong> can safely be stored as a .json file.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
@@ -3669,7 +3671,7 @@ c:\Users\defra\Desktop\git\PROJECTS\AutoCarver\docs\source\examples\MulticlassCl
 </div>
 </section>
 <section id="Loading">
-<h3>Loading<a class="headerlink" href="#Loading" title="Permalink to this heading"></a></h3>
+<h3>Loading<a class="headerlink" href="#Loading" title="Link to this heading"></a></h3>
 <p><strong>Carvers</strong> can safely be loaded from a .json file.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
@@ -3688,7 +3690,7 @@ c:\Users\defra\Desktop\git\PROJECTS\AutoCarver\docs\source\examples\MulticlassCl
 </section>
 </section>
 <section id="Applying-AutoCarver">
-<h2>Applying AutoCarver<a class="headerlink" href="#Applying-AutoCarver" title="Permalink to this heading"></a></h2>
+<h2>Applying AutoCarver<a class="headerlink" href="#Applying-AutoCarver" title="Link to this heading"></a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
 </pre></div>
@@ -3789,11 +3791,11 @@ c:\Users\defra\Desktop\git\PROJECTS\AutoCarver\docs\source\examples\MulticlassCl
 </section>
 </section>
 <section id="Feature-Selection">
-<h1>Feature Selection<a class="headerlink" href="#Feature-Selection" title="Permalink to this heading"></a></h1>
+<h1>Feature Selection<a class="headerlink" href="#Feature-Selection" title="Link to this heading"></a></h1>
 <section id="Selectors-settings">
-<h2>Selectors settings<a class="headerlink" href="#Selectors-settings" title="Permalink to this heading"></a></h2>
+<h2>Selectors settings<a class="headerlink" href="#Selectors-settings" title="Link to this heading"></a></h2>
 <section id="Features-to-select-from">
-<h3>Features to select from<a class="headerlink" href="#Features-to-select-from" title="Permalink to this heading"></a></h3>
+<h3>Features to select from<a class="headerlink" href="#Features-to-select-from" title="Link to this heading"></a></h3>
 <p>Here all features have been carved using <code class="docutils literal notranslate"><span class="pre">MulticlassCarver</span></code>, hence all features are qualitative.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
@@ -3805,7 +3807,7 @@ c:\Users\defra\Desktop\git\PROJECTS\AutoCarver\docs\source\examples\MulticlassCl
 </div>
 </section>
 <section id="Number-of-features-to-select">
-<h3>Number of features to select<a class="headerlink" href="#Number-of-features-to-select" title="Permalink to this heading"></a></h3>
+<h3>Number of features to select<a class="headerlink" href="#Number-of-features-to-select" title="Link to this heading"></a></h3>
 <p>The attribute <code class="docutils literal notranslate"><span class="pre">n_best</span></code> allows one to choose the number of features to be selected per data type (quantitative and qualitative).</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
@@ -3818,7 +3820,7 @@ c:\Users\defra\Desktop\git\PROJECTS\AutoCarver\docs\source\examples\MulticlassCl
 </section>
 </section>
 <section id="Using-Selectors">
-<h2>Using Selectors<a class="headerlink" href="#Using-Selectors" title="Permalink to this heading"></a></h2>
+<h2>Using Selectors<a class="headerlink" href="#Using-Selectors" title="Link to this heading"></a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
 </pre></div>
@@ -4074,14 +4076,14 @@ c:\Users\defra\Desktop\git\PROJECTS\AutoCarver\docs\source\examples\MulticlassCl
 </ul>
 </section>
 <section id="What's-next?">
-<h2>What’s next?<a class="headerlink" href="#What's-next?" title="Permalink to this heading"></a></h2>
+<h2>What’s next?<a class="headerlink" href="#What's-next?" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><p>Thanks to <strong>Carvers</strong> all of your features are now optimally processed for your classification task!</p></li>
 <li><p>As a final step towards your model, <strong>Selectors</strong> can prove to be handy tools to operate target optimal Data Pre-Selection, so make sure to check out <a class="reference external" href="https://autocarver.readthedocs.io/en/latest/selectors_examples.html">Selectors Examples</a>!</p></li>
 </ul>
 </section>
 <section id="Well-done!">
-<h2>Well done!<a class="headerlink" href="#Well-done!" title="Permalink to this heading"></a></h2>
+<h2>Well done!<a class="headerlink" href="#Well-done!" title="Link to this heading"></a></h2>
 <p>Your commitment to achieving optimal results in multiclass classification tasks shines through in your meticulous use of <strong>AutoCarver</strong>’s <code class="docutils literal notranslate"><span class="pre">MulticlassCarver</span></code> for data preprocessing. By fine-tuning and optimizing your dataset, you have set the stage for robust and accurate machine learning models.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">MulticlassCarver</span></code> has proven to be a valuable ally in your pursuit of excellence, carving out a path toward enhanced feature representation and model interpretability. Your dedication to refining the data preprocessing steps reflects a commitment to extracting the maximum value from your datasets.</p>
 <p>We extend our sincere appreciation for choosing <strong>AutoCarver</strong> as your companion in the data preprocessing journey. Your use of <strong>AutoCarver</strong> demonstrates a dedication to leveraging cutting-edge tools for achieving excellence in multiclass classification tasks.</p>
