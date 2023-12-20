@@ -137,7 +137,6 @@ class ContinuousCarver(BaseCarver):
         dict[str, DataFrame]
             _description_
         """
-
         # checking for empty datasets
         yvals = {feature: None for feature in features}
         if X is not None:

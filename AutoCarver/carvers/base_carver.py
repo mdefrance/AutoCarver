@@ -381,9 +381,9 @@ class BaseCarver(BaseDiscretizer):
             # historizing raw combination
             raw_association = {
                 "index_to_groupby": {modality: modality for modality in xagg.index},
-                self.sort_by: self._association_measure(xagg, n_obs=sum(xagg.apply(sum)))[
-                    self.sort_by
-                ],
+                self.sort_by: self._association_measure(
+                    xagg.dropna(), n_obs=sum(xagg.dropna().apply(sum))
+                )[self.sort_by],
             }
             self._historize_viability_test(feature, raw_association, order)
 
