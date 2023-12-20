@@ -169,7 +169,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
             ), (
                 f"Some values from values_orders['{feature}'] are never observed. Can not fit a "
                 f"distribution without any observation. Please remove following values "
-                f"{str([value for value in order.content[self.str_default] if value != self.str_default])}"
+                f"{str([v for v in order.content[self.str_default] if v != self.str_default])}"
                 f" from values_orders['{feature}']."
             )
             # leaving NaNs at the end of the list
@@ -219,7 +219,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
         min_freq : float
             Minimum frequency per grouped modalities.
 
-            * Features whose most frequent modality is less frequent than ``min_freq`` won't be discretized.
+            * Features whose most frequent modality is < than ``min_freq`` won't be discretized.
             * Sets the number of quantiles in which to discretize the continuous features.
             * Sets the minimum frequency of a quantitative feature's modality.
 
@@ -262,7 +262,8 @@ class OrdinalDiscretizer(BaseDiscretizer):
         Parameters
         ----------
         X : DataFrame
-            Dataset used to discretize. Needs to have columns has specified in ``OrdinalDiscretizer.features``.
+            Dataset used to discretize. Needs to have columns has specified in
+            ``OrdinalDiscretizer.features``.
 
         y : Series
             Binary target feature.
@@ -334,8 +335,8 @@ class ChainedDiscretizer(BaseDiscretizer):
     """Automatic discretization of categorical features, joining rare modalities into higher
     level groups.
 
-    For each provided :class:`GroupedList` from ``chained_orders`` attribute, values less frequent than
-    ``min_freq`` are grouped in there respective group, as defined by :class:`GroupedList`.
+    For each provided :class:`GroupedList` from ``chained_orders`` attribute, values less frequent
+    than ``min_freq`` are grouped in there respective group, as defined by :class:`GroupedList`.
     """
 
     @extend_docstring(BaseDiscretizer.__init__)
@@ -364,7 +365,7 @@ class ChainedDiscretizer(BaseDiscretizer):
         min_freq : float
             Minimum frequency per grouped modalities.
 
-            * Features whose most frequent modality is less frequent than ``min_freq`` will not be discretized.
+            * Features whose most frequent modality is < than ``min_freq`` will not be discretized.
             * Sets the number of quantiles in which to discretize the continuous features.
             * Sets the minimum frequency of a quantitative feature's modality.
 
@@ -394,7 +395,7 @@ class ChainedDiscretizer(BaseDiscretizer):
         assert unknown_handling in [
             "drop",
             "raise",
-        ], " - [ChainedDiscretizer] Wrong value for attribute unknown_handling. Choose from ['drop', 'raise']."
+        ], " - [ChainedDiscretizer] Wrong value for unknown_handling. Choose from 'drop', 'raise'."
         self.unknown_handling = unknown_handling
 
         # known_values: all ordered values describe in each level of the chained_orders
@@ -412,18 +413,20 @@ class ChainedDiscretizer(BaseDiscretizer):
                     for value in next_values
                     if value not in known_values and value != next_group
                 ]
-                assert (
-                    len(next_unknown) == 0
-                ), f" - [ChainedDiscretizer] Values {str(next_unknown)}, provided in chained_orders[{n+1}] are missing from chained_orders[{n}]. Please make sure values are kept trhough each level."
-
+                assert len(next_unknown) == 0, (
+                    f" - [ChainedDiscretizer] Values {str(next_unknown)}, provided in chained_orde"
+                    f"rs[{n+1}] are missing from chained_orders[{n}]. Please make sure values are "
+                    "kept trhough each level."
+                )
                 # checking for known values
                 next_known = [
                     value for value in next_values if value in known_values and value != next_group
                 ]
-                assert (
-                    len(next_known) > 0
-                ), f" - [ChainedDiscretizer] For key '{next_group}', the provided chained_orders[{n+1}] has no values from chained_orders[:{n+1}]. Please provide some values existing values."
-
+                assert len(next_known) > 0, (
+                    f" - [ChainedDiscretizer] For key '{next_group}', the provided chained_orders["
+                    f"{n+1}] has no values from chained_orders[:{n+1}]. Please provide some values"
+                    " existing values."
+                )
                 # index of the highest ranked known value of the next_group
                 highest_index = known_values.index(next_known[-1])
 
@@ -448,10 +451,11 @@ class ChainedDiscretizer(BaseDiscretizer):
 
             # checking that all values from the order are in known_values
             for value in order:
-                assert (
-                    value in self.known_values
-                ), f" - [ChainedDiscretizer] Value {value} from feature {feature} provided in values_orders is missing from levels of chained_orders. Add value to a level of chained_orders or adapt values_orders."
-
+                assert value in self.known_values, (
+                    f" - [ChainedDiscretizer] Value {value} from feature {feature} provided in val"
+                    "ues_orders is missing from levels of chained_orders. Add value to a level of "
+                    "chained_orders or adapt values_orders."
+                )
             # adding known values if missing from the order
             for value in self.known_values:
                 if value not in order.values():
@@ -467,7 +471,8 @@ class ChainedDiscretizer(BaseDiscretizer):
         Parameters
         ----------
         X : DataFrame
-            Dataset used to discretize. Needs to have columns has specified in ``ChainedDiscretizer.features``.
+            Dataset used to discretize. Needs to have columns has specified in
+            ``ChainedDiscretizer.features``.
 
         y : Series
             Binary target feature, not used, by default None.
@@ -545,15 +550,18 @@ class ChainedDiscretizer(BaseDiscretizer):
             if len(unknown_values) > 0:
                 # raising an error
                 if self.unknown_handling == "raise":
-                    assert (
-                        not len(unknown_values) > 0
-                    ), f" - [ChainedDiscretizer] Order for feature '{feature}' needs to be provided for values: {str(unknown_values)}, otherwise set remove_unknown='drop' (policy unknown_handling='raise')"
-
+                    assert not len(unknown_values) > 0, (
+                        f" - [ChainedDiscretizer] Order for feature '{feature}' needs to be provid"
+                        f"ed for values: {str(unknown_values)}, otherwise set remove_unknown='drop"
+                        "' (policy unknown_handling='raise')"
+                    )
                 # dropping unknown value
                 else:  # unknown_handling='drop'
                     # alerting user
                     print(
-                        f" - [ChainedDiscretizer] Order for feature '{feature}' was not provided for values:  {str(unknown_values)}, these values will be converted to '{self.str_nan}' (policy unknown_handling='drop')"
+                        f" - [ChainedDiscretizer] Order for feature '{feature}' was not provided "
+                        f"for values:  {str(unknown_values)}, these values will be converted to '"
+                        f"{self.str_nan}' (policy unknown_handling='drop')"
                     )
 
                     # adding unknown to the order
