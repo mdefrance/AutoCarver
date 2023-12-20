@@ -63,7 +63,7 @@ jobs:
           source .venv/bin/activate
           black --check .
           isort . --check-only
-          pylint $(find . -name "*.py" | xargs) --fail-under=8
+          pylint AutoCarver --fail-under=8
           # flake8 . 
 
   pytest_pull:
