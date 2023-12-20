@@ -58,10 +58,6 @@ good-names = ["X", "y"]
 [tool.pylint.messages_control]
 disable = ["C0301", "C0103", "import-error"]
 
-[project_urls]
-Documentation = 
-BugTracker= "https://github.com/mdefrance/AutoCarver/issues"
-
 [tool.poetry.urls]
 docs = "https://autocarver.readthedocs.io/en/latest/index.html"
 repository = "https://github.com/mdefrance/AutoCarver"
