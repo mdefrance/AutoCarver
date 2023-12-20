@@ -2,7 +2,7 @@
 
 from pytest import fixture
 
-from AutoCarver.converters import *
+from auto_carver.converters import *
 
 # def test_time_delta_converter():
 #     assert False, "TODO"

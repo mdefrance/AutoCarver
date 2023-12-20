@@ -9,7 +9,7 @@ from numpy import add, array, searchsorted, sqrt, unique, zeros
 from pandas import DataFrame, Series, crosstab
 from scipy.stats import chi2_contingency
 
-from AutoCarver.discretizers import GroupedList
+from auto_carver.discretizers import GroupedList
 
 from ..discretizers.utils.base_discretizers import extend_docstring
 from .base_carver import BaseCarver

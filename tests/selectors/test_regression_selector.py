@@ -2,8 +2,8 @@
 
 from pandas import DataFrame
 
-from AutoCarver import BinaryCarver
-from AutoCarver.selectors import RegressionSelector
+from auto_carver import BinaryCarver
+from auto_carver.selectors import RegressionSelector
 
 
 def test_regression_selector(
