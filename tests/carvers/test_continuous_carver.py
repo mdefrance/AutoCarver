@@ -4,7 +4,7 @@
 from json import dumps, loads
 
 from pandas import DataFrame
-from pytest import fixture, raises
+from pytest import raises
 
 from AutoCarver import ContinuousCarver, load_carver
 from AutoCarver.discretizers import ChainedDiscretizer

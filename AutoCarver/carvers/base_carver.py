@@ -31,7 +31,8 @@ class BaseCarver(BaseDiscretizer):
     """Automatic carving of continuous, discrete, categorical and ordinal
     features that maximizes association with a binary or continuous target.
 
-    First fits a :class:`Discretizer`. Raw data should be provided as input (not a result of ``Discretizer.transform()``).
+    First fits a :class:`Discretizer`. Raw data should be provided as input (not a result of
+    ``Discretizer.transform()``).
     """
 
     def __init__(
@@ -55,17 +56,20 @@ class BaseCarver(BaseDiscretizer):
         min_freq : float
             Minimum frequency per grouped modalities.
 
-            * Features whose most frequent modality is less frequent than ``min_freq`` will not be carved.
+            * Features whose most frequent modality is less than ``min_freq`` will not be carved.
             * Sets the number of quantiles in which to discretize the continuous features.
             * Sets the minimum frequency of a quantitative feature's modality.
 
-            **Tip**: should be set between ``0.01`` (slower, preciser, less robust) and ``0.2`` (faster, more robust)
+            **Tip**: should be set between ``0.01`` (slower, preciser, less robust) and ``0.2``
+            (faster, more robust)
 
         quantitative_features : list[str], optional
-            List of column names of quantitative features (continuous and discrete) to be carved, by default ``None``
+            List of column names of quantitative features (continuous and discrete) to be carved,
+            by default ``None``
 
         qualitative_features : list[str], optional
-            List of column names of qualitative features (non-ordinal) to be carved, by default ``None``
+            List of column names of qualitative features (non-ordinal) to be carved,
+            by default ``None``
 
         ordinal_features : list[str], optional
             List of column names of ordinal features to be carved. For those features a list of
@@ -73,15 +77,17 @@ class BaseCarver(BaseDiscretizer):
 
         values_orders : dict[str, GroupedList], optional
             Dict of feature's column names and there associated ordering.
-            If lists are passed, a :class:`GroupedList` will automatically be initiated, by default ``None``
+            If lists are passed, a :class:`GroupedList` will automatically be initiated,
+            by default ``None``
 
         max_n_mod : int, optional
             Maximum number of modality per feature, by default ``5``
 
-            All combinations of modalities for groups of modalities of sizes from 1 to ``max_n_mod`` will be tested.
+            All combinations of modalities for groups of modalities of sizes from 1 to
+            ``max_n_mod`` will be tested.
             The combination with the best association will be selected.
 
-            **Tip**: should be set between ``3`` (faster, more robust) and ``7`` (slower, preciser, less robust)
+            **Tip**: set between ``3`` (faster, more robust) and ``7`` (slower, less robust)
 
         min_freq_mod : float, optional
             Minimum frequency per final modality, by default ``None`` for ``min_freq/2``
@@ -97,11 +103,12 @@ class BaseCarver(BaseDiscretizer):
             * ``False``, ``numpy.nan`` are ignored (not grouped), by default ``True``
 
         copy : bool, optional
-            If ``True``, feature processing at transform is applied to a copy of the provided DataFrame, by default ``False``
+            If ``True``, feature processing at transform is applied to a copy of the provided
+            DataFrame, by default ``False``
 
         verbose : bool, optional
-            * ``True``, without IPython installed: prints raw Discretizers and AutoCarver Fit steps for X, by default ``False``
-            * ``True``, with IPython installed: adds HTML tables of target rates and frequencies for X and X_dev
+            * ``True``, without IPython: prints raw steps for X, by default ``False``
+            * ``True``, with IPython: adds HTML tables of target rates for X and X_dev
 
             **Tip**: IPython displaying can be turned off by setting ``pretty_print=False``
 
@@ -191,7 +198,8 @@ class BaseCarver(BaseDiscretizer):
         Parameters
         ----------
         X : DataFrame
-            Dataset used to discretize. Needs to have columns has specified in ``BaseCarver.features``.
+            Dataset used to discretize. Needs to have columns has specified in
+            ``BaseCarver.features``.
 
         y : Series
             Binary target feature with wich the association is maximized.
@@ -201,7 +209,8 @@ class BaseCarver(BaseDiscretizer):
             It should have the same distribution as X.
 
         y_dev : Series, optional
-            Binary target feature with wich the robustness of discretization is evaluated, by default ``None``
+            Binary target feature with wich the robustness of discretization is evaluated,
+            by default ``None``
 
         Returns
         -------
@@ -372,7 +381,7 @@ class BaseCarver(BaseDiscretizer):
             # historizing raw combination
             raw_association = {
                 "index_to_groupby": {modality: modality for modality in xagg.index},
-                self.sort_by: self._association_measure(xagg, n_obs=xagg.apply(sum).sum())[
+                self.sort_by: self._association_measure(xagg, n_obs=sum(xagg.apply(sum)))[
                     self.sort_by
                 ],
             }
@@ -419,7 +428,9 @@ class BaseCarver(BaseDiscretizer):
     def _update_orders(
         self, feature: str, new_order: GroupedList, labels_orders: dict[str, GroupedList]
     ) -> dict[str, GroupedList]:
-        """updates values_orders and labels_orders accoding to the new order for specified feature"""
+        """Updates values_orders and labels_orders accoding to the new order for specified
+        feature
+        """
 
         # updating label_orders
         labels_orders.update({feature: new_order})
@@ -505,7 +516,7 @@ class BaseCarver(BaseDiscretizer):
                 raw_order.remove(self.str_nan)
 
                 # adding combinations with NaNs
-                combinations = nan_combinations(raw_order, self.str_nan, self.max_n_mod, 1)
+                combinations = nan_combinations(raw_order, self.str_nan, self.max_n_mod)
 
                 # getting most associated combination
                 best_association, order = self._get_best_association(
@@ -606,6 +617,12 @@ class BaseCarver(BaseDiscretizer):
 
         return best_association, order
 
+    # def _grouper(
+    #     self, xagg: Union[DataFrame, Series], groupby: Union[dict[str:str], list[str]]
+    # ) -> Union[DataFrame, Series]:
+    #     groupby
+    #     return xagg
+
     def _test_viability(
         self,
         feature: str,
@@ -614,24 +631,7 @@ class BaseCarver(BaseDiscretizer):
         xagg_dev: Union[Series, DataFrame],
         dropna: bool,
     ) -> dict[str, Any]:
-        """Tests the viability of all possible combinations onto xagg_dev
-
-        Parameters
-        ----------
-        feature : str
-            _description_
-        order : GroupedList
-            order of the feature
-        associations_xagg : list[dict[str, Any]]
-            _description_
-        xagg_dev : Union[Series, DataFrame]
-            _description_
-
-        Returns
-        -------
-        dict[str, Any]
-            _description_
-        """
+        """Tests the viability of all possible combinations onto xagg_dev"""
         # testing viability of all combinations
         best_association, train_viable, dev_viable = (None,) * 3
         test_results: dict[str, bool] = {}
@@ -819,8 +819,8 @@ class BaseCarver(BaseDiscretizer):
 
         By default:
 
-            * Modality ``str_default="__OTHER__"`` is generated for features that contain non-representative modalities.
-            * Modality ``str_nan="__NAN__"`` is generated for features that contain ``numpy.nan``.
+            * ``str_default="__OTHER__"`` is added for features with non-representative modalities.
+            * ``str_nan="__NAN__"`` is added for features that contain ``numpy.nan``.
             * Whatever the value of ``dropna``, the association is computed for non-missing values.
 
         Parameters
@@ -905,6 +905,9 @@ class BaseCarver(BaseDiscretizer):
             mapped_xtab.index = mapped_index
 
         return mapped_xtab
+
+    # def _printer(self, xagg: Union[Series, DataFrame, None] = None) -> DataFrame:
+    #     return xagg
 
     def _print_xagg(
         self,
@@ -1093,31 +1096,14 @@ def nan_combinations(
     raw_order: GroupedList,
     str_nan: str,
     max_n_mod: int,
-    min_group_size: int,
 ) -> list[list[str]]:
     """All consecutive combinatios of non-nans with added nan to each possible group and a last
-      group only with nan if the max_n_mod is not reached by the combination
-
-    Parameters
-    ----------
-    raw_order : GroupedList
-        _description_
-    str_nan : str
-        _description_
-    max_n_mod : int
-        _description_
-    min_group_size : int
-        _description_
-
-    Returns
-    -------
-    list[list[str]]
-        _description_
+    group only with nan if the max_n_mod is not reached by the combination
     """
     # all possible consecutive combinations
     combinations = consecutive_combinations(raw_order, max_n_mod, min_group_size=1)
     # iterating over each combination
-    nan_combinations = []
+    nan_combis = []
     for combination in combinations:
         # adding nan to each group of the combination
         nan_combination = []
@@ -1136,9 +1122,9 @@ def nan_combinations(
             # adding a group for nans only
             nan_combination += [new_combination + [[str_nan]]]
 
-        nan_combinations += nan_combination
+        nan_combis += nan_combination
 
-    return nan_combinations
+    return nan_combis
 
 
 def order_apply_combination(order: GroupedList, combination: list[list[Any]]) -> GroupedList:
@@ -1212,7 +1198,7 @@ def prettier_xagg(
     caption: str = None,
     hide_index: bool = False,
 ) -> str:
-    """Converts a crosstab to the HTML format, adding nice colors
+    """Pretty display of frequency and target rate per modality on the same line
 
     Parameters
     ----------
@@ -1228,7 +1214,6 @@ def prettier_xagg(
     str
         HTML format of the crosstab
     """
-    """Pretty display of frequency and target rate per modality on the same line."""
     # checking for a provided xtab
     nicer_xagg = ""
     if nice_xagg is not None:

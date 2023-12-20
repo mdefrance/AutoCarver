@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Discretizers &mdash; autocarver Beta release documentation</title>
+  <title>Discretizers &mdash; AutoCarver Beta release documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
@@ -82,7 +82,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">autocarver</a>
+          <a href="index.html">AutoCarver</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -860,7 +860,7 @@ closest modlity in target rate or by frequency.</p>
 of values has to be provided in the <code class="docutils literal notranslate"><span class="pre">values_orders</span></code> dict.</p></li>
 <li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per grouped modalities.</p>
 <ul>
-<li><p>Features whose most frequent modality is less frequent than <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> will not be discretized.</p></li>
+<li><p>Features whose most frequent modality is &lt; than <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> won’t be discretized.</p></li>
 <li><p>Sets the number of quantiles in which to discretize the continuous features.</p></li>
 <li><p>Sets the minimum frequency of a quantitative feature’s modality.</p></li>
 </ul>
@@ -995,21 +995,21 @@ The fitted ordering can then be passed as <code class="docutils literal notransl
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.</span></span><span class="sig-name descname"><span class="pre">ChainedDiscretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">qualitative_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chained_orders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.utils.grouped_list.GroupedList"><span class="pre">GroupedList</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values_orders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.utils.grouped_list.GroupedList"><span class="pre">GroupedList</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unknown_handling</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'raise'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.ChainedDiscretizer" title="Link to this definition"></a></dt>
 <dd><p>Automatic discretization of categorical features, joining rare modalities into higher
 level groups.</p>
-<p>For each provided <a class="reference internal" href="#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.GroupedList"><code class="xref py py-class docutils literal notranslate"><span class="pre">GroupedList</span></code></a> from <code class="docutils literal notranslate"><span class="pre">chained_orders</span></code> attribute, values less frequent than
-<code class="docutils literal notranslate"><span class="pre">min_freq</span></code> are grouped in there respective group, as defined by <a class="reference internal" href="#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.GroupedList"><code class="xref py py-class docutils literal notranslate"><span class="pre">GroupedList</span></code></a>.</p>
+<p>For each provided <a class="reference internal" href="#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.GroupedList"><code class="xref py py-class docutils literal notranslate"><span class="pre">GroupedList</span></code></a> from <code class="docutils literal notranslate"><span class="pre">chained_orders</span></code> attribute, values less frequent
+than <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> are grouped in there respective group, as defined by <a class="reference internal" href="#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.GroupedList"><code class="xref py py-class docutils literal notranslate"><span class="pre">GroupedList</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>qualitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – List of column names of qualitative features (non-ordinal) to be discretized</p></li>
-<li><p><strong>chained_orders</strong> (<em>list</em><em>[</em><a class="reference internal" href="#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.GroupedList"><em>GroupedList</em></a><em>]</em>) – A list of interlocked higher level groups for each modalities of each ordianl feature.
+<li><p><strong>chained_orders</strong> (<em>list</em><em>[</em><a class="reference internal" href="#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.GroupedList"><em>GroupedList</em></a><em>]</em>) – A list of interlocked higher level groups for each modalities of each ordinal feature.
 Values of <code class="docutils literal notranslate"><span class="pre">chained_orders[0]</span></code> have to be grouped in <code class="docutils literal notranslate"><span class="pre">chained_order[1]</span></code> etc.</p></li>
 <li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per grouped modalities.</p>
 <ul>
-<li><p>Features whose most frequent modality is less frequent than <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> will not be discretized.</p></li>
+<li><p>Features whose most frequent modality is &lt; than <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> will not be discretized.</p></li>
 <li><p>Sets the number of quantiles in which to discretize the continuous features.</p></li>
 <li><p>Sets the minimum frequency of a quantitative feature’s modality.</p></li>
 </ul>
-<p><strong>Tip</strong>: should be set between <code class="docutils literal notranslate"><span class="pre">0.02</span></code> (slower, preciser, less robust) and <code class="docutils literal notranslate"><span class="pre">0.05</span></code> (faster, more robust)</p>
+<p><strong>Tip</strong>: set between <code class="docutils literal notranslate"><span class="pre">0.02</span></code> (slower, less robust) and <code class="docutils literal notranslate"><span class="pre">0.05</span></code> (faster, more robust)</p>
 </p></li>
 <li><p><strong>unknown_handling</strong> (<em>str</em><em>, </em><em>optional</em>) – <p>Whether or not to remove unknown values, by default <code class="docutils literal notranslate"><span class="pre">'raise'</span></code>.</p>
 <ul>

@@ -2,8 +2,6 @@
 for continuous regression tasks.
 """
 
-from typing import Callable
-
 from numpy import mean, unique
 from pandas import DataFrame, Series
 from scipy.stats import kruskal
@@ -21,7 +19,8 @@ class ContinuousCarver(BaseCarver):
 
     Examples
     --------
-    `Continuous Regression Example <https://autocarver.readthedocs.io/en/latest/examples/MulticlassClassification/multiclass_classification_example.html>`_
+    `Continuous Regression Example <https://autocarver.readthedocs.io/en/latest/examples/Multiclass
+    Classification/multiclass_classification_example.html>`_
     """
 
     @extend_docstring(BaseCarver.__init__)
@@ -82,7 +81,8 @@ class ContinuousCarver(BaseCarver):
         Parameters
         ----------
         X : DataFrame
-            Dataset used to discretize. Needs to have columns has specified in ``AutoCarver.features``.
+            Dataset used to discretize. Needs to have columns has specified in
+            ``AutoCarver.features``.
 
         y : Series
             Binary target feature with wich the association is maximized.
@@ -92,7 +92,8 @@ class ContinuousCarver(BaseCarver):
             It should have the same distribution as X.
 
         y_dev : Series, optional
-            Binary target feature with wich the robustness of discretization is evaluated, by default ``None``
+            Binary target feature with wich the robustness of discretization is evaluated,
+            by default ``None``
 
         Returns
         -------
@@ -117,7 +118,8 @@ class ContinuousCarver(BaseCarver):
     def _aggregator(
         self, features: list[str], X: DataFrame, y: Series, labels_orders: dict[str, GroupedList]
     ) -> dict[str, DataFrame]:
-        """Computes y values for modalities of specified features and ensures the ordering according to the known labels
+        """Computes y values for modalities of specified features and ensures the ordering
+        according to the known labels
 
         Parameters
         ----------
@@ -135,6 +137,7 @@ class ContinuousCarver(BaseCarver):
         dict[str, DataFrame]
             _description_
         """
+
         # checking for empty datasets
         yvals = {feature: None for feature in features}
         if X is not None:
@@ -144,7 +147,7 @@ class ContinuousCarver(BaseCarver):
                 yval = y.groupby(X[feature]).apply(lambda u: list(u))
 
                 # reordering according to known_order
-                yval = yval.reindex(labels_orders[feature])
+                yval = yval.reindex(labels_orders[feature], fill_value=[])
 
                 # storing results
                 yvals.update({feature: yval})

@@ -4,25 +4,27 @@ for a binary classification model.
 
 from typing import Any
 
-from numpy import array, digitize, in1d, inf, isnan, linspace, nan, quantile, sort, unique
+from numpy import array, digitize, in1d, inf, isnan, linspace, quantile, sort, unique
 from pandas import DataFrame, Series
 
-from .base_discretizers import BaseDiscretizer, applied_to_dict_list, extend_docstring
+from .base_discretizers import BaseDiscretizer, extend_docstring
 from .grouped_list import GroupedList
 
 
 class ContinuousDiscretizer(BaseDiscretizer):
-    """Automatic discretizing of continuous and discrete features, building simple groups of quantiles of values.
+    """Automatic discretizing of continuous and discrete features, building simple groups of
+    quantiles of values.
 
-    Quantile discretization creates a lot of modalities (for example: up to 100 modalities for ``min_freq=0.01``).
+    Quantile discretization creates a lot of modalities (for example: up to 100 modalities for
+    ``min_freq=0.01``).
     Set ``min_freq`` with caution.
 
     The number of quantiles depends on overrepresented modalities and nans:
 
     * Values more frequent than ``min_freq`` are set as there own modalities.
     * Other values are cut in quantiles using ``numpy.quantile``.
-    * The number of quantiles is set as ``(1-freq_of_frequent_modalities)/(min_freq)``.
-    * Nans are considered as a modality (and are taken into account in ``freq_of_frequent_modalities``).
+    * The number of quantiles is set as ``(1-freq_frequent_modals)/(min_freq)``.
+    * Nans are considered as a modality (and are taken into account in ``freq_frequent_modals``).
     """
 
     @extend_docstring(BaseDiscretizer.__init__)
@@ -45,11 +47,11 @@ class ContinuousDiscretizer(BaseDiscretizer):
         min_freq : float
             Minimum frequency per grouped modalities.
 
-            * Features whose most frequent modality is less frequent than ``min_freq`` will not be discretized.
+            * Features whose most frequent modality is less than ``min_freq`` won't be discretized.
             * Sets the number of quantiles in which to discretize the continuous features.
             * Sets the minimum frequency of a quantitative feature's modality.
 
-            **Tip**: should be set between ``0.02`` (slower, preciser, less robust) and ``0.05`` (faster, more robust)
+            **Tip**: set between ``0.02`` (slower, less robust) and ``0.05`` (faster, more robust)
         """
         # Initiating BaseDiscretizer
         super().__init__(
@@ -99,8 +101,8 @@ def find_quantiles(
 
     * Values more frequent than ``min_freq`` are set as there own modalities.
     * Other values are cut in quantiles using ``numpy.quantile``.
-    * The number of quantiles is set as ``(1-freq_of_frequent_modalities)/(min_freq)``.
-    * Nans are considered as a modality (and are taken into account in ``freq_of_frequent_modalities``).
+    * The number of quantiles is set as ``(1-freq_frequent_modals)/(min_freq)``.
+    * Nans are considered as a modality (and are taken into account in ``freq_frequent_modals``).
 
     Parameters
     ----------
@@ -136,8 +138,8 @@ def np_find_quantiles(
 
     * Values more frequent than ``min_freq`` are set as there own modalities.
     * Other values are cut in quantiles using ``numpy.quantile``.
-    * The number of quantiles is set as ``(1-freq_of_frequent_modalities)/(min_freq)``.
-    * Nans are considered as a modality (and are taken into account in ``freq_of_frequent_modalities``).
+    * The number of quantiles is set as ``(1-freq_frequent_modals)/(min_freq)``.
+    * Nans are considered as a modality (and are taken into account in ``freq_frequent_modals``).
 
     Parameters
     ----------
