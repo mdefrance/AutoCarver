@@ -2,7 +2,7 @@
 name = "AutoCarver"
 version = "5.4.9"
 description = "Automatic Discretization of Features with Optimal Target Association"
-authors = ["Mario DEFRANCE"]
+authors = ["Mario DEFRANCE <defrancemario@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 
@@ -59,4 +59,25 @@ good-names = ["X", "y"]
 disable = ["C0301", "C0103", "import-error"]
 
 [project_urls]
-Documentation = "https://autocarver.readthedocs.io/en/latest/index.html"
+Documentation = 
+BugTracker= "https://github.com/mdefrance/AutoCarver/issues"
+
+[tool.poetry.urls]
+docs = "https://autocarver.readthedocs.io/en/latest/index.html"
+repository = "https://github.com/mdefrance/AutoCarver"
+
+
+[tool.poetry]
+classifiers=[
+    # ou 4 - Beta ou 5 - Production/Stable
+    # "Development Status :: 5 - Production/Stable",
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: Unix",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+]

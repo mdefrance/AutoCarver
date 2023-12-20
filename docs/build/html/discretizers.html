@@ -431,15 +431,17 @@ Needs to have columns has specified in <code class="docutils literal notranslate
 <dl class="py class">
 <dt class="sig sig-object py" id="AutoCarver.discretizers.ContinuousDiscretizer">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.</span></span><span class="sig-name descname"><span class="pre">ContinuousDiscretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">quantitative_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values_orders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.ContinuousDiscretizer" title="Link to this definition"></a></dt>
-<dd><p>Automatic discretizing of continuous and discrete features, building simple groups of quantiles of values.</p>
-<p>Quantile discretization creates a lot of modalities (for example: up to 100 modalities for <code class="docutils literal notranslate"><span class="pre">min_freq=0.01</span></code>).
+<dd><p>Automatic discretizing of continuous and discrete features, building simple groups of
+quantiles of values.</p>
+<p>Quantile discretization creates a lot of modalities (for example: up to 100 modalities for
+<code class="docutils literal notranslate"><span class="pre">min_freq=0.01</span></code>).
 Set <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> with caution.</p>
 <p>The number of quantiles depends on overrepresented modalities and nans:</p>
 <ul class="simple">
 <li><p>Values more frequent than <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> are set as there own modalities.</p></li>
 <li><p>Other values are cut in quantiles using <code class="docutils literal notranslate"><span class="pre">numpy.quantile</span></code>.</p></li>
-<li><p>The number of quantiles is set as <code class="docutils literal notranslate"><span class="pre">(1-freq_of_frequent_modalities)/(min_freq)</span></code>.</p></li>
-<li><p>Nans are considered as a modality (and are taken into account in <code class="docutils literal notranslate"><span class="pre">freq_of_frequent_modalities</span></code>).</p></li>
+<li><p>The number of quantiles is set as <code class="docutils literal notranslate"><span class="pre">(1-freq_frequent_modals)/(min_freq)</span></code>.</p></li>
+<li><p>Nans are considered as a modality (and are taken into account in <code class="docutils literal notranslate"><span class="pre">freq_frequent_modals</span></code>).</p></li>
 </ul>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -447,11 +449,11 @@ Set <code class="docutils literal notranslate"><span class="pre">min_freq</span>
 <li><p><strong>quantitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – List of column names of quantitative features (continuous and discrete) to be dicretized</p></li>
 <li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per grouped modalities.</p>
 <ul>
-<li><p>Features whose most frequent modality is less frequent than <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> will not be discretized.</p></li>
+<li><p>Features whose most frequent modality is less than <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> won’t be discretized.</p></li>
 <li><p>Sets the number of quantiles in which to discretize the continuous features.</p></li>
 <li><p>Sets the minimum frequency of a quantitative feature’s modality.</p></li>
 </ul>
-<p><strong>Tip</strong>: should be set between <code class="docutils literal notranslate"><span class="pre">0.02</span></code> (slower, preciser, less robust) and <code class="docutils literal notranslate"><span class="pre">0.05</span></code> (faster, more robust)</p>
+<p><strong>Tip</strong>: set between <code class="docutils literal notranslate"><span class="pre">0.02</span></code> (slower, less robust) and <code class="docutils literal notranslate"><span class="pre">0.05</span></code> (faster, more robust)</p>
 </p></li>
 <li><p><strong>values_orders</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.GroupedList"><em>GroupedList</em></a><em>]</em><em>, </em><em>optional</em>) – Dict of column names and there associated ordering.
 If lists are passed, a <a class="reference internal" href="#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.GroupedList"><code class="xref py py-class docutils literal notranslate"><span class="pre">GroupedList</span></code></a> will automatically be initiated, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>

@@ -151,22 +151,27 @@ use <code class="docutils literal notranslate"><span class="pre">&quot;cramerv&q
 </p></li>
 <li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per grouped modalities.</p>
 <ul>
-<li><p>Features whose most frequent modality is less frequent than <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> will not be carved.</p></li>
+<li><p>Features whose most frequent modality is less than <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> will not be carved.</p></li>
 <li><p>Sets the number of quantiles in which to discretize the continuous features.</p></li>
 <li><p>Sets the minimum frequency of a quantitative feature’s modality.</p></li>
 </ul>
-<p><strong>Tip</strong>: should be set between <code class="docutils literal notranslate"><span class="pre">0.01</span></code> (slower, preciser, less robust) and <code class="docutils literal notranslate"><span class="pre">0.2</span></code> (faster, more robust)</p>
+<p><strong>Tip</strong>: should be set between <code class="docutils literal notranslate"><span class="pre">0.01</span></code> (slower, preciser, less robust) and <code class="docutils literal notranslate"><span class="pre">0.2</span></code>
+(faster, more robust)</p>
 </p></li>
-<li><p><strong>quantitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of quantitative features (continuous and discrete) to be carved, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
-<li><p><strong>qualitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of qualitative features (non-ordinal) to be carved, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>quantitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of quantitative features (continuous and discrete) to be carved,
+by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>qualitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of qualitative features (non-ordinal) to be carved,
+by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 <li><p><strong>ordinal_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of ordinal features to be carved. For those features a list of
 values has to be provided in the <code class="docutils literal notranslate"><span class="pre">values_orders</span></code> dict, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 <li><p><strong>values_orders</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="discretizers.html#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.GroupedList"><em>GroupedList</em></a><em>]</em><em>, </em><em>optional</em>) – Dict of feature’s column names and there associated ordering.
-If lists are passed, a <code class="xref py py-class docutils literal notranslate"><span class="pre">GroupedList</span></code> will automatically be initiated, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+If lists are passed, a <code class="xref py py-class docutils literal notranslate"><span class="pre">GroupedList</span></code> will automatically be initiated,
+by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 <li><p><strong>max_n_mod</strong> (<em>int</em><em>, </em><em>optional</em>) – <p>Maximum number of modality per feature, by default <code class="docutils literal notranslate"><span class="pre">5</span></code></p>
-<p>All combinations of modalities for groups of modalities of sizes from 1 to <code class="docutils literal notranslate"><span class="pre">max_n_mod</span></code> will be tested.
+<p>All combinations of modalities for groups of modalities of sizes from 1 to
+<code class="docutils literal notranslate"><span class="pre">max_n_mod</span></code> will be tested.
 The combination with the best association will be selected.</p>
-<p><strong>Tip</strong>: should be set between <code class="docutils literal notranslate"><span class="pre">3</span></code> (faster, more robust) and <code class="docutils literal notranslate"><span class="pre">7</span></code> (slower, preciser, less robust)</p>
+<p><strong>Tip</strong>: set between <code class="docutils literal notranslate"><span class="pre">3</span></code> (faster, more robust) and <code class="docutils literal notranslate"><span class="pre">7</span></code> (slower, less robust)</p>
 </p></li>
 <li><p><strong>min_freq_mod</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum frequency per final modality, by default <code class="docutils literal notranslate"><span class="pre">None</span></code> for <code class="docutils literal notranslate"><span class="pre">min_freq/2</span></code></p></li>
 <li><p><strong>output_dtype</strong> (<em>str</em><em>, </em><em>optional</em>) – <p>To be choosen amongst <code class="docutils literal notranslate"><span class="pre">[&quot;float&quot;,</span> <span class="pre">&quot;str&quot;]</span></code>, by default <code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code></p>
@@ -180,10 +185,11 @@ The combination with the best association will be selected.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">False</span></code>, <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code> are ignored (not grouped), by default <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
 </ul>
 </p></li>
-<li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, feature processing at transform is applied to a copy of the provided DataFrame, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, feature processing at transform is applied to a copy of the provided
+DataFrame, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
 <li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, without IPython installed: prints raw Discretizers and AutoCarver Fit steps for X, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, with IPython installed: adds HTML tables of target rates and frequencies for X and X_dev</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, without IPython: prints raw steps for X, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, with IPython: adds HTML tables of target rates for X and X_dev</p></li>
 </ul>
 <p><strong>Tip</strong>: IPython displaying can be turned off by setting <code class="docutils literal notranslate"><span class="pre">pretty_print=False</span></code></p>
 </p></li>
@@ -241,8 +247,8 @@ and returns a transformed version of <cite>X</cite>.</p>
 <p>By default:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>Modality <code class="docutils literal notranslate"><span class="pre">str_default=&quot;__OTHER__&quot;</span></code> is generated for features that contain non-representative modalities.</p></li>
-<li><p>Modality <code class="docutils literal notranslate"><span class="pre">str_nan=&quot;__NAN__&quot;</span></code> is generated for features that contain <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">str_default=&quot;__OTHER__&quot;</span></code> is added for features with non-representative modalities.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">str_nan=&quot;__NAN__&quot;</span></code> is added for features that contain <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code>.</p></li>
 <li><p>Whatever the value of <code class="docutils literal notranslate"><span class="pre">dropna</span></code>, the association is computed for non-missing values.</p></li>
 </ul>
 </div></blockquote>
@@ -369,22 +375,27 @@ use <code class="docutils literal notranslate"><span class="pre">&quot;cramerv&q
 </p></li>
 <li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per grouped modalities.</p>
 <ul>
-<li><p>Features whose most frequent modality is less frequent than <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> will not be carved.</p></li>
+<li><p>Features whose most frequent modality is less than <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> will not be carved.</p></li>
 <li><p>Sets the number of quantiles in which to discretize the continuous features.</p></li>
 <li><p>Sets the minimum frequency of a quantitative feature’s modality.</p></li>
 </ul>
-<p><strong>Tip</strong>: should be set between <code class="docutils literal notranslate"><span class="pre">0.01</span></code> (slower, preciser, less robust) and <code class="docutils literal notranslate"><span class="pre">0.2</span></code> (faster, more robust)</p>
+<p><strong>Tip</strong>: should be set between <code class="docutils literal notranslate"><span class="pre">0.01</span></code> (slower, preciser, less robust) and <code class="docutils literal notranslate"><span class="pre">0.2</span></code>
+(faster, more robust)</p>
 </p></li>
-<li><p><strong>quantitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of quantitative features (continuous and discrete) to be carved, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
-<li><p><strong>qualitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of qualitative features (non-ordinal) to be carved, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>quantitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of quantitative features (continuous and discrete) to be carved,
+by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>qualitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of qualitative features (non-ordinal) to be carved,
+by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 <li><p><strong>ordinal_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of ordinal features to be carved. For those features a list of
 values has to be provided in the <code class="docutils literal notranslate"><span class="pre">values_orders</span></code> dict, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 <li><p><strong>values_orders</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="discretizers.html#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.GroupedList"><em>GroupedList</em></a><em>]</em><em>, </em><em>optional</em>) – Dict of feature’s column names and there associated ordering.
-If lists are passed, a <code class="xref py py-class docutils literal notranslate"><span class="pre">GroupedList</span></code> will automatically be initiated, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+If lists are passed, a <code class="xref py py-class docutils literal notranslate"><span class="pre">GroupedList</span></code> will automatically be initiated,
+by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 <li><p><strong>max_n_mod</strong> (<em>int</em><em>, </em><em>optional</em>) – <p>Maximum number of modality per feature, by default <code class="docutils literal notranslate"><span class="pre">5</span></code></p>
-<p>All combinations of modalities for groups of modalities of sizes from 1 to <code class="docutils literal notranslate"><span class="pre">max_n_mod</span></code> will be tested.
+<p>All combinations of modalities for groups of modalities of sizes from 1 to
+<code class="docutils literal notranslate"><span class="pre">max_n_mod</span></code> will be tested.
 The combination with the best association will be selected.</p>
-<p><strong>Tip</strong>: should be set between <code class="docutils literal notranslate"><span class="pre">3</span></code> (faster, more robust) and <code class="docutils literal notranslate"><span class="pre">7</span></code> (slower, preciser, less robust)</p>
+<p><strong>Tip</strong>: set between <code class="docutils literal notranslate"><span class="pre">3</span></code> (faster, more robust) and <code class="docutils literal notranslate"><span class="pre">7</span></code> (slower, less robust)</p>
 </p></li>
 <li><p><strong>min_freq_mod</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum frequency per final modality, by default <code class="docutils literal notranslate"><span class="pre">None</span></code> for <code class="docutils literal notranslate"><span class="pre">min_freq/2</span></code></p></li>
 <li><p><strong>output_dtype</strong> (<em>str</em><em>, </em><em>optional</em>) – <p>To be choosen amongst <code class="docutils literal notranslate"><span class="pre">[&quot;float&quot;,</span> <span class="pre">&quot;str&quot;]</span></code>, by default <code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code></p>
@@ -398,10 +409,11 @@ The combination with the best association will be selected.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">False</span></code>, <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code> are ignored (not grouped), by default <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
 </ul>
 </p></li>
-<li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, feature processing at transform is applied to a copy of the provided DataFrame, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, feature processing at transform is applied to a copy of the provided
+DataFrame, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
 <li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, without IPython installed: prints raw Discretizers and AutoCarver Fit steps for X, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, with IPython installed: adds HTML tables of target rates and frequencies for X and X_dev</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, without IPython: prints raw steps for X, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, with IPython: adds HTML tables of target rates for X and X_dev</p></li>
 </ul>
 <p><strong>Tip</strong>: IPython displaying can be turned off by setting <code class="docutils literal notranslate"><span class="pre">pretty_print=False</span></code></p>
 </p></li>
@@ -459,8 +471,8 @@ and returns a transformed version of <cite>X</cite>.</p>
 <p>By default:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>Modality <code class="docutils literal notranslate"><span class="pre">str_default=&quot;__OTHER__&quot;</span></code> is generated for features that contain non-representative modalities.</p></li>
-<li><p>Modality <code class="docutils literal notranslate"><span class="pre">str_nan=&quot;__NAN__&quot;</span></code> is generated for features that contain <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">str_default=&quot;__OTHER__&quot;</span></code> is added for features with non-representative modalities.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">str_nan=&quot;__NAN__&quot;</span></code> is added for features that contain <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code>.</p></li>
 <li><p>Whatever the value of <code class="docutils literal notranslate"><span class="pre">dropna</span></code>, the association is computed for non-missing values.</p></li>
 </ul>
 </div></blockquote>
@@ -584,22 +596,27 @@ features that maximizes association with a continuous target.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per grouped modalities.</p>
 <ul>
-<li><p>Features whose most frequent modality is less frequent than <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> will not be carved.</p></li>
+<li><p>Features whose most frequent modality is less than <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> will not be carved.</p></li>
 <li><p>Sets the number of quantiles in which to discretize the continuous features.</p></li>
 <li><p>Sets the minimum frequency of a quantitative feature’s modality.</p></li>
 </ul>
-<p><strong>Tip</strong>: should be set between <code class="docutils literal notranslate"><span class="pre">0.01</span></code> (slower, preciser, less robust) and <code class="docutils literal notranslate"><span class="pre">0.2</span></code> (faster, more robust)</p>
+<p><strong>Tip</strong>: should be set between <code class="docutils literal notranslate"><span class="pre">0.01</span></code> (slower, preciser, less robust) and <code class="docutils literal notranslate"><span class="pre">0.2</span></code>
+(faster, more robust)</p>
 </p></li>
-<li><p><strong>quantitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of quantitative features (continuous and discrete) to be carved, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
-<li><p><strong>qualitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of qualitative features (non-ordinal) to be carved, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>quantitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of quantitative features (continuous and discrete) to be carved,
+by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>qualitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of qualitative features (non-ordinal) to be carved,
+by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 <li><p><strong>ordinal_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of ordinal features to be carved. For those features a list of
 values has to be provided in the <code class="docutils literal notranslate"><span class="pre">values_orders</span></code> dict, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 <li><p><strong>values_orders</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="discretizers.html#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.GroupedList"><em>GroupedList</em></a><em>]</em><em>, </em><em>optional</em>) – Dict of feature’s column names and there associated ordering.
-If lists are passed, a <code class="xref py py-class docutils literal notranslate"><span class="pre">GroupedList</span></code> will automatically be initiated, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+If lists are passed, a <code class="xref py py-class docutils literal notranslate"><span class="pre">GroupedList</span></code> will automatically be initiated,
+by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 <li><p><strong>max_n_mod</strong> (<em>int</em><em>, </em><em>optional</em>) – <p>Maximum number of modality per feature, by default <code class="docutils literal notranslate"><span class="pre">5</span></code></p>
-<p>All combinations of modalities for groups of modalities of sizes from 1 to <code class="docutils literal notranslate"><span class="pre">max_n_mod</span></code> will be tested.
+<p>All combinations of modalities for groups of modalities of sizes from 1 to
+<code class="docutils literal notranslate"><span class="pre">max_n_mod</span></code> will be tested.
 The combination with the best association will be selected.</p>
-<p><strong>Tip</strong>: should be set between <code class="docutils literal notranslate"><span class="pre">3</span></code> (faster, more robust) and <code class="docutils literal notranslate"><span class="pre">7</span></code> (slower, preciser, less robust)</p>
+<p><strong>Tip</strong>: set between <code class="docutils literal notranslate"><span class="pre">3</span></code> (faster, more robust) and <code class="docutils literal notranslate"><span class="pre">7</span></code> (slower, less robust)</p>
 </p></li>
 <li><p><strong>min_freq_mod</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum frequency per final modality, by default <code class="docutils literal notranslate"><span class="pre">None</span></code> for <code class="docutils literal notranslate"><span class="pre">min_freq/2</span></code></p></li>
 <li><p><strong>output_dtype</strong> (<em>str</em><em>, </em><em>optional</em>) – <p>To be choosen amongst <code class="docutils literal notranslate"><span class="pre">[&quot;float&quot;,</span> <span class="pre">&quot;str&quot;]</span></code>, by default <code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code></p>
@@ -613,10 +630,11 @@ The combination with the best association will be selected.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">False</span></code>, <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code> are ignored (not grouped), by default <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
 </ul>
 </p></li>
-<li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, feature processing at transform is applied to a copy of the provided DataFrame, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, feature processing at transform is applied to a copy of the provided
+DataFrame, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
 <li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, without IPython installed: prints raw Discretizers and AutoCarver Fit steps for X, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, with IPython installed: adds HTML tables of target rates and frequencies for X and X_dev</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, without IPython: prints raw steps for X, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, with IPython: adds HTML tables of target rates for X and X_dev</p></li>
 </ul>
 <p><strong>Tip</strong>: IPython displaying can be turned off by setting <code class="docutils literal notranslate"><span class="pre">pretty_print=False</span></code></p>
 </p></li>
@@ -674,8 +692,8 @@ and returns a transformed version of <cite>X</cite>.</p>
 <p>By default:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>Modality <code class="docutils literal notranslate"><span class="pre">str_default=&quot;__OTHER__&quot;</span></code> is generated for features that contain non-representative modalities.</p></li>
-<li><p>Modality <code class="docutils literal notranslate"><span class="pre">str_nan=&quot;__NAN__&quot;</span></code> is generated for features that contain <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">str_default=&quot;__OTHER__&quot;</span></code> is added for features with non-representative modalities.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">str_nan=&quot;__NAN__&quot;</span></code> is added for features that contain <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code>.</p></li>
 <li><p>Whatever the value of <code class="docutils literal notranslate"><span class="pre">dropna</span></code>, the association is computed for non-missing values.</p></li>
 </ul>
 </div></blockquote>
