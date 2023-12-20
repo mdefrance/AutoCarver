@@ -55,15 +55,6 @@ extend-ignore = ["E203", "E704"]
 [tool.pylint.basic]
 good-names = ["X", "y"]
 
-[tool.pylint.MASTER]
-ignore-paths = [
-  '^.*venv$',
-  '^.*\\.venv$',
-  '^.*\.pyi$',
-  '^.*\\\.pyi$',
-  '^.*\\\\.pyi$',
-]
-
 [tool.pylint.messages_control]
 disable = ["C0301", "C0103", "import-error"]
 
