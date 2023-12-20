@@ -3,9 +3,10 @@
 
 from typing import Any
 
-from numpy import inf, nan, ones, triu
-from pandas import DataFrame, notna
-from statsmodels.stats.outliers_influence import variance_inflation_factor
+from numpy import ones, triu
+from pandas import DataFrame
+
+# from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 
 def spearman_filter(
