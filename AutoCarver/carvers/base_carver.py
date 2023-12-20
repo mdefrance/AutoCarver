@@ -323,9 +323,10 @@ class BaseCarver(BaseDiscretizer):
         )
 
         # computing crosstabs for each feature on train/test
-        xaggs = self._aggregator(self.features, x_copy, y, labels_orders)
-        xaggs_dev = self._aggregator(self.features, x_dev_copy, y_dev, labels_orders)
-
+        xaggs = self._aggregator(self.features, x_copy, y, labels_orders)  # pylint: disable=E1101
+        xaggs_dev = self._aggregator(  # pylint: disable=E1101
+            self.features, x_dev_copy, y_dev, labels_orders
+        )
         # optimal butcketization/carving of each feature
         all_features = self.features[:]  # (features are being removed from self.features)
         for n, feature in enumerate(all_features):
@@ -381,7 +382,7 @@ class BaseCarver(BaseDiscretizer):
             # historizing raw combination
             raw_association = {
                 "index_to_groupby": {modality: modality for modality in xagg.index},
-                self.sort_by: self._association_measure(
+                self.sort_by: self._association_measure(  # pylint: disable=E1101
                     xagg.dropna(), n_obs=sum(xagg.dropna().apply(sum))
                 )[self.sort_by],
             }
@@ -574,7 +575,7 @@ class BaseCarver(BaseDiscretizer):
 
         # grouping tab by its indices
         grouped_xaggs = [
-            self._grouper(xagg, index_to_groupby)
+            self._grouper(xagg, index_to_groupby)  # pylint: disable=E1101
             for index_to_groupby in tqdm(
                 indices_to_groupby, disable=not self.verbose, desc="Grouping modalities   "
             )
@@ -583,7 +584,7 @@ class BaseCarver(BaseDiscretizer):
         # computing associations for each tabs
         n_obs = xagg.apply(sum).sum()  # number of observations for xtabs
         associations_xagg = [
-            self._association_measure(grouped_xagg, n_obs=n_obs)
+            self._association_measure(grouped_xagg, n_obs=n_obs)  # pylint: disable=E1101
             for grouped_xagg in tqdm(
                 grouped_xaggs, disable=not self.verbose, desc="Computing associations"
             )
@@ -617,12 +618,6 @@ class BaseCarver(BaseDiscretizer):
 
         return best_association, order
 
-    # def _grouper(
-    #     self, xagg: Union[DataFrame, Series], groupby: Union[dict[str:str], list[str]]
-    # ) -> Union[DataFrame, Series]:
-    #     groupby
-    #     return xagg
-
     def _test_viability(
         self,
         feature: str,
@@ -642,7 +637,7 @@ class BaseCarver(BaseDiscretizer):
             desc="Testing robustness    ",
         ):
             # computing target rate and frequency per value
-            train_rates = self._printer(association["xagg"])
+            train_rates = self._printer(association["xagg"])  # pylint: disable=E1101
 
             # viability on train sample:
             # - target rates are distinct for consecutive modalities
@@ -669,10 +664,12 @@ class BaseCarver(BaseDiscretizer):
                 # case 1: test sample provided -> testing robustness
                 else:
                     # grouping the dev sample per modality
-                    grouped_xagg_dev = self._grouper(xagg_dev, association["index_to_groupby"])
+                    grouped_xagg_dev = self._grouper(  # pylint: disable=E1101
+                        xagg_dev, association["index_to_groupby"]
+                    )
 
                     # computing target rate and frequency per modality
-                    dev_rates = self._printer(grouped_xagg_dev)
+                    dev_rates = self._printer(grouped_xagg_dev)  # pylint: disable=E1101
 
                     # viability on dev sample:
                     # - grouped values have the same ranks in train/test
@@ -906,9 +903,6 @@ class BaseCarver(BaseDiscretizer):
 
         return mapped_xtab
 
-    # def _printer(self, xagg: Union[Series, DataFrame, None] = None) -> DataFrame:
-    #     return xagg
-
     def _print_xagg(
         self,
         xagg: DataFrame,
@@ -931,8 +925,8 @@ class BaseCarver(BaseDiscretizer):
             print(f"\n - [AutoCarver] {message}")
 
             # getting pretty xtabs
-            nice_xagg = self._printer(xagg)
-            nice_xagg_dev = self._printer(xagg_dev)
+            nice_xagg = self._printer(xagg)  # pylint: disable=E1101
+            nice_xagg_dev = self._printer(xagg_dev)  # pylint: disable=E1101
 
             # case 0: no pretty hmtl printing
             if not self.pretty_print:

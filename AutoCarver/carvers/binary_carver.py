@@ -11,7 +11,6 @@ from scipy.stats import chi2_contingency
 
 from AutoCarver.discretizers import GroupedList
 
-from ..discretizers import GroupedList
 from ..discretizers.utils.base_discretizers import extend_docstring
 from .base_carver import BaseCarver
 
@@ -22,7 +21,8 @@ class BinaryCarver(BaseCarver):
 
     Examples
     --------
-    `Binary Classification Example <https://autocarver.readthedocs.io/en/latest/examples/BinaryClassification/binary_classification_example.html>`_
+    `Binary Classification Example <https://autocarver.readthedocs.io/en/latest/examples/
+    BinaryClassification/binary_classification_example.html>`_
     """
 
     @extend_docstring(BaseCarver.__init__)
@@ -91,7 +91,8 @@ class BinaryCarver(BaseCarver):
         Parameters
         ----------
         X : DataFrame
-            Dataset used to discretize. Needs to have columns has specified in ``AutoCarver.features``.
+            Dataset used to discretize. Needs to have columns has specified in
+            ``AutoCarver.features``.
 
         y : Series
             Binary target feature with wich the association is maximized.
@@ -101,7 +102,8 @@ class BinaryCarver(BaseCarver):
             It should have the same distribution as X.
 
         y_dev : Series, optional
-            Binary target feature with wich the robustness of discretization is evaluated, by default ``None``
+            Binary target feature with wich the robustness of discretization is evaluated,
+            by default ``None``
 
         Returns
         -------
@@ -125,7 +127,8 @@ class BinaryCarver(BaseCarver):
     def _aggregator(
         self, features: list[str], X: DataFrame, y: Series, labels_orders: dict[str, GroupedList]
     ) -> dict[str, DataFrame]:
-        """Computes crosstabs for specified features and ensures that the crosstab is ordered according to the known labels
+        """Computes crosstabs for specified features and ensures that the crosstab is ordered
+        according to the known labels
 
         Parameters
         ----------
@@ -183,7 +186,8 @@ class BinaryCarver(BaseCarver):
         # initiating summed up array with zeros
         summed_values = zeros((len(unique_indices), len(xtab.columns)))
 
-        # for each unique_index found in index_values sums xtab.Values at corresponding position in summed_values
+        # for each unique_index found in index_values sums xtab.Values at corresponding position
+        # in summed_values
         add.at(summed_values, searchsorted(unique_indices, index_values), xtab.values)
 
         # converting back to dataframe
