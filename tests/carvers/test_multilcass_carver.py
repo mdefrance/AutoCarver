@@ -147,18 +147,19 @@ def test_multiclass_carver(
         if feature[:-2] not in auto_carver.ordinal_features:
             train_target_rate = train_target_rate.sort_values()
             dev_target_rate = dev_target_rate.sort_values()
-        assert all(
-            train_target_rate.index == dev_target_rate.index
-        ), f"Not robust feature {feature} was not dropped, or robustness test not working, \n {train_target_rate} \n {dev_target_rate} \n"
-
+        assert all(train_target_rate.index == dev_target_rate.index), (
+            f"Not robust feature {feature} was not dropped, or robustness test not working, \n "
+            f"{train_target_rate} \n {dev_target_rate} \n"
+        )
     # test that all values still are in the values_orders
     for feature in auto_carver.qualitative_features:
         fitted_values = auto_carver.values_orders[feature].values()
         raw_feature_name = feature[:-2]
         init_values = raw_x_train[raw_feature_name].fillna("__NAN__").unique()
-        assert all(
-            value in fitted_values for value in init_values
-        ), f"Missing value in output! Some values are been dropped for qualitative feature: {feature}"
+        assert all(value in fitted_values for value in init_values), (
+            "Missing value in output! Some values are been dropped for qualitative feature"
+            f": {feature}"
+        )
 
     # testing output of nans
     if not dropna:
@@ -189,14 +190,14 @@ def test_multiclass_carver(
         loaded_carver.summary() == auto_carver.summary()
     ), "Non-identical AutoCarver when loading JSON"
 
-    # testing to transform dev set with unexpected modality for a feature that passed through DefaultDiscretizer
+    # transform dev with unexpected modality for a feature passed through CategoricalDiscretizer
     auto_carver.transform(x_dev_wrong_1)
 
-    # testing to transform dev set with unexpected nans for a feature that passed through DefaultDiscretizer
+    # transform dev with unexpected nans for a feature that passed through CategoricalDiscretizer
     with raises(AssertionError):
         auto_carver.transform(x_dev_wrong_2)
 
-    # testing to transform dev set with unexpected modality for a feature that did not pass through DefaultDiscretizer
+    # transfo dev with unexpected modal for feature that didnt pass through CategoricalDiscretizer
     with raises(AssertionError):
         auto_carver.transform(x_dev_wrong_3)
 
@@ -289,21 +290,19 @@ def test_multiclass_carver(
 
     elif dropna and sort_by == "tschuprowt":
         expected = {
-            "Mediums": ["unknown", "__NAN__", "Medium+", "Medium", "Medium-", "Mediums"],
-            "High+": [
-                "High",
-                "High-",
-                "Highs",
-                "Best",
-                "ALONE",
-                "BEST",
+            "High+": ["High", "High-", "Highs", "Best", "ALONE", "BEST", "High+"],
+            "Mediums": [
                 "Low+",
                 "Low",
                 "Low-",
                 "Lows",
                 "Worst",
-                "High+",
+                "Medium+",
+                "Medium",
+                "Medium-",
+                "Mediums",
             ],
+            "__NAN__": ["unknown", "__NAN__"],
         }
         assert (
             auto_carver.values_orders["Qualitative_Ordinal_lownan_2"].content == expected
