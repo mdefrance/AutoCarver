@@ -12,6 +12,8 @@
         "**/.DS_Store": true,
         "**/.pytest_cache": true,
         "**/__pycache__": true,
+        "**/AutoCarver.egg-info": true,
+        "**/.ipynb_checkpoints": true,
     },
     "python.formatting.provider": "none",
     "python.testing.pytestArgs": [
