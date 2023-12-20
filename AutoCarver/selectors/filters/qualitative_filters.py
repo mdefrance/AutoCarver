@@ -130,7 +130,7 @@ def qualitative_worst_corr(
         )
 
         # updating association if it's greater than previous better features
-        if association.get(measure_name) > worst_corr.get(measure_name, 0):
+        if association.get(measure_name, 0) > worst_corr.get(measure_name, 0):
             # renaming association measure as filter
             association[f"{measure}_filter"] = association.pop(measure_name)
 
@@ -141,7 +141,7 @@ def qualitative_worst_corr(
             worst_corr.update(association)
 
         # stopping measurements if association is greater than threshold
-        if association.get(f"{measure}_filter") > thresh_corr:
+        if association.get(f"{measure}_filter", 0) > thresh_corr:
             ranks = ranks.drop(feature, axis=0)  # removing feature from ranks
 
             return ranks, None
