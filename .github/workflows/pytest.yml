@@ -102,7 +102,7 @@ jobs:
         with:
           path: ~/.cache
           key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
-      - name: Install AutoCarver
+      - name: Install dependencies
         if: steps.cached-pip-wheels.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root --all-extras
       - name: Install AutoCarver
