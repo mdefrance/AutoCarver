@@ -5,7 +5,7 @@ from typing import Union
 from warnings import warn
 
 from numpy import nan
-from pandas import DataFrame, Series, notna, unique
+from pandas import DataFrame, Series, unique
 
 from .utils.base_discretizers import BaseDiscretizer, extend_docstring
 from .utils.grouped_list import GroupedList
@@ -51,14 +51,15 @@ class Discretizer(BaseDiscretizer):
         min_freq : float
             Minimum frequency per grouped modalities.
 
-            * Features whose most frequent modality is less frequent than ``min_freq`` will not be discretized.
+            * Features whose most frequent modality is < ``min_freq`` will not be discretized.
             * Sets the number of quantiles in which to discretize the continuous features.
             * Sets the minimum frequency of a quantitative feature's modality.
 
-            **Tip**: should be set between ``0.02`` (slower, preciser, less robust) and ``0.05`` (faster, more robust)
+            **Tip**: set between ``0.02`` (slower, less robust) and ``0.05`` (faster, more robust)
 
         ordinal_features : list[str], optional
-            List of column names of ordinal features to be discretized. For those features a list of values has to be provided in the ``values_orders`` dict, by default ``None``
+            List of column names of ordinal features to be discretized. For those features a list
+            of values has to be provided in the ``values_orders`` dict, by default ``None``
         """
         # Lists of features per type
         if ordinal_features is None:
@@ -86,9 +87,10 @@ class Discretizer(BaseDiscretizer):
         no_order_provided = [
             feature for feature in self.ordinal_features if feature not in self.values_orders
         ]
-        assert (
-            len(no_order_provided) == 0
-        ), f" - [Discretizer] No ordering was provided for following features: {str(no_order_provided)}. Please make sure you defined values_orders correctly."
+        assert len(no_order_provided) == 0, (
+            " - [Discretizer] No ordering was provided for following features: "
+            f"{str(no_order_provided)}. Please make sure you defined values_orders correctly."
+        )
 
         # class specific attributes
         self.min_freq = min_freq
@@ -185,7 +187,8 @@ class Discretizer(BaseDiscretizer):
 class QualitativeDiscretizer(BaseDiscretizer):
     """Automatic discretiziation pipeline of categorical and ordinal features.
 
-    Pipeline steps: :ref:`CategoricalDiscretizer`, :ref:`StringDiscretizer`, :ref:`OrdinalDiscretizer`.
+    Pipeline steps: :ref:`CategoricalDiscretizer`, :ref:`StringDiscretizer`,
+    :ref:`OrdinalDiscretizer`.
 
     Modalities/values of features are grouped according to there respective orders:
 
@@ -215,18 +218,19 @@ class QualitativeDiscretizer(BaseDiscretizer):
         min_freq : float
             Minimum frequency per grouped modalities.
 
-            * Features whose most frequent modality is less frequent than ``min_freq`` will not be discretized.
+            * Features whose most frequent modality is < ``min_freq`` will not be discretized.
             * Sets the number of quantiles in which to discretize the continuous features.
             * Sets the minimum frequency of a quantitative feature's modality.
 
-            **Tip**: should be set between ``0.02`` (slower, preciser, less robust) and ``0.05`` (faster, more robust)
+            **Tip**: set between ``0.02`` (slower, less robust) and ``0.05`` (faster, more robust)
 
         ordinal_features : list[str], optional
             List of column names of ordinal features to be discretized. For those features a list
             of values has to be provided in the ``values_orders`` dict, by default ``None``
 
         input_dtypes : Union[str, dict[str, str]], optional
-            Input data type, converted to a dict of the provided type for each feature, by default ``"str"``
+            Input data type, converted to a dict of the provided type for each feature,
+            by default ``"str"``
 
             * If ``"str"``, features are considered as qualitative.
             * If ``"float"``, features are considered as quantitative.
@@ -256,9 +260,10 @@ class QualitativeDiscretizer(BaseDiscretizer):
         no_order_provided = [
             feature for feature in self.ordinal_features if feature not in self.values_orders
         ]
-        assert (
-            len(no_order_provided) == 0
-        ), f" - [QualitativeDiscretizer] No ordering was provided for following features: {str(no_order_provided)}. Please make sure you defined values_orders correctly."
+        assert len(no_order_provided) == 0, (
+            " - [QualitativeDiscretizer] No ordering was provided for following features: "
+            f"{str(no_order_provided)}. Please make sure you defined values_orders correctly."
+        )
 
         # non-ordinal qualitative features
         self.non_ordinal_features = [
@@ -271,7 +276,8 @@ class QualitativeDiscretizer(BaseDiscretizer):
         Parameters
         ----------
         X : DataFrame
-            Dataset used to discretize. Needs to have columns has specified in ``QualitativeDiscretizer.features``.
+            Dataset used to discretize. Needs to have columns has specified in
+            ``QualitativeDiscretizer.features``.
 
         y : Series
             Binary target feature with wich the association is maximized.
@@ -447,14 +453,15 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         min_freq : float
             Minimum frequency per grouped modalities.
 
-            * Features whose most frequent modality is less frequent than ``min_freq`` will not be discretized.
+            * Features whose most frequent modality is < ``min_freq`` will not be discretized.
             * Sets the number of quantiles in which to discretize the continuous features.
             * Sets the minimum frequency of a quantitative feature's modality.
 
-            **Tip**: should be set between ``0.02`` (slower, preciser, less robust) and ``0.05`` (faster, more robust)
+            **Tip**: set between ``0.02`` (slower, less robust) and ``0.05`` (faster, more robust)
 
         input_dtypes : Union[str, dict[str, str]], optional
-            Input data type, converted to a dict of the provided type for each feature, by default ``"str"``
+            Input data type, converted to a dict of the provided type for each feature,
+            by default ``"str"``
 
             * If ``"str"``, features are considered as qualitative.
             * If ``"float"``, features are considered as quantitative.
@@ -479,7 +486,8 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         Parameters
         ----------
         X : DataFrame
-            Dataset used to discretize. Needs to have columns has specified in ``QuantitativeDiscretizer.features``.
+            Dataset used to discretize. Needs to have columns has specified in
+            ``QuantitativeDiscretizer.features``.
 
         y : Series
             Binary target feature with wich the association is maximized.
@@ -495,10 +503,11 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         # checking for quantitative columns
         dtypes = x_copy[self.features].map(type).apply(unique, result_type="reduce")
         not_numeric = dtypes.apply(lambda u: str in u)
-        assert all(
-            ~not_numeric
-        ), f" - [QuantitativeDiscretizer] Non-numeric features: {str(list(not_numeric[not_numeric].index))} in provided quantitative_features. Please check your inputs."
-
+        assert all(~not_numeric), (
+            " - [QuantitativeDiscretizer] Non-numeric features: "
+            f"{str(list(not_numeric[not_numeric].index))} in provided quantitative_features. "
+            "Please check your inputs."
+        )
         return x_copy
 
     @extend_docstring(BaseDiscretizer.fit)

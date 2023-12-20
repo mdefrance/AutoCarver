@@ -52,7 +52,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
         min_freq : float
             Minimum frequency per grouped modalities.
 
-            * Features whose most frequent modality is less frequent than ``min_freq`` will not be discretized.
+            * Features whose most frequent modality is < ``min_freq`` will not be discretized.
             * Sets the number of quantiles in which to discretize the continuous features.
             * Sets the minimum frequency of a quantitative feature's modality.
 
@@ -640,18 +640,19 @@ def find_common_modalities(
     min_freq: float,
     order: GroupedList,
 ) -> dict[str, Union[str, float]]:
+    """finds common modalities of a ordinal feature"""
     # total size
     len_df = len(df_feature)
 
     # computing frequencies and target rate of each modality
-    nans = isna(df_feature)
+    not_nans = ~isna(df_feature)  # pylint: disable=E1130
     stats = np.vstack(
         (
-            df_feature[~nans]
+            df_feature[not_nans]
             .value_counts(dropna=False, normalize=False)
             .reindex(order, fill_value=0)
             .values,
-            y[~nans].groupby(df_feature[~nans]).sum().reindex(order).values,
+            y[not_nans].groupby(df_feature[not_nans]).sum().reindex(order).values,
         )
     )
 
