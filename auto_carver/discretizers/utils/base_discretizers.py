@@ -77,7 +77,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             If ``True``, prints raw Discretizers Fit and Transform steps, by default ``False``
 
         n_jobs : int, optional
-            Number of processes used by multiprocessing, by default ``4``
+            Number of processes used by multiprocessing, by default ``1``
 
         **kwargs: dict
             Pass values for ``str_default`` and ``str_nan`` (default string values)
