@@ -3,7 +3,6 @@ for binary classification tasks.
 """
 
 from typing import Callable
-from warnings import warn
 
 from numpy import add, array, searchsorted, sqrt, unique, zeros
 from pandas import DataFrame, Series, crosstab
@@ -282,40 +281,3 @@ class BinaryCarver(BaseCarver):
         super().fit(x_copy, y, X_dev=x_dev_copy, y_dev=y_dev)
 
         return self
-
-
-class AutoCarver(BinaryCarver):
-    @extend_docstring(BinaryCarver.__init__)
-    def __init__(
-        self,
-        sort_by: str,
-        min_freq: float,
-        *,
-        quantitative_features: list[str] = None,
-        qualitative_features: list[str] = None,
-        ordinal_features: list[str] = None,
-        values_orders: dict[str, GroupedList] = None,
-        max_n_mod: int = 5,
-        output_dtype: str = "float",
-        dropna: bool = True,
-        copy: bool = False,
-        verbose: bool = False,
-        pretty_print: bool = False,
-        **kwargs: dict,
-    ) -> None:
-        warn("AutoCarver will be deprecated, please use BinaryCarver instead.", DeprecationWarning)
-        super().__init__(
-            sort_by,
-            min_freq,
-            quantitative_features=quantitative_features,
-            qualitative_features=qualitative_features,
-            ordinal_features=ordinal_features,
-            values_orders=values_orders,
-            max_n_mod=max_n_mod,
-            output_dtype=output_dtype,
-            dropna=dropna,
-            copy=copy,
-            verbose=verbose,
-            pretty_print=pretty_print,
-            **kwargs,
-        )
