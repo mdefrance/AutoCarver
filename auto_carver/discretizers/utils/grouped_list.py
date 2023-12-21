@@ -18,7 +18,6 @@ class GroupedList(list):
         iterable : Union[ndarray, dict, list, tuple], optional
             List-like or :class:`GroupedList`, by default ``()``
         """
-        # TODO: move list to an attribute `order`?
         # case -1: iterable is an array
         if isinstance(iterable, ndarray):
             iterable = list(iterable)
@@ -155,7 +154,7 @@ class GroupedList(list):
         self += [new_value]
         self.content.update({new_value: [new_value]})
 
-    def update(self, new_value: dict[Any, list[Any]]) -> None:  # TODO: not working as expected
+    def update(self, new_value: dict[Any, list[Any]]) -> None:
         """Updates the GroupedList via a dict
 
         Parameters
@@ -188,12 +187,13 @@ class GroupedList(list):
         keys = list(sort(keys_str)) + list(sort(keys_float))
 
         # recreating an ordered GroupedList
-        sorted = GroupedList({k: self.get(k) for k in keys})
+        sorted_list = GroupedList({k: self.get(k) for k in keys})
 
-        return sorted
+        return sorted_list
 
     def sort_by(self, ordering: list[Any]) -> None:
-        """Sorts the values of the list and dict according to ``ordering``, if any, NaNs are the last.
+        """Sorts the values of the list and dict according to ``ordering``, if any,
+        NaNs are the last.
 
         Parameters
         ----------
@@ -207,17 +207,19 @@ class GroupedList(list):
         """
 
         # checking that all values are given an order
-        assert all(
-            o in self for o in ordering
-        ), f" - [GroupedList] Unknown values in ordering: {str([v for v in ordering if v not in self])}"
-        assert all(
-            s in ordering for s in self
-        ), f" - [GroupedList] Missing value from ordering: {str([v for v in self if v not in ordering])}"
+        assert all(o in self for o in ordering), (
+            " - [GroupedList] Unknown values in ordering: "
+            f"{str([v for v in ordering if v not in self])}"
+        )
+        assert all(s in ordering for s in self), (
+            " - [GroupedList] Missing value from ordering:"
+            f" {str([v for v in self if v not in ordering])}"
+        )
 
         # ordering the content
-        sorted = GroupedList({k: self.get(k) for k in ordering})
+        sorted_list = GroupedList({k: self.get(k) for k in ordering})
 
-        return sorted
+        return sorted_list
 
     def remove(self, value: Any) -> None:
         """Removes a value from the GroupedList
@@ -306,7 +308,7 @@ class GroupedList(list):
         """
 
         # initiating list of group representation
-        repr: list[str] = []
+        repr_list: list[str] = []
 
         # iterating over each group
         for group in self:
@@ -317,15 +319,15 @@ class GroupedList(list):
                 pass
 
             elif len(values) == 1:  # case 1: there is only one value in this group
-                repr += [values[0]]
+                repr_list += [values[0]]
 
             elif len(values) == 2:  # case 2: two values in this group
-                repr += [f"{values[1]}"[:char_limit] + " and " + f"{values[0]}"[:char_limit]]
+                repr_list += [f"{values[1]}"[:char_limit] + " and " + f"{values[0]}"[:char_limit]]
 
             elif len(values) > 2:  # case 3: more than two values in this group
-                repr += [f"{values[-1]}"[:char_limit] + " to " + f"{values[0]}"[:char_limit]]
+                repr_list += [f"{values[-1]}"[:char_limit] + " to " + f"{values[0]}"[:char_limit]]
 
-        return repr
+        return repr_list
 
     def replace_group_leader(self, group_leader: Any, group_member: Any) -> None:
         """Replaces a group_leader by one of its group_members
@@ -335,7 +337,8 @@ class GroupedList(list):
         group_leader : Any
             One of the list's values (``GroupedList.content.keys()``)
         group_member : Any
-            One of the dict's values for specified group_leader (``GroupedList.content[group_leader]``)
+            One of the dict's values for specified group_leader
+            (``GroupedList.content[group_leader]``)
         """
         # checking that group_member is in group_leader
         assert (

@@ -191,7 +191,9 @@ class MulticlassCarver(BaseCarver):
             # renaming BinaryCarver's fitted values_orders/input_dtype/output_dtype for y_class
             casted_values_orders.update(dict_append_class(binary_carver.values_orders, y_class))
             casted_input_dtypes.update(dict_append_class(binary_carver.input_dtypes, y_class))
-            self._history.update(dict_append_class(binary_carver._history, y_class))
+            self._history.update(
+                dict_append_class(binary_carver._history, y_class)  # pylint: disable=W0212
+            )
             for feature in binary_carver.features:
                 # feature only present in binary_carver.feature if not removed
                 casted_features.update(

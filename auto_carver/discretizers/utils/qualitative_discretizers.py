@@ -74,7 +74,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
 
         self.min_freq = min_freq
 
-    def _prepare_data(self, X: DataFrame, y: Series) -> DataFrame:
+    def _prepare_data(self, X: DataFrame, y: Series) -> DataFrame:  # pylint: disable=W0222
         """Validates format and content of X and y.
 
         Parameters
@@ -117,7 +117,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
         return x_copy
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: DataFrame, y: Series) -> None:
+    def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
         # copying dataframe and checking data before bucketization
         x_copy = self._prepare_data(X, y)
 
@@ -260,7 +260,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
         # class specific attributes
         self.min_freq = min_freq
 
-    def _prepare_data(self, X: DataFrame, y: Series) -> DataFrame:
+    def _prepare_data(self, X: DataFrame, y: Series) -> DataFrame:  # pylint: disable=W0222
         """Validates format and content of X and y.
 
         Parameters
@@ -294,7 +294,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
         return x_copy
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: DataFrame, y: Series) -> None:
+    def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
         if self.verbose:  # verbose if requested
             print(f" - [OrdinalDiscretizer] Fit {str(self.features)}")
 
@@ -597,7 +597,7 @@ class ChainedDiscretizer(BaseDiscretizer):
         return x_copy
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: DataFrame, y: Series = None) -> None:
+    def fit(self, X: DataFrame, y: Series = None) -> None:  # pylint: disable=W0222
         # filling nans
         x_copy = self._prepare_data(X, y)
 

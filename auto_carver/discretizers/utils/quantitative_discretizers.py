@@ -72,7 +72,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
         self.q = round(1 / min_freq)  # number of quantiles
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: DataFrame, y: Series = None) -> None:
+    def fit(self, X: DataFrame, y: Series = None) -> None:  # pylint: disable=W0222
         if self.verbose:  # verbose if requested
             print(f" - [ContinuousDiscretizer] Fit {str(self.quantitative_features)}")
 
