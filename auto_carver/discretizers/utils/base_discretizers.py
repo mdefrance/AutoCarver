@@ -479,25 +479,40 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         # dataset length
         x_len = X.shape[0]
 
-        # asynchronous transform of each feature
-        with Pool(processes=self.n_jobs) as pool:
-            all_transformed_async = [
-                pool.apply_async(
-                    transform_quantitative_feature,
-                    (
-                        feature,
-                        X[feature],
-                        self.values_orders,
-                        self.str_nan,
-                        self.labels_per_values,
-                        x_len,
-                    ),
+        # no multiprocessing
+        if self.n_jobs <= 1:
+            all_transformed = [
+                transform_quantitative_feature(
+                    feature,
+                    X[feature],
+                    self.values_orders,
+                    self.str_nan,
+                    self.labels_per_values,
+                    x_len,
                 )
                 for feature in self.quantitative_features
             ]
 
-            #  waiting for the results
-            all_transformed = [result.get() for result in all_transformed_async]
+        # asynchronous transform of each feature
+        else:
+            with Pool(processes=self.n_jobs) as pool:
+                all_transformed_async = [
+                    pool.apply_async(
+                        transform_quantitative_feature,
+                        (
+                            feature,
+                            X[feature],
+                            self.values_orders,
+                            self.str_nan,
+                            self.labels_per_values,
+                            x_len,
+                        ),
+                    )
+                    for feature in self.quantitative_features
+                ]
+
+                #  waiting for the results
+                all_transformed = [result.get() for result in all_transformed_async]
 
         # unpacking transformed series
         X.update(DataFrame({feature: values for feature, values in all_transformed}))

@@ -53,18 +53,24 @@ class StringDiscretizer(BaseDiscretizer):
         # checking for binary target and copying X
         x_copy = self._prepare_data(X, y)  # X[self.features].fillna(self.str_nan)
 
-        # asynchronous conversion each feature's value
-        with Pool(processes=self.n_jobs) as pool:
-            all_orders_async = [
-                pool.apply_async(
-                    fit_feature,
-                    (feature, x_copy[feature], self.str_nan),
-                )
-                for feature in self.features
+        # no multiprocessing
+        if self.n_jobs <= 1:
+            all_orders = [
+                fit_feature(feature, x_copy[feature], self.str_nan) for feature in self.features
             ]
+        # asynchronous conversion each feature's value
+        else:
+            with Pool(processes=self.n_jobs) as pool:
+                all_orders_async = [
+                    pool.apply_async(
+                        fit_feature,
+                        (feature, x_copy[feature], self.str_nan),
+                    )
+                    for feature in self.features
+                ]
 
-            #  waiting for the results
-            all_orders = [result.get() for result in all_orders_async]
+                #  waiting for the results
+                all_orders = [result.get() for result in all_orders_async]
 
         for feature, values_order in all_orders:
             # updating values_orders accordingly

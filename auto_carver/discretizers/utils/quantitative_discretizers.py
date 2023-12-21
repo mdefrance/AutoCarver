@@ -78,14 +78,25 @@ class ContinuousDiscretizer(BaseDiscretizer):
 
         # storing ordering
         all_orders = []
-        with Pool(processes=self.n_jobs) as pool:
-            # feature processing
-            all_orders += pool.imap_unordered(
-                partial(
-                    fit_feature, X=X[self.quantitative_features], q=self.q, str_nan=self.str_nan
-                ),
-                self.quantitative_features,
-            )
+
+        # no multiprocessing
+        if self.n_jobs <= 1:
+            all_orders = [
+                fit_feature(
+                    feature, X=X[self.quantitative_features], q=self.q, str_nan=self.str_nan
+                )
+                for feature in self.quantitative_features
+            ]
+        #  launching multiprocessing
+        else:
+            with Pool(processes=self.n_jobs) as pool:
+                # feature processing
+                all_orders += pool.imap_unordered(
+                    partial(
+                        fit_feature, X=X[self.quantitative_features], q=self.q, str_nan=self.str_nan
+                    ),
+                    self.quantitative_features,
+                )
         # storing into the values_orders
         self.values_orders.update({feature: order for (feature, order) in all_orders})
 
