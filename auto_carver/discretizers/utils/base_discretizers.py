@@ -2,9 +2,9 @@
 for a binary classification model.
 """
 
-from typing import Any, Union
-from multiprocessing import Pool
 from functools import partial
+from multiprocessing import Pool
+from typing import Any, Union
 from warnings import warn
 
 from numpy import floating, integer, isfinite, isnan, nan, select

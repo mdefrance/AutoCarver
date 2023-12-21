@@ -1,7 +1,8 @@
 """Base tools to convert values into specific types.
 """
-from multiprocessing import Pool
 from functools import partial
+from multiprocessing import Pool
+
 from pandas import DataFrame, Series
 
 from .base_discretizers import BaseDiscretizer, extend_docstring, nan_unique
