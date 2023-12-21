@@ -3,6 +3,8 @@ for a binary classification model.
 """
 
 from typing import Any, Union
+from multiprocessing import Pool, cpu_count
+from functools import partial
 from warnings import warn
 
 from numpy import floating, integer, isfinite, isnan, nan, select
@@ -32,10 +34,12 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         features_dropna: dict[str, bool] = None,
     ) -> None:
         # features : list[str]
-        #     List of column names of features (continuous, discrete, categorical or ordinal) to be dicretized
+        #     List of column names of features (continuous, discrete, categorical or ordinal)
+        # to be dicretized
 
         # input_dtypes : Union[str, dict[str, str]], optional
-        #     Input data type, converted to a dict of the provided type for each feature, by default ``"str"``
+        #     Input data type, converted to a dict of the provided type for each feature,
+        # by default ``"str"``
 
         #     * If ``"str"``, features are considered as qualitative.
         #     * If ``"float"``, features are considered as quantitative.
@@ -43,23 +47,28 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         # output_dtype : str, optional
         #     To be choosen amongst ``["float", "str"]``, by default ``"str"``
 
-        #     * If ``"float"``, grouped modalities will be converted to there corresponding floating rank.
+        #     * If ``"float"``, grouped modalities will be converted to there corresponding
+        #  floating rank.
         #     * If ``"str"``, a per-group modality will be set for all the modalities of a group.
 
         # dropna : bool, optional
         #     * If ``True``, ``numpy.nan`` will be attributed there label.
-        #     * If ``False``, ``numpy.nan`` will be restored after discretization, by default ``True``
+        #     * If ``False``, ``numpy.nan`` will be restored after discretization,
+        # by default ``True``
 
         # str_default : str, optional
-        #     String representation for default qualitative values, i.e. values less frequent than ``min_freq``, by default ``"__OTHER__"``
+        #     String representation for default qualitative values, i.e. values less frequent than
+        # ``min_freq``, by default ``"__OTHER__"``
 
         # features_casting : dict[str, list[str]], optional
         #     By default ``None``, target is considered as continuous or binary.
-        #     Multiclass target: Dict of raw DataFrame columns associated to the names of copies that will be created.
+        #     Multiclass target: Dict of raw DataFrame columns associated to the names of copies
+        # that will be created.
         """
         values_orders : dict[str, GroupedList], optional
             Dict of column names and there associated ordering.
-            If lists are passed, a :class:`GroupedList` will automatically be initiated, by default ``None``
+            If lists are passed, a :class:`GroupedList` will automatically be initiated,
+            by default ``None``
 
         copy : bool, optional
             If ``True``, applies transform to a copy of the provided DataFrame, by default ``False``
@@ -219,7 +228,8 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         Parameters
         ----------
         X : DataFrame
-            Dataset used to discretize. Needs to have columns has specified in ``BaseDiscretizer.features``, by default None.
+            Dataset used to discretize. Needs to have columns has specified in
+            ``BaseDiscretizer.features``, by default None.
 
         Returns
         -------
@@ -255,7 +265,8 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         Parameters
         ----------
         X : DataFrame
-            Dataset used to discretize. Needs to have columns has specified in ``BaseDiscretizer.features``, by default None.
+            Dataset used to discretize. Needs to have columns has specified in
+            ``BaseDiscretizer.features``, by default None.
 
         y : Series
             Binary target feature, by default None.
@@ -299,7 +310,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
                 # checking indices
                 assert all(
                     y.index == X.index
-                ), f" - [Discretizer] X and y must have the same indices."
+                ), " - [Discretizer] X and y must have the same indices."
 
         return x_copy
 
@@ -411,9 +422,11 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         DataFrame
             Discretized X.
         """
-        # * For each feature's value, the associated group label is attributed (as definid by ``values_orders``).
+        # * For each feature's value, the associated group label is attributed (as definid by
+        # ``values_orders``).
         # * If ``output_dtype="float"``, converts labels into floats.
-        # * Data types are matched as ``input_dtypes=="str"`` for qualitative features and ``input_dtypes=="float"`` for quantitative ones.
+        # * Data types are matched as ``input_dtypes=="str"`` for qualitative features and
+        # ``input_dtypes=="float"`` for quantitative ones.
         # * If ``copy=True``, the input DataFrame will be copied.
 
         # copying dataframes and casting for multiclass
@@ -440,7 +453,9 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
     def _transform_quantitative(self, X: DataFrame, y: Series) -> DataFrame:
         """Applies discretization to a DataFrame's Quantitative columns.
 
-        * Data types are matched as ``input_dtypes=="str"`` for qualitative features and ``input_dtypes=="float"`` for quantitative ones.
+        * Data types are defined by:
+            * ``input_dtypes=="str"`` for qualitative features
+            * ``input_dtypes=="float"`` for quantitative features
         * If ``copye=True``, the input DataFrame will be copied.
 
         Parameters
@@ -458,53 +473,40 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         # dataset length
         x_len = X.shape[0]
 
-        # grouping each quantitative feature
-        for feature in self.quantitative_features:
-            # feature's labels associated to each quantile
-            feature_values = self.values_orders[feature]
+        # with Manager() as manager:
+        processes = cpu_count()  # number of available cores
 
-            # keeping track of nans
-            nans = isna(X[feature])
-
-            # converting nans to there corresponding quantile (if it was grouped to a quantile)
-            if any(nans):
-                assert feature_values.contains(self.str_nan), (
-                    " - [Discretizer] Unexpected value! Missing values found for feature "
-                    f"'{feature}' at transform step but not during fit. There might be new values "
-                    "in your test/dev set. Consider taking a bigger test/dev set or dropping the "
-                    f"column {feature}."
+        # splitting columns into chunks (per cpu)
+        with Pool(processes=processes) as pool:
+            all_transformed_async = [
+                pool.apply_async(
+                    partial(
+                        transform_quantitative_feature,
+                        df_feature=X[feature],
+                        values_orders=self.values_orders,
+                        str_nan=self.str_nan,
+                        labels_per_values=self.labels_per_values,
+                        x_len=x_len,
+                    ),
+                    (feature,),
                 )
-                nan_value = feature_values.get_group(self.str_nan)
-                # checking that nans have been grouped to a quantile otherwise they are left as numpy.nan (for comparison purposes)
-                if nan_value != self.str_nan:
-                    X.loc[nans, feature] = nan_value
-
-            # list of masks of values to replace with there respective group
-            values_to_group = [
-                X[feature] <= value for value in feature_values if value != self.str_nan
+                for feature in self.quantitative_features
             ]
 
-            # corressponding group for each value
-            group_labels = [
-                [self.labels_per_values[feature][value]] * x_len
-                for value in feature_values
-                if value != self.str_nan
-            ]
+            #  waiting for the results
+            all_transformed = [result.get() for result in all_transformed_async]
 
-            # checking for values to group
-            if len(values_to_group) > 0:
-                X[feature] = select(values_to_group, group_labels, default=X[feature])
-
-            # converting nans to there value
-            if any(nans):
-                X.loc[nans, feature] = self.labels_per_values[feature].get(nan_value, self.str_nan)
+        # unpacking transformed series
+        X.update(DataFrame({feature: values for feature, values in all_transformed}))
 
         return X
 
     def _transform_qualitative(self, X: DataFrame, y: Series = None) -> DataFrame:
         """Applies discretization to a DataFrame's Qualitative columns.
 
-        * Data types are matched as ``input_dtypes=="str"`` for qualitative features and ``input_dtypes=="float"`` for quantitative ones.
+        * Data types are defined by:
+            * ``input_dtypes=="str"`` for qualitative features
+            * ``input_dtypes=="float"`` for quantitative features
         * If ``copye=True``, the input DataFrame will be copied.
 
         Parameters
@@ -569,8 +571,8 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
 
         By default:
 
-            * Modality ``str_default="__OTHER__"`` is generated for features that contain non-representative modalities.
-            * Modality ``str_nan="__NAN__"`` is generated for features that contain ``numpy.nan``.
+            * ``str_default="__OTHER__"`` is added for non-representative modalities.
+            * ``str_nan="__NAN__"`` is adde for features that contain ``numpy.nan``.
 
         Parameters
         ----------
@@ -732,6 +734,51 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             self.labels_per_values = self._get_labels_per_values(self.output_dtype)
 
 
+def transform_quantitative_feature(
+    feature, df_feature, values_orders, str_nan, labels_per_values, x_len
+):
+    """Transforms a quantitative feature"""
+    print(feature)
+
+    # feature's labels associated to each quantile
+    feature_values = values_orders[feature]
+
+    # keeping track of nans
+    nans = isna(df_feature)
+
+    # converting nans to there corresponding quantile (if it was grouped to a quantile)
+    if any(nans):
+        assert feature_values.contains(str_nan), (
+            " - [Discretizer] Unexpected value! Missing values found for feature "
+            f"'{feature}' at transform step but not during fit. There might be new values "
+            "in your test/dev set. Consider taking a bigger test/dev set or dropping the "
+            f"column {feature}."
+        )
+        nan_value = feature_values.get_group(str_nan)
+        # checking that nans have been grouped to a quantile otherwise they are left as
+        # numpy.nan (for comparison purposes)
+        if nan_value != str_nan:
+            df_feature[nans] = nan_value
+
+    # list of masks of values to replace with there respective group
+    values_to_group = [df_feature <= value for value in feature_values if value != str_nan]
+
+    # corressponding group for each value
+    group_labels = [
+        [labels_per_values[feature][value]] * x_len for value in feature_values if value != str_nan
+    ]
+
+    # checking for values to group
+    if len(values_to_group) > 0:
+        df_feature = select(values_to_group, group_labels, default=df_feature)
+
+    # converting nans to there value
+    if any(nans):
+        df_feature[nans] = labels_per_values[feature].get(nan_value, str_nan)
+
+    return feature, list(df_feature)
+
+
 def convert_to_labels(
     features: list[str],
     quantitative_features: list[str],
@@ -808,7 +855,7 @@ def convert_to_values(
 
                 # choosing the value to keep as the group
                 which_to_keep = [value for value in group_to_discard if value != str_nan]
-                # case 0: keeping the largest value amongst the discarded (otherwise they wont be grouped)
+                # case 0: keeping the largest value amongst the discarded (otherwise not grouped)
                 if len(which_to_keep) > 0:
                     kept_value = max(which_to_keep)
                 # case 1: there is only str_nan in the group (it was not grouped)
@@ -1045,9 +1092,11 @@ def check_missing_values(
     # checking for unexpected values for each feature
     for feature in features:
         unexpected = [val for val in known_values[feature] if val not in uniques[feature]]
-        assert (
-            len(unexpected) == 0
-        ), f"Unexpected value! The ordering for values: {str(list(unexpected))} of feature '{feature}' was provided but there are not matching value in provided X. You should check 'values_orders['{feature}']' for unwanted values."
+        assert len(unexpected) == 0, (
+            f"Unexpected value! The ordering for values: {str(list(unexpected))} of feature '"
+            f"{feature}' was provided but there are not matching value in provided X. You should"
+            f" check 'values_orders['{feature}']' for unwanted values."
+        )
 
 
 class extend_docstring:

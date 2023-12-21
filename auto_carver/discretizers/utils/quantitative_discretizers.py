@@ -2,6 +2,8 @@
 for a binary classification model.
 """
 
+from functools import partial
+from multiprocessing import Pool
 from typing import Any
 
 from numpy import array, digitize, in1d, inf, isnan, linspace, quantile, sort, unique
@@ -73,24 +75,37 @@ class ContinuousDiscretizer(BaseDiscretizer):
             print(f" - [ContinuousDiscretizer] Fit {str(self.quantitative_features)}")
 
         # storing ordering
-        for feature in self.quantitative_features:
-            # getting quantiles for specified feature
-            quantiles = find_quantiles(X[feature].values, q=self.q)
-
-            # Converting to a groupedlist
-            order = GroupedList(quantiles + [inf])
-
-            # adding NANs if ther are any
-            if any(X[feature].isna()):
-                order.append(self.str_nan)
-
-            # storing into the values_orders
-            self.values_orders.update({feature: order})
+        all_orders = []
+        with Pool() as pool:
+            # feature processing
+            all_orders += pool.imap_unordered(
+                partial(
+                    fit_feature, X=X[self.quantitative_features], q=self.q, str_nan=self.str_nan
+                ),
+                self.quantitative_features,
+            )
+        # storing into the values_orders
+        self.values_orders.update({feature: order for (feature, order) in all_orders})
 
         # discretizing features based on each feature's values_order
         super().fit(X, y)
 
         return self
+
+
+def fit_feature(feature: str, X: DataFrame, q: float, str_nan: str):
+    """Fits one feature"""
+    # getting quantiles for specified feature
+    quantiles = find_quantiles(X[feature].values, q=q)
+
+    # Converting to a groupedlist
+    order = GroupedList(quantiles + [inf])
+
+    # adding NANs if ther are any
+    if any(X[feature].isna()):
+        order.append(str_nan)
+
+    return (feature, order)
 
 
 def find_quantiles(
