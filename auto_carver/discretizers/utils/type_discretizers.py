@@ -1,6 +1,5 @@
 """Base tools to convert values into specific types.
 """
-from functools import partial
 from multiprocessing import Pool
 
 from pandas import DataFrame, Series

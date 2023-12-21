@@ -2,7 +2,6 @@
 for a binary classification model.
 """
 
-from functools import partial
 from multiprocessing import Pool
 from typing import Any, Union
 from warnings import warn
