@@ -3,7 +3,7 @@ for a binary classification model.
 """
 
 from typing import Any, Union
-from multiprocessing import Pool, cpu_count
+from multiprocessing import Pool
 from functools import partial
 from warnings import warn
 
@@ -473,22 +473,19 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         # dataset length
         x_len = X.shape[0]
 
-        # with Manager() as manager:
-        processes = cpu_count()  # number of available cores
-
-        # splitting columns into chunks (per cpu)
-        with Pool(processes=processes) as pool:
+        # asynchronous transform of each feature
+        with Pool() as pool:
             all_transformed_async = [
                 pool.apply_async(
-                    partial(
-                        transform_quantitative_feature,
-                        df_feature=X[feature],
-                        values_orders=self.values_orders,
-                        str_nan=self.str_nan,
-                        labels_per_values=self.labels_per_values,
-                        x_len=x_len,
+                    transform_quantitative_feature,
+                    (
+                        feature,
+                        X[feature],
+                        self.values_orders,
+                        self.str_nan,
+                        self.labels_per_values,
+                        x_len,
                     ),
-                    (feature,),
                 )
                 for feature in self.quantitative_features
             ]

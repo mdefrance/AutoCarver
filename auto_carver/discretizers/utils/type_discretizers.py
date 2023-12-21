@@ -1,6 +1,7 @@
 """Base tools to convert values into specific types.
 """
-
+from multiprocessing import Pool
+from functools import partial
 from pandas import DataFrame, Series
 
 from .base_discretizers import BaseDiscretizer, extend_docstring, nan_unique
@@ -50,32 +51,20 @@ class StringDiscretizer(BaseDiscretizer):
         # checking for binary target and copying X
         x_copy = self._prepare_data(X, y)  # X[self.features].fillna(self.str_nan)
 
-        # converting each feature's value
-        for feature in self.features:
-            # unique feature values
-            unique_values = nan_unique(x_copy[feature])
-            values_order = GroupedList(unique_values)
+        # asynchronous conversion each feature's value
+        with Pool() as pool:
+            all_orders_async = [
+                pool.apply_async(
+                    fit_feature,
+                    (feature, x_copy[feature], self.str_nan),
+                )
+                for feature in self.features
+            ]
 
-            # formatting values
-            for value in unique_values:
-                # case 0: the value is an integer
-                if isinstance(value, float) and float.is_integer(value):
-                    str_value = str(int(value))  # converting value to string
-                # case 1: converting to string
-                else:
-                    str_value = str(value)
+            #  waiting for the results
+            all_orders = [result.get() for result in all_orders_async]
 
-                # checking for string values already in the order
-                if str_value not in values_order:
-                    values_order.append(str_value)  # adding string value to the order
-                    values_order.group(
-                        value, str_value
-                    )  # grouping integer value into the string value
-
-            # adding str_nan
-            if any(x_copy[feature].isna()):
-                values_order.append(self.str_nan)
-
+        for feature, values_order in all_orders:
             # updating values_orders accordingly
             # case 0: non-ordinal features, updating as is (no order provided)
             if feature not in self.values_orders:
@@ -91,3 +80,31 @@ class StringDiscretizer(BaseDiscretizer):
         super().fit(X, y)
 
         return self
+
+
+def fit_feature(feature, df_feature, str_nan):
+    """fits one feature"""
+
+    # unique feature values
+    unique_values = nan_unique(df_feature)
+    values_order = GroupedList(unique_values)
+
+    # formatting values
+    for value in unique_values:
+        # case 0: the value is an integer
+        if isinstance(value, float) and float.is_integer(value):
+            str_value = str(int(value))  # converting value to string
+        # case 1: converting to string
+        else:
+            str_value = str(value)
+
+        # checking for string values already in the order
+        if str_value not in values_order:
+            values_order.append(str_value)  # adding string value to the order
+            values_order.group(value, str_value)  # grouping integer value into the string value
+
+    # adding str_nan
+    if any(df_feature.isna()):
+        values_order.append(str_nan)
+
+    return feature, values_order
