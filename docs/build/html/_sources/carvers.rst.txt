@@ -42,7 +42,7 @@ For two combinations of modalities of :math:`x`, a higher :math:`T` or :math:`V`
 
 
 
-.. autoclass:: AutoCarver.BinaryCarver
+.. autoclass:: auto_carver.BinaryCarver
     :members: fit, transform, fit_transform, to_json, summary, history, update_discretizer
 
 
@@ -60,7 +60,7 @@ For values :math:`y_0` to :math:`y_{n_y-1}` of :math:`y`, an indicator feature i
 For two combinations of modalities of a feature :math:`x`, a higher :math:`T` or :math:`V` value indicates a stronger relationship with the binary target :math:`Y`.
 
 
-.. autoclass:: AutoCarver.MulticlassCarver
+.. autoclass:: auto_carver.MulticlassCarver
     :members: fit, transform, fit_transform, to_json, summary, history, update_discretizer
 
 
@@ -83,7 +83,7 @@ It is used to determine whether or not :math:`y` is distributed the same when :m
 
 For two combinations of modalities of :math:`x`, a higher :math:`H` value indicates that there is a greater difference between the medians of the samples.
 
-.. autoclass:: AutoCarver.ContinuousCarver
+.. autoclass:: auto_carver.ContinuousCarver
     :members: fit, transform, fit_transform, to_json, summary, history, update_discretizer
 
 
@@ -92,6 +92,6 @@ For two combinations of modalities of :math:`x`, a higher :math:`H` value indica
 Saving and Loading
 ------------------
 
-.. autofunction:: AutoCarver.BaseCarver.to_json
+.. autofunction:: auto_carver.BaseCarver.to_json
 
-.. autofunction:: AutoCarver.load_carver
+.. autofunction:: auto_carver.load_carver

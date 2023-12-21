@@ -60,10 +60,10 @@ Fitting AutoCarver
 
 .. code-block:: python
 
-    from AutoCarver import BinaryCarver
+    from auto_carver import BinaryCarver
 
     # intiating AutoCarver
-    auto_carver = BinaryCarver(
+    binary_carver = BinaryCarver(
         quantitative_features=quantitative_features,
         qualitative_features=qualitative_features,
         min_freq=0.02,  # minimum frequency per modality
@@ -73,7 +73,7 @@ Fitting AutoCarver
     )
 
     # fitting on training sample, a dev sample can be specified to evaluate carving robustness
-    x_discretized = auto_carver.fit_transform(train_set, train_set[target], X_dev=dev_set, y_dev=dev_set[target])
+    x_discretized = binary_carver.fit_transform(train_set, train_set[target], X_dev=dev_set, y_dev=dev_set[target])
 
 
 
@@ -83,8 +83,8 @@ Applying AutoCarver
 .. code-block:: python
 
     # transforming dev/test sample accordingly
-    dev_set_discretized = auto_carver.transform(dev_set)
-    test_set_discretized = auto_carver.transform(tes_set)
+    dev_set_discretized = binary_carver.transform(dev_set)
+    test_set_discretized = binary_carver.transform(tes_set)
 
 
 
@@ -99,7 +99,7 @@ All **Carvers** can safely be stored as a ``.json`` file.
 
     # storing as json file
     with open('my_carver.json', 'w') as my_carver_json:
-        json.dump(auto_carver.to_json(), my_carver_json)
+        json.dump(binary_carver.to_json(), my_carver_json)
 
 
 Loading AutoCarver
@@ -111,11 +111,11 @@ Loading AutoCarver
 
     import json
 
-    from AutoCarver import load_carver
+    from auto_carver import load_carver
 
     # loading json file
     with open('my_carver.json', 'r') as my_carver_json:
-        auto_carver = load_carver(json.load(my_carver_json))
+        binary_carver = load_carver(json.load(my_carver_json))
 
 
 
@@ -124,13 +124,13 @@ Feature Selection
 
 .. code-block:: python
 
-    from AutoCarver.selectors import ClassificationSelector
+    from auto_carver.selectors import ClassificationSelector
 
     # select the best 25 most target associated qualitative features
-    feature_selector = ClassificationSelector(
+    classification_selector = ClassificationSelector(
         qualitative_features=qualitative_features + quantitative_features,  # features to select from
         n_best=25,  # number of features to select
         verbose=True,  # displays statistics
     )
-    best_features = feature_selector.select(train_set_discretized, train_set_discretized[target])
+    best_features = classification_selector.select(train_set_discretized, train_set_discretized[target])
 

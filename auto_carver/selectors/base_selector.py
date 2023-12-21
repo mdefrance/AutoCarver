@@ -45,26 +45,30 @@ class BaseSelector:
         #     See :ref:`Measures`.
         #     Implemented measures are:
 
-        #     * [Quantitative Features] For association evaluation: ``kruskal_measure`` (default), ``R_measure``
+        #     * [Quantitative Features] For association evaluation: ``kruskal_measure`` (default),
+        # ``R_measure``
         #     * [Quantitative Features] For outlier detection: ``zscore_measure``, ``iqr_measure``
-        #     * [Qualitative Features] For association evaluation: ``chi2_measure``, ``cramerv_measure``, ``tschuprowt_measure`` (default)
+        #     * [Qualitative Features] For association evaluation: ``chi2_measure``,
+        # ``cramerv_measure``, ``tschuprowt_measure`` (default)
 
         # filters : list[Callable], optional
         #     List of filters to be used, by default ``None``.
         #     See :ref:`Filters`.
         #     Implemented filters are:
 
-        #     * [Quantitative Features] For linear correlation: ``spearman_filter`` (default), ``pearson_filter``
-        #     * [Qualitative Features] For correlation: ``cramerv_filter``, ``tschuprowt_filter`` (default)
+        #     * [Quantitative Features] For linear correlation: ``spearman_filter`` (default),
+        # ``pearson_filter``
+        #     * [Qualitative Features] For correlation: ``cramerv_filter``, ``tschuprowt_filter``
+        #  (default)
 
         """
         Parameters
         ----------
         n_best : int
-            Number of features to select.
+            Number of best features to select. Best features are:
 
-            * Best features are the ``n_best`` of each provided data types (set in ``quantitative_features`` and/or ``qualitative_features``)
-            * Best features are the ``n_best`` for each provided measures (set in ``quantitative_measures`` and/or ``qualitative_measures``)
+            * The first ``n_best`` of each provided data types (set in ``quantitative_features`` and/or ``qualitative_features``)
+            * The first ``n_best`` for each provided measures (set in ``quantitative_measures`` and/or ``qualitative_measures``)
 
         quantitative_features : list[str]
             List of column names of quantitative features to chose from, by default ``None``.
@@ -78,26 +82,37 @@ class BaseSelector:
             List of association measures to be used for ``quantitative_features``.
             :ref:`Implemented measures <Measures>` are:
 
-            * For association evaluation: :ref:`Kruskal-Wallis' H <kruskal>` (default), :ref:`R`
-            * For outlier detection: :ref:`Standard score <zscore>`, :ref:`Interquartile range <iqr>`
+            * For association evaluation:
+                * :ref:`Kruskal-Wallis' H <kruskal>` (default)
+                * :ref:`R`
+            * For outlier detection:
+                * :ref:`Standard score <zscore>`
+                * :ref:`Interquartile range <iqr>`
 
         qualitative_measures : list[Callable], optional
             List of association measures to be used for ``qualitative_features``.
             :ref:`Implemented measures <Measures>` are:
 
-            * For association evaluation: :ref:`Pearson's chi² <chi2>`, :ref:`cramerv`, :ref:`tschuprowt` (default)
+            * For association evaluation:
+                * :ref:`Pearson's chi² <chi2>`
+                * :ref:`cramerv`
+                * :ref:`tschuprowt` (default)
 
         quantitative_filters : list[Callable], optional
             List of filters to be used for ``quantitative_features``.
             :ref:`Implemented filters <Filters>` are:
 
-            * For linear correlation: :ref:`pearson_filter`, :ref:`Spearman's rho <spearman_filter>` (default)
+            * For linear correlation:
+                * :ref:`pearson_filter`
+                * :ref:`Spearman's rho <spearman_filter>` (default)
 
         qualitative_filters : list[Callable], optional
             List of filters to be used for ``qualitative_features``.
             :ref:`Implemented filters <Filters>` are:
 
-            * For correlation: :ref:`cramerv_filter`, :ref:`tschuprowt_filter` (default)
+            * For correlation:
+                * :ref:`cramerv_filter`
+                * :ref:`tschuprowt_filter` (default)
 
         colsample : float, optional
             Size of sampled list of features for sped up computation, between ``0`` and ``1``,

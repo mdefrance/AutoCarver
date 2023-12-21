@@ -38,7 +38,7 @@ Discretizers
 Discretizer, a complete discretization pipeline
 -----------------------------------------------
 
-.. autoclass:: AutoCarver.discretizers.Discretizer
+.. autoclass:: auto_carver.discretizers.Discretizer
     :members: fit, transform, fit_transform, to_json, summary
 
 
@@ -53,7 +53,7 @@ Quantitative Data
 Complete pipeline for continuous and discrete features
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: AutoCarver.discretizers.QuantitativeDiscretizer
+.. autoclass:: auto_carver.discretizers.QuantitativeDiscretizer
     :members: fit, transform, fit_transform, to_json, summary
 
 .. _ContinuousDiscretizer:
@@ -61,7 +61,7 @@ Complete pipeline for continuous and discrete features
 Continuous Discretizer
 ^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: AutoCarver.discretizers.ContinuousDiscretizer
+.. autoclass:: auto_carver.discretizers.ContinuousDiscretizer
     :members: fit, transform, fit_transform, to_json, summary
 
 
@@ -74,7 +74,7 @@ Qualitative Data
 Complete pipeline for categorical and ordinal features
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: AutoCarver.discretizers.QualitativeDiscretizer
+.. autoclass:: auto_carver.discretizers.QualitativeDiscretizer
     :members: fit, transform, fit_transform, to_json, summary
 
 
@@ -83,7 +83,7 @@ Complete pipeline for categorical and ordinal features
 Categorical Discretizer
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: AutoCarver.discretizers.CategoricalDiscretizer
+.. autoclass:: auto_carver.discretizers.CategoricalDiscretizer
     :members: fit, transform, fit_transform, to_json, summary
 
 
@@ -92,7 +92,7 @@ Categorical Discretizer
 Ordinal Discretizer
 ^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: AutoCarver.discretizers.OrdinalDiscretizer
+.. autoclass:: auto_carver.discretizers.OrdinalDiscretizer
     :members: fit, transform, fit_transform, to_json, summary
 
 
@@ -105,7 +105,7 @@ Chained Discretizer
 By providing a set of modality groups, the user can introduce use case specific knowledge into the discretization process.
 The fitted ordering can then be passed as ``values_orders`` parameter for further discretization. 
 
-.. autoclass:: AutoCarver.discretizers.ChainedDiscretizer
+.. autoclass:: auto_carver.discretizers.ChainedDiscretizer
     :members: fit, transform, fit_transform, to_json, summary
 
 
@@ -116,7 +116,7 @@ String Discretizer
 
 :class:`StringDiscretizer` is used as a data preparation tool to convert qualitative data to ``str`` type.
 
-.. autoclass:: AutoCarver.discretizers.StringDiscretizer
+.. autoclass:: auto_carver.discretizers.StringDiscretizer
     :members: fit, transform, fit_transform, to_json, summary
 
 
@@ -129,7 +129,7 @@ GroupedList
     **AutoCarver** would not exist without :class:`GroupedList`. It allows for a complete historization of the data processing steps, thanks to its ``content`` dictionnary attribute.
     All modalities are stored inside the :class:`GroupedList` and can safely be linked to there respective group label. 
 
-.. autoclass:: AutoCarver.discretizers.GroupedList
+.. autoclass:: auto_carver.discretizers.GroupedList
     :members:
 
 
@@ -137,6 +137,6 @@ GroupedList
 Saving and Loading
 ------------------
 
-.. autofunction:: AutoCarver.discretizers.BaseDiscretizer.to_json
+.. autofunction:: auto_carver.discretizers.BaseDiscretizer.to_json
 
-.. autofunction:: AutoCarver.discretizers.load_discretizer
+.. autofunction:: auto_carver.discretizers.load_discretizer

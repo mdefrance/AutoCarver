@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quick Start &mdash; AutoCarver Beta release documentation</title>
+  <title>Quick Start &mdash; auto_carver Beta release documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
@@ -40,7 +40,7 @@
               <img src="_static/auto_carver_symbol_small.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                5.4.9
+                6.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -80,7 +80,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">AutoCarver</a>
+          <a href="index.html">auto_carver</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -142,10 +142,10 @@ Ordinal features can be added, alongside there expected ordering.</p>
 <h2>Using AutoCarver<a class="headerlink" href="#using-autocarver" title="Link to this heading"></a></h2>
 <section id="fitting-autocarver">
 <h3>Fitting AutoCarver<a class="headerlink" href="#fitting-autocarver" title="Link to this heading"></a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">AutoCarver</span> <span class="kn">import</span> <span class="n">BinaryCarver</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">auto_carver</span> <span class="kn">import</span> <span class="n">BinaryCarver</span>
 
 <span class="c1"># intiating AutoCarver</span>
-<span class="n">auto_carver</span> <span class="o">=</span> <span class="n">BinaryCarver</span><span class="p">(</span>
+<span class="n">binary_carver</span> <span class="o">=</span> <span class="n">BinaryCarver</span><span class="p">(</span>
     <span class="n">quantitative_features</span><span class="o">=</span><span class="n">quantitative_features</span><span class="p">,</span>
     <span class="n">qualitative_features</span><span class="o">=</span><span class="n">qualitative_features</span><span class="p">,</span>
     <span class="n">min_freq</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span>  <span class="c1"># minimum frequency per modality</span>
@@ -155,15 +155,15 @@ Ordinal features can be added, alongside there expected ordering.</p>
 <span class="p">)</span>
 
 <span class="c1"># fitting on training sample, a dev sample can be specified to evaluate carving robustness</span>
-<span class="n">x_discretized</span> <span class="o">=</span> <span class="n">auto_carver</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">train_set</span><span class="p">,</span> <span class="n">train_set</span><span class="p">[</span><span class="n">target</span><span class="p">],</span> <span class="n">X_dev</span><span class="o">=</span><span class="n">dev_set</span><span class="p">,</span> <span class="n">y_dev</span><span class="o">=</span><span class="n">dev_set</span><span class="p">[</span><span class="n">target</span><span class="p">])</span>
+<span class="n">x_discretized</span> <span class="o">=</span> <span class="n">binary_carver</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">train_set</span><span class="p">,</span> <span class="n">train_set</span><span class="p">[</span><span class="n">target</span><span class="p">],</span> <span class="n">X_dev</span><span class="o">=</span><span class="n">dev_set</span><span class="p">,</span> <span class="n">y_dev</span><span class="o">=</span><span class="n">dev_set</span><span class="p">[</span><span class="n">target</span><span class="p">])</span>
 </pre></div>
 </div>
 </section>
 <section id="applying-autocarver">
 <h3>Applying AutoCarver<a class="headerlink" href="#applying-autocarver" title="Link to this heading"></a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># transforming dev/test sample accordingly</span>
-<span class="n">dev_set_discretized</span> <span class="o">=</span> <span class="n">auto_carver</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">dev_set</span><span class="p">)</span>
-<span class="n">test_set_discretized</span> <span class="o">=</span> <span class="n">auto_carver</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">tes_set</span><span class="p">)</span>
+<span class="n">dev_set_discretized</span> <span class="o">=</span> <span class="n">binary_carver</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">dev_set</span><span class="p">)</span>
+<span class="n">test_set_discretized</span> <span class="o">=</span> <span class="n">binary_carver</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">tes_set</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -174,7 +174,7 @@ Ordinal features can be added, alongside there expected ordering.</p>
 
 <span class="c1"># storing as json file</span>
 <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;my_carver.json&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">my_carver_json</span><span class="p">:</span>
-    <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">auto_carver</span><span class="o">.</span><span class="n">to_json</span><span class="p">(),</span> <span class="n">my_carver_json</span><span class="p">)</span>
+    <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">binary_carver</span><span class="o">.</span><span class="n">to_json</span><span class="p">(),</span> <span class="n">my_carver_json</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -183,26 +183,26 @@ Ordinal features can be added, alongside there expected ordering.</p>
 <p><strong>Carvers</strong> can safely be loaded from a .json file.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
 
-<span class="kn">from</span> <span class="nn">AutoCarver</span> <span class="kn">import</span> <span class="n">load_carver</span>
+<span class="kn">from</span> <span class="nn">auto_carver</span> <span class="kn">import</span> <span class="n">load_carver</span>
 
 <span class="c1"># loading json file</span>
 <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;my_carver.json&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">my_carver_json</span><span class="p">:</span>
-    <span class="n">auto_carver</span> <span class="o">=</span> <span class="n">load_carver</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">my_carver_json</span><span class="p">))</span>
+    <span class="n">binary_carver</span> <span class="o">=</span> <span class="n">load_carver</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">my_carver_json</span><span class="p">))</span>
 </pre></div>
 </div>
 </section>
 </section>
 <section id="feature-selection">
 <h2>Feature Selection<a class="headerlink" href="#feature-selection" title="Link to this heading"></a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">AutoCarver.selectors</span> <span class="kn">import</span> <span class="n">ClassificationSelector</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">auto_carver.selectors</span> <span class="kn">import</span> <span class="n">ClassificationSelector</span>
 
 <span class="c1"># select the best 25 most target associated qualitative features</span>
-<span class="n">feature_selector</span> <span class="o">=</span> <span class="n">ClassificationSelector</span><span class="p">(</span>
+<span class="n">classification_selector</span> <span class="o">=</span> <span class="n">ClassificationSelector</span><span class="p">(</span>
     <span class="n">qualitative_features</span><span class="o">=</span><span class="n">qualitative_features</span> <span class="o">+</span> <span class="n">quantitative_features</span><span class="p">,</span>  <span class="c1"># features to select from</span>
     <span class="n">n_best</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span>  <span class="c1"># number of features to select</span>
     <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># displays statistics</span>
 <span class="p">)</span>
-<span class="n">best_features</span> <span class="o">=</span> <span class="n">feature_selector</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">train_set_discretized</span><span class="p">,</span> <span class="n">train_set_discretized</span><span class="p">[</span><span class="n">target</span><span class="p">])</span>
+<span class="n">best_features</span> <span class="o">=</span> <span class="n">classification_selector</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">train_set_discretized</span><span class="p">,</span> <span class="n">train_set_discretized</span><span class="p">[</span><span class="n">target</span><span class="p">])</span>
 </pre></div>
 </div>
 </section>
