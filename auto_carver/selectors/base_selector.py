@@ -67,8 +67,12 @@ class BaseSelector:
         n_best : int
             Number of best features to select. Best features are:
 
-            * The first ``n_best`` of each provided data types (set in ``quantitative_features`` and/or ``qualitative_features``)
-            * The first ``n_best`` for each provided measures (set in ``quantitative_measures`` and/or ``qualitative_measures``)
+            * The first ``n_best`` of each provided data types as set in:
+                * ``quantitative_features``
+                * ``qualitative_features``
+            * The first ``n_best`` for each provided measures as set in:
+                * ``quantitative_measures``
+                * ``qualitative_measures``
 
         quantitative_features : list[str]
             List of column names of quantitative features to chose from, by default ``None``.
@@ -124,13 +128,15 @@ class BaseSelector:
             **Tip:** for better performance, should be set such as ``len(features)//2 < 200``.
 
         verbose : bool, optional
-            * ``True``, without IPython installed: prints raw feature selection steps for X, by default ``False``
-            * ``True``, with IPython installed: adds HTML tables to the output.
+            * ``True``, without IPython: prints raw selection steps for X, by default ``False``
+            * ``True``, with IPython: adds HTML tables to the output.
 
             **Tip**: IPython displaying can be turned off by setting ``pretty_print=False``.
 
         **kwargs
-            Allows one to set thresholds for provided ``quantitative_measures``/``qualitative_measures`` and ``quantitative_filters``/``qualitative_filters`` (see :ref:`Measures` and :ref:`Filters`) passed as keyword arguments.
+            Allows one to set thresholds for provided ``quantitative_measures``/
+            ``qualitative_measures`` and ``quantitative_filters``/``qualitative_filters``
+            (see :ref:`Measures` and :ref:`Filters`) passed as keyword arguments.
 
         Examples
         --------
