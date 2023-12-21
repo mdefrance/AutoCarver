@@ -38,7 +38,7 @@ class MulticlassCarver(BaseCarver):
         dropna: bool = True,
         copy: bool = False,
         verbose: bool = False,
-        n_jobs: int = 4,
+        n_jobs: int = 1,
         **kwargs: dict,
     ) -> None:
         """ """
@@ -181,6 +181,7 @@ class MulticlassCarver(BaseCarver):
                 dropna=self.dropna,
                 copy=True,  # copying x to keep raw columns as is
                 verbose=self.verbose,
+                n_jobs=self.n_jobs,
                 **self.kwargs,
             )
 

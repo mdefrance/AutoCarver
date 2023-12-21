@@ -12,7 +12,6 @@ from auto_carver.discretizers import ChainedDiscretizer
 
 def test_continuous_carver(
     x_train: DataFrame,
-    x_train_wrong_1: DataFrame,
     x_train_wrong_2: DataFrame,
     x_dev_1: DataFrame,
     x_dev_wrong_1: DataFrame,
@@ -87,6 +86,7 @@ def test_continuous_carver(
         values_orders=values_orders,
         unknown_handling="drop",
         copy=copy,
+        n_jobs=1,
     )
     x_discretized = chained_discretizer.fit_transform(x_train)
     values_orders.update(chained_discretizer.values_orders)
@@ -152,9 +152,10 @@ def test_continuous_carver(
     for feature in auto_carver.qualitative_features:
         fitted_values = auto_carver.values_orders[feature].values()
         init_values = raw_x_train[feature].fillna("__NAN__").unique()
-        assert all(
-            value in fitted_values for value in init_values
-        ), f"Missing value in output! Some values are been dropped for qualitative feature: {feature}"
+        assert all(value in fitted_values for value in init_values), (
+            "Missing value in output! Some values are been dropped for qualitative "
+            f"feature: {feature}"
+        )
 
     # testing output of nans
     if not dropna:
@@ -182,14 +183,14 @@ def test_continuous_carver(
         loaded_carver.summary() == auto_carver.summary()
     ), "Non-identical AutoCarver when loading JSON"
 
-    # testing to transform dev set with unexpected modality for a feature that passed through DefaultDiscretizer
+    # transform dev with unexpected modal for a feature that passed through CategoricalDiscretizer
     auto_carver.transform(x_dev_wrong_1)
 
-    # testing to transform dev set with unexpected nans for a feature that passed through DefaultDiscretizer
+    # transform dev with unexpected nans for a feature that passed through CategoricalDiscretizer
     with raises(AssertionError):
         auto_carver.transform(x_dev_wrong_2)
 
-    # testing to transform dev set with unexpected modality for a feature that did not pass through DefaultDiscretizer
+    # transform dev with unexpected modal for a feature that didnt go through CategoricalDiscretizer
     with raises(AssertionError):
         auto_carver.transform(x_dev_wrong_3)
 
@@ -240,6 +241,7 @@ def test_continuous_carver(
         values_orders=values_orders,
         unknown_handling="drop",
         copy=True,
+        n_jobs=1,
     )
     x_discretized = chained_discretizer.fit_transform(x_train_wrong_2, x_train_wrong_2[target])
     values_orders.update(chained_discretizer.values_orders)

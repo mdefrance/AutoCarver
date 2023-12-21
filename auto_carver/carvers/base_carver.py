@@ -50,7 +50,7 @@ class BaseCarver(BaseDiscretizer):
         dropna: bool = True,
         copy: bool = False,
         verbose: bool = False,
-        n_jobs: int = 4,
+        n_jobs: int = 1,
         **kwargs: dict,
     ) -> None:
         """

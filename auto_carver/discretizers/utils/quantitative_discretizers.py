@@ -38,7 +38,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
         values_orders: dict[str, Any] = None,
         copy: bool = False,
         verbose: bool = False,
-        n_jobs: int = 4,
+        n_jobs: int = 1,
         **kwargs: dict,
     ) -> None:
         """

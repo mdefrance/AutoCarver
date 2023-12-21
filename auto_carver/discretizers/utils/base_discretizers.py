@@ -31,7 +31,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         str_default: str = None,
         features_casting: dict[str, list[str]] = None,
         features_dropna: dict[str, bool] = None,
-        n_jobs: int = 4,
+        n_jobs: int = 1,
     ) -> None:
         # features : list[str]
         #     List of column names of features (continuous, discrete, categorical or ordinal)
@@ -389,6 +389,8 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         y : Series
             Target with wich the association is maximized.
         """
+        _, _ = X, y  # unused arguments
+
         # checking for previous fits of the discretizer that could cause unwanted errors
         assert not self.is_fitted, (
             " - [Discretizer] This Discretizer has already been fitted. "
@@ -476,6 +478,8 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         DataFrame
             Discretized X.
         """
+        _ = y  # unused argument
+
         # dataset length
         x_len = X.shape[0]
 
@@ -539,6 +543,8 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         DataFrame
             Discretized X.
         """
+        _ = y  # unused argument
+
         # filling up nans from features that have some
         if self.str_nan:
             X[self.qualitative_features] = X[self.qualitative_features].fillna(self.str_nan)
@@ -1073,8 +1079,6 @@ def applied_to_dict_list(applied: Union[DataFrame, Series]) -> dict[str, list[An
     Dict[list[Any]]
         Dict of lists of rows values
     """
-    # TODO: use this function whenever apply is used
-
     # case when it's a Series
     converted = applied.to_dict()
 

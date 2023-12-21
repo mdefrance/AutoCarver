@@ -17,7 +17,6 @@ def sort_by(request) -> str:
 
 def test_multiclass_carver(
     x_train: DataFrame,
-    x_train_wrong_1: DataFrame,
     x_train_wrong_2: DataFrame,
     x_dev_1: DataFrame,
     x_dev_wrong_1: DataFrame,
@@ -33,7 +32,7 @@ def test_multiclass_carver(
     min_freq_mod: float,
     output_dtype: str,
     dropna: bool,
-    sort_by: str,
+    sort_by: str,  # pylint: disable=W0621
     copy: bool,
 ) -> None:
     """Tests MulticlassCarver
@@ -93,6 +92,7 @@ def test_multiclass_carver(
         values_orders=values_orders,
         unknown_handling="drop",
         copy=copy,
+        n_jobs=1,
     )
     x_discretized = chained_discretizer.fit_transform(x_train)
     values_orders.update(chained_discretizer.values_orders)
@@ -249,6 +249,7 @@ def test_multiclass_carver(
         values_orders=values_orders,
         unknown_handling="drop",
         copy=True,
+        n_jobs=1,
     )
     x_discretized = chained_discretizer.fit_transform(x_train_wrong_2, x_train_wrong_2[target])
     values_orders.update(chained_discretizer.values_orders)

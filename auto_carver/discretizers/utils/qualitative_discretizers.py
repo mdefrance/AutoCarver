@@ -41,6 +41,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
         values_orders: dict[str, GroupedList] = None,
         copy: bool = False,
         verbose: bool = False,
+        n_jobs: int = 1,
         **kwargs: dict,
     ) -> None:
         """
@@ -68,6 +69,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
             str_default=kwargs.get("str_default", "__OTHER__"),
             copy=copy,
             verbose=verbose,
+            n_jobs=n_jobs,
         )
 
         self.min_freq = min_freq
@@ -207,6 +209,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
         input_dtypes: Union[str, dict[str, str]] = "str",
         copy: bool = False,
         verbose: bool = False,
+        n_jobs: int = 1,
         **kwargs: dict,
     ):
         """
@@ -242,6 +245,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
             str_nan=kwargs.get("str_nan", "__NAN__"),
             copy=copy,
             verbose=verbose,
+            n_jobs=n_jobs,
         )
 
         # checking for missong orders
@@ -350,6 +354,7 @@ class ChainedDiscretizer(BaseDiscretizer):
         unknown_handling: str = "raise",
         copy: bool = False,
         verbose: bool = False,
+        n_jobs: int = 1,
         **kwargs: dict,
     ) -> None:
         """
@@ -387,6 +392,7 @@ class ChainedDiscretizer(BaseDiscretizer):
             dropna=False,
             copy=copy,
             verbose=verbose,
+            n_jobs=n_jobs,
         )
 
         # class specific attributes
@@ -526,7 +532,9 @@ class ChainedDiscretizer(BaseDiscretizer):
 
             # converting specified features into qualitative features
             stringer = StringDiscretizer(
-                qualitative_features=features_to_convert, values_orders=self.values_orders
+                qualitative_features=features_to_convert,
+                values_orders=self.values_orders,
+                n_jobs=self.n_jobs,
             )
             x_copy = stringer.fit_transform(x_copy, y)
 
