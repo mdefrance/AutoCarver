@@ -53,6 +53,7 @@ def test_string_discretizer(x_train: DataFrame) -> None:
     discretizer = StringDiscretizer(
         qualitative_features=list(set(ordinal_features + qualitative_features)),
         values_orders=values_orders,
+        n_jobs=1,
     )
     x_discretized = discretizer.fit_transform(x_train)
 

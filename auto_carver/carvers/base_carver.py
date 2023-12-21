@@ -50,6 +50,7 @@ class BaseCarver(BaseDiscretizer):
         dropna: bool = True,
         copy: bool = False,
         verbose: bool = False,
+        n_jobs: int = 4,
         **kwargs: dict,
     ) -> None:
         """
@@ -112,6 +113,9 @@ class BaseCarver(BaseDiscretizer):
 
             **Tip**: IPython displaying can be turned off by setting ``pretty_print=False``
 
+        n_jobs : int, optional
+            Number of processes used by multiprocessing, by default ``4``
+
         **kwargs: dict
             Pass values for ``str_default`` and ``str_nan`` (default string values),
             as long as ``pretty_print`` to turn off IPython
@@ -162,6 +166,7 @@ class BaseCarver(BaseDiscretizer):
             str_default=kwargs.get("str_default", "__OTHER__"),
             dropna=dropna,
             copy=copy,
+            n_jobs=n_jobs,
             verbose=bool(max(verbose, kwargs.get("pretty_print", False))),
         )
 
@@ -297,6 +302,7 @@ class BaseCarver(BaseDiscretizer):
             str_default=self.str_default,
             copy=True,  # copying anyways, otherwise no discretization from start to finish
             verbose=self.verbose,
+            n_jobs=self.n_jobs,
         )
         x_copy = discretizer.fit_transform(x_copy, y)
         if x_dev_copy is not None:

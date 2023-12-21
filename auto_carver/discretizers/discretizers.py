@@ -37,6 +37,7 @@ class Discretizer(BaseDiscretizer):
         values_orders: dict[str, GroupedList] = None,
         copy: bool = False,
         verbose: bool = False,
+        n_jobs: int = 4,
         **kwargs: dict,
     ) -> None:
         """
@@ -81,6 +82,7 @@ class Discretizer(BaseDiscretizer):
             str_default=kwargs.get("str_default", "__OTHER__"),
             copy=copy,
             verbose=verbose,
+            n_jobs=n_jobs,
         )
 
         # checking for missing orders
@@ -129,6 +131,7 @@ class Discretizer(BaseDiscretizer):
                 str_default=self.str_default,
                 copy=False,  # always False as x_copy is already a copy (if requested)
                 verbose=self.verbose,
+                n_jobs=self.n_jobs,
             )
             qualitative_discretizer.fit(x_copy, y)
 
@@ -160,6 +163,7 @@ class Discretizer(BaseDiscretizer):
                 input_dtypes=self.input_dtypes,
                 str_nan=self.str_nan,
                 verbose=self.verbose,
+                n_jobs=self.n_jobs,
             )
             quantitative_discretizer.fit(x_copy, y)
 
@@ -207,6 +211,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
         input_dtypes: Union[str, dict[str, str]] = "str",
         copy: bool = False,
         verbose: bool = False,
+        n_jobs: int = 4,
         **kwargs: dict,
     ) -> None:
         """
@@ -254,6 +259,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
             str_default=kwargs.get("str_default", "__OTHER__"),
             copy=copy,
             verbose=verbose,
+            n_jobs=n_jobs,
         )
 
         # checking for missing orders
@@ -331,6 +337,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
                 qualitative_features=features_to_convert,
                 values_orders=self.values_orders,
                 verbose=self.verbose,
+                n_jobs=self.n_jobs,
             )
             x_copy = string_discretizer.fit_transform(x_copy, y)
 
@@ -381,6 +388,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
             verbose=self.verbose,
             str_nan="__NAN__",
             str_default="__OTHER__",
+            n_jobs=self.n_jobs,
         )
         x_copy = base_discretizer.fit_transform(x_copy, y)
 
@@ -394,6 +402,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
                 verbose=self.verbose,
                 str_nan=self.str_nan,
                 copy=False,
+                n_jobs=self.n_jobs,
             )
             ordinal_discretizer.fit(x_copy, y)
 
@@ -410,6 +419,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
                 str_default=self.str_default,
                 verbose=self.verbose,
                 copy=False,
+                n_jobs=self.n_jobs,
             )
             default_discretizer.fit(x_copy, y)
 
@@ -442,6 +452,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         input_dtypes: Union[str, dict[str, str]] = "float",
         verbose: bool = False,
         copy: bool = False,
+        n_jobs: int = 4,
         **kwargs: dict,
     ) -> None:
         """
@@ -475,6 +486,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
             str_nan=kwargs.get("str_nan", "__NAN__"),
             copy=copy,
             verbose=verbose,
+            n_jobs=n_jobs,
         )
 
         # class specific attributes
@@ -523,6 +535,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
             str_nan=self.str_nan,
             copy=True,  # needs to be True so that it does not transform x_copy
             verbose=self.verbose,
+            n_jobs=self.n_jobs,
         )
         x_copy = quantile_discretizer.fit_transform(x_copy, y)
 
@@ -550,6 +563,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
                 copy=False,
                 verbose=self.verbose,
                 input_dtypes=self.input_dtypes,
+                n_jobs=self.n_jobs,
             )
             ordinal_discretizer.fit(x_copy, y)
 

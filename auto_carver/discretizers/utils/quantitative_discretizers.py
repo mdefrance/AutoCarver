@@ -38,6 +38,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
         values_orders: dict[str, Any] = None,
         copy: bool = False,
         verbose: bool = False,
+        n_jobs: int = 4,
         **kwargs: dict,
     ) -> None:
         """
@@ -64,6 +65,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
             str_nan=kwargs.get("str_nan", "__NAN__"),
             copy=copy,
             verbose=verbose,
+            n_jobs=n_jobs,
         )
 
         self.min_freq = min_freq
@@ -76,7 +78,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
 
         # storing ordering
         all_orders = []
-        with Pool() as pool:
+        with Pool(processes=self.n_jobs) as pool:
             # feature processing
             all_orders += pool.imap_unordered(
                 partial(

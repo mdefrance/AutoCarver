@@ -31,6 +31,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         str_default: str = None,
         features_casting: dict[str, list[str]] = None,
         features_dropna: dict[str, bool] = None,
+        n_jobs: int = 4,
     ) -> None:
         # features : list[str]
         #     List of column names of features (continuous, discrete, categorical or ordinal)
@@ -74,6 +75,9 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
 
         verbose : bool, optional
             If ``True``, prints raw Discretizers Fit and Transform steps, by default ``False``
+
+        n_jobs : int, optional
+            Number of processes used by multiprocessing, by default ``4``
 
         **kwargs: dict
             Pass values for ``str_default`` and ``str_nan`` (default string values)
@@ -123,6 +127,9 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         self.quantitative_features = [
             feature for feature in features if self.input_dtypes[feature] == "float"
         ]
+
+        # setting number of jobs
+        self.n_jobs = n_jobs
 
         # for each feature, getting label associated to each value
         self.labels_per_values: dict[str, dict[Any, Any]] = {}  # will be initiated during fit
@@ -473,7 +480,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         x_len = X.shape[0]
 
         # asynchronous transform of each feature
-        with Pool() as pool:
+        with Pool(processes=self.n_jobs) as pool:
             all_transformed_async = [
                 pool.apply_async(
                     transform_quantitative_feature,

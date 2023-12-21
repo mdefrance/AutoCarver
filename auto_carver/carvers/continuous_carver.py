@@ -38,6 +38,7 @@ class ContinuousCarver(BaseCarver):
         dropna: bool = True,
         copy: bool = False,
         verbose: bool = False,
+        n_jobs: int = 4,
         **kwargs: dict,
     ) -> None:
         """
@@ -66,6 +67,7 @@ class ContinuousCarver(BaseCarver):
             dropna=dropna,
             copy=copy,
             verbose=verbose,
+            n_jobs=n_jobs,
             **kwargs,
         )
 

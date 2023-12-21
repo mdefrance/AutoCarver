@@ -24,6 +24,7 @@ class StringDiscretizer(BaseDiscretizer):
         values_orders: dict[str, GroupedList] = None,
         copy: bool = False,
         verbose: bool = False,
+        n_jobs: int = 4,
         **kwargs: dict,
     ) -> None:
         """
@@ -41,6 +42,7 @@ class StringDiscretizer(BaseDiscretizer):
             str_nan=kwargs.get("str_nan", "__NAN__"),
             copy=copy,
             verbose=verbose,
+            n_jobs=n_jobs,
         )
 
     @extend_docstring(BaseDiscretizer.fit)
@@ -52,7 +54,7 @@ class StringDiscretizer(BaseDiscretizer):
         x_copy = self._prepare_data(X, y)  # X[self.features].fillna(self.str_nan)
 
         # asynchronous conversion each feature's value
-        with Pool() as pool:
+        with Pool(processes=self.n_jobs) as pool:
             all_orders_async = [
                 pool.apply_async(
                     fit_feature,

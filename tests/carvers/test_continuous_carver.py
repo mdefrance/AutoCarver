@@ -108,6 +108,7 @@ def test_continuous_carver(
         dropna=dropna,
         copy=copy,
         verbose=False,
+        n_jobs=1,
     )
     x_discretized = auto_carver.fit_transform(
         x_train,
@@ -255,6 +256,7 @@ def test_continuous_carver(
         dropna=dropna,
         copy=copy,
         verbose=False,
+        n_jobs=1,
     )
     x_discretized = auto_carver.fit_transform(x_train_wrong_2, x_train_wrong_2[target])
 

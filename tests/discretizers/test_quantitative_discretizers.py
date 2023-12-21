@@ -24,7 +24,12 @@ def test_quantile_discretizer(x_train: DataFrame):
     ]
     min_freq = 0.1
 
-    discretizer = ContinuousDiscretizer(features, min_freq, copy=True)
+    discretizer = ContinuousDiscretizer(
+        features,
+        min_freq,
+        copy=True,
+        n_jobs=1,
+    )
     x_discretized = discretizer.fit_transform(x_train)
 
     assert all(

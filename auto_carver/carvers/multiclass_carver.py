@@ -18,7 +18,8 @@ class MulticlassCarver(BaseCarver):
 
     Examples
     --------
-    `Multiclass Classification Example <https://autocarver.readthedocs.io/en/latest/examples/MulticlassClassification/multiclass_classification_example.html>`_
+    `Multiclass Classification Example <https://autocarver.readthedocs.io/en/latest/examples/
+    MulticlassClassification/multiclass_classification_example.html>`_
     """
 
     @extend_docstring(BinaryCarver.__init__)
@@ -37,6 +38,7 @@ class MulticlassCarver(BaseCarver):
         dropna: bool = True,
         copy: bool = False,
         verbose: bool = False,
+        n_jobs: int = 4,
         **kwargs: dict,
     ) -> None:
         """ """
@@ -62,6 +64,7 @@ class MulticlassCarver(BaseCarver):
             dropna=dropna,
             copy=copy,
             verbose=verbose,
+            n_jobs=n_jobs,
             **kwargs,
         )
         self.kwargs = kwargs
@@ -78,7 +81,8 @@ class MulticlassCarver(BaseCarver):
         Parameters
         ----------
         X : DataFrame
-            Dataset used to discretize. Needs to have columns has specified in ``AutoCarver.features``.
+            Dataset used to discretize. Needs to have columns has specified in
+            ``AutoCarver.features``.
 
         y : Series
             Binary target feature with wich the association is maximized.
@@ -88,7 +92,8 @@ class MulticlassCarver(BaseCarver):
             It should have the same distribution as X.
 
         y_dev : Series, optional
-            Binary target feature with wich the robustness of discretization is evaluated, by default ``None``
+            Binary target feature with wich the robustness of discretization is evaluated,
+            by default ``None``
 
         Returns
         -------
@@ -153,7 +158,8 @@ class MulticlassCarver(BaseCarver):
         for n, y_class in enumerate(y_classes):
             if self.verbose:  # verbose if requested
                 print(
-                    f"\n---------\n[MulticlassCarver] Fit y={y_class} ({n+1}/{len(y_classes)})\n------"
+                    f"\n---------\n[MulticlassCarver] Fit y={y_class} ({n+1}/{len(y_classes)})"
+                    "\n------"
                 )
 
             # identifying this y_class
@@ -207,6 +213,7 @@ class MulticlassCarver(BaseCarver):
             copy=self.copy,
             verbose=self.verbose,
             features_casting=casted_features,
+            n_jobs=self.n_jobs,
         )
 
         # fitting BaseDiscretizer
