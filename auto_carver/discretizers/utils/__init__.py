@@ -5,3 +5,14 @@ from .grouped_list import GroupedList
 from .qualitative_discretizers import CategoricalDiscretizer, ChainedDiscretizer, OrdinalDiscretizer
 from .quantitative_discretizers import ContinuousDiscretizer
 from .type_discretizers import StringDiscretizer
+
+__all__ = [
+    "BaseDiscretizer",
+    "extend_docstring",
+    "GroupedList",
+    "CategoricalDiscretizer",
+    "ChainedDiscretizer",
+    "OrdinalDiscretizer",
+    "ContinuousDiscretizer",
+    "StringDiscretizer",
+]

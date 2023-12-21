@@ -100,8 +100,8 @@ class BaseSelector:
             * For correlation: :ref:`cramerv_filter`, :ref:`tschuprowt_filter` (default)
 
         colsample : float, optional
-            Size of sampled list of features for sped up computation, between ``0`` and ``1``, by default ``1.0``
-            By default, all features are used.
+            Size of sampled list of features for sped up computation, between ``0`` and ``1``,
+            by default ``1.0``, all features are used.
 
             For ``colsample=0.5``, Selector will search for the best features in
             ``features[:len(features)//2]`` and then in ``features[len(features)//2:]``.

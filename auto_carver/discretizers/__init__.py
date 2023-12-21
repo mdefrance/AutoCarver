@@ -10,3 +10,18 @@ from .utils.qualitative_discretizers import (
 )
 from .utils.quantitative_discretizers import ContinuousDiscretizer
 from .utils.type_discretizers import StringDiscretizer
+
+__all__ = [
+    "Discretizer",
+    "QualitativeDiscretizer",
+    "QuantitativeDiscretizer",
+    "BaseDiscretizer",
+    "extend_docstring",
+    "load_discretizer",
+    "GroupedList",
+    "CategoricalDiscretizer",
+    "ChainedDiscretizer",
+    "OrdinalDiscretizer",
+    "ContinuousDiscretizer",
+    "StringDiscretizer",
+]
