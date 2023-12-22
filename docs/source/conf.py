@@ -14,7 +14,7 @@ print(os.listdir(path))
 sys.path.insert(0, path)
 
 
-import auto_carver
+import AutoCarver
 
 # make copy of notebooks in docs folder, as they must be here for sphinx to
 # pick them up properly.
