@@ -3,7 +3,7 @@
 from numpy import inf
 from pandas import DataFrame
 
-from AutoCarver.discretizers import Discretizer, QualitativeDiscretizer, QuantitativeDiscretizer
+from auto_carver.discretizers import Discretizer, QualitativeDiscretizer, QuantitativeDiscretizer
 
 
 def test_quantitative_discretizer(x_train: DataFrame, target: str):

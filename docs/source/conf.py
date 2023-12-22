@@ -1,16 +1,20 @@
+""" Config for sphinx documentation
+"""
+
 import configparser
 import os
-import shutil
 import sys
+from inspect import getsourcefile
+
+import toml
 
 # -- Path setup --------------------------------------------------------------
 path = "../../"
 print(os.listdir(path))
 sys.path.insert(0, path)
 
-from inspect import getsourcefile
 
-import AutoCarver
+import auto_carver
 
 # make copy of notebooks in docs folder, as they must be here for sphinx to
 # pick them up properly.
@@ -47,12 +51,12 @@ def ensure_pandoc_installed(_):
 
 
 def setup(app):
+    """ensures that pandoc is installed"""
     app.connect("builder-inited", ensure_pandoc_installed)
 
 
 # Read metadata from setup.cfg
-config = configparser.ConfigParser()
-config.read("../../setup.cfg")  # Provide the correct path to your setup.cfg
+pyproject = toml.load("../../pyproject.toml")
 
 
 # Configuration file for the Sphinx documentation builder.
@@ -63,18 +67,18 @@ config.read("../../setup.cfg")  # Provide the correct path to your setup.cfg
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = config["metadata"]["name"]
+project = pyproject["tool"]["poetry"]["name"]
 copyright = "2023, Mario Defrance"
-author = config["metadata"]["author"]
-version = config["metadata"]["version"]
-release = "Beta Release"
+author = pyproject["tool"]["poetry"]["authors"][0]
+version = pyproject["tool"]["poetry"]["version"]
+release = "Beta release"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
 html_theme_options = {
-    #'canonical_url': '',
+    # 'canonical_url': '',
     "logo_only": True,
     "display_version": True,
     "prev_next_buttons_location": "bottom",

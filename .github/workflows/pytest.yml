@@ -17,28 +17,64 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        id: setup-python
+        uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-
-      - name: Install dependencies and AutoCarver
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r ${{ github.workspace }}/tests/requirements.txt
-          pip install -r ${{ github.workspace }}/requirements.txt
-          pip install ${{ github.workspace }}
+      
+      #----------------------------------------------
+      #  -----  install & configure poetry  -----
+      #----------------------------------------------
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+      #----------------------------------------------
+      #       load cached venv if cache exists
+      #----------------------------------------------
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+      #----------------------------------------------
+      # install dependencies if cache does not exist
+      #----------------------------------------------
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root --all-extras
+      - name: Install AutoCarver
+        run: poetry install --no-interaction --only-root --all-extras
 
       - name: Run tests
-        run: pytest -v --cov ${{ github.workspace }}/tests/
+        run: |
+          source .venv/bin/activate
+          python -m pytest -v --cov ${{ github.workspace }}/tests/
+      
+      - name: Pylint
+        run: |
+          cd ${{ github.workspace }}
+          source .venv/bin/activate
+          black --check .
+          isort . --check-only
+          pylint auto_carver --fail-under=8
+          # flake8 . 
 
   pytest_pull:
     strategy:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
         python-version: ['3.9', '3.10', '3.11', '3.12']
+
+    defaults:
+      run:
+        shell: bash
 
     runs-on: ${{ matrix.os }}
 
@@ -47,46 +83,33 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        id: setup-python
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies and AutoCarver
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r ${{ github.workspace }}/tests/requirements.txt
-          pip install -r ${{ github.workspace }}/requirements.txt
-          pip install ${{ github.workspace }}
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+      - name: Load cached venv
+        id: cached-pip-wheels
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-root --all-extras
+      - name: Install AutoCarver
+        run: poetry install --no-interaction --only-root --all-extras
 
       - name: Run tests
-        run: pytest -v --cov ${{ github.workspace }}/tests/
-  
-  pylint:
-    
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-
-      - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r ${{ github.workspace }}/tests/requirements.txt
-
-      - name: Run lint
-        run: |
-          cd ${{ github.workspace }}
-          black --check .
-          isort . --check-only
-          pylint $(find . -name "*.py" | xargs) --fail-under=8
-          # flake8 . 
+          source $VENV
+          python -m pytest -v --cov ${{ github.workspace }}/tests/
+          
   

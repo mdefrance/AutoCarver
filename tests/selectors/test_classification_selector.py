@@ -3,8 +3,8 @@
 from pandas import DataFrame
 from pytest import FixtureRequest, fixture
 
-from AutoCarver import selectors
-from AutoCarver.selectors import ClassificationSelector
+from auto_carver import selectors
+from auto_carver.selectors import ClassificationSelector
 
 
 @fixture(params=["binary_target", "multiclass_target"])

@@ -1,29 +1,33 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Setting things up &mdash; AutoCarver Beta Release documentation</title>
-      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../../../_static/nbsphinx-code-cells.css" type="text/css" />
+  <title>Setting things up &mdash; auto_carver Beta release documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/nbsphinx-code-cells.css?v=2aa19091" />
+
+  
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="../../../_static/jquery.js"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
-        <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/sphinx_highlight.js"></script>
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=39f3c58d"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
         <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="author" title="About these documents" href="../../../about.html" />
     <link rel="index" title="Index" href="../../../genindex.html" />
-    <link rel="search" title="Search" href="../../../search.html" /> 
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Selectors Examples" href="../../../selectors_examples.html" />
+    <link rel="prev" title="Discretizers Examples" href="../../../discretizers_examples.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -39,7 +43,7 @@
               <img src="../../../_static/auto_carver_symbol_small.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                5.4.7
+                6.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -62,9 +66,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../selectors.html">Selectors</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Examples</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../../../carvers_examples.html">Carvers Examples</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../discretizers_examples.html">Discretizers Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../discretizers_examples.html">Discretizers Examples</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../discretizers_examples.html#complete-discretization-pipeline-example">Complete Discretization Pipeline Example</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../../selectors_examples.html">Selectors Examples</a></li>
 </ul>
 
@@ -74,7 +81,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../../index.html">AutoCarver</a>
+          <a href="../../../index.html">auto_carver</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -82,6 +89,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../discretizers_examples.html">Discretizers Examples</a></li>
       <li class="breadcrumb-item active">Setting things up</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../../_sources/examples/Discretizers/CompletePipeline/discretizer_example.ipynb.txt" rel="nofollow"> View page source</a>
@@ -93,16 +101,16 @@
            <div itemprop="articleBody">
              
   <section id="Setting-things-up">
-<h1>Setting things up<a class="headerlink" href="#Setting-things-up" title="Permalink to this heading"></a></h1>
+<h1>Setting things up<a class="headerlink" href="#Setting-things-up" title="Link to this heading"></a></h1>
 <section id="About-this-notebook">
-<h2>About this notebook<a class="headerlink" href="#About-this-notebook" title="Permalink to this heading"></a></h2>
+<h2>About this notebook<a class="headerlink" href="#About-this-notebook" title="Link to this heading"></a></h2>
 <p>Welcome to this notebook where we will explore the Census Adult Income dataset, a rich source of socio-economic information derived from the 1994 U.S. Census Bureau database. Our focus in this analysis is on employing a robust Python data discretization pipeline: <code class="docutils literal notranslate"><span class="pre">Discretizer</span></code>. This versatile tool is able to discretize various types of data, both quantitative and qualitative, making it an ideal companion for preprocessing tasks.</p>
 <p>Data discretization is a crucial step in preparing datasets for machine learning models. It involves transforming continuous or categorical variables into discrete bins, allowing for improved interpretability, handling non-linearity, and addressing potential outliers. The <code class="docutils literal notranslate"><span class="pre">Discretizer</span></code> we will employ is designed to handle a diverse range of data types, including quantitative variables such as age and education level, as well as qualitative variables like marital status and occupation.</p>
 <p>Throughout this notebook, we will delve into the intricacies of the Census Adult Income dataset, exploring the distribution of features and employing the Discretizer to discretize the data effectively. By the end of this preprocessing journey, we aim to create a dataset that is well-suited for subsequent machine learning tasks, enabling the development of robust models for predicting income levels based on socio-economic attributes.</p>
 <p>Let’s embark on this exploration and witness the power of <code class="docutils literal notranslate"><span class="pre">Discretizer</span></code> in preparing our data for insightful analysis and accurate modeling.</p>
 </section>
 <section id="Installation">
-<h2>Installation<a class="headerlink" href="#Installation" title="Permalink to this heading"></a></h2>
+<h2>Installation<a class="headerlink" href="#Installation" title="Link to this heading"></a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -113,7 +121,7 @@
 </div>
 </section>
 <section id="Census-Data">
-<h2>Census Data<a class="headerlink" href="#Census-Data" title="Permalink to this heading"></a></h2>
+<h2>Census Data<a class="headerlink" href="#Census-Data" title="Link to this heading"></a></h2>
 <p>In this example notebook, we will use the Census dataset.</p>
 <p>The Census Adult Income dataset, commonly referred to as the “Adult” dataset, is a well-known dataset in the realm of machine learning and data analysis. It is frequently used for tasks related to classification and predictive modeling. The dataset is derived from the 1994 U.S. Census Bureau database and contains a diverse set of features that aim to predict whether an individual earns more than $50,000 annually, making it a binary classification problem.</p>
 <p>The features in the Adult dataset include demographic information such as age, education level, marital status, occupation, and work-related details like hours worked per week. The primary objective when working with this dataset is typically to build a predictive model capable of discerning between individuals with annual incomes above and below the $50,000 threshold.</p>
@@ -272,7 +280,7 @@
 </div>
 </section>
 <section id="Target-type">
-<h2>Target type<a class="headerlink" href="#Target-type" title="Permalink to this heading"></a></h2>
+<h2>Target type<a class="headerlink" href="#Target-type" title="Link to this heading"></a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
@@ -305,7 +313,7 @@ Name: count, dtype: int64
 <p>The target <code class="docutils literal notranslate"><span class="pre">&quot;income&quot;</span></code> is a binary target used in a classification task.</p>
 </section>
 <section id="Data-Sampling">
-<h2>Data Sampling<a class="headerlink" href="#Data-Sampling" title="Permalink to this heading"></a></h2>
+<h2>Data Sampling<a class="headerlink" href="#Data-Sampling" title="Link to this heading"></a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
@@ -342,7 +350,7 @@ c:\Users\defra\.conda\envs\py39\lib\site-packages\sklearn\utils\validation.py:61
 </div>
 </section>
 <section id="Picking-up-columns-to-Discretize">
-<h2>Picking up columns to Discretize<a class="headerlink" href="#Picking-up-columns-to-Discretize" title="Permalink to this heading"></a></h2>
+<h2>Picking up columns to Discretize<a class="headerlink" href="#Picking-up-columns-to-Discretize" title="Link to this heading"></a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
@@ -545,11 +553,11 @@ dtype: object
 </section>
 </section>
 <section id="Using-Discretizer">
-<h1>Using Discretizer<a class="headerlink" href="#Using-Discretizer" title="Permalink to this heading"></a></h1>
+<h1>Using Discretizer<a class="headerlink" href="#Using-Discretizer" title="Link to this heading"></a></h1>
 <section id="Discretizer-Settings">
-<h2>Discretizer Settings<a class="headerlink" href="#Discretizer-Settings" title="Permalink to this heading"></a></h2>
+<h2>Discretizer Settings<a class="headerlink" href="#Discretizer-Settings" title="Link to this heading"></a></h2>
 <section id="Representativness-of-modalities">
-<h3>Representativness of modalities<a class="headerlink" href="#Representativness-of-modalities" title="Permalink to this heading"></a></h3>
+<h3>Representativness of modalities<a class="headerlink" href="#Representativness-of-modalities" title="Link to this heading"></a></h3>
 <p>The attribute <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> allows one to choose the minimum frequency per basic modalities. It is used by <strong>Discretizers</strong>:</p>
 <ul class="simple">
 <li><p>For quantitative features, it defines the number of quantiles to initialy discretize the features with.</p></li>
@@ -567,7 +575,7 @@ dtype: object
 </section>
 </section>
 <section id="Fitting-Discretizer">
-<h2>Fitting Discretizer<a class="headerlink" href="#Fitting-Discretizer" title="Permalink to this heading"></a></h2>
+<h2>Fitting Discretizer<a class="headerlink" href="#Fitting-Discretizer" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><p>First, all qualitative features are discretized using <code class="docutils literal notranslate"><span class="pre">QualitativeDiscretizer</span></code>:</p>
 <ol class="arabic simple">
@@ -587,7 +595,7 @@ dtype: object
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">AutoCarver.discretizers</span> <span class="kn">import</span> <span class="n">Discretizer</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">auto_carver.discretizers</span> <span class="kn">import</span> <span class="n">Discretizer</span>
 
 <span class="c1"># intiating AutoCarver</span>
 <span class="n">discretizer</span> <span class="o">=</span> <span class="n">Discretizer</span><span class="p">(</span>
@@ -628,9 +636,9 @@ dtype: object
 </div>
 </section>
 <section id="Discretizer-Analysis">
-<h2>Discretizer Analysis<a class="headerlink" href="#Discretizer-Analysis" title="Permalink to this heading"></a></h2>
+<h2>Discretizer Analysis<a class="headerlink" href="#Discretizer-Analysis" title="Link to this heading"></a></h2>
 <section id="Quantitative-Continuous-Feature">
-<h3>Quantitative Continuous Feature<a class="headerlink" href="#Quantitative-Continuous-Feature" title="Permalink to this heading"></a></h3>
+<h3>Quantitative Continuous Feature<a class="headerlink" href="#Quantitative-Continuous-Feature" title="Link to this heading"></a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
@@ -756,7 +764,7 @@ Name: proportion, dtype: float64
 </ul>
 </section>
 <section id="Quantitative-Discrete-Feature">
-<h3>Quantitative Discrete Feature<a class="headerlink" href="#Quantitative-Discrete-Feature" title="Permalink to this heading"></a></h3>
+<h3>Quantitative Discrete Feature<a class="headerlink" href="#Quantitative-Discrete-Feature" title="Link to this heading"></a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
@@ -1010,7 +1018,7 @@ Target rate for hours-per-week values equal to 55: 47.32%
 </section>
 </section>
 <section id="Qualitative-Categorical-Feature">
-<h2>Qualitative Categorical Feature<a class="headerlink" href="#Qualitative-Categorical-Feature" title="Permalink to this heading"></a></h2>
+<h2>Qualitative Categorical Feature<a class="headerlink" href="#Qualitative-Categorical-Feature" title="Link to this heading"></a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
@@ -1184,7 +1192,7 @@ Name: proportion, dtype: float64
 </ul>
 </section>
 <section id="Qualitative-Ordinal-Feature">
-<h2>Qualitative Ordinal Feature<a class="headerlink" href="#Qualitative-Ordinal-Feature" title="Permalink to this heading"></a></h2>
+<h2>Qualitative Ordinal Feature<a class="headerlink" href="#Qualitative-Ordinal-Feature" title="Link to this heading"></a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
@@ -1419,9 +1427,9 @@ Provided ordering: [&#39;Preschool&#39;, &#39;1st-4th&#39;, &#39;5th-6th&#39;, &
 </ul>
 </section>
 <section id="Saving-and-Loading-Discretizer">
-<h2>Saving and Loading Discretizer<a class="headerlink" href="#Saving-and-Loading-Discretizer" title="Permalink to this heading"></a></h2>
+<h2>Saving and Loading Discretizer<a class="headerlink" href="#Saving-and-Loading-Discretizer" title="Link to this heading"></a></h2>
 <section id="Saving">
-<h3>Saving<a class="headerlink" href="#Saving" title="Permalink to this heading"></a></h3>
+<h3>Saving<a class="headerlink" href="#Saving" title="Link to this heading"></a></h3>
 <p>All <strong>Discretizers</strong> can safely be stored as a .json file.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
@@ -1437,7 +1445,7 @@ Provided ordering: [&#39;Preschool&#39;, &#39;1st-4th&#39;, &#39;5th-6th&#39;, &
 </div>
 </section>
 <section id="Loading">
-<h3>Loading<a class="headerlink" href="#Loading" title="Permalink to this heading"></a></h3>
+<h3>Loading<a class="headerlink" href="#Loading" title="Link to this heading"></a></h3>
 <p><strong>Carvers</strong> can safely be loaded from a .json file.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
@@ -1445,7 +1453,7 @@ Provided ordering: [&#39;Preschool&#39;, &#39;1st-4th&#39;, &#39;5th-6th&#39;, &
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
 
-<span class="kn">from</span> <span class="nn">AutoCarver.discretizers</span> <span class="kn">import</span> <span class="n">load_discretizer</span>
+<span class="kn">from</span> <span class="nn">auto_carver.discretizers</span> <span class="kn">import</span> <span class="n">load_discretizer</span>
 
 <span class="c1"># loading json file</span>
 <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;discretizer.json&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">my_discretizer_json</span><span class="p">:</span>
@@ -1456,7 +1464,7 @@ Provided ordering: [&#39;Preschool&#39;, &#39;1st-4th&#39;, &#39;5th-6th&#39;, &
 </section>
 </section>
 <section id="Applying-Discretizer">
-<h2>Applying Discretizer<a class="headerlink" href="#Applying-Discretizer" title="Permalink to this heading"></a></h2>
+<h2>Applying Discretizer<a class="headerlink" href="#Applying-Discretizer" title="Link to this heading"></a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
 </pre></div>
@@ -1467,7 +1475,7 @@ Provided ordering: [&#39;Preschool&#39;, &#39;1st-4th&#39;, &#39;5th-6th&#39;, &
 </div>
 </section>
 <section id="What's-next?">
-<h2>What’s next?<a class="headerlink" href="#What's-next?" title="Permalink to this heading"></a></h2>
+<h2>What’s next?<a class="headerlink" href="#What's-next?" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><p>Thanks to <strong>Discretizers</strong> all of your features are now quantitative ordinal features with representative enough modalities!</p></li>
 <li><p><strong>Discretizers</strong> are directly integrated in <strong>Carvers</strong> for a better user experience</p></li>
@@ -1475,7 +1483,7 @@ Provided ordering: [&#39;Preschool&#39;, &#39;1st-4th&#39;, &#39;5th-6th&#39;, &
 </ul>
 </section>
 <section id="Well-done!">
-<h2>Well done!<a class="headerlink" href="#Well-done!" title="Permalink to this heading"></a></h2>
+<h2>Well done!<a class="headerlink" href="#Well-done!" title="Link to this heading"></a></h2>
 <p>You have successfully navigated the intricacies of feature discretization using the <strong>AutoCarver</strong> package, creating a dataset with finely tuned discrete representations that enhance the interpretability and effectiveness of your features.</p>
 <p>Your meticulous approach to discretizing both quantitative and qualitative attributes, utilizing the <code class="docutils literal notranslate"><span class="pre">QuantitativeDiscretizer</span></code> and <code class="docutils literal notranslate"><span class="pre">QualitativeDiscretizer</span></code> components, showcases your commitment to preparing data for meaningful analysis and modeling.</p>
 <p>We appreciate your trust in the <strong>AutoCarver</strong> package, and we hope that the discretized features contribute to the success of your machine learning endeavors. As you move forward with your analyses and predictive modeling tasks, may the insights gained from this well-crafted dataset lead to impactful and informed decisions.</p>
@@ -1486,7 +1494,10 @@ Provided ordering: [&#39;Preschool&#39;, &#39;1st-4th&#39;, &#39;5th-6th&#39;, &
 
            </div>
           </div>
-          <footer>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../../../discretizers_examples.html" class="btn btn-neutral float-left" title="Discretizers Examples" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../../selectors_examples.html" class="btn btn-neutral float-right" title="Selectors Examples" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
   <hr/>
 
