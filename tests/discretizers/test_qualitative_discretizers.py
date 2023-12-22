@@ -3,7 +3,7 @@
 from pandas import DataFrame
 from pytest import raises
 
-from auto_carver.discretizers import (
+from AutoCarver.discretizers import (
     CategoricalDiscretizer,
     ChainedDiscretizer,
     GroupedList,

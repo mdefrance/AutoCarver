@@ -60,7 +60,7 @@ Fitting AutoCarver
 
 .. code-block:: python
 
-    from auto_carver import BinaryCarver
+    from AutoCarver import BinaryCarver
 
     # intiating AutoCarver
     binary_carver = BinaryCarver(
@@ -111,7 +111,7 @@ Loading AutoCarver
 
     import json
 
-    from auto_carver import load_carver
+    from AutoCarver import load_carver
 
     # loading json file
     with open('my_carver.json', 'r') as my_carver_json:
@@ -124,7 +124,7 @@ Feature Selection
 
 .. code-block:: python
 
-    from auto_carver.selectors import ClassificationSelector
+    from AutoCarver.selectors import ClassificationSelector
 
     # select the best 25 most target associated qualitative features
     classification_selector = ClassificationSelector(
