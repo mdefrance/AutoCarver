@@ -19,6 +19,9 @@ jobs:
   deploy:
 
     runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/autocarver/
 
     steps:
     - uses: actions/checkout@v3
@@ -39,6 +42,5 @@ jobs:
     - name: Publish package
       uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
       with:
-        repository_url: https://pypi.org/p/autocarver/
         user: __token__
         password: ${{ secrets.PYPI_API_TOKEN }}
