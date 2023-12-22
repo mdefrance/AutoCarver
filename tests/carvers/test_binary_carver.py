@@ -6,8 +6,8 @@ from json import dumps, loads
 from pandas import DataFrame
 from pytest import fixture, raises
 
-from auto_carver import BinaryCarver, load_carver
-from auto_carver.discretizers import ChainedDiscretizer
+from AutoCarver import BinaryCarver, load_carver
+from AutoCarver.discretizers import ChainedDiscretizer
 
 
 @fixture(scope="module", params=["tschuprowt", "cramerv"])

@@ -2,7 +2,7 @@
 
 from pandas import DataFrame
 
-from auto_carver.discretizers.utils.type_discretizers import StringDiscretizer
+from AutoCarver.discretizers.utils.type_discretizers import StringDiscretizer
 
 
 def test_string_discretizer(x_train: DataFrame) -> None:
