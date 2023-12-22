@@ -1,0 +1,3351 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Setting things up &mdash; auto_carver Beta release documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/nbsphinx-code-cells.css?v=2aa19091" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=39f3c58d"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Setting things up" href="../MulticlassClassification/multiclass_classification_example.html" />
+    <link rel="prev" title="Carvers Examples" href="../../../carvers_examples.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/auto_carver_symbol_small.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                6.0.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quick_start.html">Quick Start</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../discretizers.html">Discretizers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../carvers.html">Carvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../selectors.html">Selectors</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../carvers_examples.html">Carvers Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../discretizers_examples.html">Discretizers Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../selectors_examples.html">Selectors Examples</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../selectors_examples.html#binary-classification-example">Binary Classification Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../selectors_examples.html#multiclass-classification-example">Multiclass Classification Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../selectors_examples.html#continuous-regression-example">Continuous Regression Example</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">auto_carver</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../carvers_examples.html">Carvers Examples</a></li>
+      <li class="breadcrumb-item active">Setting things up</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/examples/Carvers/BinaryClassification/binary_classification_example.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Setting-things-up">
+<h1>Setting things up<a class="headerlink" href="#Setting-things-up" title="Link to this heading"></a></h1>
+<section id="About-this-notebook">
+<h2>About this notebook<a class="headerlink" href="#About-this-notebook" title="Link to this heading"></a></h2>
+<p>In this notebook, we embark on a journey to enhance the predictive power of the Titanic Dataset through sophisticated preprocessing using the <code class="docutils literal notranslate"><span class="pre">BinaryCarver</span></code> pipeline. Designed to maximize associations in the data, <code class="docutils literal notranslate"><span class="pre">BinaryCarver</span></code> is a robust Python tool capable of discretizing any type of data—whether it be quantitative or qualitative. Our specific focus is on preparing the dataset for binary classification tasks, such as predicting survival outcomes.</p>
+<p>The Titanic Dataset, derived from the iconic 1912 Titanic passenger information, provides a diverse set of features ranging from socio-economic status and age to cabin location. Leveraging <code class="docutils literal notranslate"><span class="pre">BinaryCarver</span></code>, we aim to perform association-maximizing discretization, refining both quantitative and qualitative features to create a finely tuned dataset for our binary classification endeavors.</p>
+<p>Throughout this notebook, we’ll delve into the intricacies of <code class="docutils literal notranslate"><span class="pre">BinaryCarver</span></code>’s discretization pipeline, exploring its capabilities in handling a variety of data types. Whether it’s transforming passenger ages or classifying fares, <code class="docutils literal notranslate"><span class="pre">BinaryCarver</span></code>’s adaptability ensures that every feature is optimally represented for our classification tasks.</p>
+<p>Join us in this exploration as we harness the power of <code class="docutils literal notranslate"><span class="pre">BinaryCarver</span></code> to preprocess the Titanic Dataset. Through effective feature engineering and discretization, we strive to create a dataset that not only captures the nuances of the Titanic passenger profiles but also sets the stage for the development of accurate and impactful binary classification models.</p>
+<p>Let’s dive in and uncover the potential of <code class="docutils literal notranslate"><span class="pre">BinaryCarver</span></code> in transforming the Titanic Dataset for optimal predictive modeling.</p>
+</section>
+<section id="Installation">
+<h2>Installation<a class="headerlink" href="#Installation" title="Link to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">pip</span> install AutoCarver[jupyter]
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Collecting AutoCarver[jupyter]
+  Downloading AutoCarver-5.4.6-py3-none-any.whl (69 kB)
+     ---------------------------------------- 0.0/69.2 kB ? eta -:--:--
+     ----- ---------------------------------- 10.2/69.2 kB ? eta -:--:--
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ---------------- --------------------- 30.7/69.2 kB 330.3 kB/s eta 0:00:01
+     ----------------------- --------------- 41.0/69.2 kB 25.9 kB/s eta 0:00:02
+     ----------------------- --------------- 41.0/69.2 kB 25.9 kB/s eta 0:00:02
+     ----------------------- --------------- 41.0/69.2 kB 25.9 kB/s eta 0:00:02
+     ----------------------- --------------- 41.0/69.2 kB 25.9 kB/s eta 0:00:02
+     ----------------------- --------------- 41.0/69.2 kB 25.9 kB/s eta 0:00:02
+     ----------------------- --------------- 41.0/69.2 kB 25.9 kB/s eta 0:00:02
+     ----------------------- --------------- 41.0/69.2 kB 25.9 kB/s eta 0:00:02
+     ----------------------- --------------- 41.0/69.2 kB 25.9 kB/s eta 0:00:02
+     ----------------------- --------------- 41.0/69.2 kB 25.9 kB/s eta 0:00:02
+     --------------------------------------- 69.2/69.2 kB 37.0 kB/s eta 0:00:00
+Requirement already satisfied: pandas&gt;=2.1 in c:\users\defra\.conda\envs\py39\lib\site-packages (from AutoCarver[jupyter]) (2.1.3)
+Requirement already satisfied: numpy in c:\users\defra\.conda\envs\py39\lib\site-packages (from AutoCarver[jupyter]) (1.24.2)
+Requirement already satisfied: scipy in c:\users\defra\.conda\envs\py39\lib\site-packages (from AutoCarver[jupyter]) (1.10.1)
+Requirement already satisfied: statsmodels in c:\users\defra\.conda\envs\py39\lib\site-packages (from AutoCarver[jupyter]) (0.14.0)
+Requirement already satisfied: scikit-learn in c:\users\defra\.conda\envs\py39\lib\site-packages (from AutoCarver[jupyter]) (1.2.2)
+Requirement already satisfied: tqdm in c:\users\defra\.conda\envs\py39\lib\site-packages (from AutoCarver[jupyter]) (4.65.0)
+Requirement already satisfied: ipython in c:\users\defra\.conda\envs\py39\lib\site-packages (from AutoCarver[jupyter]) (8.11.0)
+Requirement already satisfied: matplotlib in c:\users\defra\.conda\envs\py39\lib\site-packages (from AutoCarver[jupyter]) (3.7.1)
+Requirement already satisfied: tzdata&gt;=2022.1 in c:\users\defra\.conda\envs\py39\lib\site-packages (from pandas&gt;=2.1-&gt;AutoCarver[jupyter]) (2023.3)
+Requirement already satisfied: pytz&gt;=2020.1 in c:\users\defra\.conda\envs\py39\lib\site-packages (from pandas&gt;=2.1-&gt;AutoCarver[jupyter]) (2022.7.1)
+Requirement already satisfied: python-dateutil&gt;=2.8.2 in c:\users\defra\.conda\envs\py39\lib\site-packages (from pandas&gt;=2.1-&gt;AutoCarver[jupyter]) (2.8.2)
+Requirement already satisfied: pygments&gt;=2.4.0 in c:\users\defra\.conda\envs\py39\lib\site-packages (from ipython-&gt;AutoCarver[jupyter]) (2.14.0)
+Requirement already satisfied: matplotlib-inline in c:\users\defra\.conda\envs\py39\lib\site-packages (from ipython-&gt;AutoCarver[jupyter]) (0.1.6)
+Requirement already satisfied: colorama in c:\users\defra\.conda\envs\py39\lib\site-packages (from ipython-&gt;AutoCarver[jupyter]) (0.4.6)
+Requirement already satisfied: pickleshare in c:\users\defra\.conda\envs\py39\lib\site-packages (from ipython-&gt;AutoCarver[jupyter]) (0.7.5)
+Requirement already satisfied: traitlets&gt;=5 in c:\users\defra\.conda\envs\py39\lib\site-packages (from ipython-&gt;AutoCarver[jupyter]) (5.9.0)
+Requirement already satisfied: backcall in c:\users\defra\.conda\envs\py39\lib\site-packages (from ipython-&gt;AutoCarver[jupyter]) (0.2.0)
+Requirement already satisfied: prompt-toolkit!=3.0.37,&lt;3.1.0,&gt;=3.0.30 in c:\users\defra\.conda\envs\py39\lib\site-packages (from ipython-&gt;AutoCarver[jupyter]) (3.0.38)
+Requirement already satisfied: decorator in c:\users\defra\.conda\envs\py39\lib\site-packages (from ipython-&gt;AutoCarver[jupyter]) (5.1.1)
+Requirement already satisfied: stack-data in c:\users\defra\.conda\envs\py39\lib\site-packages (from ipython-&gt;AutoCarver[jupyter]) (0.6.2)
+Requirement already satisfied: jedi&gt;=0.16 in c:\users\defra\.conda\envs\py39\lib\site-packages (from ipython-&gt;AutoCarver[jupyter]) (0.18.2)
+Requirement already satisfied: kiwisolver&gt;=1.0.1 in c:\users\defra\.conda\envs\py39\lib\site-packages (from matplotlib-&gt;AutoCarver[jupyter]) (1.4.4)
+Requirement already satisfied: contourpy&gt;=1.0.1 in c:\users\defra\.conda\envs\py39\lib\site-packages (from matplotlib-&gt;AutoCarver[jupyter]) (1.0.7)
+Requirement already satisfied: importlib-resources&gt;=3.2.0 in c:\users\defra\.conda\envs\py39\lib\site-packages (from matplotlib-&gt;AutoCarver[jupyter]) (5.12.0)
+Requirement already satisfied: packaging&gt;=20.0 in c:\users\defra\.conda\envs\py39\lib\site-packages (from matplotlib-&gt;AutoCarver[jupyter]) (23.0)
+Requirement already satisfied: fonttools&gt;=4.22.0 in c:\users\defra\.conda\envs\py39\lib\site-packages (from matplotlib-&gt;AutoCarver[jupyter]) (4.39.1)
+Requirement already satisfied: cycler&gt;=0.10 in c:\users\defra\.conda\envs\py39\lib\site-packages (from matplotlib-&gt;AutoCarver[jupyter]) (0.11.0)
+Requirement already satisfied: pyparsing&gt;=2.3.1 in c:\users\defra\.conda\envs\py39\lib\site-packages (from matplotlib-&gt;AutoCarver[jupyter]) (3.0.9)
+Requirement already satisfied: pillow&gt;=6.2.0 in c:\users\defra\.conda\envs\py39\lib\site-packages (from matplotlib-&gt;AutoCarver[jupyter]) (9.4.0)
+Requirement already satisfied: joblib&gt;=1.1.1 in c:\users\defra\.conda\envs\py39\lib\site-packages (from scikit-learn-&gt;AutoCarver[jupyter]) (1.2.0)
+Requirement already satisfied: threadpoolctl&gt;=2.0.0 in c:\users\defra\.conda\envs\py39\lib\site-packages (from scikit-learn-&gt;AutoCarver[jupyter]) (3.1.0)
+Requirement already satisfied: patsy&gt;=0.5.2 in c:\users\defra\.conda\envs\py39\lib\site-packages (from statsmodels-&gt;AutoCarver[jupyter]) (0.5.3)
+Requirement already satisfied: zipp&gt;=3.1.0 in c:\users\defra\.conda\envs\py39\lib\site-packages (from importlib-resources&gt;=3.2.0-&gt;matplotlib-&gt;AutoCarver[jupyter]) (3.15.0)
+Requirement already satisfied: parso&lt;0.9.0,&gt;=0.8.0 in c:\users\defra\.conda\envs\py39\lib\site-packages (from jedi&gt;=0.16-&gt;ipython-&gt;AutoCarver[jupyter]) (0.8.3)
+Requirement already satisfied: six in c:\users\defra\.conda\envs\py39\lib\site-packages (from patsy&gt;=0.5.2-&gt;statsmodels-&gt;AutoCarver[jupyter]) (1.16.0)
+Requirement already satisfied: wcwidth in c:\users\defra\.conda\envs\py39\lib\site-packages (from prompt-toolkit!=3.0.37,&lt;3.1.0,&gt;=3.0.30-&gt;ipython-&gt;AutoCarver[jupyter]) (0.2.6)
+Requirement already satisfied: asttokens&gt;=2.1.0 in c:\users\defra\.conda\envs\py39\lib\site-packages (from stack-data-&gt;ipython-&gt;AutoCarver[jupyter]) (2.2.1)
+Requirement already satisfied: pure-eval in c:\users\defra\.conda\envs\py39\lib\site-packages (from stack-data-&gt;ipython-&gt;AutoCarver[jupyter]) (0.2.2)
+Requirement already satisfied: executing&gt;=1.2.0 in c:\users\defra\.conda\envs\py39\lib\site-packages (from stack-data-&gt;ipython-&gt;AutoCarver[jupyter]) (1.2.0)
+Installing collected packages: AutoCarver
+Successfully installed AutoCarver-5.4.6
+Note: you may need to restart the kernel to use updated packages.
+</pre></div></div>
+</div>
+</section>
+<section id="Titanic-Data">
+<h2>Titanic Data<a class="headerlink" href="#Titanic-Data" title="Link to this heading"></a></h2>
+<p>In this example notebook, we will use the Titanic dataset.</p>
+<p>The Titanic dataset is a well-known and frequently used dataset in the field of machine learning and data science. It provides information about the passengers on board the Titanic, the famous ship that sank on its maiden voyage in 1912. The dataset is often used for predictive modeling, classification, and regression tasks.</p>
+<p>The dataset includes various features such as passengers’ names, ages, genders, ticket classes, cabin information, and whether they survived or not. The primary goal when working with the Titanic dataset is often to build predictive models that can infer whether a passenger survived or perished based on their individual characteristics (binary classification).</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="c1"># URL to the Titanic dataset on Kaggle</span>
+<span class="n">titanic_url</span> <span class="o">=</span> <span class="s2">&quot;https://web.stanford.edu/class/archive/cs/cs109/cs109.1166/stuff/titanic.csv&quot;</span>
+
+<span class="c1"># Use pandas to read the CSV file directly from the URL</span>
+<span class="n">titanic_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">titanic_url</span><span class="p">)</span>
+
+<span class="c1"># Display the first few rows of the dataset</span>
+<span class="n">titanic_data</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Survived</th>
+      <th>Pclass</th>
+      <th>Name</th>
+      <th>Sex</th>
+      <th>Age</th>
+      <th>Siblings/Spouses Aboard</th>
+      <th>Parents/Children Aboard</th>
+      <th>Fare</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>3</td>
+      <td>Mr. Owen Harris Braund</td>
+      <td>male</td>
+      <td>22.0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>7.2500</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1</td>
+      <td>1</td>
+      <td>Mrs. John Bradley (Florence Briggs Thayer) Cum...</td>
+      <td>female</td>
+      <td>38.0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>71.2833</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1</td>
+      <td>3</td>
+      <td>Miss. Laina Heikkinen</td>
+      <td>female</td>
+      <td>26.0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>7.9250</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1</td>
+      <td>1</td>
+      <td>Mrs. Jacques Heath (Lily May Peel) Futrelle</td>
+      <td>female</td>
+      <td>35.0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>53.1000</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0</td>
+      <td>3</td>
+      <td>Mr. William Henry Allen</td>
+      <td>male</td>
+      <td>35.0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>8.0500</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+</section>
+<section id="Target-type-and-Carver-selection">
+<h2>Target type and Carver selection<a class="headerlink" href="#Target-type-and-Carver-selection" title="Link to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">target</span> <span class="o">=</span> <span class="s2">&quot;Survived&quot;</span>
+
+<span class="n">titanic_data</span><span class="p">[</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">dropna</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Survived
+0    545
+1    342
+Name: count, dtype: int64
+</pre></div></div>
+</div>
+<p>The target <code class="docutils literal notranslate"><span class="pre">&quot;Survived&quot;</span></code> is a binary target of type <code class="docutils literal notranslate"><span class="pre">int64</span></code> used in a classification task. Hence we will use <code class="docutils literal notranslate"><span class="pre">AutoCarver.BinaryCarver</span></code> and <code class="docutils literal notranslate"><span class="pre">AutoCarver.selectors.ClassificationSelector</span></code> in following code blocks.</p>
+</section>
+<section id="Data-Sampling">
+<h2>Data Sampling<a class="headerlink" href="#Data-Sampling" title="Link to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">train_test_split</span>
+
+<span class="c1"># stratified sampling by target</span>
+<span class="n">train_set</span><span class="p">,</span> <span class="n">dev_set</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">titanic_data</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.33</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">stratify</span><span class="o">=</span><span class="n">titanic_data</span><span class="p">[</span><span class="n">target</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+c:\Users\defra\.conda\envs\py39\lib\site-packages\sklearn\utils\validation.py:605: FutureWarning: is_sparse is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.SparseDtype)` instead.
+  if is_sparse(pd_dtype):
+c:\Users\defra\.conda\envs\py39\lib\site-packages\sklearn\utils\validation.py:614: FutureWarning: is_sparse is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.SparseDtype)` instead.
+  if is_sparse(pd_dtype) or not is_extension_array_dtype(pd_dtype):
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># checking target rate per dataset</span>
+<span class="n">train_set</span><span class="p">[</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">dev_set</span><span class="p">[</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(0.38552188552188554, 0.3856655290102389)
+</pre></div></div>
+</div>
+</section>
+<section id="Picking-up-columns-to-Carve">
+<h2>Picking up columns to Carve<a class="headerlink" href="#Picking-up-columns-to-Carve" title="Link to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">train_set</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Survived</th>
+      <th>Pclass</th>
+      <th>Name</th>
+      <th>Sex</th>
+      <th>Age</th>
+      <th>Siblings/Spouses Aboard</th>
+      <th>Parents/Children Aboard</th>
+      <th>Fare</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>617</th>
+      <td>0</td>
+      <td>3</td>
+      <td>Mr. Antoni Yasbeck</td>
+      <td>male</td>
+      <td>27.0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>14.4542</td>
+    </tr>
+    <tr>
+      <th>489</th>
+      <td>0</td>
+      <td>1</td>
+      <td>Mr. Harry Markland Molson</td>
+      <td>male</td>
+      <td>55.0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>30.5000</td>
+    </tr>
+    <tr>
+      <th>871</th>
+      <td>1</td>
+      <td>3</td>
+      <td>Miss. Adele Kiamie Najib</td>
+      <td>female</td>
+      <td>15.0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>7.2250</td>
+    </tr>
+    <tr>
+      <th>654</th>
+      <td>0</td>
+      <td>3</td>
+      <td>Mrs. John (Catherine) Bourke</td>
+      <td>female</td>
+      <td>32.0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>15.5000</td>
+    </tr>
+    <tr>
+      <th>653</th>
+      <td>0</td>
+      <td>3</td>
+      <td>Mr. Alexander Radeff</td>
+      <td>male</td>
+      <td>27.0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>7.8958</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># column data types</span>
+<span class="n">train_set</span><span class="o">.</span><span class="n">dtypes</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Survived                     int64
+Pclass                       int64
+Name                        object
+Sex                         object
+Age                        float64
+Siblings/Spouses Aboard      int64
+Parents/Children Aboard      int64
+Fare                       float64
+dtype: object
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># values taken by Parents/Children Aboard</span>
+<span class="n">train_set</span><span class="p">[</span><span class="s2">&quot;Parents/Children Aboard&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Parents/Children Aboard
+0    438
+1     87
+2     60
+3      3
+5      3
+4      2
+6      1
+Name: count, dtype: int64
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># values taken by Pclass</span>
+<span class="n">train_set</span><span class="p">[</span><span class="s2">&quot;Pclass&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Pclass
+3    326
+1    142
+2    126
+Name: count, dtype: int64
+</pre></div></div>
+</div>
+<p>The feature <code class="docutils literal notranslate"><span class="pre">&quot;Pclass&quot;</span></code> is of type <code class="docutils literal notranslate"><span class="pre">&quot;int64&quot;</span></code>, but it can be considered a qualitative ordinal feature rather than a quantitative discrete feature (socio-economic status). Thus we will add it to the list of <code class="docutils literal notranslate"><span class="pre">ordinal_features</span></code> and set the ordering of its values in <code class="docutils literal notranslate"><span class="pre">values_orders</span></code> (string values).</p>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;Sex&quot;</span></code> is the only quantitative categorical feature, it’s added to the list of <code class="docutils literal notranslate"><span class="pre">qualitative_features</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;Fare&quot;</span></code> is the only quantitative continuous features, whilst <code class="docutils literal notranslate"><span class="pre">&quot;Age&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Siblings/Spouses</span> <span class="pre">Aboard&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;Parents/Children</span> <span class="pre">Aboard&quot;</span></code> can be considered as quantitative discrete features. Those four features will be added to the list of <code class="docutils literal notranslate"><span class="pre">quantitative_features</span></code>.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># lists of features per data type</span>
+<span class="n">quantitative_features</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Age&quot;</span><span class="p">,</span> <span class="s2">&quot;Fare&quot;</span><span class="p">,</span> <span class="s2">&quot;Siblings/Spouses Aboard&quot;</span><span class="p">,</span> <span class="s2">&quot;Parents/Children Aboard&quot;</span><span class="p">]</span>
+<span class="n">qualitative_features</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Sex&quot;</span><span class="p">]</span>
+<span class="n">ordinal_features</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Pclass&quot;</span><span class="p">]</span>
+
+<span class="c1"># user-specified ordering for ordinal features</span>
+<span class="n">values_orders</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;Pclass&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="s2">&quot;3&quot;</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+<section id="Using-AutoCarver">
+<h1>Using AutoCarver<a class="headerlink" href="#Using-AutoCarver" title="Link to this heading"></a></h1>
+<section id="AutoCarver-settings">
+<h2>AutoCarver settings<a class="headerlink" href="#AutoCarver-settings" title="Link to this heading"></a></h2>
+<section id="Representativness-of-modalities">
+<h3>Representativness of modalities<a class="headerlink" href="#Representativness-of-modalities" title="Link to this heading"></a></h3>
+<p>The attribute <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> allows one to choose the minimum frequency per basic modalities. It is used by <strong>Discretizers</strong>:</p>
+<ul class="simple">
+<li><p>For quantitative features, it defines the number of quantiles to initialy discretize the features with.</p></li>
+<li><p>For qualitative features, it defines the threshold under which a modality is grouped to either a default value or its closest modality.</p></li>
+</ul>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">min_freq</span> <span class="o">=</span> <span class="mf">0.05</span>
+</pre></div>
+</div>
+</div>
+<p><strong>Tip:</strong> should be set between <code class="docutils literal notranslate"><span class="pre">0.01</span></code> (slower, preciser, less robust) and <code class="docutils literal notranslate"><span class="pre">0.2</span></code> (faster, more robust)</p>
+</section>
+<section id="Desired-number-of-modalities">
+<h3>Desired number of modalities<a class="headerlink" href="#Desired-number-of-modalities" title="Link to this heading"></a></h3>
+<p>The attribute <code class="docutils literal notranslate"><span class="pre">max_n_mod</span></code> allows one to choose the maximum number of modalities per carved feature. It is used by <strong>Carvers</strong> has the upper limit of number of modalities per consecutive combination of modalities.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">max_n_mod</span> <span class="o">=</span> <span class="mi">5</span>
+</pre></div>
+</div>
+</div>
+<p><strong>Tip:</strong> should be set between <code class="docutils literal notranslate"><span class="pre">3</span></code> (faster, more robust) and <code class="docutils literal notranslate"><span class="pre">7</span></code> (slower, preciser, less robust)</p>
+</section>
+<section id="Association-metric">
+<h3>Association metric<a class="headerlink" href="#Association-metric" title="Link to this heading"></a></h3>
+<p>The attribute <code class="docutils literal notranslate"><span class="pre">sort_by</span></code> allows one to choose the association metric used to sort combinations. Combinations of grouped modalities are ranked according to the specified modalities and the best ranked viable combination is returned by <strong>Carvers</strong>.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># For BinaryCarver, to be choosen amongst [&quot;tschuprowt&quot;, &quot;cramerv&quot;]</span>
+<span class="n">sort_by</span> <span class="o">=</span> <span class="s2">&quot;tschuprowt&quot;</span>  <span class="c1"># &quot;cramerv&quot;</span>
+</pre></div>
+</div>
+</div>
+<p><strong>Tip:</strong> use <code class="docutils literal notranslate"><span class="pre">&quot;tschuprowt&quot;</span></code> for more robust, or less output modalities, use <code class="docutils literal notranslate"><span class="pre">&quot;cramerv&quot;</span></code> for more output modalities.</p>
+</section>
+<section id="Grouping-NaNs">
+<h3>Grouping NaNs<a class="headerlink" href="#Grouping-NaNs" title="Link to this heading"></a></h3>
+<p>The attribute <code class="docutils literal notranslate"><span class="pre">dropna</span></code> allows one to choose whether or not <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code> should be grouped with another modality. If set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, <strong>Carvers</strong> will first find the most suitable combination of non-NaN values, and then test out all possible combinations with <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code>.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dropna</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># anyway, there are no numpy.nan in this dataset</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Optional-attributes">
+<h3>Optional attributes<a class="headerlink" href="#Optional-attributes" title="Link to this heading"></a></h3>
+<section id="Minimal-frequency-per-carved-modality">
+<h4>Minimal frequency per carved modality<a class="headerlink" href="#Minimal-frequency-per-carved-modality" title="Link to this heading"></a></h4>
+<p>The attribute <code class="docutils literal notranslate"><span class="pre">min_freq_mod</span></code> allows one to choose the minimum frequency per output modality. It is used by <strong>Carvers</strong> in viability tests to put aside combinations that are not frequent enough in train or dev sets. By default, it is set to <code class="docutils literal notranslate"><span class="pre">min_freq/2</span></code>.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">min_freq_mod</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># for 0.05,  at least 5 % of observations per output modality in train and dev sets</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Type-of-output-carved-features">
+<h4>Type of output carved features<a class="headerlink" href="#Type-of-output-carved-features" title="Link to this heading"></a></h4>
+<p>The attribute <code class="docutils literal notranslate"><span class="pre">output_dtype</span></code> allows one to choose the output type:</p>
+<ul class="simple">
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code> for integer output (default)</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">&quot;str&quot;</span></code> for string output</p></li>
+</ul>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">output_dtype</span> <span class="o">=</span> <span class="s2">&quot;float&quot;</span>  <span class="c1"># &quot;str&quot;</span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+</section>
+<section id="Fitting-AutoCarver">
+<h2>Fitting AutoCarver<a class="headerlink" href="#Fitting-AutoCarver" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>First, all qualitative features are discretized:</p>
+<ol class="arabic simple">
+<li><p>Using <code class="docutils literal notranslate"><span class="pre">StringDiscretizer</span></code> to convert them to <code class="docutils literal notranslate"><span class="pre">str</span></code> if not already the case</p></li>
+<li><p>For qualitative ordinal features: using <code class="docutils literal notranslate"><span class="pre">OrdinalDiscretizer</span></code> for under-represented values (less frequent than <code class="docutils literal notranslate"><span class="pre">min_freq=0.05</span></code>) to be grouped with its closest modality</p></li>
+<li><p>For qualitative categorical features: using <code class="docutils literal notranslate"><span class="pre">CategoricalDiscretizer</span></code> for under-represented values (less frequent than <code class="docutils literal notranslate"><span class="pre">min_freq=0.05</span></code>) to be grouped with a default value (<code class="docutils literal notranslate"><span class="pre">str_default=&quot;__OTHER__&quot;</span></code>)</p></li>
+</ol>
+</li>
+<li><p>Second, all quantitative features are discretized:</p>
+<ol class="arabic simple">
+<li><p>Using <code class="docutils literal notranslate"><span class="pre">ContinuousDiscretizer</span></code> for quantile discretization that keeps track of over-represented values (more frequent than <code class="docutils literal notranslate"><span class="pre">min_freq=0.05</span></code>)</p></li>
+<li><p>Using <code class="docutils literal notranslate"><span class="pre">OrdinalDiscretizer</span></code> for any remaining under-represented values (less frequent than <code class="docutils literal notranslate"><span class="pre">min_freq/2=0.025</span></code>) to be grouped with its closest modality</p></li>
+</ol>
+</li>
+<li><p>Third, all features are carved following this recipe, for all classes of <code class="docutils literal notranslate"><span class="pre">train_set[target]</span></code> (except one):</p>
+<ol class="arabic simple">
+<li><p>The raw distribution is printed out on provided <code class="docutils literal notranslate"><span class="pre">train_set</span></code> and <code class="docutils literal notranslate"><span class="pre">dev_set</span></code>. It’s the output of the discretization step</p></li>
+<li><p>Grouping modalities: all consecutive combinations of modalities are applied to <code class="docutils literal notranslate"><span class="pre">train_set</span></code></p></li>
+<li><p>Computing associations: the association metric (<code class="docutils literal notranslate"><span class="pre">sort_by=&quot;cramerv&quot;</span></code>) is computed with the provided target <code class="docutils literal notranslate"><span class="pre">train_set[target]</span></code></p></li>
+<li><p>Combinations are sorted in descending order by association value</p></li>
+<li><p>Testing robustness: finds the first combination that checks the following:</p>
+<ul>
+<li><p>Representativness of modalities on <code class="docutils literal notranslate"><span class="pre">train_set</span></code> and <code class="docutils literal notranslate"><span class="pre">dev_set</span></code> (all should be more frequent than <code class="docutils literal notranslate"><span class="pre">min_freq_mod</span></code>)</p></li>
+<li><p>Distinct target rates per consecutive modalities on <code class="docutils literal notranslate"><span class="pre">train_set</span></code> and <code class="docutils literal notranslate"><span class="pre">dev_set</span></code></p></li>
+<li><p>No inversion of target rates between <code class="docutils literal notranslate"><span class="pre">train_set</span></code> and <code class="docutils literal notranslate"><span class="pre">dev_set</span></code> (same ordering of modalities by target rate)</p></li>
+</ul>
+</li>
+<li><p>(Optional) If requested via <code class="docutils literal notranslate"><span class="pre">dropna=True</span></code>, and if any, all combinations of modalities with <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code> are applied to <code class="docutils literal notranslate"><span class="pre">train_set</span></code> and steps 3. and 4. are run</p></li>
+<li><p>The carved distribution is printed out on provided <code class="docutils literal notranslate"><span class="pre">train_set</span></code> and <code class="docutils literal notranslate"><span class="pre">dev_set</span></code>. It’s the output of the carving step</p></li>
+</ol>
+</li>
+</ul>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">auto_carver</span> <span class="kn">import</span> <span class="n">BinaryCarver</span>
+
+<span class="c1"># intiating AutoCarver</span>
+<span class="n">auto_carver</span> <span class="o">=</span> <span class="n">BinaryCarver</span><span class="p">(</span>
+    <span class="n">quantitative_features</span><span class="o">=</span><span class="n">quantitative_features</span><span class="p">,</span>
+    <span class="n">qualitative_features</span><span class="o">=</span><span class="n">qualitative_features</span><span class="p">,</span>
+    <span class="n">ordinal_features</span><span class="o">=</span><span class="n">ordinal_features</span><span class="p">,</span>
+    <span class="n">values_orders</span><span class="o">=</span><span class="n">values_orders</span><span class="p">,</span>
+    <span class="n">min_freq</span><span class="o">=</span><span class="n">min_freq</span><span class="p">,</span>
+    <span class="n">min_freq_mod</span><span class="o">=</span><span class="n">min_freq_mod</span><span class="p">,</span>
+    <span class="n">max_n_mod</span><span class="o">=</span><span class="n">max_n_mod</span><span class="p">,</span>
+    <span class="n">dropna</span><span class="o">=</span><span class="n">dropna</span><span class="p">,</span>
+    <span class="n">sort_by</span><span class="o">=</span><span class="n">sort_by</span><span class="p">,</span>
+    <span class="n">output_dtype</span><span class="o">=</span><span class="n">output_dtype</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># showing statistics</span>
+    <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># whether or not to return a copy of the input dataset</span>
+<span class="p">)</span>
+
+<span class="c1"># fitting on training sample, a dev sample can be specified to evaluate carving robustness</span>
+<span class="n">train_set_processed</span> <span class="o">=</span> <span class="n">auto_carver</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">train_set</span><span class="p">,</span> <span class="n">train_set</span><span class="p">[</span><span class="n">target</span><span class="p">],</span> <span class="n">X_dev</span><span class="o">=</span><span class="n">dev_set</span><span class="p">,</span> <span class="n">y_dev</span><span class="o">=</span><span class="n">dev_set</span><span class="p">[</span><span class="n">target</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+------
+[Discretizer] Fit Qualitative Features
+---
+ - [StringDiscretizer] Fit [&#39;Pclass&#39;]
+ - [OrdinalDiscretizer] Fit [&#39;Pclass&#39;]
+ - [CategoricalDiscretizer] Fit [&#39;Sex&#39;]
+------
+
+------
+[Discretizer] Fit Quantitative Features
+---
+ - [ContinuousDiscretizer] Fit [&#39;Parents/Children Aboard&#39;, &#39;Fare&#39;, &#39;Siblings/Spouses Aboard&#39;, &#39;Age&#39;]
+ - [OrdinalDiscretizer] Fit [&#39;Age&#39;, &#39;Fare&#39;, &#39;Siblings/Spouses Aboard&#39;, &#39;Parents/Children Aboard&#39;]
+------
+
+
+------
+[AutoCarver] Fit Sex (1/6)
+---
+
+ - [AutoCarver] Raw distribution
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+c:\Users\defra\Desktop\git\PROJECTS\AutoCarver\docs\source\examples\BinaryClassification\../../../../../AutoCarver\AutoCarver\discretizers\discretizers.py:325: UserWarning:  - [QualitativeDiscretizer] Non-string features: [&#39;Pclass&#39;]. Trying to convert them using type_discretizers.StringDiscretizer, otherwise convert them manually. Unexpected data types: [&lt;class &#39;int&#39;&gt;].
+  warn(
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<style type="text/css">
+#T_04af1_row0_col0, #T_04af1_row1_col1 {
+  background-color: #3b4cc0;
+  color: #f1f1f1;
+}
+#T_04af1_row0_col1, #T_04af1_row1_col0 {
+  background-color: #b40426;
+  color: #f1f1f1;
+}
+</style>
+<table id="T_04af1" style='display:inline'>
+  <caption>X distribution</caption>
+  <thead>
+    <tr>
+      <th class="blank level0" >&nbsp;</th>
+      <th id="T_04af1_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_04af1_level0_col1" class="col_heading level0 col1" >frequency</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th id="T_04af1_level0_row0" class="row_heading level0 row0" >male</th>
+      <td id="T_04af1_row0_col0" class="data row0 col0" >0.1878</td>
+      <td id="T_04af1_row0_col1" class="data row0 col1" >0.6364</td>
+    </tr>
+    <tr>
+      <th id="T_04af1_level0_row1" class="row_heading level0 row1" >female</th>
+      <td id="T_04af1_row1_col0" class="data row1 col0" >0.7315</td>
+      <td id="T_04af1_row1_col1" class="data row1 col1" >0.3636</td>
+    </tr>
+  </tbody>
+</table>
+          <style type="text/css">
+#T_47488_row0_col0, #T_47488_row1_col1 {
+  background-color: #3b4cc0;
+  color: #f1f1f1;
+}
+#T_47488_row0_col1, #T_47488_row1_col0 {
+  background-color: #b40426;
+  color: #f1f1f1;
+}
+</style>
+<table id="T_47488" style='display:inline'>
+  <caption>X_dev distribution</caption>
+  <thead>
+    <tr>
+      <th id="T_47488_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_47488_level0_col1" class="col_heading level0 col1" >frequency</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td id="T_47488_row0_col0" class="data row0 col0" >0.1949</td>
+      <td id="T_47488_row0_col1" class="data row0 col1" >0.6655</td>
+    </tr>
+    <tr>
+      <td id="T_47488_row1_col0" class="data row1 col0" >0.7653</td>
+      <td id="T_47488_row1_col1" class="data row1 col1" >0.3345</td>
+    </tr>
+  </tbody>
+</table></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Grouping modalities   : 100%|██████████| 1/1 [00:00&lt;?, ?it/s]
+Computing associations: 100%|██████████| 1/1 [00:00&lt;00:00, 663.24it/s]
+Testing robustness    :   0%|          | 0/1 [00:00&lt;?, ?it/s]
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+ - [AutoCarver] Carved distribution
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<style type="text/css">
+#T_fc71c_row0_col0, #T_fc71c_row1_col1 {
+  background-color: #3b4cc0;
+  color: #f1f1f1;
+}
+#T_fc71c_row0_col1, #T_fc71c_row1_col0 {
+  background-color: #b40426;
+  color: #f1f1f1;
+}
+</style>
+<table id="T_fc71c" style='display:inline'>
+  <caption>X distribution</caption>
+  <thead>
+    <tr>
+      <th class="blank level0" >&nbsp;</th>
+      <th id="T_fc71c_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_fc71c_level0_col1" class="col_heading level0 col1" >frequency</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th id="T_fc71c_level0_row0" class="row_heading level0 row0" >male</th>
+      <td id="T_fc71c_row0_col0" class="data row0 col0" >0.1878</td>
+      <td id="T_fc71c_row0_col1" class="data row0 col1" >0.6364</td>
+    </tr>
+    <tr>
+      <th id="T_fc71c_level0_row1" class="row_heading level0 row1" >female</th>
+      <td id="T_fc71c_row1_col0" class="data row1 col0" >0.7315</td>
+      <td id="T_fc71c_row1_col1" class="data row1 col1" >0.3636</td>
+    </tr>
+  </tbody>
+</table>
+          <style type="text/css">
+#T_24963_row0_col0, #T_24963_row1_col1 {
+  background-color: #3b4cc0;
+  color: #f1f1f1;
+}
+#T_24963_row0_col1, #T_24963_row1_col0 {
+  background-color: #b40426;
+  color: #f1f1f1;
+}
+</style>
+<table id="T_24963" style='display:inline'>
+  <caption>X_dev distribution</caption>
+  <thead>
+    <tr>
+      <th id="T_24963_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_24963_level0_col1" class="col_heading level0 col1" >frequency</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td id="T_24963_row0_col0" class="data row0 col0" >0.1949</td>
+      <td id="T_24963_row0_col1" class="data row0 col1" >0.6655</td>
+    </tr>
+    <tr>
+      <td id="T_24963_row1_col0" class="data row1 col0" >0.7653</td>
+      <td id="T_24963_row1_col1" class="data row1 col1" >0.3345</td>
+    </tr>
+  </tbody>
+</table></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+------
+
+
+------
+[AutoCarver] Fit Siblings/Spouses Aboard (2/6)
+---
+
+ - [AutoCarver] Raw distribution
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<style type="text/css">
+#T_a2b1b_row0_col0 {
+  background-color: #f7b89c;
+  color: #000000;
+}
+#T_a2b1b_row0_col1, #T_a2b1b_row1_col0 {
+  background-color: #b40426;
+  color: #f1f1f1;
+}
+#T_a2b1b_row1_col1 {
+  background-color: #9fbfff;
+  color: #000000;
+}
+#T_a2b1b_row2_col0 {
+  background-color: #ef886b;
+  color: #f1f1f1;
+}
+#T_a2b1b_row2_col1 {
+  background-color: #3f53c6;
+  color: #f1f1f1;
+}
+#T_a2b1b_row3_col0, #T_a2b1b_row3_col1 {
+  background-color: #3b4cc0;
+  color: #f1f1f1;
+}
+</style>
+<table id="T_a2b1b" style='display:inline'>
+  <caption>X distribution</caption>
+  <thead>
+    <tr>
+      <th class="blank level0" >&nbsp;</th>
+      <th id="T_a2b1b_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_a2b1b_level0_col1" class="col_heading level0 col1" >frequency</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th id="T_a2b1b_level0_row0" class="row_heading level0 row0" >x <= 0.000e+00</th>
+      <td id="T_a2b1b_row0_col0" class="data row0 col0" >0.3614</td>
+      <td id="T_a2b1b_row0_col1" class="data row0 col1" >0.6801</td>
+    </tr>
+    <tr>
+      <th id="T_a2b1b_level0_row1" class="row_heading level0 row1" >0.000e+00 < x <= 1.000e+00</th>
+      <td id="T_a2b1b_row1_col0" class="data row1 col0" >0.5000</td>
+      <td id="T_a2b1b_row1_col1" class="data row1 col1" >0.2323</td>
+    </tr>
+    <tr>
+      <th id="T_a2b1b_level0_row2" class="row_heading level0 row2" >1.000e+00 < x <= 3.000e+00</th>
+      <td id="T_a2b1b_row2_col0" class="data row2 col0" >0.4138</td>
+      <td id="T_a2b1b_row2_col1" class="data row2 col1" >0.0488</td>
+    </tr>
+    <tr>
+      <th id="T_a2b1b_level0_row3" class="row_heading level0 row3" >3.000e+00 < x</th>
+      <td id="T_a2b1b_row3_col0" class="data row3 col0" >0.0870</td>
+      <td id="T_a2b1b_row3_col1" class="data row3 col1" >0.0387</td>
+    </tr>
+  </tbody>
+</table>
+          <style type="text/css">
+#T_635c5_row0_col0 {
+  background-color: #bad0f8;
+  color: #000000;
+}
+#T_635c5_row0_col1, #T_635c5_row1_col0 {
+  background-color: #b40426;
+  color: #f1f1f1;
+}
+#T_635c5_row1_col1 {
+  background-color: #a9c6fd;
+  color: #000000;
+}
+#T_635c5_row2_col0 {
+  background-color: #c4d5f3;
+  color: #000000;
+}
+#T_635c5_row2_col1 {
+  background-color: #465ecf;
+  color: #f1f1f1;
+}
+#T_635c5_row3_col0, #T_635c5_row3_col1 {
+  background-color: #3b4cc0;
+  color: #f1f1f1;
+}
+</style>
+<table id="T_635c5" style='display:inline'>
+  <caption>X_dev distribution</caption>
+  <thead>
+    <tr>
+      <th id="T_635c5_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_635c5_level0_col1" class="col_heading level0 col1" >frequency</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td id="T_635c5_row0_col0" class="data row0 col0" >0.3200</td>
+      <td id="T_635c5_row0_col1" class="data row0 col1" >0.6826</td>
+    </tr>
+    <tr>
+      <td id="T_635c5_row1_col0" class="data row1 col0" >0.6056</td>
+      <td id="T_635c5_row1_col1" class="data row1 col1" >0.2423</td>
+    </tr>
+    <tr>
+      <td id="T_635c5_row2_col0" class="data row2 col0" >0.3333</td>
+      <td id="T_635c5_row2_col1" class="data row2 col1" >0.0512</td>
+    </tr>
+    <tr>
+      <td id="T_635c5_row3_col0" class="data row3 col0" >0.1429</td>
+      <td id="T_635c5_row3_col1" class="data row3 col1" >0.0239</td>
+    </tr>
+  </tbody>
+</table></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Grouping modalities   : 100%|██████████| 7/7 [00:00&lt;00:00, 7025.63it/s]
+Computing associations: 100%|██████████| 7/7 [00:00&lt;00:00, 3453.32it/s]
+Testing robustness    :  29%|██▊       | 2/7 [00:00&lt;00:00, 155.62it/s]
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+ - [AutoCarver] Carved distribution
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<style type="text/css">
+#T_14352_row0_col0 {
+  background-color: #c0d4f5;
+  color: #000000;
+}
+#T_14352_row0_col1, #T_14352_row1_col0 {
+  background-color: #b40426;
+  color: #f1f1f1;
+}
+#T_14352_row1_col1 {
+  background-color: #8badfd;
+  color: #000000;
+}
+#T_14352_row2_col0, #T_14352_row2_col1 {
+  background-color: #3b4cc0;
+  color: #f1f1f1;
+}
+</style>
+<table id="T_14352" style='display:inline'>
+  <caption>X distribution</caption>
+  <thead>
+    <tr>
+      <th class="blank level0" >&nbsp;</th>
+      <th id="T_14352_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_14352_level0_col1" class="col_heading level0 col1" >frequency</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th id="T_14352_level0_row0" class="row_heading level0 row0" >x <= 0.000e+00</th>
+      <td id="T_14352_row0_col0" class="data row0 col0" >0.3614</td>
+      <td id="T_14352_row0_col1" class="data row0 col1" >0.6801</td>
+    </tr>
+    <tr>
+      <th id="T_14352_level0_row1" class="row_heading level0 row1" >0.000e+00 < x <= 1.000e+00</th>
+      <td id="T_14352_row1_col0" class="data row1 col0" >0.5000</td>
+      <td id="T_14352_row1_col1" class="data row1 col1" >0.2323</td>
+    </tr>
+    <tr>
+      <th id="T_14352_level0_row2" class="row_heading level0 row2" >1.000e+00 < x</th>
+      <td id="T_14352_row2_col0" class="data row2 col0" >0.2692</td>
+      <td id="T_14352_row2_col1" class="data row2 col1" >0.0875</td>
+    </tr>
+  </tbody>
+</table>
+          <style type="text/css">
+#T_ea164_row0_col0 {
+  background-color: #6788ee;
+  color: #f1f1f1;
+}
+#T_ea164_row0_col1, #T_ea164_row1_col0 {
+  background-color: #b40426;
+  color: #f1f1f1;
+}
+#T_ea164_row1_col1 {
+  background-color: #96b7ff;
+  color: #000000;
+}
+#T_ea164_row2_col0, #T_ea164_row2_col1 {
+  background-color: #3b4cc0;
+  color: #f1f1f1;
+}
+</style>
+<table id="T_ea164" style='display:inline'>
+  <caption>X_dev distribution</caption>
+  <thead>
+    <tr>
+      <th id="T_ea164_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_ea164_level0_col1" class="col_heading level0 col1" >frequency</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td id="T_ea164_row0_col0" class="data row0 col0" >0.3200</td>
+      <td id="T_ea164_row0_col1" class="data row0 col1" >0.6826</td>
+    </tr>
+    <tr>
+      <td id="T_ea164_row1_col0" class="data row1 col0" >0.6056</td>
+      <td id="T_ea164_row1_col1" class="data row1 col1" >0.2423</td>
+    </tr>
+    <tr>
+      <td id="T_ea164_row2_col0" class="data row2 col0" >0.2727</td>
+      <td id="T_ea164_row2_col1" class="data row2 col1" >0.0751</td>
+    </tr>
+  </tbody>
+</table></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+------
+
+
+------
+[AutoCarver] Fit Fare (3/6)
+---
+
+ - [AutoCarver] Raw distribution
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<style type="text/css">
+#T_c5a45_row0_col0, #T_c5a45_row10_col1 {
+  background-color: #3b4cc0;
+  color: #f1f1f1;
+}
+#T_c5a45_row0_col1, #T_c5a45_row8_col1, #T_c5a45_row13_col1, #T_c5a45_row14_col1, #T_c5a45_row16_col1 {
+  background-color: #6f92f3;
+  color: #f1f1f1;
+}
+#T_c5a45_row1_col0, #T_c5a45_row5_col0 {
+  background-color: #8db0fe;
+  color: #000000;
+}
+#T_c5a45_row1_col1, #T_c5a45_row5_col1, #T_c5a45_row15_col1 {
+  background-color: #799cf8;
+  color: #f1f1f1;
+}
+#T_c5a45_row2_col0 {
+  background-color: #c3d5f4;
+  color: #000000;
+}
+#T_c5a45_row2_col1 {
+  background-color: #f18d6f;
+  color: #f1f1f1;
+}
+#T_c5a45_row3_col0 {
+  background-color: #81a4fb;
+  color: #f1f1f1;
+}
+#T_c5a45_row3_col1 {
+  background-color: #cdd9ec;
+  color: #000000;
+}
+#T_c5a45_row4_col0 {
+  background-color: #92b4fe;
+  color: #000000;
+}
+#T_c5a45_row4_col1 {
+  background-color: #f5c0a7;
+  color: #000000;
+}
+#T_c5a45_row6_col0 {
+  background-color: #f0cdbb;
+  color: #000000;
+}
+#T_c5a45_row6_col1, #T_c5a45_row16_col0 {
+  background-color: #b40426;
+  color: #f1f1f1;
+}
+#T_c5a45_row7_col0 {
+  background-color: #a6c4fe;
+  color: #000000;
+}
+#T_c5a45_row7_col1, #T_c5a45_row11_col1 {
+  background-color: #82a6fb;
+  color: #f1f1f1;
+}
+#T_c5a45_row8_col0 {
+  background-color: #f6bda2;
+  color: #000000;
+}
+#T_c5a45_row9_col0 {
+  background-color: #bed2f6;
+  color: #000000;
+}
+#T_c5a45_row9_col1 {
+  background-color: #aac7fd;
+  color: #000000;
+}
+#T_c5a45_row10_col0 {
+  background-color: #f7b99e;
+  color: #000000;
+}
+#T_c5a45_row11_col0 {
+  background-color: #b5cdfa;
+  color: #000000;
+}
+#T_c5a45_row12_col0 {
+  background-color: #d5dbe5;
+  color: #000000;
+}
+#T_c5a45_row12_col1 {
+  background-color: #5d7ce6;
+  color: #f1f1f1;
+}
+#T_c5a45_row13_col0 {
+  background-color: #e2dad5;
+  color: #000000;
+}
+#T_c5a45_row14_col0 {
+  background-color: #f7ad90;
+  color: #000000;
+}
+#T_c5a45_row15_col0 {
+  background-color: #cf453c;
+  color: #f1f1f1;
+}
+</style>
+<table id="T_c5a45" style='display:inline'>
+  <caption>X distribution</caption>
+  <thead>
+    <tr>
+      <th class="blank level0" >&nbsp;</th>
+      <th id="T_c5a45_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_c5a45_level0_col1" class="col_heading level0 col1" >frequency</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th id="T_c5a45_level0_row0" class="row_heading level0 row0" >x <= 7.125e+00</th>
+      <td id="T_c5a45_row0_col0" class="data row0 col0" >0.0333</td>
+      <td id="T_c5a45_row0_col1" class="data row0 col1" >0.0505</td>
+    </tr>
+    <tr>
+      <th id="T_c5a45_level0_row1" class="row_heading level0 row1" >7.125e+00 < x <= 7.250e+00</th>
+      <td id="T_c5a45_row1_col0" class="data row1 col0" >0.2258</td>
+      <td id="T_c5a45_row1_col1" class="data row1 col1" >0.0522</td>
+    </tr>
+    <tr>
+      <th id="T_c5a45_level0_row2" class="row_heading level0 row2" >7.250e+00 < x <= 7.796e+00</th>
+      <td id="T_c5a45_row2_col0" class="data row2 col0" >0.3462</td>
+      <td id="T_c5a45_row2_col1" class="data row2 col1" >0.0875</td>
+    </tr>
+    <tr>
+      <th id="T_c5a45_level0_row3" class="row_heading level0 row3" >7.796e+00 < x <= 7.896e+00</th>
+      <td id="T_c5a45_row3_col0" class="data row3 col0" >0.2000</td>
+      <td id="T_c5a45_row3_col1" class="data row3 col1" >0.0673</td>
+    </tr>
+    <tr>
+      <th id="T_c5a45_level0_row4" class="row_heading level0 row4" >7.896e+00 < x <= 8.050e+00</th>
+      <td id="T_c5a45_row4_col0" class="data row4 col0" >0.2340</td>
+      <td id="T_c5a45_row4_col1" class="data row4 col1" >0.0791</td>
+    </tr>
+    <tr>
+      <th id="T_c5a45_level0_row5" class="row_heading level0 row5" >8.050e+00 < x <= 1.046e+01</th>
+      <td id="T_c5a45_row5_col0" class="data row5 col0" >0.2258</td>
+      <td id="T_c5a45_row5_col1" class="data row5 col1" >0.0522</td>
+    </tr>
+    <tr>
+      <th id="T_c5a45_level0_row6" class="row_heading level0 row6" >1.046e+01 < x <= 1.400e+01</th>
+      <td id="T_c5a45_row6_col0" class="data row6 col0" >0.4833</td>
+      <td id="T_c5a45_row6_col1" class="data row6 col1" >0.1010</td>
+    </tr>
+    <tr>
+      <th id="T_c5a45_level0_row7" class="row_heading level0 row7" >1.400e+01 < x <= 1.610e+01</th>
+      <td id="T_c5a45_row7_col0" class="data row7 col0" >0.2812</td>
+      <td id="T_c5a45_row7_col1" class="data row7 col1" >0.0539</td>
+    </tr>
+    <tr>
+      <th id="T_c5a45_level0_row8" class="row_heading level0 row8" >1.610e+01 < x <= 2.300e+01</th>
+      <td id="T_c5a45_row8_col0" class="data row8 col0" >0.5333</td>
+      <td id="T_c5a45_row8_col1" class="data row8 col1" >0.0505</td>
+    </tr>
+    <tr>
+      <th id="T_c5a45_level0_row9" class="row_heading level0 row9" >2.300e+01 < x <= 2.600e+01</th>
+      <td id="T_c5a45_row9_col0" class="data row9 col0" >0.3333</td>
+      <td id="T_c5a45_row9_col1" class="data row9 col1" >0.0606</td>
+    </tr>
+    <tr>
+      <th id="T_c5a45_level0_row10" class="row_heading level0 row10" >2.600e+01 < x <= 2.772e+01</th>
+      <td id="T_c5a45_row10_col0" class="data row10 col0" >0.5417</td>
+      <td id="T_c5a45_row10_col1" class="data row10 col1" >0.0404</td>
+    </tr>
+    <tr>
+      <th id="T_c5a45_level0_row11" class="row_heading level0 row11" >2.772e+01 < x <= 3.127e+01</th>
+      <td id="T_c5a45_row11_col0" class="data row11 col0" >0.3125</td>
+      <td id="T_c5a45_row11_col1" class="data row11 col1" >0.0539</td>
+    </tr>
+    <tr>
+      <th id="T_c5a45_level0_row12" class="row_heading level0 row12" >3.127e+01 < x <= 4.012e+01</th>
+      <td id="T_c5a45_row12_col0" class="data row12 col0" >0.3929</td>
+      <td id="T_c5a45_row12_col1" class="data row12 col1" >0.0471</td>
+    </tr>
+    <tr>
+      <th id="T_c5a45_level0_row13" class="row_heading level0 row13" >4.012e+01 < x <= 5.590e+01</th>
+      <td id="T_c5a45_row13_col0" class="data row13 col0" >0.4333</td>
+      <td id="T_c5a45_row13_col1" class="data row13 col1" >0.0505</td>
+    </tr>
+    <tr>
+      <th id="T_c5a45_level0_row14" class="row_heading level0 row14" >5.590e+01 < x <= 7.673e+01</th>
+      <td id="T_c5a45_row14_col0" class="data row14 col0" >0.5667</td>
+      <td id="T_c5a45_row14_col1" class="data row14 col1" >0.0505</td>
+    </tr>
+    <tr>
+      <th id="T_c5a45_level0_row15" class="row_heading level0 row15" >7.673e+01 < x <= 1.109e+02</th>
+      <td id="T_c5a45_row15_col0" class="data row15 col0" >0.7419</td>
+      <td id="T_c5a45_row15_col1" class="data row15 col1" >0.0522</td>
+    </tr>
+    <tr>
+      <th id="T_c5a45_level0_row16" class="row_heading level0 row16" >1.109e+02 < x</th>
+      <td id="T_c5a45_row16_col0" class="data row16 col0" >0.8000</td>
+      <td id="T_c5a45_row16_col1" class="data row16 col1" >0.0505</td>
+    </tr>
+  </tbody>
+</table>
+          <style type="text/css">
+#T_428d8_row0_col0 {
+  background-color: #465ecf;
+  color: #f1f1f1;
+}
+#T_428d8_row0_col1, #T_428d8_row12_col1 {
+  background-color: #5a78e4;
+  color: #f1f1f1;
+}
+#T_428d8_row1_col0, #T_428d8_row4_col0 {
+  background-color: #7ea1fa;
+  color: #f1f1f1;
+}
+#T_428d8_row1_col1 {
+  background-color: #445acc;
+  color: #f1f1f1;
+}
+#T_428d8_row2_col0, #T_428d8_row15_col1 {
+  background-color: #89acfd;
+  color: #000000;
+}
+#T_428d8_row2_col1 {
+  background-color: #f4c6af;
+  color: #000000;
+}
+#T_428d8_row3_col0, #T_428d8_row10_col1, #T_428d8_row13_col1 {
+  background-color: #3b4cc0;
+  color: #f1f1f1;
+}
+#T_428d8_row3_col1 {
+  background-color: #a2c1ff;
+  color: #000000;
+}
+#T_428d8_row4_col1, #T_428d8_row11_col1, #T_428d8_row16_col1 {
+  background-color: #7da0f9;
+  color: #f1f1f1;
+}
+#T_428d8_row5_col0 {
+  background-color: #485fd1;
+  color: #f1f1f1;
+}
+#T_428d8_row5_col1 {
+  background-color: #d8dce2;
+  color: #000000;
+}
+#T_428d8_row6_col0 {
+  background-color: #dadce0;
+  color: #000000;
+}
+#T_428d8_row6_col1, #T_428d8_row15_col0 {
+  background-color: #b40426;
+  color: #f1f1f1;
+}
+#T_428d8_row7_col0, #T_428d8_row12_col0 {
+  background-color: #e2dad5;
+  color: #000000;
+}
+#T_428d8_row7_col1 {
+  background-color: #e1dad6;
+  color: #000000;
+}
+#T_428d8_row8_col0 {
+  background-color: #f7b497;
+  color: #000000;
+}
+#T_428d8_row8_col1 {
+  background-color: #aec9fc;
+  color: #000000;
+}
+#T_428d8_row9_col0 {
+  background-color: #f7b396;
+  color: #000000;
+}
+#T_428d8_row9_col1 {
+  background-color: #96b7ff;
+  color: #000000;
+}
+#T_428d8_row10_col0, #T_428d8_row13_col0, #T_428d8_row16_col0 {
+  background-color: #dc5d4a;
+  color: #f1f1f1;
+}
+#T_428d8_row11_col0 {
+  background-color: #f1cdba;
+  color: #000000;
+}
+#T_428d8_row14_col0 {
+  background-color: #f59c7d;
+  color: #000000;
+}
+#T_428d8_row14_col1 {
+  background-color: #7295f4;
+  color: #f1f1f1;
+}
+</style>
+<table id="T_428d8" style='display:inline'>
+  <caption>X_dev distribution</caption>
+  <thead>
+    <tr>
+      <th id="T_428d8_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_428d8_level0_col1" class="col_heading level0 col1" >frequency</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td id="T_428d8_row0_col0" class="data row0 col0" >0.0833</td>
+      <td id="T_428d8_row0_col1" class="data row0 col1" >0.0410</td>
+    </tr>
+    <tr>
+      <td id="T_428d8_row1_col0" class="data row1 col0" >0.2000</td>
+      <td id="T_428d8_row1_col1" class="data row1 col1" >0.0341</td>
+    </tr>
+    <tr>
+      <td id="T_428d8_row2_col0" class="data row2 col0" >0.2222</td>
+      <td id="T_428d8_row2_col1" class="data row2 col1" >0.0922</td>
+    </tr>
+    <tr>
+      <td id="T_428d8_row3_col0" class="data row3 col0" >0.0556</td>
+      <td id="T_428d8_row3_col1" class="data row3 col1" >0.0614</td>
+    </tr>
+    <tr>
+      <td id="T_428d8_row4_col0" class="data row4 col0" >0.2000</td>
+      <td id="T_428d8_row4_col1" class="data row4 col1" >0.0512</td>
+    </tr>
+    <tr>
+      <td id="T_428d8_row5_col0" class="data row5 col0" >0.0870</td>
+      <td id="T_428d8_row5_col1" class="data row5 col1" >0.0785</td>
+    </tr>
+    <tr>
+      <td id="T_428d8_row6_col0" class="data row6 col0" >0.3947</td>
+      <td id="T_428d8_row6_col1" class="data row6 col1" >0.1297</td>
+    </tr>
+    <tr>
+      <td id="T_428d8_row7_col0" class="data row7 col0" >0.4167</td>
+      <td id="T_428d8_row7_col1" class="data row7 col1" >0.0819</td>
+    </tr>
+    <tr>
+      <td id="T_428d8_row8_col0" class="data row8 col0" >0.5263</td>
+      <td id="T_428d8_row8_col1" class="data row8 col1" >0.0648</td>
+    </tr>
+    <tr>
+      <td id="T_428d8_row9_col0" class="data row9 col0" >0.5294</td>
+      <td id="T_428d8_row9_col1" class="data row9 col1" >0.0580</td>
+    </tr>
+    <tr>
+      <td id="T_428d8_row10_col0" class="data row10 col0" >0.6667</td>
+      <td id="T_428d8_row10_col1" class="data row10 col1" >0.0307</td>
+    </tr>
+    <tr>
+      <td id="T_428d8_row11_col0" class="data row11 col0" >0.4667</td>
+      <td id="T_428d8_row11_col1" class="data row11 col1" >0.0512</td>
+    </tr>
+    <tr>
+      <td id="T_428d8_row12_col0" class="data row12 col0" >0.4167</td>
+      <td id="T_428d8_row12_col1" class="data row12 col1" >0.0410</td>
+    </tr>
+    <tr>
+      <td id="T_428d8_row13_col0" class="data row13 col0" >0.6667</td>
+      <td id="T_428d8_row13_col1" class="data row13 col1" >0.0307</td>
+    </tr>
+    <tr>
+      <td id="T_428d8_row14_col0" class="data row14 col0" >0.5714</td>
+      <td id="T_428d8_row14_col1" class="data row14 col1" >0.0478</td>
+    </tr>
+    <tr>
+      <td id="T_428d8_row15_col0" class="data row15 col0" >0.7500</td>
+      <td id="T_428d8_row15_col1" class="data row15 col1" >0.0546</td>
+    </tr>
+    <tr>
+      <td id="T_428d8_row16_col0" class="data row16 col0" >0.6667</td>
+      <td id="T_428d8_row16_col1" class="data row16 col1" >0.0512</td>
+    </tr>
+  </tbody>
+</table></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Grouping modalities   : 100%|██████████| 2516/2516 [00:00&lt;00:00, 7771.79it/s]
+Computing associations: 100%|██████████| 2516/2516 [00:00&lt;00:00, 4375.16it/s]
+Testing robustness    :   0%|          | 0/2516 [00:00&lt;?, ?it/s]
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+ - [AutoCarver] Carved distribution
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<style type="text/css">
+#T_94806_row0_col0, #T_94806_row2_col1 {
+  background-color: #3b4cc0;
+  color: #f1f1f1;
+}
+#T_94806_row0_col1 {
+  background-color: #f7aa8c;
+  color: #000000;
+}
+#T_94806_row1_col0 {
+  background-color: #b9d0f9;
+  color: #000000;
+}
+#T_94806_row1_col1, #T_94806_row2_col0 {
+  background-color: #b40426;
+  color: #f1f1f1;
+}
+</style>
+<table id="T_94806" style='display:inline'>
+  <caption>X distribution</caption>
+  <thead>
+    <tr>
+      <th class="blank level0" >&nbsp;</th>
+      <th id="T_94806_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_94806_level0_col1" class="col_heading level0 col1" >frequency</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th id="T_94806_level0_row0" class="row_heading level0 row0" >x <= 1.046e+01</th>
+      <td id="T_94806_row0_col0" class="data row0 col0" >0.2251</td>
+      <td id="T_94806_row0_col1" class="data row0 col1" >0.3889</td>
+    </tr>
+    <tr>
+      <th id="T_94806_level0_row1" class="row_heading level0 row1" >1.046e+01 < x <= 7.673e+01</th>
+      <td id="T_94806_row1_col0" class="data row1 col0" >0.4305</td>
+      <td id="T_94806_row1_col1" class="data row1 col1" >0.5084</td>
+    </tr>
+    <tr>
+      <th id="T_94806_level0_row2" class="row_heading level0 row2" >7.673e+01 < x</th>
+      <td id="T_94806_row2_col0" class="data row2 col0" >0.7705</td>
+      <td id="T_94806_row2_col1" class="data row2 col1" >0.1027</td>
+    </tr>
+  </tbody>
+</table>
+          <style type="text/css">
+#T_d6400_row0_col0, #T_d6400_row2_col1 {
+  background-color: #3b4cc0;
+  color: #f1f1f1;
+}
+#T_d6400_row0_col1 {
+  background-color: #f0cdbb;
+  color: #000000;
+}
+#T_d6400_row1_col0 {
+  background-color: #f2cab5;
+  color: #000000;
+}
+#T_d6400_row1_col1, #T_d6400_row2_col0 {
+  background-color: #b40426;
+  color: #f1f1f1;
+}
+</style>
+<table id="T_d6400" style='display:inline'>
+  <caption>X_dev distribution</caption>
+  <thead>
+    <tr>
+      <th id="T_d6400_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_d6400_level0_col1" class="col_heading level0 col1" >frequency</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td id="T_d6400_row0_col0" class="data row0 col0" >0.1429</td>
+      <td id="T_d6400_row0_col1" class="data row0 col1" >0.3584</td>
+    </tr>
+    <tr>
+      <td id="T_d6400_row1_col0" class="data row1 col0" >0.4841</td>
+      <td id="T_d6400_row1_col1" class="data row1 col1" >0.5358</td>
+    </tr>
+    <tr>
+      <td id="T_d6400_row2_col0" class="data row2 col0" >0.7097</td>
+      <td id="T_d6400_row2_col1" class="data row2 col1" >0.1058</td>
+    </tr>
+  </tbody>
+</table></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+------
+
+
+------
+[AutoCarver] Fit Age (4/6)
+---
+
+ - [AutoCarver] Raw distribution
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<style type="text/css">
+#T_bc504_row0_col0, #T_bc504_row9_col1 {
+  background-color: #b40426;
+  color: #f1f1f1;
+}
+#T_bc504_row0_col1 {
+  background-color: #aac7fd;
+  color: #000000;
+}
+#T_bc504_row1_col0 {
+  background-color: #a3c2fe;
+  color: #000000;
+}
+#T_bc504_row1_col1, #T_bc504_row10_col1, #T_bc504_row16_col1 {
+  background-color: #a1c0ff;
+  color: #000000;
+}
+#T_bc504_row2_col0 {
+  background-color: #dedcdb;
+  color: #000000;
+}
+#T_bc504_row2_col1, #T_bc504_row17_col1 {
+  background-color: #98b9ff;
+  color: #000000;
+}
+#T_bc504_row3_col0 {
+  background-color: #c0d4f5;
+  color: #000000;
+}
+#T_bc504_row3_col1 {
+  background-color: #f7af91;
+  color: #000000;
+}
+#T_bc504_row4_col0, #T_bc504_row4_col1, #T_bc504_row12_col1 {
+  background-color: #3b4cc0;
+  color: #f1f1f1;
+}
+#T_bc504_row5_col0 {
+  background-color: #adc9fd;
+  color: #000000;
+}
+#T_bc504_row5_col1 {
+  background-color: #bd1f2d;
+  color: #f1f1f1;
+}
+#T_bc504_row6_col0, #T_bc504_row15_col0 {
+  background-color: #f4c6af;
+  color: #000000;
+}
+#T_bc504_row6_col1 {
+  background-color: #cbd8ee;
+  color: #000000;
+}
+#T_bc504_row7_col0 {
+  background-color: #bbd1f8;
+  color: #000000;
+}
+#T_bc504_row7_col1 {
+  background-color: #f7a688;
+  color: #000000;
+}
+#T_bc504_row8_col0 {
+  background-color: #88abfd;
+  color: #000000;
+}
+#T_bc504_row8_col1 {
+  background-color: #4a63d3;
+  color: #f1f1f1;
+}
+#T_bc504_row9_col0 {
+  background-color: #bcd2f7;
+  color: #000000;
+}
+#T_bc504_row10_col0 {
+  background-color: #e6d7cf;
+  color: #000000;
+}
+#T_bc504_row11_col0 {
+  background-color: #d8dce2;
+  color: #000000;
+}
+#T_bc504_row11_col1 {
+  background-color: #f3c7b1;
+  color: #000000;
+}
+#T_bc504_row12_col0 {
+  background-color: #d7dce3;
+  color: #000000;
+}
+#T_bc504_row13_col0 {
+  background-color: #ccd9ed;
+  color: #000000;
+}
+#T_bc504_row13_col1 {
+  background-color: #b2ccfb;
+  color: #000000;
+}
+#T_bc504_row14_col0, #T_bc504_row14_col1 {
+  background-color: #d9dce1;
+  color: #000000;
+}
+#T_bc504_row15_col1 {
+  background-color: #86a9fc;
+  color: #f1f1f1;
+}
+#T_bc504_row16_col0 {
+  background-color: #b6cefa;
+  color: #000000;
+}
+#T_bc504_row17_col0 {
+  background-color: #5977e3;
+  color: #f1f1f1;
+}
+</style>
+<table id="T_bc504" style='display:inline'>
+  <caption>X distribution</caption>
+  <thead>
+    <tr>
+      <th class="blank level0" >&nbsp;</th>
+      <th id="T_bc504_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_bc504_level0_col1" class="col_heading level0 col1" >frequency</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th id="T_bc504_level0_row0" class="row_heading level0 row0" >x <= 4.000e+00</th>
+      <td id="T_bc504_row0_col0" class="data row0 col0" >0.7333</td>
+      <td id="T_bc504_row0_col1" class="data row0 col1" >0.0505</td>
+    </tr>
+    <tr>
+      <th id="T_bc504_level0_row1" class="row_heading level0 row1" >4.000e+00 < x <= 1.400e+01</th>
+      <td id="T_bc504_row1_col0" class="data row1 col0" >0.3103</td>
+      <td id="T_bc504_row1_col1" class="data row1 col1" >0.0488</td>
+    </tr>
+    <tr>
+      <th id="T_bc504_level0_row2" class="row_heading level0 row2" >1.400e+01 < x <= 1.700e+01</th>
+      <td id="T_bc504_row2_col0" class="data row2 col0" >0.4286</td>
+      <td id="T_bc504_row2_col1" class="data row2 col1" >0.0471</td>
+    </tr>
+    <tr>
+      <th id="T_bc504_level0_row3" class="row_heading level0 row3" >1.700e+01 < x <= 1.900e+01</th>
+      <td id="T_bc504_row3_col0" class="data row3 col0" >0.3636</td>
+      <td id="T_bc504_row3_col1" class="data row3 col1" >0.0741</td>
+    </tr>
+    <tr>
+      <th id="T_bc504_level0_row4" class="row_heading level0 row4" >1.900e+01 < x <= 2.000e+01</th>
+      <td id="T_bc504_row4_col0" class="data row4 col0" >0.1176</td>
+      <td id="T_bc504_row4_col1" class="data row4 col1" >0.0286</td>
+    </tr>
+    <tr>
+      <th id="T_bc504_level0_row5" class="row_heading level0 row5" >2.000e+01 < x <= 2.200e+01</th>
+      <td id="T_bc504_row5_col0" class="data row5 col0" >0.3273</td>
+      <td id="T_bc504_row5_col1" class="data row5 col1" >0.0926</td>
+    </tr>
+    <tr>
+      <th id="T_bc504_level0_row6" class="row_heading level0 row6" >2.200e+01 < x <= 2.400e+01</th>
+      <td id="T_bc504_row6_col0" class="data row6 col0" >0.5000</td>
+      <td id="T_bc504_row6_col1" class="data row6 col1" >0.0572</td>
+    </tr>
+    <tr>
+      <th id="T_bc504_level0_row7" class="row_heading level0 row7" >2.400e+01 < x <= 2.700e+01</th>
+      <td id="T_bc504_row7_col0" class="data row7 col0" >0.3556</td>
+      <td id="T_bc504_row7_col1" class="data row7 col1" >0.0758</td>
+    </tr>
+    <tr>
+      <th id="T_bc504_level0_row8" class="row_heading level0 row8" >2.700e+01 < x <= 2.800e+01</th>
+      <td id="T_bc504_row8_col0" class="data row8 col0" >0.2632</td>
+      <td id="T_bc504_row8_col1" class="data row8 col1" >0.0320</td>
+    </tr>
+    <tr>
+      <th id="T_bc504_level0_row9" class="row_heading level0 row9" >2.800e+01 < x <= 3.100e+01</th>
+      <td id="T_bc504_row9_col0" class="data row9 col0" >0.3571</td>
+      <td id="T_bc504_row9_col1" class="data row9 col1" >0.0943</td>
+    </tr>
+    <tr>
+      <th id="T_bc504_level0_row10" class="row_heading level0 row10" >3.100e+01 < x <= 3.300e+01</th>
+      <td id="T_bc504_row10_col0" class="data row10 col0" >0.4483</td>
+      <td id="T_bc504_row10_col1" class="data row10 col1" >0.0488</td>
+    </tr>
+    <tr>
+      <th id="T_bc504_level0_row11" class="row_heading level0 row11" >3.300e+01 < x <= 3.600e+01</th>
+      <td id="T_bc504_row11_col0" class="data row11 col0" >0.4146</td>
+      <td id="T_bc504_row11_col1" class="data row11 col1" >0.0690</td>
+    </tr>
+    <tr>
+      <th id="T_bc504_level0_row12" class="row_heading level0 row12" >3.600e+01 < x <= 3.800e+01</th>
+      <td id="T_bc504_row12_col0" class="data row12 col0" >0.4118</td>
+      <td id="T_bc504_row12_col1" class="data row12 col1" >0.0286</td>
+    </tr>
+    <tr>
+      <th id="T_bc504_level0_row13" class="row_heading level0 row13" >3.800e+01 < x <= 4.100e+01</th>
+      <td id="T_bc504_row13_col0" class="data row13 col0" >0.3871</td>
+      <td id="T_bc504_row13_col1" class="data row13 col1" >0.0522</td>
+    </tr>
+    <tr>
+      <th id="T_bc504_level0_row14" class="row_heading level0 row14" >4.100e+01 < x <= 4.500e+01</th>
+      <td id="T_bc504_row14_col0" class="data row14 col0" >0.4167</td>
+      <td id="T_bc504_row14_col1" class="data row14 col1" >0.0606</td>
+    </tr>
+    <tr>
+      <th id="T_bc504_level0_row15" class="row_heading level0 row15" >4.500e+01 < x <= 4.900e+01</th>
+      <td id="T_bc504_row15_col0" class="data row15 col0" >0.5000</td>
+      <td id="T_bc504_row15_col1" class="data row15 col1" >0.0438</td>
+    </tr>
+    <tr>
+      <th id="T_bc504_level0_row16" class="row_heading level0 row16" >4.900e+01 < x <= 5.600e+01</th>
+      <td id="T_bc504_row16_col0" class="data row16 col0" >0.3448</td>
+      <td id="T_bc504_row16_col1" class="data row16 col1" >0.0488</td>
+    </tr>
+    <tr>
+      <th id="T_bc504_level0_row17" class="row_heading level0 row17" >5.600e+01 < x</th>
+      <td id="T_bc504_row17_col0" class="data row17 col0" >0.1786</td>
+      <td id="T_bc504_row17_col1" class="data row17 col1" >0.0471</td>
+    </tr>
+  </tbody>
+</table>
+          <style type="text/css">
+#T_9a569_row0_col0 {
+  background-color: #eb7d62;
+  color: #f1f1f1;
+}
+#T_9a569_row0_col1, #T_9a569_row17_col1 {
+  background-color: #aac7fd;
+  color: #000000;
+}
+#T_9a569_row1_col0, #T_9a569_row7_col1 {
+  background-color: #b40426;
+  color: #f1f1f1;
+}
+#T_9a569_row1_col1, #T_9a569_row13_col1 {
+  background-color: #d6dce4;
+  color: #000000;
+}
+#T_9a569_row2_col0 {
+  background-color: #c9d7f0;
+  color: #000000;
+}
+#T_9a569_row2_col1 {
+  background-color: #bad0f8;
+  color: #000000;
+}
+#T_9a569_row3_col0 {
+  background-color: #aec9fc;
+  color: #000000;
+}
+#T_9a569_row3_col1, #T_9a569_row9_col1 {
+  background-color: #d55042;
+  color: #f1f1f1;
+}
+#T_9a569_row4_col0, #T_9a569_row15_col0 {
+  background-color: #b9d0f9;
+  color: #000000;
+}
+#T_9a569_row4_col1, #T_9a569_row5_col0 {
+  background-color: #3b4cc0;
+  color: #f1f1f1;
+}
+#T_9a569_row5_col1 {
+  background-color: #f4c6af;
+  color: #000000;
+}
+#T_9a569_row6_col0 {
+  background-color: #a6c4fe;
+  color: #000000;
+}
+#T_9a569_row6_col1 {
+  background-color: #c53334;
+  color: #f1f1f1;
+}
+#T_9a569_row7_col0 {
+  background-color: #e5d8d1;
+  color: #000000;
+}
+#T_9a569_row8_col0 {
+  background-color: #8fb1fe;
+  color: #000000;
+}
+#T_9a569_row8_col1 {
+  background-color: #edd1c2;
+  color: #000000;
+}
+#T_9a569_row9_col0 {
+  background-color: #f2cab5;
+  color: #000000;
+}
+#T_9a569_row10_col0 {
+  background-color: #e8765c;
+  color: #f1f1f1;
+}
+#T_9a569_row10_col1, #T_9a569_row14_col1 {
+  background-color: #88abfd;
+  color: #000000;
+}
+#T_9a569_row11_col0 {
+  background-color: #b8122a;
+  color: #f1f1f1;
+}
+#T_9a569_row11_col1 {
+  background-color: #f7a889;
+  color: #000000;
+}
+#T_9a569_row12_col0 {
+  background-color: #7a9df8;
+  color: #f1f1f1;
+}
+#T_9a569_row12_col1 {
+  background-color: #5875e1;
+  color: #f1f1f1;
+}
+#T_9a569_row13_col0 {
+  background-color: #4e68d8;
+  color: #f1f1f1;
+}
+#T_9a569_row14_col0 {
+  background-color: #8badfd;
+  color: #000000;
+}
+#T_9a569_row15_col1, #T_9a569_row16_col1 {
+  background-color: #9abbff;
+  color: #000000;
+}
+#T_9a569_row16_col0 {
+  background-color: #d24b40;
+  color: #f1f1f1;
+}
+#T_9a569_row17_col0 {
+  background-color: #d9dce1;
+  color: #000000;
+}
+</style>
+<table id="T_9a569" style='display:inline'>
+  <caption>X_dev distribution</caption>
+  <thead>
+    <tr>
+      <th id="T_9a569_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_9a569_level0_col1" class="col_heading level0 col1" >frequency</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td id="T_9a569_row0_col0" class="data row0 col0" >0.5385</td>
+      <td id="T_9a569_row0_col1" class="data row0 col1" >0.0444</td>
+    </tr>
+    <tr>
+      <td id="T_9a569_row1_col0" class="data row1 col0" >0.6250</td>
+      <td id="T_9a569_row1_col1" class="data row1 col1" >0.0546</td>
+    </tr>
+    <tr>
+      <td id="T_9a569_row2_col0" class="data row2 col0" >0.3571</td>
+      <td id="T_9a569_row2_col1" class="data row2 col1" >0.0478</td>
+    </tr>
+    <tr>
+      <td id="T_9a569_row3_col0" class="data row3 col0" >0.3200</td>
+      <td id="T_9a569_row3_col1" class="data row3 col1" >0.0853</td>
+    </tr>
+    <tr>
+      <td id="T_9a569_row4_col0" class="data row4 col0" >0.3333</td>
+      <td id="T_9a569_row4_col1" class="data row4 col1" >0.0205</td>
+    </tr>
+    <tr>
+      <td id="T_9a569_row5_col0" class="data row5 col0" >0.1579</td>
+      <td id="T_9a569_row5_col1" class="data row5 col1" >0.0648</td>
+    </tr>
+    <tr>
+      <td id="T_9a569_row6_col0" class="data row6 col0" >0.3077</td>
+      <td id="T_9a569_row6_col1" class="data row6 col1" >0.0887</td>
+    </tr>
+    <tr>
+      <td id="T_9a569_row7_col0" class="data row7 col0" >0.4074</td>
+      <td id="T_9a569_row7_col1" class="data row7 col1" >0.0922</td>
+    </tr>
+    <tr>
+      <td id="T_9a569_row8_col0" class="data row8 col0" >0.2778</td>
+      <td id="T_9a569_row8_col1" class="data row8 col1" >0.0614</td>
+    </tr>
+    <tr>
+      <td id="T_9a569_row9_col0" class="data row9 col0" >0.4400</td>
+      <td id="T_9a569_row9_col1" class="data row9 col1" >0.0853</td>
+    </tr>
+    <tr>
+      <td id="T_9a569_row10_col0" class="data row10 col0" >0.5455</td>
+      <td id="T_9a569_row10_col1" class="data row10 col1" >0.0375</td>
+    </tr>
+    <tr>
+      <td id="T_9a569_row11_col0" class="data row11 col0" >0.6190</td>
+      <td id="T_9a569_row11_col1" class="data row11 col1" >0.0717</td>
+    </tr>
+    <tr>
+      <td id="T_9a569_row12_col0" class="data row12 col0" >0.2500</td>
+      <td id="T_9a569_row12_col1" class="data row12 col1" >0.0273</td>
+    </tr>
+    <tr>
+      <td id="T_9a569_row13_col0" class="data row13 col0" >0.1875</td>
+      <td id="T_9a569_row13_col1" class="data row13 col1" >0.0546</td>
+    </tr>
+    <tr>
+      <td id="T_9a569_row14_col0" class="data row14 col0" >0.2727</td>
+      <td id="T_9a569_row14_col1" class="data row14 col1" >0.0375</td>
+    </tr>
+    <tr>
+      <td id="T_9a569_row15_col0" class="data row15 col0" >0.3333</td>
+      <td id="T_9a569_row15_col1" class="data row15 col1" >0.0410</td>
+    </tr>
+    <tr>
+      <td id="T_9a569_row16_col0" class="data row16 col0" >0.5833</td>
+      <td id="T_9a569_row16_col1" class="data row16 col1" >0.0410</td>
+    </tr>
+    <tr>
+      <td id="T_9a569_row17_col0" class="data row17 col0" >0.3846</td>
+      <td id="T_9a569_row17_col1" class="data row17 col1" >0.0444</td>
+    </tr>
+  </tbody>
+</table></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Grouping modalities   : 100%|██████████| 3213/3213 [00:00&lt;00:00, 7916.00it/s]
+Computing associations: 100%|██████████| 3213/3213 [00:00&lt;00:00, 4466.30it/s]
+Testing robustness    :   0%|          | 0/3213 [00:00&lt;?, ?it/s]
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+ - [AutoCarver] Carved distribution
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<style type="text/css">
+#T_37fd1_row0_col0, #T_37fd1_row1_col1 {
+  background-color: #b40426;
+  color: #f1f1f1;
+}
+#T_37fd1_row0_col1, #T_37fd1_row1_col0 {
+  background-color: #3b4cc0;
+  color: #f1f1f1;
+}
+</style>
+<table id="T_37fd1" style='display:inline'>
+  <caption>X distribution</caption>
+  <thead>
+    <tr>
+      <th class="blank level0" >&nbsp;</th>
+      <th id="T_37fd1_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_37fd1_level0_col1" class="col_heading level0 col1" >frequency</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th id="T_37fd1_level0_row0" class="row_heading level0 row0" >x <= 4.000e+00</th>
+      <td id="T_37fd1_row0_col0" class="data row0 col0" >0.7333</td>
+      <td id="T_37fd1_row0_col1" class="data row0 col1" >0.0505</td>
+    </tr>
+    <tr>
+      <th id="T_37fd1_level0_row1" class="row_heading level0 row1" >4.000e+00 < x</th>
+      <td id="T_37fd1_row1_col0" class="data row1 col0" >0.3670</td>
+      <td id="T_37fd1_row1_col1" class="data row1 col1" >0.9495</td>
+    </tr>
+  </tbody>
+</table>
+          <style type="text/css">
+#T_08644_row0_col0, #T_08644_row1_col1 {
+  background-color: #b40426;
+  color: #f1f1f1;
+}
+#T_08644_row0_col1, #T_08644_row1_col0 {
+  background-color: #3b4cc0;
+  color: #f1f1f1;
+}
+</style>
+<table id="T_08644" style='display:inline'>
+  <caption>X_dev distribution</caption>
+  <thead>
+    <tr>
+      <th id="T_08644_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_08644_level0_col1" class="col_heading level0 col1" >frequency</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td id="T_08644_row0_col0" class="data row0 col0" >0.5385</td>
+      <td id="T_08644_row0_col1" class="data row0 col1" >0.0444</td>
+    </tr>
+    <tr>
+      <td id="T_08644_row1_col0" class="data row1 col0" >0.3786</td>
+      <td id="T_08644_row1_col1" class="data row1 col1" >0.9556</td>
+    </tr>
+  </tbody>
+</table></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+------
+
+
+------
+[AutoCarver] Fit Pclass (5/6)
+---
+
+ - [AutoCarver] Raw distribution
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<style type="text/css">
+#T_5feb7_row0_col0, #T_5feb7_row2_col1 {
+  background-color: #b40426;
+  color: #f1f1f1;
+}
+#T_5feb7_row0_col1 {
+  background-color: #536edd;
+  color: #f1f1f1;
+}
+#T_5feb7_row1_col0 {
+  background-color: #f0cdbb;
+  color: #000000;
+}
+#T_5feb7_row1_col1, #T_5feb7_row2_col0 {
+  background-color: #3b4cc0;
+  color: #f1f1f1;
+}
+</style>
+<table id="T_5feb7" style='display:inline'>
+  <caption>X distribution</caption>
+  <thead>
+    <tr>
+      <th class="blank level0" >&nbsp;</th>
+      <th id="T_5feb7_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_5feb7_level0_col1" class="col_heading level0 col1" >frequency</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th id="T_5feb7_level0_row0" class="row_heading level0 row0" >1, 1</th>
+      <td id="T_5feb7_row0_col0" class="data row0 col0" >0.6197</td>
+      <td id="T_5feb7_row0_col1" class="data row0 col1" >0.2391</td>
+    </tr>
+    <tr>
+      <th id="T_5feb7_level0_row1" class="row_heading level0 row1" >2, 2</th>
+      <td id="T_5feb7_row1_col0" class="data row1 col0" >0.4683</td>
+      <td id="T_5feb7_row1_col1" class="data row1 col1" >0.2121</td>
+    </tr>
+    <tr>
+      <th id="T_5feb7_level0_row2" class="row_heading level0 row2" >3, 3</th>
+      <td id="T_5feb7_row2_col0" class="data row2 col0" >0.2515</td>
+      <td id="T_5feb7_row2_col1" class="data row2 col1" >0.5488</td>
+    </tr>
+  </tbody>
+</table>
+          <style type="text/css">
+#T_f7594_row0_col0, #T_f7594_row2_col1 {
+  background-color: #b40426;
+  color: #f1f1f1;
+}
+#T_f7594_row0_col1 {
+  background-color: #6b8df0;
+  color: #f1f1f1;
+}
+#T_f7594_row1_col0 {
+  background-color: #f2cab5;
+  color: #000000;
+}
+#T_f7594_row1_col1, #T_f7594_row2_col0 {
+  background-color: #3b4cc0;
+  color: #f1f1f1;
+}
+</style>
+<table id="T_f7594" style='display:inline'>
+  <caption>X_dev distribution</caption>
+  <thead>
+    <tr>
+      <th id="T_f7594_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_f7594_level0_col1" class="col_heading level0 col1" >frequency</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td id="T_f7594_row0_col0" class="data row0 col0" >0.6486</td>
+      <td id="T_f7594_row0_col1" class="data row0 col1" >0.2526</td>
+    </tr>
+    <tr>
+      <td id="T_f7594_row1_col0" class="data row1 col0" >0.4828</td>
+      <td id="T_f7594_row1_col1" class="data row1 col1" >0.1980</td>
+    </tr>
+    <tr>
+      <td id="T_f7594_row2_col0" class="data row2 col0" >0.2298</td>
+      <td id="T_f7594_row2_col1" class="data row2 col1" >0.5495</td>
+    </tr>
+  </tbody>
+</table></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Grouping modalities   : 100%|██████████| 3/3 [00:00&lt;?, ?it/s]
+Computing associations: 100%|██████████| 3/3 [00:00&lt;00:00, 3000.22it/s]
+Testing robustness    :   0%|          | 0/3 [00:00&lt;?, ?it/s]
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+ - [AutoCarver] Carved distribution
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<style type="text/css">
+#T_185ac_row0_col0, #T_185ac_row1_col1 {
+  background-color: #b40426;
+  color: #f1f1f1;
+}
+#T_185ac_row0_col1, #T_185ac_row1_col0 {
+  background-color: #3b4cc0;
+  color: #f1f1f1;
+}
+</style>
+<table id="T_185ac" style='display:inline'>
+  <caption>X distribution</caption>
+  <thead>
+    <tr>
+      <th class="blank level0" >&nbsp;</th>
+      <th id="T_185ac_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_185ac_level0_col1" class="col_heading level0 col1" >frequency</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th id="T_185ac_level0_row0" class="row_heading level0 row0" >1 to 2</th>
+      <td id="T_185ac_row0_col0" class="data row0 col0" >0.5485</td>
+      <td id="T_185ac_row0_col1" class="data row0 col1" >0.4512</td>
+    </tr>
+    <tr>
+      <th id="T_185ac_level0_row1" class="row_heading level0 row1" >3, 3</th>
+      <td id="T_185ac_row1_col0" class="data row1 col0" >0.2515</td>
+      <td id="T_185ac_row1_col1" class="data row1 col1" >0.5488</td>
+    </tr>
+  </tbody>
+</table>
+          <style type="text/css">
+#T_cd0ef_row0_col0, #T_cd0ef_row1_col1 {
+  background-color: #b40426;
+  color: #f1f1f1;
+}
+#T_cd0ef_row0_col1, #T_cd0ef_row1_col0 {
+  background-color: #3b4cc0;
+  color: #f1f1f1;
+}
+</style>
+<table id="T_cd0ef" style='display:inline'>
+  <caption>X_dev distribution</caption>
+  <thead>
+    <tr>
+      <th id="T_cd0ef_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_cd0ef_level0_col1" class="col_heading level0 col1" >frequency</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td id="T_cd0ef_row0_col0" class="data row0 col0" >0.5758</td>
+      <td id="T_cd0ef_row0_col1" class="data row0 col1" >0.4505</td>
+    </tr>
+    <tr>
+      <td id="T_cd0ef_row1_col0" class="data row1 col0" >0.2298</td>
+      <td id="T_cd0ef_row1_col1" class="data row1 col1" >0.5495</td>
+    </tr>
+  </tbody>
+</table></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+------
+
+
+------
+[AutoCarver] Fit Parents/Children Aboard (6/6)
+---
+
+ - [AutoCarver] Raw distribution
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<style type="text/css">
+#T_30338_row0_col0, #T_30338_row2_col1 {
+  background-color: #3b4cc0;
+  color: #f1f1f1;
+}
+#T_30338_row0_col1, #T_30338_row1_col0 {
+  background-color: #b40426;
+  color: #f1f1f1;
+}
+#T_30338_row1_col1 {
+  background-color: #4961d2;
+  color: #f1f1f1;
+}
+#T_30338_row2_col0 {
+  background-color: #d0473d;
+  color: #f1f1f1;
+}
+</style>
+<table id="T_30338" style='display:inline'>
+  <caption>X distribution</caption>
+  <thead>
+    <tr>
+      <th class="blank level0" >&nbsp;</th>
+      <th id="T_30338_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_30338_level0_col1" class="col_heading level0 col1" >frequency</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th id="T_30338_level0_row0" class="row_heading level0 row0" >x <= 0.000e+00</th>
+      <td id="T_30338_row0_col0" class="data row0 col0" >0.3447</td>
+      <td id="T_30338_row0_col1" class="data row0 col1" >0.7374</td>
+    </tr>
+    <tr>
+      <th id="T_30338_level0_row1" class="row_heading level0 row1" >0.000e+00 < x <= 1.000e+00</th>
+      <td id="T_30338_row1_col0" class="data row1 col0" >0.5057</td>
+      <td id="T_30338_row1_col1" class="data row1 col1" >0.1465</td>
+    </tr>
+    <tr>
+      <th id="T_30338_level0_row2" class="row_heading level0 row2" >1.000e+00 < x</th>
+      <td id="T_30338_row2_col0" class="data row2 col0" >0.4928</td>
+      <td id="T_30338_row2_col1" class="data row2 col1" >0.1162</td>
+    </tr>
+  </tbody>
+</table>
+          <style type="text/css">
+#T_b29f5_row0_col0, #T_b29f5_row2_col1 {
+  background-color: #3b4cc0;
+  color: #f1f1f1;
+}
+#T_b29f5_row0_col1, #T_b29f5_row1_col0 {
+  background-color: #b40426;
+  color: #f1f1f1;
+}
+#T_b29f5_row1_col1 {
+  background-color: #4257c9;
+  color: #f1f1f1;
+}
+#T_b29f5_row2_col0 {
+  background-color: #5d7ce6;
+  color: #f1f1f1;
+}
+</style>
+<table id="T_b29f5" style='display:inline'>
+  <caption>X_dev distribution</caption>
+  <thead>
+    <tr>
+      <th id="T_b29f5_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_b29f5_level0_col1" class="col_heading level0 col1" >frequency</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td id="T_b29f5_row0_col0" class="data row0 col0" >0.3475</td>
+      <td id="T_b29f5_row0_col1" class="data row0 col1" >0.8055</td>
+    </tr>
+    <tr>
+      <td id="T_b29f5_row1_col0" class="data row1 col0" >0.6774</td>
+      <td id="T_b29f5_row1_col1" class="data row1 col1" >0.1058</td>
+    </tr>
+    <tr>
+      <td id="T_b29f5_row2_col0" class="data row2 col0" >0.3846</td>
+      <td id="T_b29f5_row2_col1" class="data row2 col1" >0.0887</td>
+    </tr>
+  </tbody>
+</table></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Grouping modalities   : 100%|██████████| 3/3 [00:00&lt;00:00, 2901.96it/s]
+Computing associations: 100%|██████████| 3/3 [00:00&lt;00:00, 3006.67it/s]
+Testing robustness    :   0%|          | 0/3 [00:00&lt;?, ?it/s]
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+ - [AutoCarver] Carved distribution
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<style type="text/css">
+#T_b8bad_row0_col0, #T_b8bad_row1_col1 {
+  background-color: #3b4cc0;
+  color: #f1f1f1;
+}
+#T_b8bad_row0_col1, #T_b8bad_row1_col0 {
+  background-color: #b40426;
+  color: #f1f1f1;
+}
+</style>
+<table id="T_b8bad" style='display:inline'>
+  <caption>X distribution</caption>
+  <thead>
+    <tr>
+      <th class="blank level0" >&nbsp;</th>
+      <th id="T_b8bad_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_b8bad_level0_col1" class="col_heading level0 col1" >frequency</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th id="T_b8bad_level0_row0" class="row_heading level0 row0" >x <= 0.000e+00</th>
+      <td id="T_b8bad_row0_col0" class="data row0 col0" >0.3447</td>
+      <td id="T_b8bad_row0_col1" class="data row0 col1" >0.7374</td>
+    </tr>
+    <tr>
+      <th id="T_b8bad_level0_row1" class="row_heading level0 row1" >0.000e+00 < x</th>
+      <td id="T_b8bad_row1_col0" class="data row1 col0" >0.5000</td>
+      <td id="T_b8bad_row1_col1" class="data row1 col1" >0.2626</td>
+    </tr>
+  </tbody>
+</table>
+          <style type="text/css">
+#T_fe8b4_row0_col0, #T_fe8b4_row1_col1 {
+  background-color: #3b4cc0;
+  color: #f1f1f1;
+}
+#T_fe8b4_row0_col1, #T_fe8b4_row1_col0 {
+  background-color: #b40426;
+  color: #f1f1f1;
+}
+</style>
+<table id="T_fe8b4" style='display:inline'>
+  <caption>X_dev distribution</caption>
+  <thead>
+    <tr>
+      <th id="T_fe8b4_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_fe8b4_level0_col1" class="col_heading level0 col1" >frequency</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td id="T_fe8b4_row0_col0" class="data row0 col0" >0.3475</td>
+      <td id="T_fe8b4_row0_col1" class="data row0 col1" >0.8055</td>
+    </tr>
+    <tr>
+      <td id="T_fe8b4_row1_col0" class="data row1 col0" >0.5439</td>
+      <td id="T_fe8b4_row1_col1" class="data row1 col1" >0.1945</td>
+    </tr>
+  </tbody>
+</table></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+------
+
+</pre></div></div>
+</div>
+</section>
+<section id="AutoCarver-analysis">
+<h2>AutoCarver analysis<a class="headerlink" href="#AutoCarver-analysis" title="Link to this heading"></a></h2>
+<section id="Carving-Summary">
+<h3>Carving Summary<a class="headerlink" href="#Carving-Summary" title="Link to this heading"></a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">auto_carver</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th></th>
+      <th>label</th>
+      <th>content</th>
+    </tr>
+    <tr>
+      <th>feature</th>
+      <th>dtype</th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th rowspan="2" valign="top">Age</th>
+      <th>float</th>
+      <td>0</td>
+      <td>[x &lt;= 4.000e+00]</td>
+    </tr>
+    <tr>
+      <th>float</th>
+      <td>1</td>
+      <td>[4.000e+00 &lt; x]</td>
+    </tr>
+    <tr>
+      <th rowspan="3" valign="top">Fare</th>
+      <th>float</th>
+      <td>0</td>
+      <td>[x &lt;= 1.046e+01]</td>
+    </tr>
+    <tr>
+      <th>float</th>
+      <td>1</td>
+      <td>[1.046e+01 &lt; x &lt;= 7.673e+01]</td>
+    </tr>
+    <tr>
+      <th>float</th>
+      <td>2</td>
+      <td>[7.673e+01 &lt; x]</td>
+    </tr>
+    <tr>
+      <th rowspan="2" valign="top">Parents/Children Aboard</th>
+      <th>float</th>
+      <td>0</td>
+      <td>[x &lt;= 0.000e+00]</td>
+    </tr>
+    <tr>
+      <th>float</th>
+      <td>1</td>
+      <td>[0.000e+00 &lt; x]</td>
+    </tr>
+    <tr>
+      <th rowspan="3" valign="top">Siblings/Spouses Aboard</th>
+      <th>float</th>
+      <td>0</td>
+      <td>[x &lt;= 0.000e+00]</td>
+    </tr>
+    <tr>
+      <th>float</th>
+      <td>1</td>
+      <td>[0.000e+00 &lt; x &lt;= 1.000e+00]</td>
+    </tr>
+    <tr>
+      <th>float</th>
+      <td>2</td>
+      <td>[1.000e+00 &lt; x]</td>
+    </tr>
+    <tr>
+      <th rowspan="2" valign="top">Pclass</th>
+      <th>str</th>
+      <td>0</td>
+      <td>[1, 2]</td>
+    </tr>
+    <tr>
+      <th>str</th>
+      <td>1</td>
+      <td>[3]</td>
+    </tr>
+    <tr>
+      <th rowspan="2" valign="top">Sex</th>
+      <th>str</th>
+      <td>0</td>
+      <td>[male]</td>
+    </tr>
+    <tr>
+      <th>str</th>
+      <td>1</td>
+      <td>[female]</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<ul class="simple">
+<li><p>As requested with <code class="docutils literal notranslate"><span class="pre">output_dtype=&quot;float&quot;</span></code>, output labels are integers of ranks of modalities</p></li>
+<li><p>For quantitative feature <code class="docutils literal notranslate"><span class="pre">Age</span></code>, the selected combination of modalities groups ages as follows:</p>
+<ul>
+<li><p>modality <code class="docutils literal notranslate"><span class="pre">0</span></code>: lower or equal to 4 years old (<code class="docutils literal notranslate"><span class="pre">content==[&quot;x</span> <span class="pre">&lt;=</span> <span class="pre">4.000e+00&quot;]</span></code>)</p></li>
+<li><p>modality <code class="docutils literal notranslate"><span class="pre">1</span></code>: ages higher than 4 years old (<code class="docutils literal notranslate"><span class="pre">content==[&quot;4.000e+00</span> <span class="pre">&lt;</span> <span class="pre">x</span> <span class="pre">&quot;]</span></code>)</p></li>
+</ul>
+</li>
+<li><p>For qualitative categorical feature <code class="docutils literal notranslate"><span class="pre">Sex</span></code>, the selected combination of modalities has left modalities <code class="docutils literal notranslate"><span class="pre">content=[&quot;male&quot;]</span></code> in modality <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">content=[&quot;female&quot;]</span></code> in modality <code class="docutils literal notranslate"><span class="pre">1</span></code> (no combination possible)</p></li>
+<li><p>For qualitative ordinal feature <code class="docutils literal notranslate"><span class="pre">Pclass</span></code>, the selected combination of modalities socio-economic status as follows:</p>
+<ul>
+<li><p>modality <code class="docutils literal notranslate"><span class="pre">0</span></code>: upper and middle classes (<code class="docutils literal notranslate"><span class="pre">content==[1,</span> <span class="pre">2]</span></code>)</p></li>
+<li><p>modality <code class="docutils literal notranslate"><span class="pre">1</span></code>: lower class (<code class="docutils literal notranslate"><span class="pre">content==[3]</span></code>).</p></li>
+<li><p>The user-provided ordering of modalities has been preserved.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="Detailed-overview-of-tested-combinations">
+<h3>Detailed overview of tested combinations<a class="headerlink" href="#Detailed-overview-of-tested-combinations" title="Link to this heading"></a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">auto_carver</span><span class="o">.</span><span class="n">history</span><span class="p">(</span><span class="n">feature</span><span class="o">=</span><span class="s2">&quot;Pclass&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>combination</th>
+      <th>tschuprowt</th>
+      <th>viability</th>
+      <th>viability_message</th>
+      <th>grouping_nan</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>[[1, 1], [2, 2], [3, 3]]</td>
+      <td>0.269965</td>
+      <td>None</td>
+      <td>[Raw X distribution]</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>[[1, 1, 2, 2], [3, 3]]</td>
+      <td>0.300144</td>
+      <td>True</td>
+      <td>[Combination robust between X and X_dev]</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>[[1, 1], [2, 2], [3, 3]]</td>
+      <td>0.269965</td>
+      <td>None</td>
+      <td>[Not checked]</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>[[1, 1], [2, 2, 3, 3]]</td>
+      <td>0.265643</td>
+      <td>None</td>
+      <td>[Not checked]</td>
+      <td>False</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<ul class="simple">
+<li><p>The most associated combination (the first tested out, where <code class="docutils literal notranslate"><span class="pre">viability_message!=[&quot;Raw</span> <span class="pre">X</span> <span class="pre">distribution&quot;]</span></code>) groups <code class="docutils literal notranslate"><span class="pre">Pclass==1</span></code> with <code class="docutils literal notranslate"><span class="pre">Pclass==2</span></code> and leaves <code class="docutils literal notranslate"><span class="pre">Pclass==3</span></code> as its own modality</p></li>
+<li><p>For feature feature <code class="docutils literal notranslate"><span class="pre">Pclass</span></code>, the 1st combination is passes the tests:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">viability_message!=[&quot;Combination</span> <span class="pre">robust</span> <span class="pre">between</span> <span class="pre">X</span> <span class="pre">and</span> <span class="pre">X_dev&quot;]</span></code></p></li>
+<li><p>Tschuprow’s T with <code class="docutils literal notranslate"><span class="pre">Survived</span></code> is <code class="docutils literal notranslate"><span class="pre">0.300144</span></code> for this combination</p></li>
+<li><p>Following combinations (less associated with the target) where not tested: <code class="docutils literal notranslate"><span class="pre">viability_message==[&quot;Not</span> <span class="pre">checked&quot;]</span></code></p></li>
+</ul>
+</li>
+<li><p>For all combinations <code class="docutils literal notranslate"><span class="pre">grouping_nan==False</span></code> means that it is not a combination in which NaNs are being groupedwith other modalities (as requested with <code class="docutils literal notranslate"><span class="pre">dropna=False</span></code>)</p></li>
+</ul>
+</section>
+</section>
+<section id="Saving-and-Loading-AutoCarver">
+<h2>Saving and Loading AutoCarver<a class="headerlink" href="#Saving-and-Loading-AutoCarver" title="Link to this heading"></a></h2>
+<section id="Saving">
+<h3>Saving<a class="headerlink" href="#Saving" title="Link to this heading"></a></h3>
+<p>All <strong>Carvers</strong> can safely be stored as a .json file.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
+
+<span class="c1"># storing as json file</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;binay_carver.json&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">my_carver_json</span><span class="p">:</span>
+    <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">auto_carver</span><span class="o">.</span><span class="n">to_json</span><span class="p">(),</span> <span class="n">my_carver_json</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Loading">
+<h3>Loading<a class="headerlink" href="#Loading" title="Link to this heading"></a></h3>
+<p><strong>Carvers</strong> can safely be loaded from a .json file.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
+
+<span class="kn">from</span> <span class="nn">auto_carver</span> <span class="kn">import</span> <span class="n">load_carver</span>
+
+<span class="c1"># loading json file</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;binay_carver.json&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">my_carver_json</span><span class="p">:</span>
+    <span class="n">auto_carver</span> <span class="o">=</span> <span class="n">load_carver</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">my_carver_json</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+<section id="Applying-AutoCarver">
+<h2>Applying AutoCarver<a class="headerlink" href="#Applying-AutoCarver" title="Link to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dev_set_processed</span> <span class="o">=</span> <span class="n">auto_carver</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">dev_set</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dev_set_processed</span><span class="p">[</span><span class="n">auto_carver</span><span class="o">.</span><span class="n">features</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">u</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">dropna</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Sex</th>
+      <th>Siblings/Spouses Aboard</th>
+      <th>Fare</th>
+      <th>Age</th>
+      <th>Pclass</th>
+      <th>Parents/Children Aboard</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0.0</th>
+      <td>0.665529</td>
+      <td>0.682594</td>
+      <td>0.358362</td>
+      <td>0.044369</td>
+      <td>0.450512</td>
+      <td>0.805461</td>
+    </tr>
+    <tr>
+      <th>1.0</th>
+      <td>0.334471</td>
+      <td>0.242321</td>
+      <td>0.535836</td>
+      <td>0.955631</td>
+      <td>0.549488</td>
+      <td>0.194539</td>
+    </tr>
+    <tr>
+      <th>2.0</th>
+      <td>NaN</td>
+      <td>0.075085</td>
+      <td>0.105802</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+</section>
+</section>
+<section id="Feature-Selection">
+<h1>Feature Selection<a class="headerlink" href="#Feature-Selection" title="Link to this heading"></a></h1>
+<section id="Selectors-settings">
+<h2>Selectors settings<a class="headerlink" href="#Selectors-settings" title="Link to this heading"></a></h2>
+<section id="Features-to-select-from">
+<h3>Features to select from<a class="headerlink" href="#Features-to-select-from" title="Link to this heading"></a></h3>
+<p>Here all features have been carved using <code class="docutils literal notranslate"><span class="pre">BinaryCarver</span></code>, hence all features are qualitative.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">features</span> <span class="o">=</span> <span class="n">qualitative_features</span> <span class="o">+</span> <span class="n">quantitative_features</span> <span class="o">+</span> <span class="n">ordinal_features</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Number-of-features-to-select">
+<h3>Number of features to select<a class="headerlink" href="#Number-of-features-to-select" title="Link to this heading"></a></h3>
+<p>The attribute <code class="docutils literal notranslate"><span class="pre">n_best</span></code> allows one to choose the number of features to be selected per data type (quantitative and qualitative).</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">n_best</span> <span class="o">=</span> <span class="mi">6</span>  <span class="c1"># here the number of features is low, ClassificationSelector will only be used to compute useful statistics</span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+<section id="Using-Selectors">
+<h2>Using Selectors<a class="headerlink" href="#Using-Selectors" title="Link to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">auto_carver.selectors</span> <span class="kn">import</span> <span class="n">ClassificationSelector</span>
+
+<span class="c1"># select the most target associated qualitative features</span>
+<span class="n">feature_selector</span> <span class="o">=</span> <span class="n">ClassificationSelector</span><span class="p">(</span>
+    <span class="n">qualitative_features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span>
+    <span class="n">n_best</span><span class="o">=</span><span class="n">n_best</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># displays statistics</span>
+<span class="p">)</span>
+<span class="n">best_features</span> <span class="o">=</span> <span class="n">feature_selector</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">train_set_processed</span><span class="p">,</span> <span class="n">train_set_processed</span><span class="p">[</span><span class="n">target</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+------
+[Selector] Selecting from qualitative features: [&#39;Sex&#39;, &#39;Siblings/Spouses Aboard&#39;, &#39;Fare&#39;, &#39;Age&#39;, &#39;Pclass&#39;, &#39;Parents/Children Aboard&#39;]
+---
+
+ - [Selector] Association between X and y
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<style type="text/css">
+#T_8ac20_row0_col1, #T_8ac20_row1_col1, #T_8ac20_row2_col1, #T_8ac20_row2_col2, #T_8ac20_row3_col1, #T_8ac20_row4_col1, #T_8ac20_row5_col1, #T_8ac20_row5_col5 {
+  background-color: #3b4cc0;
+  color: #f1f1f1;
+}
+#T_8ac20_row0_col2 {
+  background-color: #9bbcff;
+  color: #000000;
+}
+#T_8ac20_row0_col5, #T_8ac20_row3_col2 {
+  background-color: #b40426;
+  color: #f1f1f1;
+}
+#T_8ac20_row1_col2 {
+  background-color: #5673e0;
+  color: #f1f1f1;
+}
+#T_8ac20_row1_col5 {
+  background-color: #ccd9ed;
+  color: #000000;
+}
+#T_8ac20_row2_col5, #T_8ac20_row5_col2 {
+  background-color: #bcd2f7;
+  color: #000000;
+}
+#T_8ac20_row3_col5 {
+  background-color: #5875e1;
+  color: #f1f1f1;
+}
+#T_8ac20_row4_col2 {
+  background-color: #e1dad6;
+  color: #000000;
+}
+#T_8ac20_row4_col5 {
+  background-color: #485fd1;
+  color: #f1f1f1;
+}
+</style>
+<table id="T_8ac20" style='display:inline'>
+  <thead>
+    <tr>
+      <th class="blank level0" >&nbsp;</th>
+      <th id="T_8ac20_level0_col0" class="col_heading level0 col0" >dtype</th>
+      <th id="T_8ac20_level0_col1" class="col_heading level0 col1" >pct_nan</th>
+      <th id="T_8ac20_level0_col2" class="col_heading level0 col2" >pct_mode</th>
+      <th id="T_8ac20_level0_col3" class="col_heading level0 col3" >mode</th>
+      <th id="T_8ac20_level0_col4" class="col_heading level0 col4" >chi2_statistic</th>
+      <th id="T_8ac20_level0_col5" class="col_heading level0 col5" >tschuprowt_measure</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th id="T_8ac20_level0_row0" class="row_heading level0 row0" >Sex</th>
+      <td id="T_8ac20_row0_col0" class="data row0 col0" >int64</td>
+      <td id="T_8ac20_row0_col1" class="data row0 col1" >0.0000</td>
+      <td id="T_8ac20_row0_col2" class="data row0 col2" >0.6364</td>
+      <td id="T_8ac20_row0_col3" class="data row0 col3" >0</td>
+      <td id="T_8ac20_row0_col4" class="data row0 col4" >169.2047</td>
+      <td id="T_8ac20_row0_col5" class="data row0 col5" >0.5337</td>
+    </tr>
+    <tr>
+      <th id="T_8ac20_level0_row1" class="row_heading level0 row1" >Pclass</th>
+      <td id="T_8ac20_row1_col0" class="data row1 col0" >int64</td>
+      <td id="T_8ac20_row1_col1" class="data row1 col1" >0.0000</td>
+      <td id="T_8ac20_row1_col2" class="data row1 col2" >0.5488</td>
+      <td id="T_8ac20_row1_col3" class="data row1 col3" >1</td>
+      <td id="T_8ac20_row1_col4" class="data row1 col4" >53.5114</td>
+      <td id="T_8ac20_row1_col5" class="data row1 col5" >0.3001</td>
+    </tr>
+    <tr>
+      <th id="T_8ac20_level0_row2" class="row_heading level0 row2" >Fare</th>
+      <td id="T_8ac20_row2_col0" class="data row2 col0" >float64</td>
+      <td id="T_8ac20_row2_col1" class="data row2 col1" >0.0000</td>
+      <td id="T_8ac20_row2_col2" class="data row2 col2" >0.5084</td>
+      <td id="T_8ac20_row2_col3" class="data row2 col3" >1.0000</td>
+      <td id="T_8ac20_row2_col4" class="data row2 col4" >65.8288</td>
+      <td id="T_8ac20_row2_col5" class="data row2 col5" >0.2799</td>
+    </tr>
+    <tr>
+      <th id="T_8ac20_level0_row3" class="row_heading level0 row3" >Age</th>
+      <td id="T_8ac20_row3_col0" class="data row3 col0" >float64</td>
+      <td id="T_8ac20_row3_col1" class="data row3 col1" >0.0000</td>
+      <td id="T_8ac20_row3_col2" class="data row3 col2" >0.9495</td>
+      <td id="T_8ac20_row3_col3" class="data row3 col3" >1.0000</td>
+      <td id="T_8ac20_row3_col4" class="data row3 col4" >14.6254</td>
+      <td id="T_8ac20_row3_col5" class="data row3 col5" >0.1569</td>
+    </tr>
+    <tr>
+      <th id="T_8ac20_level0_row4" class="row_heading level0 row4" >Parents/Children Aboard</th>
+      <td id="T_8ac20_row4_col0" class="data row4 col0" >int64</td>
+      <td id="T_8ac20_row4_col1" class="data row4 col1" >0.0000</td>
+      <td id="T_8ac20_row4_col2" class="data row4 col2" >0.7374</td>
+      <td id="T_8ac20_row4_col3" class="data row4 col3" >0</td>
+      <td id="T_8ac20_row4_col4" class="data row4 col4" >11.0576</td>
+      <td id="T_8ac20_row4_col5" class="data row4 col5" >0.1364</td>
+    </tr>
+    <tr>
+      <th id="T_8ac20_level0_row5" class="row_heading level0 row5" >Siblings/Spouses Aboard</th>
+      <td id="T_8ac20_row5_col0" class="data row5 col0" >int64</td>
+      <td id="T_8ac20_row5_col1" class="data row5 col1" >0.0000</td>
+      <td id="T_8ac20_row5_col2" class="data row5 col2" >0.6801</td>
+      <td id="T_8ac20_row5_col3" class="data row5 col3" >0</td>
+      <td id="T_8ac20_row5_col4" class="data row5 col4" >11.5963</td>
+      <td id="T_8ac20_row5_col5" class="data row5 col5" >0.1175</td>
+    </tr>
+  </tbody>
+</table></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+ - [Selector] Association between X and y, filtered for inter-feature assocation
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<style type="text/css">
+#T_4f5a3_row0_col1, #T_4f5a3_row1_col1, #T_4f5a3_row2_col1, #T_4f5a3_row2_col2, #T_4f5a3_row3_col1, #T_4f5a3_row4_col1, #T_4f5a3_row5_col1, #T_4f5a3_row5_col5 {
+  background-color: #3b4cc0;
+  color: #f1f1f1;
+}
+#T_4f5a3_row0_col2 {
+  background-color: #9bbcff;
+  color: #000000;
+}
+#T_4f5a3_row0_col5, #T_4f5a3_row3_col2 {
+  background-color: #b40426;
+  color: #f1f1f1;
+}
+#T_4f5a3_row1_col2 {
+  background-color: #5673e0;
+  color: #f1f1f1;
+}
+#T_4f5a3_row1_col5 {
+  background-color: #ccd9ed;
+  color: #000000;
+}
+#T_4f5a3_row2_col5, #T_4f5a3_row5_col2 {
+  background-color: #bcd2f7;
+  color: #000000;
+}
+#T_4f5a3_row3_col5 {
+  background-color: #5875e1;
+  color: #f1f1f1;
+}
+#T_4f5a3_row4_col2 {
+  background-color: #e1dad6;
+  color: #000000;
+}
+#T_4f5a3_row4_col5 {
+  background-color: #485fd1;
+  color: #f1f1f1;
+}
+</style>
+<table id="T_4f5a3" style='display:inline'>
+  <thead>
+    <tr>
+      <th class="blank level0" >&nbsp;</th>
+      <th id="T_4f5a3_level0_col0" class="col_heading level0 col0" >dtype</th>
+      <th id="T_4f5a3_level0_col1" class="col_heading level0 col1" >pct_nan</th>
+      <th id="T_4f5a3_level0_col2" class="col_heading level0 col2" >pct_mode</th>
+      <th id="T_4f5a3_level0_col3" class="col_heading level0 col3" >mode</th>
+      <th id="T_4f5a3_level0_col4" class="col_heading level0 col4" >chi2_statistic</th>
+      <th id="T_4f5a3_level0_col5" class="col_heading level0 col5" >tschuprowt_measure</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th id="T_4f5a3_level0_row0" class="row_heading level0 row0" >Sex</th>
+      <td id="T_4f5a3_row0_col0" class="data row0 col0" >int64</td>
+      <td id="T_4f5a3_row0_col1" class="data row0 col1" >0.0000</td>
+      <td id="T_4f5a3_row0_col2" class="data row0 col2" >0.6364</td>
+      <td id="T_4f5a3_row0_col3" class="data row0 col3" >0</td>
+      <td id="T_4f5a3_row0_col4" class="data row0 col4" >169.2047</td>
+      <td id="T_4f5a3_row0_col5" class="data row0 col5" >0.5337</td>
+    </tr>
+    <tr>
+      <th id="T_4f5a3_level0_row1" class="row_heading level0 row1" >Pclass</th>
+      <td id="T_4f5a3_row1_col0" class="data row1 col0" >int64</td>
+      <td id="T_4f5a3_row1_col1" class="data row1 col1" >0.0000</td>
+      <td id="T_4f5a3_row1_col2" class="data row1 col2" >0.5488</td>
+      <td id="T_4f5a3_row1_col3" class="data row1 col3" >1</td>
+      <td id="T_4f5a3_row1_col4" class="data row1 col4" >53.5114</td>
+      <td id="T_4f5a3_row1_col5" class="data row1 col5" >0.3001</td>
+    </tr>
+    <tr>
+      <th id="T_4f5a3_level0_row2" class="row_heading level0 row2" >Fare</th>
+      <td id="T_4f5a3_row2_col0" class="data row2 col0" >float64</td>
+      <td id="T_4f5a3_row2_col1" class="data row2 col1" >0.0000</td>
+      <td id="T_4f5a3_row2_col2" class="data row2 col2" >0.5084</td>
+      <td id="T_4f5a3_row2_col3" class="data row2 col3" >1.0000</td>
+      <td id="T_4f5a3_row2_col4" class="data row2 col4" >65.8288</td>
+      <td id="T_4f5a3_row2_col5" class="data row2 col5" >0.2799</td>
+    </tr>
+    <tr>
+      <th id="T_4f5a3_level0_row3" class="row_heading level0 row3" >Age</th>
+      <td id="T_4f5a3_row3_col0" class="data row3 col0" >float64</td>
+      <td id="T_4f5a3_row3_col1" class="data row3 col1" >0.0000</td>
+      <td id="T_4f5a3_row3_col2" class="data row3 col2" >0.9495</td>
+      <td id="T_4f5a3_row3_col3" class="data row3 col3" >1.0000</td>
+      <td id="T_4f5a3_row3_col4" class="data row3 col4" >14.6254</td>
+      <td id="T_4f5a3_row3_col5" class="data row3 col5" >0.1569</td>
+    </tr>
+    <tr>
+      <th id="T_4f5a3_level0_row4" class="row_heading level0 row4" >Parents/Children Aboard</th>
+      <td id="T_4f5a3_row4_col0" class="data row4 col0" >int64</td>
+      <td id="T_4f5a3_row4_col1" class="data row4 col1" >0.0000</td>
+      <td id="T_4f5a3_row4_col2" class="data row4 col2" >0.7374</td>
+      <td id="T_4f5a3_row4_col3" class="data row4 col3" >0</td>
+      <td id="T_4f5a3_row4_col4" class="data row4 col4" >11.0576</td>
+      <td id="T_4f5a3_row4_col5" class="data row4 col5" >0.1364</td>
+    </tr>
+    <tr>
+      <th id="T_4f5a3_level0_row5" class="row_heading level0 row5" >Siblings/Spouses Aboard</th>
+      <td id="T_4f5a3_row5_col0" class="data row5 col0" >int64</td>
+      <td id="T_4f5a3_row5_col1" class="data row5 col1" >0.0000</td>
+      <td id="T_4f5a3_row5_col2" class="data row5 col2" >0.6801</td>
+      <td id="T_4f5a3_row5_col3" class="data row5 col3" >0</td>
+      <td id="T_4f5a3_row5_col4" class="data row5 col4" >11.5963</td>
+      <td id="T_4f5a3_row5_col5" class="data row5 col5" >0.1175</td>
+    </tr>
+  </tbody>
+</table></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+ - [Selector] Selected qualitative features: [&#39;Sex&#39;, &#39;Pclass&#39;, &#39;Fare&#39;, &#39;Age&#39;, &#39;Parents/Children Aboard&#39;, &#39;Siblings/Spouses Aboard&#39;]
+------
+
+</pre></div></div>
+</div>
+<ul class="simple">
+<li><p>Feature <code class="docutils literal notranslate"><span class="pre">Sex</span></code> is the most associated with the target <code class="docutils literal notranslate"><span class="pre">Survived</span></code>:</p>
+<ul>
+<li><p>Tschuprow’s T value is <code class="docutils literal notranslate"><span class="pre">tschuprowt_measure=0.5337</span></code></p></li>
+<li><p>It has 0 % of NaNs (<code class="docutils literal notranslate"><span class="pre">pct_nan=0.0</span></code>)</p></li>
+<li><p>Its mode, <code class="docutils literal notranslate"><span class="pre">0</span></code>, represents 64 % of observed data (<code class="docutils literal notranslate"><span class="pre">pct_nan=0.6364</span></code>)</p></li>
+</ul>
+</li>
+<li><p>Here, no feature where filtered out for there inter-feature association or over-represented values (no thresholds were set)</p></li>
+</ul>
+</section>
+<section id="What's-next?">
+<h2>What’s next?<a class="headerlink" href="#What's-next?" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Thanks to <strong>Carvers</strong> all of your features are now optimally processed for your classification task!</p></li>
+<li><p>As a final step towards your model, <strong>Selectors</strong> can prove to be handy tools to operate target optimal Data Pre-Selection, so make sure to check out <a class="reference external" href="https://autocarver.readthedocs.io/en/latest/selectors_examples.html">Selectors Examples</a>!</p></li>
+</ul>
+</section>
+<section id="Well-done!">
+<h2>Well done!<a class="headerlink" href="#Well-done!" title="Link to this heading"></a></h2>
+<p>Your commitment to achieving optimal results in binary classification tasks shines through in your meticulous use of <strong>AutoCarver</strong>’s <code class="docutils literal notranslate"><span class="pre">BinaryCarver</span></code> for data preprocessing. By fine-tuning and optimizing your dataset, you have set the stage for robust and accurate machine learning models.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">BinaryCarver</span></code> has proven to be a valuable ally in your pursuit of excellence, carving out a path toward enhanced feature representation and model interpretability. Your dedication to refining the data preprocessing steps reflects a commitment to extracting the maximum value from your datasets.</p>
+<p>We extend our sincere appreciation for choosing <strong>AutoCarver</strong> as your companion in the data preprocessing journey. Your use of <strong>AutoCarver</strong> demonstrates a dedication to leveraging cutting-edge tools for achieving excellence in binary classification tasks.</p>
+<p>As you transition to the modeling phase, may the carefully crafted features and preprocessing steps contribute to the success of your predictive models. We’re excited to see the impact of your work and are grateful for the opportunity to be part of your data science endeavors.</p>
+<p>Thank you for trusting <strong>AutoCarver</strong>, and we wish you continued success in your data-driven ventures.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../../../carvers_examples.html" class="btn btn-neutral float-left" title="Carvers Examples" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../MulticlassClassification/multiclass_classification_example.html" class="btn btn-neutral float-right" title="Setting things up" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Mario Defrance.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

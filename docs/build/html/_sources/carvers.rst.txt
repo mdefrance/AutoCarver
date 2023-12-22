@@ -1,7 +1,9 @@
+.. _Carvers:
+
 Carvers
 =======
 
-The core of **AutoCarver** resides in the following Data Optimization steps: 
+The core of **AutoCarver** resides in its **Carvers**, they provide the following Data Optimization steps: 
 
    1. Identifying the most associated combination from all ordered combinations of modalities.
    2. Testing all combinations of NaNs grouped to one of those modalities.
@@ -40,8 +42,8 @@ For two combinations of modalities of :math:`x`, a higher :math:`T` or :math:`V`
 
 
 
-.. autoclass:: AutoCarver.BinaryCarver
-    :members: fit, transform, fit_transform, to_json, summary
+.. autoclass:: auto_carver.BinaryCarver
+    :members: fit, transform, fit_transform, to_json, summary, history, update_discretizer
 
 
 .. _MulticlassCarver:
@@ -49,7 +51,7 @@ For two combinations of modalities of :math:`x`, a higher :math:`T` or :math:`V`
 Multilclass Classification
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Within :class:`MulticlassCarver`, a multiclass target consists of a column :math:`y` that contains several values :math:`y_0` to :math:`y_{n_y}` where :math:`n_y>2` is the number of values taken by :math:`y`.
+Within :class:`MulticlassCarver`, a multiclass target consists of a column :math:`y` that contains several values :math:`y_0` to :math:`y_{n_y}` where :math:`n_y>2` is the number of modalities taken by :math:`y`.
 
 For values :math:`y_0` to :math:`y_{n_y-1}` of :math:`y`, an indicator feature is built: :math:`Y_0 = \mathbb{1}_{y=y_0}` to :math:`Y_{n_y-1} = \mathbb{1}_{y=y_{n_y-1}}`.
 
@@ -58,8 +60,8 @@ For values :math:`y_0` to :math:`y_{n_y-1}` of :math:`y`, an indicator feature i
 For two combinations of modalities of a feature :math:`x`, a higher :math:`T` or :math:`V` value indicates a stronger relationship with the binary target :math:`Y`.
 
 
-.. autoclass:: AutoCarver.MulticlassCarver
-    :members: fit, transform, fit_transform, to_json, summary
+.. autoclass:: auto_carver.MulticlassCarver
+    :members: fit, transform, fit_transform, to_json, summary, history, update_discretizer
 
 
 
@@ -81,15 +83,15 @@ It is used to determine whether or not :math:`y` is distributed the same when :m
 
 For two combinations of modalities of :math:`x`, a higher :math:`H` value indicates that there is a greater difference between the medians of the samples.
 
-.. autoclass:: AutoCarver.ContinuousCarver
-    :members: fit, transform, fit_transform, to_json, summary
+.. autoclass:: auto_carver.ContinuousCarver
+    :members: fit, transform, fit_transform, to_json, summary, history, update_discretizer
 
 
 
 
-Saving and loading
+Saving and Loading
 ------------------
 
-.. autofunction:: AutoCarver.BaseCarver.to_json
+.. autofunction:: auto_carver.BaseCarver.to_json
 
-.. autofunction:: AutoCarver.load_carver
+.. autofunction:: auto_carver.load_carver

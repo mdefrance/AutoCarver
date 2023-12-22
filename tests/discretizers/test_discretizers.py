@@ -3,7 +3,7 @@
 from numpy import inf
 from pandas import DataFrame
 
-from AutoCarver.discretizers import Discretizer, QualitativeDiscretizer, QuantitativeDiscretizer
+from auto_carver.discretizers import Discretizer, QualitativeDiscretizer, QuantitativeDiscretizer
 
 
 def test_quantitative_discretizer(x_train: DataFrame, target: str):
@@ -13,6 +13,8 @@ def test_quantitative_discretizer(x_train: DataFrame, target: str):
     ----------
     x_train : DataFrame
         Simulated Train DataFrame
+    target: str
+        Target feature
     """
 
     features = [
@@ -37,6 +39,7 @@ def test_quantitative_discretizer(x_train: DataFrame, target: str):
         1.0,
         2.0,
         3.0,
+        4.0,
         inf,
         "__NAN__",
     ], "NaNs should not be grouped whatsoever"
@@ -44,6 +47,7 @@ def test_quantitative_discretizer(x_train: DataFrame, target: str):
         1.0,
         2.0,
         3.0,
+        4.0,
         inf,
     ], "Rare values should be grouped to the closest one (OrdinalDiscretizer)"
 
@@ -55,6 +59,8 @@ def test_qualitative_discretizer(x_train: DataFrame, target: str):
     ----------
     x_train : DataFrame
         Simulated Train DataFrame
+    target: str
+        Target feature
     """
 
     features = ["Qualitative", "Qualitative_grouped", "Qualitative_lownan", "Qualitative_highnan"]
@@ -146,6 +152,8 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
         Simulated Train DataFrame
     x_dev_1 : DataFrame
         Simulated Test DataFrame
+    target: str
+        Target feature
     """
 
     quantitative_features = [
@@ -217,6 +225,7 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
         1.0,
         2.0,
         3.0,
+        4.0,
         inf,
         "__NAN__",
     ], "NaNs should not be grouped whatsoever"
@@ -224,6 +233,7 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
         1.0,
         2.0,
         3.0,
+        4.0,
         inf,
     ], "Rare values should be grouped to the closest one (OrdinalDiscretizer)"
 

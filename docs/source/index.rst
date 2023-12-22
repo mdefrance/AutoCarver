@@ -8,21 +8,25 @@ Welcome to AutoCarver's documentation!
 
 .. toctree::
    :maxdepth: 1
-   :caption: Contents:
+   :caption: Introduction
 
    about
    installation
    quick_start
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Documentation
+
    discretizers
    carvers
-   feature_selector
-   examples
+   selectors
 
+.. toctree::
+   :maxdepth: 1
+   :caption: Examples
 
+   carvers_examples
+   discretizers_examples
+   selectors_examples
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

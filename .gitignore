@@ -1,4 +1,3 @@
-
 *.gz
 *.pyc
 AutoCarver.egg-info/PKG-INFO
@@ -6,6 +5,8 @@ AutoCarver.egg-info/dependency_links.txt
 AutoCarver.egg-info/top_level.txt
 AutoCarver.egg-info/SOURCES.txt
 *.coverage
-*.json
-*.ipynb
+# *.json
+# *.ipynb
 *.ipynb_checkpoints
+test_package.ipynb
+*.exe

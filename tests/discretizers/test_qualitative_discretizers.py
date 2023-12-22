@@ -3,7 +3,7 @@
 from pandas import DataFrame
 from pytest import raises
 
-from AutoCarver.discretizers import (
+from auto_carver.discretizers import (
     CategoricalDiscretizer,
     ChainedDiscretizer,
     GroupedList,
@@ -407,6 +407,8 @@ def test_default_discretizer(x_train: DataFrame, target: str) -> None:
     ----------
     x_train : DataFrame
         Simulated Train DataFrame
+    target: str
+        Target feature
     """
 
     # defining values_orders
@@ -545,6 +547,8 @@ def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:
     ----------
     x_train : DataFrame
         Simulated Train DataFrame
+    target: str
+        Target feature
     """
     # defining values_orders
     order = ["Low-", "Low", "Low+", "Medium-", "Medium", "Medium+", "High-", "High", "High+"]

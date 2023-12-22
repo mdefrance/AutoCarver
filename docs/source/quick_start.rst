@@ -20,7 +20,7 @@ In the following quick start example, we will consider a binary classification p
 
     target = "binary_target"
 
-Hence the use of :class:`BinaryCarver` in following code blocks.
+Hence the use of :class:`BinaryCarver` and :class:`ClassificationSelector` in following code blocks.
 
 
 
@@ -47,7 +47,7 @@ Picking up columns to Carve
     qualitative_features = ["Qualitative", "Qualitative_grouped", "Qualitative_lownan", "Qualitative_highnan", "Discrete_Qualitative_noorder", "Discrete_Qualitative_lownan_noorder", "Discrete_Qualitative_rarevalue_noorder"]
 
 Qualitative features will automatically be converted to ``str`` if necessary.
-Ordinal features can be added, alongside there expected ordering. See :ref:`Examples`.
+Ordinal features can be added, alongside there expected ordering.
 
 
 
@@ -60,10 +60,10 @@ Fitting AutoCarver
 
 .. code-block:: python
 
-    from AutoCarver import BinaryCarver
+    from auto_carver import BinaryCarver
 
     # intiating AutoCarver
-    auto_carver = BinaryCarver(
+    binary_carver = BinaryCarver(
         quantitative_features=quantitative_features,
         qualitative_features=qualitative_features,
         min_freq=0.02,  # minimum frequency per modality
@@ -73,7 +73,7 @@ Fitting AutoCarver
     )
 
     # fitting on training sample, a dev sample can be specified to evaluate carving robustness
-    x_discretized = auto_carver.fit_transform(train_set, train_set[target], X_dev=dev_set, y_dev=dev_set[target])
+    x_discretized = binary_carver.fit_transform(train_set, train_set[target], X_dev=dev_set, y_dev=dev_set[target])
 
 
 
@@ -83,15 +83,15 @@ Applying AutoCarver
 .. code-block:: python
 
     # transforming dev/test sample accordingly
-    dev_set_discretized = auto_carver.transform(dev_set)
-    test_set_discretized = auto_carver.transform(tes_set)
+    dev_set_discretized = binary_carver.transform(dev_set)
+    test_set_discretized = binary_carver.transform(tes_set)
 
 
 
 Saving AutoCarver
 ^^^^^^^^^^^^^^^^^
 
-All Carvers can safely be stored as a ``.json`` file.
+All **Carvers** can safely be stored as a ``.json`` file.
 
 .. code-block:: python
 
@@ -99,23 +99,23 @@ All Carvers can safely be stored as a ``.json`` file.
 
     # storing as json file
     with open('my_carver.json', 'w') as my_carver_json:
-        json.dump(auto_carver.to_json(), my_carver_json)
+        json.dump(binary_carver.to_json(), my_carver_json)
 
 
 Loading AutoCarver
 ^^^^^^^^^^^^^^^^^^
 
-The `AutoCarver` can safely be loaded from a .json file.
+**Carvers** can safely be loaded from a .json file.
 
 .. code-block:: python
 
     import json
 
-    from AutoCarver import load_carver
+    from auto_carver import load_carver
 
     # loading json file
     with open('my_carver.json', 'r') as my_carver_json:
-        auto_carver = load_carver(json.load(my_carver_json))
+        binary_carver = load_carver(json.load(my_carver_json))
 
 
 
@@ -124,18 +124,13 @@ Feature Selection
 
 .. code-block:: python
 
-    from AutoCarver.feature_selection import FeatureSelector
+    from auto_carver.selectors import ClassificationSelector
 
     # select the best 25 most target associated qualitative features
-    feature_selector = FeatureSelector(
-        qualitative_features=features,  # features to select from
+    classification_selector = ClassificationSelector(
+        qualitative_features=qualitative_features + quantitative_features,  # features to select from
         n_best=25,  # number of features to select
-        verbose=True  # displays statistics
+        verbose=True,  # displays statistics
     )
-    best_features = feature_selector.select(train_set_discretized, train_set_discretized[target])
+    best_features = classification_selector.select(train_set_discretized, train_set_discretized[target])
 
-
-In-depth examples
------------------
-
-See :ref:`Examples`.

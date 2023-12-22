@@ -13,21 +13,9 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2
-
-      - name: Extract Tag Name
-        id: extract_tag_name
-        run: |
-          PR_TITLE="${{ github.event.pull_request.title }}"
-          TAG_NAME=$(echo "$PR_TITLE" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
-          echo "::set-output name=tag_name::$TAG_NAME"
+        uses: actions/checkout@v4
 
       - name: Build ReadTheDocs Latest
         run: |
           curl -X POST\
            -H "Authorization: Token ${{ secrets.READTHEDOCS_API_TOKEN }}" https://readthedocs.org/api/v3/projects/autocarver/versions/latest/builds/
-
-      - name: Build ReadTheDocs vTAG_NAME
-        run: |
-          curl -X POST\
-          -H "Authorization: Token ${{ secrets.READTHEDOCS_API_TOKEN }}" https://readthedocs.org/api/v3/projects/autocarver/versions/${{ steps.extract_tag_name.outputs.tag_name }}/builds/

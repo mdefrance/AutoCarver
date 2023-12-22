@@ -1,38 +1,35 @@
+
+</p>
+<p align="center">
+    <img alt="AutoCarver Logo" src="https://raw.githubusercontent.com/mdefrance/AutoCarver/main/docs/source/artwork/auto_carver_symbol_small.png" width="25%">
+</p>
+
+
 </p>
 <p align="left">
     <img alt="PyPI" src="https://img.shields.io/pypi/v/autocarver">
     <img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/autocarver">
-    <img alt="GitHub" src="https://img.shields.io/github/license/mdefrance/autocarver">
-    <img src="https://github.com/mdefrance/AutoCarver/actions/workflows/pytest.yml/badge.svg">
-    <img src='https://readthedocs.org/projects/autocarver/badge/?version=latest' alt='Documentation Status' />
+    <img alt="License" src="https://img.shields.io/github/license/mdefrance/autocarver">
+    <img alt="Pytest Status" src="https://github.com/mdefrance/AutoCarver/actions/workflows/pytest.yml/badge.svg" >
+    <img alt="Documentation Status" src="https://readthedocs.org/projects/autocarver/badge/?version=latest">
 </p>
 
 
 # ReadTheDocs
 
-Go check out the brand new package documentation at [ReadTheDocs](https://autocarver.readthedocs.io/en/latest/index.html)!
+Check out the package documentation on [ReadTheDocs](https://autocarver.readthedocs.io/en/latest/index.html)!
 
 # Install
 
 **AutoCarver** can be installed from [PyPI](https://pypi.org/project/AutoCarver):
 
-## Minimal install
-
-To install the base features (without vizualization tools), use the following:
-
 <pre>
 pip install autocarver
 </pre>
 
-## Unabling pretty printing
 
-To enable ``pretty_print`` features (nice colorful html tables in jupyter), use the following:
 
-<pre>
-pip install autocarver[jupyter]
-</pre>
-
-# AutoCarver
+# Why AutoCarver?
 
 **AutoCarver** is a powerful Python package designed to address the fundamental question of *What's the best processing for my model's features?*
 

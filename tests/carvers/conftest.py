@@ -1,6 +1,6 @@
 """ Defines fixtures for carvers pytests"""
 
-from pytest import fixture
+from pytest import FixtureRequest, fixture
 
 
 @fixture
@@ -100,25 +100,25 @@ def level1_to_level2() -> dict[str, list[str]]:
 
 
 @fixture(scope="module", params=["float", "str"])
-def output_dtype(request) -> str:
+def output_dtype(request: type[FixtureRequest]) -> str:
     return request.param
 
 
 @fixture(scope="module", params=[True, False])
-def dropna(request) -> bool:
+def dropna(request: type[FixtureRequest]) -> bool:
     return request.param
 
 
 @fixture(scope="module", params=["tschuprowt", "cramerv"])
-def sort_by(request) -> str:
+def sort_by(request: type[FixtureRequest]) -> str:
     return request.param
 
 
 @fixture(scope="module", params=[True, False])
-def copy(request) -> bool:
+def copy(request: type[FixtureRequest]) -> bool:
     return request.param
 
 
 @fixture(scope="module", params=[None, 0.12])
-def min_freq_mod(request) -> float:
+def min_freq_mod(request: type[FixtureRequest]) -> float:
     return request.param
