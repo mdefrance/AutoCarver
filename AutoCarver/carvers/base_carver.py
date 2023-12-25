@@ -261,7 +261,7 @@ class BaseCarver(BaseDiscretizer):
             if feature in self._history:
                 self._history[feature] += [{"removed": True}]
 
-    def fit(
+    def fit(  # pylint: disable=W0222
         self,
         X: DataFrame,
         y: Series,
@@ -1239,6 +1239,6 @@ def prettier_xagg(
             nicer_xagg.hide(axis="index")
 
         # converting to html
-        nicer_xagg = nicer_xagg._repr_html_()
+        nicer_xagg = nicer_xagg._repr_html_()  # pylint: disable=W0212
 
     return nicer_xagg

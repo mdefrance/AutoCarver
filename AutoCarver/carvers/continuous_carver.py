@@ -145,7 +145,7 @@ class ContinuousCarver(BaseCarver):
             # crosstab for each feature
             for feature in features:
                 # computing crosstab with str_nan
-                yval = y.groupby(X[feature]).apply(lambda u: list(u))
+                yval = y.groupby(X[feature]).apply(lambda u: list(u))  # pylint: disable=W0108
 
                 # reordering according to known_order
                 yval = yval.reindex(labels_orders[feature], fill_value=[])
@@ -186,6 +186,8 @@ class ContinuousCarver(BaseCarver):
         dict[str, float]
             Kruskal-Wallis' H as a dict.
         """
+        _ = kwargs  # unused attribute
+
         # Kruskal-Wallis' H
         return {"kruskal": kruskal(*tuple(yval.values))[0]}
 

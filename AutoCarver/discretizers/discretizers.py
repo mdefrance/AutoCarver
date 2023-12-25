@@ -111,7 +111,7 @@ class Discretizer(BaseDiscretizer):
                 self.ordinal_features.remove(feature)
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: DataFrame, y: Series) -> None:
+    def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
         # Checking for binary target and copying X
         x_copy = self._prepare_data(X, y)
 
@@ -373,7 +373,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
                 self.non_ordinal_features.remove(feature)
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: DataFrame, y: Series) -> None:
+    def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
         # checking data before bucketization
         x_copy = self._prepare_data(X, y)
 
@@ -492,7 +492,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         # class specific attributes
         self.min_freq = min_freq
 
-    def _prepare_data(self, X: DataFrame, y: Series) -> DataFrame:
+    def _prepare_data(self, X: DataFrame, y: Series) -> DataFrame:  # pylint: disable=W0222
         """Validates format and content of X and y.
 
         Parameters
@@ -523,7 +523,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         return x_copy
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: DataFrame, y: Series) -> None:
+    def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
         # checking data before bucketization
         x_copy = self._prepare_data(X, y)
 
