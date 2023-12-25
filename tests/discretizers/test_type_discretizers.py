@@ -55,7 +55,7 @@ def test_string_discretizer(x_train: DataFrame) -> None:
         values_orders=values_orders,
         n_jobs=1,
     )
-    x_discretized = discretizer.fit_transform(x_train)
+    _ = discretizer.fit_transform(x_train)
 
     expected = {
         "2": [2, "2"],

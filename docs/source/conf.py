@@ -1,7 +1,6 @@
 """ Config for sphinx documentation
 """
 
-import configparser
 import os
 import sys
 from inspect import getsourcefile
@@ -15,6 +14,8 @@ sys.path.insert(0, path)
 
 
 import AutoCarver
+
+_ = AutoCarver
 
 # make copy of notebooks in docs folder, as they must be here for sphinx to
 # pick them up properly.
@@ -34,6 +35,7 @@ DOCS_DIRECTORY = os.path.dirname(os.path.abspath(getsourcefile(lambda: 0)))
 
 
 def ensure_pandoc_installed(_):
+    """ensures that pypandox is available for nive jupyter notebooks"""
     import pypandoc
 
     # Download pandoc if necessary. If pandoc is already installed and on
@@ -68,7 +70,7 @@ pyproject = toml.load("../../pyproject.toml")
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = pyproject["tool"]["poetry"]["name"]
-copyright = "2023, Mario Defrance"
+copyright = "2023, Mario Defrance"  # pylint, disable=W0622
 author = pyproject["tool"]["poetry"]["authors"][0]
 version = pyproject["tool"]["poetry"]["version"]
 release = "Beta release"

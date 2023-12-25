@@ -100,7 +100,7 @@ def test_qualitative_discretizer(x_train: DataFrame, target: str):
         copy=True,
         verbose=True,
     )
-    x_discretized = discretizer.fit_transform(x_train, x_train[target])
+    _ = discretizer.fit_transform(x_train, x_train[target])
 
     quali_expected = {
         "__OTHER__": ["Category A", "Category D", "Category F", "__OTHER__"],
@@ -287,7 +287,10 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
     }
     assert (
         discretizer.values_orders["Discrete_Qualitative_rarevalue_noorder"].content == expected
-    ), "Qualitative features with float values should be converted to string and there values stored in the values_orders"
+    ), (
+        "Qualitative features with float values should be converted to string and there "
+        "values stored in the values_orders"
+    )
     expected = {
         "2": [2, "2"],
         "4": [4, "4"],
@@ -295,9 +298,10 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
         "3": [3, "3"],
         "__OTHER__": [7, "7", 6, "6", 5, "5", "__OTHER__"],
     }
-    assert (
-        discretizer.values_orders["Discrete_Qualitative_noorder"].content == expected
-    ), "Qualitative features with int values should be converted to string and there values stored in the values_orders"
+    assert discretizer.values_orders["Discrete_Qualitative_noorder"].content == expected, (
+        "Qualitative features with int values should be converted to string and there "
+        "values stored in the values_orders"
+    )
     expected = {
         "2": ["1", 2.0, "2"],
         "3": [3.0, "3"],
@@ -305,10 +309,10 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
         "5": [6.0, "6", 7.0, "7", 5.0, "5"],
         "__NAN__": ["__NAN__"],
     }
-    assert (
-        discretizer.values_orders["Discrete_Qualitative_highnan"].content == expected
-    ), "Ordinal qualitative features with int or float values that contain nan should be converted to string and there values stored in the values_orders"
-
+    assert discretizer.values_orders["Discrete_Qualitative_highnan"].content == expected, (
+        "Ordinal qualitative features with int or float values that contain nan should "
+        "be converted to string and there values stored in the values_orders"
+    )
     # checking for inconsistancies in tranform
     for feature in discretizer.features:
         test_unique = x_dev_discretized[feature].unique()

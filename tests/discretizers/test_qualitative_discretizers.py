@@ -74,7 +74,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
         unknown_handling="raise",
         copy=True,
     )
-    x_discretized = discretizer.fit_transform(x_train)
+    _ = discretizer.fit_transform(x_train)
 
     expected = {
         "High+": ["High+"],
@@ -118,9 +118,10 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
         "Worst": ["Low+", "Low", "Low-", "Lows", "Worst"],
         "__NAN__": ["__NAN__"],
     }
-    assert (
-        discretizer.values_orders["Qualitative_Ordinal_lownan"].content == expected
-    ), "NaNs should be added to the order and missing values from the values_orders should be added (from chained_orders)"
+    assert discretizer.values_orders["Qualitative_Ordinal_lownan"].content == expected, (
+        "NaNs should be added to the order and missing values from the values_orders "
+        "should be added (from chained_orders)"
+    )
     expected = [
         "Medium",
         "Mediums",
@@ -151,7 +152,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
     )
 
     # Case 1: unknown value but no NaN
-    x_discretized = discretizer.fit_transform(x_train_wrong_1)
+    _ = discretizer.fit_transform(x_train_wrong_1)
 
     expected = {
         "Mediums": ["Medium+", "Medium", "Medium-", "Mediums"],
@@ -182,9 +183,10 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
         "Best": ["High", "High-", "Highs", "Best"],
         "__NAN__": ["__NAN__"],
     }
-    assert (
-        discretizer.values_orders["Qualitative_Ordinal_lownan"].content == expected
-    ), "NaNs should be added to the order and missing values from the values_orders should be added (from chained_orders)"
+    assert discretizer.values_orders["Qualitative_Ordinal_lownan"].content == expected, (
+        "NaNs should be added to the order and missing values from the values_orders should"
+        " be added (from chained_orders)"
+    )
     expected = [
         "Medium",
         "Mediums",
@@ -207,7 +209,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
         unknown_handling="drop",
         copy=True,
     )
-    x_discretized = discretizer.fit_transform(x_train_wrong_2)
+    _ = discretizer.fit_transform(x_train_wrong_2)
 
     expected = {
         "Medium": ["Medium"],
@@ -237,9 +239,10 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
         "Best": ["High", "High-", "Highs", "Best"],
         "__NAN__": ["unknown", "__NAN__"],
     }
-    assert (
-        discretizer.values_orders["Qualitative_Ordinal_lownan"].content == expected
-    ), "NaNs should be added to the order and missing values from the values_orders should be added (from chained_orders)"
+    assert discretizer.values_orders["Qualitative_Ordinal_lownan"].content == expected, (
+        "NaNs should be added to the order and missing values from the values_orders should "
+        "be added (from chained_orders)"
+    )
     expected = [
         "Mediums",
         "Worst",
@@ -273,7 +276,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
         values_orders=values_orders,
         copy=True,
     )
-    x_discretized = discretizer.fit_transform(x_train)
+    _ = discretizer.fit_transform(x_train)
 
     expected = {
         "Medium": ["Medium"],
@@ -325,7 +328,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
             unknown_handling="drop",
             copy=True,
         )
-        x_discretized = discretizer.fit_transform(x_train)
+        _ = discretizer.fit_transform(x_train)
 
     # testing for defintion of levels
     with raises(AssertionError):
@@ -350,9 +353,9 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
             unknown_handling="drop",
             copy=True,
         )
-        x_discretized = discretizer.fit_transform(x_train)
+        _ = discretizer.fit_transform(x_train)
 
-    # testing that it does not work when there is a vale in values_orders missing from chained_orders
+    # testing that it does not work for value in values_orders missing from chained_orders
     with raises(AssertionError):
         values_orders = {
             "Qualitative_Ordinal_lownan": [
@@ -397,7 +400,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
             values_orders=values_orders,
             copy=True,
         )
-        x_discretized = discretizer.fit_transform(x_train)
+        _ = discretizer.fit_transform(x_train)
 
 
 def test_default_discretizer(x_train: DataFrame, target: str) -> None:
@@ -444,7 +447,7 @@ def test_default_discretizer(x_train: DataFrame, target: str) -> None:
         discretizer = CategoricalDiscretizer(
             qualitative_features=features, min_freq=min_freq, values_orders=values_orders, copy=True
         )
-        x_discretized = discretizer.fit_transform(x_train, x_train[target])
+        _ = discretizer.fit_transform(x_train, x_train[target])
 
     # correct feature ordering
     groupedlist_grouped.group("Category B", "Category D")
@@ -458,7 +461,7 @@ def test_default_discretizer(x_train: DataFrame, target: str) -> None:
     discretizer = CategoricalDiscretizer(
         qualitative_features=features, min_freq=min_freq, values_orders=values_orders, copy=True
     )
-    x_discretized = discretizer.fit_transform(x_train, x_train[target])
+    _ = discretizer.fit_transform(x_train, x_train[target])
 
     assert (
         discretizer.values_orders["Qualitative_Ordinal"].content == groupedlist_ordinal.content
