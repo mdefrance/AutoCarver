@@ -83,6 +83,8 @@ def nans_measure(
     tuple[bool, dict[str, Any]]
         Whether or not there are to many NaNs and the percentage of NaNs
     """
+    _, _ = y, kwargs  # unused attributes
+
     nans = x.isnull()  # ckecking for nans
     pct_nan = nans.mean()  # Computing percentage of nans
 
@@ -93,7 +95,8 @@ def nans_measure(
     active = pct_nan < thresh_nan
     if not active:
         print(
-            f"Feature {x.name} will be discarded (more than {thresh_nan:2.2%} of nans). Otherwise, set a greater value for thresh_nan."
+            f"Feature {x.name} will be discarded (more than {thresh_nan:2.2%} of nans). Otherwise,"
+            " set a greater value for thresh_nan."
         )
 
     return active, measurement
@@ -118,6 +121,8 @@ def dtype_measure(
     tuple[bool, dict[str, Any]]
         True and the feature's dtype
     """
+    _, _ = y, kwargs  # unused attributes
+
     # getting dtype
     measurement = {"dtype": x.dtype}
 
@@ -146,6 +151,8 @@ def mode_measure(
     tuple[bool, dict[str, Any]]
         Whether or not the mode is overrepresented and the percentage of mode
     """
+    _, _ = y, kwargs  # unused attributes
+
     mode = x.mode(dropna=True).values[0]  # computing mode
     pct_mode = (x == mode).mean()  # Computing percentage of the mode
 
@@ -156,7 +163,8 @@ def mode_measure(
     active = pct_mode < thresh_mode
     if not active:
         print(
-            f"Feature {x.name} will be discarded (more than {thresh_mode:2.2%} of its mode). Otherwise, set a greater value for thresh_mode."
+            f"Feature {x.name} will be discarded (more than {thresh_mode:2.2%} of its mode). "
+            "Otherwise, set a greater value for thresh_mode."
         )
 
     return active, measurement

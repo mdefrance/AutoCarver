@@ -122,6 +122,7 @@ def quantitative_filter(
     thresh_corr, float: default 1.
         Maximum association between features
     """
+    _ = params  # unused attribute
 
     # accessing the prefered order
     prefered_order = ranks.index

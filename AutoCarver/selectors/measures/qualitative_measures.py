@@ -2,7 +2,7 @@
 """
 
 from math import sqrt
-from typing import Any, Callable
+from typing import Any
 
 from pandas import Series, crosstab, notna
 from scipy.stats import chi2_contingency
@@ -27,8 +27,10 @@ def chi2_measure(
     thresh_chi2: float = 0,
     **kwargs,
 ) -> tuple[bool, dict[str, Any]]:
-    """Wrapper for `scipy.stats.chi2_contingency <https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chi2_contingency.html>`_.
-    Computes Chi2 statistic on the ``x`` by ``y`` `pandas.crosstab <https://pandas.pydata.org/docs/reference/api/pandas.crosstab.html>`_.
+    """Wrapper for `scipy.stats.chi2_contingency <https://docs.scipy.org/doc/scipy/reference/
+    generated/scipy.stats.chi2_contingency.html>`_.
+    Computes Chi2 statistic on the ``x`` by ``y`` `pandas.crosstab <https://pandas.pydata.org/docs/
+    reference/api/pandas.crosstab.html>`_.
 
     Parameters
     ----------
@@ -42,8 +44,10 @@ def chi2_measure(
     Returns
     -------
     tuple[bool, dict[str, Any]]
-        Whether ``x`` is sufficiently associated to ``y`` and Pearson's chi2 between ``x`` and ``y``.
+        Whether ``x`` is sufficiently associated to ``y`` and Pearson's chi2 between ``x`` and ``y``
     """
+    _ = kwargs  # unused attribute
+
     # computing crosstab between x and y
     xtab = crosstab(x, y)
 

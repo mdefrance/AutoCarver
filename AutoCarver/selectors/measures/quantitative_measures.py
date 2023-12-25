@@ -33,6 +33,8 @@ def kruskal_measure(
     tuple[bool, dict[str, Any]]
         Whether ``x`` is sufficiently associated to ``y`` and Kruskal-Wallis' H test statistic
     """
+    _ = kwargs  # unused attribute
+
     # ckecking for nans
     nans = x.isnull()
 
@@ -73,8 +75,11 @@ def R_measure(
     Returns
     -------
     tuple[bool, dict[str, Any]]
-        Whether ``x`` is sufficiently associated to ``y`` and the square root of the determination coefficient
+        Whether ``x`` is sufficiently associated to ``y`` and the square root of the determination
+        coefficient
     """
+    _ = kwargs  # unused attribute
+
     nans = x.isnull()  # ckecking for nans
 
     # grouping feature and target
@@ -117,6 +122,8 @@ def pearson_measure(
     tuple[bool, dict[str, Any]]
         Whether ``x`` is sufficiently associated to ``y`` and Pearson's r
     """
+    _ = kwargs  # unused attribute
+
     nans = x.isnull()  # ckecking for nans
 
     # computing spearman's r
@@ -155,6 +162,8 @@ def spearman_measure(
     tuple[bool, dict[str, Any]]
         Whether ``x`` is sufficiently associated to ``y`` and Spearman's rho
     """
+    _, _ = y, kwargs  # unused attributes
+
     nans = x.isnull()  # ckecking for nans
 
     # computing spearman's r
@@ -193,6 +202,8 @@ def distance_measure(
     tuple[bool, dict[str, Any]]
         Whether ``x`` is sufficiently associated to ``y`` and Distance Correlation
     """
+    _ = kwargs  # unused attribute
+
     nans = x.isnull()  # ckecking for nans
 
     # computing spearman's r
@@ -231,6 +242,8 @@ def zscore_measure(
     tuple[bool, dict[str, Any]]
         Whether or not there are too many outliers and the outlier measurement
     """
+    _, _ = y, kwargs  # unused attributes
+
     mean = x.mean()  # mean of the feature
     std = x.std()  # standard deviation of the feature
     zscore = (x - mean) / std  # zscore per observation
@@ -276,6 +289,8 @@ def iqr_measure(
     tuple[bool, dict[str, Any]]
         Whether or not there are too many outliers and the outlier measurement
     """
+    _, _ = y, kwargs  # unused attributes
+
     q3 = x.quantile(0.75)  # 3rd quartile
     q1 = x.quantile(0.25)  # 1st quartile
     iqr = q3 - q1  # inter quartile range

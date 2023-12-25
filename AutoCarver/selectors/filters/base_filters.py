@@ -8,8 +8,7 @@ from pandas import DataFrame
 
 def thresh_filter(X: DataFrame, ranks: DataFrame, **kwargs) -> dict[str, Any]:
     """Filters out missing association measure (did not pass a threshold)"""
+    _, _ = X, kwargs  # unused attributes
 
     # drops rows with nans
-    associations = ranks.dropna(axis=0)
-
-    return associations
+    return ranks.dropna(axis=0)

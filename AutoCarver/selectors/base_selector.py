@@ -376,7 +376,7 @@ class BaseSelector:
                 nicer_association = nicer_association.format(precision=4)
 
                 # displaying html of colored DataFrame
-                display_html(nicer_association._repr_html_(), raw=True)
+                display_html(nicer_association._repr_html_(), raw=True)  # pylint: disable=W0212
 
 
 def feature_association(x: Series, y: Series, measures: list[Callable], **kwargs) -> dict[str, Any]:
