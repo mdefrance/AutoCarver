@@ -64,7 +64,7 @@ jobs:
           black --check .
           isort . --check-only
           pylint AutoCarver --fail-under=8
-          flake8 autocarver
+          flake8 AutoCarver
 
   pytest_pull:
     strategy:
