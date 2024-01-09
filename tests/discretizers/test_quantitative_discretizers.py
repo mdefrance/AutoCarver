@@ -6,7 +6,7 @@ from pandas import DataFrame
 from AutoCarver.discretizers import ContinuousDiscretizer
 
 
-def test_quantile_discretizer(x_train: DataFrame):
+def test_continuous_discretizer(x_train: DataFrame):
     """Tests ContinuousDiscretizer
 
     Parameters
@@ -33,8 +33,10 @@ def test_quantile_discretizer(x_train: DataFrame):
     x_discretized = discretizer.fit_transform(x_train)
 
     assert all(
-        x_discretized.Quantitative.value_counts(normalize=True) == min_freq
+        x_discretized["Quantitative"].value_counts(normalize=True) == min_freq
     ), "Wrong quantiles"
+
+    print(discretizer.values_orders["Discrete_Quantitative_highnan"])
     assert discretizer.values_orders["Discrete_Quantitative_highnan"] == [
         2.0,
         3.0,

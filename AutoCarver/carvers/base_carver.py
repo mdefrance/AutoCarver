@@ -1028,30 +1028,7 @@ def consecutive_combinations(
     next_index: int = None,
     all_combinations: list[list[Any]] = None,
 ) -> list[list[Any]]:
-    """Computes all possible combinations of values of order up to max_group_size.
-
-    Parameters
-    ----------
-    raw_order : list[Any]
-        _description_
-    max_group_size : int
-        _description_
-    min_group_size : int, optional
-        _description_, by default 1
-    nb_remaining_group : int, optional
-        _description_, by default None
-    current_combination : list[Any], optional
-        _description_, by default None
-    next_index : int, optional
-        _description_, by default None
-    all_combinations : list[list[Any]], optional
-        _description_, by default None
-
-    Returns
-    -------
-    list[list[Any]]
-        _description_
-    """
+    """Computes all possible combinations of values of order up to max_group_size."""
     # initiating recursive attributes
     if current_combination is None:
         current_combination = []
@@ -1128,20 +1105,7 @@ def nan_combinations(
 
 
 def order_apply_combination(order: GroupedList, combination: list[list[Any]]) -> GroupedList:
-    """Converts a list of combination to a GroupedList
-
-    Parameters
-    ----------
-    order : GroupedList
-        _description_
-    combination : list[list[Any]]
-        _description_
-
-    Returns
-    -------
-    GroupedList
-        _description_
-    """
+    """Converts a list of combination to a GroupedList"""
     order_copy = GroupedList(order)
     for combi in combination:
         order_copy.group_list(combi, combi[0])

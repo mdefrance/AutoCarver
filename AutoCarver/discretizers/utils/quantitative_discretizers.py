@@ -6,7 +6,19 @@ from functools import partial
 from multiprocessing import Pool
 from typing import Any
 
-from numpy import array, digitize, in1d, inf, isnan, linspace, quantile, sort, unique
+from numpy import (
+    array,
+    digitize,
+    in1d,
+    inf,
+    isnan,
+    linspace,
+    quantile,
+    sort,
+    unique,
+    bincount,
+    ones,
+)
 from pandas import DataFrame, Series
 
 from .base_discretizers import BaseDiscretizer, extend_docstring
@@ -72,9 +84,15 @@ class ContinuousDiscretizer(BaseDiscretizer):
         self.q = round(1 / min_freq)  # number of quantiles
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: DataFrame, y: Series = None) -> None:  # pylint: disable=W0222
+    def fit(  # pylint: disable=W0222
+        self, X: DataFrame, y: Series = None, sample_weight: Series = None
+    ) -> None:
         if self.verbose:  # verbose if requested
             print(f" - [ContinuousDiscretizer] Fit {str(self.quantitative_features)}")
+
+        # initiating weights if not provided
+        if sample_weight is None:
+            sample_weight = Series(ones(X.shape[0]), index=X.index)
 
         # storing ordering
         all_orders = []
@@ -83,17 +101,25 @@ class ContinuousDiscretizer(BaseDiscretizer):
         if self.n_jobs <= 1:
             all_orders = [
                 fit_feature(
-                    feature, X=X[self.quantitative_features], q=self.q, str_nan=self.str_nan
+                    feature,
+                    X=X[self.quantitative_features],
+                    sample_weight=sample_weight,
+                    q=self.q,
+                    str_nan=self.str_nan,
                 )
                 for feature in self.quantitative_features
             ]
-        #  launching multiprocessing
+        # launching multiprocessing
         else:
             with Pool(processes=self.n_jobs) as pool:
                 # feature processing
                 all_orders += pool.imap_unordered(
                     partial(
-                        fit_feature, X=X[self.quantitative_features], q=self.q, str_nan=self.str_nan
+                        fit_feature,
+                        X=X[self.quantitative_features],
+                        sample_weight=sample_weight,
+                        q=self.q,
+                        str_nan=self.str_nan,
                     ),
                     self.quantitative_features,
                 )
@@ -106,10 +132,10 @@ class ContinuousDiscretizer(BaseDiscretizer):
         return self
 
 
-def fit_feature(feature: str, X: DataFrame, q: float, str_nan: str):
+def fit_feature(feature: str, X: DataFrame, sample_weight: Series, q: float, str_nan: str):
     """Fits one feature"""
     # getting quantiles for specified feature
-    quantiles = find_quantiles(X[feature].values, q=q)
+    quantiles = find_quantiles(X[feature].values, sample_weight.values, q=q)
 
     # Converting to a groupedlist
     order = GroupedList(quantiles + [inf])
@@ -123,6 +149,7 @@ def fit_feature(feature: str, X: DataFrame, q: float, str_nan: str):
 
 def find_quantiles(
     df_feature: array,
+    sample_weight: array,
     q: int,
 ) -> list[float]:
     """Finds quantiles of a Series recursively.
@@ -142,12 +169,13 @@ def find_quantiles(
     Returns
     -------
     list[float]
-        _description_
+        List of quantiles
     """
     return list(
         sort(
             np_find_quantiles(
                 df_feature[~isnan(df_feature)],  # getting rid of missing values
+                sample_weight[~isnan(df_feature)],
                 q,
                 len_df=len(df_feature),  # getting raw dataset size
                 quantiles=[],  # initiating list of quantiles
@@ -158,6 +186,7 @@ def find_quantiles(
 
 def np_find_quantiles(
     df_feature: array,
+    sample_weight: array,
     q: int,
     len_df: int = None,
     quantiles: list[float] = None,
@@ -183,14 +212,15 @@ def np_find_quantiles(
     Returns
     -------
     list[float]
-        _description_
+        List of quantiles
     """
     # case 1: no observation, all values have been attributed there corresponding modality
     if df_feature.shape[0] == 0:
         return quantiles
 
     # frequencies per known value
-    values, frequencies = unique(df_feature, return_counts=True)
+    values, inv_frequencies = unique(df_feature, return_inverse=True)
+    frequencies = bincount(inv_frequencies, sample_weight.reshape(-1) / sample_weight.sum())
 
     # case 3 : there are no missing values
     # case 3.1 : there is an over-populated value
@@ -201,9 +231,8 @@ def np_find_quantiles(
         # computing quantiles on smaller and greater values
         sub_indices = digitize(df_feature, frequent_values, right=False)
         for i in range(0, len(frequent_values) + 1):
-            quantiles += np_find_quantiles(
-                df_feature[(sub_indices == i) & (~in1d(df_feature, frequent_values))], q, len_df, []
-            )
+            mask = (sub_indices == i) & (~in1d(df_feature, frequent_values))
+            quantiles += np_find_quantiles(df_feature[mask], sample_weight[mask], q, len_df, [])
 
         # adding over-represented modality to the list of quantiles
         return quantiles + list(frequent_values)
