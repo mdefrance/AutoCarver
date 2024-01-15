@@ -10,3 +10,4 @@ AutoCarver.egg-info/SOURCES.txt
 *.ipynb_checkpoints
 test_package.ipynb
 *.exe
+weighted_test.ipynb
