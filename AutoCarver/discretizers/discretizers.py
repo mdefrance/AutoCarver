@@ -1,7 +1,7 @@
 """Tools to build simple buckets out of Quantitative and Qualitative features
 for a binary classification model.
 """
-from typing import Union
+from typing import Any, Union
 from warnings import warn
 
 from numpy import nan
@@ -545,7 +545,12 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         # [Quantitative features] Grouping rare quantiles into closest common one
         #  -> can exist because of overrepresented values (values more frequent than min_freq)
         # searching for features with rare quantiles: computing min frequency per feature
-        frequencies = x_copy[self.features].apply(min_value_counts, axis=0)
+        frequencies = x_copy[self.features].apply(
+            min_value_counts,
+            values_orders=quantile_discretizer.values_orders,
+            labels_per_values=quantile_discretizer.labels_per_values,
+            axis=0,
+        )
 
         # minimal frequency of a quantile
         q_min_freq = self.min_freq / 2
@@ -578,27 +583,20 @@ class QuantitativeDiscretizer(BaseDiscretizer):
 
 def min_value_counts(
     x: Series,
+    values_orders: GroupedList = None,
+    labels_per_values: dict[str, dict[Any]] = None,
     dropna: bool = False,
     normalize: bool = True,
 ) -> float:
-    """Minimum of modalities' frequencies.
-
-    Parameters
-    ----------
-    x : Series
-        _description_
-    dropna : bool, optional
-        _description_, by default False
-    normalize : bool, optional
-        _description_, by default True
-
-    Returns
-    -------
-    float
-        _description_
-    """
+    """Minimum of modalities' frequencies."""
     # modality frequency
     values = x.value_counts(dropna=dropna, normalize=normalize)
+
+    # setting indices with known values
+    order = values_orders.get(x.name)
+    order_labels = [labels_per_values.get(x.name).get(val) for val in order]
+    if order is not None:
+        values = values.reindex(order_labels).fillna(0)
 
     # minimal frequency
     return values.values.min()
