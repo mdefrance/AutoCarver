@@ -137,7 +137,7 @@ def quantitative_filter(
     # iterating over each feature by target association order
     for feature in prefered_order:
         # correlation with features more associated to the target
-        corr_with_better_features = X_corr.loc[:feature, feature]
+        corr_with_better_features = X_corr.loc[:feature, feature].fillna(0)
 
         # maximum correlation with a better feature
         corr_with, worst_corr = corr_with_better_features.agg(["idxmax", "max"])
