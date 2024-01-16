@@ -172,3 +172,60 @@ def json_deserialize_values_orders(json_serialized_values_orders: str) -> dict[s
         values_orders.update({feature: GroupedList(feature_content)})
 
     return values_orders
+
+
+def json_serialize_history(history: dict) -> dict:
+    """JSON serializes an _history
+
+    Parameters
+    ----------
+    _history : dict
+        _history to serialize
+
+    Returns
+    -------
+    dict
+        JSON serialized _history
+    """
+
+    # converting history to a json
+    json_serialized_history = {
+        feature: [
+            json_serialize_combination(combination)
+            for combination in combinations
+            if "combination" in combination
+        ]
+        for feature, combinations in history.items()
+    }
+
+    return json_serialized_history
+
+
+def json_serialize_combination(combination: dict) -> str:
+    """JSON serializes a combination
+
+    Parameters
+    ----------
+    combination : dict
+        combination to serialize
+
+    Returns
+    -------
+    dict
+        JSON serialized combination
+    """
+
+    # converting combination to a json
+    json_serialized_combination = {key: value for key, value in combination.items()}
+
+    # converting combination values to a json
+    json_serialized_combination.update(
+        {
+            "combination": [
+                [convert_value_to_base_type(value) for value in modality]
+                for modality in json_serialized_combination["combination"]
+            ]
+        }
+    )
+
+    return json_serialized_combination

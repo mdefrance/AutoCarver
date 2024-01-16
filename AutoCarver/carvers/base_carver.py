@@ -17,6 +17,7 @@ from ..discretizers.utils.base_discretizers import (
     convert_to_values,
     load_discretizer,
 )
+from ..discretizers.utils.serialization import json_serialize_history
 
 # trying to import extra dependencies
 try:
@@ -817,46 +818,6 @@ class BaseCarver(BaseDiscretizer):
                 }
             ]
 
-    def history(self, feature: str = None) -> DataFrame:
-        """Historic of tested combinations and there association with the target.
-
-        By default:
-
-            * ``str_default="__OTHER__"`` is added for features with non-representative modalities.
-            * ``str_nan="__NAN__"`` is added for features that contain ``numpy.nan``.
-            * Whatever the value of ``dropna``, the association is computed for non-missing values.
-
-        Parameters
-        ----------
-        feature : str, optional
-            Specify for which feature to return the history, by default ``None``
-
-        Returns
-        -------
-        DataFrame
-            Historic of features' tested combinations.
-        """
-        # getting feature's history
-        if feature is not None:
-            assert (
-                feature in self._history.keys()
-            ), f"Carving of feature {feature} was not requested."
-            histo = self._history[feature]
-
-        # getting all features' history
-        else:
-            histo = []
-            for feature in self._history.keys():
-                feature_histories = self._history[feature]
-                for feature_history in feature_histories:
-                    feature_history.update({"feature": feature})
-                histo += feature_histories
-
-        # formatting combinations
-        # history["combination"] = history["combination"].apply(format_for_history)
-
-        return DataFrame(histo)
-
     def _index_mapper(
         self, feature: str, labels_orders: dict[str, GroupedList], xtab: DataFrame = None
     ) -> DataFrame:
@@ -953,6 +914,25 @@ class BaseCarver(BaseDiscretizer):
 
                 # displaying html of colored DataFrame
                 display_html(nicer_xaggs, raw=True)
+
+    def to_json(self) -> str:
+        """Converts to .json format.
+
+        To be used with ``json.dump``.
+
+        Returns
+        -------
+        str
+            JSON serialized object
+        """
+        # extracting content dictionnaries
+        json_serialized_base_discretizer = super().to_json()
+
+        # adding carver history and summary
+        json_serialized_base_discretizer.update({"_history": json_serialize_history(self._history)})
+
+        # dumping as json
+        return json_serialized_base_discretizer
 
 
 def filter_nan(xagg: Union[Series, DataFrame], str_nan: str) -> DataFrame:
@@ -1190,7 +1170,16 @@ def load_carver(auto_carver_json: dict) -> BaseDiscretizer:
     BaseDiscretizer
         A fitted AutoCarver.
     """
-    return load_discretizer(auto_carver_json)
+    # removing _history if it exists
+    _history = auto_carver_json.pop("_history", None)
+
+    # loading discretizer
+    loaded_discretizer = load_discretizer(auto_carver_json)
+
+    # adding back _history
+    loaded_discretizer._history = _history  # pylint: disable=W0212
+
+    return loaded_discretizer
 
 
 def prettier_xagg(

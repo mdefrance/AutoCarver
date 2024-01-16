@@ -295,45 +295,49 @@ class BaseSelector:
             # getting features of the specific data type
             features = self.input_dtypes[dtype][:]
 
-            # splitting features in chunks
-            if self.colsample < 1:
-                # shuffling features to get random samples of features
-                shuffle(features)
+            # checking for features for the dtype
+            if len(features) > 0:
+                # splitting features in chunks
+                if self.colsample < 1:
+                    # shuffling features to get random samples of features
+                    shuffle(features)
 
-                # number of features per sample
-                chunks = int(len(self.features) // (1 / self.colsample))
+                    # number of features per sample
+                    chunks = int(len(self.features) // (1 / self.colsample))
 
-                # splitting feature list in samples
-                feature_samples = [
-                    features[chunks * i : chunks * (i + 1)]
-                    for i in range(int(1 / self.colsample) - 1)
-                ]
+                    # splitting feature list in samples
+                    feature_samples = [
+                        features[chunks * i : chunks * (i + 1)]
+                        for i in range(int(1 / self.colsample) - 1)
+                    ]
 
-                # adding last sample with all remaining features
-                feature_samples += [features[chunks * (int(1 / self.colsample) - 1) :]]
+                    # adding last sample with all remaining features
+                    feature_samples += [features[chunks * (int(1 / self.colsample) - 1) :]]
 
-                # iterating over each feature samples
-                best_features = []
-                for feature_sample in feature_samples:
-                    # fitting association on features
-                    best_features += self._select_features(
-                        X, y, feature_sample, int(self.n_best // 2), dtype
-                    )
+                    # iterating over each feature samples
+                    best_features = []
+                    for feature_sample in feature_samples:
+                        # fitting association on features
+                        best_features += self._select_features(
+                            X, y, feature_sample, int(self.n_best // 2), dtype
+                        )
 
-            # splitting in chunks not requested
-            else:
-                best_features = features[:]
+                # splitting in chunks not requested
+                else:
+                    best_features = features[:]
 
-            # final selection with all best_features selected
-            if any(best_features):
-                best_features = self._select_features(X, y, best_features, self.n_best, dtype)
-                all_best_features += best_features
-                if self.verbose:  # verbose if requested
-                    data_type = "quantitative"
-                    if dtype != "float":
-                        data_type = "qualitative"
-                    print(f"\n - [Selector] Selected {data_type} features: {str(best_features)}")
-                    print("------\n")
+                # final selection with all best_features selected
+                if any(best_features):
+                    best_features = self._select_features(X, y, best_features, self.n_best, dtype)
+                    all_best_features += best_features
+                    if self.verbose:  # verbose if requested
+                        data_type = "quantitative"
+                        if dtype != "float":
+                            data_type = "qualitative"
+                        print(
+                            f"\n - [Selector] Selected {data_type} features: {str(best_features)}"
+                        )
+                        print("------\n")
 
         return all_best_features
 

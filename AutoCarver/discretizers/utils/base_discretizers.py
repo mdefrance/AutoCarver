@@ -143,6 +143,8 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         self.features_casting = {
             feature: casting[:] for feature, casting in features_casting.items()
         }
+        # initiating _history for carvers
+        self._history = None
 
     def _get_labels_per_values(self, output_dtype: str) -> dict[str, dict[Any, Any]]:
         """Creates a dict that contains, for each feature, for each value, the associated label
@@ -519,7 +521,9 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
                 all_transformed = [result.get() for result in all_transformed_async]
 
         # unpacking transformed series
-        X.update(DataFrame({feature: values for feature, values in all_transformed}))
+        X[[feature for feature, _ in all_transformed]] = DataFrame(
+            {feature: values for feature, values in all_transformed}
+        )
 
         return X
 
@@ -574,7 +578,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             JSON serialized object
         """
         # extracting content dictionnaries
-        json_serialized_base_discretizer = {
+        return {
             "features": self.features,
             "values_orders": json_serialize_values_orders(self.values_orders),
             "features_casting": self.features_casting,
@@ -587,8 +591,50 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             "copy": self.copy,
         }
 
-        # dumping as json
-        return json_serialized_base_discretizer
+    def history(self, feature: str = None) -> DataFrame:
+        """Historic of tested combinations and there association with the target.
+
+        By default:
+
+            * ``str_default="__OTHER__"`` is added for features with non-representative modalities.
+            * ``str_nan="__NAN__"`` is added for features that contain ``numpy.nan``.
+            * Whatever the value of ``dropna``, the association is computed for non-missing values.
+
+        Parameters
+        ----------
+        feature : str, optional
+            Specify for which feature to return the history, by default ``None``
+
+        Returns
+        -------
+        DataFrame
+            Historic of features' tested combinations.
+        """
+        # checking for an history
+        if self._history is not None:
+            # getting feature's history
+            if feature is not None:
+                assert (
+                    feature in self._history.keys()
+                ), f"Carving of feature {feature} was not requested."
+                histo = self._history[feature]
+
+            # getting all features' history
+            else:
+                histo = []
+                for feature in self._history.keys():
+                    feature_histories = self._history[feature]
+                    for feature_history in feature_histories:
+                        feature_history.update({"feature": feature})
+                    histo += feature_histories
+
+            # formatting combinations
+            # history["combination"] = history["combination"].apply(format_for_history)
+
+            return DataFrame(histo)
+
+        else:
+            return self._history
 
     def summary(self, feature: str = None) -> DataFrame:
         """Summarizes the data discretization process.
@@ -762,7 +808,6 @@ def transform_quantitative_feature(
     feature, df_feature, values_orders, str_nan, labels_per_values, x_len
 ):
     """Transforms a quantitative feature"""
-    print(feature)
 
     # feature's labels associated to each quantile
     feature_values = values_orders[feature]

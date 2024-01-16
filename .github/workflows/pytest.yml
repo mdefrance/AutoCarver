@@ -63,7 +63,7 @@ jobs:
           source .venv/bin/activate
           black --check .
           isort . --check-only
-          pylint AutoCarver --fail-under=8
+          pylint AutoCarver --fail-under=9
           flake8 AutoCarver
 
   pytest_pull:
