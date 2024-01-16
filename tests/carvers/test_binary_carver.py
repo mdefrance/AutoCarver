@@ -184,6 +184,7 @@ def test_binary_carver(
         ), "Not copied correctly"
 
     # testing json serialization
+    print(auto_carver.to_json()["_history"])
     json_serialized_auto_carver = dumps(auto_carver.to_json())
     loaded_carver = load_carver(loads(json_serialized_auto_carver))
 

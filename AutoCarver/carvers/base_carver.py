@@ -17,6 +17,7 @@ from ..discretizers.utils.base_discretizers import (
     convert_to_values,
     load_discretizer,
 )
+from ..discretizers.utils.serialization import json_serialize_history
 
 # trying to import extra dependencies
 try:
@@ -928,7 +929,7 @@ class BaseCarver(BaseDiscretizer):
         json_serialized_base_discretizer = super().to_json()
 
         # adding carver history and summary
-        json_serialized_base_discretizer.update({"_history": self._history})
+        json_serialized_base_discretizer.update({"_history": json_serialize_history(self._history)})
 
         # dumping as json
         return json_serialized_base_discretizer
