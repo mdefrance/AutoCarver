@@ -522,7 +522,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
 
         # unpacking transformed series
         X[[feature for feature, _ in all_transformed]] = DataFrame(
-            {feature: values for feature, values in all_transformed}
+            {feature: values for feature, values in all_transformed}, index=X.index
         )
 
         return X
