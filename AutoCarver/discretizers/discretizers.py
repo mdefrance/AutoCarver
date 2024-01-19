@@ -528,7 +528,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         x_copy = self._prepare_data(X, y)
 
         # [Quantitative features] Grouping values into quantiles
-        quantile_discretizer = ContinuousDiscretizer(
+        continuous_discretizer = ContinuousDiscretizer(
             quantitative_features=self.features,
             min_freq=self.min_freq,
             values_orders=self.values_orders,
@@ -537,18 +537,19 @@ class QuantitativeDiscretizer(BaseDiscretizer):
             verbose=self.verbose,
             n_jobs=self.n_jobs,
         )
-        x_copy = quantile_discretizer.fit_transform(x_copy, y)
+
+        x_copy = continuous_discretizer.fit_transform(x_copy, y)
 
         # storing orders of grouped features
-        self.values_orders.update(quantile_discretizer.values_orders)
+        self.values_orders.update(continuous_discretizer.values_orders)
 
         # [Quantitative features] Grouping rare quantiles into closest common one
         #  -> can exist because of overrepresented values (values more frequent than min_freq)
         # searching for features with rare quantiles: computing min frequency per feature
         frequencies = x_copy[self.features].apply(
             min_value_counts,
-            values_orders=quantile_discretizer.values_orders,
-            labels_per_values=quantile_discretizer.labels_per_values,
+            values_orders=continuous_discretizer.values_orders,
+            labels_per_values=continuous_discretizer.labels_per_values,
             axis=0,
         )
 
