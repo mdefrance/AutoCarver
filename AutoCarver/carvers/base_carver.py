@@ -634,6 +634,7 @@ class BaseCarver(BaseDiscretizer):
         dropna: bool,
     ) -> dict[str, Any]:
         """Tests the viability of all possible combinations onto xagg_dev"""
+
         # testing viability of all combinations
         best_association, train_viable, dev_viable = (None,) * 3
         test_results: dict[str, bool] = {}
@@ -712,6 +713,7 @@ class BaseCarver(BaseDiscretizer):
                 n_combination=n_combination,
                 associations_xagg=associations_xagg,
                 dropna=dropna,
+                verbose=self.verbose,
                 **test_results,
             )
 
@@ -731,6 +733,7 @@ class BaseCarver(BaseDiscretizer):
         train_viable: bool = None,
         dev_viable: bool = None,
         dropna: bool = False,
+        verbose: bool = False,
         **viability_msg_params,
     ) -> None:
         """historizes the viability tests results for specified feature
@@ -790,33 +793,33 @@ class BaseCarver(BaseDiscretizer):
         messages_to_historize = [messages] + [["Not checked"]] * len(associations_not_checked)
         viability_to_historize = [viability] + [None] * len(associations_not_checked)
 
-        # historizing all combinations
-        for asso, msg, viab in zip(
-            associations_to_historize, messages_to_historize, viability_to_historize
-        ):
-            # Formats a combination for historization
-            combi = asso["index_to_groupby"]
-            formatted_combi = [
-                [
-                    value
-                    for modality in combi.keys()
-                    for group_modality in order.get(modality, modality)
-                    for value in self.values_orders[feature].get(group_modality, group_modality)
-                    if combi[modality] == final_group
-                ]
-                for final_group in Series(combi.values()).unique()
-            ]
-
-            # historizing test results
-            self._history[feature] += [
-                {
-                    "combination": formatted_combi,
-                    self.sort_by: asso[self.sort_by],
-                    "viability": viab,
-                    "viability_message": msg,
-                    "grouping_nan": dropna,
-                }
-            ]
+        # historizing test results: list comprehension for faster processing (large number of combi)
+        self._history[feature] += [
+            {
+                # Formats a combination for historization
+                "combination": [
+                    [
+                        value
+                        for modality in asso["index_to_groupby"].keys()
+                        for group_modality in order.get(modality, modality)
+                        for value in self.values_orders[feature].get(group_modality, group_modality)
+                        if asso["index_to_groupby"][modality] == final_group
+                    ]
+                    for final_group in Series(asso["index_to_groupby"].values()).unique()
+                ],
+                self.sort_by: asso[self.sort_by],
+                "viability": viab,
+                "viability_message": msg,
+                "grouping_nan": dropna,
+            }
+            # historizing all combinations
+            for asso, msg, viab in tqdm(
+                zip(associations_to_historize, messages_to_historize, viability_to_historize),
+                total=len(associations_to_historize),
+                disable=not verbose,
+                desc="Logging combinations  ",
+            )
+        ]
 
     def _index_mapper(
         self, feature: str, labels_orders: dict[str, GroupedList], xtab: DataFrame = None
