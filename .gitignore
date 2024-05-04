@@ -11,3 +11,4 @@ AutoCarver.egg-info/SOURCES.txt
 test_package.ipynb
 *.exe
 weighted_test.ipynb
+continuous_regression_example.ipynb

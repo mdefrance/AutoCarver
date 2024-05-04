@@ -1,0 +1,2 @@
+STR_DEFAULT = "__OTHER__"
+STR_NAN = "__NAN__"
