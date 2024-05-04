@@ -13,12 +13,10 @@ class BaseFeature:
     def __init__(
         self,
         name: str,
-        output_dtype: str,
         str_nan: str = STR_NAN,
         str_default: str = STR_DEFAULT,
     ) -> None:
         self.name = name
-        self.output_dtype = output_dtype
 
         self.str_nan = str_nan
         self.has_nan = False
@@ -28,7 +26,8 @@ class BaseFeature:
         self.is_fitted = False
 
         self.dtype = None
-        self.order: list[str] = GroupedList()
+        self.order = GroupedList()
+        self.labels: dict[str] = {}
 
         # self.distribution = GroupedList()
 
@@ -36,3 +35,6 @@ class BaseFeature:
         _, _ = X, y  # unused attributes
 
         self.is_fitted = True  # fitted feature
+
+    def update(self, order: GroupedList) -> None:
+        self.order = order

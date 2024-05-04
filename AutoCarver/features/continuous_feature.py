@@ -3,6 +3,7 @@
 from pandas import DataFrame, Series
 
 from ..config import STR_DEFAULT, STR_NAN
+from ..discretizers import GroupedList
 from .base_feature import BaseFeature
 
 
@@ -14,7 +15,7 @@ class ContinuousFeature(BaseFeature):
         str_nan: str = STR_NAN,
         str_default: str = STR_DEFAULT,
     ) -> None:
-        super().__init__(name, output_dtype, str_nan, str_default)
+        super().__init__(name, str_nan, str_default)
 
         self.dtype = "continuous"
 
@@ -25,5 +26,8 @@ class ContinuousFeature(BaseFeature):
 
         super().fit(X, y)
 
-    def update(self, order: list) -> None:
-        self.order.update({})
+    def update(self, order: GroupedList) -> None:
+        super().update(order)
+
+        # TODO: update labels
+        self.labels.update({})

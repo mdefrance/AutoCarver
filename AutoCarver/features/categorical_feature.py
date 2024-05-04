@@ -16,7 +16,7 @@ class CategoricalFeature(BaseFeature):
         str_nan: str = STR_NAN,
         str_default: str = STR_DEFAULT,
     ) -> None:
-        super().__init__(name, output_dtype, str_nan, str_default)
+        super().__init__(name, str_nan, str_default)
 
         self.dtype = "categorical"
 
@@ -30,3 +30,9 @@ class CategoricalFeature(BaseFeature):
             self.has_nan = True
 
         super().fit(X, y)
+
+    def update(self, order: GroupedList) -> None:
+        super().update(order)
+
+        # TODO: update labels
+        self.labels.update({})

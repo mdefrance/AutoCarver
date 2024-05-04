@@ -81,6 +81,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
         all_orders = []
 
         # no multiprocessing
+        # TODO: def apply_multiprocessing with fun, kwargs and n_jobs
         if self.n_jobs <= 1:
             all_orders = [
                 fit_feature(
@@ -88,7 +89,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
                 )
                 for feature in self.quantitative_features
             ]
-        #  launching multiprocessing
+        # multiprocessing
         else:
             with Pool(processes=self.n_jobs) as pool:
                 # feature processing
