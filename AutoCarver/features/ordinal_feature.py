@@ -13,7 +13,6 @@ class OrdinalFeature(BaseFeature):
         self,
         name: str,
         order: list[str],
-        output_dtype: str,
         str_nan: str = STR_NAN,
         str_default: str = STR_DEFAULT,
     ) -> None:
@@ -22,7 +21,16 @@ class OrdinalFeature(BaseFeature):
         self.dtype = "ordinal"
         self.order = GroupedList(order)
 
+        # adding stats
+        self.n_unique = None
+        self.mode = None
+        self.pct_mode = None
+
+    def __repr__(self):
+        return f"OrdinalFeature('{self.name}')"
+
     def fit(self, X: DataFrame, y: Series = None) -> None:
+        """TODO: fit stats"""
         # checking for feature's unique non-nan values
         unique_values = nan_unique(X[self.name])
 

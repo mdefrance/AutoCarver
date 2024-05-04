@@ -7,17 +7,20 @@ from ..discretizers import GroupedList
 from .base_feature import BaseFeature
 
 
-class ContinuousFeature(BaseFeature):
+class QuantitativeFeature(BaseFeature):
     def __init__(
         self,
         name: str,
-        output_dtype: str,
         str_nan: str = STR_NAN,
         str_default: str = STR_DEFAULT,
+        **kwargs,
     ) -> None:
         super().__init__(name, str_nan, str_default)
 
         self.dtype = "continuous"
+
+    def __repr__(self):
+        return f"QuantitativeFeature('{self.name}')"
 
     def fit(self, X: DataFrame, y: Series = None) -> None:
         # adding NANS

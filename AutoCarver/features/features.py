@@ -2,30 +2,90 @@
 
 from .base_feature import BaseFeature
 from .categorical_feature import CategoricalFeature
-from .continuous_feature import ContinuousFeature
+from .continuous_feature import QuantitativeFeature
 from .ordinal_feature import OrdinalFeature
 
 
+class Features:
+
+    def __init__(
+        self,
+        categoricals: list[str] = None,
+        quantitatives: list[str] = None,
+        ordinals: list[str] = None,
+        ordinal_values: dict[str, list[str]] = None,
+    ) -> None:
+
+        # ordered values per ordinal features
+        self.ordinal_values = ordinal_values
+
+        # casting features accordingly
+        self.categoricals = cast_features(categoricals, CategoricalFeature)
+        self.quantitatives = cast_features(quantitatives, QuantitativeFeature)
+        self.ordinals = cast_features(ordinals, OrdinalFeature, ordinal_values=self.ordinal_values)
+
+        # checking that features were passed as input
+        if len(self.categoricals) == 0 and len(self.quantitatives) == 0 and len(self.ordinals) == 0:
+            raise ValueError(
+                " - [Features] No feature passed as input. Please provided column names"
+                "by setting categoricals, quantitatives or ordinals."
+            )
+
+        # checking that qualitatitve and quantitative features are distinct
+        if (
+            any(
+                feature in get_names(self.ordinals) + get_names(self.quantitatives)
+                for feature in get_names(self.categoricals)
+            )
+            or any(
+                feature in get_names(self.categoricals) + get_names(self.ordinals)
+                for feature in get_names(self.quantitatives)
+            )
+            or any(
+                feature in get_names(self.categoricals) + get_names(self.quantitatives)
+                for feature in get_names(self.ordinals)
+            )
+        ):
+            raise ValueError(
+                " - [AutoCarver] One of provided features is in quantitatives and in "
+                "categoricals and/or in ordinals. Please, check inputs!"
+            )
+
+        self.names = (
+            get_names(self.categoricals) + get_names(self.ordinals) + get_names(self.quantitatives)
+        )
+
+    def __repr__(self):
+        return f"Features({str(list(self.names))})"
+
+
 def cast_features(
-    features: list[str | BaseFeature], target_class: type = BaseFeature
+    features: list[str],
+    target_class: type = BaseFeature,
+    ordinal_values: dict[str, list[str]] = None,
 ) -> list[BaseFeature]:
-    """converts a list of string feature names to"""
+    """converts a list of string feature names to there corresponding Feature class"""
 
     # inititating features if not provided
     if features is None:
-        features = []
+        features: list[str] = []
 
-    converted_features = []  # initiating
+    # inititating ordered values for ordinal features if not provided
+    if ordinal_values is None:
+        ordinal_values: dict[str, list[str]] = {}
+
+    # initiating list of converted features
+    converted_features: list[target_class] = []
 
     # iterating over each feature
     for feature in features:
         # string case, initiating feature
         if isinstance(feature, str):
-            converted_features += [target_class(feature)]
+            converted_features += [target_class(feature, order=ordinal_values.get(feature))]
         # already a BaseFeature
         elif isinstance(feature, target_class):
             converted_features += [feature]
-        # what?
+
         else:
             raise TypeError(
                 f" - [Features] feature {feature} is neither a str, nor a {target_class.__name__}."
@@ -35,31 +95,10 @@ def cast_features(
     return [
         feature
         for n, feature in enumerate(converted_features)
-        if feature.name not in [f.name for f in converted_features[n + 1 :]]
+        if feature.name not in get_names(converted_features[n + 1 :])
     ]
 
 
-class Features:
-
-    def __init__(
-        self,
-        categorical_features: list[str | CategoricalFeature] = None,
-        continuous_features: list[str | ContinuousFeature] = None,
-        ordinal_features: list[str | OrdinalFeature] = None,
-    ) -> None:
-
-        # casting features accordingly
-        self.categorical_features = cast_features(categorical_features, CategoricalFeature)
-        self.continuous_features = cast_features(continuous_features, ContinuousFeature)
-        self.ordinal_features = cast_features(ordinal_features, OrdinalFeature)
-
-        # checking that features were passed as input
-        if (
-            len(self.categorical_features) == 0
-            and len(self.continuous_features) == 0
-            and len(self.ordinal_features) == 0
-        ):
-            raise ValueError(
-                " - [Features] No feature passed as input. Pleased provided column names"
-                "by setting categorical_features, continuous_features or ordinal_features."
-            )
+def get_names(features: list[BaseFeature]) -> list[str]:
+    """Gives names from Features"""
+    return [feature.name for feature in features]

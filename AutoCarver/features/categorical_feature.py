@@ -12,13 +12,16 @@ class CategoricalFeature(BaseFeature):
     def __init__(
         self,
         name: str,
-        output_dtype: str,
         str_nan: str = STR_NAN,
         str_default: str = STR_DEFAULT,
+        **kwargs,
     ) -> None:
         super().__init__(name, str_nan, str_default)
 
         self.dtype = "categorical"
+
+    def __repr__(self):
+        return f"CategoricalFeature('{self.name}')"
 
     def fit(self, X: DataFrame, y: Series = None) -> None:
         # initiating feature with its unique non-nan values
