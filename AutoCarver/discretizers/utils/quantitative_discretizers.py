@@ -9,6 +9,7 @@ from typing import Any
 from numpy import array, digitize, in1d, inf, isnan, linspace, quantile, sort, unique
 from pandas import DataFrame, Series
 
+from ...config import STR_NAN
 from .base_discretizers import BaseDiscretizer, extend_docstring
 from .grouped_list import GroupedList
 
@@ -62,7 +63,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
             values_orders=values_orders,
             input_dtypes="float",
             output_dtype="str",
-            str_nan=kwargs.get("str_nan", "__NAN__"),
+            str_nan=kwargs.get("str_nan", STR_NAN),
             copy=copy,
             verbose=verbose,
             n_jobs=n_jobs,

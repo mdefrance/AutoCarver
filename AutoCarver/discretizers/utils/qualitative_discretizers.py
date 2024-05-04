@@ -9,6 +9,7 @@ import numpy as np
 from numpy import argmin, nan, select
 from pandas import DataFrame, Series, isna, unique
 
+from ...config import STR_DEFAULT, STR_NAN
 from .base_discretizers import (
     BaseDiscretizer,
     convert_to_labels,
@@ -18,7 +19,6 @@ from .base_discretizers import (
     target_rate,
     value_counts,
 )
-from ...config import STR_DEFAULT, STR_NAN
 from .grouped_list import GroupedList
 from .type_discretizers import StringDiscretizer
 

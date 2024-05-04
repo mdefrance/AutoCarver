@@ -3,6 +3,8 @@ TODO: add labels
 TODO add casted features?
 """
 
+from pandas import DataFrame, Series
+
 from ..config import STR_DEFAULT, STR_NAN
 from ..discretizers import GroupedList
 
@@ -11,13 +13,11 @@ class BaseFeature:
     def __init__(
         self,
         name: str,
-        input_dtype: str,
         output_dtype: str,
         str_nan: str = STR_NAN,
         str_default: str = STR_DEFAULT,
     ) -> None:
         self.name = name
-        self.input_dtype = input_dtype
         self.output_dtype = output_dtype
 
         self.str_nan = str_nan
@@ -27,13 +27,12 @@ class BaseFeature:
 
         self.is_fitted = False
 
-        self.type = "base"
+        self.dtype = None
         self.order: list[str] = GroupedList()
 
         # self.distribution = GroupedList()
 
-    # def fit(self, X: DataFrame, y: Series = None) -> None:  # pylint: disable=W0222
+    def fit(self, X: DataFrame, y: Series = None) -> None:  # pylint: disable=W0222
+        _, _ = X, y  # unused attributes
 
-    #     values_orders = (self.values_orders,)
-    #     input_dtypes = (self.input_dtypes,)
-    #     str_nan = (self.str_nan,)
+        self.is_fitted = True  # fitted feature
