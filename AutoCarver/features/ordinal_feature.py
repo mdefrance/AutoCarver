@@ -13,10 +13,11 @@ class OrdinalFeature(BaseFeature):
         self,
         name: str,
         order: list[str],
+        output_dtype: str,
         str_nan: str = STR_NAN,
         str_default: str = STR_DEFAULT,
     ) -> None:
-        super().__init__(name, str_nan, str_default)
+        super().__init__(name, output_dtype, str_nan, str_default)
 
         self.dtype = "ordinal"
         self.order = GroupedList(order)
@@ -35,7 +36,7 @@ class OrdinalFeature(BaseFeature):
         unique_values = nan_unique(X[self.name])
 
         # unexpected values for this feature
-        unexpected = [val for val in unique_values if not self.order.contains(val)]
+        unexpected = [val for val in unique_values if not self.values.contains(val)]
         assert len(unexpected) == 0, (
             " - [OrdinalFeature] Unexpected value for feature '{self.name}'! Values: "
             f"{str(list(unexpected))}. Make sure to set order accordingly when defining feature."
@@ -43,13 +44,25 @@ class OrdinalFeature(BaseFeature):
 
         # adding NANS
         if any(X[self.name].isna()):
-            self.order.append(self.str_nan)
+            self.values.append(self.str_nan)
             self.has_nan = True
 
         super().fit(X, y)
 
-    def update(self, order: GroupedList) -> None:
-        super().update(order)
+    def update(self, values: GroupedList) -> None:
+        super().update(values)
 
-        # TODO: update labels
-        self.labels.update({})
+        # updating labels accordingly
+        self.update_labels()
+
+    def update_labels(self, labels: list[str] = None) -> None:
+        """updates label for each value of the feature"""
+        # for qualitative feature -> by default, labels are values
+        labels = self.values[:]
+
+        # requested float output (AutoCarver) -> converting to integers
+        if self.output_dtype == "float":
+            labels = [n for n, _ in enumerate(labels)]
+
+        # building label per value
+        super().update_labels(labels)
