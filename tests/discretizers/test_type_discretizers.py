@@ -2,6 +2,7 @@
 
 from pandas import DataFrame
 
+from AutoCarver.config import STR_NAN
 from AutoCarver.discretizers.utils.type_discretizers import StringDiscretizer
 
 
@@ -55,7 +56,7 @@ def test_string_discretizer(x_train: DataFrame) -> None:
         values_orders=values_orders,
         n_jobs=1,
     )
-    x_discretized = discretizer.fit_transform(x_train)
+    _ = discretizer.fit_transform(x_train)
 
     expected = {
         "2": [2, "2"],
@@ -77,7 +78,7 @@ def test_string_discretizer(x_train: DataFrame) -> None:
         "1": [1.0, "1"],
         "5": [5.0, "5"],
         "6": [6.0, "6"],
-        "__NAN__": ["__NAN__"],
+        STR_NAN: [STR_NAN],
     }
     assert (
         discretizer.values_orders["Discrete_Qualitative_lownan_noorder"].content == expected
@@ -106,7 +107,7 @@ def test_string_discretizer(x_train: DataFrame) -> None:
         "High-": ["High-"],
         "High": ["High"],
         "High+": ["High+"],
-        "__NAN__": ["__NAN__"],
+        STR_NAN: [STR_NAN],
     }
     assert (
         discretizer.values_orders["Qualitative_Ordinal_lownan"].content == expected
@@ -135,7 +136,7 @@ def test_string_discretizer(x_train: DataFrame) -> None:
         "5": [5.0, "5"],
         "6": [6.0, "6"],
         "7": [7.0, "7"],
-        "__NAN__": ["__NAN__"],
+        STR_NAN: [STR_NAN],
     }
     assert (
         discretizer.values_orders["Discrete_Qualitative_highnan"].content == expected

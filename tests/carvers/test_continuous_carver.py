@@ -7,6 +7,7 @@ from pandas import DataFrame
 from pytest import raises
 
 from AutoCarver import ContinuousCarver, load_carver
+from AutoCarver.config import STR_NAN
 from AutoCarver.discretizers import ChainedDiscretizer
 
 
@@ -151,7 +152,7 @@ def test_continuous_carver(
     # test that all values still are in the values_orders
     for feature in auto_carver.qualitative_features:
         fitted_values = auto_carver.values_orders[feature].values()
-        init_values = raw_x_train[feature].fillna("__NAN__").unique()
+        init_values = raw_x_train[feature].fillna(STR_NAN).unique()
         assert all(value in fitted_values for value in init_values), (
             "Missing value in output! Some values are been dropped for qualitative "
             f"feature: {feature}"
@@ -171,8 +172,8 @@ def test_continuous_carver(
     # testing copy functionnality
     if copy:
         assert all(
-            x_discretized[auto_carver.features].fillna("__NAN__")
-            == x_train[auto_carver.features].fillna("__NAN__")
+            x_discretized[auto_carver.features].fillna(STR_NAN)
+            == x_train[auto_carver.features].fillna(STR_NAN)
         ), "Not copied correctly"
 
     # testing json serialization
@@ -276,7 +277,7 @@ def test_continuous_carver(
                 "Mediums",
             ],
             "High+": ["High", "High-", "Highs", "Best", "ALONE", "BEST", "High+"],
-            "__NAN__": ["unknown", "__NAN__"],
+            STR_NAN: ["unknown", STR_NAN],
         }
         assert (
             auto_carver.values_orders["Qualitative_Ordinal_lownan"].content == expected
@@ -296,7 +297,7 @@ def test_continuous_carver(
                 "Mediums",
             ],
             "High+": ["High", "High-", "Highs", "Best", "ALONE", "BEST", "High+"],
-            "__NAN__": ["unknown", "__NAN__"],
+            STR_NAN: ["unknown", STR_NAN],
         }
         assert (
             auto_carver.values_orders["Qualitative_Ordinal_lownan"].content == expected

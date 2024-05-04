@@ -2,7 +2,6 @@
 
 from pandas import DataFrame
 
-from AutoCarver import BinaryCarver
 from AutoCarver.selectors import RegressionSelector
 
 
@@ -66,4 +65,5 @@ def test_regression_selector(
         feature in expected[n_best] for feature in best_features
     ), "Not correctly selected features"
     # checking for correctly selected number of features -> not possible
-    # assert len(list(feature for feature in best_features if feature in quantitative_features)) <= n_best
+    # assert len(list(feature for feature in best_features if feature in quantitative_features))
+    # <= n_best

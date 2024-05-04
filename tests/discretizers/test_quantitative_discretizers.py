@@ -3,6 +3,7 @@
 from numpy import inf
 from pandas import DataFrame
 
+from AutoCarver.config import STR_NAN
 from AutoCarver.discretizers import ContinuousDiscretizer
 
 
@@ -41,10 +42,10 @@ def test_quantile_discretizer(x_train: DataFrame):
         4.0,
         7.0,
         inf,
-        "__NAN__",
+        STR_NAN,
     ], "NaNs should be added to the order"
     assert (
-        "__NAN__" in x_discretized["Discrete_Quantitative_highnan"].unique()
+        STR_NAN in x_discretized["Discrete_Quantitative_highnan"].unique()
     ), "NaNs should be filled with the str_nan value"
     assert discretizer.values_orders["Discrete_Quantitative_lownan"] == [
         1.0,
@@ -53,7 +54,7 @@ def test_quantile_discretizer(x_train: DataFrame):
         4.0,
         6.0,
         inf,
-        "__NAN__",
+        STR_NAN,
     ], "NaNs should not be grouped whatsoever"
     assert discretizer.values_orders["Discrete_Quantitative_rarevalue"] == [
         0.5,

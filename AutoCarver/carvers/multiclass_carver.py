@@ -6,6 +6,7 @@ from typing import Any, Callable
 
 from pandas import DataFrame, Series, unique
 
+from ..config import STR_DEFAULT, STR_NAN
 from ..discretizers import BaseDiscretizer, GroupedList
 from ..discretizers.utils.base_discretizers import extend_docstring
 from .base_carver import BaseCarver
@@ -211,8 +212,8 @@ class MulticlassCarver(BaseCarver):
             values_orders=casted_values_orders,
             input_dtypes=casted_input_dtypes,
             output_dtype=self.output_dtype,
-            str_nan=self.kwargs.get("str_nan", "__NAN__"),
-            str_default=self.kwargs.get("str_default", "__OTHER__"),
+            str_nan=self.kwargs.get("str_nan", STR_NAN),
+            str_default=self.kwargs.get("str_default", STR_DEFAULT),
             dropna=self.dropna,
             copy=self.copy,
             verbose=self.verbose,

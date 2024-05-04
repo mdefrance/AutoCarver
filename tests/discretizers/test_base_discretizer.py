@@ -3,6 +3,7 @@
 from numpy import nan
 from pandas import DataFrame
 
+from AutoCarver.config import STR_NAN
 from AutoCarver.discretizers import BaseDiscretizer, GroupedList
 
 
@@ -21,7 +22,7 @@ def test_grouped_list_discretizer(x_train: DataFrame, x_dev_1: DataFrame, x_dev_
     """
 
     # values to input nans
-    str_nan = "__NAN__"
+    str_nan = STR_NAN
 
     # defining values_orders
     order = ["Low-", "Low", "Low+", "Medium-", "Medium", "Medium+", "High-", "High", "High+"]
@@ -84,7 +85,7 @@ def test_grouped_list_discretizer(x_train: DataFrame, x_dev_1: DataFrame, x_dev_
         .replace("High-", "High")
         .replace("High", "High")
         .replace("High+", "High+")
-        .replace(nan, "__NAN__")
+        .replace(nan, STR_NAN)
     )
     assert all(
         x_expected["Qualitative_Ordinal_lownan"] == x_discretized["Qualitative_Ordinal_lownan"]

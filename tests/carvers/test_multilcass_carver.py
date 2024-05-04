@@ -7,6 +7,7 @@ from pandas import DataFrame
 from pytest import fixture, raises
 
 from AutoCarver import MulticlassCarver, load_carver
+from AutoCarver.config import STR_NAN
 from AutoCarver.discretizers import ChainedDiscretizer
 
 
@@ -156,7 +157,7 @@ def test_multiclass_carver(
     for feature in auto_carver.qualitative_features:
         fitted_values = auto_carver.values_orders[feature].values()
         raw_feature_name = feature[:-2]
-        init_values = raw_x_train[raw_feature_name].fillna("__NAN__").unique()
+        init_values = raw_x_train[raw_feature_name].fillna(STR_NAN).unique()
         assert all(value in fitted_values for value in init_values), (
             "Missing value in output! Some values are been dropped for qualitative feature"
             f": {feature}"
@@ -179,8 +180,7 @@ def test_multiclass_carver(
         renamed_x_train = x_train[[feature[:-2] for feature in auto_carver.features]].copy()
         renamed_x_train.columns = auto_carver.features
         assert all(
-            x_discretized[auto_carver.features].fillna("__NAN__")
-            == renamed_x_train.fillna("__NAN__")
+            x_discretized[auto_carver.features].fillna(STR_NAN) == renamed_x_train.fillna(STR_NAN)
         ), "Not copied correctly"
 
     # testing json serialization
@@ -285,7 +285,7 @@ def test_multiclass_carver(
                 "Mediums",
             ],
             "High+": ["High", "High-", "Highs", "Best", "ALONE", "BEST", "High+"],
-            "__NAN__": ["unknown", "__NAN__"],
+            STR_NAN: ["unknown", STR_NAN],
         }
         assert (
             auto_carver.values_orders["Qualitative_Ordinal_lownan_1"].content == expected
@@ -305,7 +305,7 @@ def test_multiclass_carver(
                 "Medium-",
                 "Mediums",
             ],
-            "__NAN__": ["unknown", "__NAN__"],
+            STR_NAN: ["unknown", STR_NAN],
         }
         assert (
             auto_carver.values_orders["Qualitative_Ordinal_lownan_2"].content == expected

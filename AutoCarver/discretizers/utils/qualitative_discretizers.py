@@ -1,6 +1,7 @@
 """Tools to build simple buckets out of Qualitative features
 for a binary classification model.
 """
+
 from typing import Union
 from warnings import warn
 
@@ -17,6 +18,7 @@ from .base_discretizers import (
     target_rate,
     value_counts,
 )
+from ...config import STR_DEFAULT, STR_NAN
 from .grouped_list import GroupedList
 from .type_discretizers import StringDiscretizer
 
@@ -65,8 +67,8 @@ class CategoricalDiscretizer(BaseDiscretizer):
             values_orders=values_orders,
             input_dtypes="str",
             output_dtype="str",
-            str_nan=kwargs.get("str_nan", "__NAN__"),
-            str_default=kwargs.get("str_default", "__OTHER__"),
+            str_nan=kwargs.get("str_nan", STR_NAN),
+            str_default=kwargs.get("str_default", STR_DEFAULT),
             copy=copy,
             verbose=verbose,
             n_jobs=n_jobs,

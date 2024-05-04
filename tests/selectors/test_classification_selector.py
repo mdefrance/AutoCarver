@@ -3,12 +3,12 @@
 from pandas import DataFrame
 from pytest import FixtureRequest, fixture
 
-from AutoCarver import selectors
 from AutoCarver.selectors import ClassificationSelector
 
 
 @fixture(params=["binary_target", "multiclass_target"])
 def target(request: type[FixtureRequest]) -> str:
+    """target task"""
     return request.param
 
 
@@ -98,4 +98,5 @@ def test_classification_selector(
         feature in expected[n_best][target] for feature in best_features
     ), "Not correctly selected features"
     # checking for correctly selected number of features -> not possible
-    # assert len(list(feature for feature in best_features if feature in quantitative_features)) <= n_best
+    # assert len(list(feature for feature in best_features if feature in quantitative_features))
+    # <= n_best
