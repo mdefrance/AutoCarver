@@ -861,7 +861,9 @@ class BaseCarver(BaseDiscretizer):
                     (
                         mapped_idx[-1] + " to " + mapped_idx[0]
                         if len(mapped_idx) > 2
-                        else mapped_idx[0] if len(mapped_idx) == 0 else ", ".join(mapped_idx)
+                        else mapped_idx[0]
+                        if len(mapped_idx) == 0
+                        else ", ".join(mapped_idx)
                     )
                     for mapped_idx in mapped_index
                 ]

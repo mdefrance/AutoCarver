@@ -8,7 +8,6 @@ from ..discretizers import GroupedList
 
 
 class BaseFeature:
-
     def __init__(
         self,
         name: str,
@@ -17,7 +16,6 @@ class BaseFeature:
         str_nan: str = STR_NAN,
         str_default: str = STR_DEFAULT,
     ) -> None:
-
         self.name = name
         self.input_dtype = input_dtype
         self.output_dtype = output_dtype

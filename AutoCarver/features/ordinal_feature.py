@@ -8,7 +8,6 @@ from ..discretizers import GroupedList
 
 
 class OrdinalFeature(BaseFeature):
-
     def __init__(
         self,
         name: str,
@@ -24,7 +23,6 @@ class OrdinalFeature(BaseFeature):
         self.order = GroupedList(order)
 
     def fit(self, X: DataFrame, y: Series = None) -> None:
-
         _ = y  # unused attributes
 
         # adding NANS

@@ -10,7 +10,6 @@ from ..discretizers.utils.base_discretizers import nan_unique
 
 
 class CategoricalFeature(BaseFeature):
-
     def __init__(
         self,
         name: str,
@@ -24,7 +23,6 @@ class CategoricalFeature(BaseFeature):
         self.type = "categorical"
 
     def fit(self, X: DataFrame, y: Series = None) -> None:
-
         _ = y  # unused attributes
 
         # initiating feature with its unique non-nan values
