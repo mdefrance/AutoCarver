@@ -1,6 +1,10 @@
-""" TODO: initiate features from dataset"""
+""" TODO: initiate features from dataset
+TODO: add labels
+TODO add casted features?
+"""
 
 from ..config import STR_DEFAULT, STR_NAN
+from ..discretizers import GroupedList
 
 
 class BaseFeature:
@@ -22,6 +26,11 @@ class BaseFeature:
         self.has_nan = False
         self.str_default = str_default
         self.has_default = False
+
+        self.is_fitted = False
+
+        self.type = "base"
+        self.order: list[str] = GroupedList()
 
         # self.distribution = GroupedList()
 
