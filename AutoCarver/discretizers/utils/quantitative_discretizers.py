@@ -79,8 +79,8 @@ class ContinuousDiscretizer(BaseDiscretizer):
         # fitting each feature
         all_orders = imap_unordered_function(
             fit_feature,
-            self.n_jobs,
             self.quantitative_features,
+            self.n_jobs,
             X=X[self.quantitative_features],
             q=self.q,
             str_nan=self.str_nan,
