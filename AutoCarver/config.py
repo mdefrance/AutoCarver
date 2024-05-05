@@ -1,2 +1,2 @@
-STR_DEFAULT = "__OTHER__"
-STR_NAN = "__NAN__"
+DEFAULT = "__OTHER__"
+NAN = "__NAN__"

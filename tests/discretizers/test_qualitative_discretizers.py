@@ -3,7 +3,7 @@
 from pandas import DataFrame
 from pytest import raises
 
-from AutoCarver.config import STR_DEFAULT, STR_NAN
+from AutoCarver.config import DEFAULT, NAN
 from AutoCarver.discretizers import (
     CategoricalDiscretizer,
     ChainedDiscretizer,
@@ -105,7 +105,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
         "High-": ["High-"],
         "High": ["High"],
         "High+": ["High+"],
-        STR_NAN: [STR_NAN],
+        NAN: [NAN],
     }
     assert (
         discretizer.values_orders["Qualitative_Ordinal_highnan"].content == expected
@@ -117,7 +117,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
         "Best": ["High", "High-", "Highs", "Best"],
         "Mediums": ["Medium+", "Medium-", "Mediums"],
         "Worst": ["Low+", "Low", "Low-", "Lows", "Worst"],
-        STR_NAN: [STR_NAN],
+        NAN: [NAN],
     }
     assert discretizer.values_orders["Qualitative_Ordinal_lownan"].content == expected, (
         "NaNs should be added to the order and missing values from the values_orders should"
@@ -129,7 +129,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
         "Worst",
         "High+",
         "Best",
-        STR_NAN,
+        NAN,
     ]
     assert (
         discretizer.values_orders["Qualitative_Ordinal_lownan"] == expected
@@ -160,7 +160,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
         "Worst": ["Low+", "Low", "Low-", "Lows", "Worst"],
         "High+": ["High+"],
         "Best": ["High", "High-", "Highs", "Best"],
-        STR_NAN: ["unknown", STR_NAN],
+        NAN: ["unknown", NAN],
     }
     assert (
         discretizer.values_orders["Qualitative_Ordinal"].content == expected
@@ -170,7 +170,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
         "Worst",
         "High+",
         "Best",
-        STR_NAN,
+        NAN,
     ]
     assert (
         discretizer.values_orders["Qualitative_Ordinal"] == expected
@@ -182,7 +182,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
         "Worst": ["Low+", "Low", "Low-", "Lows", "Worst"],
         "High+": ["High+"],
         "Best": ["High", "High-", "Highs", "Best"],
-        STR_NAN: [STR_NAN],
+        NAN: [NAN],
     }
     assert discretizer.values_orders["Qualitative_Ordinal_lownan"].content == expected, (
         "NaNs should be added to the order and missing values from the values_orders should be"
@@ -194,7 +194,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
         "Worst",
         "High+",
         "Best",
-        STR_NAN,
+        NAN,
     ]
     assert (
         discretizer.values_orders["Qualitative_Ordinal_lownan"] == expected
@@ -238,7 +238,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
         "Worst": ["Low+", "Low", "Low-", "Lows", "Worst"],
         "High+": ["High+"],
         "Best": ["High", "High-", "Highs", "Best"],
-        STR_NAN: ["unknown", STR_NAN],
+        NAN: ["unknown", NAN],
     }
     assert discretizer.values_orders["Qualitative_Ordinal_lownan"].content == expected, (
         "NaNs should be added to the order and missing values from the values_orders should be "
@@ -249,7 +249,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
         "Worst",
         "High+",
         "Best",
-        STR_NAN,
+        NAN,
     ]
     assert (
         discretizer.values_orders["Qualitative_Ordinal_lownan"] == expected
@@ -286,7 +286,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
         "High+": ["High+"],
         "Best": ["High", "High-", "Highs", "Best"],
         "BEST": ["ALL_ALONE", "ALONE", "BEST"],
-        STR_NAN: [STR_NAN],
+        NAN: [NAN],
     }
 
     assert (
@@ -469,15 +469,15 @@ def test_default_discretizer(x_train: DataFrame, target: str) -> None:
     ), "Column names of values_orders not provided if features should not be discretized."
 
     quali_expected_order = {
-        "binary_target": ["Category D", STR_DEFAULT, "Category F", "Category C", "Category E"],
-        "continuous_target": [STR_DEFAULT, "Category C", "Category E", "Category F", "Category D"],
+        "binary_target": ["Category D", DEFAULT, "Category F", "Category C", "Category E"],
+        "continuous_target": [DEFAULT, "Category C", "Category E", "Category F", "Category D"],
     }
     assert (
         discretizer.values_orders["Qualitative"] == quali_expected_order[target]
     ), "Incorrect ordering by target rate"
 
     quali_expected = {
-        STR_DEFAULT: ["Category A", STR_DEFAULT],
+        DEFAULT: ["Category A", DEFAULT],
         "Category C": ["Category C"],
         "Category F": ["Category F"],
         "Category E": ["Category E"],
@@ -493,16 +493,16 @@ def test_default_discretizer(x_train: DataFrame, target: str) -> None:
             "Category F",
             "Category C",
             "Category E",
-            STR_NAN,
+            NAN,
         ],
-        "continuous_target": ["Category C", "Category E", "Category F", "Category D", STR_NAN],
+        "continuous_target": ["Category C", "Category E", "Category F", "Category D", NAN],
     }
     assert (
         discretizer.values_orders["Qualitative_lownan"] == quali_lownan_expected_order[target]
     ), "Incorrect ordering by target rate"
 
     quali_lownan_expected = {
-        STR_NAN: [STR_NAN],
+        NAN: [NAN],
         "Category C": ["Category C"],
         "Category F": ["Category F"],
         "Category E": ["Category E"],
@@ -515,21 +515,21 @@ def test_default_discretizer(x_train: DataFrame, target: str) -> None:
     quali_highnan_expected_order = {
         "binary_target": [
             "Category D",
-            STR_DEFAULT,
+            DEFAULT,
             "Category C",
             "Category E",
-            STR_NAN,
+            NAN,
         ],
-        "continuous_target": [STR_DEFAULT, "Category C", "Category E", "Category D", STR_NAN],
+        "continuous_target": [DEFAULT, "Category C", "Category E", "Category D", NAN],
     }
     assert (
         discretizer.values_orders["Qualitative_highnan"] == quali_highnan_expected_order[target]
     ), "Incorrect ordering by target rate"
 
     quali_highnan_expected = {
-        STR_DEFAULT: ["Category A", STR_DEFAULT],
+        DEFAULT: ["Category A", DEFAULT],
         "Category C": ["Category C"],
-        STR_NAN: [STR_NAN],
+        NAN: [NAN],
         "Category E": ["Category E"],
         "Category D": ["Category D"],
     }
@@ -594,7 +594,7 @@ def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:
         "Medium+": ["High-", "Medium+"],
         "High": ["High"],
         "High+": ["High+"],
-        STR_NAN: [STR_NAN],
+        NAN: [NAN],
     }
     assert (
         discretizer.values_orders["Qualitative_Ordinal"].content == expected_ordinal_01
@@ -626,7 +626,7 @@ def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:
         "Medium": ["Medium"],
         "High": ["Medium+", "High-", "High"],
         "High+": ["High+"],
-        STR_NAN: [STR_NAN],
+        NAN: [NAN],
     }
     assert (
         discretizer.values_orders["Qualitative_Ordinal"].content == expected_ordinal_08

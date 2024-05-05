@@ -9,7 +9,7 @@ import numpy as np
 from numpy import argmin, nan, select
 from pandas import DataFrame, Series, isna, unique
 
-from ...config import STR_DEFAULT, STR_NAN
+from ...config import DEFAULT, NAN
 from .base_discretizers import (
     BaseDiscretizer,
     convert_to_labels,
@@ -227,7 +227,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
             values_orders=values_orders,
             input_dtypes=input_dtypes,
             output_dtype="str",
-            str_nan=kwargs.get("str_nan", STR_NAN),
+            str_nan=kwargs.get("nan", NAN),
             copy=copy,
             verbose=verbose,
             n_jobs=n_jobs,
@@ -373,7 +373,7 @@ class ChainedDiscretizer(BaseDiscretizer):
             values_orders=values_orders,
             input_dtypes="str",
             output_dtype="str",
-            str_nan=kwargs.get("str_nan", STR_NAN),
+            str_nan=kwargs.get("nan", NAN),
             dropna=False,
             copy=copy,
             verbose=verbose,

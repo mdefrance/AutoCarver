@@ -39,7 +39,7 @@ class StringDiscretizer(BaseDiscretizer):
             values_orders=values_orders,
             input_dtypes="str",
             output_dtype="str",
-            str_nan=kwargs.get("str_nan", "__NAN__"),
+            str_nan=kwargs.get("nan", "__NAN__"),
             copy=copy,
             verbose=verbose,
             n_jobs=n_jobs,

@@ -8,7 +8,7 @@ from warnings import warn
 from numpy import nan
 from pandas import DataFrame, Series, unique
 
-from ..config import STR_DEFAULT, STR_NAN
+from ..config import DEFAULT, NAN
 from .utils.base_discretizers import BaseDiscretizer, extend_docstring
 from ..features import GroupedList
 from .utils.qualitative_discretizers import CategoricalDiscretizer, OrdinalDiscretizer
@@ -80,8 +80,8 @@ class Discretizer(BaseDiscretizer):
             values_orders=values_orders,
             input_dtypes=self.input_dtypes,
             output_dtype="str",
-            str_nan=kwargs.get("str_nan", STR_NAN),
-            str_default=kwargs.get("str_default", STR_DEFAULT),
+            str_nan=kwargs.get("nan", NAN),
+            str_default=kwargs.get("default", DEFAULT),
             copy=copy,
             verbose=verbose,
             n_jobs=n_jobs,
@@ -257,8 +257,8 @@ class QualitativeDiscretizer(BaseDiscretizer):
             values_orders=values_orders,
             input_dtypes=input_dtypes,
             output_dtype="str",
-            str_nan=kwargs.get("str_nan", STR_NAN),
-            str_default=kwargs.get("str_default", STR_DEFAULT),
+            str_nan=kwargs.get("nan", NAN),
+            str_default=kwargs.get("default", DEFAULT),
             copy=copy,
             verbose=verbose,
             n_jobs=n_jobs,
@@ -388,8 +388,8 @@ class QualitativeDiscretizer(BaseDiscretizer):
             dropna=False,
             copy=True,
             verbose=self.verbose,
-            str_nan=STR_NAN,
-            str_default=STR_DEFAULT,
+            str_nan=NAN,
+            str_default=DEFAULT,
             n_jobs=self.n_jobs,
         )
         x_copy = base_discretizer.fit_transform(x_copy, y)
@@ -485,7 +485,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
             values_orders=values_orders,
             input_dtypes=input_dtypes,
             output_dtype="str",
-            str_nan=kwargs.get("str_nan", STR_NAN),
+            str_nan=kwargs.get("nan", NAN),
             copy=copy,
             verbose=verbose,
             n_jobs=n_jobs,

@@ -9,7 +9,7 @@ from numpy import isclose
 from pandas import DataFrame, Series
 from tqdm import tqdm
 
-from ..config import STR_DEFAULT, STR_NAN
+from ..config import DEFAULT, NAN
 from ..features import GroupedList
 from ..discretizers.discretizers import Discretizer
 from ..discretizers.utils.base_discretizers import (
@@ -164,8 +164,8 @@ class BaseCarver(BaseDiscretizer):
             values_orders=values_orders,
             input_dtypes=self.input_dtypes,
             output_dtype=output_dtype,
-            str_nan=kwargs.get("str_nan", STR_NAN),
-            str_default=kwargs.get("str_default", STR_DEFAULT),
+            str_nan=kwargs.get("nan", NAN),
+            str_default=kwargs.get("default", DEFAULT),
             dropna=dropna,
             copy=copy,
             n_jobs=n_jobs,

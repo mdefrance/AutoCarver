@@ -5,7 +5,7 @@ TODO add casted features?
 
 from pandas import DataFrame, Series
 
-from ..config import STR_DEFAULT, STR_NAN
+from ..config import DEFAULT, NAN
 from .grouped_list import GroupedList
 
 
@@ -15,11 +15,11 @@ class BaseFeature:
 
         # whether or not feature has some NaNs
         self.has_nan = None
-        self.str_nan = kwargs.get("str_nan", STR_NAN)
+        self.str_nan = kwargs.get("nan", NAN)
 
         # whether or not feature has some default values
         self.has_default = None
-        self.str_default = kwargs.get("str_default", STR_DEFAULT)
+        self.str_default = kwargs.get("default", DEFAULT)
 
         # whether or not nans must be removed
         self.dropna = None

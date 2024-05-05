@@ -2,7 +2,7 @@
 
 from pandas import DataFrame
 
-from AutoCarver.config import STR_NAN
+from AutoCarver.config import NAN
 from AutoCarver.discretizers.utils.type_discretizers import StringDiscretizer
 
 
@@ -78,7 +78,7 @@ def test_string_discretizer(x_train: DataFrame) -> None:
         "1": [1.0, "1"],
         "5": [5.0, "5"],
         "6": [6.0, "6"],
-        STR_NAN: [STR_NAN],
+        NAN: [NAN],
     }
     assert (
         discretizer.values_orders["Discrete_Qualitative_lownan_noorder"].content == expected
@@ -107,7 +107,7 @@ def test_string_discretizer(x_train: DataFrame) -> None:
         "High-": ["High-"],
         "High": ["High"],
         "High+": ["High+"],
-        STR_NAN: [STR_NAN],
+        NAN: [NAN],
     }
     assert (
         discretizer.values_orders["Qualitative_Ordinal_lownan"].content == expected
@@ -136,7 +136,7 @@ def test_string_discretizer(x_train: DataFrame) -> None:
         "5": [5.0, "5"],
         "6": [6.0, "6"],
         "7": [7.0, "7"],
-        STR_NAN: [STR_NAN],
+        NAN: [NAN],
     }
     assert (
         discretizer.values_orders["Discrete_Qualitative_highnan"].content == expected
