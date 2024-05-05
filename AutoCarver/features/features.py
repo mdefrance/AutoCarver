@@ -63,7 +63,11 @@ class Features:
         return f"Features({str(list(self.names))})"
 
     def __call__(self, feature_name: str):
-        return self.dict.get(feature_name)
+        # checking that feature exists
+        if feature_name in self.dict:
+            return self.dict.get(feature_name)
+        else:
+            raise ValueError(f" - [AutoCarver] '{feature_name}' not in features.")
 
     def __iter__(self):
         return iter(self.list)
