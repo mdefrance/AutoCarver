@@ -1,14 +1,13 @@
 """ Defines a set of features"""
 
+from ..discretizers import GroupedList
 from .base_feature import BaseFeature
 from .categorical_feature import CategoricalFeature
 from .continuous_feature import QuantitativeFeature
 from .ordinal_feature import OrdinalFeature
-from ..discretizers import GroupedList
 
 
 class Features:
-
     def __init__(
         self,
         categoricals: list[str] = None,
@@ -16,7 +15,6 @@ class Features:
         ordinals: list[str] = None,
         ordinal_values: dict[str, list[str]] = None,
     ) -> None:
-
         # ordered values per ordinal features
         self.ordinal_values = ordinal_values
 

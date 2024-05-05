@@ -2,8 +2,6 @@
 for a binary classification model.
 """
 
-from functools import partial
-from multiprocessing import Pool
 from typing import Any
 
 from numpy import array, digitize, in1d, inf, isnan, linspace, quantile, sort, unique
@@ -12,6 +10,7 @@ from pandas import DataFrame, Series
 from ...config import STR_NAN
 from .base_discretizers import BaseDiscretizer, extend_docstring
 from .grouped_list import GroupedList
+from .multiprocessing import imap_unordered_function
 
 
 class ContinuousDiscretizer(BaseDiscretizer):
@@ -77,28 +76,16 @@ class ContinuousDiscretizer(BaseDiscretizer):
         if self.verbose:  # verbose if requested
             print(f" - [ContinuousDiscretizer] Fit {str(self.quantitative_features)}")
 
-        # storing ordering
-        all_orders = []
+        # fitting each feature
+        all_orders = imap_unordered_function(
+            fit_feature,
+            self.n_jobs,
+            self.quantitative_features,
+            X=X[self.quantitative_features],
+            q=self.q,
+            str_nan=self.str_nan,
+        )
 
-        # no multiprocessing
-        # TODO: def apply_multiprocessing with fun, kwargs and n_jobs
-        if self.n_jobs <= 1:
-            all_orders = [
-                fit_feature(
-                    feature, X=X[self.quantitative_features], q=self.q, str_nan=self.str_nan
-                )
-                for feature in self.quantitative_features
-            ]
-        # multiprocessing
-        else:
-            with Pool(processes=self.n_jobs) as pool:
-                # feature processing
-                all_orders += pool.imap_unordered(
-                    partial(
-                        fit_feature, X=X[self.quantitative_features], q=self.q, str_nan=self.str_nan
-                    ),
-                    self.quantitative_features,
-                )
         # storing into the values_orders
         self.values_orders.update({feature: order for (feature, order) in all_orders})
 

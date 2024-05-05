@@ -1,6 +1,6 @@
 """ Defines a continuous feature"""
 
-from numpy import nan, isfinite
+from numpy import isfinite, nan
 from pandas import DataFrame, Series, isna
 
 from ..config import STR_DEFAULT, STR_NAN

@@ -2,7 +2,6 @@
 for a binary classification model.
 """
 
-from multiprocessing import Pool
 from typing import Any, Union
 from warnings import warn
 
@@ -11,6 +10,7 @@ from pandas import DataFrame, Series, isna, notna, unique
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from .grouped_list import GroupedList
+from .multiprocessing import apply_async_function
 from .serialization import json_deserialize_values_orders, json_serialize_values_orders
 
 
@@ -485,40 +485,17 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         # dataset length
         x_len = X.shape[0]
 
-        # no multiprocessing
-        if self.n_jobs <= 1:
-            all_transformed = [
-                transform_quantitative_feature(
-                    feature,
-                    X[feature],
-                    self.values_orders,
-                    self.str_nan,
-                    self.labels_per_values,
-                    x_len,
-                )
-                for feature in self.quantitative_features
-            ]
-
-        # asynchronous transform of each feature
-        else:
-            with Pool(processes=self.n_jobs) as pool:
-                all_transformed_async = [
-                    pool.apply_async(
-                        transform_quantitative_feature,
-                        (
-                            feature,
-                            X[feature],
-                            self.values_orders,
-                            self.str_nan,
-                            self.labels_per_values,
-                            x_len,
-                        ),
-                    )
-                    for feature in self.quantitative_features
-                ]
-
-                #  waiting for the results
-                all_transformed = [result.get() for result in all_transformed_async]
+        # transforming all features
+        all_transformed = apply_async_function(
+            transform_quantitative_feature,
+            self.quantitative_features,
+            self.n_jobs,
+            X,
+            self.values_orders,
+            self.str_nan,
+            self.labels_per_values,
+            x_len,
+        )
 
         # unpacking transformed series
         X[[feature for feature, _ in all_transformed]] = DataFrame(
@@ -916,9 +893,11 @@ def convert_to_values(
             if feature in quantitative_features:
                 # getting raw quantiles to be grouped
                 group_to_discard = [
-                    labels_to_quantiles[feature][label_discarded]
-                    if label_discarded != str_nan
-                    else str_nan
+                    (
+                        labels_to_quantiles[feature][label_discarded]
+                        if label_discarded != str_nan
+                        else str_nan
+                    )
                     for label_discarded in group_to_discard
                 ]
 

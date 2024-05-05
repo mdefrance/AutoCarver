@@ -1,11 +1,11 @@
 """Base tools to convert values into specific types.
 """
-from multiprocessing import Pool
 
 from pandas import DataFrame, Series
 
 from .base_discretizers import BaseDiscretizer, extend_docstring, nan_unique
 from .grouped_list import GroupedList
+from .multiprocessing import apply_async_function
 
 
 class StringDiscretizer(BaseDiscretizer):
@@ -53,25 +53,16 @@ class StringDiscretizer(BaseDiscretizer):
         # checking for binary target and copying X
         x_copy = self._prepare_data(X, y)  # X[self.features].fillna(self.str_nan)
 
-        # no multiprocessing
-        if self.n_jobs <= 1:
-            all_orders = [
-                fit_feature(feature, x_copy[feature], self.str_nan) for feature in self.features
-            ]
-        # asynchronous conversion each feature's value
-        else:
-            with Pool(processes=self.n_jobs) as pool:
-                all_orders_async = [
-                    pool.apply_async(
-                        fit_feature,
-                        (feature, x_copy[feature], self.str_nan),
-                    )
-                    for feature in self.features
-                ]
+        # transforming all features
+        all_orders = apply_async_function(
+            fit_feature,
+            self.features,
+            self.n_jobs,
+            x_copy,
+            self.str_nan,
+        )
 
-                #  waiting for the results
-                all_orders = [result.get() for result in all_orders_async]
-
+        # unpacking multiprcessed results
         for feature, values_order in all_orders:
             # updating values_orders accordingly
             # case 0: non-ordinal features, updating as is (no order provided)
