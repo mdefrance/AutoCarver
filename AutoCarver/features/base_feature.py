@@ -13,13 +13,11 @@ class BaseFeature:
     def __init__(
         self,
         name: str,
-        output_dtype: str,
         str_nan: str = STR_NAN,
         str_default: str = STR_DEFAULT,
     ) -> None:
         self.name = name
 
-        self.output_dtype = output_dtype
         self.str_nan = str_nan
         self.has_nan = False
         self.str_default = str_default
@@ -39,8 +37,12 @@ class BaseFeature:
     def update(self, values: GroupedList) -> None:
         self.values = values
 
-    def update_labels(self, labels) -> None:
+    def update_labels(self, labels: GroupedList, output_dtype: str = "str") -> None:
         """updates label for each value of the feature TODO: take output_dtype as input"""
+
+        # requested float output (AutoCarver) -> converting to integers
+        if output_dtype == "float":
+            labels = [n for n, _ in enumerate(labels)]
 
         # updating label per value
         for group_of_values, label in zip(self.values, labels):

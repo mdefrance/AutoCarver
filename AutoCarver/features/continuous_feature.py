@@ -12,12 +12,11 @@ class QuantitativeFeature(BaseFeature):
     def __init__(
         self,
         name: str,
-        output_dtype: str,
         str_nan: str = STR_NAN,
         str_default: str = STR_DEFAULT,
         **kwargs,
     ) -> None:
-        super().__init__(name, output_dtype, str_nan, str_default)
+        super().__init__(name, str_nan, str_default)
 
         self.dtype = "continuous"
 
@@ -31,49 +30,39 @@ class QuantitativeFeature(BaseFeature):
 
         super().fit(X, y)
 
-    def update(self, values: GroupedList) -> None:
+    def update(self, values: GroupedList, output_dtype: str = "str") -> None:
+        """updates values and labels for each value of the feature"""
+        # updating feature's values
         super().update(values)
 
-        # updating labels accordingly
-        self.update_labels()
-
-    def update_labels(self, labels: list[str] = None) -> None:
-        """updates label for each value of the feature"""
-
-        # case 0: quantitative feature -> labels per quantile (removes str_nan)
-        labels = get_labels(self.values, self.str_nan)
+        # for quantitative features -> labels per quantile (removes str_nan)
+        labels = get_labels(values, self.str_nan)
 
         # add NaNs if there are any
-        if self.str_nan in self.values:
+        if self.str_nan in values:
             labels += [self.str_nan]
 
-        # requested float output (AutoCarver) -> converting to integers
-        if self.output_dtype == "float":
-            labels = [n for n, _ in enumerate(labels)]
-
         # building label per value
-        super().update_labels(labels)
+        super().update_labels(labels, output_dtype=output_dtype)
 
 
-def get_labels(quantiles: list[float], str_nan: str) -> list[str]:
-    """_summary_
+def get_labels(values: GroupedList, str_nan: str) -> list[str]:
+    """gives labels per quantile (values for continuous features)
 
     Parameters
     ----------
-    feature : str
-        _description_
-    order : GroupedList
-        _description_
+    values : GroupedList
+        feature's values (quantiles in the case of continuous ones)
     str_nan : str
-        _description_
+        default string value for nan
 
     Returns
     -------
     list[str]
-        _description_
+        list of labels per quantile
     """
     # filtering out nan and inf for formatting
-    quantiles = [val for val in quantiles if val != str_nan and isfinite(val)]
+    quantiles = [val for val in values if val != str_nan and isfinite(val)]
 
     # converting quantiles in string
     labels = format_quantiles(quantiles)

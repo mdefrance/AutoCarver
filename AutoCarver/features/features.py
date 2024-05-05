@@ -4,6 +4,7 @@ from .base_feature import BaseFeature
 from .categorical_feature import CategoricalFeature
 from .continuous_feature import QuantitativeFeature
 from .ordinal_feature import OrdinalFeature
+from ..discretizers import GroupedList
 
 
 class Features:
@@ -55,8 +56,24 @@ class Features:
             get_names(self.categoricals) + get_names(self.ordinals) + get_names(self.quantitatives)
         )
 
+        self.list = self.categoricals + self.ordinals + self.quantitatives
+        self.dict = {feature.name: feature for feature in self.list}
+
     def __repr__(self):
         return f"Features({str(list(self.names))})"
+
+    def __call__(self, feature_name: str):
+        return self.dict.get(feature_name)
+
+    def __iter__(self):
+        return iter(self.list)
+
+    def __getitem__(self, index):
+        return self.list[index]
+
+    def update(self, feature_values: dict[str, GroupedList]) -> None:
+        for feature, values in feature_values.items():
+            self(feature).update(values)
 
 
 def cast_features(
@@ -81,7 +98,7 @@ def cast_features(
     for feature in features:
         # string case, initiating feature
         if isinstance(feature, str):
-            converted_features += [target_class(feature, order=ordinal_values.get(feature))]
+            converted_features += [target_class(feature, values=ordinal_values.get(feature))]
         # already a BaseFeature
         elif isinstance(feature, target_class):
             converted_features += [feature]

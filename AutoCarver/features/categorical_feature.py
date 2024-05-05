@@ -12,12 +12,11 @@ class CategoricalFeature(BaseFeature):
     def __init__(
         self,
         name: str,
-        output_dtype: str,
         str_nan: str = STR_NAN,
         str_default: str = STR_DEFAULT,
         **kwargs,
     ) -> None:
-        super().__init__(name, output_dtype, str_nan, str_default)
+        super().__init__(name, str_nan, str_default)
 
         self.dtype = "categorical"
 
@@ -35,20 +34,10 @@ class CategoricalFeature(BaseFeature):
 
         super().fit(X, y)
 
-    def update(self, values: GroupedList) -> None:
+    def update(self, values: GroupedList, output_dtype: str = "str") -> None:
+        """updates values and labels for each value of the feature"""
+        # updating feature's values
         super().update(values)
 
-        # updating labels accordingly
-        self.update_labels()
-
-    def update_labels(self, labels: list[str] = None) -> None:
-        """updates label for each value of the feature"""
         # for qualitative feature -> by default, labels are values
-        labels = self.values
-
-        # requested float output (AutoCarver) -> converting to integers
-        if self.output_dtype == "float":
-            labels = [n for n, _ in enumerate(labels)]
-
-        # building label per value
-        super().update_labels(labels)
+        super().update_labels(values, output_dtype=output_dtype)
