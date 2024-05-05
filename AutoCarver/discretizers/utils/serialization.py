@@ -5,7 +5,7 @@ from typing import Any, Union
 
 from numpy import floating, inf, integer, isfinite
 
-from .grouped_list import GroupedList
+from ...features import GroupedList
 
 
 def convert_value_to_base_type(value: Any) -> Union[str, float, int]:

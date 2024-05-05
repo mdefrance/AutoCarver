@@ -41,3 +41,4 @@ def test_features(
     assert (
         features.ordinals[0].values == features("Qualitative_Ordinal").values
     ), "reference issue, not same Feature object"
+    assert "High++++" in features("Qualitative_Ordinal").values

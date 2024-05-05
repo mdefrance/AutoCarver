@@ -1,10 +1,29 @@
 """ Defines a set of features"""
 
-from ..discretizers import GroupedList
+from pandas import DataFrame, Series
+from .grouped_list import GroupedList
 from .base_feature import BaseFeature
 from .categorical_feature import CategoricalFeature
 from .continuous_feature import QuantitativeFeature
 from .ordinal_feature import OrdinalFeature
+
+
+class MultiFeatures:
+    def __init__(
+        self,
+        labels: list[str],
+        categoricals: list[str] = None,
+        quantitatives: list[str] = None,
+        ordinals: list[str] = None,
+        ordinal_values: dict[str, list[str]] = None,
+        **kwargs: dict,
+    ) -> None:
+
+        self.features = {
+            label: Features(categoricals, quantitatives, ordinals, ordinal_values, **kwargs)
+            for label in labels
+        }
+        self.labels = labels
 
 
 class Features:
@@ -14,14 +33,17 @@ class Features:
         quantitatives: list[str] = None,
         ordinals: list[str] = None,
         ordinal_values: dict[str, list[str]] = None,
+        **kwargs: dict,
     ) -> None:
         # ordered values per ordinal features
         self.ordinal_values = ordinal_values
 
         # casting features accordingly
-        self.categoricals = cast_features(categoricals, CategoricalFeature)
-        self.quantitatives = cast_features(quantitatives, QuantitativeFeature)
-        self.ordinals = cast_features(ordinals, OrdinalFeature, ordinal_values=self.ordinal_values)
+        self.categoricals = cast_features(categoricals, CategoricalFeature, **kwargs)
+        self.quantitatives = cast_features(quantitatives, QuantitativeFeature, **kwargs)
+        self.ordinals = cast_features(
+            ordinals, OrdinalFeature, ordinal_values=self.ordinal_values, **kwargs
+        )
 
         # checking that features were passed as input
         if len(self.categoricals) == 0 and len(self.quantitatives) == 0 and len(self.ordinals) == 0:
@@ -50,38 +72,69 @@ class Features:
                 "categoricals and/or in ordinals. Please, check inputs!"
             )
 
-        self.names = (
-            get_names(self.categoricals) + get_names(self.ordinals) + get_names(self.quantitatives)
-        )
+    def __repr__(self) -> str:
+        return f"Features({str(self.get_names())})"
 
-        self.list = self.categoricals + self.ordinals + self.quantitatives
-        self.dict = {feature.name: feature for feature in self.list}
-
-    def __repr__(self):
-        return f"Features({str(list(self.names))})"
-
-    def __call__(self, feature_name: str):
+    def __call__(self, feature_name: str) -> BaseFeature:
         # checking that feature exists
-        if feature_name in self.dict:
-            return self.dict.get(feature_name)
+        if feature_name in self.to_dict():
+            return self.to_dict().get(feature_name)
         else:
             raise ValueError(f" - [AutoCarver] '{feature_name}' not in features.")
 
-    def __iter__(self):
-        return iter(self.list)
+    def get_names(self) -> list[str]:
+        return (
+            get_names(self.categoricals) + get_names(self.ordinals) + get_names(self.quantitatives)
+        )
 
-    def __getitem__(self, index):
-        return self.list[index]
+    def to_list(self) -> list[BaseFeature]:
+        return self.categoricals + self.ordinals + self.quantitatives
+
+    def __len__(self) -> int:
+        return len(self.to_list())
+
+    def to_dict(self) -> dict[str, BaseFeature]:
+        return {feature.name: feature for feature in self.to_list()}
+
+    def __iter__(self):
+        return iter(self.to_list())
+
+    def __getitem__(self, index: int) -> BaseFeature:
+        return self.to_list()[index]
+
+    def remove(self, feature_name: str) -> None:
+        self.categoricals = [feat for feat in self.categoricals if feat.name != feature_name]
+        self.ordinals = [feat for feat in self.ordinals if feat.name != feature_name]
+        self.quantitatives = [feat for feat in self.quantitatives if feat.name != feature_name]
 
     def update(self, feature_values: dict[str, GroupedList]) -> None:
         for feature, values in feature_values.items():
             self(feature).update(values)
+
+    def fit(self, X: DataFrame, y: Series = None) -> None:
+        for feature in self:
+            feature.fit(X, y)
+
+    def update_labels(self, output_dtype: str = "str") -> None:
+        for feature in self:
+            feature.update_labels(output_dtype=output_dtype)
+
+    def get_qualitatives(self, return_names: bool = False) -> list[BaseFeature]:
+        if return_names:
+            return get_names(self.categoricals + self.ordinals)
+        return self.categoricals + self.ordinals
+
+    def get_quantitatives(self, return_names: bool = False) -> list[BaseFeature]:
+        if return_names:
+            return get_names(self.quantitatives)
+        return self.quantitatives
 
 
 def cast_features(
     features: list[str],
     target_class: type = BaseFeature,
     ordinal_values: dict[str, list[str]] = None,
+    **kwargs: dict,
 ) -> list[BaseFeature]:
     """converts a list of string feature names to there corresponding Feature class"""
 
@@ -100,7 +153,9 @@ def cast_features(
     for feature in features:
         # string case, initiating feature
         if isinstance(feature, str):
-            converted_features += [target_class(feature, values=ordinal_values.get(feature))]
+            converted_features += [
+                target_class(feature, values=ordinal_values.get(feature), **kwargs)
+            ]
         # already a BaseFeature
         elif isinstance(feature, target_class):
             converted_features += [feature]

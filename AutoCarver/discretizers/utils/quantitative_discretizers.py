@@ -2,15 +2,13 @@
 for a binary classification model.
 """
 
-from typing import Any
-
 from numpy import array, digitize, in1d, inf, isnan, linspace, quantile, sort, unique
 from pandas import DataFrame, Series
 
-from ...config import STR_NAN
 from .base_discretizers import BaseDiscretizer, extend_docstring
-from .grouped_list import GroupedList
+from ...features import GroupedList
 from .multiprocessing import imap_unordered_function
+from ...features import Features, BaseFeature
 
 
 class ContinuousDiscretizer(BaseDiscretizer):
@@ -32,10 +30,9 @@ class ContinuousDiscretizer(BaseDiscretizer):
     @extend_docstring(BaseDiscretizer.__init__)
     def __init__(
         self,
-        quantitative_features: list[str],
+        features: list[str],
         min_freq: float,
         *,
-        values_orders: dict[str, Any] = None,
         copy: bool = False,
         verbose: bool = False,
         n_jobs: int = 1,
@@ -44,7 +41,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
         """
         Parameters
         ----------
-        quantitative_features : list[str]
+        features : list[str]
             List of column names of quantitative features (continuous and discrete) to be dicretized
 
         min_freq : float
@@ -56,38 +53,32 @@ class ContinuousDiscretizer(BaseDiscretizer):
 
             **Tip**: set between ``0.02`` (slower, less robust) and ``0.05`` (faster, more robust)
         """
+        # initiating features
+        features = Features(quantitatives=features, **kwargs)
+
         # Initiating BaseDiscretizer
-        super().__init__(
-            features=quantitative_features,
-            values_orders=values_orders,
-            input_dtypes="float",
-            output_dtype="str",
-            str_nan=kwargs.get("str_nan", STR_NAN),
-            copy=copy,
-            verbose=verbose,
-            n_jobs=n_jobs,
-        )
+        super().__init__(features=features, copy=copy, verbose=verbose, n_jobs=n_jobs, **kwargs)
 
         self.min_freq = min_freq
         self.q = round(1 / min_freq)  # number of quantiles
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series = None) -> None:  # pylint: disable=W0222
-        if self.verbose:  # verbose if requested
-            print(f" - [ContinuousDiscretizer] Fit {str(self.quantitative_features)}")
+        if self.verbose:  # verbose if requested TODO put this in a wrapper with self.__name__
+            print(f" - [ContinuousDiscretizer] Fit {self.features}")
 
         # fitting each feature
         all_orders = imap_unordered_function(
             fit_feature,
-            self.quantitative_features,
+            self.features.get_quantitatives(),
             self.n_jobs,
-            X=X[self.quantitative_features],
+            X=X[self.features.get_quantitatives(True)],
             q=self.q,
-            str_nan=self.str_nan,
         )
 
         # storing into the values_orders
-        self.values_orders.update({feature: order for (feature, order) in all_orders})
+        self.features.fit(X, y)
+        self.features.update(dict(all_orders))
 
         # discretizing features based on each feature's values_order
         super().fit(X, y)
@@ -95,19 +86,19 @@ class ContinuousDiscretizer(BaseDiscretizer):
         return self
 
 
-def fit_feature(feature: str, X: DataFrame, q: float, str_nan: str):
+def fit_feature(feature: BaseFeature, X: DataFrame, q: float) -> tuple[str, GroupedList]:
     """Fits one feature"""
     # getting quantiles for specified feature
-    quantiles = find_quantiles(X[feature].values, q=q)
+    quantiles = find_quantiles(X[feature.name].values, q=q)
 
     # Converting to a groupedlist
     order = GroupedList(quantiles + [inf])
 
     # adding NANs if ther are any
-    if any(X[feature].isna()):
-        order.append(str_nan)
+    if any(X[feature.name].isna()):
+        order.append(feature.str_nan)
 
-    return (feature, order)
+    return (feature.name, order)
 
 
 def find_quantiles(
@@ -124,14 +115,14 @@ def find_quantiles(
     Parameters
     ----------
     df_feature : Series
-        _description_
+        continuous feature
     q : int
-        _description_
+        number of quantiles
 
     Returns
     -------
     list[float]
-        _description_
+        list of quantiles for the feature
     """
     return list(
         sort(

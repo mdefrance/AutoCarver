@@ -19,7 +19,7 @@ from .base_discretizers import (
     target_rate,
     value_counts,
 )
-from .grouped_list import GroupedList
+from ...features import GroupedList, Features
 from .type_discretizers import StringDiscretizer
 
 
@@ -37,10 +37,9 @@ class CategoricalDiscretizer(BaseDiscretizer):
     @extend_docstring(BaseDiscretizer.__init__)
     def __init__(
         self,
-        qualitative_features: list[str],
+        features: list[str],
         min_freq: float,
         *,
-        values_orders: dict[str, GroupedList] = None,
         copy: bool = False,
         verbose: bool = False,
         n_jobs: int = 1,
@@ -49,7 +48,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
         """
         Parameters
         ----------
-        qualitative_features : list[str]
+        features : list[str]
             List of column names of qualitative features (non-ordinal) to be discretized
 
         min_freq : float
@@ -61,18 +60,11 @@ class CategoricalDiscretizer(BaseDiscretizer):
 
             **Tip**: set between ``0.02`` (slower, less robust) and ``0.05`` (faster, more robust)
         """
+        # initiating features
+        features = Features(categoricals=features, **kwargs)
+
         # Initiating BaseDiscretizer
-        super().__init__(
-            features=qualitative_features,
-            values_orders=values_orders,
-            input_dtypes="str",
-            output_dtype="str",
-            str_nan=kwargs.get("str_nan", STR_NAN),
-            str_default=kwargs.get("str_default", STR_DEFAULT),
-            copy=copy,
-            verbose=verbose,
-            n_jobs=n_jobs,
-        )
+        super().__init__(features=features, copy=copy, verbose=verbose, n_jobs=n_jobs, **kwargs)
 
         self.min_freq = min_freq
 
@@ -96,25 +88,15 @@ class CategoricalDiscretizer(BaseDiscretizer):
         # checking for binary target
         x_copy = super()._prepare_data(X, y)
 
-        # checks and initilizes values_orders
-        for feature in self.qualitative_features:
-            # initiating features missing from values_orders
-            if feature not in self.values_orders:
-                self.values_orders.update({feature: GroupedList(nan_unique(x_copy[feature]))})
+        for feature in self.features:
+            if not feature.is_fitted:  # fitting features
+                feature.fit(x_copy, y)
 
         # checking that all unique values in X are in values_orders
-        self._check_new_values(x_copy, features=self.qualitative_features)
+        self._check_new_values(x_copy, features=self.features)
 
-        # adding NANS
-        for feature in self.qualitative_features:
-            order = self.values_orders[feature]
-            if any(x_copy[feature].isna()):
-                if self.str_nan not in order.values():
-                    order.append(self.str_nan)
-                    self.values_orders.update({feature: order})
-
-        # filling up NaNs
-        x_copy[self.qualitative_features] = x_copy[self.qualitative_features].fillna(self.str_nan)
+        # filling up nans for features that have some
+        x_copy = x_copy.fillna({f.name: f.str_nan for f in self.features if f.has_nan})
 
         return x_copy
 
@@ -124,65 +106,66 @@ class CategoricalDiscretizer(BaseDiscretizer):
         x_copy = self._prepare_data(X, y)
 
         if self.verbose:  # verbose if requested
-            print(f" - [CategoricalDiscretizer] Fit {str(self.qualitative_features)}")
+            print(f" - [CategoricalDiscretizer] Fit {self.features}")
 
         # computing frequencies of each modality
-        frequencies = x_copy[self.qualitative_features].apply(value_counts, normalize=True, axis=0)
+        frequencies = x_copy[self.features.get_names()].apply(value_counts, normalize=True, axis=0)
 
-        for feature in self.qualitative_features:
-            # sorting orders based on target rates
-            order = self.values_orders[feature]
-
+        for feature in self.features:
             # checking for rare values
             values_to_group = [
                 val
-                for val, freq in frequencies[feature].items()
-                if freq < self.min_freq and val != self.str_nan
+                for val, freq in frequencies[feature.name].items()
+                if freq < self.min_freq and val != feature.str_nan
             ]
 
             # adding values that are completly missing (no frequency in X)
-            values_to_group += [value for value in order if value not in frequencies[feature]]
+            values_to_group += [
+                value for value in feature.values if value not in frequencies[feature.name]
+            ]
 
             # grouping values to str_default if any
             if any(values_to_group):
                 # adding default value to the order
-                order.append(self.str_default)
+                feature.values.append(feature.str_default)
+                feature.has_default = True
 
                 # grouping rare values in default value
-                order.group_list(values_to_group, self.str_default)
-                x_copy.loc[x_copy[feature].isin(values_to_group), feature] = self.str_default
-
-                # updating values_orders
-                self.values_orders.update({feature: order})
+                feature.values.group_list(values_to_group, feature.str_default)
+                x_copy.loc[x_copy[feature.name].isin(values_to_group), feature.name] = (
+                    feature.str_default
+                )
 
         # computing target rate per modality for ordering
-        target_rates = x_copy[self.qualitative_features].apply(
+        target_rates = x_copy[self.features.get_names()].apply(
             target_rate, y=y, ascending=True, axis=0
         )
 
         # sorting orders based on target rates
-        for feature in self.qualitative_features:
-            order = self.values_orders[feature]
+        for feature in self.features:
+            order = feature.values
 
             # new ordering according to target rate
-            new_order = list(target_rates[feature])
+            new_order = list(target_rates[feature.name])
 
-            # checking for default but no value observed, enable to group this modal, raising error
-            assert (self.str_default in order and self.str_default in new_order) or (
-                self.str_default not in order and self.str_default not in new_order
-            ), (
-                f"Some values from values_orders['{feature}'] are never observed. Can not fit a "
-                f"distribution without any observation. Please remove following values "
-                f"{str([v for v in order.content[self.str_default] if v != self.str_default])}"
-                f" from values_orders['{feature}']."
-            )
-            # leaving NaNs at the end of the list
-            if self.str_nan in new_order:
-                new_order.remove(self.str_nan)
-                new_order += [self.str_nan]
+            # checking that if there is a default it is observed
+            if feature.str_default in order and feature.str_default not in new_order:
+                not_observed = [
+                    v for v in order.content[feature.str_default] if v != feature.str_default
+                ]
+                raise ValueError(
+                    f"Some provided values of '{feature.name}' are never observed. Can not fit a "
+                    "distribution without any observation. Please remove following values "
+                    f"{str(not_observed)} from values_orders['{feature}']."
+                )
+
+            # keeping nans by themselves
+            if feature.str_nan in new_order:
+                new_order.remove(feature.str_nan)
+                new_order += [feature.str_nan]
 
             # sorting order updating values_orders
-            self.values_orders.update({feature: order.sort_by(new_order)})
+            feature.update(order.sort_by(new_order))
 
         # discretizing features based on each feature's values_order
         super().fit(X, y)

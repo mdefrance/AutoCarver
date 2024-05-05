@@ -4,7 +4,7 @@
 from pandas import DataFrame, Series
 
 from .base_discretizers import BaseDiscretizer, extend_docstring, nan_unique
-from .grouped_list import GroupedList
+from ...features import GroupedList
 from .multiprocessing import apply_async_function
 
 

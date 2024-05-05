@@ -7,7 +7,8 @@ from typing import Any, Callable
 from pandas import DataFrame, Series, unique
 
 from ..config import STR_DEFAULT, STR_NAN
-from ..discretizers import BaseDiscretizer, GroupedList
+from ..discretizers import BaseDiscretizer
+from ..features import GroupedList
 from ..discretizers.utils.base_discretizers import extend_docstring
 from .base_carver import BaseCarver
 from .binary_carver import BinaryCarver

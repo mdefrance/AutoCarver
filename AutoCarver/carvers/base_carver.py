@@ -10,7 +10,7 @@ from pandas import DataFrame, Series
 from tqdm import tqdm
 
 from ..config import STR_DEFAULT, STR_NAN
-from ..discretizers import GroupedList
+from ..features import GroupedList
 from ..discretizers.discretizers import Discretizer
 from ..discretizers.utils.base_discretizers import (
     BaseDiscretizer,
@@ -861,9 +861,7 @@ class BaseCarver(BaseDiscretizer):
                     (
                         mapped_idx[-1] + " to " + mapped_idx[0]
                         if len(mapped_idx) > 2
-                        else mapped_idx[0]
-                        if len(mapped_idx) == 0
-                        else ", ".join(mapped_idx)
+                        else mapped_idx[0] if len(mapped_idx) == 0 else ", ".join(mapped_idx)
                     )
                     for mapped_idx in mapped_index
                 ]

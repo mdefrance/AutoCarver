@@ -6,27 +6,30 @@ TODO add casted features?
 from pandas import DataFrame, Series
 
 from ..config import STR_DEFAULT, STR_NAN
-from ..discretizers import GroupedList
+from .grouped_list import GroupedList
 
 
 class BaseFeature:
-    def __init__(
-        self,
-        name: str,
-        str_nan: str = STR_NAN,
-        str_default: str = STR_DEFAULT,
-    ) -> None:
+    def __init__(self, name: str, **kwargs: dict) -> None:
         self.name = name
 
-        self.str_nan = str_nan
-        self.has_nan = False
-        self.str_default = str_default
-        self.has_default = False
+        # whether or not feature has some NaNs
+        self.has_nan = None
+        self.str_nan = kwargs.get("str_nan", STR_NAN)
 
+        # whether or not feature has some default values
+        self.has_default = None
+        self.str_default = kwargs.get("str_default", STR_DEFAULT)
+
+        # whether or not nans must be removed
+        self.dropna = None
+
+        # whether or not feature has been fitted
         self.is_fitted = False
 
-        self.dtype = None
+        # feature values, type and labels
         self.values = GroupedList()
+        self.dtype = None
         self.label_per_value: dict[str, str] = {}
 
     def fit(self, X: DataFrame, y: Series = None) -> None:  # pylint: disable=W0222
@@ -35,10 +38,15 @@ class BaseFeature:
         self.is_fitted = True  # fitted feature
 
     def update(self, values: GroupedList) -> None:
+        """updates values for each value of the feature"""
         self.values = values
 
-    def update_labels(self, labels: GroupedList, output_dtype: str = "str") -> None:
-        """updates label for each value of the feature TODO: take output_dtype as input"""
+    def update_labels(self, labels: GroupedList = None, output_dtype: str = "str") -> None:
+        """updates label for each value of the feature"""
+
+        # initiating labels for qualitative features
+        if labels is None:
+            labels = self.values
 
         # requested float output (AutoCarver) -> converting to integers
         if output_dtype == "float":

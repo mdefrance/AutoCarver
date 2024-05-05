@@ -10,7 +10,7 @@ from pandas import DataFrame, Series, unique
 
 from ..config import STR_DEFAULT, STR_NAN
 from .utils.base_discretizers import BaseDiscretizer, extend_docstring
-from .utils.grouped_list import GroupedList
+from ..features import GroupedList
 from .utils.qualitative_discretizers import CategoricalDiscretizer, OrdinalDiscretizer
 from .utils.quantitative_discretizers import ContinuousDiscretizer
 from .utils.type_discretizers import StringDiscretizer

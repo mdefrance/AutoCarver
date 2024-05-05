@@ -1,22 +1,16 @@
 """ Defines a categorical feature"""
 
 from pandas import DataFrame, Series
+from typing import Any
+from pandas import unique, notna
 
-from ..config import STR_DEFAULT, STR_NAN
-from ..discretizers import GroupedList
-from ..discretizers.utils.base_discretizers import nan_unique
+from .grouped_list import GroupedList
 from .base_feature import BaseFeature
 
 
 class CategoricalFeature(BaseFeature):
-    def __init__(
-        self,
-        name: str,
-        str_nan: str = STR_NAN,
-        str_default: str = STR_DEFAULT,
-        **kwargs,
-    ) -> None:
-        super().__init__(name, str_nan, str_default)
+    def __init__(self, name: str, **kwargs: dict) -> None:
+        super().__init__(name, **kwargs)
 
         self.dtype = "categorical"
 
@@ -34,10 +28,33 @@ class CategoricalFeature(BaseFeature):
 
         super().fit(X, y)
 
-    def update(self, values: GroupedList, output_dtype: str = "str") -> None:
+    def update(self, values: GroupedList) -> None:
         """updates values and labels for each value of the feature"""
         # updating feature's values
         super().update(values)
 
         # for qualitative feature -> by default, labels are values
-        super().update_labels(values, output_dtype=output_dtype)
+        super().update_labels()
+
+
+def nan_unique(x: Series) -> list[Any]:
+    """Unique non-NaN values.
+
+    Parameters
+    ----------
+    x : Series
+        Values to be deduplicated.
+
+    Returns
+    -------
+    list[Any]
+        List of unique non-nan values
+    """
+
+    # unique values
+    uniques = unique(x)
+
+    # filtering out nans
+    uniques = [u for u in uniques if notna(u)]
+
+    return uniques

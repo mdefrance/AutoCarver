@@ -6,7 +6,7 @@ from numpy import mean, unique
 from pandas import DataFrame, Series
 from scipy.stats import kruskal
 
-from ..discretizers import GroupedList
+from ..features import GroupedList
 from ..discretizers.utils.base_discretizers import extend_docstring
 from .base_carver import BaseCarver
 

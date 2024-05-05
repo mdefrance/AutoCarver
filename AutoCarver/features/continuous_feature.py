@@ -3,20 +3,13 @@
 from numpy import isfinite, nan
 from pandas import DataFrame, Series, isna
 
-from ..config import STR_DEFAULT, STR_NAN
-from ..discretizers import GroupedList
+from .grouped_list import GroupedList
 from .base_feature import BaseFeature
 
 
 class QuantitativeFeature(BaseFeature):
-    def __init__(
-        self,
-        name: str,
-        str_nan: str = STR_NAN,
-        str_default: str = STR_DEFAULT,
-        **kwargs,
-    ) -> None:
-        super().__init__(name, str_nan, str_default)
+    def __init__(self, name: str, **kwargs: dict) -> None:
+        super().__init__(name, **kwargs)
 
         self.dtype = "continuous"
 
@@ -30,16 +23,22 @@ class QuantitativeFeature(BaseFeature):
 
         super().fit(X, y)
 
-    def update(self, values: GroupedList, output_dtype: str = "str") -> None:
+    def update(self, values: GroupedList) -> None:
         """updates values and labels for each value of the feature"""
         # updating feature's values
         super().update(values)
 
+        # updating feature's labels
+        self.update_labels()
+
+    def update_labels(self, labels: GroupedList = None, output_dtype: str = "str") -> None:
+        """updates label for each value of the feature"""
+
         # for quantitative features -> labels per quantile (removes str_nan)
-        labels = get_labels(values, self.str_nan)
+        labels = get_labels(self.values, self.str_nan)
 
         # add NaNs if there are any
-        if self.str_nan in values:
+        if self.str_nan in self.values:
             labels += [self.str_nan]
 
         # building label per value

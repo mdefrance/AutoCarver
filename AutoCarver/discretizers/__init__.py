@@ -2,7 +2,8 @@
 
 from .discretizers import Discretizer, QualitativeDiscretizer, QuantitativeDiscretizer
 from .utils.base_discretizers import BaseDiscretizer, extend_docstring, load_discretizer
-from .utils.grouped_list import GroupedList
+
+# from .utils.grouped_list import GroupedList
 from .utils.qualitative_discretizers import (
     CategoricalDiscretizer,
     ChainedDiscretizer,
@@ -18,7 +19,7 @@ __all__ = [
     "BaseDiscretizer",
     "extend_docstring",
     "load_discretizer",
-    "GroupedList",
+    # "GroupedList",
     "CategoricalDiscretizer",
     "ChainedDiscretizer",
     "OrdinalDiscretizer",
