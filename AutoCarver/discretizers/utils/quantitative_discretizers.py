@@ -66,7 +66,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series = None) -> None:  # pylint: disable=W0222
-        self.verbose()  # verbose if requested
+        self._verbose()  # verbose if requested
 
         # fitting each feature
         all_orders = imap_unordered_function(

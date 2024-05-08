@@ -103,7 +103,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
         # copying dataframe and checking data before bucketization
         x_copy = self._prepare_data(X, y)
 
-        self.verbose()  # verbose if requested
+        self._verbose()  # verbose if requested
 
         # computing frequencies of each modality
         frequencies = x_copy[self.features.get_names()].apply(value_counts, normalize=True, axis=0)
@@ -140,14 +140,14 @@ class CategoricalDiscretizer(BaseDiscretizer):
 
         # sorting orders based on target rates
         for feature in self.features:
-            order = feature.values
-
             # new ordering according to target rate
             new_order = list(target_rates[feature.name])
 
             # checking that if there is a default it is observed
-            if feature.default in order and feature.default not in new_order:
-                not_observed = [v for v in order.content[feature.default] if v != feature.default]
+            if feature.default in feature.values and feature.default not in new_order:
+                not_observed = [
+                    v for v in feature.values.content[feature.default] if v != feature.default
+                ]
                 raise ValueError(
                     f"Some provided values of '{feature.name}' are never observed. Can not fit a "
                     "distribution without any observation. Please remove following values "
@@ -160,7 +160,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
                 new_order += [feature.nan]
 
             # sorting order updating values_orders
-            feature.update(order.sort_by(new_order))
+            feature.update(new_order, sorted_values=True)
 
         # discretizing features based on each feature's values_order
         super().fit(X, y)
@@ -256,7 +256,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
-        self.verbose()  # verbose if requested
+        self._verbose()  # verbose if requested
 
         # checking values orders
         x_copy = self._prepare_data(X, y)

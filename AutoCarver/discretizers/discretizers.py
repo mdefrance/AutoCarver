@@ -16,6 +16,9 @@ from .utils.quantitative_discretizers import ContinuousDiscretizer
 from .utils.type_discretizers import StringDiscretizer
 
 
+from ..features import GroupedList, Features
+
+
 class Discretizer(BaseDiscretizer):
     """Automatic discretization pipeline of continuous, discrete, categorical and ordinal features.
 
@@ -205,12 +208,11 @@ class QualitativeDiscretizer(BaseDiscretizer):
     @extend_docstring(BaseDiscretizer.__init__)
     def __init__(
         self,
-        qualitative_features: list[str],
         min_freq: float,
+        categoricals: list[str] = None,
+        ordinals: list[str] = None,
+        ordinal_values: dict[str, GroupedList] = None,
         *,
-        ordinal_features: list[str] = None,
-        values_orders: dict[str, GroupedList] = None,
-        input_dtypes: Union[str, dict[str, str]] = "str",
         copy: bool = False,
         verbose: bool = False,
         n_jobs: int = 1,
@@ -242,41 +244,16 @@ class QualitativeDiscretizer(BaseDiscretizer):
             * If ``"str"``, features are considered as qualitative.
             * If ``"float"``, features are considered as quantitative.
         """
-        # Lists of features
-        if ordinal_features is None:
-            ordinal_features = []
-        self.ordinal_features = list(set(ordinal_features))
-        self.features = list(set(qualitative_features + ordinal_features))
+        # initiating features
+        features = Features(
+            categoricals=categoricals, ordinals=ordinals, ordinal_values=ordinal_values, **kwargs
+        )
 
         # class specific attributes
         self.min_freq = min_freq
 
         # Initiating BaseDiscretizer
-        super().__init__(
-            features=self.features,
-            values_orders=values_orders,
-            input_dtypes=input_dtypes,
-            output_dtype="str",
-            str_nan=kwargs.get("nan", NAN),
-            str_default=kwargs.get("default", DEFAULT),
-            copy=copy,
-            verbose=verbose,
-            n_jobs=n_jobs,
-        )
-
-        # checking for missing orders
-        no_order_provided = [
-            feature for feature in self.ordinal_features if feature not in self.values_orders
-        ]
-        assert len(no_order_provided) == 0, (
-            " - [QualitativeDiscretizer] No ordering was provided for following features: "
-            f"{str(no_order_provided)}. Please make sure you defined values_orders correctly."
-        )
-
-        # non-ordinal qualitative features
-        self.non_ordinal_features = [
-            feature for feature in self.qualitative_features if feature not in self.ordinal_features
-        ]
+        super().__init__(features=features, copy=copy, verbose=verbose, n_jobs=n_jobs, **kwargs)
 
     def _prepare_data(self, X: DataFrame, y: Series = None) -> DataFrame:
         """Validates format and content of X and y. Converts non-string columns into strings.
@@ -298,48 +275,53 @@ class QualitativeDiscretizer(BaseDiscretizer):
         # checking for binary target, copying X
         x_copy = super()._prepare_data(X, y)
 
-        # checking for ids (unique value per row)
-        max_frequencies = x_copy[self.features].apply(
+        # checking for columns without any common modality
+        all_features = self.features.get_names()  # prevents inplace removal to break loop
+        max_frequencies = x_copy[all_features].apply(
             lambda u: u.value_counts(normalize=True, dropna=False).drop(nan, errors="ignore").max(),
             axis=0,
         )
         # for each feature, checking that at least one value is more frequent than min_freq
-        all_features = self.features[:]  # features are being removed from self.features
         for feature in all_features:
+            # no common modality found
             if max_frequencies[feature] < self.min_freq:
                 warn(
-                    f" - [QualitativeDiscretizer] For feature '{feature}', the largest modality"
+                    f" - [{self.__name__}] For feature '{feature}', the largest modality"
                     f" has {max_frequencies[feature]:2.2%} observations which is lower than "
-                    "min_freq={self.min_freq:2.2%}. This feature will not be Discretized. Consider"
-                    " decreasing parameter min_freq or removing this feature.",
+                    f"min_freq={self.min_freq:2.2%}. This feature will not be Discretized. "
+                    "Consider decreasing min_freq or removing this feature.",
                     UserWarning,
                 )
-                self._remove_feature(feature)
+                self.features.remove(feature)
 
         # checking for columns containing floats or integers even with filled nans
         dtypes = (
-            x_copy[self.features].fillna(self.str_nan).map(type).apply(unique, result_type="reduce")
+            x_copy.fillna({f.name: f.nan for f in self.features if f.has_nan})[
+                self.features.get_names()
+            ]
+            .map(type)
+            .apply(unique, result_type="reduce")
         )
         not_object = dtypes.apply(lambda u: any(typ != str for typ in u))
 
-        # non qualitative features detected
+        # non-qualitative features detected
         if any(not_object):
             features_to_convert = list(not_object.index[not_object])
             unexpected_dtypes = [typ for dtyp in dtypes[not_object] for typ in dtyp if typ != str]
             warn(
-                f" - [QualitativeDiscretizer] Non-string features: {str(features_to_convert)}"
+                f" - [{self.__name__}] Non-string features: {str(features_to_convert)}"
                 ". Trying to convert them using type_discretizers.StringDiscretizer, "
                 "otherwise convert them manually. "
-                f"Unexpected data types: {str(list(unexpected_dtypes))}.",
+                f"Unexpected data types: {str(set(unexpected_dtypes))}.",
                 UserWarning,
             )
 
             # converting specified features into qualitative features
             string_discretizer = StringDiscretizer(
-                qualitative_features=features_to_convert,
-                values_orders=self.values_orders,
-                verbose=self.verbose,
-                n_jobs=self.n_jobs,
+                features=[
+                    feature for feature in self.features if feature.name in features_to_convert
+                ],
+                **self.kwargs,
             )
             x_copy = string_discretizer.fit_transform(x_copy, y)
 

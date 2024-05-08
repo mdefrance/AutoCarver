@@ -26,11 +26,8 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         features: Features,
         *,
         output_dtype: str = "str",
-        dropna: bool = True,
-        copy: bool = True,  #
-        verbose: bool = True,  #
         features_casting: dict[str, list[str]] = None,
-        n_jobs: int = 1,
+        **kwargs: dict,
     ) -> None:
         # features : list[str]
         #     List of column names of features (continuous, discrete, categorical or ordinal)
@@ -87,19 +84,20 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         """
         # features and values
         self.features = features
-        self.copy = copy
+        self.copy = kwargs.get("copy", True)
+        self.kwargs = kwargs
 
         # output type
         self.output_dtype = output_dtype
 
         # whether or not to reinstate numpy nan after bucketization
-        self.dropna = dropna
+        self.dropna = kwargs.get("dropna", True)
 
         # whether to print info
-        self.verbose = verbose
+        self.verbose = kwargs.get("verbose", True)
 
         # setting number of jobs
-        self.n_jobs = n_jobs
+        self.n_jobs = kwargs.get("n_jobs", 1)
 
         # check if the discretizer has already been fitted
         self.is_fitted = False
@@ -446,7 +444,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
 
         return X
 
-    def verbose(self) -> None:
+    def _verbose(self) -> None:
         """prints logs if requested"""
         if self.verbose:
             print(f" - [{self.__name__}] Fit {str(self.features)}")

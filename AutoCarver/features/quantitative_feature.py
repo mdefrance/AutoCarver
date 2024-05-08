@@ -23,7 +23,9 @@ class QuantitativeFeature(BaseFeature):
 
         super().fit(X, y)
 
-    def update(self, values: GroupedList, convert_labels: bool = False) -> None:
+    def update(
+        self, values: GroupedList, convert_labels: bool = False, sorted_values: bool = False
+    ) -> None:
         """updates values and labels for each value of the feature"""
         # updating feature's values
         super().update(values)
@@ -31,7 +33,11 @@ class QuantitativeFeature(BaseFeature):
         # updating feature's labels
         self.update_labels()
 
-    def update_labels(self, labels: GroupedList = None, output_dtype: str = "str") -> None:
+    def update_labels(
+        self,
+        labels: GroupedList = None,
+        output_dtype: str = "str",
+    ) -> None:
         """updates label for each value of the feature"""
 
         # for quantitative features -> labels per quantile (removes nan)

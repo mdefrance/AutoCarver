@@ -4,10 +4,9 @@
 from pandas import DataFrame, Series
 
 from .base_discretizers import BaseDiscretizer, extend_docstring, nan_unique
-from ...features import GroupedList
 from .multiprocessing import apply_async_function
 
-from ...features import GroupedList, Features, BaseFeature
+from ...features import GroupedList, BaseFeature
 
 
 class StringDiscretizer(BaseDiscretizer):
@@ -24,10 +23,6 @@ class StringDiscretizer(BaseDiscretizer):
     def __init__(
         self,
         features: list[BaseFeature],
-        *,
-        copy: bool = False,
-        verbose: bool = False,
-        n_jobs: int = 1,
         **kwargs: dict,
     ) -> None:
         """
@@ -37,7 +32,7 @@ class StringDiscretizer(BaseDiscretizer):
             List of column names of qualitative features to be converted as string
         """
         # Initiating BaseDiscretizer
-        super().__init__(features=features, copy=copy, verbose=verbose, n_jobs=n_jobs, **kwargs)
+        super().__init__(features=features, **kwargs)
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series = None) -> None:  # pylint: disable=W0222

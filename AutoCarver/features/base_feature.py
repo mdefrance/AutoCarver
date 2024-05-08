@@ -43,16 +43,32 @@ class BaseFeature:
     def __repr__(self):
         return f"{self.__name__}('{self.name}')"
 
-    def update(self, values: GroupedList, convert_labels: bool = False) -> None:
+    def update(
+        self, values: GroupedList, convert_labels: bool = False, sorted_values: bool = False
+    ) -> None:
         """updates values for each value of the feature"""
-        # values are not labels
-        if not convert_labels:
-            # checking for GroupedList
-            if not isinstance(values, GroupedList):
-                raise ValueError(f" - [{self.__name__}] Wrong input, expected GroupedList object.")
 
-            # copying values
-            self.values = values
+        # values are the same but sorted
+        if sorted_values:
+            self.values = self.values.sort_by(values)
+
+        # checking for GroupedList
+        elif not isinstance(values, GroupedList):
+            raise ValueError(f" - [{self.__name__}] Wrong input, expected GroupedList object.")
+
+        # values are not labels
+        elif not convert_labels:
+
+            # initiating values
+            if self.values is None:
+                self.values = values
+
+            # updating existing values
+            else:
+                # iterating over each grouped values
+                for kept_value, grouped_values in values.content.items():
+                    # updating values
+                    self.values.group_list(grouped_values, kept_value)
 
         # values are labels -> converting them back to values
         else:
