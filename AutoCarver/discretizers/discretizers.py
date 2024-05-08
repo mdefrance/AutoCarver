@@ -36,15 +36,15 @@ class Discretizer(BaseDiscretizer):
     @extend_docstring(BaseDiscretizer.__init__)
     def __init__(
         self,
-        quantitative_features: list[str],
-        qualitative_features: list[str],
         min_freq: float,
+        categoricals: list[str] = None,
+        ordinals: list[str] = None,
+        quantitatives: list[str] = None,
         *,
-        ordinal_features: list[str] = None,
-        values_orders: dict[str, GroupedList] = None,
-        copy: bool = False,
-        verbose: bool = False,
-        n_jobs: int = 1,
+        ordinal_values: dict[str, GroupedList] = None,
+        # copy: bool = False,
+        # verbose: bool = False,
+        # n_jobs: int = 1,
         **kwargs: dict,
     ) -> None:
         """
@@ -69,125 +69,58 @@ class Discretizer(BaseDiscretizer):
             List of column names of ordinal features to be discretized. For those features a list
             of values has to be provided in the ``values_orders`` dict, by default ``None``
         """
-        # Lists of features per type
-        if ordinal_features is None:
-            ordinal_features = []
-        self.ordinal_features = list(set(ordinal_features))
-        self.features = list(set(quantitative_features + qualitative_features + ordinal_features))
-
-        # initializing input_dtypes
-        self.input_dtypes = {feature: "str" for feature in qualitative_features + ordinal_features}
-        self.input_dtypes.update({feature: "float" for feature in quantitative_features})
-
-        # Initiating BaseDiscretizer
-        super().__init__(
-            features=self.features,
-            values_orders=values_orders,
-            input_dtypes=self.input_dtypes,
-            output_dtype="str",
-            str_nan=kwargs.get("nan", NAN),
-            str_default=kwargs.get("default", DEFAULT),
-            copy=copy,
-            verbose=verbose,
-            n_jobs=n_jobs,
+        # initiating features
+        features = Features(
+            quantitatives=quantitatives,
+            categoricals=categoricals,
+            ordinals=ordinals,
+            ordinal_values=ordinal_values,
+            **kwargs,
         )
-
-        # checking for missing orders
-        no_order_provided = [
-            feature for feature in self.ordinal_features if feature not in self.values_orders
-        ]
-        assert len(no_order_provided) == 0, (
-            " - [Discretizer] No ordering was provided for following features: "
-            f"{str(no_order_provided)}. Please make sure you defined values_orders correctly."
-        )
-
-        # class specific attributes
-        self.min_freq = min_freq
-
-    def _remove_feature(self, feature: str) -> None:
-        """Removes a feature from all ``feature`` attributes
-
-        Parameters
-        ----------
-        feature : str
-            Column name of the feature to remove
-        """
-        if feature in self.features:
-            super()._remove_feature(feature)
-            if feature in self.ordinal_features:
-                self.ordinal_features.remove(feature)
+        super().__init__(features=features, **kwargs)  # Initiating BaseDiscretizer
+        self.min_freq = min_freq  # minimum frequency per modality
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
         # Checking for binary target and copying X
         x_copy = self._prepare_data(X, y)
 
+        kept_features: list[str] = []  # list of viable features
+
         # [Qualitative features] Grouping qualitative features
-        if len(self.qualitative_features) > 0:
-            if self.verbose:  # verbose if requested
-                print("------\n[Discretizer] Fit Qualitative Features\n---")
+        if len(self.features.get_qualitatives()) > 0:
 
             # grouping qualitative features
             qualitative_discretizer = QualitativeDiscretizer(
-                qualitative_features=self.qualitative_features,
-                ordinal_features=self.ordinal_features,
+                categoricals=self.features.categoricals,
+                ordinals=self.features.ordinals,
                 min_freq=self.min_freq,
-                values_orders=self.values_orders,
-                input_dtypes=self.input_dtypes,
-                str_nan=self.str_nan,
-                str_default=self.str_default,
                 copy=False,  # always False as x_copy is already a copy (if requested)
                 verbose=self.verbose,
                 n_jobs=self.n_jobs,
             )
             qualitative_discretizer.fit(x_copy, y)
 
-            # storing orders of grouped features
-            self.values_orders.update(qualitative_discretizer.values_orders)
-
-            # removing dropped features
-            removed_features = [
-                feature
-                for feature in self.qualitative_features
-                if feature not in qualitative_discretizer.features
-            ]
-            for feature in removed_features:
-                self._remove_feature(feature)
-
-            if self.verbose:  # verbose if requested
-                print("------\n")
+            # saving kept features
+            kept_features += qualitative_discretizer.features.get_names()
 
         # [Quantitative features] Grouping quantitative features
-        if len(self.quantitative_features) > 0:
-            if self.verbose:  # verbose if requested
-                print("------\n[Discretizer] Fit Quantitative Features\n---")
+        if len(self.features.get_quantitatives()) > 0:
 
             # grouping quantitative features
             quantitative_discretizer = QuantitativeDiscretizer(
-                quantitative_features=self.quantitative_features,
+                quantitatives=self.features.quantitatives,
                 min_freq=self.min_freq,
-                values_orders=self.values_orders,
-                input_dtypes=self.input_dtypes,
-                str_nan=self.str_nan,
                 verbose=self.verbose,
                 n_jobs=self.n_jobs,
             )
             quantitative_discretizer.fit(x_copy, y)
 
-            # storing orders of grouped features
-            self.values_orders.update(quantitative_discretizer.values_orders)
+            # saving kept features
+            kept_features += quantitative_discretizer.features.get_names()
 
-            # removing dropped features
-            removed_features = [
-                feature
-                for feature in self.quantitative_features
-                if feature not in quantitative_discretizer.features
-            ]
-            for feature in removed_features:
-                self._remove_feature(feature)
-
-            if self.verbose:  # verbose if requested
-                print("------\n")
+        # removing dropped features
+        self.features.keep_features(kept_features)
 
         # discretizing features based on each feature's values_order
         super().fit(X, y)
@@ -328,6 +261,10 @@ class QualitativeDiscretizer(BaseDiscretizer):
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
+        if self.verbose:  # verbose if requested
+            print(" ---")
+            self._verbose()
+
         # checking data before bucketization
         x_copy = self._prepare_data(X, y)
 
@@ -365,6 +302,9 @@ class QualitativeDiscretizer(BaseDiscretizer):
 
         # discretizing features based on each feature's values_order
         super().fit(X, y)
+
+        if self.verbose:  # verbose if requested
+            print(" ---\n")
 
         return self
 
@@ -451,6 +391,10 @@ class QuantitativeDiscretizer(BaseDiscretizer):
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
+        if self.verbose:  # verbose if requested
+            print(" ---")
+            self._verbose()
+
         # checking data before bucketization
         x_copy = self._prepare_data(X, y)
 
@@ -491,6 +435,9 @@ class QuantitativeDiscretizer(BaseDiscretizer):
 
         # discretizing features based on each feature's values_order
         super().fit(X, y)
+
+        if self.verbose:  # verbose if requested
+            print(" ---\n")
 
         return self
 

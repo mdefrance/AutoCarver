@@ -116,6 +116,16 @@ class Features:
         self.ordinals = [feat for feat in self.ordinals if feat.name != feature_name]
         self.quantitatives = [feat for feat in self.quantitatives if feat.name != feature_name]
 
+    def keep_features(self, kept_features: list[str]):
+        """list of features to keep (removes the others)"""
+        self.categoricals = [
+            feature for feature in self.categoricals if feature.name in kept_features
+        ]
+        self.ordinals = [feature for feature in self.ordinals if feature.name in kept_features]
+        self.quantitatives = [
+            feature for feature in self.quantitatives if feature.name in kept_features
+        ]
+
     def fit(self, X: DataFrame, y: Series = None) -> None:
         for feature in self:
             if not feature.is_fitted:  # checking for non-fitted features
