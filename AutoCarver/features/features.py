@@ -74,6 +74,8 @@ class Features:
             )
 
     def __repr__(self) -> str:
+        # TODO add feature types
+        # f'get_names(self.categoricals) + get_names(self.ordinals) + get_names(self.quantitatives)
         return f"Features({str(self.get_names())})"
 
     def __call__(self, feature_name: str) -> BaseFeature:

@@ -19,6 +19,8 @@ from ...features.qualitative_feature import nan_unique
 class BaseDiscretizer(BaseEstimator, TransformerMixin):
     """Applies discretization using a dict of GroupedList to transform a DataFrame's columns."""
 
+    __name__ = "BaseDiscretizer"
+
     def __init__(
         self,
         features: Features,
@@ -110,6 +112,9 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         }
         # initiating _history for carvers
         self._history = None
+
+    def __repr__(self) -> str:
+        return f"{self.__name__}({str(self.features)})"
 
     def _remove_feature(self, feature: str) -> None:
         """Removes a feature from all ``BaseDiscretizer.feature`` attributes
@@ -440,6 +445,11 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         X = X.replace({f.name: f.label_per_value for f in qualitatives})
 
         return X
+
+    def verbose(self) -> None:
+        """prints logs if requested"""
+        if self.verbose:
+            print(f" - [{self.__name__}] Fit {str(self.features)}")
 
     # def to_json(self) -> str:
     #     """Converts to .json format.

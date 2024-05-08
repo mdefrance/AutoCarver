@@ -31,6 +31,8 @@ class CategoricalDiscretizer(BaseDiscretizer):
     Only use for qualitative non-ordinal features.
     """
 
+    __name__ = "CategoricalDiscretizer"
+
     @extend_docstring(BaseDiscretizer.__init__)
     def __init__(
         self,
@@ -101,8 +103,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
         # copying dataframe and checking data before bucketization
         x_copy = self._prepare_data(X, y)
 
-        if self.verbose:  # verbose if requested
-            print(f" - [CategoricalDiscretizer] Fit {self.features}")
+        self.verbose()  # verbose if requested
 
         # computing frequencies of each modality
         frequencies = x_copy[self.features.get_names()].apply(value_counts, normalize=True, axis=0)
@@ -178,6 +179,8 @@ class OrdinalDiscretizer(BaseDiscretizer):
     Fisrt fits :ref:`StringDiscretizer` if neccesary.
     """
 
+    __name__ = "OrdinalDiscretizer"
+
     @extend_docstring(BaseDiscretizer.__init__)
     def __init__(
         self,
@@ -216,7 +219,6 @@ class OrdinalDiscretizer(BaseDiscretizer):
         """
         # initiating features
         features = Features(ordinals=features, ordinal_values=ordinal_values, **kwargs)
-        self.ordinal_values = ordinal_values
 
         # Initiating BaseDiscretizer
         super().__init__(features=features, copy=copy, verbose=verbose, n_jobs=n_jobs, **kwargs)
@@ -254,8 +256,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
-        if self.verbose:  # verbose if requested
-            print(f" - [OrdinalDiscretizer] Fit {self.features}")
+        self.verbose()  # verbose if requested
 
         # checking values orders
         x_copy = self._prepare_data(X, y)

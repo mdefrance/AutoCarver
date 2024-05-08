@@ -27,6 +27,8 @@ class ContinuousDiscretizer(BaseDiscretizer):
     * Nans are considered as a modality (and are taken into account in ``freq_frequent_modals``).
     """
 
+    __name__ = "ContinuousDiscretizer"
+
     @extend_docstring(BaseDiscretizer.__init__)
     def __init__(
         self,
@@ -64,8 +66,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series = None) -> None:  # pylint: disable=W0222
-        if self.verbose:  # verbose if requested TODO put this in a wrapper with self.__name__
-            print(f" - [ContinuousDiscretizer] Fit {self.features}")
+        self.verbose()  # verbose if requested
 
         # fitting each feature
         all_orders = imap_unordered_function(
