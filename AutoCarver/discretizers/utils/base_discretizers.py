@@ -25,7 +25,6 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         self,
         features: Features,
         *,
-        output_dtype: str = "str",
         features_casting: dict[str, list[str]] = None,
         **kwargs: dict,
     ) -> None:
@@ -83,12 +82,12 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         See `Discretizers examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
         """
         # features and values
-        self.features = features
+        self.features = Features(features)
         self.copy = kwargs.get("copy", True)
         self.kwargs = kwargs
 
         # output type
-        self.output_dtype = output_dtype
+        self.output_dtype = kwargs.get("output_dtype", "str")
 
         # whether or not to reinstate numpy nan after bucketization
         self.dropna = kwargs.get("dropna", True)
@@ -110,6 +109,12 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         }
         # initiating _history for carvers
         self._history = None
+
+        # initiating things for super().__repr__
+        self.ordinals = None
+        self.categoricals = None
+        self.quantitatives = None
+        self.ordinal_values = None
 
     def __repr__(self) -> str:
         return f"{self.__name__}({str(self.features)})"

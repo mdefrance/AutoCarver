@@ -46,6 +46,12 @@ class Features:
             ordinals, OrdinalFeature, ordinal_values=self.ordinal_values, **kwargs
         )
 
+        # ensuring features are grouped accordingly (already initiated features)
+        all_features = self.categoricals + self.ordinals + self.quantitatives
+        self.categoricals = [feature for feature in all_features if feature.is_categorical]
+        self.ordinals = [feature for feature in all_features if feature.is_ordinal]
+        self.quantitatives = [feature for feature in all_features if feature.is_quantitative]
+
         # checking that features were passed as input
         if len(self.categoricals) == 0 and len(self.quantitatives) == 0 and len(self.ordinals) == 0:
             raise ValueError(
@@ -115,9 +121,15 @@ class Features:
             if not feature.is_fitted:  # checking for non-fitted features
                 feature.fit(X, y)
 
-    def update(self, feature_values: dict[str, GroupedList], convert_labels: bool = False) -> None:
+    def update(
+        self,
+        feature_values: dict[str, GroupedList],
+        convert_labels: bool = False,
+        sorted_values: bool = False,
+        replace: bool = False,
+    ) -> None:
         for feature, values in feature_values.items():
-            self(feature).update(values, convert_labels)
+            self(feature).update(values, convert_labels, sorted_values, replace)
 
     def update_labels(self, output_dtype: str = "str") -> None:
         for feature in self:
@@ -161,7 +173,7 @@ def cast_features(
                 target_class(feature, values=ordinal_values.get(feature), **kwargs)
             ]
         # already a BaseFeature
-        elif isinstance(feature, target_class):
+        elif isinstance(feature, BaseFeature):
             converted_features += [feature]
 
         else:

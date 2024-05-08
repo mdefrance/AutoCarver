@@ -8,7 +8,7 @@ from pandas import DataFrame, Series
 from .base_discretizers import BaseDiscretizer, extend_docstring
 from ...features import GroupedList
 from .multiprocessing import imap_unordered_function
-from ...features import Features, BaseFeature
+from ...features import Features, BaseFeature, QuantitativeFeature
 
 
 class ContinuousDiscretizer(BaseDiscretizer):
@@ -32,7 +32,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
     @extend_docstring(BaseDiscretizer.__init__)
     def __init__(
         self,
-        features: list[str],
+        quantitatives: list[QuantitativeFeature],
         min_freq: float,
         *,
         copy: bool = False,
@@ -56,7 +56,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
             **Tip**: set between ``0.02`` (slower, less robust) and ``0.05`` (faster, more robust)
         """
         # initiating features
-        features = Features(quantitatives=features, **kwargs)
+        features = Features(quantitatives=quantitatives, **kwargs)
 
         # Initiating BaseDiscretizer
         super().__init__(features=features, copy=copy, verbose=verbose, n_jobs=n_jobs, **kwargs)

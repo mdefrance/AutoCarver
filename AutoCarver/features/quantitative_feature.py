@@ -10,8 +10,7 @@ from .base_feature import BaseFeature
 class QuantitativeFeature(BaseFeature):
     def __init__(self, name: str, **kwargs: dict) -> None:
         super().__init__(name, **kwargs)
-
-        self.dtype = "continuous"
+        self.is_quantitative = True
 
     def __repr__(self):
         return f"QuantitativeFeature('{self.name}')"
@@ -24,11 +23,15 @@ class QuantitativeFeature(BaseFeature):
         super().fit(X, y)
 
     def update(
-        self, values: GroupedList, convert_labels: bool = False, sorted_values: bool = False
+        self,
+        values: GroupedList,
+        convert_labels: bool = False,
+        sorted_values: bool = False,
+        replace: bool = True,
     ) -> None:
         """updates values and labels for each value of the feature"""
         # updating feature's values
-        super().update(values)
+        super().update(values, convert_labels, sorted_values, replace)
 
         # updating feature's labels
         self.update_labels()

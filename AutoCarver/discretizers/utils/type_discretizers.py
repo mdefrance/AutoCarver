@@ -6,7 +6,7 @@ from pandas import DataFrame, Series
 from .base_discretizers import BaseDiscretizer, extend_docstring, nan_unique
 from .multiprocessing import apply_async_function
 
-from ...features import GroupedList, BaseFeature
+from ...features import GroupedList, BaseFeature, Features
 
 
 class StringDiscretizer(BaseDiscretizer):
@@ -31,21 +31,24 @@ class StringDiscretizer(BaseDiscretizer):
         features : list[str]
             List of column names of qualitative features to be converted as string
         """
+        # initiating features
+        features = Features(quantitatives=features, **kwargs)
+
         # Initiating BaseDiscretizer
         super().__init__(features=features, **kwargs)
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series = None) -> None:  # pylint: disable=W0222
-        self.verbose()  # verbose if requested
+        self._verbose()  # verbose if requested
 
         # checking for binary target and copying X
-        x_copy = self._prepare_data(X, y)  # X[self.features].fillna(self.str_nan)
+        x_copy = self._prepare_data(X, y)
 
         # transforming all features
         all_orders = apply_async_function(fit_feature, self.features, self.n_jobs, x_copy)
 
         # updating features accordingly
-        self.features.update(all_orders)
+        self.features.update(dict(all_orders), replace=True)
         self.features.fit(x_copy, y)
 
         # discretizing features based on each feature's values_order
@@ -59,7 +62,11 @@ def fit_feature(feature: BaseFeature, df_feature: Series):
 
     # unique feature values
     unique_values = nan_unique(df_feature)
-    values_order = GroupedList(unique_values)
+
+    # initiating feature values
+    order = GroupedList(unique_values)
+    if feature.values is not None:
+        order = GroupedList(feature.values)
 
     # formatting values
     for value in unique_values:
@@ -70,13 +77,14 @@ def fit_feature(feature: BaseFeature, df_feature: Series):
         else:
             str_value = str(value)
 
-        # checking for string values already in the order
-        if str_value not in values_order:
-            values_order.append(str_value)  # adding string value to the order
-            values_order.group(value, str_value)  # grouping integer value into the string value
+        # adding missing str_value to the order
+        if str_value not in order:
+            order.append(str_value)
+        # adding float/int values to the order
+        if value not in order:
+            order.append(value)
 
-    # adding str_nan
-    if any(df_feature.isna()):
-        values_order.append(feature.str_nan)
+        # grouping float/int value into the str value
+        order.group(value, str_value)
 
-    return feature.name, values_order
+    return feature.name, order

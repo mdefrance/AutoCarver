@@ -13,8 +13,7 @@ class CategoricalFeature(BaseFeature):
 
     def __init__(self, name: str, **kwargs: dict) -> None:
         super().__init__(name, **kwargs)
-
-        self.dtype = "categorical"
+        self.is_categorical = True
 
         # TODO adding stats
         self.n_unique = None
@@ -38,14 +37,19 @@ class CategoricalFeature(BaseFeature):
         super().fit(X, y)
 
     def update(
-        self, values: GroupedList, convert_labels: bool = False, sorted_values: bool = False
+        self,
+        values: GroupedList,
+        convert_labels: bool = False,
+        sorted_values: bool = False,
+        replace: bool = False,
     ) -> None:
         """updates values and labels for each value of the feature"""
         # updating feature's values
-        super().update(values, convert_labels, sorted_values)
+        super().update(values, convert_labels, sorted_values, replace)
 
         # for qualitative feature -> by default, labels are values
         super().update_labels()
+        # TODO make better labels
 
 
 class OrdinalFeature(CategoricalFeature):
@@ -53,8 +57,8 @@ class OrdinalFeature(CategoricalFeature):
 
     def __init__(self, name: str, values: list[str], **kwargs: dict) -> None:
         super().__init__(name, **kwargs)
-
-        self.dtype = "ordinal"
+        self.is_ordinal = True
+        self.is_categorical = False
 
         # checking for values
         if len(values) == 0:

@@ -16,7 +16,7 @@ from .base_discretizers import (
     target_rate,
     value_counts,
 )
-from ...features import GroupedList, Features
+from ...features import GroupedList, CategoricalFeature, OrdinalFeature, Features
 from .type_discretizers import StringDiscretizer
 
 
@@ -36,12 +36,12 @@ class CategoricalDiscretizer(BaseDiscretizer):
     @extend_docstring(BaseDiscretizer.__init__)
     def __init__(
         self,
-        features: list[str],
+        categoricals: list[CategoricalFeature],
         min_freq: float,
-        *,
-        copy: bool = False,
-        verbose: bool = False,
-        n_jobs: int = 1,
+        # *,
+        # copy: bool = False,
+        # verbose: bool = False,
+        # n_jobs: int = 1,
         **kwargs: dict,
     ) -> None:
         """
@@ -60,10 +60,10 @@ class CategoricalDiscretizer(BaseDiscretizer):
             **Tip**: set between ``0.02`` (slower, less robust) and ``0.05`` (faster, more robust)
         """
         # initiating features
-        features = Features(categoricals=features, **kwargs)
+        features = Features(categoricals=categoricals, **kwargs)
 
         # Initiating BaseDiscretizer
-        super().__init__(features=features, copy=copy, verbose=verbose, n_jobs=n_jobs, **kwargs)
+        super().__init__(features=features, **kwargs)
 
         self.min_freq = min_freq
 
@@ -184,13 +184,13 @@ class OrdinalDiscretizer(BaseDiscretizer):
     @extend_docstring(BaseDiscretizer.__init__)
     def __init__(
         self,
-        features: list[str],
-        ordinal_values: dict[str, GroupedList],
+        ordinals: list[OrdinalFeature],
         min_freq: float,
         *,
-        copy: bool = False,
-        verbose: bool = False,
-        n_jobs: int = 1,
+        ordinal_values: dict[str, GroupedList] = None,
+        # copy: bool = False,
+        # verbose: bool = False,
+        # n_jobs: int = 1,
         **kwargs: dict,
     ):
         """
@@ -218,10 +218,10 @@ class OrdinalDiscretizer(BaseDiscretizer):
             * ``'float"``, features are considered as quantitative.
         """
         # initiating features
-        features = Features(ordinals=features, ordinal_values=ordinal_values, **kwargs)
+        features = Features(ordinals=ordinals, ordinal_values=ordinal_values, **kwargs)
 
         # Initiating BaseDiscretizer
-        super().__init__(features=features, copy=copy, verbose=verbose, n_jobs=n_jobs, **kwargs)
+        super().__init__(features=features, **kwargs)
 
         # class specific attributes
         self.min_freq = min_freq

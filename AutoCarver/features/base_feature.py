@@ -10,6 +10,8 @@ from .grouped_list import GroupedList
 
 
 class BaseFeature:
+    """TODO add transform that checks for new unexpected values"""
+
     __name__ = "Feature"
 
     def __init__(self, name: str, **kwargs: dict) -> None:
@@ -30,11 +32,15 @@ class BaseFeature:
         self.is_fitted = False
 
         # feature values, type and labels
-        self.dtype = None
         self.values = None  # current values
         self.labels = None  # current labels
         self.label_per_value: dict[str, str] = {}  # current label for all existing values
         self.value_per_label: dict[str, str] = {}  # a value for each current label
+
+        # initating feature dtypes
+        self.is_ordinal = False
+        self.is_categorical = False
+        self.is_quantitative = False
 
     def fit(self, X: DataFrame, y: Series = None) -> None:  # pylint: disable=W0222
         _, _ = X, y  # unused attributes
@@ -44,7 +50,11 @@ class BaseFeature:
         return f"{self.__name__}('{self.name}')"
 
     def update(
-        self, values: GroupedList, convert_labels: bool = False, sorted_values: bool = False
+        self,
+        values: GroupedList,
+        convert_labels: bool = False,
+        sorted_values: bool = False,
+        replace: bool = False,
     ) -> None:
         """updates values for each value of the feature"""
 
@@ -55,6 +65,10 @@ class BaseFeature:
         # checking for GroupedList
         elif not isinstance(values, GroupedList):
             raise ValueError(f" - [{self.__name__}] Wrong input, expected GroupedList object.")
+
+        # replacing existing values
+        elif replace:
+            self.values = values
 
         # values are not labels
         elif not convert_labels:

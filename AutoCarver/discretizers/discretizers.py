@@ -16,7 +16,7 @@ from .utils.quantitative_discretizers import ContinuousDiscretizer
 from .utils.type_discretizers import StringDiscretizer
 
 
-from ..features import GroupedList, Features
+from ..features import GroupedList, Features, BaseFeature
 
 
 class Discretizer(BaseDiscretizer):
@@ -30,6 +30,8 @@ class Discretizer(BaseDiscretizer):
     * [Ordinal features] user-specified order.
     * [Continuous/Discrete features] real order of the values.
     """
+
+    __name__ = "Discretizer"
 
     @extend_docstring(BaseDiscretizer.__init__)
     def __init__(
@@ -205,6 +207,8 @@ class QualitativeDiscretizer(BaseDiscretizer):
     * [Ordinal features] user-specified order.
     """
 
+    __name__ = "QualitativeDiscretizer"
+
     @extend_docstring(BaseDiscretizer.__init__)
     def __init__(
         self,
@@ -212,10 +216,10 @@ class QualitativeDiscretizer(BaseDiscretizer):
         categoricals: list[str] = None,
         ordinals: list[str] = None,
         ordinal_values: dict[str, GroupedList] = None,
-        *,
-        copy: bool = False,
-        verbose: bool = False,
-        n_jobs: int = 1,
+        # *,
+        # copy: bool = False,
+        # verbose: bool = False,
+        # n_jobs: int = 1,
         **kwargs: dict,
     ) -> None:
         """
@@ -248,12 +252,8 @@ class QualitativeDiscretizer(BaseDiscretizer):
         features = Features(
             categoricals=categoricals, ordinals=ordinals, ordinal_values=ordinal_values, **kwargs
         )
-
-        # class specific attributes
-        self.min_freq = min_freq
-
-        # Initiating BaseDiscretizer
-        super().__init__(features=features, copy=copy, verbose=verbose, n_jobs=n_jobs, **kwargs)
+        super().__init__(features=features, **kwargs)  # Initiating BaseDiscretizer
+        self.min_freq = min_freq  # minimum frequency per modality
 
     def _prepare_data(self, X: DataFrame, y: Series = None) -> DataFrame:
         """Validates format and content of X and y. Converts non-string columns into strings.
@@ -309,9 +309,8 @@ class QualitativeDiscretizer(BaseDiscretizer):
             features_to_convert = list(not_object.index[not_object])
             unexpected_dtypes = [typ for dtyp in dtypes[not_object] for typ in dtyp if typ != str]
             warn(
-                f" - [{self.__name__}] Non-string features: {str(features_to_convert)}"
-                ". Trying to convert them using type_discretizers.StringDiscretizer, "
-                "otherwise convert them manually. "
+                f" - [{self.__name__}] Non-string features: {str(features_to_convert)}. "
+                "Converting them with type_discretizers.StringDiscretizer. "
                 f"Unexpected data types: {str(set(unexpected_dtypes))}.",
                 UserWarning,
             )
@@ -325,36 +324,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
             )
             x_copy = string_discretizer.fit_transform(x_copy, y)
 
-            # updating values_orders accordingly
-            self.values_orders.update(string_discretizer.values_orders)
-
-        # adding known nans at training
-        for feature in self.features:
-            if feature in self.values_orders:
-                order = self.values_orders[feature]
-                if any(x_copy[feature].isna()) and (self.str_nan not in order):
-                    order.append(self.str_nan)
-                    self.values_orders.update({feature: order})
-
-        # checking that all unique values in X are in values_orders
-        self._check_new_values(x_copy, features=self.ordinal_features)
-
         return x_copy
-
-    def _remove_feature(self, feature: str) -> None:
-        """Removes a feature from all ``feature`` attributes
-
-        Parameters
-        ----------
-        feature : str
-            Column name of the feature to remove
-        """
-        if feature in self.features:
-            super()._remove_feature(feature)
-            if feature in self.ordinal_features:
-                self.ordinal_features.remove(feature)
-            if feature in self.non_ordinal_features:
-                self.non_ordinal_features.remove(feature)
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
@@ -363,52 +333,35 @@ class QualitativeDiscretizer(BaseDiscretizer):
 
         # Base discretization (useful if already discretized)
         base_discretizer = BaseDiscretizer(
-            features=[feature for feature in self.features if feature in self.values_orders],
-            values_orders=self.values_orders,
-            input_dtypes="str",
-            output_dtype="str",
+            features=[feature for feature in self.features if feature.is_fitted],
             dropna=False,
             copy=True,
             verbose=self.verbose,
-            str_nan=NAN,
-            str_default=DEFAULT,
             n_jobs=self.n_jobs,
         )
         x_copy = base_discretizer.fit_transform(x_copy, y)
 
         # [Qualitative ordinal features] Grouping rare values into closest common one
-        if len(self.ordinal_features) > 0:
+        if len(self.features.ordinals) > 0:
             ordinal_discretizer = OrdinalDiscretizer(
-                ordinal_features=self.ordinal_features,
-                values_orders=self.values_orders,
-                input_dtypes=self.input_dtypes,
+                ordinals=self.features.ordinals,
                 min_freq=self.min_freq,
                 verbose=self.verbose,
-                str_nan=self.str_nan,
                 copy=False,
                 n_jobs=self.n_jobs,
             )
             ordinal_discretizer.fit(x_copy, y)
 
-            # storing orders of grouped features
-            self.values_orders.update(ordinal_discretizer.values_orders)
-
         # [Qualitative non-ordinal features] Grouping rare values into str_default '__OTHER__'
-        if len(self.non_ordinal_features) > 0:
+        if len(self.features.categoricals) > 0:
             default_discretizer = CategoricalDiscretizer(
-                qualitative_features=self.non_ordinal_features,
+                categoricals=self.features.categoricals,
                 min_freq=self.min_freq,
-                values_orders=self.values_orders,
-                str_nan=self.str_nan,
-                str_default=self.str_default,
                 verbose=self.verbose,
                 copy=False,
                 n_jobs=self.n_jobs,
             )
             default_discretizer.fit(x_copy, y)
-
-            # storing orders of grouped features
-            self.values_orders.update(default_discretizer.values_orders)
 
         # discretizing features based on each feature's values_order
         super().fit(X, y)
@@ -426,17 +379,17 @@ class QuantitativeDiscretizer(BaseDiscretizer):
      * [Continuous/Discrete features] real order of the values.
     """
 
+    __name__ = "QuantitativeDiscretizer"
+
     @extend_docstring(BaseDiscretizer.__init__)
     def __init__(
         self,
-        quantitative_features: list[str],
+        quantitatives: list[str],
         min_freq: float,
-        *,
-        values_orders: dict[str, GroupedList] = None,
-        input_dtypes: Union[str, dict[str, str]] = "float",
-        verbose: bool = False,
-        copy: bool = False,
-        n_jobs: int = 1,
+        # *,
+        # verbose: bool = False,
+        # copy: bool = False,
+        # n_jobs: int = 1,
         **kwargs: dict,
     ) -> None:
         """
@@ -461,20 +414,9 @@ class QuantitativeDiscretizer(BaseDiscretizer):
             * If ``"str"``, features are considered as qualitative.
             * If ``"float"``, features are considered as quantitative.
         """
-        # Initiating BaseDiscretizer
-        super().__init__(
-            features=quantitative_features,
-            values_orders=values_orders,
-            input_dtypes=input_dtypes,
-            output_dtype="str",
-            str_nan=kwargs.get("nan", NAN),
-            copy=copy,
-            verbose=verbose,
-            n_jobs=n_jobs,
-        )
-
-        # class specific attributes
-        self.min_freq = min_freq
+        features = Features(quantitatives=quantitatives, **kwargs)  # initiating features
+        super().__init__(features=features, **kwargs)  # Initiating BaseDiscretizer
+        self.min_freq = min_freq  # minimum frequency per modality
 
     def _prepare_data(self, X: DataFrame, y: Series) -> DataFrame:  # pylint: disable=W0222
         """Validates format and content of X and y.
@@ -497,13 +439,14 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         x_copy = super()._prepare_data(X, y)
 
         # checking for quantitative columns
-        dtypes = x_copy[self.features].map(type).apply(unique, result_type="reduce")
+        dtypes = x_copy[self.features.get_names()].map(type).apply(unique, result_type="reduce")
         not_numeric = dtypes.apply(lambda u: str in u)
-        assert all(~not_numeric), (
-            " - [QuantitativeDiscretizer] Non-numeric features: "
-            f"{str(list(not_numeric[not_numeric].index))} in provided quantitative_features. "
-            "Please check your inputs."
-        )
+        if any(not_numeric):
+            raise ValueError(
+                f" - [{self.__name__}] Non-numeric features: "
+                f"{str(list(not_numeric[not_numeric].index))} in provided quantitative_features. "
+                "Please check your inputs."
+            )
         return x_copy
 
     @extend_docstring(BaseDiscretizer.fit)
@@ -513,10 +456,8 @@ class QuantitativeDiscretizer(BaseDiscretizer):
 
         # [Quantitative features] Grouping values into quantiles
         continuous_discretizer = ContinuousDiscretizer(
-            quantitative_features=self.features,
+            quantitatives=self.features.quantitatives,
             min_freq=self.min_freq,
-            values_orders=self.values_orders,
-            str_nan=self.str_nan,
             copy=True,  # needs to be True so that it does not transform x_copy
             verbose=self.verbose,
             n_jobs=self.n_jobs,
@@ -524,17 +465,11 @@ class QuantitativeDiscretizer(BaseDiscretizer):
 
         x_copy = continuous_discretizer.fit_transform(x_copy, y)
 
-        # storing orders of grouped features
-        self.values_orders.update(continuous_discretizer.values_orders)
-
         # [Quantitative features] Grouping rare quantiles into closest common one
         #  -> can exist because of overrepresented values (values more frequent than min_freq)
         # searching for features with rare quantiles: computing min frequency per feature
-        frequencies = x_copy[self.features].apply(
-            min_value_counts,
-            values_orders=continuous_discretizer.values_orders,
-            labels_per_values=continuous_discretizer.labels_per_values,
-            axis=0,
+        frequencies = x_copy[self.features.get_names()].apply(
+            min_value_counts, features=self.features, axis=0
         )
 
         # minimal frequency of a quantile
@@ -546,19 +481,13 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         # Grouping rare modalities
         if len(has_rare) > 0:
             ordinal_discretizer = OrdinalDiscretizer(
-                ordinal_features=has_rare,
+                ordinals=[feature for feature in self.features if feature.name in has_rare],
                 min_freq=q_min_freq,
-                values_orders=self.values_orders,
-                str_nan=self.str_nan,
                 copy=False,
                 verbose=self.verbose,
-                input_dtypes=self.input_dtypes,
                 n_jobs=self.n_jobs,
             )
             ordinal_discretizer.fit(x_copy, y)
-
-            # storing orders of grouped features
-            self.values_orders.update(ordinal_discretizer.values_orders)
 
         # discretizing features based on each feature's values_order
         super().fit(X, y)
@@ -568,20 +497,20 @@ class QuantitativeDiscretizer(BaseDiscretizer):
 
 def min_value_counts(
     x: Series,
-    values_orders: GroupedList = None,
-    labels_per_values: dict[str, dict[Any]] = None,
+    features: Features,
     dropna: bool = False,
     normalize: bool = True,
 ) -> float:
     """Minimum of modalities' frequencies."""
+    # getting corresponding feature
+    feature = features(x.name)
+
     # modality frequency
     values = x.value_counts(dropna=dropna, normalize=normalize)
 
     # setting indices with known values
-    order = values_orders.get(x.name)
-    order_labels = [labels_per_values.get(x.name).get(val) for val in order]
-    if order is not None:
-        values = values.reindex(order_labels).fillna(0)
+    if feature.values is not None:
+        values = values.reindex(feature.labels).fillna(0)
 
     # minimal frequency
     return values.values.min()
