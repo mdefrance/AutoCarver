@@ -13,7 +13,7 @@ from ...features.grouped_list import GroupedList
 from .multiprocessing import apply_async_function
 from .serialization import json_deserialize_values_orders, json_serialize_values_orders
 from ...features import Features, BaseFeature, get_names
-from ...features.categorical_feature import nan_unique
+from ...features.qualitative_feature import nan_unique
 
 
 class BaseDiscretizer(BaseEstimator, TransformerMixin):

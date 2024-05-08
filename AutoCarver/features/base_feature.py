@@ -10,6 +10,8 @@ from .grouped_list import GroupedList
 
 
 class BaseFeature:
+    __name__ = "Feature"
+
     def __init__(self, name: str, **kwargs: dict) -> None:
         self.name = name
 
@@ -28,19 +30,40 @@ class BaseFeature:
         self.is_fitted = False
 
         # feature values, type and labels
-        self.values = GroupedList()
-        self.labels: list[str] = []
         self.dtype = None
-        self.label_per_value: dict[str, str] = {}
+        self.values = None  # current values
+        self.labels = None  # current labels
+        self.label_per_value: dict[str, str] = {}  # current label for all existing values
+        self.value_per_label: dict[str, str] = {}  # a value for each current label
 
     def fit(self, X: DataFrame, y: Series = None) -> None:  # pylint: disable=W0222
         _, _ = X, y  # unused attributes
+        self.is_fitted = True  # feature is fitted
 
-        self.is_fitted = True  # fitted feature
+    def __repr__(self):
+        return f"{self.__name__}('{self.name}')"
 
-    def update(self, values: GroupedList) -> None:
+    def update(self, values: GroupedList, convert_labels: bool = False) -> None:
         """updates values for each value of the feature"""
-        self.values = values
+        # values are not labels
+        if not convert_labels:
+            # checking for GroupedList
+            if not isinstance(values, GroupedList):
+                raise ValueError(f" - [{self.__name__}] Wrong input, expected GroupedList object.")
+
+            # copying values
+            self.values = values
+
+        # values are labels -> converting them back to values
+        else:
+            # iterating over each grouped values
+            for kept_value, grouped_values in values.content.items():
+                # converting labels to values
+                kept_value = self.value_per_label.get(kept_value)
+                grouped_values = [self.value_per_label.get(value) for value in grouped_values]
+
+                # updating values
+                self.values.group_list(grouped_values, kept_value)
 
     def update_labels(self, labels: GroupedList = None, output_dtype: str = "str") -> None:
         """updates label for each value of the feature"""
@@ -56,7 +79,8 @@ class BaseFeature:
         # saving updated labels
         self.labels = labels
 
-        # updating label_per_value
-        for group_of_values, label in zip(self.values, labels):
-            for value in self.values.get(group_of_values):
-                self.label_per_value.update({value: label})
+        # updating label_per_value nand value_per_label
+        for value, label in zip(self.values, labels):
+            for grouped_value in self.values.get(value):
+                self.label_per_value.update({grouped_value: label})
+            self.value_per_label.update({label: value})

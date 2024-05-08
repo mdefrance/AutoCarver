@@ -9,13 +9,10 @@ import numpy as np
 from numpy import argmin, nan, select
 from pandas import DataFrame, Series, isna, unique
 
-from ...config import DEFAULT, NAN
+from ...config import NAN
 from .base_discretizers import (
     BaseDiscretizer,
-    convert_to_labels,
-    convert_to_values,
     extend_docstring,
-    nan_unique,
     target_rate,
     value_counts,
 )
@@ -89,9 +86,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
         x_copy = super()._prepare_data(X, y)
 
         # fitting features
-        for feature in self.features:
-            if not feature.is_fitted:
-                feature.fit(x_copy, y)
+        self.features.fit(x_copy, y)
 
         # checking that all unique values in X are in values_orders
         self._check_new_values(x_copy, features=self.features)
@@ -250,9 +245,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
         x_copy = super()._prepare_data(X, y)
 
         # fitting features
-        for feature in self.features:
-            if not feature.is_fitted:
-                feature.fit(x_copy, y)
+        self.features.fit(x_copy, y)
 
         # filling up nans for features that have some
         x_copy = x_copy.fillna({f.name: f.nan for f in self.features if f.has_nan})
@@ -267,34 +260,19 @@ class OrdinalDiscretizer(BaseDiscretizer):
         # checking values orders
         x_copy = self._prepare_data(X, y)
 
-        # converting potential quantiles into there labels
-        known_orders = convert_to_labels(
-            features=self.features,
-            quantitative_features=self.quantitative_features,
-            values_orders=self.values_orders,
-            str_nan=self.str_nan,
-            dropna=True,
-        )
-        # TODO: what about dropna?????
-
         # grouping rare modalities for each feature
         common_modalities = {
-            feature: find_common_modalities(
-                x_copy[feature.name], y, min_freq=self.min_freq, order=feature.labels
+            feature.name: find_common_modalities(
+                x_copy[feature.name],
+                y,
+                min_freq=self.min_freq,
+                order=[label for label in feature.labels if label != feature.nan],
             )
             for feature in self.features
         }
 
-        # converting potential labels into there respective values (quantiles)
-        self.values_orders.update(
-            convert_to_values(
-                features=self.features,
-                quantitative_features=self.quantitative_features,
-                values_orders=self.values_orders,
-                label_orders=common_modalities,
-                str_nan=self.str_nan,
-            )
-        )
+        # updating features accordingly
+        self.features.update(common_modalities, convert_labels=True)
 
         # discretizing features based on each feature's values_order
         super().fit(x_copy, y)
@@ -613,9 +591,12 @@ def find_common_modalities(
     df_feature: Series,
     y: Series,
     min_freq: float,
-    order: GroupedList,
+    order: list[str],
 ) -> dict[str, Union[str, float]]:
     """finds common modalities of a ordinal feature"""
+    # making a groupedlist of ordered labels
+    order = GroupedList(order)
+
     # total size
     len_df = len(df_feature)
 

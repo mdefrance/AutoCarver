@@ -3,12 +3,13 @@
 from pandas import DataFrame, Series
 from .grouped_list import GroupedList
 from .base_feature import BaseFeature
-from .categorical_feature import CategoricalFeature
-from .continuous_feature import QuantitativeFeature
-from .ordinal_feature import OrdinalFeature
+from .qualitative_feature import CategoricalFeature, OrdinalFeature
+from .quantitative_feature import QuantitativeFeature
 
 
 class MultiFeatures:
+    """TODO"""
+
     def __init__(
         self,
         labels: list[str],
@@ -107,13 +108,14 @@ class Features:
         self.ordinals = [feat for feat in self.ordinals if feat.name != feature_name]
         self.quantitatives = [feat for feat in self.quantitatives if feat.name != feature_name]
 
-    def update(self, feature_values: dict[str, GroupedList]) -> None:
-        for feature, values in feature_values.items():
-            self(feature).update(values)
-
     def fit(self, X: DataFrame, y: Series = None) -> None:
         for feature in self:
-            feature.fit(X, y)
+            if not feature.is_fitted:  # checking for non-fitted features
+                feature.fit(X, y)
+
+    def update(self, feature_values: dict[str, GroupedList], convert_labels: bool = False) -> None:
+        for feature, values in feature_values.items():
+            self(feature).update(values, convert_labels)
 
     def update_labels(self, output_dtype: str = "str") -> None:
         for feature in self:

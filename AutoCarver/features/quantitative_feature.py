@@ -23,7 +23,7 @@ class QuantitativeFeature(BaseFeature):
 
         super().fit(X, y)
 
-    def update(self, values: GroupedList) -> None:
+    def update(self, values: GroupedList, convert_labels: bool = False) -> None:
         """updates values and labels for each value of the feature"""
         # updating feature's values
         super().update(values)
