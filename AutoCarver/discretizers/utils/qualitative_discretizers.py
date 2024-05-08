@@ -88,15 +88,16 @@ class CategoricalDiscretizer(BaseDiscretizer):
         # checking for binary target
         x_copy = super()._prepare_data(X, y)
 
+        # fitting features
         for feature in self.features:
-            if not feature.is_fitted:  # fitting features
+            if not feature.is_fitted:
                 feature.fit(x_copy, y)
 
         # checking that all unique values in X are in values_orders
         self._check_new_values(x_copy, features=self.features)
 
         # filling up nans for features that have some
-        x_copy = x_copy.fillna({f.name: f.str_nan for f in self.features if f.has_nan})
+        x_copy = x_copy.fillna({f.name: f.nan for f in self.features if f.has_nan})
 
         return x_copy
 
@@ -116,7 +117,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
             values_to_group = [
                 val
                 for val, freq in frequencies[feature.name].items()
-                if freq < self.min_freq and val != feature.str_nan
+                if freq < self.min_freq and val != feature.nan
             ]
 
             # adding values that are completly missing (no frequency in X)
@@ -127,13 +128,13 @@ class CategoricalDiscretizer(BaseDiscretizer):
             # grouping values to str_default if any
             if any(values_to_group):
                 # adding default value to the order
-                feature.values.append(feature.str_default)
+                feature.values.append(feature.default)
                 feature.has_default = True
 
                 # grouping rare values in default value
-                feature.values.group_list(values_to_group, feature.str_default)
+                feature.values.group_list(values_to_group, feature.default)
                 x_copy.loc[x_copy[feature.name].isin(values_to_group), feature.name] = (
-                    feature.str_default
+                    feature.default
                 )
 
         # computing target rate per modality for ordering
@@ -149,10 +150,8 @@ class CategoricalDiscretizer(BaseDiscretizer):
             new_order = list(target_rates[feature.name])
 
             # checking that if there is a default it is observed
-            if feature.str_default in order and feature.str_default not in new_order:
-                not_observed = [
-                    v for v in order.content[feature.str_default] if v != feature.str_default
-                ]
+            if feature.default in order and feature.default not in new_order:
+                not_observed = [v for v in order.content[feature.default] if v != feature.default]
                 raise ValueError(
                     f"Some provided values of '{feature.name}' are never observed. Can not fit a "
                     "distribution without any observation. Please remove following values "
@@ -160,9 +159,9 @@ class CategoricalDiscretizer(BaseDiscretizer):
                 )
 
             # keeping nans by themselves
-            if feature.str_nan in new_order:
-                new_order.remove(feature.str_nan)
-                new_order += [feature.str_nan]
+            if feature.nan in new_order:
+                new_order.remove(feature.nan)
+                new_order += [feature.nan]
 
             # sorting order updating values_orders
             feature.update(order.sort_by(new_order))
@@ -187,11 +186,10 @@ class OrdinalDiscretizer(BaseDiscretizer):
     @extend_docstring(BaseDiscretizer.__init__)
     def __init__(
         self,
-        ordinal_features: list[str],
+        features: list[str],
+        ordinal_values: dict[str, GroupedList],
         min_freq: float,
-        values_orders: dict[str, GroupedList],
         *,
-        input_dtypes: Union[str, dict[str, str]] = "str",
         copy: bool = False,
         verbose: bool = False,
         n_jobs: int = 1,
@@ -221,26 +219,12 @@ class OrdinalDiscretizer(BaseDiscretizer):
             * ``"str"``, features are considered as qualitative.
             * ``'float"``, features are considered as quantitative.
         """
-        # Initiating BaseDiscretizer
-        super().__init__(
-            features=ordinal_features,
-            values_orders=values_orders,
-            input_dtypes=input_dtypes,
-            output_dtype="str",
-            str_nan=kwargs.get("nan", NAN),
-            copy=copy,
-            verbose=verbose,
-            n_jobs=n_jobs,
-        )
+        # initiating features
+        features = Features(ordinals=features, ordinal_values=ordinal_values, **kwargs)
+        self.ordinal_values = ordinal_values
 
-        # checking for missong orders
-        no_order_provided = [
-            feature for feature in self.features if feature not in self.values_orders
-        ]
-        assert len(no_order_provided) == 0, (
-            " - [OrdinalDiscretizer] No ordering was provided for following features:"
-            f" {str(no_order_provided)}. Please make sure you defined ``values_orders`` correctly."
-        )
+        # Initiating BaseDiscretizer
+        super().__init__(features=features, copy=copy, verbose=verbose, n_jobs=n_jobs, **kwargs)
 
         # class specific attributes
         self.min_freq = min_freq
@@ -264,24 +248,21 @@ class OrdinalDiscretizer(BaseDiscretizer):
         """
         # checking for binary target and copying X
         x_copy = super()._prepare_data(X, y)
-        # adding NANS
-        for feature in self.features:
-            if any(x_copy[feature].isna()):
-                values = self.values_orders[feature]
-                if not values.contains(self.str_nan):
-                    values.append(self.str_nan)
-                    self.values_orders.update({feature: values})
 
-        # removing NaNs if any already imputed -> grouping only non-nan values
-        if self.str_nan:
-            x_copy = x_copy.replace(self.str_nan, nan)
+        # fitting features
+        for feature in self.features:
+            if not feature.is_fitted:
+                feature.fit(x_copy, y)
+
+        # filling up nans for features that have some
+        x_copy = x_copy.fillna({f.name: f.nan for f in self.features if f.has_nan})
 
         return x_copy
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
         if self.verbose:  # verbose if requested
-            print(f" - [OrdinalDiscretizer] Fit {str(self.features)}")
+            print(f" - [OrdinalDiscretizer] Fit {self.features}")
 
         # checking values orders
         x_copy = self._prepare_data(X, y)
@@ -294,11 +275,12 @@ class OrdinalDiscretizer(BaseDiscretizer):
             str_nan=self.str_nan,
             dropna=True,
         )
+        # TODO: what about dropna?????
 
         # grouping rare modalities for each feature
         common_modalities = {
             feature: find_common_modalities(
-                x_copy[feature], y, min_freq=self.min_freq, order=known_orders[feature]
+                x_copy[feature.name], y, min_freq=self.min_freq, order=feature.labels
             )
             for feature in self.features
         }

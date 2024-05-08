@@ -34,12 +34,12 @@ class QuantitativeFeature(BaseFeature):
     def update_labels(self, labels: GroupedList = None, output_dtype: str = "str") -> None:
         """updates label for each value of the feature"""
 
-        # for quantitative features -> labels per quantile (removes str_nan)
-        labels = get_labels(self.values, self.str_nan)
+        # for quantitative features -> labels per quantile (removes nan)
+        labels = get_labels(self.values, self.nan)
 
         # add NaNs if there are any
-        if self.str_nan in self.values:
-            labels += [self.str_nan]
+        if self.nan in self.values:
+            labels += [self.nan]
 
         # building label per value
         super().update_labels(labels, output_dtype=output_dtype)
@@ -52,7 +52,7 @@ def get_labels(values: GroupedList, str_nan: str) -> list[str]:
     ----------
     values : GroupedList
         feature's values (quantiles in the case of continuous ones)
-    str_nan : str
+    nan : str
         default string value for nan
 
     Returns

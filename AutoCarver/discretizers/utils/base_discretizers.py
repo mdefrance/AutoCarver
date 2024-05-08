@@ -254,10 +254,10 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         X.replace(
             {
                 feature.name: {
-                    val: feature.str_default
+                    val: feature.default
                     for val in uniques[feature.name]
                     if val not in feature.values.values()
-                    and val != feature.str_nan
+                    and val != feature.nan
                     and feature.has_default
                 }
                 for feature in features
@@ -359,9 +359,9 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         # reinstating nans
         for feature in self.features:
             if feature.dropna:  # checking whether we should have dropped nans or not
-                if feature.str_nan in feature.label_per_value:  # checking that nans were grouped
+                if feature.nan in feature.label_per_value:  # checking that nans were grouped
                     x_copy[feature.name] = x_copy[feature.name].replace(
-                        feature.label_per_value[feature.str_nan], nan
+                        feature.label_per_value[feature.nan], nan
                     )
 
         return x_copy
@@ -431,7 +431,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         qualitatives = self.features.get_qualitatives()
 
         # filling up nans for features that have some
-        X = X.fillna({f.name: f.str_nan for f in qualitatives if f.has_nan})
+        X = X.fillna({f.name: f.nan for f in qualitatives if f.has_nan})
 
         # checking that all unique values in X are in values_orders
         X = self._check_new_values(X, features=qualitatives)
@@ -458,8 +458,8 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
     #         "features_casting": self.features_casting,
     #         "input_dtypes": self.input_dtypes,
     #         "output_dtype": self.output_dtype,
-    #         "nan": self.str_nan,
-    #         "default": self.str_default,
+    #         "nan": self.nan,
+    #         "default": self.default,
     #         "dropna": self.dropna,
     #         "features_dropna": self.features_dropna,
     #         "copy": self.copy,
@@ -545,7 +545,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
     #         # adding each value/label
     #         for value, label in self.labels_per_values[feature].items():
     #             # checking that nan where dropped
-    #             if not (not self.dropna and value == self.str_nan):
+    #             if not (not self.dropna and value == self.nan):
     #                 # initiating feature summary (default value/label)
     #                 feature_summary = {
     #                     "feature": feature,
@@ -562,7 +562,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
     #                         if not isinstance(value, integer) and not isinstance(
     #                             value, int
     #                         ):  # checking for ints
-    #                             if value != self.str_default:  # checking for str_default
+    #                             if value != self.default:  # checking for str_default
     #                                 summaries += [feature_summary]
 
     #                 # case 1: quantitative feature -> take the raw label per value
@@ -575,10 +575,10 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
     #         # initiating feature summary (no value/label)
     #         feature_summary = {"feature": feature, "dtype": self.input_dtypes[feature]}
     #         # if there are nans -> if already added it will be dropped afterwards (unique content)
-    #         if self.str_nan in raw_labels_per_values[feature]:
-    #             nan_group = self.values_orders[feature].get_group(self.str_nan)
+    #         if self.nan in raw_labels_per_values[feature]:
+    #             nan_group = self.values_orders[feature].get_group(self.nan)
     #             feature_summary.update(
-    #                 {"label": self.labels_per_values[feature][nan_group], "content": self.str_nan}
+    #                 {"label": self.labels_per_values[feature][nan_group], "content": self.nan}
     #             )
     #             summaries += [feature_summary]
 
@@ -628,7 +628,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
 
     #     # checking for nans
     #     if isnan(discarded_value):
-    #         discarded_value = self.str_nan
+    #         discarded_value = self.nan
     #         self.features_dropna[feature] = True
     #     assert not isnan(
     #         kept_value
@@ -695,20 +695,18 @@ def transform_quantitative_feature(
                 " in your test/dev set. Consider taking a bigger test/dev set or dropping the "
                 f"column {feature.name}."
             )
-        nan_value = feature.values.get_group(feature.str_nan)
+        nan_value = feature.values.get_group(feature.nan)
         # checking that nans have been grouped to a quantile otherwise they are left as
         # numpy.nan (for comparison purposes)
-        if nan_value != feature.str_nan:
+        if nan_value != feature.nan:
             df_feature[nans] = nan_value
 
     # list of masks of values to replace with there respective group
-    values_to_group = [df_feature <= value for value in feature.values if value != feature.str_nan]
+    values_to_group = [df_feature <= value for value in feature.values if value != feature.nan]
 
     # corressponding group for each value
     group_labels = [
-        [feature.label_per_value[value]] * x_len
-        for value in feature.values
-        if value != feature.str_nan
+        [feature.label_per_value[value]] * x_len for value in feature.values if value != feature.nan
     ]
 
     # checking for values to group
@@ -717,7 +715,7 @@ def transform_quantitative_feature(
 
     # converting nans to there value
     if any(nans):
-        df_feature[nans] = feature.label_per_value.get(nan_value, feature.str_nan)
+        df_feature[nans] = feature.label_per_value.get(nan_value, feature.nan)
 
     return feature.name, list(df_feature)
 

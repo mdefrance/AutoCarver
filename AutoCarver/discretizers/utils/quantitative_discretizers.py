@@ -96,9 +96,9 @@ def fit_feature(feature: BaseFeature, X: DataFrame, q: float) -> tuple[str, Grou
 
     # adding NANs if ther are any
     if any(X[feature.name].isna()):
-        order.append(feature.str_nan)
+        order.append(feature.nan)
 
-    return (feature.name, order)
+    return feature.name, order
 
 
 def find_quantiles(

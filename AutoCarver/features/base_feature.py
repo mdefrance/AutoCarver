@@ -15,11 +15,11 @@ class BaseFeature:
 
         # whether or not feature has some NaNs
         self.has_nan = None
-        self.str_nan = kwargs.get("nan", NAN)
+        self.nan = kwargs.get("nan", NAN)
 
         # whether or not feature has some default values
         self.has_default = None
-        self.str_default = kwargs.get("default", DEFAULT)
+        self.default = kwargs.get("default", DEFAULT)
 
         # whether or not nans must be removed
         self.dropna = None
@@ -29,6 +29,7 @@ class BaseFeature:
 
         # feature values, type and labels
         self.values = GroupedList()
+        self.labels: list[str] = []
         self.dtype = None
         self.label_per_value: dict[str, str] = {}
 
@@ -52,7 +53,10 @@ class BaseFeature:
         if output_dtype == "float":
             labels = [n for n, _ in enumerate(labels)]
 
-        # updating label per value
+        # saving updated labels
+        self.labels = labels
+
+        # updating label_per_value
         for group_of_values, label in zip(self.values, labels):
             for value in self.values.get(group_of_values):
                 self.label_per_value.update({value: label})

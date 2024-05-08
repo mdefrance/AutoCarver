@@ -13,6 +13,13 @@ class OrdinalFeature(BaseFeature):
 
         self.dtype = "ordinal"
 
+        # checking for values
+        if len(values) == 0:
+            raise ValueError(
+                " - [Features] Please make sure to provide all ordered values for "
+                f"OrdinalFeature('{self.name}')"
+            )
+
         # setting values and labels
         super().update(GroupedList(values))
         super().update_labels(values)
@@ -32,14 +39,15 @@ class OrdinalFeature(BaseFeature):
 
         # unexpected values for this feature
         unexpected = [val for val in unique_values if not self.values.contains(val)]
-        assert len(unexpected) == 0, (
-            " - [OrdinalFeature] Unexpected value for feature '{self.name}'! Values: "
-            f"{str(list(unexpected))}. Make sure to set order accordingly when defining feature."
-        )
+        if len(unexpected) > 0:
+            raise ValueError(
+                " - [Features] Please make sure to provide all ordered values for "
+                f"OrdinalFeature('{self.name}'). Unexpected values: {str(list(unexpected))}"
+            )
 
         # adding NANS
         if any(X[self.name].isna()):
-            self.values.append(self.str_nan)
+            self.values.append(self.nan)
             self.has_nan = True
 
         super().fit(X, y)

@@ -23,7 +23,7 @@ class CategoricalFeature(BaseFeature):
 
         # adding NANS
         if any(X[self.name].isna()):
-            self.values.append(self.str_nan)
+            self.values.append(self.nan)
             self.has_nan = True
 
         super().fit(X, y)
