@@ -129,3 +129,7 @@ class BaseFeature:
             for grouped_value in self.values.get(value):
                 self.label_per_value.update({grouped_value: label})
             self.value_per_label.update({label: value})
+
+    def set_dropna(self, dropna: bool = True) -> None:
+        """Sets feature in dropna mode"""
+        self.dropna = dropna

@@ -175,6 +175,11 @@ class Features:
             return get_names(self.quantitatives)
         return self.quantitatives
 
+    def set_dropna(self, dropna: bool = True) -> None:
+        """Sets feature in dropna mode"""
+        for feature in self:
+            feature.set_dropna(dropna)
+
 
 def cast_features(
     features: list[str],
