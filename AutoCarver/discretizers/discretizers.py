@@ -208,24 +208,46 @@ class QualitativeDiscretizer(BaseDiscretizer):
         # checking for binary target, copying X
         x_copy = super()._prepare_data(X, y)
 
-        # checking for columns without any common modality
-        all_features = self.features.get_names()  # prevents inplace removal to break loop
-        max_frequencies = x_copy[all_features].apply(
-            lambda u: u.value_counts(normalize=True, dropna=False).drop(nan, errors="ignore").max(),
+        # getting feature values' frequencies
+        max_frequencies = x_copy[self.features.get_names()].apply(
+            lambda u: u.value_counts(normalize=True, dropna=False).max(),
             axis=0,
         )
-        # for each feature, checking that at least one value is more frequent than min_freq
-        for feature in all_features:
-            # no common modality found
-            if max_frequencies[feature] < self.min_freq:
-                warn(
-                    f" - [{self.__name__}] For feature '{feature}', the largest modality"
-                    f" has {max_frequencies[feature]:2.2%} observations which is lower than "
-                    f"min_freq={self.min_freq:2.2%}. This feature will not be Discretized. "
-                    "Consider decreasing min_freq or removing this feature.",
-                    UserWarning,
-                )
-                self.features.remove(feature)
+        # features with no common modality (biggest value less frequent than min_freq)
+        non_common = [f.name for f in self.features if max_frequencies[f.name] < self.min_freq]
+        # features with too common modality (biggest value more frequent than 1-min_freq)
+        too_common = [f.name for f in self.features if max_frequencies[f.name] > 1 - self.min_freq]
+        # raising
+        if len(too_common + non_common) > 0:
+
+            # building error message
+            error_msg = (
+                f" - [{self.__name__}] Features {str(too_common + non_common)} contain a too "
+                "frequent modality or no frequent enough modality. Consider decreasing min_freq or removing"
+                " these feature.\nINFO:\n"
+            )
+            # adding features with no common values
+            error_msg += "\n".join(
+                [
+                    (
+                        f" - {self.features(f)}: most frequent value has "
+                        f"freq={max_frequencies[f]:2.2%} < min_freq={self.min_freq:2.2%}"
+                    )
+                    for f in non_common
+                ]
+            )
+            # adding features with too common values
+            error_msg += "\n".join(
+                [
+                    (
+                        f" - {self.features(f)}: most frequent value has "
+                        f"freq={max_frequencies[f]:2.2%} > (1-min_freq)={1-self.min_freq:2.2%}"
+                    )
+                    for f in too_common
+                ]
+            )
+
+            raise ValueError(error_msg)
 
         # checking for columns containing floats or integers even with filled nans
         dtypes = (
@@ -237,21 +259,14 @@ class QualitativeDiscretizer(BaseDiscretizer):
         )
         not_object = dtypes.apply(lambda u: any(typ != str for typ in u))
 
-        # non-qualitative features detected
+        # converting detected non-string features
         if any(not_object):
-            features_to_convert = list(not_object.index[not_object])
-            unexpected_dtypes = [typ for dtyp in dtypes[not_object] for typ in dtyp if typ != str]
-            warn(
-                f" - [{self.__name__}] Non-string features: {str(features_to_convert)}. "
-                "Converting them with type_discretizers.StringDiscretizer. "
-                f"Unexpected data types: {str(set(unexpected_dtypes))}.",
-                UserWarning,
-            )
-
             # converting specified features into qualitative features
             string_discretizer = StringDiscretizer(
                 features=[
-                    feature for feature in self.features if feature.name in features_to_convert
+                    feature
+                    for feature in self.features
+                    if feature.name in not_object.index[not_object]
                 ],
                 **self.kwargs,
             )
@@ -262,8 +277,8 @@ class QualitativeDiscretizer(BaseDiscretizer):
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
         if self.verbose:  # verbose if requested
-            print(" ---")
-            self._verbose()
+            print("------")
+            self._verbose("---")
 
         # checking data before bucketization
         x_copy = self._prepare_data(X, y)
@@ -304,7 +319,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
         super().fit(X, y)
 
         if self.verbose:  # verbose if requested
-            print(" ---\n")
+            print("------\n")
 
         return self
 
@@ -392,8 +407,8 @@ class QuantitativeDiscretizer(BaseDiscretizer):
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
         if self.verbose:  # verbose if requested
-            print(" ---")
-            self._verbose()
+            print("------")
+            self._verbose("---")
 
         # checking data before bucketization
         x_copy = self._prepare_data(X, y)
@@ -437,7 +452,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         super().fit(X, y)
 
         if self.verbose:  # verbose if requested
-            print(" ---\n")
+            print("------\n")
 
         return self
 

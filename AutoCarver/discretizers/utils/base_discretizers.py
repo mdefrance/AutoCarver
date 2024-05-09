@@ -449,10 +449,10 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
 
         return X
 
-    def _verbose(self) -> None:
+    def _verbose(self, prefix: str = " -") -> None:
         """prints logs if requested"""
         if self.verbose:
-            print(f" - [{self.__name__}] Fit {str(self.features)}")
+            print(f"{prefix} [{self.__name__}] Fit {str(self.features)}")
 
     # def to_json(self) -> str:
     #     """Converts to .json format.
