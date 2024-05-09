@@ -124,38 +124,32 @@ class BinaryCarver(BaseCarver):
 
         return x_copy, x_dev_copy
 
-    def _aggregator(
-        self, features: list[str], X: DataFrame, y: Series, labels_orders: dict[str, GroupedList]
-    ) -> dict[str, DataFrame]:
+    def _aggregator(self, X: DataFrame, y: Series) -> dict[str, DataFrame]:
         """Computes crosstabs for specified features and ensures that the crosstab is ordered
         according to the known labels
 
         Parameters
         ----------
-        features : list[str]
-            _description_
         X : DataFrame
             _description_
         y : Series
-            _description_
-        labels_orders : dict[str, GroupedList]
             _description_
 
         Returns
         -------
         dict[str, DataFrame]
-            _description_
+            dict of crosstab(X, y) by feature name
         """
         # checking for empty datasets
-        xtabs = {feature: None for feature in features}
+        xtabs = {feature.name: None for feature in self.features}
         if X is not None:
             # crosstab for each feature
-            for feature in features:
+            for feature in self.features:
                 # computing crosstab with str_nan
-                xtab = crosstab(X[feature], y)
+                xtab = crosstab(X[feature.name], y)
 
                 # reordering according to known_order
-                xtab = xtab.reindex(labels_orders[feature])
+                xtab = xtab.reindex(feature.labels)
 
                 # storing results
                 xtabs.update({feature: xtab})

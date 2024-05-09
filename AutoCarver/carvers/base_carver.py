@@ -7,18 +7,12 @@ from warnings import warn
 
 from numpy import isclose
 from pandas import DataFrame, Series
-from tqdm import tqdm
+from tqdm.autonotebook import tqdm
 
-from ..config import DEFAULT, NAN
 from ..discretizers.discretizers import Discretizer
-from ..discretizers.utils.base_discretizers import (
-    BaseDiscretizer,
-    convert_to_labels,
-    convert_to_values,
-    load_discretizer,
-)
+from ..discretizers.utils.base_discretizers import BaseDiscretizer, load_discretizer
 from ..discretizers.utils.serialization import json_serialize_history
-from ..features import GroupedList
+from ..features import GroupedList, Features, BaseFeature
 
 # trying to import extra dependencies
 try:
@@ -42,17 +36,17 @@ class BaseCarver(BaseDiscretizer):
         sort_by: str,
         min_freq: float,
         *,
-        quantitative_features: list[str] = None,
-        qualitative_features: list[str] = None,
-        ordinal_features: list[str] = None,
-        values_orders: dict[str, GroupedList] = None,
+        quantitatives: list[str] = None,
+        categoricals: list[str] = None,
+        ordinals: list[str] = None,
+        ordinal_values: dict[str, GroupedList] = None,
         max_n_mod: int = 5,
         min_freq_mod: float = None,
         output_dtype: str = "float",
         dropna: bool = True,
-        copy: bool = False,
-        verbose: bool = False,
-        n_jobs: int = 1,
+        # copy: bool = False,
+        # verbose: bool = False,
+        # n_jobs: int = 1,
         **kwargs: dict,
     ) -> None:
         """
@@ -122,55 +116,22 @@ class BaseCarver(BaseDiscretizer):
             Pass values for ``str_default`` and ``str_nan`` (default string values),
             as long as ``pretty_print`` to turn off IPython
         """
-        # Lists of features
-        if quantitative_features is None:
-            quantitative_features = []
-        if qualitative_features is None:
-            qualitative_features = []
-        if ordinal_features is None:
-            ordinal_features = []
-        assert (
-            len(quantitative_features) > 0
-            or len(qualitative_features) > 0
-            or len(ordinal_features) > 0
-        ), (
-            " - [AutoCarver] No feature passed as input. Pleased provided column names to Carver "
-            "by setting quantitative_features, qualitative_features or ordinal_features."
+        # initiating features
+        features = Features(
+            quantitatives=quantitatives,
+            categoricals=categoricals,
+            ordinals=ordinals,
+            ordinal_values=ordinal_values,
+            **kwargs,
         )
-        self.ordinal_features = list(set(ordinal_features))
-        self.features = list(set(quantitative_features + qualitative_features + ordinal_features))
 
-        # checking that qualitatitve and quantitative features are distinct
-        msg = (
-            " - [AutoCarver] One of provided features is both in quantitative_features and in qual"
-            "itative_features or ordinal_features. Please, be careful with your inputs!"
+        # adding verbose to kwargs
+        kwargs.update(
+            {"verbose": bool(max(kwargs.get("verbose", False), kwargs.get("pretty_print", False)))}
         )
-        assert all(
-            quali_feature not in quantitative_features
-            for quali_feature in (qualitative_features + ordinal_features)
-        ), msg
-        assert all(
-            quanti_feature not in (qualitative_features + ordinal_features)
-            for quanti_feature in quantitative_features
-        ), msg
-
-        # initializing input_dtypes
-        self.input_dtypes = {feature: "str" for feature in qualitative_features + ordinal_features}
-        self.input_dtypes.update({feature: "float" for feature in quantitative_features})
 
         # Initiating BaseDiscretizer
-        super().__init__(
-            features=self.features,
-            values_orders=values_orders,
-            input_dtypes=self.input_dtypes,
-            output_dtype=output_dtype,
-            str_nan=kwargs.get("nan", NAN),
-            str_default=kwargs.get("default", DEFAULT),
-            dropna=dropna,
-            copy=copy,
-            n_jobs=n_jobs,
-            verbose=bool(max(verbose, kwargs.get("pretty_print", False))),
-        )
+        super().__init__(features=features, output_dtype=output_dtype, dropna=dropna, **kwargs)
 
         # class specific attributes
         self.min_freq = min_freq  # minimum frequency per base bucket
@@ -178,7 +139,9 @@ class BaseCarver(BaseDiscretizer):
         if min_freq_mod is None:
             min_freq_mod = min_freq / 2
         self.min_freq_mod = min_freq_mod  # minimum frequency per final bucket
-        self.sort_by = sort_by
+        self.sort_by = sort_by  # metric used to sort feature combinations
+
+        # pretty printing if requested
         self.pretty_print = False
         if self.verbose and kwargs.get("pretty_print", True):
             if _has_idisplay:  # checking for installed dependencies
@@ -229,7 +192,29 @@ class BaseCarver(BaseDiscretizer):
         x_dev_copy = super()._prepare_data(X_dev, y_dev)
 
         # checking for not provided y
-        assert y is not None, f" - [AutoCarver] y must be provided {y}"
+        if y is None:
+            raise ValueError(f" - [AutoCarver] y must be provided, got {y}")
+
+        # discretizing all features
+        discretizer = Discretizer(
+            self.min_freq,
+            self.features,
+            copy=True,  # copying anyways, otherwise no discretization from start to finish
+            **self.kwargs,
+        )
+        x_copy = discretizer.fit_transform(x_copy, y)
+        if x_dev_copy is not None:
+            x_dev_copy = discretizer.transform(x_dev_copy, y_dev)
+
+        # removing dropped features
+        self.features.keep_features(discretizer.features.get_names())
+
+        # setting up features to convert nans to feature.nan (drop nans)
+        self.features.set_dropna(True)
+
+        # filling up nans
+        x_copy = self.features.fillna(x_copy)
+        x_dev_copy = self.features.fillna(x_dev_copy)
 
         return x_copy, x_dev_copy
 
@@ -258,8 +243,6 @@ class BaseCarver(BaseDiscretizer):
         """
         if feature in self.features:
             super()._remove_feature(feature)
-            if feature in self.ordinal_features:
-                self.ordinal_features.remove(feature)
             if feature in self._history:
                 self._history[feature] += [{"removed": True}]
 
@@ -293,48 +276,10 @@ class BaseCarver(BaseDiscretizer):
         # preparing datasets and checking for wrong values
         x_copy, x_dev_copy = self._prepare_data(X, y, X_dev, y_dev)
 
-        # discretizing all features
-        discretizer = Discretizer(
-            quantitative_features=self.quantitative_features,
-            qualitative_features=self.qualitative_features,
-            min_freq=self.min_freq,
-            ordinal_features=self.ordinal_features,
-            values_orders=self.values_orders,
-            str_nan=self.str_nan,
-            str_default=self.str_default,
-            copy=True,  # copying anyways, otherwise no discretization from start to finish
-            verbose=self.verbose,
-            n_jobs=self.n_jobs,
-        )
-        x_copy = discretizer.fit_transform(x_copy, y)
-        if x_dev_copy is not None:
-            x_dev_copy = discretizer.transform(x_dev_copy, y_dev)
-        self.input_dtypes.update(discretizer.input_dtypes)  # saving data types
-
-        # updating values_orders according to base bucketization
-        self.values_orders.update(discretizer.values_orders)
-
-        # removing dropped features
-        removed_features = [
-            feature for feature in self.features if feature not in discretizer.features
-        ]
-        for feature in removed_features:
-            self._remove_feature(feature)
-
-        # converting quantiles into there respective labels
-        labels_orders = convert_to_labels(
-            features=self.features,
-            quantitative_features=self.quantitative_features,
-            values_orders=self.values_orders,
-            str_nan=self.str_nan,
-            dropna=False,
-        )
-
         # computing crosstabs for each feature on train/test
-        xaggs = self._aggregator(self.features, x_copy, y, labels_orders)  # pylint: disable=E1101
-        xaggs_dev = self._aggregator(  # pylint: disable=E1101
-            self.features, x_dev_copy, y_dev, labels_orders
-        )
+        xaggs = self._aggregator(x_copy, y)  # pylint: disable=E1111
+        xaggs_dev = self._aggregator(x_dev_copy, y_dev)  # pylint: disable=E1111
+
         # optimal butcketization/carving of each feature
         all_features = self.features[:]  # (features are being removed from self.features)
         for n, feature in enumerate(all_features):
@@ -342,214 +287,129 @@ class BaseCarver(BaseDiscretizer):
                 print(f"\n------\n[AutoCarver] Fit {feature} ({n+1}/{len(all_features)})\n---")
 
             # carving the feature
-            labels_orders = self._carve_feature(feature, xaggs, xaggs_dev, labels_orders)
+            self._carve_feature(feature, xaggs, xaggs_dev)
 
             if self.verbose:  # verbose if requested
                 print("------\n")
+
+            # TODO
+            # self.features.set_dropna(False)
 
         # discretizing features based on each feature's values_order
         super().fit(X, y)
 
         return self
 
+    def _aggregator(self, X: DataFrame, y: Series) -> Union[Series, DataFrame]:
+        """aggregation function -> carver specific"""
+        _, _ = X, y  # unused attributes
+
+    def _association_measure(self, xtab: DataFrame, n_obs: int) -> Union[Series, DataFrame]:
+        """association measure function -> carver specific"""
+        _, _ = xtab, n_obs  # unused attributes
+
     def _carve_feature(
         self,
-        feature: str,
+        feature: BaseFeature,
         xaggs: dict[str, Union[Series, DataFrame]],
         xaggs_dev: dict[str, Union[Series, DataFrame]],
-        labels_orders: dict[str, GroupedList],
     ) -> dict[str, GroupedList]:
-        """Carves a feature into buckets that maximize association with the target
-
-        Parameters
-        ----------
-        feature : str
-            _description_
-        xaggs : dict[str, Union[Series, DataFrame]]
-            _description_
-        xaggs_dev : dict[str, Union[Series, DataFrame]]
-            _description_
-        labels_orders : dict[str, GroupedList]
-            _description_
-
-        Returns
-        -------
-        dict[str, GroupedList]
-            _description_
-        """
+        """Carves a feature into buckets that maximize association with the target"""
         # getting xtabs on train/test
-        xagg = xaggs[feature]
-        xagg_dev = xaggs_dev[feature]
+        xagg = xaggs[feature.name]
+        xagg_dev = xaggs_dev[feature.name]
 
-        # checking that the feature has at least 2 modalities
-        best_combination = None
-        if len(xagg.index) > 1:
-            # ordering
-            order = labels_orders[feature]
+        # historizing raw combination TODO
+        raw_association = {
+            "index_to_groupby": {modality: modality for modality in xagg.index},
+            self.sort_by: self._association_measure(  # pylint: disable=E1101
+                xagg.dropna(), n_obs=sum(xagg.dropna().apply(sum))
+            )[self.sort_by],
+        }
+        self._historize_viability_test(feature, raw_association, feature.labels)
 
-            # historizing raw combination
-            raw_association = {
-                "index_to_groupby": {modality: modality for modality in xagg.index},
-                self.sort_by: self._association_measure(  # pylint: disable=E1101
-                    xagg.dropna(), n_obs=sum(xagg.dropna().apply(sum))
-                )[self.sort_by],
-            }
-            self._historize_viability_test(feature, raw_association, order)
+        # verbose if requested
+        self._print_xagg(feature, xagg=xagg, xagg_dev=xagg_dev, message="Raw distribution")
 
-            # verbose
-            self._print_xagg(
-                xagg=self._index_mapper(feature, labels_orders, xagg),
-                xagg_dev=self._index_mapper(feature, labels_orders, xagg_dev),
-                message="Raw distribution",
-            )
-
-            # getting best combination
-            best_combination = self._get_best_combination(feature, order, xagg, xagg_dev=xagg_dev)
+        # getting best combination
+        best_combination = self._get_best_combination(feature, xagg, xagg_dev=xagg_dev)
 
         # checking that a suitable combination has been found
         if best_combination is not None:
-            order, xagg, xagg_dev = best_combination
-            # updating orders accordingly
-            labels_orders = self._update_orders(feature, order, labels_orders)
+            labels, xagg, xagg_dev = best_combination  # unpacking
 
-            # verbose
-            self._print_xagg(
-                xagg=self._index_mapper(feature, labels_orders, xagg),
-                xagg_dev=self._index_mapper(feature, labels_orders, xagg_dev),
-                message="Carved distribution",
-            )
+            # updating feature accordingly
+            feature.update(labels, convert_labels=True)
+
+            # verbose if requested
+            self._print_xagg(feature, xagg=xagg, xagg_dev=xagg_dev, message="Carved distribution")
 
         # no suitable combination has been found -> removing feature
         else:
             warn(
-                f" - [AutoCarver] No robust combination for feature '{feature}' could be found"
-                ". It will be ignored. You might have to increase the size of your dev sample"
-                " (dev sample not representative of dev sample for this feature) or you"
-                " should consider dropping this features.",
+                f" - [AutoCarver] No robust combination for '{feature}' could be found"
+                ". Consider increasing the size of dev sample or dropping the feature"
+                " (train sample not representative of dev sample for this feature).",
                 UserWarning,
             )
-            self._remove_feature(feature)
-            if feature in labels_orders:
-                labels_orders.pop(feature)
-
-        return labels_orders
-
-    def _update_orders(
-        self, feature: str, new_order: GroupedList, labels_orders: dict[str, GroupedList]
-    ) -> dict[str, GroupedList]:
-        """Updates values_orders and labels_orders accoding to the new order for specified
-        feature
-        """
-
-        # updating label_orders
-        labels_orders.update({feature: new_order})
-
-        # updating values_orders
-        self.values_orders.update(
-            convert_to_values(
-                features=[feature],
-                quantitative_features=[feature] if feature in self.quantitative_features else [],
-                values_orders=self.values_orders,
-                label_orders=labels_orders,
-                str_nan=self.str_nan,
-            )
-        )
-        # updating labels
-        labels_orders = convert_to_labels(
-            features=self.features,
-            quantitative_features=self.quantitative_features,
-            values_orders=self.values_orders,
-            str_nan=self.str_nan,
-            dropna=False,
-        )
-
-        return labels_orders
+            self.features.remove(feature.name)
 
     def _get_best_combination(
         self,
-        feature: str,
-        order: GroupedList,
+        feature: BaseFeature,
         xagg: DataFrame,
         *,
         xagg_dev: DataFrame = None,
     ) -> tuple[GroupedList, DataFrame, DataFrame]:
-        """_summary_
-
-        Parameters
-        ----------
-        order : GroupedList
-            _description_
-        xagg : DataFrame
-            _description_
-        xagg_dev : DataFrame, optional
-            _description_, by default None
-
-        Returns
-        -------
-        tuple[GroupedList, DataFrame, DataFrame]
-            _description_
-        """
+        """ """
         # raw ordering
-        raw_order = GroupedList(order)
-        if self.str_nan in raw_order:
-            raw_order.remove(self.str_nan)
+        raw_labels = GroupedList(feature.labels)
+        if feature.has_nan:  # removing nans for combination of non-nans
+            raw_labels.remove(feature.nan)
 
-        # filtering out nans if requested from train/test crosstabs
-        raw_xagg = filter_nan(xagg, self.str_nan)
-        raw_xagg_dev = filter_nan(xagg_dev, self.str_nan)
+        # filtering out nans from train/test crosstabs
+        raw_xagg = filter_nan(xagg, feature.nan)
+        raw_xagg_dev = filter_nan(xagg_dev, feature.nan)
 
         # checking for non-nan values
         best_association = None
         if raw_xagg.shape[0] > 1:
             # all possible consecutive combinations
-            combinations = consecutive_combinations(raw_order, self.max_n_mod, min_group_size=1)
+            combinations = consecutive_combinations(raw_labels, self.max_n_mod)
 
             # getting most associated combination
-            best_association, order = self._get_best_association(
-                feature,
-                order,
-                raw_xagg,
-                combinations,
-                xagg_dev=raw_xagg_dev,
+            best_association, labels = self._get_best_association(
+                feature, raw_xagg, combinations, xagg_dev=raw_xagg_dev, dropna=False
             )
 
-            # applying best_combination to order and xtabs
-            if best_association is not None:
-                xagg = xagg_apply_order(xagg, order)
-                xagg_dev = xagg_apply_order(xagg_dev, order)
-
             # grouping NaNs if requested to drop them (dropna=True)
-            if self.dropna and self.str_nan in order and best_association is not None:
+            if self.dropna and feature.has_nan and best_association is not None:
+                # applying best_combination to xtabs
+                xagg = xagg_apply_order(xagg, labels)
+                xagg_dev = xagg_apply_order(xagg_dev, labels)
+
                 # raw ordering without nans
-                raw_order = GroupedList(order)
-                raw_order.remove(self.str_nan)
+                raw_labels = GroupedList(labels)
 
                 # adding combinations with NaNs
-                combinations = nan_combinations(raw_order, self.str_nan, self.max_n_mod)
+                combinations = nan_combinations(raw_labels, feature.nan, self.max_n_mod)
 
                 # getting most associated combination
-                best_association, order = self._get_best_association(
-                    feature,
-                    order,
-                    xagg,
-                    combinations,
-                    xagg_dev=xagg_dev,
-                    dropna=True,
+                best_association, labels = self._get_best_association(
+                    feature, xagg, combinations, xagg_dev=xagg_dev, dropna=True
                 )
-
-                # applying best_combination to order and xtab
-                if best_association is not None:
-                    xagg = xagg_apply_order(xagg, order)
-                    xagg_dev = xagg_apply_order(xagg_dev, order)
 
         # checking that a suitable combination has been found
         if best_association is not None:
-            return order, xagg, xagg_dev
+            # applying best_combination to xtabs
+            xagg = xagg_apply_order(xagg, labels)
+            xagg_dev = xagg_apply_order(xagg_dev, labels)
+
+            return labels, xagg, xagg_dev
 
     def _get_best_association(
         self,
-        feature: str,
-        order: GroupedList,
+        feature: BaseFeature,
         xagg: Union[Series, DataFrame],
         combinations: list[list[str]],
         *,
@@ -564,8 +424,6 @@ class BaseCarver(BaseDiscretizer):
             feature to measure association with
         xagg : Union[Series, DataFrame]
             _description_
-        order : GroupedList
-            order of the feature
         combinations : list[list[str]]
             _description_
         xagg_dev : Union[Series, DataFrame], optional
@@ -618,18 +476,17 @@ class BaseCarver(BaseDiscretizer):
         )
 
         # testing viability of combination
-        best_association = self._test_viability(feature, order, associations_xagg, xagg_dev, dropna)
+        best_association = self._test_viability(feature, associations_xagg, xagg_dev, dropna)
 
         # applying best_combination to order and xtab
         if best_association is not None:
-            order = order_apply_combination(order, best_association["combination"])
+            labels = order_apply_combination(feature.labels, best_association["combination"])
 
-        return best_association, order
+        return best_association, labels
 
     def _test_viability(
         self,
-        feature: str,
-        order: GroupedList,
+        feature: BaseFeature,
         associations_xagg: list[dict[str, Any]],
         xagg_dev: Union[Series, DataFrame],
         dropna: bool,
@@ -708,9 +565,9 @@ class BaseCarver(BaseDiscretizer):
 
             # historizing combinations and tests
             self._historize_viability_test(
-                feature=feature,
+                feature=feature.name,
                 association=association,
-                order=order,
+                order=feature.labels,
                 n_combination=n_combination,
                 associations_xagg=associations_xagg,
                 dropna=dropna,
@@ -822,9 +679,7 @@ class BaseCarver(BaseDiscretizer):
             )
         ]
 
-    def _index_mapper(
-        self, feature: str, labels_orders: dict[str, GroupedList], xtab: DataFrame = None
-    ) -> DataFrame:
+    def _index_mapper(self, feature: BaseFeature, xtab: DataFrame = None) -> DataFrame:
         """Prints a binary xtab's statistics
 
         Parameters
@@ -846,14 +701,12 @@ class BaseCarver(BaseDiscretizer):
             mapped_xtab = xtab.copy()
 
             # for qualitative features -> mapping with values_orders.content
-            if feature in self.qualitative_features:
-                mapped_index = [
-                    self.values_orders[feature].get(idx, idx) for idx in mapped_xtab.index
-                ]
+            if feature.is_qualitative:
+                mapped_index = [feature.values.get(idx, idx) for idx in mapped_xtab.index]
                 # removing str_default and deduplicating for features converted to str
                 mapped_index = [
                     list(
-                        set(str(idx) for n, idx in enumerate(mapped_idx) if idx != self.str_default)
+                        set(str(idx) for n, idx in enumerate(mapped_idx) if idx != feature.default)
                     )
                     for mapped_idx in mapped_index
                 ]
@@ -861,15 +714,13 @@ class BaseCarver(BaseDiscretizer):
                     (
                         mapped_idx[-1] + " to " + mapped_idx[0]
                         if len(mapped_idx) > 2
-                        else mapped_idx[0]
-                        if len(mapped_idx) == 0
-                        else ", ".join(mapped_idx)
+                        else mapped_idx[0] if len(mapped_idx) == 0 else ", ".join(mapped_idx)
                     )
                     for mapped_idx in mapped_index
                 ]
             # for quantitative features -> mapping with labels_orders.keys
             else:
-                mapped_index = labels_orders[feature][:]
+                mapped_index = feature.labels[:]
 
             # modifying indices based on provided order
             mapped_xtab.index = mapped_index
@@ -878,6 +729,7 @@ class BaseCarver(BaseDiscretizer):
 
     def _print_xagg(
         self,
+        feature: BaseFeature,
         xagg: DataFrame,
         message: str,
         *,
@@ -897,9 +749,13 @@ class BaseCarver(BaseDiscretizer):
         if self.verbose:  # verbose if requested
             print(f"\n - [AutoCarver] {message}")
 
+            # formatting XAGG
+            formatted_xagg = self._index_mapper(feature, xagg)
+            formatted_xagg_dev = self._index_mapper(feature, xagg_dev)
+
             # getting pretty xtabs
-            nice_xagg = self._printer(xagg)  # pylint: disable=E1101
-            nice_xagg_dev = self._printer(xagg_dev)  # pylint: disable=E1101
+            nice_xagg = self._printer(formatted_xagg)  # pylint: disable=E1101
+            nice_xagg_dev = self._printer(formatted_xagg_dev)  # pylint: disable=E1101
 
             # case 0: no pretty hmtl printing
             if not self.pretty_print:

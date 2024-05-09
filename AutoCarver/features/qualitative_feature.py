@@ -12,6 +12,7 @@ class CategoricalFeature(BaseFeature):
     def __init__(self, name: str, **kwargs: dict) -> None:
         super().__init__(name, **kwargs)
         self.is_categorical = True
+        self.is_qualitative = True
 
         # TODO adding stats
         self.n_unique = None

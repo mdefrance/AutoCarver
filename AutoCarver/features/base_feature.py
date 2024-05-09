@@ -26,7 +26,7 @@ class BaseFeature:
         self.default = kwargs.get("default", DEFAULT)
 
         # whether or not nans must be removed
-        self.dropna = None
+        self.dropna = False
 
         # whether or not feature has been fitted
         self.is_fitted = False
@@ -40,6 +40,7 @@ class BaseFeature:
         # initating feature dtypes
         self.is_ordinal = False
         self.is_categorical = False
+        self.is_qualitative = False
         self.is_quantitative = False
 
     def fit(self, X: DataFrame, y: Series = None) -> None:  # pylint: disable=W0222
@@ -131,5 +132,29 @@ class BaseFeature:
             self.value_per_label.update({label: value})
 
     def set_dropna(self, dropna: bool = True) -> None:
-        """Sets feature in dropna mode"""
-        self.dropna = dropna
+        """Activates or deactivates feature's dropna mode"""
+        # activating dropna mode
+        if dropna:
+            # setting dropna
+            self.dropna = dropna
+
+            # adding nan to the values
+            values = GroupedList(self.values)
+            values.append(self.nan)
+
+            # updating values
+            self.update(values, replace=True)
+
+        # deactivating dropna mode
+        else:
+            # setting dropna
+            self.dropna = dropna
+
+            # checking for values merged with nans
+            if len(self.values.get(self.nan)) > 1:
+                raise RuntimeError(
+                    "Can not set feature dropna=False has values were grouped with nans."
+                )
+
+            # dropping nans from values
+            self.values.remove(self.nan)
