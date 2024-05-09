@@ -150,7 +150,8 @@ class GroupedList(list):
         new_value : Any
             New key to be added.
         """
-
+        if new_value in self:  # checking for already existing values
+            raise ValueError(f"- [GroupedList] Value {new_value} already in list!")
         self += [new_value]
         self.content.update({new_value: [new_value]})
 

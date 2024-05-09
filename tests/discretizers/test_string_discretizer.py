@@ -75,9 +75,6 @@ def test_string_discretizer(x_train: DataFrame) -> None:
         "1": [1.0, "1"],
         "5": [5.0, "5"],
         "6": [6.0, "6"],
-        features("Discrete_Qualitative_lownan_noorder").nan: [
-            features("Discrete_Qualitative_lownan_noorder").nan
-        ],
     }
     assert (
         discretizer.features("Discrete_Qualitative_lownan_noorder").values.content == expected
@@ -106,7 +103,6 @@ def test_string_discretizer(x_train: DataFrame) -> None:
         "High-": ["High-"],
         "High": ["High"],
         "High+": ["High+"],
-        features("Qualitative_Ordinal_lownan").nan: [features("Qualitative_Ordinal_lownan").nan],
     }
     assert (
         discretizer.features("Qualitative_Ordinal_lownan").values.content == expected
@@ -135,9 +131,6 @@ def test_string_discretizer(x_train: DataFrame) -> None:
         "5": [5.0, "5"],
         "6": [6.0, "6"],
         "7": [7.0, "7"],
-        features("Discrete_Qualitative_highnan").nan: [
-            features("Discrete_Qualitative_highnan").nan
-        ],
     }
     assert (
         discretizer.features("Discrete_Qualitative_highnan").values.content == expected

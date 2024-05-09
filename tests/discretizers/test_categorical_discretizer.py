@@ -4,7 +4,7 @@ from pandas import DataFrame
 from pytest import raises
 
 from AutoCarver.discretizers import CategoricalDiscretizer
-from AutoCarver.features import GroupedList
+from AutoCarver.features import GroupedList, Features
 
 
 def test_categorical_discretizer(x_train: DataFrame, target: str) -> None:
@@ -18,12 +18,13 @@ def test_categorical_discretizer(x_train: DataFrame, target: str) -> None:
         Target feature
     """
 
+    # setting new str_default
+    str_default = "_DEFAULT_"
+
     # defining values_orders
     order = ["Category A", "Category B", "Category C", "Category D", "Category E", "Category F"]
     # ordering for base qualitative ordinal feature
     groupedlist = GroupedList(order)
-    groupedlist_lownan = GroupedList(["Category C", "Category D", "Category E", "Category F"])
-    groupedlist_highnan = GroupedList(["Category A", "Category C", "Category D", "Category E"])
 
     # ordering for qualitative ordinal feature that contains NaNs
     groupedlist_grouped = GroupedList(order)
@@ -37,57 +38,55 @@ def test_categorical_discretizer(x_train: DataFrame, target: str) -> None:
 
     # storing per feature orders
     values_orders = {
-        "Qualitative_grouped": groupedlist_grouped,
-        "Qualitative_highnan": groupedlist,
-        "Qualitative_lownan": groupedlist,
-        "Qualitative_Ordinal": groupedlist_ordinal,
+        "Qualitative_grouped": GroupedList(groupedlist_grouped),
+        "Qualitative_highnan": GroupedList(groupedlist),
+        "Qualitative_lownan": GroupedList(groupedlist),
+        "Qualitative_Ordinal": GroupedList(groupedlist_ordinal),
     }
 
-    features = ["Qualitative", "Qualitative_grouped", "Qualitative_lownan", "Qualitative_highnan"]
+    categoricals = [
+        "Qualitative_grouped",
+        "Qualitative_lownan",
+        "Qualitative_highnan",
+        "Qualitative_Ordinal",
+    ]
+    features = Features(categoricals=categoricals, default=str_default)
+    features.update(values_orders, replace=True)
 
     min_freq = 0.02
     # unwanted value in values_orders
-    with raises(AssertionError):
-        discretizer = CategoricalDiscretizer(
-            qualitative_features=features, min_freq=min_freq, values_orders=values_orders, copy=True
-        )
+    with raises(ValueError):
+        discretizer = CategoricalDiscretizer(categoricals=features, min_freq=min_freq, copy=True)
         _ = discretizer.fit_transform(x_train, x_train[target])
 
     # correct feature ordering
-    groupedlist_grouped.group("Category B", "Category D")
-    values_orders = {
-        "Qualitative_grouped": groupedlist_grouped,
-        "Qualitative_highnan": groupedlist_highnan,
-        "Qualitative_lownan": groupedlist_lownan,
-        "Qualitative_Ordinal": groupedlist_ordinal,
-    }
+    features = Features(categoricals=categoricals + ["Qualitative"], default=str_default)
 
-    discretizer = CategoricalDiscretizer(
-        qualitative_features=features, min_freq=min_freq, values_orders=values_orders, copy=True
-    )
+    discretizer = CategoricalDiscretizer(categoricals=features, min_freq=min_freq, copy=True)
     _ = discretizer.fit_transform(x_train, x_train[target])
 
-    assert (
-        discretizer.values_orders["Qualitative_Ordinal"].content == groupedlist_ordinal.content
-    ), "Column names of values_orders not provided if features should not be discretized."
+    assert discretizer.features("Qualitative_Ordinal").values.get(str_default) == [
+        "Low-",
+        str_default,
+    ], "Non frequent modalities should be grouped with default value."
 
     quali_expected_order = {
-        "binary_target": ["Category D", DEFAULT, "Category F", "Category C", "Category E"],
-        "continuous_target": [DEFAULT, "Category C", "Category E", "Category F", "Category D"],
+        "binary_target": ["Category D", str_default, "Category F", "Category C", "Category E"],
+        "continuous_target": [str_default, "Category C", "Category E", "Category F", "Category D"],
     }
     assert (
-        discretizer.values_orders["Qualitative"] == quali_expected_order[target]
+        discretizer.features("Qualitative").values == quali_expected_order[target]
     ), "Incorrect ordering by target rate"
 
     quali_expected = {
-        DEFAULT: ["Category A", DEFAULT],
+        str_default: ["Category A", str_default],
         "Category C": ["Category C"],
         "Category F": ["Category F"],
         "Category E": ["Category E"],
         "Category D": ["Category D"],
     }
     assert (
-        discretizer.values_orders["Qualitative"].content == quali_expected
+        discretizer.features("Qualitative").values.content == quali_expected
     ), "Values less frequent than min_freq should be grouped into default_value"
 
     quali_lownan_expected_order = {
@@ -96,50 +95,52 @@ def test_categorical_discretizer(x_train: DataFrame, target: str) -> None:
             "Category F",
             "Category C",
             "Category E",
-            NAN,
         ],
-        "continuous_target": ["Category C", "Category E", "Category F", "Category D", NAN],
+        "continuous_target": [
+            "Category C",
+            "Category E",
+            "Category F",
+            "Category D",
+        ],
     }
     assert (
-        discretizer.values_orders["Qualitative_lownan"] == quali_lownan_expected_order[target]
+        discretizer.features("Qualitative_lownan").values == quali_lownan_expected_order[target]
     ), "Incorrect ordering by target rate"
 
     quali_lownan_expected = {
-        NAN: [NAN],
         "Category C": ["Category C"],
         "Category F": ["Category F"],
         "Category E": ["Category E"],
         "Category D": ["Category D"],
     }
     assert (
-        discretizer.values_orders["Qualitative_lownan"].content == quali_lownan_expected
+        discretizer.features("Qualitative_lownan").values.content == quali_lownan_expected
     ), "If any, NaN values should be put into str_nan and kept by themselves"
 
     quali_highnan_expected_order = {
         "binary_target": [
             "Category D",
-            DEFAULT,
+            str_default,
             "Category C",
             "Category E",
-            NAN,
         ],
-        "continuous_target": [DEFAULT, "Category C", "Category E", "Category D", NAN],
+        "continuous_target": [
+            str_default,
+            "Category C",
+            "Category E",
+            "Category D",
+        ],
     }
     assert (
-        discretizer.values_orders["Qualitative_highnan"] == quali_highnan_expected_order[target]
+        discretizer.features("Qualitative_highnan").values == quali_highnan_expected_order[target]
     ), "Incorrect ordering by target rate"
 
     quali_highnan_expected = {
-        DEFAULT: ["Category A", DEFAULT],
+        str_default: ["Category A", str_default],
         "Category C": ["Category C"],
-        NAN: [NAN],
         "Category E": ["Category E"],
         "Category D": ["Category D"],
     }
     assert (
-        discretizer.values_orders["Qualitative_highnan"].content == quali_highnan_expected
+        discretizer.features("Qualitative_highnan").values.content == quali_highnan_expected
     ), "If any, NaN values should be put into str_nan and kept by themselves"
-
-    assert (
-        discretizer.values_orders["Qualitative_grouped"].content == groupedlist_grouped.content
-    ), "Grouped values should keep there group"

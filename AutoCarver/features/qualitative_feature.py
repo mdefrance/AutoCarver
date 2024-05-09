@@ -1,8 +1,6 @@
 """ Defines a categorical feature"""
 
-from typing import Any
-
-from pandas import DataFrame, Series, notna, unique
+from pandas import DataFrame, Series, notna, unique, isna
 
 from .base_feature import BaseFeature
 from .grouped_list import GroupedList
@@ -24,17 +22,41 @@ class CategoricalFeature(BaseFeature):
         return f"{self.__name__}('{self.name}')"
 
     def fit(self, X: DataFrame, y: Series = None) -> None:
+        """TODO fit stats"""
+
         # checking that feature is not ordinal (already set values)
         if self.values is None:
-            # initiating feature with its unique non-nan values
-            self.values = GroupedList(nan_unique(X[self.name]))
+            # checking for feature's unique non-nan values
+            unique_values = nan_unique(X[self.name])
 
-        # adding NANS
-        if any(X[self.name].isna()):
-            self.values.append(self.nan)
-            self.has_nan = True
+            # initiating feature with its unique non-nan values
+            self.update(GroupedList(unique_values))
 
         super().fit(X, y)
+
+        # checking for unexpected values
+        self.check_values(X)
+
+    def check_values(self, X: DataFrame) -> None:
+        """checks for unexpected values from unique values in DataFrame"""
+
+        # computing unique values if not provided
+        unique_values = unique(X[self.name])
+
+        # unexpected values for this feature
+        unexpected = [
+            value
+            for value in unique_values
+            if (not self.values.contains(value) and notna(value))
+            or (isna(value) and not self.has_nan)
+        ]
+        if len(unexpected) > 0:
+            raise ValueError(
+                f" - [Features] Unexpected values for "
+                f"{self.__name__}('{self.name}'). Unexpected values: {str(list(unexpected))}."
+            )
+
+        super().check_values(X)
 
     def update(
         self,
@@ -70,24 +92,8 @@ class OrdinalFeature(CategoricalFeature):
         # setting values and labels
         super().update(GroupedList(values))
 
-    def fit(self, X: DataFrame, y: Series = None) -> None:
-        """TODO: fit stats"""
-        # checking for feature's unique non-nan values
-        unique_values = nan_unique(X[self.name])
 
-        # unexpected values for this feature
-        unexpected = [val for val in unique_values if not self.values.contains(val)]
-        if len(unexpected) > 0:
-            raise ValueError(
-                " - [Features] Please make sure to provide all ordered values for "
-                f"{self.__name__}('{self.name}'). Unexpected values: {str(list(unexpected))}."
-                "Make sure to use StringDiscretizer to convert float/int to str."
-            )
-
-        super().fit(X, y)
-
-
-def nan_unique(x: Series) -> list[Any]:
+def nan_unique(x: Series) -> list[str]:
     """Unique non-NaN values.
 
     Parameters
@@ -97,7 +103,7 @@ def nan_unique(x: Series) -> list[Any]:
 
     Returns
     -------
-    list[Any]
+    list[str]
         List of unique non-nan values
     """
 
@@ -105,6 +111,6 @@ def nan_unique(x: Series) -> list[Any]:
     uniques = unique(x)
 
     # filtering out nans
-    uniques = [u for u in uniques if notna(u)]
+    uniques = [value for value in uniques if notna(value)]
 
     return uniques

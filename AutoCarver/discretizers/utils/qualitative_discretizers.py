@@ -7,11 +7,11 @@ from warnings import warn
 
 import numpy as np
 from numpy import argmin, nan, select
-from pandas import DataFrame, Series, isna, unique
+from pandas import DataFrame, Series, isna, unique, notna
 
 from ...config import NAN
 from ...features import CategoricalFeature, Features, GroupedList, OrdinalFeature
-from .base_discretizers import BaseDiscretizer, extend_docstring, target_rate, value_counts
+from .base_discretizers import BaseDiscretizer, extend_docstring
 from .type_discretizers import StringDiscretizer
 
 
@@ -85,11 +85,14 @@ class CategoricalDiscretizer(BaseDiscretizer):
         # fitting features
         self.features.fit(x_copy, y)
 
-        # checking that all unique values in X are in values_orders
-        self._check_new_values(x_copy, features=self.features)
-
         # filling up nans for features that have some
-        x_copy = x_copy.fillna({f.name: f.nan for f in self.features if f.has_nan})
+        x_copy = x_copy.fillna(
+            {
+                feature.name: feature.nan
+                for feature in self.features
+                if feature.has_nan and feature.dropna
+            }
+        )
 
         return x_copy
 
@@ -100,21 +103,40 @@ class CategoricalDiscretizer(BaseDiscretizer):
 
         self._verbose()  # verbose if requested
 
-        # computing frequencies of each modality
-        frequencies = x_copy[self.features.get_names()].apply(value_counts, normalize=True, axis=0)
+        # grouping modalities less frequent than min_freq into feature.default
+        x_copy = self._group_defaults(x_copy)
 
+        # sorting features' values by target rate
+        self._target_sort(x_copy, y)
+
+        # discretizing features based on each feature's values_order
+        super().fit(X, y)
+
+        return self
+
+    def _group_defaults(self, X: DataFrame) -> DataFrame:
+        """Groups modalities less frequent than min_freq into feature.default"""
+
+        # computing frequencies of each modality
+        frequencies = X[self.features.get_names()].apply(series_value_counts, axis=0)
+
+        # iterating over each feature
         for feature in self.features:
             # checking for rare values
             values_to_group = [
-                val
-                for val, freq in frequencies[feature.name].items()
-                if freq < self.min_freq and val != feature.nan
+                value
+                for value, freq in frequencies[feature.name].items()
+                if freq < self.min_freq and value != feature.nan and notna(value)
             ]
 
-            # adding values that are completly missing (no frequency in X)
-            values_to_group += [
+            # checking for completly missing values (no frequency observed in X)
+            missing_values = [
                 value for value in feature.values if value not in frequencies[feature.name]
             ]
+            if len(missing_values) > 0:
+                raise ValueError(
+                    f" - [{self.__name__}] Unexpected values {missing_values} for {feature}."
+                )
 
             # grouping values to str_default if any
             if any(values_to_group):
@@ -124,43 +146,21 @@ class CategoricalDiscretizer(BaseDiscretizer):
 
                 # grouping rare values in default value
                 feature.values.group_list(values_to_group, feature.default)
-                x_copy.loc[
-                    x_copy[feature.name].isin(values_to_group), feature.name
-                ] = feature.default
+                X.loc[X[feature.name].isin(values_to_group), feature.name] = feature.default
+
+        return X
+
+    def _target_sort(self, X: DataFrame, y: Series) -> None:
+        """Sorts features' values by target rate"""
 
         # computing target rate per modality for ordering
-        target_rates = x_copy[self.features.get_names()].apply(
-            target_rate, y=y, ascending=True, axis=0
+        target_rates = X[self.features.get_names()].apply(series_target_rate, y=y, axis=0)
+
+        # sorting features' values based on target rates
+        self.features.update(
+            {feature: list(sorted_values) for feature, sorted_values in target_rates.items()},
+            sorted_values=True,
         )
-
-        # sorting orders based on target rates
-        for feature in self.features:
-            # new ordering according to target rate
-            new_order = list(target_rates[feature.name])
-
-            # checking that if there is a default it is observed
-            if feature.default in feature.values and feature.default not in new_order:
-                not_observed = [
-                    v for v in feature.values.content[feature.default] if v != feature.default
-                ]
-                raise ValueError(
-                    f"Some provided values of '{feature.name}' are never observed. Can not fit a "
-                    "distribution without any observation. Please remove following values "
-                    f"{str(not_observed)} from values_orders['{feature}']."
-                )
-
-            # keeping nans by themselves
-            if feature.nan in new_order:
-                new_order.remove(feature.nan)
-                new_order += [feature.nan]
-
-            # sorting order updating values_orders
-            feature.update(new_order, sorted_values=True)
-
-        # discretizing features based on each feature's values_order
-        super().fit(X, y)
-
-        return self
 
 
 class OrdinalDiscretizer(BaseDiscretizer):
@@ -581,6 +581,22 @@ class ChainedDiscretizer(BaseDiscretizer):
         super().fit(X, y)
 
         return self
+
+
+def series_target_rate(x: Series, y: Series, dropna: bool = True, ascending=True) -> dict:
+    """Target y rate per modality of x into a dictionnary"""
+
+    rates = y.groupby(x, dropna=dropna).mean().sort_values(ascending=ascending)
+
+    return rates.to_dict()
+
+
+def series_value_counts(x: Series, dropna: bool = False, normalize: bool = True) -> dict:
+    """Counts the values of each modality of a series into a dictionnary"""
+
+    values = x.value_counts(dropna=dropna, normalize=normalize)
+
+    return values.to_dict()
 
 
 def find_common_modalities(

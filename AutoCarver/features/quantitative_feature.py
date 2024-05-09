@@ -15,13 +15,6 @@ class QuantitativeFeature(BaseFeature):
     def __repr__(self):
         return f"QuantitativeFeature('{self.name}')"
 
-    def fit(self, X: DataFrame, y: Series = None) -> None:
-        # adding NANS
-        if any(X[self.name].isna()):
-            self.has_nan = True
-
-        super().fit(X, y)
-
     def update(
         self,
         values: GroupedList,

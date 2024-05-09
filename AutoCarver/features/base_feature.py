@@ -44,7 +44,16 @@ class BaseFeature:
 
     def fit(self, X: DataFrame, y: Series = None) -> None:  # pylint: disable=W0222
         _, _ = X, y  # unused attributes
+
+        # looking for NANS
+        if any(X[self.name].isna()):
+            self.has_nan = True
+
         self.is_fitted = True  # feature is fitted
+
+    def check_values(self, X: DataFrame) -> None:
+        """checks for unexpected values from unique values in DataFrame"""
+        _ = X  # unused attribute
 
     def __repr__(self):
         return f"{self.__name__}('{self.name}')"

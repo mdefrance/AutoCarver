@@ -440,13 +440,20 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         qualitatives = self.features.get_qualitatives()
 
         # filling up nans for features that have some
-        X = X.fillna({f.name: f.nan for f in qualitatives if f.has_nan})
+        X.fillna(
+            {
+                feature.name: feature.nan
+                for feature in qualitatives
+                if feature.has_nan and feature.dropna
+            },
+            inplace=True,
+        )
 
         # checking that all unique values in X are in values_orders
-        X = self._check_new_values(X, features=qualitatives)
+        self.features.check_values(X)
 
         # replacing values for there corresponding label
-        X = X.replace({f.name: f.label_per_value for f in qualitatives})
+        X.replace({feature.name: feature.label_per_value for feature in qualitatives}, inplace=True)
 
         return X
 
@@ -826,54 +833,6 @@ def convert_to_values(
         values_orders.update({feature: order})
 
     return values_orders
-
-
-def value_counts(x: Series, dropna: bool = False, normalize: bool = True) -> dict:
-    """Counts the values of each modality of a series into a dictionnary
-
-    Parameters
-    ----------
-    x : Series
-        _description_
-    dropna : bool, optional
-        _description_, by default False
-    normalize : bool, optional
-        _description_, by default True
-
-    Returns
-    -------
-    dict
-        _description_
-    """
-
-    values = x.value_counts(dropna=dropna, normalize=normalize)
-
-    return values.to_dict()
-
-
-def target_rate(x: Series, y: Series, dropna: bool = True, ascending=True) -> dict:
-    """Target y rate per modality of x into a dictionnary
-
-    Parameters
-    ----------
-    x : Series
-        _description_
-    y : Series
-        _description_
-    dropna : bool, optional
-        _description_, by default True
-    ascending : bool, optional
-        _description_, by default True
-
-    Returns
-    -------
-    dict
-        _description_
-    """
-
-    rates = y.groupby(x, dropna=dropna).mean().sort_values(ascending=ascending)
-
-    return rates.to_dict()
 
 
 def get_labels(quantiles: list[float], str_nan: str) -> list[str]:

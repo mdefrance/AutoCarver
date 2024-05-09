@@ -126,9 +126,18 @@ class Features:
             feature for feature in self.quantitatives if feature.name in kept_features
         ]
 
-    def fit(self, X: DataFrame, y: Series = None) -> None:
+    def check_values(self, X: DataFrame) -> None:
         for feature in self:
             if not feature.is_fitted:  # checking for non-fitted features
+                raise RuntimeError(f" - [Features] {feature} not yet fitted!")
+            else:  # checking for unexpected values
+                feature.check_values(X)
+
+    def fit(self, X: DataFrame, y: Series = None) -> None:
+        for feature in self:
+            if feature.is_fitted:  # checking for fitted features
+                feature.check_values(X)
+            else:  # fitting feature
                 feature.fit(X, y)
 
     def update(

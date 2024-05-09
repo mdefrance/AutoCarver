@@ -31,7 +31,7 @@ class StringDiscretizer(BaseDiscretizer):
             List of column names of qualitative features to be converted as string
         """
         # initiating features
-        features = Features(quantitatives=features, **kwargs)
+        features = Features(features, **kwargs)
 
         # Initiating BaseDiscretizer
         super().__init__(features=features, **kwargs)
