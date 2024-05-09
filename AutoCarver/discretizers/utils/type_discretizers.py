@@ -3,10 +3,9 @@
 
 from pandas import DataFrame, Series
 
+from ...features import BaseFeature, Features, GroupedList
 from .base_discretizers import BaseDiscretizer, extend_docstring, nan_unique
 from .multiprocessing import apply_async_function
-
-from ...features import GroupedList, BaseFeature, Features
 
 
 class StringDiscretizer(BaseDiscretizer):

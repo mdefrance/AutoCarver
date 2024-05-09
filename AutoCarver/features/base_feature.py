@@ -72,7 +72,6 @@ class BaseFeature:
 
         # values are not labels
         elif not convert_labels:
-
             # initiating values
             if self.values is None:
                 self.values = values

@@ -2,21 +2,13 @@
 for a binary classification model.
 """
 
-from typing import Any, Union
-from warnings import warn
-
-from numpy import nan
 from pandas import DataFrame, Series, unique
 
-from ..config import DEFAULT, NAN
+from ..features import Features, GroupedList
 from .utils.base_discretizers import BaseDiscretizer, extend_docstring
-from ..features import GroupedList
 from .utils.qualitative_discretizers import CategoricalDiscretizer, OrdinalDiscretizer
 from .utils.quantitative_discretizers import ContinuousDiscretizer
 from .utils.type_discretizers import StringDiscretizer
-
-
-from ..features import GroupedList, Features, BaseFeature
 
 
 class Discretizer(BaseDiscretizer):
@@ -89,7 +81,6 @@ class Discretizer(BaseDiscretizer):
 
         # [Qualitative features] Grouping qualitative features
         if len(self.features.get_qualitatives()) > 0:
-
             # grouping qualitative features
             qualitative_discretizer = QualitativeDiscretizer(
                 categoricals=self.features.categoricals,
@@ -106,7 +97,6 @@ class Discretizer(BaseDiscretizer):
 
         # [Quantitative features] Grouping quantitative features
         if len(self.features.get_quantitatives()) > 0:
-
             # grouping quantitative features
             quantitative_discretizer = QuantitativeDiscretizer(
                 quantitatives=self.features.quantitatives,
@@ -219,12 +209,11 @@ class QualitativeDiscretizer(BaseDiscretizer):
         too_common = [f.name for f in self.features if max_frequencies[f.name] > 1 - self.min_freq]
         # raising
         if len(too_common + non_common) > 0:
-
             # building error message
             error_msg = (
                 f" - [{self.__name__}] Features {str(too_common + non_common)} contain a too "
-                "frequent modality or no frequent enough modality. Consider decreasing min_freq or removing"
-                " these feature.\nINFO:\n"
+                "frequent modality or no frequent enough modality. Consider decreasing min_freq or "
+                "removing these feature.\nINFO:\n"
             )
             # adding features with no common values
             error_msg += "\n".join(

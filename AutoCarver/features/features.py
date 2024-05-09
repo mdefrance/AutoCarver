@@ -1,8 +1,9 @@
 """ Defines a set of features"""
 
 from pandas import DataFrame, Series
-from .grouped_list import GroupedList
+
 from .base_feature import BaseFeature
+from .grouped_list import GroupedList
 from .qualitative_feature import CategoricalFeature, OrdinalFeature
 from .quantitative_feature import QuantitativeFeature
 
@@ -19,7 +20,6 @@ class MultiFeatures:
         ordinal_values: dict[str, list[str]] = None,
         **kwargs: dict,
     ) -> None:
-
         self.features = {
             label: Features(categoricals, quantitatives, ordinals, ordinal_values, **kwargs)
             for label in labels

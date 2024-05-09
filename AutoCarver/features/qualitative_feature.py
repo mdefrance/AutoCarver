@@ -1,11 +1,11 @@
 """ Defines a categorical feature"""
 
-from pandas import DataFrame, Series
 from typing import Any
-from pandas import unique, notna
 
-from .grouped_list import GroupedList
+from pandas import DataFrame, Series, notna, unique
+
 from .base_feature import BaseFeature
+from .grouped_list import GroupedList
 
 
 class CategoricalFeature(BaseFeature):

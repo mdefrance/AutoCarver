@@ -1,8 +1,8 @@
 """Set of tests for features module.
 """
 
-from AutoCarver.features import Features
 from AutoCarver.discretizers import GroupedList
+from AutoCarver.features import Features
 
 
 def test_features(

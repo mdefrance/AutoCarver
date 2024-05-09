@@ -5,10 +5,9 @@ for a binary classification model.
 from numpy import array, digitize, in1d, inf, isnan, linspace, quantile, sort, unique
 from pandas import DataFrame, Series
 
+from ...features import BaseFeature, Features, GroupedList, QuantitativeFeature
 from .base_discretizers import BaseDiscretizer, extend_docstring
-from ...features import GroupedList
 from .multiprocessing import imap_unordered_function
-from ...features import Features, BaseFeature, QuantitativeFeature
 
 
 class ContinuousDiscretizer(BaseDiscretizer):

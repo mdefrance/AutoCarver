@@ -10,13 +10,8 @@ from numpy import argmin, nan, select
 from pandas import DataFrame, Series, isna, unique
 
 from ...config import NAN
-from .base_discretizers import (
-    BaseDiscretizer,
-    extend_docstring,
-    target_rate,
-    value_counts,
-)
-from ...features import GroupedList, CategoricalFeature, OrdinalFeature, Features
+from ...features import CategoricalFeature, Features, GroupedList, OrdinalFeature
+from .base_discretizers import BaseDiscretizer, extend_docstring, target_rate, value_counts
 from .type_discretizers import StringDiscretizer
 
 
@@ -129,9 +124,9 @@ class CategoricalDiscretizer(BaseDiscretizer):
 
                 # grouping rare values in default value
                 feature.values.group_list(values_to_group, feature.default)
-                x_copy.loc[x_copy[feature.name].isin(values_to_group), feature.name] = (
-                    feature.default
-                )
+                x_copy.loc[
+                    x_copy[feature.name].isin(values_to_group), feature.name
+                ] = feature.default
 
         # computing target rate per modality for ordering
         target_rates = x_copy[self.features.get_names()].apply(
