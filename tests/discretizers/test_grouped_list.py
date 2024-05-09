@@ -2,7 +2,7 @@
 
 from pytest import raises
 
-from AutoCarver.discretizers.utils.grouped_list import GroupedList
+from AutoCarver.features import GroupedList
 
 
 def test_grouped_list_init():

@@ -2,8 +2,8 @@
 
 from pandas import DataFrame
 
-from AutoCarver.config import NAN
-from AutoCarver.discretizers.utils.type_discretizers import StringDiscretizer
+from AutoCarver.discretizers import StringDiscretizer
+from AutoCarver.features import Features
 
 
 def test_string_discretizer(x_train: DataFrame) -> None:
@@ -15,7 +15,7 @@ def test_string_discretizer(x_train: DataFrame) -> None:
         Simulated Train DataFrame
     """
 
-    qualitative_features = [
+    categoricals = [
         "Qualitative",
         "Qualitative_grouped",
         "Qualitative_lownan",
@@ -24,8 +24,8 @@ def test_string_discretizer(x_train: DataFrame) -> None:
         "Discrete_Qualitative_lownan_noorder",
         "Discrete_Qualitative_rarevalue_noorder",
     ]
-    ordinal_features = ["Qualitative_Ordinal_lownan", "Discrete_Qualitative_highnan"]
-    values_orders = {
+    ordinals = ["Qualitative_Ordinal", "Qualitative_Ordinal_lownan", "Discrete_Qualitative_highnan"]
+    ordinal_values = {
         "Qualitative_Ordinal": [
             "Low-",
             "Low",
@@ -50,12 +50,9 @@ def test_string_discretizer(x_train: DataFrame) -> None:
         ],
         "Discrete_Qualitative_highnan": ["1", "2", "3", "4", "5", "6", "7"],
     }
+    features = Features(categoricals=categoricals, ordinals=ordinals, ordinal_values=ordinal_values)
 
-    discretizer = StringDiscretizer(
-        qualitative_features=list(set(ordinal_features + qualitative_features)),
-        values_orders=values_orders,
-        n_jobs=1,
-    )
+    discretizer = StringDiscretizer(features=features)
     _ = discretizer.fit_transform(x_train)
 
     expected = {
@@ -68,7 +65,7 @@ def test_string_discretizer(x_train: DataFrame) -> None:
         "6": [6, "6"],
     }
     assert (
-        discretizer.values_orders["Discrete_Qualitative_noorder"].content == expected
+        discretizer.features("Discrete_Qualitative_noorder").values.content == expected
     ), "Not correctly converted for qualitative with integers"
 
     expected = {
@@ -78,10 +75,12 @@ def test_string_discretizer(x_train: DataFrame) -> None:
         "1": [1.0, "1"],
         "5": [5.0, "5"],
         "6": [6.0, "6"],
-        NAN: [NAN],
+        features("Discrete_Qualitative_lownan_noorder").nan: [
+            features("Discrete_Qualitative_lownan_noorder").nan
+        ],
     }
     assert (
-        discretizer.values_orders["Discrete_Qualitative_lownan_noorder"].content == expected
+        discretizer.features("Discrete_Qualitative_lownan_noorder").values.content == expected
     ), "Not correctly converted for qualitative with integers and nans"
 
     expected = {
@@ -94,7 +93,7 @@ def test_string_discretizer(x_train: DataFrame) -> None:
         "6": [6.0, "6"],
     }
     assert (
-        discretizer.values_orders["Discrete_Qualitative_rarevalue_noorder"].content == expected
+        discretizer.features("Discrete_Qualitative_rarevalue_noorder").values.content == expected
     ), "Not correctly converted for qualitative with integers and floats"
 
     expected = {
@@ -107,10 +106,10 @@ def test_string_discretizer(x_train: DataFrame) -> None:
         "High-": ["High-"],
         "High": ["High"],
         "High+": ["High+"],
-        NAN: [NAN],
+        features("Qualitative_Ordinal_lownan").nan: [features("Qualitative_Ordinal_lownan").nan],
     }
     assert (
-        discretizer.values_orders["Qualitative_Ordinal_lownan"].content == expected
+        discretizer.features("Qualitative_Ordinal_lownan").values.content == expected
     ), "No conversion for already string features"
 
     expected = {
@@ -125,7 +124,7 @@ def test_string_discretizer(x_train: DataFrame) -> None:
         "High+": ["High+"],
     }
     assert (
-        discretizer.values_orders["Qualitative_Ordinal"].content == expected
+        discretizer.features("Qualitative_Ordinal").values.content == expected
     ), "No conversion for not specified featues"
 
     expected = {
@@ -136,8 +135,10 @@ def test_string_discretizer(x_train: DataFrame) -> None:
         "5": [5.0, "5"],
         "6": [6.0, "6"],
         "7": [7.0, "7"],
-        NAN: [NAN],
+        features("Discrete_Qualitative_highnan").nan: [
+            features("Discrete_Qualitative_highnan").nan
+        ],
     }
     assert (
-        discretizer.values_orders["Discrete_Qualitative_highnan"].content == expected
+        discretizer.features("Discrete_Qualitative_highnan").values.content == expected
     ), "Original order should be kept for ordinal features"
