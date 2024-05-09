@@ -3,7 +3,7 @@
 from pandas import DataFrame
 
 from AutoCarver.discretizers import OrdinalDiscretizer
-from AutoCarver.features import GroupedList
+from AutoCarver.features import GroupedList, OrdinalFeature
 
 
 def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:
@@ -27,19 +27,18 @@ def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:
     groupedlist_lownan = GroupedList(order)
 
     # storing per feature orders
-    features = ["Qualitative_Ordinal", "Qualitative_Ordinal_lownan"]
-    values_orders = {
+    ordinals = ["Qualitative_Ordinal", "Qualitative_Ordinal_lownan"]
+    ordinal_values = {
         "Qualitative_Ordinal": groupedlist,
         "Qualitative_Ordinal_lownan": groupedlist_lownan,
     }
+    features = [OrdinalFeature(ordinal, ordinal_values.get(ordinal)) for ordinal in ordinals]
 
     # minimum frequency per modality + apply(find_common_modalities) outputs a Series
     min_freq = 0.01
 
     # discretizing features
-    discretizer = OrdinalDiscretizer(
-        ordinal_features=features, min_freq=min_freq, values_orders=values_orders, copy=True
-    )
+    discretizer = OrdinalDiscretizer(ordinals=features, min_freq=min_freq, copy=True)
     discretizer.fit_transform(x_train, x_train[target])
 
     expected_ordinal_01 = {
@@ -51,6 +50,10 @@ def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:
         "High": ["High"],
         "High+": ["High+"],
     }
+    assert (
+        discretizer.features("Qualitative_Ordinal").values.content == expected_ordinal_01
+    ), "Missing value in order not correctly grouped"
+
     expected_ordinal_lownan_01 = {
         "Low+": ["Low", "Low-", "Low+"],
         "Medium-": ["Medium-"],
@@ -58,13 +61,12 @@ def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:
         "Medium+": ["High-", "Medium+"],
         "High": ["High"],
         "High+": ["High+"],
-        NAN: [NAN],
+        discretizer.features("Qualitative_Ordinal_lownan").nan: [
+            discretizer.features("Qualitative_Ordinal_lownan").nan
+        ],
     }
     assert (
-        discretizer.values_orders["Qualitative_Ordinal"].content == expected_ordinal_01
-    ), "Missing value in order not correctly grouped"
-    assert (
-        discretizer.values_orders["Qualitative_Ordinal_lownan"].content
+        discretizer.features("Qualitative_Ordinal_lownan").values.content
         == expected_ordinal_lownan_01
     ), "Missing value in order not correctly grouped or introduced nans."
 
@@ -72,9 +74,8 @@ def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:
     min_freq = 0.08
 
     # discretizing features
-    discretizer = OrdinalDiscretizer(
-        ordinal_features=features, min_freq=min_freq, values_orders=values_orders, copy=True
-    )
+    features = [OrdinalFeature(ordinal, ordinal_values.get(ordinal)) for ordinal in ordinals]
+    discretizer = OrdinalDiscretizer(ordinals=features, min_freq=min_freq, copy=True)
     discretizer.fit_transform(x_train, x_train[target])
 
     expected_ordinal_08 = {
@@ -84,18 +85,21 @@ def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:
         "High": ["Medium+", "High-", "High"],
         "High+": ["High+"],
     }
+    assert (
+        discretizer.features("Qualitative_Ordinal").values.content == expected_ordinal_08
+    ), "Values not correctly grouped"
+
     expected_ordinal_lownan_08 = {
         "Low+": ["Low", "Low-", "Low+"],
         "Medium-": ["Medium-"],
         "Medium": ["Medium"],
         "High": ["Medium+", "High-", "High"],
         "High+": ["High+"],
-        NAN: [NAN],
+        discretizer.features("Qualitative_Ordinal_lownan").nan: [
+            discretizer.features("Qualitative_Ordinal_lownan").nan
+        ],
     }
     assert (
-        discretizer.values_orders["Qualitative_Ordinal"].content == expected_ordinal_08
-    ), "Values not correctly grouped"
-    assert (
-        discretizer.values_orders["Qualitative_Ordinal_lownan"].content
+        discretizer.features("Qualitative_Ordinal_lownan").values.content
         == expected_ordinal_lownan_08
     ), "NaNs should stay by themselves."
