@@ -83,9 +83,9 @@ class OrdinalFeature(CategoricalFeature):
         self.is_categorical = False
 
         # checking for values
-        if len(values) == 0:
+        if values is None or len(values) == 0:
             raise ValueError(
-                " - [Features] Please make sure to provide all ordered values for "
+                " - [Features] Please make sure to provide values for "
                 f"{self.__name__}('{self.name}')"
             )
 

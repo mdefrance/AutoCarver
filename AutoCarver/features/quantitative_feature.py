@@ -23,8 +23,6 @@ class QuantitativeFeature(BaseFeature):
         replace: bool = True,
     ) -> None:
         """updates values and labels for each value of the feature"""
-        if self.values is not None:
-            print(self, self.values.content, "->", values.content)
         # updating feature's values
         super().update(values, convert_labels, sorted_values, replace)
 

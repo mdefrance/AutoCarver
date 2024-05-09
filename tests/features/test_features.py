@@ -1,8 +1,8 @@
 """Set of tests for features module.
 """
 
-from AutoCarver.discretizers import GroupedList
-from AutoCarver.features import Features
+from pytest import raises
+from AutoCarver.features import Features, GroupedList
 
 
 def test_features(
@@ -37,8 +37,20 @@ def test_features(
     ), "non initiated ordinal labels"
 
     # checking for updates of values
-    features.update({"Qualitative_Ordinal": GroupedList(["High-", "High", "High+", "High++++"])})
+    features.update(
+        {"Qualitative_Ordinal": GroupedList(["High-", "High", "High+", "High++++"])}, replace=True
+    )
     assert (
         features.ordinals[0].values == features("Qualitative_Ordinal").values
     ), "reference issue, not same Feature object"
-    assert "High++++" in features("Qualitative_Ordinal").values
+    assert (
+        "High++++" in features("Qualitative_Ordinal").values
+    ), "reference issue, not same Feature object"
+
+    # checking that an ordinal feature needs its values
+    with raises(ValueError):
+        Features(ordinals=["test"])
+
+    # checking that a feature can not be both ordinal and categorical
+    with raises(ValueError):
+        Features(categoricals=["test"], ordinals=["test"], ordinal_values={"test": ["test2"]})

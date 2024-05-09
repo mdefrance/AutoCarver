@@ -44,12 +44,12 @@ def test_continuous_discretizer(x_train: DataFrame):
         4.0,
         7.0,
         inf,
-        features("Discrete_Quantitative_highnan").nan,
-    ], "NaNs should be added to the order"
-    assert (
-        features("Discrete_Quantitative_highnan").nan
-        in x_discretized["Discrete_Quantitative_highnan"].unique()
-    ), "NaNs should be filled with the str_nan value"
+    ], "NaNs should not be added to the order"
+
+    assert discretizer.features(
+        "Discrete_Quantitative_highnan"
+    ).has_nan, "NaNs should fitted per feature"
+
     assert discretizer.features("Discrete_Quantitative_lownan").values == [
         1.0,
         2.0,
@@ -57,8 +57,8 @@ def test_continuous_discretizer(x_train: DataFrame):
         4.0,
         6.0,
         inf,
-        features("Discrete_Quantitative_rarevalue").nan,
     ], "NaNs should not be grouped whatsoever"
+
     assert discretizer.features("Discrete_Quantitative_rarevalue").values == [
         0.5,
         1.0,
