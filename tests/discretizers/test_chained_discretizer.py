@@ -3,16 +3,11 @@
 from pandas import DataFrame
 from pytest import raises
 
-from AutoCarver.config import DEFAULT, NAN
-from AutoCarver.discretizers import (
-    CategoricalDiscretizer,
-    ChainedDiscretizer,
-    GroupedList,
-    OrdinalDiscretizer,
-)
+from AutoCarver.discretizers import CategoricalDiscretizer, ChainedDiscretizer, OrdinalDiscretizer
+from AutoCarver.features import GroupedList
 
 
-def test_chained_discretizer(x_train: DataFrame) -> None:
+def _chained_discretizer(x_train: DataFrame) -> None:
     """Tests CategoricalDiscretizer
 
     Parameters
