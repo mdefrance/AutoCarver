@@ -61,9 +61,6 @@ def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:
         "Medium+": ["High-", "Medium+"],
         "High": ["High"],
         "High+": ["High+"],
-        discretizer.features("Qualitative_Ordinal_lownan").nan: [
-            discretizer.features("Qualitative_Ordinal_lownan").nan
-        ],
     }
     assert (
         discretizer.features("Qualitative_Ordinal_lownan").values.content
@@ -95,9 +92,6 @@ def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:
         "Medium": ["Medium"],
         "High": ["Medium+", "High-", "High"],
         "High+": ["High+"],
-        discretizer.features("Qualitative_Ordinal_lownan").nan: [
-            discretizer.features("Qualitative_Ordinal_lownan").nan
-        ],
     }
     assert (
         discretizer.features("Qualitative_Ordinal_lownan").values.content

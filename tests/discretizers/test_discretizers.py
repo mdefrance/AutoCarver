@@ -18,7 +18,7 @@ def test_quantitative_discretizer(x_train: DataFrame, target: str):
         Target feature
     """
 
-    features = [
+    quantitatives = [
         "Quantitative",
         "Discrete_Quantitative",
         "Discrete_Quantitative_highnan",
@@ -27,24 +27,21 @@ def test_quantitative_discretizer(x_train: DataFrame, target: str):
     ]
     min_freq = 0.1
 
-    discretizer = QuantitativeDiscretizer(quantitative_features=features, min_freq=min_freq)
+    discretizer = QuantitativeDiscretizer(quantitatives=quantitatives, min_freq=min_freq)
     x_discretized = discretizer.fit_transform(x_train, x_train[target])
 
-    assert (
-        NAN in discretizer.values_orders["Discrete_Quantitative_lownan"]
+    assert not discretizer.features("Discrete_Quantitative_lownan").values.contains(
+        discretizer.features("Discrete_Quantitative_lownan").nan
     ), "Missing order should not be grouped with ordinal_discretizer"
+
     assert all(
-        x_discretized.Quantitative.value_counts(normalize=True) >= min_freq
+        x_discretized["Quantitative"].value_counts(normalize=True) >= min_freq
     ), "Non-nan value was not grouped"
-    assert discretizer.values_orders["Discrete_Quantitative_lownan"] == [
-        1.0,
-        2.0,
-        3.0,
-        4.0,
-        inf,
-        NAN,
-    ], "NaNs should not be grouped whatsoever"
-    assert discretizer.values_orders["Discrete_Quantitative_rarevalue"] == [
+
+    print(x_train.Discrete_Quantitative_rarevalue.value_counts(dropna=False, normalize=True))
+
+    print(discretizer.features("Discrete_Quantitative_rarevalue").values.content)
+    assert discretizer.features("Discrete_Quantitative_rarevalue").values == [
         1.0,
         2.0,
         3.0,

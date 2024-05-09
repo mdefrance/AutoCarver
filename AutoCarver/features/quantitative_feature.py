@@ -1,7 +1,7 @@
 """ Defines a continuous feature"""
 
 from numpy import isfinite, nan
-from pandas import DataFrame, Series, isna
+from pandas import isna
 
 from .base_feature import BaseFeature
 from .grouped_list import GroupedList
@@ -23,6 +23,8 @@ class QuantitativeFeature(BaseFeature):
         replace: bool = True,
     ) -> None:
         """updates values and labels for each value of the feature"""
+        if self.values is not None:
+            print(self, self.values.content, "->", values.content)
         # updating feature's values
         super().update(values, convert_labels, sorted_values, replace)
 

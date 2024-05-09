@@ -86,13 +86,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
         self.features.fit(x_copy, y)
 
         # filling up nans for features that have some
-        x_copy = x_copy.fillna(
-            {
-                feature.name: feature.nan
-                for feature in self.features
-                if feature.has_nan and feature.dropna
-            }
-        )
+        x_copy = self.features.fillna(x_copy)
 
         return x_copy
 
@@ -245,7 +239,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
         self.features.fit(x_copy, y)
 
         # filling up nans for features that have some
-        x_copy = x_copy.fillna({f.name: f.nan for f in self.features if f.has_nan})
+        x_copy = self.features.fillna(x_copy)
 
         return x_copy
 

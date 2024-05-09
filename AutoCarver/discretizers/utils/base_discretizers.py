@@ -440,14 +440,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         qualitatives = self.features.get_qualitatives()
 
         # filling up nans for features that have some
-        X.fillna(
-            {
-                feature.name: feature.nan
-                for feature in qualitatives
-                if feature.has_nan and feature.dropna
-            },
-            inplace=True,
-        )
+        X = self.features.fillna(X)
 
         # checking that all unique values in X are in values_orders
         self.features.check_values(X)

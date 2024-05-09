@@ -140,6 +140,17 @@ class Features:
             else:  # fitting feature
                 feature.fit(X, y)
 
+    def fillna(self, X: DataFrame) -> DataFrame:
+        """fills nans of a DataFrame"""
+
+        # fills features with nans when dropna is True
+        X.fillna(
+            {feature.name: feature.nan for feature in self if feature.has_nan and feature.dropna},
+            inplace=True,
+        )
+
+        return X
+
     def update(
         self,
         feature_values: dict[str, GroupedList],

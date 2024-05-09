@@ -100,6 +100,13 @@ class BaseFeature:
                 kept_value = self.value_per_label.get(kept_value)
                 grouped_values = [self.value_per_label.get(value) for value in grouped_values]
 
+                # choosing which value to keep for quantitative features
+                if self.is_quantitative:
+                    which_to_keep = [value for value in grouped_values if value != self.nan]
+                    # keeping the largest value amongst the discarded (otherwise not grouped)
+                    if len(which_to_keep) > 0:
+                        kept_value = max(which_to_keep)
+
                 # updating values
                 self.values.group_list(grouped_values, kept_value)
 
