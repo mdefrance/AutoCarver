@@ -3,26 +3,22 @@
 from numpy import nan
 from pandas import DataFrame
 
-from AutoCarver.config import NAN
-from AutoCarver.discretizers import BaseDiscretizer, GroupedList
+from AutoCarver.discretizers import BaseDiscretizer
+from AutoCarver.features import GroupedList, Features
 
 
 # TODO: test quantitative discretization
-def test_grouped_list_discretizer(x_train: DataFrame, x_dev_1: DataFrame, x_dev_2: DataFrame):
+def test_base_discretizer(x_train: DataFrame) -> None:
     """Tests BaseDiscretizer
 
     Parameters
     ----------
     x_train : DataFrame
         Simulated Train DataFrame
-    x_dev_1 : DataFrame
-        Simulated Test DataFrame
-    x_dev_2 : DataFrame
-        Simulated Test DataFrame
     """
 
     # values to input nans
-    str_nan = NAN
+    str_nan = "NAN"
 
     # defining values_orders
     order = ["Low-", "Low", "Low+", "Medium-", "Medium", "Medium+", "High-", "High", "High+"]
@@ -38,20 +34,19 @@ def test_grouped_list_discretizer(x_train: DataFrame, x_dev_1: DataFrame, x_dev_
     groupedlist_lownan.group_list(["Medium+", "High-"], "High")
 
     # storing per feature orders
-    values_orders = {
+    ordinal_values = {
         "Qualitative_Ordinal": groupedlist,
         "Qualitative_Ordinal_lownan": groupedlist_lownan,
     }
-    features = ["Qualitative_Ordinal", "Qualitative_Ordinal_lownan"]
+    ordinals = ["Qualitative_Ordinal", "Qualitative_Ordinal_lownan"]
+    features = Features(ordinals=ordinals, ordinal_values=ordinal_values, nan=str_nan)
+    for feature in features:
+        feature.is_fitted = True
+        feature.dropna = True
+        feature.has_nan = True
 
     # initiating discretizer
-    discretizer = BaseDiscretizer(
-        features=features,
-        values_orders=values_orders,
-        str_nan=str_nan,
-        input_dtypes="str",
-        copy=True,
-    )
+    discretizer = BaseDiscretizer(features=features, copy=True)
     x_discretized = discretizer.fit_transform(x_train)
 
     # testing ordinal qualitative feature discretization
@@ -85,8 +80,9 @@ def test_grouped_list_discretizer(x_train: DataFrame, x_dev_1: DataFrame, x_dev_
         .replace("High-", "High")
         .replace("High", "High")
         .replace("High+", "High+")
-        .replace(nan, NAN)
+        .replace(nan, str_nan)
     )
+
     assert all(
         x_expected["Qualitative_Ordinal_lownan"] == x_discretized["Qualitative_Ordinal_lownan"]
     ), "incorrect discretization with nans"

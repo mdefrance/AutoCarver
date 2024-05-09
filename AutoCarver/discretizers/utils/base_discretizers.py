@@ -364,13 +364,14 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         if len(self.features.get_qualitatives()) > 0:
             x_copy = self._transform_qualitative(x_copy, y)
 
-        # reinstating nans
-        for feature in self.features:
-            if feature.dropna:  # checking whether we should have dropped nans or not
-                if feature.nan in feature.label_per_value:  # checking that nans were grouped
-                    x_copy[feature.name] = x_copy[feature.name].replace(
-                        feature.label_per_value[feature.nan], nan
-                    )
+        # reinstating nans for features without dropna
+        x_copy = x_copy.replace(
+            {
+                feature.name: {feature.label_per_value[feature.nan]: nan}
+                for feature in self.features
+                if not feature.dropna and feature.nan in feature.label_per_value
+            }
+        )
 
         return x_copy
 
