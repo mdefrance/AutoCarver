@@ -206,15 +206,10 @@ class BaseCarver(BaseDiscretizer):
         if y is None:
             raise ValueError(f" - [AutoCarver] y must be provided, got {y}")
 
-        # discretizing all features
-        discretizer = Discretizer(
-            self.min_freq,
-            self.features,
-            copy=True,  # copying anyways, otherwise no discretization from start to finish
-            **self.kwargs,
-        )
+        # discretizing all features, always copying, to keep discretization from start to finish
+        discretizer = Discretizer(self.min_freq, self.features, **dict(self.kwargs, copy=True))
         x_copy = discretizer.fit_transform(x_copy, y)
-        if x_dev_copy is not None:
+        if x_dev_copy is not None:  # applying on x_dev
             x_dev_copy = discretizer.transform(x_dev_copy, y_dev)
 
         # removing dropped features

@@ -1,6 +1,6 @@
 """ Defines a categorical feature"""
 
-from pandas import DataFrame, Series, notna, unique, isna
+from pandas import DataFrame, Series, notna, unique
 
 from .base_feature import BaseFeature
 from .grouped_list import GroupedList
@@ -46,16 +46,19 @@ class CategoricalFeature(BaseFeature):
 
         # unexpected values for this feature
         unexpected = [
-            value
-            for value in unique_values
-            if (not self.values.contains(value) and notna(value))
-            or (isna(value) and not self.has_nan)
+            value for value in unique_values if not self.values.contains(value) and notna(value)
         ]
         if len(unexpected) > 0:
-            raise ValueError(
-                f" - [Features] Unexpected values for "
-                f"{self.__name__}('{self.name}'). Unexpected values: {str(list(unexpected))}."
-            )
+            # feature does not have a default value
+            if not self.has_default:
+                raise ValueError(
+                    f" - [Features] Unexpected values for "
+                    f"{self.__name__}('{self.name}'). Unexpected values: {str(list(unexpected))}."
+                )
+
+            # feature has default value: adding unexpected to default
+            default_group = self.values.get_group(self.default)
+            self.group_list(unexpected, default_group)
 
         super().check_values(X)
 

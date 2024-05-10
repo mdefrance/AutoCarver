@@ -3,6 +3,9 @@ TODO: add labels
 TODO add casted features?
 """
 
+from typing import Any
+
+
 from pandas import DataFrame, Series
 
 from ..config import DEFAULT, NAN
@@ -52,9 +55,18 @@ class BaseFeature:
 
         self.is_fitted = True  # feature is fitted
 
+    def group_list(self, to_discard: list[Any], to_keep: Any) -> None:
+        """wrapper of GroupedList: groups a list of values into a kept value"""
+
+        values = GroupedList(self.values)
+        values.group_list(to_discard, to_keep)
+        self.update(values, replace=True)
+
     def check_values(self, X: DataFrame) -> None:
         """checks for unexpected values from unique values in DataFrame"""
-        _ = X  # unused attribute
+
+        if any(X[self.name].isna()) and not self.has_nan:
+            raise ValueError(f" - [Features] Unexpected NaN for {self.__name__}('{self.name}').")
 
     def __repr__(self):
         return f"{self.__name__}('{self.name}')"
@@ -130,6 +142,20 @@ class BaseFeature:
             for grouped_value in self.values.get(value):
                 self.label_per_value.update({grouped_value: label})
             self.value_per_label.update({label: value})
+
+    def set_has_default(self, has_default: bool = True) -> None:
+        """adds default to the feature"""
+        # copying values
+        values = GroupedList(self.values)
+
+        # setting default
+        if has_default:
+            # adding to the values
+            values.append(self.default)
+            self.has_default = True
+
+            # updating labels
+            self.update(values, replace=True)
 
     def set_dropna(self, dropna: bool = True) -> None:
         """Activates or deactivates feature's dropna mode"""

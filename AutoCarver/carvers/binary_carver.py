@@ -29,17 +29,17 @@ class BinaryCarver(BaseCarver):
         sort_by: str,
         min_freq: float,
         *,
-        quantitative_features: list[str] = None,
-        qualitative_features: list[str] = None,
-        ordinal_features: list[str] = None,
-        values_orders: dict[str, GroupedList] = None,
+        quantitatives: list[str] = None,
+        categoricals: list[str] = None,
+        ordinals: list[str] = None,
+        ordinal_values: dict[str, GroupedList] = None,
         max_n_mod: int = 5,
         min_freq_mod: float = None,
         output_dtype: str = "float",
         dropna: bool = True,
-        copy: bool = False,
-        verbose: bool = False,
-        n_jobs: int = 1,
+        # copy: bool = False,
+        # verbose: bool = False,
+        # n_jobs: int = 1,
         **kwargs: dict,
     ) -> None:
         """
@@ -56,26 +56,24 @@ class BinaryCarver(BaseCarver):
         """
         # association measure used to find the best groups for binary targets
         implemented_measures = ["tschuprowt", "cramerv"]
-        assert sort_by in implemented_measures, (
-            f" - [BinaryCarver] Measure '{sort_by}' not yet implemented for binary targets. "
-            f"Choose from: {str(implemented_measures)}."
-        )
+        if sort_by not in implemented_measures:
+            raise ValueError(
+                f" - [BinaryCarver] Measure '{sort_by}' not implemented for binary targets. "
+                f"Choose from: {str(implemented_measures)}."
+            )
 
         # Initiating BaseCarver
         super().__init__(
             min_freq=min_freq,
             sort_by=sort_by,
-            quantitative_features=quantitative_features,
-            qualitative_features=qualitative_features,
-            ordinal_features=ordinal_features,
-            values_orders=values_orders,
+            quantitatives=quantitatives,
+            categoricals=categoricals,
+            ordinals=ordinals,
+            ordinal_values=ordinal_values,
             max_n_mod=max_n_mod,
             min_freq_mod=min_freq_mod,
             output_dtype=output_dtype,
             dropna=dropna,
-            copy=copy,
-            verbose=verbose,
-            n_jobs=n_jobs,
             **kwargs,
         )
 
@@ -110,17 +108,15 @@ class BinaryCarver(BaseCarver):
         tuple[DataFrame, DataFrame, dict[str, Callable]]
             Copies of (X, X_dev) and helpers to be used according to target type
         """
-        # Checking for binary target and copying X
-        x_copy, x_dev_copy = super()._prepare_data(X, y, X_dev=X_dev, y_dev=y_dev)
-
         # binary target, checking values
         y_values = unique(y)
-        assert (0 in y_values) & (
-            1 in y_values
-        ), " - [BinaryCarver] y must be a binary Series (int or float, not object)"
-        assert (
-            len(y_values) == 2
-        ), " - [BinaryCarver] y must be a binary Series (int or float, not object)"
+        if not ((0 in y_values) and (1 in y_values)) or len(y_values) != 2:
+            raise ValueError(
+                " - [BinaryCarver] y must be a binary Series (int or float, not object)"
+            )
+
+        # Checking for binary target and discretizing X
+        x_copy, x_dev_copy = super()._prepare_data(X, y, X_dev=X_dev, y_dev=y_dev)
 
         return x_copy, x_dev_copy
 
@@ -156,38 +152,38 @@ class BinaryCarver(BaseCarver):
 
         return xtabs
 
-    def _grouper(self, xtab: DataFrame, groupby: list[str]) -> DataFrame:
+    def _grouper(self, xagg: DataFrame, groupby: list[str]) -> DataFrame:
         """Groups a crosstab by groupby and sums column values by groups (vectorized)
 
         Parameters
         ----------
-        xtab : DataFrame
-            _description_
+        xagg : DataFrame
+            crosstab between X and y
         groupby : list[str]
-            _description_
+            indices to group by
 
         Returns
         -------
         DataFrame
-            _description_
+            Crosstab grouped by indices
         """
         # all indices that may be duplicated
-        index_values = array([groupby.get(index_value, index_value) for index_value in xtab.index])
+        index_values = array([groupby.get(index_value, index_value) for index_value in xagg.index])
 
         # all unique indices deduplicated
         unique_indices = unique(index_values)
 
         # initiating summed up array with zeros
-        summed_values = zeros((len(unique_indices), len(xtab.columns)))
+        summed_values = zeros((len(unique_indices), len(xagg.columns)))
 
         # for each unique_index found in index_values sums xtab.Values at corresponding position
         # in summed_values
-        add.at(summed_values, searchsorted(unique_indices, index_values), xtab.values)
+        add.at(summed_values, searchsorted(unique_indices, index_values), xagg.values)
 
         # converting back to dataframe
-        return DataFrame(summed_values, index=unique_indices, columns=xtab.columns)
+        return DataFrame(summed_values, index=unique_indices, columns=xagg.columns)
 
-    def _association_measure(self, xtab: DataFrame, n_obs: int) -> dict[str, float]:
+    def _association_measure(self, xagg: DataFrame, n_obs: int) -> dict[str, float]:
         """Computes measures of association between feature and target by crosstab.
 
         Parameters
@@ -204,10 +200,10 @@ class BinaryCarver(BaseCarver):
             Cramér's V and Tschuprow's as a dict.
         """
         # number of values taken by the features
-        n_mod_x = xtab.shape[0]
+        n_mod_x = xagg.shape[0]
 
         # Chi2 statistic
-        chi2 = chi2_contingency(xtab)[0]
+        chi2 = chi2_contingency(xagg)[0]
 
         # Cramér's V
         cramerv = sqrt(chi2 / n_obs)
@@ -217,27 +213,27 @@ class BinaryCarver(BaseCarver):
 
         return {"cramerv": cramerv, "tschuprowt": tschuprowt}
 
-    def _target_rate(self, xtab: DataFrame) -> DataFrame:
-        """Computes target rate per row for a binary target (column) in a crosstab
+    # def _target_rate(self, xtab: DataFrame) -> DataFrame:
+    #     """Computes target rate per row for a binary target (column) in a crosstab
 
-        Parameters
-        ----------
-        xtab : DataFrame
-            _description_
+    #     Parameters
+    #     ----------
+    #     xagg : DataFrame
+    #         crosstab of X by y
 
-        Returns
-        -------
-        DataFrame
-            _description_
-        """
-        return xtab[1].divide(xtab.sum(axis=1)).sort_values()
+    #     Returns
+    #     -------
+    #     DataFrame
+    #         y mean by xagg index
+    #     """
+    #     return xtab[1].divide(xtab.sum(axis=1)).sort_values()
 
-    def _printer(self, xtab: DataFrame = None) -> DataFrame:
+    def _printer(self, xagg: DataFrame = None) -> DataFrame:
         """Prints a binary xtab's statistics
 
         Parameters
         ----------
-        xtab : Dataframe
+        xagg : Dataframe
             A crosstab, by default None
 
         Returns
@@ -247,32 +243,15 @@ class BinaryCarver(BaseCarver):
         """
         # checking for an xtab
         stats = None
-        if xtab is not None:
+        if xagg is not None:
             # target rate and frequency statistics per modality
             stats = DataFrame(
                 {
                     # target rate per modality
-                    "target_rate": xtab[1].divide(xtab.sum(axis=1)),
+                    "target_rate": xagg[1].divide(xagg.sum(axis=1)),
                     # frequency per modality
-                    "frequency": xtab.sum(axis=1) / xtab.sum().sum(),
+                    "frequency": xagg.sum(axis=1) / xagg.sum().sum(),
                 }
             )
 
         return stats
-
-    @extend_docstring(BaseCarver.fit)
-    def fit(
-        self,
-        X: DataFrame,
-        y: Series,
-        *,
-        X_dev: DataFrame = None,
-        y_dev: Series = None,
-    ) -> None:
-        # preparing datasets and checking for wrong values
-        x_copy, x_dev_copy = self._prepare_data(X, y, X_dev, y_dev)
-
-        # Fitting BaseCarver
-        super().fit(x_copy, y, X_dev=x_dev_copy, y_dev=y_dev)
-
-        return self

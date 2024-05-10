@@ -413,8 +413,6 @@ class QuantitativeDiscretizer(BaseDiscretizer):
 
         x_copy = continuous_discretizer.fit_transform(x_copy, y)
 
-        print(self.features("Discrete_Quantitative_rarevalue").values.content)
-
         # [Quantitative features] Grouping rare quantiles into closest common one
         #  -> can exist because of overrepresented values (values more frequent than min_freq)
         # searching for features with rare quantiles: computing min frequency per feature

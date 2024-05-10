@@ -135,11 +135,10 @@ class CategoricalDiscretizer(BaseDiscretizer):
             # grouping values to str_default if any
             if any(values_to_group):
                 # adding default value to the order
-                feature.values.append(feature.default)
-                feature.has_default = True
+                feature.set_has_default(True)
 
                 # grouping rare values in default value
-                feature.values.group_list(values_to_group, feature.default)
+                feature.group_list(values_to_group, feature.default)
                 X.loc[X[feature.name].isin(values_to_group), feature.name] = feature.default
 
         return X

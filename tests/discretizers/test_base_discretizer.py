@@ -2,13 +2,19 @@
 
 from numpy import nan
 from pandas import DataFrame
+from pytest import FixtureRequest, fixture
 
 from AutoCarver.discretizers import BaseDiscretizer
 from AutoCarver.features import GroupedList, Features
 
 
+@fixture(params=[True, False])
+def dropna(request: type[FixtureRequest]) -> str:
+    return request.param
+
+
 # TODO: test quantitative discretization
-def test_base_discretizer(x_train: DataFrame) -> None:
+def test_base_discretizer(x_train: DataFrame, dropna: bool) -> None:
     """Tests BaseDiscretizer
 
     Parameters
@@ -19,6 +25,7 @@ def test_base_discretizer(x_train: DataFrame) -> None:
 
     # values to input nans
     str_nan = "NAN"
+    # dropna = True
 
     # defining values_orders
     order = ["Low-", "Low", "Low+", "Medium-", "Medium", "Medium+", "High-", "High", "High+"]
@@ -42,17 +49,18 @@ def test_base_discretizer(x_train: DataFrame) -> None:
     features = Features(ordinals=ordinals, ordinal_values=ordinal_values, nan=str_nan)
     for feature in features:
         feature.is_fitted = True
-        feature.dropna = True
+        feature.dropna = dropna
         feature.has_nan = True
 
     # initiating discretizer
-    discretizer = BaseDiscretizer(features=features, copy=True)
+    discretizer = BaseDiscretizer(features=features, dropna=dropna, copy=True)
     x_discretized = discretizer.fit_transform(x_train)
 
     # testing ordinal qualitative feature discretization
     x_expected = x_train.copy()
-    x_expected["Qualitative_Ordinal"] = (
-        x_expected["Qualitative_Ordinal"]
+    feature = "Qualitative_Ordinal"
+    x_expected[feature] = (
+        x_expected[feature]
         .replace("Low-", "Low+")
         .replace("Low", "Low+")
         .replace("Low+", "Low+")
@@ -63,14 +71,12 @@ def test_base_discretizer(x_train: DataFrame) -> None:
         .replace("High", "High")
         .replace("High+", "High+")
     )
-    assert all(
-        x_expected["Qualitative_Ordinal"] == x_discretized["Qualitative_Ordinal"]
-    ), "incorrect discretization"
+    assert all(x_expected[feature] == x_discretized[feature]), "incorrect discretization"
 
     # testing ordinal qualitative feature discretization with nans
-    x_expected = x_train.copy()
-    x_expected["Qualitative_Ordinal_lownan"] = (
-        x_expected["Qualitative_Ordinal_lownan"]
+    feature = "Qualitative_Ordinal_lownan"
+    x_expected[feature] = (
+        x_expected[feature]
         .replace("Low-", "Low+")
         .replace("Low", "Low+")
         .replace("Low+", "Low+")
@@ -80,14 +86,17 @@ def test_base_discretizer(x_train: DataFrame) -> None:
         .replace("High-", "High")
         .replace("High", "High")
         .replace("High+", "High+")
-        .replace(nan, str_nan)
     )
+    # replacing nans if requested
+    if dropna:
+        x_expected[feature] = x_expected[feature].replace(nan, str_nan)
 
+    assert all(x_expected[feature].isna() == x_discretized[feature].isna()), "unexpected NaNs"
     assert all(
-        x_expected["Qualitative_Ordinal_lownan"] == x_discretized["Qualitative_Ordinal_lownan"]
+        x_expected.loc[x_expected[feature].notna(), feature]
+        == x_discretized.loc[x_discretized[feature].notna(), feature]
     ), "incorrect discretization with nans"
 
     # checking that other columns are left unchanged
-    assert all(
-        x_discretized["Quantitative"] == x_discretized["Quantitative"]
-    ), "Other columns should not be modified"
+    feature = "Quantitative"
+    assert all(x_discretized[feature] == x_discretized[feature]), "Others should not be modified"

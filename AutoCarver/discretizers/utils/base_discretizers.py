@@ -83,14 +83,18 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         """
         # features and values
         self.features = Features(features)
-        self.copy = kwargs.get("copy", True)
+
+        # saving kwargs
         self.kwargs = kwargs
+
+        # whether or not to copy input dataframe
+        self.copy = kwargs.get("copy", True)
 
         # output type
         self.output_dtype = kwargs.get("output_dtype", "str")
 
         # whether or not to reinstate numpy nan after bucketization
-        self.dropna = kwargs.get("dropna", True)
+        self.dropna = kwargs.get("dropna", False)
 
         # whether to print info
         self.verbose = kwargs.get("verbose", True)
@@ -116,7 +120,8 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         self.quantitatives = None
         self.ordinal_values = None
 
-    def __repr__(self) -> str:
+    def __repr__(self, N_CHAR_MAX: int = 700) -> str:
+        _ = N_CHAR_MAX  # unused attribute
         return f"{self.__name__}({str(self.features)})"
 
     def _remove_feature(self, feature: str) -> None:
@@ -240,62 +245,6 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
 
     __prepare_data = _prepare_data  # private copy
 
-    def _check_new_values(self, X: DataFrame, features: list[BaseFeature]) -> None:
-        """Checks for new, unexpected values, in X
-
-        Parameters
-        ----------
-        X : DataFrame
-            New DataFrame (at transform time)
-        features : list[str]
-            List of column names
-        """
-        # unique non-nan values in new dataframe
-        uniques = X[get_names(features)].apply(
-            nan_unique,
-            axis=0,
-            result_type="expand",
-        )
-        uniques = applied_to_dict_list(uniques)
-
-        # replacing unknwon values if there was a default discretization
-        X.replace(
-            {
-                feature.name: {
-                    val: feature.default
-                    for val in uniques[feature.name]
-                    if val not in feature.values.values()
-                    and val != feature.nan
-                    and feature.has_default
-                }
-                for feature in features
-            },
-            inplace=True,
-        )
-        # updating unique non-nan values in new dataframe
-        uniques = X[get_names(features)].apply(
-            nan_unique,
-            axis=0,
-            result_type="expand",
-        )
-        uniques = applied_to_dict_list(uniques)
-
-        # checking for unexpected values for each feature
-        for feature in features:
-            # unexpected values for this feature
-            unexpected = [
-                val for val in uniques[feature.name] if val not in feature.values.values()
-            ]
-            if len(unexpected) > 0:
-                raise ValueError(
-                    " - [Discretizer] Unexpected value! The ordering for values: "
-                    f"{str(list(unexpected))} of feature '{feature.name}' was not provided. "
-                    "There might be new values in your test/dev set. Consider taking a bigger "
-                    f"test/dev set or dropping the column {feature.name}."
-                )
-
-        return X
-
     def fit(self, X: DataFrame = None, y: Series = None) -> None:
         """Learns simple discretization of values of X according to values of y.
 
@@ -356,6 +305,12 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         # copying dataframes and casting for multiclass
         x_copy = self.__prepare_data(X, y)
 
+        # filling up nans for features that have some
+        x_copy = self.features.fillna(x_copy)
+
+        # checking that all unique values in X are in features
+        self.features.check_values(x_copy)
+
         # transforming quantitative features
         if len(self.features.get_quantitatives()) > 0:
             x_copy = self._transform_quantitative(x_copy, y)
@@ -363,15 +318,6 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         # transforming qualitative features
         if len(self.features.get_qualitatives()) > 0:
             x_copy = self._transform_qualitative(x_copy, y)
-
-        # reinstating nans for features without dropna
-        x_copy = x_copy.replace(
-            {
-                feature.name: {feature.label_per_value[feature.nan]: nan}
-                for feature in self.features
-                if not feature.dropna and feature.nan in feature.label_per_value
-            }
-        )
 
         return x_copy
 
@@ -438,12 +384,6 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
 
         # list of qualitative features
         qualitatives = self.features.get_qualitatives()
-
-        # filling up nans for features that have some
-        X = self.features.fillna(X)
-
-        # checking that all unique values in X are in values_orders
-        self.features.check_values(X)
 
         # replacing values for there corresponding label
         X.replace({feature.name: feature.label_per_value for feature in qualitatives}, inplace=True)
@@ -696,24 +636,19 @@ def transform_quantitative_feature(
     feature: BaseFeature, df_feature: Series, x_len: int
 ) -> tuple[str, Series]:
     """Transforms a quantitative feature"""
-
-    # keeping track of nans
-    nans = isna(df_feature)
+    # identifying nans
+    feature_nans = df_feature == feature.nan
 
     # converting nans to there corresponding quantile (if it was grouped to a quantile)
-    if any(nans):
-        if not feature.has_nan:  # checking for unexpected NaNs
-            raise ValueError(
-                " - [Discretizer] Unexpected value! Missing values found for feature "
-                f"'{feature.name}' at transform step but not during fit. There might be new values"
-                " in your test/dev set. Consider taking a bigger test/dev set or dropping the "
-                f"column {feature.name}."
-            )
-        nan_value = feature.values.get_group(feature.nan)
-        # checking that nans have been grouped to a quantile otherwise they are left as
-        # numpy.nan (for comparison purposes)
-        if nan_value != feature.nan:
-            df_feature[nans] = nan_value
+    if any(feature_nans):
+        # value with which nans have grouped
+        nan_group = feature.values.get_group(feature.nan)
+        # checking that nans have been grouped to a quantile
+        if nan_group != feature.nan:
+            df_feature[feature_nans] = nan_group
+        # otherwise they are left as NaNs for comparison purposes
+        else:
+            df_feature[feature_nans] = nan
 
     # list of masks of values to replace with there respective group
     values_to_group = [df_feature <= value for value in feature.values if value != feature.nan]
@@ -727,9 +662,9 @@ def transform_quantitative_feature(
     if len(values_to_group) > 0:
         df_feature = select(values_to_group, group_labels, default=df_feature)
 
-    # converting nans to there value
-    if any(nans):
-        df_feature[nans] = feature.label_per_value.get(nan_value, feature.nan)
+    # reinstating nans
+    if any(feature_nans):
+        df_feature[feature_nans] = feature.label_per_value.get(feature.nan)
 
     return feature.name, list(df_feature)
 
