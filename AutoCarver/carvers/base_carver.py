@@ -2,6 +2,7 @@
 for any task.
 """
 
+from functools import partial
 from typing import Any, Union
 from warnings import warn
 
@@ -152,6 +153,8 @@ class BaseCarver(BaseDiscretizer):
                     "Install extra dependencies with pip install autocarver[jupyter]",
                     UserWarning,
                 )
+        # progress bar if requested
+        self.tqdm = partial(tqdm, disable=not self.verbose)
 
         # historizing everything
         self._history = {feature: [] for feature in self.features}
@@ -301,12 +304,24 @@ class BaseCarver(BaseDiscretizer):
         return self
 
     def _aggregator(self, X: DataFrame, y: Series) -> Union[Series, DataFrame]:
-        """aggregation function -> carver specific"""
+        """Helper that aggregates X by y into crosstab or means (carver specific)"""
         _, _ = X, y  # unused attributes
+        return True
 
-    def _association_measure(self, xtab: DataFrame, n_obs: int) -> Union[Series, DataFrame]:
-        """association measure function -> carver specific"""
-        _, _ = xtab, n_obs  # unused attributes
+    def _association_measure(self, xagg: DataFrame, n_obs: int) -> Union[Series, DataFrame]:
+        """Helper to measure association between X and y (carver specific)"""
+        _, _ = xagg, n_obs  # unused attributes
+        return True
+
+    def _grouper(self, xagg: DataFrame, groupby: list[str]) -> DataFrame:
+        """Helper to group XAGG's values by groupby (carver specific)"""
+        _, _ = xagg, groupby  # unused attributes
+        return True
+
+    def _printer(self, xagg: DataFrame = None) -> DataFrame:
+        """helper to print an XAGG (carver specific)"""
+        _ = xagg  # unused attribute
+        return True
 
     def _carve_feature(
         self,
@@ -322,7 +337,7 @@ class BaseCarver(BaseDiscretizer):
         # historizing raw combination TODO
         raw_association = {
             "index_to_groupby": {modality: modality for modality in xagg.index},
-            self.sort_by: self._association_measure(  # pylint: disable=E1101
+            self.sort_by: self._association_measure(
                 xagg.dropna(), n_obs=sum(xagg.dropna().apply(sum))
             )[self.sort_by],
         }
@@ -441,19 +456,15 @@ class BaseCarver(BaseDiscretizer):
 
         # grouping tab by its indices
         grouped_xaggs = [
-            self._grouper(xagg, index_to_groupby)  # pylint: disable=E1101
-            for index_to_groupby in tqdm(
-                indices_to_groupby, disable=not self.verbose, desc="Grouping modalities   "
-            )
+            self._grouper(xagg, index_to_groupby)
+            for index_to_groupby in self.tqdm(indices_to_groupby, desc="Grouping modalities   ")
         ]
 
         # computing associations for each tabs
         n_obs = xagg.apply(sum).sum()  # number of observations for xtabs
         associations_xagg = [
-            self._association_measure(grouped_xagg, n_obs=n_obs)  # pylint: disable=E1101
-            for grouped_xagg in tqdm(
-                grouped_xaggs, disable=not self.verbose, desc="Computing associations"
-            )
+            self._association_measure(grouped_xagg, n_obs=n_obs)
+            for grouped_xagg in self.tqdm(grouped_xaggs, desc="Computing associations")
         ]
 
         # adding corresponding combination to the association
@@ -496,14 +507,13 @@ class BaseCarver(BaseDiscretizer):
         # testing viability of all combinations
         best_association, train_viable, dev_viable = (None,) * 3
         test_results: dict[str, bool] = {}
-        for n_combination, association in tqdm(
+        for n_combination, association in self.tqdm(
             enumerate(associations_xagg),
             total=len(associations_xagg),
-            disable=not self.verbose,
             desc="Testing robustness    ",
         ):
             # computing target rate and frequency per value
-            train_rates = self._printer(association["xagg"])  # pylint: disable=E1101
+            train_rates = self._printer(association["xagg"])
 
             # viability on train sample:
             # - target rates are distinct for consecutive modalities
@@ -530,12 +540,10 @@ class BaseCarver(BaseDiscretizer):
                 # case 1: test sample provided -> testing robustness
                 else:
                     # grouping the dev sample per modality
-                    grouped_xagg_dev = self._grouper(  # pylint: disable=E1101
-                        xagg_dev, association["index_to_groupby"]
-                    )
+                    grouped_xagg_dev = self._grouper(xagg_dev, association["index_to_groupby"])
 
                     # computing target rate and frequency per modality
-                    dev_rates = self._printer(grouped_xagg_dev)  # pylint: disable=E1101
+                    dev_rates = self._printer(grouped_xagg_dev)
 
                     # viability on dev sample:
                     # - grouped values have the same ranks in train/test
@@ -565,9 +573,8 @@ class BaseCarver(BaseDiscretizer):
 
             # historizing combinations and tests
             self._historize_viability_test(
-                feature=feature.name,
+                feature=feature,
                 association=association,
-                order=feature.labels,
                 n_combination=n_combination,
                 associations_xagg=associations_xagg,
                 dropna=dropna,
@@ -583,9 +590,8 @@ class BaseCarver(BaseDiscretizer):
 
     def _historize_viability_test(
         self,
-        feature: str,
+        feature: BaseFeature,
         association: dict[Any],
-        order: GroupedList,
         n_combination: int = None,
         associations_xagg: list[dict[str, Any]] = None,
         train_viable: bool = None,
@@ -652,15 +658,15 @@ class BaseCarver(BaseDiscretizer):
         viability_to_historize = [viability] + [None] * len(associations_not_checked)
 
         # historizing test results: list comprehension for faster processing (large number of combi)
-        self._history[feature] += [
+        self._history[feature.name] += [
             {
                 # Formats a combination for historization
                 "combination": [
                     [
                         value
                         for modality in asso["index_to_groupby"].keys()
-                        for group_modality in order.get(modality, modality)
-                        for value in self.values_orders[feature].get(group_modality, group_modality)
+                        for group_modality in feature.labels.get(modality, modality)
+                        for value in feature.values.get(group_modality, group_modality)
                         if asso["index_to_groupby"][modality] == final_group
                     ]
                     for final_group in Series(asso["index_to_groupby"].values()).unique()
@@ -671,10 +677,9 @@ class BaseCarver(BaseDiscretizer):
                 "grouping_nan": dropna,
             }
             # historizing all combinations
-            for asso, msg, viab in tqdm(
+            for asso, msg, viab in self.tqdm(
                 zip(associations_to_historize, messages_to_historize, viability_to_historize),
                 total=len(associations_to_historize),
-                disable=not verbose,
                 desc="Logging combinations  ",
             )
         ]
@@ -754,8 +759,8 @@ class BaseCarver(BaseDiscretizer):
             formatted_xagg_dev = self._index_mapper(feature, xagg_dev)
 
             # getting pretty xtabs
-            nice_xagg = self._printer(formatted_xagg)  # pylint: disable=E1101
-            nice_xagg_dev = self._printer(formatted_xagg_dev)  # pylint: disable=E1101
+            nice_xagg = self._printer(formatted_xagg)
+            nice_xagg_dev = self._printer(formatted_xagg_dev)
 
             # case 0: no pretty hmtl printing
             if not self.pretty_print:
