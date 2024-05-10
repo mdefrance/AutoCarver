@@ -23,6 +23,8 @@ class BinaryCarver(BaseCarver):
     BinaryClassification/binary_classification_example.html>`_
     """
 
+    __name__ = "BinaryCarver"
+
     @extend_docstring(BaseCarver.__init__)
     def __init__(
         self,
@@ -136,7 +138,7 @@ class BinaryCarver(BaseCarver):
         dict[str, DataFrame]
             dict of crosstab(X, y) by feature name
         """
-        # checking for empty datasets
+        # checking for empty datasets (dev)
         xtabs = {feature.name: None for feature in self.features}
         if X is not None:
             # crosstab for each feature
@@ -148,7 +150,7 @@ class BinaryCarver(BaseCarver):
                 xtab = xtab.reindex(feature.labels)
 
                 # storing results
-                xtabs.update({feature: xtab})
+                xtabs.update({feature.name: xtab})
 
         return xtabs
 

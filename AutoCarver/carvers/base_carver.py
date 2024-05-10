@@ -40,6 +40,8 @@ class BaseCarver(BaseDiscretizer):
     ``Discretizer.transform()``).
     """
 
+    __name__ = "AutoCarver"
+
     def __init__(
         self,
         sort_by: str,
@@ -165,7 +167,7 @@ class BaseCarver(BaseDiscretizer):
         self.tqdm = partial(tqdm, disable=not self.verbose)
 
         # historizing everything
-        self._history = {feature: [] for feature in self.features}
+        self._history = {feature.name: [] for feature in self.features}
 
     def _prepare_data(
         self,
@@ -198,16 +200,18 @@ class BaseCarver(BaseDiscretizer):
         tuple[DataFrame, DataFrame]
             Copies of (X, X_dev)
         """
+        # checking for not provided y
+        if y is None:
+            raise ValueError(f" - [{self.__name__}] y must be provided, got {y}")
+
         # Checking for binary target and copying X
         x_copy = super()._prepare_data(X, y)
         x_dev_copy = super()._prepare_data(X_dev, y_dev)
 
-        # checking for not provided y
-        if y is None:
-            raise ValueError(f" - [AutoCarver] y must be provided, got {y}")
-
         # discretizing all features, always copying, to keep discretization from start to finish
-        discretizer = Discretizer(self.min_freq, self.features, **dict(self.kwargs, copy=True))
+        discretizer = Discretizer(
+            self.min_freq, self.features, **dict(self.kwargs, copy=True, output_dtype="str")
+        )
         x_copy = discretizer.fit_transform(x_copy, y)
         if x_dev_copy is not None:  # applying on x_dev
             x_dev_copy = discretizer.transform(x_dev_copy, y_dev)
@@ -225,18 +229,7 @@ class BaseCarver(BaseDiscretizer):
         return x_copy, x_dev_copy
 
     def _combination_formatter(self, combination: list[list[str]]) -> dict[str, str]:
-        """Attributes the first element of a group to all elements of a group
-
-        Parameters
-        ----------
-        combination : list[list[str]]
-            _description_
-
-        Returns
-        -------
-        dict[str, str]
-            _description_
-        """
+        """Attributes the first element of a group to all elements of a group"""
         return {modal: group[0] for group in combination for modal in group}
 
     def _remove_feature(self, feature: str) -> None:
@@ -290,7 +283,7 @@ class BaseCarver(BaseDiscretizer):
         all_features = self.features[:]  # (features are being removed from self.features)
         for n, feature in enumerate(all_features):
             if self.verbose:  # verbose if requested
-                print(f"\n------\n[AutoCarver] Fit {feature} ({n+1}/{len(all_features)})\n---")
+                print(f"\n------\n[{self.__name__}] Fit {feature} ({n+1}/{len(all_features)})\n---")
 
             # carving the feature
             self._carve_feature(feature, xaggs, xaggs_dev)
@@ -365,8 +358,8 @@ class BaseCarver(BaseDiscretizer):
         # no suitable combination has been found -> removing feature
         else:
             warn(
-                f" - [AutoCarver] No robust combination for '{feature}' could be found"
-                ". Consider increasing the size of dev sample or dropping the feature"
+                f"\n - [{self.__name__}] No robust combination for '{feature}' could be found"
+                ".\nConsider increasing the size of dev sample or dropping the feature"
                 " (train sample not representative of dev sample for this feature).",
                 UserWarning,
             )
@@ -493,6 +486,7 @@ class BaseCarver(BaseDiscretizer):
         best_association = self._test_viability(feature, associations_xagg, xagg_dev, dropna)
 
         # applying best_combination to order and xtab
+        labels = feature.labels
         if best_association is not None:
             labels = order_apply_combination(feature.labels, best_association["combination"])
 
@@ -680,11 +674,12 @@ class BaseCarver(BaseDiscretizer):
                 "grouping_nan": dropna,
             }
             # historizing all combinations
-            for asso, msg, viab in self.tqdm(
-                zip(associations_to_historize, messages_to_historize, viability_to_historize),
-                total=len(associations_to_historize),
-                desc="Logging combinations  ",
+            for asso, msg, viab in zip(
+                associations_to_historize, messages_to_historize, viability_to_historize
             )
+            # tqdm(total=len(associations_to_historize),
+            # disable=verbose,
+            # desc="Logging combinations  ",)
         ]
 
     def _print_xagg(
@@ -707,7 +702,7 @@ class BaseCarver(BaseDiscretizer):
             Whether to output html or not, by default False
         """
         if self.verbose:  # verbose if requested
-            print(f"\n - [AutoCarver] {message}")
+            print(f"\n - [{self.__name__}] {message}")
 
             # formatting XAGG
             formatted_xagg = index_mapper(feature, xagg)

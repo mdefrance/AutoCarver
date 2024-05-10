@@ -164,12 +164,13 @@ class BaseFeature:
             # setting dropna
             self.dropna = dropna
 
-            # adding nan to the values
-            values = GroupedList(self.values)
-            values.append(self.nan)
+            # adding nan to the values only if they were found
+            if self.has_nan:
+                values = GroupedList(self.values)
+                values.append(self.nan)
 
-            # updating values
-            self.update(values, replace=True)
+                # updating values
+                self.update(values, replace=True)
 
         # deactivating dropna mode
         else:
