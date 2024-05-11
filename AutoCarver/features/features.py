@@ -7,6 +7,8 @@ from .grouped_list import GroupedList
 from .qualitative_feature import CategoricalFeature, OrdinalFeature
 from .quantitative_feature import QuantitativeFeature
 
+from numpy import nan
+
 
 class MultiFeatures:
     """TODO"""
@@ -146,6 +148,21 @@ class Features:
         # fills features with nans when dropna is True
         X.fillna(
             {feature.name: feature.nan for feature in self if feature.has_nan and feature.dropna},
+            inplace=True,
+        )
+
+        return X
+
+    def unfillna(self, X: DataFrame) -> DataFrame:
+        """unfills nans when not supposed to have filled them"""
+
+        # reinstating nans of features for which nans should not have been dropped
+        X.replace(
+            {
+                feature.name: {feature.nan: nan}
+                for feature in self
+                if feature.has_nan and not feature.dropna
+            },
             inplace=True,
         )
 

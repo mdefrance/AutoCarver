@@ -347,7 +347,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         x_len = X.shape[0]
 
         # transforming all features
-        all_transformed = apply_async_function(
+        transformed = apply_async_function(
             transform_quantitative_feature,
             self.features.get_quantitatives(),
             self.n_jobs,
@@ -356,7 +356,10 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         )
 
         # unpacking transformed series
-        X[[feat for feat, _ in all_transformed]] = DataFrame(dict(all_transformed), index=X.index)
+        X[[feature for feature, _ in transformed]] = DataFrame(dict(transformed), index=X.index)
+
+        # reinstating nans when not supposed to group them
+        X = self.features.unfillna(X)
 
         return X
 
@@ -637,18 +640,20 @@ def transform_quantitative_feature(
 ) -> tuple[str, Series]:
     """Transforms a quantitative feature"""
     # identifying nans
-    feature_nans = df_feature == feature.nan
+    feature_nans = (df_feature == feature.nan) | df_feature.isna()
 
     # converting nans to there corresponding quantile (if it was grouped to a quantile)
     if any(feature_nans):
         # value with which nans have grouped
         nan_group = feature.values.get_group(feature.nan)
+
         # checking that nans have been grouped to a quantile
         if nan_group != feature.nan:
-            df_feature[feature_nans] = nan_group
+            df_feature.mask(feature_nans, nan_group, inplace=True)
+
         # otherwise they are left as NaNs for comparison purposes
         else:
-            df_feature[feature_nans] = nan
+            df_feature.mask(feature_nans, nan, inplace=True)
 
     # list of masks of values to replace with there respective group
     values_to_group = [df_feature <= value for value in feature.values if value != feature.nan]
@@ -662,9 +667,9 @@ def transform_quantitative_feature(
     if len(values_to_group) > 0:
         df_feature = select(values_to_group, group_labels, default=df_feature)
 
-    # reinstating nans
+    # reinstating nans otherwise nan is converted to 'nan' by numpy
     if any(feature_nans):
-        df_feature[feature_nans] = feature.label_per_value.get(feature.nan)
+        df_feature[feature_nans] = feature.label_per_value.get(feature.nan, feature.nan)
 
     return feature.name, list(df_feature)
 

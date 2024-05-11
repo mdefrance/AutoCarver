@@ -72,7 +72,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
             fit_feature,
             self.features.get_quantitatives(),
             self.n_jobs,
-            X=X[self.features.get_quantitatives(True)],
+            X=X[self.features.get_quantitatives(return_names=True)],
             q=self.q,
         )
 

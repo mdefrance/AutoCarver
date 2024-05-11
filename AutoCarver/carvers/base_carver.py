@@ -276,8 +276,8 @@ class BaseCarver(BaseDiscretizer):
         x_copy, x_dev_copy = self._prepare_data(X, y, X_dev, y_dev)
 
         # computing crosstabs for each feature on train/test
-        xaggs = self._aggregator(x_copy, y)  # pylint: disable=E1111
-        xaggs_dev = self._aggregator(x_dev_copy, y_dev)  # pylint: disable=E1111
+        xaggs = self._aggregator(x_copy, y)
+        xaggs_dev = self._aggregator(x_dev_copy, y_dev)
 
         # optimal butcketization/carving of each feature
         all_features = self.features[:]  # (features are being removed from self.features)
@@ -347,13 +347,11 @@ class BaseCarver(BaseDiscretizer):
 
         # checking that a suitable combination has been found
         if best_combination is not None:
-            labels, xagg, xagg_dev = best_combination  # unpacking
-
-            # updating feature accordingly
-            print("update", feature.values, labels.content)
-            feature.update(labels, convert_labels=True)
+            xagg, xagg_dev = best_combination  # unpacking
 
             # verbose if requested
+            print(feature.values, feature.labels)
+            print(xagg)
             self._print_xagg(feature, xagg=xagg, xagg_dev=xagg_dev, message="Carved distribution")
 
         # no suitable combination has been found -> removing feature
@@ -390,35 +388,31 @@ class BaseCarver(BaseDiscretizer):
             combinations = consecutive_combinations(raw_labels, self.max_n_mod)
 
             # getting most associated combination
-            best_association, labels = self._get_best_association(
+            best_association = self._get_best_association(
                 feature, raw_xagg, combinations, xagg_dev=raw_xagg_dev, dropna=False
             )
 
             # grouping NaNs if requested to drop them (dropna=True)
             if self.dropna and feature.has_nan and best_association is not None:
-                # applying best_combination to xtabs
-                xagg = xagg_apply_combination(xagg, labels)
-                xagg_dev = xagg_apply_combination(xagg_dev, labels)
+                xagg, xagg_dev = best_association  # unpacking
 
                 # raw ordering without nans
-                raw_labels = GroupedList(labels)
+                raw_labels = GroupedList(feature.labels[:])
                 raw_labels.remove(feature.nan)  # nans are added within nan_combinations
 
                 # adding combinations with NaNs
                 combinations = nan_combinations(raw_labels, feature.nan, self.max_n_mod)
 
                 # getting most associated combination
-                best_association, labels = self._get_best_association(
+                best_association = self._get_best_association(
                     feature, xagg, combinations, xagg_dev=xagg_dev, dropna=True
                 )
 
         # checking that a suitable combination has been found
         if best_association is not None:
-            # applying best_combination to xtabs
-            xagg = xagg_apply_combination(xagg, labels)
-            xagg_dev = xagg_apply_combination(xagg_dev, labels)
+            xagg, xagg_dev = best_association  # unpacking
 
-            return labels, xagg, xagg_dev
+            return xagg, xagg_dev
 
     def _get_best_association(
         self,
@@ -428,7 +422,7 @@ class BaseCarver(BaseDiscretizer):
         *,
         xagg_dev: Union[Series, DataFrame] = None,
         dropna: bool = False,
-    ) -> tuple[dict[str, Any], GroupedList]:
+    ) -> tuple[DataFrame, DataFrame]:
         """Computes associations of the tab for each combination
 
         Parameters
@@ -487,13 +481,18 @@ class BaseCarver(BaseDiscretizer):
         # testing viability of combination
         best_association = self._test_viability(feature, associations_xagg, xagg_dev, dropna)
 
-        # applying best_combination to order and xtab
-        labels = feature.labels
+        # applying best_combination to feature labels and xtab
         if best_association is not None:
-            print("order apply", labels.content, feature.labels.content)
             labels = order_apply_combination(feature.labels, best_association["combination"])
 
-        return best_association, labels
+            # applying best_combination to xtabs
+            xagg = xagg_apply_combination(xagg, labels)
+            xagg_dev = xagg_apply_combination(xagg_dev, labels)
+
+            # updating feature's values accordingly
+            feature.update(labels, convert_labels=True)
+
+            return xagg, xagg_dev
 
     def _test_viability(
         self,
