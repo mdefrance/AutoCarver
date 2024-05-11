@@ -350,8 +350,6 @@ class BaseCarver(BaseDiscretizer):
             xagg, xagg_dev = best_combination  # unpacking
 
             # verbose if requested
-            print(feature.values, feature.labels)
-            print(xagg)
             self._print_xagg(feature, xagg=xagg, xagg_dev=xagg_dev, message="Carved distribution")
 
         # no suitable combination has been found -> removing feature

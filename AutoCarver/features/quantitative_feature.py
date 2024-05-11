@@ -86,22 +86,28 @@ def format_quantiles(a_list: list[float]) -> list[str]:
     list[str]
         List of boundaries per quantile
     """
-    # scientific formatting
-    formatted_list = [f"{number:.3e}" for number in a_list]
+    # only one non nan quantile
+    if len(a_list) == 0:
+        order = ["-inf < x < inf"]
 
-    # stripping whitespaces
-    formatted_list = [string.strip() for string in formatted_list]
+    # several quantiles
+    else:
+        # scientific formatting
+        formatted_list = [f"{number:.3e}" for number in a_list]
 
-    # low and high bounds per quantiles
-    upper_bounds = formatted_list + [nan]
-    lower_bounds = [nan] + formatted_list
-    order: list[str] = []
-    for lower, upper in zip(lower_bounds, upper_bounds):
-        if isna(lower):
-            order += [f"x <= {upper}"]
-        elif isna(upper):
-            order += [f"{lower} < x"]
-        else:
-            order += [f"{lower} < x <= {upper}"]
+        # stripping whitespaces
+        formatted_list = [string.strip() for string in formatted_list]
+
+        # low and high bounds per quantiles
+        upper_bounds = formatted_list + [nan]
+        lower_bounds = [nan] + formatted_list
+        order: list[str] = []
+        for lower, upper in zip(lower_bounds, upper_bounds):
+            if isna(lower):
+                order += [f"x <= {upper}"]
+            elif isna(upper):
+                order += [f"{lower} < x"]
+            else:
+                order += [f"{lower} < x <= {upper}"]
 
     return order
