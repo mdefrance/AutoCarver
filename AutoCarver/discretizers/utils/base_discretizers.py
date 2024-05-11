@@ -10,7 +10,7 @@ from pandas import DataFrame, Series, isna, notna, unique
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from ...features import BaseFeature, Features, get_names
-from ...features.grouped_list import GroupedList
+from ...features.utils.grouped_list import GroupedList
 from ...features.qualitative_feature import nan_unique
 from .multiprocessing import apply_async_function
 from .serialization import json_deserialize_values_orders, json_serialize_values_orders
