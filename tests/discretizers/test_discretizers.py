@@ -69,6 +69,7 @@ def test_qualitative_discretizer(x_train: DataFrame, target: str):
         "Qualitative_grouped",
         "Qualitative_lownan",
         "Qualitative_highnan",
+        "Discrete_Quantitative",
     ]
     ordinals = ["Qualitative_Ordinal", "Qualitative_Ordinal_lownan"]
     ordinal_values = {
@@ -108,7 +109,7 @@ def test_qualitative_discretizer(x_train: DataFrame, target: str):
         copy=True,
         verbose=True,
     )
-    _ = discretizer.fit_transform(x_train, x_train[target])
+    x_discretized = discretizer.fit_transform(x_train, x_train[target])
 
     quali_expected = {
         str_default: ["Category A", "Category D", "Category F", str_default],
@@ -149,6 +150,11 @@ def test_qualitative_discretizer(x_train: DataFrame, target: str):
     assert (
         discretizer.features("Qualitative_Ordinal_lownan").values.content == expected_ordinal_lownan
     ), "NaNs should stay by themselves."
+
+    feature = "Discrete_Quantitative"
+    assert all(
+        value in discretizer.features(feature).values for value in x_discretized[feature].unique()
+    ), "discretizer not taking into account string discretizer"
 
 
 def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):

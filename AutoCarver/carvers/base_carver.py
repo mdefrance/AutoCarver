@@ -350,7 +350,7 @@ class BaseCarver(BaseDiscretizer):
             labels, xagg, xagg_dev = best_combination  # unpacking
 
             # updating feature accordingly
-            feature.update(labels, convert_labels=True)
+            feature.update(labels, replace=True)
 
             # verbose if requested
             self._print_xagg(feature, xagg=xagg, xagg_dev=xagg_dev, message="Carved distribution")
@@ -401,6 +401,7 @@ class BaseCarver(BaseDiscretizer):
 
                 # raw ordering without nans
                 raw_labels = GroupedList(labels)
+                raw_labels.remove(feature.nan)  # nans are added within nan_combinations
 
                 # adding combinations with NaNs
                 combinations = nan_combinations(raw_labels, feature.nan, self.max_n_mod)
@@ -488,6 +489,7 @@ class BaseCarver(BaseDiscretizer):
         # applying best_combination to order and xtab
         labels = feature.labels
         if best_association is not None:
+            print("order apply", labels.content, feature.labels.content)
             labels = order_apply_combination(feature.labels, best_association["combination"])
 
         return best_association, labels
