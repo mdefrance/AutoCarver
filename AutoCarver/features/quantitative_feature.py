@@ -20,7 +20,7 @@ class QuantitativeFeature(BaseFeature):
         values: GroupedList,
         convert_labels: bool = False,
         sorted_values: bool = False,
-        replace: bool = True,
+        replace: bool = False,
     ) -> None:
         """updates values and labels for each value of the feature"""
         # updating feature's values
@@ -37,11 +37,11 @@ class QuantitativeFeature(BaseFeature):
         """updates label for each value of the feature"""
 
         # for quantitative features -> labels per quantile (removes nan)
-        labels = get_labels(self.values, self.nan)
+        labels = GroupedList(get_labels(self.values, self.nan))
 
         # add NaNs if there are any
         if self.nan in self.values:
-            labels += [self.nan]
+            labels.append(self.nan)
 
         # building label per value
         super().update_labels(labels, output_dtype=output_dtype)

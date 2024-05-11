@@ -79,7 +79,6 @@ class BaseFeature:
         replace: bool = False,
     ) -> None:
         """updates values for each value of the feature"""
-
         # values are the same but sorted
         if sorted_values:
             self.values = self.values.sort_by(values)
@@ -108,10 +107,12 @@ class BaseFeature:
         # values are labels -> converting them back to values
         else:
             # iterating over each grouped values
-            for kept_value, grouped_values in values.content.items():
+            for kept_label, grouped_labels in values.content.items():
                 # converting labels to values
-                kept_value = self.value_per_label.get(kept_value)
-                grouped_values = [self.value_per_label.get(value) for value in grouped_values]
+                kept_value = self.value_per_label.get(kept_label, kept_label)
+                grouped_values = [
+                    self.value_per_label.get(label, label) for label in grouped_labels
+                ]
 
                 # choosing which value to keep for quantitative features
                 if self.is_quantitative:
@@ -120,8 +121,22 @@ class BaseFeature:
                     if len(which_to_keep) > 0:
                         kept_value = max(which_to_keep)
 
-                # updating values
-                self.values.group_list(grouped_values, kept_value)
+                # choosing which value to keep for qualitative features
+                else:
+                    # getting group of kept_value
+                    kept_value = self.values.get_group(kept_value)
+                    # keeping only values not already grouped with kept_value
+                    grouped_values = list(
+                        set(
+                            self.values.get_group(value)
+                            for value in grouped_values
+                            if self.values.get_group(value) != kept_value
+                        )
+                    )
+
+                # updating values if any to group
+                if len(grouped_values) > 0:
+                    self.values.group_list(grouped_values, kept_value)
 
     def update_labels(self, labels: GroupedList = None, output_dtype: str = "str") -> None:
         """updates label for each value of the feature"""

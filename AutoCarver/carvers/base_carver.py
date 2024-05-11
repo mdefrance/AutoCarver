@@ -350,7 +350,8 @@ class BaseCarver(BaseDiscretizer):
             labels, xagg, xagg_dev = best_combination  # unpacking
 
             # updating feature accordingly
-            feature.update(labels, replace=True)
+            print("update", feature.values, labels.content)
+            feature.update(labels, convert_labels=True)
 
             # verbose if requested
             self._print_xagg(feature, xagg=xagg, xagg_dev=xagg_dev, message="Carved distribution")
@@ -374,7 +375,7 @@ class BaseCarver(BaseDiscretizer):
     ) -> tuple[GroupedList, DataFrame, DataFrame]:
         """ """
         # raw ordering
-        raw_labels = GroupedList(feature.labels)
+        raw_labels = GroupedList(feature.labels[:])
         if feature.has_nan:  # removing nans for combination of non-nans
             raw_labels.remove(feature.nan)
 
