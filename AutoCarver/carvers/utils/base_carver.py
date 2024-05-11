@@ -10,18 +10,18 @@ from numpy import isclose
 from pandas import DataFrame, Series
 from tqdm.autonotebook import tqdm
 
-from .utils.combinations import (
+from .combinations import (
     nan_combinations,
     consecutive_combinations,
     xagg_apply_combination,
     order_apply_combination,
 )
-from .utils.pretty_print import prettier_xagg, index_mapper
+from .pretty_print import prettier_xagg, index_mapper
 
-from ..discretizers.discretizers import Discretizer
-from ..discretizers.utils.base_discretizers import BaseDiscretizer, load_discretizer
-from ..discretizers.utils.serialization import json_serialize_history
-from ..features import GroupedList, Features, BaseFeature
+from ...discretizers.discretizers import Discretizer
+from ...discretizers.utils.base_discretizers import BaseDiscretizer, load_discretizer
+from ...discretizers.utils.serialization import json_serialize_history
+from ...features import GroupedList, Features, BaseFeature
 
 # trying to import extra dependencies
 try:

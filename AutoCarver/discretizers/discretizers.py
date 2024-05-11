@@ -6,8 +6,8 @@ from pandas import DataFrame, Series, unique
 
 from ..features import Features, GroupedList
 from .utils.base_discretizers import BaseDiscretizer, extend_docstring
-from .utils.qualitative_discretizers import CategoricalDiscretizer, OrdinalDiscretizer
-from .utils.quantitative_discretizers import ContinuousDiscretizer
+from .qualitative_discretizers import CategoricalDiscretizer, OrdinalDiscretizer
+from .quantitative_discretizers import ContinuousDiscretizer
 from .utils.type_discretizers import StringDiscretizer
 
 
