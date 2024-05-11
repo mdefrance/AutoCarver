@@ -10,7 +10,7 @@ from scipy.stats import chi2_contingency
 
 from ..discretizers.utils.base_discretizers import extend_docstring
 from ..features import GroupedList
-from .base_carver import BaseCarver
+from .utils.base_carver import BaseCarver
 
 
 class BinaryCarver(BaseCarver):
