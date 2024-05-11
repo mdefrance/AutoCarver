@@ -3,8 +3,8 @@
 from numpy import isfinite, nan
 from pandas import isna
 
-from .base_feature import BaseFeature
-from .grouped_list import GroupedList
+from .utils.base_feature import BaseFeature
+from .utils.grouped_list import GroupedList
 
 
 class QuantitativeFeature(BaseFeature):

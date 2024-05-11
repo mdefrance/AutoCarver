@@ -2,8 +2,8 @@
 
 from pandas import DataFrame, Series
 
-from .base_feature import BaseFeature
-from .grouped_list import GroupedList
+from .utils.base_feature import BaseFeature
+from .utils.grouped_list import GroupedList
 from .qualitative_feature import CategoricalFeature, OrdinalFeature
 from .quantitative_feature import QuantitativeFeature
 

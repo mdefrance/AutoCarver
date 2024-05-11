@@ -8,7 +8,7 @@ from typing import Any
 
 from pandas import DataFrame, Series
 
-from ..config import DEFAULT, NAN
+from ...config import DEFAULT, NAN
 from .grouped_list import GroupedList
 
 
