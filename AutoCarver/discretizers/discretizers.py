@@ -214,10 +214,10 @@ class QualitativeDiscretizer(BaseDiscretizer):
     def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
         if self.verbose:  # verbose if requested
             print("------")
-            self._verbose("---")
 
         # checking data before bucketization
         x_copy = self._prepare_data(X, y)
+        self._verbose("---")  # verbose if requested
 
         # Base discretization (useful if already discretized)
         base_discretizer = BaseDiscretizer(
@@ -344,10 +344,10 @@ class QuantitativeDiscretizer(BaseDiscretizer):
     def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
         if self.verbose:  # verbose if requested
             print("------")
-            self._verbose("---")
 
         # checking data before bucketization
         x_copy = self._prepare_data(X, y)
+        self._verbose("---")  # verbose if requested
 
         # [Quantitative features] Grouping values into quantiles
         continuous_discretizer = ContinuousDiscretizer(

@@ -83,41 +83,70 @@ def test_binary_carver(
     # copying x_train for comparison purposes
     raw_x_train = x_train.copy()
 
+    # binary target for binary carver
     target = "binary_target"
 
+    # minimum frequency per value
     min_freq = 0.15
 
+    # fitting chained discretizer
     chained_discretizer = ChainedDiscretizer(
-        qualitative_features=chained_features,
-        chained_orders=[level0_to_level1, level1_to_level2],
         min_freq=min_freq,
-        values_orders=values_orders,
-        unknown_handling="drop",
+        ordinals=chained_features,
+        chained_orders=[level0_to_level1, level1_to_level2],
+        ordinal_values=values_orders,
         copy=copy,
-        n_jobs=1,
     )
     x_discretized = chained_discretizer.fit_transform(x_train)
-    values_orders.update(chained_discretizer.values_orders)
+    values_orders.update(chained_discretizer.to_dict())
 
-    # minimum frequency per modality
+    # minimum frequency and maximum number of modality
     min_freq = 0.1
     max_n_mod = 4
 
-    # tests with 'tschuprowt' measure
+    # testing with uneligible features
+    with raises(ValueError):
+        auto_carver = BinaryCarver(
+            min_freq=min_freq,
+            sort_by=sort_by,
+            quantitatives=quantitative_features,
+            categoricals=qualitative_features,
+            ordinals=ordinal_features,
+            ordinal_values=values_orders,
+            max_n_mod=max_n_mod,
+            output_dtype=output_dtype,
+            min_freq_mod=min_freq_mod,
+            dropna=dropna,
+            copy=copy,
+            verbose=False,
+        )
+        x_discretized = auto_carver.fit_transform(
+            x_train,
+            x_train[target],
+            X_dev=x_dev_1,
+            y_dev=x_dev_1[target],
+        )
+        x_dev_discretized = auto_carver.transform(x_dev_1)
+
+    # removing wrong features
+    qualitative_features.remove("nan")
+    qualitative_features.remove("ones")
+    qualitative_features.remove("ones_nan")
+
+    # fitting carver
     auto_carver = BinaryCarver(
-        quantitative_features=quantitative_features,
-        qualitative_features=qualitative_features,
-        ordinal_features=ordinal_features,
-        values_orders=values_orders,
         min_freq=min_freq,
-        max_n_mod=max_n_mod,
         sort_by=sort_by,
+        quantitatives=quantitative_features,
+        categoricals=qualitative_features,
+        ordinals=ordinal_features,
+        ordinal_values=values_orders,
+        max_n_mod=max_n_mod,
         output_dtype=output_dtype,
         min_freq_mod=min_freq_mod,
         dropna=dropna,
         copy=copy,
         verbose=False,
-        n_jobs=1,
     )
     x_discretized = auto_carver.fit_transform(
         x_train,
@@ -128,21 +157,23 @@ def test_binary_carver(
     x_dev_discretized = auto_carver.transform(x_dev_1)
 
     # testing that attributes where correctly used
+    print(x_discretized[auto_carver.features.get_names()].nunique())
     assert all(
-        x_discretized[auto_carver.features].nunique() <= max_n_mod
+        x_discretized[auto_carver.features.get_names()].nunique() <= max_n_mod
     ), "Too many buckets after carving of train sample"
     assert all(
-        x_dev_discretized[auto_carver.features].nunique() <= max_n_mod
+        x_dev_discretized[auto_carver.features.get_names()].nunique() <= max_n_mod
     ), "Too many buckets after carving of test sample"
 
     # testing for differences between train and dev
     assert all(
-        x_discretized[auto_carver.features].nunique()
-        == x_dev_discretized[auto_carver.features].nunique()
+        x_discretized[auto_carver.features.get_names()].nunique()
+        == x_dev_discretized[auto_carver.features.get_names()].nunique()
     ), "More buckets in train or test samples"
-    for feature in auto_carver.features:
+    for feature in auto_carver.features.get_names():
         train_target_rate = x_discretized.groupby(feature)[target].mean().sort_values()
         dev_target_rate = x_dev_discretized.groupby(feature)[target].mean().sort_values()
+
         assert all(
             train_target_rate.index == dev_target_rate.index
         ), f"Not robust feature {feature} was not dropped, or robustness test not working"
@@ -152,18 +183,19 @@ def test_binary_carver(
         assert not any(
             train_frequency.values < auto_carver.min_freq_mod
         ), f"Some modalities of {feature} are less frequent than min_freq_mod in train"
+
         dev_frequency = x_dev_discretized[feature].value_counts(normalize=True, dropna=True)
         assert not any(
             dev_frequency.values < auto_carver.min_freq_mod
         ), f"Some modalities {feature} are less frequent than min_freq_mod in dev"
 
     # test that all values still are in the values_orders
-    for feature in auto_carver.qualitative_features:
-        fitted_values = auto_carver.values_orders[feature].values()
+    for feature in auto_carver.features.get_qualitatives():
+        fitted_values = feature.values.values()
         init_values = raw_x_train[feature].fillna(NAN).unique()
         assert all(value in fitted_values for value in init_values), (
             "Missing value in output! Some values are been dropped for qualitative "
-            f"feature: {feature}"
+            f"feature: {feature.name}"
         )
 
     # testing output of nans

@@ -197,6 +197,10 @@ class Features:
         for feature in self:
             feature.set_dropna(dropna)
 
+    def get_content(self) -> dict:
+        """Returns per feature content"""
+        return {feature.name: feature.get_content() for feature in self}
+
 
 def cast_features(
     features: list[str],

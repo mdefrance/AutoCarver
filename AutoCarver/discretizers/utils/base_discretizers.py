@@ -398,6 +398,11 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         if self.verbose:
             print(f"{prefix} [{self.__name__}] Fit {str(self.features)}")
 
+    def to_dict(self) -> dict[str, GroupedList]:
+        """Converts Discretizer to dict"""
+
+        return self.features.get_content()
+
     # def to_json(self) -> str:
     #     """Converts to .json format.
 

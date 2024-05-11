@@ -204,3 +204,7 @@ class BaseFeature:
 
             # dropping nans from values
             self.values.remove(self.nan)
+
+    def get_content(self):
+        """returns feature values' content"""
+        return self.values.content

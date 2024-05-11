@@ -242,10 +242,10 @@ class OrdinalDiscretizer(BaseDiscretizer):
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
-        self._verbose()  # verbose if requested
 
         # checking values orders
         x_copy = self._prepare_data(X, y)
+        self._verbose()  # verbose if requested
 
         # grouping rare modalities for each feature
         common_modalities = {
@@ -444,10 +444,10 @@ class ChainedDiscretizer(BaseDiscretizer):
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series = None) -> None:  # pylint: disable=W0222
-        self._verbose()  # verbose if requested
 
         # preprocessing data
         x_copy = self._prepare_data(X, y)
+        self._verbose()  # verbose if requested
 
         # iterating over each feature
         for feature in self.features:
