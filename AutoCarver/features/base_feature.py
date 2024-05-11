@@ -126,13 +126,17 @@ class BaseFeature:
                     # getting group of kept_value
                     kept_value = self.values.get_group(kept_value)
                     # keeping only values not already grouped with kept_value
-                    grouped_values = list(
-                        set(
-                            self.values.get_group(value)
-                            for value in grouped_values
-                            if self.values.get_group(value) != kept_value
-                        )
-                    )
+                    grouped_values = [
+                        self.values.get_group(value)
+                        for value in grouped_values
+                        if self.values.get_group(value) != kept_value
+                    ]
+                    # deduplicating
+                    grouped_values = [
+                        value
+                        for num, value in enumerate(grouped_values)
+                        if value not in grouped_values[num + 1 :]
+                    ]
 
                 # updating values if any to group
                 if len(grouped_values) > 0:
