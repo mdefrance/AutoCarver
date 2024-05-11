@@ -6,9 +6,13 @@ from pandas import DataFrame, Series, unique
 
 from ..features import Features, GroupedList
 from .utils.base_discretizers import BaseDiscretizer, extend_docstring
-from .qualitative_discretizers import CategoricalDiscretizer, OrdinalDiscretizer
+from .qualitative_discretizers import (
+    CategoricalDiscretizer,
+    OrdinalDiscretizer,
+    check_frequencies,
+    check_dtypes,
+)
 from .quantitative_discretizers import ContinuousDiscretizer
-from .utils.type_discretizers import StringDiscretizer
 
 
 class Discretizer(BaseDiscretizer):
@@ -198,68 +202,11 @@ class QualitativeDiscretizer(BaseDiscretizer):
         # checking for binary target, copying X
         x_copy = super()._prepare_data(X, y)
 
-        # getting feature values' frequencies
-        max_frequencies = x_copy[self.features.get_names()].apply(
-            lambda u: u.value_counts(normalize=True, dropna=False).max(),
-            axis=0,
-        )
-        # features with no common modality (biggest value less frequent than min_freq)
-        non_common = [f.name for f in self.features if max_frequencies[f.name] < self.min_freq]
-        # features with too common modality (biggest value more frequent than 1-min_freq)
-        too_common = [f.name for f in self.features if max_frequencies[f.name] > 1 - self.min_freq]
-        # raising
-        if len(too_common + non_common) > 0:
-            # building error message
-            error_msg = (
-                f" - [{self.__name__}] Features {str(too_common + non_common)} contain a too "
-                "frequent modality or no frequent enough modality. Consider decreasing min_freq or "
-                "removing these feature.\nINFO:\n"
-            )
-            # adding features with no common values
-            error_msg += "\n".join(
-                [
-                    (
-                        f" - {self.features(f)}: most frequent value has "
-                        f"freq={max_frequencies[f]:2.2%} < min_freq={self.min_freq:2.2%}"
-                    )
-                    for f in non_common
-                ]
-            )
-            # adding features with too common values
-            error_msg += "\n".join(
-                [
-                    (
-                        f" - {self.features(f)}: most frequent value has "
-                        f"freq={max_frequencies[f]:2.2%} > (1-min_freq)={1-self.min_freq:2.2%}"
-                    )
-                    for f in too_common
-                ]
-            )
+        # checking feature values' frequencies
+        check_frequencies(self.features, x_copy, self.min_freq, self.__name__)
 
-            raise ValueError(error_msg)
-
-        # checking for columns containing floats or integers even with filled nans
-        dtypes = (
-            x_copy.fillna({f.name: f.nan for f in self.features if f.has_nan})[
-                self.features.get_names()
-            ]
-            .map(type)
-            .apply(unique, result_type="reduce")
-        )
-        not_object = dtypes.apply(lambda u: any(typ != str for typ in u))
-
-        # converting detected non-string features
-        if any(not_object):
-            # converting specified features into qualitative features
-            string_discretizer = StringDiscretizer(
-                features=[
-                    feature
-                    for feature in self.features
-                    if feature.name in not_object.index[not_object]
-                ],
-                **self.kwargs,
-            )
-            x_copy = string_discretizer.fit_transform(x_copy, y)
+        # converting non-str columns
+        x_copy = check_dtypes(self.features, x_copy, **self.kwargs)
 
         return x_copy
 
