@@ -699,7 +699,7 @@ class BaseCarver(BaseDiscretizer):
                 # displaying html of colored DataFrame
                 display_html(nicer_xaggs, raw=True)
 
-    def save_carver(self, file_name: str, light_mode: bool = False):
+    def save_carver(self, file_name: str, light_mode: bool = False) -> None:
         """Saves pipeline to .json file.
 
         Parameters
@@ -714,6 +714,38 @@ class BaseCarver(BaseDiscretizer):
         """
         super().save(file_name, light_mode)
 
+    @classmethod
+    def load_carver(file_name: str) -> BaseDiscretizer:
+        """Allows one to load an AutoCarver saved as a .json file.
+
+        The AutoCarver has to be saved with ``AutoCarver.save_carver()``, otherwise there
+        can be no guarantee for it to be restored.
+
+        Parameters
+        ----------
+        file_name : str
+            String of saved AutoCarver's .json file name.
+
+        Returns
+        -------
+        BaseDiscretizer
+            A fitted AutoCarver.
+        """
+        # reading file
+        with open(file_name, "r", encoding="utf-8") as json_file:
+            auto_carver_json = json.load(json_file)
+
+        # removing _history if it exists
+        _history = auto_carver_json.pop("_history", None)
+
+        # loading discretizer
+        loaded_discretizer = load_discretizer(auto_carver_json)
+
+        # adding back _history
+        loaded_discretizer._history = _history  # pylint: disable=W0212
+
+        return loaded_discretizer
+
 
 def filter_nan(xagg: Union[Series, DataFrame], str_nan: str) -> DataFrame:
     """Filters out nans from crosstab or y values"""
@@ -726,31 +758,3 @@ def filter_nan(xagg: Union[Series, DataFrame], str_nan: str) -> DataFrame:
             filtered_xagg = xagg.drop(str_nan, axis=0)
 
     return filtered_xagg
-
-
-def load_carver(auto_carver_json: dict) -> BaseDiscretizer:
-    """Allows one to load an AutoCarver saved as a .json file.
-
-    The AutoCarver has to be saved with ``json.dump(f, AutoCarver.to_json())``, otherwise there
-    can be no guarantee for it to be restored.
-
-    Parameters
-    ----------
-    auto_carver_json : str
-        Loaded .json file using ``json.load(f)``.
-
-    Returns
-    -------
-    BaseDiscretizer
-        A fitted AutoCarver.
-    """
-    # removing _history if it exists
-    _history = auto_carver_json.pop("_history", None)
-
-    # loading discretizer
-    loaded_discretizer = load_discretizer(auto_carver_json)
-
-    # adding back _history
-    loaded_discretizer._history = _history  # pylint: disable=W0212
-
-    return loaded_discretizer
