@@ -52,9 +52,6 @@ class BaseCarver(BaseDiscretizer):
         min_freq_mod: float = None,
         output_dtype: str = "float",
         dropna: bool = True,
-        # copy: bool = False,
-        # verbose: bool = False,
-        # n_jobs: int = 1,
         **kwargs: dict,
     ) -> None:
         """
@@ -263,30 +260,37 @@ class BaseCarver(BaseDiscretizer):
         """
         # preparing datasets and checking for wrong values
         x_copy, x_dev_copy = self._prepare_data(X, y, X_dev, y_dev)
+        super()._verbose("---------\n------")
 
         # computing crosstabs for each feature on train/test
         xaggs = self._aggregator(x_copy, y)
         xaggs_dev = self._aggregator(x_dev_copy, y_dev)
 
         # optimal butcketization/carving of each feature
-        all_features = self.features[:]  # (features are being removed from self.features)
+        all_features = self.features.get_names()  # (features are being removed from self.features)
         for n, feature in enumerate(all_features):
-            if self.verbose:  # verbose if requested
-                print(f"\n------\n[{self.__name__}] Fit {feature} ({n+1}/{len(all_features)})\n---")
+            self._verbose(feature, all_features, n)
 
             # carving the feature
-            self._carve_feature(feature, xaggs, xaggs_dev)
+            self._carve_feature(self.features(feature), xaggs, xaggs_dev)
 
             if self.verbose:  # verbose if requested
-                print("------\n")
+                print("---\n")
 
-            # TODO
-            # self.features.set_dropna(False)
+            # setting dropna according to user request
+            self.features.set_dropna(self.dropna)
 
         # discretizing features based on each feature's values_order
         super().fit(X, y)
 
         return self
+
+    def _verbose(self, feature: str, all_features: list[str], n: int, prefix: str = "---") -> None:
+        if self.verbose:  # verbose if requested
+            print(
+                f"{prefix} [{self.__name__}] Fit {self.features(feature)} "
+                f"({n+1}/{len(all_features)})"
+            )
 
     def _aggregator(self, X: DataFrame, y: Series) -> Union[Series, DataFrame]:
         """Helper that aggregates X by y into crosstab or means (carver specific)"""
@@ -343,11 +347,10 @@ class BaseCarver(BaseDiscretizer):
 
         # no suitable combination has been found -> removing feature
         else:
-            warn(
-                f"\n - [{self.__name__}] No robust combination for '{feature}' could be found"
-                ".\nConsider increasing the size of dev sample or dropping the feature"
-                " (train sample not representative of dev sample for this feature).",
-                UserWarning,
+            print(
+                f"\n - [{self.__name__}] No robust combination for {feature}"
+                ". Consider increasing the size of X_dev or dropping the feature"
+                " (X not representative of X_dev for this feature)."
             )
             self.features.remove(feature.name)
 

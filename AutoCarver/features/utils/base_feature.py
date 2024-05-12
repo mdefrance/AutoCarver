@@ -184,7 +184,7 @@ class BaseFeature:
             self.dropna = dropna
 
             # adding nan to the values only if they were found
-            if self.has_nan:
+            if self.has_nan and not self.values.contains(self.nan):
                 values = GroupedList(self.values)
                 values.append(self.nan)
 
@@ -204,6 +204,9 @@ class BaseFeature:
 
             # dropping nans from values
             self.values.remove(self.nan)
+
+            # updating values
+            self.update(values, replace=True)
 
     def get_content(self):
         """returns feature values' content"""

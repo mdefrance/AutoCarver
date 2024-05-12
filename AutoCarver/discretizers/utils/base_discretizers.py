@@ -82,7 +82,9 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         See `Discretizers examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
         """
         # features and values
-        self.features = Features(features)
+        self.features = features
+        if isinstance(features, list):
+            self.features = Features(features)
 
         # saving kwargs
         self.kwargs = kwargs
@@ -122,7 +124,11 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
 
     def __repr__(self, N_CHAR_MAX: int = 700) -> str:
         _ = N_CHAR_MAX  # unused attribute
-        return f"{self.__name__}({str(self.features)})"
+        # truncating features if too long
+        str_features = str(self.features)
+        if len(str_features) > N_CHAR_MAX:
+            str_features = str_features[:N_CHAR_MAX] + "..."
+        return f"{self.__name__}({str_features})"
 
     def _remove_feature(self, feature: str) -> None:
         """Removes a feature from all ``BaseDiscretizer.feature`` attributes

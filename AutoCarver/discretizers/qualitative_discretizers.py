@@ -605,8 +605,8 @@ def check_frequencies(features: Features, X: DataFrame, min_freq: float, name: s
         # building error message
         error_msg = (
             f" - [{name}] Features {str(too_common + non_common)} contain a too frequent modality "
-            "or no frequent enough modality. Consider decreasing min_freq or removing these "
-            "feature.\nINFO:\n"
+            "or no frequent enough modalities. Consider decreasing min_freq or removing these "
+            "features.\nINFO:\n"
         )
 
         # adding features with no common values
