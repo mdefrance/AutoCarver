@@ -5,7 +5,8 @@ from typing import Any, Union
 
 from numpy import floating, inf, integer, isfinite
 
-from ...features import GroupedList
+from .grouped_list import GroupedList
+from ...config import INF
 
 
 def convert_value_to_base_type(value: Any) -> Union[str, float, int]:
@@ -24,7 +25,7 @@ def convert_value_to_base_type(value: Any) -> Union[str, float, int]:
 
     output = value  # str/float/int value
     if not isinstance(value, str) and not isfinite(value):  # numpy.inf value
-        output = "numpy.inf"
+        output = INF
     elif isinstance(value, integer):  # np.int value
         output = int(value)
     elif isinstance(value, floating):  # np.float value
@@ -47,7 +48,7 @@ def convert_value_to_numpy_type(value: Union[str, float, int]) -> Any:
         Deserialized value
     """
     output = value  # str/float/int value
-    if value == "numpy.inf":  # numpy.inf value
+    if value == INF:  # numpy.inf value
         output = inf
 
     return output
@@ -110,6 +111,24 @@ def convert_values_to_numpy_types(
         }
 
     return output
+
+
+def json_serialize_content(content: dict[str, GroupedList]) -> str:
+    """JSON serializes a feature values' content
+
+    Parameters
+    ----------
+    content : dict[str: GroupedList]
+        A feature values' content to serialize
+
+    Returns
+    -------
+    str
+        JSON serialized content
+    """
+
+    # converting values_orders to a json
+    return dumps(convert_values_to_base_types(content))
 
 
 def json_serialize_values_orders(values_orders: dict[str, GroupedList]) -> str:

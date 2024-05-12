@@ -20,7 +20,7 @@ from .pretty_print import prettier_xagg, index_mapper
 
 from ...discretizers.discretizers import Discretizer
 from ...discretizers.utils.base_discretizers import BaseDiscretizer, load_discretizer
-from ...discretizers.utils.serialization import json_serialize_history
+from ...features.utils.serialization import json_serialize_history
 from ...features import GroupedList, Features, BaseFeature
 
 # trying to import extra dependencies

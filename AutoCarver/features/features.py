@@ -260,6 +260,9 @@ class Features:
         """Returns per feature content"""
         return {feature.name: feature.get_content() for feature in self}
 
+    def to_json(self, light_mode: bool = False) -> dict:
+        return {feature.name: feature.to_json(light_mode) for feature in self}
+
 
 def cast_features(
     features: list[str],

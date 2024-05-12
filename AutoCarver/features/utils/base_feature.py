@@ -10,6 +10,7 @@ from pandas import DataFrame, Series
 
 from ...config import DEFAULT, NAN
 from .grouped_list import GroupedList
+from .serialization import json_serialize_content
 
 
 class BaseFeature:
@@ -21,11 +22,11 @@ class BaseFeature:
         self.name = name
 
         # whether or not feature has some NaNs
-        self.has_nan = None
+        self.has_nan = False
         self.nan = kwargs.get("nan", NAN)
 
         # whether or not feature has some default values
-        self.has_default = None
+        self.has_default = False
         self.default = kwargs.get("default", DEFAULT)
 
         # whether or not nans must be removed
@@ -46,7 +47,14 @@ class BaseFeature:
         self.is_qualitative = False
         self.is_quantitative = False
 
-    def fit(self, X: DataFrame, y: Series = None) -> None:  # pylint: disable=W0222
+        # initiating feature's trained statistics
+        self.statistics: dict[str:Any] = {}
+
+        # initiating feature's combination history
+        self.history = None
+
+    def fit(self, X: DataFrame, y: Series = None) -> None:
+        """Fits the feature to a DataFrame"""
         _, _ = X, y  # unused attributes
 
         # looking for NANS
@@ -211,3 +219,29 @@ class BaseFeature:
     def get_content(self):
         """returns feature values' content"""
         return self.values.content
+
+    def to_json(self, light_mode: bool = False):
+        """converts feature to json"""
+        # minimal output json
+        output = {
+            "name": self.name,
+            "has_nan": self.has_nan,
+            "nan": self.nan,
+            "has_default": self.has_default,
+            "default": self.default,
+            "dropna": self.dropna,
+            "is_fitted": self.is_fitted,
+            "content": json_serialize_content(self.get_content()),
+            "is_ordinal": self.is_ordinal,
+            "is_categorical": self.is_categorical,
+            "is_qualitative": self.is_qualitative,
+            "is_quantitative": self.is_quantitative,
+        }
+
+        # light output
+        if light_mode:
+            return output
+
+        # enriched mode (larger json)
+        output.update({"statistics": self.statistics, "history": self.history})
+        return output
