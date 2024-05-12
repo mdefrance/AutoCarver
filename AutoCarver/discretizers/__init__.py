@@ -1,7 +1,7 @@
 """ Loads Discretization tools."""
 
 from .discretizers import Discretizer, QualitativeDiscretizer, QuantitativeDiscretizer
-from .utils.base_discretizers import BaseDiscretizer, extend_docstring, load_discretizer
+from .utils.base_discretizers import BaseDiscretizer, extend_docstring
 
 # from .utils.grouped_list import GroupedList
 from .qualitative_discretizers import CategoricalDiscretizer, ChainedDiscretizer, OrdinalDiscretizer
@@ -14,7 +14,6 @@ __all__ = [
     "QualitativeDiscretizer",
     "QuantitativeDiscretizer",
     "extend_docstring",
-    "load_discretizer",
     "CategoricalDiscretizer",
     "ChainedDiscretizer",
     "OrdinalDiscretizer",

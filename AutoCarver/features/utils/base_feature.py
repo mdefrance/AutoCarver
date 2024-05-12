@@ -10,11 +10,10 @@ from pandas import DataFrame, Series
 
 from ...config import DEFAULT, NAN
 from .grouped_list import GroupedList
-from .serialization import json_serialize_content, json_serialize_history
+from .serialization import json_serialize_feature, json_deserialize_content
 
 
 class BaseFeature:
-    """TODO add transform that checks for new unexpected values"""
 
     __name__ = "Feature"
 
@@ -22,18 +21,18 @@ class BaseFeature:
         self.name = name
 
         # whether or not feature has some NaNs
-        self.has_nan = False
+        self.has_nan = kwargs.get("has_nan", False)
         self.nan = kwargs.get("nan", NAN)
 
         # whether or not feature has some default values
-        self.has_default = False
+        self.has_default = kwargs.get("has_default", False)
         self.default = kwargs.get("default", DEFAULT)
 
         # whether or not nans must be removed
-        self.dropna = False
+        self.dropna = kwargs.get("dropna", False)
 
         # whether or not feature has been fitted
-        self.is_fitted = False
+        self.is_fitted = kwargs.get("is_fitted", False)
 
         # feature values, type and labels
         self.values = None  # current values
@@ -42,16 +41,16 @@ class BaseFeature:
         self.value_per_label: dict[str, str] = {}  # a value for each current label
 
         # initating feature dtypes
-        self.is_ordinal = False
-        self.is_categorical = False
-        self.is_qualitative = False
-        self.is_quantitative = False
+        self.is_ordinal = kwargs.get("is_ordinal", False)
+        self.is_categorical = kwargs.get("is_categorical", False)
+        self.is_qualitative = kwargs.get("is_qualitative", False)
+        self.is_quantitative = kwargs.get("is_quantitative", False)
 
         # initiating feature's trained statistics
-        self.statistics: dict[str:Any] = {}
+        self.statistics: dict[str:Any] = kwargs.get("statistics", {})
 
         # initiating feature's combination history
-        self.history: list[dict, Any] = []
+        self.history: list[dict, Any] = kwargs.get("history", [])
 
     def fit(self, X: DataFrame, y: Series = None) -> None:
         """Fits the feature to a DataFrame"""
@@ -236,7 +235,7 @@ class BaseFeature:
             JSON serialized object
         """
         # minimal output json
-        output = {
+        feature = {
             "name": self.name,
             "has_nan": self.has_nan,
             "nan": self.nan,
@@ -244,7 +243,8 @@ class BaseFeature:
             "default": self.default,
             "dropna": self.dropna,
             "is_fitted": self.is_fitted,
-            "content": json_serialize_content(self.get_content()),
+            "values": self.values,
+            "content": self.get_content(),
             "is_ordinal": self.is_ordinal,
             "is_categorical": self.is_categorical,
             "is_qualitative": self.is_qualitative,
@@ -253,15 +253,26 @@ class BaseFeature:
 
         # light output
         if light_mode:
-            return output
+            # serializing feature dict
+            return json_serialize_feature(feature)
 
         # enriched mode (larger json)
-        output.update(
-            {"statistics": self.statistics, "history": json_serialize_history(self.history)}
-        )
-        return output
+        feature.update({"statistics": self.statistics, "history": self.history})
+        return json_serialize_feature(feature)
 
     @classmethod
     def load(cls, feature_json: dict):
+        """Loads a feature"""
 
-        return cls(**feature_json)
+        # TODO load per data type!!!
+        # deserializing content into grouped list of values
+        values = json_deserialize_content(feature_json)
+
+        # initiating feature without content
+        feature = cls(**feature_json)
+
+        # updating feature with deserialized content
+        feature.update(values, replace=True)
+        feature.update_labels()
+
+        return feature

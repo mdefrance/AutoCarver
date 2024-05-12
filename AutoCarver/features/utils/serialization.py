@@ -113,60 +113,6 @@ def convert_values_to_numpy_types(
     return output
 
 
-def json_serialize_content(content: dict[str, GroupedList]) -> str:
-    """JSON serializes a feature values' content
-
-    Parameters
-    ----------
-    content : dict[str: GroupedList]
-        A feature values' content to serialize
-
-    Returns
-    -------
-    str
-        JSON serialized content
-    """
-
-    # converting values_orders to a json
-    return dumps(convert_values_to_base_types(content))
-
-
-def json_deserialize_values_orders(json_serialized_values_orders: str) -> dict[str, GroupedList]:
-    """JSON serializes a values_orders
-
-    Parameters
-    ----------
-    json_serialized_values_orders : str
-        JSON serialized values_orders
-
-    Returns
-    -------
-    dict[str: GroupedList]
-        values_orders deserialized
-    """
-    # converting to dict
-    json_deserialized_values_orders = loads(json_serialized_values_orders)
-
-    # converting to numpy type
-    json_deserialized_values_orders = convert_values_to_numpy_types(json_deserialized_values_orders)
-
-    # converting to GroupedList
-    values_orders: dict[str, GroupedList] = {}
-    for feature, content in json_deserialized_values_orders.items():
-        # getting content from serialized dict
-        feature_content: GroupedList = {}
-        for value in content["order"]:
-            content_key = value
-            # float and int dict keys (converted in string by json.dumps)
-            if not isinstance(value, str) and isfinite(value):
-                content_key = str(value)
-            feature_content.update({value: content["content"][content_key]})
-        # saving up built GroupedList
-        values_orders.update({feature: GroupedList(feature_content)})
-
-    return values_orders
-
-
 def json_serialize_history(history: list[dict]) -> dict:
     """JSON serializes a feature's history
 
@@ -189,6 +135,25 @@ def json_serialize_history(history: list[dict]) -> dict:
             if "combination" in combination
         ]
     )
+
+
+def json_serialize_feature(feature: dict) -> str:
+    """JSON serializes a feature's dict"""
+
+    # serializing values
+    values = feature.get("values")
+    feature.update({"values": convert_values_to_base_types(values[:])})
+
+    # serializing content
+    content = feature.get("content")
+    feature.update({"content": dumps(convert_values_to_base_types(content))})
+
+    # serializing history
+    if "history" in feature:
+        history = feature.get("history")
+        feature.update({"history": json_serialize_history(history)})
+
+    return feature
 
 
 def json_serialize_combination(combination: dict) -> str:
@@ -219,3 +184,40 @@ def json_serialize_combination(combination: dict) -> str:
     )
 
     return json_serialized_combination
+
+
+def json_deserialize_content(json_serialized_feature: dict) -> dict:
+    """JSON deserializes a content
+
+    Parameters
+    ----------
+    json_serialized_content : str
+        JSON serialized content
+
+    Returns
+    -------
+    dict[str: GroupedList]
+        content deserialized
+    """
+
+    # reading values and content from json
+    values = json_serialized_feature.get("values")
+    content = json_serialized_feature.get("content")
+
+    # converting to numpy types
+    values = convert_values_to_numpy_types(values)
+    content = convert_values_to_numpy_types(loads(content))
+
+    # fixing json dumping with string keys
+    for value in values:
+        content_key = value
+
+        # float and int dict keys (converted in string by json.dumps)
+        if not isinstance(value, str) and isfinite(value):
+            content_key = str(value)
+
+        # updating
+        content.update({value: content.pop(content_key)})
+
+    # converting to grouped list
+    return GroupedList(content)

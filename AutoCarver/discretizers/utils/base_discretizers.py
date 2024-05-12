@@ -12,7 +12,6 @@ from ...features import BaseFeature, Features
 from ...features.utils.grouped_list import GroupedList
 from ...features.qualitative_features import nan_unique
 from .multiprocessing import apply_async_function
-from ...features.utils.serialization import json_deserialize_values_orders
 import json
 
 
@@ -448,7 +447,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             raise ValueError(
                 f" - [{self.__name__}] Make sure to provide a file name with .json extension."
             )
-    
+
     @classmethod
     def load(cls, file_name: str) -> None:
         """Allows one to load an Discretizer saved as a .json file.
@@ -471,7 +470,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             discretizer_json = json.load(json_file)
 
         # deserializing features' content
-        for name, feature in 
+        # for name, feature in
         values_orders = json_deserialize_content(discretizer_json["values_orders"])
 
         # updating auto_carver attributes
@@ -481,8 +480,6 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         discretizer = BaseDiscretizer(**discretizer_json)
         discretizer.fit()
 
-
-            
         # removing _history if it exists
         _history = auto_carver_json.pop("_history", None)
 
@@ -1008,4 +1005,3 @@ class extend_docstring:
             if doc is not None:
                 function.__doc__ = doc + function.__doc__
         return function
-
