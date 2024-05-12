@@ -131,7 +131,7 @@ class BaseCarver(BaseDiscretizer):
         )
 
         # Initiating BaseDiscretizer
-        super().__init__(features=features, output_dtype=output_dtype, dropna=dropna, **kwargs)
+        super().__init__(features, output_dtype=output_dtype, dropna=dropna, **kwargs)
 
         # class specific attributes
         self.min_freq = min_freq  # minimum frequency per base bucket

@@ -48,12 +48,8 @@ class CategoricalDiscretizer(BaseDiscretizer):
 
             **Tip**: set between ``0.02`` (slower, less robust) and ``0.05`` (faster, more robust)
         """
-        # initiating features
-        features = Features(categoricals=categoricals, **kwargs)
-
         # Initiating BaseDiscretizer
-        super().__init__(features=features, **kwargs)
-
+        super().__init__(categoricals, **kwargs)
         self.min_freq = min_freq
 
     def _prepare_data(self, X: DataFrame, y: Series) -> DataFrame:  # pylint: disable=W0222
@@ -194,11 +190,8 @@ class OrdinalDiscretizer(BaseDiscretizer):
             * ``"str"``, features are considered as qualitative.
             * ``'float"``, features are considered as quantitative.
         """
-        # initiating features
-        features = Features(ordinals=ordinals, **kwargs)
-
         # Initiating BaseDiscretizer
-        super().__init__(features=features, **kwargs)
+        super().__init__(ordinals, **kwargs)
 
         # class specific attributes
         self.min_freq = min_freq
@@ -303,9 +296,7 @@ class ChainedDiscretizer(BaseDiscretizer):
         """
         # not dropping nans whatsoever
         kwargs = dict(kwargs, dropna=False)
-
-        features = Features(features, **kwargs)  # initiating features
-        super().__init__(features=features, **kwargs)  # Initiating BaseDiscretizer
+        super().__init__(features, **kwargs)  # Initiating BaseDiscretizer
 
         # class specific attributes
         self.min_freq = min_freq

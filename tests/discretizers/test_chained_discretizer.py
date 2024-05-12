@@ -3,6 +3,7 @@
 from pandas import DataFrame
 from pytest import raises
 
+from AutoCarver import Features
 from AutoCarver.discretizers import ChainedDiscretizer
 
 
@@ -67,12 +68,15 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
         "Best": ["Highs", "Best"],
     }
 
+    # defining features
+    features = Features(
+        ordinals=chained_features,
+        ordinal_values=ordinal_values,
+    )
+
     # fitting discretizer
     discretizer = ChainedDiscretizer(
-        ordinals=chained_features,
-        chained_orders=[level0_to_level1, level1_to_level2],
-        min_freq=min_freq,
-        ordinal_values=ordinal_values,
+        min_freq=min_freq, features=features, chained_orders=[level0_to_level1, level1_to_level2]
     )
     _ = discretizer.fit_transform(x_train)
 
@@ -85,7 +89,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
     }
     feature = "Qualitative_Ordinal"
     assert (
-        discretizer.features(feature).values.content == expected
+        discretizer.features(feature).get_content() == expected
     ), "Values less frequent than min_freq should be grouped"
 
     assert discretizer.features(feature).values == [
@@ -105,7 +109,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
     }
 
     feature = "Qualitative_Ordinal_lownan"
-    assert discretizer.features(feature).values.content == expected, (
+    assert discretizer.features(feature).get_content() == expected, (
         "NaNs should be added to the order and missing values from the values_orders should"
         " be added (from chained_orders)"
     )
@@ -126,11 +130,12 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
     with raises(ValueError):
         discretizer.fit_transform(x_train_wrong_2)
 
+    # defining features
+    features = Features(categoricals=chained_features)
+
     # testing with categorical features
     discretizer = ChainedDiscretizer(
-        categoricals=chained_features,
-        chained_orders=[level0_to_level1, level1_to_level2],
-        min_freq=min_freq,
+        min_freq=min_freq, features=features, chained_orders=[level0_to_level1, level1_to_level2]
     )
     _ = discretizer.fit_transform(x_train)
 
@@ -143,7 +148,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
     }
     feature = "Qualitative_Ordinal"
     assert (
-        discretizer.features(feature).values.content == expected
+        discretizer.features(feature).get_content() == expected
     ), "Values less frequent than min_freq should be grouped"
 
     assert discretizer.features(feature).values == [
@@ -163,7 +168,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
     }
 
     feature = "Qualitative_Ordinal_lownan"
-    assert discretizer.features(feature).values.content == expected, (
+    assert discretizer.features(feature).get_content() == expected, (
         "NaNs should be added to the order and missing values from the values_orders should"
         " be added (from chained_orders)"
     )
@@ -190,12 +195,15 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
         "BEST": ["ALONE", "BEST"],
     }
 
+    # defining features
+    features = Features(
+        ordinals=chained_features,
+        ordinal_values=ordinal_values,
+    )
+
     # fitting discretizer
     discretizer = ChainedDiscretizer(
-        ordinals=chained_features,
-        chained_orders=[level0_to_level1, level1_to_level2],
-        min_freq=min_freq,
-        ordinal_values=ordinal_values,
+        min_freq=min_freq, features=features, chained_orders=[level0_to_level1, level1_to_level2]
     )
     _ = discretizer.fit_transform(x_train)
 
@@ -209,7 +217,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
         "BEST": ["ALL_ALONE", "ALONE", "BEST"],
     }
     assert (
-        discretizer.features(feature).values.content == expected
+        discretizer.features(feature).get_content() == expected
     ), "All provided values should be kept."
 
     feature = "Qualitative_Ordinal"
@@ -222,7 +230,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
         "BEST": ["ALL_ALONE", "ALONE", "BEST"],
     }
     assert (
-        discretizer.features(feature).values.content == expected
+        discretizer.features(feature).get_content() == expected
     ), "All provided values should be kept."
 
     # testing for good defintion of levels
@@ -238,12 +246,17 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
             "BEST": ["ALONE", "BEST"],
         }
 
+        # defining features
+        features = Features(
+            ordinals=chained_features,
+            ordinal_values=ordinal_values,
+        )
+
         # fitting discretizer
         discretizer = ChainedDiscretizer(
-            ordinals=chained_features,
-            chained_orders=[level0_to_level1, level1_to_level2],
             min_freq=min_freq,
-            ordinal_values=ordinal_values,
+            features=features,
+            chained_orders=[level0_to_level1, level1_to_level2],
         )
         _ = discretizer.fit_transform(x_train)
 
@@ -260,12 +273,17 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
             "BEST": ["BEST"],
         }
 
+        # defining features
+        features = Features(
+            ordinals=chained_features,
+            ordinal_values=ordinal_values,
+        )
+
         # fitting discretizer
         discretizer = ChainedDiscretizer(
-            ordinals=chained_features,
-            chained_orders=[level0_to_level1, level1_to_level2],
             min_freq=min_freq,
-            ordinal_values=ordinal_values,
+            features=features,
+            chained_orders=[level0_to_level1, level1_to_level2],
         )
         _ = discretizer.fit_transform(x_train)
 
@@ -305,11 +323,16 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
             "Best": ["Highs", "Best"],
         }
 
+        # defining features
+        features = Features(
+            ordinals=chained_features,
+            ordinal_values=ordinal_values,
+        )
+
         # fitting discretizer
         discretizer = ChainedDiscretizer(
-            ordinals=chained_features,
-            chained_orders=[level0_to_level1, level1_to_level2],
             min_freq=min_freq,
-            ordinal_values=ordinal_values,
+            features=features,
+            chained_orders=[level0_to_level1, level1_to_level2],
         )
         _ = discretizer.fit_transform(x_train)

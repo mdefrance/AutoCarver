@@ -8,7 +8,7 @@ from .qualitative_features import CategoricalFeature, OrdinalFeature
 from .quantitative_features import QuantitativeFeature
 
 from numpy import nan
-from warnings import warn
+from typing import Union
 
 
 # class AutoFeatures(Features):
@@ -149,8 +149,28 @@ class Features:
     def __iter__(self):
         return iter(self.to_list())
 
-    def __getitem__(self, index: int) -> BaseFeature:
-        return self.to_list()[index]
+    def __getitem__(
+        self, index: Union[int, str, list[int], list[str]]
+    ) -> Union[BaseFeature, list[BaseFeature]]:
+        # list index request
+        if isinstance(index, int):
+            return self.to_list()[index]
+        # feature name request
+        if isinstance(index, str):
+            return self.to_dict().get(index)
+        # list request
+        if isinstance(index, list):
+            # checking for element to search for
+            if len(index) > 0:
+                # list index request
+                if isinstance(index[0], int):
+                    self_list = self.to_list()
+                    return [self_list[idx] for idx in index]
+                # feature name request
+                if isinstance(index[0], str):
+                    self_dict = self.to_dict()
+                    return [self_dict.get(name) for name in index]
+        return None
 
     def remove(self, feature_name: str) -> None:
         self.categoricals = [feat for feat in self.categoricals if feat.name != feature_name]

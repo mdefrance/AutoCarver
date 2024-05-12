@@ -4,7 +4,7 @@ for a binary classification model.
 
 from pandas import DataFrame, Series, unique
 
-from ..features import Features, CategoricalFeature, OrdinalFeature, QuantitativeFeature
+from ..features import Features, CategoricalFeature, QuantitativeFeature
 from .utils.base_discretizers import BaseDiscretizer, extend_docstring
 from .qualitative_discretizers import (
     CategoricalDiscretizer,
@@ -58,7 +58,7 @@ class Discretizer(BaseDiscretizer):
             List of column names of ordinal features to be discretized. For those features a list
             of values has to be provided in the ``values_orders`` dict, by default ``None``
         """
-        super().__init__(features=features, **kwargs)  # Initiating BaseDiscretizer
+        super().__init__(features, **kwargs)  # Initiating BaseDiscretizer
         self.min_freq = min_freq  # minimum frequency per modality
 
     @extend_docstring(BaseDiscretizer.fit)
@@ -72,8 +72,7 @@ class Discretizer(BaseDiscretizer):
         if len(self.features.get_qualitatives()) > 0:
             # grouping qualitative features
             qualitative_discretizer = QualitativeDiscretizer(
-                categoricals=self.features.categoricals,
-                ordinals=self.features.ordinals,
+                qualitatives=self.features.get_qualitatives(),
                 min_freq=self.min_freq,
                 copy=False,  # always False as x_copy is already a copy (if requested)
                 verbose=self.verbose,
@@ -88,7 +87,7 @@ class Discretizer(BaseDiscretizer):
         if len(self.features.get_quantitatives()) > 0:
             # grouping quantitative features
             quantitative_discretizer = QuantitativeDiscretizer(
-                quantitatives=self.features.quantitatives,
+                quantitatives=self.features.get_quantitatives(),
                 min_freq=self.min_freq,
                 verbose=self.verbose,
                 n_jobs=self.n_jobs,
@@ -125,8 +124,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
     def __init__(
         self,
         min_freq: float,
-        categoricals: list[CategoricalFeature] = None,
-        ordinals: list[OrdinalFeature] = None,
+        qualitatives: list[CategoricalFeature] = None,
         **kwargs: dict,
     ) -> None:
         """
@@ -155,9 +153,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
             * If ``"str"``, features are considered as qualitative.
             * If ``"float"``, features are considered as quantitative.
         """
-        # initiating features
-        features = Features(categoricals=categoricals, ordinals=ordinals, **kwargs)
-        super().__init__(features=features, **kwargs)  # Initiating BaseDiscretizer
+        super().__init__(qualitatives, **kwargs)  # Initiating BaseDiscretizer
         self.min_freq = min_freq  # minimum frequency per modality
 
     def _prepare_data(self, X: DataFrame, y: Series = None) -> DataFrame:
@@ -270,8 +266,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
             * If ``"str"``, features are considered as qualitative.
             * If ``"float"``, features are considered as quantitative.
         """
-        features = Features(quantitatives=quantitatives, **kwargs)  # initiating features
-        super().__init__(features=features, **kwargs)  # Initiating BaseDiscretizer
+        super().__init__(quantitatives, **kwargs)  # Initiating BaseDiscretizer
         self.min_freq = min_freq  # minimum frequency per modality
 
     def _prepare_data(self, X: DataFrame, y: Series) -> DataFrame:  # pylint: disable=W0222
