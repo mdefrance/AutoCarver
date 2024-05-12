@@ -90,7 +90,7 @@ def fit_feature(feature: BaseFeature, df_feature: Series):
 
 
 class TimedeltaDiscretizer(BaseDiscretizer):
-    """Converts specified columns of a DataFrame into float timedeltas.
+    """TODO Converts specified columns of a DataFrame into float timedeltas.
 
     * Keeps NaN inplace
     """

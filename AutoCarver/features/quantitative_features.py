@@ -47,6 +47,49 @@ class QuantitativeFeature(BaseFeature):
         super().update_labels(labels, output_dtype=output_dtype)
 
 
+class DatetimeFeature(BaseFeature):
+    """TODO"""
+
+    def __init__(self, name: str, reference_date: str, **kwargs: dict) -> None:
+        super().__init__(name, **kwargs)
+        self.is_quantitative = True
+        self.reference_date = reference_date  # date of reference to compare with
+
+    def __repr__(self):
+        return f"DatetimeFeature('{self.name}')"
+
+    def update(
+        self,
+        values: GroupedList,
+        convert_labels: bool = False,
+        sorted_values: bool = False,
+        replace: bool = False,
+    ) -> None:
+        """updates values and labels for each value of the feature"""
+        # updating feature's values
+        super().update(values, convert_labels, sorted_values, replace)
+
+        # updating feature's labels
+        self.update_labels()
+
+    def update_labels(
+        self,
+        labels: GroupedList = None,
+        output_dtype: str = "str",
+    ) -> None:
+        """updates label for each value of the feature"""
+
+        # for quantitative features -> labels per quantile (removes nan)
+        labels = GroupedList(get_labels(self.values, self.nan))
+
+        # add NaNs if there are any
+        if self.nan in self.values:
+            labels.append(self.nan)
+
+        # building label per value
+        super().update_labels(labels, output_dtype=output_dtype)
+
+
 def get_labels(values: GroupedList, str_nan: str) -> list[str]:
     """gives labels per quantile (values for continuous features)
 

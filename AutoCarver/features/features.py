@@ -4,8 +4,8 @@ from pandas import DataFrame, Series
 
 from .utils.base_feature import BaseFeature
 from .utils.grouped_list import GroupedList
-from .qualitative_feature import CategoricalFeature, OrdinalFeature
-from .quantitative_feature import QuantitativeFeature
+from .qualitative_features import CategoricalFeature, OrdinalFeature
+from .quantitative_features import QuantitativeFeature
 
 from numpy import nan
 from warnings import warn
