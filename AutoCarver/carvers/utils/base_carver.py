@@ -46,11 +46,8 @@ class BaseCarver(BaseDiscretizer):
         self,
         sort_by: str,
         min_freq: float,
+        features: Features,
         *,
-        quantitatives: list[str] = None,
-        categoricals: list[str] = None,
-        ordinals: list[str] = None,
-        ordinal_values: dict[str, GroupedList] = None,
         max_n_mod: int = 5,
         min_freq_mod: float = None,
         output_dtype: str = "float",
@@ -127,16 +124,8 @@ class BaseCarver(BaseDiscretizer):
             Pass values for ``str_default`` and ``str_nan`` (default string values),
             as long as ``pretty_print`` to turn off IPython
         """
-        # initiating features
-        features = Features(
-            quantitatives=quantitatives,
-            categoricals=categoricals,
-            ordinals=ordinals,
-            ordinal_values=ordinal_values,
-            **kwargs,
-        )
 
-        # adding verbose to kwargs
+        # adding correct verbose to kwargs
         kwargs.update(
             {"verbose": bool(max(kwargs.get("verbose", False), kwargs.get("pretty_print", False)))}
         )

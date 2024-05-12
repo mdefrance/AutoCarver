@@ -87,3 +87,49 @@ def fit_feature(feature: BaseFeature, df_feature: Series):
         order.group(value, str_value)
 
     return feature.name, order
+
+
+class TimedeltaDiscretizer(BaseDiscretizer):
+    """Converts specified columns of a DataFrame into float timedeltas.
+
+    * Keeps NaN inplace
+    """
+
+    __name__ = "TimedeltaDiscretizer"
+
+    @extend_docstring(BaseDiscretizer.__init__)
+    def __init__(
+        self,
+        features: list[BaseFeature],
+        **kwargs: dict,
+    ) -> None:
+        """
+        Parameters
+        ----------
+        features : list[str]
+            List of column names of qualitative features to be converted as string
+        """
+        # initiating features
+        features = Features(features, **kwargs)
+
+        # Initiating BaseDiscretizer
+        super().__init__(features=features, **kwargs)
+
+    @extend_docstring(BaseDiscretizer.fit)
+    def fit(self, X: DataFrame, y: Series = None) -> None:  # pylint: disable=W0222
+        self._verbose()  # verbose if requested
+
+        # checking for binary target and copying X
+        x_copy = self._prepare_data(X, y)
+
+        # transforming all features
+        all_orders = apply_async_function(fit_feature, self.features, self.n_jobs, x_copy)
+
+        # updating features accordingly
+        self.features.update(dict(all_orders), replace=True)
+        self.features.fit(x_copy, y)
+
+        # discretizing features based on each feature's values_order
+        super().fit(X, y)
+
+        return self

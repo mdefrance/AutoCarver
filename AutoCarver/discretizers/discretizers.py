@@ -4,7 +4,7 @@ for a binary classification model.
 
 from pandas import DataFrame, Series, unique
 
-from ..features import Features, GroupedList
+from ..features import Features, CategoricalFeature, OrdinalFeature, QuantitativeFeature
 from .utils.base_discretizers import BaseDiscretizer, extend_docstring
 from .qualitative_discretizers import (
     CategoricalDiscretizer,
@@ -33,14 +33,7 @@ class Discretizer(BaseDiscretizer):
     def __init__(
         self,
         min_freq: float,
-        categoricals: list[str] = None,
-        ordinals: list[str] = None,
-        quantitatives: list[str] = None,
-        *,
-        ordinal_values: dict[str, GroupedList] = None,
-        # copy: bool = False,
-        # verbose: bool = False,
-        # n_jobs: int = 1,
+        features: Features,
         **kwargs: dict,
     ) -> None:
         """
@@ -65,14 +58,6 @@ class Discretizer(BaseDiscretizer):
             List of column names of ordinal features to be discretized. For those features a list
             of values has to be provided in the ``values_orders`` dict, by default ``None``
         """
-        # initiating features
-        features = Features(
-            quantitatives=quantitatives,
-            categoricals=categoricals,
-            ordinals=ordinals,
-            ordinal_values=ordinal_values,
-            **kwargs,
-        )
         super().__init__(features=features, **kwargs)  # Initiating BaseDiscretizer
         self.min_freq = min_freq  # minimum frequency per modality
 
@@ -140,13 +125,8 @@ class QualitativeDiscretizer(BaseDiscretizer):
     def __init__(
         self,
         min_freq: float,
-        categoricals: list[str] = None,
-        ordinals: list[str] = None,
-        ordinal_values: dict[str, GroupedList] = None,
-        # *,
-        # copy: bool = False,
-        # verbose: bool = False,
-        # n_jobs: int = 1,
+        categoricals: list[CategoricalFeature] = None,
+        ordinals: list[OrdinalFeature] = None,
         **kwargs: dict,
     ) -> None:
         """
@@ -176,9 +156,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
             * If ``"float"``, features are considered as quantitative.
         """
         # initiating features
-        features = Features(
-            categoricals=categoricals, ordinals=ordinals, ordinal_values=ordinal_values, **kwargs
-        )
+        features = Features(categoricals=categoricals, ordinals=ordinals, **kwargs)
         super().__init__(features=features, **kwargs)  # Initiating BaseDiscretizer
         self.min_freq = min_freq  # minimum frequency per modality
 
@@ -212,20 +190,15 @@ class QualitativeDiscretizer(BaseDiscretizer):
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
-        if self.verbose:  # verbose if requested
-            print("------")
+        self._verbose("------\n---")  # verbose if requested
 
         # checking data before bucketization
         x_copy = self._prepare_data(X, y)
-        self._verbose("---")  # verbose if requested
 
         # Base discretization (useful if already discretized)
         base_discretizer = BaseDiscretizer(
             features=[feature for feature in self.features if feature.is_fitted],
-            dropna=False,
-            copy=True,
-            verbose=self.verbose,
-            n_jobs=self.n_jobs,
+            **dict(self.kwargs, copy=True, dropna=False),
         )
         x_copy = base_discretizer.fit_transform(x_copy, y)
 
@@ -234,9 +207,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
             ordinal_discretizer = OrdinalDiscretizer(
                 ordinals=self.features.ordinals,
                 min_freq=self.min_freq,
-                verbose=self.verbose,
-                copy=False,
-                n_jobs=self.n_jobs,
+                **dict(self.kwargs, copy=False),
             )
             ordinal_discretizer.fit(x_copy, y)
 
@@ -245,9 +216,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
             default_discretizer = CategoricalDiscretizer(
                 categoricals=self.features.categoricals,
                 min_freq=self.min_freq,
-                verbose=self.verbose,
-                copy=False,
-                n_jobs=self.n_jobs,
+                **dict(self.kwargs, copy=False),
             )
             default_discretizer.fit(x_copy, y)
 
@@ -275,12 +244,8 @@ class QuantitativeDiscretizer(BaseDiscretizer):
     @extend_docstring(BaseDiscretizer.__init__)
     def __init__(
         self,
-        quantitatives: list[str],
+        quantitatives: list[QuantitativeFeature],
         min_freq: float,
-        # *,
-        # verbose: bool = False,
-        # copy: bool = False,
-        # n_jobs: int = 1,
         **kwargs: dict,
     ) -> None:
         """
@@ -342,20 +307,16 @@ class QuantitativeDiscretizer(BaseDiscretizer):
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
-        if self.verbose:  # verbose if requested
-            print("------")
+        self._verbose("------\n---")  # verbose if requested
 
         # checking data before bucketization
         x_copy = self._prepare_data(X, y)
-        self._verbose("---")  # verbose if requested
 
         # [Quantitative features] Grouping values into quantiles
         continuous_discretizer = ContinuousDiscretizer(
             quantitatives=self.features.quantitatives,
             min_freq=self.min_freq,
-            copy=True,  # needs to be True so that it does not transform x_copy
-            verbose=self.verbose,
-            n_jobs=self.n_jobs,
+            **dict(self.kwargs, copy=True),  # needs to be True not to transform x_copy
         )
 
         x_copy = continuous_discretizer.fit_transform(x_copy, y)

@@ -8,25 +8,64 @@ from .qualitative_feature import CategoricalFeature, OrdinalFeature
 from .quantitative_feature import QuantitativeFeature
 
 from numpy import nan
+from warnings import warn
 
 
-class MultiFeatures:
-    """TODO"""
+# class AutoFeatures(Features):
+#     """TODO"""
 
-    def __init__(
-        self,
-        labels: list[str],
-        categoricals: list[str] = None,
-        quantitatives: list[str] = None,
-        ordinals: list[str] = None,
-        ordinal_values: dict[str, list[str]] = None,
-        **kwargs: dict,
-    ) -> None:
-        self.features = {
-            label: Features(categoricals, quantitatives, ordinals, ordinal_values, **kwargs)
-            for label in labels
-        }
-        self.labels = labels
+#     __name__ = "AutoFeatures"
+
+#     def __init__(self):
+#         raise EnvironmentError(
+#             f" - [{self.__name__}] Should be instantiated with AutoFeatures.from_dataframe()"
+#         )
+
+#     def from_dataframe(self, X: DataFrame) -> None:
+#         """Automatically generates Features from an input DataFrame based on there data types"""
+#         # initiating features
+#         categoricals, ordinals, quantitatives, datetimes = ([],) * 4
+
+#         # getting data types
+#         for feature, dtype in X.dtypes:
+#             str_dtype = str(dtype).lower()
+#             # categorical feature
+#             if dtype == "object":
+#                 categoricals += [feature]
+#             # quantitative feature
+#             elif str_dtype.startswith("int") or str_dtype.startswith("float"):
+#                 quantitatives += [feature]
+#             # datetime feature
+#             elif "date" in str_dtype or "time" in str_dtype:
+#                 datetimes += [feature]
+#             # unknown data type
+#             else:
+#                 warn(
+#                     f" - [{self.__name__}] Ommited column {feature}, unknown data type {dtype}",
+#                     UserWarning,
+#                 )
+
+
+# # def get_dtype()
+
+
+# class MultiFeatures:
+#     """TODO"""
+
+#     def __init__(
+#         self,
+#         labels: list[str],
+#         categoricals: list[str] = None,
+#         quantitatives: list[str] = None,
+#         ordinals: list[str] = None,
+#         ordinal_values: dict[str, list[str]] = None,
+#         **kwargs: dict,
+#     ) -> None:
+#         self.features = {
+#             label: Features(categoricals, quantitatives, ordinals, ordinal_values, **kwargs)
+#             for label in labels
+#         }
+#         self.labels = labels
 
 
 class Features:

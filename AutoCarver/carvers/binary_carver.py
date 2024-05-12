@@ -9,8 +9,8 @@ from pandas import DataFrame, Series, crosstab
 from scipy.stats import chi2_contingency
 
 from ..discretizers.utils.base_discretizers import extend_docstring
-from ..features import GroupedList
 from .utils.base_carver import BaseCarver
+from ..features import Features
 
 
 class BinaryCarver(BaseCarver):
@@ -30,18 +30,12 @@ class BinaryCarver(BaseCarver):
         self,
         sort_by: str,
         min_freq: float,
+        features: Features,
         *,
-        quantitatives: list[str] = None,
-        categoricals: list[str] = None,
-        ordinals: list[str] = None,
-        ordinal_values: dict[str, GroupedList] = None,
         max_n_mod: int = 5,
         min_freq_mod: float = None,
         output_dtype: str = "float",
         dropna: bool = True,
-        # copy: bool = False,
-        # verbose: bool = False,
-        # n_jobs: int = 1,
         **kwargs: dict,
     ) -> None:
         """
@@ -68,10 +62,7 @@ class BinaryCarver(BaseCarver):
         super().__init__(
             min_freq=min_freq,
             sort_by=sort_by,
-            quantitatives=quantitatives,
-            categoricals=categoricals,
-            ordinals=ordinals,
-            ordinal_values=ordinal_values,
+            features=features,
             max_n_mod=max_n_mod,
             min_freq_mod=min_freq_mod,
             output_dtype=output_dtype,
@@ -215,20 +206,20 @@ class BinaryCarver(BaseCarver):
 
         return {"cramerv": cramerv, "tschuprowt": tschuprowt}
 
-    # def _target_rate(self, xtab: DataFrame) -> DataFrame:
-    #     """Computes target rate per row for a binary target (column) in a crosstab
+    def _target_rate(self, xagg: DataFrame) -> DataFrame:
+        """Computes target rate per row for a binary target (column) in a crosstab
 
-    #     Parameters
-    #     ----------
-    #     xagg : DataFrame
-    #         crosstab of X by y
+        Parameters
+        ----------
+        xagg : DataFrame
+            crosstab of X by y
 
-    #     Returns
-    #     -------
-    #     DataFrame
-    #         y mean by xagg index
-    #     """
-    #     return xtab[1].divide(xtab.sum(axis=1)).sort_values()
+        Returns
+        -------
+        DataFrame
+            y mean by xagg index
+        """
+        return xagg[1].divide(xagg.sum(axis=1)).sort_values()
 
     def _printer(self, xagg: DataFrame = None) -> DataFrame:
         """Prints a binary xtab's statistics

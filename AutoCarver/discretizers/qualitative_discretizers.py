@@ -8,7 +8,7 @@ import numpy as np
 from numpy import argmin, nan, select
 from pandas import DataFrame, Series, isna, unique, notna
 
-from ..features import CategoricalFeature, Features, GroupedList, OrdinalFeature
+from ..features import BaseFeature, CategoricalFeature, Features, GroupedList, OrdinalFeature
 from .utils.base_discretizers import BaseDiscretizer, extend_docstring
 from .utils.type_discretizers import StringDiscretizer
 
@@ -31,10 +31,6 @@ class CategoricalDiscretizer(BaseDiscretizer):
         self,
         categoricals: list[CategoricalFeature],
         min_freq: float,
-        # *,
-        # copy: bool = False,
-        # verbose: bool = False,
-        # n_jobs: int = 1,
         **kwargs: dict,
     ) -> None:
         """
@@ -172,11 +168,6 @@ class OrdinalDiscretizer(BaseDiscretizer):
         self,
         ordinals: list[OrdinalFeature],
         min_freq: float,
-        *,
-        ordinal_values: dict[str, GroupedList] = None,
-        # copy: bool = False,
-        # verbose: bool = False,
-        # n_jobs: int = 1,
         **kwargs: dict,
     ):
         """
@@ -204,7 +195,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
             * ``'float"``, features are considered as quantitative.
         """
         # initiating features
-        features = Features(ordinals=ordinals, ordinal_values=ordinal_values, **kwargs)
+        features = Features(ordinals=ordinals, **kwargs)
 
         # Initiating BaseDiscretizer
         super().__init__(features=features, **kwargs)
@@ -281,14 +272,8 @@ class ChainedDiscretizer(BaseDiscretizer):
     def __init__(
         self,
         min_freq: float,
+        features: list[BaseFeature],
         chained_orders: list[GroupedList],
-        categoricals: list[str] = None,
-        ordinals: list[str] = None,
-        *,
-        ordinal_values: dict[str, GroupedList] = None,
-        # copy: bool = False,
-        # verbose: bool = False,
-        # n_jobs: int = 1,
         **kwargs: dict,
     ) -> None:
         """
@@ -319,13 +304,8 @@ class ChainedDiscretizer(BaseDiscretizer):
         # not dropping nans whatsoever
         kwargs = dict(kwargs, dropna=False)
 
-        # initiating features
-        features = Features(
-            categoricals=categoricals, ordinals=ordinals, ordinal_values=ordinal_values, **kwargs
-        )
-
-        # Initiating BaseDiscretizer
-        super().__init__(features=features, **kwargs)
+        features = Features(features, **kwargs)  # initiating features
+        super().__init__(features=features, **kwargs)  # Initiating BaseDiscretizer
 
         # class specific attributes
         self.min_freq = min_freq

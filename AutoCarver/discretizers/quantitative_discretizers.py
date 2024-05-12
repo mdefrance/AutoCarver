@@ -33,10 +33,6 @@ class ContinuousDiscretizer(BaseDiscretizer):
         self,
         quantitatives: list[QuantitativeFeature],
         min_freq: float,
-        *,
-        copy: bool = False,
-        verbose: bool = False,
-        n_jobs: int = 1,
         **kwargs: dict,
     ) -> None:
         """
@@ -58,7 +54,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
         features = Features(quantitatives=quantitatives, **kwargs)
 
         # Initiating BaseDiscretizer
-        super().__init__(features=features, copy=copy, verbose=verbose, n_jobs=n_jobs, **kwargs)
+        super().__init__(features=features, **kwargs)
 
         self.min_freq = min_freq
         self.q = round(1 / min_freq)  # number of quantiles
