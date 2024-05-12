@@ -20,7 +20,6 @@ from .pretty_print import prettier_xagg, index_mapper
 
 from ...discretizers.discretizers import Discretizer
 from ...discretizers.utils.base_discretizers import BaseDiscretizer, load_discretizer
-from ...features.utils.serialization import json_serialize_history
 from ...features import GroupedList, Features, BaseFeature
 
 # trying to import extra dependencies
@@ -152,9 +151,6 @@ class BaseCarver(BaseDiscretizer):
         # progress bar if requested
         self.tqdm = partial(tqdm, disable=not self.verbose)
 
-        # historizing everything
-        self._history = {feature.name: [] for feature in self.features}
-
     def _prepare_data(
         self,
         X: DataFrame,
@@ -218,19 +214,6 @@ class BaseCarver(BaseDiscretizer):
         """Attributes the first element of a group to all elements of a group"""
         return {modal: group[0] for group in combination for modal in group}
 
-    def _remove_feature(self, feature: str) -> None:
-        """Removes a feature from all ``BaseCarver.features`` attributes
-
-        Parameters
-        ----------
-        feature : str
-            Column name of the feature to remove
-        """
-        if feature in self.features:
-            super()._remove_feature(feature)
-            if feature in self._history:
-                self._history[feature] += [{"removed": True}]
-
     def fit(  # pylint: disable=W0222
         self,
         X: DataFrame,
@@ -269,7 +252,11 @@ class BaseCarver(BaseDiscretizer):
         # optimal butcketization/carving of each feature
         all_features = self.features.get_names()  # (features are being removed from self.features)
         for n, feature in enumerate(all_features):
-            self._verbose(feature, all_features, n)
+            if self.verbose:  # verbose if requested
+                print(
+                    f"--- [{self.__name__}] Fit {self.features(feature)} "
+                    f"({n+1}/{len(all_features)})"
+                )
 
             # carving the feature
             self._carve_feature(self.features(feature), xaggs, xaggs_dev)
@@ -285,32 +272,24 @@ class BaseCarver(BaseDiscretizer):
 
         return self
 
-    def _verbose(self, feature: str, all_features: list[str], n: int, prefix: str = "---") -> None:
-        if self.verbose:  # verbose if requested
-            print(
-                f"{prefix} [{self.__name__}] Fit {self.features(feature)} "
-                f"({n+1}/{len(all_features)})"
-            )
-
     def _aggregator(self, X: DataFrame, y: Series) -> Union[Series, DataFrame]:
         """Helper that aggregates X by y into crosstab or means (carver specific)"""
-        _, _ = X, y  # unused attributes
-        return True
+        _ = y  # unused attribute
+        return X
 
     def _association_measure(self, xagg: DataFrame, n_obs: int) -> Union[Series, DataFrame]:
         """Helper to measure association between X and y (carver specific)"""
-        _, _ = xagg, n_obs  # unused attributes
-        return True
+        _ = n_obs  # unused attribute
+        return xagg
 
     def _grouper(self, xagg: DataFrame, groupby: list[str]) -> DataFrame:
         """Helper to group XAGG's values by groupby (carver specific)"""
-        _, _ = xagg, groupby  # unused attributes
-        return True
+        _ = groupby  # unused attribute
+        return xagg
 
     def _printer(self, xagg: DataFrame = None) -> DataFrame:
         """helper to print an XAGG (carver specific)"""
-        _ = xagg  # unused attribute
-        return True
+        return xagg
 
     def _carve_feature(
         self,
@@ -586,7 +565,6 @@ class BaseCarver(BaseDiscretizer):
         train_viable: bool = None,
         dev_viable: bool = None,
         dropna: bool = False,
-        verbose: bool = False,
         **viability_msg_params,
     ) -> None:
         """historizes the viability tests results for specified feature
@@ -647,7 +625,7 @@ class BaseCarver(BaseDiscretizer):
         viability_to_historize = [viability] + [None] * len(associations_not_checked)
 
         # historizing test results: list comprehension for faster processing (large number of combi)
-        self._history[feature.name] += [
+        feature.history += [
             {
                 # Formats a combination for historization
                 "combination": [
@@ -669,9 +647,6 @@ class BaseCarver(BaseDiscretizer):
             for asso, msg, viab in zip(
                 associations_to_historize, messages_to_historize, viability_to_historize
             )
-            # tqdm(total=len(associations_to_historize),
-            # disable=verbose,
-            # desc="Logging combinations  ",)
         ]
 
     def _print_xagg(
@@ -724,24 +699,20 @@ class BaseCarver(BaseDiscretizer):
                 # displaying html of colored DataFrame
                 display_html(nicer_xaggs, raw=True)
 
-    def to_json(self) -> str:
-        """Converts to .json format.
+    def save_carver(self, file_name: str, light_mode: bool = False):
+        """Saves pipeline to .json file.
 
-        To be used with ``json.dump``.
+        Parameters
+        ----------
+        file : str
+            String of .json file name.
 
         Returns
         -------
         str
             JSON serialized object
         """
-        # extracting content dictionnaries
-        json_serialized_base_discretizer = super().to_json()
-
-        # adding carver history and summary
-        json_serialized_base_discretizer.update({"_history": json_serialize_history(self._history)})
-
-        # dumping as json
-        return json_serialized_base_discretizer
+        super().save(file_name, light_mode)
 
 
 def filter_nan(xagg: Union[Series, DataFrame], str_nan: str) -> DataFrame:

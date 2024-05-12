@@ -3,20 +3,17 @@ for a binary classification model.
 """
 
 from typing import Any, Union
-from warnings import warn
 
 from numpy import floating, integer, isfinite, isnan, nan, select
 from pandas import DataFrame, Series, isna, notna, unique
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from ...features import BaseFeature, Features, get_names
+from ...features import BaseFeature, Features
 from ...features.utils.grouped_list import GroupedList
 from ...features.qualitative_features import nan_unique
 from .multiprocessing import apply_async_function
-from ...features.utils.serialization import (
-    json_deserialize_values_orders,
-    json_serialize_values_orders,
-)
+from ...features.utils.serialization import json_deserialize_values_orders
+import json
 
 
 class BaseDiscretizer(BaseEstimator, TransformerMixin):
@@ -409,32 +406,93 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
 
     def to_dict(self) -> dict[str, GroupedList]:
         """Converts Discretizer to dict"""
-
         return self.features.get_content()
 
-    # def to_json(self) -> str:
-    #     """Converts to .json format.
+    def to_json(self, light_mode: bool = False) -> str:
+        """Converts to JSON format.
 
-    #     To be used with ``json.dump``.
+        To be used with ``json.dump``.
 
-    #     Returns
-    #     -------
-    #     str
-    #         JSON serialized object
-    #     """
-    #     # extracting content dictionnaries
-    #     return {
-    #         "features": self.features,
-    #         "values_orders": json_serialize_values_orders(self.values_orders),
-    #         "features_casting": self.features_casting,
-    #         "input_dtypes": self.input_dtypes,
-    #         "output_dtype": self.output_dtype,
-    #         "nan": self.nan,
-    #         "default": self.default,
-    #         "dropna": self.dropna,
-    #         "features_dropna": self.features_dropna,
-    #         "copy": self.copy,
-    #     }
+        Parameters
+        ----------
+        light_mode: bool, optional
+            Whether or not to save features' history and statistics, by default False
+
+        Returns
+        -------
+        str
+            JSON serialized object
+        """
+        return self.features.to_json(light_mode)
+
+    def save(self, file_name: str, light_mode: bool = False) -> None:
+        """Saves pipeline to .json file.
+
+        Parameters
+        ----------
+        file : str
+            String of .json file name.
+        light_mode: bool, optional
+            Whether or not to save features' history and statistics, by default False
+
+        Returns
+        -------
+        str
+            JSON serialized object
+        """
+        # checking for input
+        if file_name.endswith(".json"):
+            with open(file_name, "w", encoding="utf-8") as json_file:
+                json.dump(self.to_json(light_mode), json_file)
+        else:
+            raise ValueError(
+                f" - [{self.__name__}] Make sure to provide a file name with .json extension."
+            )
+    
+    @classmethod
+    def load(cls, file_name: str) -> None:
+        """Allows one to load an Discretizer saved as a .json file.
+
+        The Discretizer has to be saved with ``Discretizer.save()``, otherwise there
+        can be no guarantee for it to be restored.
+
+        Parameters
+        ----------
+        file_name : str
+            String of saved Discretizer's .json file name.
+
+        Returns
+        -------
+        BaseDiscretizer
+            A fitted Discretizer.
+        """
+        # reading file
+        with open(file_name, "r", encoding="utf-8") as json_file:
+            discretizer_json = json.load(json_file)
+
+        # deserializing features' content
+        for name, feature in 
+        values_orders = json_deserialize_content(discretizer_json["values_orders"])
+
+        # updating auto_carver attributes
+        discretizer_json.update({"values_orders": values_orders})
+
+        # initiating BaseDiscretizer
+        discretizer = BaseDiscretizer(**discretizer_json)
+        discretizer.fit()
+
+
+            
+        # removing _history if it exists
+        _history = auto_carver_json.pop("_history", None)
+
+        # loading discretizer
+        loaded_discretizer = load_discretizer(auto_carver_json)
+
+        # adding back _history
+        loaded_discretizer._history = _history  # pylint: disable=W0212
+
+        return loaded_discretizer
 
     # def history(self, feature: str = None) -> DataFrame:
     #     """Historic of tested combinations and there association with the target.
@@ -951,31 +1009,3 @@ class extend_docstring:
                 function.__doc__ = doc + function.__doc__
         return function
 
-
-def load_discretizer(discretizer_json: dict) -> BaseDiscretizer:
-    """Allows one to load a Discretizer saved as a .json file.
-
-    The Discretizer has to be saved with ``json.dump(f, Discretizer.to_json())``, otherwise there
-    can be no guarantee for it to be restored.
-
-    Parameters
-    ----------
-    discretizer_json : str
-        Loaded .json file using ``json.load(f)``.
-
-    Returns
-    -------
-    BaseDiscretizer
-        A fitted Discretizer.
-    """
-    # deserializing values_orders
-    values_orders = json_deserialize_values_orders(discretizer_json["values_orders"])
-
-    # updating auto_carver attributes
-    discretizer_json.update({"values_orders": values_orders})
-
-    # initiating BaseDiscretizer
-    discretizer = BaseDiscretizer(**discretizer_json)
-    discretizer.fit()
-
-    return discretizer

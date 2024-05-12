@@ -10,7 +10,7 @@ from pandas import DataFrame, Series
 
 from ...config import DEFAULT, NAN
 from .grouped_list import GroupedList
-from .serialization import json_serialize_content
+from .serialization import json_serialize_content, json_serialize_history
 
 
 class BaseFeature:
@@ -51,7 +51,7 @@ class BaseFeature:
         self.statistics: dict[str:Any] = {}
 
         # initiating feature's combination history
-        self.history = None
+        self.history: list[dict, Any] = []
 
     def fit(self, X: DataFrame, y: Series = None) -> None:
         """Fits the feature to a DataFrame"""
@@ -216,12 +216,25 @@ class BaseFeature:
             # updating values
             self.update(values, replace=True)
 
-    def get_content(self):
+    def get_content(self) -> dict:
         """returns feature values' content"""
         return self.values.content
 
-    def to_json(self, light_mode: bool = False):
-        """converts feature to json"""
+    def to_json(self, light_mode: bool = False) -> dict:
+        """Converts to JSON format.
+
+        To be used with ``json.dump``.
+
+        Parameters
+        ----------
+        light_mode: bool, optional
+            Whether or not to save feature's history and statistics, by default False
+
+        Returns
+        -------
+        str
+            JSON serialized object
+        """
         # minimal output json
         output = {
             "name": self.name,
@@ -243,5 +256,12 @@ class BaseFeature:
             return output
 
         # enriched mode (larger json)
-        output.update({"statistics": self.statistics, "history": self.history})
+        output.update(
+            {"statistics": self.statistics, "history": json_serialize_history(self.history)}
+        )
         return output
+
+    @classmethod
+    def load(cls, feature_json: dict):
+
+        return cls(**feature_json)

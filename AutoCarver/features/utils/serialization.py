@@ -131,32 +131,6 @@ def json_serialize_content(content: dict[str, GroupedList]) -> str:
     return dumps(convert_values_to_base_types(content))
 
 
-def json_serialize_values_orders(values_orders: dict[str, GroupedList]) -> str:
-    """JSON serializes a values_orders
-
-    Parameters
-    ----------
-    values_orders : dict[str: GroupedList]
-        values_orders to serialize
-
-    Returns
-    -------
-    str
-        JSON serialized values_orders
-    """
-
-    # converting values_orders to a json
-    json_serialized_values_orders = {
-        feature: {
-            "order": convert_values_to_base_types(order),
-            "content": convert_values_to_base_types(order.content),
-        }
-        for feature, order in values_orders.items()
-    }
-
-    return dumps(json_serialized_values_orders)
-
-
 def json_deserialize_values_orders(json_serialized_values_orders: str) -> dict[str, GroupedList]:
     """JSON serializes a values_orders
 
@@ -193,8 +167,8 @@ def json_deserialize_values_orders(json_serialized_values_orders: str) -> dict[s
     return values_orders
 
 
-def json_serialize_history(history: dict) -> dict:
-    """JSON serializes an _history
+def json_serialize_history(history: list[dict]) -> dict:
+    """JSON serializes a feature's history
 
     Parameters
     ----------
@@ -208,16 +182,13 @@ def json_serialize_history(history: dict) -> dict:
     """
 
     # converting history to a json
-    json_serialized_history = {
-        feature: [
+    return dumps(
+        [
             json_serialize_combination(combination)
-            for combination in combinations
+            for combination in history
             if "combination" in combination
         ]
-        for feature, combinations in history.items()
-    }
-
-    return json_serialized_history
+    )
 
 
 def json_serialize_combination(combination: dict) -> str:
