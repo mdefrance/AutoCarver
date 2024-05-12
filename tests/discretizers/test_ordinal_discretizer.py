@@ -3,7 +3,7 @@
 from pandas import DataFrame
 
 from AutoCarver.discretizers import OrdinalDiscretizer
-from AutoCarver.features import GroupedList, OrdinalFeature
+from AutoCarver.features import GroupedList, Features
 
 
 def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:
@@ -32,7 +32,7 @@ def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:
         "Qualitative_Ordinal": groupedlist,
         "Qualitative_Ordinal_lownan": groupedlist_lownan,
     }
-    features = [OrdinalFeature(ordinal, ordinal_values.get(ordinal)) for ordinal in ordinals]
+    features = Features(ordinals=ordinals, ordinal_values=ordinal_values)
 
     # minimum frequency per modality + apply(find_common_modalities) outputs a Series
     min_freq = 0.01
@@ -70,7 +70,7 @@ def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:
     min_freq = 0.08
 
     # discretizing features
-    features = [OrdinalFeature(ordinal, ordinal_values.get(ordinal)) for ordinal in ordinals]
+    features = Features(ordinals=ordinals, ordinal_values=ordinal_values)
     discretizer = OrdinalDiscretizer(ordinals=features, min_freq=min_freq, copy=True)
     discretizer.fit_transform(x_train, x_train[target])
 
