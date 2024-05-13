@@ -1,9 +1,9 @@
 """ TODO: initiate features from dataset
-TODO: add labels
+TODO: add labels for qualitatives
 TODO add casted features?
 """
 
-from typing import Any
+from typing import Any, Type
 
 
 from pandas import DataFrame, Series
@@ -84,8 +84,11 @@ class BaseFeature:
         convert_labels: bool = False,
         sorted_values: bool = False,
         replace: bool = False,
+        output_dtype: str = "str",
     ) -> None:
         """updates values for each value of the feature"""
+        _ = output_dtype  # unused attribute
+
         # values are the same but sorted
         if sorted_values:
             self.values = self.values.sort_by(values)
@@ -261,10 +264,9 @@ class BaseFeature:
         return json_serialize_feature(feature)
 
     @classmethod
-    def load(cls, feature_json: dict):
+    def load(cls: Type["BaseFeature"], feature_json: dict, output_dtype: str) -> "BaseFeature":
         """Loads a feature"""
 
-        # TODO load per data type!!!
         # deserializing content into grouped list of values
         values = json_deserialize_content(feature_json)
 
@@ -272,7 +274,6 @@ class BaseFeature:
         feature = cls(**feature_json)
 
         # updating feature with deserialized content
-        feature.update(values, replace=True)
-        feature.update_labels()
+        feature.update(values, replace=True, output_dtype=output_dtype)
 
         return feature

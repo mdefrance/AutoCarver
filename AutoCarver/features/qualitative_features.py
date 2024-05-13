@@ -68,13 +68,20 @@ class CategoricalFeature(BaseFeature):
         convert_labels: bool = False,
         sorted_values: bool = False,
         replace: bool = False,
+        output_dtype: str = "str",
     ) -> None:
         """updates values and labels for each value of the feature"""
         # updating feature's values
-        super().update(values, convert_labels, sorted_values, replace)
+        super().update(
+            values,
+            convert_labels=convert_labels,
+            sorted_values=sorted_values,
+            replace=replace,
+            output_dtype=output_dtype,
+        )
 
         # for qualitative feature -> by default, labels are values
-        super().update_labels()
+        super().update_labels(output_dtype=output_dtype)
         # TODO make better labels
 
 

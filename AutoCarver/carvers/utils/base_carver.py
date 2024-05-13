@@ -2,8 +2,10 @@
 for any task.
 """
 
+import json
+
 from functools import partial
-from typing import Any, Union
+from typing import Any, Union, Type
 from warnings import warn
 
 from numpy import isclose
@@ -302,15 +304,6 @@ class BaseCarver(BaseDiscretizer):
         xagg = xaggs[feature.name]
         xagg_dev = xaggs_dev[feature.name]
 
-        # historizing raw combination TODO
-        raw_association = {
-            "index_to_groupby": {modality: modality for modality in xagg.index},
-            self.sort_by: self._association_measure(
-                xagg.dropna(), n_obs=sum(xagg.dropna().apply(sum))
-            )[self.sort_by],
-        }
-        self._historize_viability_test(feature, raw_association, feature.labels)
-
         # verbose if requested
         self._print_xagg(feature, xagg=xagg, xagg_dev=xagg_dev, message="Raw distribution")
 
@@ -327,9 +320,8 @@ class BaseCarver(BaseDiscretizer):
         # no suitable combination has been found -> removing feature
         else:
             print(
-                f"\n - [{self.__name__}] No robust combination for {feature}"
-                ". Consider increasing the size of X_dev or dropping the feature"
-                " (X not representative of X_dev for this feature)."
+                f"WARNING: No robust combination for {feature}. Consider increasing the size of "
+                "X_dev or dropping the feature (X not representative of X_dev for this feature)."
             )
             self.features.remove(feature.name)
 
@@ -353,6 +345,15 @@ class BaseCarver(BaseDiscretizer):
         # checking for non-nan values
         best_association = None
         if raw_xagg.shape[0] > 1:
+            # historizing raw combination TODO
+            raw_association = {
+                "index_to_groupby": {modality: modality for modality in xagg.index},
+                self.sort_by: self._association_measure(
+                    xagg.dropna(), n_obs=sum(xagg.dropna().apply(sum))
+                )[self.sort_by],
+            }
+            self._historize_viability_test(feature, raw_association, feature.labels)
+
             # all possible consecutive combinations
             combinations = consecutive_combinations(raw_labels, self.max_n_mod)
 
@@ -363,6 +364,9 @@ class BaseCarver(BaseDiscretizer):
 
             # grouping NaNs if requested to drop them (dropna=True)
             if self.dropna and feature.has_nan and best_association is not None:
+                if self.verbose:  # verbose if requested
+                    print(f" - [{self.__name__}] Grouping NaNs")
+
                 xagg, xagg_dev = best_association  # unpacking
 
                 # raw ordering without nans
@@ -449,6 +453,8 @@ class BaseCarver(BaseDiscretizer):
 
         # testing viability of combination
         best_association = self._test_viability(feature, associations_xagg, xagg_dev, dropna)
+        if self.verbose:  # verbose if requested
+            print("\n")
 
         # applying best_combination to feature labels and xtab
         if best_association is not None:
@@ -669,7 +675,7 @@ class BaseCarver(BaseDiscretizer):
             Whether to output html or not, by default False
         """
         if self.verbose:  # verbose if requested
-            print(f"\n - [{self.__name__}] {message}")
+            print(f" - [{self.__name__}] {message}")
 
             # formatting XAGG
             formatted_xagg = index_mapper(feature, xagg)
@@ -715,36 +721,34 @@ class BaseCarver(BaseDiscretizer):
         super().save(file_name, light_mode)
 
     @classmethod
-    def load_carver(file_name: str) -> BaseDiscretizer:
-        """Allows one to load an AutoCarver saved as a .json file.
+    def load_carver(cls: Type["BaseCarver"], file_name: str) -> "BaseDiscretizer":
+        """Allows one to load a Carver saved as a .json file.
 
-        The AutoCarver has to be saved with ``AutoCarver.save_carver()``, otherwise there
+        The Carver has to be saved with ``Carver.save()``, otherwise there
         can be no guarantee for it to be restored.
 
         Parameters
         ----------
         file_name : str
-            String of saved AutoCarver's .json file name.
+            String of saved Carver's .json file name.
 
         Returns
         -------
         BaseDiscretizer
-            A fitted AutoCarver.
+            A fitted Carver.
         """
         # reading file
         with open(file_name, "r", encoding="utf-8") as json_file:
-            auto_carver_json = json.load(json_file)
+            carver_json = json.load(json_file)
 
-        # removing _history if it exists
-        _history = auto_carver_json.pop("_history", None)
+        # deserializing features
+        features = Features.load(carver_json.pop("features"), carver_json.get("output_dtype"))
 
-        # loading discretizer
-        loaded_discretizer = load_discretizer(auto_carver_json)
+        # initiating BaseDiscretizer
+        loaded_carver = BaseDiscretizer(features=features, **carver_json)
+        loaded_carver.fit()
 
-        # adding back _history
-        loaded_discretizer._history = _history  # pylint: disable=W0212
-
-        return loaded_discretizer
+        return loaded_carver
 
 
 def filter_nan(xagg: Union[Series, DataFrame], str_nan: str) -> DataFrame:

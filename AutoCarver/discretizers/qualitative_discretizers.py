@@ -460,6 +460,9 @@ class ChainedDiscretizer(BaseDiscretizer):
 
         super().fit(X, y)
 
+        if self.verbose:  # verbose if requested
+            print("\n")
+
         return self
 
 

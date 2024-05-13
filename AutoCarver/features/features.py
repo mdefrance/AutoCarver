@@ -8,7 +8,7 @@ from .qualitative_features import CategoricalFeature, OrdinalFeature
 from .quantitative_features import QuantitativeFeature
 
 from numpy import nan
-from typing import Union
+from typing import Union, Type
 
 
 # class AutoFeatures(Features):
@@ -188,6 +188,7 @@ class Features:
         ]
 
     def check_values(self, X: DataFrame) -> None:
+        """Cheks for unexpected values for each feature in columns of DataFrame X"""
         for feature in self:
             if not feature.is_fitted:  # checking for non-fitted features
                 raise RuntimeError(f" - [Features] {feature} not yet fitted!")
@@ -195,6 +196,7 @@ class Features:
                 feature.check_values(X)
 
     def fit(self, X: DataFrame, y: Series = None) -> None:
+        """fits all features to there respective column in DataFrame X"""
         for feature in self:
             if feature.is_fitted:  # checking for fitted features
                 feature.check_values(X)
@@ -262,6 +264,26 @@ class Features:
 
     def to_json(self, light_mode: bool = False) -> dict:
         return {feature.name: feature.to_json(light_mode) for feature in self}
+
+    @classmethod
+    def load(cls: Type["Features"], features_json: dict, output_dtype: str) -> "Features":
+        """Loads a set of features"""
+
+        # casting each feature to there corresponding type
+        unpacked_features: list[BaseFeature] = []
+        for _, feature in features_json.items():
+            # categorical feature
+            if feature.get("is_categorical"):
+                unpacked_features += [CategoricalFeature.load(feature, output_dtype)]
+            # ordinal feature
+            elif feature.get("is_ordinal"):
+                unpacked_features += [OrdinalFeature.load(feature, output_dtype)]
+            # ordinal feature
+            elif feature.get("is_quantitative"):
+                unpacked_features += [QuantitativeFeature.load(feature, output_dtype)]
+
+        # initiating features
+        return cls(unpacked_features)
 
 
 def cast_features(

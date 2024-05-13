@@ -21,13 +21,20 @@ class QuantitativeFeature(BaseFeature):
         convert_labels: bool = False,
         sorted_values: bool = False,
         replace: bool = False,
+        output_dtype: str = "str",
     ) -> None:
         """updates values and labels for each value of the feature"""
         # updating feature's values
-        super().update(values, convert_labels, sorted_values, replace)
+        super().update(
+            values,
+            convert_labels=convert_labels,
+            sorted_values=sorted_values,
+            replace=replace,
+            output_dtype=output_dtype,
+        )
 
         # updating feature's labels
-        self.update_labels()
+        self.update_labels(output_dtype=output_dtype)
 
     def update_labels(
         self,
@@ -64,13 +71,14 @@ class DatetimeFeature(BaseFeature):
         convert_labels: bool = False,
         sorted_values: bool = False,
         replace: bool = False,
+        output_dtype: str = "str",
     ) -> None:
         """updates values and labels for each value of the feature"""
         # updating feature's values
         super().update(values, convert_labels, sorted_values, replace)
 
         # updating feature's labels
-        self.update_labels()
+        self.update_labels(output_dtype)
 
     def update_labels(
         self,

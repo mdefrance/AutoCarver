@@ -6,7 +6,7 @@ from json import dumps, loads
 from pandas import DataFrame
 from pytest import raises
 
-from AutoCarver import ContinuousCarver, load_carver
+from AutoCarver import ContinuousCarver
 from AutoCarver.config import NAN
 from AutoCarver.discretizers import ChainedDiscretizer
 

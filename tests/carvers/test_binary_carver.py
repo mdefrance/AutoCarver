@@ -1,12 +1,13 @@
 """Set of tests for binary_carver module.
 """
 
-from json import dumps, loads
+import json
+import tempfile
 
 from pandas import DataFrame
 from pytest import fixture, raises
 
-from AutoCarver import BinaryCarver, load_carver, Features
+from AutoCarver import BinaryCarver, Features
 from AutoCarver.config import NAN
 from AutoCarver.discretizers import ChainedDiscretizer
 
@@ -217,6 +218,9 @@ def test_binary_carver(
         ), "Not copied correctly"
 
     # testing json serialization
+    # temp_json = tempfile.NamedTemporaryFile(mode="w+")
+    # json.dump(config, temp_json)
+    # temp_json.flush()
     json_serialized_auto_carver = dumps(auto_carver.to_json())
     loaded_carver = load_carver(loads(json_serialized_auto_carver))
 

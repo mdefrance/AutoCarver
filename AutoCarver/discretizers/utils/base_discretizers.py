@@ -2,7 +2,7 @@
 for a binary classification model.
 """
 
-from typing import Any, Union
+from typing import Any, Union, Type
 
 from numpy import floating, integer, isfinite, isnan, nan, select
 from pandas import DataFrame, Series, isna, notna, unique
@@ -112,14 +112,14 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         self.features_casting = {
             feature: casting[:] for feature, casting in features_casting.items()
         }
-        # initiating _history for carvers
-        self._history = None
 
         # initiating things for super().__repr__
         self.ordinals = None
         self.categoricals = None
         self.quantitatives = None
         self.ordinal_values = None
+        self.min_freq = kwargs.get("min_freq", None)
+        self.sort_by = kwargs.get("sort_by", None)
 
     def __repr__(self, N_CHAR_MAX: int = 700) -> str:
         _ = N_CHAR_MAX  # unused attribute
@@ -422,7 +422,17 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         str
             JSON serialized object
         """
-        return self.features.to_json(light_mode)
+        # adding all parameters
+        return {
+            "features": self.features.to_json(light_mode),
+            "dropna": self.dropna,
+            "min_freq": self.min_freq,
+            "sort_by": self.sort_by,
+            "is_fitted": self.is_fitted,
+            "n_jobs": self.n_jobs,
+            "verbose": self.verbose,
+            "output_dtype": self.output_dtype,
+        }
 
     def save(self, file_name: str, light_mode: bool = False) -> None:
         """Saves pipeline to .json file.
@@ -443,13 +453,14 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         if file_name.endswith(".json"):
             with open(file_name, "w", encoding="utf-8") as json_file:
                 json.dump(self.to_json(light_mode), json_file)
+        # raising for non-json file name
         else:
             raise ValueError(
                 f" - [{self.__name__}] Make sure to provide a file name with .json extension."
             )
 
     @classmethod
-    def load(cls, file_name: str) -> None:
+    def load_discretizer(cls: Type["BaseDiscretizer"], file_name: str) -> "BaseDiscretizer":
         """Allows one to load an Discretizer saved as a .json file.
 
         The Discretizer has to be saved with ``Discretizer.save()``, otherwise there
@@ -469,25 +480,14 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         with open(file_name, "r", encoding="utf-8") as json_file:
             discretizer_json = json.load(json_file)
 
-        # deserializing features' content
-        # for name, feature in
-        values_orders = json_deserialize_content(discretizer_json["values_orders"])
-
-        # updating auto_carver attributes
-        discretizer_json.update({"values_orders": values_orders})
+        # deserializing features
+        features = Features.load(
+            discretizer_json.pop("features"), discretizer_json.get("output_dtype")
+        )
 
         # initiating BaseDiscretizer
-        discretizer = BaseDiscretizer(**discretizer_json)
-        discretizer.fit()
-
-        # removing _history if it exists
-        _history = auto_carver_json.pop("_history", None)
-
-        # loading discretizer
-        loaded_discretizer = load_discretizer(auto_carver_json)
-
-        # adding back _history
-        loaded_discretizer._history = _history  # pylint: disable=W0212
+        loaded_discretizer = cls(features=features, **discretizer_json)
+        loaded_discretizer.fit()
 
         return loaded_discretizer
 

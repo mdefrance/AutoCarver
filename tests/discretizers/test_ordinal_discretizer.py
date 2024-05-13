@@ -39,8 +39,9 @@ def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:
 
     # discretizing features
     discretizer = OrdinalDiscretizer(ordinals=features, min_freq=min_freq, copy=True)
-    discretizer.fit_transform(x_train, x_train[target])
+    x_disc = discretizer.fit_transform(x_train, x_train[target])
 
+    feature = "Qualitative_Ordinal"
     expected_ordinal_01 = {
         "Low-": ["Low", "Low-"],
         "Low+": ["Low+"],
@@ -50,8 +51,13 @@ def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:
         "High": ["High"],
         "High+": ["High+"],
     }
+    print(
+        discretizer.features(feature).get_content(),
+        features(feature).get_content(),
+        x_disc[feature].value_counts(dropna=False, normalize=True).round(2),
+    )
     assert (
-        features("Qualitative_Ordinal").get_content() == expected_ordinal_01
+        features(feature).get_content() == expected_ordinal_01
     ), "Missing value in order not correctly grouped"
 
     expected_ordinal_lownan_01 = {
