@@ -5,7 +5,7 @@ TODO add casted features?
 
 from typing import Any, Type
 
-
+import json
 from pandas import DataFrame, Series
 
 from ...config import DEFAULT, NAN
@@ -270,8 +270,13 @@ class BaseFeature:
         # deserializing content into grouped list of values
         values = json_deserialize_content(feature_json)
 
+        # loading history
+        history = []
+        if "history" in feature_json:
+            history = json.loads(feature_json.pop("history"))
+
         # initiating feature without content
-        feature = cls(**feature_json)
+        feature = cls(**dict(feature_json, history=history))
 
         # updating feature with deserialized content
         feature.update(values, replace=True, output_dtype=output_dtype)
