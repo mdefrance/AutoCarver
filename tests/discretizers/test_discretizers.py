@@ -156,8 +156,9 @@ def test_qualitative_discretizer(x_train: DataFrame, target: str):
     ), "NaNs should stay by themselves."
 
     feature = "Discrete_Quantitative"
+    print(features(feature).labels, x_discretized[feature].unique())
     assert all(
-        value in features(feature).values for value in x_discretized[feature].unique()
+        label in features(feature).labels for label in x_discretized[feature].unique()
     ), "discretizer not taking into account string discretizer"
 
 

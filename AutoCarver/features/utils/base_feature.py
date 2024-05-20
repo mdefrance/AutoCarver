@@ -46,6 +46,9 @@ class BaseFeature:
         self.is_qualitative = kwargs.get("is_qualitative", False)
         self.is_quantitative = kwargs.get("is_quantitative", False)
 
+        # max number of characters per label
+        self.max_n_chars = kwargs.get("max_n_chars", 50)
+
         # initiating feature's trained statistics
         self.statistics: dict[str:Any] = kwargs.get("statistics", {})
 
@@ -72,8 +75,8 @@ class BaseFeature:
     def check_values(self, X: DataFrame) -> None:
         """checks for unexpected values from unique values in DataFrame"""
 
-        if any(X[self.name].isna()) and not self.has_nan:
-            raise ValueError(f" - [Features] Unexpected NaN for {self.__name__}('{self.name}').")
+        if (any(X[self.name].isna()) or any(X[self.name] == self.nan)) and not self.has_nan:
+            raise ValueError(f" - [{self}] Unexpected NaNs.")
 
     def __repr__(self):
         return f"{self.__name__}('{self.name}')"
@@ -152,12 +155,19 @@ class BaseFeature:
                 if len(grouped_values) > 0:
                     self.values.group_list(grouped_values, kept_value)
 
-    def update_labels(self, labels: GroupedList = None, output_dtype: str = "str") -> None:
+        # updating labels accordingly
+        self.update_labels(output_dtype=output_dtype)
+
+    def get_labels(self) -> GroupedList:
+        """gives labels per values"""
+        # default labels are values
+        return self.values
+
+    def update_labels(self, output_dtype: str = "str") -> None:
         """updates label for each value of the feature"""
 
         # initiating labels for qualitative features
-        if labels is None:
-            labels = self.values
+        labels = self.get_labels()
 
         # requested float output (AutoCarver) -> converting to integers
         if output_dtype == "float":

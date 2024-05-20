@@ -1,6 +1,6 @@
 """ Defines a continuous feature"""
 
-from numpy import isfinite, nan
+from numpy import isfinite, nan, diff, floor, log10
 from pandas import isna
 
 from .utils.base_feature import BaseFeature
@@ -15,43 +15,35 @@ class QuantitativeFeature(BaseFeature):
     def __repr__(self):
         return f"QuantitativeFeature('{self.name}')"
 
-    def update(
-        self,
-        values: GroupedList,
-        convert_labels: bool = False,
-        sorted_values: bool = False,
-        replace: bool = False,
-        output_dtype: str = "str",
-    ) -> None:
-        """updates values and labels for each value of the feature"""
-        # updating feature's values
-        super().update(
-            values,
-            convert_labels=convert_labels,
-            sorted_values=sorted_values,
-            replace=replace,
-            output_dtype=output_dtype,
-        )
+    def get_labels(self) -> GroupedList:
+        """gives labels per quantile (values for continuous features)
 
-        # updating feature's labels
-        self.update_labels(output_dtype=output_dtype)
+        Parameters
+        ----------
+        values : GroupedList
+            feature's values (quantiles in the case of continuous ones)
+        nan : str
+            default string value for nan
 
-    def update_labels(
-        self,
-        labels: GroupedList = None,
-        output_dtype: str = "str",
-    ) -> None:
-        """updates label for each value of the feature"""
+        Returns
+        -------
+        list[str]
+            list of labels per quantile
+        """
+        # filtering out nan and inf for formatting
+        quantiles = [val for val in self.values if val != self.nan and isfinite(val)]
 
-        # for quantitative features -> labels per quantile (removes nan)
-        labels = GroupedList(get_labels(self.values, self.nan))
+        # converting quantiles in string
+        labels = format_quantiles(quantiles)
+
+        # converting to grouped list
+        labels = GroupedList(labels)
 
         # add NaNs if there are any
         if self.nan in self.values:
             labels.append(self.nan)
 
-        # building label per value
-        super().update_labels(labels, output_dtype=output_dtype)
+        return labels
 
 
 class DatetimeFeature(BaseFeature):
@@ -64,62 +56,6 @@ class DatetimeFeature(BaseFeature):
 
     def __repr__(self):
         return f"DatetimeFeature('{self.name}')"
-
-    def update(
-        self,
-        values: GroupedList,
-        convert_labels: bool = False,
-        sorted_values: bool = False,
-        replace: bool = False,
-        output_dtype: str = "str",
-    ) -> None:
-        """updates values and labels for each value of the feature"""
-        # updating feature's values
-        super().update(values, convert_labels, sorted_values, replace)
-
-        # updating feature's labels
-        self.update_labels(output_dtype)
-
-    def update_labels(
-        self,
-        labels: GroupedList = None,
-        output_dtype: str = "str",
-    ) -> None:
-        """updates label for each value of the feature"""
-
-        # for quantitative features -> labels per quantile (removes nan)
-        labels = GroupedList(get_labels(self.values, self.nan))
-
-        # add NaNs if there are any
-        if self.nan in self.values:
-            labels.append(self.nan)
-
-        # building label per value
-        super().update_labels(labels, output_dtype=output_dtype)
-
-
-def get_labels(values: GroupedList, str_nan: str) -> list[str]:
-    """gives labels per quantile (values for continuous features)
-
-    Parameters
-    ----------
-    values : GroupedList
-        feature's values (quantiles in the case of continuous ones)
-    nan : str
-        default string value for nan
-
-    Returns
-    -------
-    list[str]
-        list of labels per quantile
-    """
-    # filtering out nan and inf for formatting
-    quantiles = [val for val in values if val != str_nan and isfinite(val)]
-
-    # converting quantiles in string
-    labels = format_quantiles(quantiles)
-
-    return labels
 
 
 def format_quantiles(a_list: list[float]) -> list[str]:
@@ -143,8 +79,12 @@ def format_quantiles(a_list: list[float]) -> list[str]:
 
     # several quantiles
     else:
+        # getting minimal number of decimals to differentiate labels
+        decimals_needed = min_decimals_to_differentiate(a_list)
+        decimals_needed = max(decimals_needed, 1)
+
         # scientific formatting
-        formatted_list = [f"{number:.3e}" for number in a_list]
+        formatted_list = [f"{number:.{decimals_needed}e}" for number in a_list]
 
         # stripping whitespaces
         formatted_list = [string.strip() for string in formatted_list]
@@ -162,3 +102,22 @@ def format_quantiles(a_list: list[float]) -> list[str]:
                 order += [f"{lower} < x <= {upper}"]
 
     return order
+
+
+def min_decimals_to_differentiate(sorted_numbers: list[float]) -> int:
+    """computes number of decimals needed for printing"""
+
+    # checking for values
+    if len(sorted_numbers) <= 1:
+        return 0
+
+    # Find the smallest difference between consecutive numbers
+    smallest_diff = min(diff(sorted_numbers))
+
+    # All numbers are identical
+    if smallest_diff == 0:
+        return 0
+
+    # Number of decimal places needed
+    decimal_places = -int(floor(log10(smallest_diff)))
+    return decimal_places

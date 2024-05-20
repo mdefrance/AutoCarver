@@ -1,8 +1,7 @@
 """Set of tests for binary_carver module.
 """
 
-import json
-import tempfile
+import os
 
 from pandas import DataFrame
 from pytest import fixture, raises
@@ -205,7 +204,6 @@ def test_binary_carver(
             == x_discretized[features.get_names()].isna().mean()
         ), "Some Nans are being dropped (grouped) or more nans than expected"
     else:
-        print(x_discretized[features.get_names()].isna().mean())
         assert all(
             x_discretized[features.get_names()].isna().mean() == 0
         ), "Some Nans are not dropped (grouped)"
@@ -218,11 +216,10 @@ def test_binary_carver(
         ), "Not copied correctly"
 
     # testing json serialization
-    # temp_json = tempfile.NamedTemporaryFile(mode="w+")
-    # json.dump(config, temp_json)
-    # temp_json.flush()
-    json_serialized_auto_carver = dumps(auto_carver.to_json())
-    loaded_carver = load_carver(loads(json_serialized_auto_carver))
+    carver_file = "test.json"
+    auto_carver.save(carver_file)
+    loaded_carver = BinaryCarver.load_carver(carver_file)
+    os.remove(carver_file)
 
     assert all(
         loaded_carver.summary() == auto_carver.summary()

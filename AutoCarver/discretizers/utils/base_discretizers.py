@@ -554,45 +554,36 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
     #     DataFrame
     #         A summary of features' values per modalities.
     #     """
-    #     # storing requested feature for later
-    #     requested_features = self.features[:]
+    #     # storing all features for later
+    #     requested_features = self.features
     #     if feature is not None:
-    #         requested_features = [feature]
-    #         assert feature in self.features, (
-    #             f"Discretization of feature {feature} was not " "requested or it has been dropped."
-    #         )
+    #         requested_features = [self.features(feature)]
 
     #     # raw label per value with output_dtype 'str'
-    #     raw_labels_per_values = self._get_labels_per_values(output_dtype="str")
+    #     # raw_labels_per_values = self._get_labels_per_values(output_dtype="str")
 
     #     # initiating summaries
     #     summaries: list[dict[str, Any]] = []
     #     for feature in requested_features:
     #         # adding each value/label
-    #         for value, label in self.labels_per_values[feature].items():
+    #         for value, label in feature.label_per_value.items():
     #             # checking that nan where dropped
-    #             if not (not self.dropna and value == self.nan):
+    #             if not (not self.dropna and value == feature.nan):
     #                 # initiating feature summary (default value/label)
-    #                 feature_summary = {
-    #                     "feature": feature,
-    #                     "dtype": self.input_dtypes[feature],
-    #                     "label": label,
-    #                     "content": value,
-    #                 }
+    #                 feature_summary = {"feature": feature, "label": label, "content": value}
 
     #                 # case 0: qualitative feature -> not adding floats and integers str_default
-    #                 if feature in self.qualitative_features:
-    #                     if not isinstance(value, floating) and not isinstance(
-    #                         value, float
-    #                     ):  # checking for floats
-    #                         if not isinstance(value, integer) and not isinstance(
-    #                             value, int
-    #                         ):  # checking for ints
-    #                             if value != self.default:  # checking for str_default
+    #                 if feature.is_qualitative:
+    #                     # checking for floats
+    #                     if not isinstance(value, floating) and not isinstance(value, float):
+    #                         # checking for ints
+    #                         if not isinstance(value, integer) and not isinstance(value, int):
+    #                             # checking for default
+    #                             if value != feature.default:
     #                                 summaries += [feature_summary]
 
     #                 # case 1: quantitative feature -> take the raw label per value
-    #                 elif feature in self.quantitative_features:
+    #                 elif feature.is_quantitative:
     #                     feature_summary.update({"content": raw_labels_per_values[feature][value]})
     #                     summaries += [feature_summary]
 

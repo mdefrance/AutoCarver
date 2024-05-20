@@ -11,6 +11,7 @@ from pandas import DataFrame, Series, isna, unique, notna
 from ..features import BaseFeature, CategoricalFeature, Features, GroupedList, OrdinalFeature
 from .utils.base_discretizers import BaseDiscretizer, extend_docstring
 from .utils.type_discretizers import StringDiscretizer
+from icecream import ic
 
 
 class CategoricalDiscretizer(BaseDiscretizer):
@@ -92,6 +93,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
 
         # sorting features' values by target rate
         self._target_sort(x_copy, y)
+        self.features.fit(x_copy)
 
         # discretizing features based on each feature's values_order
         super().fit(X, y)
@@ -639,9 +641,7 @@ def check_dtypes(features: Features, X: DataFrame, **kwargs: dict) -> DataFrame:
 
     # getting per feature data types
     dtypes = (
-        X.fillna({feature.name: feature.nan for feature in features if feature.has_nan})[
-            features.get_names()
-        ]
+        X.fillna({feature.name: feature.nan for feature in features})[features.get_names()]
         .map(type)
         .apply(unique, result_type="reduce")
     )
@@ -652,7 +652,9 @@ def check_dtypes(features: Features, X: DataFrame, **kwargs: dict) -> DataFrame:
     # converting detected non-string features
     if any(not_object):
         # converting non-str features into qualitative features
-        to_convert = [feat for feat in features if feat.name in not_object.index[not_object]]
+        to_convert = [
+            feature for feature in features if feature.name in not_object.index[not_object]
+        ]
         string_discretizer = StringDiscretizer(features=to_convert, **kwargs)
         X = string_discretizer.fit_transform(X)
 

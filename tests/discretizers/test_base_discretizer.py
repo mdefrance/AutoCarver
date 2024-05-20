@@ -36,7 +36,7 @@ def test_base_discretizer(x_train: DataFrame, dropna: bool) -> None:
     groupedlist.group_list(["Medium+", "High-"], "High")
 
     # ordering for qualitative ordinal feature that contains NaNs
-    groupedlist_lownan = GroupedList(order + [str_nan])
+    groupedlist_lownan = GroupedList(order)
     groupedlist_lownan.group_list(["Low-", "Low"], "Low+")
     groupedlist_lownan.group_list(["Medium+", "High-"], "High")
 
@@ -46,11 +46,12 @@ def test_base_discretizer(x_train: DataFrame, dropna: bool) -> None:
         "Qualitative_Ordinal_lownan": groupedlist_lownan,
     }
     ordinals = ["Qualitative_Ordinal", "Qualitative_Ordinal_lownan"]
-    features = Features(ordinals=ordinals, ordinal_values=ordinal_values, nan=str_nan)
-    for feature in features:
-        feature.is_fitted = True
-        feature.dropna = dropna
-        feature.has_nan = True
+    features = Features(
+        ordinals=ordinals, ordinal_values=ordinal_values, nan=str_nan, dropna=dropna
+    )
+    features.fit(x_train)
+    feature = features("Qualitative_Ordinal_lownan")
+    print(feature.has_nan, feature.dropna, feature.get_content())
 
     # initiating discretizer
     discretizer = BaseDiscretizer(features=features, dropna=dropna, copy=True)
@@ -92,9 +93,12 @@ def test_base_discretizer(x_train: DataFrame, dropna: bool) -> None:
         x_expected[feature] = x_expected[feature].replace(nan, str_nan)
 
     assert all(x_expected[feature].isna() == x_discretized[feature].isna()), "unexpected NaNs"
+
+    non_nans = x_expected[feature].notna()
+    print(x_expected.loc[non_nans, feature].value_counts())
+    print(x_discretized.loc[non_nans, feature].value_counts())
     assert all(
-        x_expected.loc[x_expected[feature].notna(), feature]
-        == x_discretized.loc[x_discretized[feature].notna(), feature]
+        x_expected.loc[non_nans, feature] == x_discretized.loc[non_nans, feature]
     ), "incorrect discretization with nans"
 
     # checking that other columns are left unchanged

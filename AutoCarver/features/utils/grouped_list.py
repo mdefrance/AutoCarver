@@ -294,42 +294,6 @@ class GroupedList(list):
         """
         return any(is_equal(value, known) for known in self.values())
 
-    def get_repr(self, char_limit: int = 6) -> list[str]:
-        """Returns a representative list of strings of values of groups.
-
-        Parameters
-        ----------
-        char_limit : int, optional
-            Maximum number of character per string, by default 6
-
-        Returns
-        -------
-        list[str]
-            List of short str representation of the keys' values
-        """
-
-        # initiating list of group representation
-        repr_list: list[str] = []
-
-        # iterating over each group
-        for group in self:
-            # accessing group's values
-            values = self.get(group)
-
-            if len(values) == 0:  # case 0: there are no value in this group
-                pass
-
-            elif len(values) == 1:  # case 1: there is only one value in this group
-                repr_list += [values[0]]
-
-            elif len(values) == 2:  # case 2: two values in this group
-                repr_list += [f"{values[1]}"[:char_limit] + " and " + f"{values[0]}"[:char_limit]]
-
-            elif len(values) > 2:  # case 3: more than two values in this group
-                repr_list += [f"{values[-1]}"[:char_limit] + " to " + f"{values[0]}"[:char_limit]]
-
-        return repr_list
-
     def replace_group_leader(self, group_leader: Any, group_member: Any) -> None:
         """Replaces a group_leader by one of its group_members
 

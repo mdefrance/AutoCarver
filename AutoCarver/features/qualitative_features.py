@@ -1,5 +1,6 @@
 """ Defines a categorical feature"""
 
+from numpy import floating, integer
 from pandas import DataFrame, Series, notna, unique
 
 from .utils.base_feature import BaseFeature
@@ -13,6 +14,7 @@ class CategoricalFeature(BaseFeature):
         super().__init__(name, **kwargs)
         self.is_categorical = True
         self.is_qualitative = True
+        self.raw_order: list[str] = []
 
         # TODO adding stats
         self.n_unique = None
@@ -25,13 +27,19 @@ class CategoricalFeature(BaseFeature):
     def fit(self, X: DataFrame, y: Series = None) -> None:
         """TODO fit stats"""
 
+        # checking for feature's unique non-nan values
+        sorted_unique_values = nan_unique(X[self.name], sort=True)
+
         # checking that feature is not ordinal (already set values)
         if self.values is None:
-            # checking for feature's unique non-nan values
-            unique_values = nan_unique(X[self.name])
 
             # initiating feature with its unique non-nan values
-            self.update(GroupedList(unique_values))
+            self.update(GroupedList(sorted_unique_values))
+
+        # checking that raw order has not been set
+        if len(self.raw_order) == 0:
+            # saving up number ordering for labeling
+            self.raw_order = [self.values.get_group(value) for value in sorted_unique_values]
 
         super().fit(X, y)
 
@@ -41,20 +49,22 @@ class CategoricalFeature(BaseFeature):
     def check_values(self, X: DataFrame) -> None:
         """checks for unexpected values from unique values in DataFrame"""
 
-        # computing unique values if not provided
-        unique_values = unique(X[self.name])
+        # computing unique labels in dataframe
+        unique_labels = unique(X[self.name])
+
+        # converting to labels
+        unique_values = [self.value_per_label.get(label, label) for label in unique_labels]
 
         # unexpected values for this feature
         unexpected = [
-            value for value in unique_values if not self.values.contains(value) and notna(value)
+            value
+            for value in unique_values
+            if not self.values.contains(value) and notna(value) and value != self.nan
         ]
         if len(unexpected) > 0:
             # feature does not have a default value
             if not self.has_default:
-                raise ValueError(
-                    f" - [Features] Unexpected values for "
-                    f"{self.__name__}('{self.name}'). Unexpected values: {str(list(unexpected))}."
-                )
+                raise ValueError(f" - [{self}] Unexpected values: {str(list(unexpected))}")
 
             # feature has default value: adding unexpected to default
             default_group = self.values.get_group(self.default)
@@ -62,27 +72,49 @@ class CategoricalFeature(BaseFeature):
 
         super().check_values(X)
 
-    def update(
-        self,
-        values: GroupedList,
-        convert_labels: bool = False,
-        sorted_values: bool = False,
-        replace: bool = False,
-        output_dtype: str = "str",
-    ) -> None:
-        """updates values and labels for each value of the feature"""
-        # updating feature's values
-        super().update(
-            values,
-            convert_labels=convert_labels,
-            sorted_values=sorted_values,
-            replace=replace,
-            output_dtype=output_dtype,
-        )
+    def get_labels(self) -> GroupedList:
+        """gives labels per values"""
 
-        # for qualitative feature -> by default, labels are values
-        super().update_labels(output_dtype=output_dtype)
-        # TODO make better labels
+        # iterating over each value and there contente
+        labels = []
+        for group, content in self.get_content().items():
+
+            # ordering content as per original ordering (removes DEFAULT and NAN)
+            ordered_content = [
+                value
+                for value in self.raw_order
+                if value in content
+                # removing nan
+                and value != self.nan
+                # removing floats
+                and not isinstance(value, floating) and not isinstance(value, float)
+                # removing ints
+                and not isinstance(value, integer) and not isinstance(value, int)
+            ]
+
+            # building label from ordered content
+            if len(ordered_content) == 0:
+                label = group
+            elif len(ordered_content) == 1:
+                label = ordered_content[0]
+            else:
+                # list label for categorical feature
+                label = ", ".join(ordered_content)
+                if len(label) > self.max_n_chars:
+                    label = label[: self.max_n_chars] + "..."
+
+                # ordered label for ordinal features
+                if self.is_ordinal:
+                    label = f"{ordered_content[0]} to {ordered_content[-1]}"
+
+            # adding nans
+            if self.nan in content and label != self.nan:  # and self.nan not in label:
+                label += f", {self.nan}"
+
+            # saving label
+            labels += [label]
+
+        return GroupedList(labels)
 
 
 class OrdinalFeature(CategoricalFeature):
@@ -95,22 +127,30 @@ class OrdinalFeature(CategoricalFeature):
 
         # checking for values
         if values is None or len(values) == 0:
+            raise ValueError(f" - [{self}] Please make sure to provide values.")
+
+        # checking for nan ordering
+        if self.nan in values:
             raise ValueError(
-                " - [Features] Please make sure to provide values for "
-                f"{self.__name__}('{self.name}')"
+                f" - [{self}] Ordering for '{self.nan}' can't be set by user, only fitted on data."
             )
+
+        # saving up raw ordering for labeling
+        self.raw_order = values[:]
 
         # setting values and labels
         super().update(GroupedList(values))
 
 
-def nan_unique(x: Series) -> list[str]:
+def nan_unique(x: Series, sort: bool = False) -> list[str]:
     """Unique non-NaN values.
 
     Parameters
     ----------
     x : Series
         Values to be deduplicated.
+    sorted : boolean, optionnal
+        Whether or not to sort unique by appearance.
 
     Returns
     -------
@@ -118,8 +158,13 @@ def nan_unique(x: Series) -> list[str]:
         List of unique non-nan values
     """
 
-    # unique values
-    uniques = unique(x)
+    # unique values not sorted
+    if sort:
+        uniques = unique(x)
+
+    # sorting unique values
+    else:
+        uniques = list(x.value_counts(sort=True, ascending=False).index)
 
     # filtering out nans
     uniques = [value for value in uniques if notna(value)]

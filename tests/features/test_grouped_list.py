@@ -162,6 +162,3 @@ def test_grouped_list_functions():
     # test contains
     assert groupedlist.contains("3")
     assert not groupedlist.contains("15")
-
-    # test get_repr
-    assert groupedlist.get_repr() == ["5 to 3", "7 and 0"]

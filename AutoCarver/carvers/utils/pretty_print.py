@@ -77,27 +77,7 @@ def index_mapper(feature: BaseFeature, xtab: DataFrame = None) -> DataFrame:
         # copying initial xtab
         mapped_xtab = xtab.copy()
 
-        # for qualitative features -> mapping with values_orders.content
-        if feature.is_qualitative:
-            mapped_index = [feature.values.get(idx, idx) for idx in mapped_xtab.index]
-            # removing str_default and deduplicating for features converted to str
-            mapped_index = [
-                list(set(str(idx) for n, idx in enumerate(mapped_idx) if idx != feature.default))
-                for mapped_idx in mapped_index
-            ]
-            mapped_index = [
-                (
-                    mapped_idx[-1] + " to " + mapped_idx[0]
-                    if len(mapped_idx) > 2
-                    else mapped_idx[0] if len(mapped_idx) == 0 else ", ".join(mapped_idx)
-                )
-                for mapped_idx in mapped_index
-            ]
-        # for quantitative features -> mapping with labels_orders.keys
-        else:
-            mapped_index = feature.labels[:]
-
         # modifying indices based on provided order
-        mapped_xtab.index = mapped_index
+        mapped_xtab.index = feature.labels[:]
 
     return mapped_xtab
