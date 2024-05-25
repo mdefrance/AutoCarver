@@ -8,7 +8,7 @@ from numpy import add, array, searchsorted, sqrt, unique, zeros
 from pandas import DataFrame, Series, crosstab
 from scipy.stats import chi2_contingency
 
-from ..discretizers.utils.base_discretizers import extend_docstring
+from ..discretizers.utils.base_discretizer import extend_docstring
 from .utils.base_carver import BaseCarver
 from ..features import Features
 
@@ -34,7 +34,7 @@ class BinaryCarver(BaseCarver):
         *,
         max_n_mod: int = 5,
         min_freq_mod: float = None,
-        output_dtype: str = "float",
+        ordinal_encoding: bool = True,
         dropna: bool = True,
         **kwargs: dict,
     ) -> None:
@@ -65,7 +65,7 @@ class BinaryCarver(BaseCarver):
             features=features,
             max_n_mod=max_n_mod,
             min_freq_mod=min_freq_mod,
-            output_dtype=output_dtype,
+            ordinal_encoding=ordinal_encoding,
             dropna=dropna,
             **kwargs,
         )

@@ -87,10 +87,10 @@ class BaseFeature:
         convert_labels: bool = False,
         sorted_values: bool = False,
         replace: bool = False,
-        output_dtype: str = "str",
+        ordinal_encoding: bool = False,
     ) -> None:
         """updates values for each value of the feature"""
-        _ = output_dtype  # unused attribute
+        _ = ordinal_encoding  # unused attribute
 
         # values are the same but sorted
         if sorted_values:
@@ -156,21 +156,21 @@ class BaseFeature:
                     self.values.group_list(grouped_values, kept_value)
 
         # updating labels accordingly
-        self.update_labels(output_dtype=output_dtype)
+        self.update_labels(ordinal_encoding=ordinal_encoding)
 
     def get_labels(self) -> GroupedList:
         """gives labels per values"""
         # default labels are values
         return self.values
 
-    def update_labels(self, output_dtype: str = "str") -> None:
+    def update_labels(self, ordinal_encoding: bool = False) -> None:
         """updates label for each value of the feature"""
 
         # initiating labels for qualitative features
         labels = self.get_labels()
 
         # requested float output (AutoCarver) -> converting to integers
-        if output_dtype == "float":
+        if ordinal_encoding:
             labels = [n for n, _ in enumerate(labels)]
 
         # saving updated labels
@@ -274,7 +274,7 @@ class BaseFeature:
         return json_serialize_feature(feature)
 
     @classmethod
-    def load(cls: Type["BaseFeature"], feature_json: dict, output_dtype: str) -> "BaseFeature":
+    def load(cls: Type["BaseFeature"], feature_json: dict, ordinal_encoding: bool) -> "BaseFeature":
         """Loads a feature"""
 
         # deserializing content into grouped list of values
@@ -289,6 +289,6 @@ class BaseFeature:
         feature = cls(**dict(feature_json, history=history))
 
         # updating feature with deserialized content
-        feature.update(values, replace=True, output_dtype=output_dtype)
+        feature.update(values, replace=True, ordinal_encoding=ordinal_encoding)
 
         return feature

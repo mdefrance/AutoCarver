@@ -38,7 +38,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         #     * If ``"str"``, features are considered as qualitative.
         #     * If ``"float"``, features are considered as quantitative.
 
-        # output_dtype : str, optional
+        # ordinal_encoding : str, optional
         #     To be choosen amongst ``["float", "str"]``, by default ``"str"``
 
         #     * If ``"float"``, grouped modalities will be converted to there corresponding
@@ -92,7 +92,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         self.copy = kwargs.get("copy", True)
 
         # output type
-        self.output_dtype = kwargs.get("output_dtype", "str")
+        self.ordinal_encoding = kwargs.get("ordinal_encoding", False)
 
         # whether or not to reinstate numpy nan after bucketization
         self.dropna = kwargs.get("dropna", False)
@@ -277,7 +277,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             raise ValueError(f" - [Discretizer] Features not fitted: {str(missing_features)}.")
 
         # for each feature, getting label associated to each value
-        self.features.update_labels(self.output_dtype)
+        self.features.update_labels(self.ordinal_encoding)
 
         # setting fitted as True to raise alerts
         self.is_fitted = True
@@ -302,7 +302,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         """
         # * For each feature's value, the associated group label is attributed (as definid by
         # ``values_orders``).
-        # * If ``output_dtype="float"``, converts labels into floats.
+        # * If ``ordinal_encoding="float"``, converts labels into floats.
         # * Data types are matched as ``input_dtypes=="str"`` for qualitative features and
         # ``input_dtypes=="float"`` for quantitative ones.
         # * If ``copy=True``, the input DataFrame will be copied.
@@ -431,7 +431,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             "is_fitted": self.is_fitted,
             "n_jobs": self.n_jobs,
             "verbose": self.verbose,
-            "output_dtype": self.output_dtype,
+            "ordinal_encoding": self.ordinal_encoding,
         }
 
     def save(self, file_name: str, light_mode: bool = False) -> None:
@@ -482,7 +482,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
 
         # deserializing features
         features = Features.load(
-            discretizer_json.pop("features"), discretizer_json.get("output_dtype")
+            discretizer_json.pop("features"), discretizer_json.get("ordinal_encoding")
         )
 
         # initiating BaseDiscretizer
@@ -536,86 +536,90 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
     #     else:
     #         return self._history
 
-    # def summary(self, feature: str = None) -> DataFrame:
-    #     """Summarizes the data discretization process.
+    def summary(self, feature: str = None) -> DataFrame:
+        """Summarizes the data discretization process.
 
-    #     By default:
+        By default:
 
-    #         * ``str_default="__OTHER__"`` is added for non-representative modalities.
-    #         * ``str_nan="__NAN__"`` is adde for features that contain ``numpy.nan``.
+            * ``str_default="__OTHER__"`` is added for non-representative modalities.
+            * ``str_nan="__NAN__"`` is adde for features that contain ``numpy.nan``.
 
-    #     Parameters
-    #     ----------
-    #     feature : str, optional
-    #         Specify for which feature to return the summary, by default ``None``
+        Parameters
+        ----------
+        feature : str, optional
+            Specify for which feature to return the summary, by default ``None``
 
-    #     Returns
-    #     -------
-    #     DataFrame
-    #         A summary of features' values per modalities.
-    #     """
-    #     # storing all features for later
-    #     requested_features = self.features
-    #     if feature is not None:
-    #         requested_features = [self.features(feature)]
+        Returns
+        -------
+        DataFrame
+            A summary of features' values per modalities.
+        """
+        # storing all features for later
+        requested_features = self.features
+        if feature is not None:
+            requested_features = [self.features(feature)]
 
-    #     # raw label per value with output_dtype 'str'
-    #     # raw_labels_per_values = self._get_labels_per_values(output_dtype="str")
+        # raw label per value with ordinal_encoding 'str'
+        # raw_labels_per_values = self._get_labels_per_values(ordinal_encoding=False)
 
-    #     # initiating summaries
-    #     summaries: list[dict[str, Any]] = []
-    #     for feature in requested_features:
-    #         # adding each value/label
-    #         for value, label in feature.label_per_value.items():
-    #             # checking that nan where dropped
-    #             if not (not self.dropna and value == feature.nan):
-    #                 # initiating feature summary (default value/label)
-    #                 feature_summary = {"feature": feature, "label": label, "content": value}
+        # initiating summaries
+        summaries: list[dict[str, Any]] = []
+        for feature in requested_features:
+            # adding each value/label
+            for value, label in feature.label_per_value.items():
+                # checking that nan where dropped
+                if not (not self.dropna and value == feature.nan):
+                    # initiating feature summary (default value/label)
+                    feature_summary = {"feature": str(feature), "label": label, "content": value}
 
-    #                 # case 0: qualitative feature -> not adding floats and integers str_default
-    #                 if feature.is_qualitative:
-    #                     # checking for floats
-    #                     if not isinstance(value, floating) and not isinstance(value, float):
-    #                         # checking for ints
-    #                         if not isinstance(value, integer) and not isinstance(value, int):
-    #                             # checking for default
-    #                             if value != feature.default:
-    #                                 summaries += [feature_summary]
+                    # case 0: qualitative feature -> not adding floats and integers str_default
+                    if feature.is_qualitative:
+                        # checking for floats
+                        if not isinstance(value, floating) and not isinstance(value, float):
+                            # checking for ints
+                            if not isinstance(value, integer) and not isinstance(value, int):
+                                # checking for default
+                                if value != feature.default:
+                                    summaries += [feature_summary]
 
-    #                 # case 1: quantitative feature -> take the raw label per value
-    #                 elif feature.is_quantitative:
-    #                     feature_summary.update({"content": raw_labels_per_values[feature][value]})
-    #                     summaries += [feature_summary]
+                    # case 1: quantitative feature -> take the raw label per value
+                    elif feature.is_quantitative:
+                        feature_summary.update({"content": feature.label_per_value.get(value)})
+                        summaries += [feature_summary]
 
-    #     # adding nans for quantitative features (when nan has been grouped)
-    #     for feature in self.quantitative_features:
-    #         # initiating feature summary (no value/label)
-    #         feature_summary = {"feature": feature, "dtype": self.input_dtypes[feature]}
-    #         # if there are nans -> if already added it will be dropped afterwards (unique content)
-    #         if self.nan in raw_labels_per_values[feature]:
-    #             nan_group = self.values_orders[feature].get_group(self.nan)
-    #             feature_summary.update(
-    #                 {"label": self.labels_per_values[feature][nan_group], "content": self.nan}
-    #             )
-    #             summaries += [feature_summary]
+            # adding nans for quantitative features (when nan has been grouped)
+            if feature.is_quantitative:
+                # initiating feature summary (no value/label)
+                feature_summary = {"feature": str(feature)}
 
-    #     # aggregating unique values per label
-    #     summaries = (
-    #         DataFrame(summaries)
-    #         .groupby(["feature", "dtype", "label"])["content"]
-    #         .apply(lambda u: list(unique(u)))
-    #         .reset_index()
-    #     )
-    #     # sorting content
-    #     sorted_contents: list[list[Any]] = []
-    #     for content in summaries["content"]:
-    #         content.sort(key=repr)
-    #         sorted_contents += [content]
-    #     summaries["content"] = sorted_contents
-    #     # sorting and seting index
-    #     summaries = summaries.sort_values(["dtype", "feature"]).set_index(["feature", "dtype"])
+                # if there are nans -> if already added it will be dropped afterwards
+                if feature.nan in feature.label_per_value:
+                    nan_group = feature.values.get_group(feature.nan)
+                    feature_summary.update(
+                        {
+                            "label": feature.label_per_value.get(nan_group, nan_group),
+                            "content": feature.nan,
+                        }
+                    )
+                    summaries += [feature_summary]
 
-    #     return summaries
+        # aggregating unique values per label
+        summaries = (
+            DataFrame(summaries)
+            .groupby(["feature", "label"])["content"]
+            .apply(lambda u: list(unique(u)))
+            .reset_index()
+        )
+        # sorting content
+        sorted_contents: list[list[Any]] = []
+        for content in summaries["content"]:
+            content.sort(key=repr)
+            sorted_contents += [content]
+        summaries["content"] = sorted_contents
+        # sorting and seting index
+        summaries = summaries.sort_values(["feature"]).set_index(["feature"])
+
+        return summaries
 
     # def update_discretizer(
     #     self,
@@ -692,7 +696,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
 
     #         # updating Carver values_orders and labels_per_values
     #         self.values_orders.update({feature: order})
-    #         self.labels_per_values = self._get_labels_per_values(self.output_dtype)
+    #         self.labels_per_values = self._get_labels_per_values(self.ordinal_encoding)
 
 
 def transform_quantitative_feature(

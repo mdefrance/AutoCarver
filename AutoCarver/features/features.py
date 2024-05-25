@@ -239,9 +239,9 @@ class Features:
         for feature, values in feature_values.items():
             self(feature).update(values, convert_labels, sorted_values, replace)
 
-    def update_labels(self, output_dtype: str = "str") -> None:
+    def update_labels(self, ordinal_encoding: bool = False) -> None:
         for feature in self:
-            feature.update_labels(output_dtype=output_dtype)
+            feature.update_labels(ordinal_encoding=ordinal_encoding)
 
     def get_qualitatives(self, return_names: bool = False) -> list[BaseFeature]:
         if return_names:
@@ -266,7 +266,7 @@ class Features:
         return {feature.name: feature.to_json(light_mode) for feature in self}
 
     @classmethod
-    def load(cls: Type["Features"], features_json: dict, output_dtype: str) -> "Features":
+    def load(cls: Type["Features"], features_json: dict, ordinal_encoding: bool) -> "Features":
         """Loads a set of features"""
 
         # casting each feature to there corresponding type
@@ -274,13 +274,13 @@ class Features:
         for _, feature in features_json.items():
             # categorical feature
             if feature.get("is_categorical"):
-                unpacked_features += [CategoricalFeature.load(feature, output_dtype)]
+                unpacked_features += [CategoricalFeature.load(feature, ordinal_encoding)]
             # ordinal feature
             elif feature.get("is_ordinal"):
-                unpacked_features += [OrdinalFeature.load(feature, output_dtype)]
+                unpacked_features += [OrdinalFeature.load(feature, ordinal_encoding)]
             # ordinal feature
             elif feature.get("is_quantitative"):
-                unpacked_features += [QuantitativeFeature.load(feature, output_dtype)]
+                unpacked_features += [QuantitativeFeature.load(feature, ordinal_encoding)]
 
         # initiating features
         return cls(unpacked_features)

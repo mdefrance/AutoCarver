@@ -32,7 +32,7 @@ def test_binary_carver(
     level0_to_level1: dict[str, list[str]],
     level1_to_level2: dict[str, list[str]],
     min_freq_mod: float,
-    output_dtype: str,
+    ordinal_encoding: bool,
     dropna: bool,
     sort_by: str,  # pylint: disable=W0621
     copy: bool,
@@ -71,7 +71,7 @@ def test_binary_carver(
         Chained orders level1 to level2 of features to be chained
     min_freq_mod : float
         Minimum frequency per carved modalities
-    output_dtype : str
+    ordinal_encoding : str
         Output type 'str' or 'float'
     dropna : bool
         Whether or note to drop nans
@@ -117,7 +117,7 @@ def test_binary_carver(
             sort_by=sort_by,
             features=features,
             max_n_mod=max_n_mod,
-            output_dtype=output_dtype,
+            ordinal_encoding=ordinal_encoding,
             min_freq_mod=min_freq_mod,
             dropna=dropna,
             copy=copy,
@@ -142,7 +142,7 @@ def test_binary_carver(
         sort_by=sort_by,
         features=features,
         max_n_mod=max_n_mod,
-        output_dtype=output_dtype,
+        ordinal_encoding=ordinal_encoding,
         min_freq_mod=min_freq_mod,
         dropna=dropna,
         copy=copy,
@@ -297,7 +297,7 @@ def test_binary_carver(
         max_n_mod=max_n_mod,
         min_freq_mod=min_freq_mod,
         sort_by=sort_by,
-        output_dtype=output_dtype,
+        ordinal_encoding=ordinal_encoding,
         dropna=dropna,
         copy=copy,
         verbose=False,

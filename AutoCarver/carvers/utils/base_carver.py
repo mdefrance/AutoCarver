@@ -20,8 +20,7 @@ from .combinations import (
 )
 from .pretty_print import prettier_xagg, index_mapper
 
-from ...discretizers.discretizers import Discretizer
-from ...discretizers.utils.base_discretizers import BaseDiscretizer
+from ...discretizers import Discretizer, BaseDiscretizer
 from ...features import GroupedList, Features, BaseFeature
 
 # trying to import extra dependencies
@@ -51,7 +50,7 @@ class BaseCarver(BaseDiscretizer):
         *,
         max_n_mod: int = 5,
         min_freq_mod: float = None,
-        output_dtype: str = "float",
+        ordinal_encoding: bool = True,
         dropna: bool = True,
         **kwargs: dict,
     ) -> None:
@@ -95,11 +94,11 @@ class BaseCarver(BaseDiscretizer):
         min_freq_mod : float, optional
             Minimum frequency per final modality, by default ``None`` for ``min_freq/2``
 
-        output_dtype : str, optional
-            To be choosen amongst ``["float", "str"]``, by default ``"float"``
+        ordinal_encoding : bool, optional
+            Whether or not to ordinal encode features, by default ``True``
 
-            * ``"float"``, sets the rank of modalities as label.
-            * ``"str"``, sets one modality of group as label.
+            * ``True``, sets the rank of modalities as label.
+            * ``False``, sets one modality of group as label.
 
         dropna : bool, optional
             * ``True``, try to group ``numpy.nan`` with other modalities.
@@ -129,7 +128,7 @@ class BaseCarver(BaseDiscretizer):
         )
 
         # Initiating BaseDiscretizer
-        super().__init__(features, output_dtype=output_dtype, dropna=dropna, **kwargs)
+        super().__init__(features, ordinal_encoding=ordinal_encoding, dropna=dropna, **kwargs)
 
         # class specific attributes
         self.min_freq = min_freq  # minimum frequency per base bucket
@@ -194,7 +193,7 @@ class BaseCarver(BaseDiscretizer):
 
         # discretizing all features, always copying, to keep discretization from start to finish
         discretizer = Discretizer(
-            self.min_freq, self.features, **dict(self.kwargs, copy=True, output_dtype="str")
+            self.min_freq, self.features, **dict(self.kwargs, copy=True, ordinal_encoding=False)
         )
         x_copy = discretizer.fit_transform(x_copy, y)
         if x_dev_copy is not None:  # applying on x_dev
@@ -742,7 +741,7 @@ class BaseCarver(BaseDiscretizer):
             carver_json = json.load(json_file)
 
         # deserializing features
-        features = Features.load(carver_json.pop("features"), carver_json.get("output_dtype"))
+        features = Features.load(carver_json.pop("features"), carver_json.get("ordinal_encoding"))
 
         # initiating BaseDiscretizer
         loaded_carver = BaseDiscretizer(features=features, **carver_json)

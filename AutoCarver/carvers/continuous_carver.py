@@ -6,7 +6,7 @@ from numpy import mean, unique
 from pandas import DataFrame, Series
 from scipy.stats import kruskal
 
-from ..discretizers.utils.base_discretizers import extend_docstring
+from ..discretizers.utils.base_discretizer import extend_docstring
 from ..features import GroupedList
 from .utils.base_carver import BaseCarver
 
@@ -34,7 +34,7 @@ class ContinuousCarver(BaseCarver):
         values_orders: dict[str, GroupedList] = None,
         max_n_mod: int = 5,
         min_freq_mod: float = None,
-        output_dtype: str = "float",
+        ordinal_encoding: bool = True,
         dropna: bool = True,
         copy: bool = False,
         verbose: bool = False,
@@ -63,7 +63,7 @@ class ContinuousCarver(BaseCarver):
             values_orders=values_orders,
             max_n_mod=max_n_mod,
             min_freq_mod=min_freq_mod,
-            output_dtype=output_dtype,
+            ordinal_encoding=ordinal_encoding,
             dropna=dropna,
             copy=copy,
             verbose=verbose,

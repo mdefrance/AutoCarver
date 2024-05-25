@@ -8,7 +8,7 @@ from pandas import DataFrame, Series, unique
 
 from ..config import DEFAULT, NAN
 from ..discretizers import BaseDiscretizer
-from ..discretizers.utils.base_discretizers import extend_docstring
+from ..discretizers.utils.base_discretizer import extend_docstring
 from ..features import GroupedList
 from .utils.base_carver import BaseCarver
 from .binary_carver import BinaryCarver
@@ -36,7 +36,7 @@ class MulticlassCarver(BaseCarver):
         values_orders: dict[str, GroupedList] = None,
         max_n_mod: int = 5,
         min_freq_mod: float = None,
-        output_dtype: str = "float",
+        ordinal_encoding: bool = True,
         dropna: bool = True,
         copy: bool = False,
         verbose: bool = False,
@@ -62,7 +62,7 @@ class MulticlassCarver(BaseCarver):
             values_orders=values_orders,
             max_n_mod=max_n_mod,
             min_freq_mod=min_freq_mod,
-            output_dtype=output_dtype,
+            ordinal_encoding=ordinal_encoding,
             dropna=dropna,
             copy=copy,
             verbose=verbose,
@@ -180,7 +180,7 @@ class MulticlassCarver(BaseCarver):
                 ordinal_features=self.ordinal_features,
                 values_orders=raw_values_orders,
                 max_n_mod=self.max_n_mod,
-                output_dtype=self.output_dtype,
+                ordinal_encoding=self.ordinal_encoding,
                 dropna=self.dropna,
                 copy=True,  # copying x to keep raw columns as is
                 verbose=self.verbose,
@@ -191,7 +191,7 @@ class MulticlassCarver(BaseCarver):
             # fitting BinaryCarver for y_class
             binary_carver.fit(x_copy, target_class, X_dev=x_dev_copy, y_dev=target_class_dev)
 
-            # renaming BinaryCarver's fitted values_orders/input_dtype/output_dtype for y_class
+            # renaming BinaryCarver's fitted values_orders/input_dtype/ordinal_encoding for y_class
             casted_values_orders.update(dict_append_class(binary_carver.values_orders, y_class))
             casted_input_dtypes.update(dict_append_class(binary_carver.input_dtypes, y_class))
             casted_history.update(
@@ -212,7 +212,7 @@ class MulticlassCarver(BaseCarver):
             features=[feature for castings in casted_features.values() for feature in castings],
             values_orders=casted_values_orders,
             input_dtypes=casted_input_dtypes,
-            output_dtype=self.output_dtype,
+            ordinal_encoding=self.ordinal_encoding,
             str_nan=self.kwargs.get("nan", NAN),
             str_default=self.kwargs.get("default", DEFAULT),
             dropna=self.dropna,

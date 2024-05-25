@@ -8,6 +8,8 @@ from .utils.grouped_list import GroupedList
 
 
 class QuantitativeFeature(BaseFeature):
+    __name__ = "Quantitative"
+
     def __init__(self, name: str, **kwargs: dict) -> None:
         super().__init__(name, **kwargs)
         self.is_quantitative = True

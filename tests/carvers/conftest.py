@@ -100,7 +100,7 @@ def level1_to_level2() -> dict[str, list[str]]:
 
 
 @fixture(scope="module", params=["float", "str"])
-def output_dtype(request: type[FixtureRequest]) -> str:
+def ordinal_encoding(request: type[FixtureRequest]) -> str:
     return request.param
 
 
