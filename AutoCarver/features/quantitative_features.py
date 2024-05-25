@@ -1,6 +1,6 @@
 """ Defines a continuous feature"""
 
-from numpy import isfinite, nan, diff, floor, log10
+from numpy import isfinite, nan, diff, floor, log10  # pylint: disable=E0611
 from pandas import isna
 
 from .utils.base_feature import BaseFeature
@@ -46,6 +46,25 @@ class QuantitativeFeature(BaseFeature):
             labels.append(self.nan)
 
         return labels
+
+    def get_summary(self):
+        """returns summary of feature's values' content"""
+        # getting feature's labels
+        labels = self.get_labels()
+
+        # iterating over each value
+        summary = []
+        for num, (group, values) in enumerate(self.get_content().items()):
+            # getting group label
+            group_label = self.label_per_value.get(group)
+
+            # Quantitative features: getting labels
+            values = labels[num]
+
+            # adding group summary
+            summary += [{"feature": self, "label": group_label, "content": values}]
+
+        return summary
 
 
 class DatetimeFeature(BaseFeature):

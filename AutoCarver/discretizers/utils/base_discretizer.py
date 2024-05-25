@@ -554,72 +554,12 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         DataFrame
             A summary of features' values per modalities.
         """
-        # storing all features for later
-        requested_features = self.features
+        # checking for requested specific feature
         if feature is not None:
-            requested_features = [self.features(feature)]
+            summary = self.features(feature).get_summary()
+            return DataFrame(summary).set_index(["feature", "label"])
 
-        # raw label per value with ordinal_encoding 'str'
-        # raw_labels_per_values = self._get_labels_per_values(ordinal_encoding=False)
-
-        # initiating summaries
-        summaries: list[dict[str, Any]] = []
-        for feature in requested_features:
-            # adding each value/label
-            for value, label in feature.label_per_value.items():
-                # checking that nan where dropped
-                if not (not self.dropna and value == feature.nan):
-                    # initiating feature summary (default value/label)
-                    feature_summary = {"feature": str(feature), "label": label, "content": value}
-
-                    # case 0: qualitative feature -> not adding floats and integers str_default
-                    if feature.is_qualitative:
-                        # checking for floats
-                        if not isinstance(value, floating) and not isinstance(value, float):
-                            # checking for ints
-                            if not isinstance(value, integer) and not isinstance(value, int):
-                                # checking for default
-                                if value != feature.default:
-                                    summaries += [feature_summary]
-
-                    # case 1: quantitative feature -> take the raw label per value
-                    elif feature.is_quantitative:
-                        feature_summary.update({"content": feature.label_per_value.get(value)})
-                        summaries += [feature_summary]
-
-            # adding nans for quantitative features (when nan has been grouped)
-            if feature.is_quantitative:
-                # initiating feature summary (no value/label)
-                feature_summary = {"feature": str(feature)}
-
-                # if there are nans -> if already added it will be dropped afterwards
-                if feature.nan in feature.label_per_value:
-                    nan_group = feature.values.get_group(feature.nan)
-                    feature_summary.update(
-                        {
-                            "label": feature.label_per_value.get(nan_group, nan_group),
-                            "content": feature.nan,
-                        }
-                    )
-                    summaries += [feature_summary]
-
-        # aggregating unique values per label
-        summaries = (
-            DataFrame(summaries)
-            .groupby(["feature", "label"])["content"]
-            .apply(lambda u: list(unique(u)))
-            .reset_index()
-        )
-        # sorting content
-        sorted_contents: list[list[Any]] = []
-        for content in summaries["content"]:
-            content.sort(key=repr)
-            sorted_contents += [content]
-        summaries["content"] = sorted_contents
-        # sorting and seting index
-        summaries = summaries.sort_values(["feature"]).set_index(["feature"])
-
-        return summaries
+        return self.features.get_summaries()
 
     # def update_discretizer(
     #     self,

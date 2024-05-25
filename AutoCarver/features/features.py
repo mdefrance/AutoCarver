@@ -285,6 +285,15 @@ class Features:
         # initiating features
         return cls(unpacked_features)
 
+    def get_summaries(self):
+        """returns summaries of features' values' content"""
+        # iterating over each feature
+        summaries = []
+        for feature in self:
+            summaries += feature.get_summary()
+
+        return DataFrame(summaries).set_index(["feature", "label"])
+
 
 def cast_features(
     features: list[str],

@@ -116,6 +116,26 @@ class CategoricalFeature(BaseFeature):
 
         return GroupedList(labels)
 
+    def get_summary(self):
+        """returns summary of feature's values' content"""
+        # iterating over each value
+        summary = []
+        for group, values in self.get_content().items():
+            # getting group label
+            group_label = self.label_per_value.get(group)
+
+            # Qualtiative features: filtering out numbers
+            values = [value for value in values if isinstance(value, str)]
+
+            # if there is only one value converting to str
+            if len(values) == 1:
+                values = values[0]
+
+            # adding group summary
+            summary += [{"feature": self, "label": group_label, "content": values}]
+
+        return summary
+
 
 class OrdinalFeature(CategoricalFeature):
     __name__ = "Ordinal"
