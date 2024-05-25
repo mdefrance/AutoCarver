@@ -62,7 +62,7 @@ class QuantitativeFeature(BaseFeature):
             values = labels[num]
 
             # adding group summary
-            summary += [{"feature": self, "label": group_label, "content": values}]
+            summary += [{"feature": str(self), "label": group_label, "content": values}]
 
         return summary
 

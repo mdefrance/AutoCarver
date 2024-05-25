@@ -258,8 +258,10 @@ class Features:
         for feature in self:
             feature.set_dropna(dropna)
 
-    def get_content(self) -> dict:
+    def get_content(self, feature: str = None) -> dict:
         """Returns per feature content"""
+        if feature is not None:
+            return self(feature).get_content()
         return {feature.name: feature.get_content() for feature in self}
 
     def to_json(self, light_mode: bool = False) -> dict:

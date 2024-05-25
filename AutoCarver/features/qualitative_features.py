@@ -14,7 +14,6 @@ class CategoricalFeature(BaseFeature):
         super().__init__(name, **kwargs)
         self.is_categorical = True
         self.is_qualitative = True
-        self.raw_order: list[str] = []
 
         # TODO adding stats
         self.n_unique = None
@@ -66,7 +65,12 @@ class CategoricalFeature(BaseFeature):
             if not self.has_default:
                 raise ValueError(f" - [{self}] Unexpected values: {str(list(unexpected))}")
 
-            # feature has default value: adding unexpected to default
+            # feature has default value:
+            # adding unexpected value to list of known values
+            for unexpected_value in unexpected:
+                self.values.append(unexpected_value)
+
+            # adding unexpected to default
             default_group = self.values.get_group(self.default)
             self.group_list(unexpected, default_group)
 
@@ -132,7 +136,7 @@ class CategoricalFeature(BaseFeature):
                 values = values[0]
 
             # adding group summary
-            summary += [{"feature": self, "label": group_label, "content": values}]
+            summary += [{"feature": str(self), "label": group_label, "content": values}]
 
         return summary
 
@@ -155,8 +159,12 @@ class OrdinalFeature(CategoricalFeature):
                 f" - [{self}] Ordering for '{self.nan}' can't be set by user, only fitted on data."
             )
 
+        # checking for str values
+        if not all(isinstance(value, str) for value in values):
+            raise ValueError(f" - [{self}] Please make sure to provide str values.")
+
         # saving up raw ordering for labeling
-        self.raw_order = values[:]
+        self.raw_order = kwargs.get("raw_order", values[:])
 
         # setting values and labels
         super().update(GroupedList(values))

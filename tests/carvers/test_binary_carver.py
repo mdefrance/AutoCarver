@@ -221,129 +221,79 @@ def test_binary_carver(
     loaded_carver = BinaryCarver.load_carver(carver_file)
     os.remove(carver_file)
 
+    # checking that reloading worked exactly the same
     assert all(
         loaded_carver.summary() == auto_carver.summary()
-    ), "Non-identical AutoCarver when loading JSON"
+    ), "Non-identical summaries when loading from JSON"
+    assert all(
+        x_discretized[features.get_names()]
+        == loaded_carver.transform(x_dev_1)[features.get_names()]
+    ), "Non-identical discretized values when loading from JSON"
 
-    # transform dev with unexpected modal for a feature that passed through CategoricalDiscretizer
+    # transform dev with unexpected modal for a feature that has_default
     auto_carver.transform(x_dev_wrong_1)
 
-    # transform dev with unexpected nans for a feature that passed through CategoricalDiscretizer
-    with raises(AssertionError):
+    # transform dev with unexpected nans for a feature that has_default
+    with raises(ValueError):
         auto_carver.transform(x_dev_wrong_2)
 
-    # transform dev with unexpected modal for a feature that didnt go through CategoricalDiscretizer
-    with raises(AssertionError):
+    # transform dev with unexpected modal for a feature that does not have default
+    with raises(ValueError):
         auto_carver.transform(x_dev_wrong_3)
 
     # testing with unknown values in chained discretizer
-    chained_features = ["Qualitative_Ordinal", "Qualitative_Ordinal_lownan"]
-    values_orders = {
-        "Qualitative_Ordinal_lownan": [
-            "Low+",
-            "Medium-",
-            "Medium",
-            "Medium+",
-            "High-",
-            "High",
-            "High+",
-        ],
-        "Qualitative_Ordinal_highnan": [
-            "Low-",
-            "Low",
-            "Low+",
-            "Medium-",
-            "Medium",
-            "Medium+",
-            "High-",
-            "High",
-            "High+",
-        ],
-        "Discrete_Qualitative_highnan": ["1", "2", "3", "4", "5", "6", "7"],
-    }
-
-    level0_to_level1 = {
-        "Lows": ["Low-", "Low", "Low+", "Lows"],
-        "Mediums": ["Medium-", "Medium", "Medium+", "Mediums"],
-        "Highs": ["High-", "High", "High+", "Highs"],
-        "ALONE": ["ALONE"],
-    }
-    level1_to_level2 = {
-        "Worst": ["Lows", "Mediums", "Worst"],
-        "Best": ["Highs", "Best"],
-        "BEST": ["ALONE", "BEST"],
-    }
-
-    min_freq = 0.15
-    max_n_mod = 4
-    chained_discretizer = ChainedDiscretizer(
-        qualitative_features=chained_features,
-        chained_orders=[level0_to_level1, level1_to_level2],
-        min_freq=min_freq,
-        values_orders=values_orders,
-        unknown_handling="drop",
-        copy=True,
-        n_jobs=1,
+    values_orders.update(
+        {
+            "Qualitative_Ordinal_lownan": [
+                "Low+",
+                "Medium-",
+                "Medium",
+                "Medium+",
+                "High-",
+                "High",
+                "High+",
+            ],
+            "Qualitative_Ordinal_highnan": [
+                "Low-",
+                "Low",
+                "Low+",
+                "Medium-",
+                "Medium",
+                "Medium+",
+                "High-",
+                "High",
+                "High+",
+            ],
+            "Discrete_Qualitative_highnan": ["1", "2", "3", "4", "5", "6", "7"],
+        }
     )
-    x_discretized = chained_discretizer.fit_transform(x_train_wrong_2, x_train_wrong_2[target])
-    values_orders.update(chained_discretizer.values_orders)
 
+    # minimum frequency per value
+    min_freq = 0.15
+
+    # defining features
+    features = Features(
+        ordinal_values=values_orders,
+        ordinals=ordinal_features,
+    )
+
+    # removing wrong features
+    features.remove("nan")
+    features.remove("ones")
+    features.remove("ones_nan")
+
+    # fitting carver
     auto_carver = BinaryCarver(
-        quantitative_features=quantitative_features,
-        qualitative_features=qualitative_features,
-        ordinal_features=ordinal_features,
-        values_orders=values_orders,
         min_freq=min_freq,
-        max_n_mod=max_n_mod,
-        min_freq_mod=min_freq_mod,
         sort_by=sort_by,
+        features=features,
+        max_n_mod=max_n_mod,
         ordinal_encoding=ordinal_encoding,
+        min_freq_mod=min_freq_mod,
         dropna=dropna,
         copy=copy,
         verbose=False,
-        n_jobs=1,
     )
-    x_discretized = auto_carver.fit_transform(x_train_wrong_2, x_train_wrong_2[target])
-
-    if not dropna and sort_by == "cramerv":
-        expected = {
-            "Mediums": [
-                "Low+",
-                "Low",
-                "Low-",
-                "Lows",
-                "Worst",
-                "Medium+",
-                "Medium",
-                "Medium-",
-                "Mediums",
-            ],
-            "High+": ["High", "High-", "Highs", "Best", "ALONE", "BEST", "High+"],
-            NAN: ["unknown", NAN],
-        }
-        print(auto_carver.values_orders["Qualitative_Ordinal_lownan"].content)
-        assert (
-            auto_carver.values_orders["Qualitative_Ordinal_lownan"].content == expected
-        ), "Unknown modalities should be kept in the order"
-
-    elif dropna and sort_by == "tschuprowt":
-        expected = {
-            "Mediums": [
-                "unknown",
-                NAN,
-                "Low+",
-                "Low",
-                "Low-",
-                "Lows",
-                "Worst",
-                "Medium+",
-                "Medium",
-                "Medium-",
-                "Mediums",
-            ],
-            "High+": ["High", "High-", "Highs", "Best", "ALONE", "BEST", "High+"],
-        }
-        print(auto_carver.values_orders["Qualitative_Ordinal_lownan"].content)
-        assert (
-            auto_carver.values_orders["Qualitative_Ordinal_lownan"].content == expected
-        ), "Unknown modalities should be kept in the order"
+    # trying to carve an ordinal feature with unexpected values
+    with raises(ValueError):
+        x_discretized = auto_carver.fit_transform(x_train_wrong_2, x_train_wrong_2[target])

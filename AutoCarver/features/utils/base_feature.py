@@ -55,6 +55,9 @@ class BaseFeature:
         # initiating feature's combination history
         self.history: list[dict, Any] = kwargs.get("history", [])
 
+        # initiating base ordering (quantitative features)
+        self.raw_order: list[str] = kwargs.get("raw_order", [])
+
     def fit(self, X: DataFrame, y: Series = None) -> None:
         """Fits the feature to a DataFrame"""
         _, _ = X, y  # unused attributes
@@ -262,6 +265,7 @@ class BaseFeature:
             "is_categorical": self.is_categorical,
             "is_qualitative": self.is_qualitative,
             "is_quantitative": self.is_quantitative,
+            "raw_order": self.raw_order,
         }
 
         # light output
