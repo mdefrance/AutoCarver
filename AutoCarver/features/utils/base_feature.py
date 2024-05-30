@@ -226,10 +226,12 @@ class BaseFeature:
                 )
 
             # dropping nans from values
-            self.values.remove(self.nan)
+            values = GroupedList(self.values)
+            if self.nan in self.values:
+                values.remove(self.nan)
 
             # updating values
-            self.update(values, replace=True)
+            self.update(self.values, replace=True)
 
     def get_content(self) -> dict:
         """returns feature values' content"""
