@@ -23,8 +23,6 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
     def __init__(
         self,
         features: Features,
-        *,
-        features_casting: dict[str, list[str]] = None,
         **kwargs: dict,
     ) -> None:
         # features : list[str]
@@ -106,13 +104,6 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         # check if the discretizer has already been fitted
         self.is_fitted = False
 
-        # target classes multiclass vs binary vs continuous
-        if features_casting is None:
-            features_casting = {feature: [feature] for feature in self.features}
-        self.features_casting = {
-            feature: casting[:] for feature, casting in features_casting.items()
-        }
-
         # initiating things for super().__repr__
         self.ordinals = None
         self.categoricals = None
@@ -140,22 +131,8 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         if feature in self.features:
             self.features.remove(feature)
 
-            # getting corresponding raw_feature
-            raw_feature = next(
-                raw_feature
-                for raw_feature, casting in self.features_casting.items()
-                if feature in casting
-            )
-            casting = self.features_casting.get(raw_feature)
-            # removing feature from casting
-            casting.remove(feature)
-            self.features_casting.update({raw_feature: casting})
-            # removing raw feature if there are no more casting for it
-            if len(self.features_casting.get(raw_feature)) == 0:
-                self.features_casting.pop(raw_feature)
-
     def _cast_features(self, X: DataFrame) -> DataFrame:
-        """Casts the features of a DataFrame using features_casting to duplicate columns
+        """Casts the features of a DataFrame using feature versions to duplicate columns
 
         Parameters
         ----------
@@ -168,26 +145,14 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         DataFrame
             A formatted X
         """
-        # for binary/continuous targets
-        if all(len(feature_casting) == 1 for feature_casting in self.features_casting.values()):
-            X.rename(
-                columns={
-                    feature: feature_casting[0]
-                    for feature, feature_casting in self.features_casting.items()
-                },
-                inplace=True,
-            )
-
-        # for multiclass targets
-        else:
-            # duplicating features
-            X = X.assign(
-                **{
-                    casted_feature: X[feature]
-                    for feature, feature_casting in self.features_casting.items()
-                    for casted_feature in feature_casting
-                }
-            )
+        # duplicating features with versions disctinct from names (= multiclass target)
+        X = X.assign(
+            **{
+                feature.version: X[feature.name]
+                for feature in self.features
+                if feature.name != feature.version
+            }
+        )
 
         return X
 
@@ -324,6 +289,9 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         if len(self.features.get_qualitatives()) > 0:
             x_copy = self._transform_qualitative(x_copy, y)
 
+        # reinstating nans when not supposed to group them
+        x_copy = self.features.unfillna(x_copy)
+
         return x_copy
 
     def _transform_quantitative(self, X: DataFrame, y: Series) -> DataFrame:
@@ -363,9 +331,6 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         # unpacking transformed series
         X[[feature for feature, _ in transformed]] = DataFrame(dict(transformed), index=X.index)
 
-        # reinstating nans when not supposed to group them
-        X = self.features.unfillna(X)
-
         return X
 
     def _transform_qualitative(self, X: DataFrame, y: Series = None) -> DataFrame:
@@ -394,7 +359,9 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         qualitatives = self.features.get_qualitatives()
 
         # replacing values for there corresponding label
-        X.replace({feature.name: feature.label_per_value for feature in qualitatives}, inplace=True)
+        X.replace(
+            {feature.version: feature.label_per_value for feature in qualitatives}, inplace=True
+        )
 
         return X
 
@@ -678,200 +645,6 @@ def transform_quantitative_feature(
     return feature.name, list(df_feature)
 
 
-def convert_to_labels(
-    features: list[str],
-    quantitative_features: list[str],
-    values_orders: dict[str, GroupedList],
-    str_nan: str,
-    dropna: bool = True,
-) -> dict[str, GroupedList]:
-    """Converts a values_orders values (quantiles) to labels"""
-    # copying values_orders without nans
-    labels_orders = {
-        feature: GroupedList([value for value in values_orders[feature] if value != str_nan])
-        for feature in features
-    }
-
-    # for quantitative features getting labels per quantile
-    if any(quantitative_features):
-        # getting group "name" per quantile
-        quantiles_labels, _ = get_quantiles_labels(quantitative_features, values_orders, str_nan)
-
-        # applying alliases to known orders
-        for feature in quantitative_features:
-            labels_orders.update(
-                {
-                    feature: GroupedList(
-                        [quantiles_labels[feature][quantile] for quantile in labels_orders[feature]]
-                    )
-                }
-            )
-
-    # adding back nans if requested
-    if not dropna:
-        for feature in features:
-            if str_nan in values_orders[feature]:
-                order = labels_orders[feature]
-                order.append(str_nan)  # adding back nans at the end of the order
-                labels_orders.update({feature: order})
-
-    return labels_orders
-
-
-def convert_to_values(
-    features: list[str],
-    quantitative_features: list[str],
-    values_orders: dict[str, GroupedList],
-    label_orders: dict[str, GroupedList],
-    str_nan: str,
-) -> dict[str, Any]:
-    """Converts a values_orders labels to values (quantiles)"""
-    # for quantitative features getting labels per quantile
-    if any(quantitative_features):
-        # getting quantile per group "name"
-        _, labels_to_quantiles = get_quantiles_labels(quantitative_features, values_orders, str_nan)
-
-    # updating feature orders (that keeps NaNs and quantiles)
-    for feature in features:
-        # initial complete ordering with NAN and quantiles
-        order = values_orders[feature]
-
-        # checking for grouped modalities
-        groups_to_discard = label_orders[feature].content
-
-        # grouping the raw quantile values
-        for kept_value, group_to_discard in groups_to_discard.items():
-            # for qualitative features grouping as is
-            # for quantitative features getting quantile per alias
-            if feature in quantitative_features:
-                # getting raw quantiles to be grouped
-                group_to_discard = [
-                    (
-                        labels_to_quantiles[feature][label_discarded]
-                        if label_discarded != str_nan
-                        else str_nan
-                    )
-                    for label_discarded in group_to_discard
-                ]
-
-                # choosing the value to keep as the group
-                which_to_keep = [value for value in group_to_discard if value != str_nan]
-                # case 0: keeping the largest value amongst the discarded (otherwise not grouped)
-                if len(which_to_keep) > 0:
-                    kept_value = max(which_to_keep)
-                # case 1: there is only str_nan in the group (it was not grouped)
-                else:
-                    kept_value = group_to_discard[0]
-
-            # grouping quantiles
-            order.group_list(group_to_discard, kept_value)
-
-        # updating ordering
-        values_orders.update({feature: order})
-
-    return values_orders
-
-
-def get_labels(quantiles: list[float], str_nan: str) -> list[str]:
-    """_summary_
-
-    Parameters
-    ----------
-    feature : str
-        _description_
-    order : GroupedList
-        _description_
-    str_nan : str
-        _description_
-
-    Returns
-    -------
-    list[str]
-        _description_
-    """
-    # filtering out nan and inf for formatting
-    quantiles = [val for val in quantiles if val != str_nan and isfinite(val)]
-
-    # converting quantiles in string
-    labels = format_quantiles(quantiles)
-
-    return labels
-
-
-def get_quantiles_labels(
-    features: list[str], values_orders: dict[str, GroupedList], str_nan: str
-) -> tuple[dict[str, GroupedList], dict[str, GroupedList]]:
-    """Converts a values_orders of quantiles into a values_orders of string quantiles
-
-    Parameters
-    ----------
-    features : list[str]
-        _description_
-    values_orders : dict[str, GroupedList]
-        _description_
-    str_nan : str
-        _description_
-
-    Returns
-    -------
-    dict[str, GroupedList]
-        _description_
-    """
-    # applying quantiles formatting to orders of specified features
-    quantiles_to_labels = {}
-    labels_to_quantiles = {}
-    for feature in features:
-        quantiles = list(values_orders[feature])
-        labels = get_labels(quantiles, str_nan)
-
-        # associates quantiles to their respective labels
-        quantiles_to_labels.update(
-            {feature: {quantile: alias for quantile, alias in zip(quantiles, labels)}}
-        )
-        # associates quantiles to their respective labels
-        labels_to_quantiles.update(
-            {feature: {alias: quantile for quantile, alias in zip(quantiles, labels)}}
-        )
-
-    return quantiles_to_labels, labels_to_quantiles
-
-
-def format_quantiles(a_list: list[float]) -> list[str]:
-    """Formats a list of float quantiles into a list of boundaries.
-
-    Rounds quantiles to the closest power of 1000.
-
-    Parameters
-    ----------
-    a_list : list[float]
-        Sorted list of quantiles to convert into string
-
-    Returns
-    -------
-    list[str]
-        List of boundaries per quantile
-    """
-    # scientific formatting
-    formatted_list = [f"{number:.3e}" for number in a_list]
-
-    # stripping whitespaces
-    formatted_list = [string.strip() for string in formatted_list]
-
-    # low and high bounds per quantiles
-    upper_bounds = formatted_list + [nan]
-    lower_bounds = [nan] + formatted_list
-    order: list[str] = []
-    for lower, upper in zip(lower_bounds, upper_bounds):
-        if isna(lower):
-            order += [f"x <= {upper}"]
-        elif isna(upper):
-            order += [f"{lower} < x"]
-        else:
-            order += [f"{lower} < x <= {upper}"]
-
-    return order
-
-
 def applied_to_dict_list(applied: Union[DataFrame, Series]) -> dict[str, list[Any]]:
     """Converts a DataFrame or a List in a Dict of lists
 
@@ -893,38 +666,6 @@ def applied_to_dict_list(applied: Union[DataFrame, Series]) -> dict[str, list[An
         converted = applied.to_dict(orient="list")
 
     return converted
-
-
-def check_missing_values(
-    X: DataFrame, features: list[str], known_values: dict[str, list[Any]]
-) -> None:
-    """Checks for missing values from X, (unexpected values in values_orders)
-
-    Parameters
-    ----------
-    X : DataFrame
-        New DataFrame (at transform time)
-    features : list[str]
-        List of column names
-    known_values : dict[str, list[Any]]
-        Dict of known values per column name
-    """
-    # unique non-nan values in new dataframe
-    uniques = X[features].apply(
-        nan_unique,
-        axis=0,
-        result_type="expand",
-    )
-    uniques = applied_to_dict_list(uniques)
-
-    # checking for unexpected values for each feature
-    for feature in features:
-        unexpected = [val for val in known_values[feature] if val not in uniques[feature]]
-        assert len(unexpected) == 0, (
-            f"Unexpected value! The ordering for values: {str(list(unexpected))} of feature '"
-            f"{feature}' was provided but there are not matching value in provided X. You should"
-            f" check 'values_orders['{feature}']' for unwanted values."
-        )
 
 
 class extend_docstring:

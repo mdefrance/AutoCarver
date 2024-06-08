@@ -180,11 +180,11 @@ class Features:
 
         # removing from list of typed features
         self.categoricals = [
-            feature for feature in self.categoricals if feature.name != feature_name
+            feature for feature in self.categoricals if feature.version != feature_name
         ]
-        self.ordinals = [feature for feature in self.ordinals if feature.name != feature_name]
+        self.ordinals = [feature for feature in self.ordinals if feature.version != feature_name]
         self.quantitatives = [
-            feature for feature in self.quantitatives if feature.name != feature_name
+            feature for feature in self.quantitatives if feature.version != feature_name
         ]
 
     def keep(self, kept_features: list[str]):
@@ -192,11 +192,11 @@ class Features:
 
         # keeping from list of typed features
         self.categoricals = [
-            feature for feature in self.categoricals if feature.name in kept_features
+            feature for feature in self.categoricals if feature.version in kept_features
         ]
-        self.ordinals = [feature for feature in self.ordinals if feature.name in kept_features]
+        self.ordinals = [feature for feature in self.ordinals if feature.version in kept_features]
         self.quantitatives = [
-            feature for feature in self.quantitatives if feature.name in kept_features
+            feature for feature in self.quantitatives if feature.version in kept_features
         ]
 
     def check_values(self, X: DataFrame) -> None:
@@ -245,7 +245,7 @@ class Features:
         # reinstating nans of features for which nans should not have been dropped
         X.replace(
             {
-                feature.version: {feature.nan: nan}
+                feature.version: {feature.label_per_value.get(feature.nan, feature.nan): nan}
                 for feature in self
                 if feature.has_nan and not feature.dropna
             },

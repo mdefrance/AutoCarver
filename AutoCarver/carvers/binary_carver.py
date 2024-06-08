@@ -33,8 +33,6 @@ class BinaryCarver(BaseCarver):
         features: Features,
         *,
         max_n_mod: int = 5,
-        min_freq_mod: float = None,
-        ordinal_encoding: bool = True,
         dropna: bool = True,
         **kwargs: dict,
     ) -> None:
@@ -64,8 +62,6 @@ class BinaryCarver(BaseCarver):
             sort_by=sort_by,
             features=features,
             max_n_mod=max_n_mod,
-            min_freq_mod=min_freq_mod,
-            ordinal_encoding=ordinal_encoding,
             dropna=dropna,
             **kwargs,
         )

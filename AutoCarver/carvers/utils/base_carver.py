@@ -49,8 +49,6 @@ class BaseCarver(BaseDiscretizer):
         features: Features,
         *,
         max_n_mod: int = 5,
-        min_freq_mod: float = None,
-        ordinal_encoding: bool = True,
         dropna: bool = True,
         **kwargs: dict,
     ) -> None:
@@ -123,19 +121,24 @@ class BaseCarver(BaseDiscretizer):
         """
 
         # adding correct verbose to kwargs
+        verbose = bool(max(kwargs.get("verbose", False), kwargs.get("pretty_print", False)))
         kwargs.update(
-            {"verbose": bool(max(kwargs.get("verbose", False), kwargs.get("pretty_print", False)))}
+            {
+                "verbose": verbose,
+                "ordinal_encoding": kwargs.get("ordinal_encoding", True),
+            }
         )
 
         # Initiating BaseDiscretizer
-        super().__init__(features, ordinal_encoding=ordinal_encoding, dropna=dropna, **kwargs)
+        super().__init__(features, dropna=dropna, **kwargs)
 
         # class specific attributes
-        self.min_freq = min_freq  # minimum frequency per base bucket
+        self.min_freq = min_freq  # minimum frequency per bucket
         self.max_n_mod = max_n_mod  # maximum number of modality per feature
-        if min_freq_mod is None:
-            min_freq_mod = min_freq / 2
-        self.min_freq_mod = min_freq_mod  # minimum frequency per final bucket
+        # minimum frequency per final bucket TODO use this in discretizer?
+        self.min_freq_mod = kwargs.get("min_freq_mod")
+        if self.min_freq_mod is None:
+            self.min_freq_mod = min_freq / 2
         self.sort_by = sort_by  # metric used to sort feature combinations
 
         # pretty printing if requested
@@ -149,6 +152,7 @@ class BaseCarver(BaseDiscretizer):
                     "Install extra dependencies with pip install autocarver[jupyter]",
                     UserWarning,
                 )
+
         # progress bar if requested
         self.tqdm = partial(tqdm, disable=not self.verbose)
 
@@ -193,14 +197,14 @@ class BaseCarver(BaseDiscretizer):
 
         # discretizing all features, always copying, to keep discretization from start to finish
         discretizer = Discretizer(
-            self.min_freq, self.features, **dict(self.kwargs, copy=True, ordinal_encoding=False)
+            self.min_freq_mod, self.features, **dict(self.kwargs, copy=True, ordinal_encoding=False)
         )
         x_copy = discretizer.fit_transform(x_copy, y)
         if x_dev_copy is not None:  # applying on x_dev
             x_dev_copy = discretizer.transform(x_dev_copy, y_dev)
 
         # removing dropped features
-        self.features.keep_features(discretizer.features.get_names())
+        self.features.keep(discretizer.features.get_names())
 
         # setting up features to convert nans to feature.nan (drop nans)
         self.features.set_dropna(True)
@@ -265,8 +269,8 @@ class BaseCarver(BaseDiscretizer):
             if self.verbose:  # verbose if requested
                 print("---\n")
 
-            # setting dropna according to user request
-            self.features.set_dropna(self.dropna)
+        # setting dropna according to user request
+        self.features.set_dropna(self.dropna)
 
         # discretizing features based on each feature's values_order
         super().fit(X, y)
@@ -351,7 +355,7 @@ class BaseCarver(BaseDiscretizer):
                     xagg.dropna(), n_obs=sum(xagg.dropna().apply(sum))
                 )[self.sort_by],
             }
-            self._historize_viability_test(feature, raw_association, feature.labels)
+            self._historize(feature, raw_association, feature.labels)
 
             # all possible consecutive combinations
             combinations = consecutive_combinations(raw_labels, self.max_n_mod)
@@ -494,7 +498,7 @@ class BaseCarver(BaseDiscretizer):
                 isclose(train_rates["target_rate"][1:], train_rates["target_rate"].shift(1)[1:])
             )
             # - minimum frequency is reached for all modalities
-            min_freq_train = all(train_rates["frequency"] >= self.min_freq_mod)
+            min_freq_train = all(train_rates["frequency"] >= self.min_freq)
 
             # checking for viability on train
             train_viable = min_freq_train and distinct_rates_train
@@ -525,7 +529,7 @@ class BaseCarver(BaseDiscretizer):
                         == dev_rates.sort_values("target_rate").index
                     )
                     # - minimum frequency is reached for all modalities
-                    min_freq_dev = all(dev_rates["frequency"] >= self.min_freq_mod)
+                    min_freq_dev = all(dev_rates["frequency"] >= self.min_freq)
                     # - target rates are distinct for all modalities
                     distinct_rates_dev = not any(
                         isclose(dev_rates["target_rate"][1:], dev_rates["target_rate"].shift(1)[1:])
@@ -545,7 +549,7 @@ class BaseCarver(BaseDiscretizer):
                         best_association = association  # found best viable combination
 
             # historizing combinations and tests
-            self._historize_viability_test(
+            self._historize(
                 feature=feature,
                 association=association,
                 n_combination=n_combination,
@@ -561,7 +565,7 @@ class BaseCarver(BaseDiscretizer):
 
         return best_association
 
-    def _historize_viability_test(
+    def _historize(
         self,
         feature: BaseFeature,
         association: dict[Any],
@@ -592,13 +596,11 @@ class BaseCarver(BaseDiscretizer):
         if not viability_msg_params.get("ranks_train_dev", True):
             messages += ["X_dev: inversion of target rates per modality"]
         if not viability_msg_params.get("min_freq_dev", True):
-            messages += [
-                f"X_dev: non-representative modality (min_freq_mod={self.min_freq_mod:2.2%})"
-            ]
+            messages += [f"X_dev: non-representative modality (min_freq={self.min_freq:2.2%})"]
         if not viability_msg_params.get("distinct_rates_dev", True):
             messages += ["X_dev: non-distinct target rates per consecutive modalities"]
         if not viability_msg_params.get("min_freq_train", True):
-            messages += [f"X: non-representative modality (min_freq_mod={self.min_freq_mod:2.2%})"]
+            messages += [f"X: non-representative modality (min_freq={self.min_freq:2.2%})"]
         if not viability_msg_params.get("distinct_rates_train", True):
             messages += ["X: non-distinct target rates per consecutive modalities"]
 
