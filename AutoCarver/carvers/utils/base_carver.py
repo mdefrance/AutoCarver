@@ -341,13 +341,9 @@ class BaseCarver(BaseDiscretizer):
         if feature.has_nan:  # removing nans for combination of non-nans
             raw_labels.remove(feature.nan)
 
-        # filtering out nans from train/test crosstabs
-        raw_xagg = filter_nan(xagg, feature.nan)
-        raw_xagg_dev = filter_nan(xagg_dev, feature.nan)
-
         # checking for non-nan values
         best_association = None
-        if raw_xagg.shape[0] > 1:
+        if len([label for label in xagg.index if label != feature.nan]) > 1:
             # historizing raw combination TODO
             raw_association = {
                 "index_to_groupby": {modality: modality for modality in xagg.index},
@@ -362,7 +358,7 @@ class BaseCarver(BaseDiscretizer):
 
             # getting most associated combination
             best_association = self._get_best_association(
-                feature, raw_xagg, combinations, xagg_dev=raw_xagg_dev, dropna=False
+                feature, xagg, combinations, xagg_dev=xagg_dev, dropna=False
             )
 
             # grouping NaNs if requested to drop them (dropna=True)
@@ -370,25 +366,20 @@ class BaseCarver(BaseDiscretizer):
                 if self.verbose:  # verbose if requested
                     print(f" - [{self.__name__}] Grouping NaNs")
 
-                xagg, xagg_dev = best_association  # unpacking
-
-                # raw ordering without nans
-                raw_labels = GroupedList(feature.labels[:])
-                raw_labels.remove(feature.nan)  # nans are added within nan_combinations
+                # unpacking suitable combination
+                xagg, xagg_dev = best_association
 
                 # adding combinations with NaNs
-                combinations = nan_combinations(raw_labels, feature.nan, self.max_n_mod)
+                combinations = nan_combinations(feature, self.max_n_mod)
 
                 # getting most associated combination
                 best_association = self._get_best_association(
                     feature, xagg, combinations, xagg_dev=xagg_dev, dropna=True
                 )
 
-        # checking that a suitable combination has been found
+        # returning suitable combination
         if best_association is not None:
-            xagg, xagg_dev = best_association  # unpacking
-
-            return xagg, xagg_dev
+            return best_association
 
     def _get_best_association(
         self,
@@ -417,6 +408,13 @@ class BaseCarver(BaseDiscretizer):
         tuple[dict[str, Any], GroupedList]
             best viable association and associated modality order
         """
+
+        # filtering out nans from train/test crosstabs
+        raw_xagg, raw_xagg_dev = xagg.copy(), xagg_dev.copy()
+        if not dropna:
+            xagg = filter_nan(xagg, feature.nan)
+            xagg_dev = filter_nan(xagg_dev, feature.nan)
+
         # values to groupby indices with
         indices_to_groupby = [
             self._combination_formatter(combination) for combination in combinations
@@ -463,12 +461,15 @@ class BaseCarver(BaseDiscretizer):
         if best_association is not None:
             labels = order_apply_combination(feature.labels, best_association["combination"])
 
-            # applying best_combination to xtabs
-            xagg = xagg_apply_combination(xagg, labels)
-            xagg_dev = xagg_apply_combination(xagg_dev, labels)
+            # applying best_combination to raw xagg and xagg_dev
+            print("labels", labels)
+            xagg = xagg_apply_combination(raw_xagg, labels)
+            xagg_dev = xagg_apply_combination(raw_xagg_dev, labels)
 
-            # updating feature's values accordingly
+            # updating feature's values and xagg indices accordingly
             feature.update(labels, convert_labels=True)
+            xagg.index = feature.labels
+            xagg_dev.index = feature.labels
 
             return xagg, xagg_dev
 

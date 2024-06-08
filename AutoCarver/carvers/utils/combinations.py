@@ -2,14 +2,14 @@
 for any task.
 """
 
-from typing import Any
+from typing import Any, Generator
 from pandas import DataFrame
-from ...features import GroupedList
+from ...features import GroupedList, BaseFeature
 
 
 def combinations_at_index(
     start_idx: int, order: list[Any], nb_remaining_groups: int, min_group_size: int = 1
-) -> tuple[list[Any], int, int]:
+) -> Generator[list[Any], int, int]:
     """Gets all possible combinations of sizes up to the last element of a list"""
     # iterating over each possible length of groups
     for size in range(min_group_size, len(order) + 1):
@@ -74,15 +74,18 @@ def consecutive_combinations(
 
 
 def nan_combinations(
-    raw_order: GroupedList,
-    str_nan: str,
+    feature: BaseFeature,
     max_n_mod: int,
 ) -> list[list[str]]:
     """All consecutive combinatios of non-nans with added nan to each possible group and a last
     group only with nan if the max_n_mod is not reached by the combination
     """
+    # raw ordering without nans
+    raw_labels = GroupedList(feature.labels[:])
+    raw_labels.remove(feature.nan)  # nans are added within nan_combinations
+
     # all possible consecutive combinations
-    combinations = consecutive_combinations(raw_order, max_n_mod, min_group_size=1)
+    combinations = consecutive_combinations(raw_labels, max_n_mod, min_group_size=1)
     # iterating over each combination
     nan_combis = []
     for combination in combinations:
@@ -92,7 +95,7 @@ def nan_combinations(
             # copying input combination
             new_combination = combination[:]
             # adding nan to the nth group
-            new_combination[n] = new_combination[n] + [str_nan]
+            new_combination[n] = new_combination[n] + [feature.nan]
             # storing updated combination with attributed group to nan
             nan_combination += [new_combination]
 
@@ -101,7 +104,7 @@ def nan_combinations(
             # copying input combination
             new_combination = combination[:]
             # adding a group for nans only
-            nan_combination += [new_combination + [[str_nan]]]
+            nan_combination += [new_combination + [[feature.nan]]]
 
         nan_combis += nan_combination
 
@@ -125,6 +128,7 @@ def order_apply_combination(order: GroupedList, combination: list[list[Any]]) ->
     """
     order_copy = GroupedList(order)
     for combi in combination:
+        print("combi", combi)
         order_copy.group_list(combi, combi[0])
 
     return order_copy

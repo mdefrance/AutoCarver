@@ -7,7 +7,6 @@ from pandas import DataFrame, Series
 from scipy.stats import kruskal
 
 from ..discretizers.utils.base_discretizer import extend_docstring
-from ..features import GroupedList
 from .utils.base_carver import BaseCarver
 from ..features import Features
 
@@ -33,8 +32,6 @@ class ContinuousCarver(BaseCarver):
         features: Features,
         *,
         max_n_mod: int = 5,
-        min_freq_mod: float = None,
-        ordinal_encoding: bool = True,
         dropna: bool = True,
         **kwargs: dict,
     ) -> None:
@@ -55,8 +52,6 @@ class ContinuousCarver(BaseCarver):
             sort_by="kruskal",
             features=features,
             max_n_mod=max_n_mod,
-            min_freq_mod=min_freq_mod,
-            ordinal_encoding=ordinal_encoding,
             dropna=dropna,
             **kwargs,
         )
@@ -131,8 +126,10 @@ class ContinuousCarver(BaseCarver):
         # checking for empty datasets
         yvals = {feature.name: None for feature in self.features}
         if X is not None:
-            # crosstab for each feature
+
+            # y mean for each feature
             for feature in self.features:
+
                 # computing crosstab with str_nan
                 yval = y.groupby(X[feature.name]).apply(lambda u: list(u))  # pylint: disable=W0108
 
@@ -140,7 +137,7 @@ class ContinuousCarver(BaseCarver):
                 yval = yval.reindex(feature.labels, fill_value=[])
 
                 # storing results
-                yvals.update({feature: yval})
+                yvals.update({feature.name: yval})
 
         return yvals
 
@@ -160,7 +157,14 @@ class ContinuousCarver(BaseCarver):
             _description_
         """
         # TODO: convert this to the vectorial version like BinaryCarver
-        return xagg.groupby(groupby).sum()
+        grouped_xagg = xagg.groupby(groupby).sum()
+
+        if grouped_xagg.shape[0] == 1:
+            print("xagg", xagg)
+            print("groupby", groupby)
+            print("grouped_xagg", grouped_xagg)
+
+        return grouped_xagg
 
     def _association_measure(self, xagg: Series, n_obs: int) -> dict[str, float]:
         """Computes measures of association between feature and quantitative target.
