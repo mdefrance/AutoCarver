@@ -295,20 +295,9 @@ class BaseFeature:
             history = json.loads(feature_json.pop("history"))
 
         # initiating feature without content
-        feature = cls(**dict(feature_json, history=history))
+        feature = cls(**dict(feature_json, history=history, load_mode=True))
 
         # updating feature with deserialized content
         feature.update(values, replace=True, ordinal_encoding=ordinal_encoding)
 
         return feature
-
-    def make_multiclass(self, y_classes: list[str]) -> None:
-        """making a renamed copy of feature"""
-
-        # copy of feature
-        new_feature = deepcopy(self)
-
-        # renaming
-        new_feature.name = new_name
-
-        return new_feature

@@ -164,15 +164,29 @@ def test_binary_carver(
         x_dev_discretized[features.get_names()].nunique() <= max_n_mod
     ), "Too many buckets after carving of test sample"
 
+    # checking that nans were not dropped if not requested
+    if not dropna:
+        # testing output of nans
+        assert all(
+            raw_x_train[features.get_names()].isna().mean()
+            == x_discretized[features.get_names()].isna().mean()
+        ), "Some Nans are being dropped (grouped) or more nans than expected"
+
+    # checking that nans were dropped if requested
+    else:
+        assert all(
+            x_discretized[features.get_names()].isna().mean() == 0
+        ), "Some Nans are not dropped (grouped)"
+
     # testing for differences between train and dev
     assert all(
         x_discretized[features.get_names()].nunique()
         == x_dev_discretized[features.get_names()].nunique()
     ), "More buckets in train or test samples"
     for feature in features.get_names():
+        # getting target rate per feature
         train_target_rate = x_discretized.groupby(feature)[target].mean().sort_values()
         dev_target_rate = x_dev_discretized.groupby(feature)[target].mean().sort_values()
-
         assert all(
             train_target_rate.index == dev_target_rate.index
         ), f"Not robust feature {feature} was not dropped, or robustness test not working"
@@ -196,17 +210,6 @@ def test_binary_carver(
             "Missing value in output! Some values are been dropped for qualitative "
             f"feature: {feature.name}"
         )
-
-    # testing output of nans
-    if not dropna:
-        assert all(
-            raw_x_train[features.get_names()].isna().mean()
-            == x_discretized[features.get_names()].isna().mean()
-        ), "Some Nans are being dropped (grouped) or more nans than expected"
-    else:
-        assert all(
-            x_discretized[features.get_names()].isna().mean() == 0
-        ), "Some Nans are not dropped (grouped)"
 
     # testing copy functionnality
     if copy:

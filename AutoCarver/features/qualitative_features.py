@@ -154,7 +154,7 @@ class OrdinalFeature(CategoricalFeature):
             raise ValueError(f" - [{self}] Please make sure to provide values.")
 
         # checking for nan ordering
-        if self.nan in values:
+        if self.nan in values and not kwargs.get("load_mode", False):
             raise ValueError(
                 f" - [{self}] Ordering for '{self.nan}' can't be set by user, only fitted on data."
             )
