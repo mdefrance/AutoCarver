@@ -9,7 +9,7 @@ from .quantitative_features import QuantitativeFeature
 
 from numpy import nan
 from typing import Union, Type
-
+from copy import deepcopy
 
 # class AutoFeatures(Features):
 #     """TODO"""
@@ -69,6 +69,9 @@ from typing import Union, Type
 
 
 class Features:
+
+    __name__ = "Features"
+
     def __init__(
         self,
         categoricals: list[str] = None,
@@ -96,89 +99,98 @@ class Features:
         # checking that features were passed as input
         if len(self.categoricals) == 0 and len(self.quantitatives) == 0 and len(self.ordinals) == 0:
             raise ValueError(
-                " - [Features] No feature passed as input. Please provided column names"
+                f" - [{self.__name__}] No feature passed as input. Please provide column names"
                 "by setting categoricals, quantitatives or ordinals."
             )
 
         # checking that qualitatitve and quantitative features are distinct
+        ordinal_names = get_versions(self.ordinals)  # unique version but non-unique names
+        categorcial_names = get_versions(self.categoricals)
+        quantitative_names = get_versions(self.quantitatives)
         if (
-            any(
-                feature in get_names(self.ordinals) + get_names(self.quantitatives)
-                for feature in get_names(self.categoricals)
-            )
-            or any(
-                feature in get_names(self.categoricals) + get_names(self.ordinals)
-                for feature in get_names(self.quantitatives)
-            )
-            or any(
-                feature in get_names(self.categoricals) + get_names(self.quantitatives)
-                for feature in get_names(self.ordinals)
-            )
+            any(feature in ordinal_names + quantitative_names for feature in categorcial_names)
+            or any(feature in categorcial_names + ordinal_names for feature in quantitative_names)
+            or any(feature in categorcial_names + quantitative_names for feature in ordinal_names)
         ):
             raise ValueError(
-                " - [AutoCarver] One of provided features is in quantitatives and in "
+                f" - [{self.__name__}] One of provided features is in quantitatives and in "
                 "categoricals and/or in ordinals. Please, check inputs!"
             )
 
     def __repr__(self) -> str:
-        # TODO add feature types
-        # f'get_names(self.categoricals) + get_names(self.ordinals) + get_names(self.quantitatives)
-        return f"Features({str(self.get_names())})"
+        """Returns names of all features"""
+        return f"{self.__name__}({str(self.get_names())})"
 
     def __call__(self, feature_name: str) -> BaseFeature:
-        # checking that feature exists
-        if feature_name in self.to_dict():
-            return self.to_dict().get(feature_name)
-        else:
-            raise ValueError(f" - [AutoCarver] '{feature_name}' not in features.")
+        """Returns specified feature by name"""
+        # checking that feature exists among versions
+        self_dict = self.to_dict()
+        if feature_name in self_dict:
+            return self_dict.get(feature_name)
 
-    def get_names(self) -> list[str]:
-        return (
-            get_names(self.categoricals) + get_names(self.ordinals) + get_names(self.quantitatives)
-        )
-
-    def to_list(self) -> list[BaseFeature]:
-        return self.categoricals + self.ordinals + self.quantitatives
+        # not found feature
+        raise ValueError(f" - [{self.__name__}] '{feature_name}' not in features.")
 
     def __len__(self) -> int:
+        """Returns number of features"""
         return len(self.to_list())
 
-    def to_dict(self) -> dict[str, BaseFeature]:
-        return {feature.name: feature for feature in self.to_list()}
-
     def __iter__(self):
+        """Returns an iterator of all features"""
         return iter(self.to_list())
 
     def __getitem__(
         self, index: Union[int, str, list[int], list[str]]
     ) -> Union[BaseFeature, list[BaseFeature]]:
+        """Get item by index in list of features, by feature name or with a list of
+        indices/feature names
+        """
         # list index request
         if isinstance(index, int):
             return self.to_list()[index]
+
         # feature name request
         if isinstance(index, str):
-            return self.to_dict().get(index)
-        # list request
-        if isinstance(index, list):
-            # checking for element to search for
-            if len(index) > 0:
-                # list index request
-                if isinstance(index[0], int):
-                    self_list = self.to_list()
-                    return [self_list[idx] for idx in index]
-                # feature name request
-                if isinstance(index[0], str):
-                    self_dict = self.to_dict()
-                    return [self_dict.get(name) for name in index]
+            return self(index)
+
+        # list request and element to search for
+        if isinstance(index, list) and len(index) > 0:
+
+            # list index request
+            if isinstance(index[0], int):
+                self_list = self.to_list()
+                return [self_list[idx] for idx in index]
+
+            # feature name request
+            if isinstance(index[0], str):
+                return [self(name) for name in index]
+
         return None
 
-    def remove(self, feature_name: str) -> None:
-        self.categoricals = [feat for feat in self.categoricals if feat.name != feature_name]
-        self.ordinals = [feat for feat in self.ordinals if feat.name != feature_name]
-        self.quantitatives = [feat for feat in self.quantitatives if feat.name != feature_name]
+    def get_names(self) -> list[str]:
+        """Returns names of all features"""
+        return get_names(self.to_list())
 
-    def keep_features(self, kept_features: list[str]):
+    def get_versions(self) -> list[str]:
+        """Returns names of all features"""
+        return get_versions(self.to_list())
+
+    def remove(self, feature_name: str) -> None:
+        """Removes a feature by name"""
+
+        # removing from list of typed features
+        self.categoricals = [
+            feature for feature in self.categoricals if feature.name != feature_name
+        ]
+        self.ordinals = [feature for feature in self.ordinals if feature.name != feature_name]
+        self.quantitatives = [
+            feature for feature in self.quantitatives if feature.name != feature_name
+        ]
+
+    def keep(self, kept_features: list[str]):
         """list of features to keep (removes the others)"""
+
+        # keeping from list of typed features
         self.categoricals = [
             feature for feature in self.categoricals if feature.name in kept_features
         ]
@@ -189,18 +201,27 @@ class Features:
 
     def check_values(self, X: DataFrame) -> None:
         """Cheks for unexpected values for each feature in columns of DataFrame X"""
+        # iterating over all features
         for feature in self:
-            if not feature.is_fitted:  # checking for non-fitted features
-                raise RuntimeError(f" - [Features] {feature} not yet fitted!")
-            else:  # checking for unexpected values
-                feature.check_values(X)
+
+            # checking for non-fitted features
+            if not feature.is_fitted:
+                raise RuntimeError(f" - [{self.__name__}] '{feature}' not yet fitted!")
+
+            # checking for unexpected values
+            feature.check_values(X)
 
     def fit(self, X: DataFrame, y: Series = None) -> None:
         """fits all features to there respective column in DataFrame X"""
+        # iterating over all features
         for feature in self:
-            if feature.is_fitted:  # checking for fitted features
+
+            # checking for fitted features
+            if feature.is_fitted:
                 feature.check_values(X)
-            else:  # fitting feature
+
+            # fitting feature
+            else:
                 feature.fit(X, y)
 
     def fillna(self, X: DataFrame) -> DataFrame:
@@ -208,7 +229,11 @@ class Features:
 
         # fills features with nans when dropna is True
         X.fillna(
-            {feature.name: feature.nan for feature in self if feature.has_nan and feature.dropna},
+            {
+                feature.version: feature.nan
+                for feature in self
+                if feature.has_nan and feature.dropna
+            },
             inplace=True,
         )
 
@@ -220,7 +245,7 @@ class Features:
         # reinstating nans of features for which nans should not have been dropped
         X.replace(
             {
-                feature.name: {feature.nan: nan}
+                feature.version: {feature.nan: nan}
                 for feature in self
                 if feature.has_nan and not feature.dropna
             },
@@ -236,36 +261,79 @@ class Features:
         sorted_values: bool = False,
         replace: bool = False,
     ) -> None:
+        """Updates all features using provided feature_values"""
+        # iterating over each feature
         for feature, values in feature_values.items():
             self(feature).update(values, convert_labels, sorted_values, replace)
 
     def update_labels(self, ordinal_encoding: bool = False) -> None:
+        """Updates all feature labels"""
+        # iterating over each feature
         for feature in self:
             feature.update_labels(ordinal_encoding=ordinal_encoding)
 
     def get_qualitatives(self, return_names: bool = False) -> list[BaseFeature]:
+        """Returns all qualitative features"""
+        # returning feature names
         if return_names:
-            return get_names(self.categoricals + self.ordinals)
+            return get_versions(self.categoricals + self.ordinals)
+
+        # returning feature objects
         return self.categoricals + self.ordinals
 
     def get_quantitatives(self, return_names: bool = False) -> list[BaseFeature]:
+        """Returns all quantitative features"""
+        # returning feature names
         if return_names:
-            return get_names(self.quantitatives)
+            return get_versions(self.quantitatives)
+
+        # returning feature objects
         return self.quantitatives
+
+    def get_ordinals(self, return_names: bool = False) -> list[BaseFeature]:
+        """Returns all ordinal features"""
+        # returning feature names
+        if return_names:
+            return get_versions(self.ordinals)
+
+        # returning feature objects
+        return self.ordinals
+
+    def get_categoricals(self, return_names: bool = False) -> list[BaseFeature]:
+        """Returns all categorical features"""
+        # returning feature names
+        if return_names:
+            return get_versions(self.categoricals)
+
+        # returning feature objects
+        return self.categoricals
 
     def set_dropna(self, dropna: bool = True) -> None:
         """Sets feature in dropna mode"""
+        # iterating over each feature
         for feature in self:
             feature.set_dropna(dropna)
 
     def get_content(self, feature: str = None) -> dict:
         """Returns per feature content"""
+        # returning specific feature's content
         if feature is not None:
             return self(feature).get_content()
-        return {feature.name: feature.get_content() for feature in self}
+
+        # returning all features' content
+        return {feature.version: feature.get_content() for feature in self}
 
     def to_json(self, light_mode: bool = False) -> dict:
+        """Converts a feature to JSON format"""
         return {feature.name: feature.to_json(light_mode) for feature in self}
+
+    def to_list(self) -> list[BaseFeature]:
+        """Returns a list of all features"""
+        return self.categoricals + self.ordinals + self.quantitatives
+
+    def to_dict(self) -> dict[str, BaseFeature]:
+        """Returns a dict of all versionned features"""
+        return {feature.version: feature for feature in self.to_list()}
 
     @classmethod
     def load(cls: Type["Features"], features_json: dict, ordinal_encoding: bool) -> "Features":
@@ -295,6 +363,14 @@ class Features:
             summaries += feature.get_summary()
 
         return DataFrame(summaries).set_index(["feature", "label"])
+
+    def get_multiclass_features(self, y_classes: list[str]) -> "Features":
+        """Returns multiclass version of accordingly renamed features"""
+
+        return {
+            y_class: Features([feature.rename(f"{feature.name}_y={y_class}") for feature in self])
+            for y_class in y_classes
+        }
 
 
 def cast_features(
@@ -343,3 +419,17 @@ def cast_features(
 def get_names(features: list[BaseFeature]) -> list[str]:
     """Gives names from Features"""
     return [feature.name for feature in features]
+
+
+def get_versions(features: list[BaseFeature]) -> list[str]:
+    """Gives version names from Features"""
+    return [feature.version for feature in features]
+
+
+class MulticlassFeatures:
+
+    def __init__(self, features: Features, y_classes: list[str]) -> None:
+
+        self.raw_features = deepcopy(features)
+        self.y_classes = y_classes
+        self.features = {y_class: deepcopy(features) for y_class in self.y_classes}

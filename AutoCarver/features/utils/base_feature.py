@@ -7,7 +7,7 @@ from typing import Any, Type
 
 import json
 from pandas import DataFrame, Series
-
+from copy import deepcopy
 from ...config import DEFAULT, NAN
 from .grouped_list import GroupedList
 from .serialization import json_serialize_feature, json_deserialize_content
@@ -57,6 +57,9 @@ class BaseFeature:
 
         # initiating base ordering (quantitative features)
         self.raw_order: list[str] = kwargs.get("raw_order", [])
+
+        # initiating feature version
+        self.version: str = kwargs.get("version", self.name)
 
     def fit(self, X: DataFrame, y: Series = None) -> None:
         """Fits the feature to a DataFrame"""
@@ -298,3 +301,14 @@ class BaseFeature:
         feature.update(values, replace=True, ordinal_encoding=ordinal_encoding)
 
         return feature
+
+    def make_multiclass(self, y_classes: list[str]) -> None:
+        """making a renamed copy of feature"""
+
+        # copy of feature
+        new_feature = deepcopy(self)
+
+        # renaming
+        new_feature.name = new_name
+
+        return new_feature

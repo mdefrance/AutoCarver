@@ -98,7 +98,7 @@ class Discretizer(BaseDiscretizer):
             kept_features += quantitative_discretizer.features.get_names()
 
         # removing dropped features
-        self.features.keep_features(kept_features)
+        self.features.keep(kept_features)
 
         # discretizing features based on each feature's values_order
         super().fit(X, y)
