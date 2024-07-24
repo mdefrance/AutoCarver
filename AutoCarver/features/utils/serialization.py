@@ -142,7 +142,7 @@ def json_serialize_feature(feature: dict) -> str:
 
     # serializing values
     values = feature.get("values")
-    feature.update({"values": convert_values_to_base_types(values[:])})
+    feature.update({"values": convert_values_to_base_types(values)})
 
     # serializing content
     content = feature.get("content")
@@ -208,16 +208,19 @@ def json_deserialize_content(json_serialized_feature: dict) -> dict:
     values = convert_values_to_numpy_types(values)
     content = convert_values_to_numpy_types(loads(content))
 
-    # fixing json dumping with string keys
-    for value in values:
-        content_key = value
+    # cehcking for values
+    if values is not None:
 
-        # float and int dict keys (converted in string by json.dumps)
-        if not isinstance(value, str) and isfinite(value):
-            content_key = str(value)
+        # fixing json dumping with string keys
+        for value in values:
+            content_key = value
 
-        # updating
-        content.update({value: content.pop(content_key)})
+            # float and int dict keys (converted in string by json.dumps)
+            if not isinstance(value, str) and isfinite(value):
+                content_key = str(value)
 
-    # converting to grouped list
-    return GroupedList(content)
+            # updating
+            content.update({value: content.pop(content_key)})
+
+        # converting to grouped list
+        return GroupedList(content)

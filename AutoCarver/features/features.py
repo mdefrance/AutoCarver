@@ -9,7 +9,6 @@ from .quantitative_features import QuantitativeFeature
 
 from numpy import nan
 from typing import Union, Type
-from copy import deepcopy
 
 # class AutoFeatures(Features):
 #     """TODO"""
@@ -119,14 +118,18 @@ class Features:
 
     def __repr__(self) -> str:
         """Returns names of all features"""
-        return f"{self.__name__}({str(self.get_names())})"
+        return f"{self.__name__}({str(self.get_versions())})"
 
     def __call__(self, feature_name: str) -> BaseFeature:
         """Returns specified feature by name"""
-        # checking that feature exists among versions
+        # looking for feature names
         self_dict = self.to_dict()
         if feature_name in self_dict:
             return self_dict.get(feature_name)
+
+        # looking for version names
+        if feature_name in self.get_versions():
+            return next(feature for feature in self if feature.version == feature_name)
 
         # not found feature
         raise ValueError(f" - [{self.__name__}] '{feature_name}' not in features.")
@@ -187,17 +190,38 @@ class Features:
             feature for feature in self.quantitatives if feature.version != feature_name
         ]
 
-    def keep(self, kept_features: list[str]):
+    def keep(self, kept_features: list[str], version_tag: str = None):
         """list of features to keep (removes the others)"""
 
+        # keeping from list of typed features with specific version_tag
+        if version_tag is not None:
+            self.categoricals = [
+                feature
+                for feature in self.categoricals
+                if feature.version in kept_features or feature.version != version_tag
+            ]
+            self.ordinals = [
+                feature
+                for feature in self.ordinals
+                if feature.version in kept_features or feature.version != version_tag
+            ]
+            self.quantitatives = [
+                feature
+                for feature in self.quantitatives
+                if feature.version in kept_features or feature.version != version_tag
+            ]
+
         # keeping from list of typed features
-        self.categoricals = [
-            feature for feature in self.categoricals if feature.version in kept_features
-        ]
-        self.ordinals = [feature for feature in self.ordinals if feature.version in kept_features]
-        self.quantitatives = [
-            feature for feature in self.quantitatives if feature.version in kept_features
-        ]
+        else:
+            self.categoricals = [
+                feature for feature in self.categoricals if feature.version in kept_features
+            ]
+            self.ordinals = [
+                feature for feature in self.ordinals if feature.version in kept_features
+            ]
+            self.quantitatives = [
+                feature for feature in self.quantitatives if feature.version in kept_features
+            ]
 
     def check_values(self, X: DataFrame) -> None:
         """Cheks for unexpected values for each feature in columns of DataFrame X"""
@@ -333,7 +357,7 @@ class Features:
 
     def to_dict(self) -> dict[str, BaseFeature]:
         """Returns a dict of all versionned features"""
-        return {feature.version: feature for feature in self.to_list()}
+        return {feature.name: feature for feature in self.to_list()}
 
     @classmethod
     def load(cls: Type["Features"], features_json: dict, ordinal_encoding: bool) -> "Features":
@@ -355,7 +379,7 @@ class Features:
         # initiating features
         return cls(unpacked_features)
 
-    def get_summaries(self):
+    def get_summaries(self) -> DataFrame:
         """returns summaries of features' values' content"""
         # iterating over each feature
         summaries = []
@@ -364,13 +388,69 @@ class Features:
 
         return DataFrame(summaries).set_index(["feature", "label"])
 
-    def get_multiclass_features(self, y_classes: list[str]) -> "Features":
-        """Returns multiclass version of accordingly renamed features"""
+    def add_feature_versions(self, y_classes: list[str], ordinal_encoding: bool) -> "Features":
+        """Builds versions of all features for each y_class"""
 
-        return {
-            y_class: Features([feature.rename(f"{feature.name}_y={y_class}") for feature in self])
-            for y_class in y_classes
-        }
+        # initiating new features' versions
+        categoricals: list[BaseFeature] = []
+        ordinals: list[BaseFeature] = []
+        quantitatives: list[BaseFeature] = []
+
+        # iterating over each possible class
+        for y_class in y_classes:
+
+            # making new versions of features
+            categoricals += [
+                make_version(feature, y_class, ordinal_encoding) for feature in self.categoricals
+            ]
+            ordinals += [
+                make_version(feature, y_class, ordinal_encoding) for feature in self.ordinals
+            ]
+            quantitatives += [
+                make_version(feature, y_class, ordinal_encoding) for feature in self.quantitatives
+            ]
+
+        # saving feature versions
+        self.categoricals = categoricals
+        self.ordinals = ordinals
+        self.quantitatives = quantitatives
+
+    def get_version_group(self, y_class: str) -> list[BaseFeature]:
+        """Returns all features with specified version_tag"""
+
+        return [feature for feature in self if feature.version_tag == y_class]
+
+
+def make_version(feature: BaseFeature, y_class: str, ordinal_encoding: bool) -> BaseFeature:
+    """Makes a copy of a feature with specified version"""
+
+    # converting feature to json
+    feature_json = feature.to_json(light_mode=False)
+
+    # categorical feature
+    if feature_json.get("is_categorical"):
+        new_feature = CategoricalFeature.load(feature_json, ordinal_encoding)
+    # ordinal feature
+    elif feature_json.get("is_ordinal"):
+        new_feature = OrdinalFeature.load(feature_json, ordinal_encoding)
+    # ordinal feature
+    elif feature_json.get("is_quantitative"):
+        new_feature = QuantitativeFeature.load(feature_json, ordinal_encoding)
+    # base feature
+    else:
+        new_feature = BaseFeature.load(feature_json, ordinal_encoding)
+
+    # modifying version and tag
+    new_feature.version_tag = y_class
+    new_feature.version = make_version_name(new_feature.name, y_class)
+
+    return new_feature
+
+
+def make_version_name(feature_name: str, y_class: str) -> str:
+    """Builds a version name for a feature and target class"""
+
+    return f"{feature_name}__y={y_class}"
 
 
 def cast_features(
@@ -412,7 +492,7 @@ def cast_features(
     return [
         feature
         for n, feature in enumerate(converted_features)
-        if feature.name not in get_names(converted_features[n + 1 :])
+        if feature.version not in get_versions(converted_features[n + 1 :])
     ]
 
 
@@ -424,12 +504,3 @@ def get_names(features: list[BaseFeature]) -> list[str]:
 def get_versions(features: list[BaseFeature]) -> list[str]:
     """Gives version names from Features"""
     return [feature.version for feature in features]
-
-
-class MulticlassFeatures:
-
-    def __init__(self, features: Features, y_classes: list[str]) -> None:
-
-        self.raw_features = deepcopy(features)
-        self.y_classes = y_classes
-        self.features = {y_class: deepcopy(features) for y_class in self.y_classes}

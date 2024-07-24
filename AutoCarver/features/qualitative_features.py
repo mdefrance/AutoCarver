@@ -20,14 +20,11 @@ class CategoricalFeature(BaseFeature):
         self.mode = None
         self.pct_mode = None
 
-    def __repr__(self):
-        return f"{self.__name__}('{self.name}')"
-
     def fit(self, X: DataFrame, y: Series = None) -> None:
         """TODO fit stats"""
 
         # checking for feature's unique non-nan values
-        sorted_unique_values = nan_unique(X[self.name], sort=True)
+        sorted_unique_values = nan_unique(X[self.version], sort=True)
 
         # checking that feature is not ordinal (already set values)
         if self.values is None:
@@ -49,7 +46,7 @@ class CategoricalFeature(BaseFeature):
         """checks for unexpected values from unique values in DataFrame"""
 
         # computing unique labels in dataframe
-        unique_labels = unique(X[self.name])
+        unique_labels = unique(X[self.version])
 
         # converting to labels
         unique_values = [self.value_per_label.get(label, label) for label in unique_labels]

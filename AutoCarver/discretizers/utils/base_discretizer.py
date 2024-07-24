@@ -150,7 +150,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             **{
                 feature.version: X[feature.name]
                 for feature in self.features
-                if feature.name != feature.version
+                if feature.version != feature.name and feature.version not in X
             }
         )
 
@@ -180,7 +180,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         if X is not None:
             if not isinstance(X, DataFrame):  # checking for X's type
                 raise ValueError(
-                    f" - [Discretizer] X must be a pandas.DataFrame, instead {type(X)} was passed"
+                    f" - [{self.__name__}] X must be a pandas.DataFrame, passed {type(X)}"
                 )
 
             # copying X
@@ -191,10 +191,12 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             x_copy = self._cast_features(x_copy)
 
             # checking for input columns
-            missing_columns = [feature for feature in self.features if feature.name not in x_copy]
+            missing_columns = [
+                feature for feature in self.features if feature.version not in x_copy
+            ]
             if len(missing_columns) > 0:
                 raise ValueError(
-                    f" - [Discretizer] Requested discretization of {str(missing_columns)} but "
+                    f" - [{self.__name__}] Requested discretization of {str(missing_columns)} but "
                     "those columns are missing from provided X. Please check your inputs! "
                 )
 
@@ -202,14 +204,14 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             if y is not None:
                 if not isinstance(y, Series):  # checking for y's type
                     raise ValueError(
-                        f" - [Discretizer] y must be a pandas.Series, instead {type(y)} was passed"
+                        f" - [{self.__name__}] y must be a pandas.Series, passed {type(y)}"
                     )
 
                 if any(y.isna()):  # checking for nans in the target
-                    raise ValueError(" - [Discretizer] y should not contain numpy.nan")
+                    raise ValueError(f" - [{self.__name__}] y should not contain numpy.nan")
 
                 if not all(y.index == X.index):  # checking for matching indices
-                    raise ValueError(" - [Discretizer] X and y must have the same indices.")
+                    raise ValueError(f" - [{self.__name__}] X and y must have the same indices.")
 
         return x_copy
 
@@ -237,7 +239,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
             )
 
         # checking that all features were fitted
-        missing_features = [feature.name for feature in self.features if not feature.is_fitted]
+        missing_features = [feature.version for feature in self.features if not feature.is_fitted]
         if len(missing_features) != 0:
             raise ValueError(f" - [Discretizer] Features not fitted: {str(missing_features)}.")
 
@@ -283,11 +285,55 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
 
         # transforming quantitative features
         if len(self.features.get_quantitatives()) > 0:
+            from ...features.features import get_versions
+
+            try:
+                print(
+                    "raw quantitative",
+                    sum(
+                        x_copy[get_versions(self.features.get_quantitatives())].nunique()
+                        > self.max_n_mod
+                    ),
+                )
+            except:
+                pass
             x_copy = self._transform_quantitative(x_copy, y)
+            try:
+                print(
+                    "discretized quantitative",
+                    sum(
+                        x_copy[get_versions(self.features.get_quantitatives())].nunique()
+                        > self.max_n_mod
+                    ),
+                )
+            except:
+                pass
 
         # transforming qualitative features
         if len(self.features.get_qualitatives()) > 0:
+            from ...features.features import get_versions
+
+            try:
+                print(
+                    "raw qualitative",
+                    sum(
+                        x_copy[get_versions(self.features.get_qualitatives())].nunique()
+                        > self.max_n_mod
+                    ),
+                )
+            except:
+                pass
             x_copy = self._transform_qualitative(x_copy, y)
+            try:
+                print(
+                    "discretized qualitative",
+                    sum(
+                        x_copy[get_versions(self.features.get_qualitatives())].nunique()
+                        > self.max_n_mod
+                    ),
+                )
+            except:
+                pass
 
         # reinstating nans when not supposed to group them
         x_copy = self.features.unfillna(x_copy)
@@ -640,9 +686,9 @@ def transform_quantitative_feature(
 
     # reinstating nans otherwise nan is converted to 'nan' by numpy
     if any(feature_nans):
-        df_feature[feature_nans] = feature.label_per_value.get(feature.nan, feature.nan)
+        df_feature[feature_nans] = feature.label_per_value.get(feature.nan, nan)
 
-    return feature.name, list(df_feature)
+    return feature.version, list(df_feature)
 
 
 def applied_to_dict_list(applied: Union[DataFrame, Series]) -> dict[str, list[Any]]:

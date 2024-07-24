@@ -14,9 +14,6 @@ class QuantitativeFeature(BaseFeature):
         super().__init__(name, **kwargs)
         self.is_quantitative = True
 
-    def __repr__(self):
-        return f"QuantitativeFeature('{self.name}')"
-
     def get_labels(self) -> GroupedList:
         """gives labels per quantile (values for continuous features)
 
@@ -74,9 +71,6 @@ class DatetimeFeature(BaseFeature):
         super().__init__(name, **kwargs)
         self.is_quantitative = True
         self.reference_date = reference_date  # date of reference to compare with
-
-    def __repr__(self):
-        return f"DatetimeFeature('{self.name}')"
 
 
 def format_quantiles(a_list: list[float]) -> list[str]:

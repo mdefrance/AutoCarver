@@ -81,7 +81,7 @@ class Discretizer(BaseDiscretizer):
             qualitative_discretizer.fit(x_copy, y)
 
             # saving kept features
-            kept_features += qualitative_discretizer.features.get_names()
+            kept_features += qualitative_discretizer.features.get_versions()
 
         # [Quantitative features] Grouping quantitative features
         if len(self.features.get_quantitatives()) > 0:
@@ -95,7 +95,7 @@ class Discretizer(BaseDiscretizer):
             quantitative_discretizer.fit(x_copy, y)
 
             # saving kept features
-            kept_features += quantitative_discretizer.features.get_names()
+            kept_features += quantitative_discretizer.features.get_versions()
 
         # removing dropped features
         self.features.keep(kept_features)
@@ -290,7 +290,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         x_copy = super()._prepare_data(X, y)
 
         # checking for quantitative columns
-        dtypes = x_copy[self.features.get_names()].map(type).apply(unique, result_type="reduce")
+        dtypes = x_copy[self.features.get_versions()].map(type).apply(unique, result_type="reduce")
         not_numeric = dtypes.apply(lambda u: str in u)
         if any(not_numeric):
             raise ValueError(
@@ -319,7 +319,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         # [Quantitative features] Grouping rare quantiles into closest common one
         #  -> can exist because of overrepresented values (values more frequent than min_freq)
         # searching for features with rare quantiles: computing min frequency per feature
-        frequencies = x_copy[self.features.get_names()].apply(
+        frequencies = x_copy[self.features.get_versions()].apply(
             min_value_counts, features=self.features, axis=0
         )
 
@@ -332,7 +332,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         # Grouping rare modalities
         if len(has_rare) > 0:
             ordinal_discretizer = OrdinalDiscretizer(
-                ordinals=[feature for feature in self.features if feature.name in has_rare],
+                ordinals=[feature for feature in self.features if feature.version in has_rare],
                 min_freq=q_min_freq,
                 copy=False,
                 verbose=self.verbose,

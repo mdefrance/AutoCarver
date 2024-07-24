@@ -103,20 +103,20 @@ class CategoricalDiscretizer(BaseDiscretizer):
         """Groups modalities less frequent than min_freq into feature.default"""
 
         # computing frequencies of each modality
-        frequencies = X[self.features.get_names()].apply(series_value_counts, axis=0)
+        frequencies = X[self.features.get_versions()].apply(series_value_counts, axis=0)
 
         # iterating over each feature
         for feature in self.features:
             # checking for rare values
             values_to_group = [
                 value
-                for value, freq in frequencies[feature.name].items()
+                for value, freq in frequencies[feature.version].items()
                 if freq < self.min_freq and value != feature.nan and notna(value)
             ]
 
             # checking for completly missing values (no frequency observed in X)
             missing_values = [
-                value for value in feature.values if value not in frequencies[feature.name]
+                value for value in feature.values if value not in frequencies[feature.version]
             ]
             if len(missing_values) > 0:
                 raise ValueError(
@@ -130,7 +130,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
 
                 # grouping rare values in default value
                 feature.group_list(values_to_group, feature.default)
-                X.loc[X[feature.name].isin(values_to_group), feature.name] = feature.default
+                X.loc[X[feature.version].isin(values_to_group), feature.version] = feature.default
 
         return X
 
@@ -138,7 +138,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
         """Sorts features' values by target rate"""
 
         # computing target rate per modality for ordering
-        target_rates = X[self.features.get_names()].apply(series_target_rate, y=y, axis=0)
+        target_rates = X[self.features.get_versions()].apply(series_target_rate, y=y, axis=0)
 
         # sorting features' values based on target rates
         self.features.update(
@@ -234,8 +234,8 @@ class OrdinalDiscretizer(BaseDiscretizer):
 
         # grouping rare modalities for each feature
         common_modalities = {
-            feature.name: find_common_modalities(
-                x_copy[feature.name],
+            feature.version: find_common_modalities(
+                x_copy[feature.version],
                 y,
                 min_freq=self.min_freq,
                 order=[label for label in feature.labels if label != feature.nan],
@@ -428,7 +428,7 @@ class ChainedDiscretizer(BaseDiscretizer):
             for level_order in self.chained_orders:
                 # computing frequencies of each modality
                 frequencies = (
-                    x_copy[feature.name]
+                    x_copy[feature.version]
                     .value_counts(normalize=True, dropna=False)
                     .drop(nan, errors="ignore")
                 )
@@ -444,11 +444,13 @@ class ChainedDiscretizer(BaseDiscretizer):
                 groups_value = [level_order.get_group(value) for value in values_to_group]
 
                 # values of the feature to input (needed for next levels of the order)
-                df_to_input = [x_copy[feature.name] == discarded for discarded in values_to_group]
+                df_to_input = [
+                    x_copy[feature.version] == discarded for discarded in values_to_group
+                ]
 
                 # inputing non frequent values
-                x_copy[feature.name] = select(
-                    df_to_input, groups_value, default=x_copy[feature.name]
+                x_copy[feature.version] = select(
+                    df_to_input, groups_value, default=x_copy[feature.version]
                 )
 
                 # historizing in the feature's order
@@ -593,16 +595,16 @@ def check_frequencies(features: Features, X: DataFrame, min_freq: float, name: s
     """Checks features' frequencies compared to min_freq"""
 
     # computing features' max modality frequency (mode frequency)
-    max_freq = X[features.get_names()].apply(
+    max_freq = X[features.get_versions()].apply(
         lambda u: u.value_counts(normalize=True, dropna=False).max(),
         axis=0,
     )
 
     # features with no common modality (biggest value less frequent than min_freq)
-    non_common = [f.name for f in features if max_freq[f.name] < min_freq]
+    non_common = [f.version for f in features if max_freq[f.version] < min_freq]
 
     # features with too common modality (biggest value more frequent than 1-min_freq)
-    too_common = [f.name for f in features if max_freq[f.name] > 1 - min_freq]
+    too_common = [f.version for f in features if max_freq[f.version] > 1 - min_freq]
 
     # raising
     if len(too_common + non_common) > 0:
@@ -640,7 +642,7 @@ def check_dtypes(features: Features, X: DataFrame, **kwargs: dict) -> DataFrame:
 
     # getting per feature data types
     dtypes = (
-        X.fillna({feature.name: feature.nan for feature in features})[features.get_names()]
+        X.fillna({feature.version: feature.nan for feature in features})[features.get_versions()]
         .map(type)
         .apply(unique, result_type="reduce")
     )
@@ -652,7 +654,7 @@ def check_dtypes(features: Features, X: DataFrame, **kwargs: dict) -> DataFrame:
     if any(not_object):
         # converting non-str features into qualitative features
         to_convert = [
-            feature for feature in features if feature.name in not_object.index[not_object]
+            feature for feature in features if feature.version in not_object.index[not_object]
         ]
         string_discretizer = StringDiscretizer(features=to_convert, **kwargs)
         X = string_discretizer.fit_transform(X)

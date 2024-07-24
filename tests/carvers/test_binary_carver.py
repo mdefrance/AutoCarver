@@ -136,7 +136,7 @@ def test_binary_carver(
     features.remove("ones")
     features.remove("ones_nan")
 
-    # fitting carver
+    # fitting with provided measure
     auto_carver = BinaryCarver(
         min_freq=min_freq,
         sort_by=sort_by,
@@ -156,34 +156,35 @@ def test_binary_carver(
     )
     x_dev_discretized = auto_carver.transform(x_dev_1)
 
+    # getting kept features
+    feature_names = features.get_names()
+
     # testing that attributes where correctly used
     assert all(
-        x_discretized[features.get_names()].nunique() <= max_n_mod
+        x_discretized[feature_names].nunique() <= max_n_mod
     ), "Too many buckets after carving of train sample"
     assert all(
-        x_dev_discretized[features.get_names()].nunique() <= max_n_mod
+        x_dev_discretized[feature_names].nunique() <= max_n_mod
     ), "Too many buckets after carving of test sample"
 
     # checking that nans were not dropped if not requested
     if not dropna:
         # testing output of nans
         assert all(
-            raw_x_train[features.get_names()].isna().mean()
-            == x_discretized[features.get_names()].isna().mean()
+            raw_x_train[feature_names].isna().mean() == x_discretized[feature_names].isna().mean()
         ), "Some Nans are being dropped (grouped) or more nans than expected"
 
     # checking that nans were dropped if requested
     else:
         assert all(
-            x_discretized[features.get_names()].isna().mean() == 0
+            x_discretized[feature_names].isna().mean() == 0
         ), "Some Nans are not dropped (grouped)"
 
     # testing for differences between train and dev
     assert all(
-        x_discretized[features.get_names()].nunique()
-        == x_dev_discretized[features.get_names()].nunique()
+        x_discretized[feature_names].nunique() == x_dev_discretized[feature_names].nunique()
     ), "More buckets in train or test samples"
-    for feature in features.get_names():
+    for feature in feature_names:
         # getting target rate per feature
         train_target_rate = x_discretized.groupby(feature)[target].mean().sort_values()
         dev_target_rate = x_dev_discretized.groupby(feature)[target].mean().sort_values()
@@ -214,8 +215,7 @@ def test_binary_carver(
     # testing copy functionnality
     if copy:
         assert all(
-            x_discretized[features.get_names()].fillna(NAN)
-            == x_train[features.get_names()].fillna(NAN)
+            x_discretized[feature_names].fillna(NAN) == x_train[feature_names].fillna(NAN)
         ), "Not copied correctly"
 
     # testing json serialization
@@ -229,8 +229,8 @@ def test_binary_carver(
         loaded_carver.summary() == auto_carver.summary()
     ), "Non-identical summaries when loading from JSON"
     assert all(
-        x_discretized[features.get_names()]
-        == loaded_carver.transform(x_dev_1)[features.get_names()]
+        x_discretized[feature_names]
+        == loaded_carver.transform(x_dev_1)[loaded_carver.features.get_names()]
     ), "Non-identical discretized values when loading from JSON"
 
     # transform dev with unexpected modal for a feature that has_default
@@ -244,7 +244,7 @@ def test_binary_carver(
     with raises(ValueError):
         auto_carver.transform(x_dev_wrong_3)
 
-    # testing with unknown values in chained discretizer
+    # testing with unknown values
     values_orders.update(
         {
             "Qualitative_Ordinal_lownan": [

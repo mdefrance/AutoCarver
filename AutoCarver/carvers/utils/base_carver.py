@@ -304,8 +304,8 @@ class BaseCarver(BaseDiscretizer):
     ) -> dict[str, GroupedList]:
         """Carves a feature into buckets that maximize association with the target"""
         # getting xtabs on train/test
-        xagg = xaggs[feature.name]
-        xagg_dev = xaggs_dev[feature.name]
+        xagg = xaggs[feature.version]
+        xagg_dev = xaggs_dev[feature.version]
 
         # verbose if requested
         self._print_xagg(feature, xagg=xagg, xagg_dev=xagg_dev, message="Raw distribution")
@@ -326,7 +326,7 @@ class BaseCarver(BaseDiscretizer):
                 f"WARNING: No robust combination for {feature}. Consider increasing the size of "
                 "X_dev or dropping the feature (X not representative of X_dev for this feature)."
             )
-            self.features.remove(feature.name)
+            self.features.remove(feature.version)
 
     def _get_best_combination(
         self,

@@ -85,12 +85,12 @@ class ContinuousDiscretizer(BaseDiscretizer):
 def fit_feature(feature: BaseFeature, X: DataFrame, q: float) -> tuple[str, GroupedList]:
     """Fits one feature"""
     # getting quantiles for specified feature
-    quantiles = find_quantiles(X[feature.name].values, q=q)
+    quantiles = find_quantiles(X[feature.version].values, q=q)
 
     # Converting to a groupedlist
     order = GroupedList(quantiles + [inf])
 
-    return feature.name, order
+    return feature.version, order
 
 
 def find_quantiles(

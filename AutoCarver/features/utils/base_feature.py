@@ -7,7 +7,6 @@ from typing import Any, Type
 
 import json
 from pandas import DataFrame, Series
-from copy import deepcopy
 from ...config import DEFAULT, NAN
 from .grouped_list import GroupedList
 from .serialization import json_serialize_feature, json_deserialize_content
@@ -60,6 +59,10 @@ class BaseFeature:
 
         # initiating feature version
         self.version: str = kwargs.get("version", self.name)
+        self.version_tag: str = kwargs.get("version_tag", self.name)
+
+    def __repr__(self):
+        return f"{self.__name__}('{self.version}')"
 
     def fit(self, X: DataFrame, y: Series = None) -> None:
         """Fits the feature to a DataFrame"""
@@ -81,11 +84,8 @@ class BaseFeature:
     def check_values(self, X: DataFrame) -> None:
         """checks for unexpected values from unique values in DataFrame"""
 
-        if (any(X[self.name].isna()) or any(X[self.name] == self.nan)) and not self.has_nan:
+        if (any(X[self.version].isna()) or any(X[self.version] == self.nan)) and not self.has_nan:
             raise ValueError(f" - [{self}] Unexpected NaNs.")
-
-    def __repr__(self):
-        return f"{self.__name__}('{self.name}')"
 
     def update(
         self,
@@ -238,7 +238,9 @@ class BaseFeature:
 
     def get_content(self) -> dict:
         """returns feature values' content"""
-        return self.values.content
+        if isinstance(self.values, GroupedList):
+            return self.values.content
+        return self.values
 
     def to_json(self, light_mode: bool = False) -> dict:
         """Converts to JSON format.
@@ -258,6 +260,8 @@ class BaseFeature:
         # minimal output json
         feature = {
             "name": self.name,
+            "version": self.version,
+            "version_tag": self.version_tag,
             "has_nan": self.has_nan,
             "nan": self.nan,
             "has_default": self.has_default,
@@ -298,6 +302,7 @@ class BaseFeature:
         feature = cls(**dict(feature_json, history=history, load_mode=True))
 
         # updating feature with deserialized content
-        feature.update(values, replace=True, ordinal_encoding=ordinal_encoding)
+        if values is not None:
+            feature.update(values, replace=True, ordinal_encoding=ordinal_encoding)
 
         return feature

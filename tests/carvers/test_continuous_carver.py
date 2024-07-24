@@ -108,7 +108,7 @@ def test_continuous_carver(
     min_freq = 0.1
     max_n_mod = 4
 
-    # tests with 'tschuprowt' measure
+    # fitting continuous carver
     auto_carver = ContinuousCarver(
         min_freq=min_freq,
         features=features,
@@ -214,7 +214,7 @@ def test_continuous_carver(
     with raises(ValueError):
         auto_carver.transform(x_dev_wrong_3)
 
-    # testing with unknown values in chained discretizer
+    # testing with unknown values
     values_orders.update(
         {
             "Qualitative_Ordinal_lownan": [
