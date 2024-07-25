@@ -84,6 +84,7 @@ class BaseFeature:
     def check_values(self, X: DataFrame) -> None:
         """checks for unexpected values from unique values in DataFrame"""
 
+        # checking for nans whereas at training none were witnessed
         if (any(X[self.version].isna()) or any(X[self.version] == self.nan)) and not self.has_nan:
             raise ValueError(f" - [{self}] Unexpected NaNs.")
 

@@ -97,15 +97,6 @@ def test_binary_carver(
         quantitatives=quantitative_features,
     )
 
-    # fitting chained discretizer
-    chained_discretizer = ChainedDiscretizer(
-        min_freq=min_freq,
-        features=features[chained_features],
-        chained_orders=[level0_to_level1, level1_to_level2],
-        copy=copy,
-    )
-    x_discretized = chained_discretizer.fit_transform(x_train)
-
     # minimum frequency and maximum number of modality
     min_freq = 0.1
     max_n_mod = 4
@@ -131,10 +122,25 @@ def test_binary_carver(
         )
         x_dev_discretized = auto_carver.transform(x_dev_1)
 
+    # defining features
+    features = Features(
+        categoricals=qualitative_features,
+        ordinal_values=values_orders,
+        ordinals=ordinal_features,
+        quantitatives=quantitative_features,
+    )
     # removing wrong features
-    features.remove("nan")
-    features.remove("ones")
-    features.remove("ones_nan")
+    for feature_name in ["nan", "ones", "ones_nan"]:
+        features.remove(feature_name)
+
+    # fitting chained discretizer
+    chained_discretizer = ChainedDiscretizer(
+        min_freq=min_freq,
+        features=features[chained_features],
+        chained_orders=[level0_to_level1, level1_to_level2],
+        copy=copy,
+    )
+    chained_discretizer.fit(x_train)
 
     # fitting with provided measure
     auto_carver = BinaryCarver(
@@ -236,7 +242,7 @@ def test_binary_carver(
     # transform dev with unexpected modal for a feature that has_default
     auto_carver.transform(x_dev_wrong_1)
 
-    # transform dev with unexpected nans for a feature that has_default
+    # transform dev with unexpected nans (even though it has_default)
     with raises(ValueError):
         auto_carver.transform(x_dev_wrong_2)
 

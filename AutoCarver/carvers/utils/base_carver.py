@@ -197,7 +197,9 @@ class BaseCarver(BaseDiscretizer):
 
         # discretizing all features, always copying, to keep discretization from start to finish
         discretizer = Discretizer(
-            self.min_freq_mod, self.features, **dict(self.kwargs, copy=True, ordinal_encoding=False)
+            self.min_freq_mod,
+            self.features,
+            **dict(self.kwargs, dropna=False, copy=True, ordinal_encoding=False),
         )
         x_copy = discretizer.fit_transform(x_copy, y)
         if x_dev_copy is not None:  # applying on x_dev
@@ -408,7 +410,8 @@ class BaseCarver(BaseDiscretizer):
         tuple[dict[str, Any], GroupedList]
             best viable association and associated modality order
         """
-
+        print("\n", feature)
+        print("\nraw_xagg\n", xagg)
         # filtering out nans from train/test crosstabs
         raw_xagg, raw_xagg_dev = xagg.copy(), xagg_dev.copy()
         if not dropna:
@@ -462,7 +465,6 @@ class BaseCarver(BaseDiscretizer):
             labels = order_apply_combination(feature.labels, best_association["combination"])
 
             # applying best_combination to raw xagg and xagg_dev
-            print("labels", labels)
             xagg = xagg_apply_combination(raw_xagg, labels)
             xagg_dev = xagg_apply_combination(raw_xagg_dev, labels)
 

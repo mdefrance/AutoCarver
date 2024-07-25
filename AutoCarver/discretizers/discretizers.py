@@ -85,6 +85,7 @@ class Discretizer(BaseDiscretizer):
 
         # [Quantitative features] Grouping quantitative features
         if len(self.features.get_quantitatives()) > 0:
+
             # grouping quantitative features
             quantitative_discretizer = QuantitativeDiscretizer(
                 quantitatives=self.features.get_quantitatives(),

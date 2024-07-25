@@ -285,55 +285,11 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
 
         # transforming quantitative features
         if len(self.features.get_quantitatives()) > 0:
-            from ...features.features import get_versions
-
-            try:
-                print(
-                    "raw quantitative",
-                    sum(
-                        x_copy[get_versions(self.features.get_quantitatives())].nunique()
-                        > self.max_n_mod
-                    ),
-                )
-            except:
-                pass
             x_copy = self._transform_quantitative(x_copy, y)
-            try:
-                print(
-                    "discretized quantitative",
-                    sum(
-                        x_copy[get_versions(self.features.get_quantitatives())].nunique()
-                        > self.max_n_mod
-                    ),
-                )
-            except:
-                pass
 
         # transforming qualitative features
         if len(self.features.get_qualitatives()) > 0:
-            from ...features.features import get_versions
-
-            try:
-                print(
-                    "raw qualitative",
-                    sum(
-                        x_copy[get_versions(self.features.get_qualitatives())].nunique()
-                        > self.max_n_mod
-                    ),
-                )
-            except:
-                pass
             x_copy = self._transform_qualitative(x_copy, y)
-            try:
-                print(
-                    "discretized qualitative",
-                    sum(
-                        x_copy[get_versions(self.features.get_qualitatives())].nunique()
-                        > self.max_n_mod
-                    ),
-                )
-            except:
-                pass
 
         # reinstating nans when not supposed to group them
         x_copy = self.features.unfillna(x_copy)
@@ -682,7 +638,7 @@ def transform_quantitative_feature(
 
     # checking for values to group
     if len(values_to_group) > 0:
-        df_feature = select(values_to_group, group_labels, default=df_feature)
+        df_feature = Series(select(values_to_group, group_labels, default=df_feature))
 
     # reinstating nans otherwise nan is converted to 'nan' by numpy
     if any(feature_nans):
