@@ -215,18 +215,6 @@ def test_multiclass_carver(
                 val not in discretized for val in train
             ), f"Not copied correctly ({feature})"
 
-        # trying out inplace: no inplace for multiclass (because of BaseDiscretizer._cast_features' DataFrame.assign)
-        # else:
-        #     print(
-        #         "\n - discretized",
-        #         x_discretized[feature.version].fillna(NAN).value_counts(dropna=False),
-        #         "\n ",
-        #     )
-        #     print("\n", "\n - raw", x_train[feature.name].fillna(NAN).value_counts(dropna=False))
-        #     assert all(
-        #         x_discretized[feature.version].fillna(NAN) == x_train[feature.name].fillna(NAN)
-        #     ), f"Not modified original dataframe ({feature})"
-
     # testing json serialization
     carver_file = "test.json"
     auto_carver.save(carver_file)
@@ -254,35 +242,36 @@ def test_multiclass_carver(
         auto_carver.transform(x_dev_wrong_3)
 
     # testing with unknown values
-    values_orders = {
-        "Qualitative_Ordinal_lownan": [
-            "Low+",
-            "Medium-",
-            "Medium",
-            "Medium+",
-            "High-",
-            "High",
-            "High+",
-        ],
-        "Qualitative_Ordinal_highnan": [
-            "Low-",
-            "Low",
-            "Low+",
-            "Medium-",
-            "Medium",
-            "Medium+",
-            "High-",
-            "High",
-            "High+",
-        ],
-        "Discrete_Qualitative_highnan": ["1", "2", "3", "4", "5", "6", "7"],
-    }
+    values_orders.update(
+        {
+            "Qualitative_Ordinal_lownan": [
+                "Low+",
+                "Medium-",
+                "Medium",
+                "Medium+",
+                "High-",
+                "High",
+                "High+",
+            ],
+            "Qualitative_Ordinal_highnan": [
+                "Low-",
+                "Low",
+                "Low+",
+                "Medium-",
+                "Medium",
+                "Medium+",
+                "High-",
+                "High",
+                "High+",
+            ],
+            "Discrete_Qualitative_highnan": ["1", "2", "3", "4", "5", "6", "7"],
+        }
+    )
 
     # minimum frequency per value
     min_freq = 0.15
 
     # defining features
-    print(ordinal_features, values_orders)
     features = Features(
         ordinal_values=values_orders,
         ordinals=ordinal_features,

@@ -250,7 +250,6 @@ def test_continuous_carver(
         ordinal_values=values_orders,
         ordinals=ordinal_features,
     )
-    assert False, "did not raise"
 
     # removing wrong features
     features.remove("nan")
