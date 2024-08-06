@@ -16,7 +16,7 @@ def sort_by(request) -> str:
     return request.param
 
 
-def _multiclass_carver(
+def test_multiclass_carver(
     x_train: DataFrame,
     x_train_wrong_2: DataFrame,
     x_dev_1: DataFrame,
@@ -149,8 +149,6 @@ def _multiclass_carver(
     ), "Version missing from Dev dataframe after transform"
 
     # testing that attributes where correctly used
-    print(feature_versions)
-    print(x_discretized[feature_versions].nunique())
     assert all(
         x_discretized[feature_versions].nunique() <= max_n_mod
     ), "Too many buckets after carving of train sample"
@@ -179,12 +177,16 @@ def _multiclass_carver(
     ), "More buckets in train or test samples"
     for feature in features:
         # getting target rate for version tag
-        train_target_rate = x_discretized.groupby(feature.version)[target].apply(
-            lambda u: (str(u) == feature.version_tag).mean()
-        )
-        dev_target_rate = x_dev_discretized.groupby(feature)[target].apply(
-            lambda u: (str(u) == feature.version_tag).mean()
-        )
+        train_target_rate = (
+            (x_discretized[target].astype(str) == feature.version_tag).groupby(
+                x_discretized[feature.version]
+            )
+        ).mean()
+        dev_target_rate = (
+            (x_dev_discretized[target].astype(str) == feature.version_tag).groupby(
+                x_dev_discretized[feature.version]
+            )
+        ).mean()
         # sorting by target for non-ordinal features
         if not feature.is_ordinal:
             train_target_rate = train_target_rate.sort_values()
@@ -202,13 +204,28 @@ def _multiclass_carver(
             f": {feature.name}"
         )
 
-    # testing copy functionnality
+    # trying out copy
     if copy:
-        # iterating over each feature
         for feature in features:
-            assert all(
-                x_discretized[feature.version].fillna(NAN) == x_train[feature.name].fillna(NAN)
-            ), "Not copied correctly"
+            # unique values per feature
+            discretized = list(x_discretized[feature.version].fillna(NAN).unique())
+            train = list(x_train[feature.name].fillna(NAN).unique())
+
+            assert any(val not in train for val in discretized) or any(
+                val not in discretized for val in train
+            ), f"Not copied correctly ({feature})"
+
+        # trying out inplace: no inplace for multiclass (because of BaseDiscretizer._cast_features' DataFrame.assign)
+        # else:
+        #     print(
+        #         "\n - discretized",
+        #         x_discretized[feature.version].fillna(NAN).value_counts(dropna=False),
+        #         "\n ",
+        #     )
+        #     print("\n", "\n - raw", x_train[feature.name].fillna(NAN).value_counts(dropna=False))
+        #     assert all(
+        #         x_discretized[feature.version].fillna(NAN) == x_train[feature.name].fillna(NAN)
+        #     ), f"Not modified original dataframe ({feature})"
 
     # testing json serialization
     carver_file = "test.json"
@@ -265,6 +282,7 @@ def _multiclass_carver(
     min_freq = 0.15
 
     # defining features
+    print(ordinal_features, values_orders)
     features = Features(
         ordinal_values=values_orders,
         ordinals=ordinal_features,

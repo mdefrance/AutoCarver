@@ -86,7 +86,7 @@ def fit_feature(feature: BaseFeature, df_feature: Series):
         # grouping float/int value into the str value
         order.group(value, str_value)
 
-    return feature.name, order
+    return feature.version, order
 
 
 class TimedeltaDiscretizer(BaseDiscretizer):

@@ -220,6 +220,10 @@ def test_binary_carver(
 
     # testing copy functionnality
     if copy:
+        assert any(
+            x_discretized[feature_names].fillna(NAN) != x_train[feature_names].fillna(NAN)
+        ), "Not inplace correctly"
+    else:
         assert all(
             x_discretized[feature_names].fillna(NAN) == x_train[feature_names].fillna(NAN)
         ), "Not copied correctly"

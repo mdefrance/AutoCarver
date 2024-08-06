@@ -126,18 +126,18 @@ class BinaryCarver(BaseCarver):
             dict of crosstab(X, y) by feature name
         """
         # checking for empty datasets (dev)
-        xtabs = {feature.name: None for feature in self.features}
+        xtabs = {feature.version: None for feature in self.features}
         if X is not None:
             # crosstab for each feature
             for feature in self.features:
                 # computing crosstab with str_nan
-                xtab = crosstab(X[feature.name], y)
+                xtab = crosstab(X[feature.version], y)
 
                 # reordering according to known_order
                 xtab = xtab.reindex(feature.labels)
 
                 # storing results
-                xtabs.update({feature.name: xtab})
+                xtabs.update({feature.version: xtab})
 
         return xtabs
 

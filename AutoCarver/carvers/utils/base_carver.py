@@ -206,7 +206,7 @@ class BaseCarver(BaseDiscretizer):
             x_dev_copy = discretizer.transform(x_dev_copy, y_dev)
 
         # removing dropped features
-        self.features.keep(discretizer.features.get_names())
+        self.features.keep(discretizer.features.get_versions())
 
         # setting up features to convert nans to feature.nan (drop nans)
         self.features.set_dropna(True)
@@ -248,6 +248,7 @@ class BaseCarver(BaseDiscretizer):
             Target of the development dataset, by default ``None``
             Should have the same distribution as y.
         """
+
         # preparing datasets and checking for wrong values
         x_copy, x_dev_copy = self._prepare_data(X, y, X_dev, y_dev)
         super()._verbose("---------\n------")
@@ -257,7 +258,7 @@ class BaseCarver(BaseDiscretizer):
         xaggs_dev = self._aggregator(x_dev_copy, y_dev)
 
         # optimal butcketization/carving of each feature
-        all_features = self.features.get_names()  # (features are being removed from self.features)
+        all_features = self.features.get_versions()  # features are removed from self.features
         for n, feature in enumerate(all_features):
             if self.verbose:  # verbose if requested
                 print(
@@ -410,8 +411,6 @@ class BaseCarver(BaseDiscretizer):
         tuple[dict[str, Any], GroupedList]
             best viable association and associated modality order
         """
-        print("\n", feature)
-        print("\nraw_xagg\n", xagg)
         # filtering out nans from train/test crosstabs
         raw_xagg, raw_xagg_dev = xagg.copy(), xagg_dev.copy()
         if not dropna:
@@ -714,8 +713,10 @@ class BaseCarver(BaseDiscretizer):
 
         Parameters
         ----------
-        file : str
+        file_name : str
             String of .json file name.
+        light_mode: bool, optional
+            Whether or not to save features' history and statistics, by default False
 
         Returns
         -------

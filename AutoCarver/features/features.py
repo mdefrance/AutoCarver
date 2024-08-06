@@ -190,38 +190,12 @@ class Features:
             feature for feature in self.quantitatives if feature.version != feature_name
         ]
 
-    def keep(self, kept_features: list[str], version_tag: str = None):
-        """list of features to keep (removes the others)"""
+    def keep(self, kept: list[str]) -> None:
+        """list of features' versions to keep (removes the others)"""
 
-        # keeping from list of typed features with specific version_tag
-        if version_tag is not None:
-            self.categoricals = [
-                feature
-                for feature in self.categoricals
-                if feature.version in kept_features or feature.version != version_tag
-            ]
-            self.ordinals = [
-                feature
-                for feature in self.ordinals
-                if feature.version in kept_features or feature.version != version_tag
-            ]
-            self.quantitatives = [
-                feature
-                for feature in self.quantitatives
-                if feature.version in kept_features or feature.version != version_tag
-            ]
-
-        # keeping from list of typed features
-        else:
-            self.categoricals = [
-                feature for feature in self.categoricals if feature.version in kept_features
-            ]
-            self.ordinals = [
-                feature for feature in self.ordinals if feature.version in kept_features
-            ]
-            self.quantitatives = [
-                feature for feature in self.quantitatives if feature.version in kept_features
-            ]
+        self.categoricals = [feature for feature in self.categoricals if feature.version in kept]
+        self.ordinals = [feature for feature in self.ordinals if feature.version in kept]
+        self.quantitatives = [feature for feature in self.quantitatives if feature.version in kept]
 
     def check_values(self, X: DataFrame) -> None:
         """Cheks for unexpected values for each feature in columns of DataFrame X"""
@@ -349,7 +323,7 @@ class Features:
 
     def to_json(self, light_mode: bool = False) -> dict:
         """Converts a feature to JSON format"""
-        return {feature.name: feature.to_json(light_mode) for feature in self}
+        return {feature.version: feature.to_json(light_mode) for feature in self}
 
     def to_list(self) -> list[BaseFeature]:
         """Returns a list of all features"""
@@ -357,7 +331,7 @@ class Features:
 
     def to_dict(self) -> dict[str, BaseFeature]:
         """Returns a dict of all versionned features"""
-        return {feature.name: feature for feature in self.to_list()}
+        return {feature.version: feature for feature in self.to_list()}
 
     @classmethod
     def load(cls: Type["Features"], features_json: dict, ordinal_encoding: bool) -> "Features":
@@ -396,19 +370,11 @@ class Features:
         ordinals: list[BaseFeature] = []
         quantitatives: list[BaseFeature] = []
 
-        # iterating over each possible class
+        # iterating over each possible class: making new versions of features
         for y_class in y_classes:
-
-            # making new versions of features
-            categoricals += [
-                make_version(feature, y_class, ordinal_encoding) for feature in self.categoricals
-            ]
-            ordinals += [
-                make_version(feature, y_class, ordinal_encoding) for feature in self.ordinals
-            ]
-            quantitatives += [
-                make_version(feature, y_class, ordinal_encoding) for feature in self.quantitatives
-            ]
+            categoricals += make_versions(self.categoricals, y_class, ordinal_encoding)
+            ordinals += make_versions(self.ordinals, y_class, ordinal_encoding)
+            quantitatives += make_versions(self.quantitatives, y_class, ordinal_encoding)
 
         # saving feature versions
         self.categoricals = categoricals
@@ -419,6 +385,11 @@ class Features:
         """Returns all features with specified version_tag"""
 
         return [feature for feature in self if feature.version_tag == y_class]
+
+
+def make_versions(features: list[BaseFeature], y_class: str, ordinal_encoding: bool) -> BaseFeature:
+    """Makes a copy of a list of features with specified version"""
+    return [make_version(feature, y_class, ordinal_encoding) for feature in features]
 
 
 def make_version(feature: BaseFeature, y_class: str, ordinal_encoding: bool) -> BaseFeature:

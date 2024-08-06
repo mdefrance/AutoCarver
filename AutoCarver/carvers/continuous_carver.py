@@ -124,20 +124,20 @@ class ContinuousCarver(BaseCarver):
             _description_
         """
         # checking for empty datasets
-        yvals = {feature.name: None for feature in self.features}
+        yvals = {feature.version: None for feature in self.features}
         if X is not None:
 
             # y mean for each feature
             for feature in self.features:
 
                 # computing crosstab with str_nan
-                yval = y.groupby(X[feature.name]).apply(lambda u: list(u))  # pylint: disable=W0108
+                yval = y.groupby(X[feature.version]).apply(lambda u: list(u))  # pylint: disable=W0108
 
                 # reordering according to known_order
                 yval = yval.reindex(feature.labels, fill_value=[])
 
                 # storing results
-                yvals.update({feature.name: yval})
+                yvals.update({feature.version: yval})
 
         return yvals
 
@@ -158,11 +158,6 @@ class ContinuousCarver(BaseCarver):
         """
         # TODO: convert this to the vectorial version like BinaryCarver
         grouped_xagg = xagg.groupby(groupby).sum()
-
-        if grouped_xagg.shape[0] == 1:
-            print("xagg", xagg)
-            print("groupby", groupby)
-            print("grouped_xagg", grouped_xagg)
 
         return grouped_xagg
 

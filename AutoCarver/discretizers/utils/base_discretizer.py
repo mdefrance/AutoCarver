@@ -145,6 +145,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
         DataFrame
             A formatted X
         """
+
         # duplicating features with versions disctinct from names (= multiclass target)
         X = X.assign(
             **{
@@ -408,7 +409,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        file : str
+        file_name : str
             String of .json file name.
         light_mode: bool, optional
             Whether or not to save features' history and statistics, by default False
@@ -424,9 +425,7 @@ class BaseDiscretizer(BaseEstimator, TransformerMixin):
                 json.dump(self.to_json(light_mode), json_file)
         # raising for non-json file name
         else:
-            raise ValueError(
-                f" - [{self.__name__}] Make sure to provide a file name with .json extension."
-            )
+            raise ValueError(f" - [{self.__name__}] Provide a file_name that ends with .json.")
 
     @classmethod
     def load_discretizer(cls: Type["BaseDiscretizer"], file_name: str) -> "BaseDiscretizer":

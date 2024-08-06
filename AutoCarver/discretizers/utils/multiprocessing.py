@@ -34,12 +34,12 @@ def apply_async_function(
 
     # no multiprocessing
     if n_jobs <= 1:
-        results = [fun(f, X[f.name], *args) for f in features]
+        results = [fun(f, X[f.version], *args) for f in features]
 
     # asynchronous transform of each feature
     else:
         with Pool(processes=n_jobs) as pool:
-            results_async = [pool.apply_async(fun, (f, X[f.name], *args)) for f in features]
+            results_async = [pool.apply_async(fun, (f, X[f.version], *args)) for f in features]
 
             #  waiting for the results
             results = [result.get() for result in results_async]

@@ -45,6 +45,12 @@ class MulticlassCarver(BaseCarver):
                 f"Choose from: {str(implemented_measures)}."
             )
 
+        # warning user for
+        if kwargs.get("copy"):
+            print(
+                "WARNING: can't set copy=True for MulticlassCarver (no inplace DataFrame.assign)."
+            )
+
         # Initiating BaseCarver
         super().__init__(
             min_freq=min_freq,
@@ -156,10 +162,16 @@ class MulticlassCarver(BaseCarver):
             )
 
             # fitting BinaryCarver for y_class
-            binary_carver.fit(x_copy, target_class, X_dev=x_dev_copy, y_dev=target_class_dev)
+            x_copy_transformed = binary_carver.fit_transform(
+                x_copy, target_class, X_dev=x_dev_copy, y_dev=target_class_dev
+            )
 
-            # filtering out dropped features
-            self.features.keep(binary_carver.features.get_versions(), version_tag=y_class)
+            # filtering out dropped features whilst keeping other version tags
+            kept_features = binary_carver.features.get_versions()
+            kept_features += [
+                feature.version for feature in self.features if feature.version_tag != y_class
+            ]
+            self.features.keep(kept_features)
 
             if self.verbose:  # verbose if requested
                 print("---------\n")

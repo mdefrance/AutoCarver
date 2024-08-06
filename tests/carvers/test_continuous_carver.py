@@ -245,10 +245,12 @@ def test_continuous_carver(
     min_freq = 0.15
 
     # defining features
+    print(ordinal_features, values_orders)
     features = Features(
         ordinal_values=values_orders,
         ordinals=ordinal_features,
     )
+    assert False, "did not raise"
 
     # removing wrong features
     features.remove("nan")
