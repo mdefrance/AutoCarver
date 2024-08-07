@@ -160,10 +160,10 @@ def test_multiclass_carver(
     if not dropna:
         # iterating over each feature
         for feature in features:
-            assert all(
+            assert (
                 raw_x_train[feature.name].isna().mean()
                 == x_discretized[feature.version].isna().mean()
-            ), "Some Nans are being dropped (grouped) or more nans than expected"
+            ), f"Some Nans are being dropped (grouped) or more nans than expected {feature}"
 
     # checking that nans were dropped if requested
     else:
