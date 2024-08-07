@@ -11,6 +11,7 @@ from ..discretizers.utils.base_discretizer import extend_docstring
 from .utils.base_carver import BaseCarver
 from .binary_carver import BinaryCarver
 from ..features import Features
+from typing import Union
 
 
 class MulticlassCarver(BaseCarver):
@@ -162,7 +163,7 @@ class MulticlassCarver(BaseCarver):
             )
 
             # fitting BinaryCarver for y_class
-            x_copy_transformed = binary_carver.fit_transform(
+            binary_carver.fit_transform(
                 x_copy, target_class, X_dev=x_dev_copy, y_dev=target_class_dev
             )
 
@@ -183,6 +184,22 @@ class MulticlassCarver(BaseCarver):
         BaseDiscretizer.fit(self, x_copy, y_copy)
 
         return self
+
+    def _aggregator(self, X: DataFrame, y: Series) -> Union[Series, DataFrame]:
+        """Helper that aggregates X by y into crosstab or means (carver specific)"""
+        _, _ = X, y
+
+    def _association_measure(self, xagg: DataFrame, n_obs: int) -> Union[Series, DataFrame]:
+        """Helper to measure association between X and y (carver specific)"""
+        _, _ = xagg, n_obs
+
+    def _grouper(self, xagg: DataFrame, groupby: list[str]) -> DataFrame:
+        """Helper to group XAGG's values by groupby (carver specific)"""
+        _, _ = xagg, groupby
+
+    def _printer(self, xagg: DataFrame = None) -> DataFrame:
+        """helper to print an XAGG (carver specific)"""
+        _ = xagg
 
 
 def get_one_vs_rest(y: Series, y_class: Any) -> Series:

@@ -10,9 +10,10 @@ from pandas import DataFrame, Series
 from ...config import DEFAULT, NAN
 from .grouped_list import GroupedList
 from .serialization import json_serialize_feature, json_deserialize_content
+from abc import ABC
 
 
-class BaseFeature:
+class BaseFeature(ABC):
 
     __name__ = "Feature"
 

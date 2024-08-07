@@ -131,7 +131,9 @@ class ContinuousCarver(BaseCarver):
             for feature in self.features:
 
                 # computing crosstab with str_nan
-                yval = y.groupby(X[feature.version]).apply(lambda u: list(u))  # pylint: disable=W0108
+                yval = y.groupby(X[feature.version]).apply(
+                    lambda u: list(u)
+                )  # pylint: disable=W0108
 
                 # reordering according to known_order
                 yval = yval.reindex(feature.labels, fill_value=[])

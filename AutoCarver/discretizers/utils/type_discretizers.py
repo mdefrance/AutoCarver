@@ -4,8 +4,9 @@
 from pandas import DataFrame, Series
 
 from ...features import BaseFeature, Features, GroupedList
-from .base_discretizer import BaseDiscretizer, extend_docstring, nan_unique
+from .base_discretizer import BaseDiscretizer, extend_docstring
 from .multiprocessing import apply_async_function
+from ...features.qualitative_features import nan_unique
 
 
 class StringDiscretizer(BaseDiscretizer):

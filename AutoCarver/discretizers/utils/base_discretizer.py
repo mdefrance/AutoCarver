@@ -2,20 +2,20 @@
 for a binary classification model.
 """
 
+import json
 from typing import Any, Union, Type
 
-from numpy import floating, integer, isfinite, isnan, nan, select
-from pandas import DataFrame, Series, isna, notna, unique
+from numpy import nan, select
+from pandas import DataFrame, Series
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from ...features import BaseFeature, Features
 from ...features.utils.grouped_list import GroupedList
-from ...features.qualitative_features import nan_unique
 from .multiprocessing import apply_async_function
-import json
+from abc import ABC
 
 
-class BaseDiscretizer(BaseEstimator, TransformerMixin):
+class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
     """Applies discretization using a dict of GroupedList to transform a DataFrame's columns."""
 
     __name__ = "BaseDiscretizer"

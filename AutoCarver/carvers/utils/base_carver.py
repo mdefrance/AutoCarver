@@ -12,6 +12,8 @@ from numpy import isclose
 from pandas import DataFrame, Series
 from tqdm.autonotebook import tqdm
 
+from abc import abstractmethod
+
 from .combinations import (
     nan_combinations,
     consecutive_combinations,
@@ -280,24 +282,25 @@ class BaseCarver(BaseDiscretizer):
 
         return self
 
+    @abstractmethod
     def _aggregator(self, X: DataFrame, y: Series) -> Union[Series, DataFrame]:
         """Helper that aggregates X by y into crosstab or means (carver specific)"""
-        _ = y  # unused attribute
-        return X
+        pass
 
+    @abstractmethod
     def _association_measure(self, xagg: DataFrame, n_obs: int) -> Union[Series, DataFrame]:
         """Helper to measure association between X and y (carver specific)"""
-        _ = n_obs  # unused attribute
-        return xagg
+        pass
 
+    @abstractmethod
     def _grouper(self, xagg: DataFrame, groupby: list[str]) -> DataFrame:
         """Helper to group XAGG's values by groupby (carver specific)"""
-        _ = groupby  # unused attribute
-        return xagg
+        pass
 
+    @abstractmethod
     def _printer(self, xagg: DataFrame = None) -> DataFrame:
         """helper to print an XAGG (carver specific)"""
-        return xagg
+        pass
 
     def _carve_feature(
         self,
