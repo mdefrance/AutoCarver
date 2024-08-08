@@ -4,7 +4,7 @@
 from typing import Any
 
 from numpy import ones, triu
-from pandas import DataFrame
+from pandas import DataFrame, Index
 
 # from statsmodels.stats.outliers_influence import variance_inflation_factor
 
@@ -165,3 +165,75 @@ def quantitative_filter(
         associations = ranks.join(associations, how="right")
 
     return associations
+
+
+from abc import ABC, abstractmethod
+
+
+class Filter(ABC):
+
+    def __init__(self, measure: str, threshold: float = 1):
+        self.measure = measure
+        self.threshold = threshold
+
+    @abstractmethod
+    def filter(self, X: DataFrame, ranks: Index) -> DataFrame:
+        pass
+
+
+class QuantitativeFilter(Filter):
+
+    def filter(self, X: DataFrame, ranks: Index) -> DataFrame:
+
+        # computing correlation between features
+        X_corr = self._compute_correlation(X, ranks)
+
+        # initiating list of maximum association per feature
+        associations = []
+
+        # iterating over each feature by target association order
+        for feature in ranks:
+            # maximum correlation with a better feature
+            correlation_with, worst_correlation = self._maximum_correlation_with_better_features(
+                X_corr, feature
+            )
+
+            # dropping the feature if it was too correlated to a better feature
+            if worst_correlation > self.threshold:
+                X_corr = X_corr.drop(feature, axis=0).drop(feature, axis=1)
+
+            # kept feature: updating associations with this feature
+            else:
+                associations.append(
+                    self._update_associations(feature, correlation_with, worst_correlation)
+                )
+
+        # checking for some selected features
+        if len(associations) > 0:
+            # formatting output to DataFrame
+            associations = self._format_associations(associations, ranks)
+
+        return associations
+
+    def _compute_correlation(self, X: DataFrame, rank: list) -> DataFrame:
+        X_corr = X[rank].corr(self.measure).abs()
+        X_corr = X_corr.where(triu(ones(X_corr.shape), k=1).astype(bool))
+        return X_corr
+
+    def _maximum_correlation_with_better_features(
+        self, X_corr: DataFrame, feature: str
+    ) -> DataFrame:
+        """Computes correlation with features"""
+        corr_with_better_features = X_corr.loc[:feature, feature].fillna(0)
+        return corr_with_better_features.agg(["idxmax", "max"])
+
+    def _update_associations(self, feature: str, corr_with: str, worst_corr: float) -> dict:
+        return {
+            "feature": feature,
+            f"{self.measure}_filter": worst_corr,
+            f"{self.measure}_with": corr_with,
+        }
+
+    def _format_associations(self, associations: list, ranks: DataFrame) -> DataFrame:
+        associations = DataFrame(associations).set_index("feature")
+        return ranks.join(associations, how="right")
