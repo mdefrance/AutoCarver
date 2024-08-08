@@ -6,9 +6,10 @@ from warnings import warn
 
 from numpy import unique
 from pandas import DataFrame, Series
-
+from math import ceil
 from .filters import thresh_filter
 from .measures import dtype_measure, make_measure, mode_measure, nans_measure
+from ..features import Features, BaseFeature
 
 # trying to import extra dependencies
 try:
@@ -27,15 +28,16 @@ class BaseSelector:
     * Get your best features with ``Selector.select()``!
     """
 
+    __name__ = "Selector"
+
     def __init__(
         self,
         n_best: int,
-        quantitative_features: list[str] = None,
-        qualitative_features: list[str] = None,
+        features: Features = None,
         *,
         measures: Union[list[Callable], dict[str, list[Callable]]] = None,
         filters: Union[list[Callable], dict[str, list[Callable]]] = None,
-        colsample: float = 1.0,
+        max_num_features_per_chunk: int = 100,
         verbose: bool = False,
         **kwargs,
     ) -> None:
@@ -142,28 +144,21 @@ class BaseSelector:
         --------
         See `Selectors examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
         """
-        # settinp up list of features
-        if quantitative_features is None:
-            quantitative_features = []
-        self.quantitative_features = list(set(quantitative_features))
-        if qualitative_features is None:
-            qualitative_features = []
-        self.qualitative_features = list(set(qualitative_features))
-        assert len(quantitative_features) > 0 or len(qualitative_features) > 0, (
-            "No feature passed as input. Pleased provided column names to Carver by setting "
-            "qualitative_features or quantitative_features."
-        )
-        self.features = list(set(self.qualitative_features + self.quantitative_features))
-        self.input_dtypes = {"float": self.quantitative_features, "str": self.qualitative_features}
+        # features and values
+        self.features = features
+        if isinstance(features, list):
+            self.features = Features(features)
 
         # number of features selected
         self.n_best = n_best
-        assert (
-            0 < int(self.n_best) <= len(self.features) + 1
-        ), "Must set 0 < n_best <= len(features)"
+        if not (0 < int(self.n_best) <= len(self.features)):
+            raise ValueError("Must set 0 < n_best <= len(features)")
 
         # feature sample size per iteration
-        self.colsample = colsample
+        # maximum number of features per chunk
+        self.max_num_features_per_chunk = max_num_features_per_chunk
+        if not (2 < max_num_features_per_chunk):
+            raise ValueError("Must set 2 < max_num_features_per_chunk")
 
         # adding default measures
         self.measures = {
@@ -203,16 +198,12 @@ class BaseSelector:
         self,
         X: DataFrame,
         y: Series,
-        features: list[str],
+        features: list[BaseFeature],
         n_best: int,
-        dtype: str,
-    ) -> list[str]:
+    ) -> list[BaseFeature]:
         """Selects the n_best features amongst the specified ones"""
         if self.verbose:  # verbose if requested
-            data_type = "quantitative"
-            if dtype != "float":
-                data_type = "qualitative"
-            print(f"------\n[Selector] Selecting from {data_type} features: {str(features)}\n---")
+            print(f"------\n[{self.__name__}] Selecting from: {features}\n---")
 
         # Computes association between X and y
         initial_associations = apply_measures(
@@ -291,55 +282,42 @@ class BaseSelector:
         """
         # iterating over each type of feature
         all_best_features = []
-        for dtype in unique(list(self.input_dtypes.keys())):
-            # getting features of the specific data type
-            features = self.input_dtypes[dtype][:]
+        for features in [self.features.get_qualitatives(), self.features.get_quantitatives()]:
 
-            # checking for features for the dtype
-            if len(features) > 0:
-                # splitting features in chunks
-                if self.colsample < 1:
-                    # shuffling features to get random samples of features
-                    shuffle(features)
+            # splitting features in chunks and getting best chunk-features if needed
+            best_features = self._get_best_features_per_chunk(features, X, y)
 
-                    # number of features per sample
-                    chunks = int(len(self.features) // (1 / self.colsample))
+            # selecting amongst best features per chunk
+            if any(best_features):
+                best_features = self._select_features(X, y, best_features, self.n_best)
 
-                    # splitting feature list in samples
-                    feature_samples = [
-                        features[chunks * i : chunks * (i + 1)]
-                        for i in range(int(1 / self.colsample) - 1)
-                    ]
-
-                    # adding last sample with all remaining features
-                    feature_samples += [features[chunks * (int(1 / self.colsample) - 1) :]]
-
-                    # iterating over each feature samples
-                    best_features = []
-                    for feature_sample in feature_samples:
-                        # fitting association on features
-                        best_features += self._select_features(
-                            X, y, feature_sample, int(self.n_best // 2), dtype
-                        )
-
-                # splitting in chunks not requested
-                else:
-                    best_features = features[:]
-
-                # final selection with all best_features selected
-                if any(best_features):
-                    best_features = self._select_features(X, y, best_features, self.n_best, dtype)
-                    all_best_features += best_features
-                    if self.verbose:  # verbose if requested
-                        data_type = "quantitative"
-                        if dtype != "float":
-                            data_type = "qualitative"
-                        print(
-                            f"\n - [Selector] Selected {data_type} features: {str(best_features)}"
-                        )
-                        print("------\n")
+                all_best_features += best_features
+                if self.verbose:  # verbose if requested
+                    print(f"\n - [{self.__name__}] Selected: {best_features}------\n")
 
         return all_best_features
+
+    def _get_best_features_per_chunk(
+        self, features: list[BaseFeature], X: DataFrame, y: Series
+    ) -> list[BaseFeature]:
+        """gets best features per chunk of maximum size as set by max_num_features_per_chunk"""
+
+        # keeping all features per default
+        best_features = features[:]
+
+        # too many features: chunking and selecting best amongst chunks
+        if len(features) > self.max_num_features_per_chunk:
+
+            # making random chunks of features
+            chunks = make_random_chunks(features, self.max_num_features_per_chunk)
+
+            # iterating over each feature samples
+            best_features = []
+            for chunk in chunks:
+                # fitting association on features
+                best_features += self._select_features(X, y, chunk, int(self.n_best // 2))
+
+        return best_features
 
     def _print_associations(self, association: DataFrame, message: str = "") -> None:
         """EDA of fitted associations
@@ -353,7 +331,7 @@ class BaseSelector:
         """
         # checking for verbose
         if self.verbose:
-            print(f"\n - [Selector] Association between X and y{message}")
+            print(f"\n - [{self.__name__}] Association between X and y{message}")
 
             # printing raw DataFrame
             if not self.pretty_print:
@@ -381,6 +359,32 @@ class BaseSelector:
 
                 # displaying html of colored DataFrame
                 display_html(nicer_association._repr_html_(), raw=True)  # pylint: disable=W0212
+
+
+def make_random_chunks(elements: list, max_chunk_sizes: int) -> list:
+    """makes a specific number of random chunks of of a list"""
+
+    # copying in order to not moidy initial list
+    shuffled_elements = elements[:]
+
+    # shuffling features to get random samples of features
+    shuffle(shuffled_elements)
+
+    # number of chunks
+    num_chunks = ceil(len(elements) / max_chunk_sizes)
+
+    # getting size of each chunk
+    chunk_size, remainder = divmod(len(elements), num_chunks)
+
+    # getting all chunks
+    chunks = []
+    start = 0
+    for i in range(num_chunks):
+        end = start + chunk_size + (1 if i < remainder else 0)
+        chunks.append(shuffled_elements[start:end])
+        start = end
+
+    return chunks
 
 
 def feature_association(x: Series, y: Series, measures: list[Callable], **kwargs) -> dict[str, Any]:
@@ -412,26 +416,9 @@ def feature_association(x: Series, y: Series, measures: list[Callable], **kwargs
 
 
 def apply_measures(
-    X: DataFrame, y: Series, measures: list[Callable], features: list[str], **kwargs
+    X: DataFrame, y: Series, measures: list[Callable], features: list[BaseFeature], **kwargs
 ) -> DataFrame:
-    """Measures association between columns of X and y
-
-    Parameters
-    ----------
-    X : DataFrame
-        _description_
-    y : Series
-        _description_
-    features : list[str]
-        _description_
-    measure_names : list[str]
-        _description_
-
-    Returns
-    -------
-    DataFrame
-        _description_
-    """
+    """Measures association between columns of X and y"""
     # applying association measure to each column
     associations = (
         X[features]

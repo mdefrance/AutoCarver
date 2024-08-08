@@ -1,8 +1,36 @@
 """ Base measures that defines Quantitative and Qualitative features.
 """
+
 from typing import Any, Callable
 
-from pandas import Series
+from pandas import Series, isnull
+
+from abc import ABC, abstractmethod
+
+
+class BaseMeasure(ABC):
+    def __init__(self, threshold: float) -> None:
+        self.threshold = threshold
+        self.value = None
+
+    @abstractmethod
+    def compute_association(self, x: Series, y: Series) -> float:
+        pass
+
+    def validate(self) -> bool:
+        if not isnull(self.value):
+            return self.value < self.threshold
+        return False
+
+
+class OutlierMeasure(BaseMeasure):
+    def __init__(self, threshold: float) -> None:
+        super().__init__(threshold)
+        self.info = {}
+
+    @abstractmethod
+    def compute_association(self, x: Series, y: Series = None) -> float:
+        pass
 
 
 def reverse_xy(measure: Callable):
