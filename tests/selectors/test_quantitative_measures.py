@@ -5,6 +5,7 @@ from pandas import Series, isna
 from pytest import FixtureRequest, fixture
 from AutoCarver.selectors import (
     BaseMeasure,
+    AbsoluteMeasure,
     OutlierMeasure,
     DistanceMeasure,
     PearsonMeasure,
@@ -16,8 +17,11 @@ from AutoCarver.selectors import (
 )
 
 
-# setting OutlierMeasure as non abstract class for the duration of the test
+# TODO test absolutemeasure
+
+# setting OutlierMeasure, AbsoluteMeasure as non abstract classes for the duration of the test
 OutlierMeasure.__abstractmethods__ = set()
+AbsoluteMeasure.__abstractmethods__ = set()
 
 
 threshold = 0.1
@@ -26,6 +30,11 @@ threshold = 0.1
 @fixture
 def outlier_measure() -> OutlierMeasure:
     return OutlierMeasure(threshold=threshold)
+
+
+@fixture
+def absolute_measure() -> AbsoluteMeasure:
+    return AbsoluteMeasure(threshold=threshold)
 
 
 @fixture(params=[DistanceMeasure, PearsonMeasure, SpearmanMeasure])
@@ -76,10 +85,38 @@ def test_validate_with_null_value(outlier_measure: OutlierMeasure) -> None:
     assert outlier_measure.validate(), "keep undefined outlier rates"
 
 
-def test_outlier_measure_type(outlier_measure: BaseMeasure) -> None:
+def test_outlier_measure_type(outlier_measure: OutlierMeasure) -> None:
     """checks types of x and y"""
     assert not outlier_measure.is_x_qualitative, "x should be quantitative"
     assert outlier_measure.is_x_quantitative, "x should be quantitative"
+
+
+def test_validate_absolute_with_value_below_threshold(absolute_measure: AbsoluteMeasure) -> None:
+    """checks that validates works as expected for base measure (remove low correlation)"""
+
+    # with positive value
+    absolute_measure.value = 0.05
+    print(absolute_measure.value, absolute_measure.threshold, absolute_measure.validate())
+    assert not absolute_measure.validate(), "not validating correcly (remove low correlation)"
+
+    # with negative value
+    absolute_measure.value = -0.05
+    print(absolute_measure.value, absolute_measure.threshold, absolute_measure.validate())
+    assert not absolute_measure.validate(), "not validating correcly (remove low correlation)"
+
+
+def test_validate_absolute_with_value_above_threshold(absolute_measure: AbsoluteMeasure) -> None:
+    """checks that validates works as expected for base measure (keep high correlation)"""
+
+    # with positive value
+    absolute_measure.value = 1
+    print(absolute_measure.value, absolute_measure.threshold, absolute_measure.validate())
+    assert absolute_measure.validate(), "not validating correcly (keep high correlation)"
+
+    # with negative value
+    absolute_measure.value = -1
+    print(absolute_measure.value, absolute_measure.threshold, absolute_measure.validate())
+    assert absolute_measure.validate(), "not validating correcly (keep high correlation)"
 
 
 def test_quanti_quanti_measure_type(quanti_quanti_measure: BaseMeasure) -> None:
@@ -188,6 +225,7 @@ def test_quanti_quali_validate_with_computed_association_below_threshold(
     """checks that correlated features are not removed"""
 
     # without nans
+    quanti_quali_measure.threshold = 10
     quanti_quali_measure.compute_association(series_data, quali_series_data)
     print(
         quanti_quali_measure.value,
@@ -238,9 +276,11 @@ def test_quanti_quanti_validate_with_computed_association_below_threshold(
 ) -> None:
     """checks that correlated features are not removed"""
 
+    quanti_quanti_measure.threshold = 5
     # without nans
-    quanti_quanti_measure.compute_association(series_data, series_data * 0)
+    quanti_quanti_measure.compute_association(series_data, (series_data <= 2).astype(int))
     print(
+        quanti_quanti_measure.__name__,
         quanti_quanti_measure.value,
         quanti_quanti_measure.threshold,
         quanti_quanti_measure.validate(),
@@ -250,7 +290,9 @@ def test_quanti_quanti_validate_with_computed_association_below_threshold(
     ), "kept feature with lower than threshold correlation"
 
     # with nans
-    quanti_quanti_measure.compute_association(series_data.replace(1, nan), series_data * 0)
+    quanti_quanti_measure.compute_association(
+        series_data.replace(1, nan), (series_data <= 2).astype(int)
+    )
     print(
         quanti_quanti_measure.__name__,
         quanti_quanti_measure.value,
@@ -286,3 +328,59 @@ def test_quanti_quanti_validate_with_computed_association_above_threshold(
         quanti_quanti_measure.validate(),
     )
     assert quanti_quanti_measure.validate(), "removed feature with lower than threshold correlation"
+
+
+def test_quanti_binary_validate_with_computed_association_below_threshold(
+    quanti_binary_measure: BaseMeasure, binary_series_data: Series, series_data: Series
+) -> None:
+    """checks that correlated features are not removed"""
+
+    quanti_binary_measure.threshold = 1.0
+    # without nans
+    quanti_binary_measure.compute_association(series_data, binary_series_data)
+    print(
+        quanti_binary_measure.value,
+        quanti_binary_measure.threshold,
+        quanti_binary_measure.validate(),
+    )
+    assert (
+        not quanti_binary_measure.validate()
+    ), "kept feature with lower than threshold correlation"
+
+    # with nans
+    quanti_binary_measure.compute_association(series_data.replace(1, nan), binary_series_data)
+    print(
+        quanti_binary_measure.__name__,
+        quanti_binary_measure.value,
+        quanti_binary_measure.threshold,
+        quanti_binary_measure.validate(),
+    )
+    assert (
+        not quanti_binary_measure.validate()
+    ), "kept feature with lower than threshold correlation"
+
+
+def test_quanti_binary_validate_with_computed_association_above_threshold(
+    quanti_binary_measure: BaseMeasure, binary_series_data: Series, series_data: Series
+) -> None:
+    """checks that non-correlated features are removed"""
+
+    # without nans
+    quanti_binary_measure.compute_association(series_data, binary_series_data)
+    print(
+        quanti_binary_measure.__name__,
+        quanti_binary_measure.value,
+        quanti_binary_measure.threshold,
+        quanti_binary_measure.validate(),
+    )
+    assert quanti_binary_measure.validate(), "removed feature with lower than threshold correlation"
+
+    # with nans
+    quanti_binary_measure.compute_association(series_data.replace(1, nan), binary_series_data)
+    print(
+        quanti_binary_measure.__name__,
+        quanti_binary_measure.value,
+        quanti_binary_measure.threshold,
+        quanti_binary_measure.validate(),
+    )
+    assert quanti_binary_measure.validate(), "removed feature with lower than threshold correlation"

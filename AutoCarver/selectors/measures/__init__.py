@@ -3,6 +3,7 @@
 from .base_measures import (
     BaseMeasure,
     OutlierMeasure,
+    AbsoluteMeasure,
     dtype_measure,
     make_measure,
     mode_measure,
@@ -20,6 +21,7 @@ from .quantitative_measures import (
 )
 
 __all__ = [
+    "AbsoluteMeasure",
     "dtype_measure",
     "make_measure",
     "mode_measure",

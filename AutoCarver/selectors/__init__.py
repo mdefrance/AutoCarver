@@ -10,6 +10,7 @@
 #     tschuprowt_filter,
 # )
 from .measures import (
+    AbsoluteMeasure,
     BaseMeasure,
     OutlierMeasure,
     Chi2Measure,
@@ -38,6 +39,7 @@ __all__ = [
     # "tschuprowt_filter",
     # "pearson_filter",
     # "spearman_filter",
+    "AbsoluteMeasure",
     "dtype_measure",
     "make_measure",
     "mode_measure",

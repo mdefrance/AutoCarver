@@ -33,6 +33,15 @@ class BaseMeasure(ABC):
         return False
 
 
+class AbsoluteMeasure(BaseMeasure):
+
+    def validate(self) -> bool:
+        """checks if measured correlation is above specified threshold -> keep the feature"""
+        if not isnull(self.value) and notna(self.value):
+            return abs(self.value) > self.threshold
+        return False
+
+
 class OutlierMeasure(BaseMeasure):
     is_x_quantitative = True
 
