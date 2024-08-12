@@ -172,6 +172,10 @@ from abc import ABC, abstractmethod
 
 class Filter(ABC):
 
+    is_filter = True
+    is_quantitative = False
+    is_qualitative = False
+
     def __init__(self, measure: str, threshold: float = 1):
         self.measure = measure
         self.threshold = threshold
@@ -183,10 +187,25 @@ class Filter(ABC):
 
 class QuantitativeFilter(Filter):
 
+    __name__ = "QuantitativeFilter"
+    is_quantitative = True
+
     def filter(self, X: DataFrame, ranks: Index) -> DataFrame:
 
         # computing correlation between features
         X_corr = self._compute_correlation(X, ranks)
+
+        # filtering too correlated features
+        associations = self._filter_correlated_features(X_corr, ranks)
+
+        # formatting output to DataFrame
+        if len(associations) > 0:
+            associations = self._format_associations(associations, ranks)
+
+        return associations
+
+    def _filter_correlated_features(self, X_corr: DataFrame, ranks: list[str]) -> list:
+        """filtering out features too correlated with a better ranked feature"""
 
         # initiating list of maximum association per feature
         associations = []
@@ -194,9 +213,11 @@ class QuantitativeFilter(Filter):
         # iterating over each feature by target association order
         for feature in ranks:
             # maximum correlation with a better feature
-            correlation_with, worst_correlation = self._maximum_correlation_with_better_features(
+            correlation_with, worst_correlation = self._max_correlation_with_better_features(
                 X_corr, feature
             )
+
+            # TODO update feature accordingly (update stats)
 
             # dropping the feature if it was too correlated to a better feature
             if worst_correlation > self.threshold:
@@ -208,22 +229,18 @@ class QuantitativeFilter(Filter):
                     self._update_associations(feature, correlation_with, worst_correlation)
                 )
 
-        # checking for some selected features
-        if len(associations) > 0:
-            # formatting output to DataFrame
-            associations = self._format_associations(associations, ranks)
-
         return associations
 
     def _compute_correlation(self, X: DataFrame, rank: list) -> DataFrame:
+        """Computing correlation between features"""
+        # absolute correlation between features
         X_corr = X[rank].corr(self.measure).abs()
-        X_corr = X_corr.where(triu(ones(X_corr.shape), k=1).astype(bool))
-        return X_corr
 
-    def _maximum_correlation_with_better_features(
-        self, X_corr: DataFrame, feature: str
-    ) -> DataFrame:
-        """Computes correlation with features"""
+        # getting upper right part of the correlation matrix
+        return X_corr.where(triu(ones(X_corr.shape), k=1).astype(bool))
+
+    def _max_correlation_with_better_features(self, X_corr: DataFrame, feature: str) -> DataFrame:
+        """Computes correlation with better features (filtering out X_corr)"""
         corr_with_better_features = X_corr.loc[:feature, feature].fillna(0)
         return corr_with_better_features.agg(["idxmax", "max"])
 

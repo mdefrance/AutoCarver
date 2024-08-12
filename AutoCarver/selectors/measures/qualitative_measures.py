@@ -22,6 +22,8 @@ from scipy.stats import chi2_contingency
 
 class Chi2Measure(BaseMeasure):
     __name__ = "Chi2"
+    is_x_qualitative = True
+    is_y_qualitative = True
 
     def compute_association(self, x: Series, y: Series) -> float:
         """Wrapper for `scipy.stats.chi2_contingency <https://docs.scipy.org/doc/scipy/reference/
@@ -85,7 +87,8 @@ class CramerVMeasure(Chi2Measure):
         min_n_mod = min(n_mod_x, n_mod_y)
 
         # computing Cramér's V
-        self.value = sqrt(chi2_value / n_obs / (min_n_mod - 1))
+        if min_n_mod > 1:
+            self.value = sqrt(chi2_value / n_obs / (min_n_mod - 1))
 
         return self.value
 

@@ -13,6 +13,8 @@ from .base_measures import BaseMeasure, OutlierMeasure
 
 class KruskalMeasure(BaseMeasure):
     __name__ = "Kruskal"
+    is_x_quantitative = True
+    is_y_qualitative = True
 
     def compute_association(self, x: Series, y: Series) -> float:
         """Kruskal-Wallis' test statistic between ``x`` for each value taken by ``y``.
@@ -45,6 +47,9 @@ class KruskalMeasure(BaseMeasure):
 
 class RMeasure(BaseMeasure):
     __name__ = "R"
+    is_x_quantitative = True
+    is_y_qualitative = True
+    is_y_binary = True
 
     def compute_association(self, x: Series, y: Series) -> float:
         """Square root of the coefficient of determination of linear regression model of ``x`` by ``y``.
@@ -82,6 +87,8 @@ class RMeasure(BaseMeasure):
 
 class PearsonMeasure(BaseMeasure):
     __name__ = "Pearson"
+    is_x_quantitative = True
+    is_y_quantitative = True
 
     def compute_association(self, x: Series, y: Series) -> float:
         """Pearson's linear correlation coefficient between ``x`` and ``y``.
@@ -111,6 +118,8 @@ class PearsonMeasure(BaseMeasure):
 
 class SpearmanMeasure(BaseMeasure):
     __name__ = "Spearman"
+    is_x_quantitative = True
+    is_y_quantitative = True
 
     def compute_association(self, x: Series, y: Series) -> float:
         """Spearman's rank correlation coefficient between ``x`` and ``y``.
@@ -139,6 +148,8 @@ class SpearmanMeasure(BaseMeasure):
 
 class DistanceMeasure(BaseMeasure):
     __name__ = "Distance"
+    is_x_quantitative = True
+    is_y_quantitative = True
 
     def compute_association(self, x: Series, y: Series) -> float:
         """Distance correlation between ``x`` and ``y``.
@@ -165,7 +176,7 @@ class DistanceMeasure(BaseMeasure):
         return self.value
 
 
-class ZScoreMeasure(OutlierMeasure):
+class ZscoreOutlierMeasure(OutlierMeasure):
     __name__ = "ZScore"
 
     def compute_association(self, x: Series, y: Series = None) -> float:
@@ -200,7 +211,7 @@ class ZScoreMeasure(OutlierMeasure):
         return self.value
 
 
-class IQRMeasure(BaseMeasure):
+class IqrOutlierMeasure(BaseMeasure):
     __name__ = "IQR"
 
     def compute_association(self, x: Series, y: Series = None) -> float:

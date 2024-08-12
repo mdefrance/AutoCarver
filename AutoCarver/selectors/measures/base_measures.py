@@ -3,13 +3,22 @@
 
 from typing import Any, Callable
 
-from pandas import Series, isnull
+from pandas import Series, isnull, notna
 
 from abc import ABC, abstractmethod
 
 
 class BaseMeasure(ABC):
-    def __init__(self, threshold: float) -> None:
+
+    is_measure = True
+    is_x_quantitative = False
+    is_x_qualitative = False
+
+    is_y_qualitative = False
+    is_y_quantitative = False
+    is_y_binary = False
+
+    def __init__(self, threshold: float = 1.0) -> None:
         self.threshold = threshold
         self.value = None
 
@@ -18,19 +27,30 @@ class BaseMeasure(ABC):
         pass
 
     def validate(self) -> bool:
-        if not isnull(self.value):
-            return self.value < self.threshold
+        """checks if measured correlation is above specified threshold -> keep the feature"""
+        if not isnull(self.value) and notna(self.value):
+            return self.value > self.threshold
         return False
 
 
 class OutlierMeasure(BaseMeasure):
-    def __init__(self, threshold: float) -> None:
+    is_x_quantitative = True
+
+    def __init__(self, threshold: float = 0.0) -> None:
         super().__init__(threshold)
         self.info = {}
 
     @abstractmethod
     def compute_association(self, x: Series, y: Series = None) -> float:
         pass
+
+    def validate(self) -> bool:
+        """checks if measured outlier rate is below specified threshold -> keep the feature
+        (by default keeps feature if outliermeasure is not defined)
+        """
+        if not isnull(self.value) and notna(self.value):
+            return self.value < self.threshold
+        return True
 
 
 def reverse_xy(measure: Callable):
