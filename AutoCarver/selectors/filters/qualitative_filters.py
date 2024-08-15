@@ -66,36 +66,6 @@ class QualitativeFilter(BaseFilter):
 
     is_x_qualitative = True
 
-    def _compute_worst_correlation(
-        self, X: DataFrame, feature: BaseFeature, rank: list[BaseFeature]
-    ) -> tuple[str, float]:
-        """Computes maximum association between a feature and features
-        more associated to the target (according to ranks)
-        """
-
-        # initiating worst correlation
-        correlation_with, worst_correlation = feature.version, 0.0
-
-        # features more associated with target
-        current_feature_index = get_versions(rank).index(feature.version)
-        better_features = rank[: current_feature_index - 1]
-
-        # iterating over each better feature
-        for better_feature in better_features:
-
-            # computing association with the better feature
-            correlation = self.measure.compute_association(X[feature.version], X[better_feature])
-
-            # updating association if it's greater than previous better features
-            if correlation > worst_correlation:
-                worst_correlation, correlation_with = correlation, better_feature.version
-
-            # breaking loop if too correlated
-            if not self._validate(worst_correlation):
-                break
-
-        return correlation_with, worst_correlation
-
     def filter(self, X: DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:
 
         # filtering ranks to avoid correlation with already removed features
@@ -123,11 +93,43 @@ class QualitativeFilter(BaseFilter):
 
             # removing feature from ranks
             else:
-                print(len(filtered_ranks), "before removing")
                 filtered_ranks.remove(feature)
-                print(len(filtered_ranks), "after removing")
 
         return filtered
+
+    def _compute_worst_correlation(
+        self, X: DataFrame, feature: BaseFeature, rank: list[BaseFeature]
+    ) -> tuple[str, float]:
+        """Computes maximum association between a feature and features
+        more associated to the target (according to ranks)
+        """
+
+        # initiating worst correlation
+        correlation_with, worst_correlation = feature.version, 0.0
+
+        # features more associated with target
+        current_feature_index = get_versions(rank).index(feature.version)
+        better_features = rank[:current_feature_index]
+        print(feature.version, "better_features", better_features, current_feature_index)
+
+        # iterating over each better feature
+        for better_feature in better_features:
+
+            # computing association with the better feature
+            correlation = self.measure.compute_association(
+                X[feature.version], X[better_feature.version]
+            )
+            print(feature.version, better_feature.version, correlation)
+
+            # updating association if it's greater than previous better features
+            if correlation > worst_correlation:
+                worst_correlation, correlation_with = correlation, better_feature.version
+
+            # breaking loop if too correlated
+            if not self._validate(worst_correlation):
+                break
+
+        return correlation_with, worst_correlation
 
     def _validate(self, worst_correlation: float) -> bool:
         """Checks if the worst correlation of a feature is above specified threshold"""

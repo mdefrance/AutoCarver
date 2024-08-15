@@ -2,7 +2,7 @@
 
 from .base_filters import thresh_filter, BaseFilter
 
-# from .qualitative_filters import cramerv_filter, tschuprowt_filter
+from .qualitative_filters import QualitativeFilter, CramervFilter, TschuprowtFilter
 from .quantitative_filters import QuantitativeFilter, SpearmanFilter, PearsonFilter
 
 __all__ = [
@@ -11,8 +11,7 @@ __all__ = [
     "thresh_filter",
     "SpearmanFilter",
     "PearsonFilter",
-    # "cramerv_filter",
-    # "tschuprowt_filter",
-    # "pearson_filter",
-    # "spearman_filter",
+    "QualitativeFilter",
+    "CramervFilter",
+    "TschuprowtFilter",
 ]
