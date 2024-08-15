@@ -2,7 +2,6 @@
 """
 
 from math import sqrt
-
 from numpy import nan
 from pandas import DataFrame, Series
 from scipy.spatial.distance import correlation
@@ -11,7 +10,24 @@ from statsmodels.formula.api import ols
 from .base_measures import BaseMeasure, OutlierMeasure
 
 
-class KruskalMeasure(BaseMeasure):
+class ReversibleMeasure(BaseMeasure):
+    """A reversible measure"""
+
+    def __init__(self, threshold: float = 1) -> None:
+        super().__init__(threshold)
+        self.reversed = False
+
+    def reverse_xy(self) -> bool:
+        """reverses x and y within compute_association method"""
+        self.reversed = True
+        self.is_x_qualitative = not self.is_x_qualitative
+        self.is_x_quantitative = not self.is_x_quantitative
+        self.is_y_qualitative = not self.is_y_qualitative
+        self.is_y_quantitative = not self.is_y_quantitative
+        return True
+
+
+class KruskalMeasure(ReversibleMeasure):
     __name__ = "Kruskal"
     is_x_quantitative = True
     is_y_qualitative = False
@@ -33,6 +49,11 @@ class KruskalMeasure(BaseMeasure):
         tuple[bool, dict[str, Any]]
             Whether ``x`` is sufficiently associated to ``y`` and Kruskal-Wallis' H test statistic
         """
+
+        # reversing if requested
+        if self.reversed:
+            x, y = y, x
+
         # ckecking for nans
         nans = x.isnull()
 
@@ -45,13 +66,13 @@ class KruskalMeasure(BaseMeasure):
         return self.value
 
 
-class RMeasure(BaseMeasure):
+class RMeasure(ReversibleMeasure):
     __name__ = "R"
     is_x_quantitative = True
     is_y_qualitative = True
     is_y_binary = True
 
-    def compute_association(self, x: Series, y: Series) -> float:
+    def _compute_association(self, x: Series, y: Series) -> float:
         """Square root of the coefficient of determination of linear regression model of ``x`` by ``y``.
 
         Parameters
@@ -69,8 +90,16 @@ class RMeasure(BaseMeasure):
             Whether ``x`` is sufficiently associated to ``y`` and the square root of the determination
             coefficient
         """
+        # reversing if requested
+        if self.reversed:
+            x, y = y, x
+
         # ckecking for nans
-        nans = x.isnull()
+        nans = x.isnull() | x.isna()
+
+        # checking values of y
+        if len(y[~nans].unique()) != 2:
+            raise ValueError(f" - [{self.__name__}Measure] Provided y is not binary")
 
         # grouping feature and target
         ols_df = DataFrame({"feature": x[~nans], "target": y[~nans]})
@@ -82,6 +111,7 @@ class RMeasure(BaseMeasure):
         self.value = (
             sqrt(regression.rsquared) if regression.rsquared and regression.rsquared >= 0 else nan
         )
+
         return self.value
 
 
@@ -108,7 +138,7 @@ class PearsonMeasure(BaseMeasure):
             Whether ``x`` is sufficiently associated to ``y`` and Pearson's r
         """
         # ckecking for nans
-        nans = x.isnull()
+        nans = x.isnull() | x.isna()
 
         # computing spearman's r
         r = pearsonr(x[~nans], y[~nans])
@@ -139,7 +169,7 @@ class SpearmanMeasure(BaseMeasure):
             Whether ``x`` is sufficiently associated to ``y`` and Spearman's rho
         """
         # ckecking for nans
-        nans = x.isnull()
+        nans = x.isnull() | x.isna()
         # computing spearman's rho
         rho = spearmanr(x[~nans], y[~nans])
         self.value = rho[0] if rho else nan

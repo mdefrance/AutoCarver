@@ -1,14 +1,6 @@
 """ Loads association measures."""
 
-from .base_measures import (
-    BaseMeasure,
-    OutlierMeasure,
-    AbsoluteMeasure,
-    dtype_measure,
-    make_measure,
-    mode_measure,
-    nans_measure,
-)
+from .base_measures import BaseMeasure, OutlierMeasure, AbsoluteMeasure, NanMeasure, ModeMeasure
 from .qualitative_measures import Chi2Measure, CramervMeasure, TschuprowtMeasure
 from .quantitative_measures import (
     RMeasure,
@@ -22,10 +14,8 @@ from .quantitative_measures import (
 
 __all__ = [
     "AbsoluteMeasure",
-    "dtype_measure",
-    "make_measure",
-    "mode_measure",
-    "nans_measure",
+    "NanMeasure",
+    "ModeMeasure",
     "BaseMeasure",
     "OutlierMeasure",
     "Chi2Measure",

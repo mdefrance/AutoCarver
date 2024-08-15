@@ -26,7 +26,7 @@ class BaseFilter(ABC):
         self.threshold = threshold
 
     @abstractmethod
-    def filter(self, X: DataFrame, ranks: list[BaseFeature]) -> DataFrame:
+    def filter(self, X: DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:
         pass
 
     def update_feature(
@@ -57,9 +57,23 @@ class BaseFilter(ABC):
         feature.statistics.update({"filters": filters})
 
 
-def thresh_filter(X: DataFrame, ranks: DataFrame, **kwargs) -> dict[str, Any]:
-    """Filters out missing association measure (did not pass a threshold)"""
-    _, _ = X, kwargs  # unused attributes
+class ValidFilter(BaseFilter):
+    __name__ = "Valid"
+    is_default = True
 
-    # drops rows with nans
-    return ranks.dropna(axis=0)
+    def filter(self, X: DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:
+        """filters out all non-valid features fril ranks"""
+        _ = X  # not used
+
+        # iterating over each feature
+        filtered = []
+        for feature in ranks:
+
+            # getting feature's measures
+            measures = feature.statistics.get("measures")
+
+            # checking for non-valid measures, keeping feature
+            if all(measure.get("valid") for measure in measures.values()):
+                filtered += [feature]
+
+        return filtered

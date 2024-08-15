@@ -44,7 +44,7 @@ def test_to_dict(base_measure: BaseMeasure) -> None:
             "value": value,
             "threshold": THRESHOLD,
             "valid": False,
-            "info": {"higher_is_better": True, "correlation_with": "target"},
+            "info": {"higher_is_better": True, "correlation_with": "target", "is_default": False},
         }
     }
     assert base_measure.to_dict() == expected_dict
@@ -63,7 +63,11 @@ def test_update_feature(base_measure: BaseMeasure) -> None:
                 "value": value,
                 "threshold": THRESHOLD,
                 "valid": False,
-                "info": {"higher_is_better": True, "correlation_with": "target"},
+                "info": {
+                    "higher_is_better": True,
+                    "correlation_with": "target",
+                    "is_default": False,
+                },
             }
         }
     }

@@ -1,6 +1,6 @@
 """ Loads association filters."""
 
-from .base_filters import thresh_filter, BaseFilter
+from .base_filters import BaseFilter, ValidFilter
 
 from .qualitative_filters import QualitativeFilter, CramervFilter, TschuprowtFilter
 from .quantitative_filters import QuantitativeFilter, SpearmanFilter, PearsonFilter
@@ -8,7 +8,7 @@ from .quantitative_filters import QuantitativeFilter, SpearmanFilter, PearsonFil
 __all__ = [
     "BaseFilter",
     "QuantitativeFilter",
-    "thresh_filter",
+    "ValidFilter",
     "SpearmanFilter",
     "PearsonFilter",
     "QualitativeFilter",

@@ -1,21 +1,13 @@
 """Tools to select the best Quantitative and Qualitative features."""
 
 from random import shuffle, seed
-from typing import Any, Callable, Union
 from warnings import warn
 
-from numpy import unique
 from pandas import DataFrame, Series
 from math import ceil
-from .filters import ValidFilter, BaseFilter, SpearmanFilter, TschuprowtFilter
-from .measures import (
-    ModeMeasure,
-    NanMeasure,
-    TschuprowtMeasure,
-    SpearmanMeasure,
-    BaseMeasure,
-)
-from ..features import Features, BaseFeature, QuantitativeFeature, QualitativeFeature
+from .filters import BaseFilter
+from .measures import BaseMeasure
+from ..features import Features, BaseFeature, QuantitativeFeature, CategoricalFeature
 
 # trying to import extra dependencies
 try:
@@ -255,7 +247,7 @@ class BaseSelector(ABC):
 
     def _select_qualitatives(
         self, features: list[BaseFeature], X: DataFrame, y: Series
-    ) -> list[QualitativeFeature]:
+    ) -> list[CategoricalFeature]:
         """selects amongst qualitative features"""
 
         # iterating over qualitative features

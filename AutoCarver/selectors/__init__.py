@@ -1,7 +1,7 @@
 """ Loads feature selection tools."""
 
 # from .base_selector import BaseSelector
-# from .classification_selector import ClassificationSelector
+from .classification_selector import ClassificationSelector
 from .filters import (
     QualitativeFilter,
     CramervFilter,
@@ -19,10 +19,8 @@ from .measures import (
     Chi2Measure,
     CramervMeasure,
     TschuprowtMeasure,
-    dtype_measure,
-    make_measure,
-    mode_measure,
-    nans_measure,
+    ModeMeasure,
+    NanMeasure,
     RMeasure,
     DistanceMeasure,
     KruskalMeasure,
@@ -32,16 +30,12 @@ from .measures import (
     ZscoreOutlierMeasure,
 )
 
-# from .regression_selector import RegressionSelector
+from .regression_selector import RegressionSelector
 
 __all__ = [
-    # "BaseSelector",
-    # "ClassificationSelector",
-    # "thresh_filter",
-    # "cramerv_filter",
-    # "tschuprowt_filter",
-    # "pearson_filter",
-    # "spearman_filter",
+    # selectors
+    "RegressionSelector",
+    "ClassificationSelector",
     # filters
     "BaseFilter",
     "QuantitativeFilter",
@@ -52,10 +46,8 @@ __all__ = [
     "TschuprowtFilter",
     # measures
     "AbsoluteMeasure",
-    "dtype_measure",
-    "make_measure",
-    "mode_measure",
-    "nans_measure",
+    "ModeMeasure",
+    "NanMeasure",
     "BaseMeasure",
     "OutlierMeasure",
     "Chi2Measure",
@@ -68,5 +60,4 @@ __all__ = [
     "IqrOutlierMeasure",
     "KruskalMeasure",
     "ZscoreOutlierMeasure",
-    # "RegressionSelector",
 ]
