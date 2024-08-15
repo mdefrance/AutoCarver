@@ -1,6 +1,6 @@
 from pytest import fixture, FixtureRequest
-from pandas import DataFrame, isna
-from AutoCarver.selectors import QualitativeFilter, CramervFilter, TschuprowtFilter
+from pandas import DataFrame
+from AutoCarver.selectors import QualitativeFilter, CramervFilter, TschuprowtFilter, BaseMeasure
 from AutoCarver.features import BaseFeature
 
 THRESHOLD = 1.0
@@ -60,6 +60,8 @@ def test_qualitative_filter(
 def test_filter(
     filter: QualitativeFilter, sample_data: DataFrame, sample_ranks: list[BaseFeature]
 ) -> None:
+
+    assert isinstance(filter.measure, BaseMeasure), "measure should be a BaseMeasure"
 
     # testing _compute_worst_correlation
     correlation_with, worst_correlation = filter._compute_worst_correlation(

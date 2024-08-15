@@ -11,8 +11,6 @@ from ...features import BaseFeature
 
 class BaseMeasure(ABC):
 
-    is_measure = True
-    is_filter = False
     is_x_quantitative = False
     is_x_qualitative = False
 
@@ -21,6 +19,7 @@ class BaseMeasure(ABC):
     is_y_binary = False
 
     # info
+    is_default = False
     higher_is_better = True
     correlation_with = "target"
     # absolute_threshold = False
@@ -45,6 +44,7 @@ class BaseMeasure(ABC):
             # adding default info about the measure
             higher_is_better=self.higher_is_better,
             correlation_with=self.correlation_with,
+            is_default=self.is_default,
         )
 
     @info.setter
@@ -74,16 +74,22 @@ class BaseMeasure(ABC):
 
         # checking for a value
         if self.value is None:
-            raise ValueError(f"[{self.__name__}] Use compute_association first!")
+            raise ValueError(f" - [{self.__name__}] Use compute_association first!")
 
         # existing stats
         measures = feature.statistics.get("measures", {})
 
-        # updating statistics
+        # adding new measure
         measures.update(self.to_dict())
 
         # updating statistics of the feature accordingly
         feature.statistics.update({"measures": measures})
+
+    def reverse_xy(self) -> bool:
+        """reverses values of x and y in compute_association"""
+
+        # when its not implemented
+        return False
 
 
 class AbsoluteMeasure(BaseMeasure):
@@ -104,6 +110,7 @@ class OutlierMeasure(BaseMeasure):
     # info
     higher_is_better = False
     correlation_with = "itself"
+    is_default = True
 
     def __init__(self, threshold: float = 0.0) -> None:
         super().__init__(threshold)
@@ -136,45 +143,6 @@ def reverse_xy(measure: Callable):
     reversed_measure.__name__ = measure.__name__
 
     return reversed_measure
-
-
-def make_measure(
-    measure: Callable,
-    active: bool,
-    association: dict[str, Any],
-    x: Series,
-    y: Series,
-    **kwargs,
-) -> tuple[bool, dict[str, Any]]:
-    """Wrapper to make measures from base metrics
-
-    Parameters
-    ----------
-    measure : Callable
-        _description_
-    active : bool
-        _description_
-    association : dict[str, Any]
-        _description_
-    x : Series
-        Feature to measure
-    y : Series
-        Binary target feature
-
-    Returns
-    -------
-    tuple[bool, dict[str, Any]]
-        _description_
-    """
-    # check that previous steps where passed for computational optimization
-    if active:
-        # use the measure
-        active, measurement = measure(x, y, **kwargs)
-
-        # update association table
-        association.update(measurement)
-
-    return active, association
 
 
 def nans_measure(

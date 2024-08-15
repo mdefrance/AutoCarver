@@ -1,15 +1,21 @@
 """Tools to select the best Quantitative and Qualitative features."""
 
-from random import shuffle
+from random import shuffle, seed
 from typing import Any, Callable, Union
 from warnings import warn
 
 from numpy import unique
 from pandas import DataFrame, Series
 from math import ceil
-from .filters import thresh_filter
-from .measures import dtype_measure, make_measure, mode_measure, nans_measure
-from ..features import Features, BaseFeature
+from .filters import ValidFilter, BaseFilter, SpearmanFilter, TschuprowtFilter
+from .measures import (
+    ModeMeasure,
+    NanMeasure,
+    TschuprowtMeasure,
+    SpearmanMeasure,
+    BaseMeasure,
+)
+from ..features import Features, BaseFeature, QuantitativeFeature, QualitativeFeature
 
 # trying to import extra dependencies
 try:
@@ -19,8 +25,10 @@ except ImportError:
 else:
     _has_idisplay = True
 
+from abc import ABC, abstractmethod
 
-class BaseSelector:
+
+class BaseSelector(ABC):
     """A pipeline of measures to perform a feature pre-selection that maximizes association
     with a binary target.
 
@@ -28,18 +36,17 @@ class BaseSelector:
     * Get your best features with ``Selector.select()``!
     """
 
-    __name__ = "Selector"
+    __name__ = "BaseSelector"
 
     def __init__(
         self,
         n_best: int,
-        features: Features = None,
+        features: Features,
         *,
-        measures: Union[list[Callable], dict[str, list[Callable]]] = None,
-        filters: Union[list[Callable], dict[str, list[Callable]]] = None,
+        measures: list[BaseMeasure] = None,
+        filters: list[BaseFilter] = None,
         max_num_features_per_chunk: int = 100,
-        verbose: bool = False,
-        **kwargs,
+        **kwargs: dict,
     ) -> None:
         # measures : list[Callable], optional
         #     List of association measures to be used, by default ``None``.
@@ -158,29 +165,20 @@ class BaseSelector:
         # feature sample size per iteration
         # maximum number of features per chunk
         self.max_num_features_per_chunk = max_num_features_per_chunk
-        if not (2 < max_num_features_per_chunk):
+        if max_num_features_per_chunk <= 2:
             raise ValueError("Must set 2 < max_num_features_per_chunk")
 
+        # random state for chunk shuffling
+        self.random_state = kwargs.get("random_state", 0)
+
         # adding default measures
-        self.measures = {
-            dtype: [dtype_measure, nans_measure, mode_measure] + requested_measures[:]
-            for dtype, requested_measures in measures.items()
-        }
+        self.measures = self._initiate_measures(measures)
 
         # adding default filter
-        self.filters = {
-            dtype: [thresh_filter] + requested_filters[:]
-            for dtype, requested_filters in filters.items()
-        }
+        self.filters = self._initiate_filters(filters)
 
-        # names of measures to sort by
-        self.measure_names = {
-            dtype: [measure.__name__ for measure in requested_measures[::-1]]
-            for dtype, requested_measures in self.measures.items()
-        }
-
-        # wether or not to print tables
-        self.verbose = bool(max(verbose, kwargs.get("pretty_print", False)))
+        # whether to print info
+        self.verbose = bool(max(kwargs.get("verbose", True), kwargs.get("pretty_print", False)))
         self.pretty_print = False
         if self.verbose and kwargs.get("pretty_print", True):
             if _has_idisplay:  # checking for installed dependencies
@@ -195,76 +193,17 @@ class BaseSelector:
         # keyword arguments
         self.kwargs = kwargs
 
-    def _select_features(
-        self,
-        X: DataFrame,
-        y: Series,
-        features: list[BaseFeature],
-        n_best: int,
-    ) -> list[BaseFeature]:
-        """Selects the n_best features amongst the specified ones"""
-        if self.verbose:  # verbose if requested
-            print(f"------\n[{self.__name__}] Selecting from: {features}\n---")
+    @abstractmethod
+    def _initiate_measures(self, requested_measures: list[BaseMeasure] = None) -> list[BaseMeasure]:
+        """initiates the list of measures with default values"""
+        pass
 
-        # Computes association between X and y
-        initial_associations = apply_measures(
-            X, y, measures=self.measures[dtype], features=features, **self.kwargs
-        )
+    @abstractmethod
+    def _initiate_filters(self, requested_filters: list[BaseFilter] = None) -> list[BaseFilter]:
+        """initiates the list of measures with default values"""
+        pass
 
-        # sorting statistics
-        measure_names = evaluated_measure_names(initial_associations, self.measure_names[dtype])
-        initial_associations = initial_associations.sort_values(measure_names, ascending=False)
-
-        # displaying non-filterd associations
-        self._print_associations(association=initial_associations)
-
-        # applying filtering for each measure
-        all_best_features: dict[str, Any] = {}
-        for measure_name in measure_names:
-            # sorting association for each measure
-            associations = initial_associations.sort_values(measure_name, ascending=False)
-
-            # filtering for each measure, as each measure ranks the features differently
-            filtered_association = apply_filters(
-                X, associations, filters=self.filters[dtype], **self.kwargs
-            )
-
-            # selected features for the measure
-            selected_features = [
-                feature
-                for feature in initial_associations.index
-                if (len(filtered_association) > 0)
-                and (feature in filtered_association.index[:n_best])
-            ]
-
-            # saving results
-            all_best_features.update(
-                {
-                    measure_name: {
-                        "selected": selected_features,
-                        "association": filtered_association,
-                    }
-                }
-            )
-
-        # list of unique best_featues per measure_name
-        best_features = [
-            # ordering according target association
-            feature
-            for feature in initial_associations.index
-            # checking that feature has been selected by a measure
-            if any(feature in all_best_features[measure]["selected"] for measure in measure_names)
-        ]
-
-        # displaying association measure
-        self._print_associations(
-            association=initial_associations.reindex(best_features),
-            message=", filtered for inter-feature assocation",
-        )
-
-        return best_features
-
-    def select(self, X: DataFrame, y: Series) -> list[str]:
+    def select(self, X: DataFrame, y: Series) -> list[BaseFeature]:
         """Selects the ``n_best`` features of the DataFrame, by association with the target
 
         Parameters
@@ -281,25 +220,63 @@ class BaseSelector:
         list[str]
             List of selected features
         """
-        # iterating over each type of feature
-        all_best_features = []
-        for features in [self.features.get_qualitatives(), self.features.get_quantitatives()]:
 
-            # splitting features in chunks and getting best chunk-features if needed
-            best_features = self._get_best_features_per_chunk(features, X, y)
+        # apply default measures to features
+        apply_measures(self.features, X, y, get_default_measures(self.measures))
 
-            # selecting amongst best features per chunk
-            if any(best_features):
-                best_features = self._select_features(X, y, best_features, self.n_best)
+        # apply default filters to features
+        features = apply_filters(self.features, X, get_default_filters(self.filters))
 
-                all_best_features += best_features
-                if self.verbose:  # verbose if requested
-                    print(f"\n - [{self.__name__}] Selected: {best_features}------\n")
+        # checking for quantitative features before selection
+        quantitatives = [feature for feature in features if feature.is_quantitative]
+        if len(quantitatives) > 0:
+            best_quantitative_features = self._select_quantitatives(quantitatives, X, y)
 
-        return all_best_features
+        # checking for qualitative features before selection
+        qualitatives = [feature for feature in features if feature.is_qualitative]
+        if len(qualitatives) > 0:
+            best_qualitative_features = self._select_qualitatives(qualitatives, X, y)
 
-    def _get_best_features_per_chunk(
+        return best_quantitative_features, best_qualitative_features
+
+    def _select_quantitatives(
+        self, quantitatives: list[BaseFeature], X: DataFrame, y: Series
+    ) -> list[QuantitativeFeature]:
+        """selects amongst quantitative features"""
+
+        # getting measures to sort features
+        measures = get_quantitative_measures(self.measures)
+
+        # getting filters
+        filters = get_quantitative_filters(self.filters)
+
+        # splitting features in chunks and getting best per-chunk set of features
+        return self._get_best_features_across_chunks(quantitatives, X, y, measures, filters)
+
+    def _select_qualitatives(
         self, features: list[BaseFeature], X: DataFrame, y: Series
+    ) -> list[QualitativeFeature]:
+        """selects amongst qualitative features"""
+
+        # iterating over qualitative features
+        qualitatives = [feature for feature in features if feature.is_qualitative]
+
+        # getting measures to sort features
+        measures = get_qualitative_measures(self.measures)
+
+        # getting filters
+        filters = get_qualitative_filters(self.filters)
+
+        # splitting features in chunks and getting best per-chunk set of features
+        return self._get_best_features_across_chunks(qualitatives, X, y, measures, filters)
+
+    def _get_best_features_across_chunks(
+        self,
+        features: list[BaseFeature],
+        X: DataFrame,
+        y: Series,
+        measures: list[BaseMeasure],
+        filters: list[BaseFilter],
     ) -> list[BaseFeature]:
         """gets best features per chunk of maximum size as set by max_num_features_per_chunk"""
 
@@ -310,65 +287,70 @@ class BaseSelector:
         if len(features) > self.max_num_features_per_chunk:
 
             # making random chunks of features
-            chunks = make_random_chunks(features, self.max_num_features_per_chunk)
+            chunks = make_random_chunks(
+                features, self.max_num_features_per_chunk, self.random_state
+            )
 
             # iterating over each feature samples
             best_features = []
             for chunk in chunks:
                 # fitting association on features
-                best_features += self._select_features(X, y, chunk, int(self.n_best // 2))
-
-        return best_features
-
-    def _print_associations(self, association: DataFrame, message: str = "") -> None:
-        """EDA of fitted associations
-
-        Parameters
-        ----------
-        association : DataFrame
-            _description_
-        pretty_print : bool, optional
-            _description_, by default False
-        """
-        # checking for verbose
-        if self.verbose:
-            print(f"\n - [{self.__name__}] Association between X and y{message}")
-
-            # printing raw DataFrame
-            if not self.pretty_print:
-                print(association)
-
-            # adding colors and displaying DataFrame as html
-            else:
-                # finding columns with indicators to colorize
-                subset = [
-                    column
-                    for column in association.columns
-                    # checking for an association indicator
-                    if any(indic in column for indic in ["pct_", "_measure", "_filter"])
-                ]
-
-                # adding coolwarm color gradient
-                nicer_association = association.style.background_gradient(
-                    cmap="coolwarm", subset=subset
+                best_features += get_best_features(
+                    chunk, X, y, measures, filters, int(self.n_best // len(chunks))
                 )
-                # printing inline notebook
-                nicer_association = nicer_association.set_table_attributes("style='display:inline'")
 
-                # lower precision
-                nicer_association = nicer_association.format(precision=4)
+        return get_best_features(best_features, X, y, measures, filters, self.n_best)
 
-                # displaying html of colored DataFrame
-                display_html(nicer_association._repr_html_(), raw=True)  # pylint: disable=W0212
+    # def _print_associations(self, association: DataFrame, message: str = "") -> None:
+    #     """EDA of fitted associations
+
+    #     Parameters
+    #     ----------
+    #     association : DataFrame
+    #         _description_
+    #     pretty_print : bool, optional
+    #         _description_, by default False
+    #     """
+    #     # checking for verbose
+    #     if self.verbose:
+    #         print(f"\n - [{self.__name__}] Association between X and y{message}")
+
+    #         # printing raw DataFrame
+    #         if not self.pretty_print:
+    #             print(association)
+
+    #         # adding colors and displaying DataFrame as html
+    #         else:
+    #             # finding columns with indicators to colorize
+    #             subset = [
+    #                 column
+    #                 for column in association.columns
+    #                 # checking for an association indicator
+    #                 if any(indic in column for indic in ["pct_", "_measure", "_filter"])
+    #             ]
+
+    #             # adding coolwarm color gradient
+    #             nicer_association = association.style.background_gradient(
+    #                 cmap="coolwarm", subset=subset
+    #             )
+    #             # printing inline notebook
+    #             nicer_association = nicer_association.set_table_attributes("style='display:inline'")
+
+    #             # lower precision
+    #             nicer_association = nicer_association.format(precision=4)
+
+    #             # displaying html of colored DataFrame
+    #             display_html(nicer_association._repr_html_(), raw=True)  # pylint: disable=W0212
 
 
-def make_random_chunks(elements: list, max_chunk_sizes: int) -> list:
+def make_random_chunks(elements: list, max_chunk_sizes: int, random_state: int = None) -> list:
     """makes a specific number of random chunks of of a list"""
 
     # copying in order to not moidy initial list
     shuffled_elements = elements[:]
 
     # shuffling features to get random samples of features
+    seed(random_state)
     shuffle(shuffled_elements)
 
     # number of chunks
@@ -388,97 +370,117 @@ def make_random_chunks(elements: list, max_chunk_sizes: int) -> list:
     return chunks
 
 
-def feature_association(x: Series, y: Series, measures: list[Callable], **kwargs) -> dict[str, Any]:
-    """Measures association between x and y
+def get_quantitative_measures(measures: list[BaseMeasure]) -> list[BaseMeasure]:
+    """returns filtered list of measures that apply on quantitative features"""
+    return [measure for measure in measures if measure.is_x_quantitative and not measure.is_default]
 
-    Parameters
-    ----------
-    x : Series
-        Sample of a feature.
-    y : Series
-        Binary target feature with wich the association is evaluated.
 
-    Returns
-    -------
-    dict[str, Any]
-        Association metrics' values
-    """
-    # measures keep going only if previous basic tests are passed
-    passed = True
-    association = {}
+def get_qualitative_measures(measures: list[BaseMeasure]) -> list[BaseMeasure]:
+    """returns filtered list of measures that apply on qualitative features"""
+    return [measure for measure in measures if measure.is_x_qualitative and not measure.is_default]
 
-    # iterating over each measure
-    for measure in measures:
-        passed, association = make_measure(
-            measure, passed, association, x, y, **kwargs, **association
-        )
 
-    return association
+def get_default_measures(measures: list[BaseMeasure]) -> list[BaseMeasure]:
+    """returns filtered list of measures that apply on qualitative features"""
+    return [measure for measure in measures if measure.is_default]
+
+
+def get_quantitative_filters(filters: list[BaseFilter]) -> list[BaseFilter]:
+    """returns filtered list of filters that apply on quantitative features"""
+    return [filter for filter in filters if filter.is_x_quantitative and not filter.is_default]
+
+
+def get_qualitative_filters(filters: list[BaseFilter]) -> list[BaseFilter]:
+    """returns filtered list of filters that apply on qualitative features"""
+    return [filter for filter in filters if filter.is_x_qualitative and not filter.is_default]
+
+
+def get_default_filters(filters: list[BaseFilter]) -> list[BaseFilter]:
+    """returns filtered list of filters that apply on qualitative features"""
+    return [filter for filter in filters if filter.is_default]
 
 
 def apply_measures(
-    X: DataFrame, y: Series, measures: list[Callable], features: list[BaseFeature], **kwargs
+    features: list[BaseFeature], X: DataFrame, y: Series, measures: list[BaseMeasure]
 ) -> DataFrame:
     """Measures association between columns of X and y"""
-    # applying association measure to each column
-    associations = (
-        X[features]
-        .apply(feature_association, y=y, measures=measures, **kwargs, result_type="expand", axis=0)
-        .T
-    )
 
-    return associations
+    # iterating over each feature
+    for feature in features:
 
+        # iterating over each measure
+        for measure in measures:
 
-def evaluated_measure_names(associations: DataFrame, measure_names: list[str]) -> list[str]:
-    """_summary_
+            # computing association for feature
+            measure.compute_association(X[feature.version], y)
 
-    Parameters
-    ----------
-    associations : DataFrame
-        _description_
-    measure_names : list[str]
-        _description_
-
-    Returns
-    -------
-    list[str]
-        _description_
-    """
-    # Getting evaluated measures (filtering out non-measures: pct_zscore, pct_iqr...)
-    sort_by = [
-        measure_name
-        for measure_name in measure_names
-        if measure_name in associations and "_measure" in measure_name
-    ]
-
-    return sort_by
+            # updating feature accordingly
+            measure.update_feature(feature)
 
 
 def apply_filters(
-    X: DataFrame, associations: DataFrame, filters: list[Callable], **kwargs
+    features: list[BaseFeature], X: DataFrame, filters: list[BaseFilter]
 ) -> DataFrame:
-    """Filters out too correlated features (least relevant first)
+    """Filters out too correlated features (least relevant first)"""
 
-    Parameters
-    ----------
-    X : DataFrame
-        _description_
-    associations : DataFrame
-        _description_
-    filters : list[Callable]
-        _description_
-    measure_name : str
-        _description_
+    # keeping track of remaining features
+    filtered = features[:]
 
-    Returns
-    -------
-    DataFrame
-        _description_
-    """
-    # applying successive filters
-    filtered_associations = associations.copy()
-    for filtering in filters:
-        filtered_associations = filtering(X, filtered_associations, **kwargs)
+    # iterating over each filter
+    for filter_ in filters:
 
-    return filtered_associations
+        # applying filter
+        filtered = filter_.filter(X, filtered)
+
+    return filtered
+
+
+def get_best_features(
+    features: list[BaseFeature],
+    X: DataFrame,
+    y: Series,
+    measures: list[BaseMeasure],
+    filters: list[BaseFilter],
+    n_best: int,
+) -> list[BaseFeature]:
+    """gives best features according to provided measures"""
+
+    # check for sortable measures
+    if not all(measure.is_sortable for measure in measures):
+        raise ValueError("All provided measures should be sortable")
+
+    # applying measures to all features
+    apply_measures(features, X, y, measures)
+
+    # getting best feature for each sortable measure
+    best_features = []
+    for measure in measures:
+
+        # sorting features according to measure
+        sorted_features = sort_features_per_measure(features, measure)
+
+        # applying filters
+        filtered_features = apply_filters(sorted_features, X, filters)
+
+        # getting best features according to measure
+        best_features += filtered_features[:n_best]
+
+    # deduplicating best features
+    return remove_duplicates(best_features)
+
+
+def remove_duplicates(features: list[BaseFeature]) -> list[BaseFeature]:
+    """removes duplicated features, keeping its first appearance"""
+    return [features[i] for i in range(len(features)) if features[i] not in features[:i]]
+
+
+def sort_features_per_measure(
+    features: list[BaseFeature], measure: BaseMeasure
+) -> list[BaseFeature]:
+    """sorts features according to specified measure"""
+    return sorted(features, key=lambda feature: get_measure_value(feature, measure))
+
+
+def get_measure_value(feature: BaseFeature, measure: BaseMeasure) -> float:
+    """gives value of measure for specified feature"""
+    return feature.statistics.get("measures").get(measure.__name__).get("value")

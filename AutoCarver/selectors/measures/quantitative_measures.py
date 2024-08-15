@@ -14,7 +14,7 @@ from .base_measures import BaseMeasure, OutlierMeasure
 class KruskalMeasure(BaseMeasure):
     __name__ = "Kruskal"
     is_x_quantitative = True
-    is_y_qualitative = True
+    is_y_qualitative = False
 
     def compute_association(self, x: Series, y: Series) -> float:
         """Kruskal-Wallis' test statistic between ``x`` for each value taken by ``y``.

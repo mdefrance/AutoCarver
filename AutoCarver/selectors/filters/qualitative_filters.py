@@ -145,7 +145,7 @@ class CramervFilter(QualitativeFilter):
 
     __name__ = "CramerV"
 
-    def __init__(self, threshold: float) -> None:
+    def __init__(self, threshold: float = 1.0) -> None:
         super().__init__(threshold)
         self.measure = CramervMeasure(threshold)
 
@@ -154,6 +154,6 @@ class TschuprowtFilter(QualitativeFilter):
 
     __name__ = "TschuprowT"
 
-    def __init__(self, threshold: float) -> None:
+    def __init__(self, threshold: float = 1.0) -> None:
         super().__init__(threshold)
         self.measure = TschuprowtMeasure(threshold)

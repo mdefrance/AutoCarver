@@ -191,7 +191,7 @@ class SpearmanFilter(QuantitativeFilter):
 
     __name__ = "Spearman"
 
-    def __init__(self, threshold: float) -> None:
+    def __init__(self, threshold: float = 1.0) -> None:
         super().__init__(threshold)
         self.measure = "spearman"
 
@@ -200,6 +200,6 @@ class PearsonFilter(QuantitativeFilter):
 
     __name__ = "Pearson"
 
-    def __init__(self, threshold: float) -> None:
+    def __init__(self, threshold: float = 1.0) -> None:
         super().__init__(threshold)
         self.measure = "pearson"

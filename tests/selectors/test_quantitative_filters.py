@@ -60,6 +60,9 @@ def test_quantitative_filter(
 def test_filter(
     filter: QuantitativeFilter, sample_data: DataFrame, sample_ranks: list[BaseFeature]
 ) -> None:
+
+    assert isinstance(filter.measure, str), "measure should be a name for DataFrame.corr"
+
     # testing _compute_correlation
     correlation = filter._compute_correlation(sample_data, sample_ranks)
     assert isinstance(correlation, DataFrame), "Correlation should be a dataframe"
