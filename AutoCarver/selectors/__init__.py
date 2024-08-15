@@ -2,13 +2,15 @@
 
 # from .base_selector import BaseSelector
 # from .classification_selector import ClassificationSelector
-# from .filters import (
-#     cramerv_filter,
-#     pearson_filter,
-#     spearman_filter,
-#     thresh_filter,
-#     tschuprowt_filter,
-# )
+from .filters import (
+    #     cramerv_filter,
+    #     thresh_filter,
+    #     tschuprowt_filter,
+    BaseFilter,
+    QuantitativeFilter,
+    SpearmanFilter,
+    PearsonFilter,
+)
 from .measures import (
     AbsoluteMeasure,
     BaseMeasure,
@@ -39,6 +41,12 @@ __all__ = [
     # "tschuprowt_filter",
     # "pearson_filter",
     # "spearman_filter",
+    # filters
+    "BaseFilter",
+    "QuantitativeFilter",
+    "SpearmanFilter",
+    "PearsonFilter",
+    # measures
     "AbsoluteMeasure",
     "dtype_measure",
     "make_measure",
