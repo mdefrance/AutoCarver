@@ -6,15 +6,6 @@ from pytest import FixtureRequest, fixture
 from AutoCarver.selectors import BaseMeasure, Chi2Measure, CramerVMeasure, TschuprowTMeasure
 
 
-# setting BaseMeasure as non abstract class for the duration of the test
-BaseMeasure.__abstractmethods__ = set()
-
-
-@fixture
-def base_measure() -> BaseMeasure:
-    return BaseMeasure(threshold=0.5)
-
-
 @fixture(params=[Chi2Measure, CramerVMeasure, TschuprowTMeasure])
 def measure(request: type[FixtureRequest]) -> BaseMeasure:
     return request.param(threshold=0.5)
@@ -30,29 +21,6 @@ def series_data() -> Series:
 def nan_series_data() -> Series:
     x = Series([nan, nan, 3, 4, 5])
     return x
-
-
-def test_validate_with_value_below_threshold(base_measure: BaseMeasure) -> None:
-    """checks that validates works as expected for base measure (remove low correlation)"""
-    base_measure.value = 0
-    print(base_measure.value, base_measure.threshold, base_measure.validate())
-    assert not base_measure.validate(), "not validating correcly (remove low correlation)"
-
-
-def test_validate_with_value_above_threshold(base_measure: BaseMeasure) -> None:
-    """checks that validates works as expected for base measure (keep high correlation)"""
-    base_measure.value = 1
-    print(base_measure.value, base_measure.threshold, base_measure.validate())
-    assert base_measure.validate(), "not validating correcly (keep high correlation)"
-
-
-def test_validate_with_null_value(base_measure: BaseMeasure) -> None:
-    """checks that validates works as expected for base measure"""
-    base_measure.value = None
-    print(base_measure.value, base_measure.threshold, base_measure.validate())
-    assert (
-        not base_measure.validate()
-    ), "when value is missing, should default to false (remove low correlation)"
 
 
 def test_measure_type(measure: BaseMeasure) -> None:

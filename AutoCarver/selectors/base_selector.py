@@ -144,6 +144,7 @@ class BaseSelector:
         --------
         See `Selectors examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
         """
+        # TODO print a config that says what the user has selectes (measures+filters)
         # features and values
         self.features = features
         if isinstance(features, list):

@@ -5,8 +5,6 @@ from pandas import Series, isna
 from pytest import FixtureRequest, fixture
 from AutoCarver.selectors import (
     BaseMeasure,
-    AbsoluteMeasure,
-    OutlierMeasure,
     DistanceMeasure,
     PearsonMeasure,
     SpearmanMeasure,
@@ -17,24 +15,12 @@ from AutoCarver.selectors import (
 )
 
 
-# TODO test absolutemeasure
-
-# setting OutlierMeasure, AbsoluteMeasure as non abstract classes for the duration of the test
-OutlierMeasure.__abstractmethods__ = set()
-AbsoluteMeasure.__abstractmethods__ = set()
-
-
 threshold = 0.1
 
 
-@fixture
-def outlier_measure() -> OutlierMeasure:
-    return OutlierMeasure(threshold=threshold)
-
-
-@fixture
-def absolute_measure() -> AbsoluteMeasure:
-    return AbsoluteMeasure(threshold=threshold)
+@fixture(params=[IqrOutlierMeasure, ZscoreOutlierMeasure])
+def outlier_measure(request: type[FixtureRequest]) -> BaseMeasure:
+    return request.param(threshold=threshold)
 
 
 @fixture(params=[DistanceMeasure, PearsonMeasure, SpearmanMeasure])
@@ -56,67 +42,6 @@ def quanti_binary_measure(request: type[FixtureRequest]) -> BaseMeasure:
 def series_data() -> Series:
     x = Series([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     return x
-
-
-# @fixture
-# def nan_series_data() -> Series:
-#     x = Series([nan, nan, 3, 4, 5])
-#     return x
-
-
-def test_validate_with_value_below_threshold(outlier_measure: OutlierMeasure) -> None:
-    """checks that validates works as expected for base measure (keep low outlier rates)"""
-    outlier_measure.value = 0
-    print(outlier_measure.value, outlier_measure.threshold, outlier_measure.validate())
-    assert outlier_measure.validate(), "not validating correcly (keep low outlier rates)"
-
-
-def test_validate_with_value_above_threshold(outlier_measure: OutlierMeasure) -> None:
-    """checks that validates works as expected for base measure (drop high outlier rates)"""
-    outlier_measure.value = 1
-    print(outlier_measure.value, outlier_measure.threshold, outlier_measure.validate())
-    assert not outlier_measure.validate(), "not validating correcly (drop high outlier rates)"
-
-
-def test_validate_with_null_value(outlier_measure: OutlierMeasure) -> None:
-    """checks that validates works as expected for base measure"""
-    outlier_measure.value = None
-    print(outlier_measure.value, outlier_measure.threshold, outlier_measure.validate())
-    assert outlier_measure.validate(), "keep undefined outlier rates"
-
-
-def test_outlier_measure_type(outlier_measure: OutlierMeasure) -> None:
-    """checks types of x and y"""
-    assert not outlier_measure.is_x_qualitative, "x should be quantitative"
-    assert outlier_measure.is_x_quantitative, "x should be quantitative"
-
-
-def test_validate_absolute_with_value_below_threshold(absolute_measure: AbsoluteMeasure) -> None:
-    """checks that validates works as expected for base measure (remove low correlation)"""
-
-    # with positive value
-    absolute_measure.value = 0.05
-    print(absolute_measure.value, absolute_measure.threshold, absolute_measure.validate())
-    assert not absolute_measure.validate(), "not validating correcly (remove low correlation)"
-
-    # with negative value
-    absolute_measure.value = -0.05
-    print(absolute_measure.value, absolute_measure.threshold, absolute_measure.validate())
-    assert not absolute_measure.validate(), "not validating correcly (remove low correlation)"
-
-
-def test_validate_absolute_with_value_above_threshold(absolute_measure: AbsoluteMeasure) -> None:
-    """checks that validates works as expected for base measure (keep high correlation)"""
-
-    # with positive value
-    absolute_measure.value = 1
-    print(absolute_measure.value, absolute_measure.threshold, absolute_measure.validate())
-    assert absolute_measure.validate(), "not validating correcly (keep high correlation)"
-
-    # with negative value
-    absolute_measure.value = -1
-    print(absolute_measure.value, absolute_measure.threshold, absolute_measure.validate())
-    assert absolute_measure.validate(), "not validating correcly (keep high correlation)"
 
 
 def test_quanti_quanti_measure_type(quanti_quanti_measure: BaseMeasure) -> None:
@@ -154,6 +79,71 @@ def binary_series_data() -> Series:
 def quali_series_data() -> Series:
     x = Series([2, 2, 0, 1, 1, 1, 1, 0, 0, 0])
     return x
+
+
+@fixture
+def outlier_series_data() -> Series:
+    x = Series(
+        [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            50,
+            51,
+        ]
+    )
+    return x
+
+
+def test_outlier_compute_association(outlier_measure: BaseMeasure, series_data: Series) -> None:
+    """checks that correlation measurement works"""
+
+    # without nans
+    association = outlier_measure.compute_association(series_data)
+    assert association is not None, "not correctly computed association"
+    assert outlier_measure.value == association, "not stored measurement"
+
+    # with nans
+    association = outlier_measure.compute_association(series_data.replace(1, nan))
+    assert association is not None, "not correctly computed association"
+    assert outlier_measure.value == association, "not stored measurement"
 
 
 def test_quanti_binary_compute_association(
@@ -217,6 +207,33 @@ def test_quanti_quanti_compute_association(
     )
     assert association is not None, "not correctly computed association"
     assert quanti_quanti_measure.value == association, "not stored measurement"
+
+
+def test_outlier_validate_with_computed_association_below_threshold(
+    outlier_measure: BaseMeasure, series_data: Series
+) -> None:
+    """checks that correlated features are not removed"""
+
+    # without nans
+    outlier_measure.threshold = 1
+    outlier_measure.compute_association(series_data)
+    print(
+        outlier_measure.__name__,
+        outlier_measure.value,
+        outlier_measure.threshold,
+        outlier_measure.validate(),
+    )
+    assert outlier_measure.validate(), "kept feature with lower than threshold correlation"
+
+    # with nans
+    outlier_measure.compute_association(series_data.replace(1, nan))
+    print(
+        outlier_measure.__name__,
+        outlier_measure.value,
+        outlier_measure.threshold,
+        outlier_measure.validate(),
+    )
+    assert outlier_measure.validate(), "kept feature with lower than threshold correlation"
 
 
 def test_quanti_quali_validate_with_computed_association_below_threshold(
@@ -384,3 +401,30 @@ def test_quanti_binary_validate_with_computed_association_above_threshold(
         quanti_binary_measure.validate(),
     )
     assert quanti_binary_measure.validate(), "removed feature with lower than threshold correlation"
+
+
+def test_outlier_validate_with_computed_association_above_threshold(
+    outlier_measure: BaseMeasure, outlier_series_data: Series
+) -> None:
+    """checks that correlated features are not removed"""
+
+    # without nans
+    outlier_measure.threshold = 0.02
+    outlier_measure.compute_association(outlier_series_data.replace(51, 5e50))
+    print(
+        outlier_measure.__name__,
+        outlier_measure.value,
+        outlier_measure.threshold,
+        outlier_measure.validate(),
+    )
+    assert not outlier_measure.validate(), "kept feature with lower than threshold correlation"
+
+    # with nans
+    outlier_measure.compute_association(outlier_series_data.replace(50, nan).replace(51, 5e50))
+    print(
+        outlier_measure.__name__,
+        outlier_measure.value,
+        outlier_measure.threshold,
+        outlier_measure.validate(),
+    )
+    assert not outlier_measure.validate(), "kept feature with lower than threshold correlation"

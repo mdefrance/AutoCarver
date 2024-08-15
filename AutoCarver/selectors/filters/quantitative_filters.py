@@ -5,6 +5,7 @@ from typing import Any
 
 from numpy import ones, triu
 from pandas import DataFrame, Index
+from ...features import BaseFeature, get_versions
 
 # from statsmodels.stats.outliers_influence import variance_inflation_factor
 
@@ -170,87 +171,120 @@ def quantitative_filter(
 from abc import ABC, abstractmethod
 
 
-class Filter(ABC):
+class BaseFilter(ABC):
 
+    __name__ = "BaseFilter"
+
+    is_measure = False
     is_filter = True
-    is_quantitative = False
-    is_qualitative = False
+    is_x_quantitative = False
+    is_x_qualitative = False
 
-    def __init__(self, measure: str, threshold: float = 1):
-        self.measure = measure
+    # info
+    higher_is_better = False
+
+    def __init__(self, threshold: float = 1.0):
+        self.measure = None
         self.threshold = threshold
 
     @abstractmethod
-    def filter(self, X: DataFrame, ranks: Index) -> DataFrame:
+    def filter(self, X: DataFrame, ranks: list[BaseFeature]) -> DataFrame:
         pass
 
+    def update_feature(
+        self,
+        feature: BaseFeature,
+        value: float,
+        valid: bool,
+        info: dict,
+    ) -> None:
+        """adds measure to specified feature"""
 
-class QuantitativeFilter(Filter):
+        # existing stats
+        filters = feature.statistics.get("filters", {})
+
+        # updating statistics
+        filters.update(
+            {
+                self.__name__: {
+                    "value": value,
+                    "threshold": self.threshold,
+                    "valid": valid,
+                    "info": dict(higher_is_better=self.higher_is_better, **info),
+                }
+            }
+        )
+
+        # updating statistics of the feature accordingly
+        feature.statistics.update({"filters": filters})
+
+
+class QuantitativeFilter(BaseFilter):
 
     __name__ = "QuantitativeFilter"
-    is_quantitative = True
 
-    def filter(self, X: DataFrame, ranks: Index) -> DataFrame:
+    is_x_quantitative = True
+
+    def filter(self, X: DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:
 
         # computing correlation between features
         X_corr = self._compute_correlation(X, ranks)
 
         # filtering too correlated features
-        associations = self._filter_correlated_features(X_corr, ranks)
+        return self._filter_correlated_features(X_corr, ranks)
 
-        # formatting output to DataFrame
-        if len(associations) > 0:
-            associations = self._format_associations(associations, ranks)
-
-        return associations
-
-    def _filter_correlated_features(self, X_corr: DataFrame, ranks: list[str]) -> list:
-        """filtering out features too correlated with a better ranked feature"""
-
-        # initiating list of maximum association per feature
-        associations = []
-
-        # iterating over each feature by target association order
-        for feature in ranks:
-            # maximum correlation with a better feature
-            correlation_with, worst_correlation = self._max_correlation_with_better_features(
-                X_corr, feature
-            )
-
-            # TODO update feature accordingly (update stats)
-
-            # dropping the feature if it was too correlated to a better feature
-            if worst_correlation > self.threshold:
-                X_corr = X_corr.drop(feature, axis=0).drop(feature, axis=1)
-
-            # kept feature: updating associations with this feature
-            else:
-                associations.append(
-                    self._update_associations(feature, correlation_with, worst_correlation)
-                )
-
-        return associations
-
-    def _compute_correlation(self, X: DataFrame, rank: list) -> DataFrame:
+    def _compute_correlation(self, X: DataFrame, rank: list[BaseFeature]) -> DataFrame:
         """Computing correlation between features"""
         # absolute correlation between features
-        X_corr = X[rank].corr(self.measure).abs()
+        X_corr = X[get_versions(rank)].corr(self.measure).abs()
 
         # getting upper right part of the correlation matrix
         return X_corr.where(triu(ones(X_corr.shape), k=1).astype(bool))
 
-    def _max_correlation_with_better_features(self, X_corr: DataFrame, feature: str) -> DataFrame:
+    def _filter_correlated_features(self, X_corr: DataFrame, ranks: list[BaseFeature]) -> list:
+        """filtering out features too correlated with a better ranked feature"""
+
+        # iterating over each feature by target association order
+        filtered: list[BaseFeature] = []
+        for feature in ranks:
+            # maximum correlation with a better feature
+            correlation_with, worst_correlation = self._compute_worst_correlation(X_corr, feature)
+
+            # checking for too much correlation
+            valid = self._validate(feature, worst_correlation, correlation_with)
+
+            # dropping feature if it was too correlated
+            if not valid:
+                X_corr.drop(feature.version, axis=0, inplace=True)
+                X_corr.drop(feature.version, axis=1, inplace=True)
+
+            # keeping feature
+            else:
+                filtered += [feature]
+
+        return filtered
+
+    def _compute_worst_correlation(self, X_corr: DataFrame, feature: BaseFeature) -> DataFrame:
         """Computes correlation with better features (filtering out X_corr)"""
-        corr_with_better_features = X_corr.loc[:feature, feature].fillna(0)
+
+        # correlation with more associated features
+        corr_with_better_features = X_corr.loc[: feature.version, feature.version].fillna(0)
+
+        # worst/maximum correlation with better features
         return corr_with_better_features.agg(["idxmax", "max"])
 
-    def _update_associations(self, feature: str, corr_with: str, worst_corr: float) -> dict:
-        return {
-            "feature": feature,
-            f"{self.measure}_filter": worst_corr,
-            f"{self.measure}_with": corr_with,
-        }
+    def _validate(
+        self, feature: BaseFeature, worst_correlation: float, correlation_with: str
+    ) -> DataFrame:
+        """Checks if the worst correlation of a feature is above specified threshold"""
+        # dropping the feature if it was too correlated to a better feature
+        valid = True
+        if worst_correlation > self.threshold:
+            valid = False
 
-    def _format_associations(self, associations: list, ranks: DataFrame) -> DataFrame:
-        associations = DataFrame(associations).set_index("feature")
-        return ranks.join(associations, how="right")
+        # update feature accordingly (update stats)
+        self.update_feature(
+            feature, worst_correlation, valid, info={"correlation_with": correlation_with}
+        )
+
+        return valid

@@ -2,9 +2,9 @@
 """
 
 from math import sqrt
-from .base_measures import BaseMeasure
 from pandas import Series, crosstab, notna
 from scipy.stats import chi2_contingency
+from .base_measures import BaseMeasure
 
 # X continue y continue distance correlation
 # X binaire y continue kruskal y, x
@@ -21,16 +21,18 @@ from scipy.stats import chi2_contingency
 
 
 class Chi2Measure(BaseMeasure):
+    """Wrapper for `scipy.stats.chi2_contingency <https://docs.scipy.org/doc/scipy/reference/
+    generated/scipy.stats.chi2_contingency.html>`_.
+    Computes Chi2 statistic on the ``x`` by ``y`` `pandas.crosstab <https://pandas.pydata.org/docs/
+    reference/api/pandas.crosstab.html>`_.
+    """
+    
     __name__ = "Chi2"
     is_x_qualitative = True
     is_y_qualitative = True
 
     def compute_association(self, x: Series, y: Series) -> float:
-        """Wrapper for `scipy.stats.chi2_contingency <https://docs.scipy.org/doc/scipy/reference/
-        generated/scipy.stats.chi2_contingency.html>`_.
-        Computes Chi2 statistic on the ``x`` by ``y`` `pandas.crosstab <https://pandas.pydata.org/docs/
-        reference/api/pandas.crosstab.html>`_.
-
+        """
         Parameters
         ----------
         x : Series

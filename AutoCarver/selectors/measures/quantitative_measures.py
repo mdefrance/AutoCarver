@@ -211,7 +211,7 @@ class ZscoreOutlierMeasure(OutlierMeasure):
         return self.value
 
 
-class IqrOutlierMeasure(BaseMeasure):
+class IqrOutlierMeasure(OutlierMeasure):
     __name__ = "IQR"
 
     def compute_association(self, x: Series, y: Series = None) -> float:

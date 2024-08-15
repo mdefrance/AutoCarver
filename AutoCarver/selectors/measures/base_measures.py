@@ -6,11 +6,13 @@ from typing import Any, Callable
 from pandas import Series, isnull, notna
 
 from abc import ABC, abstractmethod
+from ...features import BaseFeature
 
 
 class BaseMeasure(ABC):
 
     is_measure = True
+    is_filter = False
     is_x_quantitative = False
     is_x_qualitative = False
 
@@ -18,36 +20,93 @@ class BaseMeasure(ABC):
     is_y_quantitative = False
     is_y_binary = False
 
+    # info
+    higher_is_better = True
+    correlation_with = "target"
+    # absolute_threshold = False
+
+    __name__ = "BaseMeasure"
+
     def __init__(self, threshold: float = 1.0) -> None:
         self.threshold = threshold
         self.value = None
+        self._info = {}
 
     @abstractmethod
     def compute_association(self, x: Series, y: Series) -> float:
         pass
 
+    @property
+    def info(self) -> dict:
+        """gives info about the measure"""
+
+        return dict(
+            self._info,
+            # adding default info about the measure
+            higher_is_better=self.higher_is_better,
+            correlation_with=self.correlation_with,
+        )
+
+    @info.setter
+    def info(self, content: dict) -> None:
+        """updates info"""
+        self._info.update(content)
+
     def validate(self) -> bool:
         """checks if measured correlation is above specified threshold -> keep the feature"""
         if not isnull(self.value) and notna(self.value):
-            return self.value > self.threshold
+            return self.value >= self.threshold
         return False
+
+    def to_dict(self) -> dict:
+        """converts to a dict"""
+        return {
+            self.__name__: {
+                "value": self.value,
+                "threshold": self.threshold,
+                "valid": self.validate(),
+                "info": self.info,
+            }
+        }
+
+    def update_feature(self, feature: BaseFeature) -> None:
+        """adds measure to specified feature"""
+
+        # checking for a value
+        if self.value is None:
+            raise ValueError(f"[{self.__name__}] Use compute_association first!")
+
+        # existing stats
+        measures = feature.statistics.get("measures", {})
+
+        # updating statistics
+        measures.update(self.to_dict())
+
+        # updating statistics of the feature accordingly
+        feature.statistics.update({"measures": measures})
 
 
 class AbsoluteMeasure(BaseMeasure):
 
+    # info
+    # absolute_threshold = False
+
     def validate(self) -> bool:
         """checks if measured correlation is above specified threshold -> keep the feature"""
         if not isnull(self.value) and notna(self.value):
-            return abs(self.value) > self.threshold
+            return abs(self.value) >= self.threshold
         return False
 
 
 class OutlierMeasure(BaseMeasure):
     is_x_quantitative = True
 
+    # info
+    higher_is_better = False
+    correlation_with = "itself"
+
     def __init__(self, threshold: float = 0.0) -> None:
         super().__init__(threshold)
-        self.info = {}
 
     @abstractmethod
     def compute_association(self, x: Series, y: Series = None) -> float:
