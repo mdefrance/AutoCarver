@@ -26,7 +26,7 @@ class Chi2Measure(BaseMeasure):
     Computes Chi2 statistic on the ``x`` by ``y`` `pandas.crosstab <https://pandas.pydata.org/docs/
     reference/api/pandas.crosstab.html>`_.
     """
-    
+
     __name__ = "Chi2"
     is_x_qualitative = True
     is_y_qualitative = True
@@ -55,7 +55,7 @@ class Chi2Measure(BaseMeasure):
         return self.value
 
 
-class CramerVMeasure(Chi2Measure):
+class CramervMeasure(Chi2Measure):
     __name__ = "CramerV"
 
     def compute_association(self, x: Series, y: Series, chi2_value: float = None) -> float:
@@ -95,7 +95,7 @@ class CramerVMeasure(Chi2Measure):
         return self.value
 
 
-class TschuprowTMeasure(Chi2Measure):
+class TschuprowtMeasure(Chi2Measure):
     __name__ = "TschuprowT"
 
     def compute_association(self, x: Series, y: Series, chi2_value: float = None) -> float:

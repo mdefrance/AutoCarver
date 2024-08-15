@@ -3,10 +3,10 @@
 from numpy import nan
 from pandas import Series
 from pytest import FixtureRequest, fixture
-from AutoCarver.selectors import BaseMeasure, Chi2Measure, CramerVMeasure, TschuprowTMeasure
+from AutoCarver.selectors import BaseMeasure, Chi2Measure, CramervMeasure, TschuprowtMeasure
 
 
-@fixture(params=[Chi2Measure, CramerVMeasure, TschuprowTMeasure])
+@fixture(params=[Chi2Measure, CramervMeasure, TschuprowtMeasure])
 def measure(request: type[FixtureRequest]) -> BaseMeasure:
     return request.param(threshold=0.5)
 

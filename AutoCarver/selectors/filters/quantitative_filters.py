@@ -122,7 +122,6 @@ class QuantitativeFilter(BaseFilter):
 
         # computing correlation between features
         X_corr = self._compute_correlation(X, ranks)
-        print(X_corr)
 
         # filtering too correlated features
         return self._filter_correlated_features(X_corr, ranks)
@@ -135,7 +134,9 @@ class QuantitativeFilter(BaseFilter):
         # getting upper right part of the correlation matrix and removing autocorrelation
         return X_corr.where(triu(ones(X_corr.shape), k=1).astype(bool))
 
-    def _filter_correlated_features(self, X_corr: DataFrame, ranks: list[BaseFeature]) -> list:
+    def _filter_correlated_features(
+        self, X_corr: DataFrame, ranks: list[BaseFeature]
+    ) -> list[BaseFeature]:
         """filtering out features too correlated with a better ranked feature"""
 
         # iterating over each feature by target association order
@@ -171,7 +172,7 @@ class QuantitativeFilter(BaseFilter):
 
     def _validate(
         self, feature: BaseFeature, worst_correlation: float, correlation_with: str
-    ) -> DataFrame:
+    ) -> bool:
         """Checks if the worst correlation of a feature is above specified threshold"""
         # dropping the feature if it was too correlated to a better feature
         valid = True

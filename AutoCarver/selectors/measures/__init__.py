@@ -9,7 +9,7 @@ from .base_measures import (
     mode_measure,
     nans_measure,
 )
-from .qualitative_measures import Chi2Measure, CramerVMeasure, TschuprowTMeasure
+from .qualitative_measures import Chi2Measure, CramervMeasure, TschuprowtMeasure
 from .quantitative_measures import (
     RMeasure,
     DistanceMeasure,
@@ -29,10 +29,10 @@ __all__ = [
     "BaseMeasure",
     "OutlierMeasure",
     "Chi2Measure",
-    "CramerVMeasure",
+    "CramervMeasure",
     "PearsonMeasure",
     "SpearmanMeasure",
-    "TschuprowTMeasure",
+    "TschuprowtMeasure",
     "RMeasure",
     "DistanceMeasure",
     "IqrOutlierMeasure",
