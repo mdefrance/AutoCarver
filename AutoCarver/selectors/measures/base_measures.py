@@ -106,12 +106,13 @@ class AbsoluteMeasure(BaseMeasure):
 
 
 class OutlierMeasure(BaseMeasure):
+    is_default = True
     is_x_quantitative = True
+    is_x_qualitative = False
 
     # info
     higher_is_better = False
     correlation_with = "itself"
-    is_default = True
 
     def __init__(self, threshold: float = 0.0) -> None:
         super().__init__(threshold)
@@ -132,6 +133,8 @@ class OutlierMeasure(BaseMeasure):
 class NanMeasure(BaseMeasure):
     __name__ = "NaN"
     is_default = True
+    is_x_quantitative = True
+    is_x_qualitative = True
 
     def compute_association(self, x: Series, y: Series) -> float:
         """Measure of the percentage of NaNs
@@ -158,6 +161,8 @@ class NanMeasure(BaseMeasure):
 class ModeMeasure(BaseMeasure):
     __name__ = "Mode"
     is_default = True
+    is_x_quantitative = True
+    is_x_qualitative = True
 
     def compute_association(self, x: Series, y: Series) -> float:
         """Measure of the percentage of NaNs

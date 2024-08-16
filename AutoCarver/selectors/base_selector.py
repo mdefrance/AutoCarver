@@ -213,19 +213,13 @@ class BaseSelector(ABC):
             List of selected features
         """
 
-        # apply default measures to features
-        apply_measures(self.features, X, y, get_default_measures(self.measures))
-
-        # apply default filters to features
-        features = apply_filters(self.features, X, get_default_filters(self.filters))
-
         # checking for quantitative features before selection
-        quantitatives = [feature for feature in features if feature.is_quantitative]
+        quantitatives = self.features.get_quantitatives()
         if len(quantitatives) > 0:
             best_quantitative_features = self._select_quantitatives(quantitatives, X, y)
 
         # checking for qualitative features before selection
-        qualitatives = [feature for feature in features if feature.is_qualitative]
+        qualitatives = self.features.get_qualitatives()
         if len(qualitatives) > 0:
             best_qualitative_features = self._select_qualitatives(qualitatives, X, y)
 
@@ -239,25 +233,34 @@ class BaseSelector(ABC):
         # getting measures to sort features
         measures = get_quantitative_measures(self.measures)
 
+        # apply default measures to features
+        apply_measures(quantitatives, X, y, measures, default_measures=True)
+
         # getting filters
         filters = get_quantitative_filters(self.filters)
+
+        # apply default filters to features
+        quantitatives = apply_filters(quantitatives, X, filters, default_filters=True)
 
         # splitting features in chunks and getting best per-chunk set of features
         return self._get_best_features_across_chunks(quantitatives, X, y, measures, filters)
 
     def _select_qualitatives(
-        self, features: list[BaseFeature], X: DataFrame, y: Series
+        self, qualitatives: list[BaseFeature], X: DataFrame, y: Series
     ) -> list[CategoricalFeature]:
         """selects amongst qualitative features"""
-
-        # iterating over qualitative features
-        qualitatives = [feature for feature in features if feature.is_qualitative]
 
         # getting measures to sort features
         measures = get_qualitative_measures(self.measures)
 
+        # apply default measures to features
+        apply_measures(qualitatives, X, y, measures, default_measures=True)
+
         # getting filters
         filters = get_qualitative_filters(self.filters)
+
+        # apply default filters to features
+        qualitatives = apply_filters(qualitatives, X, filters, default_filters=True)
 
         # splitting features in chunks and getting best per-chunk set of features
         return self._get_best_features_across_chunks(qualitatives, X, y, measures, filters)
@@ -364,44 +367,68 @@ def make_random_chunks(elements: list, max_chunk_sizes: int, random_state: int =
 
 def get_quantitative_measures(measures: list[BaseMeasure]) -> list[BaseMeasure]:
     """returns filtered list of measures that apply on quantitative features"""
-    return [measure for measure in measures if measure.is_x_quantitative and not measure.is_default]
+    return [measure for measure in measures if measure.is_x_quantitative]
 
 
 def get_qualitative_measures(measures: list[BaseMeasure]) -> list[BaseMeasure]:
     """returns filtered list of measures that apply on qualitative features"""
-    return [measure for measure in measures if measure.is_x_qualitative and not measure.is_default]
-
-
-def get_default_measures(measures: list[BaseMeasure]) -> list[BaseMeasure]:
-    """returns filtered list of measures that apply on qualitative features"""
-    return [measure for measure in measures if measure.is_default]
+    return [measure for measure in measures if measure.is_x_qualitative]
 
 
 def get_quantitative_filters(filters: list[BaseFilter]) -> list[BaseFilter]:
     """returns filtered list of filters that apply on quantitative features"""
-    return [filter for filter in filters if filter.is_x_quantitative and not filter.is_default]
+    return [filter for filter in filters if filter.is_x_quantitative]
 
 
 def get_qualitative_filters(filters: list[BaseFilter]) -> list[BaseFilter]:
     """returns filtered list of filters that apply on qualitative features"""
-    return [filter for filter in filters if filter.is_x_qualitative and not filter.is_default]
+    return [filter for filter in filters if filter.is_x_qualitative]
 
 
-def get_default_filters(filters: list[BaseFilter]) -> list[BaseFilter]:
-    """returns filtered list of filters that apply on qualitative features"""
-    return [filter for filter in filters if filter.is_default]
+def remove_duplicates(features: list[BaseFeature]) -> list[BaseFeature]:
+    """removes duplicated features, keeping its first appearance"""
+    return [features[i] for i in range(len(features)) if features[i] not in features[:i]]
+
+
+def sort_features_per_measure(
+    features: list[BaseFeature], measure: BaseMeasure
+) -> list[BaseFeature]:
+    """sorts features according to specified measure"""
+    return sorted(features, key=lambda feature: get_measure_value(feature, measure))
+
+
+def get_measure_value(feature: BaseFeature, measure: BaseMeasure) -> float:
+    """gives value of measure for specified feature"""
+    return feature.statistics.get("measures").get(measure.__name__).get("value")
 
 
 def apply_measures(
-    features: list[BaseFeature], X: DataFrame, y: Series, measures: list[BaseMeasure]
-) -> DataFrame:
+    features: list[BaseFeature],
+    X: DataFrame,
+    y: Series,
+    measures: list[BaseMeasure],
+    default_measures: bool = False,
+) -> None:
     """Measures association between columns of X and y"""
+
+    # keeping only default measures or non default measures
+    used_measures = [measure for measure in measures if measure.is_default == default_measures]
 
     # iterating over each feature
     for feature in features:
 
         # iterating over each measure
-        for measure in measures:
+        for measure in used_measures:
+
+            # checking for mismatched data types
+            if not (
+                (feature.is_quantitative and measure.is_x_quantitative)
+                or (feature.is_qualitative and measure.is_x_qualitative)
+            ):
+                raise TypeError(
+                    f"Type mismatch, provided feature {feature}, with measure {measure} that has "
+                    f"measure.is_x_quantitative={measure.is_x_quantitative}"
+                )
 
             # computing association for feature
             measure.compute_association(X[feature.version], y)
@@ -411,15 +438,33 @@ def apply_measures(
 
 
 def apply_filters(
-    features: list[BaseFeature], X: DataFrame, filters: list[BaseFilter]
-) -> DataFrame:
+    features: list[BaseFeature],
+    X: DataFrame,
+    filters: list[BaseFilter],
+    default_filters: bool = False,
+) -> list[BaseFeature]:
     """Filters out too correlated features (least relevant first)"""
+
+    # keeping only default filters or non default filters
+    used_filters = [filter_ for filter_ in filters if filter_.is_default == default_filters]
 
     # keeping track of remaining features
     filtered = features[:]
 
     # iterating over each filter
-    for filter_ in filters:
+    for filter_ in used_filters:
+        print(filter_, filter_.threshold)
+
+        # checking for mismatched data types
+        for feature in features:
+            if not (
+                (feature.is_quantitative and filter_.is_x_quantitative)
+                or (feature.is_qualitative and filter_.is_x_qualitative)
+            ):
+                raise TypeError(
+                    f"Type mismatch, provided feature {feature}, with filter {filter_} that has "
+                    f"filter.is_x_quantitative={filter_.is_x_quantitative}"
+                )
 
         # applying filter
         filtered = filter_.filter(X, filtered)
@@ -459,20 +504,3 @@ def get_best_features(
 
     # deduplicating best features
     return remove_duplicates(best_features)
-
-
-def remove_duplicates(features: list[BaseFeature]) -> list[BaseFeature]:
-    """removes duplicated features, keeping its first appearance"""
-    return [features[i] for i in range(len(features)) if features[i] not in features[:i]]
-
-
-def sort_features_per_measure(
-    features: list[BaseFeature], measure: BaseMeasure
-) -> list[BaseFeature]:
-    """sorts features according to specified measure"""
-    return sorted(features, key=lambda feature: get_measure_value(feature, measure))
-
-
-def get_measure_value(feature: BaseFeature, measure: BaseMeasure) -> float:
-    """gives value of measure for specified feature"""
-    return feature.statistics.get("measures").get(measure.__name__).get("value")

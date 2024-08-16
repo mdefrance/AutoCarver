@@ -8,59 +8,12 @@ from ..measures import CramervMeasure, TschuprowtMeasure
 from ...features import BaseFeature, get_versions
 from .base_filters import BaseFilter
 
-# def cramerv_filter(
-#     X: DataFrame, ranks: DataFrame, thresh_corr: float = 1, **kwargs
-# ) -> dict[str, Any]:
-#     """Computes maximum Cramer's V between ``X`` and ``X`` (qualitative).
-#     Features too correlated to a feature more associated with the target
-#     are excluded (according to provided ``ranks``).
-
-#     Parameters
-#     ----------
-#     X : DataFrame
-#         Contains columns named after ``ranks``'s index (feature names)
-#     ranks : DataFrame
-#         Ranked features as index of the association table
-#     thresh_corr : float, optional
-#         Maximum Cramér's V bewteen features, by default ``1``
-
-#     Returns
-#     -------
-#     dict[str, Any]
-#         Maximum Cramér's V with a better feature
-#     """
-
-#     # applying quantitative filter with Cramer's V correlation
-#     return qualitative_filter(X, ranks, cramerv_measure, thresh_corr, **kwargs)
-
-
-# def tschuprowt_filter(
-#     X: DataFrame, ranks: DataFrame, thresh_corr: float = 1, **kwargs
-# ) -> dict[str, Any]:
-#     """Computes max Tschuprow's T between X and X (qualitative).
-#     Features too correlated to a feature more associated with the target
-#     are excluded (according to provided ``ranks``).
-
-#     Parameters
-#     ----------
-#     X : DataFrame
-#         Contains columns named after ``ranks``'s index (feature names)
-#     ranks : DataFrame
-#         Ranked features as index of the association table
-#     thresh_corr : float, optional
-#         Maximum Tschuprow's T bewteen features, by default ``1``
-
-#     Returns
-#     -------
-#     dict[str, Any]
-#         Maximum Tschuprow's T with a better feature
-#     """
-
-#     # applying quantitative filter with Tschuprow's T correlation
-#     return qualitative_filter(X, ranks, tschuprowt_measure, thresh_corr, **kwargs)
-
 
 class QualitativeFilter(BaseFilter):
+    """Computes max association between X and X (qualitative) excluding features
+    that are correlated to a feature more associated with the target
+    (defined by the ranks).
+    """
 
     __name__ = "QualitativeFilter"
 
@@ -110,7 +63,6 @@ class QualitativeFilter(BaseFilter):
         # features more associated with target
         current_feature_index = get_versions(rank).index(feature.version)
         better_features = rank[:current_feature_index]
-        print(feature.version, "better_features", better_features, current_feature_index)
 
         # iterating over each better feature
         for better_feature in better_features:
@@ -119,7 +71,6 @@ class QualitativeFilter(BaseFilter):
             correlation = self.measure.compute_association(
                 X[feature.version], X[better_feature.version]
             )
-            print(feature.version, better_feature.version, correlation)
 
             # updating association if it's greater than previous better features
             if correlation > worst_correlation:
@@ -142,6 +93,24 @@ class QualitativeFilter(BaseFilter):
 
 
 class CramervFilter(QualitativeFilter):
+    """Computes maximum Cramer's V between ``X`` and ``X`` (qualitative).
+    Features too correlated to a feature more associated with the target
+    are excluded (according to provided ``ranks``).
+
+    Parameters
+    ----------
+    X : DataFrame
+        Contains columns named after ``ranks``'s index (feature names)
+    ranks : DataFrame
+        Ranked features as index of the association table
+    thresh_corr : float, optional
+        Maximum Cramér's V bewteen features, by default ``1``
+
+    Returns
+    -------
+    dict[str, Any]
+        Maximum Cramér's V with a better feature
+    """
 
     __name__ = "CramerV"
 
@@ -151,6 +120,24 @@ class CramervFilter(QualitativeFilter):
 
 
 class TschuprowtFilter(QualitativeFilter):
+    """Computes max Tschuprow's T between X and X (qualitative).
+    Features too correlated to a feature more associated with the target
+    are excluded (according to provided ``ranks``).
+
+    Parameters
+    ----------
+    X : DataFrame
+        Contains columns named after ``ranks``'s index (feature names)
+    ranks : DataFrame
+        Ranked features as index of the association table
+    thresh_corr : float, optional
+        Maximum Tschuprow's T bewteen features, by default ``1``
+
+    Returns
+    -------
+    dict[str, Any]
+        Maximum Tschuprow's T with a better feature
+    """
 
     __name__ = "TschuprowT"
 

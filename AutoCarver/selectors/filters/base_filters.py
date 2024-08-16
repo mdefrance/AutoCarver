@@ -62,6 +62,8 @@ class BaseFilter(ABC):
 class ValidFilter(BaseFilter):
     __name__ = "Valid"
     is_default = True
+    is_x_quantitative = True
+    is_x_qualitative = True
 
     def filter(self, X: DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:
         """filters out all non-valid features fril ranks"""
@@ -72,10 +74,10 @@ class ValidFilter(BaseFilter):
         for feature in ranks:
 
             # getting feature's measures
-            measures = feature.statistics.get("measures")
+            measures = feature.statistics.get("measures", {})
 
             # checking for non-valid measures, keeping feature
-            if all(measure.get("valid") for measure in measures.values()):
+            if len(measures) == 0 or all(measure.get("valid") for measure in measures.values()):
                 filtered += [feature]
 
         return filtered

@@ -1,66 +1,12 @@
 """ Filters based on association measures between Quantitative features.
 """
 
-from typing import Any
-
 from numpy import ones, triu
 from pandas import DataFrame
 from ...features import BaseFeature, get_versions
 from .base_filters import BaseFilter
 
 # from statsmodels.stats.outliers_influence import variance_inflation_factor
-
-
-# def spearman_filter(
-#     X: DataFrame, ranks: DataFrame, thresh_corr: float = 1, **params
-# ) -> dict[str, Any]:
-#     """Computes maximum Spearman's rho between X and X (quantitative).
-#     Features too correlated to a feature more associated with the target
-#     are excluded (according to provided ``ranks``).
-
-#     Parameters
-#     ----------
-#     X : DataFrame
-#         Contains columns named after ``ranks``'s index (feature names)
-#     ranks : DataFrame
-#         Ranked features as index of the association table
-#     thresh_corr : float, optional
-#         Maximum Spearman's rho bewteen features, by default ``1``
-
-#     Returns
-#     -------
-#     dict[str, Any]
-#         Maximum Spearman's rho with a better features
-#     """
-
-#     # applying quantitative filter with spearman correlation
-#     return quantitative_filter(X, ranks, "spearman", thresh_corr, **params)
-
-
-# def pearson_filter(
-#     X: DataFrame, ranks: DataFrame, thresh_corr: float = 1, **params
-# ) -> dict[str, Any]:
-#     """Computes maximum Pearson's r between X and X (quantitative).
-#     Features too correlated to a feature more associated with the target
-#     are excluded (according to provided ``ranks``).
-
-#     Parameters
-#     ----------
-#     X : DataFrame
-#         Contains columns named after ``ranks``'s index (feature names)
-#     ranks : DataFrame
-#         Ranked features as index of the association table
-#     thresh_corr : float, optional
-#         Maximum Pearson's r bewteen features, by default ``1``
-
-#     Returns
-#     -------
-#     dict[str, Any]
-#         Maximum Pearson's r with a better feature
-#     """
-
-#     # applying quantitative filter with spearman correlation
-#     return quantitative_filter(X, ranks, "pearson", thresh_corr, **params)
 
 
 # TODO
@@ -113,6 +59,15 @@ from .base_filters import BaseFilter
 
 
 class QuantitativeFilter(BaseFilter):
+    """Computes max association between X and X (quantitative) excluding features
+    that are correlated to a feature more associated with the target
+    (defined by the ranks).
+
+    Parameters
+    ----------
+    thresh_corr, float: default 1.
+        Maximum association between features
+    """
 
     __name__ = "QuantitativeFilter"
 
@@ -188,6 +143,24 @@ class QuantitativeFilter(BaseFilter):
 
 
 class SpearmanFilter(QuantitativeFilter):
+    """Computes maximum Spearman's rho between X and X (quantitative).
+    Features too correlated to a feature more associated with the target
+    are excluded (according to provided ``ranks``).
+
+    Parameters
+    ----------
+    X : DataFrame
+        Contains columns named after ``ranks``'s index (feature names)
+    ranks : DataFrame
+        Ranked features as index of the association table
+    thresh_corr : float, optional
+        Maximum Spearman's rho bewteen features, by default ``1``
+
+    Returns
+    -------
+    dict[str, Any]
+        Maximum Spearman's rho with a better features
+    """
 
     __name__ = "Spearman"
 
@@ -197,6 +170,24 @@ class SpearmanFilter(QuantitativeFilter):
 
 
 class PearsonFilter(QuantitativeFilter):
+    """Computes maximum Pearson's r between X and X (quantitative).
+    Features too correlated to a feature more associated with the target
+    are excluded (according to provided ``ranks``).
+
+    Parameters
+    ----------
+    X : DataFrame
+        Contains columns named after ``ranks``'s index (feature names)
+    ranks : DataFrame
+        Ranked features as index of the association table
+    thresh_corr : float, optional
+        Maximum Pearson's r bewteen features, by default ``1``
+
+    Returns
+    -------
+    dict[str, Any]
+        Maximum Pearson's r with a better feature
+    """
 
     __name__ = "Pearson"
 
