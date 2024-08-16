@@ -59,6 +59,13 @@ def test_quanti_quali_measure_type(quanti_quali_measure: BaseMeasure) -> None:
     assert quanti_quali_measure.is_y_qualitative, "y should be qualitative"
     assert not quanti_quali_measure.is_y_quantitative, "y should be qualitative"
 
+    # testing reversing measure
+    quanti_quali_measure.reverse_xy()
+    assert quanti_quali_measure.is_x_qualitative, "(reversed) x should be qualitative"
+    assert not quanti_quali_measure.is_x_quantitative, "(reversed) x should be qualitative"
+    assert not quanti_quali_measure.is_y_qualitative, "(reversed) y should be quantitative"
+    assert quanti_quali_measure.is_y_quantitative, "(reversed) y should be quantitative"
+
 
 def test_quanti_binary_measure_type(quanti_binary_measure: BaseMeasure) -> None:
     """checks types of x and y"""
@@ -189,6 +196,17 @@ def test_quanti_quali_compute_association(
     assert quanti_quali_measure.value == association or (
         isna(quanti_quali_measure.value) and isna(association)
     ), "not stored measurement"
+
+
+def test_quanti_quanli_reverse_xy(
+    quanti_quali_measure: BaseMeasure, series_data: Series, quali_series_data: Series
+) -> None:
+    """checks that reverse measurement works"""
+
+    association = quanti_quali_measure.compute_association(series_data, quali_series_data)
+    quanti_quali_measure.reverse_xy()
+    association_reversed = quanti_quali_measure.compute_association(quali_series_data, series_data)
+    assert association == association_reversed, "not same correlation when reversed"
 
 
 def test_quanti_quanti_compute_association(

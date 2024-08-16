@@ -1,8 +1,6 @@
 """ Base measures that defines Quantitative and Qualitative features.
 """
 
-from typing import Any, Callable
-
 from pandas import Series, isnull, notna
 
 from abc import ABC, abstractmethod
@@ -30,6 +28,9 @@ class BaseMeasure(ABC):
         self.threshold = threshold
         self.value = None
         self._info = {}
+
+    def __repr__(self) -> str:
+        return self.__name__
 
     @abstractmethod
     def compute_association(self, x: Series, y: Series) -> float:
@@ -74,7 +75,7 @@ class BaseMeasure(ABC):
 
         # checking for a value
         if self.value is None:
-            raise ValueError(f" - [{self.__name__}] Use compute_association first!")
+            raise ValueError(f" - [{self}] Use compute_association first!")
 
         # existing stats
         measures = feature.statistics.get("measures", {})
@@ -126,23 +127,6 @@ class OutlierMeasure(BaseMeasure):
         if not isnull(self.value) and notna(self.value):
             return self.value < self.threshold
         return True
-
-
-def reverse_xy(measure: Callable):
-    """Reverses places of x and y in measure"""
-
-    def reversed_measure(
-        x: Series,
-        y: Series,
-        **kwargs,
-    ) -> tuple[bool, dict[str, Any]]:
-        """Reversed version of the measure"""
-        return measure(y, x, **kwargs)
-
-    # setting name of passed measure
-    reversed_measure.__name__ = measure.__name__
-
-    return reversed_measure
 
 
 class NanMeasure(BaseMeasure):

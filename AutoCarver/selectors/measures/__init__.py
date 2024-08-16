@@ -10,6 +10,7 @@ from .quantitative_measures import (
     SpearmanMeasure,
     IqrOutlierMeasure,
     ZscoreOutlierMeasure,
+    ReversibleMeasure,
 )
 
 __all__ = [
@@ -28,4 +29,5 @@ __all__ = [
     "IqrOutlierMeasure",
     "KruskalMeasure",
     "ZscoreOutlierMeasure",
+    "ReversibleMeasure",
 ]

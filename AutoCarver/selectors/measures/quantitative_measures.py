@@ -30,7 +30,7 @@ class ReversibleMeasure(BaseMeasure):
 class KruskalMeasure(ReversibleMeasure):
     __name__ = "Kruskal"
     is_x_quantitative = True
-    is_y_qualitative = False
+    is_y_qualitative = True
 
     def compute_association(self, x: Series, y: Series) -> float:
         """Kruskal-Wallis' test statistic between ``x`` for each value taken by ``y``.
@@ -66,14 +66,15 @@ class KruskalMeasure(ReversibleMeasure):
         return self.value
 
 
-class RMeasure(ReversibleMeasure):
+class RMeasure(BaseMeasure):
     __name__ = "R"
     is_x_quantitative = True
     is_y_qualitative = True
     is_y_binary = True
 
-    def _compute_association(self, x: Series, y: Series) -> float:
-        """Square root of the coefficient of determination of linear regression model of ``x`` by ``y``.
+    def compute_association(self, x: Series, y: Series) -> float:
+        """Square root of the coefficient of determination of linear regression model of
+        ``x`` by ``y``.
 
         Parameters
         ----------
@@ -87,19 +88,19 @@ class RMeasure(ReversibleMeasure):
         Returns
         -------
         tuple[bool, dict[str, Any]]
-            Whether ``x`` is sufficiently associated to ``y`` and the square root of the determination
-            coefficient
+            Whether ``x`` is sufficiently associated to ``y`` and the square root of the
+            coefficient of determination
         """
-        # reversing if requested
-        if self.reversed:
-            x, y = y, x
+        # # reversing if requested
+        # if self.reversed:
+        #     x, y = y, x
 
         # ckecking for nans
         nans = x.isnull() | x.isna()
 
         # checking values of y
         if len(y[~nans].unique()) != 2:
-            raise ValueError(f" - [{self.__name__}Measure] Provided y is not binary")
+            raise ValueError(f" - [{self}] Provided y is not binary")
 
         # grouping feature and target
         ols_df = DataFrame({"feature": x[~nans], "target": y[~nans]})

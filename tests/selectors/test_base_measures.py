@@ -1,4 +1,4 @@
-"""Set of tests for Qualitative correlation measures module."""
+"""Set of tests for base correlation measures module."""
 
 from pytest import fixture, raises
 from AutoCarver.features import BaseFeature
@@ -6,15 +6,18 @@ from AutoCarver.selectors import (
     BaseMeasure,
     AbsoluteMeasure,
     OutlierMeasure,
+    NanMeasure,
+    ModeMeasure,
 )
+from AutoCarver.selectors.measures import ReversibleMeasure
+from pandas import Series
+from numpy import nan
 
-
-# TODO test absolutemeasure
-
-# setting BaseMeasure, OutlierMeasure, AbsoluteMeasure as non abstract classes for the duration of the test
+# setting BaseMeasure, OutlierMeasure, AbsoluteMeasure, ReversibleMeasure as non abstract classes for the duration of the test
 OutlierMeasure.__abstractmethods__ = set()
 AbsoluteMeasure.__abstractmethods__ = set()
 BaseMeasure.__abstractmethods__ = set()
+ReversibleMeasure.__abstractmethods__ = set()
 
 THRESHOLD = 1
 
@@ -22,6 +25,21 @@ THRESHOLD = 1
 @fixture
 def base_measure() -> BaseMeasure:
     return BaseMeasure(threshold=THRESHOLD)
+
+
+@fixture
+def reversible_measure() -> ReversibleMeasure:
+    return ReversibleMeasure()
+
+
+@fixture
+def nan_measure() -> NanMeasure:
+    return NanMeasure()
+
+
+@fixture
+def mode_measure() -> ModeMeasure:
+    return ModeMeasure()
 
 
 @fixture
@@ -47,6 +65,7 @@ def test_to_dict(base_measure: BaseMeasure) -> None:
             "info": {"higher_is_better": True, "correlation_with": "target", "is_default": False},
         }
     }
+    print(base_measure.to_dict())
     assert base_measure.to_dict() == expected_dict
 
 
@@ -159,3 +178,24 @@ def test_absolute_validate(absolute_measure: AbsoluteMeasure) -> None:
     assert (
         not absolute_measure.validate()
     ), "when value is missing, should default to false (remove low correlation)"
+
+
+def test_nan_measure(nan_measure: NanMeasure) -> None:
+    """tests nan measure"""
+    series = Series([1, 2, None, 4])
+    assert nan_measure.compute_association(series, None) == 0.25, "should measure None as missing"
+    series = Series([1, 2, nan, 4])
+    assert nan_measure.compute_association(series, None) == 0.25, "should measure nan as missing"
+
+
+def test_mode_measure(mode_measure: ModeMeasure) -> None:
+    """tests mode measure"""
+    series = Series([1, 2, 2, 4])
+    assert mode_measure.compute_association(series, None) == 0.5
+
+
+def test_reverse_xy(reversible_measure: ReversibleMeasure) -> None:
+    """tests reversible measure"""
+    assert reversible_measure.reversed == False
+    assert reversible_measure.reverse_xy() == True
+    assert reversible_measure.reversed == True
