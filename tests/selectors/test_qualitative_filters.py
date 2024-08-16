@@ -61,6 +61,11 @@ def test_filter(
     filter: QualitativeFilter, sample_data: DataFrame, sample_ranks: list[BaseFeature]
 ) -> None:
 
+    # testing type
+    assert filter.is_x_qualitative, "x should be qulitative"
+    assert not filter.is_x_quantitative, "x should be qualitative"
+    assert not filter.is_default, "should not be default"
+
     assert isinstance(filter.measure, BaseMeasure), "measure should be a BaseMeasure"
 
     # testing _compute_worst_correlation

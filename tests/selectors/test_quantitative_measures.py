@@ -50,6 +50,7 @@ def test_quanti_quanti_measure_type(quanti_quanti_measure: BaseMeasure) -> None:
     assert quanti_quanti_measure.is_x_quantitative, "x should be quantitative"
     assert not quanti_quanti_measure.is_y_qualitative, "y should be quantitative"
     assert quanti_quanti_measure.is_y_quantitative, "y should be quantitative"
+    assert not quanti_quanti_measure.is_default, "should not be default"
 
 
 def test_quanti_quali_measure_type(quanti_quali_measure: BaseMeasure) -> None:
@@ -58,6 +59,7 @@ def test_quanti_quali_measure_type(quanti_quali_measure: BaseMeasure) -> None:
     assert quanti_quali_measure.is_x_quantitative, "x should be quantitative"
     assert quanti_quali_measure.is_y_qualitative, "y should be qualitative"
     assert not quanti_quali_measure.is_y_quantitative, "y should be qualitative"
+    assert not quanti_quali_measure.is_default, "should not be default"
 
     # testing reversing measure
     quanti_quali_measure.reverse_xy()
@@ -74,6 +76,7 @@ def test_quanti_binary_measure_type(quanti_binary_measure: BaseMeasure) -> None:
     assert quanti_binary_measure.is_y_qualitative, "y should be quantitative"
     assert not quanti_binary_measure.is_y_quantitative, "y should be quantitative"
     assert quanti_binary_measure.is_y_binary, "y should be binary"
+    assert not quanti_binary_measure.is_default, "should not be default"
 
 
 @fixture

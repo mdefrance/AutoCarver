@@ -1,8 +1,6 @@
 """ Filters based on association measure between features and a binary target.
 """
 
-from typing import Any
-
 from pandas import DataFrame
 
 from abc import ABC, abstractmethod
@@ -17,6 +15,7 @@ class BaseFilter(ABC):
     is_filter = True
     is_x_quantitative = False
     is_x_qualitative = False
+    is_default = False
 
     # info
     higher_is_better = False
@@ -24,6 +23,9 @@ class BaseFilter(ABC):
     def __init__(self, threshold: float = 1.0):
         self.measure = None
         self.threshold = threshold
+
+    def __repr__(self) -> str:
+        return self.__name__
 
     @abstractmethod
     def filter(self, X: DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:
@@ -48,7 +50,7 @@ class BaseFilter(ABC):
                     "value": value,
                     "threshold": self.threshold,
                     "valid": valid,
-                    "info": dict(higher_is_better=self.higher_is_better, **info),
+                    "info": {"higher_is_better": self.higher_is_better, **info},
                 }
             }
         )

@@ -36,6 +36,11 @@ def test_quantitative_filter(
     filter: QuantitativeFilter, sample_data: DataFrame, sample_ranks: list[BaseFeature]
 ) -> None:
 
+    # testing type
+    assert filter.is_x_quantitative, "x should be quantitative"
+    assert not filter.is_x_qualitative, "x should be quantitative"
+    assert not filter.is_default, "should not be default"
+
     # test with negatively and 100% correlated features
     filter.threshold = 0.9
     filtered_features = filter.filter(sample_data, sample_ranks)

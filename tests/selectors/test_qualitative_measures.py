@@ -29,6 +29,7 @@ def test_measure_type(measure: BaseMeasure) -> None:
     assert not measure.is_x_quantitative, "x should be qualitative"
     assert measure.is_y_qualitative, "y should be qualitative"
     assert not measure.is_y_quantitative, "y should be qualitative"
+    assert not measure.is_default, "should not be default"
 
 
 def test_compute_association(measure: BaseMeasure, series_data: Series) -> None:
