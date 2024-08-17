@@ -1,5 +1,6 @@
 """Tools to select the best Quantitative and Qualitative features."""
 
+from abc import ABC, abstractmethod
 from typing import Union
 from random import shuffle, seed
 from warnings import warn
@@ -8,7 +9,7 @@ from pandas import DataFrame, Series
 from math import ceil
 from .filters import BaseFilter
 from .measures import BaseMeasure
-from ..features import Features, BaseFeature, QuantitativeFeature, CategoricalFeature
+from ..features import Features, BaseFeature
 
 # trying to import extra dependencies
 try:
@@ -17,8 +18,6 @@ except ImportError:
     _has_idisplay = False
 else:
     _has_idisplay = True
-
-from abc import ABC, abstractmethod
 
 
 class BaseSelector(ABC):
@@ -186,6 +185,9 @@ class BaseSelector(ABC):
         # keyword arguments
         self.kwargs = kwargs
 
+    def __repr__(self) -> str:
+        return self.__name__
+
     @abstractmethod
     def _initiate_measures(self, requested_measures: list[BaseMeasure] = None) -> list[BaseMeasure]:
         """initiates the list of measures with default values"""
@@ -249,7 +251,7 @@ class BaseSelector(ABC):
         y: Series,
         measures: list[BaseMeasure],
         filters: list[BaseFilter],
-    ) -> list[CategoricalFeature]:
+    ) -> list[BaseFeature]:
         """selects amongst features"""
 
         # apply default measures to features

@@ -32,17 +32,14 @@ class ClassificationSelector(BaseSelector):
         if all(measure.__name__ != "NaN" for measure in measures):
             measures = [NanMeasure()] + measures
 
-        # checking x and y types for measures
-        for measure in measures:
-
-            # checking for quantitative target
-            if measure.is_y_qualitative:
-
-                # trying to reverse the measure's x and y if implemented
-                if not measure.reverse_xy():
-                    raise ValueError(
-                        f" - [{self.__name__}] Provide measures for qualitative target!"
-                    )
+        # checking for measures for quantitative target
+        if not all(
+            measure.is_y_qualitative
+            or (measure.reverse_xy() and measure.is_y_qualitative)
+            or measure.is_default
+            for measure in measures
+        ):
+            raise ValueError(f" - [{self}] Provide measures for qualitative target!")
         return measures
 
     def _initiate_filters(self, requested_filters: list[BaseFilter] = None) -> list[BaseFilter]:

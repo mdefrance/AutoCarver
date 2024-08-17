@@ -1,69 +1,121 @@
 """Set of tests for RegressionSelector module."""
 
-from pandas import DataFrame
-
+from pytest import raises
+from AutoCarver.selectors.base_selector import remove_default_metrics, get_default_metrics
 from AutoCarver.selectors import RegressionSelector
+from AutoCarver.features import Features
+from AutoCarver.selectors.measures import BaseMeasure
+from AutoCarver.selectors.filters import BaseFilter
 
 
-def test_regression_selector(
-    x_train: DataFrame,
-    quantitative_features: list[str],
-    qualitative_features: list[str],
-    ordinal_features: list[str],
-    n_best: int,
-) -> None:
-    """Tests RegressionSelector
+def test_regression_selector_initiate_default(features_object: Features) -> None:
 
-    Parameters
-    ----------
-    x_train : DataFrame
-        Simulated Train DataFrame
-    quantitative_features : list[str]
-        List of quantitative raw features to be carved
-    qualitative_features : list[str]
-        List of qualitative raw features to be carved
-    ordinal_features : list[str]
-        List of ordinal raw features to be carved
-    n_best: int
-        Number of features to be selected
-    """
-
-    target = "continuous_target"
-
-    # select the n_best most target associated qualitative features
-    feature_selector = RegressionSelector(
+    # checking for default measures
+    n_best, max_num_features_per_chunk = 2, 100
+    selector = RegressionSelector(
         n_best=n_best,
-        qualitative_features=qualitative_features + ordinal_features,
-        quantitative_features=quantitative_features,
-        verbose=False,
+        features=features_object,
+        max_num_features_per_chunk=max_num_features_per_chunk,
     )
-    best_features = feature_selector.select(x_train, x_train[target])
 
-    expected = {
-        3: [
-            "Discrete_Quantitative_highnan",
-            "Discrete_Quantitative",
-            "Discrete_Quantitative_lownan",
-            "Qualitative_Ordinal",
-            "Discrete_Qualitative_noorder",
-            "Discrete_Qualitative_rarevalue_noorder",
-        ],
-        5: [
-            "Discrete_Quantitative_highnan",
-            "Discrete_Quantitative",
-            "Discrete_Quantitative_lownan",
-            "Discrete_Quantitative_rarevalue",
-            "Quantitative",
-            "Qualitative_Ordinal",
-            "Discrete_Qualitative_noorder",
-            "Discrete_Qualitative_rarevalue_noorder",
-            "Qualitative",
-            "Qualitative_grouped",
-        ],
-    }
-    assert all(feature in best_features for feature in expected[n_best]) and all(
-        feature in expected[n_best] for feature in best_features
-    ), "Not correctly selected features"
-    # checking for correctly selected number of features -> not possible
-    # assert len(list(feature for feature in best_features if feature in quantitative_features))
-    # <= n_best
+    assert any(measure.__name__ == "Mode" for measure in selector.measures)
+    assert any(measure.__name__ == "NaN" for measure in selector.measures)
+    assert any(filter_.__name__ == "Valid" for filter_ in selector.filters)
+    assert len(remove_default_metrics(selector.measures)) >= 1
+    assert len(remove_default_metrics(selector.filters)) >= 1
+
+
+def test_regression_selector_initiate_measures(
+    features_object: Features, measures: list[BaseMeasure]
+) -> None:
+    """tests initiation of measures"""
+
+    n_best, max_num_features_per_chunk = 2, 100
+
+    # adding default measure
+    default_measures = get_default_metrics(measures)
+    if len(default_measures) > 0:
+        selector = RegressionSelector(
+            n_best=n_best,
+            features=features_object,
+            max_num_features_per_chunk=max_num_features_per_chunk,
+            measures=default_measures,
+        )
+        assert any(measure.__name__ == "Mode" for measure in selector.measures)
+        assert any(measure.__name__ == "NaN" for measure in selector.measures)
+        assert (
+            len(selector.measures)
+            == len(
+                [measure for measure in default_measures if measure.__name__ not in ["Mode", "NaN"]]
+            )
+            + 2
+        )
+
+    # adding qualitative target measures
+    regression_measures = [
+        measure
+        for measure in remove_default_metrics(measures)
+        if measure.is_y_quantitative or (measure.reverse_xy() and measure.is_y_quantitative)
+    ]
+    if len(regression_measures) > 0:
+        selector = RegressionSelector(
+            n_best=n_best,
+            features=features_object,
+            max_num_features_per_chunk=max_num_features_per_chunk,
+            measures=regression_measures,
+        )
+        assert any(measure.__name__ == "Mode" for measure in selector.measures)
+        assert any(measure.__name__ == "NaN" for measure in selector.measures)
+        assert len(selector.measures) == len(regression_measures) + 2
+
+    # checking error for quantitative target measures
+    classification_measures = [
+        measure
+        for measure in remove_default_metrics(measures)
+        if not (measure.is_y_quantitative or (measure.reverse_xy() and measure.is_y_quantitative))
+    ]
+    if len(classification_measures) > 0:
+        with raises(ValueError):
+            selector = RegressionSelector(
+                n_best=n_best,
+                features=features_object,
+                max_num_features_per_chunk=max_num_features_per_chunk,
+                measures=classification_measures,
+            )
+
+
+def test_regression_selector_initiate_filters(
+    features_object: Features, filters: list[BaseFilter]
+) -> None:
+    """tests initiation of filters"""
+
+    # checking for default filters
+    n_best, max_num_features_per_chunk = 2, 100
+
+    # adding default filter
+    default_filters = get_default_metrics(filters)
+    if len(default_filters) > 0:
+        selector = RegressionSelector(
+            n_best=n_best,
+            features=features_object,
+            max_num_features_per_chunk=max_num_features_per_chunk,
+            filters=default_filters,
+        )
+        assert any(filter_.__name__ == "Valid" for filter_ in selector.filters)
+        assert (
+            len(selector.filters)
+            == len([filter_ for filter_ in default_filters if filter_.__name__ not in ["Valid"]])
+            + 1
+        )
+
+    # adding filters
+    filters = remove_default_metrics(filters)
+    if len(filters) > 0:
+        selector = RegressionSelector(
+            n_best=n_best,
+            features=features_object,
+            max_num_features_per_chunk=max_num_features_per_chunk,
+            filters=filters,
+        )
+        assert any(filter_.__name__ == "Valid" for filter_ in selector.filters)
+        assert len(selector.filters) == len(filters) + 1

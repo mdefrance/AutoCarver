@@ -273,5 +273,5 @@ def x_dev_wrong_3(x_dev_1: DataFrame) -> DataFrame:
 
 
 @fixture(params=["continuous_target", "binary_target"])
-def target(request: type[FixtureRequest]) -> str:
+def target(request: FixtureRequest) -> str:
     return request.param

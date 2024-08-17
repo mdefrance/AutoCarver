@@ -9,7 +9,7 @@ from AutoCarver.features import GroupedList, Features
 
 
 @fixture(params=[True, False])
-def dropna(request: type[FixtureRequest]) -> str:
+def dropna(request: FixtureRequest) -> str:
     return request.param
 
 

@@ -19,22 +19,22 @@ threshold = 0.1
 
 
 @fixture(params=[IqrOutlierMeasure, ZscoreOutlierMeasure])
-def outlier_measure(request: type[FixtureRequest]) -> BaseMeasure:
+def outlier_measure(request: FixtureRequest) -> BaseMeasure:
     return request.param(threshold=threshold)
 
 
 @fixture(params=[DistanceMeasure, PearsonMeasure, SpearmanMeasure])
-def quanti_quanti_measure(request: type[FixtureRequest]) -> BaseMeasure:
+def quanti_quanti_measure(request: FixtureRequest) -> BaseMeasure:
     return request.param(threshold=threshold)
 
 
 @fixture(params=[KruskalMeasure])
-def quanti_quali_measure(request: type[FixtureRequest]) -> BaseMeasure:
+def quanti_quali_measure(request: FixtureRequest) -> BaseMeasure:
     return request.param(threshold=threshold)
 
 
 @fixture(params=[RMeasure])
-def quanti_binary_measure(request: type[FixtureRequest]) -> BaseMeasure:
+def quanti_binary_measure(request: FixtureRequest) -> BaseMeasure:
     return request.param(threshold=threshold)
 
 

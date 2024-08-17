@@ -1,6 +1,6 @@
 """ set of tests for base selector"""
 
-from pytest import fixture, FixtureRequest, raises
+from pytest import raises
 
 from pandas import DataFrame, Series
 from AutoCarver.features import (
@@ -23,78 +23,6 @@ from AutoCarver.selectors.base_selector import (
     apply_filters,
     get_best_features,
 )
-from AutoCarver.selectors.measures import (
-    NanMeasure,
-    ModeMeasure,
-    Chi2Measure,
-    CramervMeasure,
-    KruskalMeasure,
-    PearsonMeasure,
-    DistanceMeasure,
-    SpearmanMeasure,
-    IqrOutlierMeasure,
-    TschuprowtMeasure,
-    ZscoreOutlierMeasure,
-)
-from AutoCarver.selectors.filters import (
-    ValidFilter,
-    CramervFilter,
-    PearsonFilter,
-    SpearmanFilter,
-    TschuprowtFilter,
-)
-
-quanti_measures = [KruskalMeasure, PearsonMeasure, DistanceMeasure, SpearmanMeasure]
-quali_measures = [Chi2Measure, CramervMeasure, TschuprowtMeasure]
-
-
-@fixture(params=quanti_measures + quali_measures)
-def measure(request: FixtureRequest) -> BaseMeasure:
-    return request.param()
-
-
-@fixture(params=quali_measures)
-def quali_measure(request: FixtureRequest) -> BaseMeasure:
-    return request.param()
-
-
-@fixture(params=quanti_measures)
-def quanti_measure(request: FixtureRequest) -> BaseMeasure:
-    return request.param()
-
-
-@fixture(params=[NanMeasure, ModeMeasure, ZscoreOutlierMeasure, IqrOutlierMeasure])
-def default_measure(request: FixtureRequest) -> BaseMeasure:
-    return request.param()
-
-
-@fixture
-def measures(
-    quanti_measure: BaseMeasure, quali_measure: BaseMeasure, default_measure: BaseMeasure
-) -> list[BaseMeasure]:
-    return [default_measure, quanti_measure, quali_measure]
-
-
-@fixture(params=[PearsonFilter, SpearmanFilter])
-def quanti_filter(request: FixtureRequest) -> BaseFilter:
-    return request.param()
-
-
-@fixture(params=[CramervFilter, TschuprowtFilter])
-def quali_filter(request: FixtureRequest) -> BaseFilter:
-    return request.param()
-
-
-@fixture(params=[ValidFilter])
-def default_filter(request: FixtureRequest) -> BaseFilter:
-    return request.param()
-
-
-@fixture
-def filters(
-    quanti_filter: BaseFilter, quali_filter: BaseFilter, default_filter: BaseFilter
-) -> list[BaseFilter]:
-    return [default_filter, quanti_filter, quali_filter]
 
 
 def test_make_random_chunks() -> None:
@@ -235,38 +163,6 @@ def test_sort_features_per_measure(measure: BaseMeasure) -> None:
     assert sorted_features[0] == feature2
     assert sorted_features[1] == feature1
     assert sorted_features[2] == feature3
-
-
-@fixture
-def features():
-    feature1 = BaseFeature("feature1")
-    feature1.is_qualitative = True
-    feature1.is_categorical = True
-    feature2 = BaseFeature("feature2")
-    feature2.is_qualitative = True
-    feature2.is_ordinal = True
-    feature3 = BaseFeature("feature3")
-    feature3.is_quantitative = True
-    feature4 = BaseFeature("feature4")
-    feature4.is_quantitative = True
-    return [feature1, feature2, feature3, feature4]
-
-
-@fixture
-def X():
-    return DataFrame(
-        {
-            "feature1": [0, 1, 0, 1, 0, 1],
-            "feature2": [2, 0, 2, 0, 0, 0],
-            "feature3": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
-            "feature4": [-4.0, -2.0, -0.0, -2.0, -4.0, -8.0],
-        }
-    )
-
-
-@fixture
-def y():
-    return Series([7, 8, 9, 10, 11, 12])
 
 
 def test_apply_measures(
@@ -443,16 +339,6 @@ def _get_best_features(
         get_best_features(
             quantitative_features, X, y, quantitative_measures, qualitative_filters, 1
         )
-
-
-@fixture
-def features_object(features: list[BaseFeature]) -> Features:
-    """mock Features"""
-    return Features(features)
-
-
-# setting BaseSelector as non abstract classes for the duration of the test
-BaseSelector.__abstractmethods__ = set()
 
 
 def test_base_selector_init_valid_parameters(features_object: Features) -> None:

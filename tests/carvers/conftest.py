@@ -100,25 +100,25 @@ def level1_to_level2() -> dict[str, list[str]]:
 
 
 @fixture(scope="module", params=["float", "str"])
-def ordinal_encoding(request: type[FixtureRequest]) -> str:
+def ordinal_encoding(request: FixtureRequest) -> str:
     return request.param
 
 
 @fixture(scope="module", params=[True, False])
-def dropna(request: type[FixtureRequest]) -> bool:
+def dropna(request: FixtureRequest) -> bool:
     return request.param
 
 
 @fixture(scope="module", params=["tschuprowt", "cramerv"])
-def sort_by(request: type[FixtureRequest]) -> str:
+def sort_by(request: FixtureRequest) -> str:
     return request.param
 
 
 @fixture(scope="module", params=[True, False])
-def copy(request: type[FixtureRequest]) -> bool:
+def copy(request: FixtureRequest) -> bool:
     return request.param
 
 
 @fixture(scope="module", params=[None, 0.12])
-def min_freq_mod(request: type[FixtureRequest]) -> float:
+def min_freq_mod(request: FixtureRequest) -> float:
     return request.param

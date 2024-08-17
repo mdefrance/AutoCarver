@@ -7,7 +7,7 @@ from AutoCarver.selectors import BaseMeasure, Chi2Measure, CramervMeasure, Tschu
 
 
 @fixture(params=[Chi2Measure, CramervMeasure, TschuprowtMeasure])
-def measure(request: type[FixtureRequest]) -> BaseMeasure:
+def measure(request: FixtureRequest) -> BaseMeasure:
     return request.param(threshold=0.5)
 
 
