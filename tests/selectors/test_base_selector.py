@@ -14,6 +14,7 @@ from AutoCarver.selectors.base_selector import (
     sort_features_per_measure,
     apply_measures,
     apply_filters,
+    get_best_features,
 )
 from AutoCarver.selectors.measures import (
     NanMeasure,
@@ -211,10 +212,11 @@ def y():
 from icecream import ic
 
 
-def test_apply_measures(
+def _apply_measures(
     features: list[BaseFeature], X: DataFrame, y: Series, measures: list[BaseMeasure]
 ) -> None:
     """testing function apply_measures"""
+
     # sorting out measures
     quantitative_measures = get_quantitative_measures(measures)
     qualitative_measures = get_qualitative_measures(measures)
@@ -248,9 +250,7 @@ def test_apply_measures(
         apply_measures(qualitative_features, X, y, quantitative_measures, default_measures=False)
 
 
-def test_apply_filters(
-    features: list[BaseFeature], X: DataFrame, y: Series, filters: list[BaseFilter]
-) -> None:
+def _apply_filters(features: list[BaseFeature], X: DataFrame, filters: list[BaseFilter]) -> None:
     """testing function apply_filters"""
 
     # sorting out filters
@@ -282,3 +282,105 @@ def test_apply_filters(
     quantitative_filters[-1].threshold = 0.0
     filtered = apply_filters(quantitative_features, X, quantitative_filters, default_filters=False)
     assert len(filtered) == (len(quantitative_features) - 1)
+
+
+def test_get_best_features(
+    features: list[BaseFeature],
+    X: DataFrame,
+    y: Series,
+    measures: list[BaseMeasure],
+    filters: list[BaseFilter],
+) -> None:
+
+    # sorting out features
+    qualitative_features = [feature for feature in features if feature.is_qualitative]
+    quantitative_features = [feature for feature in features if feature.is_quantitative]
+
+    # sorting out measures
+    quantitative_measures = get_quantitative_measures(measures)
+    qualitative_measures = get_qualitative_measures(measures)
+
+    # sorting out filters
+    quantitative_filters = get_quantitative_filters(filters)
+    qualitative_filters = get_qualitative_filters(filters)
+
+    # non sortable measures
+    with raises(ValueError):
+        get_best_features(
+            quantitative_features, X, y, quantitative_measures, quantitative_filters, 1
+        )
+    # when default_measure is OutlierMeasure there are no default_measure for qualtitatives
+    if any(not measure.is_sortable for measure in qualitative_measures):
+        with raises(ValueError):
+            get_best_features(
+                qualitative_features, X, y, qualitative_measures, qualitative_filters, 1
+            )
+
+    # sorting out measures
+    quantitative_measures = [measure for measure in quantitative_measures if not measure.is_default]
+    qualitative_measures = [measure for measure in qualitative_measures if not measure.is_default]
+
+    # getting all quantitative features
+    n_best = len(quantitative_features)
+    best_features = get_best_features(
+        quantitative_features, X, y, quantitative_measures, quantitative_filters, n_best
+    )
+    assert len(best_features) == len(quantitative_features)
+    for feature in quantitative_features:
+        assert feature in best_features
+
+    # getting all qualitative features
+    n_best = len(qualitative_features)
+    best_features = get_best_features(
+        qualitative_features, X, y, qualitative_measures, qualitative_filters, n_best
+    )
+    assert len(best_features) == len(qualitative_features)
+    for feature in qualitative_features:
+        assert feature in best_features
+
+    # testing out quantitative measures
+    n_best = 1
+    best_features = get_best_features(
+        quantitative_features, X, y, quantitative_measures, quantitative_filters, n_best
+    )
+    assert len(best_features) == n_best
+
+    # testing out qualitative measures
+    n_best = 1
+    best_features = get_best_features(
+        qualitative_features, X, y, qualitative_measures, qualitative_filters, n_best
+    )
+    assert len(best_features) == n_best
+
+    # testing out quantitative filters
+    n_best = len(quantitative_features)
+    quantitative_filters[-1].threshold = 0
+    best_features = get_best_features(
+        quantitative_features, X, y, quantitative_measures, quantitative_filters, n_best
+    )
+    assert len(best_features) == 1
+
+    # testing out qualitative filters
+    n_best = len(quantitative_features)
+    qualitative_filters[-1].threshold = 0
+    best_features = get_best_features(
+        qualitative_features, X, y, qualitative_measures, qualitative_filters, n_best
+    )
+    assert len(best_features) == 1
+
+    # mismatched qualitatitve features and measures
+    with raises(TypeError):
+        get_best_features(qualitative_features, X, y, quantitative_measures, qualitative_filters, 1)
+    # mismatched qualitative features and filters
+    with raises(TypeError):
+        get_best_features(qualitative_features, X, y, qualitative_measures, quantitative_filters, 1)
+    # mismatched quantitatitve features and measures
+    with raises(TypeError):
+        get_best_features(
+            quantitative_features, X, y, qualitative_measures, quantitative_filters, 1
+        )
+    # mismatched quantitative features and filters
+    with raises(TypeError):
+        get_best_features(
+            quantitative_features, X, y, quantitative_measures, qualitative_filters, 1
+        )

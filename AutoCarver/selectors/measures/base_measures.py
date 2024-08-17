@@ -15,6 +15,7 @@ class BaseMeasure(ABC):
     is_y_qualitative = False
     is_y_quantitative = False
     is_y_binary = False
+    is_sortable = True
 
     # info
     is_default = False
@@ -109,6 +110,7 @@ class OutlierMeasure(BaseMeasure):
     is_default = True
     is_x_quantitative = True
     is_x_qualitative = False
+    is_sortable = False
 
     # info
     higher_is_better = False
@@ -135,6 +137,7 @@ class NanMeasure(BaseMeasure):
     is_default = True
     is_x_quantitative = True
     is_x_qualitative = True
+    is_sortable = False
 
     def compute_association(self, x: Series, y: Series) -> float:
         """Measure of the percentage of NaNs
@@ -163,6 +166,7 @@ class ModeMeasure(BaseMeasure):
     is_default = True
     is_x_quantitative = True
     is_x_qualitative = True
+    is_sortable = False
 
     def compute_association(self, x: Series, y: Series) -> float:
         """Measure of the percentage of NaNs
