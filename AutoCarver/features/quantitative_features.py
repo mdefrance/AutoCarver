@@ -9,10 +9,7 @@ from .utils.grouped_list import GroupedList
 
 class QuantitativeFeature(BaseFeature):
     __name__ = "Quantitative"
-
-    def __init__(self, name: str, **kwargs: dict) -> None:
-        super().__init__(name, **kwargs)
-        self.is_quantitative = True
+    is_quantitative = True
 
     def get_labels(self) -> GroupedList:
         """gives labels per quantile (values for continuous features)

@@ -246,7 +246,7 @@ def test_grouped_list_replace_group_leader() -> None:
         gl.replace_group_leader("b", "f")
 
 
-def test_GroupedList_sanity_check():
+def test_grouped_list_sanity_check():
     gl = GroupedList({"a": ["b"], "c": ["c", "d"]})
     gl.sanity_check()  # should not raise any error
 

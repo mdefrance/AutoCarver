@@ -1,10 +1,7 @@
 """ TODO: initiate features from dataset
-TODO: add labels for qualitatives
-TODO add casted features?
 """
 
 import json
-from abc import ABC
 from typing import Any, Type
 
 from pandas import DataFrame, Series
@@ -14,8 +11,12 @@ from .grouped_list import GroupedList
 from .serialization import json_deserialize_content, json_serialize_feature
 
 
-class BaseFeature(ABC):
+class BaseFeature:
     __name__ = "Feature"
+    is_quantitative = False
+    is_qualitative = False
+    is_categorical = False
+    is_ordinal = False
 
     def __init__(self, name: str, **kwargs: dict) -> None:
         self.name = name
@@ -69,18 +70,15 @@ class BaseFeature(ABC):
         """Fits the feature to a DataFrame"""
         _, _ = X, y  # unused attributes
 
+        # cehcking for previous fit
+        if self.is_fitted:
+            raise RuntimeError(f"[{self}] {self} has already been fitted!")
+
         # looking for NANS
         if any(X[self.name].isna()):
             self.has_nan = True
 
         self.is_fitted = True  # feature is fitted
-
-    def group_list(self, to_discard: list[Any], to_keep: Any) -> None:
-        """wrapper of GroupedList: groups a list of values into a kept value"""
-
-        values = GroupedList(self.values)
-        values.group_list(to_discard, to_keep)
-        self.update(values, replace=True)
 
     def check_values(self, X: DataFrame) -> None:
         """checks for unexpected values from unique values in DataFrame"""
@@ -97,8 +95,7 @@ class BaseFeature(ABC):
         replace: bool = False,
         ordinal_encoding: bool = False,
     ) -> None:
-        """updates values for each value of the feature"""
-        _ = ordinal_encoding  # unused attribute
+        """updates content of values of the feature"""
 
         # values are the same but sorted
         if sorted_values:
@@ -120,9 +117,8 @@ class BaseFeature(ABC):
 
             # updating existing values
             else:
-                # iterating over each grouped values
+                # updating: iterating over each grouped values
                 for kept_value, grouped_values in values.content.items():
-                    # updating values
                     self.values.group_list(grouped_values, kept_value)
 
         # values are labels -> converting them back to values
@@ -165,6 +161,13 @@ class BaseFeature(ABC):
 
         # updating labels accordingly
         self.update_labels(ordinal_encoding=ordinal_encoding)
+
+    def group_list(self, to_discard: list[Any], to_keep: Any) -> None:
+        """wrapper of GroupedList: groups a list of values into a kept value"""
+
+        values = GroupedList(self.values)
+        values.group_list(to_discard, to_keep)
+        self.update(values, replace=True)
 
     def get_labels(self) -> GroupedList:
         """gives labels per values"""
@@ -236,7 +239,7 @@ class BaseFeature(ABC):
                 values.remove(self.nan)
 
             # updating values
-            self.update(self.values, replace=True)
+            self.update(values, replace=True)
 
     def get_content(self) -> dict:
         """returns feature values' content"""
