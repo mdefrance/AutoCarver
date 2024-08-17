@@ -11,6 +11,9 @@ from pandas import isna
 class GroupedList(list):
     """An ordered list that's extended with a per-value content dict."""
 
+    def __repr__(self) -> str:
+        return "GroupedList"
+
     def __init__(self, iterable: Union[ndarray, dict, list, tuple] = ()) -> None:
         """
         Parameters
@@ -31,10 +34,9 @@ class GroupedList(list):
             self.content = dict(iterable.items())
 
             # checking that all values are only present once
-            all_values = [val for _, values in iterable.items() for val in values]
-            assert len(list(set(all_values))) == len(
-                all_values
-            ), " - [GroupedList] A value is present in several keys (groups)"
+            all_values = [value for values in iterable.values() for value in values]
+            if not len(list(set(all_values))) == len(all_values):
+                raise ValueError(f" - [{self}] A value is present in several keys (groups)")
 
             # adding key to itself if it's not present in an other key
             keys_copy = keys[:]  # copying initial keys
@@ -75,6 +77,16 @@ class GroupedList(list):
             # initiating the values with the provided list of keys
             self.content = {v: [v] for v in iterable}
 
+    def get_values(self) -> list[Any]:
+        """All values content in all groups
+
+        Returns
+        -------
+        list[Any]
+            List of all values in the GroupedList
+        """
+        return [value for values in self.content.values() for value in values]
+
     def get(self, key: Any, default: Any = None) -> list[Any]:
         """List of values content in key
 
@@ -101,6 +113,29 @@ class GroupedList(list):
 
         return found
 
+    def sanity_check(self) -> None:
+        """raises ValueError if there is an issue with the any element of the GroupedList"""
+        # each element of the list should be in its elements
+        for key, values in self.content.items():
+            if key not in values:
+                raise ValueError(f"[{self}] Missing group leader {key} in its values: {values}")
+
+        # an element can not be in several groups
+        all_values = self.get_values()
+        if len(set(all_values)) != len(all_values):
+            raise ValueError(f"[{self}] Some values are in several groups")
+
+        # checking that element of the list are keys of the content dict
+        if not len(self) == len(self.content):
+            raise ValueError(
+                f"[{self}] Keys missing from content dict or element missing from list"
+            )
+        if any(
+            list_element != dict_key
+            for list_element, dict_key in zip(self, list(self.content.keys()))
+        ):
+            raise ValueError(f"[{self}] Not the same ordering between list and content dict")
+
     def group(self, discarded: Any, kept: Any) -> None:
         """Groups the discarded value with the kept value
 
@@ -115,8 +150,10 @@ class GroupedList(list):
         # checking that those values are distinct
         if not is_equal(discarded, kept):
             # checking that those values exist in the list
-            assert discarded in self, f" - [GroupedList] {discarded} not in list"
-            assert kept in self, f" - [GroupedList] {kept} not in list"
+            if discarded not in self:
+                raise ValueError(f" - [{self}] {discarded} not in list")
+            if kept not in self:
+                raise ValueError(f" - [{self}] {kept} not in list")
 
             # accessing values content in each value
             content_discarded = self.content.get(discarded)
@@ -127,6 +164,9 @@ class GroupedList(list):
 
             # removing discarded from the list
             self.remove(discarded)
+
+        # sanity check after modification
+        self.sanity_check()
 
     def group_list(self, to_discard: list[Any], to_keep: Any) -> None:
         """Groups elements to_discard into values to_keep
@@ -139,8 +179,12 @@ class GroupedList(list):
             Key value in which to group ``to_discard`` values.
         """
 
+        # grouping each element of to_discard list
         for discarded, kept in zip(to_discard, [to_keep] * len(to_discard)):
             self.group(discarded, kept)
+
+        # sanity check after modification
+        self.sanity_check()
 
     def append(self, new_value: Any) -> None:
         """Appends a new_value to the GroupedList
@@ -150,10 +194,17 @@ class GroupedList(list):
         new_value : Any
             New key to be added.
         """
-        if new_value in self:  # checking for already existing values
-            raise ValueError(f"- [GroupedList] Value {new_value} already in list!")
+
+        # checking for already existing values
+        if new_value in self.get_values():
+            raise ValueError(f"- [{self}] Value {new_value} already in list!")
+
+        # adding value to list and dict
         self += [new_value]
         self.content.update({new_value: [new_value]})
+
+        # sanity check after modification
+        self.sanity_check()
 
     def update(self, new_value: dict[Any, list[Any]]) -> None:
         """Updates the GroupedList via a dict
@@ -164,13 +215,27 @@ class GroupedList(list):
             Dict of key, values to updated ``content`` dict
         """
 
+        # should provide a dict of lists
+        if not isinstance(new_value, dict) or not all(
+            isinstance(value, list) for value in new_value.values()
+        ):
+            raise ValueError(f"[{self}] Provide a dictionnary of lists (values)")
+
+        # adding missing keys to there list of values
+        for key, value in new_value.items():
+            if key not in value:
+                new_value.update({key: value + [key]})
+
         # adding keys to the order if they are new values
         self += [key for key, _ in new_value.items() if key not in self]
 
         # updating content according to new_value
         self.content.update(new_value)
 
-    def sort(self):
+        # sanity check after modification
+        self.sanity_check()
+
+    def sort(self) -> "GroupedList":
         """Sorts the values of the list and dict (if any, NaNs are last).
 
         Returns
@@ -192,7 +257,7 @@ class GroupedList(list):
 
         return sorted_list
 
-    def sort_by(self, ordering: list[Any]) -> None:
+    def sort_by(self, ordering: list[Any]) -> "GroupedList":
         """Sorts the values of the list and dict according to ``ordering``, if any,
         NaNs are the last.
 
@@ -208,14 +273,16 @@ class GroupedList(list):
         """
 
         # checking that all values are given an order
-        assert all(o in self for o in ordering), (
-            " - [GroupedList] Unknown values in ordering: "
-            f"{str([v for v in ordering if v not in self])}"
-        )
-        assert all(s in ordering for s in self), (
-            " - [GroupedList] Missing value from ordering:"
-            f" {str([v for v in self if v not in ordering])}"
-        )
+        if not all(o in self for o in ordering):
+            raise ValueError(
+                f" - [{self}] Unknown values in ordering: "
+                f"{str([v for v in ordering if v not in self])}"
+            )
+        if not all(s in ordering for s in self):
+            raise ValueError(
+                f" - [{self}] Missing value from ordering:"
+                f" {str([v for v in self if v not in ordering])}"
+            )
 
         # ordering the content
         sorted_list = GroupedList({k: self.get(k) for k in ordering})
@@ -232,6 +299,9 @@ class GroupedList(list):
         """
         super().remove(value)
         self.content.pop(value)
+
+        # sanity check after modification
+        self.sanity_check()
 
     def pop(self, idx: int) -> None:
         """Pop a value from the GroupedList by index
@@ -267,17 +337,9 @@ class GroupedList(list):
         if any(found):
             return found[0]
 
+        # TODO expected behavior?
+        # if not found, should return itself by default
         return value
-
-    def values(self) -> list[Any]:
-        """All values content in all groups
-
-        Returns
-        -------
-        list[Any]
-            List of all values in the GroupedList
-        """
-        return [value for values in self.content.values() for value in values]
 
     def contains(self, value: Any) -> bool:
         """Checks if a value is content in any group, also matches NaNs.
@@ -292,7 +354,7 @@ class GroupedList(list):
         bool
             Whether the value is in the GroupedList
         """
-        return any(is_equal(value, known) for known in self.values())
+        return any(is_equal(value, known) for known in self.get_values())
 
     def replace_group_leader(self, group_leader: Any, group_member: Any) -> None:
         """Replaces a group_leader by one of its group_members
@@ -306,9 +368,8 @@ class GroupedList(list):
             (``GroupedList.content[group_leader]``)
         """
         # checking that group_member is in group_leader
-        assert (
-            group_member in self.content[group_leader]
-        ), f" - [GroupedList] {group_member} is not in {group_leader}"
+        if group_member not in self.content[group_leader]:
+            raise ValueError(f" - [{self}] {group_member} is not in {group_leader}")
 
         # replacing in the list
         group_idx = self.index(group_leader)
@@ -318,25 +379,13 @@ class GroupedList(list):
         self.content.update({group_member: self.content[group_leader][:]})
         self.content.pop(group_leader)
 
+        # TODO check if this has a purpose
         # sorting things up
-        self.sort_by(self)
+        # self.sort_by(self)
 
 
 def is_equal(a: Any, b: Any) -> bool:
-    """Checks if a and b are equal (NaN insensitive)
-
-    Parameters
-    ----------
-    a : Any
-        _description_
-    b : Any
-        _description_
-
-    Returns
-    -------
-    bool
-        _description_
-    """
+    """Checks if a and b are equal (NaN insensitive)"""
 
     # default equality
     equal = a == b
