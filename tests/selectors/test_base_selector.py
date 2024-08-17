@@ -1,27 +1,27 @@
 """ set of tests for base selector"""
 
+from pandas import DataFrame, Series
 from pytest import raises
 
-from pandas import DataFrame, Series
 from AutoCarver.features import (
-    Features,
     BaseFeature,
-    get_quantitative_features,
+    Features,
     get_qualitative_features,
+    get_quantitative_features,
 )
 from AutoCarver.selectors import BaseFilter, BaseMeasure
 from AutoCarver.selectors.base_selector import (
     BaseSelector,
-    make_random_chunks,
-    get_quantitative_metrics,
-    get_qualitative_metrics,
+    apply_filters,
+    apply_measures,
+    get_best_features,
     get_default_metrics,
+    get_qualitative_metrics,
+    get_quantitative_metrics,
+    make_random_chunks,
     remove_default_metrics,
     remove_duplicates,
     sort_features_per_measure,
-    apply_measures,
-    apply_filters,
-    get_best_features,
 )
 
 
@@ -246,7 +246,6 @@ def _get_best_features(
     measures: list[BaseMeasure],
     filters: list[BaseFilter],
 ) -> None:
-
     # sorting out features
     qualitative_features = get_qualitative_features(features)
     quantitative_features = get_quantitative_features(features)
@@ -432,7 +431,6 @@ def test_base_selector_get_best_features_across_chunks_no_chunking(
     measures: list[BaseMeasure],
     filters: list[BaseFilter],
 ) -> None:
-
     # generating several correlated features
     new_features = []
     new_X = {}
@@ -482,7 +480,6 @@ def test_base_selector_get_best_features_across_chunks_with_chunking(
     measures: list[BaseMeasure],
     filters: list[BaseFilter],
 ) -> None:
-
     # generating several correlated features
     new_features = []
     new_X = {}

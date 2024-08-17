@@ -2,16 +2,15 @@
 for multiclass classification tasks.
 """
 
-from typing import Any, Callable
+from typing import Any, Callable, Union
 
 from pandas import DataFrame, Series, unique
 
 from ..discretizers import BaseDiscretizer
 from ..discretizers.utils.base_discretizer import extend_docstring
-from .utils.base_carver import BaseCarver
-from .binary_carver import BinaryCarver
 from ..features import Features
-from typing import Union
+from .binary_carver import BinaryCarver
+from .utils.base_carver import BaseCarver
 
 
 class MulticlassCarver(BaseCarver):

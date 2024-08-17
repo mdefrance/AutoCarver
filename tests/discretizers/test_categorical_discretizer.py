@@ -4,7 +4,7 @@ from pandas import DataFrame
 from pytest import raises
 
 from AutoCarver.discretizers import CategoricalDiscretizer
-from AutoCarver.features import GroupedList, Features
+from AutoCarver.features import Features, GroupedList
 
 
 def test_categorical_discretizer(x_train: DataFrame, target: str) -> None:

@@ -3,17 +3,17 @@
 from numpy import nan
 from pandas import Series, isna
 from pytest import FixtureRequest, fixture
+
 from AutoCarver.selectors import (
     BaseMeasure,
     DistanceMeasure,
-    PearsonMeasure,
-    SpearmanMeasure,
-    RMeasure,
-    KruskalMeasure,
     IqrOutlierMeasure,
+    KruskalMeasure,
+    PearsonMeasure,
+    RMeasure,
+    SpearmanMeasure,
     ZscoreOutlierMeasure,
 )
-
 
 threshold = 0.1
 

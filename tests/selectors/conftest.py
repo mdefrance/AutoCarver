@@ -45,32 +45,32 @@
 #     return request.param
 
 
-from pytest import fixture, FixtureRequest
-
 from pandas import DataFrame, Series
-from AutoCarver.features import Features, BaseFeature
+from pytest import FixtureRequest, fixture
+
+from AutoCarver.features import BaseFeature, Features
 from AutoCarver.selectors import BaseFilter, BaseMeasure
-from AutoCarver.selectors.measures import (
-    NanMeasure,
-    ModeMeasure,
-    Chi2Measure,
-    CramervMeasure,
-    KruskalMeasure,
-    PearsonMeasure,
-    DistanceMeasure,
-    SpearmanMeasure,
-    IqrOutlierMeasure,
-    TschuprowtMeasure,
-    ZscoreOutlierMeasure,
-)
+from AutoCarver.selectors.base_selector import BaseSelector
 from AutoCarver.selectors.filters import (
-    ValidFilter,
     CramervFilter,
     PearsonFilter,
     SpearmanFilter,
     TschuprowtFilter,
+    ValidFilter,
 )
-from AutoCarver.selectors.base_selector import BaseSelector
+from AutoCarver.selectors.measures import (
+    Chi2Measure,
+    CramervMeasure,
+    DistanceMeasure,
+    IqrOutlierMeasure,
+    KruskalMeasure,
+    ModeMeasure,
+    NanMeasure,
+    PearsonMeasure,
+    SpearmanMeasure,
+    TschuprowtMeasure,
+    ZscoreOutlierMeasure,
+)
 
 # setting BaseSelector as non abstract classes for the duration of the test
 BaseSelector.__abstractmethods__ = set()

@@ -3,27 +3,24 @@ for any task.
 """
 
 import json
-
+from abc import abstractmethod
 from functools import partial
-from typing import Any, Union, Type
+from typing import Any, Type, Union
 from warnings import warn
 
 from numpy import isclose
 from pandas import DataFrame, Series
 from tqdm.autonotebook import tqdm
 
-from abc import abstractmethod
-
+from ...discretizers import BaseDiscretizer, Discretizer
+from ...features import BaseFeature, Features, GroupedList
 from .combinations import (
-    nan_combinations,
     consecutive_combinations,
-    xagg_apply_combination,
+    nan_combinations,
     order_apply_combination,
+    xagg_apply_combination,
 )
-from .pretty_print import prettier_xagg, index_mapper
-
-from ...discretizers import Discretizer, BaseDiscretizer
-from ...features import GroupedList, Features, BaseFeature
+from .pretty_print import index_mapper, prettier_xagg
 
 # trying to import extra dependencies
 try:

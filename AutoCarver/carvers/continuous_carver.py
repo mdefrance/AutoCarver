@@ -7,8 +7,8 @@ from pandas import DataFrame, Series
 from scipy.stats import kruskal
 
 from ..discretizers.utils.base_discretizer import extend_docstring
-from .utils.base_carver import BaseCarver
 from ..features import Features
+from .utils.base_carver import BaseCarver
 
 
 class ContinuousCarver(BaseCarver):
@@ -126,10 +126,8 @@ class ContinuousCarver(BaseCarver):
         # checking for empty datasets
         yvals = {feature.version: None for feature in self.features}
         if X is not None:
-
             # y mean for each feature
             for feature in self.features:
-
                 # computing crosstab with str_nan
                 yval = y.groupby(X[feature.version]).apply(
                     lambda u: list(u)

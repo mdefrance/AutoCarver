@@ -4,15 +4,15 @@ for a binary classification model.
 
 from pandas import DataFrame, Series, unique
 
-from ..features import Features, CategoricalFeature, QuantitativeFeature
-from .utils.base_discretizer import BaseDiscretizer, extend_docstring
+from ..features import CategoricalFeature, Features, QuantitativeFeature
 from .qualitative_discretizers import (
     CategoricalDiscretizer,
     OrdinalDiscretizer,
-    check_frequencies,
     check_dtypes,
+    check_frequencies,
 )
 from .quantitative_discretizers import ContinuousDiscretizer
+from .utils.base_discretizer import BaseDiscretizer, extend_docstring
 
 
 class Discretizer(BaseDiscretizer):
@@ -85,7 +85,6 @@ class Discretizer(BaseDiscretizer):
 
         # [Quantitative features] Grouping quantitative features
         if len(self.features.get_quantitatives()) > 0:
-
             # grouping quantitative features
             quantitative_discretizer = QuantitativeDiscretizer(
                 quantitatives=self.features.get_quantitatives(),

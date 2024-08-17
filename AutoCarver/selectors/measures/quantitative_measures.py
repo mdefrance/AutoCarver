@@ -2,12 +2,14 @@
 """
 
 from math import sqrt
+
 from numpy import nan
 from pandas import DataFrame, Series
 from scipy.spatial.distance import correlation
 from scipy.stats import kruskal, pearsonr, spearmanr
 from statsmodels.formula.api import ols
-from .base_measures import BaseMeasure, OutlierMeasure, AbsoluteMeasure
+
+from .base_measures import AbsoluteMeasure, BaseMeasure, OutlierMeasure
 
 
 class ReversibleMeasure(BaseMeasure):

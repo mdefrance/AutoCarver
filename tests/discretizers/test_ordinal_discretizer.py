@@ -3,7 +3,7 @@
 from pandas import DataFrame
 
 from AutoCarver.discretizers import OrdinalDiscretizer
-from AutoCarver.features import GroupedList, Features
+from AutoCarver.features import Features, GroupedList
 
 
 def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:

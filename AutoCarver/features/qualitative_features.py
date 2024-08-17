@@ -28,7 +28,6 @@ class CategoricalFeature(BaseFeature):
 
         # checking that feature is not ordinal (already set values)
         if self.values is None:
-
             # initiating feature with its unique non-nan values
             self.update(GroupedList(sorted_unique_values))
 
@@ -79,7 +78,6 @@ class CategoricalFeature(BaseFeature):
         # iterating over each value and there contente
         labels = []
         for group, content in self.get_content().items():
-
             # ordering content as per original ordering (removes DEFAULT and NAN)
             ordered_content = [
                 value

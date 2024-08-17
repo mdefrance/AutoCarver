@@ -6,7 +6,7 @@ import os
 from pandas import DataFrame
 from pytest import fixture, raises
 
-from AutoCarver import MulticlassCarver, Features
+from AutoCarver import Features, MulticlassCarver
 from AutoCarver.config import NAN
 from AutoCarver.discretizers import ChainedDiscretizer
 

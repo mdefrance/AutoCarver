@@ -5,7 +5,7 @@ from pandas import DataFrame
 from pytest import FixtureRequest, fixture
 
 from AutoCarver.discretizers import BaseDiscretizer
-from AutoCarver.features import GroupedList, Features
+from AutoCarver.features import Features, GroupedList
 
 
 @fixture(params=[True, False])

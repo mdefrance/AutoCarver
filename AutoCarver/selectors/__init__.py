@@ -3,33 +3,31 @@
 # from .base_selector import BaseSelector
 from .classification_selector import ClassificationSelector
 from .filters import (
-    QualitativeFilter,
-    CramervFilter,
-    TschuprowtFilter,
     BaseFilter,
+    CramervFilter,
+    PearsonFilter,
+    QualitativeFilter,
     QuantitativeFilter,
     SpearmanFilter,
-    PearsonFilter,
+    TschuprowtFilter,
 )
-
 from .measures import (
     AbsoluteMeasure,
     BaseMeasure,
-    OutlierMeasure,
     Chi2Measure,
     CramervMeasure,
-    TschuprowtMeasure,
+    DistanceMeasure,
+    IqrOutlierMeasure,
+    KruskalMeasure,
     ModeMeasure,
     NanMeasure,
-    RMeasure,
-    DistanceMeasure,
-    KruskalMeasure,
+    OutlierMeasure,
     PearsonMeasure,
+    RMeasure,
     SpearmanMeasure,
-    IqrOutlierMeasure,
+    TschuprowtMeasure,
     ZscoreOutlierMeasure,
 )
-
 from .regression_selector import RegressionSelector
 
 __all__ = [

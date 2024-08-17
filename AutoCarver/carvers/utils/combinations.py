@@ -3,8 +3,10 @@ for any task.
 """
 
 from typing import Any, Generator
+
 from pandas import DataFrame
-from ...features import GroupedList, BaseFeature
+
+from ...features import BaseFeature, GroupedList
 
 
 def combinations_at_index(

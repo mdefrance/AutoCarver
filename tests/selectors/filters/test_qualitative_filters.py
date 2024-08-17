@@ -1,7 +1,8 @@
-from pytest import fixture, FixtureRequest
 from pandas import DataFrame
-from AutoCarver.selectors import QualitativeFilter, CramervFilter, TschuprowtFilter, BaseMeasure
+from pytest import FixtureRequest, fixture
+
 from AutoCarver.features import BaseFeature
+from AutoCarver.selectors import BaseMeasure, CramervFilter, QualitativeFilter, TschuprowtFilter
 
 THRESHOLD = 1.0
 
@@ -35,7 +36,6 @@ def filter(request: FixtureRequest) -> QualitativeFilter:
 def test_qualitative_filter(
     filter: QualitativeFilter, sample_data: DataFrame, sample_ranks: list[BaseFeature]
 ) -> None:
-
     # test with negatively and 100% correlated features
     filter.threshold = 0.3
     filtered_features = filter.filter(sample_data, sample_ranks)
@@ -60,7 +60,6 @@ def test_qualitative_filter(
 def test_filter(
     filter: QualitativeFilter, sample_data: DataFrame, sample_ranks: list[BaseFeature]
 ) -> None:
-
     # testing type
     assert filter.is_x_qualitative, "x should be qulitative"
     assert not filter.is_x_quantitative, "x should be qualitative"

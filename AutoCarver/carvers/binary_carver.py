@@ -9,8 +9,8 @@ from pandas import DataFrame, Series, crosstab
 from scipy.stats import chi2_contingency
 
 from ..discretizers.utils.base_discretizer import extend_docstring
-from .utils.base_carver import BaseCarver
 from ..features import Features
+from .utils.base_carver import BaseCarver
 
 
 class BinaryCarver(BaseCarver):

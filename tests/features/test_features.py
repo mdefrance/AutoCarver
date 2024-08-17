@@ -2,6 +2,7 @@
 """
 
 from pytest import raises
+
 from AutoCarver.features import Features, GroupedList
 
 

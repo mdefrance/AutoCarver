@@ -1,6 +1,6 @@
 """ Defines a continuous feature"""
 
-from numpy import isfinite, nan, diff, floor, log10  # pylint: disable=E0611
+from numpy import diff, floor, isfinite, log10, nan  # pylint: disable=E0611
 from pandas import isna
 
 from .utils.base_feature import BaseFeature

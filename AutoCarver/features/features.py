@@ -1,14 +1,14 @@
 """ Defines a set of features"""
 
-from pandas import DataFrame, Series
-
-from .utils.base_feature import BaseFeature
-from .utils.grouped_list import GroupedList
-from .qualitative_features import CategoricalFeature, OrdinalFeature
-from .quantitative_features import QuantitativeFeature
+from typing import Type, Union
 
 from numpy import nan
-from typing import Union, Type
+from pandas import DataFrame, Series
+
+from .qualitative_features import CategoricalFeature, OrdinalFeature
+from .quantitative_features import QuantitativeFeature
+from .utils.base_feature import BaseFeature
+from .utils.grouped_list import GroupedList
 
 # class AutoFeatures(Features):
 #     """TODO"""
@@ -68,7 +68,6 @@ from typing import Union, Type
 
 
 class Features:
-
     __name__ = "Features"
 
     def __init__(
@@ -158,7 +157,6 @@ class Features:
 
         # list request and element to search for
         if isinstance(index, list) and len(index) > 0:
-
             # list index request
             if isinstance(index[0], int):
                 self_list = self.to_list()
@@ -201,7 +199,6 @@ class Features:
         """Cheks for unexpected values for each feature in columns of DataFrame X"""
         # iterating over all features
         for feature in self:
-
             # checking for non-fitted features
             if not feature.is_fitted:
                 raise RuntimeError(f" - [{self.__name__}] '{feature}' not yet fitted!")
@@ -213,7 +210,6 @@ class Features:
         """fits all features to there respective column in DataFrame X"""
         # iterating over all features
         for feature in self:
-
             # checking for fitted features
             if feature.is_fitted:
                 feature.check_values(X)

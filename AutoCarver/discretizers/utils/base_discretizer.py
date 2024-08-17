@@ -3,7 +3,8 @@ for a binary classification model.
 """
 
 import json
-from typing import Any, Union, Type
+from abc import ABC
+from typing import Any, Type, Union
 
 from numpy import nan, select
 from pandas import DataFrame, Series
@@ -12,7 +13,6 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from ...features import BaseFeature, Features
 from ...features.utils.grouped_list import GroupedList
 from .multiprocessing import apply_async_function
-from abc import ABC
 
 
 class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):

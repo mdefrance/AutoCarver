@@ -3,9 +3,9 @@
 from numpy import inf
 from pandas import DataFrame, notna
 
+from AutoCarver import Features
 from AutoCarver.config import DEFAULT
 from AutoCarver.discretizers import Discretizer, QualitativeDiscretizer, QuantitativeDiscretizer
-from AutoCarver import Features
 
 
 def test_quantitative_discretizer(x_train: DataFrame, target: str):

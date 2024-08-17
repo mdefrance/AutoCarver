@@ -5,8 +5,8 @@ from typing import Any, Union
 
 from numpy import floating, inf, integer, isfinite
 
-from .grouped_list import GroupedList
 from ...config import INF
+from .grouped_list import GroupedList
 
 
 def convert_value_to_base_type(value: Any) -> Union[str, float, int]:
@@ -210,7 +210,6 @@ def json_deserialize_content(json_serialized_feature: dict) -> dict:
 
     # cehcking for values
     if values is not None:
-
         # fixing json dumping with string keys
         for value in values:
             content_key = value

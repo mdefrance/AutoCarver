@@ -6,7 +6,7 @@ from typing import Union
 
 import numpy as np
 from numpy import argmin, nan, select
-from pandas import DataFrame, Series, isna, unique, notna
+from pandas import DataFrame, Series, isna, notna, unique
 
 from ..features import BaseFeature, CategoricalFeature, Features, GroupedList, OrdinalFeature
 from .utils.base_discretizer import BaseDiscretizer, extend_docstring
@@ -227,7 +227,6 @@ class OrdinalDiscretizer(BaseDiscretizer):
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
-
         # checking values orders
         x_copy = self._prepare_data(X, y)
         self._verbose()  # verbose if requested
@@ -416,14 +415,12 @@ class ChainedDiscretizer(BaseDiscretizer):
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series = None) -> None:  # pylint: disable=W0222
-
         # preprocessing data
         x_copy = self._prepare_data(X, y)
         self._verbose()  # verbose if requested
 
         # iterating over each feature
         for feature in self.features:
-
             # iterating over each specified orders
             for level_order in self.chained_orders:
                 # computing frequencies of each modality

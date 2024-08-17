@@ -3,6 +3,7 @@
 from numpy import nan
 from pandas import Series
 from pytest import FixtureRequest, fixture
+
 from AutoCarver.selectors import BaseMeasure, Chi2Measure, CramervMeasure, TschuprowtMeasure
 
 

@@ -1,7 +1,8 @@
-from pytest import fixture, FixtureRequest
 from pandas import DataFrame, isna
-from AutoCarver.selectors import QuantitativeFilter, SpearmanFilter, PearsonFilter
+from pytest import FixtureRequest, fixture
+
 from AutoCarver.features import BaseFeature
+from AutoCarver.selectors import PearsonFilter, QuantitativeFilter, SpearmanFilter
 
 THRESHOLD = 1.0
 
@@ -35,7 +36,6 @@ def filter(request: FixtureRequest) -> QuantitativeFilter:
 def test_quantitative_filter(
     filter: QuantitativeFilter, sample_data: DataFrame, sample_ranks: list[BaseFeature]
 ) -> None:
-
     # testing type
     assert filter.is_x_quantitative, "x should be quantitative"
     assert not filter.is_x_qualitative, "x should be quantitative"
@@ -65,7 +65,6 @@ def test_quantitative_filter(
 def test_filter(
     filter: QuantitativeFilter, sample_data: DataFrame, sample_ranks: list[BaseFeature]
 ) -> None:
-
     assert isinstance(filter.measure, str), "measure should be a name for DataFrame.corr"
 
     # testing _compute_correlation

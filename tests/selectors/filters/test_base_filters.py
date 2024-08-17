@@ -1,10 +1,9 @@
 """Set of tests for base correlation filters."""
 
 from pytest import fixture
+
 from AutoCarver.features import BaseFeature
-
-from AutoCarver.selectors.filters import ValidFilter, BaseFilter
-
+from AutoCarver.selectors.filters import BaseFilter, ValidFilter
 
 # setting BaseFilter as non abstract classes for the duration of the test
 BaseFilter.__abstractmethods__ = set()

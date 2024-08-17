@@ -1,15 +1,16 @@
 """Tools to select the best Quantitative and Qualitative features."""
 
 from abc import ABC, abstractmethod
+from math import ceil
+from random import seed, shuffle
 from typing import Union
-from random import shuffle, seed
 from warnings import warn
 
 from pandas import DataFrame, Series
-from math import ceil
+
+from ..features import BaseFeature, Features
 from .filters import BaseFilter
 from .measures import BaseMeasure
-from ..features import Features, BaseFeature
 
 # trying to import extra dependencies
 try:
@@ -223,7 +224,6 @@ class BaseSelector(ABC):
         quantitatives = self.features.get_quantitatives()
         print("quantitatives", quantitatives)
         if len(quantitatives) > 0:
-
             # getting qualitative measures and filters
             measures = get_quantitative_metrics(self.measures)
             filters = get_quantitative_metrics(self.filters)
@@ -234,7 +234,6 @@ class BaseSelector(ABC):
         # checking for qualitative features before selection
         qualitatives = self.features.get_qualitatives()
         if len(qualitatives) > 0:
-
             # getting qualitative measures and filters
             measures = get_qualitative_metrics(self.measures)
             filters = get_qualitative_metrics(self.filters)
@@ -282,7 +281,6 @@ class BaseSelector(ABC):
 
         # too many features: chunking and selecting best amongst chunks
         if len(features) > self.max_num_features_per_chunk:
-
             # making random chunks of features
             chunks = make_random_chunks(
                 features, self.max_num_features_per_chunk, self.random_state
@@ -428,10 +426,8 @@ def apply_measures(
 
     # iterating over each feature
     for feature in features:
-
         # iterating over each measure
         for measure in used_measures:
-
             # checking for mismatched data types
             if not (
                 (feature.is_quantitative and measure.is_x_quantitative)
@@ -467,7 +463,6 @@ def apply_filters(
 
     # iterating over each filter
     for filter_ in used_filters:
-
         # checking for mismatched data types
         for feature in features:
             if not (
@@ -505,7 +500,6 @@ def get_best_features(
     # getting best feature for each sortable measure
     best_features = []
     for measure in measures:
-
         # sorting features according to measure
         sorted_features = sort_features_per_measure(features, measure)
 

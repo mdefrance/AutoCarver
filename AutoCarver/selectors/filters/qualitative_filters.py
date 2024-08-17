@@ -3,9 +3,8 @@
 
 from pandas import DataFrame
 
-from ..measures import CramervMeasure, TschuprowtMeasure
-
 from ...features import BaseFeature, get_versions
+from ..measures import CramervMeasure, TschuprowtMeasure
 from .base_filters import BaseFilter
 
 
@@ -20,7 +19,6 @@ class QualitativeFilter(BaseFilter):
     is_x_qualitative = True
 
     def filter(self, X: DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:
-
         # filtering ranks to avoid correlation with already removed features
         filtered_ranks = ranks[:]
 
@@ -66,7 +64,6 @@ class QualitativeFilter(BaseFilter):
 
         # iterating over each better feature
         for better_feature in better_features:
-
             # computing association with the better feature
             correlation = self.measure.compute_association(
                 X[feature.version], X[better_feature.version]

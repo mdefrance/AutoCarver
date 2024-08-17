@@ -1,17 +1,18 @@
 """Set of tests for base correlation measures module."""
 
+from numpy import nan
+from pandas import Series
 from pytest import fixture, raises
+
 from AutoCarver.features import BaseFeature
 from AutoCarver.selectors import (
-    BaseMeasure,
     AbsoluteMeasure,
-    OutlierMeasure,
-    NanMeasure,
+    BaseMeasure,
     ModeMeasure,
+    NanMeasure,
+    OutlierMeasure,
 )
 from AutoCarver.selectors.measures import ReversibleMeasure
-from pandas import Series
-from numpy import nan
 
 # setting BaseMeasure, OutlierMeasure, AbsoluteMeasure, ReversibleMeasure as non abstract classes for the duration of the test
 OutlierMeasure.__abstractmethods__ = set()

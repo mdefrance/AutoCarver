@@ -1,14 +1,14 @@
 """ Filters based on association measure between features and a binary target.
 """
 
+from abc import ABC, abstractmethod
+
 from pandas import DataFrame
 
-from abc import ABC, abstractmethod
 from ...features import BaseFeature
 
 
 class BaseFilter(ABC):
-
     __name__ = "BaseFilter"
 
     is_measure = False
@@ -72,7 +72,6 @@ class ValidFilter(BaseFilter):
         # iterating over each feature
         filtered = []
         for feature in ranks:
-
             # getting feature's measures
             measures = feature.statistics.get("measures", {})
 

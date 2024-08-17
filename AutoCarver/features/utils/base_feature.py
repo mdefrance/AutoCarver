@@ -3,18 +3,18 @@ TODO: add labels for qualitatives
 TODO add casted features?
 """
 
+import json
+from abc import ABC
 from typing import Any, Type
 
-import json
 from pandas import DataFrame, Series
+
 from ...config import DEFAULT, NAN
 from .grouped_list import GroupedList
-from .serialization import json_serialize_feature, json_deserialize_content
-from abc import ABC
+from .serialization import json_deserialize_content, json_serialize_feature
 
 
 class BaseFeature(ABC):
-
     __name__ = "Feature"
 
     def __init__(self, name: str, **kwargs: dict) -> None:

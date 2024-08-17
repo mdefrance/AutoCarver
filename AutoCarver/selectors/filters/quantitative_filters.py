@@ -3,6 +3,7 @@
 
 from numpy import ones, triu
 from pandas import DataFrame
+
 from ...features import BaseFeature, get_versions
 from .base_filters import BaseFilter
 
@@ -74,7 +75,6 @@ class QuantitativeFilter(BaseFilter):
     is_x_quantitative = True
 
     def filter(self, X: DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:
-
         # computing correlation between features
         X_corr = self._compute_correlation(X, ranks)
 

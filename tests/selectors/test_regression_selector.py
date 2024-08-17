@@ -1,15 +1,15 @@
 """Set of tests for RegressionSelector module."""
 
 from pytest import raises
-from AutoCarver.selectors.base_selector import remove_default_metrics, get_default_metrics
-from AutoCarver.selectors import RegressionSelector
+
 from AutoCarver.features import Features
-from AutoCarver.selectors.measures import BaseMeasure
+from AutoCarver.selectors import RegressionSelector
+from AutoCarver.selectors.base_selector import get_default_metrics, remove_default_metrics
 from AutoCarver.selectors.filters import BaseFilter
+from AutoCarver.selectors.measures import BaseMeasure
 
 
 def test_regression_selector_initiate_default(features_object: Features) -> None:
-
     # checking for default measures
     n_best, max_num_features_per_chunk = 2, 100
     selector = RegressionSelector(

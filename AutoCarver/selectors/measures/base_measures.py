@@ -1,14 +1,14 @@
 """ Base measures that defines Quantitative and Qualitative features.
 """
 
+from abc import ABC, abstractmethod
+
 from pandas import Series, isnull, notna
 
-from abc import ABC, abstractmethod
 from ...features import BaseFeature
 
 
 class BaseMeasure(ABC):
-
     is_x_quantitative = False
     is_x_qualitative = False
 
@@ -95,7 +95,6 @@ class BaseMeasure(ABC):
 
 
 class AbsoluteMeasure(BaseMeasure):
-
     # info
     # absolute_threshold = False
 
