@@ -9,11 +9,11 @@ from .utils.grouped_list import GroupedList
 
 class CategoricalFeature(BaseFeature):
     __name__ = "Categorical"
+    is_categorical = True
+    is_qualitative = True
 
     def __init__(self, name: str, **kwargs: dict) -> None:
         super().__init__(name, **kwargs)
-        self.is_categorical = True
-        self.is_qualitative = True
 
         # TODO adding stats
         self.n_unique = None
@@ -141,10 +141,11 @@ class CategoricalFeature(BaseFeature):
 class OrdinalFeature(CategoricalFeature):
     __name__ = "Ordinal"
 
+    is_ordinal = True
+    is_categorical = False
+
     def __init__(self, name: str, values: list[str], **kwargs: dict) -> None:
         super().__init__(name, **kwargs)
-        self.is_ordinal = True
-        self.is_categorical = False
 
         # checking for values
         if values is None or len(values) == 0:
@@ -195,3 +196,18 @@ def nan_unique(x: Series, sort: bool = False) -> list[str]:
     uniques = [value for value in uniques if notna(value)]
 
     return uniques
+
+
+def get_qualitative_features(features: list[BaseFeature]) -> list[CategoricalFeature]:
+    """returns qualitative features amongst provided features"""
+    return [feature for feature in features if feature.is_qualitative]
+
+
+def get_categorical_features(features: list[BaseFeature]) -> list[CategoricalFeature]:
+    """returns categorical features amongst provided features"""
+    return [feature for feature in features if feature.is_categorical]
+
+
+def get_ordinal_features(features: list[BaseFeature]) -> list[OrdinalFeature]:
+    """returns ordinal features amongst provided features"""
+    return [feature for feature in features if feature.is_ordinal]

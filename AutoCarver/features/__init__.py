@@ -3,13 +3,23 @@
 from .utils.base_feature import BaseFeature
 from .features import Features, get_names, get_versions
 from .utils.grouped_list import GroupedList
-from .qualitative_features import CategoricalFeature, OrdinalFeature
-from .quantitative_features import QuantitativeFeature
+from .qualitative_features import (
+    CategoricalFeature,
+    OrdinalFeature,
+    get_qualitative_features,
+    get_categorical_features,
+    get_ordinal_features,
+)
+from .quantitative_features import QuantitativeFeature, get_quantitative_features
 
 __all__ = [
     "Features",
     "get_names",
     "get_versions",
+    "get_quantitative_features",
+    "get_qualitative_features",
+    "get_categorical_features",
+    "get_ordinal_features",
     "BaseFeature",
     "GroupedList",
     "CategoricalFeature",

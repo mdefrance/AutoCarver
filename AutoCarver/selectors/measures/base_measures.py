@@ -25,7 +25,7 @@ class BaseMeasure(ABC):
 
     __name__ = "BaseMeasure"
 
-    def __init__(self, threshold: float = 1.0) -> None:
+    def __init__(self, threshold: float = 0.0) -> None:
         self.threshold = threshold
         self.value = None
         self._info = {}
@@ -116,7 +116,7 @@ class OutlierMeasure(BaseMeasure):
     higher_is_better = False
     correlation_with = "itself"
 
-    def __init__(self, threshold: float = 0.0) -> None:
+    def __init__(self, threshold: float = 1.0) -> None:
         super().__init__(threshold)
 
     @abstractmethod
@@ -132,14 +132,12 @@ class OutlierMeasure(BaseMeasure):
         return True
 
 
-class NanMeasure(BaseMeasure):
+class NanMeasure(OutlierMeasure):
     __name__ = "NaN"
-    is_default = True
     is_x_quantitative = True
     is_x_qualitative = True
-    is_sortable = False
 
-    def compute_association(self, x: Series, y: Series) -> float:
+    def compute_association(self, x: Series, y: Series = None) -> float:
         """Measure of the percentage of NaNs
 
         Parameters
@@ -161,14 +159,12 @@ class NanMeasure(BaseMeasure):
         return self.value
 
 
-class ModeMeasure(BaseMeasure):
+class ModeMeasure(OutlierMeasure):
     __name__ = "Mode"
-    is_default = True
     is_x_quantitative = True
     is_x_qualitative = True
-    is_sortable = False
 
-    def compute_association(self, x: Series, y: Series) -> float:
+    def compute_association(self, x: Series, y: Series = None) -> float:
         """Measure of the percentage of NaNs
 
         Parameters

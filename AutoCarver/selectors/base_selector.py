@@ -1,5 +1,6 @@
 """Tools to select the best Quantitative and Qualitative features."""
 
+from typing import Union
 from random import shuffle, seed
 from warnings import warn
 
@@ -188,12 +189,12 @@ class BaseSelector(ABC):
     @abstractmethod
     def _initiate_measures(self, requested_measures: list[BaseMeasure] = None) -> list[BaseMeasure]:
         """initiates the list of measures with default values"""
-        pass
+        return requested_measures
 
     @abstractmethod
     def _initiate_filters(self, requested_filters: list[BaseFilter] = None) -> list[BaseFilter]:
         """initiates the list of measures with default values"""
-        pass
+        return requested_filters
 
     def select(self, X: DataFrame, y: Series) -> list[BaseFeature]:
         """Selects the ``n_best`` features of the DataFrame, by association with the target
@@ -213,57 +214,56 @@ class BaseSelector(ABC):
             List of selected features
         """
 
+        # list of best_features
+        best_features: list[BaseFeature] = []
+
         # checking for quantitative features before selection
         quantitatives = self.features.get_quantitatives()
+        print("quantitatives", quantitatives)
         if len(quantitatives) > 0:
-            best_quantitative_features = self._select_quantitatives(quantitatives, X, y)
+
+            # getting qualitative measures and filters
+            measures = get_quantitative_metrics(self.measures)
+            filters = get_quantitative_metrics(self.filters)
+
+            # getting best features
+            best_features += self._select_features(quantitatives, X, y, measures, filters)
 
         # checking for qualitative features before selection
         qualitatives = self.features.get_qualitatives()
         if len(qualitatives) > 0:
-            best_qualitative_features = self._select_qualitatives(qualitatives, X, y)
 
-        return best_quantitative_features, best_qualitative_features
+            # getting qualitative measures and filters
+            measures = get_qualitative_metrics(self.measures)
+            filters = get_qualitative_metrics(self.filters)
 
-    def _select_quantitatives(
-        self, quantitatives: list[BaseFeature], X: DataFrame, y: Series
-    ) -> list[QuantitativeFeature]:
-        """selects amongst quantitative features"""
+            # getting best features
+            best_features += self._select_features(qualitatives, X, y, measures, filters)
 
-        # getting measures to sort features
-        measures = get_quantitative_measures(self.measures)
+        return best_features
 
-        # apply default measures to features
-        apply_measures(quantitatives, X, y, measures, default_measures=True)
-
-        # getting filters
-        filters = get_quantitative_filters(self.filters)
-
-        # apply default filters to features
-        quantitatives = apply_filters(quantitatives, X, filters, default_filters=True)
-
-        # splitting features in chunks and getting best per-chunk set of features
-        return self._get_best_features_across_chunks(quantitatives, X, y, measures, filters)
-
-    def _select_qualitatives(
-        self, qualitatives: list[BaseFeature], X: DataFrame, y: Series
+    def _select_features(
+        self,
+        features: list[BaseFeature],
+        X: DataFrame,
+        y: Series,
+        measures: list[BaseMeasure],
+        filters: list[BaseFilter],
     ) -> list[CategoricalFeature]:
-        """selects amongst qualitative features"""
-
-        # getting measures to sort features
-        measures = get_qualitative_measures(self.measures)
+        """selects amongst features"""
 
         # apply default measures to features
-        apply_measures(qualitatives, X, y, measures, default_measures=True)
-
-        # getting filters
-        filters = get_qualitative_filters(self.filters)
+        apply_measures(features, X, y, measures, default_measures=True)
 
         # apply default filters to features
-        qualitatives = apply_filters(qualitatives, X, filters, default_filters=True)
+        features = apply_filters(features, X, filters, default_filters=True)
+
+        # getting non-default measures and filters
+        measures = remove_default_metrics(measures)
+        filters = remove_default_metrics(filters)
 
         # splitting features in chunks and getting best per-chunk set of features
-        return self._get_best_features_across_chunks(qualitatives, X, y, measures, filters)
+        return self._get_best_features_across_chunks(features, X, y, measures, filters)
 
     def _get_best_features_across_chunks(
         self,
@@ -291,7 +291,7 @@ class BaseSelector(ABC):
             for chunk in chunks:
                 # fitting association on features
                 best_features += get_best_features(
-                    chunk, X, y, measures, filters, int(self.n_best // len(chunks))
+                    chunk, X, y, measures, filters, max(int(self.n_best // len(chunks)), 1)
                 )
 
         return get_best_features(best_features, X, y, measures, filters, self.n_best)
@@ -365,24 +365,32 @@ def make_random_chunks(elements: list, max_chunk_sizes: int, random_state: int =
     return chunks
 
 
-def get_quantitative_measures(measures: list[BaseMeasure]) -> list[BaseMeasure]:
-    """returns filtered list of measures that apply on quantitative features"""
-    return [measure for measure in measures if measure.is_x_quantitative]
+def get_qualitative_metrics(
+    metrics: list[Union[BaseMeasure, BaseFilter]]
+) -> list[Union[BaseMeasure, BaseFilter]]:
+    """returns filtered list of measures/filters that apply on qualitative features"""
+    return [metric for metric in metrics if metric.is_x_qualitative]
 
 
-def get_qualitative_measures(measures: list[BaseMeasure]) -> list[BaseMeasure]:
-    """returns filtered list of measures that apply on qualitative features"""
-    return [measure for measure in measures if measure.is_x_qualitative]
+def get_quantitative_metrics(
+    metrics: list[Union[BaseMeasure, BaseFilter]]
+) -> list[Union[BaseMeasure, BaseFilter]]:
+    """returns filtered list of measures/filters that apply on quantitative features"""
+    return [metric for metric in metrics if metric.is_x_quantitative]
 
 
-def get_quantitative_filters(filters: list[BaseFilter]) -> list[BaseFilter]:
-    """returns filtered list of filters that apply on quantitative features"""
-    return [filter for filter in filters if filter.is_x_quantitative]
+def get_default_metrics(
+    metrics: list[Union[BaseMeasure, BaseFilter]]
+) -> list[Union[BaseMeasure, BaseFilter]]:
+    """returns filtered list of measures/filters that are default"""
+    return [metric for metric in metrics if metric.is_default]
 
 
-def get_qualitative_filters(filters: list[BaseFilter]) -> list[BaseFilter]:
-    """returns filtered list of filters that apply on qualitative features"""
-    return [filter for filter in filters if filter.is_x_qualitative]
+def remove_default_metrics(
+    metrics: list[Union[BaseMeasure, BaseFilter]]
+) -> list[Union[BaseMeasure, BaseFilter]]:
+    """returns filtered list of measures/filters that are non-default"""
+    return [metric for metric in metrics if not metric.is_default]
 
 
 def remove_duplicates(features: list[BaseFeature]) -> list[BaseFeature]:
@@ -408,11 +416,13 @@ def apply_measures(
     y: Series,
     measures: list[BaseMeasure],
     default_measures: bool = False,
-) -> None:
-    """Measures association between columns of X and y"""
+) -> list[BaseMeasure]:
+    """Measures association between columns of X and y, returns remaining_measures (not used)"""
 
     # keeping only default measures or non default measures
-    used_measures = [measure for measure in measures if measure.is_default == default_measures]
+    used_measures = remove_default_metrics(measures)
+    if default_measures:
+        used_measures = get_default_metrics(measures)
 
     # iterating over each feature
     for feature in features:
@@ -446,14 +456,15 @@ def apply_filters(
     """Filters out too correlated features (least relevant first)"""
 
     # keeping only default filters or non default filters
-    used_filters = [filter_ for filter_ in filters if filter_.is_default == default_filters]
+    used_filters = remove_default_metrics(filters)
+    if default_filters:
+        used_filters = get_default_metrics(filters)
 
     # keeping track of remaining features
     filtered = features[:]
 
     # iterating over each filter
     for filter_ in used_filters:
-        print(filter_, filter_.threshold)
 
         # checking for mismatched data types
         for feature in features:

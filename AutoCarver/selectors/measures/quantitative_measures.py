@@ -7,7 +7,7 @@ from pandas import DataFrame, Series
 from scipy.spatial.distance import correlation
 from scipy.stats import kruskal, pearsonr, spearmanr
 from statsmodels.formula.api import ols
-from .base_measures import BaseMeasure, OutlierMeasure
+from .base_measures import BaseMeasure, OutlierMeasure, AbsoluteMeasure
 
 
 class ReversibleMeasure(BaseMeasure):
@@ -116,7 +116,7 @@ class RMeasure(BaseMeasure):
         return self.value
 
 
-class PearsonMeasure(BaseMeasure):
+class PearsonMeasure(AbsoluteMeasure):
     __name__ = "Pearson"
     is_x_quantitative = True
     is_y_quantitative = True
@@ -147,7 +147,7 @@ class PearsonMeasure(BaseMeasure):
         return self.value
 
 
-class SpearmanMeasure(BaseMeasure):
+class SpearmanMeasure(AbsoluteMeasure):
     __name__ = "Spearman"
     is_x_quantitative = True
     is_y_quantitative = True
@@ -177,7 +177,7 @@ class SpearmanMeasure(BaseMeasure):
         return self.value
 
 
-class DistanceMeasure(BaseMeasure):
+class DistanceMeasure(AbsoluteMeasure):
     __name__ = "Distance"
     is_x_quantitative = True
     is_y_quantitative = True

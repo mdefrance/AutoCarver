@@ -86,11 +86,12 @@ def test_filter(
     ), "should be BaseFeature"
 
     # testing _compute_worst_correlation
-    correlation_with, worst_correlation = filter._compute_worst_correlation(
-        correlation, sample_ranks[1]
-    )
+    feature = sample_ranks[1]
+    correlation_with, worst_correlation = filter._compute_worst_correlation(correlation, feature)
     assert isinstance(worst_correlation, float)
     assert isinstance(correlation_with, str)
+    print(correlation)
+    assert correlation.loc[correlation_with, feature.version] == worst_correlation
 
     # testing _validate
     feature = sample_ranks[0]

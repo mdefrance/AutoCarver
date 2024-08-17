@@ -136,3 +136,8 @@ def min_decimals_to_differentiate(sorted_numbers: list[float]) -> int:
     # Number of decimal places needed
     decimal_places = -int(floor(log10(smallest_diff)))
     return decimal_places
+
+
+def get_quantitative_features(features: list[BaseFeature]) -> list[QuantitativeFeature]:
+    """returns quantitative features amongst provided features"""
+    return [feature for feature in features if feature.is_quantitative]

@@ -84,7 +84,7 @@ class QuantitativeFilter(BaseFilter):
     def _compute_correlation(self, X: DataFrame, rank: list[BaseFeature]) -> DataFrame:
         """Computing correlation between features"""
         # absolute correlation between features
-        X_corr = X[get_versions(rank)].corr(self.measure).abs()
+        X_corr = X[get_versions(rank)].corr(self.measure)
 
         # getting upper right part of the correlation matrix and removing autocorrelation
         return X_corr.where(triu(ones(X_corr.shape), k=1).astype(bool))
@@ -122,8 +122,10 @@ class QuantitativeFilter(BaseFilter):
         # correlation with more associated features
         corr_with_better_features = X_corr.loc[: feature.version, feature.version].fillna(0)
 
-        # worst/maximum correlation with better features
-        return corr_with_better_features.agg(["idxmax", "max"])
+        # worst/maximum absolute correlation with better features
+        return corr_with_better_features.agg(
+            [lambda x: x.abs().idxmax(), lambda x: max(x.min(), x.max(), key=abs)]
+        )
 
     def _validate(
         self, feature: BaseFeature, worst_correlation: float, correlation_with: str
@@ -131,12 +133,19 @@ class QuantitativeFilter(BaseFilter):
         """Checks if the worst correlation of a feature is above specified threshold"""
         # dropping the feature if it was too correlated to a better feature
         valid = True
-        if worst_correlation > self.threshold:
+        if abs(worst_correlation) > self.threshold:
             valid = False
 
         # update feature accordingly (update stats)
         self.update_feature(
-            feature, worst_correlation, valid, info={"correlation_with": correlation_with}
+            feature,
+            worst_correlation,
+            valid,
+            info={
+                "correlation_with": (
+                    correlation_with if correlation_with != feature.version else "itself"
+                )
+            },
         )
 
         return valid

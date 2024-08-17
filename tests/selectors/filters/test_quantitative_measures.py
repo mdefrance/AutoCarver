@@ -341,6 +341,11 @@ def test_quanti_quanti_validate_with_computed_association_below_threshold(
         not quanti_quanti_measure.validate()
     ), "kept feature with lower than threshold correlation"
 
+    # test with negative value
+    quanti_quanti_measure.value = -0.5
+    quanti_quanti_measure.thresold = 0.6
+    assert not quanti_quanti_measure.validate()
+
 
 def test_quanti_quanti_validate_with_computed_association_above_threshold(
     quanti_quanti_measure: BaseMeasure, series_data: Series
@@ -366,6 +371,11 @@ def test_quanti_quanti_validate_with_computed_association_above_threshold(
         quanti_quanti_measure.validate(),
     )
     assert quanti_quanti_measure.validate(), "removed feature with lower than threshold correlation"
+
+    # test with negative value
+    quanti_quanti_measure.value = -0.5
+    quanti_quanti_measure.thresold = 0.3
+    assert quanti_quanti_measure.validate()
 
 
 def test_quanti_binary_validate_with_computed_association_below_threshold(

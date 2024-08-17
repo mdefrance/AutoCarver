@@ -58,7 +58,7 @@ class QualitativeFilter(BaseFilter):
         """
 
         # initiating worst correlation
-        correlation_with, worst_correlation = feature.version, 0.0
+        correlation_with, worst_correlation = "itself", 0.0
 
         # features more associated with target
         current_feature_index = get_versions(rank).index(feature.version)

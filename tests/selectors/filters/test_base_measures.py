@@ -188,12 +188,28 @@ def test_nan_measure(nan_measure: NanMeasure) -> None:
     assert nan_measure.compute_association(series, None) == 0.25, "should measure nan as missing"
     assert nan_measure.is_default, "should be default"
 
+    nan_measure.threshold = 1.0
+    nan_measure.value = 0.5
+    assert nan_measure.validate(), "should be valid"
+
+    nan_measure.threshold = 0.5
+    nan_measure.value = 1.0
+    assert not nan_measure.validate(), "should not be valid"
+
 
 def test_mode_measure(mode_measure: ModeMeasure) -> None:
     """tests mode measure"""
     series = Series([1, 2, 2, 4])
     assert mode_measure.compute_association(series, None) == 0.5
     assert mode_measure.is_default, "should be default"
+
+    mode_measure.threshold = 1.0
+    mode_measure.value = 0.5
+    assert mode_measure.validate(), "should be valid"
+
+    mode_measure.threshold = 0.5
+    mode_measure.value = 1.0
+    assert not mode_measure.validate(), "should not be valid"
 
 
 def test_reverse_xy(reversible_measure: ReversibleMeasure) -> None:

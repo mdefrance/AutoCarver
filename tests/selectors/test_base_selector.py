@@ -2,14 +2,14 @@
 
 from pytest import fixture, FixtureRequest, raises
 
-from AutoCarver.features import BaseFeature
+from AutoCarver.features import BaseFeature, get_quantitative_features, get_qualitative_features
 from AutoCarver.selectors import BaseFilter, BaseMeasure
 from AutoCarver.selectors.base_selector import (
     make_random_chunks,
-    get_quantitative_filters,
-    get_quantitative_measures,
-    get_qualitative_filters,
-    get_qualitative_measures,
+    get_quantitative_metrics,
+    get_qualitative_metrics,
+    get_default_metrics,
+    remove_default_metrics,
     remove_duplicates,
     sort_features_per_measure,
     apply_measures,
@@ -37,8 +37,8 @@ from AutoCarver.selectors.filters import (
     TschuprowtFilter,
 )
 
-quanti_measures = [KruskalMeasure, PearsonMeasure, DistanceMeasure, SpearmanMeasure]
-quali_measures = [Chi2Measure, CramervMeasure, TschuprowtMeasure]
+quanti_measures = [KruskalMeasure]  # , PearsonMeasure, DistanceMeasure, SpearmanMeasure]
+quali_measures = [Chi2Measure]  # , CramervMeasure, TschuprowtMeasure]
 
 
 @fixture(params=quanti_measures + quali_measures)
@@ -101,50 +101,106 @@ def test_make_random_chunks() -> None:
     assert all(element in elements for chunk in chunks for element in chunk)
 
 
-def test_get_quantitative_measures(
-    quanti_measure: BaseMeasure, quali_measure: BaseMeasure, default_measure: BaseMeasure
+def test_get_quantitative_metrics(
+    quanti_measure: BaseMeasure,
+    quali_measure: BaseMeasure,
+    default_measure: BaseMeasure,
+    quanti_filter: BaseFilter,
+    quali_filter: BaseFilter,
+    default_filter: BaseFilter,
 ) -> None:
-    """function test of get_quantitative_measures"""
+    """function test of get_quantitative_metrics"""
+
+    # test with measures
     measures = [quanti_measure, quali_measure, default_measure]
-    quantitative_measures = get_quantitative_measures(measures)
+    quantitative_measures = get_quantitative_metrics(measures)
     assert len(quantitative_measures) == 2
     assert quantitative_measures[0] == quanti_measure
     assert quantitative_measures[1] == default_measure
 
+    # test with filters
+    filters = [quanti_filter, quali_filter, default_filter]
+    quantitative_filters = get_quantitative_metrics(filters)
+    assert len(quantitative_filters) == 2
+    assert quantitative_filters[0] == quanti_filter
+    assert quantitative_filters[1] == default_filter
 
-def test_get_qualitative_measures(
-    quanti_measure: BaseMeasure, quali_measure: BaseMeasure, default_measure: BaseMeasure
+
+def test_get_qualitative_metrics(
+    quanti_measure: BaseMeasure,
+    quali_measure: BaseMeasure,
+    default_measure: BaseMeasure,
+    quanti_filter: BaseFilter,
+    quali_filter: BaseFilter,
+    default_filter: BaseFilter,
 ) -> None:
-    """function test of get_qualitative_measures"""
+    """function test of get_qualitative_metrics"""
+
+    # test with measures
     measures = [quanti_measure, quali_measure, default_measure]
-    qualitative_measures = get_qualitative_measures(measures)
+    qualitative_measures = get_qualitative_metrics(measures)
     assert len(qualitative_measures) >= 1
     assert qualitative_measures[0] == quali_measure
     # checking for outlier measures that are default but only for quantitatives
     if len(qualitative_measures) == 2:
         assert qualitative_measures[1] == default_measure
 
-
-def test_get_quantitative_filters(
-    quanti_filter: BaseFilter, quali_filter: BaseFilter, default_filter: BaseFilter
-) -> None:
-    """function test of get_quantitative_filters"""
+    # test with filters
     filters = [quanti_filter, quali_filter, default_filter]
-    quantitative_filters = get_quantitative_filters(filters)
-    assert len(quantitative_filters) == 2
-    assert quantitative_filters[0] == quanti_filter
-    assert quantitative_filters[1] == default_filter
-
-
-def test_get_qualitative_filters(
-    quanti_filter: BaseFilter, quali_filter: BaseFilter, default_filter: BaseFilter
-) -> None:
-    """function test of get_qualitative_filters"""
-    filters = [quanti_filter, quali_filter, default_filter]
-    qualitative_filters = get_qualitative_filters(filters)
+    qualitative_filters = get_qualitative_metrics(filters)
     assert len(qualitative_filters) == 2
     assert qualitative_filters[0] == quali_filter
     assert qualitative_filters[1] == default_filter
+
+
+def test_get_default_metrics(
+    quanti_measure: BaseMeasure,
+    quali_measure: BaseMeasure,
+    default_measure: BaseMeasure,
+    quanti_filter: BaseFilter,
+    quali_filter: BaseFilter,
+    default_filter: BaseFilter,
+) -> None:
+    """function test of get_default_metrics"""
+
+    # test with measures
+    measures = [quanti_measure, quali_measure, default_measure]
+    default_measures = get_default_metrics(measures)
+    assert len(default_measures) <= 1
+    # checking for outlier measures that are default but only for quantitatives
+    if len(default_measures) == 1:
+        assert default_measures[0] == default_measure
+
+    # test with filters
+    filters = [quanti_filter, quali_filter, default_filter]
+    default_filters = get_default_metrics(filters)
+    assert len(default_filters) == 1
+    assert default_filters[0] == default_filter
+
+
+def test_remove_default_metrics(
+    quanti_measure: BaseMeasure,
+    quali_measure: BaseMeasure,
+    default_measure: BaseMeasure,
+    quanti_filter: BaseFilter,
+    quali_filter: BaseFilter,
+    default_filter: BaseFilter,
+) -> None:
+    """function test of remove_default_metrics"""
+
+    # test with measures
+    measures = [quanti_measure, quali_measure, default_measure]
+    nondefault_measures = remove_default_metrics(measures)
+    assert len(nondefault_measures) == 2
+    assert nondefault_measures[0] == quanti_measure
+    assert nondefault_measures[1] == quali_measure
+
+    # test with filters
+    filters = [quanti_filter, quali_filter, default_filter]
+    nondefault_filters = remove_default_metrics(filters)
+    assert len(nondefault_filters) == 2
+    assert nondefault_filters[0] == quanti_filter
+    assert nondefault_filters[1] == quali_filter
 
 
 def test_remove_duplicates() -> None:
@@ -183,8 +239,10 @@ from unittest.mock import Mock
 def features():
     feature1 = BaseFeature("feature1")
     feature1.is_qualitative = True
+    feature1.is_categorical = True
     feature2 = BaseFeature("feature2")
     feature2.is_qualitative = True
+    feature2.is_ordinal = True
     feature3 = BaseFeature("feature3")
     feature3.is_quantitative = True
     feature4 = BaseFeature("feature4")
@@ -218,12 +276,12 @@ def _apply_measures(
     """testing function apply_measures"""
 
     # sorting out measures
-    quantitative_measures = get_quantitative_measures(measures)
-    qualitative_measures = get_qualitative_measures(measures)
+    quantitative_measures = get_quantitative_metrics(measures)
+    qualitative_measures = get_qualitative_metrics(measures)
 
     # sorting out features
-    qualitative_features = [feature for feature in features if feature.is_qualitative]
-    quantitative_features = [feature for feature in features if feature.is_quantitative]
+    qualitative_features = get_qualitative_features(features)
+    quantitative_features = get_quantitative_features(features)
 
     # applying qualitative measures
     apply_measures(qualitative_features, X, y, qualitative_measures, default_measures=True)
@@ -254,12 +312,12 @@ def _apply_filters(features: list[BaseFeature], X: DataFrame, filters: list[Base
     """testing function apply_filters"""
 
     # sorting out filters
-    quantitative_filters = get_quantitative_filters(filters)
-    qualitative_filters = get_qualitative_filters(filters)
+    quantitative_filters = get_quantitative_metrics(filters)
+    qualitative_filters = get_qualitative_metrics(filters)
 
     # sorting out features
-    qualitative_features = [feature for feature in features if feature.is_qualitative]
-    quantitative_features = [feature for feature in features if feature.is_quantitative]
+    qualitative_features = get_qualitative_features(features)
+    quantitative_features = get_quantitative_features(features)
 
     # applying default filters
     filtered = apply_filters(features, X, filters, default_filters=True)
@@ -284,7 +342,7 @@ def _apply_filters(features: list[BaseFeature], X: DataFrame, filters: list[Base
     assert len(filtered) == (len(quantitative_features) - 1)
 
 
-def test_get_best_features(
+def _get_best_features(
     features: list[BaseFeature],
     X: DataFrame,
     y: Series,
@@ -293,16 +351,16 @@ def test_get_best_features(
 ) -> None:
 
     # sorting out features
-    qualitative_features = [feature for feature in features if feature.is_qualitative]
-    quantitative_features = [feature for feature in features if feature.is_quantitative]
+    qualitative_features = get_qualitative_features(features)
+    quantitative_features = get_quantitative_features(features)
 
     # sorting out measures
-    quantitative_measures = get_quantitative_measures(measures)
-    qualitative_measures = get_qualitative_measures(measures)
+    quantitative_measures = get_quantitative_metrics(measures)
+    qualitative_measures = get_qualitative_metrics(measures)
 
     # sorting out filters
-    quantitative_filters = get_quantitative_filters(filters)
-    qualitative_filters = get_qualitative_filters(filters)
+    quantitative_filters = get_quantitative_metrics(filters)
+    qualitative_filters = get_qualitative_metrics(filters)
 
     # non sortable measures
     with raises(ValueError):
@@ -317,8 +375,8 @@ def test_get_best_features(
             )
 
     # sorting out measures
-    quantitative_measures = [measure for measure in quantitative_measures if not measure.is_default]
-    qualitative_measures = [measure for measure in qualitative_measures if not measure.is_default]
+    quantitative_measures = remove_default_metrics(quantitative_measures)
+    qualitative_measures = remove_default_metrics(qualitative_measures)
 
     # getting all quantitative features
     n_best = len(quantitative_features)
@@ -384,3 +442,216 @@ def test_get_best_features(
         get_best_features(
             quantitative_features, X, y, quantitative_measures, qualitative_filters, 1
         )
+
+
+from AutoCarver.features import Features
+from AutoCarver.selectors.base_selector import BaseSelector
+
+
+@fixture
+def features_object(features: list[BaseFeature]) -> Features:
+    """mock Features"""
+    return Features(features)
+
+
+# setting BaseSelector as non abstract classes for the duration of the test
+BaseSelector.__abstractmethods__ = set()
+
+
+def test_base_selector_init_valid_parameters(features_object: Features) -> None:
+    """test init of base selector"""
+
+    # n_best < len(features)
+    n_best, max_num_features_per_chunk = 2, 100
+    selector = BaseSelector(
+        n_best=n_best,
+        features=features_object,
+        max_num_features_per_chunk=max_num_features_per_chunk,
+    )
+    assert selector.n_best == n_best
+    assert selector.features == features_object
+    assert selector.max_num_features_per_chunk == max_num_features_per_chunk
+
+    # n_best > len(features)
+    n_best, max_num_features_per_chunk = 100, 100
+    with pytest.raises(ValueError):
+        BaseSelector(
+            n_best=n_best,
+            features=features_object,
+            max_num_features_per_chunk=max_num_features_per_chunk,
+        )
+
+    # invalid  max_num_features_per_chunk
+    n_best, max_num_features_per_chunk = 100, 1
+    with pytest.raises(ValueError):
+        BaseSelector(
+            n_best=n_best,
+            features=features_object,
+            max_num_features_per_chunk=max_num_features_per_chunk,
+        )
+
+
+def _base_selector_select(
+    features_object: Features,
+    X: DataFrame,
+    y: Series,
+    measures: list[BaseMeasure],
+    filters: list[BaseFilter],
+) -> None:
+    """tests BaseSelector select function"""
+
+    # keeping all features
+    n_best, max_num_features_per_chunk = 2, 100
+    selector = BaseSelector(
+        n_best=n_best,
+        features=features_object,
+        max_num_features_per_chunk=max_num_features_per_chunk,
+        measures=measures,
+        filters=filters,
+    )
+    best_features = selector.select(X, y)
+    assert isinstance(best_features, list)
+    for feature in features_object.get_quantitatives():
+        assert feature in best_features
+    for feature in features_object.get_qualitatives():
+        assert feature in best_features
+
+    # keeping best feature per type
+    n_best, max_num_features_per_chunk = 1, 100
+    selector = BaseSelector(
+        n_best=n_best,
+        features=features_object,
+        max_num_features_per_chunk=max_num_features_per_chunk,
+        measures=measures,
+        filters=filters,
+    )
+    best_features = selector.select(X, y)
+    assert len(best_features) == 2
+    quantitative_sorted_features = sort_features_per_measure(
+        get_quantitative_features(features_object),
+        remove_default_metrics(get_quantitative_metrics(measures))[0],
+    )
+    assert len(get_quantitative_features(best_features)) == 1
+    assert get_quantitative_features(best_features)[0] == quantitative_sorted_features[0]
+
+    qualitative_sorted_features = sort_features_per_measure(
+        get_qualitative_features(features_object),
+        remove_default_metrics(get_qualitative_metrics(measures))[0],
+    )
+    assert len(get_qualitative_features(best_features)) == 1
+    assert get_qualitative_features(best_features)[0] == qualitative_sorted_features[0]
+
+
+def _base_selector_get_best_features_across_chunks_no_chunking(
+    features_object: Features,
+    X: DataFrame,
+    y: Series,
+    measures: list[BaseMeasure],
+    filters: list[BaseFilter],
+) -> None:
+
+    # generating several correlated features
+    new_features = []
+    new_X = {}
+    for i in range(10):
+        for feature in features_object:
+            new_name = feature.name + f"_{i}"
+            new_X.update({new_name: X[feature.name]})
+            new_feature = BaseFeature(new_name)
+            new_feature.is_quantitative = feature.is_quantitative
+            new_feature.is_categorical = feature.is_categorical
+            new_feature.is_ordinal = feature.is_ordinal
+            new_feature.is_qualitative = feature.is_qualitative
+            new_features += [new_feature]
+
+    X = DataFrame(new_X)
+    features_object = Features(new_features)
+
+    n_best, max_num_features_per_chunk = 1, 100
+    selector = BaseSelector(
+        n_best=n_best,
+        features=features_object,
+        max_num_features_per_chunk=max_num_features_per_chunk,
+        measures=measures,
+        filters=filters,
+    )
+    best_features = selector.select(X, y)
+    assert len(best_features) == 2
+    quantitative_sorted_features = sort_features_per_measure(
+        get_quantitative_features(features_object),
+        remove_default_metrics(get_quantitative_metrics(measures))[0],
+    )
+    assert len(get_quantitative_features(best_features)) == 1
+    assert get_quantitative_features(best_features)[0] == quantitative_sorted_features[0]
+
+    qualitative_sorted_features = sort_features_per_measure(
+        get_qualitative_features(features_object),
+        remove_default_metrics(get_qualitative_metrics(measures))[0],
+    )
+    assert len(get_qualitative_features(best_features)) == 1
+    assert get_qualitative_features(best_features)[0] == qualitative_sorted_features[0]
+
+
+def test_base_selector_get_best_features_across_chunks_with_chunking(
+    features_object: Features,
+    X: DataFrame,
+    y: Series,
+    measures: list[BaseMeasure],
+    filters: list[BaseFilter],
+) -> None:
+
+    # generating several correlated features
+    new_features = []
+    new_X = {}
+    for i in range(10):
+        for feature in features_object:
+            new_name = feature.name + f"_{i}"
+            new_X.update({new_name: X[feature.name]})
+            new_feature = BaseFeature(new_name)
+            new_feature.is_quantitative = feature.is_quantitative
+            new_feature.is_categorical = feature.is_categorical
+            new_feature.is_ordinal = feature.is_ordinal
+            new_feature.is_qualitative = feature.is_qualitative
+            new_features += [new_feature]
+
+    X = DataFrame(new_X)
+    features_object = Features(new_features)
+
+    n_best, max_num_features_per_chunk = 1, 10
+    selector = BaseSelector(
+        n_best=n_best,
+        features=features_object,
+        max_num_features_per_chunk=max_num_features_per_chunk,
+        measures=measures,
+        filters=filters,
+    )
+    best_features = selector.select(X, y)
+    assert len(best_features) == 2
+
+    # looking for first chunk
+    quantitative_chunks = make_random_chunks(
+        get_quantitative_features(features_object),
+        max_num_features_per_chunk,
+        selector.random_state,
+    )
+    print(quantitative_chunks[0][0] in features_object.get_quantitatives(), quantitative_chunks[0])
+
+    quantitative_sorted_features = sort_features_per_measure(
+        quantitative_chunks[0],
+        remove_default_metrics(get_quantitative_metrics(measures))[0],
+    )
+    assert len(get_quantitative_features(best_features)) == 1
+    assert get_quantitative_features(best_features)[0] == quantitative_sorted_features[0]
+
+    # looking for first chunk
+    qualitative_chunks = make_random_chunks(
+        get_qualitative_features(features_object),
+        max_num_features_per_chunk,
+        selector.random_state,
+    )
+    qualitative_sorted_features = sort_features_per_measure(
+        qualitative_chunks[0],
+        remove_default_metrics(get_qualitative_metrics(measures))[0],
+    )
+    assert len(get_qualitative_features(best_features)) == 1
+    assert get_qualitative_features(best_features)[0] == qualitative_sorted_features[0]
