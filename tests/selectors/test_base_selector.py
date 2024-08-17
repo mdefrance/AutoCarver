@@ -2,9 +2,16 @@
 
 from pytest import fixture, FixtureRequest, raises
 
-from AutoCarver.features import BaseFeature, get_quantitative_features, get_qualitative_features
+from pandas import DataFrame, Series
+from AutoCarver.features import (
+    Features,
+    BaseFeature,
+    get_quantitative_features,
+    get_qualitative_features,
+)
 from AutoCarver.selectors import BaseFilter, BaseMeasure
 from AutoCarver.selectors.base_selector import (
+    BaseSelector,
     make_random_chunks,
     get_quantitative_metrics,
     get_qualitative_metrics,
@@ -37,8 +44,8 @@ from AutoCarver.selectors.filters import (
     TschuprowtFilter,
 )
 
-quanti_measures = [KruskalMeasure]  # , PearsonMeasure, DistanceMeasure, SpearmanMeasure]
-quali_measures = [Chi2Measure]  # , CramervMeasure, TschuprowtMeasure]
+quanti_measures = [KruskalMeasure, PearsonMeasure, DistanceMeasure, SpearmanMeasure]
+quali_measures = [Chi2Measure, CramervMeasure, TschuprowtMeasure]
 
 
 @fixture(params=quanti_measures + quali_measures)
@@ -230,11 +237,6 @@ def test_sort_features_per_measure(measure: BaseMeasure) -> None:
     assert sorted_features[2] == feature3
 
 
-import pytest
-from pandas import DataFrame, Series
-from unittest.mock import Mock
-
-
 @fixture
 def features():
     feature1 = BaseFeature("feature1")
@@ -267,10 +269,7 @@ def y():
     return Series([7, 8, 9, 10, 11, 12])
 
 
-from icecream import ic
-
-
-def _apply_measures(
+def test_apply_measures(
     features: list[BaseFeature], X: DataFrame, y: Series, measures: list[BaseMeasure]
 ) -> None:
     """testing function apply_measures"""
@@ -308,7 +307,9 @@ def _apply_measures(
         apply_measures(qualitative_features, X, y, quantitative_measures, default_measures=False)
 
 
-def _apply_filters(features: list[BaseFeature], X: DataFrame, filters: list[BaseFilter]) -> None:
+def test_apply_filters(
+    features: list[BaseFeature], X: DataFrame, filters: list[BaseFilter]
+) -> None:
     """testing function apply_filters"""
 
     # sorting out filters
@@ -444,10 +445,6 @@ def _get_best_features(
         )
 
 
-from AutoCarver.features import Features
-from AutoCarver.selectors.base_selector import BaseSelector
-
-
 @fixture
 def features_object(features: list[BaseFeature]) -> Features:
     """mock Features"""
@@ -474,7 +471,7 @@ def test_base_selector_init_valid_parameters(features_object: Features) -> None:
 
     # n_best > len(features)
     n_best, max_num_features_per_chunk = 100, 100
-    with pytest.raises(ValueError):
+    with raises(ValueError):
         BaseSelector(
             n_best=n_best,
             features=features_object,
@@ -483,7 +480,7 @@ def test_base_selector_init_valid_parameters(features_object: Features) -> None:
 
     # invalid  max_num_features_per_chunk
     n_best, max_num_features_per_chunk = 100, 1
-    with pytest.raises(ValueError):
+    with raises(ValueError):
         BaseSelector(
             n_best=n_best,
             features=features_object,
@@ -491,7 +488,7 @@ def test_base_selector_init_valid_parameters(features_object: Features) -> None:
         )
 
 
-def _base_selector_select(
+def test_base_selector_select(
     features_object: Features,
     X: DataFrame,
     y: Series,
@@ -542,7 +539,7 @@ def _base_selector_select(
     assert get_qualitative_features(best_features)[0] == qualitative_sorted_features[0]
 
 
-def _base_selector_get_best_features_across_chunks_no_chunking(
+def test_base_selector_get_best_features_across_chunks_no_chunking(
     features_object: Features,
     X: DataFrame,
     y: Series,
