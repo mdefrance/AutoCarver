@@ -2,7 +2,7 @@
 """
 
 import json
-from typing import Any, Type
+from typing import Any
 
 from pandas import DataFrame, Series
 
@@ -10,8 +10,10 @@ from ...config import DEFAULT, NAN
 from .grouped_list import GroupedList
 from .serialization import json_deserialize_content, json_serialize_feature
 
+from abc import ABC, abstractmethod
 
-class BaseFeature:
+
+class BaseFeature(ABC):
     __name__ = "Feature"
     is_quantitative = False
     is_qualitative = False
@@ -42,10 +44,10 @@ class BaseFeature:
         self.value_per_label: dict[str, str] = {}  # a value for each current label
 
         # initating feature dtypes
-        self.is_ordinal = kwargs.get("is_ordinal", False)
-        self.is_categorical = kwargs.get("is_categorical", False)
-        self.is_qualitative = kwargs.get("is_qualitative", False)
-        self.is_quantitative = kwargs.get("is_quantitative", False)
+        self.is_ordinal = kwargs.get("is_ordinal", self.is_ordinal)
+        self.is_categorical = kwargs.get("is_categorical", self.is_categorical)
+        self.is_qualitative = kwargs.get("is_qualitative", self.is_qualitative)
+        self.is_quantitative = kwargs.get("is_quantitative", self.is_quantitative)
 
         # max number of characters per label
         self.max_n_chars = kwargs.get("max_n_chars", 50)
@@ -111,6 +113,11 @@ class BaseFeature:
             # udpating value_per_label
             self.value_per_label.update({label: value})
 
+    @abstractmethod
+    def _specific_update(self, values: GroupedList, convert_labels: bool = False) -> None:
+        """update content of values specifically per feature type"""
+        pass
+
     def update(
         self,
         values: GroupedList,
@@ -133,76 +140,28 @@ class BaseFeature:
         elif replace:
             self.values = values
 
-        # values are not labels
-        elif not convert_labels:
-            # initiating values
-            if self.values is None:
-                self.values = values
-
-            # updating existing values
-            else:
-                # updating: iterating over each grouped values
-                for kept_value, grouped_values in values.content.items():
-                    self.values.group_list(grouped_values, kept_value)
-
-        # values are labels -> converting them back to values
+        # using type method specific
         else:
-            # iterating over each grouped values
-            for kept_label, grouped_labels in values.content.items():
-
-                # converting labels to values
-                kept_value = self.value_per_label.get(kept_label, kept_label)
-                grouped_values = [
-                    self.value_per_label.get(label, label) for label in grouped_labels
-                ]
-
-                # choosing which value to keep for quantitative features
-                if self.is_quantitative:
-                    which_to_keep = [value for value in grouped_values if value != self.nan]
-                    # keeping the largest value amongst the discarded (otherwise not grouped)
-                    if len(which_to_keep) > 0:
-                        kept_value = max(which_to_keep)
-
-                # choosing which value to keep for qualitative features
-                else:
-
-                    # getting group of kept_value
-                    kept_value = self.values.get_group(kept_value)
-
-                    # keeping only values not already grouped with kept_value
-                    grouped_values = [
-                        self.values.get_group(value)
-                        for value in grouped_values
-                        if self.values.get_group(value) != kept_value
-                    ]
-
-                    # deduplicating
-                    grouped_values = [
-                        value
-                        for num, value in enumerate(grouped_values)
-                        if value not in grouped_values[num + 1 :]
-                    ]
-
-                # updating values if any to group
-                if len(grouped_values) > 0:
-                    self.values.group_list(grouped_values, kept_value)
+            self._specific_update(values, convert_labels=convert_labels)
 
         # updating labels accordingly
         self.update_labels(ordinal_encoding=ordinal_encoding)
 
-    def group_list(self, to_discard: list[Any], to_keep: Any) -> None:
+    def group_list(
+        self, to_discard: list[Any], to_keep: Any, ordinal_encoding: bool = False
+    ) -> None:
         """wrapper of GroupedList: groups a list of values into a kept value"""
 
         values = GroupedList(self.values)
         values.group_list(to_discard, to_keep)
-        self.update(values, replace=True)
+        self.update(values, replace=True, ordinal_encoding=ordinal_encoding)
 
     def get_labels(self) -> GroupedList:
         """gives labels per values"""
         # default labels are values
         return self.values
 
-    def set_has_default(self, has_default: bool = True) -> None:
+    def set_has_default(self, has_default: bool = True, ordinal_encoding: bool = False) -> None:
         """adds default to the feature"""
         # copying values
         values = GroupedList(self.values)
@@ -214,9 +173,9 @@ class BaseFeature:
             self.has_default = True
 
             # updating labels
-            self.update(values, replace=True)
+            self.update(values, replace=True, ordinal_encoding=ordinal_encoding)
 
-    def set_dropna(self, dropna: bool = True) -> None:
+    def set_dropna(self, dropna: bool = True, ordinal_encoding: bool = False) -> None:
         """Activates or deactivates feature's dropna mode"""
         # activating dropna mode
         if dropna:
@@ -229,7 +188,7 @@ class BaseFeature:
                 values.append(self.nan)
 
                 # updating values
-                self.update(values, replace=True)
+                self.update(values, replace=True, ordinal_encoding=ordinal_encoding)
 
         # deactivating dropna mode
         else:
@@ -248,7 +207,7 @@ class BaseFeature:
                 values.remove(self.nan)
 
             # updating values
-            self.update(values, replace=True)
+            self.update(values, replace=True, ordinal_encoding=ordinal_encoding)
 
     def get_content(self) -> dict:
         """returns feature values' content"""

@@ -1,6 +1,6 @@
 """ Defines a continuous feature"""
 
-from numpy import diff, floor, isfinite, log10, nan  # pylint: disable=E0611
+from numpy import diff, floor, isfinite, log10, nan, inf  # pylint: disable=E0611
 from pandas import isna
 
 from .utils.base_feature import BaseFeature
@@ -10,6 +10,61 @@ from .utils.grouped_list import GroupedList
 class QuantitativeFeature(BaseFeature):
     __name__ = "Quantitative"
     is_quantitative = True
+
+    def set_has_default(self, has_default: bool = True) -> None:
+        """does nothing for quantitative features: no default value possible"""
+        _ = has_default
+
+    def _specific_update(self, values: GroupedList, convert_labels: bool = False) -> None:
+        """update content of values specifically per feature type"""
+
+        # no values have been set
+        if not convert_labels and self.values is None:
+            # checking that inf is amongst values
+            if values[-1] != inf:
+                raise ValueError(f" - [{self}] Must provide values with values[-1] == numpy.inf")
+            self.values = values
+
+        # values are not labels
+        elif not convert_labels:
+
+            # updating: iterating over each grouped values
+            for kept_value, grouped_values in values.content.items():
+                self.values.group_list(grouped_values, kept_value)
+
+        # values are labels -> converting them back to values
+        else:
+
+            # iterating over each grouped values
+            for kept_label, grouped_labels in values.content.items():
+
+                # converting labels to values
+                kept_value = self.value_per_label.get(kept_label)
+                grouped_values = [self.value_per_label.get(label) for label in grouped_labels]
+
+                # checking that kept values exists
+                if kept_label not in self.value_per_label:
+                    raise AttributeError(
+                        f"{self} no {kept_label}, in value_per_label: {self.value_per_label}"
+                    )
+
+                # checking that grouped values exists
+                for grouped_value, grouped_label in zip(grouped_values, grouped_labels):
+                    if grouped_value is None:
+                        print(
+                            f"{self} no {grouped_label}, in value_per_label: {self.value_per_label}"
+                        )
+
+                # choosing which value to keep
+                which_to_keep = [value for value in grouped_values if value != self.nan]
+
+                # keeping the largest value amongst the discarded
+                if len(which_to_keep) > 0:
+                    kept_value = max(which_to_keep)
+
+                # updating values if any to group
+                if len(grouped_values) > 0:
+                    self.values.group_list(grouped_values, kept_value)
 
     def get_labels(self) -> GroupedList:
         """gives labels per quantile (values for continuous features)
@@ -92,8 +147,7 @@ def format_quantiles(a_list: list[float]) -> list[str]:
     # several quantiles
     else:
         # getting minimal number of decimals to differentiate labels
-        decimals_needed = min_decimals_to_differentiate(a_list)
-        decimals_needed = max(decimals_needed, 1)
+        decimals_needed = min_decimals_to_differentiate(a_list, min_decimals=1)
 
         # scientific formatting
         formatted_list = [f"{number:.{decimals_needed}e}" for number in a_list]
@@ -116,23 +170,25 @@ def format_quantiles(a_list: list[float]) -> list[str]:
     return order
 
 
-def min_decimals_to_differentiate(sorted_numbers: list[float]) -> int:
+def min_decimals_to_differentiate(sorted_numbers: list[float], min_decimals: int = 0) -> int:
     """computes number of decimals needed for printing"""
 
     # checking for values
     if len(sorted_numbers) <= 1:
-        return 0
+        return min_decimals
 
     # Find the smallest difference between consecutive numbers
     smallest_diff = min(diff(sorted_numbers))
 
     # All numbers are identical
     if smallest_diff == 0:
-        return 0
+        return min_decimals
 
     # Number of decimal places needed
     decimal_places = -int(floor(log10(smallest_diff)))
-    return decimal_places
+
+    # minimum of 0
+    return max(decimal_places, min_decimals)
 
 
 def get_quantitative_features(features: list[BaseFeature]) -> list[QuantitativeFeature]:

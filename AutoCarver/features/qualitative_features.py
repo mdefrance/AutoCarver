@@ -135,6 +135,62 @@ class CategoricalFeature(BaseFeature):
 
         return summary
 
+    def _specific_update(self, values: GroupedList, convert_labels: bool = False) -> None:
+        """update content of values specifically per feature type"""
+
+        # no values have been set
+        if not convert_labels and self.values is None:
+            self.values = values
+
+        # values are not labels
+        elif not convert_labels:
+            # updating: iterating over each grouped values
+            for kept_value, grouped_values in values.content.items():
+                self.values.group_list(grouped_values, kept_value)
+
+        # values are labels -> converting them back to values
+        else:
+            # iterating over each grouped values
+            for kept_label, grouped_labels in values.content.items():
+
+                # converting labels to values
+                kept_value = self.value_per_label.get(kept_label)
+                grouped_values = [self.value_per_label.get(label) for label in grouped_labels]
+
+                # checking that kept values exists
+                if kept_label not in self.value_per_label:
+                    raise AttributeError(
+                        f"{self} no {kept_label}, in value_per_label: {self.value_per_label}"
+                    )
+
+                # checking that grouped values exists
+                for grouped_value, grouped_label in zip(grouped_values, grouped_labels):
+                    if grouped_value is None:
+                        print(
+                            f"{self} no {grouped_label}, in value_per_label: {self.value_per_label}"
+                        )
+
+                # choosing which value to keep: getting group of kept_value
+                kept_value = self.values.get_group(kept_value)
+
+                # keeping only values not already grouped with kept_value
+                grouped_values = [
+                    self.values.get_group(value)
+                    for value in grouped_values
+                    if self.values.get_group(value) != kept_value
+                ]
+
+                # deduplicating
+                grouped_values = [
+                    value
+                    for num, value in enumerate(grouped_values)
+                    if value not in grouped_values[num + 1 :]
+                ]
+
+                # updating values if any to group
+                if len(grouped_values) > 0:
+                    self.values.group_list(grouped_values, kept_value)
+
 
 class OrdinalFeature(CategoricalFeature):
     __name__ = "Ordinal"
