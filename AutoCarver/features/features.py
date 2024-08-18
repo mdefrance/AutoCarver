@@ -48,24 +48,6 @@ from .utils.grouped_list import GroupedList
 # # def get_dtype()
 
 
-# class MultiFeatures:
-#     """TODO"""
-
-#     def __init__(
-#         self,
-#         labels: list[str],
-#         categoricals: list[str] = None,
-#         quantitatives: list[str] = None,
-#         ordinals: list[str] = None,
-#         ordinal_values: dict[str, list[str]] = None,
-#         **kwargs: dict,
-#     ) -> None:
-#         self.features = {
-#             label: Features(categoricals, quantitatives, ordinals, ordinal_values, **kwargs)
-#             for label in labels
-#         }
-#         self.labels = labels
-
 
 class Features:
     __name__ = "Features"
@@ -455,7 +437,7 @@ def cast_features(
                 f" - [Features] feature {feature} is neither a str, nor a {target_class.__name__}."
             )
 
-    # deduplicating features by name
+    # deduplicating features by version name
     return [
         feature
         for n, feature in enumerate(converted_features)
