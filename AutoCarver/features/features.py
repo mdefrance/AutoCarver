@@ -330,7 +330,7 @@ class Features:
         return {feature.version: feature for feature in self.to_list()}
 
     @classmethod
-    def load(cls: Type["Features"], features_json: dict, ordinal_encoding: bool) -> "Features":
+    def load(cls, features_json: dict, ordinal_encoding: bool) -> "Features":
         """Loads a set of features"""
 
         # casting each feature to there corresponding type

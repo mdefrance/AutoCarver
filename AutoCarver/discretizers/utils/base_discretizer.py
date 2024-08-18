@@ -428,7 +428,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             raise ValueError(f" - [{self.__name__}] Provide a file_name that ends with .json.")
 
     @classmethod
-    def load_discretizer(cls: Type["BaseDiscretizer"], file_name: str) -> "BaseDiscretizer":
+    def load_discretizer(cls, file_name: str) -> "BaseDiscretizer":
         """Allows one to load an Discretizer saved as a .json file.
 
         The Discretizer has to be saved with ``Discretizer.save()``, otherwise there

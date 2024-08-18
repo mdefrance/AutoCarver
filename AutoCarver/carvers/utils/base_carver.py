@@ -726,7 +726,7 @@ class BaseCarver(BaseDiscretizer):
         super().save(file_name, light_mode)
 
     @classmethod
-    def load_carver(cls: Type["BaseCarver"], file_name: str) -> "BaseDiscretizer":
+    def load_carver(cls, file_name: str) -> "BaseDiscretizer":
         """Allows one to load a Carver saved as a .json file.
 
         The Carver has to be saved with ``Carver.save()``, otherwise there

@@ -72,7 +72,7 @@ class BaseFeature:
 
         # cehcking for previous fit
         if self.is_fitted:
-            raise RuntimeError(f"[{self}] {self} has already been fitted!")
+            raise RuntimeError(f"[{self}] Already been fitted!")
 
         # looking for NANS
         if any(X[self.name].isna()):
@@ -86,6 +86,30 @@ class BaseFeature:
         # checking for nans whereas at training none were witnessed
         if (any(X[self.version].isna()) or any(X[self.version] == self.nan)) and not self.has_nan:
             raise ValueError(f" - [{self}] Unexpected NaNs.")
+
+    def update_labels(self, ordinal_encoding: bool = False) -> None:
+        """updates label for each value of the feature"""
+
+        # initiating labels for qualitative features
+        labels = self.get_labels()
+
+        # requested float output (AutoCarver) -> converting to integers
+        if ordinal_encoding:
+            labels = [n for n, _ in enumerate(labels)]
+
+        # saving updated labels
+        self.labels = labels[:]
+
+        # updating label_per_value and value_per_label accordingly
+        self.value_per_label = {}
+        for value, label in zip(self.values, labels):
+
+            # updating label_per_value
+            for grouped_value in self.values.get(value):
+                self.label_per_value.update({grouped_value: label})
+
+            # udpating value_per_label
+            self.value_per_label.update({label: value})
 
     def update(
         self,
@@ -125,6 +149,7 @@ class BaseFeature:
         else:
             # iterating over each grouped values
             for kept_label, grouped_labels in values.content.items():
+
                 # converting labels to values
                 kept_value = self.value_per_label.get(kept_label, kept_label)
                 grouped_values = [
@@ -140,14 +165,17 @@ class BaseFeature:
 
                 # choosing which value to keep for qualitative features
                 else:
+
                     # getting group of kept_value
                     kept_value = self.values.get_group(kept_value)
+
                     # keeping only values not already grouped with kept_value
                     grouped_values = [
                         self.values.get_group(value)
                         for value in grouped_values
                         if self.values.get_group(value) != kept_value
                     ]
+
                     # deduplicating
                     grouped_values = [
                         value
@@ -173,25 +201,6 @@ class BaseFeature:
         """gives labels per values"""
         # default labels are values
         return self.values
-
-    def update_labels(self, ordinal_encoding: bool = False) -> None:
-        """updates label for each value of the feature"""
-
-        # initiating labels for qualitative features
-        labels = self.get_labels()
-
-        # requested float output (AutoCarver) -> converting to integers
-        if ordinal_encoding:
-            labels = [n for n, _ in enumerate(labels)]
-
-        # saving updated labels
-        self.labels = labels
-
-        # updating label_per_value nand value_per_label
-        for value, label in zip(self.values, labels):
-            for grouped_value in self.values.get(value):
-                self.label_per_value.update({grouped_value: label})
-            self.value_per_label.update({label: value})
 
     def set_has_default(self, has_default: bool = True) -> None:
         """adds default to the feature"""
@@ -292,7 +301,7 @@ class BaseFeature:
         return json_serialize_feature(feature)
 
     @classmethod
-    def load(cls: Type["BaseFeature"], feature_json: dict, ordinal_encoding: bool) -> "BaseFeature":
+    def load(cls, feature_json: dict, ordinal_encoding: bool) -> "BaseFeature":
         """Loads a feature"""
 
         # deserializing content into grouped list of values

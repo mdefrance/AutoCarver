@@ -12,7 +12,7 @@ class GroupedList(list):
     """An ordered list that's extended with a per-value content dict."""
 
     def __repr__(self) -> str:
-        return "GroupedList"
+        return f"GroupedList({super().__repr__()})"
 
     def __init__(self, iterable: Union[ndarray, dict, list, tuple] = ()) -> None:
         """
