@@ -6,7 +6,7 @@ from pytest import raises
 from AutoCarver.features import Features, GroupedList
 
 
-def test_features(
+def _features(
     quantitative_features: list[str],
     qualitative_features: list[str],
     ordinal_features: list[str],

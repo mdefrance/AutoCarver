@@ -7,18 +7,14 @@ from .utils.base_feature import BaseFeature
 from .utils.grouped_list import GroupedList
 
 
-class CategoricalFeature(BaseFeature):
-    __name__ = "Categorical"
-    is_categorical = True
+class QualitativeFeature(BaseFeature):
+    __name__ = "Qualitative"
     is_qualitative = True
 
-    def __init__(self, name: str, **kwargs: dict) -> None:
-        super().__init__(name, **kwargs)
 
-        # TODO adding stats
-        self.n_unique = None
-        self.mode = None
-        self.pct_mode = None
+class CategoricalFeature(QualitativeFeature):
+    __name__ = "Categorical"
+    is_categorical = True
 
     def fit(self, X: DataFrame, y: Series = None) -> None:
         """TODO fit stats"""
@@ -28,17 +24,19 @@ class CategoricalFeature(BaseFeature):
 
         # checking that feature is not ordinal (already set values)
         if self.values is None:
+
             # initiating feature with its unique non-nan values
             self.update(GroupedList(sorted_unique_values))
 
-        # checking that raw order has not been set
+        # checking that raw order has not been set (also useful when loading from json)
         if len(self.raw_order) == 0:
+
             # saving up number ordering for labeling
             self.raw_order = [self.values.get_group(value) for value in sorted_unique_values]
 
         super().fit(X, y)
 
-        # checking for unexpected values
+        # class-specific checking for unexpected values
         self.check_values(X)
 
     def check_values(self, X: DataFrame) -> None:
@@ -75,43 +73,12 @@ class CategoricalFeature(BaseFeature):
     def get_labels(self) -> GroupedList:
         """gives labels per values"""
 
-        # iterating over each value and there contente
+        # iterating over each value and there content
         labels = []
         for group, content in self.get_content().items():
-            # ordering content as per original ordering (removes DEFAULT and NAN)
-            ordered_content = [
-                value
-                for value in self.raw_order
-                if value in content
-                # removing nan
-                and value != self.nan
-                # removing floats
-                and not isinstance(value, floating) and not isinstance(value, float)
-                # removing ints
-                and not isinstance(value, integer) and not isinstance(value, int)
-            ]
 
-            # building label from ordered content
-            if len(ordered_content) == 0:
-                label = group
-            elif len(ordered_content) == 1:
-                label = ordered_content[0]
-            else:
-                # list label for categorical feature
-                label = ", ".join(ordered_content)
-                if len(label) > self.max_n_chars:
-                    label = label[: self.max_n_chars] + "..."
-
-                # ordered label for ordinal features
-                if self.is_ordinal:
-                    label = f"{ordered_content[0]} to {ordered_content[-1]}"
-
-            # adding nans
-            if self.nan in content and label != self.nan:  # and self.nan not in label:
-                label += f", {self.nan}"
-
-            # saving label
-            labels += [label]
+            # formatting label
+            labels += [self._format_modalities(group, content)]
 
         return GroupedList(labels)
 
@@ -150,6 +117,7 @@ class CategoricalFeature(BaseFeature):
 
         # values are labels -> converting them back to values
         else:
+
             # iterating over each grouped values
             for kept_label, grouped_labels in values.content.items():
 
@@ -172,6 +140,7 @@ class CategoricalFeature(BaseFeature):
 
                 # choosing which value to keep: getting group of kept_value
                 kept_value = self.values.get_group(kept_value)
+                # TODO force kept_value to != self.nan like in quantitative feature?
 
                 # keeping only values not already grouped with kept_value
                 grouped_values = [
@@ -190,6 +159,57 @@ class CategoricalFeature(BaseFeature):
                 # updating values if any to group
                 if len(grouped_values) > 0:
                     self.values.group_list(grouped_values, kept_value)
+
+    def _format_modalities(self, group: str, content: list[str]) -> list[str]:
+        """Formats a list of float quantiles into a list of boundaries.
+
+        Rounds quantiles to the closest power of 1000.
+
+        Parameters
+        ----------
+        a_list : list[float]
+            Sorted list of quantiles to convert into string
+
+        Returns
+        -------
+        list[str]
+            List of boundaries per quantile
+        """
+
+        # ordering content as per original ordering (removes DEFAULT and NAN)
+        ordered_content = [
+            value
+            for value in self.raw_order
+            if value in content
+            # removing nan
+            and value != self.nan
+            # removing floats
+            and not isinstance(value, floating) and not isinstance(value, float)
+            # removing ints
+            and not isinstance(value, integer) and not isinstance(value, int)
+        ]
+
+        # building label from ordered content
+        if len(ordered_content) == 0:
+            label = group
+
+        elif len(ordered_content) == 1:
+            label = ordered_content[0]
+        else:
+            # list label for categorical feature
+            label = ", ".join(ordered_content)
+            if len(label) > self.max_n_chars:
+                label = label[: self.max_n_chars] + "..."
+
+            # ordered label for ordinal features
+            if self.is_ordinal:
+                label = f"{ordered_content[0]} to {ordered_content[-1]}"
+
+        # adding nans
+        if self.nan in content and label != self.nan:  # and self.nan not in label:
+            label += f", {self.nan}"
+
+        return label
 
 
 class OrdinalFeature(CategoricalFeature):

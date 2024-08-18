@@ -134,7 +134,7 @@ class BaseFeature(ABC):
 
         # checking for GroupedList
         elif not isinstance(values, GroupedList):
-            raise ValueError(f" - [{self.__name__}] Wrong input, expected GroupedList object.")
+            raise ValueError(f" - [{self}] Wrong input, expected GroupedList object.")
 
         # replacing existing values
         elif replace:
@@ -174,6 +174,11 @@ class BaseFeature(ABC):
 
             # updating labels
             self.update(values, replace=True, ordinal_encoding=ordinal_encoding)
+
+        # checking that it was not already set to True
+        else:
+            if self.has_default:
+                raise RuntimeError(f" - [{self}] has_default has been set to True, can't go back")
 
     def set_dropna(self, dropna: bool = True, ordinal_encoding: bool = False) -> None:
         """Activates or deactivates feature's dropna mode"""

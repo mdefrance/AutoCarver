@@ -87,9 +87,7 @@ def test_get_quantitative_features() -> None:
 
     # only quantitative
     feature1 = QuantitativeFeature("feature1")
-    feature1.is_quantitative = True
     feature2 = QuantitativeFeature("feature2")
-    feature2.is_quantitative = True
     result = get_quantitative_features([feature1, feature2])
     assert result == [feature1, feature2]
 

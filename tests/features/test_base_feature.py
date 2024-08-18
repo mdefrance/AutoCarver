@@ -183,6 +183,9 @@ def test_base_feature_set_has_default() -> None:
     assert "default" in feature.values
     assert feature.get_content() == {"a": ["a"], "b": ["b"], "default": ["default"]}
     assert feature.labels == [0, 1, 2]
+    # resetting set_has_default
+    with raises(RuntimeError):
+        feature.set_has_default(False)
 
 
 def test_base_feature_set_dropna() -> None:
