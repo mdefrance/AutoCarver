@@ -28,18 +28,21 @@ class BaseFeature(ABC):
         self.nan = kwargs.get("nan", NAN)
 
         # whether or not feature has some default values
-        self.has_default = kwargs.get("has_default", False)
+        self._has_default = kwargs.get("has_default", False)
         self.default = kwargs.get("default", DEFAULT)
 
         # whether or not nans must be removed
-        self.dropna = kwargs.get("dropna", False)
+        self._dropna = kwargs.get("dropna", False)
 
         # whether or not feature has been fitted
         self.is_fitted = kwargs.get("is_fitted", False)
 
+        # whether or not to ordinally encode labels
+        self._ordinal_encoding = kwargs.get("ordinal_encoding", False)
+
         # feature values, type and labels
         self.values = None  # current values
-        self.labels = None  # current labels
+        self._labels = None  # current labels
         self.label_per_value: dict[str, str] = {}  # current label for all existing values
         self.value_per_label: dict[str, str] = {}  # a value for each current label
 
@@ -68,43 +71,122 @@ class BaseFeature(ABC):
     def __repr__(self):
         return f"{self.__name__}('{self.version}')"
 
-    def fit(self, X: DataFrame, y: Series = None) -> None:
-        """Fits the feature to a DataFrame"""
-        _, _ = X, y  # unused attributes
+    @property
+    def has_default(self) -> bool:
+        """whether or not to the feature has default values"""
+        return self._has_default
 
-        # cehcking for previous fit
-        if self.is_fitted:
-            raise RuntimeError(f"[{self}] Already been fitted!")
+    @has_default.setter
+    def has_default(self, value: bool) -> None:
+        """sets ordinal_encoding and labels accordingly"""
 
-        # looking for NANS
-        if any(X[self.name].isna()):
-            self.has_nan = True
+        # check input value
+        if not isinstance(value, bool):
+            raise ValueError(f"Trying to set has_default with type {type(value)}")
 
-        self.is_fitted = True  # feature is fitted
+        # copying values
+        values = GroupedList(self.values)
 
-    def check_values(self, X: DataFrame) -> None:
-        """checks for unexpected values from unique values in DataFrame"""
+        # setting has_default
+        if value and not self.has_default:
 
-        # checking for nans whereas at training none were witnessed
-        if (any(X[self.version].isna()) or any(X[self.version] == self.nan)) and not self.has_nan:
-            raise ValueError(f" - [{self}] Unexpected NaNs.")
+            # adding to the values
+            values.append(self.default)
 
-    def update_labels(self, ordinal_encoding: bool = False) -> None:
-        """updates label for each value of the feature"""
+            # updating labels
+            self.update(values, replace=True)
 
-        # initiating labels for qualitative features
-        labels = self.get_labels()
+        # checking that it was not already set to True
+        elif not value and self.has_default:
+            raise RuntimeError(f" - [{self}] has_default has been set to True, can't go back")
 
-        # requested float output (AutoCarver) -> converting to integers
-        if ordinal_encoding:
-            labels = [n for n, _ in enumerate(labels)]
+        # updating attribute
+        self._has_default = value
 
-        # saving updated labels
-        self.labels = labels[:]
+    @property
+    def ordinal_encoding(self) -> bool:
+        """whether or not to ordinally encode feature's labels"""
+        return self._ordinal_encoding
+
+    @ordinal_encoding.setter
+    def ordinal_encoding(self, value: bool) -> None:
+        """sets ordinal_encoding and labels accordingly"""
+
+        # check input value
+        if not isinstance(value, bool):
+            raise ValueError(f"Trying to set ordinal_encoding with type {type(value)}")
+
+        # updating attribute
+        self._ordinal_encoding = value
+
+        # updating labels
+        if self.values is not None:
+            self.update_labels()
+
+    @property
+    def dropna(self) -> bool:
+        """whether or not to drop missing values (nan)"""
+        return self._dropna
+
+    @dropna.setter
+    def dropna(self, value: bool) -> None:
+        """Activates or deactivates feature's dropna mode"""
+
+        # check input value
+        if not isinstance(value, bool):
+            raise ValueError(f"Trying to set dropna with type {type(value)}")
+
+        # activating dropna mode
+        if value and not self.dropna:
+
+            # adding nan to the values only if they were found
+            if self.has_nan and not self.values.contains(self.nan):
+                values = GroupedList(self.values)
+                values.append(self.nan)
+
+                # updating values
+                self.update(values, replace=True)
+
+        # deactivating dropna mode
+        elif not value and self.dropna:
+
+            # checking for values merged with nans
+            if len(self.values.get(self.nan)) > 1:
+                raise RuntimeError(
+                    "Can not set feature dropna=False has values were grouped with nans."
+                )
+
+            # dropping nans from values
+            values = GroupedList(self.values)
+            if self.nan in self.values:
+                values.remove(self.nan)
+
+            # updating values
+            self.update(values, replace=True)
+
+        # setting dropna
+        self._dropna = value
+
+    @property
+    def content(self) -> dict:
+        """returns feature values' content"""
+        if isinstance(self.values, GroupedList):
+            return self.values.content
+        return self.values
+
+    @property
+    def labels(self) -> GroupedList:
+        """gives labels associated to feature's values"""
+        # default labels are values
+        return self._labels
+
+    @labels.setter
+    def labels(self, values: GroupedList) -> None:
+        """updates labels per values and values per label associated to feature's labels"""
 
         # updating label_per_value and value_per_label accordingly
         self.value_per_label = {}
-        for value, label in zip(self.values, labels):
+        for value, label in zip(self.values, values):
 
             # updating label_per_value
             for grouped_value in self.values.get(value):
@@ -112,6 +194,27 @@ class BaseFeature(ABC):
 
             # udpating value_per_label
             self.value_per_label.update({label: value})
+
+        self._labels = values[:]
+
+    @abstractmethod
+    def make_labels(self) -> GroupedList:
+        """builds labels according to feature's values"""
+        # default labels are values
+        return self.values
+
+    def update_labels(self) -> None:
+        """updates label for each value of the feature"""
+
+        # initiating labels for qualitative features
+        labels = self.make_labels()
+
+        # requested float output (AutoCarver) -> converting to integers
+        if self.ordinal_encoding:
+            labels = [n for n, _ in enumerate(labels)]
+
+        # saving updated labels
+        self.labels = labels
 
     @abstractmethod
     def _specific_update(self, values: GroupedList, convert_labels: bool = False) -> None:
@@ -124,7 +227,6 @@ class BaseFeature(ABC):
         convert_labels: bool = False,
         sorted_values: bool = False,
         replace: bool = False,
-        ordinal_encoding: bool = False,
     ) -> None:
         """updates content of values of the feature"""
 
@@ -145,80 +247,38 @@ class BaseFeature(ABC):
             self._specific_update(values, convert_labels=convert_labels)
 
         # updating labels accordingly
-        self.update_labels(ordinal_encoding=ordinal_encoding)
+        self.update_labels()
 
-    def group_list(
-        self, to_discard: list[Any], to_keep: Any, ordinal_encoding: bool = False
-    ) -> None:
+    def fit(self, X: DataFrame, y: Series = None) -> None:
+        """Fits the feature to a DataFrame"""
+        _, _ = X, y  # unused attributes
+
+        # checking for previous fit
+        if self.is_fitted:
+            raise RuntimeError(f"[{self}] Already been fitted!")
+
+        # looking for NANS
+        if any(X[self.name].isna()):
+            self.has_nan = True
+
+        self.is_fitted = True  # feature is fitted
+
+    def check_values(self, X: DataFrame) -> None:
+        """checks for unexpected values from unique values in DataFrame"""
+
+        # checking for nans whereas at training none were witnessed
+        if (any(X[self.version].isna()) or any(X[self.version] == self.nan)) and not self.has_nan:
+            raise ValueError(f"[{self}] Unexpected NaNs.")
+
+    def group_list(self, to_discard: list[Any], to_keep: Any) -> None:
         """wrapper of GroupedList: groups a list of values into a kept value"""
 
+        # using GroupedList's group_list
         values = GroupedList(self.values)
         values.group_list(to_discard, to_keep)
-        self.update(values, replace=True, ordinal_encoding=ordinal_encoding)
 
-    def get_labels(self) -> GroupedList:
-        """gives labels per values"""
-        # default labels are values
-        return self.values
-
-    def set_has_default(self, has_default: bool = True, ordinal_encoding: bool = False) -> None:
-        """adds default to the feature"""
-        # copying values
-        values = GroupedList(self.values)
-
-        # setting default
-        if has_default:
-            # adding to the values
-            values.append(self.default)
-            self.has_default = True
-
-            # updating labels
-            self.update(values, replace=True, ordinal_encoding=ordinal_encoding)
-
-        # checking that it was not already set to True
-        else:
-            if self.has_default:
-                raise RuntimeError(f" - [{self}] has_default has been set to True, can't go back")
-
-    def set_dropna(self, dropna: bool = True, ordinal_encoding: bool = False) -> None:
-        """Activates or deactivates feature's dropna mode"""
-        # activating dropna mode
-        if dropna:
-            # setting dropna
-            self.dropna = dropna
-
-            # adding nan to the values only if they were found
-            if self.has_nan and not self.values.contains(self.nan):
-                values = GroupedList(self.values)
-                values.append(self.nan)
-
-                # updating values
-                self.update(values, replace=True, ordinal_encoding=ordinal_encoding)
-
-        # deactivating dropna mode
-        else:
-            # setting dropna
-            self.dropna = dropna
-
-            # checking for values merged with nans
-            if len(self.values.get(self.nan)) > 1:
-                raise RuntimeError(
-                    "Can not set feature dropna=False has values were grouped with nans."
-                )
-
-            # dropping nans from values
-            values = GroupedList(self.values)
-            if self.nan in self.values:
-                values.remove(self.nan)
-
-            # updating values
-            self.update(values, replace=True, ordinal_encoding=ordinal_encoding)
-
-    def get_content(self) -> dict:
-        """returns feature values' content"""
-        if isinstance(self.values, GroupedList):
-            return self.values.content
-        return self.values
+        # updating feature's values
+        self.update(values, replace=True)
 
     def to_json(self, light_mode: bool = False) -> dict:
         """Converts to JSON format.
@@ -247,25 +307,23 @@ class BaseFeature(ABC):
             "dropna": self.dropna,
             "is_fitted": self.is_fitted,
             "values": self.values,
-            "content": self.get_content(),
+            "content": self.content,
             "is_ordinal": self.is_ordinal,
             "is_categorical": self.is_categorical,
             "is_qualitative": self.is_qualitative,
             "is_quantitative": self.is_quantitative,
             "raw_order": self.raw_order,
+            "ordinal_encoding": self.ordinal_encoding,
         }
 
-        # light output
-        if light_mode:
-            # serializing feature dict
-            return json_serialize_feature(feature)
-
         # enriched mode (larger json)
-        feature.update({"statistics": self.statistics, "history": self.history})
+        if not light_mode:
+            feature.update({"statistics": self.statistics, "history": self.history})
+
         return json_serialize_feature(feature)
 
     @classmethod
-    def load(cls, feature_json: dict, ordinal_encoding: bool) -> "BaseFeature":
+    def load(cls, feature_json: dict) -> "BaseFeature":
         """Loads a feature"""
 
         # deserializing content into grouped list of values
@@ -281,6 +339,6 @@ class BaseFeature(ABC):
 
         # updating feature with deserialized content
         if values is not None:
-            feature.update(values, replace=True, ordinal_encoding=ordinal_encoding)
+            feature.update(values, replace=True)
 
         return feature

@@ -66,7 +66,7 @@ class QuantitativeFeature(BaseFeature):
                 if len(grouped_values) > 0:
                     self.values.group_list(grouped_values, kept_value)
 
-    def get_labels(self) -> GroupedList:
+    def make_labels(self) -> GroupedList:
         """gives labels per quantile (values for continuous features)
 
         Parameters

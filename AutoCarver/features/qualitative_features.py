@@ -34,6 +34,7 @@ class CategoricalFeature(QualitativeFeature):
             # saving up number ordering for labeling
             self.raw_order = [self.values.get_group(value) for value in sorted_unique_values]
 
+        # fitting BaseFeature
         super().fit(X, y)
 
         # class-specific checking for unexpected values
@@ -70,7 +71,7 @@ class CategoricalFeature(QualitativeFeature):
 
         super().check_values(X)
 
-    def get_labels(self) -> GroupedList:
+    def make_labels(self) -> GroupedList:
         """gives labels per values"""
 
         # iterating over each value and there content

@@ -35,12 +35,12 @@ def test_base_feature_initialization() -> None:
     assert feature.version_tag == "test_feature"
 
 
-def test_base_feature_get_content() -> None:
-    """test method get_content"""
+def test_base_feature_content() -> None:
+    """test property content"""
     feature = BaseFeature(name="test_feature")
     feature.values = GroupedList(["a", "d"])
 
-    assert feature.get_content() == {"a": ["a"], "d": ["d"]}
+    assert feature.content == {"a": ["a"], "d": ["d"]}
 
 
 def test_base_feature_fit() -> None:
@@ -83,40 +83,46 @@ def test_base_feature_check_values() -> None:
         feature.check_values(data)
 
 
-def test_base_feature_get_labels() -> None:
-    """test method get_labels"""
+def test_base_feature_make_labels() -> None:
+    """test method make_labels"""
     feature = BaseFeature(name="test_feature")
 
     # testing sorting values
     feature.values = GroupedList({"a": ["a", "b"], "c": ["c", "d"]})
-    values = feature.get_labels()
+    values = feature.make_labels()
     assert values == ["a", "c"]
     assert values.content == {"a": ["a", "b"], "c": ["c", "d"]}
 
 
-def test_base_feature_update_labels() -> None:
-    """test method update_labels"""
+def test_base_feature_update_labels_ordinal_encoding() -> None:
+    """test method update_labels and ordinal_encoding"""
     feature = BaseFeature(name="test_feature")
 
     # testing without ordinal encoding
     feature.values = GroupedList({"a": ["a", "b"], "c": ["c", "d"]})
-    feature.update_labels(ordinal_encoding=False)
+    feature.update_labels()
     assert feature.labels == ["a", "c"]
     with raises(AttributeError):
-        feature.labels.content
+        _ = feature.labels.content
     assert feature.label_per_value == {"a": "a", "b": "a", "c": "c", "d": "c"}
     assert feature.value_per_label == {"a": "a", "c": "c"}
 
     # testing with ordinal encoding existing labels
-    feature.update_labels(ordinal_encoding=True)
+    feature.ordinal_encoding = True  # automatically updates labels
     assert feature.labels == [0, 1]
     assert feature.label_per_value == {"a": 0, "b": 0, "c": 1, "d": 1}
     assert feature.value_per_label == {0: "a", 1: "c"}
 
+    # testing turning off ordinal encoding existing labels
+    feature.ordinal_encoding = False  # automatically updates labels
+    assert feature.labels == ["a", "c"]
+    assert feature.label_per_value == {"a": "a", "b": "a", "c": "c", "d": "c"}
+    assert feature.value_per_label == {"a": "a", "c": "c"}
+
     # testing with ordinal encoding non-existing labels
     feature = BaseFeature(name="test_feature")
     feature.values = GroupedList({"a": ["a", "b"], "c": ["c", "d"]})
-    feature.update_labels(ordinal_encoding=True)
+    feature.ordinal_encoding = True  # automatically updates labels
     assert feature.labels == [0, 1]
     assert feature.label_per_value == {"a": 0, "b": 0, "c": 1, "d": 1}
     assert feature.value_per_label == {0: "a", 1: "c"}
@@ -130,7 +136,7 @@ def tset_base_feature_update() -> None:
     feature.values = GroupedList({"a": ["a", "b"], "c": ["c", "d"]})
     feature.update(["c", "a"], sorted_values=True)
     assert feature.values == ["c", "a"]
-    assert feature.get_content() == {"c": ["c", "d"], "a": ["a", "b"]}
+    assert feature.content == {"c": ["c", "d"], "a": ["a", "b"]}
 
     # input should be a groupedlist
     with raises(ValueError):
@@ -141,51 +147,32 @@ def tset_base_feature_update() -> None:
     # testing replace values
     feature.update(GroupedList({1: ["a", "b"], 2: ["c", "d"]}), replace=True)
     assert feature.values == [1, 2]
-    assert feature.get_content() == {1: ["a", "b", 1], 2: ["c", "d", 2]}
+    assert feature.content == {1: ["a", "b", 1], 2: ["c", "d", 2]}
 
 
-def test_base_feature_set_has_default() -> None:
-    """test method set_has_default"""
+def test_base_feature_has_default() -> None:
+    """test property has_default"""
     feature = BaseFeature(name="test_feature")
     feature.update(GroupedList(["a", "b"]), replace=True)
     feature.default = "default"
 
     # not setting default
-    feature.set_has_default(has_default=False)
+    feature.has_default = False
     assert not feature.has_default
     assert "default" not in feature.values
-    assert feature.get_content() == {"a": ["a"], "b": ["b"]}
+    assert feature.content == {"a": ["a"], "b": ["b"]}
     assert feature.labels == ["a", "b"]
 
     # setting default
-    feature.set_has_default(has_default=True)
+    feature.has_default = True
     assert feature.has_default
     assert "default" in feature.values
-    assert feature.get_content() == {"a": ["a"], "b": ["b"], "default": ["default"]}
+    assert feature.content == {"a": ["a"], "b": ["b"], "default": ["default"]}
     assert feature.labels == ["a", "b", "default"]
 
-    # with ordinal_encoding
-    feature = BaseFeature(name="test_feature")
-    ordinal_encoding = True
-    feature.update(GroupedList(["a", "b"]), replace=True, ordinal_encoding=ordinal_encoding)
-    feature.default = "default"
-
-    # not setting default
-    feature.set_has_default(has_default=False, ordinal_encoding=ordinal_encoding)
-    assert not feature.has_default
-    assert "default" not in feature.values
-    assert feature.get_content() == {"a": ["a"], "b": ["b"]}
-    assert feature.labels == [0, 1]
-
-    # setting default
-    feature.set_has_default(has_default=True, ordinal_encoding=ordinal_encoding)
-    assert feature.has_default
-    assert "default" in feature.values
-    assert feature.get_content() == {"a": ["a"], "b": ["b"], "default": ["default"]}
-    assert feature.labels == [0, 1, 2]
     # resetting set_has_default
     with raises(RuntimeError):
-        feature.set_has_default(False)
+        feature.has_default = False
 
 
 def test_base_feature_set_dropna() -> None:
@@ -193,80 +180,72 @@ def test_base_feature_set_dropna() -> None:
 
     # activate feature does not have nan
     feature = BaseFeature(name="test_feature")
-    ordinal_encoding = False
-    feature.update(GroupedList(["a", "b"]), replace=True, ordinal_encoding=ordinal_encoding)
+    feature.update(GroupedList(["a", "b"]), replace=True)
     feature.nan = "nan_value"
     feature.has_nan = False
-    feature.set_dropna(dropna=True, ordinal_encoding=ordinal_encoding)
+    feature.dropna = True
     assert feature.dropna
     assert "nan_value" not in feature.values
-    assert feature.get_content() == {"a": ["a"], "b": ["b"]}
+    assert feature.content == {"a": ["a"], "b": ["b"]}
     assert feature.labels == ["a", "b"]
 
     # activate feature has nan
     feature = BaseFeature(name="test_feature")
-    feature.update(GroupedList(["a", "b"]), replace=True, ordinal_encoding=ordinal_encoding)
+    feature.update(GroupedList(["a", "b"]), replace=True)
     feature.nan = "nan_value"
     feature.has_nan = True
-    feature.set_dropna(dropna=True, ordinal_encoding=ordinal_encoding)
+    feature.dropna = True
     assert feature.dropna
     assert "nan_value" in feature.values
-    assert feature.get_content() == {"a": ["a"], "b": ["b"], "nan_value": ["nan_value"]}
+    assert feature.content == {"a": ["a"], "b": ["b"], "nan_value": ["nan_value"]}
     assert feature.labels == ["a", "b", "nan_value"]
 
     # deactivate feature already merged nans
     feature = BaseFeature(name="test_feature")
     feature.update(
-        GroupedList({"a": ["a"], "b": ["b"], "nan_value": ["nan_value", "c"]}),
-        replace=True,
-        ordinal_encoding=ordinal_encoding,
+        GroupedList({"a": ["a"], "b": ["b"], "nan_value": ["nan_value", "c"]}), replace=True
     )
     feature.nan = "nan_value"
     feature.has_nan = True
-    feature.set_dropna(dropna=True, ordinal_encoding=ordinal_encoding)  # Activate dropna
+    feature.dropna = True  # Activate dropna
     assert "nan_value" in feature.values
-    assert feature.get_content() == {"a": ["a"], "b": ["b"], "nan_value": ["nan_value", "c"]}
+    assert feature.content == {"a": ["a"], "b": ["b"], "nan_value": ["nan_value", "c"]}
     with raises(RuntimeError):
-        feature.set_dropna(dropna=False)  # Attempt to deactivate dropna with merged nans
+        feature.dropna = False  # Attempt to deactivate dropna with merged nans
 
     # deactivate feature not merged nans
     feature = BaseFeature(name="test_feature")
-    feature.update(
-        GroupedList({"a": ["a"], "b": ["b"], "nan_value": ["nan_value"]}),
-        replace=True,
-        ordinal_encoding=ordinal_encoding,
-    )
+    feature.update(GroupedList({"a": ["a"], "b": ["b"], "nan_value": ["nan_value"]}), replace=True)
     feature.nan = "nan_value"
     feature.has_nan = True
-    feature.set_dropna(dropna=True, ordinal_encoding=ordinal_encoding)  # Activate dropna
-    assert feature.get_content() == {"a": ["a"], "b": ["b"], "nan_value": ["nan_value"]}
-    feature.set_dropna(
-        dropna=False, ordinal_encoding=ordinal_encoding
-    )  # Deactivate dropna without merged nans
-    assert feature.get_content() == {"a": ["a"], "b": ["b"]}
+    feature.dropna = True  # Activate dropna
+    assert feature.content == {"a": ["a"], "b": ["b"], "nan_value": ["nan_value"]}
+    feature.dropna = False  # Deactivate dropna without merged nans
+    assert feature.content == {"a": ["a"], "b": ["b"]}
     assert not feature.dropna
 
     # activate feature does not have nan
     feature = BaseFeature(name="test_feature")
-    ordinal_encoding = True
-    feature.update(GroupedList(["a", "b"]), replace=True, ordinal_encoding=ordinal_encoding)
+    feature.update(GroupedList(["a", "b"]), replace=True)
     feature.nan = "nan_value"
     feature.has_nan = False
-    feature.set_dropna(dropna=True, ordinal_encoding=ordinal_encoding)
+    feature.dropna = True
+    feature.ordinal_encoding = True
     assert feature.dropna
     assert "nan_value" not in feature.values
-    assert feature.get_content() == {"a": ["a"], "b": ["b"]}
+    assert feature.content == {"a": ["a"], "b": ["b"]}
     assert feature.labels == [0, 1]
 
     # activate feature has nan
     feature = BaseFeature(name="test_feature")
-    feature.update(GroupedList(["a", "b"]), replace=True, ordinal_encoding=ordinal_encoding)
+    feature.update(GroupedList(["a", "b"]), replace=True)
     feature.nan = "nan_value"
     feature.has_nan = True
-    feature.set_dropna(dropna=True, ordinal_encoding=ordinal_encoding)
+    feature.dropna = True
+    feature.ordinal_encoding = True
     assert feature.dropna
     assert "nan_value" in feature.values
-    assert feature.get_content() == {"a": ["a"], "b": ["b"], "nan_value": ["nan_value"]}
+    assert feature.content == {"a": ["a"], "b": ["b"], "nan_value": ["nan_value"]}
     assert feature.labels == [0, 1, 2]
 
 
@@ -277,7 +256,7 @@ def test_base_feature_group_list() -> None:
     feature.group_list(["b", "c"], "a")
 
     assert feature.values == ["a", "d"]
-    assert feature.get_content() == {"a": ["c", "b", "a"], "d": ["d"]}
+    assert feature.content == {"a": ["c", "b", "a"], "d": ["d"]}
 
 
 def test_base_feature_to_json() -> None:
@@ -288,8 +267,7 @@ def test_base_feature_to_json() -> None:
     feature.values = GroupedList(["a", "b", "c"])
     feature.is_ordinal = True
     feature.is_categorical = True
-    ordinal_encoding = False
-    feature.update_labels(ordinal_encoding=ordinal_encoding)
+    feature.update_labels()
 
     json_output = feature.to_json(light_mode=True)
 
@@ -297,6 +275,7 @@ def test_base_feature_to_json() -> None:
     assert json_output["is_ordinal"]
     assert json_output["is_categorical"]
     assert json_output["values"] == feature.values
+    assert not json_output["ordinal_encoding"]
     assert "statistics" not in json_output
     assert "history" not in json_output
 
@@ -309,8 +288,7 @@ def test_base_feature_to_json() -> None:
     feature.values = GroupedList(["a", "b", "c"])
     feature.is_ordinal = True
     feature.is_categorical = True
-    ordinal_encoding = True
-    feature.update_labels(ordinal_encoding=ordinal_encoding)
+    feature.ordinal_encoding = True
 
     json_output = feature.to_json(light_mode=True)
 
@@ -318,6 +296,7 @@ def test_base_feature_to_json() -> None:
     assert json_output["is_ordinal"]
     assert json_output["is_categorical"]
     assert json_output["values"] == feature.values
+    assert json_output["ordinal_encoding"]
     assert "statistics" not in json_output
     assert "history" not in json_output
 
@@ -336,8 +315,7 @@ def test_base_feature_load() -> None:
     feature.is_categorical = True
     feature.nan = "nan_value"
     feature.has_nan = True
-    ordinal_encoding = False
-    feature.update_labels(ordinal_encoding=ordinal_encoding)
+    feature.update_labels()
     feature.statistics = {"test": "value"}
     feature.history = [
         {"combination": [["value1"], ["value2"]]},
@@ -347,7 +325,7 @@ def test_base_feature_load() -> None:
 
     feature_data = feature.to_json(light_mode=False)
 
-    loaded_feature = BaseFeature.load(feature_data, ordinal_encoding=ordinal_encoding)
+    loaded_feature = BaseFeature.load(feature_data)
 
     assert loaded_feature.name == feature.name
     assert loaded_feature.version == feature.version
@@ -357,13 +335,14 @@ def test_base_feature_load() -> None:
     assert loaded_feature.has_nan == feature.has_nan
     assert loaded_feature.nan == feature.nan
     assert loaded_feature.values == feature.values[:]
-    assert loaded_feature.get_content() == feature.get_content()
+    assert loaded_feature.content == feature.content
     assert loaded_feature.labels == feature.labels
     assert loaded_feature.label_per_value == feature.label_per_value
     assert loaded_feature.value_per_label == feature.value_per_label
     assert loaded_feature.raw_order == feature.raw_order
     assert loaded_feature.statistics == feature.statistics
     assert loaded_feature.history == feature.history
+    assert not loaded_feature.ordinal_encoding
 
     # ordinal encoding true
     feature = BaseFeature(name="test_feature")
@@ -372,8 +351,7 @@ def test_base_feature_load() -> None:
     feature.is_categorical = True
     feature.nan = "nan_value"
     feature.has_nan = True
-    ordinal_encoding = True
-    feature.update_labels(ordinal_encoding=ordinal_encoding)
+    feature.ordinal_encoding = True
     feature.statistics = {"test": "value"}
     feature.history = [
         {"combination": [["value1"], ["value2"]]},
@@ -383,7 +361,7 @@ def test_base_feature_load() -> None:
 
     feature_data = feature.to_json(light_mode=True)
 
-    loaded_feature = BaseFeature.load(feature_data, ordinal_encoding=ordinal_encoding)
+    loaded_feature = BaseFeature.load(feature_data)
 
     assert loaded_feature.name == feature.name
     assert loaded_feature.version == feature.version
@@ -393,10 +371,11 @@ def test_base_feature_load() -> None:
     assert loaded_feature.has_nan == feature.has_nan
     assert loaded_feature.nan == feature.nan
     assert loaded_feature.values == feature.values[:]
-    assert loaded_feature.get_content() == feature.get_content()
+    assert loaded_feature.content == feature.content
     assert loaded_feature.labels == feature.labels
     assert loaded_feature.label_per_value == feature.label_per_value
     assert loaded_feature.value_per_label == feature.value_per_label
     assert loaded_feature.raw_order == feature.raw_order
     assert len(loaded_feature.statistics) == 0
     assert len(loaded_feature.history) == 0
+    assert loaded_feature.ordinal_encoding
