@@ -60,14 +60,18 @@
 from pytest import fixture, raises
 from AutoCarver.features import (
     BaseFeature,
+    QualitativeFeature,
     CategoricalFeature,
     OrdinalFeature,
     QuantitativeFeature,
 )
 from AutoCarver.features.features import (
+    Features,
     make_versions,
     make_version,
     make_version_name,
+    remove_version,
+    keep_versions,
     cast_features,
     get_names,
     get_versions,
@@ -108,17 +112,36 @@ def test_make_version(mock_features):
 
 def test_make_versions(mock_features):
     """test funtion make_versions"""
-    y_class = "classB"
+    y_classes = ["A", "B", "C"]
     ordinal_encoding = True
 
-    new_features = make_versions(mock_features, y_class, ordinal_encoding)
+    initial_names = get_names(mock_features)
 
-    assert len(new_features) == len(mock_features)
-    assert all(f.version_tag == y_class for f in new_features)
-    assert all(f.version == make_version_name(f.name, y_class) for f in new_features)
-    assert isinstance(new_features[0], CategoricalFeature)
-    assert isinstance(new_features[1], OrdinalFeature)
-    assert isinstance(new_features[2], QuantitativeFeature)
+    new_features = make_versions(mock_features, y_classes, ordinal_encoding)
+
+    assert len(new_features) == len(mock_features) * len(y_classes)
+    new_features_names = get_names(new_features)
+    assert all(new_name in initial_names for new_name in new_features_names)
+    new_features_versions = get_versions(new_features)
+    assert all(
+        make_version_name(f.name, y_class) in new_features_versions
+        for f in mock_features
+        for y_class in y_classes
+    )
+    assert (
+        sum(isinstance(new_feature, CategoricalFeature) for new_feature in new_features)
+        == len(y_classes) * 2  # ordinal features also are categorical
+    )
+    assert sum(isinstance(new_feature, OrdinalFeature) for new_feature in new_features) == len(
+        y_classes
+    )
+    assert sum(isinstance(new_feature, QuantitativeFeature) for new_feature in new_features) == len(
+        y_classes
+    )
+    for y_class in y_classes:
+        assert sum(new_feature.version_tag == y_class for new_feature in new_features) == len(
+            mock_features
+        )
 
 
 def test_get_names(mock_features):
@@ -192,3 +215,405 @@ def test_cast_features(mock_features):
 
     assert len(casted_features) == 2
     assert feature1.version in get_versions(casted_features)
+
+
+def test_remove_version(mock_features):
+    """test function remove_version"""
+    y_classes = ["A", "B", "C"]
+    ordinal_encoding = False
+    new_features = make_versions(mock_features, y_classes, ordinal_encoding)
+
+    # removing each feature version
+    for feature in new_features:
+        result = remove_version(feature.version, new_features)
+        assert len(result) == len(mock_features) * len(y_classes) - 1
+        assert all(f.version != feature.version for f in result)
+
+    # Edge case: Remove a version that doesn't exist
+    removed_version = "feature_D"
+    result = remove_version(removed_version, new_features)
+    assert len(result) == len(mock_features) * len(y_classes)
+
+
+def test_keep_versions(mock_features):
+    """test function keep_versions"""
+    y_classes = ["A", "B", "C"]
+    ordinal_encoding = False
+    new_features = make_versions(mock_features, y_classes, ordinal_encoding)
+
+    for kept_version1 in new_features:
+        for kept_version2 in new_features:
+            result = keep_versions([kept_version1.version, kept_version2.version], new_features)
+            assert len(result) == 1 + int(kept_version1.version != kept_version2.version)
+            assert any(f.version == kept_version1.version for f in result)
+            assert any(f.version == kept_version2.version for f in result)
+
+    # Edge case: Keep a version that doesn't exist
+    kept_versions = ["feature_D"]
+    result = keep_versions(kept_versions, new_features)
+    assert len(result) == 0
+
+
+from pandas import DataFrame, Series
+
+
+@fixture
+def mock_categoricals():
+    return [
+        CategoricalFeature(name="cat1"),
+        CategoricalFeature(name="cat2"),
+    ]
+
+
+@fixture
+def mock_ordinals():
+    return [
+        OrdinalFeature(name="ord1", values=["low", "medium", "high"]),
+        OrdinalFeature(name="ord2", values=["low", "medium", "high"]),
+    ]
+
+
+@fixture
+def mock_quantitatives():
+    return [
+        QuantitativeFeature(name="quant1"),
+        QuantitativeFeature(name="quant2"),
+    ]
+
+
+@fixture
+def features(mock_categoricals, mock_ordinals, mock_quantitatives):
+    return Features(
+        categoricals=[f.name for f in mock_categoricals],
+        quantitatives=[f.name for f in mock_quantitatives],
+        ordinals=[f.name for f in mock_ordinals],
+        ordinal_values={"ord1": ["low", "medium", "high"], "ord2": ["low", "medium", "high"]},
+    )
+
+
+def test_features_initialization(features, mock_categoricals, mock_ordinals, mock_quantitatives):
+    assert len(features.categoricals) == len(mock_categoricals)
+    assert len(features.ordinals) == len(mock_ordinals)
+    assert len(features.quantitatives) == len(mock_quantitatives)
+
+
+def test_features_call(features, mock_categoricals, mock_ordinals, mock_quantitatives):
+    assert features("cat1") == features.categoricals[0]
+    assert features("ord1") == features.ordinals[0]
+    assert features("quant1") == features.quantitatives[0]
+
+    with raises(ValueError):
+        features("nonexistent")
+
+
+def test_features_len(features):
+    assert len(features) == len(features.categoricals) + len(features.ordinals) + len(
+        features.quantitatives
+    )
+
+
+def test_features_iter(features):
+    feature_list = list(iter(features))
+    assert feature_list == features.to_list()
+
+
+def test_features_getitem(features):
+    # list mode
+    assert features[0] == features.categoricals[0]
+    with raises(IndexError):
+        features[100]
+    assert features[[0, -1]] == [features.categoricals[0], features.quantitatives[-1]]
+
+    # dict mode
+    assert features["cat1"] == features.categoricals[0]
+    with raises(ValueError):
+        features["nonexistent"]
+    assert features[["cat1", "ord1"]] == [features("cat1"), features("ord1")]
+
+
+def test_features_get_names(features):
+    names = features.get_names()
+    expected_names = get_names(features)
+    assert names == expected_names
+
+
+def test_features_get_versions(features):
+    versions = features.get_versions()
+    expected_versions = get_versions(features)
+    assert versions == expected_versions
+
+
+def test_features_remove_by_name(features):
+
+    # removing a categorical feature by name
+    features.remove("cat1")
+    assert len(features.categoricals) == 1
+    assert features.categoricals[0].name != "cat1"
+    assert len(features) == 5
+
+    # # removing a categorical feature by version
+    # features.categoricals[0].version = "cat2_v2"
+    # features.remove("cat2_v2")
+    # assert len(features.categoricals) == 1
+    # assert features.categoricals[0].version != "cat2_v2"
+    # assert len(features) == 5
+
+    # removing a ordinal feature by name
+    features.remove("ord1")
+    assert len(features.ordinals) == 1
+    assert features.ordinals[0].name != "ord1"
+    assert len(features) == 4
+
+    # removing a quantitative feature by name
+    features.remove("quant1")
+    assert len(features.quantitatives) == 1
+    assert features.quantitatives[0].name != "quant1"
+    assert len(features) == 3
+
+
+def test_features_remove_by_version(features):
+
+    # removing a categorical feature by version
+    features.categoricals[0].version = "cat1_v2"
+    features.remove("cat1_v2")
+    assert len(features.categoricals) == 1
+    assert features.categoricals[0].version != "cat1_v2"
+    assert len(features) == 5
+
+    # removing a ordinal feature by version
+    features.ordinals[0].version = "ord1_v2"
+    features.remove("ord1_v2")
+    assert len(features.ordinals) == 1
+    assert features.ordinals[0].version != "ord1_v2"
+    assert len(features) == 4
+
+    # removing a quantitative feature by version
+    features.quantitatives[0].version = "quant1_v2"
+    features.remove("quant1_v2")
+    assert len(features.quantitatives) == 1
+    assert features.quantitatives[0].version != "quant1_v2"
+    assert len(features) == 3
+
+
+def test_features_keep(features):
+
+    # keeping a categorical feature by name
+    features_copy = Features(features)
+    features_copy.keep(["cat1"])
+    assert len(features_copy.categoricals) == 1
+    assert features_copy.categoricals[0].name == "cat1"
+    assert len(features_copy.ordinals) == 0
+    assert len(features_copy.quantitatives) == 0
+
+    # keeping a ordinal feature by name
+    features_copy = Features(features)
+    features_copy.keep(["ord1"])
+    assert len(features_copy.ordinals) == 1
+    assert features_copy.ordinals[0].name == "ord1"
+    assert len(features_copy.categoricals) == 0
+    assert len(features_copy.quantitatives) == 0
+
+    # keeping a quantitative feature by name
+    features_copy = Features(features)
+    features_copy.keep(["quant1"])
+    assert len(features_copy.quantitatives) == 1
+    assert features_copy.quantitatives[0].name == "quant1"
+    assert len(features_copy.categoricals) == 0
+    assert len(features_copy.ordinals) == 0
+
+    # keeping a categorical feature by version
+    features_copy = Features(features)
+    features_copy.categoricals[0].version = "cat1_v2"
+    features_copy.keep(["cat1_v2"])
+    assert len(features_copy.categoricals) == 1
+    assert features_copy.categoricals[0].version == "cat1_v2"
+    assert len(features_copy.ordinals) == 0
+    assert len(features_copy.quantitatives) == 0
+
+    # keeping a ordinal feature by version
+    features_copy = Features(features)
+    features_copy.ordinals[0].version = "ord1_v2"
+    features_copy.keep(["ord1_v2"])
+    assert len(features_copy.ordinals) == 1
+    assert features_copy.ordinals[0].version == "ord1_v2"
+    assert len(features_copy.categoricals) == 0
+    assert len(features_copy.quantitatives) == 0
+
+    # keeping a quantitative feature by version
+    features_copy = Features(features)
+    features_copy.quantitatives[0].version = "quant1_v2"
+    features_copy.keep(["quant1_v2"])
+    assert len(features_copy.quantitatives) == 1
+    assert features_copy.quantitatives[0].version == "quant1_v2"
+    assert len(features_copy.categoricals) == 0
+    assert len(features_copy.ordinals) == 0
+
+    # Edge case, keep unexpected version
+    features_copy = Features(features)
+    features_copy.keep(["unexpected"])
+    assert len(features_copy.ordinals) == 0
+    assert len(features_copy.categoricals) == 0
+    assert len(features_copy.ordinals) == 0
+
+
+# def test_features_check_values(features):
+#     X = DataFrame({"cat1": ["a", "b"], "ord1": ["low", "medium"], "quant1": [1, 2]})
+
+#     with raises(RuntimeError):
+#         features.check_values(X)
+
+#     for feature in features:
+#         feature.is_fitted = True
+
+#     features.check_values(X)
+
+
+# def test_features_fit(features):
+#     X = DataFrame({"cat1": ["a", "b"], "ord1": ["low", "medium"], "quant1": [1, 2]})
+
+#     for feature in features:
+#         feature.is_fitted = False
+
+#     features.fit(X)
+
+#     for feature in features:
+#         assert feature.is_fitted is True
+
+
+# def test_features_fillna(features):
+#     X = DataFrame({"cat1": ["a", None], "ord1": ["low", None], "quant1": [1, None]})
+
+#     for feature in features:
+#         feature.has_nan = True
+#         feature.dropna = True
+#         feature.nan = -1
+
+#     filled_X = features.fillna(X)
+#     assert filled_X["cat1"].iloc[1] == -1
+#     assert filled_X["ord1"].iloc[1] == -1
+#     assert filled_X["quant1"].iloc[1] == -1
+
+
+# def test_features_unfillna(features):
+#     X = DataFrame({"cat1": ["a", -1], "ord1": ["low", -1], "quant1": [1, -1]})
+
+#     for feature in features:
+#         feature.has_nan = True
+#         feature.dropna = False
+#         feature.nan = -1
+#         feature.label_per_value = {-1: "NA"}
+
+#     unfilled_X = features.unfillna(X)
+#     assert unfilled_X["cat1"].iloc[1] == pytest.approx(float("nan"))
+#     assert unfilled_X["ord1"].iloc[1] == pytest.approx(float("nan"))
+#     assert unfilled_X["quant1"].iloc[1] == pytest.approx(float("nan"))
+
+
+# def test_features_update(features):
+#     mock_values = {
+#         "cat1": GroupedList(content={"a": ["a1", "a2"]}),
+#         "ord1": GroupedList(content={"low": ["low1", "low2"]}),
+#     }
+
+#     for feature in features:
+#         feature.update = lambda *args, **kwargs: None
+
+#     features.update(mock_values)
+
+#     for feature in features.categoricals + features.ordinals:
+#         assert feature.version in mock_values
+
+
+# def test_features_update_labels(features):
+#     for feature in features:
+#         feature.update_labels = lambda *args, **kwargs: None
+
+#     features.update_labels()
+
+#     for feature in features:
+#         assert hasattr(feature, "labels")
+
+
+def test_features_get_qualitatives(features):
+    qualitatives = features.get_qualitatives()
+    assert len(qualitatives) == len(features.categoricals) + len(features.ordinals)
+    assert all(isinstance(feature, QualitativeFeature) for feature in qualitatives)
+
+
+def test_features_get_quantitatives(features):
+    quantitatives = features.get_quantitatives()
+    assert len(quantitatives) == len(features.quantitatives)
+    assert all(isinstance(feature, QuantitativeFeature) for feature in quantitatives)
+
+
+def test_features_get_ordinals(features):
+    ordinals = features.get_ordinals()
+    assert len(ordinals) == len(features.ordinals)
+    assert all(isinstance(feature, OrdinalFeature) for feature in ordinals)
+
+
+def test_features_get_categoricals(features):
+    categoricals = features.get_categoricals()
+    assert len(categoricals) == len(features.categoricals)
+    assert all(isinstance(feature, CategoricalFeature) for feature in categoricals)
+
+
+# def test_features_set_dropna(features):
+#     features.set_dropna(True)
+#     for feature in features:
+#         assert feature.dropna is True
+
+
+# def test_features_get_content(features):
+#     content = features.get_content()
+#     assert isinstance(content, dict)
+#     assert all(isinstance(value, dict) for value in content.values())
+
+
+# def test_features_to_json(features):
+#     json_data = features.to_json()
+#     assert isinstance(json_data, dict)
+#     assert all(isinstance(value, dict) for value in json_data.values())
+
+
+# def test_features_to_list(features):
+#     feature_list = features.to_list()
+#     assert isinstance(feature_list, list)
+#     assert len(feature_list) == len(features.categoricals) + len(features.ordinals) + len(
+#         features.quantitatives
+#     )
+
+
+# def test_features_to_dict(features):
+#     feature_dict = features.to_dict()
+#     assert isinstance(feature_dict, dict)
+#     assert len(feature_dict) == len(features.categoricals) + len(features.ordinals) + len(
+#         features.quantitatives
+#     )
+
+
+# def test_features_load(features):
+#     json_data = features.to_json()
+#     loaded_features = Features.load(json_data, ordinal_encoding=False)
+#     assert isinstance(loaded_features, Features)
+#     assert len(loaded_features) == len(features)
+
+
+# def test_features_get_summaries(features):
+#     summaries = features.get_summaries()
+#     assert isinstance(summaries, DataFrame)
+#     assert "feature" in summaries.columns
+#     assert "label" in summaries.columns
+
+
+# def test_features_add_feature_versions(features):
+#     features.add_feature_versions(["classA", "classB"], ordinal_encoding=False)
+#     assert len(features.categoricals) > 0
+#     assert len(features.ordinals) > 0
+#     assert len(features.quantitatives) > 0
+
+
+# def test_features_get_version_group(features):
+#     group = features.get_version_group("classA")
+#     assert isinstance(group, list)
+#     assert all(feature.version_tag == "classA" for feature in group)

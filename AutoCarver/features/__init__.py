@@ -2,6 +2,7 @@
 
 from .features import Features, get_names, get_versions
 from .qualitative_features import (
+    QualitativeFeature,
     CategoricalFeature,
     OrdinalFeature,
     get_categorical_features,
@@ -25,4 +26,5 @@ __all__ = [
     "CategoricalFeature",
     "OrdinalFeature",
     "QuantitativeFeature",
+    "QualitativeFeature",
 ]

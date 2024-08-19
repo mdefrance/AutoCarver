@@ -48,7 +48,6 @@ from .utils.grouped_list import GroupedList
 # # def get_dtype()
 
 
-
 class Features:
     __name__ = "Features"
 
@@ -158,24 +157,17 @@ class Features:
         """Returns names of all features"""
         return get_versions(self.to_list())
 
-    def remove(self, feature_name: str) -> None:
-        """Removes a feature by name"""
-
-        # removing from list of typed features
-        self.categoricals = [
-            feature for feature in self.categoricals if feature.version != feature_name
-        ]
-        self.ordinals = [feature for feature in self.ordinals if feature.version != feature_name]
-        self.quantitatives = [
-            feature for feature in self.quantitatives if feature.version != feature_name
-        ]
+    def remove(self, feature_version: str) -> None:
+        """Removes a feature by version"""
+        self.categoricals = remove_version(feature_version, self.categoricals)
+        self.ordinals = remove_version(feature_version, self.ordinals)
+        self.quantitatives = remove_version(feature_version, self.quantitatives)
 
     def keep(self, kept: list[str]) -> None:
         """list of features' versions to keep (removes the others)"""
-
-        self.categoricals = [feature for feature in self.categoricals if feature.version in kept]
-        self.ordinals = [feature for feature in self.ordinals if feature.version in kept]
-        self.quantitatives = [feature for feature in self.quantitatives if feature.version in kept]
+        self.categoricals = keep_versions(kept, self.categoricals)
+        self.ordinals = keep_versions(kept, self.ordinals)
+        self.quantitatives = keep_versions(kept, self.quantitatives)
 
     def check_values(self, X: DataFrame) -> None:
         """Cheks for unexpected values for each feature in columns of DataFrame X"""
@@ -286,14 +278,12 @@ class Features:
 
     def set_dropna(self, dropna: bool = True) -> None:
         """Sets feature in dropna mode"""
-        # iterating over each feature
-        for feature in self:
+        for feature in self:  # iterating over each feature
             feature.set_dropna(dropna)
 
     def get_content(self, feature: str = None) -> dict:
         """Returns per feature content"""
-        # returning specific feature's content
-        if feature is not None:
+        if feature is not None:  # returning specific feature's content
             return self(feature).get_content()
 
         # returning all features' content
@@ -342,22 +332,9 @@ class Features:
 
     def add_feature_versions(self, y_classes: list[str], ordinal_encoding: bool) -> "Features":
         """Builds versions of all features for each y_class"""
-
-        # initiating new features' versions
-        categoricals: list[BaseFeature] = []
-        ordinals: list[BaseFeature] = []
-        quantitatives: list[BaseFeature] = []
-
-        # iterating over each possible class: making new versions of features
-        for y_class in y_classes:
-            categoricals += make_versions(self.categoricals, y_class, ordinal_encoding)
-            ordinals += make_versions(self.ordinals, y_class, ordinal_encoding)
-            quantitatives += make_versions(self.quantitatives, y_class, ordinal_encoding)
-
-        # saving feature versions
-        self.categoricals = categoricals
-        self.ordinals = ordinals
-        self.quantitatives = quantitatives
+        self.categoricals = make_versions(self.categoricals, y_classes, ordinal_encoding)
+        self.ordinals = make_versions(self.ordinals, y_classes, ordinal_encoding)
+        self.quantitatives = make_versions(self.quantitatives, y_classes, ordinal_encoding)
 
     def get_version_group(self, y_class: str) -> list[BaseFeature]:
         """Returns all features with specified version_tag"""
@@ -365,9 +342,25 @@ class Features:
         return [feature for feature in self if feature.version_tag == y_class]
 
 
-def make_versions(features: list[BaseFeature], y_class: str, ordinal_encoding: bool) -> BaseFeature:
+def remove_version(removed_version: str, features: list[BaseFeature]) -> list[BaseFeature]:
+    """removes a feature according its version"""
+    return [feature for feature in features if feature.version != removed_version]
+
+
+def keep_versions(kept_versions: list[str], features: list[BaseFeature]) -> list[BaseFeature]:
+    """keeps requested feature versions according its version"""
+    return [feature for feature in features if feature.version in kept_versions]
+
+
+def make_versions(
+    features: list[BaseFeature], y_classes: list[str], ordinal_encoding: bool
+) -> BaseFeature:
     """Makes a copy of a list of features with specified version"""
-    return [make_version(feature, y_class, ordinal_encoding) for feature in features]
+    return [
+        make_version(feature, y_class, ordinal_encoding)
+        for y_class in y_classes
+        for feature in features
+    ]
 
 
 def make_version(feature: BaseFeature, y_class: str, ordinal_encoding: bool) -> BaseFeature:
