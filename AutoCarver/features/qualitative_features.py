@@ -1,5 +1,6 @@
 """ Defines a categorical feature"""
 
+from abc import abstractmethod
 from numpy import floating, integer
 from pandas import DataFrame, Series, notna, unique
 
@@ -10,11 +11,6 @@ from .utils.grouped_list import GroupedList
 class QualitativeFeature(BaseFeature):
     __name__ = "Qualitative"
     is_qualitative = True
-
-
-class CategoricalFeature(QualitativeFeature):
-    __name__ = "Categorical"
-    is_categorical = True
 
     def fit(self, X: DataFrame, y: Series = None) -> None:
         """TODO fit stats"""
@@ -76,7 +72,7 @@ class CategoricalFeature(QualitativeFeature):
 
         # iterating over each value and there content
         labels = []
-        for group, content in self.get_content().items():
+        for group, content in self.content.items():
 
             # formatting label
             labels += [self._format_modalities(group, content)]
@@ -87,7 +83,7 @@ class CategoricalFeature(QualitativeFeature):
         """returns summary of feature's values' content"""
         # iterating over each value
         summary = []
-        for group, values in self.get_content().items():
+        for group, values in self.content.items():
             # getting group label
             group_label = self.label_per_value.get(group)
 
@@ -161,6 +157,11 @@ class CategoricalFeature(QualitativeFeature):
                 if len(grouped_values) > 0:
                     self.values.group_list(grouped_values, kept_value)
 
+    @abstractmethod
+    def _specific_formatting(self, ordered_content: list[str]) -> str:
+        """specific label formatting"""
+        pass
+
     def _format_modalities(self, group: str, content: list[str]) -> list[str]:
         """Formats a list of float quantiles into a list of boundaries.
 
@@ -193,18 +194,10 @@ class CategoricalFeature(QualitativeFeature):
         # building label from ordered content
         if len(ordered_content) == 0:
             label = group
-
         elif len(ordered_content) == 1:
             label = ordered_content[0]
         else:
-            # list label for categorical feature
-            label = ", ".join(ordered_content)
-            if len(label) > self.max_n_chars:
-                label = label[: self.max_n_chars] + "..."
-
-            # ordered label for ordinal features
-            if self.is_ordinal:
-                label = f"{ordered_content[0]} to {ordered_content[-1]}"
+            label = self._specific_formatting(ordered_content)
 
         # adding nans
         if self.nan in content and label != self.nan:  # and self.nan not in label:
@@ -213,11 +206,25 @@ class CategoricalFeature(QualitativeFeature):
         return label
 
 
-class OrdinalFeature(CategoricalFeature):
+class CategoricalFeature(QualitativeFeature):
+    __name__ = "Categorical"
+    is_categorical = True
+
+    def _specific_formatting(self, ordered_content: list[str]) -> str:
+        """categorical features' specific label formatting"""
+
+        # list label for categorical feature
+        label = ", ".join(ordered_content)
+        if len(label) > self.max_n_chars:
+            label = label[: self.max_n_chars] + "..."
+
+        return label
+
+
+class OrdinalFeature(QualitativeFeature):
     __name__ = "Ordinal"
 
     is_ordinal = True
-    is_categorical = False
 
     def __init__(self, name: str, values: list[str], **kwargs: dict) -> None:
         super().__init__(name, **kwargs)
@@ -241,6 +248,12 @@ class OrdinalFeature(CategoricalFeature):
 
         # setting values and labels
         super().update(GroupedList(values))
+
+    def _specific_formatting(self, ordered_content: list[str]) -> str:
+        """ordinal features' specific label formatting"""
+
+        # ordered label for ordinal features
+        return f"{ordered_content[0]} to {ordered_content[-1]}"
 
 
 def nan_unique(x: Series, sort: bool = False) -> list[str]:

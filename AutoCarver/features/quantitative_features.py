@@ -11,9 +11,10 @@ class QuantitativeFeature(BaseFeature):
     __name__ = "Quantitative"
     is_quantitative = True
 
-    def set_has_default(self, has_default: bool = True) -> None:
+    @BaseFeature.has_default.setter
+    def has_default(self, value: bool) -> None:
         """does nothing for quantitative features: no default value possible"""
-        _ = has_default
+        _ = value
 
     def _specific_update(self, values: GroupedList, convert_labels: bool = False) -> None:
         """update content of values specifically per feature type"""
@@ -99,11 +100,11 @@ class QuantitativeFeature(BaseFeature):
     def get_summary(self):
         """returns summary of feature's values' content"""
         # getting feature's labels
-        labels = self.get_labels()
+        labels = self.make_labels()
 
         # iterating over each value
         summary = []
-        for num, (group, values) in enumerate(self.get_content().items()):
+        for num, (group, values) in enumerate(self.content.items()):
             # getting group label
             group_label = self.label_per_value.get(group)
 

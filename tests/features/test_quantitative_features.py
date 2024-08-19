@@ -110,8 +110,8 @@ def test_quantitative_feature_type(sample_quantitative_feature: QuantitativeFeat
     assert not sample_quantitative_feature.is_categorical
 
 
-def test_quantitative_feature_get_labels(sample_quantitative_feature: QuantitativeFeature) -> None:
-    """testing get_labels"""
+def test_quantitative_feature_make_labels(sample_quantitative_feature: QuantitativeFeature) -> None:
+    """testing make_labels"""
 
     # fitting some nans
     sample_quantitative_feature.fit(
@@ -119,7 +119,7 @@ def test_quantitative_feature_get_labels(sample_quantitative_feature: Quantitati
     )
     # labels without setting dropna to true
     assert sample_quantitative_feature.values == [0.1, 0.5, 0.9, inf]
-    labels = sample_quantitative_feature.get_labels()
+    labels = sample_quantitative_feature.make_labels()
     assert labels == [
         "x <= 1.0e-01",
         "1.0e-01 < x <= 5.0e-01",
@@ -127,8 +127,8 @@ def test_quantitative_feature_get_labels(sample_quantitative_feature: Quantitati
         "9.0e-01 < x",
     ]
     # setting dropna true
-    sample_quantitative_feature.set_dropna(True)
-    labels = sample_quantitative_feature.get_labels()
+    sample_quantitative_feature.dropna = True
+    labels = sample_quantitative_feature.make_labels()
     assert sample_quantitative_feature.values == [0.1, 0.5, 0.9, inf, NAN]
     assert labels == [
         "x <= 1.0e-01",
@@ -138,8 +138,8 @@ def test_quantitative_feature_get_labels(sample_quantitative_feature: Quantitati
         NAN,
     ]
     # resetting dropna
-    sample_quantitative_feature.set_dropna(False)
-    labels = sample_quantitative_feature.get_labels()
+    sample_quantitative_feature.dropna = False
+    labels = sample_quantitative_feature.make_labels()
     assert sample_quantitative_feature.values == [0.1, 0.5, 0.9, inf]
     assert labels == [
         "x <= 1.0e-01",
@@ -148,9 +148,9 @@ def test_quantitative_feature_get_labels(sample_quantitative_feature: Quantitati
         "9.0e-01 < x",
     ]
 
-    # setting set_has_default true
-    sample_quantitative_feature.set_has_default(True)
-    labels = sample_quantitative_feature.get_labels()
+    # setting has_default true
+    sample_quantitative_feature.has_default = True
+    labels = sample_quantitative_feature.make_labels()
     assert sample_quantitative_feature.values == [0.1, 0.5, 0.9, inf]
     assert labels == [
         "x <= 1.0e-01",
@@ -158,9 +158,9 @@ def test_quantitative_feature_get_labels(sample_quantitative_feature: Quantitati
         "5.0e-01 < x <= 9.0e-01",
         "9.0e-01 < x",
     ]
-    # resetting set_has_default
-    sample_quantitative_feature.set_has_default(False)
-    labels = sample_quantitative_feature.get_labels()
+    # resetting has_default false
+    sample_quantitative_feature.has_default = False
+    labels = sample_quantitative_feature.make_labels()
     assert sample_quantitative_feature.values == [0.1, 0.5, 0.9, inf]
     assert labels == [
         "x <= 1.0e-01",
@@ -173,20 +173,18 @@ def test_quantitative_feature_get_labels(sample_quantitative_feature: Quantitati
 def test_quantitative_feature_update_no_ordinal_encoding(
     sample_quantitative_feature: QuantitativeFeature,
 ) -> None:
-    """testing get_labels"""
+    """testing update"""
 
     # fitting some nans
     sample_quantitative_feature.fit(
         DataFrame({sample_quantitative_feature.version: [1, 2, 3, 4, nan]})
     )
-    ordinal_encoding = False
     sample_quantitative_feature.update(
         GroupedList({"x <= 1.0e-01": ["x <= 1.0e-01", "1.0e-01 < x <= 5.0e-01"]}),
         convert_labels=True,
-        ordinal_encoding=ordinal_encoding,
     )
     assert sample_quantitative_feature.values == [0.5, 0.9, inf]
-    assert sample_quantitative_feature.get_content() == {0.5: [0.1, 0.5], 0.9: [0.9], inf: [inf]}
+    assert sample_quantitative_feature.content == {0.5: [0.1, 0.5], 0.9: [0.9], inf: [inf]}
     assert sample_quantitative_feature.labels == [
         "x <= 5.0e-01",
         "5.0e-01 < x <= 9.0e-01",
@@ -205,15 +203,13 @@ def test_quantitative_feature_update_no_ordinal_encoding(
     }
 
     # adding nans
-    sample_quantitative_feature.set_dropna(True, ordinal_encoding=ordinal_encoding)
+    sample_quantitative_feature.dropna = True
     print(sample_quantitative_feature.label_per_value)
     sample_quantitative_feature.update(
-        GroupedList({NAN: [NAN, "x <= 5.0e-01"]}),
-        convert_labels=True,
-        ordinal_encoding=ordinal_encoding,
+        GroupedList({NAN: [NAN, "x <= 5.0e-01"]}), convert_labels=True
     )
     assert sample_quantitative_feature.values == [0.5, 0.9, inf]
-    assert sample_quantitative_feature.get_content() == {
+    assert sample_quantitative_feature.content == {
         0.5: [NAN, 0.1, 0.5],
         0.9: [0.9],
         inf: [inf],
@@ -251,15 +247,10 @@ def test_quantitative_feature_update_ordinal_encoding(
     sample_quantitative_feature.fit(
         DataFrame({sample_quantitative_feature.version: [1, 2, 3, 4, nan]})
     )
-    ordinal_encoding = True
-    sample_quantitative_feature.update_labels(ordinal_encoding=ordinal_encoding)
-    sample_quantitative_feature.update(
-        GroupedList({2: [2, 3]}),
-        convert_labels=True,
-        ordinal_encoding=ordinal_encoding,
-    )
+    sample_quantitative_feature.ordinal_encoding = True
+    sample_quantitative_feature.update(GroupedList({2: [2, 3]}), convert_labels=True)
     assert sample_quantitative_feature.values == [0.1, 0.5, inf]
-    assert sample_quantitative_feature.get_content() == {0.1: [0.1], 0.5: [0.5], inf: [0.9, inf]}
+    assert sample_quantitative_feature.content == {0.1: [0.1], 0.5: [0.5], inf: [0.9, inf]}
     assert sample_quantitative_feature.labels == [0, 1, 2]
     assert sample_quantitative_feature.value_per_label == {
         0: 0.1,
@@ -274,15 +265,11 @@ def test_quantitative_feature_update_ordinal_encoding(
     }
 
     # adding nans
-    sample_quantitative_feature.set_dropna(True, ordinal_encoding=ordinal_encoding)
-    print(sample_quantitative_feature.get_content())
-    sample_quantitative_feature.update(
-        GroupedList({3: [3, 1]}),
-        convert_labels=True,
-        ordinal_encoding=ordinal_encoding,
-    )
+    sample_quantitative_feature.dropna = True
+    print(sample_quantitative_feature.content)
+    sample_quantitative_feature.update(GroupedList({3: [3, 1]}), convert_labels=True)
     assert sample_quantitative_feature.values == [0.1, 0.5, inf]
-    assert sample_quantitative_feature.get_content() == {
+    assert sample_quantitative_feature.content == {
         0.1: [0.1],
         0.5: [NAN, 0.5],
         inf: [0.9, inf],
@@ -324,7 +311,7 @@ def test_get_summary(sample_quantitative_feature: QuantitativeFeature) -> None:
     ]
     assert summary == expected_summary
 
-    sample_quantitative_feature.update_labels(ordinal_encoding=True)
+    sample_quantitative_feature.ordinal_encoding = True
     summary = sample_quantitative_feature.get_summary()
     expected_summary = [
         {"feature": "Quantitative('test_feature')", "label": 0, "content": "x <= 1.0e-01"},
@@ -346,7 +333,8 @@ def test_get_summary(sample_quantitative_feature: QuantitativeFeature) -> None:
     sample_quantitative_feature.fit(
         DataFrame({sample_quantitative_feature.version: [0.1, 0.2, 0.3, 0.4, nan]})
     )
-    sample_quantitative_feature.set_dropna(True, ordinal_encoding=True)
+    sample_quantitative_feature.ordinal_encoding = True
+    sample_quantitative_feature.dropna = True
     summary = sample_quantitative_feature.get_summary()
     print(summary)
     expected_summary = [
