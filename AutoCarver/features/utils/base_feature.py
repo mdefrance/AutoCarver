@@ -136,6 +136,10 @@ class BaseFeature(ABC):
         if not isinstance(value, bool):
             raise ValueError(f"Trying to set dropna with type {type(value)}")
 
+        # check input value
+        if self.values is None:
+            raise ValueError("Trying to set dropna before there where values observed")
+
         # activating dropna mode
         if value and not self.dropna:
 
@@ -151,7 +155,7 @@ class BaseFeature(ABC):
         elif not value and self.dropna:
 
             # checking for values merged with nans
-            if len(self.values.get(self.nan)) > 1:
+            if self.values is not None and len(self.values.get(self.nan)) > 1:
                 raise RuntimeError(
                     "Can not set feature dropna=False has values were grouped with nans."
                 )

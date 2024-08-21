@@ -77,6 +77,8 @@ from AutoCarver.features.features import (
     get_versions,
 )  # Replace 'your_module' with the actual module name
 
+from AutoCarver.features.utils import GroupedList
+
 
 @fixture
 def mock_features():
@@ -559,16 +561,33 @@ def test_features_get_categoricals(features):
     assert all(isinstance(feature, CategoricalFeature) for feature in categoricals)
 
 
-# def test_features_set_dropna(features):
-#     features.set_dropna(True)
-#     for feature in features:
-#         assert feature.dropna is True
+def test_features_set_dropna(features):
+
+    for feature in features:
+        feature.values = GroupedList([1, 2, 3])
+    features.dropna = True
+    for feature in features:
+        assert feature.dropna
+
+    assert features.dropna
+    assert features._dropna
+
+    features.dropna = False
+    for feature in features:
+        assert not feature.dropna
+
+    assert not features.dropna
+    assert not features._dropna
 
 
-# def test_features_get_content(features):
-#     content = features.get_content()
-#     assert isinstance(content, dict)
-#     assert all(isinstance(value, dict) for value in content.values())
+def test_features_get_content(features):
+    """TODO"""
+
+    for feature in features:
+        feature.values = GroupedList([1, 2, 3])
+    content = features.content
+    assert isinstance(content, dict)
+    assert all(isinstance(value, dict) for value in content.values())
 
 
 # def test_features_to_json(features):
