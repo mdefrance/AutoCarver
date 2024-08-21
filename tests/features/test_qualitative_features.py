@@ -17,6 +17,7 @@ from AutoCarver.config import NAN, DEFAULT
 
 BaseFeature.__abstractmethods__ = set()
 
+
 # TODO rewrite from QualitativeFeature
 def test_get_qualitative_features() -> None:
     """test function get_qualitative_features"""
@@ -317,6 +318,16 @@ def test_check_values_no_unexpected(sample_categorical_feature: CategoricalFeatu
     with raises(ValueError):
         sample_categorical_feature.check_values(data)
 
+    # testing with nans
+    sample_categorical_feature.value_per_label = {"label1": "value1"}
+    sample_categorical_feature.values = GroupedList({"value1": ["value1"]})
+    sample_categorical_feature.nan = "N/A"
+    sample_categorical_feature.has_nan = True
+    sample_categorical_feature.dropna = True
+    data = DataFrame({"test_feature": ["value1", "N/A"]})
+    sample_categorical_feature.check_values(data)
+    sample_categorical_feature.dropna = False
+
     # unexpected value in data with has_default = true
     sample_categorical_feature.value_per_label = {"label1": "value1"}
     sample_categorical_feature.values = GroupedList({"value1": ["value1"]})
@@ -328,15 +339,9 @@ def test_check_values_no_unexpected(sample_categorical_feature: CategoricalFeatu
     # Ensure the unexpected value was added
     assert "label3" in sample_categorical_feature.values.content["default_value"]
 
-    # testing with nans
-    sample_categorical_feature.value_per_label = {"label1": "value1"}
-    sample_categorical_feature.values = GroupedList({"value1": ["value1"]})
-    sample_categorical_feature.has_default = False
-    sample_categorical_feature.nan = "N/A"
-    sample_categorical_feature.has_nan = True
-    sample_categorical_feature.dropna  = True
-    data = DataFrame({"test_feature": ["value1", "N/A"]})
-    sample_categorical_feature.check_values(data)
+    # can not come back from has default
+    with raises(RuntimeError):
+        sample_categorical_feature.has_default = False
 
 
 def test_categorical_feature_update_ordinal_encoding(
@@ -438,8 +443,7 @@ def test_categorical_feature_update_no_ordinal_encoding(
     )
     sample_categorical_feature.ordinal_encoding = False
     sample_categorical_feature.update(
-        GroupedList({"d, e, f": ["c", "d, e, f"]}),
-        convert_labels=True
+        GroupedList({"d, e, f": ["c", "d, e, f"]}), convert_labels=True
     )
     print(sample_categorical_feature.content)
     assert sample_categorical_feature.values == ["a", "b", "d"]
@@ -473,10 +477,7 @@ def test_categorical_feature_update_no_ordinal_encoding(
     # adding nans
     sample_categorical_feature.dropna = True
     print(sample_categorical_feature.content)
-    sample_categorical_feature.update(
-        GroupedList({NAN: [NAN, "b"]}),
-        convert_labels=True
-    )
+    sample_categorical_feature.update(GroupedList({NAN: [NAN, "b"]}), convert_labels=True)
     assert sample_categorical_feature.values == ["a", "d", NAN]
     print(sample_categorical_feature.content)
     assert sample_categorical_feature.content == {
@@ -522,10 +523,7 @@ def test_ordinal_feature_update_ordinal_encoding(
         DataFrame({sample_ordinal_feature.version: ["a", "c", "f", "1", nan]})
     )
     sample_ordinal_feature.ordinal_encoding = True
-    sample_ordinal_feature.update(
-        GroupedList({2: [2, 3]}),
-        convert_labels=True
-    )
+    sample_ordinal_feature.update(GroupedList({2: [2, 3]}), convert_labels=True)
     print(sample_ordinal_feature.content)
     assert sample_ordinal_feature.values == ["a", "b", "c"]
     assert sample_ordinal_feature.content == {
@@ -557,10 +555,7 @@ def test_ordinal_feature_update_ordinal_encoding(
     # adding nans
     sample_ordinal_feature.dropna = True
     print(sample_ordinal_feature.content)
-    sample_ordinal_feature.update(
-        GroupedList({3: [3, 1]}),
-        convert_labels=True
-    )
+    sample_ordinal_feature.update(GroupedList({3: [3, 1]}), convert_labels=True)
     assert sample_ordinal_feature.values == ["a", "c", NAN]
     assert sample_ordinal_feature.content == {
         "a": ["1", "2", "3", "4", "5", "a"],
@@ -605,10 +600,7 @@ def test_ordinal_feature_update_no_ordinal_encoding(
         DataFrame({sample_ordinal_feature.version: ["a", "c", "f", "1", nan]})
     )
     sample_ordinal_feature.ordinal_encoding = False
-    sample_ordinal_feature.update(
-        GroupedList({"d to f": ["c", "d to f"]}),
-        convert_labels=True
-    )
+    sample_ordinal_feature.update(GroupedList({"d to f": ["c", "d to f"]}), convert_labels=True)
     print(sample_ordinal_feature.content)
     assert sample_ordinal_feature.values == ["a", "b", "d"]
     assert sample_ordinal_feature.content == {
@@ -641,10 +633,7 @@ def test_ordinal_feature_update_no_ordinal_encoding(
     # adding nans
     sample_ordinal_feature.dropna = True
     print(sample_ordinal_feature.content)
-    sample_ordinal_feature.update(
-        GroupedList({NAN: [NAN, "b"]}),
-        convert_labels=True
-    )
+    sample_ordinal_feature.update(GroupedList({NAN: [NAN, "b"]}), convert_labels=True)
     assert sample_ordinal_feature.values == ["a", "d", NAN]
     print(sample_ordinal_feature.content)
     assert sample_ordinal_feature.content == {
@@ -776,12 +765,13 @@ def test_ordinal_feature_get_summary(sample_ordinal_feature: OrdinalFeature) -> 
         {"feature": "Ordinal('test_feature')", "label": 2, "content": "c"},
         {"feature": "Ordinal('test_feature')", "label": 3, "content": ["e", "f", "d"]},
     ]
+
     assert summary == expected_summary
 
     # fitting some nans
     sample_ordinal_feature.fit(DataFrame({sample_ordinal_feature.version: ["a", "b", nan]}))
-    sample_categorical_feature.dropna = True
-    sample_categorical_feature.ordinal_encoding = True
+    sample_ordinal_feature.dropna = True
+    sample_ordinal_feature.ordinal_encoding = True
     summary = sample_ordinal_feature.get_summary()
 
     expected_summary = [
@@ -795,11 +785,12 @@ def test_ordinal_feature_get_summary(sample_ordinal_feature: OrdinalFeature) -> 
         {"feature": "Ordinal('test_feature')", "label": 3, "content": ["e", "f", "d"]},
         {"feature": "Ordinal('test_feature')", "label": 4, "content": "__NAN__"},
     ]
+    print(summary)
     assert summary == expected_summary
 
     # adding some default
-    sample_categorical_feature.has_default = True
-    sample_categorical_feature.ordinal_encoding = True
+    sample_ordinal_feature.has_default = True
+    sample_ordinal_feature.ordinal_encoding = True
     summary = sample_ordinal_feature.get_summary()
 
     expected_summary = [

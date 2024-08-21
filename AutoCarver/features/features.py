@@ -5,8 +5,14 @@ from typing import Type, Union
 from numpy import nan
 from pandas import DataFrame, Series
 
-from .qualitative_features import CategoricalFeature, OrdinalFeature
-from .quantitative_features import QuantitativeFeature
+from .qualitative_features import (
+    QualitativeFeature,
+    CategoricalFeature,
+    OrdinalFeature,
+    get_categorical_features,
+    get_ordinal_features,
+)
+from .quantitative_features import QuantitativeFeature, get_quantitative_features
 from .utils.base_feature import BaseFeature
 from .utils.grouped_list import GroupedList
 
@@ -63,22 +69,21 @@ class Features:
         self.ordinal_values = ordinal_values
 
         # casting features accordingly
-        self.categoricals = cast_features(categoricals, CategoricalFeature, **kwargs)
-        self.quantitatives = cast_features(quantitatives, QuantitativeFeature, **kwargs)
-        self.ordinals = cast_features(
+        all_features = cast_features(categoricals, CategoricalFeature, **kwargs)
+        all_features += cast_features(quantitatives, QuantitativeFeature, **kwargs)
+        all_features += cast_features(
             ordinals, OrdinalFeature, ordinal_values=self.ordinal_values, **kwargs
         )
 
         # ensuring features are grouped accordingly (already initiated features)
-        all_features = self.categoricals + self.ordinals + self.quantitatives
-        self.categoricals = [feature for feature in all_features if feature.is_categorical]
-        self.ordinals = [feature for feature in all_features if feature.is_ordinal]
-        self.quantitatives = [feature for feature in all_features if feature.is_quantitative]
+        self._categoricals = get_categorical_features(all_features)
+        self._ordinals = get_ordinal_features(all_features)
+        self._quantitatives = get_quantitative_features(all_features)
 
         # checking that features were passed as input
         if len(self.categoricals) == 0 and len(self.quantitatives) == 0 and len(self.ordinals) == 0:
             raise ValueError(
-                f" - [{self.__name__}] No feature passed as input. Please provide column names"
+                f"[{self}] No feature passed as input. Please provide column names"
                 "by setting categoricals, quantitatives or ordinals."
             )
 
@@ -92,13 +97,16 @@ class Features:
             or any(feature in categorcial_names + quantitative_names for feature in ordinal_names)
         ):
             raise ValueError(
-                f" - [{self.__name__}] One of provided features is in quantitatives and in "
+                f"[{self}] One of provided features is in quantitatives and in "
                 "categoricals and/or in ordinals. Please, check inputs!"
             )
 
+        self._dropna = False
+        self._ordinal_encoding = False
+
     def __repr__(self) -> str:
         """Returns names of all features"""
-        return f"{self.__name__}({str(self.get_versions())})"
+        return f"{self.__name__}({str(self.versions)})"
 
     def __call__(self, feature_name: str) -> BaseFeature:
         """Returns specified feature by name"""
@@ -108,7 +116,7 @@ class Features:
             return self_dict.get(feature_name)
 
         # looking for version names
-        if feature_name in self.get_versions():
+        if feature_name in self.versions:
             return next(feature for feature in self if feature.version == feature_name)
 
         # not found feature
@@ -149,13 +157,105 @@ class Features:
 
         return None
 
-    def get_names(self) -> list[str]:
+    @property
+    def names(self) -> list[str]:
         """Returns names of all features"""
         return get_names(self.to_list())
 
-    def get_versions(self) -> list[str]:
-        """Returns names of all features"""
+    @property
+    def versions(self) -> list[str]:
+        """Returns versions of all features"""
         return get_versions(self.to_list())
+
+    @property
+    def qualitatives(self) -> list[QualitativeFeature]:
+        """Returns all qualitative features"""
+        return self.categoricals + self.ordinals
+
+    @property
+    def categoricals(self) -> list[CategoricalFeature]:
+        """Returns all categorical features"""
+        return self._categoricals
+
+    @categoricals.setter
+    def categoricals(self, values: list[CategoricalFeature]) -> None:
+        """sets ordinal features"""
+
+        if not all(isinstance(feature, CategoricalFeature) for feature in values):
+            raise AttributeError(
+                f"[{self}] Trying to set categorical feature with wrongly typed feature"
+            )
+        self._categoricals = values
+
+    @property
+    def ordinals(self) -> list[OrdinalFeature]:
+        """Returns all ordinal features"""
+        return self._ordinals
+
+    @ordinals.setter
+    def ordinals(self, values: list[OrdinalFeature]) -> None:
+        """sets ordinal features"""
+
+        if not all(isinstance(feature, OrdinalFeature) for feature in values):
+            raise AttributeError(
+                f"[{self}] Trying to set ordinal feature with wrongly typed feature"
+            )
+        self._ordinals = values
+
+    @property
+    def quantitatives(self) -> list[QuantitativeFeature]:
+        """Returns all quantitative features"""
+        return self._quantitatives
+
+    @quantitatives.setter
+    def quantitatives(self, values: list[QuantitativeFeature]) -> None:
+        """sets quantitative features"""
+
+        if not all(isinstance(feature, QuantitativeFeature) for feature in values):
+            raise AttributeError(
+                f"[{self}] Trying to set quantitative feature with wrongly typed feature"
+            )
+        self._quantitatives = values
+
+    @property
+    def dropna(self) -> bool:
+        """whether or not to drop missing values"""
+        return self._dropna
+
+    @dropna.setter
+    def dropna(self, value: bool) -> None:
+        """Sets features in dropna mode"""
+
+        if not isinstance(value, bool):
+            raise ValueError("Can only set dropna has a bool")
+
+        for feature in self:  # iterating over each feature
+            feature.dropna = value
+
+        self._dropna = value
+
+    @property
+    def ordinal_encoding(self) -> bool:
+        """whether or not to ordinal encode labels"""
+        return self._ordinal_encoding
+
+    @ordinal_encoding.setter
+    def ordinal_encoding(self, value: bool) -> None:
+        """Sets features in ordinal_encoding mode"""
+
+        if not isinstance(value, bool):
+            raise ValueError("Can only set ordinal_encoding has a bool")
+
+        for feature in self:  # iterating over each feature
+            feature.ordinal_encoding = value
+
+        self._ordinal_encoding = value
+
+    @property
+    def content(self) -> dict:
+        """Returns per feature content"""
+        # returning all features' content
+        return {feature.version: feature.content for feature in self}
 
     def remove(self, feature_version: str) -> None:
         """Removes a feature by version"""
@@ -230,64 +330,33 @@ class Features:
         replace: bool = False,
     ) -> None:
         """Updates all features using provided feature_values"""
-        # iterating over each feature
-        for feature, values in feature_values.items():
+        for feature, values in feature_values.items():  # updating each features
             self(feature).update(values, convert_labels, sorted_values, replace)
 
-    def update_labels(self, ordinal_encoding: bool = False) -> None:
+    def update_labels(self) -> None:
         """Updates all feature labels"""
+        for feature in self:  # updating each features
+            feature.update_labels()
+
+    def add_feature_versions(self, y_classes: list[str]) -> None:
+        """Builds versions of all features for each y_class"""
+        self.categoricals = make_versions(self.categoricals, y_classes)
+        self.ordinals = make_versions(self.ordinals, y_classes)
+        self.quantitatives = make_versions(self.quantitatives, y_classes)
+
+    def get_version_group(self, y_class: str) -> list[BaseFeature]:
+        """Returns all features with specified version_tag"""
+
+        return [feature for feature in self if feature.version_tag == y_class]
+
+    def get_summaries(self) -> DataFrame:
+        """returns summaries of features' values' content"""
         # iterating over each feature
+        summaries = []
         for feature in self:
-            feature.update_labels(ordinal_encoding=ordinal_encoding)
+            summaries += feature.get_summary()
 
-    def get_qualitatives(self, return_names: bool = False) -> list[BaseFeature]:
-        """Returns all qualitative features"""
-        # returning feature names
-        if return_names:
-            return get_versions(self.categoricals + self.ordinals)
-
-        # returning feature objects
-        return self.categoricals + self.ordinals
-
-    def get_quantitatives(self, return_names: bool = False) -> list[BaseFeature]:
-        """Returns all quantitative features"""
-        # returning feature names
-        if return_names:
-            return get_versions(self.quantitatives)
-
-        # returning feature objects
-        return self.quantitatives
-
-    def get_ordinals(self, return_names: bool = False) -> list[BaseFeature]:
-        """Returns all ordinal features"""
-        # returning feature names
-        if return_names:
-            return get_versions(self.ordinals)
-
-        # returning feature objects
-        return self.ordinals
-
-    def get_categoricals(self, return_names: bool = False) -> list[BaseFeature]:
-        """Returns all categorical features"""
-        # returning feature names
-        if return_names:
-            return get_versions(self.categoricals)
-
-        # returning feature objects
-        return self.categoricals
-
-    def set_dropna(self, dropna: bool = True) -> None:
-        """Sets feature in dropna mode"""
-        for feature in self:  # iterating over each feature
-            feature.set_dropna(dropna)
-
-    def get_content(self, feature: str = None) -> dict:
-        """Returns per feature content"""
-        if feature is not None:  # returning specific feature's content
-            return self(feature).get_content()
-
-        # returning all features' content
-        return {feature.version: feature.get_content() for feature in self}
+        return DataFrame(summaries).set_index(["feature", "label"])
 
     def to_json(self, light_mode: bool = False) -> dict:
         """Converts a feature to JSON format"""
@@ -302,44 +371,27 @@ class Features:
         return {feature.version: feature for feature in self.to_list()}
 
     @classmethod
-    def load(cls, features_json: dict, ordinal_encoding: bool) -> "Features":
+    def load(cls, features_json: dict) -> "Features":
         """Loads a set of features"""
 
         # casting each feature to there corresponding type
         unpacked_features: list[BaseFeature] = []
         for _, feature in features_json.items():
+
             # categorical feature
             if feature.get("is_categorical"):
-                unpacked_features += [CategoricalFeature.load(feature, ordinal_encoding)]
+                unpacked_features += [CategoricalFeature.load(feature)]
+
             # ordinal feature
             elif feature.get("is_ordinal"):
-                unpacked_features += [OrdinalFeature.load(feature, ordinal_encoding)]
+                unpacked_features += [OrdinalFeature.load(feature)]
+
             # ordinal feature
             elif feature.get("is_quantitative"):
-                unpacked_features += [QuantitativeFeature.load(feature, ordinal_encoding)]
+                unpacked_features += [QuantitativeFeature.load(feature)]
 
         # initiating features
         return cls(unpacked_features)
-
-    def get_summaries(self) -> DataFrame:
-        """returns summaries of features' values' content"""
-        # iterating over each feature
-        summaries = []
-        for feature in self:
-            summaries += feature.get_summary()
-
-        return DataFrame(summaries).set_index(["feature", "label"])
-
-    def add_feature_versions(self, y_classes: list[str], ordinal_encoding: bool) -> "Features":
-        """Builds versions of all features for each y_class"""
-        self.categoricals = make_versions(self.categoricals, y_classes, ordinal_encoding)
-        self.ordinals = make_versions(self.ordinals, y_classes, ordinal_encoding)
-        self.quantitatives = make_versions(self.quantitatives, y_classes, ordinal_encoding)
-
-    def get_version_group(self, y_class: str) -> list[BaseFeature]:
-        """Returns all features with specified version_tag"""
-
-        return [feature for feature in self if feature.version_tag == y_class]
 
 
 def remove_version(removed_version: str, features: list[BaseFeature]) -> list[BaseFeature]:
@@ -352,18 +404,12 @@ def keep_versions(kept_versions: list[str], features: list[BaseFeature]) -> list
     return [feature for feature in features if feature.version in kept_versions]
 
 
-def make_versions(
-    features: list[BaseFeature], y_classes: list[str], ordinal_encoding: bool
-) -> BaseFeature:
+def make_versions(features: list[BaseFeature], y_classes: list[str]) -> BaseFeature:
     """Makes a copy of a list of features with specified version"""
-    return [
-        make_version(feature, y_class, ordinal_encoding)
-        for y_class in y_classes
-        for feature in features
-    ]
+    return [make_version(feature, y_class) for y_class in y_classes for feature in features]
 
 
-def make_version(feature: BaseFeature, y_class: str, ordinal_encoding: bool) -> BaseFeature:
+def make_version(feature: BaseFeature, y_class: str) -> BaseFeature:
     """Makes a copy of a feature with specified version"""
 
     # converting feature to json
@@ -371,16 +417,16 @@ def make_version(feature: BaseFeature, y_class: str, ordinal_encoding: bool) -> 
 
     # categorical feature
     if feature_json.get("is_categorical"):
-        new_feature = CategoricalFeature.load(feature_json, ordinal_encoding)
+        new_feature = CategoricalFeature.load(feature_json)
     # ordinal feature
     elif feature_json.get("is_ordinal"):
-        new_feature = OrdinalFeature.load(feature_json, ordinal_encoding)
+        new_feature = OrdinalFeature.load(feature_json)
     # ordinal feature
     elif feature_json.get("is_quantitative"):
-        new_feature = QuantitativeFeature.load(feature_json, ordinal_encoding)
+        new_feature = QuantitativeFeature.load(feature_json)
     # base feature
     else:
-        new_feature = BaseFeature.load(feature_json, ordinal_encoding)
+        new_feature = BaseFeature.load(feature_json)
 
     # modifying version and tag
     new_feature.version_tag = y_class

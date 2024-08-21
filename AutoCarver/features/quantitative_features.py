@@ -31,7 +31,7 @@ class QuantitativeFeature(BaseFeature):
 
             # updating: iterating over each grouped values
             for kept_value, grouped_values in values.content.items():
-                self.values.group_list(grouped_values, kept_value)
+                self.values.group(grouped_values, kept_value)
 
         # values are labels -> converting them back to values
         else:
@@ -65,7 +65,7 @@ class QuantitativeFeature(BaseFeature):
 
                 # updating values if any to group
                 if len(grouped_values) > 0:
-                    self.values.group_list(grouped_values, kept_value)
+                    self.values.group(grouped_values, kept_value)
 
     def make_labels(self) -> GroupedList:
         """gives labels per quantile (values for continuous features)

@@ -63,7 +63,7 @@ class QualitativeFeature(BaseFeature):
 
             # adding unexpected to default
             default_group = self.values.get_group(self.default)
-            self.group_list(unexpected, default_group)
+            self.group(unexpected, default_group)
 
         super().check_values(X)
 
@@ -110,7 +110,7 @@ class QualitativeFeature(BaseFeature):
         elif not convert_labels:
             # updating: iterating over each grouped values
             for kept_value, grouped_values in values.content.items():
-                self.values.group_list(grouped_values, kept_value)
+                self.values.group(grouped_values, kept_value)
 
         # values are labels -> converting them back to values
         else:
@@ -155,7 +155,7 @@ class QualitativeFeature(BaseFeature):
 
                 # updating values if any to group
                 if len(grouped_values) > 0:
-                    self.values.group_list(grouped_values, kept_value)
+                    self.values.group(grouped_values, kept_value)
 
     @abstractmethod
     def _specific_formatting(self, ordered_content: list[str]) -> str:

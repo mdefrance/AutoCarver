@@ -270,12 +270,12 @@ class BaseFeature(ABC):
         if (any(X[self.version].isna()) or any(X[self.version] == self.nan)) and not self.has_nan:
             raise ValueError(f"[{self}] Unexpected NaNs.")
 
-    def group_list(self, to_discard: list[Any], to_keep: Any) -> None:
+    def group(self, to_discard: list[str], to_keep: str) -> None:
         """wrapper of GroupedList: groups a list of values into a kept value"""
 
-        # using GroupedList's group_list
+        # using GroupedList's group
         values = GroupedList(self.values)
-        values.group_list(to_discard, to_keep)
+        values.group(to_discard, to_keep)
 
         # updating feature's values
         self.update(values, replace=True)

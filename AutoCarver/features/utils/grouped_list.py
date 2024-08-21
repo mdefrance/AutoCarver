@@ -77,12 +77,13 @@ class GroupedList(list):
             # initiating the values with the provided list of keys
             self.content = {v: [v] for v in iterable}
 
-    def get_values(self) -> list[Any]:
+    @property
+    def values(self) -> list[str]:
         """All values content in all groups
 
         Returns
         -------
-        list[Any]
+        list[str]
             List of all values in the GroupedList
         """
         return [value for values in self.content.values() for value in values]
@@ -121,7 +122,7 @@ class GroupedList(list):
                 raise ValueError(f"[{self}] Missing group leader {key} in its values: {values}")
 
         # an element can not be in several groups
-        all_values = self.get_values()
+        all_values = self.values
         if len(set(all_values)) != len(all_values):
             raise ValueError(f"[{self}] Some values are in several groups")
 
@@ -136,7 +137,7 @@ class GroupedList(list):
         ):
             raise ValueError(f"[{self}] Not the same ordering between list and content dict")
 
-    def group(self, discarded: Any, kept: Any) -> None:
+    def _group_single_value(self, discarded: Any, kept: Any) -> None:
         """Groups the discarded value with the kept value
 
         Parameters
@@ -165,23 +166,24 @@ class GroupedList(list):
             # removing discarded from the list
             self.remove(discarded)
 
-        # sanity check after modification
-        self.sanity_check()
-
-    def group_list(self, to_discard: list[Any], to_keep: Any) -> None:
-        """Groups elements to_discard into values to_keep
+    def group(self, to_discard: Union[list[str], str], to_keep: str) -> None:
+        """Groups the discarded value with the kept value
 
         Parameters
         ----------
-        to_discard : list[Any]
+        to_discard : list[Any] | Any
             Values to be grouped into the key ``to_keep``.
         to_keep : Any
             Key value in which to group ``to_discard`` values.
         """
+        # case of single value to discard
+        if not isinstance(to_discard, list):
+            self._group_single_value(to_discard, to_keep)
 
-        # grouping each element of to_discard list
-        for discarded, kept in zip(to_discard, [to_keep] * len(to_discard)):
-            self.group(discarded, kept)
+        # list of values to group
+        else:
+            for discarded in to_discard:
+                self._group_single_value(discarded, to_keep)
 
         # sanity check after modification
         self.sanity_check()
@@ -196,7 +198,7 @@ class GroupedList(list):
         """
 
         # checking for already existing values
-        if new_value in self.get_values():
+        if new_value in self.values:
             raise ValueError(f"- [{self}] Value {new_value} already in list!")
 
         # adding value to list and dict
@@ -354,7 +356,7 @@ class GroupedList(list):
         bool
             Whether the value is in the GroupedList
         """
-        return any(is_equal(value, known) for known in self.get_values())
+        return any(is_equal(value, known) for known in self.values)
 
     def replace_group_leader(self, group_leader: Any, group_member: Any) -> None:
         """Replaces a group_leader by one of its group_members

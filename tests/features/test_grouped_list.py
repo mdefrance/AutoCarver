@@ -84,6 +84,7 @@ def test_grouped_list_get_non_existing_key() -> None:
 
 
 def test_grouped_list_group() -> None:
+    # trying with a signle value
     gl = GroupedList({"a": ["b"], "c": ["d"]})
     gl.group("a", "c")
     assert gl == ["c"]
@@ -95,23 +96,22 @@ def test_grouped_list_group() -> None:
     with raises(ValueError):
         gl.group("d", "c")  # d is not in grouped_list
 
-
-def test_grouped_list_group_list() -> None:
+    # trying with a list
     gl = GroupedList({"a": ["b"], "c": ["d"]})
-    gl.group_list(["a", "c"], "c")
+    gl.group(["a", "c"], "c")
     assert gl == ["c"]
     assert gl.content == {"c": ["b", "a", "d", "c"]}
 
     gl = GroupedList({"a": ["b"], "c": ["d"], "e": ["e"]})
-    gl.group_list(["a", "e"], "c")
+    gl.group(["a", "e"], "c")
     assert gl == ["c"]
     assert gl.content == {"c": ["e", "b", "a", "d", "c"]}
 
     with raises(ValueError):
-        gl.group_list(["a", "e"], "g")  # g is not in grouped_list
+        gl.group(["a", "e"], "g")  # g is not in grouped_list
 
     with raises(ValueError):
-        gl.group_list(["a", "g"], "c")  # g is not in grouped_list
+        gl.group(["a", "g"], "c")  # g is not in grouped_list
 
 
 def test_grouped_list_append() -> None:
@@ -223,7 +223,7 @@ def test_grouped_list_get_group() -> None:
 
 def test_grouped_list_get_values() -> None:
     gl = GroupedList({"a": ["b", "c"], "d": ["e"]})
-    assert gl.get_values() == ["b", "c", "a", "e", "d"]
+    assert gl.values == ["b", "c", "a", "e", "d"]
 
 
 def test_grouped_list_contains() -> None:
