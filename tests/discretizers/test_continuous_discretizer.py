@@ -24,8 +24,6 @@ def test_continuous_discretizer(x_train: DataFrame):
         "Discrete_Quantitative_rarevalue",
     ]
     features = Features(quantitatives=quantitatives)
-    for feature in features:
-        feature.dropna = True
     min_freq = 0.1
 
     discretizer = ContinuousDiscretizer(
@@ -33,11 +31,15 @@ def test_continuous_discretizer(x_train: DataFrame):
         min_freq,
         copy=True,
     )
-    x_discretized = discretizer.fit_transform(x_train)
+    x_discretized = discretizer.fit(x_train)
+    features.dropna = True
+    x_discretized = discretizer.transform(x_train)
+    features.dropna = False
 
     assert all(
         x_discretized.Quantitative.value_counts(normalize=True) == min_freq
     ), "Wrong quantiles"
+
     assert features("Discrete_Quantitative_highnan").values == [
         2.0,
         3.0,
@@ -46,7 +48,7 @@ def test_continuous_discretizer(x_train: DataFrame):
         inf,
     ], "NaNs should not be added to the order"
 
-    assert features("Discrete_Quantitative_highnan").has_nan, "NaNs should fitted per feature"
+    assert features("Discrete_Quantitative_highnan").has_nan, "Should have nan"
 
     assert features("Discrete_Quantitative_lownan").values == [
         1.0,

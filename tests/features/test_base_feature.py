@@ -1,5 +1,6 @@
 """ set of tests for BaseFeature"""
 
+import json
 from pytest import raises
 from pandas import DataFrame
 from AutoCarver.config import DEFAULT, NAN
@@ -278,6 +279,7 @@ def test_base_feature_to_json() -> None:
     assert not json_output["ordinal_encoding"]
     assert "statistics" not in json_output
     assert "history" not in json_output
+    json.dumps(json_output)
 
     json_output = feature.to_json(light_mode=False)
     assert "statistics" in json_output
@@ -289,6 +291,7 @@ def test_base_feature_to_json() -> None:
     feature.is_ordinal = True
     feature.is_categorical = True
     feature.ordinal_encoding = True
+    json.dumps(json_output)
 
     json_output = feature.to_json(light_mode=True)
 
@@ -303,6 +306,7 @@ def test_base_feature_to_json() -> None:
     json_output = feature.to_json(light_mode=False)
     assert "statistics" in json_output
     assert "history" in json_output
+    json.dumps(json_output)
 
 
 def test_base_feature_load() -> None:

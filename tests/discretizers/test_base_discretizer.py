@@ -32,13 +32,13 @@ def test_base_discretizer(x_train: DataFrame, dropna: bool) -> None:
 
     # ordering for base qualitative ordinal feature
     groupedlist = GroupedList(order)
-    groupedlist.group_list(["Low-", "Low"], "Low+")
-    groupedlist.group_list(["Medium+", "High-"], "High")
+    groupedlist.group(["Low-", "Low"], "Low+")
+    groupedlist.group(["Medium+", "High-"], "High")
 
     # ordering for qualitative ordinal feature that contains NaNs
     groupedlist_lownan = GroupedList(order)
-    groupedlist_lownan.group_list(["Low-", "Low"], "Low+")
-    groupedlist_lownan.group_list(["Medium+", "High-"], "High")
+    groupedlist_lownan.group(["Low-", "Low"], "Low+")
+    groupedlist_lownan.group(["Medium+", "High-"], "High")
 
     # storing per feature orders
     ordinal_values = {
@@ -51,7 +51,7 @@ def test_base_discretizer(x_train: DataFrame, dropna: bool) -> None:
     )
     features.fit(x_train)
     feature = features("Qualitative_Ordinal_lownan")
-    print(feature.has_nan, feature.dropna, feature.get_content())
+    print(feature.has_nan, feature.dropna, feature.content)
 
     # initiating discretizer
     discretizer = BaseDiscretizer(features=features, dropna=dropna, copy=True)

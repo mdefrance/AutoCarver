@@ -65,7 +65,7 @@ def test_string_discretizer(x_train: DataFrame) -> None:
         "6": [6, "6"],
     }
     assert (
-        features("Discrete_Qualitative_noorder").get_content() == expected
+        features("Discrete_Qualitative_noorder").content == expected
     ), "Not correctly converted for qualitative with integers"
 
     expected = {
@@ -77,7 +77,7 @@ def test_string_discretizer(x_train: DataFrame) -> None:
         "6": [6.0, "6"],
     }
     assert (
-        features("Discrete_Qualitative_lownan_noorder").get_content() == expected
+        features("Discrete_Qualitative_lownan_noorder").content == expected
     ), "Not correctly converted for qualitative with integers and nans"
 
     expected = {
@@ -90,7 +90,7 @@ def test_string_discretizer(x_train: DataFrame) -> None:
         "6": [6.0, "6"],
     }
     assert (
-        features("Discrete_Qualitative_rarevalue_noorder").get_content() == expected
+        features("Discrete_Qualitative_rarevalue_noorder").content == expected
     ), "Not correctly converted for qualitative with integers and floats"
 
     expected = {
@@ -105,7 +105,7 @@ def test_string_discretizer(x_train: DataFrame) -> None:
         "High+": ["High+"],
     }
     assert (
-        features("Qualitative_Ordinal_lownan").get_content() == expected
+        features("Qualitative_Ordinal_lownan").content == expected
     ), "No conversion for already string features"
 
     expected = {
@@ -120,7 +120,7 @@ def test_string_discretizer(x_train: DataFrame) -> None:
         "High+": ["High+"],
     }
     assert (
-        features("Qualitative_Ordinal").get_content() == expected
+        features("Qualitative_Ordinal").content == expected
     ), "No conversion for not specified featues"
 
     expected = {
@@ -133,5 +133,5 @@ def test_string_discretizer(x_train: DataFrame) -> None:
         "7": [7.0, "7"],
     }
     assert (
-        features("Discrete_Qualitative_highnan").get_content() == expected
+        features("Discrete_Qualitative_highnan").content == expected
     ), "Original order should be kept for ordinal features"

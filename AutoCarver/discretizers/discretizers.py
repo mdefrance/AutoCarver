@@ -69,10 +69,10 @@ class Discretizer(BaseDiscretizer):
         kept_features: list[str] = []  # list of viable features
 
         # [Qualitative features] Grouping qualitative features
-        if len(self.features.get_qualitatives()) > 0:
+        if len(self.features.qualitatives) > 0:
             # grouping qualitative features
             qualitative_discretizer = QualitativeDiscretizer(
-                qualitatives=self.features.get_qualitatives(),
+                qualitatives=self.features.qualitatives,
                 min_freq=self.min_freq,
                 copy=False,  # always False as x_copy is already a copy (if requested)
                 verbose=self.verbose,
@@ -81,13 +81,13 @@ class Discretizer(BaseDiscretizer):
             qualitative_discretizer.fit(x_copy, y)
 
             # saving kept features
-            kept_features += qualitative_discretizer.features.get_versions()
+            kept_features += qualitative_discretizer.features.versions
 
         # [Quantitative features] Grouping quantitative features
-        if len(self.features.get_quantitatives()) > 0:
+        if len(self.features.quantitatives) > 0:
             # grouping quantitative features
             quantitative_discretizer = QuantitativeDiscretizer(
-                quantitatives=self.features.get_quantitatives(),
+                quantitatives=self.features.quantitatives,
                 min_freq=self.min_freq,
                 verbose=self.verbose,
                 n_jobs=self.n_jobs,
@@ -95,7 +95,7 @@ class Discretizer(BaseDiscretizer):
             quantitative_discretizer.fit(x_copy, y)
 
             # saving kept features
-            kept_features += quantitative_discretizer.features.get_versions()
+            kept_features += quantitative_discretizer.features.versions
 
         # removing dropped features
         self.features.keep(kept_features)
@@ -290,7 +290,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         x_copy = super()._prepare_data(X, y)
 
         # checking for quantitative columns
-        dtypes = x_copy[self.features.get_versions()].map(type).apply(unique, result_type="reduce")
+        dtypes = x_copy[self.features.versions].map(type).apply(unique, result_type="reduce")
         not_numeric = dtypes.apply(lambda u: str in u)
         if any(not_numeric):
             raise ValueError(
@@ -319,7 +319,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         # [Quantitative features] Grouping rare quantiles into closest common one
         #  -> can exist because of overrepresented values (values more frequent than min_freq)
         # searching for features with rare quantiles: computing min frequency per feature
-        frequencies = x_copy[self.features.get_versions()].apply(
+        frequencies = x_copy[self.features.versions].apply(
             min_value_counts, features=self.features, axis=0
         )
 

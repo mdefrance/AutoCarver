@@ -89,7 +89,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
     }
     feature = "Qualitative_Ordinal"
     assert (
-        discretizer.features(feature).get_content() == expected
+        discretizer.features(feature).content == expected
     ), "Values less frequent than min_freq should be grouped"
 
     assert discretizer.features(feature).values == [
@@ -109,7 +109,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
     }
 
     feature = "Qualitative_Ordinal_lownan"
-    assert discretizer.features(feature).get_content() == expected, (
+    assert discretizer.features(feature).content == expected, (
         "NaNs should be added to the order and missing values from the values_orders should"
         " be added (from chained_orders)"
     )
@@ -148,7 +148,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
     }
     feature = "Qualitative_Ordinal"
     assert (
-        discretizer.features(feature).get_content() == expected
+        discretizer.features(feature).content == expected
     ), "Values less frequent than min_freq should be grouped"
 
     assert discretizer.features(feature).values == [
@@ -168,7 +168,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
     }
 
     feature = "Qualitative_Ordinal_lownan"
-    assert discretizer.features(feature).get_content() == expected, (
+    assert discretizer.features(feature).content == expected, (
         "NaNs should be added to the order and missing values from the values_orders should"
         " be added (from chained_orders)"
     )
@@ -217,7 +217,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
         "BEST": ["ALL_ALONE", "ALONE", "BEST"],
     }
     assert (
-        discretizer.features(feature).get_content() == expected
+        discretizer.features(feature).content == expected
     ), "All provided values should be kept."
 
     feature = "Qualitative_Ordinal"
@@ -230,7 +230,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
         "BEST": ["ALL_ALONE", "ALONE", "BEST"],
     }
     assert (
-        discretizer.features(feature).get_content() == expected
+        discretizer.features(feature).content == expected
     ), "All provided values should be kept."
 
     # testing for good defintion of levels

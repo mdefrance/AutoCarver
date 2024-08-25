@@ -42,7 +42,7 @@ def test_quantitative_discretizer(x_train: DataFrame, target: str):
 
     print(x_train.Discrete_Quantitative_rarevalue.value_counts(dropna=False, normalize=True))
 
-    print(features("Discrete_Quantitative_rarevalue").get_content())
+    print(features("Discrete_Quantitative_rarevalue").content)
     assert features("Discrete_Quantitative_rarevalue").values == [
         1.0,
         2.0,
@@ -111,7 +111,7 @@ def test_qualitative_discretizer(x_train: DataFrame, target: str):
     min_freq = 0.1
 
     discretizer = QualitativeDiscretizer(
-        min_freq=min_freq, qualitatives=features.get_qualitatives(), copy=True, verbose=True
+        min_freq=min_freq, qualitatives=features.qualitatives, copy=True, verbose=True
     )
     x_discretized = discretizer.fit_transform(x_train, x_train[target])
 
@@ -121,7 +121,7 @@ def test_qualitative_discretizer(x_train: DataFrame, target: str):
         "Category E": ["Category E"],
     }
     assert (
-        features("Qualitative").get_content() == quali_expected
+        features("Qualitative").content == quali_expected
     ), "Values less frequent than min_freq should be grouped into default_value"
 
     quali_lownan_expected = {
@@ -130,7 +130,7 @@ def test_qualitative_discretizer(x_train: DataFrame, target: str):
         "Category E": ["Category E"],
     }
     assert (
-        features("Qualitative_lownan").get_content() == quali_lownan_expected
+        features("Qualitative_lownan").content == quali_lownan_expected
     ), "If any, NaN values should be put into str_nan and kept by themselves"
 
     expected_ordinal = {
@@ -141,7 +141,7 @@ def test_qualitative_discretizer(x_train: DataFrame, target: str):
         "High+": ["High+"],
     }
     assert (
-        features("Qualitative_Ordinal").get_content() == expected_ordinal
+        features("Qualitative_Ordinal").content == expected_ordinal
     ), "Values not correctly grouped"
 
     expected_ordinal_lownan = {
@@ -152,7 +152,7 @@ def test_qualitative_discretizer(x_train: DataFrame, target: str):
         "High+": ["High+"],
     }
     assert (
-        features("Qualitative_Ordinal_lownan").get_content() == expected_ordinal_lownan
+        features("Qualitative_Ordinal_lownan").content == expected_ordinal_lownan
     ), "NaNs should stay by themselves."
 
     feature = "Discrete_Quantitative"
@@ -262,7 +262,7 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
         "Category E": ["Category E"],
     }
     assert (
-        features("Qualitative").get_content() == quali_expected
+        features("Qualitative").content == quali_expected
     ), "Values less frequent than min_freq should be grouped into default_value"
 
     quali_lownan_expected = {
@@ -271,7 +271,7 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
         "Category E": ["Category E"],
     }
     assert (
-        features("Qualitative_lownan").get_content() == quali_lownan_expected
+        features("Qualitative_lownan").content == quali_lownan_expected
     ), "If any, NaN values should be put into str_nan and kept by themselves"
 
     expected_ordinal = {
@@ -282,7 +282,7 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
         "High+": ["High+"],
     }
     assert (
-        features("Qualitative_Ordinal").get_content() == expected_ordinal
+        features("Qualitative_Ordinal").content == expected_ordinal
     ), "Values not correctly grouped"
 
     expected_ordinal_lownan = {
@@ -293,7 +293,7 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
         "High+": ["High+"],
     }
     assert (
-        features("Qualitative_Ordinal_lownan").get_content() == expected_ordinal_lownan
+        features("Qualitative_Ordinal_lownan").content == expected_ordinal_lownan
     ), "NaNs should stay by themselves."
 
     # Testing out qualitative with int/float values inside -> StringDiscretizer
@@ -304,7 +304,7 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
         "3": [3.0, "3"],
         DEFAULT: [0.5, "0.5", 6.0, "6", 5.0, "5", DEFAULT],
     }
-    assert features("Discrete_Qualitative_rarevalue_noorder").get_content() == expected, (
+    assert features("Discrete_Qualitative_rarevalue_noorder").content == expected, (
         "Qualitative features with float values should be converted to string and there values "
         "stored in the values_orders"
     )
@@ -315,7 +315,7 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
         "3": [3, "3"],
         DEFAULT: [7, "7", 6, "6", 5, "5", DEFAULT],
     }
-    assert features("Discrete_Qualitative_noorder").get_content() == expected, (
+    assert features("Discrete_Qualitative_noorder").content == expected, (
         "Qualitative features with int values should be converted to string and there values stored"
         " in the values_orders"
     )
@@ -325,7 +325,7 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
         "4": [4.0, "4"],
         "5": [6.0, "6", 7.0, "7", 5.0, "5"],
     }
-    assert features("Discrete_Qualitative_highnan").get_content() == expected, (
+    assert features("Discrete_Qualitative_highnan").content == expected, (
         "Ordinal qualitative features with int or float values that contain nan should be converted"
         " to string and there values stored in the values_orders"
     )

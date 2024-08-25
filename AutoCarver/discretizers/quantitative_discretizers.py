@@ -5,7 +5,7 @@ for a binary classification model.
 from numpy import array, digitize, in1d, inf, isnan, linspace, quantile, sort, unique
 from pandas import DataFrame, Series
 
-from ..features import BaseFeature, Features, GroupedList, QuantitativeFeature
+from ..features import BaseFeature, Features, GroupedList, QuantitativeFeature, get_versions
 from .utils.base_discretizer import BaseDiscretizer, extend_docstring
 from .utils.multiprocessing import imap_unordered_function
 
@@ -66,9 +66,9 @@ class ContinuousDiscretizer(BaseDiscretizer):
         # fitting each feature
         all_orders = imap_unordered_function(
             fit_feature,
-            self.features.get_quantitatives(),
+            self.features.quantitatives,
             self.n_jobs,
-            X=X[self.features.get_quantitatives(return_names=True)],
+            X=X[get_versions(self.features.quantitatives)],
             q=self.q,
         )
 

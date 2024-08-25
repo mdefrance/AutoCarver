@@ -103,7 +103,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
         """Groups modalities less frequent than min_freq into feature.default"""
 
         # computing frequencies of each modality
-        frequencies = X[self.features.get_versions()].apply(series_value_counts, axis=0)
+        frequencies = X[self.features.versions].apply(series_value_counts, axis=0)
 
         # iterating over each feature
         for feature in self.features:
@@ -126,10 +126,10 @@ class CategoricalDiscretizer(BaseDiscretizer):
             # grouping values to str_default if any
             if any(values_to_group):
                 # adding default value to the order
-                feature.set_has_default(True)
+                feature.has_default = True
 
                 # grouping rare values in default value
-                feature.group_list(values_to_group, feature.default)
+                feature.group(values_to_group, feature.default)
                 X.loc[X[feature.version].isin(values_to_group), feature.version] = feature.default
 
         return X
@@ -138,7 +138,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
         """Sorts features' values by target rate"""
 
         # computing target rate per modality for ordering
-        target_rates = X[self.features.get_versions()].apply(series_target_rate, y=y, axis=0)
+        target_rates = X[self.features.versions].apply(series_target_rate, y=y, axis=0)
 
         # sorting features' values based on target rates
         self.features.update(
@@ -304,7 +304,7 @@ class ChainedDiscretizer(BaseDiscretizer):
 
         # known_values: all ordered values describe in each level of the chained_orders
         # starting off with first level
-        known_values = self.chained_orders[0].values()
+        known_values = self.chained_orders[0].values
         # adding each level
         for n, next_level in enumerate(self.chained_orders[1:]):
             # iterating over each group of the next level
@@ -366,7 +366,7 @@ class ChainedDiscretizer(BaseDiscretizer):
                     )
             # adding known values if missing from the order
             for value in self.known_values:
-                if value not in order.values():
+                if value not in order.values:
                     order.append(value)
             # sorting in case an ordering was provided
             order = order.sort_by(self.known_values)
@@ -435,7 +435,7 @@ class ChainedDiscretizer(BaseDiscretizer):
                 to_keep = list(values[frequencies >= self.min_freq])
 
                 # values from the order to group (not frequent enough or absent)
-                values_to_group = [value for value in level_order.values() if value not in to_keep]
+                values_to_group = [value for value in level_order.values if value not in to_keep]
 
                 # values to group into discarded values
                 groups_value = [level_order.get_group(value) for value in values_to_group]
@@ -592,7 +592,7 @@ def check_frequencies(features: Features, X: DataFrame, min_freq: float, name: s
     """Checks features' frequencies compared to min_freq"""
 
     # computing features' max modality frequency (mode frequency)
-    max_freq = X[features.get_versions()].apply(
+    max_freq = X[features.versions].apply(
         lambda u: u.value_counts(normalize=True, dropna=False).max(),
         axis=0,
     )
@@ -639,7 +639,7 @@ def check_dtypes(features: Features, X: DataFrame, **kwargs: dict) -> DataFrame:
 
     # getting per feature data types
     dtypes = (
-        X.fillna({feature.version: feature.nan for feature in features})[features.get_versions()]
+        X.fillna({feature.version: feature.nan for feature in features})[features.versions]
         .map(type)
         .apply(unique, result_type="reduce")
     )

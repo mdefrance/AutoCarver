@@ -52,12 +52,12 @@ def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:
         "High+": ["High+"],
     }
     print(
-        discretizer.features(feature).get_content(),
-        features(feature).get_content(),
+        discretizer.features(feature).content,
+        features(feature).content,
         x_disc[feature].value_counts(dropna=False, normalize=True).round(2),
     )
     assert (
-        features(feature).get_content() == expected_ordinal_01
+        features(feature).content == expected_ordinal_01
     ), "Missing value in order not correctly grouped"
 
     expected_ordinal_lownan_01 = {
@@ -69,7 +69,7 @@ def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:
         "High+": ["High+"],
     }
     assert (
-        features("Qualitative_Ordinal_lownan").get_content() == expected_ordinal_lownan_01
+        features("Qualitative_Ordinal_lownan").content == expected_ordinal_lownan_01
     ), "Missing value in order not correctly grouped or introduced nans."
 
     # minimum frequency per modality + apply(find_common_modalities) outputs a DataFrame
@@ -88,7 +88,7 @@ def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:
         "High+": ["High+"],
     }
     assert (
-        features("Qualitative_Ordinal").get_content() == expected_ordinal_08
+        features("Qualitative_Ordinal").content == expected_ordinal_08
     ), "Values not correctly grouped"
 
     expected_ordinal_lownan_08 = {
@@ -99,5 +99,5 @@ def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:
         "High+": ["High+"],
     }
     assert (
-        features("Qualitative_Ordinal_lownan").get_content() == expected_ordinal_lownan_08
+        features("Qualitative_Ordinal_lownan").content == expected_ordinal_lownan_08
     ), "NaNs should stay by themselves."

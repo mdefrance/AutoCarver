@@ -56,7 +56,7 @@
 #     with raises(ValueError):
 #         Features(categoricals=["test"], ordinals=["test"], ordinal_values={"test": ["test2"]})
 
-
+import json
 from pytest import fixture, raises
 from AutoCarver.features import (
     BaseFeature,
@@ -580,57 +580,100 @@ def test_features_set_dropna(features):
     assert not features._dropna
 
 
-def test_features_get_content(features):
-    """TODO"""
+def test_features_content(features):
+    """test content functionnality"""
 
     for feature in features:
         feature.values = GroupedList([1, 2, 3])
     content = features.content
     assert isinstance(content, dict)
     assert all(isinstance(value, dict) for value in content.values())
+    assert all(feature.version in content for feature in features)
+    assert all(content.get(feature.version) == feature.content for feature in features)
 
 
-# def test_features_to_json(features):
-#     json_data = features.to_json()
-#     assert isinstance(json_data, dict)
-#     assert all(isinstance(value, dict) for value in json_data.values())
+def test_features_to_json(features):
+    json_data = features.to_json(False)
+    assert isinstance(json_data, dict)
+    assert all(isinstance(value, dict) for value in json_data.values())
+    assert all(feature.version in json_data for feature in features)
+    assert all(json_data.get(feature.version) == feature.to_json(False) for feature in features)
+    json.dumps(json_data)
 
 
-# def test_features_to_list(features):
-#     feature_list = features.to_list()
-#     assert isinstance(feature_list, list)
-#     assert len(feature_list) == len(features.categoricals) + len(features.ordinals) + len(
-#         features.quantitatives
-#     )
+def test_features_to_list(features):
+    feature_list = features.to_list()
+    assert isinstance(feature_list, list)
+    assert len(feature_list) == len(features.categoricals) + len(features.ordinals) + len(
+        features.quantitatives
+    )
 
 
-# def test_features_to_dict(features):
-#     feature_dict = features.to_dict()
-#     assert isinstance(feature_dict, dict)
-#     assert len(feature_dict) == len(features.categoricals) + len(features.ordinals) + len(
-#         features.quantitatives
-#     )
+def test_features_to_dict(features):
+    for feature in features:
+        feature.version = feature.name + "_v2"
+        feature.values = GroupedList([1, 2, 3])
+    feature_dict = features.to_dict()
+    assert isinstance(feature_dict, dict)
+    assert len(feature_dict) == len(features.categoricals) + len(features.ordinals) + len(
+        features.quantitatives
+    )
+    assert all(isinstance(value, BaseFeature) for value in feature_dict.values())
+    assert all(feature.version in feature_dict for feature in features)
+    assert not any(feature.name in feature_dict for feature in features)
+    assert all(feature_dict.get(feature.version) == feature for feature in features)
 
 
-# def test_features_load(features):
-#     json_data = features.to_json()
-#     loaded_features = Features.load(json_data, ordinal_encoding=False)
-#     assert isinstance(loaded_features, Features)
-#     assert len(loaded_features) == len(features)
+from AutoCarver.features.qualitative_features import get_categorical_features, get_ordinal_features
+from AutoCarver.features.quantitative_features import get_quantitative_features
 
 
-# def test_features_get_summaries(features):
-#     summaries = features.get_summaries()
-#     assert isinstance(summaries, DataFrame)
-#     assert "feature" in summaries.columns
-#     assert "label" in summaries.columns
+def test_features_load(features):
+    json_data = features.to_json()
+    loaded_features = Features.load(json_data)
+    assert isinstance(loaded_features, Features)
+    assert len(loaded_features) == len(features)
+    assert all(feature.name in get_names(loaded_features) for feature in features)
+    assert all(
+        isinstance(loaded_features(feature.version), CategoricalFeature)
+        for feature in get_categorical_features(loaded_features)
+    )
+    assert all(
+        isinstance(loaded_features(feature.version), OrdinalFeature)
+        for feature in get_ordinal_features(loaded_features)
+    )
+    assert all(
+        isinstance(loaded_features(feature.version), QuantitativeFeature)
+        for feature in get_quantitative_features(loaded_features)
+    )
 
 
-# def test_features_add_feature_versions(features):
-#     features.add_feature_versions(["classA", "classB"], ordinal_encoding=False)
-#     assert len(features.categoricals) > 0
-#     assert len(features.ordinals) > 0
-#     assert len(features.quantitatives) > 0
+def test_features_get_summaries(features):
+
+    for feature in features:
+        if feature.values is None:
+            feature.values = GroupedList([1, 2, 3])
+    summaries = features.get_summaries()
+    assert isinstance(summaries, DataFrame)
+    summary_features = list(summaries.reset_index(drop=False)["feature"])
+    for feature in features:
+        assert feature.__repr__() in summary_features
+
+
+def test_features_add_feature_versions(features):
+
+    raw_categoricals = features.categoricals
+    raw_ordinals = features.ordinals
+    raw_quantitatives = features.quantitatives
+
+    new_classes = ["A", "B"]
+    features.add_feature_versions(new_classes)
+    assert len(features.categoricals) == len(raw_categoricals) * len(new_classes)
+    assert all(feature.name in get_names(features.categoricals) for feature in raw_categoricals)
+    assert len(features.ordinals) == len(raw_ordinals) * len(new_classes)
+    assert all(feature.name in get_names(features.ordinals) for feature in raw_ordinals)
+    assert len(features.quantitatives) == len(raw_quantitatives) * len(new_classes)
+    assert all(feature.name in get_names(features.quantitatives) for feature in raw_quantitatives)
 
 
 # def test_features_get_version_group(features):

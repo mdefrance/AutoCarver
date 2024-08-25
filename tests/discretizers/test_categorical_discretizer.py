@@ -33,8 +33,8 @@ def test_categorical_discretizer(x_train: DataFrame, target: str) -> None:
     # ordering for base qualitative ordinal feature
     order = ["Low-", "Low", "Low+", "Medium-", "Medium", "Medium+", "High-", "High", "High+"]
     groupedlist_ordinal = GroupedList(order)
-    groupedlist_ordinal.group_list(["Low-", "Low"], "Low+")
-    groupedlist_ordinal.group_list(["Medium+", "High-"], "High")
+    groupedlist_ordinal.group(["Low-", "Low"], "Low+")
+    groupedlist_ordinal.group(["Medium+", "High-"], "High")
 
     # storing per feature orders
     values_orders = {
@@ -86,7 +86,7 @@ def test_categorical_discretizer(x_train: DataFrame, target: str) -> None:
         "Category D": ["Category D"],
     }
     assert (
-        features("Qualitative").get_content() == quali_expected
+        features("Qualitative").content == quali_expected
     ), "Values less frequent than min_freq should be grouped into default_value"
 
     quali_lownan_expected_order = {
@@ -114,7 +114,7 @@ def test_categorical_discretizer(x_train: DataFrame, target: str) -> None:
         "Category D": ["Category D"],
     }
     assert (
-        features("Qualitative_lownan").get_content() == quali_lownan_expected
+        features("Qualitative_lownan").content == quali_lownan_expected
     ), "If any, NaN values should be put into str_nan and kept by themselves"
 
     quali_highnan_expected_order = {
@@ -142,5 +142,5 @@ def test_categorical_discretizer(x_train: DataFrame, target: str) -> None:
         "Category D": ["Category D"],
     }
     assert (
-        features("Qualitative_highnan").get_content() == quali_highnan_expected
+        features("Qualitative_highnan").content == quali_highnan_expected
     ), "If any, NaN values should be put into str_nan and kept by themselves"

@@ -102,13 +102,13 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         self.n_jobs = kwargs.get("n_jobs", 1)
 
         # check if the discretizer has already been fitted
-        self.is_fitted = False
+        self.is_fitted = kwargs.get("is_fitted", False)
 
         # initiating things for super().__repr__
-        self.ordinals = None
-        self.categoricals = None
-        self.quantitatives = None
-        self.ordinal_values = None
+        # self.ordinals = None
+        # self.categoricals = None
+        # self.quantitatives = None
+        # self.ordinal_values = None
         self.min_freq = kwargs.get("min_freq", None)
         self.sort_by = kwargs.get("sort_by", None)
 
@@ -235,17 +235,19 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         # checking for previous fits of the discretizer that could cause unwanted errors
         if self.is_fitted:
             raise RuntimeError(
-                " - [Discretizer] This Discretizer has already been fitted. "
+                f"[{self}] This Discretizer has already been fitted. "
                 "Fitting it anew could break established orders. Please initialize a new one."
             )
 
         # checking that all features were fitted
         missing_features = [feature.version for feature in self.features if not feature.is_fitted]
         if len(missing_features) != 0:
-            raise ValueError(f" - [Discretizer] Features not fitted: {str(missing_features)}.")
+            raise ValueError(f"[{self}] Features not fitted: {str(missing_features)}.")
 
         # for each feature, getting label associated to each value
-        self.features.update_labels(self.ordinal_encoding)
+        # self.features.update_labels(self.ordinal_encoding)
+        # setting features in ordinal encoding mode
+        self.features.ordinal_encoding = self.ordinal_encoding
 
         # setting fitted as True to raise alerts
         self.is_fitted = True
@@ -285,11 +287,11 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         self.features.check_values(x_copy)
 
         # transforming quantitative features
-        if len(self.features.get_quantitatives()) > 0:
+        if len(self.features.quantitatives) > 0:
             x_copy = self._transform_quantitative(x_copy, y)
 
         # transforming qualitative features
-        if len(self.features.get_qualitatives()) > 0:
+        if len(self.features.qualitatives) > 0:
             x_copy = self._transform_qualitative(x_copy, y)
 
         # reinstating nans when not supposed to group them
@@ -325,7 +327,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         # transforming all features
         transformed = apply_async_function(
             transform_quantitative_feature,
-            self.features.get_quantitatives(),
+            self.features.quantitatives,
             self.n_jobs,
             X,
             x_len,
@@ -359,7 +361,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         _ = y  # unused argument
 
         # list of qualitative features
-        qualitatives = self.features.get_qualitatives()
+        qualitatives = self.features.qualitatives
 
         # replacing values for there corresponding label
         X.replace(
@@ -375,7 +377,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
     def to_dict(self) -> dict[str, GroupedList]:
         """Converts Discretizer to dict"""
-        return self.features.get_content()
+        return self.features.content
 
     def to_json(self, light_mode: bool = False) -> str:
         """Converts to JSON format.
@@ -449,9 +451,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             discretizer_json = json.load(json_file)
 
         # deserializing features
-        features = Features.load(
-            discretizer_json.pop("features"), discretizer_json.get("ordinal_encoding")
-        )
+        features = Features.load(discretizer_json.pop("features"))
 
         # initiating BaseDiscretizer
         loaded_discretizer = cls(features=features, **discretizer_json)
