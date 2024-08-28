@@ -7,7 +7,7 @@ from typing import Any, Callable, Union
 from pandas import DataFrame, Series, unique
 
 from ..discretizers import BaseDiscretizer
-from ..discretizers.utils.base_discretizer import extend_docstring
+from ..utils import extend_docstring
 from ..features import Features
 from .binary_carver import BinaryCarver
 from .utils.base_carver import BaseCarver
@@ -41,7 +41,7 @@ class MulticlassCarver(BaseCarver):
         implemented_measures = ["tschuprowt", "cramerv"]
         if sort_by not in implemented_measures:
             raise ValueError(
-                f" - [{self.__name__}] Measure '{sort_by}' not implemented for binary targets. "
+                f"[{self.__name__}] Measure '{sort_by}' not implemented for binary targets. "
                 f"Choose from: {str(implemented_measures)}."
             )
 
@@ -98,7 +98,7 @@ class MulticlassCarver(BaseCarver):
         # multiclass target, checking values
         if len(unique(y_copy)) <= 2:
             raise ValueError(
-                f" - [{self.__name__}] provided y is binary, consider using BinaryCarver instead."
+                f"[{self.__name__}] provided y is binary, consider using BinaryCarver instead."
             )
 
         # checking for dev target's values
@@ -114,7 +114,7 @@ class MulticlassCarver(BaseCarver):
             missing_y_dev = [mod_y_dev for mod_y_dev in unique_y_dev if mod_y_dev not in unique_y]
             if len(missing_y) > 0 or len(missing_y_dev) > 0:
                 raise ValueError(
-                    f" - [{self.__name__}] Mismatch between y and y_dev: {missing_y_dev+missing_y}"
+                    f"[{self.__name__}] Mismatch between y and y_dev: {missing_y_dev+missing_y}"
                 )
 
         return X, y_copy, X_dev, y_dev_copy
@@ -135,7 +135,7 @@ class MulticlassCarver(BaseCarver):
         y_classes = sorted(list(y_copy.unique()))[1:]  # removing one of the classes
 
         # adding versionned features
-        self.features.add_feature_versions(y_classes, self.ordinal_encoding)
+        self.features.add_feature_versions(y_classes)
 
         # iterating over each class minus one
         for n, y_class in enumerate(y_classes):
@@ -167,7 +167,7 @@ class MulticlassCarver(BaseCarver):
             )
 
             # filtering out dropped features whilst keeping other version tags
-            kept_features = binary_carver.features.get_versions()
+            kept_features = binary_carver.features.versions
             kept_features += [
                 feature.version for feature in self.features if feature.version_tag != y_class
             ]

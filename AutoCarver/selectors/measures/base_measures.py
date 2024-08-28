@@ -76,7 +76,7 @@ class BaseMeasure(ABC):
 
         # checking for a value
         if self.value is None:
-            raise ValueError(f" - [{self}] Use compute_association first!")
+            raise ValueError(f"[{self}] Use compute_association first!")
 
         # existing stats
         measures = feature.statistics.get("measures", {})

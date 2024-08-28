@@ -8,7 +8,7 @@ from numpy import add, array, searchsorted, sqrt, unique, zeros
 from pandas import DataFrame, Series, crosstab
 from scipy.stats import chi2_contingency
 
-from ..discretizers.utils.base_discretizer import extend_docstring
+from ..utils import extend_docstring
 from ..features import Features
 from .utils.base_carver import BaseCarver
 
@@ -48,11 +48,12 @@ class BinaryCarver(BaseCarver):
             **Tip**: use ``"tschuprowt"`` for more robust, or less output modalities,
             use ``"cramerv"`` for more output modalities.
         """
+
         # association measure used to find the best groups for binary targets
         implemented_measures = ["tschuprowt", "cramerv"]
         if sort_by not in implemented_measures:
             raise ValueError(
-                f" - [BinaryCarver] Measure '{sort_by}' not implemented for binary targets. "
+                f"[{self.__name__}] Measure '{sort_by}' not implemented for binary targets. "
                 f"Choose from: {str(implemented_measures)}."
             )
 

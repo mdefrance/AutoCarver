@@ -5,7 +5,7 @@ from .discretizers import Discretizer, QualitativeDiscretizer, QuantitativeDiscr
 # from .utils.grouped_list import GroupedList
 from .qualitative_discretizers import CategoricalDiscretizer, ChainedDiscretizer, OrdinalDiscretizer
 from .quantitative_discretizers import ContinuousDiscretizer
-from .utils.base_discretizer import BaseDiscretizer, extend_docstring
+from .utils.base_discretizer import BaseDiscretizer
 from .utils.type_discretizers import StringDiscretizer
 
 __all__ = [
@@ -13,7 +13,6 @@ __all__ = [
     "Discretizer",
     "QualitativeDiscretizer",
     "QuantitativeDiscretizer",
-    "extend_docstring",
     "CategoricalDiscretizer",
     "ChainedDiscretizer",
     "OrdinalDiscretizer",

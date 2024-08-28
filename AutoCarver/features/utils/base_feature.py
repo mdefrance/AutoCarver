@@ -98,7 +98,7 @@ class BaseFeature(ABC):
 
         # checking that it was not already set to True
         elif not value and self.has_default:
-            raise RuntimeError(f" - [{self}] has_default has been set to True, can't go back")
+            raise RuntimeError(f"[{self}] has_default has been set to True, can't go back")
 
         # updating attribute
         self._has_default = value
@@ -240,7 +240,7 @@ class BaseFeature(ABC):
 
         # checking for GroupedList
         elif not isinstance(values, GroupedList):
-            raise ValueError(f" - [{self}] Wrong input, expected GroupedList object.")
+            raise ValueError(f"[{self}] Wrong input, expected GroupedList object.")
 
         # replacing existing values
         elif replace:

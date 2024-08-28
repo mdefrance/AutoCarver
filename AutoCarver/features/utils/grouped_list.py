@@ -36,7 +36,7 @@ class GroupedList(list):
             # checking that all values are only present once
             all_values = [value for values in iterable.values() for value in values]
             if not len(list(set(all_values))) == len(all_values):
-                raise ValueError(f" - [{self}] A value is present in several keys (groups)")
+                raise ValueError(f"[{self}] A value is present in several keys (groups)")
 
             # adding key to itself if it's not present in an other key
             keys_copy = keys[:]  # copying initial keys
@@ -152,9 +152,9 @@ class GroupedList(list):
         if not is_equal(discarded, kept):
             # checking that those values exist in the list
             if discarded not in self:
-                raise ValueError(f" - [{self}] {discarded} not in list")
+                raise ValueError(f"[{self}] {discarded} not in list")
             if kept not in self:
-                raise ValueError(f" - [{self}] {kept} not in list")
+                raise ValueError(f"[{self}] {kept} not in list")
 
             # accessing values content in each value
             content_discarded = self.content.get(discarded)
@@ -277,12 +277,12 @@ class GroupedList(list):
         # checking that all values are given an order
         if not all(o in self for o in ordering):
             raise ValueError(
-                f" - [{self}] Unknown values in ordering: "
+                f"[{self}] Unknown values in ordering: "
                 f"{str([v for v in ordering if v not in self])}"
             )
         if not all(s in ordering for s in self):
             raise ValueError(
-                f" - [{self}] Missing value from ordering:"
+                f"[{self}] Missing value from ordering:"
                 f" {str([v for v in self if v not in ordering])}"
             )
 
@@ -371,7 +371,7 @@ class GroupedList(list):
         """
         # checking that group_member is in group_leader
         if group_member not in self.content[group_leader]:
-            raise ValueError(f" - [{self}] {group_member} is not in {group_leader}")
+            raise ValueError(f"[{self}] {group_member} is not in {group_leader}")
 
         # replacing in the list
         group_idx = self.index(group_leader)

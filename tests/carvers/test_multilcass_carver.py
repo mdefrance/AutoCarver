@@ -135,7 +135,7 @@ def test_multiclass_carver(
     x_dev_discretized = auto_carver.transform(x_dev_1)
 
     # getting kept features
-    feature_versions = features.get_versions()
+    feature_versions = features.versions
 
     # checking that there were some versions built
     assert all(
@@ -196,9 +196,12 @@ def test_multiclass_carver(
         ), f"Not robust feature {feature} was not dropped, or robustness test not working"
 
     # test that all values still are in the values_orders
-    for feature in features.get_qualitatives():
-        fitted_values = feature.values.values()
-        init_values = raw_x_train[feature.name].fillna(NAN).unique()
+    for feature in features.qualitatives:
+        fitted_values = feature.values.values
+        # adding nan to list of initial values
+        init_values = raw_x_train[feature.name].fillna(feature.nan).unique()
+        if not dropna:  # removing nan from list of initial values
+            init_values = [value for value in init_values if value != feature.nan]
         assert all(value in fitted_values for value in init_values), (
             "Missing value in output! Some values have been dropped for qualitative feature"
             f": {feature.name}"
@@ -227,7 +230,7 @@ def test_multiclass_carver(
     ), "Non-identical summaries when loading from JSON"
     assert all(
         x_discretized[feature_versions]
-        == loaded_carver.transform(x_dev_1)[loaded_carver.features.get_versions()]
+        == loaded_carver.transform(x_dev_1)[loaded_carver.features.versions]
     ), "Non-identical discretized values when loading from JSON"
 
     # transform dev with unexpected modal for a feature that has_default

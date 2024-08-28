@@ -6,7 +6,7 @@ from numpy import mean, unique
 from pandas import DataFrame, Series
 from scipy.stats import kruskal
 
-from ..discretizers.utils.base_discretizer import extend_docstring
+from ..utils import extend_docstring
 from ..features import Features
 from .utils.base_carver import BaseCarver
 
@@ -42,7 +42,7 @@ class ContinuousCarver(BaseCarver):
         # association measure used to find the best groups for continuous targets
         if "sort_by" in kwargs and kwargs.get("sort_by") != "kruskal":
             raise ValueError(
-                f" - [{self.__name__}] Measure '{kwargs.get('sort_by')}' not implemented for "
+                f"[{self.__name__}] Measure '{kwargs.get('sort_by')}' not implemented for "
                 "continuous targets. Use 'kruskal' instead."
             )
 
@@ -94,11 +94,11 @@ class ContinuousCarver(BaseCarver):
         y_values = unique(y)
         if len(y_values) <= 2:
             raise ValueError(
-                f" - [{self.__name__}] provided y is binary, consider using BinaryCarver instead."
+                f"[{self.__name__}] provided y is binary, consider using BinaryCarver instead."
             )
         if str in y.apply(type).unique():
             raise ValueError(
-                f" - [{self.__name__}] y must be a continuous Series (int or float, not object)"
+                f"[{self.__name__}] y must be a continuous Series (int or float, not object)"
             )
 
         return x_copy, x_dev_copy

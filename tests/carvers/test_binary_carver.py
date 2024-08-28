@@ -71,8 +71,8 @@ def test_binary_carver(
         Chained orders level1 to level2 of features to be chained
     min_freq_mod : float
         Minimum frequency per carved modalities
-    ordinal_encoding : str
-        Output type 'str' or 'float'
+    ordinal_encoding : bool
+        Output type True or False
     dropna : bool
         Whether or note to drop nans
     sort_by : str
@@ -163,7 +163,7 @@ def test_binary_carver(
     x_dev_discretized = auto_carver.transform(x_dev_1)
 
     # getting kept features
-    feature_names = features.get_names()
+    feature_names = features.names
 
     # testing that attributes where correctly used
     assert all(
@@ -210,11 +210,16 @@ def test_binary_carver(
         ), f"Some modalities {feature} are less frequent than min_freq_mod in dev"
 
     # test that all values still are in the values_orders
-    for feature in features.get_qualitatives():
-        fitted_values = feature.values.values()
-        init_values = raw_x_train[feature.name].fillna(NAN).unique()
+    for feature in features.qualitatives:
+        fitted_values = feature.values.values
+        # adding nan to list of initial values
+        init_values = raw_x_train[feature.name].fillna(feature.nan).unique()
+        if not dropna:  # removing nan from list of initial values
+            init_values = [value for value in init_values if value != feature.nan]
+        print("init_values", init_values)
+        print("fitted_values", fitted_values)
         assert all(value in fitted_values for value in init_values), (
-            "Missing value in output! Some values are been dropped for qualitative "
+            "Missing value in output! Some values have been dropped for qualitative "
             f"feature: {feature.name}"
         )
 
@@ -240,7 +245,7 @@ def test_binary_carver(
     ), "Non-identical summaries when loading from JSON"
     assert all(
         x_discretized[feature_names]
-        == loaded_carver.transform(x_dev_1)[loaded_carver.features.get_names()]
+        == loaded_carver.transform(x_dev_1)[loaded_carver.features.names]
     ), "Non-identical discretized values when loading from JSON"
 
     # transform dev with unexpected modal for a feature that has_default

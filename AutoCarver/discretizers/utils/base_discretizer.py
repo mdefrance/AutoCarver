@@ -4,7 +4,7 @@ for a binary classification model.
 
 import json
 from abc import ABC
-from typing import Any, Type, Union
+from typing import Any, Union
 
 from numpy import nan, select
 from pandas import DataFrame, Series
@@ -88,12 +88,23 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         # whether or not to copy input dataframe
         self.copy = kwargs.get("copy", True)
+        if not isinstance(self.copy, bool):
+            raise AttributeError(f"[{self.__name__}] copy should be a bool, not {type(self.copy)}")
 
         # output type
         self.ordinal_encoding = kwargs.get("ordinal_encoding", False)
+        if not isinstance(self.ordinal_encoding, bool):
+            raise AttributeError(
+                f"[{self.__name__}] ordinal_encoding should be a bool, "
+                f"not {type(self.ordinal_encoding)}"
+            )
 
         # whether or not to reinstate numpy nan after bucketization
         self.dropna = kwargs.get("dropna", False)
+        if not isinstance(self.dropna, bool):
+            raise AttributeError(
+                f"[{self.__name__}] dropna should be a bool, not {type(self.dropna)}"
+            )
 
         # whether to print info
         self.verbose = kwargs.get("verbose", True)
@@ -103,12 +114,6 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         # check if the discretizer has already been fitted
         self.is_fitted = kwargs.get("is_fitted", False)
-
-        # initiating things for super().__repr__
-        # self.ordinals = None
-        # self.categoricals = None
-        # self.quantitatives = None
-        # self.ordinal_values = None
         self.min_freq = kwargs.get("min_freq", None)
         self.sort_by = kwargs.get("sort_by", None)
 
@@ -181,7 +186,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         if X is not None:
             if not isinstance(X, DataFrame):  # checking for X's type
                 raise ValueError(
-                    f" - [{self.__name__}] X must be a pandas.DataFrame, passed {type(X)}"
+                    f"[{self.__name__}] X must be a pandas.DataFrame, passed {type(X)}"
                 )
 
             # copying X
@@ -197,7 +202,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             ]
             if len(missing_columns) > 0:
                 raise ValueError(
-                    f" - [{self.__name__}] Requested discretization of {str(missing_columns)} but "
+                    f"[{self.__name__}] Requested discretization of {str(missing_columns)} but "
                     "those columns are missing from provided X. Please check your inputs! "
                 )
 
@@ -205,14 +210,14 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             if y is not None:
                 if not isinstance(y, Series):  # checking for y's type
                     raise ValueError(
-                        f" - [{self.__name__}] y must be a pandas.Series, passed {type(y)}"
+                        f"[{self.__name__}] y must be a pandas.Series, passed {type(y)}"
                     )
 
                 if any(y.isna()):  # checking for nans in the target
-                    raise ValueError(f" - [{self.__name__}] y should not contain numpy.nan")
+                    raise ValueError(f"[{self.__name__}] y should not contain numpy.nan")
 
                 if not all(y.index == X.index):  # checking for matching indices
-                    raise ValueError(f" - [{self.__name__}] X and y must have the same indices.")
+                    raise ValueError(f"[{self.__name__}] X and y must have the same indices.")
 
         return x_copy
 
@@ -236,17 +241,18 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         if self.is_fitted:
             raise RuntimeError(
                 f"[{self}] This Discretizer has already been fitted. "
-                "Fitting it anew could break established orders. Please initialize a new one."
+                "Fitting it anew could break it. Please initialize a new one."
             )
 
         # checking that all features were fitted
         missing_features = [feature.version for feature in self.features if not feature.is_fitted]
         if len(missing_features) != 0:
-            raise ValueError(f"[{self}] Features not fitted: {str(missing_features)}.")
+            raise ValueError(f"[{self.__name__}] Features not fitted: {str(missing_features)}.")
 
         # for each feature, getting label associated to each value
         # self.features.update_labels(self.ordinal_encoding)
         # setting features in ordinal encoding mode
+        print("self.ordinal_encoding", self.ordinal_encoding, self.__name__)
         self.features.ordinal_encoding = self.ordinal_encoding
 
         # setting fitted as True to raise alerts
@@ -427,7 +433,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
                 json.dump(self.to_json(light_mode), json_file)
         # raising for non-json file name
         else:
-            raise ValueError(f" - [{self.__name__}] Provide a file_name that ends with .json.")
+            raise ValueError(f"[{self.__name__}] Provide a file_name that ends with .json.")
 
     @classmethod
     def load_discretizer(cls, file_name: str) -> "BaseDiscretizer":
@@ -570,7 +576,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
     #     # checking that discarded_value is not already in new_value
     #     if order.get_group(discarded_value) == kept_value:
     #         warn(
-    #             f" - [Discretizer] {discarded_value} is already grouped within {kept_value}",
+    #             f"[Discretizer] {discarded_value} is already grouped within {kept_value}",
     #             UserWarning,
     #         )
 
@@ -595,7 +601,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
     #             # checking that kept_value is in discarded_value
     #             assert order.get_group(kept_value) == discarded_value, (
-    #                 f" - [Discretizer] Can not proceed! {kept_value} already is a "
+    #                 f"[Discretizer] Can not proceed! {kept_value} already is a "
     #                 f"member of another group ({order.get_group(kept_value)})"
     #             )
 
@@ -667,18 +673,3 @@ def applied_to_dict_list(applied: Union[DataFrame, Series]) -> dict[str, list[An
         converted = applied.to_dict(orient="list")
 
     return converted
-
-
-class extend_docstring:
-    """Used to extend a Child's method docstring with the Parent's method docstring"""
-
-    def __init__(self, method):
-        self.doc = method.__doc__
-
-    def __call__(self, function):
-        if self.doc is not None:
-            doc = function.__doc__
-            function.__doc__ = self.doc
-            if doc is not None:
-                function.__doc__ = doc + function.__doc__
-        return function

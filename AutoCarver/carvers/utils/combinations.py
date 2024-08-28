@@ -130,7 +130,7 @@ def order_apply_combination(order: GroupedList, combination: list[list[Any]]) ->
     """
     order_copy = GroupedList(order)
     for combi in combination:
-        order_copy.group_list(combi, combi[0])
+        order_copy.group(combi, combi[0])
 
     return order_copy
 

@@ -102,7 +102,7 @@ class RMeasure(BaseMeasure):
 
         # checking values of y
         if len(y[~nans].unique()) != 2:
-            raise ValueError(f" - [{self}] Provided y is not binary")
+            raise ValueError(f"[{self}] Provided y is not binary")
 
         # grouping feature and target
         ols_df = DataFrame({"feature": x[~nans], "target": y[~nans]})

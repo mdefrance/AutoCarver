@@ -72,8 +72,9 @@ from AutoCarver.selectors.measures import (
     ZscoreOutlierMeasure,
 )
 
-# setting BaseSelector as non abstract classes for the duration of the test
+# setting BaseSelector, BaseFeature as non abstract classes for the duration of the test
 BaseSelector.__abstractmethods__ = set()
+BaseFeature.__abstractmethods__ = set()
 
 quanti_measures = [KruskalMeasure, PearsonMeasure, DistanceMeasure, SpearmanMeasure]
 quali_measures = [Chi2Measure, CramervMeasure, TschuprowtMeasure]

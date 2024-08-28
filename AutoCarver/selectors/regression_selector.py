@@ -39,7 +39,7 @@ class RegressionSelector(BaseSelector):
             or measure.is_default
             for measure in measures
         ):
-            raise ValueError(f" - [{self}] Provide measures for quantitative target!")
+            raise ValueError(f"[{self}] Provide measures for quantitative target!")
         return measures
 
     def _initiate_filters(self, requested_filters: list[BaseFilter] = None) -> list[BaseFilter]:

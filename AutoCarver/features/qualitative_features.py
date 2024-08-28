@@ -54,7 +54,7 @@ class QualitativeFeature(BaseFeature):
         if len(unexpected) > 0:
             # feature does not have a default value
             if not self.has_default:
-                raise ValueError(f" - [{self}] Unexpected values: {str(list(unexpected))}")
+                raise ValueError(f"[{self}] Unexpected values: {str(list(unexpected))}")
 
             # feature has default value:
             # adding unexpected value to list of known values
@@ -231,17 +231,17 @@ class OrdinalFeature(QualitativeFeature):
 
         # checking for values
         if values is None or len(values) == 0:
-            raise ValueError(f" - [{self}] Please make sure to provide values.")
+            raise ValueError(f"[{self}] Please make sure to provide values.")
 
         # checking for nan ordering
         if self.nan in values and not kwargs.get("load_mode", False):
             raise ValueError(
-                f" - [{self}] Ordering for '{self.nan}' can't be set by user, only fitted on data."
+                f"[{self}] Ordering for '{self.nan}' can't be set by user, only fitted on data."
             )
 
         # checking for str values
         if not all(isinstance(value, str) for value in values):
-            raise ValueError(f" - [{self}] Please make sure to provide str values.")
+            raise ValueError(f"[{self}] Please make sure to provide str values.")
 
         # saving up raw ordering for labeling
         self.raw_order = kwargs.get("raw_order", values[:])

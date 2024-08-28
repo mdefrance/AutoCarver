@@ -99,8 +99,8 @@ def level1_to_level2() -> dict[str, list[str]]:
     }
 
 
-@fixture(scope="module", params=["float", "str"])
-def ordinal_encoding(request: FixtureRequest) -> str:
+@fixture(scope="module", params=[True, False])
+def ordinal_encoding(request: FixtureRequest) -> bool:
     return request.param
 
 

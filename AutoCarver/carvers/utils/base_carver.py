@@ -5,7 +5,7 @@ for any task.
 import json
 from abc import abstractmethod
 from functools import partial
-from typing import Any, Type, Union
+from typing import Any, Union
 from warnings import warn
 
 from numpy import isclose
@@ -134,10 +134,9 @@ class BaseCarver(BaseDiscretizer):
         # class specific attributes
         self.min_freq = min_freq  # minimum frequency per bucket
         self.max_n_mod = max_n_mod  # maximum number of modality per feature
-        # minimum frequency per final bucket TODO use this in discretizer?
-        self.min_freq_mod = kwargs.get("min_freq_mod")
-        if self.min_freq_mod is None:
-            self.min_freq_mod = min_freq / 2
+        self.discretizer_min_freq = kwargs.get("discretizer_min_freq")
+        if self.discretizer_min_freq is None:
+            self.discretizer_min_freq = self.min_freq / 2
         self.sort_by = sort_by  # metric used to sort feature combinations
 
         # pretty printing if requested
@@ -188,7 +187,7 @@ class BaseCarver(BaseDiscretizer):
         """
         # checking for not provided y
         if y is None:
-            raise ValueError(f" - [{self.__name__}] y must be provided, got {y}")
+            raise ValueError(f"[{self.__name__}] y must be provided, got {y}")
 
         # Checking for binary target and copying X
         x_copy = super()._prepare_data(X, y)
@@ -196,7 +195,7 @@ class BaseCarver(BaseDiscretizer):
 
         # discretizing all features, always copying, to keep discretization from start to finish
         discretizer = Discretizer(
-            self.min_freq_mod,
+            self.discretizer_min_freq,
             self.features,
             **dict(self.kwargs, dropna=False, copy=True, ordinal_encoding=False),
         )
@@ -205,10 +204,10 @@ class BaseCarver(BaseDiscretizer):
             x_dev_copy = discretizer.transform(x_dev_copy, y_dev)
 
         # removing dropped features
-        self.features.keep(discretizer.features.get_versions())
+        self.features.keep(discretizer.features.versions)
 
         # setting up features to convert nans to feature.nan (drop nans)
-        self.features.set_dropna(True)
+        self.features.dropna = True
 
         # filling up nans
         x_copy = self.features.fillna(x_copy)
@@ -257,7 +256,7 @@ class BaseCarver(BaseDiscretizer):
         xaggs_dev = self._aggregator(x_dev_copy, y_dev)
 
         # optimal butcketization/carving of each feature
-        all_features = self.features.get_versions()  # features are removed from self.features
+        all_features = self.features.versions  # features are removed from self.features
         for n, feature in enumerate(all_features):
             if self.verbose:  # verbose if requested
                 print(
@@ -272,7 +271,7 @@ class BaseCarver(BaseDiscretizer):
                 print("---\n")
 
         # setting dropna according to user request
-        self.features.set_dropna(self.dropna)
+        self.features.dropna = self.dropna
 
         # discretizing features based on each feature's values_order
         super().fit(X, y)
@@ -367,7 +366,7 @@ class BaseCarver(BaseDiscretizer):
             # grouping NaNs if requested to drop them (dropna=True)
             if self.dropna and feature.has_nan and best_association is not None:
                 if self.verbose:  # verbose if requested
-                    print(f" - [{self.__name__}] Grouping NaNs")
+                    print(f"[{self.__name__}] Grouping NaNs")
 
                 # unpacking suitable combination
                 xagg, xagg_dev = best_association
@@ -641,8 +640,8 @@ class BaseCarver(BaseDiscretizer):
                     [
                         value
                         for modality in asso["index_to_groupby"].keys()
-                        for group_modality in feature.labels.get(modality, modality)
-                        for value in feature.values.get(group_modality, group_modality)
+                        for group_modality in feature.label_per_value.get(modality, modality)
+                        for value in feature.content.get(group_modality, group_modality)
                         if asso["index_to_groupby"][modality] == final_group
                     ]
                     for final_group in Series(asso["index_to_groupby"].values()).unique()
@@ -678,7 +677,7 @@ class BaseCarver(BaseDiscretizer):
             Whether to output html or not, by default False
         """
         if self.verbose:  # verbose if requested
-            print(f" - [{self.__name__}] {message}")
+            print(f" [{self.__name__}] {message}")
 
             # formatting XAGG
             formatted_xagg = index_mapper(feature, xagg)
@@ -747,11 +746,10 @@ class BaseCarver(BaseDiscretizer):
             carver_json = json.load(json_file)
 
         # deserializing features
-        features = Features.load(carver_json.pop("features"), carver_json.get("ordinal_encoding"))
+        features = Features.load(carver_json.pop("features"))
 
         # initiating BaseDiscretizer
         loaded_carver = BaseDiscretizer(features=features, **carver_json)
-        loaded_carver.fit()
 
         return loaded_carver
 

@@ -221,8 +221,7 @@ class BaseSelector(ABC):
         best_features: list[BaseFeature] = []
 
         # checking for quantitative features before selection
-        quantitatives = self.features.get_quantitatives()
-        print("quantitatives", quantitatives)
+        quantitatives = self.features.quantitatives
         if len(quantitatives) > 0:
             # getting qualitative measures and filters
             measures = get_quantitative_metrics(self.measures)
@@ -232,7 +231,7 @@ class BaseSelector(ABC):
             best_features += self._select_features(quantitatives, X, y, measures, filters)
 
         # checking for qualitative features before selection
-        qualitatives = self.features.get_qualitatives()
+        qualitatives = self.features.qualitatives
         if len(qualitatives) > 0:
             # getting qualitative measures and filters
             measures = get_qualitative_metrics(self.measures)

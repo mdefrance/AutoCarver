@@ -23,7 +23,7 @@ from .utils.grouped_list import GroupedList
 
 #     def __init__(self):
 #         raise EnvironmentError(
-#             f" - [{self.__name__}] Should be instantiated with AutoFeatures.from_dataframe()"
+#             f"[{self.__name__}] Should be instantiated with AutoFeatures.from_dataframe()"
 #         )
 
 #     def from_dataframe(self, X: DataFrame) -> None:
@@ -46,7 +46,7 @@ from .utils.grouped_list import GroupedList
 #             # unknown data type
 #             else:
 #                 warn(
-#                     f" - [{self.__name__}] Ommited column {feature}, unknown data type {dtype}",
+#                     f"[{self.__name__}] Ommited column {feature}, unknown data type {dtype}",
 #                     UserWarning,
 #                 )
 
@@ -120,7 +120,7 @@ class Features:
             return next(feature for feature in self if feature.version == feature_name)
 
         # not found feature
-        raise ValueError(f" - [{self.__name__}] '{feature_name}' not in features.")
+        raise ValueError(f"[{self.__name__}] '{feature_name}' not in features.")
 
     def __len__(self) -> int:
         """Returns number of features"""
@@ -275,7 +275,7 @@ class Features:
         for feature in self:
             # checking for non-fitted features
             if not feature.is_fitted:
-                raise RuntimeError(f" - [{self.__name__}] '{feature}' not yet fitted!")
+                raise RuntimeError(f"[{self.__name__}] '{feature}' not yet fitted!")
 
             # checking for unexpected values
             feature.check_values(X)
@@ -473,7 +473,7 @@ def cast_features(
 
         else:
             raise TypeError(
-                f" - [Features] feature {feature} is neither a str, nor a {target_class.__name__}."
+                f"[Features] feature {feature} is neither a str, nor a {target_class.__name__}."
             )
 
     # deduplicating features by version name

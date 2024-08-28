@@ -9,8 +9,10 @@ from numpy import argmin, nan, select
 from pandas import DataFrame, Series, isna, notna, unique
 
 from ..features import BaseFeature, CategoricalFeature, Features, GroupedList, OrdinalFeature
-from .utils.base_discretizer import BaseDiscretizer, extend_docstring
+from .utils.base_discretizer import BaseDiscretizer
 from .utils.type_discretizers import StringDiscretizer
+
+from ..utils import extend_docstring
 
 
 class CategoricalDiscretizer(BaseDiscretizer):
@@ -120,7 +122,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
             ]
             if len(missing_values) > 0:
                 raise ValueError(
-                    f" - [{self.__name__}] Unexpected values {missing_values} for {feature}."
+                    f"[{self.__name__}] Unexpected values {missing_values} for {feature}."
                 )
 
             # grouping values to str_default if any
@@ -319,7 +321,7 @@ class ChainedDiscretizer(BaseDiscretizer):
                 ]
                 if len(next_unknown) > 0:
                     raise ValueError(
-                        f" - [{self.__name__}] Values {str(next_unknown)}, provided in "
+                        f"[{self.__name__}] Values {str(next_unknown)}, provided in "
                         f"chained_orders[{n+1}] are missing from chained_orders[{n}]. Please make "
                         "sure values are kept trhough each level."
                     )
@@ -330,7 +332,7 @@ class ChainedDiscretizer(BaseDiscretizer):
                 ]
                 if len(next_known) == 0:
                     raise ValueError(
-                        f" - [{self.__name__}] For key '{next_group}', the provided chained_orders"
+                        f"[{self.__name__}] For key '{next_group}', the provided chained_orders"
                         f"[{n+1}] has no values from chained_orders[:{n+1}]. Please provide some"
                         " existing values."
                     )
@@ -360,7 +362,7 @@ class ChainedDiscretizer(BaseDiscretizer):
             for value in order:
                 if value not in self.known_values:
                     raise ValueError(
-                        f" - [{self.__name__}] Value {value} from feature {feature} provided in "
+                        f"[{self.__name__}] Value {value} from feature {feature} provided in "
                         "values_orders is missing from levels of chained_orders. Add value to a "
                         "level of chained_orders or adapt values_orders."
                     )
@@ -607,7 +609,7 @@ def check_frequencies(features: Features, X: DataFrame, min_freq: float, name: s
     if len(too_common + non_common) > 0:
         # building error message
         error_msg = (
-            f" - [{name}] Features {str(too_common + non_common)} contain a too frequent modality "
+            f"[{name}] Features {str(too_common + non_common)} contain a too frequent modality "
             "or no frequent enough modalities. Consider decreasing min_freq or removing these "
             "features.\nINFO:\n"
         )

@@ -23,7 +23,7 @@ class QuantitativeFeature(BaseFeature):
         if not convert_labels and self.values is None:
             # checking that inf is amongst values
             if values[-1] != inf:
-                raise ValueError(f" - [{self}] Must provide values with values[-1] == numpy.inf")
+                raise ValueError(f"[{self}] Must provide values with values[-1] == numpy.inf")
             self.values = values
 
         # values are not labels

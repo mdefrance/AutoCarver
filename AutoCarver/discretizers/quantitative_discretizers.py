@@ -6,8 +6,10 @@ from numpy import array, digitize, in1d, inf, isnan, linspace, quantile, sort, u
 from pandas import DataFrame, Series
 
 from ..features import BaseFeature, Features, GroupedList, QuantitativeFeature, get_versions
-from .utils.base_discretizer import BaseDiscretizer, extend_docstring
+from .utils.base_discretizer import BaseDiscretizer
 from .utils.multiprocessing import imap_unordered_function
+
+from ..utils import extend_docstring
 
 
 class ContinuousDiscretizer(BaseDiscretizer):

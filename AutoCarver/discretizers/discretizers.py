@@ -12,7 +12,9 @@ from .qualitative_discretizers import (
     check_frequencies,
 )
 from .quantitative_discretizers import ContinuousDiscretizer
-from .utils.base_discretizer import BaseDiscretizer, extend_docstring
+from .utils.base_discretizer import BaseDiscretizer
+
+from ..utils import extend_docstring
 
 
 class Discretizer(BaseDiscretizer):
@@ -294,7 +296,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         not_numeric = dtypes.apply(lambda u: str in u)
         if any(not_numeric):
             raise ValueError(
-                f" - [{self.__name__}] Non-numeric features: "
+                f"[{self.__name__}] Non-numeric features: "
                 f"{str(list(not_numeric[not_numeric].index))} in provided quantitative_features. "
                 "Please check your inputs."
             )

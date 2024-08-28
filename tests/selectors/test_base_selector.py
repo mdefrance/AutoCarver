@@ -393,9 +393,9 @@ def test_base_selector_select(
     )
     best_features = selector.select(X, y)
     assert isinstance(best_features, list)
-    for feature in features_object.get_quantitatives():
+    for feature in features_object.quantitatives:
         assert feature in best_features
-    for feature in features_object.get_qualitatives():
+    for feature in features_object.qualitatives:
         assert feature in best_features
 
     # keeping best feature per type
@@ -514,7 +514,7 @@ def test_base_selector_get_best_features_across_chunks_with_chunking(
         max_num_features_per_chunk,
         selector.random_state,
     )
-    print(quantitative_chunks[0][0] in features_object.get_quantitatives(), quantitative_chunks[0])
+    print(quantitative_chunks[0][0] in features_object.quantitatives, quantitative_chunks[0])
 
     quantitative_sorted_features = sort_features_per_measure(
         quantitative_chunks[0],
