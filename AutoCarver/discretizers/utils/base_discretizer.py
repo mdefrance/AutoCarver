@@ -11,8 +11,20 @@ from pandas import DataFrame, Series
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from ...features import BaseFeature, Features
-from ...features.utils.grouped_list import GroupedList
 from .multiprocessing import apply_async_function
+
+
+def get_bool_attribute(kwargs: dict, attribute: str, default_value: bool) -> bool:
+    """returns value from kwargs whilst checking for bool type"""
+
+    # getting attribute value
+    value = kwargs.get(attribute, default_value)
+
+    # checking for correct type
+    if not isinstance(value, bool):
+        raise ValueError(f"{attribute} should be a bool, not {type(value)}")
+
+    return value
 
 
 class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
@@ -86,34 +98,17 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         # saving kwargs
         self.kwargs = kwargs
 
-        # whether or not to copy input dataframe
-        self.copy = kwargs.get("copy", True)
-        if not isinstance(self.copy, bool):
-            raise AttributeError(f"[{self.__name__}] copy should be a bool, not {type(self.copy)}")
-
-        # output type
-        self.ordinal_encoding = kwargs.get("ordinal_encoding", False)
-        if not isinstance(self.ordinal_encoding, bool):
-            raise AttributeError(
-                f"[{self.__name__}] ordinal_encoding should be a bool, "
-                f"not {type(self.ordinal_encoding)}"
-            )
-
-        # whether or not to reinstate numpy nan after bucketization
-        self.dropna = kwargs.get("dropna", False)
-        if not isinstance(self.dropna, bool):
-            raise AttributeError(
-                f"[{self.__name__}] dropna should be a bool, not {type(self.dropna)}"
-            )
-
-        # whether to print info
-        self.verbose = kwargs.get("verbose", True)
+        # checking types of bool attributes
+        self.copy = get_bool_attribute(kwargs, "copy", True)
+        self.ordinal_encoding = get_bool_attribute(kwargs, "ordinal_encoding", False)
+        self.dropna = get_bool_attribute(kwargs, "dropna", False)
+        self.verbose = get_bool_attribute(kwargs, "verbose", True)
 
         # setting number of jobs
         self.n_jobs = kwargs.get("n_jobs", 1)
 
         # check if the discretizer has already been fitted
-        self.is_fitted = kwargs.get("is_fitted", False)
+        self.is_fitted = get_bool_attribute(kwargs, "is_fitted", False)
         self.min_freq = kwargs.get("min_freq", None)
         self.sort_by = kwargs.get("sort_by", None)
 
@@ -151,16 +146,60 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             A formatted X
         """
 
+        # duplicating columns that have several versions
+        casted_columns = {
+            feature.version: X[feature.name]
+            for feature in self.features
+            if feature.version != feature.name and feature.version not in X
+        }
+
         # duplicating features with versions disctinct from names (= multiclass target)
-        X = X.assign(
-            **{
-                feature.version: X[feature.name]
-                for feature in self.features
-                if feature.version != feature.name and feature.version not in X
-            }
-        )
+        if len(casted_columns) > 0:  # checking for casted feature to not break inplace
+            X = X.assign(**casted_columns)
 
         return X
+
+    def _prepare_y(self, y: Series) -> None:
+        """Validates input y"""
+
+        if not isinstance(y, Series):  # checking for y's type
+            raise ValueError(f"[{self.__name__}] y must be a pandas.Series, passed {type(y)}")
+
+        if any(y.isna()):  # checking for nans in the target
+            raise ValueError(f"[{self.__name__}] y should not contain numpy.nan")
+
+    def _prepare_X(self, X: DataFrame) -> DataFrame:
+        """Validates input X"""
+
+        # checking for X's type
+        if not isinstance(X, DataFrame):
+            raise ValueError(f"[{self.__name__}] X must be a pandas.DataFrame, passed {type(X)}")
+
+        # copying X
+        x_copy = X
+        if self.copy:
+            x_copy = X.copy()
+
+        # checking for input columns by feature name
+        missing_columns = [feature for feature in self.features if feature.name not in x_copy]
+        if len(missing_columns) > 0:
+            raise ValueError(
+                f"[{self.__name__}] Requested discretization of {str(missing_columns)} but "
+                "those columns are missing from provided X. Please check your inputs! "
+            )
+
+        # casting features for multiclass targets
+        x_copy = self._cast_features(x_copy)
+
+        # checking for input columns by feature version
+        missing_columns = [feature for feature in self.features if feature.version not in x_copy]
+        if len(missing_columns) > 0:
+            raise ValueError(
+                f"[{self.__name__}] Requested discretization of {str(missing_columns)} but "
+                "those columns are missing from provided X. Please check your inputs! "
+            )
+
+        return x_copy
 
     def _prepare_data(self, X: DataFrame, y: Series = None) -> DataFrame:
         """Validates format and content of X and y.
@@ -179,47 +218,20 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         DataFrame
             A formatted copy of X
         """
-        # pointer to X
-        x_copy = X
 
         # checking DataFrame of features
         if X is not None:
-            if not isinstance(X, DataFrame):  # checking for X's type
-                raise ValueError(
-                    f"[{self.__name__}] X must be a pandas.DataFrame, passed {type(X)}"
-                )
-
-            # copying X
-            if self.copy:
-                x_copy = X.copy()
-
-            # casting features for multiclass targets
-            x_copy = self._cast_features(x_copy)
-
-            # checking for input columns
-            missing_columns = [
-                feature for feature in self.features if feature.version not in x_copy
-            ]
-            if len(missing_columns) > 0:
-                raise ValueError(
-                    f"[{self.__name__}] Requested discretization of {str(missing_columns)} but "
-                    "those columns are missing from provided X. Please check your inputs! "
-                )
+            x_copy = self._prepare_X(X)
 
             # checking target Series
             if y is not None:
-                if not isinstance(y, Series):  # checking for y's type
-                    raise ValueError(
-                        f"[{self.__name__}] y must be a pandas.Series, passed {type(y)}"
-                    )
+                self._prepare_y(y)
 
-                if any(y.isna()):  # checking for nans in the target
-                    raise ValueError(f"[{self.__name__}] y should not contain numpy.nan")
-
-                if not all(y.index == X.index):  # checking for matching indices
+                # checking for matching indices
+                if not all(y.index == X.index):
                     raise ValueError(f"[{self.__name__}] X and y must have the same indices.")
 
-        return x_copy
+            return x_copy
 
     __prepare_data = _prepare_data  # private copy
 
@@ -240,19 +252,16 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         # checking for previous fits of the discretizer that could cause unwanted errors
         if self.is_fitted:
             raise RuntimeError(
-                f"[{self}] This Discretizer has already been fitted. "
+                f"[{self.__name__}] Already fitted. "
                 "Fitting it anew could break it. Please initialize a new one."
             )
 
         # checking that all features were fitted
         missing_features = [feature.version for feature in self.features if not feature.is_fitted]
         if len(missing_features) != 0:
-            raise ValueError(f"[{self.__name__}] Features not fitted: {str(missing_features)}.")
+            raise RuntimeError(f"[{self.__name__}] Features not fitted: {str(missing_features)}.")
 
-        # for each feature, getting label associated to each value
-        # self.features.update_labels(self.ordinal_encoding)
         # setting features in ordinal encoding mode
-        print("self.ordinal_encoding", self.ordinal_encoding, self.__name__)
         self.features.ordinal_encoding = self.ordinal_encoding
 
         # setting fitted as True to raise alerts
@@ -327,16 +336,13 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         """
         _ = y  # unused argument
 
-        # dataset length
-        x_len = X.shape[0]
-
         # transforming all features
         transformed = apply_async_function(
             transform_quantitative_feature,
             self.features.quantitatives,
             self.n_jobs,
             X,
-            x_len,
+            X.shape[0],
         )
 
         # unpacking transformed series
@@ -380,10 +386,6 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         """prints logs if requested"""
         if self.verbose:
             print(f"{prefix} [{self.__name__}] Fit {str(self.features)}")
-
-    def to_dict(self) -> dict[str, GroupedList]:
-        """Converts Discretizer to dict"""
-        return self.features.content
 
     def to_json(self, light_mode: bool = False) -> str:
         """Converts to JSON format.
@@ -535,7 +537,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         return self.features.get_summaries()
 
-    # def update_discretizer(
+    # def update(
     #     self,
     #     feature: str,
     #     mode: str,
@@ -642,34 +644,11 @@ def transform_quantitative_feature(
     ]
 
     # checking for values to group
-    if len(values_to_group) > 0:
-        df_feature = Series(select(values_to_group, group_labels, default=df_feature))
+    # if len(values_to_group) > 0:  # TODO check if this is needed
+    df_feature = Series(select(values_to_group, group_labels, default=df_feature))
 
     # reinstating nans otherwise nan is converted to 'nan' by numpy
     if any(feature_nans):
         df_feature[feature_nans] = feature.label_per_value.get(feature.nan, nan)
 
     return feature.version, list(df_feature)
-
-
-def applied_to_dict_list(applied: Union[DataFrame, Series]) -> dict[str, list[Any]]:
-    """Converts a DataFrame or a List in a Dict of lists
-
-    Parameters
-    ----------
-    applied : Union[DataFrame, Series]
-        Result of pandas.DataFrame.apply
-
-    Returns
-    -------
-    Dict[list[Any]]
-        Dict of lists of rows values
-    """
-    # case when it's a Series
-    converted = applied.to_dict()
-
-    # case when it's a DataFrame
-    if isinstance(applied, DataFrame):
-        converted = applied.to_dict(orient="list")
-
-    return converted

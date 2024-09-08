@@ -1,19 +1,20 @@
 """ set of tests for quantitative features"""
 
-from numpy import nan, inf
+from numpy import inf, nan
 from pandas import DataFrame, Series
 from pytest import fixture, raises
-from AutoCarver.features.utils.grouped_list import GroupedList
-from AutoCarver.features.utils.base_feature import BaseFeature
+
+from AutoCarver.config import DEFAULT, NAN
 from AutoCarver.features.qualitative_features import (
-    get_ordinal_features,
-    get_categorical_features,
-    get_qualitative_features,
-    nan_unique,
     CategoricalFeature,
     OrdinalFeature,
+    get_categorical_features,
+    get_ordinal_features,
+    get_qualitative_features,
+    nan_unique,
 )
-from AutoCarver.config import NAN, DEFAULT
+from AutoCarver.features.utils.base_feature import BaseFeature
+from AutoCarver.features.utils.grouped_list import GroupedList
 
 BaseFeature.__abstractmethods__ = set()
 
@@ -67,7 +68,6 @@ def test_get_qualitative_features() -> None:
 
 
 def test_nan_unique():
-
     # no sorting with nans
     sample_series = Series([1, 2, 2, 3, 4, 4, 4, float("nan"), float("nan"), 5])
     result = nan_unique(sample_series)

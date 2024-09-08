@@ -6,9 +6,9 @@ from numpy import nan
 from pandas import DataFrame, Series
 
 from .qualitative_features import (
-    QualitativeFeature,
     CategoricalFeature,
     OrdinalFeature,
+    QualitativeFeature,
     get_categorical_features,
     get_ordinal_features,
 )
@@ -108,6 +108,10 @@ class Features:
         """Returns names of all features"""
         return f"{self.__name__}({str(self.versions)})"
 
+    def __contains__(self, feature_name: str) -> bool:
+        """checks if a feature is in the features"""
+        return feature_name in self.versions
+
     def __call__(self, feature_name: str) -> BaseFeature:
         """Returns specified feature by name"""
         # looking for feature names
@@ -116,7 +120,7 @@ class Features:
             return self_dict.get(feature_name)
 
         # looking for version names
-        if feature_name in self.versions:
+        if feature_name in self:
             return next(feature for feature in self if feature.version == feature_name)
 
         # not found feature
@@ -377,7 +381,6 @@ class Features:
         # casting each feature to there corresponding type
         unpacked_features: list[BaseFeature] = []
         for _, feature in features_json.items():
-
             # categorical feature
             if feature.get("is_categorical"):
                 unpacked_features += [CategoricalFeature.load(feature)]

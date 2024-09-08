@@ -8,8 +8,8 @@ from numpy import add, array, searchsorted, sqrt, unique, zeros
 from pandas import DataFrame, Series, crosstab
 from scipy.stats import chi2_contingency
 
-from ..utils import extend_docstring
 from ..features import Features
+from ..utils import extend_docstring
 from .utils.base_carver import BaseCarver
 
 

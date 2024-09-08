@@ -1,17 +1,18 @@
 """ set of tests for quantitative features"""
 
-from numpy import nan, inf
+from numpy import inf, nan
 from pandas import DataFrame
 from pytest import fixture, raises
-from AutoCarver.features.utils.grouped_list import GroupedList
-from AutoCarver.features.utils.base_feature import BaseFeature
-from AutoCarver.features.quantitative_features import (
-    format_quantiles,
-    min_decimals_to_differentiate,
-    get_quantitative_features,
-    QuantitativeFeature,
-)
+
 from AutoCarver.config import NAN
+from AutoCarver.features.quantitative_features import (
+    QuantitativeFeature,
+    format_quantiles,
+    get_quantitative_features,
+    min_decimals_to_differentiate,
+)
+from AutoCarver.features.utils.base_feature import BaseFeature
+from AutoCarver.features.utils.grouped_list import GroupedList
 
 BaseFeature.__abstractmethods__ = set()
 

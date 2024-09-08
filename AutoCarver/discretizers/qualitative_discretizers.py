@@ -9,10 +9,9 @@ from numpy import argmin, nan, select
 from pandas import DataFrame, Series, isna, notna, unique
 
 from ..features import BaseFeature, CategoricalFeature, Features, GroupedList, OrdinalFeature
+from ..utils import extend_docstring
 from .utils.base_discretizer import BaseDiscretizer
 from .utils.type_discretizers import StringDiscretizer
-
-from ..utils import extend_docstring
 
 
 class CategoricalDiscretizer(BaseDiscretizer):

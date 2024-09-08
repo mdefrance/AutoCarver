@@ -7,8 +7,8 @@ from typing import Any, Callable, Union
 from pandas import DataFrame, Series, unique
 
 from ..discretizers import BaseDiscretizer
-from ..utils import extend_docstring
 from ..features import Features
+from ..utils import extend_docstring
 from .binary_carver import BinaryCarver
 from .utils.base_carver import BaseCarver
 

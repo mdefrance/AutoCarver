@@ -2,9 +2,9 @@
 
 from .features import Features, get_names, get_versions
 from .qualitative_features import (
-    QualitativeFeature,
     CategoricalFeature,
     OrdinalFeature,
+    QualitativeFeature,
     get_categorical_features,
     get_ordinal_features,
     get_qualitative_features,

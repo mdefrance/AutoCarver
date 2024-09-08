@@ -1,8 +1,10 @@
 """ set of tests for BaseFeature"""
 
 import json
-from pytest import raises
+
 from pandas import DataFrame
+from pytest import raises
+
 from AutoCarver.config import DEFAULT, NAN
 from AutoCarver.features import BaseFeature, GroupedList
 

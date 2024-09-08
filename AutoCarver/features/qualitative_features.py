@@ -1,6 +1,7 @@
 """ Defines a categorical feature"""
 
 from abc import abstractmethod
+
 from numpy import floating, integer
 from pandas import DataFrame, Series, notna, unique
 
@@ -20,13 +21,11 @@ class QualitativeFeature(BaseFeature):
 
         # checking that feature is not ordinal (already set values)
         if self.values is None:
-
             # initiating feature with its unique non-nan values
             self.update(GroupedList(sorted_unique_values))
 
         # checking that raw order has not been set (also useful when loading from json)
         if len(self.raw_order) == 0:
-
             # saving up number ordering for labeling
             self.raw_order = [self.values.get_group(value) for value in sorted_unique_values]
 
@@ -73,7 +72,6 @@ class QualitativeFeature(BaseFeature):
         # iterating over each value and there content
         labels = []
         for group, content in self.content.items():
-
             # formatting label
             labels += [self._format_modalities(group, content)]
 
@@ -114,10 +112,8 @@ class QualitativeFeature(BaseFeature):
 
         # values are labels -> converting them back to values
         else:
-
             # iterating over each grouped values
             for kept_label, grouped_labels in values.content.items():
-
                 # converting labels to values
                 kept_value = self.value_per_label.get(kept_label)
                 grouped_values = [self.value_per_label.get(label) for label in grouped_labels]

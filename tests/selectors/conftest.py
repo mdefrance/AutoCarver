@@ -130,7 +130,7 @@ def filters(
 
 
 @fixture
-def features():
+def features() -> list[BaseFeature]:
     feature1 = BaseFeature("feature1")
     feature1.is_qualitative = True
     feature1.is_categorical = True

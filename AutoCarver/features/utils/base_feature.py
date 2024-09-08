@@ -2,6 +2,7 @@
 """
 
 import json
+from abc import ABC, abstractmethod
 from typing import Any
 
 from pandas import DataFrame, Series
@@ -9,8 +10,6 @@ from pandas import DataFrame, Series
 from ...config import DEFAULT, NAN
 from .grouped_list import GroupedList
 from .serialization import json_deserialize_content, json_serialize_feature
-
-from abc import ABC, abstractmethod
 
 
 class BaseFeature(ABC):
@@ -68,7 +67,7 @@ class BaseFeature(ABC):
         self.version: str = kwargs.get("version", self.name)
         self.version_tag: str = kwargs.get("version_tag", self.name)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__name__}('{self.version}')"
 
     @property
@@ -89,7 +88,6 @@ class BaseFeature(ABC):
 
         # setting has_default
         if value and not self.has_default:
-
             # adding to the values
             values.append(self.default)
 
@@ -142,7 +140,6 @@ class BaseFeature(ABC):
 
         # activating dropna mode
         if value and not self.dropna:
-
             # adding nan to the values only if they were found
             if self.has_nan and not self.values.contains(self.nan):
                 values = GroupedList(self.values)
@@ -153,7 +150,6 @@ class BaseFeature(ABC):
 
         # deactivating dropna mode
         elif not value and self.dropna:
-
             # checking for values merged with nans
             if self.values is not None and len(self.values.get(self.nan)) > 1:
                 raise RuntimeError(
@@ -191,7 +187,6 @@ class BaseFeature(ABC):
         # updating label_per_value and value_per_label accordingly
         self.value_per_label = {}
         for value, label in zip(self.values, values):
-
             # updating label_per_value
             for grouped_value in self.values.get(value):
                 self.label_per_value.update({grouped_value: label})

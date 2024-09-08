@@ -6,8 +6,8 @@ from numpy import mean, unique
 from pandas import DataFrame, Series
 from scipy.stats import kruskal
 
-from ..utils import extend_docstring
 from ..features import Features
+from ..utils import extend_docstring
 from .utils.base_carver import BaseCarver
 
 

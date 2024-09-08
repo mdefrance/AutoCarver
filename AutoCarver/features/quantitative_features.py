@@ -1,6 +1,6 @@
 """ Defines a continuous feature"""
 
-from numpy import diff, floor, isfinite, log10, nan, inf  # pylint: disable=E0611
+from numpy import diff, floor, inf, isfinite, log10, nan  # pylint: disable=E0611
 from pandas import isna
 
 from .utils.base_feature import BaseFeature
@@ -28,17 +28,14 @@ class QuantitativeFeature(BaseFeature):
 
         # values are not labels
         elif not convert_labels:
-
             # updating: iterating over each grouped values
             for kept_value, grouped_values in values.content.items():
                 self.values.group(grouped_values, kept_value)
 
         # values are labels -> converting them back to values
         else:
-
             # iterating over each grouped values
             for kept_label, grouped_labels in values.content.items():
-
                 # converting labels to values
                 kept_value = self.value_per_label.get(kept_label)
                 grouped_values = [self.value_per_label.get(label) for label in grouped_labels]

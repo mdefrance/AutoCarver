@@ -30,7 +30,7 @@ def test_multiclass_carver(
     chained_features: list[str],
     level0_to_level1: dict[str, list[str]],
     level1_to_level2: dict[str, list[str]],
-    min_freq_mod: float,
+    discretizer_min_freq: float,
     ordinal_encoding: bool,
     dropna: bool,
     sort_by: str,  # pylint: disable=W0621
@@ -68,7 +68,7 @@ def test_multiclass_carver(
         Chained orders level0 to level1 of features to be chained
     level1_to_level2 : dict[str, list[str]]
         Chained orders level1 to level2 of features to be chained
-    min_freq_mod : float
+    discretizer_min_freq : float
         Minimum frequency per carved modalities
     ordinal_encoding : str
         Output type 'str' or 'float'
@@ -120,7 +120,7 @@ def test_multiclass_carver(
         min_freq=min_freq,
         features=features,
         max_n_mod=max_n_mod,
-        min_freq_mod=min_freq_mod,
+        discretizer_min_freq=discretizer_min_freq,
         ordinal_encoding=ordinal_encoding,
         dropna=dropna,
         copy=copy,
@@ -292,7 +292,7 @@ def test_multiclass_carver(
         features=features,
         max_n_mod=max_n_mod,
         ordinal_encoding=ordinal_encoding,
-        min_freq_mod=min_freq_mod,
+        discretizer_min_freq=discretizer_min_freq,
         dropna=dropna,
         copy=copy,
         verbose=False,

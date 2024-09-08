@@ -120,5 +120,5 @@ def copy(request: FixtureRequest) -> bool:
 
 
 @fixture(scope="module", params=[None, 0.12])
-def min_freq_mod(request: FixtureRequest) -> float:
+def discretizer_min_freq(request: FixtureRequest) -> float:
     return request.param

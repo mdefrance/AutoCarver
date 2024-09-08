@@ -5,6 +5,7 @@ for a binary classification model.
 from pandas import DataFrame, Series, unique
 
 from ..features import CategoricalFeature, Features, QuantitativeFeature
+from ..utils import extend_docstring
 from .qualitative_discretizers import (
     CategoricalDiscretizer,
     OrdinalDiscretizer,
@@ -13,8 +14,6 @@ from .qualitative_discretizers import (
 )
 from .quantitative_discretizers import ContinuousDiscretizer
 from .utils.base_discretizer import BaseDiscretizer
-
-from ..utils import extend_docstring
 
 
 class Discretizer(BaseDiscretizer):

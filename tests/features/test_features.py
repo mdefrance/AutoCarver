@@ -57,26 +57,27 @@
 #         Features(categoricals=["test"], ordinals=["test"], ordinal_values={"test": ["test2"]})
 
 import json
+
 from pytest import fixture, raises
+
 from AutoCarver.features import (
     BaseFeature,
-    QualitativeFeature,
     CategoricalFeature,
     OrdinalFeature,
+    QualitativeFeature,
     QuantitativeFeature,
 )
-from AutoCarver.features.features import (
+from AutoCarver.features.features import (  # Replace 'your_module' with the actual module name
     Features,
-    make_versions,
-    make_version,
-    make_version_name,
-    remove_version,
-    keep_versions,
     cast_features,
     get_names,
     get_versions,
-)  # Replace 'your_module' with the actual module name
-
+    keep_versions,
+    make_version,
+    make_version_name,
+    make_versions,
+    remove_version,
+)
 from AutoCarver.features.utils import GroupedList
 
 
@@ -347,7 +348,6 @@ def test_features_get_versions(features):
 
 
 def test_features_remove_by_name(features):
-
     # removing a categorical feature by name
     features.remove("cat1")
     assert len(features.categoricals) == 1
@@ -375,7 +375,6 @@ def test_features_remove_by_name(features):
 
 
 def test_features_remove_by_version(features):
-
     # removing a categorical feature by version
     features.categoricals[0].version = "cat1_v2"
     features.remove("cat1_v2")
@@ -399,7 +398,6 @@ def test_features_remove_by_version(features):
 
 
 def test_features_keep(features):
-
     # keeping a categorical feature by name
     features_copy = Features(features)
     features_copy.keep(["cat1"])
@@ -562,7 +560,6 @@ def test_features_get_categoricals(features):
 
 
 def test_features_set_dropna(features):
-
     for feature in features:
         feature.values = GroupedList([1, 2, 3])
     features.dropna = True
@@ -649,7 +646,6 @@ def test_features_load(features):
 
 
 def test_features_get_summaries(features):
-
     for feature in features:
         if feature.values is None:
             feature.values = GroupedList([1, 2, 3])
@@ -661,7 +657,6 @@ def test_features_get_summaries(features):
 
 
 def test_features_add_feature_versions(features):
-
     raw_categoricals = features.categoricals
     raw_ordinals = features.ordinals
     raw_quantitatives = features.quantitatives

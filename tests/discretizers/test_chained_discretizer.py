@@ -216,9 +216,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
         "Best": ["High", "High-", "Highs", "Best"],
         "BEST": ["ALL_ALONE", "ALONE", "BEST"],
     }
-    assert (
-        discretizer.features(feature).content == expected
-    ), "All provided values should be kept."
+    assert discretizer.features(feature).content == expected, "All provided values should be kept."
 
     feature = "Qualitative_Ordinal"
     expected = {
@@ -229,9 +227,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
         "Best": ["High", "High-", "Highs", "Best"],
         "BEST": ["ALL_ALONE", "ALONE", "BEST"],
     }
-    assert (
-        discretizer.features(feature).content == expected
-    ), "All provided values should be kept."
+    assert discretizer.features(feature).content == expected, "All provided values should be kept."
 
     # testing for good defintion of levels
     with raises(ValueError):
