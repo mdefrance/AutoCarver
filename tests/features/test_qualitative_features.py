@@ -1,10 +1,10 @@
 """ set of tests for quantitative features"""
 
-from numpy import inf, nan
+from numpy import nan
 from pandas import DataFrame, Series
 from pytest import fixture, raises
 
-from AutoCarver.config import DEFAULT, NAN
+from AutoCarver.config import NAN
 from AutoCarver.features.qualitative_features import (
     CategoricalFeature,
     OrdinalFeature,

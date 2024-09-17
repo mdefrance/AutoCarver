@@ -108,6 +108,8 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         # check if the discretizer has already been fitted
         self.is_fitted = get_bool_attribute(kwargs, "is_fitted", False)
+
+        # carver attributes
         self.min_freq = kwargs.get("min_freq", None)
         self.sort_by = kwargs.get("sort_by", None)
 
@@ -291,6 +293,10 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         # ``input_dtypes=="float"`` for quantitative ones.
         # * If ``copy=True``, the input DataFrame will be copied.
 
+        # checking that it was fitted
+        if not self.is_fitted:
+            raise RuntimeError(f"[{self.__name__}] Call fit method first.")
+
         # copying dataframes and casting for multiclass
         x_copy = self.__prepare_data(X, y)
 
@@ -462,7 +468,6 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         # initiating BaseDiscretizer
         loaded_discretizer = cls(features=features, **discretizer_json)
-        loaded_discretizer.fit()
 
         return loaded_discretizer
 
@@ -619,6 +624,9 @@ def transform_quantitative_feature(
 ) -> tuple[str, list]:
     """Transforms a quantitative feature"""
 
+    # keeping track of original index
+    raw_index = df_feature.index
+
     # identifying nans
     feature_nans = (df_feature == feature.nan) | df_feature.isna()
 
@@ -645,7 +653,7 @@ def transform_quantitative_feature(
 
     # checking for values to group
     # if len(values_to_group) > 0:  # TODO check if this is needed
-    df_feature = Series(select(values_to_group, group_labels, default=df_feature))
+    df_feature = Series(select(values_to_group, group_labels, default=df_feature), index=raw_index)
 
     # reinstating nans otherwise nan is converted to 'nan' by numpy
     if any(feature_nans):

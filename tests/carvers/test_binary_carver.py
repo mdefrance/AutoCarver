@@ -18,6 +18,7 @@ def sort_by(request) -> str:
 
 
 def test_binary_carver(
+    tmp_path,
     x_train: DataFrame,
     x_train_wrong_2: DataFrame,
     x_dev_1: DataFrame,
@@ -234,9 +235,9 @@ def test_binary_carver(
         ), "Not copied correctly"
 
     # testing json serialization
-    carver_file = "test.json"
-    auto_carver.save(carver_file)
-    loaded_carver = BinaryCarver.load_carver(carver_file)
+    carver_file = tmp_path / "test.json"
+    auto_carver.save(str(carver_file))
+    loaded_carver = BinaryCarver.load_carver(str(carver_file))
     os.remove(carver_file)
 
     # checking that reloading worked exactly the same
