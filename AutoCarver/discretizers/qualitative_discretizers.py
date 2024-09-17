@@ -50,7 +50,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
             **Tip**: set between ``0.02`` (slower, less robust) and ``0.05`` (faster, more robust)
         """
         # Initiating BaseDiscretizer
-        super().__init__(categoricals, **kwargs)
+        super().__init__(categoricals, **dict(kwargs, min_freq=min_freq))
 
     def _prepare_data(self, X: DataFrame, y: Series) -> DataFrame:  # pylint: disable=W0222
         """Validates format and content of X and y.
