@@ -4,7 +4,6 @@ for a binary classification model.
 
 import json
 from abc import ABC
-from typing import Any, Union
 
 from numpy import nan, select
 from pandas import DataFrame, Series
@@ -617,23 +616,24 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
 def transform_quantitative_feature(
     feature: BaseFeature, df_feature: Series, x_len: int
-) -> tuple[str, Series]:
+) -> tuple[str, list]:
     """Transforms a quantitative feature"""
+
     # identifying nans
     feature_nans = (df_feature == feature.nan) | df_feature.isna()
 
     # converting nans to there corresponding quantile (if it was grouped to a quantile)
     if any(feature_nans):
-        # value with which nans have grouped
+
+        # quantile with which nans have been grouped
         nan_group = feature.values.get_group(feature.nan)
 
         # checking that nans have been grouped to a quantile
-        if nan_group != feature.nan:
-            df_feature.mask(feature_nans, nan_group, inplace=True)
+        if nan_group == feature.nan:
+            nan_group = nan
 
-        # otherwise they are left as NaNs for comparison purposes
-        else:
-            df_feature.mask(feature_nans, nan, inplace=True)
+        # converting to quantile value if grouped else keeping np.nan
+        df_feature.mask(feature_nans, nan_group, inplace=True)
 
     # list of masks of values to replace with there respective group
     values_to_group = [df_feature <= value for value in feature.values if value != feature.nan]

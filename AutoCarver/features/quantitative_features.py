@@ -88,9 +88,12 @@ class QuantitativeFeature(BaseFeature):
         # converting to grouped list
         labels = GroupedList(labels)
 
-        # add NaNs if there are any
+        # add NaNs if there are any (not grouped)
         if self.nan in self.values:
             labels.append(self.nan)
+
+        # TODO add NaNs if there are any (grouped)
+        # elif self.nan in self.values.values:
 
         return labels
 

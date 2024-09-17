@@ -26,6 +26,7 @@ def dropna(request: FixtureRequest) -> str:
 
 @fixture
 def features() -> Features:
+    """set of features"""
     feature1 = QuantitativeFeature("feature1")
     feature2 = OrdinalFeature("feature2", values=["1", "2", "3", "4"])
     feature3 = CategoricalFeature("feature3")
@@ -73,52 +74,71 @@ def test_transform_quantitative_feature(features: Features) -> None:
         "4.5e+00 < x",
     ] == list_feature
 
-    # with values to group, with nan in df_feature
+    # with values to group, with nan in df_feature (nan not grouped)
     feature = features[-1]
     feature.update(GroupedList([2, 4.5, inf]))
+    feature.has_nan = True
+    feature.dropna = True
 
     df_feature = Series([1, 2, 3, 4, 4.5, nan, 5], name=feature.version)
     feature_version, list_feature = transform_quantitative_feature(
         feature, df_feature, len(df_feature)
     )
     assert feature_version == feature.version
-
-    print(list_feature)
-    print(feature.label_per_value)
-    print(feature)
     assert [
         "x <= 2.0e+00",
         "x <= 2.0e+00",
         "2.0e+00 < x <= 4.5e+00",
         "2.0e+00 < x <= 4.5e+00",
         "2.0e+00 < x <= 4.5e+00",
-        nan,
+        feature.nan,
         "4.5e+00 < x",
     ] == list_feature
 
-    # with values to group, with nan in df_feature and grouped nans
+    # with values to group, with nan in df_feature (grouped nans)
     feature = features[-1]
     feature.update(GroupedList([2, 4.5, inf]))
+    feature.has_nan = True
+    feature.dropna = True
+    feature.update(GroupedList({2: [2], 4.5: [4.5], inf: [inf, "__NAN__"]}))
+    print(feature.values.content)
 
     df_feature = Series([1, 2, 3, 4, 4.5, nan, 5], name=feature.version)
     feature_version, list_feature = transform_quantitative_feature(
         feature, df_feature, len(df_feature)
     )
     assert feature_version == feature.version
-
-    print(list_feature)
-    print(feature.label_per_value)
-    print(feature)
     assert [
         "x <= 2.0e+00",
         "x <= 2.0e+00",
         "2.0e+00 < x <= 4.5e+00",
         "2.0e+00 < x <= 4.5e+00",
         "2.0e+00 < x <= 4.5e+00",
-        nan,
+        "4.5e+00 < x",
         "4.5e+00 < x",
     ] == list_feature
-    assert False
+
+    # with values to group, with feature.nan in df_feature (grouped nans)
+    feature = features[-1]
+    feature.has_nan = True
+    feature.dropna = True
+    feature.update(GroupedList({2: [2], 4.5: [4.5], inf: [inf, "__NAN__"]}), replace=True)
+    print(feature.values.content)
+
+    df_feature = Series([1, 2, 3, 4, 4.5, "__NAN__", 5], name=feature.version)
+    feature_version, list_feature = transform_quantitative_feature(
+        feature, df_feature, len(df_feature)
+    )
+    assert feature_version == feature.version
+    assert [
+        "x <= 2.0e+00",
+        "x <= 2.0e+00",
+        "2.0e+00 < x <= 4.5e+00",
+        "2.0e+00 < x <= 4.5e+00",
+        "2.0e+00 < x <= 4.5e+00",
+        "4.5e+00 < x",
+        "4.5e+00 < x",
+    ] == list_feature
 
 
 def test_init(features: Features, true_false: bool) -> None:

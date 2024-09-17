@@ -51,7 +51,6 @@ class CategoricalDiscretizer(BaseDiscretizer):
         """
         # Initiating BaseDiscretizer
         super().__init__(categoricals, **kwargs)
-        self.min_freq = min_freq
 
     def _prepare_data(self, X: DataFrame, y: Series) -> DataFrame:  # pylint: disable=W0222
         """Validates format and content of X and y.
