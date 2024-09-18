@@ -296,7 +296,7 @@ class Features:
             else:
                 feature.fit(X, y)
 
-    def fillna(self, X: DataFrame) -> DataFrame:
+    def fillna(self, X: DataFrame, ignore_dropna: bool = False) -> DataFrame:
         """fills nans of a DataFrame"""
 
         # fills features with nans when dropna is True
@@ -304,7 +304,7 @@ class Features:
             {
                 feature.version: feature.nan
                 for feature in self
-                if feature.has_nan and feature.dropna
+                if feature.has_nan and (feature.dropna or ignore_dropna)
             },
             inplace=True,
         )

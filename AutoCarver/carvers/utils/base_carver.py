@@ -207,11 +207,11 @@ class BaseCarver(BaseDiscretizer):
         self.features.keep(discretizer.features.versions)
 
         # setting up features to convert nans to feature.nan (drop nans)
-        self.features.dropna = True
+        # self.features.dropna = True
 
         # filling up nans
-        x_copy = self.features.fillna(x_copy)
-        x_dev_copy = self.features.fillna(x_dev_copy)
+        x_copy = self.features.fillna(x_copy, ignore_dropna=True)
+        x_dev_copy = self.features.fillna(x_dev_copy, ignore_dropna=True)
 
         return x_copy, x_dev_copy
 
@@ -271,7 +271,7 @@ class BaseCarver(BaseDiscretizer):
                 print("---\n")
 
         # setting dropna according to user request
-        self.features.dropna = self.dropna
+        # self.features.dropna = self.dropna
 
         # discretizing features based on each feature's values_order
         super().fit(X, y)

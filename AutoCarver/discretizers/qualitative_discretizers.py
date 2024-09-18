@@ -88,49 +88,56 @@ class CategoricalDiscretizer(BaseDiscretizer):
         self._verbose()  # verbose if requested
 
         # grouping modalities less frequent than min_freq into feature.default
-        x_copy = self._group_defaults(x_copy)
+        x_copy = self._group_rare_modalities(x_copy)
 
         # sorting features' values by target rate
         self._target_sort(x_copy, y)
-        self.features.fit(x_copy)
 
         # discretizing features based on each feature's values_order
         super().fit(X, y)
 
         return self
 
-    def _group_defaults(self, X: DataFrame) -> DataFrame:
+    def _group_feature_rare_modalities(
+        self, feature: CategoricalFeature, X: DataFrame, frequencies: DataFrame
+    ) -> DataFrame:
+        """Groups modalities less frequent than min_freq into feature.default"""
+
+        # checking for rare values
+        values_to_group = [
+            value
+            for value, freq in frequencies[feature.version].items()
+            if freq < self.min_freq and value != feature.nan and notna(value)
+        ]
+
+        # checking for completly missing values (no frequency observed in X)
+        missing_values = [
+            value for value in feature.values if value not in frequencies[feature.version]
+        ]
+        if len(missing_values) > 0:
+            raise ValueError(f"[{self.__name__}] Unexpected values {missing_values} for {feature}.")
+
+        # grouping values to str_default if any
+        if any(values_to_group):
+            # adding default value to the order
+            feature.has_default = True
+
+            # grouping rare values in default value
+            feature.group(values_to_group, feature.default)
+            X.loc[X[feature.version].isin(values_to_group), feature.version] = feature.default
+
+        return X
+
+    def _group_rare_modalities(self, X: DataFrame) -> DataFrame:
         """Groups modalities less frequent than min_freq into feature.default"""
 
         # computing frequencies of each modality
         frequencies = X[self.features.versions].apply(series_value_counts, axis=0)
+        print("frequencies", frequencies)
 
-        # iterating over each feature
+        # grouping rare modalities for each feature
         for feature in self.features:
-            # checking for rare values
-            values_to_group = [
-                value
-                for value, freq in frequencies[feature.version].items()
-                if freq < self.min_freq and value != feature.nan and notna(value)
-            ]
-
-            # checking for completly missing values (no frequency observed in X)
-            missing_values = [
-                value for value in feature.values if value not in frequencies[feature.version]
-            ]
-            if len(missing_values) > 0:
-                raise ValueError(
-                    f"[{self.__name__}] Unexpected values {missing_values} for {feature}."
-                )
-
-            # grouping values to str_default if any
-            if any(values_to_group):
-                # adding default value to the order
-                feature.has_default = True
-
-                # grouping rare values in default value
-                feature.group(values_to_group, feature.default)
-                X.loc[X[feature.version].isin(values_to_group), feature.version] = feature.default
+            X = self._group_feature_rare_modalities(feature, X, frequencies)
 
         return X
 
@@ -221,7 +228,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
         self.features.fit(x_copy, y)
 
         # filling up nans for features that have some
-        x_copy = self.features.fillna(x_copy)
+        x_copy = self.features.fillna(x_copy, ignore_dropna=True)
 
         return x_copy
 
@@ -406,7 +413,7 @@ class ChainedDiscretizer(BaseDiscretizer):
         self.features.fit(x_copy, y)
 
         # filling up nans for features that have some
-        x_copy = self.features.fillna(x_copy)
+        x_copy = self.features.fillna(x_copy, ignore_dropna=True)
 
         # checking for unexpected values
         self.features.check_values(x_copy)

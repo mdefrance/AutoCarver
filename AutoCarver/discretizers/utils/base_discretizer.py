@@ -229,7 +229,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
                 self._prepare_y(y)
 
                 # checking for matching indices
-                if not all(y.index == X.index):
+                if not len(y.index) == len(X.index) or not all(y.index == X.index):
                     raise ValueError(f"[{self.__name__}] X and y must have the same indices.")
 
             return x_copy
