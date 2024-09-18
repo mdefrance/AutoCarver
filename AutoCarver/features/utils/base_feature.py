@@ -194,7 +194,7 @@ class BaseFeature(ABC):
             # udpating value_per_label
             self.value_per_label.update({label: value})
 
-        self._labels = values[:]
+        self._labels = list(values)
 
     @abstractmethod
     def make_labels(self) -> GroupedList:

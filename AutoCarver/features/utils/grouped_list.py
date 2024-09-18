@@ -77,6 +77,30 @@ class GroupedList(list):
             # initiating the values with the provided list of keys
             self.content = {v: [v] for v in iterable}
 
+    # def __getitem__(self, key):
+    #     """Returns the value content in the key
+
+    #     Parameters
+    #     ----------
+    #     key : Any
+    #         Key to search for
+
+    #     Returns
+    #     -------
+    #     list[Any]
+    #         Values content in key
+
+    #     Raises
+    #     ------
+    #     KeyError
+    #         If key is not found in Group
+    #     """
+
+    #     if key in self.content:
+    #         return self.content[key]
+
+    #     raise KeyError(f"Key {key} not found in GroupedList")
+
     @property
     def values(self) -> list[str]:
         """All values content in all groups

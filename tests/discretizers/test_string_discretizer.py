@@ -1,137 +1,86 @@
 """Set of tests for quantitative_discretizers module."""
 
-from pandas import DataFrame
+from numpy import nan
+from pandas import DataFrame, Series
 
-from AutoCarver.discretizers import StringDiscretizer
-from AutoCarver.features import Features
+from AutoCarver.features import CategoricalFeature, OrdinalFeature, Features
+from AutoCarver.discretizers.utils.type_discretizers import fit_feature, StringDiscretizer
 
 
-def test_string_discretizer(x_train: DataFrame) -> None:
-    """Tests StringDiscretizer
+def test_fit_feature() -> None:
+    """test string discretizer fitting feature"""
 
-    Parameters
-    ----------
-    x_train : DataFrame
-        Simulated Train DataFrame
-    """
+    # without existing values
+    feature = CategoricalFeature("feature1")
+    df_feature = Series(["1", "2", 3.0, 3.1, 4, "6", nan, "6", 1, 2])
 
-    categoricals = [
-        "Qualitative",
-        "Qualitative_grouped",
-        "Qualitative_lownan",
-        "Qualitative_highnan",
-        "Discrete_Qualitative_noorder",
-        "Discrete_Qualitative_lownan_noorder",
-        "Discrete_Qualitative_rarevalue_noorder",
+    version, order = fit_feature(feature, df_feature)
+
+    assert version == feature.version
+    assert order == ["6", "1", "2", "3", "3.1", "4"]
+    assert order.content["6"] == ["6"]
+    assert order.content["1"] == [1, "1"]
+    assert order.content["2"] == [2, "2"]
+    assert order.content["3"] == [3.0, "3"]
+    assert order.content["3.1"] == [3.1, "3.1"]
+    assert order.content["4"] == [4, "4"]
+
+    # with existing values
+    feature = OrdinalFeature("feature2", values=["1", "2", "3"])
+    df_feature = Series(["1", "2", 3, 2.0, 1, nan])
+
+    version, order = fit_feature(feature, df_feature)
+
+    assert version == feature.version
+    assert order == ["1", "2", "3"]
+    assert order.content["1"] == [1, "1"]
+    assert order.content["2"] == [2, "2"]
+    assert order.content["3"] == [3, "3"]
+
+
+def test_stringdiscretizer_initialization() -> None:
+    """Tests the initialization of the StringDiscretizer class"""
+    feature1 = CategoricalFeature("feature1")
+    feature2 = OrdinalFeature("feature2", values=["1", "2", "3"])
+    string_discretizer = StringDiscretizer([feature1, feature2])
+    assert isinstance(string_discretizer.features, Features)
+    assert string_discretizer.features["feature2"].values == ["1", "2", "3"]
+
+
+def test_stringdiscretizer_fit() -> None:
+    """Tests the fit method of the StringDiscretizer class"""
+    feature1 = CategoricalFeature("feature1")
+    feature2 = OrdinalFeature("feature2", values=["1", "2", "3"])
+    string_discretizer = StringDiscretizer([feature1, feature2])
+
+    X = DataFrame(
+        {
+            "feature1": ["1", "2", 3.0, 3.1, 4, "6", nan, "6", 1, 2],
+            "feature2": ["1", "2", 3, 2.0, 1, nan, nan, "1", "2", "3"],
+        }
+    )
+
+    # fitting the string discretizer
+    string_discretizer.fit(X)
+
+    assert string_discretizer.features["feature1"].values == ["6", "1", "2", "3", "3.1", "4"]
+    assert string_discretizer.features["feature2"].values == ["1", "2", "3"]
+    assert string_discretizer.features["feature1"].is_fitted
+    assert string_discretizer.features["feature2"].is_fitted
+
+    # transforming X
+    transformed_x = string_discretizer.transform(X)
+
+    assert transformed_x["feature1"].tolist() == [
+        "1",
+        "2",
+        "3",
+        "3.1",
+        "4",
+        "6",
+        nan,
+        "6",
+        "1",
+        "2",
     ]
-    ordinals = ["Qualitative_Ordinal", "Qualitative_Ordinal_lownan", "Discrete_Qualitative_highnan"]
-    ordinal_values = {
-        "Qualitative_Ordinal": [
-            "Low-",
-            "Low",
-            "Low+",
-            "Medium-",
-            "Medium",
-            "Medium+",
-            "High-",
-            "High",
-            "High+",
-        ],
-        "Qualitative_Ordinal_lownan": [
-            "Low-",
-            "Low",
-            "Low+",
-            "Medium-",
-            "Medium",
-            "Medium+",
-            "High-",
-            "High",
-            "High+",
-        ],
-        "Discrete_Qualitative_highnan": ["1", "2", "3", "4", "5", "6", "7"],
-    }
-    features = Features(categoricals=categoricals, ordinals=ordinals, ordinal_values=ordinal_values)
-
-    discretizer = StringDiscretizer(features=features)
-    _ = discretizer.fit_transform(x_train)
-
-    expected = {
-        "2": [2, "2"],
-        "4": [4, "4"],
-        "3": [3, "3"],
-        "7": [7, "7"],
-        "1": [1, "1"],
-        "5": [5, "5"],
-        "6": [6, "6"],
-    }
-    assert (
-        features("Discrete_Qualitative_noorder").content == expected
-    ), "Not correctly converted for qualitative with integers"
-
-    expected = {
-        "2": [2.0, "2"],
-        "4": [4.0, "4"],
-        "3": [3.0, "3"],
-        "1": [1.0, "1"],
-        "5": [5.0, "5"],
-        "6": [6.0, "6"],
-    }
-    assert (
-        features("Discrete_Qualitative_lownan_noorder").content == expected
-    ), "Not correctly converted for qualitative with integers and nans"
-
-    expected = {
-        "2": [2.0, "2"],
-        "4": [4.0, "4"],
-        "3": [3.0, "3"],
-        "0.5": [0.5, "0.5"],
-        "1": [1.0, "1"],
-        "5": [5.0, "5"],
-        "6": [6.0, "6"],
-    }
-    assert (
-        features("Discrete_Qualitative_rarevalue_noorder").content == expected
-    ), "Not correctly converted for qualitative with integers and floats"
-
-    expected = {
-        "Low-": ["Low-"],
-        "Low": ["Low"],
-        "Low+": ["Low+"],
-        "Medium-": ["Medium-"],
-        "Medium": ["Medium"],
-        "Medium+": ["Medium+"],
-        "High-": ["High-"],
-        "High": ["High"],
-        "High+": ["High+"],
-    }
-    assert (
-        features("Qualitative_Ordinal_lownan").content == expected
-    ), "No conversion for already string features"
-
-    expected = {
-        "Low-": ["Low-"],
-        "Low": ["Low"],
-        "Low+": ["Low+"],
-        "Medium-": ["Medium-"],
-        "Medium": ["Medium"],
-        "Medium+": ["Medium+"],
-        "High-": ["High-"],
-        "High": ["High"],
-        "High+": ["High+"],
-    }
-    assert (
-        features("Qualitative_Ordinal").content == expected
-    ), "No conversion for not specified featues"
-
-    expected = {
-        "1": ["1"],
-        "2": [2.0, "2"],
-        "3": [3.0, "3"],
-        "4": [4.0, "4"],
-        "5": [5.0, "5"],
-        "6": [6.0, "6"],
-        "7": [7.0, "7"],
-    }
-    assert (
-        features("Discrete_Qualitative_highnan").content == expected
-    ), "Original order should be kept for ordinal features"
+    assert transformed_x["feature2"].tolist() == ["1", "2", "3", "2", "1", nan, nan, "1", "2", "3"]

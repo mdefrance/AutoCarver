@@ -71,17 +71,20 @@ def fit_feature(feature: BaseFeature, df_feature: Series):
 
     # formatting values
     for value in unique_values:
+
         # case 0: the value is an integer
         if isinstance(value, float) and float.is_integer(value):
             str_value = str(int(value))  # converting value to string
+
         # case 1: converting to string
         else:
             str_value = str(value)
 
-        # adding missing str_value to the order
+        # adding missing str_value to the order (for provided orders)
         if str_value not in order:
             order.append(str_value)
-        # adding float/int values to the order
+
+        # adding float/int values to the order (for provided orders)
         if value not in order:
             order.append(value)
 

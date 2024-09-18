@@ -186,6 +186,8 @@ class QualitativeFeature(BaseFeature):
             # removing ints
             and not isinstance(value, integer) and not isinstance(value, int)
         ]
+        # removing duplicates
+        ordered_content = list(dict.fromkeys(ordered_content))
 
         # building label from ordered content
         if len(ordered_content) == 0:
