@@ -190,19 +190,9 @@ class OrdinalDiscretizer(BaseDiscretizer):
 
             **Tip**: should be set between ``0.02`` (slower, preciser, less robust) and ``0.05``
             (faster, more robust)
-
-        input_dtypes : Union[str, dict[str, str]], optional
-            Input data type, converted to a dict of the provided type for each feature,
-            by default ``"str"``
-
-            * ``"str"``, features are considered as qualitative.
-            * ``'float"``, features are considered as quantitative.
         """
         # Initiating BaseDiscretizer
-        super().__init__(ordinals, **kwargs)
-
-        # class specific attributes
-        self.min_freq = min_freq
+        super().__init__(ordinals, **dict(kwargs, min_freq=min_freq))
 
     def _prepare_data(self, X: DataFrame, y: Series) -> DataFrame:  # pylint: disable=W0222
         """Validates format and content of X and y.
@@ -228,7 +218,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
         self.features.fit(x_copy, y)
 
         # filling up nans for features that have some
-        x_copy = self.features.fillna(x_copy, ignore_dropna=True)
+        x_copy = self.features.fillna(x_copy)
 
         return x_copy
 
