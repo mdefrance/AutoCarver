@@ -1,12 +1,14 @@
 """ Loads Discretization tools."""
 
-from .discretizers import Discretizer, QualitativeDiscretizer, QuantitativeDiscretizer
-
-# from .utils.grouped_list import GroupedList
-from .qualitative_discretizers import CategoricalDiscretizer, ChainedDiscretizer, OrdinalDiscretizer
-from .quantitative_discretizers import ContinuousDiscretizer
-from .utils.base_discretizer import BaseDiscretizer
-from .utils.type_discretizers import StringDiscretizer
+from .discretizer import Discretizer
+from .qualitatives import (
+    QualitativeDiscretizer,
+    CategoricalDiscretizer,
+    ChainedDiscretizer,
+    OrdinalDiscretizer,
+)
+from .quantitatives import QuantitativeDiscretizer, ContinuousDiscretizer
+from .utils import BaseDiscretizer, StringDiscretizer
 
 __all__ = [
     "BaseDiscretizer",

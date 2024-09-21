@@ -4,7 +4,7 @@ from numpy import nan
 from pandas import DataFrame, Series
 from pytest import raises
 
-from AutoCarver.discretizers.qualitative_discretizers import (
+from AutoCarver.discretizers.qualitatives.categorical_discretizer import (
     CategoricalDiscretizer,
     series_value_counts,
     series_target_rate,
