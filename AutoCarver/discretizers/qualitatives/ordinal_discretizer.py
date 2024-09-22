@@ -2,11 +2,8 @@
 for a binary classification model.
 """
 
-from typing import Union
-
-import numpy as np
-from numpy import argmin
-from pandas import DataFrame, Series, isna
+from numpy import argmin, array, arange, vstack, nan_to_num
+from pandas import DataFrame, Series, notna
 
 from ...features import GroupedList, OrdinalFeature
 from ...utils import extend_docstring
@@ -85,7 +82,9 @@ class OrdinalDiscretizer(BaseDiscretizer):
     def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
         # checking values orders
         x_copy = self._prepare_data(X, y)
-        self._verbose()  # verbose if requested
+
+        # verbose if requested
+        self._verbose()
 
         # grouping rare modalities for each feature
         common_modalities = {
@@ -93,7 +92,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
                 x_copy[feature.version],
                 y,
                 min_freq=self.min_freq,
-                order=[label for label in feature.labels if label != feature.nan],
+                labels=[label for label in feature.labels if label != feature.nan],
             )
             for feature in self.features
         }
@@ -108,32 +107,19 @@ class OrdinalDiscretizer(BaseDiscretizer):
 
 
 def find_common_modalities(
-    df_feature: Series,
-    y: Series,
-    min_freq: float,
-    order: list[str],
-) -> dict[str, Union[str, float]]:
+    df_feature: Series, y: Series, min_freq: float, labels: list[str]
+) -> GroupedList:
     """finds common modalities of a ordinal feature"""
-    # making a groupedlist of ordered labels
-    order = GroupedList(order)
 
-    # total size
-    len_df = len(df_feature)
+    # converting to grouped list
+    labels = GroupedList(labels)
 
     # computing frequencies and target rate of each modality
-    not_nans = ~isna(df_feature)  # pylint: disable=E1130
-    stats = np.vstack(
-        (
-            df_feature[not_nans]
-            .value_counts(dropna=False, normalize=False)
-            .reindex(order, fill_value=0)
-            .values,
-            y[not_nans].groupby(df_feature[not_nans]).sum().reindex(order).values,
-        )
-    )
+    stats, len_df = compute_stats(df_feature, y, labels)
 
-    # case 2.1: there are underrepresented modalities/values
+    # case 1: there are underrepresented modalities/values
     while any(stats[0, :] / len_df < min_freq) & (stats.shape[1] > 1):
+
         # identifying the underrepresented value
         discarded_idx = argmin(stats[0, :])
 
@@ -145,23 +131,61 @@ def find_common_modalities(
             min_freq,
         )
 
-        # removing the value from the initial ordering
-        order.group(order[discarded_idx], order[kept_idx])
+        # grouping discarded idx with kept idx
+        print(f"Grouping {labels[discarded_idx]} with {labels[kept_idx]}")
+        labels.group(labels[discarded_idx], labels[kept_idx])
 
-        # adding up grouped frequencies and target counts
-        stats[:, kept_idx] += stats[:, discarded_idx]
+        # updating stats accordingly
+        stats = update_stats(stats, discarded_idx, kept_idx)
 
-        # removing discarded modality
-        stats = stats[:, np.arange(stats.shape[1]) != discarded_idx]
+    # case 2 : no underrepresented value
+    return labels
 
-    # case 2.2 : no underrepresented value
-    return order
+
+def update_stats(stats: array, discarded_idx: int, kept_idx: int) -> array:
+    """Updates frequencies and target rates after grouping two modalities"""
+
+    # adding up grouped frequencies and target counts
+    stats[:, kept_idx] += nan_to_num(stats[:, discarded_idx], nan=0)
+
+    # removing discarded modality
+    return stats[:, arange(stats.shape[1]) != discarded_idx]
+
+
+def compute_stats(df_feature: Series, y: Series, labels: GroupedList) -> tuple[array, int]:
+    """Computes frequencies and target rates of each modality"""
+
+    # filtering nans
+    not_nans = notna(df_feature)
+
+    # total size
+    len_df = len(df_feature)
+
+    # computing frequencies and target rates
+    stats = vstack(
+        (
+            # frequencies
+            df_feature[not_nans]
+            .value_counts(dropna=False, normalize=False)
+            .reindex(labels, fill_value=0)
+            .values,
+            # target rates
+            y[not_nans].groupby(df_feature[not_nans]).sum().reindex(labels).values,
+        )
+    )
+
+    return stats, len_df
 
 
 def find_closest_modality(
-    idx: int, frequencies: np.array, target_rates: np.array, min_freq: float
+    idx: int, frequencies: array, target_rates: array, min_freq: float
 ) -> int:
     """Finds the closest modality in terms of frequency and target rate"""
+
+    # case 0: only one modality
+    if frequencies.shape[0] == 1:
+        return 0
+
     # case 1: lowest ranked modality
     if idx == 0:
         return 1
@@ -170,44 +194,58 @@ def find_closest_modality(
     if idx == frequencies.shape[0] - 1:
         return idx - 1
 
-    # case 3: modality ranked in the middle
-    # modalities frequencies and target rates
-    (
-        (previous_freq, current_freq, next_freq),
-        (previous_target, current_target, next_target),
-        idx_closest_modality,
-    ) = (
-        frequencies[idx - 1 : idx + 2],
-        target_rates[idx - 1 : idx + 2],
-        idx - 1,
-    )  # by default previous value
+    # Initialize closest modality index to previous modality by default
+    idx_closest_modality = idx - 1
 
-    # cases when idx + 1 is the closest
-    if (
-        # case 1: next modality is the only below min_freq -> underrepresented
-        (next_freq < min_freq <= previous_freq)
-        or (
-            (
-                # case 2: both are below min_freq
-                ((next_freq < min_freq) and (previous_freq < min_freq))
-                or
-                # case 3: both are above min_freq -> representative modalities
-                ((next_freq >= min_freq) and (previous_freq >= min_freq))
-            )
-            and (
-                # no target to differentiate -> least frequent modality
-                ((current_freq == 0) and (next_freq < previous_freq))
-                or
-                # differentiate by target -> closest target rate
-                (
-                    (current_target > 0)
-                    and (abs(previous_target - current_target) > abs(next_target - current_target))
-                )
-            )
-        )
-    ):
-        # identifying smallest modality in terms of frequency
+    # checking if next modality is closer
+    if is_next_modality_closer(idx, frequencies, target_rates, min_freq):
         idx_closest_modality = idx + 1
 
     # finding the closest value
     return idx_closest_modality
+
+
+def is_next_modality_closer(
+    idx: int, frequencies: array, target_rates: array, min_freq: float
+) -> bool:
+    """Determines if the next modality is closer than the previous to the current one"""
+
+    # Extract relevant frequencies and target rates
+    previous_freq, current_freq, next_freq = frequencies[idx - 1 : idx + 2]
+
+    # comparing frequencies to min_freq
+    both_below_min_freq = (next_freq < min_freq) and (previous_freq < min_freq)
+    both_above_min_freq = (next_freq >= min_freq) and (previous_freq >= min_freq)
+
+    # Initialize closest modality index to previous modality by default
+    closer_next_modality = False
+
+    # case 1: no observation to differentiate by target rate -> least frequent modality is choosen
+    if current_freq == 0:
+        closer_next_modality = next_freq < previous_freq
+
+    # case 2: next modality is the only below min_freq -> underrepresented modality is choosen
+    elif next_freq < min_freq <= previous_freq:
+        closer_next_modality = True
+
+    # case 3: both are below or above min_freq -> closest modality by target rate
+    elif both_below_min_freq or both_above_min_freq:
+        print("both_below_min_freq or both_above_min_freq")
+        closer_next_modality = is_next_modality_closer_by_target_rate(idx, target_rates)
+
+    return closer_next_modality
+
+
+def is_next_modality_closer_by_target_rate(idx: int, target_rates: array) -> bool:
+    """Determines if the next modality is closer in terms of target rate than the previous to the
+    current one"""
+
+    # Extract relevant frequencies and target rates
+    previous_target, current_target, next_target = target_rates[idx - 1 : idx + 2]
+
+    # absolute difference is less for the next modality
+    if abs(previous_target - current_target) > abs(next_target - current_target):
+        return True
+
+    # absolute difference is less for the previous modality
+    return False
