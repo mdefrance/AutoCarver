@@ -165,8 +165,7 @@ def np_find_quantiles(
     # frequencies per known value
     values, frequencies = unique(df_feature, return_counts=True)
 
-    # case 3 : there are no missing values
-    # case 3.1 : there is an over-populated value
+    # case 2 : there is an over-populated value
     if any(frequencies >= len_df / q):
         # identifying over-represented modality
         frequent_values = values[frequencies >= len_df / q]
@@ -181,22 +180,31 @@ def np_find_quantiles(
         # adding over-represented modality to the list of quantiles
         return quantiles + list(frequent_values)
 
-    # case 3.2 : there is no over-populated value
-    # reducing the size of quantiles by frequencies of over-represented modalities
-    new_q = round(len(df_feature) / len_df * q)
-
-    # cutting values into quantiles if there are enough of them
-    if new_q > 1:
-        quantiles += list(
-            quantile(
-                df_feature,
-                linspace(0, 1, new_q + 1)[1:-1],
-                method="lower",
-            )
-        )
-
-    # not enough values observed, grouping all remaining values into a quantile
-    else:
-        quantiles += [max(df_feature)]
+    # case 3 : there is no over-populated value -> computing quantiles
+    quantiles += compute_quantiles(df_feature, q, len_df)
 
     return quantiles
+
+
+def compute_quantiles(df_feature: array, q: int, len_df: int) -> list[float]:
+    """Computes quantiles of a Series."""
+
+    # getting quantiles needed
+    quantiles_needed = get_needed_quantiles(df_feature, q, len_df)
+
+    # cutting values into quantiles if there are enough values remaining
+    if len(quantiles_needed) > 0:
+        return list(quantile(df_feature, quantiles_needed, method="lower"))
+
+    # not enough values remaining, grouping all remaining values into one quantile
+    return [max(df_feature)]
+
+
+def get_needed_quantiles(df_feature: array, q: int, len_df: int) -> list[float]:
+    """Computes list of indices of quantiles needed."""
+
+    # updating number of quantiles taking into account identified over-represented modalities
+    new_q = round(len(df_feature) / len_df * q)
+
+    # list of quantiles needed
+    return linspace(0, 1, new_q + 1)[1:-1]

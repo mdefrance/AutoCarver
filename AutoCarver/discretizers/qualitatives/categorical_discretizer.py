@@ -148,7 +148,6 @@ class CategoricalDiscretizer(BaseDiscretizer):
             {feature: list(sorted_values) for feature, sorted_values in target_rates.items()},
             sorted_values=True,
         )
-        print({feature: list(sorted_values) for feature, sorted_values in target_rates.items()})
 
 
 def series_target_rate(x: Series, y: Series, dropna: bool = True, ascending=True) -> dict:
