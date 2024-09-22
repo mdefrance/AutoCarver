@@ -62,7 +62,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
         # Initiating BaseDiscretizer
         super().__init__(qualitatives, **dict(kwargs, min_freq=min_freq))
 
-    def _prepare_X(self, X: DataFrame) -> DataFrame:
+    def _prepare_data(self, X: DataFrame, y: Series = None) -> DataFrame:
         """Validates format and content of X and y. Converts non-string columns into strings."""
         x_copy = super()._prepare_X(X)
 
@@ -95,19 +95,17 @@ class QualitativeDiscretizer(BaseDiscretizer):
         if len(self.features.ordinals) > 0:
             ordinal_discretizer = OrdinalDiscretizer(
                 ordinals=self.features.ordinals,
-                min_freq=self.min_freq,
-                **dict(self.kwargs, copy=False),
+                **dict(self.kwargs, min_freq=self.min_freq, copy=False),
             )
             ordinal_discretizer.fit(x_copy, y)
 
-        # [Qualitative non-ordinal features] Grouping rare values into str_default '__OTHER__'
+        # [Qualitative non-ordinal features] Grouping rare values into default '__OTHER__'
         if len(self.features.categoricals) > 0:
-            default_discretizer = CategoricalDiscretizer(
+            categorical_discretizer = CategoricalDiscretizer(
                 categoricals=self.features.categoricals,
-                min_freq=self.min_freq,
-                **dict(self.kwargs, copy=False),
+                **dict(self.kwargs, min_freq=self.min_freq, copy=False),
             )
-            default_discretizer.fit(x_copy, y)
+            categorical_discretizer.fit(x_copy, y)
 
         # discretizing features based on each feature's values_order
         super().fit(X, y)

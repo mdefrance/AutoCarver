@@ -141,12 +141,14 @@ class CategoricalDiscretizer(BaseDiscretizer):
 
         # computing target rate per modality for ordering
         target_rates = X[self.features.versions].apply(series_target_rate, y=y, axis=0)
+        print(target_rates)
 
         # sorting features' values based on target rates
         self.features.update(
             {feature: list(sorted_values) for feature, sorted_values in target_rates.items()},
             sorted_values=True,
         )
+        print({feature: list(sorted_values) for feature, sorted_values in target_rates.items()})
 
 
 def series_target_rate(x: Series, y: Series, dropna: bool = True, ascending=True) -> dict:
