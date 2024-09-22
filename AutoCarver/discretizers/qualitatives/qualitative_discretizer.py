@@ -8,7 +8,7 @@ from ...features import QualitativeFeature
 from ...utils import extend_docstring
 from .categorical_discretizer import CategoricalDiscretizer
 from .ordinal_discretizer import OrdinalDiscretizer
-from .chained_discretizer import check_dtypes, check_frequencies
+from .chained_discretizer import ensure_qualitative_dtypes, check_frequencies
 from ..utils.base_discretizer import BaseDiscretizer
 
 
@@ -70,7 +70,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
         check_frequencies(self.features, x_copy, self.min_freq, self.__name__)
 
         # converting non-str columns
-        x_copy = check_dtypes(self.features, x_copy, **self.kwargs)
+        x_copy = ensure_qualitative_dtypes(self.features, x_copy, **self.kwargs)
 
         return x_copy
 

@@ -84,7 +84,7 @@ class Features:
         if len(self.categoricals) == 0 and len(self.quantitatives) == 0 and len(self.ordinals) == 0:
             raise ValueError(
                 f"[{self}] No feature passed as input. Please provide column names"
-                "by setting categoricals, quantitatives or ordinals."
+                " by setting categoricals, quantitatives or ordinals."
             )
 
         # checking that qualitatitve and quantitative features are distinct

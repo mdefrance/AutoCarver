@@ -160,13 +160,13 @@ class ChainedDiscretizer(BaseDiscretizer):
         check_frequencies(self.features, x_copy, self.min_freq, self.__name__)
 
         # converting non-str columns
-        x_copy = check_dtypes(self.features, x_copy, **self.kwargs)
+        x_copy = ensure_qualitative_dtypes(self.features, x_copy, **self.kwargs)
 
         # fitting features
         self.features.fit(x_copy, y)
 
         # filling up nans for features that have some
-        x_copy = self.features.fillna(x_copy, ignore_dropna=True)
+        x_copy = self.features.fillna(x_copy)
 
         # checking for unexpected values
         self.features.check_values(x_copy)
@@ -243,7 +243,7 @@ def check_frequencies(features: Features, X: DataFrame, min_freq: float, name: s
 
     # raising
     if len(too_common + non_common) > 0:
-        
+
         # building error message
         error_msg = (
             f"[{name}] Features {str(too_common + non_common)} contain a too frequent modality "
@@ -273,7 +273,7 @@ def check_frequencies(features: Features, X: DataFrame, min_freq: float, name: s
         raise ValueError(error_msg)
 
 
-def check_dtypes(features: Features, X: DataFrame, **kwargs: dict) -> DataFrame:
+def ensure_qualitative_dtypes(features: Features, X: DataFrame, **kwargs: dict) -> DataFrame:
     """Checks features' data types and converts int/float to str"""
 
     # getting per feature data types
