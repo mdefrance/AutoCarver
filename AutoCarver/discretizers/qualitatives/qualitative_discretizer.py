@@ -4,7 +4,7 @@ for a binary classification model.
 
 from pandas import DataFrame, Series
 
-from ...features import CategoricalFeature
+from ...features import QualitativeFeature
 from ...utils import extend_docstring
 from .categorical_discretizer import CategoricalDiscretizer
 from .ordinal_discretizer import OrdinalDiscretizer
@@ -29,8 +29,8 @@ class QualitativeDiscretizer(BaseDiscretizer):
     @extend_docstring(BaseDiscretizer.__init__)
     def __init__(
         self,
+        qualitatives: list[QualitativeFeature],
         min_freq: float,
-        qualitatives: list[CategoricalFeature] = None,
         **kwargs: dict,
     ) -> None:
         """
@@ -59,28 +59,12 @@ class QualitativeDiscretizer(BaseDiscretizer):
             * If ``"str"``, features are considered as qualitative.
             * If ``"float"``, features are considered as quantitative.
         """
-        super().__init__(qualitatives, **kwargs)  # Initiating BaseDiscretizer
-        self.min_freq = min_freq  # minimum frequency per modality
+        # Initiating BaseDiscretizer
+        super().__init__(qualitatives, **dict(kwargs, min_freq=min_freq))
 
-    def _prepare_data(self, X: DataFrame, y: Series = None) -> DataFrame:
-        """Validates format and content of X and y. Converts non-string columns into strings.
-
-        Parameters
-        ----------
-        X : DataFrame
-            Dataset used to discretize. Needs to have columns has specified in
-            ``QualitativeDiscretizer.features``.
-
-        y : Series
-            Binary target feature with wich the association is maximized.
-
-        Returns
-        -------
-        DataFrame
-            A formatted copy of X
-        """
-        # checking for binary target, copying X
-        x_copy = super()._prepare_data(X, y)
+    def _prepare_X(self, X: DataFrame) -> DataFrame:
+        """Validates format and content of X and y. Converts non-string columns into strings."""
+        x_copy = super()._prepare_X(X)
 
         # checking feature values' frequencies
         check_frequencies(self.features, x_copy, self.min_freq, self.__name__)
@@ -92,17 +76,20 @@ class QualitativeDiscretizer(BaseDiscretizer):
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
-        self._verbose("------\n---")  # verbose if requested
+
+        # verbose if requested
+        self._verbose("------\n---")
 
         # checking data before bucketization
         x_copy = self._prepare_data(X, y)
 
         # Base discretization (useful if already discretized)
-        base_discretizer = BaseDiscretizer(
-            features=[feature for feature in self.features if feature.is_fitted],
-            **dict(self.kwargs, copy=True, dropna=False),
-        )
-        x_copy = base_discretizer.fit_transform(x_copy, y)
+        discretized_features = [feature for feature in self.features if feature.is_fitted]
+        if len(discretized_features) > 0:
+            base_discretizer = BaseDiscretizer(
+                features=discretized_features, **dict(self.kwargs, copy=True, dropna=False)
+            )
+            x_copy = base_discretizer.fit_transform(x_copy, y)
 
         # [Qualitative ordinal features] Grouping rare values into closest common one
         if len(self.features.ordinals) > 0:

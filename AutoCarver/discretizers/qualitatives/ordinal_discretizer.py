@@ -120,7 +120,7 @@ def find_common_modalities(
     # case 1: there are underrepresented modalities/values
     while any(stats[0, :] / len_df < min_freq) & (stats.shape[1] > 1):
 
-        # identifying the underrepresented value
+        # identifying the first underrepresented value
         discarded_idx = argmin(stats[0, :])
 
         # choosing amongst previous and next modality (by volume and target rate)
@@ -132,7 +132,6 @@ def find_common_modalities(
         )
 
         # grouping discarded idx with kept idx
-        print(f"Grouping {labels[discarded_idx]} with {labels[kept_idx]}")
         labels.group(labels[discarded_idx], labels[kept_idx])
 
         # updating stats accordingly
@@ -194,15 +193,12 @@ def find_closest_modality(
     if idx == frequencies.shape[0] - 1:
         return idx - 1
 
-    # Initialize closest modality index to previous modality by default
-    idx_closest_modality = idx - 1
-
     # checking if next modality is closer
     if is_next_modality_closer(idx, frequencies, target_rates, min_freq):
-        idx_closest_modality = idx + 1
+        return idx + 1
 
-    # finding the closest value
-    return idx_closest_modality
+    # by default closest modality is the previous one
+    return idx - 1
 
 
 def is_next_modality_closer(
@@ -217,23 +213,20 @@ def is_next_modality_closer(
     both_below_min_freq = (next_freq < min_freq) and (previous_freq < min_freq)
     both_above_min_freq = (next_freq >= min_freq) and (previous_freq >= min_freq)
 
-    # Initialize closest modality index to previous modality by default
-    closer_next_modality = False
-
     # case 1: no observation to differentiate by target rate -> least frequent modality is choosen
     if current_freq == 0:
-        closer_next_modality = next_freq < previous_freq
+        return next_freq < previous_freq
 
     # case 2: next modality is the only below min_freq -> underrepresented modality is choosen
     elif next_freq < min_freq <= previous_freq:
-        closer_next_modality = True
+        return True
 
     # case 3: both are below or above min_freq -> closest modality by target rate
     elif both_below_min_freq or both_above_min_freq:
-        print("both_below_min_freq or both_above_min_freq")
-        closer_next_modality = is_next_modality_closer_by_target_rate(idx, target_rates)
+        return is_next_modality_closer_by_target_rate(idx, target_rates)
 
-    return closer_next_modality
+    # by default closest modality is the previous one
+    return False
 
 
 def is_next_modality_closer_by_target_rate(idx: int, target_rates: array) -> bool:
