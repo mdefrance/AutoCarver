@@ -1,11 +1,78 @@
 """Set of tests for discretizers module."""
 
-from numpy import inf
-from pandas import DataFrame, notna
+from numpy import inf, nan
+from pandas import DataFrame, notna, Series
 
-from AutoCarver import Features
+from AutoCarver.features import Features, CategoricalFeature, QuantitativeFeature, OrdinalFeature
 from AutoCarver.config import DEFAULT
 from AutoCarver.discretizers import Discretizer
+
+
+def test_discretizer_initialization():
+    """Tests Discretizer initialization"""
+    feature1 = QuantitativeFeature("feature1")
+    feature2 = QuantitativeFeature("feature2")
+    feature3 = CategoricalFeature("feature3")
+    feature4 = OrdinalFeature("feature4", values=["a", "b", "c"])
+    features = Features(
+        quantitatives=[feature1, feature2], categoricals=[feature3], ordinals=[feature4]
+    )
+    min_freq = 0.05
+    discretizer = Discretizer(features=features, min_freq=min_freq)
+    assert discretizer.min_freq == min_freq
+    assert feature1 in discretizer.features
+    assert feature2 in discretizer.features
+    assert feature3 in discretizer.features
+    assert feature4 in discretizer.features
+    assert discretizer.features == features
+
+
+def test_discretizer_fit():
+    """Tests Discretizer fit method"""
+    feature1 = QuantitativeFeature("feature1")
+    feature2 = QuantitativeFeature("feature2")
+    feature3 = CategoricalFeature("feature3")
+    feature4 = OrdinalFeature("feature4", values=["a", "b"])
+    features = Features(
+        quantitatives=[feature1, feature2], categoricals=[feature3], ordinals=[feature4]
+    )
+    min_freq = 0.3
+    discretizer = Discretizer(features=features, min_freq=min_freq)
+
+    data = {
+        "feature1": [1, 2, 3, 4, 5],
+        "feature2": [5, 4, 3, nan, 1],
+        "feature4": ["a", "b", "a", "b", nan],
+        "feature3": [1, 4, 3, 4, nan],
+    }
+    df = DataFrame(data)
+    y = Series([0, 1, 0, 1, 0])
+
+    # fitting discretizer
+    transformed_df = discretizer.fit_transform(df, y)
+
+    print(transformed_df)
+
+    data = {
+        "feature1": [
+            "x <= 2.0e+00",
+            "x <= 2.0e+00",
+            "2.0e+00 < x <= 3.0e+00",
+            "3.0e+00 < x",
+            "3.0e+00 < x",
+        ],
+        "feature2": [
+            "3.0e+00 < x",
+            "3.0e+00 < x",
+            "x <= 3.0e+00",
+            nan,
+            "x <= 3.0e+00",
+        ],
+        "feature4": ["a", "b", "a", "b", nan],
+        "feature3": ["1, 3", "4", "1, 3", "4", nan],
+    }
+    expected = DataFrame(data)
+    assert transformed_df.equals(expected)
 
 
 def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):

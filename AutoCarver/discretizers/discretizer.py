@@ -65,24 +65,18 @@ class Discretizer(BaseDiscretizer):
         x_copy = self._prepare_data(X, y)
 
         # fitting quantitative features if any
-        kept_features = self._fit_quantitatives(x_copy, y)
+        self._fit_quantitatives(x_copy, y)
 
         # fitting qualitative features if any
-        kept_features += self._fit_qualitatives(x_copy, y)
-
-        # removing dropped features
-        self.features.keep(kept_features)
+        self._fit_qualitatives(x_copy, y)
 
         # discretizing features based on each feature's values_order
         super().fit(X, y)
 
         return self
 
-    def _fit_qualitatives(self, x_copy: DataFrame, y: Series) -> list[str]:
+    def _fit_qualitatives(self, x_copy: DataFrame, y: Series) -> None:
         """Fit the QualitativeDiscretizer on the qualitative features."""
-
-        # Keeping track of viable features
-        kept_features: list[str] = []
 
         # [Qualitative features] Grouping qualitative features
         if len(self.features.qualitatives) > 0:
@@ -93,16 +87,8 @@ class Discretizer(BaseDiscretizer):
             )
             qualitative_discretizer.fit(x_copy, y)
 
-            # saving kept features
-            kept_features += qualitative_discretizer.features.versions
-
-        return kept_features
-
-    def _fit_quantitatives(self, x_copy: DataFrame, y: Series) -> list[str]:
+    def _fit_quantitatives(self, x_copy: DataFrame, y: Series) -> None:
         """Fit the QuantitativeDiscretizer on the quantitative features."""
-
-        # Keeping track of viable features
-        kept_features: list[str] = []
 
         # [Quantitative features] Grouping quantitative features
         if len(self.features.quantitatives) > 0:
@@ -112,8 +98,3 @@ class Discretizer(BaseDiscretizer):
                 quantitatives=self.features.quantitatives, **dict(self.kwargs, copy=False)
             )
             quantitative_discretizer.fit(x_copy, y)
-
-            # saving kept features
-            kept_features += quantitative_discretizer.features.versions
-
-        return kept_features

@@ -675,3 +675,19 @@ def test_features_add_feature_versions(features):
 #     group = features.get_version_group("classA")
 #     assert isinstance(group, list)
 #     assert all(feature.version_tag == "classA" for feature in group)
+
+
+def test_features_init() -> None:
+    """Tests Features initialization"""
+
+    feature1 = QuantitativeFeature("feature1")
+    feature2 = QuantitativeFeature("feature2")
+    feature3 = CategoricalFeature("feature3")
+    feature4 = OrdinalFeature("feature4", values=["a", "b", "c"])
+    features = Features(
+        quantitatives=[feature1, feature2], categoricals=[feature3], ordinals=[feature4]
+    )
+    assert feature1 in features
+    assert feature2 in features
+    assert feature3 in features
+    assert feature4 in features
