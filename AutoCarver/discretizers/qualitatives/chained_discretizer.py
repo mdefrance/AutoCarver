@@ -177,7 +177,7 @@ class ChainedDiscretizer(BaseDiscretizer):
     def fit(self, X: DataFrame, y: Series = None) -> None:  # pylint: disable=W0222
         # preprocessing data
         x_copy = self._prepare_data(X, y)
-        self._verbose()  # verbose if requested
+        self.log_if_verbose()  # verbose if requested
 
         # iterating over each feature
         for feature in self.features:

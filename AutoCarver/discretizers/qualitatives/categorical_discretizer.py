@@ -80,7 +80,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
         # copying dataframe and checking data before bucketization
         x_copy = self._prepare_data(X, y)
 
-        self._verbose()  # verbose if requested
+        self.log_if_verbose()  # verbose if requested
 
         # grouping modalities less frequent than min_freq into feature.default
         x_copy = self._group_rare_modalities(x_copy)

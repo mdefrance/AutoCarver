@@ -13,6 +13,7 @@ from ...utils import get_bool_attribute
 from ...features import BaseFeature, Features
 from .multiprocessing import apply_async_function
 
+
 class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
     """Applies discretization using a dict of GroupedList to transform a DataFrame's columns."""
 
@@ -88,7 +89,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         self.copy = get_bool_attribute(kwargs, "copy", True)
         self.ordinal_encoding = get_bool_attribute(kwargs, "ordinal_encoding", False)
         self.dropna = get_bool_attribute(kwargs, "dropna", False)
-        self.verbose = get_bool_attribute(kwargs, "verbose", True)
+        self._verbose = get_bool_attribute(kwargs, "verbose", True)
 
         # setting number of jobs
         self.n_jobs = kwargs.get("n_jobs", 1)
@@ -107,6 +108,16 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         if len(str_features) > N_CHAR_MAX:
             str_features = str_features[:N_CHAR_MAX] + "..."
         return f"{self.__name__}({str_features})"
+
+    @property
+    def verbose(self) -> bool:
+        """Returns the verbose attribute"""
+        return self._verbose
+
+    @verbose.setter
+    def verbose(self, value: bool) -> None:
+        """Sets the verbose attribute"""
+        self._verbose = value
 
     def _remove_feature(self, feature: str) -> None:
         """Removes a feature from all ``BaseDiscretizer.feature`` attributes
@@ -374,7 +385,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         return X
 
-    def _verbose(self, prefix: str = " -") -> None:
+    def log_if_verbose(self, prefix: str = " -") -> None:
         """prints logs if requested"""
         if self.verbose:
             print(f"{prefix} [{self.__name__}] Fit {str(self.features)}")

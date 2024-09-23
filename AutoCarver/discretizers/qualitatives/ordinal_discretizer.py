@@ -84,7 +84,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
         x_copy = self._prepare_data(X, y)
 
         # verbose if requested
-        self._verbose()
+        self.log_if_verbose()
 
         # grouping rare modalities for each feature
         common_modalities = {

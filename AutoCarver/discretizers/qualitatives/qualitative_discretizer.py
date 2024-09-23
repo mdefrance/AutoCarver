@@ -77,7 +77,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
         # verbose if requested
-        self._verbose("------\n---")
+        self.log_if_verbose("------\n---")
 
         # checking data before bucketization
         x_copy = self._prepare_data(X, y)

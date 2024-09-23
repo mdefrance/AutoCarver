@@ -120,13 +120,15 @@ class BaseCarver(BaseDiscretizer):
             as long as ``pretty_print`` to turn off IPython
         """
 
-        self._verbose = get_bool_attribute(kwargs, "verbose", False)
-        self._pretty_print = get_bool_attribute(kwargs, "pretty_print", False)
-
         # Initiating BaseDiscretizer
         super().__init__(
             features,
-            **dict(kwargs, verbose=self.verbose, min_freq=min_freq, dropna=dropna),
+            **dict(
+                kwargs,
+                verbose=get_bool_attribute(kwargs, "verbose", False),
+                min_freq=min_freq,
+                dropna=dropna,
+            ),
         )
 
         # class specific attributes
@@ -139,30 +141,9 @@ class BaseCarver(BaseDiscretizer):
         self.tqdm = partial(tqdm, disable=not self.verbose)
 
     @property
-    def verbose(self) -> bool:
-        """Returns the verbose attribute"""
-        return max(self._verbose, self._pretty_print)
-
-    @property
     def pretty_print(self) -> bool:
         """Returns the pretty_print attribute"""
-
-        # pretty printing if requested
-        if self.verbose and get_bool_attribute(self.kwargs, "pretty_print", True):
-
-            # checking for installed dependencies
-            if _has_idisplay:
-                return True
-
-            # warning if not installed
-            warn(
-                "Package not found: IPython. Defaulting to raw verbose. "
-                "Install extra dependencies with pip install autocarver[jupyter]",
-                UserWarning,
-            )
-
-        # pretty printing not requested
-        return False
+        return _has_idisplay
 
     def _prepare_data(
         self,
