@@ -156,7 +156,6 @@ class QualitativeFeature(BaseFeature):
     @abstractmethod
     def _specific_formatting(self, ordered_content: list[str]) -> str:
         """specific label formatting"""
-        pass
 
     def _format_modalities(self, group: str, content: list[str]) -> list[str]:
         """Formats a list of float quantiles into a list of boundaries.

@@ -8,8 +8,7 @@ from pytest import FixtureRequest, fixture, raises
 
 from AutoCarver.discretizers.utils.base_discretizer import (
     BaseDiscretizer,
-    get_bool_attribute,
-    transform_quantitative_feature,
+    transform_quantitative_feature
 )
 from AutoCarver.features import (
     CategoricalFeature,
@@ -39,20 +38,6 @@ def features() -> Features:
 def true_false(request: FixtureRequest) -> bool:
     """true or false"""
     return request.param
-
-
-def test_get_bool_attribute() -> None:
-    """test get_bool_attribute checks"""
-
-    kwargs = {"true": True, "false": False, "wrong": "value"}
-    with raises(ValueError):
-        get_bool_attribute(kwargs, "wrong", True)
-    assert get_bool_attribute(kwargs, "true", True)
-    assert get_bool_attribute(kwargs, "true", False)
-    assert not get_bool_attribute(kwargs, "false", True)
-    assert not get_bool_attribute(kwargs, "false", False)
-    assert get_bool_attribute(kwargs, "missing", True)
-    assert not get_bool_attribute(kwargs, "missing", False)
 
 
 def test_transform_quantitative_feature(features: Features) -> None:

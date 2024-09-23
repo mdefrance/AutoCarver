@@ -35,7 +35,7 @@ class BaseMeasure(ABC):
 
     @abstractmethod
     def compute_association(self, x: Series, y: Series) -> float:
-        pass
+        """computes the measure of association between x and y"""
 
     @property
     def info(self) -> dict:
@@ -120,7 +120,7 @@ class OutlierMeasure(BaseMeasure):
 
     @abstractmethod
     def compute_association(self, x: Series, y: Series = None) -> float:
-        pass
+        """computes the measure of association between x and y"""
 
     def validate(self) -> bool:
         """checks if measured outlier rate is below specified threshold -> keep the feature

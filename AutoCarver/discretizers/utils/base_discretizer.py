@@ -9,22 +9,9 @@ from numpy import nan, select
 from pandas import DataFrame, Series
 from sklearn.base import BaseEstimator, TransformerMixin
 
+from ...utils import get_bool_attribute
 from ...features import BaseFeature, Features
 from .multiprocessing import apply_async_function
-
-
-def get_bool_attribute(kwargs: dict, attribute: str, default_value: bool) -> bool:
-    """returns value from kwargs whilst checking for bool type"""
-
-    # getting attribute value
-    value = kwargs.get(attribute, default_value)
-
-    # checking for correct type
-    if not isinstance(value, bool):
-        raise ValueError(f"{attribute} should be a bool, not {type(value)}")
-
-    return value
-
 
 class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
     """Applies discretization using a dict of GroupedList to transform a DataFrame's columns."""

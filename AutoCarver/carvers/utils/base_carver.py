@@ -12,6 +12,7 @@ from numpy import isclose
 from pandas import DataFrame, Series
 from tqdm.autonotebook import tqdm
 
+from ...utils import get_bool_attribute
 from ...discretizers import BaseDiscretizer, Discretizer
 from ...features import BaseFeature, Features, GroupedList
 from .combinations import (
@@ -119,40 +120,49 @@ class BaseCarver(BaseDiscretizer):
             as long as ``pretty_print`` to turn off IPython
         """
 
-        # adding correct verbose to kwargs
-        verbose = bool(max(kwargs.get("verbose", False), kwargs.get("pretty_print", False)))
-        kwargs.update(
-            {
-                "verbose": verbose,
-                "ordinal_encoding": kwargs.get("ordinal_encoding", True),
-            }
-        )
+        self._verbose = get_bool_attribute(kwargs, "verbose", False)
+        self._pretty_print = get_bool_attribute(kwargs, "pretty_print", False)
 
         # Initiating BaseDiscretizer
-        super().__init__(features, dropna=dropna, **kwargs)
+        super().__init__(
+            features,
+            **dict(kwargs, verbose=self.verbose, min_freq=min_freq, dropna=dropna),
+        )
 
         # class specific attributes
-        self.min_freq = min_freq  # minimum frequency per bucket
         self.max_n_mod = max_n_mod  # maximum number of modality per feature
-        self.discretizer_min_freq = kwargs.get("discretizer_min_freq")
-        if self.discretizer_min_freq is None:
-            self.discretizer_min_freq = self.min_freq / 2
         self.sort_by = sort_by  # metric used to sort feature combinations
-
-        # pretty printing if requested
-        self.pretty_print = False
-        if self.verbose and kwargs.get("pretty_print", True):
-            if _has_idisplay:  # checking for installed dependencies
-                self.pretty_print = True
-            else:
-                warn(
-                    "Package not found: IPython. Defaulting to raw verbose. "
-                    "Install extra dependencies with pip install autocarver[jupyter]",
-                    UserWarning,
-                )
+        # minimum frequency for discretizer
+        self.discretizer_min_freq = kwargs.get("discretizer_min_freq", self.min_freq / 2)
 
         # progress bar if requested
         self.tqdm = partial(tqdm, disable=not self.verbose)
+
+    @property
+    def verbose(self) -> bool:
+        """Returns the verbose attribute"""
+        return max(self._verbose, self._pretty_print)
+
+    @property
+    def pretty_print(self) -> bool:
+        """Returns the pretty_print attribute"""
+
+        # pretty printing if requested
+        if self.verbose and get_bool_attribute(self.kwargs, "pretty_print", True):
+
+            # checking for installed dependencies
+            if _has_idisplay:
+                return True
+
+            # warning if not installed
+            warn(
+                "Package not found: IPython. Defaulting to raw verbose. "
+                "Install extra dependencies with pip install autocarver[jupyter]",
+                UserWarning,
+            )
+
+        # pretty printing not requested
+        return False
 
     def _prepare_data(
         self,
@@ -193,18 +203,8 @@ class BaseCarver(BaseDiscretizer):
         x_copy = super()._prepare_data(X, y)
         x_dev_copy = super()._prepare_data(X_dev, y_dev)
 
-        # discretizing all features, always copying, to keep discretization from start to finish
-        discretizer = Discretizer(
-            self.discretizer_min_freq,
-            self.features,
-            **dict(self.kwargs, dropna=False, copy=True, ordinal_encoding=False),
-        )
-        x_copy = discretizer.fit_transform(x_copy, y)
-        if x_dev_copy is not None:  # applying on x_dev
-            x_dev_copy = discretizer.transform(x_dev_copy, y_dev)
-
-        # removing dropped features
-        self.features.keep(discretizer.features.versions)
+        # discretizing features according to min_freq
+        x_copy, x_dev_copy = self._discretize(x_copy, y, x_dev_copy, y_dev)
 
         # setting up features to convert nans to feature.nan (drop nans)
         # self.features.dropna = True
@@ -214,6 +214,30 @@ class BaseCarver(BaseDiscretizer):
         x_dev_copy = self.features.fillna(x_dev_copy, ignore_dropna=True)
 
         return x_copy, x_dev_copy
+
+    def _discretize(
+        self,
+        X: DataFrame,
+        y: Series,
+        X_dev: DataFrame = None,
+        y_dev: Series = None,
+    ) -> tuple[DataFrame, DataFrame]:
+        """Discretizes X and X_dev according to the frequency of each feature's modalities."""
+
+        # discretizing all features, always copying, to keep discretization from start to finish
+        discretizer = Discretizer(
+            self.discretizer_min_freq,
+            self.features,
+            **dict(self.kwargs, dropna=False, copy=True, ordinal_encoding=False),
+        )
+        # fitting discretizer on X
+        X = discretizer.fit_transform(X, y)
+
+        # applying discretizer on X_dev if provided
+        if X_dev is not None:
+            X_dev = discretizer.transform(X_dev, y_dev)
+
+        return X, X_dev
 
     def _combination_formatter(self, combination: list[list[str]]) -> dict[str, str]:
         """Attributes the first element of a group to all elements of a group"""
@@ -281,22 +305,18 @@ class BaseCarver(BaseDiscretizer):
     @abstractmethod
     def _aggregator(self, X: DataFrame, y: Series) -> Union[Series, DataFrame]:
         """Helper that aggregates X by y into crosstab or means (carver specific)"""
-        pass
 
     @abstractmethod
     def _association_measure(self, xagg: DataFrame, n_obs: int) -> Union[Series, DataFrame]:
         """Helper to measure association between X and y (carver specific)"""
-        pass
 
     @abstractmethod
     def _grouper(self, xagg: DataFrame, groupby: list[str]) -> DataFrame:
         """Helper to group XAGG's values by groupby (carver specific)"""
-        pass
 
     @abstractmethod
     def _printer(self, xagg: DataFrame = None) -> DataFrame:
         """helper to print an XAGG (carver specific)"""
-        pass
 
     def _carve_feature(
         self,
@@ -305,6 +325,7 @@ class BaseCarver(BaseDiscretizer):
         xaggs_dev: dict[str, Union[Series, DataFrame]],
     ) -> dict[str, GroupedList]:
         """Carves a feature into buckets that maximize association with the target"""
+
         # getting xtabs on train/test
         xagg = xaggs[feature.version]
         xagg_dev = xaggs_dev[feature.version]
@@ -380,8 +401,7 @@ class BaseCarver(BaseDiscretizer):
                 )
 
         # returning suitable combination
-        if best_association is not None:
-            return best_association
+        return best_association
 
     def _get_best_association(
         self,

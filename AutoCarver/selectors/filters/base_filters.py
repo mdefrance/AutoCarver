@@ -29,7 +29,7 @@ class BaseFilter(ABC):
 
     @abstractmethod
     def filter(self, X: DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:
-        pass
+        """filters out features from ranks"""
 
     def update_feature(
         self,
