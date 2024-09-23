@@ -1,17 +1,16 @@
 """Set of tests for qualitative_discretizers module."""
 
-from numpy import nan, isnan
+from numpy import isnan, nan
 from pandas import DataFrame
 from pytest import raises
 
-from AutoCarver.features import Features, OrdinalFeature, CategoricalFeature
 from AutoCarver.discretizers import ChainedDiscretizer
-
 from AutoCarver.discretizers.qualitatives.chained_discretizer import (
     ChainedDiscretizer,
-    ensure_qualitative_dtypes,
     check_frequencies,
+    ensure_qualitative_dtypes,
 )
+from AutoCarver.features import CategoricalFeature, Features, OrdinalFeature
 
 
 def test_check_frequencies_basic():

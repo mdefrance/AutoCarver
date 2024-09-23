@@ -6,10 +6,10 @@ from pandas import DataFrame, Series
 
 from ...features import QualitativeFeature
 from ...utils import extend_docstring
-from .categorical_discretizer import CategoricalDiscretizer
-from .ordinal_discretizer import OrdinalDiscretizer
-from .chained_discretizer import ensure_qualitative_dtypes, check_frequencies
 from ..utils.base_discretizer import BaseDiscretizer
+from .categorical_discretizer import CategoricalDiscretizer
+from .chained_discretizer import check_frequencies, ensure_qualitative_dtypes
+from .ordinal_discretizer import OrdinalDiscretizer
 
 
 class QualitativeDiscretizer(BaseDiscretizer):
@@ -76,7 +76,6 @@ class QualitativeDiscretizer(BaseDiscretizer):
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
-
         # verbose if requested
         self._verbose("------\n---")
 

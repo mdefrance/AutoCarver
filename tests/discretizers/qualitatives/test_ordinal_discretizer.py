@@ -1,20 +1,19 @@
 """Set of tests for qualitative_discretizers module."""
 
-from numpy import array, vstack, nan, isnan
+from numpy import array, isnan, nan, vstack
 from pandas import DataFrame, Series
 from pytest import raises
-from AutoCarver.features import Features, GroupedList, OrdinalFeature
-
 
 from AutoCarver.discretizers.qualitatives.ordinal_discretizer import (
     OrdinalDiscretizer,
+    compute_stats,
     find_closest_modality,
     find_common_modalities,
-    is_next_modality_closer_by_target_rate,
     is_next_modality_closer,
-    compute_stats,
+    is_next_modality_closer_by_target_rate,
     update_stats,
 )
+from AutoCarver.features import Features, GroupedList, OrdinalFeature
 
 
 def test_find_closest_modality_single_element():
@@ -448,7 +447,6 @@ def test_find_common_modalities_unexpected_value():
     assert result == expected
 
 
-
 def test_ordinal_discretizer_with_increasing_freq():
     """Test OrdinalDiscretizer with basic input"""
     df = DataFrame(
@@ -484,7 +482,6 @@ def test_ordinal_discretizer_with_increasing_freq():
     )
     print(transformed)
     assert transformed.equals(df_expected), "Transformed data does not match expected data"
-
 
 
 def test_ordinal_discretizer_with_nans():

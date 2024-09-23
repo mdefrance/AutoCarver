@@ -2,7 +2,7 @@
 
 import json
 
-from numpy import inf, nan, array
+from numpy import array, inf, nan
 from pandas import DataFrame, Series
 from pytest import FixtureRequest, fixture, raises
 

@@ -2,12 +2,12 @@
 
 from .discretizer import Discretizer
 from .qualitatives import (
-    QualitativeDiscretizer,
     CategoricalDiscretizer,
     ChainedDiscretizer,
     OrdinalDiscretizer,
+    QualitativeDiscretizer,
 )
-from .quantitatives import QuantitativeDiscretizer, ContinuousDiscretizer
+from .quantitatives import ContinuousDiscretizer, QuantitativeDiscretizer
 from .utils import BaseDiscretizer, StringDiscretizer
 
 __all__ = [

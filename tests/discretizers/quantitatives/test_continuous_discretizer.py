@@ -1,17 +1,18 @@
 """Set of tests for quantitative_discretizers module."""
 
-from numpy import inf, array, allclose, nan
+from numpy import allclose, array, inf, nan
 from pandas import DataFrame
 from pytest import raises
+
 from AutoCarver.discretizers.quantitatives.continuous_discretizer import (
     ContinuousDiscretizer,
-    np_find_quantiles,
-    find_quantiles,
-    get_remaining_quantiles,
     compute_quantiles,
+    find_quantiles,
     fit_feature,
+    get_remaining_quantiles,
+    np_find_quantiles,
 )
-from AutoCarver.features import Features, QuantitativeFeature, GroupedList
+from AutoCarver.features import Features, GroupedList, QuantitativeFeature
 
 
 def test_get_remaining_quantiles_no_remaining():
@@ -685,8 +686,8 @@ def test_continuous_discretizer_fit():
     discretizer.fit(df)
 
     # Check if the features have been fitted
-    assert feature1.has_nan == False
-    assert feature2.has_nan == True
+    assert feature1.has_nan is False
+    assert feature2.has_nan is True
     assert feature1.content == {1: [1], 2: [2], 4: [4], inf: [inf]}
     assert feature2.content == {1.0: [1.0], 2.0: [2.0], 5.0: [5.0], inf: [inf]}
 

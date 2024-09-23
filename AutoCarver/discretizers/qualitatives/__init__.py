@@ -1,10 +1,9 @@
 """ Loads Qualitative Discretization tools."""
 
-from .qualitative_discretizer import QualitativeDiscretizer
 from .categorical_discretizer import CategoricalDiscretizer
-from .ordinal_discretizer import OrdinalDiscretizer
 from .chained_discretizer import ChainedDiscretizer
-
+from .ordinal_discretizer import OrdinalDiscretizer
+from .qualitative_discretizer import QualitativeDiscretizer
 
 __all__ = [
     "QualitativeDiscretizer",

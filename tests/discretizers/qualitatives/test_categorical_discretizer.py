@@ -6,10 +6,10 @@ from pytest import raises
 
 from AutoCarver.discretizers.qualitatives.categorical_discretizer import (
     CategoricalDiscretizer,
-    series_value_counts,
     series_target_rate,
+    series_value_counts,
 )
-from AutoCarver.features import Features, GroupedList, CategoricalFeature
+from AutoCarver.features import CategoricalFeature, Features, GroupedList
 
 
 def test_series_value_counts():

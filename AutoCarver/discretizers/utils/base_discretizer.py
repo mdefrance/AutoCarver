@@ -632,7 +632,6 @@ def transform_quantitative_feature(
 
     # converting nans to there corresponding quantile (if it was grouped to a quantile)
     if any(feature_nans):
-
         # quantile with which nans have been grouped
         nan_group = feature.values.get_group(feature.nan)
 

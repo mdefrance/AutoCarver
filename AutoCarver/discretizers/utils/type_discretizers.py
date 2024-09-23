@@ -71,7 +71,6 @@ def fit_feature(feature: BaseFeature, df_feature: Series):
 
     # formatting values
     for value in unique_values:
-
         # case 0: the value is an integer
         if isinstance(value, float) and float.is_integer(value):
             str_value = str(int(value))  # converting value to string

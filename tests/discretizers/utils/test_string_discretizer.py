@@ -3,8 +3,8 @@
 from numpy import nan
 from pandas import DataFrame, Series
 
-from AutoCarver.features import CategoricalFeature, OrdinalFeature, Features
-from AutoCarver.discretizers.utils.type_discretizers import fit_feature, StringDiscretizer
+from AutoCarver.discretizers.utils.type_discretizers import StringDiscretizer, fit_feature
+from AutoCarver.features import CategoricalFeature, Features, OrdinalFeature
 
 
 def test_fit_feature() -> None:

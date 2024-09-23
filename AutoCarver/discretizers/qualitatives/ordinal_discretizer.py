@@ -2,7 +2,7 @@
 for a binary classification model.
 """
 
-from numpy import argmin, array, arange, vstack, nan_to_num
+from numpy import arange, argmin, array, nan_to_num, vstack
 from pandas import DataFrame, Series, notna
 
 from ...features import GroupedList, OrdinalFeature
@@ -119,7 +119,6 @@ def find_common_modalities(
 
     # case 1: there are underrepresented modalities/values
     while any(stats[0, :] / len_df < min_freq) & (stats.shape[1] > 1):
-
         # identifying the first underrepresented value
         discarded_idx = argmin(stats[0, :])
 

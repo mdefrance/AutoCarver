@@ -5,7 +5,7 @@ for a binary classification model.
 from numpy import array, digitize, in1d, inf, isnan, linspace, quantile, sort, unique
 from pandas import DataFrame, Series
 
-from ...features import BaseFeature, Features, GroupedList, QuantitativeFeature, get_versions
+from ...features import GroupedList, QuantitativeFeature, get_versions
 from ...utils import extend_docstring
 from ..utils.base_discretizer import BaseDiscretizer
 from ..utils.multiprocessing import imap_unordered_function
@@ -169,7 +169,6 @@ def np_find_quantiles(
 
     # case 2 : there is an over-represented value
     if any(frequencies >= initial_len_df / q):
-
         # identifying over-represented modality
         frequent_values = values[frequencies >= initial_len_df / q]
 
@@ -208,7 +207,9 @@ def compute_quantiles(df_feature: array, q: int, initial_len_df: int) -> list[fl
     if len(quantiles_needed) > 0:
         return list(quantile(df_feature, quantiles_needed, method="lower"))
 
-    # not enough values remaining, grouping all remaining values into one quantile
+    # -> not enough values remaining, grouping all remaining values into one quantile
+    # returning the maximum value remaining, because it will be grouped within
+    # QuantitativeDiscretizer when using OrdinalDiscretizer
     return [max(df_feature)]
 
 

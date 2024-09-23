@@ -7,8 +7,8 @@ from pandas import DataFrame, Series, unique
 from ...features import Features, QuantitativeFeature
 from ...utils import extend_docstring
 from ..qualitatives import OrdinalDiscretizer
-from .continuous_discretizer import ContinuousDiscretizer
 from ..utils.base_discretizer import BaseDiscretizer
+from .continuous_discretizer import ContinuousDiscretizer
 
 
 class QuantitativeDiscretizer(BaseDiscretizer):
@@ -52,8 +52,14 @@ class QuantitativeDiscretizer(BaseDiscretizer):
             * If ``"str"``, features are considered as qualitative.
             * If ``"float"``, features are considered as quantitative.
         """
-        super().__init__(quantitatives, **kwargs)  # Initiating BaseDiscretizer
-        self.min_freq = min_freq  # minimum frequency per modality
+
+        # Initiating BaseDiscretizer
+        super().__init__(quantitatives, **dict(kwargs, min_freq=min_freq))
+
+    @property
+    def half_min_freq(self) -> float:
+        """Half of the minimal frequency of a quantile."""
+        return self.min_freq / 2
 
     def _prepare_data(self, X: DataFrame, y: Series) -> DataFrame:  # pylint: disable=W0222
         """Validates format and content of X and y.
@@ -76,19 +82,14 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         x_copy = super()._prepare_data(X, y)
 
         # checking for quantitative columns
-        dtypes = x_copy[self.features.versions].map(type).apply(unique, result_type="reduce")
-        not_numeric = dtypes.apply(lambda u: str in u)
-        if any(not_numeric):
-            raise ValueError(
-                f"[{self.__name__}] Non-numeric features: "
-                f"{str(list(not_numeric[not_numeric].index))} in provided quantitative_features. "
-                "Please check your inputs."
-            )
+        check_quantitative_dtypes(x_copy, self.features.versions, self.__name__)
+
         return x_copy
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
-        self._verbose("------\n---")  # verbose if requested
+        # verbose if requested
+        self._verbose("------\n---")
 
         # checking data before bucketization
         x_copy = self._prepare_data(X, y)
@@ -96,30 +97,22 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         # [Quantitative features] Grouping values into quantiles
         continuous_discretizer = ContinuousDiscretizer(
             quantitatives=self.features.quantitatives,
-            min_freq=self.min_freq,
-            **dict(self.kwargs, copy=True),  # needs to be True not to transform x_copy
+            # copy needs to be True not to transform x_copy
+            **dict(self.kwargs, min_freq=self.min_freq, copy=True),
         )
 
         x_copy = continuous_discretizer.fit_transform(x_copy, y)
 
         # [Quantitative features] Grouping rare quantiles into closest common one
         #  -> can exist because of overrepresented values (values more frequent than min_freq)
-        # searching for features with rare quantiles: computing min frequency per feature
-        frequencies = x_copy[self.features.versions].apply(
-            min_value_counts, features=self.features, axis=0
-        )
-
-        # minimal frequency of a quantile
-        q_min_freq = self.min_freq / 2
-
         # identifying features that have rare modalities
-        has_rare = list(frequencies[frequencies <= q_min_freq].index)
+        has_rare = check_frequencies(x_copy, self.features, self.half_min_freq)
 
         # Grouping rare modalities
         if len(has_rare) > 0:
             ordinal_discretizer = OrdinalDiscretizer(
-                ordinals=[feature for feature in self.features if feature.version in has_rare],
-                min_freq=q_min_freq,
+                ordinals=has_rare,
+                min_freq=self.half_min_freq,
                 copy=False,
                 verbose=self.verbose,
                 n_jobs=self.n_jobs,
@@ -133,6 +126,21 @@ class QuantitativeDiscretizer(BaseDiscretizer):
             print("------\n")
 
         return self
+
+
+def check_frequencies(
+    x: DataFrame, features: Features, half_min_freq: float
+) -> list[QuantitativeFeature]:
+    """Checks for rare modalities in the provided features."""
+
+    # searching for features with rare quantiles: computing min frequency per feature
+    frequencies = x[features.versions].apply(min_value_counts, features=features, axis=0)
+
+    # identifying features that have rare modalities
+    has_rare = list(frequencies[frequencies <= half_min_freq].index)
+
+    # returning features with rare modalities
+    return [feature for feature in features if feature.version in has_rare]
 
 
 def min_value_counts(
@@ -154,3 +162,21 @@ def min_value_counts(
 
     # minimal frequency
     return values.values.min()
+
+
+def check_quantitative_dtypes(x: DataFrame, feature_versions: list[str], name: str) -> None:
+    """Checks if the provided features are numeric."""
+
+    # checking for numeric columns
+    dtypes = x[feature_versions].map(type).apply(unique, result_type="reduce")
+
+    # getting non-numeric columns
+    not_numeric = dtypes.apply(lambda u: str in u)
+
+    # raising error if non-numeric columns are found
+    if any(not_numeric):
+        raise ValueError(
+            f"[{name}] Non-numeric features: "
+            f"{str(list(not_numeric[not_numeric].index))} in provided quantitative_features. "
+            "Please check your inputs."
+        )
