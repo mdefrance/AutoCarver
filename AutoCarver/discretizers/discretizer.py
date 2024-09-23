@@ -60,7 +60,6 @@ class Discretizer(BaseDiscretizer):
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
-
         # Checking for binary target and copying X
         x_copy = self._prepare_data(X, y)
 
@@ -80,7 +79,6 @@ class Discretizer(BaseDiscretizer):
 
         # [Qualitative features] Grouping qualitative features
         if len(self.features.qualitatives) > 0:
-
             # grouping qualitative features
             qualitative_discretizer = QualitativeDiscretizer(
                 qualitatives=self.features.qualitatives, **dict(self.kwargs, copy=False)
@@ -92,7 +90,6 @@ class Discretizer(BaseDiscretizer):
 
         # [Quantitative features] Grouping quantitative features
         if len(self.features.quantitatives) > 0:
-
             # grouping quantitative features
             quantitative_discretizer = QuantitativeDiscretizer(
                 quantitatives=self.features.quantitatives, **dict(self.kwargs, copy=False)
