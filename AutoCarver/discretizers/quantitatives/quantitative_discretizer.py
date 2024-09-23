@@ -94,14 +94,34 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         # checking data before bucketization
         x_copy = self._prepare_data(X, y)
 
+        # fitting continuous features if any
+        x_copy = self._fit_continuous(x_copy, y)
+
+        # fitting continuous features with rare modalities if any
+        self._fit_continuous_with_rare_modalities(x_copy, y)
+
+        # discretizing features based on each feature's values_order
+        super().fit(X, y)
+
+        if self.verbose:  # verbose if requested
+            print("------\n")
+
+        return self
+
+    def _fit_continuous(self, x_copy: DataFrame, y: Series) -> DataFrame:
+        """Fit the ContinuousDiscretizer on the continuous features."""
+
         # [Quantitative features] Grouping values into quantiles
         continuous_discretizer = ContinuousDiscretizer(
             quantitatives=self.features.quantitatives,
-            # copy needs to be True not to transform x_copy
+            # copy needs to be True not to check for rare modalities
             **dict(self.kwargs, min_freq=self.min_freq, copy=True),
         )
 
-        x_copy = continuous_discretizer.fit_transform(x_copy, y)
+        return continuous_discretizer.fit_transform(x_copy, y)
+
+    def _fit_continuous_with_rare_modalities(self, x_copy: DataFrame, y: Series) -> None:
+        """Fit the OrdinalDiscretizer on the continuous features with rare modalities."""
 
         # [Quantitative features] Grouping rare quantiles into closest common one
         #  -> can exist because of overrepresented values (values more frequent than min_freq)
@@ -111,21 +131,9 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         # Grouping rare modalities
         if len(has_rare) > 0:
             ordinal_discretizer = OrdinalDiscretizer(
-                ordinals=has_rare,
-                min_freq=self.half_min_freq,
-                copy=False,
-                verbose=self.verbose,
-                n_jobs=self.n_jobs,
+                ordinals=has_rare, **dict(self.kwargs, min_freq=self.half_min_freq, copy=False)
             )
             ordinal_discretizer.fit(x_copy, y)
-
-        # discretizing features based on each feature's values_order
-        super().fit(X, y)
-
-        if self.verbose:  # verbose if requested
-            print("------\n")
-
-        return self
 
 
 def check_frequencies(

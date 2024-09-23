@@ -76,6 +76,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
+
         # verbose if requested
         self._verbose("------\n---")
 
@@ -83,12 +84,39 @@ class QualitativeDiscretizer(BaseDiscretizer):
         x_copy = self._prepare_data(X, y)
 
         # Base discretization (useful if already discretized)
+        x_copy = self._base_transform(x_copy, y)
+
+        # fitting ordinal features if any
+        self._fit_ordinals(x_copy, y)
+
+        # fitting categorical features if any
+        self._fit_categoricals(x_copy, y)
+
+        # discretizing features based on each feature's values_order
+        super().fit(X, y)
+
+        if self.verbose:  # verbose if requested
+            print("------\n")
+
+        return self
+
+    def _base_transform(self, x_copy: DataFrame, y: Series) -> DataFrame:
+        """Transform the data based on the previously fitted discretizers."""
+
+        # looking for already discretized features
         discretized_features = [feature for feature in self.features if feature.is_fitted]
+
+        # Base discretization (useful if already discretized)
         if len(discretized_features) > 0:
             base_discretizer = BaseDiscretizer(
                 features=discretized_features, **dict(self.kwargs, copy=True, dropna=False)
             )
             x_copy = base_discretizer.fit_transform(x_copy, y)
+
+        return x_copy
+
+    def _fit_ordinals(self, x_copy: DataFrame, y: Series) -> None:
+        """Fit the OrdinalDiscretizer on the ordinal features."""
 
         # [Qualitative ordinal features] Grouping rare values into closest common one
         if len(self.features.ordinals) > 0:
@@ -98,6 +126,9 @@ class QualitativeDiscretizer(BaseDiscretizer):
             )
             ordinal_discretizer.fit(x_copy, y)
 
+    def _fit_categoricals(self, x_copy: DataFrame, y: Series) -> None:
+        """Fit the CategoricalDiscretizer on the categorical features."""
+
         # [Qualitative non-ordinal features] Grouping rare values into default '__OTHER__'
         if len(self.features.categoricals) > 0:
             categorical_discretizer = CategoricalDiscretizer(
@@ -105,11 +136,3 @@ class QualitativeDiscretizer(BaseDiscretizer):
                 **dict(self.kwargs, min_freq=self.min_freq, copy=False),
             )
             categorical_discretizer.fit(x_copy, y)
-
-        # discretizing features based on each feature's values_order
-        super().fit(X, y)
-
-        if self.verbose:  # verbose if requested
-            print("------\n")
-
-        return self

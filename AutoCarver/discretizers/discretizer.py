@@ -28,8 +28,8 @@ class Discretizer(BaseDiscretizer):
     @extend_docstring(BaseDiscretizer.__init__)
     def __init__(
         self,
-        min_freq: float,
         features: Features,
+        min_freq: float,
         **kwargs: dict,
     ) -> None:
         """
@@ -54,44 +54,21 @@ class Discretizer(BaseDiscretizer):
             List of column names of ordinal features to be discretized. For those features a list
             of values has to be provided in the ``values_orders`` dict, by default ``None``
         """
-        super().__init__(features, **kwargs)  # Initiating BaseDiscretizer
-        self.min_freq = min_freq  # minimum frequency per modality
+
+        # Initiating BaseDiscretizer
+        super().__init__(features, **dict(kwargs, min_freq=min_freq))
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
+
         # Checking for binary target and copying X
         x_copy = self._prepare_data(X, y)
 
-        kept_features: list[str] = []  # list of viable features
+        # fitting quantitative features if any
+        kept_features = self._fit_quantitatives(x_copy, y)
 
-        # [Qualitative features] Grouping qualitative features
-        if len(self.features.qualitatives) > 0:
-            # grouping qualitative features
-            qualitative_discretizer = QualitativeDiscretizer(
-                qualitatives=self.features.qualitatives,
-                min_freq=self.min_freq,
-                copy=False,  # always False as x_copy is already a copy (if requested)
-                verbose=self.verbose,
-                n_jobs=self.n_jobs,
-            )
-            qualitative_discretizer.fit(x_copy, y)
-
-            # saving kept features
-            kept_features += qualitative_discretizer.features.versions
-
-        # [Quantitative features] Grouping quantitative features
-        if len(self.features.quantitatives) > 0:
-            # grouping quantitative features
-            quantitative_discretizer = QuantitativeDiscretizer(
-                quantitatives=self.features.quantitatives,
-                min_freq=self.min_freq,
-                verbose=self.verbose,
-                n_jobs=self.n_jobs,
-            )
-            quantitative_discretizer.fit(x_copy, y)
-
-            # saving kept features
-            kept_features += quantitative_discretizer.features.versions
+        # fitting qualitative features if any
+        kept_features += self._fit_qualitatives(x_copy, y)
 
         # removing dropped features
         self.features.keep(kept_features)
@@ -100,3 +77,43 @@ class Discretizer(BaseDiscretizer):
         super().fit(X, y)
 
         return self
+
+    def _fit_qualitatives(self, x_copy: DataFrame, y: Series) -> list[str]:
+        """Fit the QualitativeDiscretizer on the qualitative features."""
+
+        # Keeping track of viable features
+        kept_features: list[str] = []
+
+        # [Qualitative features] Grouping qualitative features
+        if len(self.features.qualitatives) > 0:
+
+            # grouping qualitative features
+            qualitative_discretizer = QualitativeDiscretizer(
+                qualitatives=self.features.qualitatives, **dict(self.kwargs, copy=False)
+            )
+            qualitative_discretizer.fit(x_copy, y)
+
+            # saving kept features
+            kept_features += qualitative_discretizer.features.versions
+
+        return kept_features
+
+    def _fit_quantitatives(self, x_copy: DataFrame, y: Series) -> list[str]:
+        """Fit the QuantitativeDiscretizer on the quantitative features."""
+
+        # Keeping track of viable features
+        kept_features: list[str] = []
+
+        # [Quantitative features] Grouping quantitative features
+        if len(self.features.quantitatives) > 0:
+
+            # grouping quantitative features
+            quantitative_discretizer = QuantitativeDiscretizer(
+                quantitatives=self.features.quantitatives, **dict(self.kwargs, copy=False)
+            )
+            quantitative_discretizer.fit(x_copy, y)
+
+            # saving kept features
+            kept_features += quantitative_discretizer.features.versions
+
+        return kept_features
