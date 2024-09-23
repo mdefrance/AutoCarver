@@ -108,9 +108,11 @@ class Features:
         """Returns names of all features"""
         return f"{self.__name__}({str(self.versions)})"
 
-    def __contains__(self, feature_name: str) -> bool:
+    def __contains__(self, feature: Union[BaseFeature, str]) -> bool:
         """checks if a feature is in the features"""
-        return feature_name in self.versions
+        if isinstance(feature, BaseFeature):
+            return feature.version in self.versions
+        return feature in self.versions
 
     def __call__(self, feature_name: str) -> BaseFeature:
         """Returns specified feature by name"""

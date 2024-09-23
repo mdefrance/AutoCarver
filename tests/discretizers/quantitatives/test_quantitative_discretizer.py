@@ -1,10 +1,9 @@
 """Set of tests for discretizers module."""
 
 from numpy import inf
-from pandas import DataFrame, notna
+from pandas import DataFrame
 
 from AutoCarver import Features
-from AutoCarver.config import DEFAULT
 from AutoCarver.discretizers import QuantitativeDiscretizer
 
 
