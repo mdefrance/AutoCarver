@@ -46,7 +46,7 @@ class MulticlassCarver(BaseCarver):
             )
 
         # warning user for
-        if kwargs.get("copy"):
+        if "copy" in kwargs:
             print(
                 "WARNING: can't set copy=True for MulticlassCarver (no inplace DataFrame.assign)."
             )

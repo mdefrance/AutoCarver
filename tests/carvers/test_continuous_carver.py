@@ -180,8 +180,7 @@ def test_continuous_carver(
         init_values = raw_x_train[feature.name].fillna(feature.nan).unique()
         if not dropna:  # removing nan from list of initial values
             init_values = [value for value in init_values if value != feature.nan]
-        print("init_values", init_values)
-        print("fitted_values", fitted_values)
+
         assert all(value in fitted_values for value in init_values), (
             "Missing value in output! Some values are been dropped for qualitative "
             f"feature: {feature}"

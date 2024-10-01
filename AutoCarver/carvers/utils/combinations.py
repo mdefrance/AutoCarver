@@ -10,65 +10,63 @@ from ...features import BaseFeature, GroupedList
 
 
 def combinations_at_index(
-    start_idx: int, order: list[Any], nb_remaining_groups: int, min_group_size: int = 1
+    start_index: int, elements: list[Any], remaining_groups: int
 ) -> Generator[list[Any], int, int]:
     """Gets all possible combinations of sizes up to the last element of a list"""
-    # iterating over each possible length of groups
-    for size in range(min_group_size, len(order) + 1):
-        next_idx = start_idx + size  # index from which to start the next group
 
-        # checking that next index is not off the order list
-        if next_idx < len(order) + 1:
+    # iterating over each possible length of groups
+    for size in range(1, len(elements) + 1):
+        next_index = start_index + size  # index from which to start the next group
+
+        # checking that next index is not off the elements list
+        if next_index < len(elements) + 1:
+
             # checking that there are remaining groups or that it is the last group
-            if (nb_remaining_groups > 1) | (next_idx == len(order)):
-                combination = list(order[start_idx:next_idx])
-                yield (combination, next_idx, nb_remaining_groups - 1)
+            if (remaining_groups > 1) | (next_index == len(elements)):
+                combination = list(elements[start_index:next_index])
+                yield (combination, next_index, remaining_groups - 1)
 
 
 def consecutive_combinations(
     raw_order: list[Any],
     max_group_size: int,
-    min_group_size: int = 1,
-    nb_remaining_group: int = None,
+    remaining_groups: int = None,
     current_combination: list[Any] = None,
     next_index: int = None,
     all_combinations: list[list[Any]] = None,
 ) -> list[list[Any]]:
     """Computes all possible combinations of values of order up to max_group_size."""
+
     # initiating recursive attributes
     if current_combination is None:
         current_combination = []
     if next_index is None:
         next_index = 0
-    if nb_remaining_group is None:
-        nb_remaining_group = max_group_size
+    if remaining_groups is None:
+        remaining_groups = max_group_size
     if all_combinations is None:
         all_combinations = []
 
     # getting combinations for next index
-    next_combinations = [
-        elt
-        for elt in combinations_at_index(next_index, raw_order, nb_remaining_group, min_group_size)
-    ]
+    next_combinations = list(combinations_at_index(next_index, raw_order, remaining_groups))
 
     # stop case: no next_combinations possible -> adding to all_combinations
-    if len(next_combinations) == 0 and min_group_size < len(current_combination) <= max_group_size:
+    if len(next_combinations) == 0 and 1 < len(current_combination) <= max_group_size:
         # saving up combination
         all_combinations += [current_combination]
 
         # resetting remaining number of groups
-        nb_remaining_group = max_group_size
+        remaining_groups = max_group_size
 
     # otherwise: adding all next_combinations to the current_combination
-    for combination, next_index, current_nb_remaining_group in next_combinations:
+    for combination, new_next_index, new_remaining_groups in next_combinations:
         # going a rank further in the raw_xtab
         consecutive_combinations(
             raw_order,
             max_group_size,
-            min_group_size=min_group_size,
-            nb_remaining_group=current_nb_remaining_group,
+            remaining_groups=new_remaining_groups,
             current_combination=current_combination + [combination],
-            next_index=next_index,
+            next_index=new_next_index,
             all_combinations=all_combinations,
         )
 
@@ -79,18 +77,24 @@ def nan_combinations(
     feature: BaseFeature,
     max_n_mod: int,
 ) -> list[list[str]]:
-    """All consecutive combinatios of non-nans with added nan to each possible group and a last
+    """All consecutive combinations of non-nans with added nan to each possible group and a last
     group only with nan if the max_n_mod is not reached by the combination
+
+    - feature must have has_nan = True
+    - feature must have dropna = True
+    - len(feature.labels) <= max_n_mod
     """
     # raw ordering without nans
     raw_labels = GroupedList(feature.labels[:])
     raw_labels.remove(feature.nan)  # nans are added within nan_combinations
 
     # all possible consecutive combinations
-    combinations = consecutive_combinations(raw_labels, max_n_mod, min_group_size=1)
+    combinations = consecutive_combinations(raw_labels, max_n_mod)
+
     # iterating over each combination
     nan_combis = []
     for combination in combinations:
+
         # adding nan to each group of the combination
         nan_combination = []
         for n in range(len(combination)):
@@ -110,24 +114,16 @@ def nan_combinations(
 
         nan_combis += nan_combination
 
+    # adding a combination for all modalities vs nans
+    nan_combis += [[list(raw_labels), [feature.nan]]]
+
     return nan_combis
 
 
+
+
 def order_apply_combination(order: GroupedList, combination: list[list[Any]]) -> GroupedList:
-    """Converts a list of combination to a GroupedList
-
-    Parameters
-    ----------
-    order : GroupedList
-        _description_
-    combination : list[list[Any]]
-        _description_
-
-    Returns
-    -------
-    GroupedList
-        _description_
-    """
+    """Converts a list of combination to a GroupedList"""
     order_copy = GroupedList(order)
     for combi in combination:
         order_copy.group(combi, combi[0])
@@ -148,7 +144,7 @@ def xagg_apply_combination(xagg: DataFrame, order: GroupedList) -> DataFrame:
     Returns
     -------
     dict[str, Any]
-        Orderd crosstab.
+        Ordered crosstab.
     """
     # checking for input values
     combi_xagg = None
@@ -158,3 +154,8 @@ def xagg_apply_combination(xagg: DataFrame, order: GroupedList) -> DataFrame:
         combi_xagg = xagg.groupby(groups, dropna=False, sort=False).sum()
 
     return combi_xagg
+
+
+def combination_formatter(combination: list[list[str]]) -> dict[str, str]:
+    """Attributes the first element of a group to all elements of a group"""
+    return {modal: group[0] for group in combination for modal in group}

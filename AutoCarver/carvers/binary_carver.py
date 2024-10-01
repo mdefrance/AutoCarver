@@ -129,8 +129,10 @@ class BinaryCarver(BaseCarver):
         # checking for empty datasets (dev)
         xtabs = {feature.version: None for feature in self.features}
         if X is not None:
+
             # crosstab for each feature
             for feature in self.features:
+
                 # computing crosstab with str_nan
                 xtab = crosstab(X[feature.version], y)
 

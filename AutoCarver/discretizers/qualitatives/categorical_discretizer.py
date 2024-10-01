@@ -128,7 +128,6 @@ class CategoricalDiscretizer(BaseDiscretizer):
 
         # computing frequencies of each modality
         frequencies = X[self.features.versions].apply(series_value_counts, axis=0)
-        print("frequencies", frequencies)
 
         # grouping rare modalities for each feature
         for feature in self.features:

@@ -6,13 +6,12 @@ import json
 from abc import abstractmethod
 from functools import partial
 from typing import Any, Union
-from warnings import warn
 
 from numpy import isclose
 from pandas import DataFrame, Series
 from tqdm.autonotebook import tqdm
 
-from ...utils import get_bool_attribute
+from ...utils import get_bool_attribute, get_attribute
 from ...discretizers import BaseDiscretizer, Discretizer
 from ...features import BaseFeature, Features, GroupedList
 from .combinations import (
@@ -20,6 +19,7 @@ from .combinations import (
     nan_combinations,
     order_apply_combination,
     xagg_apply_combination,
+    combination_formatter,
 )
 from .pretty_print import index_mapper, prettier_xagg
 
@@ -44,7 +44,6 @@ class BaseCarver(BaseDiscretizer):
 
     def __init__(
         self,
-        sort_by: str,
         min_freq: float,
         features: Features,
         *,
@@ -120,6 +119,9 @@ class BaseCarver(BaseDiscretizer):
             as long as ``pretty_print`` to turn off IPython
         """
 
+        # minimum frequency for discretizer
+        self.discretizer_min_freq = get_attribute(kwargs, "discretizer_min_freq", min_freq / 2)
+
         # Initiating BaseDiscretizer
         super().__init__(
             features,
@@ -127,15 +129,11 @@ class BaseCarver(BaseDiscretizer):
                 kwargs,
                 verbose=get_bool_attribute(kwargs, "verbose", False),
                 min_freq=min_freq,
+                max_n_mod=max_n_mod,
                 dropna=dropna,
+                discretizer_min_freq=self.discretizer_min_freq,
             ),
         )
-
-        # class specific attributes
-        self.max_n_mod = max_n_mod  # maximum number of modality per feature
-        self.sort_by = sort_by  # metric used to sort feature combinations
-        # minimum frequency for discretizer
-        self.discretizer_min_freq = kwargs.get("discretizer_min_freq", self.min_freq / 2)
 
         # progress bar if requested
         self.tqdm = partial(tqdm, disable=not self.verbose)
@@ -143,12 +141,13 @@ class BaseCarver(BaseDiscretizer):
     @property
     def pretty_print(self) -> bool:
         """Returns the pretty_print attribute"""
-        return _has_idisplay
+        return self.verbose and _has_idisplay
 
-    def _prepare_data(
+    def _prepare_data(  # pylint: disable=W0222
         self,
         X: DataFrame,
         y: Series,
+        *,
         X_dev: DataFrame = None,
         y_dev: Series = None,
     ) -> tuple[DataFrame, DataFrame]:
@@ -185,44 +184,18 @@ class BaseCarver(BaseDiscretizer):
         x_dev_copy = super()._prepare_data(X_dev, y_dev)
 
         # discretizing features according to min_freq
-        x_copy, x_dev_copy = self._discretize(x_copy, y, x_dev_copy, y_dev)
+        x_copy, x_dev_copy = discretize(
+            self.features, x_copy, y, X_dev=x_dev_copy, y_dev=y_dev, **self.kwargs
+        )
 
-        # setting up features to convert nans to feature.nan (drop nans)
-        # self.features.dropna = True
+        # setting dropna to True for filling up nans
+        self.features.dropna = True
 
         # filling up nans
-        x_copy = self.features.fillna(x_copy, ignore_dropna=True)
-        x_dev_copy = self.features.fillna(x_dev_copy, ignore_dropna=True)
+        x_copy = self.features.fillna(x_copy)
+        x_dev_copy = self.features.fillna(x_dev_copy)
 
         return x_copy, x_dev_copy
-
-    def _discretize(
-        self,
-        X: DataFrame,
-        y: Series,
-        X_dev: DataFrame = None,
-        y_dev: Series = None,
-    ) -> tuple[DataFrame, DataFrame]:
-        """Discretizes X and X_dev according to the frequency of each feature's modalities."""
-
-        # discretizing all features, always copying, to keep discretization from start to finish
-        discretizer = Discretizer(
-            self.discretizer_min_freq,
-            self.features,
-            **dict(self.kwargs, dropna=False, copy=True, ordinal_encoding=False),
-        )
-        # fitting discretizer on X
-        X = discretizer.fit_transform(X, y)
-
-        # applying discretizer on X_dev if provided
-        if X_dev is not None:
-            X_dev = discretizer.transform(X_dev, y_dev)
-
-        return X, X_dev
-
-    def _combination_formatter(self, combination: list[list[str]]) -> dict[str, str]:
-        """Attributes the first element of a group to all elements of a group"""
-        return {modal: group[0] for group in combination for modal in group}
 
     def fit(  # pylint: disable=W0222
         self,
@@ -253,30 +226,22 @@ class BaseCarver(BaseDiscretizer):
         """
 
         # preparing datasets and checking for wrong values
-        x_copy, x_dev_copy = self._prepare_data(X, y, X_dev, y_dev)
-        super()._verbose("---------\n------")
+        x_copy, x_dev_copy = self._prepare_data(X, y, X_dev=X_dev, y_dev=y_dev)
+
+        # logging if requested
+        super().log_if_verbose("---------\n------")
 
         # computing crosstabs for each feature on train/test
         xaggs = self._aggregator(x_copy, y)
         xaggs_dev = self._aggregator(x_dev_copy, y_dev)
 
-        # optimal butcketization/carving of each feature
-        all_features = self.features.versions  # features are removed from self.features
+        # getting all features to carve (features are removed from self.features)
+        all_features = self.features.versions
+
+        # carving each feature
         for n, feature in enumerate(all_features):
-            if self.verbose:  # verbose if requested
-                print(
-                    f"--- [{self.__name__}] Fit {self.features(feature)} "
-                    f"({n+1}/{len(all_features)})"
-                )
-
-            # carving the feature
-            self._carve_feature(self.features(feature), xaggs, xaggs_dev)
-
-            if self.verbose:  # verbose if requested
-                print("---\n")
-
-        # setting dropna according to user request
-        # self.features.dropna = self.dropna
+            num_iter = f"{n+1}/{len(all_features)}"  # logging iteration number
+            self._carve_feature(self.features(feature), xaggs, xaggs_dev, num_iter)
 
         # discretizing features based on each feature's values_order
         super().fit(X, y)
@@ -304,14 +269,19 @@ class BaseCarver(BaseDiscretizer):
         feature: BaseFeature,
         xaggs: dict[str, Union[Series, DataFrame]],
         xaggs_dev: dict[str, Union[Series, DataFrame]],
+        num_iter: str,
     ) -> dict[str, GroupedList]:
         """Carves a feature into buckets that maximize association with the target"""
+
+        # verbose if requested
+        if self.verbose:
+            print(f"--- [{self.__name__}] Fit {feature} ({num_iter})")
 
         # getting xtabs on train/test
         xagg = xaggs[feature.version]
         xagg_dev = xaggs_dev[feature.version]
 
-        # verbose if requested
+        # printing raw distribution
         self._print_xagg(feature, xagg=xagg, xagg_dev=xagg_dev, message="Raw distribution")
 
         # getting best combination
@@ -321,7 +291,7 @@ class BaseCarver(BaseDiscretizer):
         if best_combination is not None:
             xagg, xagg_dev = best_combination  # unpacking
 
-            # verbose if requested
+            # printing carved distribution
             self._print_xagg(feature, xagg=xagg, xagg_dev=xagg_dev, message="Carved distribution")
 
         # no suitable combination has been found -> removing feature
@@ -332,22 +302,19 @@ class BaseCarver(BaseDiscretizer):
             )
             self.features.remove(feature.version)
 
-    def _get_best_combination(
-        self,
-        feature: BaseFeature,
-        xagg: DataFrame,
-        *,
-        xagg_dev: DataFrame = None,
-    ) -> tuple[GroupedList, DataFrame, DataFrame]:
-        """ """
-        # raw ordering
+    def _get_best_combination_non_nan(
+        self, feature: BaseFeature, xagg: DataFrame, xagg_dev: DataFrame
+    ) -> DataFrame:
+        """Computes associations of the tab for each combination of non-nans"""
+
+        # raw ordering without nans
         raw_labels = GroupedList(feature.labels[:])
         if feature.has_nan:  # removing nans for combination of non-nans
             raw_labels.remove(feature.nan)
 
         # checking for non-nan values
-        best_association = None
         if len([label for label in xagg.index if label != feature.nan]) > 1:
+
             # historizing raw combination TODO
             raw_association = {
                 "index_to_groupby": {modality: modality for modality in xagg.index},
@@ -361,27 +328,55 @@ class BaseCarver(BaseDiscretizer):
             combinations = consecutive_combinations(raw_labels, self.max_n_mod)
 
             # getting most associated combination
-            best_association = self._get_best_association(
+            return self._get_best_association(
                 feature, xagg, combinations, xagg_dev=xagg_dev, dropna=False
             )
 
-            # grouping NaNs if requested to drop them (dropna=True)
-            if self.dropna and feature.has_nan and best_association is not None:
-                if self.verbose:  # verbose if requested
-                    print(f"[{self.__name__}] Grouping NaNs")
+    def _get_best_combination_with_nan(
+        self,
+        best_association: DataFrame,
+        feature: BaseFeature,
+        xagg: DataFrame,
+        xagg_dev: DataFrame,
+    ) -> DataFrame:
+        """Computes associations of the tab for each combination with nans"""
 
-                # unpacking suitable combination
-                xagg, xagg_dev = best_association
+        # verbose if requested
+        if self.verbose:
+            print(f"[{self.__name__}] Grouping NaNs")
 
-                # adding combinations with NaNs
-                combinations = nan_combinations(feature, self.max_n_mod)
+        # unpacking suitable combination
+        xagg, xagg_dev = best_association
 
-                # getting most associated combination
-                best_association = self._get_best_association(
-                    feature, xagg, combinations, xagg_dev=xagg_dev, dropna=True
-                )
+        # adding combinations with NaNs
+        combinations = nan_combinations(feature, self.max_n_mod)
 
-        # returning suitable combination
+        # getting most associated combination
+        return self._get_best_association(
+            feature, xagg, combinations, xagg_dev=xagg_dev, dropna=True
+        )
+
+    def _get_best_combination(
+        self,
+        feature: BaseFeature,
+        xagg: DataFrame,
+        *,
+        xagg_dev: DataFrame = None,
+    ) -> tuple[GroupedList, DataFrame, DataFrame]:
+        """ """
+
+        # getting best combination without NaNs
+        best_association = self._get_best_combination_non_nan(feature, xagg, xagg_dev)
+
+        # setting dropna to user-requested value
+        self.features.dropna = self.dropna
+
+        # grouping NaNs if requested to drop them (dropna=True)
+        if self.dropna and feature.has_nan and best_association is not None:
+            best_association = self._get_best_combination_with_nan(
+                best_association, feature, xagg, xagg_dev
+            )
+
         return best_association
 
     def _get_best_association(
@@ -395,17 +390,6 @@ class BaseCarver(BaseDiscretizer):
     ) -> tuple[DataFrame, DataFrame]:
         """Computes associations of the tab for each combination
 
-        Parameters
-        ----------
-        feature : str
-            feature to measure association with
-        xagg : Union[Series, DataFrame]
-            _description_
-        combinations : list[list[str]]
-            _description_
-        xagg_dev : Union[Series, DataFrame], optional
-            _description_, by default None
-
         Returns
         -------
         tuple[dict[str, Any], GroupedList]
@@ -418,9 +402,7 @@ class BaseCarver(BaseDiscretizer):
             xagg_dev = filter_nan(xagg_dev, feature.nan)
 
         # values to groupby indices with
-        indices_to_groupby = [
-            self._combination_formatter(combination) for combination in combinations
-        ]
+        indices_to_groupby = [combination_formatter(combination) for combination in combinations]
 
         # grouping tab by its indices
         grouped_xaggs = [
@@ -439,12 +421,11 @@ class BaseCarver(BaseDiscretizer):
         for combination, index_to_groupby, association, grouped_xagg in zip(
             combinations, indices_to_groupby, associations_xagg, grouped_xaggs
         ):
-            association.update(
-                {
-                    "combination": combination,
-                    "index_to_groupby": index_to_groupby,
-                    "xagg": grouped_xagg,
-                }
+            association = dict(
+                association,
+                combination=combination,
+                index_to_groupby=index_to_groupby,
+                xagg=grouped_xagg,
             )
 
         # sorting associations according to specified metric
@@ -456,8 +437,6 @@ class BaseCarver(BaseDiscretizer):
 
         # testing viability of combination
         best_association = self._test_viability(feature, associations_xagg, xagg_dev, dropna)
-        if self.verbose:  # verbose if requested
-            print("\n")
 
         # applying best_combination to feature labels and xtab
         if best_association is not None:
@@ -564,6 +543,9 @@ class BaseCarver(BaseDiscretizer):
             # best combination found: breaking the loop on combinations
             if best_association is not None:
                 break
+
+        if self.verbose:  # verbose if requested
+            print("\n")
 
         return best_association
 
@@ -766,3 +748,37 @@ def filter_nan(xagg: Union[Series, DataFrame], str_nan: str) -> DataFrame:
             filtered_xagg = xagg.drop(str_nan, axis=0)
 
     return filtered_xagg
+
+
+def discretize(
+    features: Features,
+    X: DataFrame,
+    y: Series,
+    discretizer_min_freq: float,
+    *,
+    X_dev: DataFrame = None,
+    y_dev: Series = None,
+    **kwargs: dict,
+) -> tuple[DataFrame, DataFrame]:
+    """Discretizes X and X_dev according to the frequency of each feature's modalities."""
+
+    # discretizing all features, always copying, to keep discretization from start to finish
+    discretizer = Discretizer(
+        features=features,
+        **dict(
+            kwargs,
+            dropna=False,
+            copy=True,
+            ordinal_encoding=False,
+            min_freq=discretizer_min_freq,
+        ),
+    )
+
+    # fitting discretizer on X
+    X = discretizer.fit_transform(X, y)
+
+    # applying discretizer on X_dev if provided
+    if X_dev is not None:
+        X_dev = discretizer.transform(X_dev, y_dev)
+
+    return X, X_dev

@@ -13,6 +13,60 @@ from .serialization import json_deserialize_content, json_serialize_feature
 
 
 class BaseFeature(ABC):
+    """Base class for all features
+
+    Parameters
+    ----------
+    name : str
+
+    Attributes
+    ----------
+    name : str
+        Name of the feature.
+    has_nan : bool
+        Whether or not feature has some NaNs.
+    nan : any
+        Value used to represent NaNs.
+    has_default : bool
+        Whether or not feature has some default values.
+    default : any
+        Default value.
+    dropna : bool
+        Whether or not nans must be removed.
+    is_fitted : bool
+        Whether or not feature has been fitted.
+    ordinal_encoding : bool
+        Whether or not to ordinally encode labels.
+    values : GroupedList
+        Feature values.
+    labels : GroupedList
+        Labels associated to feature's values.
+    label_per_value : dict[str, str]
+        Label for each value.
+    value_per_label : dict[str, str]
+        Value for each label.
+    is_ordinal : bool
+        Whether or not feature is ordinal.
+    is_categorical : bool
+        Whether or not feature is categorical.
+    is_qualitative : bool
+        Whether or not feature is qualitative.
+    is_quantitative : bool
+        Whether or not feature is quantitative.
+    max_n_chars : int
+        Max number of characters per label.
+    statistics : dict[str, Any]
+        Feature's trained statistics.
+    history : list[dict, Any]
+        Feature's combination history.
+    raw_order : list[str]
+        Base ordering for quantitative features.
+    version : str
+        Feature version.
+    version_tag : str
+        Feature version tag.
+    """
+
     __name__ = "Feature"
     is_quantitative = False
     is_qualitative = False
@@ -20,6 +74,13 @@ class BaseFeature(ABC):
     is_ordinal = False
 
     def __init__(self, name: str, **kwargs: dict) -> None:
+        """Initializes a feature.
+
+        Parameters
+        ----------
+        name : str
+            Name of the feature.
+        """
         self.name = name
 
         # whether or not feature has some NaNs

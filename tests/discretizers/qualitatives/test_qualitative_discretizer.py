@@ -133,7 +133,6 @@ def test_qualitative_discretizer_fit_ordinal_features():
     # Check feature3
     expected_feature3 = GroupedList(["0", "1", "2", "3"])
     expected_feature3.group("0", "1")
-    print("featiure3", feature3.content)
     assert feature3.values == expected_feature3
     assert feature3.content == {"1": [0, "0", 1, "1"], "2": [2, "2"], "3": [3, "3"]}
 

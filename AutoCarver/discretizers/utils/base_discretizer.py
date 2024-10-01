@@ -9,7 +9,7 @@ from numpy import nan, select
 from pandas import DataFrame, Series
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from ...utils import get_bool_attribute
+from ...utils import get_bool_attribute, get_attribute
 from ...features import BaseFeature, Features
 from .multiprocessing import apply_async_function
 
@@ -92,14 +92,15 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         self._verbose = get_bool_attribute(kwargs, "verbose", True)
 
         # setting number of jobs
-        self.n_jobs = kwargs.get("n_jobs", 1)
+        self.n_jobs = get_attribute(kwargs, "n_jobs", 1)
 
         # check if the discretizer has already been fitted
         self.is_fitted = get_bool_attribute(kwargs, "is_fitted", False)
 
         # carver attributes
-        self.min_freq = kwargs.get("min_freq", None)
-        self.sort_by = kwargs.get("sort_by", None)
+        self.min_freq = kwargs.get("min_freq")  # default to None
+        self.sort_by = kwargs.get("sort_by")  # default to None
+        self.max_n_mod = kwargs.get("max_n_mod")  # default to None
 
     def __repr__(self, N_CHAR_MAX: int = 700) -> str:
         _ = N_CHAR_MAX  # unused attribute
