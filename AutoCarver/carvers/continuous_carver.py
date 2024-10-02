@@ -157,9 +157,7 @@ class ContinuousCarver(BaseCarver):
             _description_
         """
         # TODO: convert this to the vectorial version like BinaryCarver
-        grouped_xagg = xagg.groupby(groupby).sum()
-
-        return grouped_xagg
+        return xagg.groupby(groupby).sum()
 
     def _association_measure(self, xagg: Series, n_obs: int) -> dict[str, float]:
         """Computes measures of association between feature and quantitative target.

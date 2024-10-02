@@ -120,8 +120,6 @@ def nan_combinations(
     return nan_combis
 
 
-
-
 def order_apply_combination(order: GroupedList, combination: list[list[Any]]) -> GroupedList:
     """Converts a list of combination to a GroupedList"""
     order_copy = GroupedList(order)
@@ -159,3 +157,8 @@ def xagg_apply_combination(xagg: DataFrame, order: GroupedList) -> DataFrame:
 def combination_formatter(combination: list[list[str]]) -> dict[str, str]:
     """Attributes the first element of a group to all elements of a group"""
     return {modal: group[0] for group in combination for modal in group}
+
+
+def format_combinations(combinations: list[list[str]]) -> list[dict[str, str]]:
+    """Formats a list of combinations"""
+    return [combination_formatter(combination) for combination in combinations]

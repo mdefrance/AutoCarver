@@ -6,6 +6,7 @@ from AutoCarver.carvers.utils.combinations import (
     combination_formatter,
     order_apply_combination,
     xagg_apply_combination,
+    format_combinations,
 )
 from pytest import raises
 from pandas import DataFrame
@@ -373,3 +374,45 @@ def test_xagg_apply_combination_mixed_groups():
     expected = DataFrame({"A": [3, 3, 9], "B": [13, 8, 19]}, index=["a", "c", "d"])
     print(result)
     assert result.equals(expected)
+
+
+def test_format_combinations_basic():
+    combinations = [[["A", "B"], ["C", "D"]], [["E", "F"], ["G", "H"]]]
+    result = format_combinations(combinations)
+    expected = [{"A": "A", "B": "A", "C": "C", "D": "C"}, {"E": "E", "F": "E", "G": "G", "H": "G"}]
+    assert result == expected
+
+
+def test_format_combinations_single_group():
+    combinations = [[["A", "B", "C"]]]
+    result = format_combinations(combinations)
+    expected = [{"A": "A", "B": "A", "C": "A"}]
+    assert result == expected
+
+
+def test_format_combinations_single_element_groups():
+    combinations = [[["A"], ["B"], ["C"]]]
+    result = format_combinations(combinations)
+    expected = [{"A": "A", "B": "B", "C": "C"}]
+    assert result == expected
+
+
+def test_format_combinations_empty_group():
+    combinations = [[[]]]
+    result = format_combinations(combinations)
+    expected = [{}]
+    assert result == expected
+
+
+def test_format_combinations_empty_combinations():
+    combinations = []
+    result = format_combinations(combinations)
+    expected = []
+    assert result == expected
+
+
+def test_format_combinations_mixed_groups():
+    combinations = [[["A", "B"], ["C"], ["D", "E", "F"]]]
+    result = format_combinations(combinations)
+    expected = [{"A": "A", "B": "A", "C": "C", "D": "D", "E": "D", "F": "D"}]
+    assert result == expected

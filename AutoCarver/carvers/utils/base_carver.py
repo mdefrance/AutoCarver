@@ -737,17 +737,6 @@ class BaseCarver(BaseDiscretizer):
         return loaded_carver
 
 
-def filter_nan(xagg: Union[Series, DataFrame], str_nan: str) -> DataFrame:
-    """Filters out nans from crosstab or y values"""
-    # cehcking for values in crosstab
-    filtered_xagg = None
-    if xagg is not None:
-        # filtering out nans if requested from train crosstab
-        filtered_xagg = xagg.copy()
-        if str_nan in xagg.index:
-            filtered_xagg = xagg.drop(str_nan, axis=0)
-
-    return filtered_xagg
 
 
 def discretize(
