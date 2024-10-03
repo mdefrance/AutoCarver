@@ -287,6 +287,8 @@ class BaseCarver(BaseDiscretizer):
         # getting best combination
         best_combination = self._get_best_combination(feature, xagg, xagg_dev=xagg_dev)
 
+        CombinationEvaluator()
+
         # checking that a suitable combination has been found
         if best_combination is not None:
             xagg, xagg_dev = best_combination  # unpacking

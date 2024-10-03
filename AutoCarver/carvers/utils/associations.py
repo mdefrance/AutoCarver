@@ -11,12 +11,41 @@ from .combinations import (
 )
 from tqdm.autonotebook import tqdm
 
-from ABC import abstractmethod, ABC
+from abc import abstractmethod, ABC
+
+
+class PartialCombinationEvaluator:
+    def __init__(self, max_n_mod, min_freq, sort_by):
+        self.max_n_mod = max_n_mod
+        self.min_freq = min_freq
+        self.sort_by = sort_by
+
+    def __call__(
+        self,
+        feature: BaseFeature,
+        xagg: DataFrame,
+        xagg_dev: DataFrame = None,
+        dropna: bool = False,
+        verbose: bool = False,
+    ):
+        return CombinationEvaluator(
+            feature=feature,
+            xagg=xagg,
+            sort_by=self.sort_by,
+            max_n_mod=self.max_n_mod,
+            min_freq=self.min_freq,
+            xagg_dev=xagg_dev,
+            dropna=dropna,
+            verbose=verbose,
+        )
 
 
 class CombinationEvaluator(ABC):
 
     __name__ = "CombinationEvaluator"
+
+    is_y_binary = False
+    is_y_continuous = False
 
     def __init__(
         self,
@@ -53,6 +82,10 @@ class CombinationEvaluator(ABC):
     @abstractmethod
     def _association_measure(self, xagg: Union[Series, DataFrame], n_obs: int) -> dict[str, float]:
         """"""
+
+    @abstractmethod
+    def _compute_target_rates(self, xagg: Union[Series, DataFrame]) -> DataFrame:
+        """ """
 
     def _group_xagg_by_combinations(self, combinations: list[list]) -> list[dict]:
         """groups xagg by combinations of indices"""
@@ -98,61 +131,30 @@ class CombinationEvaluator(ABC):
         """testing the viability of the combination on xagg_train"""
 
         # computing target rate and frequency per value
-        train_rates = self._printer(combination["xagg"])
+        train_rates = self._compute_target_rates(combination["xagg"])
 
         # viability on train sample:
-        # - target rates are distinct for consecutive modalities
-        distinct_rates_train = not any(
-            isclose(train_rates["target_rate"][1:], train_rates["target_rate"].shift(1)[1:])
-        )
+        return test_viability(train_rates, self.min_freq)
 
-        # - minimum frequency is reached for all modalities
-        min_freq_train = all(train_rates["frequency"] >= self.min_freq)
-
-        return {
-            # overall viability on train
-            "train_rates": train_rates,
-            "train_viable": min_freq_train and distinct_rates_train,
-            "min_freq_train": min_freq_train,
-            "distinct_rates_train": distinct_rates_train,
-        }
-
-    def _test_viability_dev(self, train_rates: DataFrame, combination: dict) -> dict:
+    def _test_viability_dev(self, test_results: dict, combination: dict) -> dict:
         """testing the viability of the combination on xagg_dev"""
 
         # case 0: not viable on train or no test sample -> not testing for robustness
         if not test_results.get("train_viable") or self.xagg_dev is None:
-            return {**test_results, "dev_viable": None}
-
+            return {**test_results, "dev": {"viable": None}}
         # case 1: test sample provided -> testing robustness
+
+        # getting train target rates
+        train_target_rate = test_results.pop("train_rates")["target_rate"]
+
         # grouping the dev sample per modality
         grouped_xagg_dev = self._grouper(self.xagg_dev, combination["index_to_groupby"])
 
         # computing target rate and frequency per modality
-        dev_rates = self._printer(grouped_xagg_dev)
+        dev_rates = self._compute_target_rates(grouped_xagg_dev)
 
         # viability on dev sample:
-        # - grouped values have the same ranks in train/test
-        ranks_train_dev = all(
-            train_rates.sort_values("target_rate").index
-            == dev_rates.sort_values("target_rate").index
-        )
-
-        # - minimum frequency is reached for all modalities
-        min_freq_dev = all(dev_rates["frequency"] >= self.min_freq)
-
-        # - target rates are distinct for all modalities
-        distinct_rates_dev = not any(
-            isclose(dev_rates["target_rate"][1:], dev_rates["target_rate"].shift(1)[1:])
-        )
-
-        return {
-            # overall viability on dev
-            "dev_viable": ranks_train_dev and min_freq_dev and distinct_rates_dev,
-            "min_freq_dev": min_freq_dev,
-            "ranks_train_dev": ranks_train_dev,
-            "distinct_rates_dev": distinct_rates_dev,
-        }
+        return dict(**test_results, **test_viability(dev_rates, self.min_freq, train_target_rate))
 
     def _test_viability(self, associations: list[dict]) -> dict:
         """Tests the viability of all possible combinations onto xagg_dev"""
@@ -182,11 +184,8 @@ class CombinationEvaluator(ABC):
                 **test_results,
             )
 
-            # checking for viability on dev and train
-            if test_results["train_viable"] and (
-                test_results["dev_viable"] or test_results["dev_viable"] is None
-            ):
-                # best combination found: breaking the loop on combinations
+            # best combination found: breaking the loop on combinations
+            if is_viable(test_results):
                 viable_combination = combination
                 break
 
@@ -280,6 +279,8 @@ class CombinationEvaluator(ABC):
             # getting most associated combination
             return self._get_best_association(combinations)
 
+        return None
+
     def _get_best_combination_with_nan(self, best_combination: dict) -> DataFrame:
         """Computes associations of the tab for each combination with nans"""
 
@@ -323,3 +324,4 @@ def filter_nan(xagg: Union[Series, DataFrame], str_nan: str) -> DataFrame:
             filtered_xagg = xagg.drop(str_nan, axis=0)
 
     return filtered_xagg
+
