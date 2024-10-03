@@ -138,6 +138,8 @@ class BinaryCarver(BaseCarver):
 
                 # reordering according to known_order
                 xtab = xtab.reindex(feature.labels)
+                if any(xtab.isna()):
+                    print("missing, check dependency with combinationevaluator", xtab)
 
                 # storing results
                 xtabs.update({feature.version: xtab})

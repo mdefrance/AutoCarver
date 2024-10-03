@@ -74,7 +74,10 @@ class CombinationEvaluator(ABC):
         self.max_n_mod = max_n_mod
         self.min_freq = min_freq
         self.raw_xagg = xagg.copy()
-        self.raw_xagg_dev = xagg_dev.copy()
+        self.raw_xagg_dev = None
+        if xagg_dev is not None:
+            self.raw_xagg_dev = xagg_dev.copy()
+
         self.xagg = xagg
         self.xagg_dev = xagg_dev
 
@@ -324,36 +327,35 @@ class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
 
     is_y_binary = True
 
-    def _grouper(self, xagg: DataFrame, groupby: list[str]) -> DataFrame:
-        """Groups a crosstab by groupby and sums column values by groups (vectorized)
+    def _compute_target_rates(self, xagg: DataFrame = None) -> DataFrame:
+        """Prints a binary xtab's statistics
+
+        - there should bnot be nans in xagg
 
         Parameters
         ----------
-        xagg : DataFrame
-            crosstab between X and y
-        groupby : list[str]
-            indices to group by
+        xagg : Dataframe
+            A crosstab, by default None
 
         Returns
         -------
         DataFrame
-            Crosstab grouped by indices
+            Target rate and frequency per modality
         """
-        # all indices that may be duplicated
-        index_values = array([groupby.get(index_value, index_value) for index_value in xagg.index])
+        # checking for an xtab
+        stats = None
+        if xagg is not None:
+            # target rate and frequency statistics per modality
+            stats = DataFrame(
+                {
+                    # target rate per modality
+                    "target_rate": xagg[1].divide(xagg.sum(axis=1)),
+                    # frequency per modality
+                    "frequency": xagg.sum(axis=1) / xagg.sum().sum(),
+                }
+            )
 
-        # all unique indices deduplicated
-        unique_indices = unique(index_values)
-
-        # initiating summed up array with zeros
-        summed_values = zeros((len(unique_indices), len(xagg.columns)))
-
-        # for each unique_index found in index_values sums xtab.Values at corresponding position
-        # in summed_values
-        add.at(summed_values, searchsorted(unique_indices, index_values), xagg.values)
-
-        # converting back to dataframe
-        return DataFrame(summed_values, index=unique_indices, columns=xagg.columns)
+        return stats
 
     def _association_measure(self, xagg: DataFrame, n_obs: int) -> dict[str, float]:
         """Computes measures of association between feature and target by crosstab.
@@ -385,33 +387,36 @@ class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
 
         return {"cramerv": cramerv, "tschuprowt": tschuprowt}
 
-    def _compute_target_rates(self, xagg: DataFrame = None) -> DataFrame:
-        """Prints a binary xtab's statistics
+    def _grouper(self, xagg: DataFrame, groupby: dict) -> DataFrame:
+        """Groups a crosstab by groupby and sums column values by groups (vectorized)
 
         Parameters
         ----------
-        xagg : Dataframe
-            A crosstab, by default None
+        xagg : DataFrame
+            crosstab between X and y
+        groupby : list[str]
+            indices to group by
 
         Returns
         -------
         DataFrame
-            Target rate and frequency per modality
+            Crosstab grouped by indices
         """
-        # checking for an xtab
-        stats = None
-        if xagg is not None:
-            # target rate and frequency statistics per modality
-            stats = DataFrame(
-                {
-                    # target rate per modality
-                    "target_rate": xagg[1].divide(xagg.sum(axis=1)),
-                    # frequency per modality
-                    "frequency": xagg.sum(axis=1) / xagg.sum().sum(),
-                }
-            )
+        # all indices that may be duplicated
+        index_values = array([groupby.get(index_value, index_value) for index_value in xagg.index])
 
-        return stats
+        # all unique indices deduplicated
+        unique_indices = unique(index_values)
+
+        # initiating summed up array with zeros
+        summed_values = zeros((len(unique_indices), len(xagg.columns)))
+
+        # for each unique_index found in index_values sums xtab.Values at corresponding position
+        # in summed_values
+        add.at(summed_values, searchsorted(unique_indices, index_values), xagg.values)
+
+        # converting back to dataframe
+        return DataFrame(summed_values, index=unique_indices, columns=xagg.columns)
 
 
 class TschuprowtCombinations(BinaryCombinationEvaluator):
