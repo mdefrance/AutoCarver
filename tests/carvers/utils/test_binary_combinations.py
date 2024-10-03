@@ -1,5 +1,5 @@
 from numpy import nan
-from pandas import DataFrame, Series
+from pandas import DataFrame
 from pytest import fixture, FixtureRequest
 from AutoCarver.features import CategoricalFeature
 from numpy import allclose
@@ -9,13 +9,13 @@ from AutoCarver.carvers.utils.associations import (
     CramervCombinations,
 )
 
-from numpy import add, array, searchsorted, sqrt, unique, zeros
-from pandas import DataFrame, Series, crosstab, isna
+from numpy import sqrt
+from pandas import DataFrame, isna
 from scipy.stats import chi2_contingency
 
 
 @fixture(params=[TschuprowtCombinations, CramervCombinations])
-def evaluator(request: FixtureRequest) -> str:
+def evaluator(request: FixtureRequest) -> BinaryCombinationEvaluator:
     xagg = DataFrame({"A": [1, 3], "B": [4, 6]}, index=["a", "c"])
     return request.param(max_n_mod=5, min_freq=0.2, feature=CategoricalFeature("test"), xagg=xagg)
 

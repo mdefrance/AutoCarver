@@ -16,7 +16,7 @@ from abc import abstractmethod, ABC
 
 
 from numpy import add, array, searchsorted, sqrt, unique, zeros
-from pandas import DataFrame, Series, crosstab
+from pandas import DataFrame, Series
 from scipy.stats import chi2_contingency
 
 from numpy import mean, unique
@@ -432,6 +432,25 @@ class CramervCombinations(BinaryCombinationEvaluator):
 class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
     is_y_continuous = True
 
+    def _association_measure(self, xagg: Series, n_obs: int) -> dict[str, float]:
+        """Computes measures of association between feature and quantitative target.
+
+        Parameters
+        ----------
+        xagg : DataFrame
+            Values taken by y for each of x's modalities.
+
+        Returns
+        -------
+        dict[str, float]
+            Kruskal-Wallis' H as a dict.
+        """
+        _ = n_obs  # unused attribute
+
+        # Kruskal-Wallis' H
+        return {"kruskal": kruskal(*tuple(xagg.values))[0]}
+    
+
     def _grouper(self, xagg: Series, groupby: dict[str:str]) -> Series:
         """Groups values of y
 
@@ -450,23 +469,6 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
         # TODO: convert this to the vectorial version like BinaryCarver
         return xagg.groupby(groupby).sum()
 
-    def _association_measure(self, xagg: Series, n_obs: int) -> dict[str, float]:
-        """Computes measures of association between feature and quantitative target.
-
-        Parameters
-        ----------
-        xagg : DataFrame
-            Values taken by y for each of x's modalities.
-
-        Returns
-        -------
-        dict[str, float]
-            Kruskal-Wallis' H as a dict.
-        """
-        _ = n_obs  # unused attribute
-
-        # Kruskal-Wallis' H
-        return {"kruskal": kruskal(*tuple(xagg.values))[0]}
 
     def _printer(self, xagg: Series = None) -> DataFrame:
         """Prints a continuous yval's statistics
