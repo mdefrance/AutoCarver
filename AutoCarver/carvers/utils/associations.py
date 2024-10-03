@@ -1,5 +1,6 @@
 from typing import Union
-from numpy import isclose
+
+from .testing import is_viable, _test_viability
 from pandas import Series, DataFrame
 from ...features import BaseFeature, GroupedList
 from .combinations import (
@@ -12,6 +13,15 @@ from .combinations import (
 from tqdm.autonotebook import tqdm
 
 from abc import abstractmethod, ABC
+
+
+from numpy import add, array, searchsorted, sqrt, unique, zeros
+from pandas import DataFrame, Series, crosstab
+from scipy.stats import chi2_contingency
+
+from numpy import mean, unique
+from pandas import DataFrame, Series
+from scipy.stats import kruskal
 
 
 class PartialCombinationEvaluator:
@@ -46,12 +56,12 @@ class CombinationEvaluator(ABC):
 
     is_y_binary = False
     is_y_continuous = False
+    sort_by = None
 
     def __init__(
         self,
         feature: BaseFeature,
         xagg: DataFrame,
-        sort_by: str,
         max_n_mod: int,
         min_freq: float,
         xagg_dev: DataFrame = None,
@@ -67,8 +77,6 @@ class CombinationEvaluator(ABC):
         self.raw_xagg_dev = xagg_dev.copy()
         self.xagg = xagg
         self.xagg_dev = xagg_dev
-
-        self.sort_by = sort_by  # TODO replace this by a class per sort_by
 
         # historizing raw combination
         self._historize_raw_combination()
@@ -86,6 +94,19 @@ class CombinationEvaluator(ABC):
     @abstractmethod
     def _compute_target_rates(self, xagg: Union[Series, DataFrame]) -> DataFrame:
         """ """
+
+    def _historize_raw_combination(self):
+        # historizing raw combination TODO
+        raw_association = {
+            "index_to_groupby": {modality: modality for modality in self.xagg.index},
+            self.sort_by: self._association_measure(
+                self.xagg.dropna(), n_obs=sum(self.xagg.dropna().apply(sum))
+            )[self.sort_by],
+        }
+        self._historize(self.feature, raw_association, self.feature.labels)
+
+    def _historize(self, *args, **kwargs) -> None:
+        pass
 
     def _group_xagg_by_combinations(self, combinations: list[list]) -> list[dict]:
         """groups xagg by combinations of indices"""
@@ -134,7 +155,7 @@ class CombinationEvaluator(ABC):
         train_rates = self._compute_target_rates(combination["xagg"])
 
         # viability on train sample:
-        return test_viability(train_rates, self.min_freq)
+        return _test_viability(train_rates, self.min_freq)
 
     def _test_viability_dev(self, test_results: dict, combination: dict) -> dict:
         """testing the viability of the combination on xagg_dev"""
@@ -154,9 +175,9 @@ class CombinationEvaluator(ABC):
         dev_rates = self._compute_target_rates(grouped_xagg_dev)
 
         # viability on dev sample:
-        return dict(**test_results, **test_viability(dev_rates, self.min_freq, train_target_rate))
+        return {**test_results, **_test_viability(dev_rates, self.min_freq, train_target_rate)}
 
-    def _test_viability(self, associations: list[dict]) -> dict:
+    def _get_viable_combination(self, associations: list[dict]) -> dict:
         """Tests the viability of all possible combinations onto xagg_dev"""
 
         # testing viability of all combinations
@@ -209,12 +230,12 @@ class CombinationEvaluator(ABC):
         associations = self._compute_associations(grouped_xaggs)
 
         # testing viability of combination
-        best_association = self._test_viability(associations)
+        best_combination = self._get_viable_combination(associations)
 
         # applying best combination to feature labels and xtab
-        self._apply_best_combination(best_association)
+        self._apply_best_combination(best_combination)
 
-        return best_association
+        return best_combination
 
     def _apply_best_combination(self, best_association: dict) -> None:
         """Applies best combination to feature labels and xtab"""
@@ -240,19 +261,6 @@ class CombinationEvaluator(ABC):
             )
             self.xagg.index = self.feature.labels  # TODO: check if this is necessary
             self.xagg_dev.index = self.feature.labels
-
-    def _historize_raw_combination(self):
-        # historizing raw combination TODO
-        raw_association = {
-            "index_to_groupby": {modality: modality for modality in self.xagg.index},
-            self.sort_by: self._association_measure(
-                self.xagg.dropna(), n_obs=sum(self.xagg.dropna().apply(sum))
-            )[self.sort_by],
-        }
-        self._historize(self.feature, raw_association, self.feature.labels)
-
-    def _historize(self, *args, **kwargs) -> None:
-        pass
 
     def _get_best_combination_non_nan(self) -> DataFrame:
         """Computes associations of the tab for each combination of non-nans"""
@@ -302,7 +310,7 @@ class CombinationEvaluator(ABC):
 
         return best_combination
 
-    def _get_best_combination(self) -> tuple[GroupedList, DataFrame, DataFrame]:
+    def get_best_combination(self) -> tuple[GroupedList, DataFrame, DataFrame]:
         """Computes best combination of modalities for the feature"""
 
         # getting best combination without NaNs
@@ -310,6 +318,183 @@ class CombinationEvaluator(ABC):
 
         # grouping NaNs if requested to drop them (dropna=True)
         return self._get_best_combination_with_nan(best_combination)
+
+
+class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
+
+    is_y_binary = True
+
+    def _grouper(self, xagg: DataFrame, groupby: list[str]) -> DataFrame:
+        """Groups a crosstab by groupby and sums column values by groups (vectorized)
+
+        Parameters
+        ----------
+        xagg : DataFrame
+            crosstab between X and y
+        groupby : list[str]
+            indices to group by
+
+        Returns
+        -------
+        DataFrame
+            Crosstab grouped by indices
+        """
+        # all indices that may be duplicated
+        index_values = array([groupby.get(index_value, index_value) for index_value in xagg.index])
+
+        # all unique indices deduplicated
+        unique_indices = unique(index_values)
+
+        # initiating summed up array with zeros
+        summed_values = zeros((len(unique_indices), len(xagg.columns)))
+
+        # for each unique_index found in index_values sums xtab.Values at corresponding position
+        # in summed_values
+        add.at(summed_values, searchsorted(unique_indices, index_values), xagg.values)
+
+        # converting back to dataframe
+        return DataFrame(summed_values, index=unique_indices, columns=xagg.columns)
+
+    def _association_measure(self, xagg: DataFrame, n_obs: int) -> dict[str, float]:
+        """Computes measures of association between feature and target by crosstab.
+
+        Parameters
+        ----------
+        xtab : DataFrame
+            Crosstab between feature and target.
+
+        n_obs : int
+            Sample total size.
+
+        Returns
+        -------
+        dict[str, float]
+            Cramér's V and Tschuprow's as a dict.
+        """
+        # number of values taken by the features
+        n_mod_x = xagg.shape[0]
+
+        # Chi2 statistic
+        chi2 = chi2_contingency(xagg)[0]
+
+        # Cramér's V
+        cramerv = sqrt(chi2 / n_obs)
+
+        # Tschuprow's T
+        tschuprowt = cramerv / sqrt(sqrt(n_mod_x - 1))
+
+        return {"cramerv": cramerv, "tschuprowt": tschuprowt}
+
+    def _compute_target_rates(self, xagg: DataFrame = None) -> DataFrame:
+        """Prints a binary xtab's statistics
+
+        Parameters
+        ----------
+        xagg : Dataframe
+            A crosstab, by default None
+
+        Returns
+        -------
+        DataFrame
+            Target rate and frequency per modality
+        """
+        # checking for an xtab
+        stats = None
+        if xagg is not None:
+            # target rate and frequency statistics per modality
+            stats = DataFrame(
+                {
+                    # target rate per modality
+                    "target_rate": xagg[1].divide(xagg.sum(axis=1)),
+                    # frequency per modality
+                    "frequency": xagg.sum(axis=1) / xagg.sum().sum(),
+                }
+            )
+
+        return stats
+
+
+class TschuprowtCombinations(BinaryCombinationEvaluator):
+
+    sort_by = "tschuprowt"
+
+
+class CramervCombinations(BinaryCombinationEvaluator):
+
+    sort_by = "cramerv"
+
+
+class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
+    is_y_continuous = True
+
+    def _grouper(self, xagg: Series, groupby: dict[str:str]) -> Series:
+        """Groups values of y
+
+        Parameters
+        ----------
+        yval : Series
+            _description_
+        groupby : _type_
+            _description_
+
+        Returns
+        -------
+        Series
+            _description_
+        """
+        # TODO: convert this to the vectorial version like BinaryCarver
+        return xagg.groupby(groupby).sum()
+
+    def _association_measure(self, xagg: Series, n_obs: int) -> dict[str, float]:
+        """Computes measures of association between feature and quantitative target.
+
+        Parameters
+        ----------
+        xagg : DataFrame
+            Values taken by y for each of x's modalities.
+
+        Returns
+        -------
+        dict[str, float]
+            Kruskal-Wallis' H as a dict.
+        """
+        _ = n_obs  # unused attribute
+
+        # Kruskal-Wallis' H
+        return {"kruskal": kruskal(*tuple(xagg.values))[0]}
+
+    def _printer(self, xagg: Series = None) -> DataFrame:
+        """Prints a continuous yval's statistics
+
+        Parameters
+        ----------
+        xagg : Series
+            A series of values of y by modalities of x, by default None
+
+        Returns
+        -------
+        DataFrame
+            Target rate and frequency per modality
+        """
+        # checking for an xtab
+        stats = None
+        if xagg is not None:
+            # target rate and frequency statistics per modality
+            stats = DataFrame(
+                {
+                    # target rate per modality
+                    "target_rate": xagg.apply(mean),
+                    # frequency per modality
+                    "frequency": xagg.apply(len) / xagg.apply(len).sum(),
+                }
+            )
+
+        return stats
+
+
+class KruksalCombinations(ContinuousCombinationEvaluator):
+
+    sort_by = "kruskal"
 
 
 def filter_nan(xagg: Union[Series, DataFrame], str_nan: str) -> DataFrame:
@@ -324,4 +509,3 @@ def filter_nan(xagg: Union[Series, DataFrame], str_nan: str) -> DataFrame:
             filtered_xagg = xagg.drop(str_nan, axis=0)
 
     return filtered_xagg
-
