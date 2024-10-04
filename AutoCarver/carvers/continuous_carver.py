@@ -4,9 +4,8 @@ for continuous regression tasks.
 
 from numpy import mean, unique
 from pandas import DataFrame, Series
-from scipy.stats import kruskal
 
-from ..features import Features
+from ..features import Features, BaseFeature
 from ..utils import extend_docstring
 from .utils.base_carver import BaseCarver
 
@@ -126,18 +125,10 @@ class ContinuousCarver(BaseCarver):
         # checking for empty datasets
         yvals = {feature.version: None for feature in self.features}
         if X is not None:
-            # y mean for each feature
+
+            # list of y values for each modality of X
             for feature in self.features:
-                # computing crosstab with str_nan
-                yval = y.groupby(X[feature.version]).apply(
-                    lambda u: list(u)
-                )  # pylint: disable=W0108
-
-                # reordering according to known_order
-                yval = yval.reindex(feature.labels, fill_value=[])
-
-                # storing results
-                yvals.update({feature.version: yval})
+                yvals.update({feature.version: get_target_values_by_modality(X, y, feature)})
 
         return yvals
 
@@ -155,3 +146,14 @@ class ContinuousCarver(BaseCarver):
             _description_
         """
         return xagg.apply(mean).sort_values()
+
+
+def get_target_values_by_modality(X: DataFrame, y: Series, feature: BaseFeature) -> dict:
+    """Computes y values for modalities of specified features and ensures the ordering
+    according to the known labels"""
+
+    # list of y values for each modality of X
+    yval = y.groupby(X[feature.version]).apply(lambda u: list(u))
+
+    # reindexing to ensure the right order
+    return yval.reindex(feature.labels, fill_value=[])

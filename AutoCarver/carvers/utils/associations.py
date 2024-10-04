@@ -91,7 +91,9 @@ class CombinationEvaluator(ABC):
         """"""
 
     @abstractmethod
-    def _association_measure(self, xagg: Union[Series, DataFrame], n_obs: int) -> dict[str, float]:
+    def _association_measure(
+        self, xagg: Union[Series, DataFrame], n_obs: int = None
+    ) -> dict[str, float]:
         """"""
 
     @abstractmethod
@@ -357,7 +359,7 @@ class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
 
         return stats
 
-    def _association_measure(self, xagg: DataFrame, n_obs: int) -> dict[str, float]:
+    def _association_measure(self, xagg: DataFrame, n_obs: int = None) -> dict[str, float]:
         """Computes measures of association between feature and target by crosstab.
 
         Parameters
@@ -432,7 +434,7 @@ class CramervCombinations(BinaryCombinationEvaluator):
 class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
     is_y_continuous = True
 
-    def _association_measure(self, xagg: Series, n_obs: int) -> dict[str, float]:
+    def _association_measure(self, xagg: Series, n_obs: int = None) -> dict[str, float]:
         """Computes measures of association between feature and quantitative target.
 
         Parameters
@@ -449,7 +451,6 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
 
         # Kruskal-Wallis' H
         return {"kruskal": kruskal(*tuple(xagg.values))[0]}
-    
 
     def _grouper(self, xagg: Series, groupby: dict[str:str]) -> Series:
         """Groups values of y
@@ -469,8 +470,7 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
         # TODO: convert this to the vectorial version like BinaryCarver
         return xagg.groupby(groupby).sum()
 
-
-    def _printer(self, xagg: Series = None) -> DataFrame:
+    def _compute_target_rates(self, xagg: Series = None) -> DataFrame:
         """Prints a continuous yval's statistics
 
         Parameters

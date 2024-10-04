@@ -3,12 +3,59 @@
 
 import os
 
-from pandas import DataFrame
+from pandas import DataFrame, Series
 from pytest import raises
 
-from AutoCarver import ContinuousCarver, Features
+from AutoCarver import ContinuousCarver
+from AutoCarver.features import Features, OrdinalFeature
 from AutoCarver.config import NAN
 from AutoCarver.discretizers import ChainedDiscretizer
+from AutoCarver.carvers.continuous_carver import get_target_values_by_modality
+
+
+def test_get_target_values_by_modality_basic():
+    X = DataFrame({"feature": ["A", "B", "A", "B", "C"]})
+    y = Series([1, 2, 3, 4, 5])
+    feature = OrdinalFeature("feature", ["A", "B", "C"])
+    result = get_target_values_by_modality(X, y, feature)
+    expected = Series({"A": [1, 3], "B": [2, 4], "C": [5]})
+    assert result.equals(expected)
+
+
+def test_get_target_values_by_modality_with_nan():
+    X = DataFrame({"feature": ["A", "B", "A", "B", None]})
+    y = Series([1, 2, 3, 4, 5])
+    feature = OrdinalFeature("feature", ["A", "B", "C"])
+    result = get_target_values_by_modality(X, y, feature)
+    expected = Series({"A": [1, 3], "B": [2, 4], "C": []})
+    assert result.equals(expected)
+
+
+def test_get_target_values_by_modality_unordered_labels():
+    X = DataFrame({"feature": ["A", "B", "A", "B", "C"]})
+    y = Series([1, 2, 3, 4, 5])
+    feature = OrdinalFeature("feature", ["C", "A", "B"])
+    result = get_target_values_by_modality(X, y, feature)
+    expected = Series({"C": [5], "A": [1, 3], "B": [2, 4]})
+    assert result.equals(expected)
+
+
+def test_get_target_values_by_modality_missing_labels():
+    X = DataFrame({"feature": ["A", "B", "A", "B", "C"]})
+    y = Series([1, 2, 3, 4, 5])
+    feature = OrdinalFeature("feature", ["A", "B"])
+    result = get_target_values_by_modality(X, y, feature)
+    expected = Series({"A": [1, 3], "B": [2, 4]})
+    assert result.equals(expected)
+
+
+def test_get_target_values_by_modality_extra_labels():
+    X = DataFrame({"feature": ["A", "B", "A", "B", "C"]})
+    y = Series([1, 2, 3, 4, 5])
+    feature = OrdinalFeature("feature", ["A", "B", "C", "D"])
+    result = get_target_values_by_modality(X, y, feature)
+    expected = Series({"A": [1, 3], "B": [2, 4], "C": [5], "D": []})
+    assert result.equals(expected)
 
 
 def test_continuous_carver(
