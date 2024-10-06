@@ -6,7 +6,7 @@ from pandas import DataFrame, Series
 from scipy.stats import chi2_contingency, kruskal
 from tqdm.autonotebook import tqdm
 
-from ...features import BaseFeature, GroupedList
+from ..features import BaseFeature, GroupedList
 from .combinations import (
     consecutive_combinations,
     format_combinations,
@@ -15,32 +15,6 @@ from .combinations import (
     xagg_apply_combination,
 )
 from .testing import _test_viability, is_viable
-
-
-class PartialCombinationEvaluator:
-    def __init__(self, max_n_mod, min_freq, sort_by):
-        self.max_n_mod = max_n_mod
-        self.min_freq = min_freq
-        self.sort_by = sort_by
-
-    def __call__(
-        self,
-        feature: BaseFeature,
-        xagg: DataFrame,
-        xagg_dev: DataFrame = None,
-        dropna: bool = False,
-        verbose: bool = False,
-    ):
-        return CombinationEvaluator(
-            feature=feature,
-            xagg=xagg,
-            sort_by=self.sort_by,
-            max_n_mod=self.max_n_mod,
-            min_freq=self.min_freq,
-            xagg_dev=xagg_dev,
-            dropna=dropna,
-            verbose=verbose,
-        )
 
 
 class CombinationEvaluator(ABC):
