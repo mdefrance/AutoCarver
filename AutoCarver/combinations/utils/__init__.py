@@ -1,3 +1,5 @@
-from .testing import _test_viability, is_viable
+"""This module contains the utility functions for the combinations module."""
 
-__all__ = ["_test_viability", "is_viable"]
+from .combination_evaluator import CombinationEvaluator
+
+__all__ = ["CombinationEvaluator"]

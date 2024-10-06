@@ -1,12 +1,13 @@
+"""CombinationEvaluator class to evaluate
+the best combination of modalities for a feature."""
+
 from abc import ABC, abstractmethod
 from typing import Union
 
-from numpy import add, array, mean, searchsorted, sqrt, unique, zeros
 from pandas import DataFrame, Series
-from scipy.stats import chi2_contingency, kruskal
 from tqdm.autonotebook import tqdm
 
-from ..features import BaseFeature, GroupedList
+from ...features import BaseFeature, GroupedList
 from .combinations import (
     consecutive_combinations,
     format_combinations,
@@ -292,181 +293,6 @@ class CombinationEvaluator(ABC):
 
         # grouping NaNs if requested to drop them (dropna=True)
         return self._get_best_combination_with_nan(best_combination)
-
-
-class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
-    is_y_binary = True
-
-    def _compute_target_rates(self, xagg: DataFrame = None) -> DataFrame:
-        """Prints a binary xtab's statistics
-
-        - there should bnot be nans in xagg
-
-        Parameters
-        ----------
-        xagg : Dataframe
-            A crosstab, by default None
-
-        Returns
-        -------
-        DataFrame
-            Target rate and frequency per modality
-        """
-        # checking for an xtab
-        stats = None
-        if xagg is not None:
-            # target rate and frequency statistics per modality
-            stats = DataFrame(
-                {
-                    # target rate per modality
-                    "target_rate": xagg[1].divide(xagg.sum(axis=1)),
-                    # frequency per modality
-                    "frequency": xagg.sum(axis=1) / xagg.sum().sum(),
-                }
-            )
-
-        return stats
-
-    def _association_measure(self, xagg: DataFrame, n_obs: int = None) -> dict[str, float]:
-        """Computes measures of association between feature and target by crosstab.
-
-        Parameters
-        ----------
-        xtab : DataFrame
-            Crosstab between feature and target.
-
-        n_obs : int
-            Sample total size.
-
-        Returns
-        -------
-        dict[str, float]
-            Cramér's V and Tschuprow's as a dict.
-        """
-        # number of values taken by the features
-        n_mod_x = xagg.shape[0]
-
-        # Chi2 statistic
-        chi2 = chi2_contingency(xagg)[0]
-
-        # Cramér's V
-        cramerv = sqrt(chi2 / n_obs)
-
-        # Tschuprow's T
-        tschuprowt = cramerv / sqrt(sqrt(n_mod_x - 1))
-
-        return {"cramerv": cramerv, "tschuprowt": tschuprowt}
-
-    def _grouper(self, xagg: DataFrame, groupby: dict) -> DataFrame:
-        """Groups a crosstab by groupby and sums column values by groups (vectorized)
-
-        Parameters
-        ----------
-        xagg : DataFrame
-            crosstab between X and y
-        groupby : list[str]
-            indices to group by
-
-        Returns
-        -------
-        DataFrame
-            Crosstab grouped by indices
-        """
-        # all indices that may be duplicated
-        index_values = array([groupby.get(index_value, index_value) for index_value in xagg.index])
-
-        # all unique indices deduplicated
-        unique_indices = unique(index_values)
-
-        # initiating summed up array with zeros
-        summed_values = zeros((len(unique_indices), len(xagg.columns)))
-
-        # for each unique_index found in index_values sums xtab.Values at corresponding position
-        # in summed_values
-        add.at(summed_values, searchsorted(unique_indices, index_values), xagg.values)
-
-        # converting back to dataframe
-        return DataFrame(summed_values, index=unique_indices, columns=xagg.columns)
-
-
-class TschuprowtCombinations(BinaryCombinationEvaluator):
-    sort_by = "tschuprowt"
-
-
-class CramervCombinations(BinaryCombinationEvaluator):
-    sort_by = "cramerv"
-
-
-class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
-    is_y_continuous = True
-
-    def _association_measure(self, xagg: Series, n_obs: int = None) -> dict[str, float]:
-        """Computes measures of association between feature and quantitative target.
-
-        Parameters
-        ----------
-        xagg : DataFrame
-            Values taken by y for each of x's modalities.
-
-        Returns
-        -------
-        dict[str, float]
-            Kruskal-Wallis' H as a dict.
-        """
-        _ = n_obs  # unused attribute
-
-        # Kruskal-Wallis' H
-        return {"kruskal": kruskal(*tuple(xagg.values))[0]}
-
-    def _grouper(self, xagg: Series, groupby: dict[str:str]) -> Series:
-        """Groups values of y
-
-        Parameters
-        ----------
-        yval : Series
-            _description_
-        groupby : _type_
-            _description_
-
-        Returns
-        -------
-        Series
-            _description_
-        """
-        # TODO: convert this to the vectorial version like BinaryCarver
-        return xagg.groupby(groupby).sum()
-
-    def _compute_target_rates(self, xagg: Series = None) -> DataFrame:
-        """Prints a continuous yval's statistics
-
-        Parameters
-        ----------
-        xagg : Series
-            A series of values of y by modalities of x, by default None
-
-        Returns
-        -------
-        DataFrame
-            Target rate and frequency per modality
-        """
-        # checking for an xtab
-        stats = None
-        if xagg is not None:
-            # target rate and frequency statistics per modality
-            stats = DataFrame(
-                {
-                    # target rate per modality
-                    "target_rate": xagg.apply(mean),
-                    # frequency per modality
-                    "frequency": xagg.apply(len) / xagg.apply(len).sum(),
-                }
-            )
-
-        return stats
-
-
-class KruksalCombinations(ContinuousCombinationEvaluator):
-    sort_by = "kruskal"
 
 
 def filter_nan(xagg: Union[Series, DataFrame], str_nan: str) -> DataFrame:
