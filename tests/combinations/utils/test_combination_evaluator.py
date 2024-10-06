@@ -2,7 +2,7 @@
 
 from pandas import DataFrame, Series
 
-from AutoCarver.carvers.utils.associations import CombinationEvaluator, filter_nan
+from AutoCarver.combinations.utils.combination_evaluator import CombinationEvaluator, filter_nan
 
 # removing abstract parts of CombinationEvaluator
 CombinationEvaluator.__abstractmethods__ = set()

@@ -3,7 +3,7 @@
 from pandas import DataFrame, Series
 from pytest import raises
 
-from AutoCarver.carvers.utils.testing import (
+from AutoCarver.combinations.utils.testing import (
     _test_distinct_target_rates_between_modalities,
     _test_minimum_frequency_per_modality,
     _test_modality_ordering,

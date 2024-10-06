@@ -5,7 +5,7 @@ from pytest import FixtureRequest, fixture, raises
 from scipy.stats import kruskal
 
 from AutoCarver.carvers.continuous_carver import get_target_values_by_modality
-from AutoCarver.carvers.utils.associations import (
+from AutoCarver.combinations.continuous.continuous_combination_evaluators import (
     ContinuousCombinationEvaluator,
     KruksalCombinations,
 )

@@ -6,7 +6,7 @@ from pytest import FixtureRequest, fixture, raises
 from scipy.stats import chi2_contingency
 
 from AutoCarver.carvers.binary_carver import get_crosstab
-from AutoCarver.carvers.utils.associations import (
+from AutoCarver.combinations.binary.binary_combination_evaluators import (
     BinaryCombinationEvaluator,
     CramervCombinations,
     TschuprowtCombinations,

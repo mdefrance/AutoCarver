@@ -14,13 +14,14 @@ from tqdm.autonotebook import tqdm
 from ...discretizers import BaseDiscretizer, Discretizer
 from ...features import BaseFeature, Features, GroupedList
 from ...utils import get_attribute, get_bool_attribute
-from .combinations import (
-    combination_formatter,
-    consecutive_combinations,
-    nan_combinations,
-    order_apply_combination,
-    xagg_apply_combination,
-)
+
+# from .combinations import (
+#     combination_formatter,
+#     consecutive_combinations,
+#     nan_combinations,
+#     order_apply_combination,
+#     xagg_apply_combination,
+# )
 from .pretty_print import index_mapper, prettier_xagg
 
 # trying to import extra dependencies

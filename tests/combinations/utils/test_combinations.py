@@ -1,7 +1,7 @@
 from pandas import DataFrame
 from pytest import raises
 
-from AutoCarver.carvers.utils.combinations import (
+from AutoCarver.combinations.utils.combinations import (
     combination_formatter,
     combinations_at_index,
     consecutive_combinations,
