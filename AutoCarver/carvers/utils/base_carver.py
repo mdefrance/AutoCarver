@@ -11,15 +11,15 @@ from numpy import isclose
 from pandas import DataFrame, Series
 from tqdm.autonotebook import tqdm
 
-from ...utils import get_bool_attribute, get_attribute
 from ...discretizers import BaseDiscretizer, Discretizer
 from ...features import BaseFeature, Features, GroupedList
+from ...utils import get_attribute, get_bool_attribute
 from .combinations import (
+    combination_formatter,
     consecutive_combinations,
     nan_combinations,
     order_apply_combination,
     xagg_apply_combination,
-    combination_formatter,
 )
 from .pretty_print import index_mapper, prettier_xagg
 
@@ -316,7 +316,6 @@ class BaseCarver(BaseDiscretizer):
 
         # checking for non-nan values
         if len([label for label in xagg.index if label != feature.nan]) > 1:
-
             # historizing raw combination TODO
             raw_association = {
                 "index_to_groupby": {modality: modality for modality in xagg.index},
@@ -737,8 +736,6 @@ class BaseCarver(BaseDiscretizer):
         loaded_carver = BaseDiscretizer(features=features, **carver_json)
 
         return loaded_carver
-
-
 
 
 def discretize(

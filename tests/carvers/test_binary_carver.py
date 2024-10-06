@@ -3,18 +3,66 @@
 
 import os
 
-from pandas import DataFrame
+from numpy import nan
+from pandas import DataFrame, Series
 from pytest import fixture, raises
 
-from AutoCarver import BinaryCarver, Features
+from AutoCarver import BinaryCarver
+from AutoCarver.carvers.binary_carver import get_crosstab
 from AutoCarver.config import NAN
 from AutoCarver.discretizers import ChainedDiscretizer
+from AutoCarver.features import Features, OrdinalFeature
 
 
 @fixture(scope="module", params=["tschuprowt", "cramerv"])
 def sort_by(request) -> str:
     """sorting measure"""
     return request.param
+
+
+def test_get_crosstab_basic():
+    X = DataFrame({"feature": ["A", "B", "A", "B", "C"]})
+    y = Series([1, 0, 1, 0, 1])
+    feature = OrdinalFeature("feature", ["A", "B", "C"])
+    result = get_crosstab(X, y, feature)
+    expected = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["A", "B", "C"])
+    assert result.equals(expected)
+
+
+def test_get_crosstab_with_nan():
+    X = DataFrame({"feature": ["A", "B", "A", "B", None]})
+    y = Series([1, 0, 1, 0, 1])
+    feature = OrdinalFeature("feature", ["A", "B", "C"])
+    result = get_crosstab(X, y, feature)
+    expected = DataFrame({0: [0, 2, nan], 1: [2, 0, nan]}, index=["A", "B", "C"])
+    assert result.equals(expected)
+
+
+def test_get_crosstab_unordered_labels():
+    X = DataFrame({"feature": ["A", "B", "A", "B", "C"]})
+    y = Series([1, 0, 1, 0, 1])
+    feature = OrdinalFeature("feature", ["C", "A", "B"])
+    result = get_crosstab(X, y, feature)
+    expected = DataFrame({0: [0, 0, 2], 1: [1, 2, 0]}, index=["C", "A", "B"])
+    assert result.equals(expected)
+
+
+def test_get_crosstab_missing_labels():
+    X = DataFrame({"feature": ["A", "B", "A", "B", "C"]})
+    y = Series([1, 0, 1, 0, 1])
+    feature = OrdinalFeature("feature", ["A", "B"])
+    result = get_crosstab(X, y, feature)
+    expected = DataFrame({0: [0, 2], 1: [2, 0]}, index=["A", "B"])
+    assert result.equals(expected)
+
+
+def test_get_crosstab_extra_labels():
+    X = DataFrame({"feature": ["A", "B", "A", "B", "C"]})
+    y = Series([1, 0, 1, 0, 1])
+    feature = OrdinalFeature("feature", ["A", "B", "C", "D"])
+    result = get_crosstab(X, y, feature)
+    expected = DataFrame({0: [0, 2, 0, nan], 1: [2, 0, 1, nan]}, index=["A", "B", "C", "D"])
+    assert result.equals(expected)
 
 
 def test_binary_carver(

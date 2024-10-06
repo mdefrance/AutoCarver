@@ -1,6 +1,8 @@
 """ set of tests for viability testing within carvers"""
 
-from pandas import Series, DataFrame
+from pandas import DataFrame, Series
+from pytest import raises
+
 from AutoCarver.carvers.utils.testing import (
     _test_distinct_target_rates_between_modalities,
     _test_minimum_frequency_per_modality,
@@ -8,7 +10,6 @@ from AutoCarver.carvers.utils.testing import (
     _test_viability,
     is_viable,
 )
-from pytest import raises
 
 
 def test_distinct_target_rates_between_modalities_distinct():

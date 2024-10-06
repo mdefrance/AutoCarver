@@ -20,7 +20,6 @@ def combinations_at_index(
 
         # checking that next index is not off the elements list
         if next_index < len(elements) + 1:
-
             # checking that there are remaining groups or that it is the last group
             if (remaining_groups > 1) | (next_index == len(elements)):
                 combination = list(elements[start_index:next_index])
@@ -94,7 +93,6 @@ def nan_combinations(
     # iterating over each combination
     nan_combis = []
     for combination in combinations:
-
         # adding nan to each group of the combination
         nan_combination = []
         for n in range(len(combination)):

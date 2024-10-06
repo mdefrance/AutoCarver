@@ -1,27 +1,20 @@
+from abc import ABC, abstractmethod
 from typing import Union
 
-from .testing import is_viable, _test_viability
-from pandas import Series, DataFrame
+from numpy import add, array, mean, searchsorted, sqrt, unique, zeros
+from pandas import DataFrame, Series
+from scipy.stats import chi2_contingency, kruskal
+from tqdm.autonotebook import tqdm
+
 from ...features import BaseFeature, GroupedList
 from .combinations import (
-    nan_combinations,
     consecutive_combinations,
     format_combinations,
+    nan_combinations,
     order_apply_combination,
     xagg_apply_combination,
 )
-from tqdm.autonotebook import tqdm
-
-from abc import abstractmethod, ABC
-
-
-from numpy import add, array, searchsorted, sqrt, unique, zeros
-from pandas import DataFrame, Series
-from scipy.stats import chi2_contingency
-
-from numpy import mean, unique
-from pandas import DataFrame, Series
-from scipy.stats import kruskal
+from .testing import _test_viability, is_viable
 
 
 class PartialCombinationEvaluator:
@@ -51,7 +44,6 @@ class PartialCombinationEvaluator:
 
 
 class CombinationEvaluator(ABC):
-
     __name__ = "CombinationEvaluator"
 
     is_y_binary = False
@@ -60,29 +52,22 @@ class CombinationEvaluator(ABC):
 
     def __init__(
         self,
-        feature: BaseFeature,
-        xagg: DataFrame,
         max_n_mod: int,
         min_freq: float,
-        xagg_dev: DataFrame = None,
         dropna: bool = False,
         verbose: bool = False,
     ) -> None:
         self.verbose = verbose
         self.dropna = dropna
-        self.feature = feature
         self.max_n_mod = max_n_mod
         self.min_freq = min_freq
-        self.raw_xagg = xagg.copy()
+
+        # attributes to be set by get_best_combination
+        self.feature = None
+        self.raw_xagg = None
         self.raw_xagg_dev = None
-        if xagg_dev is not None:
-            self.raw_xagg_dev = xagg_dev.copy()
-
-        self.xagg = xagg
-        self.xagg_dev = xagg_dev
-
-        # historizing raw combination
-        self._historize_raw_combination()
+        self.xagg = None
+        self.xagg_dev = None
 
     @abstractmethod
     def _grouper(
@@ -247,7 +232,6 @@ class CombinationEvaluator(ABC):
 
         # checking that a combination was found
         if best_association is not None:
-
             # applying best_combination to feature labels
             labels = order_apply_combination(self.feature.labels, best_association["combination"])
 
@@ -275,7 +259,6 @@ class CombinationEvaluator(ABC):
 
         # removing nans if any
         if self.feature.has_nan:
-
             # removing nans for combination of non-nans
             raw_labels.remove(self.feature.nan)
 
@@ -285,7 +268,6 @@ class CombinationEvaluator(ABC):
 
         # checking for non-nan values
         if len(self.xagg.shape[0]) > 1:
-
             # all possible consecutive combinations
             combinations = consecutive_combinations(raw_labels, self.max_n_mod)
 
@@ -302,7 +284,6 @@ class CombinationEvaluator(ABC):
 
         # grouping NaNs if requested to drop them (dropna=True)
         if self.dropna and self.feature.has_nan and best_combination is not None:
-
             # verbose if requested
             if self.verbose:
                 print(f"[{self.__name__}] Grouping NaNs")
@@ -315,8 +296,22 @@ class CombinationEvaluator(ABC):
 
         return best_combination
 
-    def get_best_combination(self) -> tuple[GroupedList, DataFrame, DataFrame]:
+    def get_best_combination(
+        self, feature: BaseFeature, xagg: DataFrame, xagg_dev: DataFrame = None
+    ) -> tuple[GroupedList, DataFrame, DataFrame]:
         """Computes best combination of modalities for the feature"""
+
+        # setting feature and xtab
+        self.feature = feature
+        self.raw_xagg = xagg.copy()
+        self.raw_xagg_dev = None
+        if xagg_dev is not None:
+            self.raw_xagg_dev = xagg_dev.copy()
+        self.xagg = xagg
+        self.xagg_dev = xagg_dev
+
+        # historizing raw combination
+        self._historize_raw_combination()
 
         # getting best combination without NaNs
         best_combination = self._get_best_combination_non_nan()
@@ -326,7 +321,6 @@ class CombinationEvaluator(ABC):
 
 
 class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
-
     is_y_binary = True
 
     def _compute_target_rates(self, xagg: DataFrame = None) -> DataFrame:
@@ -422,12 +416,10 @@ class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
 
 
 class TschuprowtCombinations(BinaryCombinationEvaluator):
-
     sort_by = "tschuprowt"
 
 
 class CramervCombinations(BinaryCombinationEvaluator):
-
     sort_by = "cramerv"
 
 
@@ -500,7 +492,6 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
 
 
 class KruksalCombinations(ContinuousCombinationEvaluator):
-
     sort_by = "kruskal"
 
 

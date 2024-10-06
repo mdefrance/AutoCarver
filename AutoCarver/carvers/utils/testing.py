@@ -1,7 +1,7 @@
 """ set of tests for combinations within carvers"""
 
 from numpy import isclose
-from pandas import Series, DataFrame
+from pandas import DataFrame, Series
 
 
 def _test_distinct_target_rates_between_modalities(target_rates: Series) -> bool:

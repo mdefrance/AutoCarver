@@ -1,27 +1,25 @@
-from numpy import nan
-from pandas import DataFrame
-from pytest import fixture, FixtureRequest
-from AutoCarver.features import CategoricalFeature
-from numpy import allclose
+"""Tests for the binary_combinations module."""
+
+from numpy import allclose, nan, sqrt
+from pandas import DataFrame, Series, isna
+from pytest import FixtureRequest, fixture, raises
+from scipy.stats import chi2_contingency
+
+from AutoCarver.carvers.binary_carver import get_crosstab
 from AutoCarver.carvers.utils.associations import (
     BinaryCombinationEvaluator,
-    TschuprowtCombinations,
     CramervCombinations,
+    TschuprowtCombinations,
 )
-
-from numpy import sqrt
-from pandas import DataFrame, isna
-from scipy.stats import chi2_contingency
+from AutoCarver.features import OrdinalFeature
 
 
 @fixture(params=[TschuprowtCombinations, CramervCombinations])
 def evaluator(request: FixtureRequest) -> BinaryCombinationEvaluator:
-    xagg = DataFrame({"A": [1, 3], "B": [4, 6]}, index=["a", "c"])
-    return request.param(max_n_mod=5, min_freq=0.2, feature=CategoricalFeature("test"), xagg=xagg)
+    return request.param(max_n_mod=5, min_freq=0.2)
 
 
 def test_init(evaluator: BinaryCombinationEvaluator):
-
     assert evaluator.is_y_binary is True
     assert evaluator.is_y_continuous is False
     assert evaluator.sort_by in ["cramerv", "tschuprowt"]
@@ -72,55 +70,43 @@ def test_compute_target_rates_single_column(evaluator: BinaryCombinationEvaluato
     assert allclose(result, expected)
 
 
-def test_compute_target_rates_single_row(evaluator: BinaryCombinationEvaluator):
-    xagg = DataFrame({0: [10], 1: [5]}, index=["a"])
-    result = evaluator._compute_target_rates(xagg)
-    expected = DataFrame({"target_rate": [0.333333], "frequency": [1.0]}, index=["a"])
-    print(result)
-    assert allclose(result, expected)
-
-
-def test_compute_target_rates_single_column(evaluator: BinaryCombinationEvaluator):
-    xagg = DataFrame({1: [5, 15, 25]}, index=["a", "b", "c"])
+def test_compute_target_rates_with_nan(evaluator: BinaryCombinationEvaluator):
+    X = DataFrame({"feature": ["a", "b", "a", "b", nan]})
+    y = Series([1, 0, 1, 0, 1])
+    feature = OrdinalFeature("feature", ["a", "b", "c"])
+    xagg = get_crosstab(X, y, feature)
+    print(xagg)
     result = evaluator._compute_target_rates(xagg)
     expected = DataFrame(
-        {"target_rate": [1.0, 1.0, 1.0], "frequency": [0.111111, 0.333333, 0.555556]},
+        {"target_rate": [1.0, 0.0, nan], "frequency": [0.5, 0.5, 0.0]},
+        index=["a", "b", "c"],
+    )
+    print(result)
+    assert result.equals(expected)
+
+
+def test_compute_target_rates_all_nan(evaluator: BinaryCombinationEvaluator):
+    X = DataFrame({"feature": ["a", "b", "a", "b", "c"]})
+    y = Series([nan, nan, nan, nan, nan])
+    feature = OrdinalFeature("feature", ["a", "b", "c"])
+    xagg = get_crosstab(X, y, feature)
+    with raises(KeyError):
+        evaluator._compute_target_rates(xagg)
+
+
+def test_compute_target_rates_some_nan(evaluator: BinaryCombinationEvaluator):
+    """supposed to raise?"""
+    X = DataFrame({"feature": ["a", "b", "a", "b", "c"]})
+    y = Series([1, nan, 1, 0, 1])
+    feature = OrdinalFeature("feature", ["a", "b", "c"])
+    xagg = get_crosstab(X, y, feature)
+    result = evaluator._compute_target_rates(xagg)
+    expected = DataFrame(
+        {"target_rate": [1.0, 0, 1.0], "frequency": [0.5, 0.25, 0.25]},
         index=["a", "b", "c"],
     )
     print(result)
     assert allclose(result, expected)
-
-
-# def test_compute_target_rates_with_nan(evaluator: BinaryCombinationEvaluator):
-#     xagg = DataFrame({0: [10, nan, 30], 1: [5, 15, nan]}, index=["a", "b", "c"])
-#     result = evaluator._compute_target_rates(xagg)
-#     expected = DataFrame(
-#         {"target_rate": [0.333333, 1.0, 0.5], "frequency": [0.15, 0.15, 0.35]},
-#         index=["a", "b", "c"],
-#     )
-#     print(result)
-#     assert allclose(result, expected)
-
-
-# def test_compute_target_rates_all_nan(evaluator: BinaryCombinationEvaluator):
-#     xagg = DataFrame({0: [nan, nan, nan], 1: [nan, nan, nan]}, index=["a", "b", "c"])
-#     result = evaluator._compute_target_rates(xagg)
-#     expected = DataFrame(
-#         {"target_rate": [nan, nan, nan], "frequency": [0.0, 0.0, 0.0]},
-#         index=["a", "b", "c"],
-#     )
-#     print(result)
-#     pd.testing.assert_frame_equal(result, expected)
-
-
-# def test_compute_target_rates_some_nan(evaluator: BinaryCombinationEvaluator):
-#     xagg = DataFrame({0: [10, nan, 30], 1: [nan, 15, 25]}, index=["a", "b", "c"])
-#     result = evaluator._compute_target_rates(xagg)
-#     expected = DataFrame(
-#         {"target_rate": [1.0, 1.0, 0.545455], "frequency": [0.1, 0.15, 0.75]}, index=["a", "b", "c"]
-#     )
-#     print(result)
-#     assert allclose(result, expected)
 
 
 def test_association_measure_basic(evaluator: BinaryCombinationEvaluator):

@@ -8,7 +8,7 @@ from pytest import FixtureRequest, fixture, raises
 
 from AutoCarver.discretizers.utils.base_discretizer import (
     BaseDiscretizer,
-    transform_quantitative_feature
+    transform_quantitative_feature,
 )
 from AutoCarver.features import (
     CategoricalFeature,

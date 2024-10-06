@@ -1,15 +1,16 @@
-from AutoCarver.features import OrdinalFeature, GroupedList
+from pandas import DataFrame
+from pytest import raises
+
 from AutoCarver.carvers.utils.combinations import (
+    combination_formatter,
     combinations_at_index,
     consecutive_combinations,
+    format_combinations,
     nan_combinations,
-    combination_formatter,
     order_apply_combination,
     xagg_apply_combination,
-    format_combinations,
 )
-from pytest import raises
-from pandas import DataFrame
+from AutoCarver.features import GroupedList, OrdinalFeature
 
 
 def test_combinations_at_index_basic():

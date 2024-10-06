@@ -1,11 +1,8 @@
 """ set of tests for associations within carvers"""
 
 from pandas import DataFrame, Series
-from AutoCarver.carvers.utils.associations import (
-    filter_nan,
-    CombinationEvaluator,
-)
 
+from AutoCarver.carvers.utils.associations import CombinationEvaluator, filter_nan
 
 # removing abstract parts of CombinationEvaluator
 CombinationEvaluator.__abstractmethods__ = set()

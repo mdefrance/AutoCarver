@@ -4,11 +4,10 @@ for binary classification tasks.
 
 from typing import Callable
 
-from numpy import add, array, searchsorted, sqrt, unique, zeros
+from numpy import unique
 from pandas import DataFrame, Series, crosstab
-from scipy.stats import chi2_contingency
 
-from ..features import Features
+from ..features import BaseFeature, Features
 from ..utils import extend_docstring
 from .utils.base_carver import BaseCarver
 
@@ -129,20 +128,9 @@ class BinaryCarver(BaseCarver):
         # checking for empty datasets (dev)
         xtabs = {feature.version: None for feature in self.features}
         if X is not None:
-
             # crosstab for each feature
             for feature in self.features:
-
-                # computing crosstab with str_nan
-                xtab = crosstab(X[feature.version], y)
-
-                # reordering according to known_order
-                xtab = xtab.reindex(feature.labels)
-                if any(xtab.isna()):
-                    print("missing, check dependency with combinationevaluator", xtab)
-
-                # storing results
-                xtabs.update({feature.version: xtab})
+                xtabs.update({feature.version: get_crosstab(X, y, feature)})
 
         return xtabs
 
@@ -160,3 +148,14 @@ class BinaryCarver(BaseCarver):
             y mean by xagg index
         """
         return xagg[1].divide(xagg.sum(axis=1)).sort_values()
+
+
+def get_crosstab(X: DataFrame, y: Series, feature: BaseFeature) -> dict:
+    """Computes crosstabs for specified features and ensures that the crosstab is ordered
+    according to the known labels"""
+
+    # computing crosstab between binary y and categorical X
+    xtab = crosstab(X[feature.version], y)
+
+    # reindexing to ensure the right order
+    return xtab.reindex(feature.labels)

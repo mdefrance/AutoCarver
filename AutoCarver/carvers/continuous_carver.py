@@ -5,7 +5,7 @@ for continuous regression tasks.
 from numpy import mean, unique
 from pandas import DataFrame, Series
 
-from ..features import Features, BaseFeature
+from ..features import BaseFeature, Features
 from ..utils import extend_docstring
 from .utils.base_carver import BaseCarver
 
@@ -125,7 +125,6 @@ class ContinuousCarver(BaseCarver):
         # checking for empty datasets
         yvals = {feature.version: None for feature in self.features}
         if X is not None:
-
             # list of y values for each modality of X
             for feature in self.features:
                 yvals.update({feature.version: get_target_values_by_modality(X, y, feature)})

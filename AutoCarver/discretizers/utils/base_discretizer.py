@@ -9,8 +9,8 @@ from numpy import nan, select
 from pandas import DataFrame, Series
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from ...utils import get_bool_attribute, get_attribute
 from ...features import BaseFeature, Features
+from ...utils import get_attribute, get_bool_attribute
 from .multiprocessing import apply_async_function
 
 

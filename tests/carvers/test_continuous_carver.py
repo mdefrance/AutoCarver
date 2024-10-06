@@ -7,10 +7,10 @@ from pandas import DataFrame, Series
 from pytest import raises
 
 from AutoCarver import ContinuousCarver
-from AutoCarver.features import Features, OrdinalFeature
+from AutoCarver.carvers.continuous_carver import get_target_values_by_modality
 from AutoCarver.config import NAN
 from AutoCarver.discretizers import ChainedDiscretizer
-from AutoCarver.carvers.continuous_carver import get_target_values_by_modality
+from AutoCarver.features import Features, OrdinalFeature
 
 
 def test_get_target_values_by_modality_basic():
