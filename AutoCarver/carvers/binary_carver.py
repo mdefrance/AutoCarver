@@ -158,4 +158,4 @@ def get_crosstab(X: DataFrame, y: Series, feature: BaseFeature) -> dict:
     xtab = crosstab(X[feature.version], y)
 
     # reindexing to ensure the right order
-    return xtab.reindex(feature.labels)
+    return xtab.reindex(feature.labels, fill_value=0)

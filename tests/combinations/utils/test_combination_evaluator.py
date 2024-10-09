@@ -2,10 +2,8 @@
 
 from pandas import DataFrame, Series
 
-from AutoCarver.combinations.utils.combination_evaluator import CombinationEvaluator, filter_nan
+from AutoCarver.combinations.utils.combination_evaluator import filter_nan
 
-# removing abstract parts of CombinationEvaluator
-CombinationEvaluator.__abstractmethods__ = set()
 
 
 def test_filter_nan_with_dataframe():

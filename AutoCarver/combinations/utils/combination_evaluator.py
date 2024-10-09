@@ -44,35 +44,6 @@ class CombinationEvaluator(ABC):
         self.xagg = None
         self.xagg_dev = None
 
-    @abstractmethod
-    def _grouper(
-        self, xagg: Union[Series, DataFrame], groupby: dict[str, str]
-    ) -> Union[Series, DataFrame]:
-        """"""
-
-    @abstractmethod
-    def _association_measure(
-        self, xagg: Union[Series, DataFrame], n_obs: int = None
-    ) -> dict[str, float]:
-        """"""
-
-    @abstractmethod
-    def _compute_target_rates(self, xagg: Union[Series, DataFrame]) -> DataFrame:
-        """ """
-
-    def _historize_raw_combination(self):
-        # historizing raw combination TODO
-        raw_association = {
-            "index_to_groupby": {modality: modality for modality in self.xagg.index},
-            self.sort_by: self._association_measure(
-                self.xagg.dropna(), n_obs=sum(self.xagg.dropna().apply(sum))
-            )[self.sort_by],
-        }
-        self._historize(self.feature, raw_association, self.feature.labels)
-
-    def _historize(self, *args, **kwargs) -> None:
-        pass
-
     def _group_xagg_by_combinations(self, combinations: list[list]) -> list[dict]:
         """groups xagg by combinations of indices"""
 
@@ -113,73 +84,6 @@ class CombinationEvaluator(ABC):
             .to_dict(orient="records")
         )
 
-    def _test_viability_train(self, combination: dict) -> dict:
-        """testing the viability of the combination on xagg_train"""
-
-        # computing target rate and frequency per value
-        train_rates = self._compute_target_rates(combination["xagg"])
-
-        # viability on train sample:
-        return _test_viability(train_rates, self.min_freq)
-
-    def _test_viability_dev(self, test_results: dict, combination: dict) -> dict:
-        """testing the viability of the combination on xagg_dev"""
-
-        # case 0: not viable on train or no test sample -> not testing for robustness
-        if not test_results.get("train_viable") or self.xagg_dev is None:
-            return {**test_results, "dev": {"viable": None}}
-        # case 1: test sample provided -> testing robustness
-
-        # getting train target rates
-        train_target_rate = test_results.pop("train_rates")["target_rate"]
-
-        # grouping the dev sample per modality
-        grouped_xagg_dev = self._grouper(self.xagg_dev, combination["index_to_groupby"])
-
-        # computing target rate and frequency per modality
-        dev_rates = self._compute_target_rates(grouped_xagg_dev)
-
-        # viability on dev sample:
-        return {**test_results, **_test_viability(dev_rates, self.min_freq, train_target_rate)}
-
-    def _get_viable_combination(self, associations: list[dict]) -> dict:
-        """Tests the viability of all possible combinations onto xagg_dev"""
-
-        # testing viability of all combinations
-        viable_combination = None
-        for n_combination, combination in tqdm(
-            enumerate(associations),
-            total=len(associations),
-            desc="Testing robustness    ",
-            disable=not self.verbose,
-        ):
-            # testing combination viability on train sample
-            test_results = self._test_viability_train(combination)
-
-            # testing combination viability on dev sample
-            test_results = self._test_viability_dev(test_results, combination)
-
-            # historizing combinations and tests
-            self._historize(
-                feature=self.feature,
-                association=combination,
-                n_combination=n_combination,
-                associations_xagg=associations,
-                dropna=self.dropna,
-                verbose=self.verbose,
-                **test_results,
-            )
-
-            # best combination found: breaking the loop on combinations
-            if is_viable(test_results):
-                viable_combination = combination
-                break
-
-        if self.verbose:  # verbose if requested
-            print("\n")
-
-        return viable_combination
-
     def _get_best_association(self, combinations: list[list[str]]) -> dict:
         """Computes associations of the tab for each combination
 
@@ -216,17 +120,10 @@ class CombinationEvaluator(ABC):
 
             # updating feature's values and xagg indices accordingly
             self.feature.update(labels, convert_labels=True)
-            print(
-                "TODO",
-                self.xagg.index,
-                self.feature.labels,
-                labels,
-                best_association["combination"],
-            )
-            self.xagg.index = self.feature.labels  # TODO: check if this is necessary
+            self.xagg.index = self.feature.labels
             self.xagg_dev.index = self.feature.labels
 
-    def _get_best_combination_non_nan(self) -> DataFrame:
+    def _get_best_combination_non_nan(self) -> dict:
         """Computes associations of the tab for each combination of non-nans"""
 
         # raw ordering without nans
@@ -242,7 +139,7 @@ class CombinationEvaluator(ABC):
             self.xagg = filter_nan(self.raw_xagg, self.feature.nan)
 
         # checking for non-nan values
-        if len(self.xagg.shape[0]) > 1:
+        if self.xagg.shape[0] > 1:
             # all possible consecutive combinations
             combinations = consecutive_combinations(raw_labels, self.max_n_mod)
 
@@ -251,7 +148,7 @@ class CombinationEvaluator(ABC):
 
         return None
 
-    def _get_best_combination_with_nan(self, best_combination: dict) -> DataFrame:
+    def _get_best_combination_with_nan(self, best_combination: dict) -> dict:
         """Computes associations of the tab for each combination with nans"""
 
         # setting dropna to user-requested value
@@ -293,6 +190,94 @@ class CombinationEvaluator(ABC):
 
         # grouping NaNs if requested to drop them (dropna=True)
         return self._get_best_combination_with_nan(best_combination)
+
+    def _test_viability_train(self, combination: dict) -> dict:
+        """testing the viability of the combination on xagg_train"""
+
+        # computing target rate and frequency per value
+        train_rates = self._compute_target_rates(combination["xagg"])
+
+        # viability on train sample:
+        return _test_viability(train_rates, self.min_freq)
+
+    def _test_viability_dev(self, test_results: dict, combination: dict) -> dict:
+        """testing the viability of the combination on xagg_dev"""
+
+        # case 0: not viable on train or no test sample -> not testing for robustness
+        if not test_results.get("train").get("viable") or self.xagg_dev is None:
+            return {**test_results, "dev": {"viable": None}}
+        # case 1: test sample provided -> testing robustness
+
+        # getting train target rates
+        train_target_rate = test_results.pop("train_rates")["target_rate"]
+
+        # grouping the dev sample per modality
+        grouped_xagg_dev = self._grouper(self.xagg_dev, combination["index_to_groupby"])
+
+        # computing target rate and frequency per modality
+        dev_rates = self._compute_target_rates(grouped_xagg_dev)
+
+        # viability on dev sample:
+        return {**test_results, **_test_viability(dev_rates, self.min_freq, train_target_rate)}
+
+    def _get_viable_combination(self, associations: list[dict]) -> dict:
+        """Tests the viability of all possible combinations onto xagg_dev"""
+
+        # testing viability of all combinations
+        viable_combination = None
+        for n_combination, combination in tqdm(
+            enumerate(associations),
+            total=len(associations),
+            desc="Testing robustness    ",
+            disable=not self.verbose,
+        ):
+            # testing combination viability on train sample
+            test_results = self._test_viability_train(combination)
+
+            # testing combination viability on dev sample
+            test_results = self._test_viability_dev(test_results, combination)
+
+            # historizing combinations and tests
+            self._historize()
+
+            # best combination found: breaking the loop on combinations
+            if is_viable(test_results):
+                viable_combination = combination
+                break
+
+        if self.verbose:  # verbose if requested
+            print("\n")
+
+        return viable_combination
+
+    @abstractmethod
+    def _grouper(
+        self, xagg: Union[Series, DataFrame], groupby: dict[str, str]
+    ) -> Union[Series, DataFrame]:
+        """"""
+
+    @abstractmethod
+    def _association_measure(
+        self, xagg: Union[Series, DataFrame], n_obs: int = None
+    ) -> dict[str, float]:
+        """"""
+
+    @abstractmethod
+    def _compute_target_rates(self, xagg: Union[Series, DataFrame]) -> DataFrame:
+        """ """
+
+    def _historize_raw_combination(self):
+        # historizing raw combination TODO
+        raw_association = {
+            "index_to_groupby": {modality: modality for modality in self.xagg.index},
+            self.sort_by: self._association_measure(
+                self.xagg.dropna(), n_obs=sum(self.xagg.dropna().apply(sum))
+            )[self.sort_by],
+        }
+        self._historize(self.feature, raw_association, self.feature.labels)
+
+    def _historize(self, *args, **kwargs) -> None:
+        pass
 
 
 def filter_nan(xagg: Union[Series, DataFrame], str_nan: str) -> DataFrame:
