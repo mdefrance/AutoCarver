@@ -4,6 +4,7 @@ for a binary classification model.
 
 import json
 from abc import ABC
+from dataclasses import dataclass
 
 from numpy import nan, select
 from pandas import DataFrame, Series
@@ -14,6 +15,28 @@ from ...utils import get_attribute, get_bool_attribute
 from .multiprocessing import apply_async_function
 
 
+@dataclass
+class Sample:
+    """sample class to store X and y"""
+
+    X: DataFrame
+    y: Series = None
+
+    def __getitem__(self, key):
+        if key == "X":
+            return self.X
+        if key == "y":
+            return self.y
+
+        raise KeyError(key)
+
+    def __iter__(self):
+        return iter(["X", "y"])
+
+    def keys(self):
+        return ["X", "y"]
+
+
 class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
     """Applies discretization using a dict of GroupedList to transform a DataFrame's columns."""
 
@@ -22,7 +45,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
     def __init__(
         self,
         features: Features,
-        **kwargs: dict,
+        **kwargs,
     ) -> None:
         # features : list[str]
         #     List of column names of features (continuous, discrete, categorical or ordinal)
@@ -103,6 +126,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         self.max_n_mod = kwargs.get("max_n_mod")  # default to None
 
     def __repr__(self, N_CHAR_MAX: int = 700) -> str:
+        """Returns the string representation of the Discretizer"""
         _ = N_CHAR_MAX  # unused attribute
         # truncating features if too long
         str_features = str(self.features)
@@ -201,7 +225,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         return x_copy
 
-    def _prepare_data(self, X: DataFrame, y: Series = None) -> DataFrame:
+    def _prepare_data(self, sample: Sample) -> Sample:
         """Validates format and content of X and y.
 
         Parameters
@@ -220,18 +244,21 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         """
 
         # checking DataFrame of features
-        if X is not None:
-            x_copy = self._prepare_X(X)
+        if sample.X is not None:
+            sample.X = self._prepare_X(sample.X)
 
             # checking target Series
-            if y is not None:
-                self._prepare_y(y)
+            if sample.y is not None:
+                self._prepare_y(sample.y)
 
                 # checking for matching indices
-                if not len(y.index) == len(X.index) or not all(y.index == X.index):
+                if not len(sample.y.index) == len(sample.X.index) or not all(
+                    sample.y.index == sample.X.index
+                ):
                     raise ValueError(f"[{self.__name__}] X and y must have the same indices.")
 
-            return x_copy
+            return sample
+        return None
 
     __prepare_data = _prepare_data  # private copy
 
@@ -297,26 +324,24 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             raise RuntimeError(f"[{self.__name__}] Call fit method first.")
 
         # copying dataframes and casting for multiclass
-        x_copy = self.__prepare_data(X, y)
+        sample = self.__prepare_data(Sample(X, y))
 
         # filling up nans for features that have some
-        x_copy = self.features.fillna(x_copy)
+        sample.X = self.features.fillna(sample.X)
 
         # checking that all unique values in X are in features
-        self.features.check_values(x_copy)
+        self.features.check_values(sample.X)
 
         # transforming quantitative features
         if len(self.features.quantitatives) > 0:
-            x_copy = self._transform_quantitative(x_copy, y)
+            sample.X = self._transform_quantitative(**sample)
 
         # transforming qualitative features
         if len(self.features.qualitatives) > 0:
-            x_copy = self._transform_qualitative(x_copy, y)
+            sample.X = self._transform_qualitative(**sample)
 
         # reinstating nans when not supposed to group them
-        x_copy = self.features.unfillna(x_copy)
-
-        return x_copy
+        return self.features.unfillna(sample.X)
 
     def _transform_quantitative(self, X: DataFrame, y: Series) -> DataFrame:
         """Applies discretization to a DataFrame's Quantitative columns.

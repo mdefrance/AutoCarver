@@ -7,7 +7,7 @@ from pandas import DataFrame, Series, unique
 
 from ...features import BaseFeature, Features, GroupedList
 from ...utils import extend_docstring
-from ..utils.base_discretizer import BaseDiscretizer
+from ..utils.base_discretizer import BaseDiscretizer, Sample
 from ..utils.type_discretizers import StringDiscretizer
 
 
@@ -133,7 +133,7 @@ class ChainedDiscretizer(BaseDiscretizer):
             # updating feature
             feature.update(order, replace=True)
 
-    def _prepare_data(self, X: DataFrame, y: Series = None) -> DataFrame:
+    def _prepare_data(self, sample: Sample) -> Sample:
         """Validates format and content of X and y. Converts non-string columns into strings.
 
         Parameters
@@ -151,32 +151,32 @@ class ChainedDiscretizer(BaseDiscretizer):
             A formatted copy of X
         """
         # copying dataframe
-        x_copy = X.copy()
+        sample.X = sample.X.copy()
 
         # checking for binary target and previous fit
-        x_copy = super()._prepare_data(x_copy, y)
+        sample = super()._prepare_data(sample)
 
         # checking feature values' frequencies
-        check_frequencies(self.features, x_copy, self.min_freq, self.__name__)
+        check_frequencies(self.features, sample.X, self.min_freq, self.__name__)
 
         # converting non-str columns
-        x_copy = ensure_qualitative_dtypes(self.features, x_copy, **self.kwargs)
+        sample.X = ensure_qualitative_dtypes(self.features, sample.X, **self.kwargs)
 
         # fitting features
-        self.features.fit(x_copy, y)
+        self.features.fit(**sample)
 
         # filling up nans for features that have some
-        x_copy = self.features.fillna(x_copy)
+        sample.X = self.features.fillna(sample.X)
 
         # checking for unexpected values
-        self.features.check_values(x_copy)
+        self.features.check_values(sample.X)
 
-        return x_copy
+        return sample
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series = None) -> None:  # pylint: disable=W0222
         # preprocessing data
-        x_copy = self._prepare_data(X, y)
+        sample = self._prepare_data(Sample(X, y))
         self.log_if_verbose()  # verbose if requested
 
         # iterating over each feature
@@ -185,7 +185,7 @@ class ChainedDiscretizer(BaseDiscretizer):
             for level_order in self.chained_orders:
                 # computing frequencies of each modality
                 frequencies = (
-                    x_copy[feature.version]
+                    sample.X[feature.version]
                     .value_counts(normalize=True, dropna=False)
                     .drop(nan, errors="ignore")
                 )
@@ -202,12 +202,12 @@ class ChainedDiscretizer(BaseDiscretizer):
 
                 # values of the feature to input (needed for next levels of the order)
                 df_to_input = [
-                    x_copy[feature.version] == discarded for discarded in values_to_group
+                    sample.X[feature.version] == discarded for discarded in values_to_group
                 ]
 
                 # inputing non frequent values
-                x_copy[feature.version] = select(
-                    df_to_input, groups_value, default=x_copy[feature.version]
+                sample.X[feature.version] = select(
+                    df_to_input, groups_value, default=sample.X[feature.version]
                 )
 
                 # historizing in the feature's order

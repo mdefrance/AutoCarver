@@ -6,7 +6,7 @@ from pandas import DataFrame, Series, notna
 
 from ...features import CategoricalFeature
 from ...utils import extend_docstring
-from ..utils.base_discretizer import BaseDiscretizer
+from ..utils.base_discretizer import BaseDiscretizer, Sample
 
 
 class CategoricalDiscretizer(BaseDiscretizer):
@@ -47,7 +47,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
         # Initiating BaseDiscretizer
         super().__init__(categoricals, **dict(kwargs, min_freq=min_freq))
 
-    def _prepare_data(self, X: DataFrame, y: Series) -> DataFrame:  # pylint: disable=W0222
+    def _prepare_data(self, sample: Sample) -> Sample:
         """Validates format and content of X and y.
 
         Parameters
@@ -65,31 +65,31 @@ class CategoricalDiscretizer(BaseDiscretizer):
             A formatted copy of X
         """
         # checking for binary target
-        x_copy = super()._prepare_data(X, y)
+        sample = super()._prepare_data(sample)
 
         # fitting features
-        self.features.fit(x_copy, y)
+        self.features.fit(**sample)
 
         # filling up nans for features that have some
-        x_copy = self.features.fillna(x_copy)
+        sample.X = self.features.fillna(sample.X)
 
-        return x_copy
+        return sample
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
         # copying dataframe and checking data before bucketization
-        x_copy = self._prepare_data(X, y)
+        sample = self._prepare_data(Sample(X, y))
 
         self.log_if_verbose()  # verbose if requested
 
         # grouping modalities less frequent than min_freq into feature.default
-        x_copy = self._group_rare_modalities(x_copy)
+        sample.X = self._group_rare_modalities(sample.X)
 
         # sorting features' values by target rate
-        self._target_sort(x_copy, y)
+        self._target_sort(**sample)
 
         # discretizing features based on each feature's values_order
-        super().fit(X, y)
+        super().fit(**sample)
 
         return self
 

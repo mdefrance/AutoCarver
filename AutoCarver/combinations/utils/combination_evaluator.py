@@ -304,17 +304,17 @@ class CombinationEvaluator(ABC):
 
     @abstractmethod
     def _grouper(self, xagg: AggregatedSample, groupby: dict[str, str]) -> Union[Series, DataFrame]:
-        """"""
+        """Helper to group XAGG's values by groupby (carver specific)"""
 
     @abstractmethod
     def _association_measure(
         self, xagg: Union[Series, DataFrame], n_obs: int = None
     ) -> dict[str, float]:
-        """"""
+        """Helper to measure association between X and y (carver specific)"""
 
     @abstractmethod
     def _compute_target_rates(self, xagg: Union[Series, DataFrame]) -> DataFrame:
-        """ """
+        """helper to print an XAGG (carver specific)"""
 
     def _historize_raw_combination(self):
         # historizing raw combination TODO

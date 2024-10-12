@@ -6,7 +6,7 @@ from pandas import DataFrame, Series
 from ...features import BaseFeature, Features, GroupedList
 from ...features.qualitative_features import nan_unique
 from ...utils import extend_docstring
-from .base_discretizer import BaseDiscretizer
+from .base_discretizer import BaseDiscretizer, Sample
 from .multiprocessing import apply_async_function
 
 
@@ -43,14 +43,14 @@ class StringDiscretizer(BaseDiscretizer):
         self.log_if_verbose()  # verbose if requested
 
         # checking for binary target and copying X
-        x_copy = self._prepare_data(X, y)
+        sample = self._prepare_data(Sample(X, y))
 
         # transforming all features
-        all_orders = apply_async_function(fit_feature, self.features, self.n_jobs, x_copy)
+        all_orders = apply_async_function(fit_feature, self.features, self.n_jobs, sample.X)
 
         # updating features accordingly
         self.features.update(dict(all_orders), replace=True)
-        self.features.fit(x_copy, y)
+        self.features.fit(**sample)
 
         # discretizing features based on each feature's values_order
         super().fit(X, y)
@@ -124,14 +124,14 @@ class TimedeltaDiscretizer(BaseDiscretizer):
         self.log_if_verbose()  # verbose if requested
 
         # checking for binary target and copying X
-        x_copy = self._prepare_data(X, y)
+        sample = self._prepare_data(Sample(X, y))
 
         # transforming all features
-        all_orders = apply_async_function(fit_feature, self.features, self.n_jobs, x_copy)
+        all_orders = apply_async_function(fit_feature, self.features, self.n_jobs, sample.X)
 
         # updating features accordingly
         self.features.update(dict(all_orders), replace=True)
-        self.features.fit(x_copy, y)
+        self.features.fit(**sample)
 
         # discretizing features based on each feature's values_order
         super().fit(X, y)

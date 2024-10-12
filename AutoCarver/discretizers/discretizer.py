@@ -8,7 +8,7 @@ from ..features import Features
 from ..utils import extend_docstring
 from .qualitatives import QualitativeDiscretizer
 from .quantitatives import QuantitativeDiscretizer
-from .utils.base_discretizer import BaseDiscretizer
+from .utils.base_discretizer import BaseDiscretizer, Sample
 
 
 class Discretizer(BaseDiscretizer):
@@ -61,20 +61,20 @@ class Discretizer(BaseDiscretizer):
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
         # Checking for binary target and copying X
-        x_copy = self._prepare_data(X, y)
+        sample = self._prepare_data(Sample(X, y))
 
         # fitting quantitative features if any
-        self._fit_quantitatives(x_copy, y)
+        self._fit_quantitatives(**sample)
 
         # fitting qualitative features if any
-        self._fit_qualitatives(x_copy, y)
+        self._fit_qualitatives(**sample)
 
         # discretizing features based on each feature's values_order
-        super().fit(X, y)
+        super().fit(**sample)
 
         return self
 
-    def _fit_qualitatives(self, x_copy: DataFrame, y: Series) -> None:
+    def _fit_qualitatives(self, X: DataFrame, y: Series) -> None:
         """Fit the QualitativeDiscretizer on the qualitative features."""
 
         # [Qualitative features] Grouping qualitative features
@@ -83,9 +83,9 @@ class Discretizer(BaseDiscretizer):
             qualitative_discretizer = QualitativeDiscretizer(
                 qualitatives=self.features.qualitatives, **dict(self.kwargs, copy=False)
             )
-            qualitative_discretizer.fit(x_copy, y)
+            qualitative_discretizer.fit(X, y)
 
-    def _fit_quantitatives(self, x_copy: DataFrame, y: Series) -> None:
+    def _fit_quantitatives(self, X: DataFrame, y: Series) -> None:
         """Fit the QuantitativeDiscretizer on the quantitative features."""
 
         # [Quantitative features] Grouping quantitative features
@@ -94,4 +94,4 @@ class Discretizer(BaseDiscretizer):
             quantitative_discretizer = QuantitativeDiscretizer(
                 quantitatives=self.features.quantitatives, **dict(self.kwargs, copy=False)
             )
-            quantitative_discretizer.fit(x_copy, y)
+            quantitative_discretizer.fit(X, y)

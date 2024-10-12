@@ -6,7 +6,10 @@ from pandas import DataFrame
 from scipy.stats import chi2_contingency
 from ..utils.combination_evaluator import CombinationEvaluator, AggregatedSample
 
+
 class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
+    """Binary combination evaluator class."""
+
     is_y_binary = True
 
     def _compute_target_rates(self, xagg: DataFrame = None) -> DataFrame:
@@ -102,8 +105,12 @@ class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
 
 
 class TschuprowtCombinations(BinaryCombinationEvaluator):
+    """Tschuprowt combination evaluator class."""
+
     sort_by = "tschuprowt"
 
 
 class CramervCombinations(BinaryCombinationEvaluator):
+    """Cramerv combination evaluator class."""
+
     sort_by = "cramerv"

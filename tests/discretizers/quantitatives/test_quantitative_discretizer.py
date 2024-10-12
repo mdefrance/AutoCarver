@@ -4,6 +4,7 @@ from numpy import inf, nan
 from pandas import DataFrame, Series
 from pytest import raises
 
+from AutoCarver.discretizers.utils.base_discretizer import Sample
 from AutoCarver.discretizers.quantitatives.quantitative_discretizer import (
     QuantitativeDiscretizer,
     check_frequencies,
@@ -192,7 +193,8 @@ def test_quantitative_discretizer_prepare_data():
     df = DataFrame(data)
     y = Series([0, 1, 0, 1, 0])
 
-    prepared_df = discretizer._prepare_data(df, y)
+    sample = discretizer._prepare_data(Sample(df, y))
+    prepared_df = sample.X
     assert prepared_df["feature1"].dtype != object
     assert prepared_df["feature1"].tolist() == [1, 2, 3, 4, 5]
     assert prepared_df["feature2"].dtype != object

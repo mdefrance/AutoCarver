@@ -6,7 +6,7 @@ from pandas import DataFrame, Series
 
 from ...features import QualitativeFeature
 from ...utils import extend_docstring
-from ..utils.base_discretizer import BaseDiscretizer
+from ..utils.base_discretizer import BaseDiscretizer, Sample
 from .categorical_discretizer import CategoricalDiscretizer
 from .chained_discretizer import check_frequencies, ensure_qualitative_dtypes
 from .ordinal_discretizer import OrdinalDiscretizer
@@ -62,17 +62,17 @@ class QualitativeDiscretizer(BaseDiscretizer):
         # Initiating BaseDiscretizer
         super().__init__(qualitatives, **dict(kwargs, min_freq=min_freq))
 
-    def _prepare_data(self, X: DataFrame, y: Series = None) -> DataFrame:
+    def _prepare_data(self, sample: Sample) -> Sample:
         """Validates format and content of X and y. Converts non-string columns into strings."""
-        x_copy = super()._prepare_X(X)
+        sample.X = super()._prepare_X(sample.X)
 
         # checking feature values' frequencies
-        check_frequencies(self.features, x_copy, self.min_freq, self.__name__)
+        check_frequencies(self.features, sample.X, self.min_freq, self.__name__)
 
         # converting non-str columns
-        x_copy = ensure_qualitative_dtypes(self.features, x_copy, **self.kwargs)
+        sample.X = ensure_qualitative_dtypes(self.features, sample.X, **self.kwargs)
 
-        return x_copy
+        return sample
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
@@ -80,26 +80,26 @@ class QualitativeDiscretizer(BaseDiscretizer):
         self.log_if_verbose("------\n---")
 
         # checking data before bucketization
-        x_copy = self._prepare_data(X, y)
+        sample = self._prepare_data(Sample(X, y))
 
         # Base discretization (useful if already discretized)
-        x_copy = self._base_transform(x_copy, y)
+        sample.X = self._base_transform(**sample)
 
         # fitting ordinal features if any
-        self._fit_ordinals(x_copy, y)
+        self._fit_ordinals(**sample)
 
         # fitting categorical features if any
-        self._fit_categoricals(x_copy, y)
+        self._fit_categoricals(**sample)
 
         # discretizing features based on each feature's values_order
-        super().fit(X, y)
+        super().fit(**sample)
 
         if self.verbose:  # verbose if requested
             print("------\n")
 
         return self
 
-    def _base_transform(self, x_copy: DataFrame, y: Series) -> DataFrame:
+    def _base_transform(self, X: DataFrame, y: Series) -> DataFrame:
         """Transform the data based on the previously fitted discretizers."""
 
         # looking for already discretized features
@@ -110,11 +110,11 @@ class QualitativeDiscretizer(BaseDiscretizer):
             base_discretizer = BaseDiscretizer(
                 features=discretized_features, **dict(self.kwargs, copy=True, dropna=False)
             )
-            x_copy = base_discretizer.fit_transform(x_copy, y)
+            X = base_discretizer.fit_transform(X, y)
 
-        return x_copy
+        return X
 
-    def _fit_ordinals(self, x_copy: DataFrame, y: Series) -> None:
+    def _fit_ordinals(self, X: DataFrame, y: Series) -> None:
         """Fit the OrdinalDiscretizer on the ordinal features."""
 
         # [Qualitative ordinal features] Grouping rare values into closest common one
@@ -123,9 +123,9 @@ class QualitativeDiscretizer(BaseDiscretizer):
                 ordinals=self.features.ordinals,
                 **dict(self.kwargs, min_freq=self.min_freq, copy=False),
             )
-            ordinal_discretizer.fit(x_copy, y)
+            ordinal_discretizer.fit(X, y)
 
-    def _fit_categoricals(self, x_copy: DataFrame, y: Series) -> None:
+    def _fit_categoricals(self, X: DataFrame, y: Series) -> None:
         """Fit the CategoricalDiscretizer on the categorical features."""
 
         # [Qualitative non-ordinal features] Grouping rare values into default '__OTHER__'
@@ -134,4 +134,4 @@ class QualitativeDiscretizer(BaseDiscretizer):
                 categoricals=self.features.categoricals,
                 **dict(self.kwargs, min_freq=self.min_freq, copy=False),
             )
-            categorical_discretizer.fit(x_copy, y)
+            categorical_discretizer.fit(X, y)

@@ -9,6 +9,7 @@ from pytest import FixtureRequest, fixture, raises
 from AutoCarver.discretizers.utils.base_discretizer import (
     BaseDiscretizer,
     transform_quantitative_feature,
+    Sample,
 )
 from AutoCarver.features import (
     CategoricalFeature,
@@ -294,14 +295,14 @@ def test_prepare_data(features: Features) -> None:
         }
     )
     y = Series([0, 0, 0, 1])
-    assert disc._prepare_data(None) is None
-    disc._prepare_data(X)
-    disc._prepare_data(X, y)
+    assert disc._prepare_data(Sample(None)) is None
+    disc._prepare_data(Sample(X))
+    disc._prepare_data(Sample(X, y))
 
     # mismatched X and y
     y = Series([0, 0, 0, 1, 1])
     with raises(ValueError):
-        disc._prepare_data(X, y)
+        disc._prepare_data(Sample(X, y))
 
 
 def test_fit(features: Features) -> None:

@@ -4,6 +4,7 @@ from numpy import nan
 from pandas import DataFrame, Series
 from pytest import raises
 
+from AutoCarver.discretizers.utils.base_discretizer import Sample
 from AutoCarver.discretizers.qualitatives.categorical_discretizer import (
     CategoricalDiscretizer,
     series_target_rate,
@@ -88,7 +89,8 @@ def test_prepare_data():
 
     X = DataFrame({"feature1": ["a", "b", "a", "b", nan], "feature2": ["x", "y", "x", "y", nan]})
 
-    X_prepared = categorical_discretizer._prepare_data(X, None)
+    sample = categorical_discretizer._prepare_data(Sample(X, None))
+    X_prepared = sample.X
 
     assert X_prepared["feature1"].tolist() == ["a", "b", "a", "b", nan]
     assert X_prepared["feature2"].tolist() == ["x", "y", "x", "y", nan]

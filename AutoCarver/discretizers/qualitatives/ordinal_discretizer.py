@@ -7,7 +7,7 @@ from pandas import DataFrame, Series, notna
 
 from ...features import GroupedList, OrdinalFeature
 from ...utils import extend_docstring
-from ..utils.base_discretizer import BaseDiscretizer
+from ..utils.base_discretizer import BaseDiscretizer, Sample
 
 
 class OrdinalDiscretizer(BaseDiscretizer):
@@ -50,7 +50,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
         # Initiating BaseDiscretizer
         super().__init__(ordinals, **dict(kwargs, min_freq=min_freq))
 
-    def _prepare_data(self, X: DataFrame, y: Series) -> DataFrame:  # pylint: disable=W0222
+    def _prepare_data(self, sample: Sample) -> Sample:  # pylint: disable=W0222
         """Validates format and content of X and y.
 
         Parameters
@@ -68,20 +68,20 @@ class OrdinalDiscretizer(BaseDiscretizer):
             A formatted copy of X
         """
         # checking for binary target and copying X
-        x_copy = super()._prepare_data(X, y)
+        sample = super()._prepare_data(sample)
 
         # fitting features
-        self.features.fit(x_copy, y)
+        self.features.fit(**sample)
 
         # filling up nans for features that have some
-        x_copy = self.features.fillna(x_copy)
+        sample.X = self.features.fillna(sample.X)
 
-        return x_copy
+        return sample
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
         # checking values orders
-        x_copy = self._prepare_data(X, y)
+        sample = self._prepare_data(Sample(X, y))
 
         # verbose if requested
         self.log_if_verbose()
@@ -89,8 +89,8 @@ class OrdinalDiscretizer(BaseDiscretizer):
         # grouping rare modalities for each feature
         common_modalities = {
             feature.version: find_common_modalities(
-                x_copy[feature.version],
-                y,
+                sample.X[feature.version],
+                sample.y,
                 min_freq=self.min_freq,
                 labels=[label for label in feature.labels if label != feature.nan],
             )
@@ -101,7 +101,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
         self.features.update(common_modalities, convert_labels=True)
 
         # discretizing features based on each feature's values_order
-        super().fit(x_copy, y)
+        super().fit(**sample)
 
         return self
 

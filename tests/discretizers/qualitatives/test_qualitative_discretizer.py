@@ -3,6 +3,7 @@
 from numpy import nan
 from pandas import DataFrame, Series
 
+from AutoCarver.discretizers.utils.base_discretizer import Sample
 from AutoCarver.discretizers.qualitatives.qualitative_discretizer import QualitativeDiscretizer
 from AutoCarver.features import CategoricalFeature, Features, GroupedList, OrdinalFeature
 
@@ -26,7 +27,8 @@ def test_qualitative_discretizer_prepare_data():
         {"feature1": [1, 2, 3], "feature2": ["A", "B", "C"], "feature3": [1.0, 2.1, 3.2]}
     )
     discretizer = QualitativeDiscretizer(qualitatives=features, min_freq=0.05)
-    prepared_df = discretizer._prepare_data(df)
+    sample = discretizer._prepare_data(Sample(df))
+    prepared_df = sample.X
     assert prepared_df["feature1"].dtype == object
     assert prepared_df["feature1"].tolist() == ["1", "2", "3"]
     assert prepared_df["feature2"].dtype == object

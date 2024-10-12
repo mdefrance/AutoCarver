@@ -7,7 +7,7 @@ from pandas import DataFrame, Series, unique
 from ...features import Features, QuantitativeFeature
 from ...utils import extend_docstring
 from ..qualitatives import OrdinalDiscretizer
-from ..utils.base_discretizer import BaseDiscretizer
+from ..utils.base_discretizer import BaseDiscretizer, Sample
 from .continuous_discretizer import ContinuousDiscretizer
 
 
@@ -61,7 +61,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         """Half of the minimal frequency of a quantile."""
         return self.min_freq / 2
 
-    def _prepare_data(self, X: DataFrame, y: Series) -> DataFrame:  # pylint: disable=W0222
+    def _prepare_data(self, sample: Sample) -> Sample:  # pylint: disable=W0222
         """Validates format and content of X and y.
 
         Parameters
@@ -79,12 +79,12 @@ class QuantitativeDiscretizer(BaseDiscretizer):
             A formatted copy of X
         """
         # checking for binary target and copying X
-        x_copy = super()._prepare_data(X, y)
+        sample = super()._prepare_data(sample)
 
         # checking for quantitative columns
-        check_quantitative_dtypes(x_copy, self.features.versions, self.__name__)
+        check_quantitative_dtypes(sample.X, self.features.versions, self.__name__)
 
-        return x_copy
+        return sample
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
@@ -92,13 +92,13 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         self.log_if_verbose("------\n---")
 
         # checking data before bucketization
-        x_copy = self._prepare_data(X, y)
+        sample = self._prepare_data(Sample(X, y))
 
         # fitting continuous features if any
-        x_copy = self._fit_continuous(x_copy, y)
+        sample.X = self._fit_continuous(**sample)
 
         # fitting continuous features with rare modalities if any
-        self._fit_continuous_with_rare_modalities(x_copy, y)
+        self._fit_continuous_with_rare_modalities(**sample)
 
         # discretizing features based on each feature's values_order
         super().fit(X, y)
@@ -108,7 +108,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
 
         return self
 
-    def _fit_continuous(self, x_copy: DataFrame, y: Series) -> DataFrame:
+    def _fit_continuous(self, X: DataFrame, y: Series) -> DataFrame:
         """Fit the ContinuousDiscretizer on the continuous features."""
 
         # [Quantitative features] Grouping values into quantiles
@@ -118,22 +118,22 @@ class QuantitativeDiscretizer(BaseDiscretizer):
             **dict(self.kwargs, min_freq=self.min_freq, copy=True),
         )
 
-        return continuous_discretizer.fit_transform(x_copy, y)
+        return continuous_discretizer.fit_transform(X, y)
 
-    def _fit_continuous_with_rare_modalities(self, x_copy: DataFrame, y: Series) -> None:
+    def _fit_continuous_with_rare_modalities(self, X: DataFrame, y: Series) -> None:
         """Fit the OrdinalDiscretizer on the continuous features with rare modalities."""
 
         # [Quantitative features] Grouping rare quantiles into closest common one
         #  -> can exist because of overrepresented values (values more frequent than min_freq)
         # identifying features that have rare modalities
-        has_rare = check_frequencies(x_copy, self.features, self.half_min_freq)
+        has_rare = check_frequencies(X, self.features, self.half_min_freq)
 
         # Grouping rare modalities
         if len(has_rare) > 0:
             ordinal_discretizer = OrdinalDiscretizer(
                 ordinals=has_rare, **dict(self.kwargs, min_freq=self.half_min_freq, copy=False)
             )
-            ordinal_discretizer.fit(x_copy, y)
+            ordinal_discretizer.fit(X, y)
 
 
 def check_frequencies(
