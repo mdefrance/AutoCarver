@@ -4,8 +4,7 @@ from abc import ABC
 from numpy import add, array, searchsorted, sqrt, unique, zeros
 from pandas import DataFrame
 from scipy.stats import chi2_contingency
-from ..utils.combination_evaluator import CombinationEvaluator
-
+from ..utils.combination_evaluator import CombinationEvaluator, AggregatedSample
 
 class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
     is_y_binary = True
@@ -70,7 +69,7 @@ class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
 
         return {"cramerv": cramerv, "tschuprowt": tschuprowt}
 
-    def _grouper(self, xagg: DataFrame, groupby: dict) -> DataFrame:
+    def _grouper(self, xagg: AggregatedSample, groupby: dict) -> DataFrame:
         """Groups a crosstab by groupby and sums column values by groups (vectorized)
 
         Parameters

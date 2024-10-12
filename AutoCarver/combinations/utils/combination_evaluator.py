@@ -16,9 +16,63 @@ from .combinations import (
     xagg_apply_combination,
 )
 from .testing import _test_viability, is_viable
+from dataclasses import dataclass
+
+
+@dataclass
+class AggregatedSample:
+    """Sample class to store xtab and xtab_dev"""
+
+    xagg: DataFrame
+    _raw: DataFrame = None
+
+    def __post_init__(self):
+        """Post initialization"""
+        # setting xtab_dev to xtab if not provided
+        if self._raw is None and self.xagg is not None:
+            self._raw = self.xagg.copy()
+
+    @property
+    def raw(self) -> DataFrame:
+        """Returns the raw value of the xagg"""
+        return self._raw
+
+    @raw.setter
+    def raw(self, value: DataFrame) -> None:
+        """Sets the raw value of the xagg"""
+
+        # setting raw value
+        self._raw = value
+
+        # copying xagg
+        if value is not None:
+            self.xagg = value.copy()
+
+    @property
+    def shape(self) -> tuple[int, int]:
+        """Returns the shape of the xagg"""
+        return self.xagg.shape
+
+    @property
+    def index(self) -> list[str]:
+        """Returns the index of the xagg"""
+        return self.xagg.index
+
+    @property
+    def columns(self) -> list[str]:
+        """Returns the columns of the xagg"""
+        return self.xagg.columns
+
+    @property
+    def values(self) -> DataFrame:
+        """Returns the values of the xagg"""
+        return self.xagg.values
 
 
 class CombinationEvaluator(ABC):
+    """CombinationEvaluator class to evaluate
+    the best combination of modalities for a feature."""
+
     __name__ = "CombinationEvaluator"
 
     is_y_binary = False
@@ -38,11 +92,9 @@ class CombinationEvaluator(ABC):
         self.min_freq = min_freq
 
         # attributes to be set by get_best_combination
-        self.feature = None
-        self.raw_xagg = None
-        self.raw_xagg_dev = None
-        self.xagg = None
-        self.xagg_dev = None
+        self.feature: BaseFeature = None
+        self.train_sample: AggregatedSample = AggregatedSample(None)
+        self.dev_sample: AggregatedSample = AggregatedSample(None)
 
     def _group_xagg_by_combinations(self, combinations: list[list]) -> list[dict]:
         """groups xagg by combinations of indices"""
@@ -53,7 +105,7 @@ class CombinationEvaluator(ABC):
         # grouping tab by its indices
         return [
             {
-                "xagg": self._grouper(self.xagg, index_to_groupby),
+                "xagg": self._grouper(self.train_sample, index_to_groupby),
                 "combination": combination,
                 "index_to_groupby": index_to_groupby,
             }
@@ -67,7 +119,7 @@ class CombinationEvaluator(ABC):
         """computes associations for each grouped xagg"""
 
         # number of observations (only used for crosstabs)
-        n_obs = self.xagg.apply(sum).sum()
+        n_obs = self.train_sample.xagg.apply(sum).sum()
 
         # computing associations for each crosstab
         associations = [
@@ -118,13 +170,10 @@ class CombinationEvaluator(ABC):
             self.feature.update(labels, convert_labels=True)
 
             # applying best_combination to raw xagg and xagg_dev
-            self.raw_xagg = xagg_apply_combination(self.raw_xagg, labels, self.feature)
-            self.raw_xagg_dev = xagg_apply_combination(self.raw_xagg_dev, labels, self.feature)
-
-            # copying xagg and xagg_dev
-            self.xagg = self.raw_xagg.copy()
-            if self.raw_xagg_dev is not None:
-                self.xagg_dev = self.raw_xagg_dev.copy()
+            self.train_sample.raw = xagg_apply_combination(
+                self.train_sample.raw, labels, self.feature
+            )
+            self.dev_sample.raw = xagg_apply_combination(self.dev_sample.raw, labels, self.feature)
 
     def _get_best_combination_non_nan(self) -> dict:
         """Computes associations of the tab for each combination of non-nans
@@ -142,11 +191,11 @@ class CombinationEvaluator(ABC):
                 raw_labels.remove(self.feature.nan)
 
             # removing nans from crosstabs
-            self.xagg_dev = filter_nan(self.raw_xagg_dev, self.feature.nan)
-            self.xagg = filter_nan(self.raw_xagg, self.feature.nan)
+            self.dev_sample.xagg = filter_nan(self.dev_sample.raw, self.feature.nan)
+            self.train_sample.xagg = filter_nan(self.train_sample.raw, self.feature.nan)
 
         # checking for non-nan values
-        if self.xagg.shape[0] > 1:
+        if self.train_sample.shape[0] > 1:
             # all possible consecutive combinations
             combinations = consecutive_combinations(raw_labels, self.max_n_mod)
 
@@ -174,17 +223,13 @@ class CombinationEvaluator(ABC):
 
     def get_best_combination(
         self, feature: BaseFeature, xagg: DataFrame, xagg_dev: DataFrame = None
-    ) -> tuple[GroupedList, DataFrame, DataFrame]:
+    ) -> dict:
         """Computes best combination of modalities for the feature"""
 
         # setting feature and xtab
         self.feature = feature
-        self.raw_xagg = xagg.copy()
-        self.raw_xagg_dev = None
-        if xagg_dev is not None:
-            self.raw_xagg_dev = xagg_dev.copy()
-        self.xagg = xagg
-        self.xagg_dev = xagg_dev
+        self.train_sample = AggregatedSample(xagg)
+        self.dev_sample = AggregatedSample(xagg_dev)
 
         # setting dropna to user-requested value
         self.feature.dropna = self.dropna
@@ -211,7 +256,7 @@ class CombinationEvaluator(ABC):
         """testing the viability of the combination on xagg_dev"""
 
         # case 0: not viable on train or no test sample -> not testing for robustness
-        if not test_results.get("train").get("viable") or self.xagg_dev is None:
+        if not test_results.get("train").get("viable") or self.dev_sample.xagg is None:
             return {**test_results, "dev": {"viable": None}}
         # case 1: test sample provided -> testing robustness
 
@@ -219,7 +264,7 @@ class CombinationEvaluator(ABC):
         train_target_rate = test_results.pop("train_rates")["target_rate"]
 
         # grouping the dev sample per modality
-        grouped_xagg_dev = self._grouper(self.xagg_dev, combination["index_to_groupby"])
+        grouped_xagg_dev = self._grouper(self.dev_sample, combination["index_to_groupby"])
 
         # computing target rate and frequency per modality
         dev_rates = self._compute_target_rates(grouped_xagg_dev)
@@ -258,9 +303,7 @@ class CombinationEvaluator(ABC):
         return viable_combination
 
     @abstractmethod
-    def _grouper(
-        self, xagg: Union[Series, DataFrame], groupby: dict[str, str]
-    ) -> Union[Series, DataFrame]:
+    def _grouper(self, xagg: AggregatedSample, groupby: dict[str, str]) -> Union[Series, DataFrame]:
         """"""
 
     @abstractmethod
@@ -276,9 +319,10 @@ class CombinationEvaluator(ABC):
     def _historize_raw_combination(self):
         # historizing raw combination TODO
         raw_association = {
-            "index_to_groupby": {modality: modality for modality in self.xagg.index},
+            "index_to_groupby": {modality: modality for modality in self.train_sample.xagg.index},
             self.sort_by: self._association_measure(
-                self.xagg.dropna(), n_obs=sum(self.xagg.dropna().apply(sum))
+                self.train_sample.xagg.dropna(),
+                n_obs=sum(self.train_sample.xagg.dropna().apply(sum)),
             )[self.sort_by],
         }
         self._historize(self.feature, raw_association, self.feature.labels)

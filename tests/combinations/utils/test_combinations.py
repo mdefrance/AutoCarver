@@ -310,10 +310,11 @@ def test_xagg_apply_combination_basic():
     order = GroupedList(["a", "b", "c", "d"])
     combination = [["a", "b"], ["c", "d"]]
     order = order_apply_combination(order, combination)
+    feature = OrdinalFeature("test", values=["a to b", "c to d"])
 
-    result = xagg_apply_combination(xagg, order)
+    result = xagg_apply_combination(xagg, order, feature)
     print(result)
-    expected = DataFrame({"A": [3, 7], "B": [11, 15]}, index=["a", "c"])
+    expected = DataFrame({"A": [3, 7], "B": [11, 15]}, index=["a to b", "c to d"])
     assert result.equals(expected)
 
 
@@ -323,9 +324,10 @@ def test_xagg_apply_combination_single_group():
     order = GroupedList(["a", "b", "c"])
     combination = [["a", "b", "c"]]
     order = order_apply_combination(order, combination)
+    feature = OrdinalFeature("test", values=["a to c"])
 
-    result = xagg_apply_combination(xagg, order)
-    expected = DataFrame({"A": [6], "B": [15]}, index=["a"])
+    result = xagg_apply_combination(xagg, order, feature)
+    expected = DataFrame({"A": [6], "B": [15]}, index=["a to c"])
     print(result)
     assert result.equals(expected)
 
@@ -336,8 +338,9 @@ def test_xagg_apply_combination_single_element_groups():
     order = GroupedList(["a", "b", "c"])
     combination = [["a"], ["b"], ["c"]]
     order = order_apply_combination(order, combination)
+    feature = OrdinalFeature("test", values=["a", "b", "c"])
 
-    result = xagg_apply_combination(xagg, order)
+    result = xagg_apply_combination(xagg, order, feature)
     expected = xagg
     print(result)
     assert result.equals(expected)
@@ -349,15 +352,17 @@ def test_xagg_apply_combination_empty_xagg():
     order = GroupedList(["a", "b", "c"])
     combination = [["a"], ["b"], ["c"]]
     order = order_apply_combination(order, combination)
+    feature = OrdinalFeature("test", values=["a", "b", "c"])
 
-    result = xagg_apply_combination(xagg, order)
+    result = xagg_apply_combination(xagg, order, feature)
     assert result is None
 
 
 def test_xagg_apply_combination_empty_order():
     xagg = DataFrame({"A": [1, 2, 3], "B": [4, 5, 6]}, index=["a", "b", "c"])
     order = GroupedList([])
-    result = xagg_apply_combination(xagg, order)
+    feature = OrdinalFeature("test", values=["a", "b", "c"])
+    result = xagg_apply_combination(xagg, order, feature)
     expected = xagg
     print(result)
     assert result.equals(expected)
@@ -365,15 +370,52 @@ def test_xagg_apply_combination_empty_order():
 
 def test_xagg_apply_combination_mixed_groups():
     xagg = DataFrame({"A": [1, 2, 3, 4, 5], "B": [6, 7, 8, 9, 10]}, index=["a", "b", "c", "d", "e"])
-    order = GroupedList()
 
     order = GroupedList(["a", "b", "c", "d", "e"])
     combination = [["a", "b"], ["c"], ["d", "e"]]
     order = order_apply_combination(order, combination)
+    feature = OrdinalFeature("test", values=["a to b", "c", "d to e"])
 
-    result = xagg_apply_combination(xagg, order)
-    expected = DataFrame({"A": [3, 3, 9], "B": [13, 8, 19]}, index=["a", "c", "d"])
+    result = xagg_apply_combination(xagg, order, feature)
+    expected = DataFrame({"A": [3, 3, 9], "B": [13, 8, 19]}, index=["a to b", "c", "d to e"])
     print(result)
+    assert result.equals(expected)
+
+
+def test_xagg_apply_combination_with_nan():
+    feature = OrdinalFeature("test", values=["a to b", "c to d"])
+    feature.has_nan = True
+    feature.dropna = False
+    xagg = DataFrame(
+        {"A": [1, 2, 3, 4, 5], "B": [5, 6, 7, 8, 10]}, index=["a", "b", "c", "d", feature.nan]
+    )
+    order = GroupedList(["a", "b", "c", "d"])
+    combination = [["a", "b"], ["c", "d"]]
+    order = order_apply_combination(order, combination)
+
+    result = xagg_apply_combination(xagg, order, feature)
+    print(result)
+    expected = DataFrame(
+        {"A": [3, 7, 5], "B": [11, 15, 10]}, index=["a to b", "c to d", feature.nan]
+    )
+    assert result.equals(expected)
+
+    # dropped nan
+    feature = OrdinalFeature("test", values=["a to b", "c to d"])
+    feature.has_nan = True
+    feature.dropna = True
+    xagg = DataFrame(
+        {"A": [1, 2, 3, 4, 5], "B": [5, 6, 7, 8, 10]}, index=["a", "b", "c", "d", feature.nan]
+    )
+    order = GroupedList(["a", "b", "c", "d"])
+    combination = [["a", "b"], ["c", "d"]]
+    order = order_apply_combination(order, combination)
+
+    result = xagg_apply_combination(xagg, order, feature)
+    print(result)
+    expected = DataFrame(
+        {"A": [3, 7, 5], "B": [11, 15, 10]}, index=["a to b", "c to d", feature.nan]
+    )
     assert result.equals(expected)
 
 
