@@ -7,7 +7,7 @@ from typing import Any
 
 from pandas import DataFrame, Series
 
-from ...config import DEFAULT, NAN
+from ...config import Constants
 from .grouped_list import GroupedList
 from .serialization import json_deserialize_content, json_serialize_feature
 
@@ -85,11 +85,11 @@ class BaseFeature(ABC):
 
         # whether or not feature has some NaNs
         self.has_nan = kwargs.get("has_nan", False)
-        self.nan = kwargs.get("nan", NAN)
+        self.nan = kwargs.get("nan", Constants.NAN)
 
         # whether or not feature has some default values
         self._has_default = kwargs.get("has_default", False)
-        self.default = kwargs.get("default", DEFAULT)
+        self.default = kwargs.get("default", Constants.DEFAULT)
 
         # whether or not nans must be removed
         self._dropna = kwargs.get("dropna", False)
@@ -197,7 +197,7 @@ class BaseFeature(ABC):
 
         # check input value
         if self.values is None:
-            raise ValueError("Trying to set dropna before there where values observed")
+            raise ValueError("Trying to set dropna before there were values observed")
 
         # activating dropna mode
         if value and not self.dropna:

@@ -127,7 +127,7 @@ def order_apply_combination(order: GroupedList, combination: list[list[Any]]) ->
     return order_copy
 
 
-def xagg_apply_combination(xagg: DataFrame, order: GroupedList) -> DataFrame:
+def xagg_apply_combination(xagg: DataFrame, labels: GroupedList, feature: BaseFeature) -> DataFrame:
     """Applies an order (combination) to a crosstab
 
     Parameters
@@ -146,8 +146,14 @@ def xagg_apply_combination(xagg: DataFrame, order: GroupedList) -> DataFrame:
     combi_xagg = None
     if xagg is not None:
         # grouping modalities in the crosstab
-        groups = list(map(order.get_group, xagg.index))
+        groups = list(map(labels.get_group, xagg.index))
         combi_xagg = xagg.groupby(groups, dropna=False, sort=False).sum()
+
+        # reindexing to ensure the right labels
+        revised_index = feature.labels
+        if feature.has_nan and feature.nan not in revised_index and not feature.dropna:
+            revised_index += [feature.nan]
+        combi_xagg.index = revised_index
 
     return combi_xagg
 

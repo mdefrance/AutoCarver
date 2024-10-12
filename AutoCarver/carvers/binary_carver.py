@@ -101,7 +101,7 @@ class BinaryCarver(BaseCarver):
         y_values = unique(y)
         if not ((0 in y_values) and (1 in y_values)) or len(y_values) != 2:
             raise ValueError(
-                " - [BinaryCarver] y must be a binary Series (int or float, not object)"
+                f"[{self.__name__}] y must be a binary Series (int or float, not object)"
             )
 
         # Checking for binary target and discretizing X

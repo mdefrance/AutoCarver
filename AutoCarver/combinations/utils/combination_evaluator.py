@@ -114,17 +114,23 @@ class CombinationEvaluator(ABC):
             # applying best_combination to feature labels
             labels = order_apply_combination(self.feature.labels, best_association["combination"])
 
-            # applying best_combination to raw xagg and xagg_dev
-            self.xagg = xagg_apply_combination(self.raw_xagg, labels)
-            self.xagg_dev = xagg_apply_combination(self.raw_xagg_dev, labels)
-
             # updating feature's values and xagg indices accordingly
             self.feature.update(labels, convert_labels=True)
-            self.xagg.index = self.feature.labels
-            self.xagg_dev.index = self.feature.labels
+
+            # applying best_combination to raw xagg and xagg_dev
+            self.raw_xagg = xagg_apply_combination(self.raw_xagg, labels, self.feature)
+            self.raw_xagg_dev = xagg_apply_combination(self.raw_xagg_dev, labels, self.feature)
+
+            # copying xagg and xagg_dev
+            self.xagg = self.raw_xagg.copy()
+            if self.raw_xagg_dev is not None:
+                self.xagg_dev = self.raw_xagg_dev.copy()
 
     def _get_best_combination_non_nan(self) -> dict:
-        """Computes associations of the tab for each combination of non-nans"""
+        """Computes associations of the tab for each combination of non-nans
+
+        - dropna has to be set to True
+        """
 
         # raw ordering without nans
         raw_labels = GroupedList(self.feature.labels[:])
@@ -132,7 +138,8 @@ class CombinationEvaluator(ABC):
         # removing nans if any
         if self.feature.has_nan:
             # removing nans for combination of non-nans
-            raw_labels.remove(self.feature.nan)
+            if self.feature.dropna:
+                raw_labels.remove(self.feature.nan)
 
             # removing nans from crosstabs
             self.xagg_dev = filter_nan(self.raw_xagg_dev, self.feature.nan)
@@ -150,9 +157,6 @@ class CombinationEvaluator(ABC):
 
     def _get_best_combination_with_nan(self, best_combination: dict) -> dict:
         """Computes associations of the tab for each combination with nans"""
-
-        # setting dropna to user-requested value
-        self.feature.dropna = self.dropna
 
         # grouping NaNs if requested to drop them (dropna=True)
         if self.dropna and self.feature.has_nan and best_combination is not None:
@@ -181,6 +185,9 @@ class CombinationEvaluator(ABC):
             self.raw_xagg_dev = xagg_dev.copy()
         self.xagg = xagg
         self.xagg_dev = xagg_dev
+
+        # setting dropna to user-requested value
+        self.feature.dropna = self.dropna
 
         # historizing raw combination
         self._historize_raw_combination()

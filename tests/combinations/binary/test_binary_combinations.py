@@ -744,8 +744,8 @@ def test_apply_best_combination_with_viable(evaluator: BinaryCombinationEvaluato
     assert feature.labels == list(expected.index)
     assert allclose(evaluator.xagg, expected)
     assert allclose(evaluator.xagg_dev, expected)
-    assert allclose(evaluator.raw_xagg_dev, xagg)
-    assert allclose(evaluator.raw_xagg, xagg)
+    assert allclose(evaluator.raw_xagg_dev, expected)
+    assert allclose(evaluator.raw_xagg, expected)
 
 
 def test_apply_best_combination_with_non_viable(evaluator: BinaryCombinationEvaluator):
@@ -806,8 +806,8 @@ def test_best_association_with_combinations_viable(evaluator: BinaryCombinationE
     assert feature.labels == list(expected.index)
     assert allclose(evaluator.xagg, expected)
     assert allclose(evaluator.xagg_dev, expected)
-    assert allclose(evaluator.raw_xagg_dev, xagg)
-    assert allclose(evaluator.raw_xagg, xagg)
+    assert allclose(evaluator.raw_xagg_dev, expected)
+    assert allclose(evaluator.raw_xagg, expected)
 
 
 def test_best_association_with_combinations_non_viable(evaluator: BinaryCombinationEvaluator):
@@ -873,8 +873,8 @@ def test_best_association_with_nan_combinations_viable(evaluator: BinaryCombinat
     assert feature.labels == list(expected.index)
     assert allclose(evaluator.xagg, expected)
     assert allclose(evaluator.xagg_dev, expected)
-    assert allclose(evaluator.raw_xagg_dev, xagg)
-    assert allclose(evaluator.raw_xagg, xagg)
+    assert allclose(evaluator.raw_xagg_dev, expected)
+    assert allclose(evaluator.raw_xagg, expected)
 
 
 def test_get_best_combination_non_nan_viable(evaluator: BinaryCombinationEvaluator):
@@ -910,8 +910,8 @@ def test_get_best_combination_non_nan_viable(evaluator: BinaryCombinationEvaluat
     assert feature.labels == list(expected.index)
     assert allclose(evaluator.xagg, expected)
     assert allclose(evaluator.xagg_dev, expected)
-    assert allclose(evaluator.raw_xagg_dev, xagg)
-    assert allclose(evaluator.raw_xagg, xagg)
+    assert allclose(evaluator.raw_xagg_dev, expected)
+    assert allclose(evaluator.raw_xagg, expected)
 
 
 def test_get_best_combination_non_nan_not_viable(evaluator: BinaryCombinationEvaluator):
@@ -966,8 +966,8 @@ def test_get_best_combination_non_nan_viable_with_nan(evaluator: BinaryCombinati
     assert feature.labels == list(expected.index)
     assert allclose(evaluator.xagg, expected)
     assert allclose(evaluator.xagg_dev, expected)
-    assert allclose(evaluator.raw_xagg_dev, xagg)
-    assert allclose(evaluator.raw_xagg, xagg)
+    assert allclose(evaluator.raw_xagg_dev, expected)
+    assert allclose(evaluator.raw_xagg, expected)
 
 
 def test_get_best_combination_with_nan_viable(evaluator: BinaryCombinationEvaluator):
@@ -1005,8 +1005,8 @@ def test_get_best_combination_with_nan_viable(evaluator: BinaryCombinationEvalua
     assert feature.labels == list(expected.index)
     assert allclose(evaluator.xagg, expected)
     assert allclose(evaluator.xagg_dev, expected)
-    assert allclose(evaluator.raw_xagg_dev, xagg)
-    assert allclose(evaluator.raw_xagg, xagg)
+    assert allclose(evaluator.raw_xagg_dev, expected)
+    assert allclose(evaluator.raw_xagg, expected)
 
 
 def test_get_best_combination_with_nan_not_viable(evaluator: BinaryCombinationEvaluator):
@@ -1061,8 +1061,6 @@ def test_get_best_combination_with_nan_viable_with_nan_without_combi(
     evaluator.dropna = True
     result = evaluator._get_best_combination_with_nan(None)
     assert result is None
-    assert evaluator.feature.dropna is True
-    assert feature.dropna is True
 
 
 def test_get_best_combination_with_nan_viable_with_nan_without_feature_nan(
@@ -1086,6 +1084,7 @@ def test_get_best_combination_with_nan_viable_with_nan_without_feature_nan(
     result = evaluator._get_best_combination_with_nan(best_combination)
     assert result == best_combination
 
+
 def test_get_best_combination_with_nan_viable_with_nan_without_dropna(
     evaluator: BinaryCombinationEvaluator,
 ):
@@ -1107,11 +1106,12 @@ def test_get_best_combination_with_nan_viable_with_nan_without_dropna(
     result = evaluator._get_best_combination_with_nan(best_combination)
     assert result == best_combination
 
+
 def test_get_best_combination_with_nan_viable_with_nan(evaluator: BinaryCombinationEvaluator):
 
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     feature.has_nan = True
-    feature.dropna = False
+    feature.dropna = True  # has to be set to True
     evaluator.feature = feature
     evaluator.dropna = True
 
@@ -1129,6 +1129,40 @@ def test_get_best_combination_with_nan_viable_with_nan(evaluator: BinaryCombinat
     assert feature.dropna is True
 
     expected = {
+        "xagg": DataFrame({0: [0, 2], 1: [5, 1]}, index=["a", "b to c"]),
+        "combination": [["a", "__NAN__"], ["b to c"]],
+        "index_to_groupby": {"a": "a", "__NAN__": "a", "b to c": "b to c"},
+        "cramerv": 0.4472135954999579,
+        "tschuprowt": 0.4472135954999579,
+    }
+    assert allclose(result["xagg"], expected["xagg"])
+    assert result["combination"] == expected["combination"]
+    assert result["index_to_groupby"] == expected["index_to_groupby"]
+    assert result["cramerv"] == expected["cramerv"]
+    assert result["tschuprowt"] == expected["tschuprowt"]
+
+    expected = DataFrame({0: [0, 2], 1: [5, 1]}, index=["a, __NAN__", "b to c"])
+    assert feature.labels == list(expected.index)
+    assert allclose(evaluator.xagg, expected)
+    assert allclose(evaluator.xagg_dev, expected)
+    assert allclose(evaluator.raw_xagg_dev, expected)
+    assert allclose(evaluator.raw_xagg, expected)
+
+
+def test_get_best_combination_viable(evaluator: BinaryCombinationEvaluator):
+    """Test the get_best_combination method with a feature that has no NaN values"""
+
+    feature = OrdinalFeature("feature", ["a", "b", "c"])
+
+    xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
+    evaluator.max_n_mod = 2
+
+    result = evaluator.get_best_combination(feature, xagg, xagg)
+    print(result)
+    assert evaluator.feature == feature
+    assert feature.dropna is evaluator.dropna
+
+    expected = {
         "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
         "combination": [["a"], ["b", "c"]],
         "index_to_groupby": {"a": "a", "b": "b", "c": "b"},
@@ -1141,9 +1175,160 @@ def test_get_best_combination_with_nan_viable_with_nan(evaluator: BinaryCombinat
     assert result["cramerv"] == expected["cramerv"]
     assert result["tschuprowt"] == expected["tschuprowt"]
 
-    expected = DataFrame({0: [0, 2, 0], 1: [2, 1, 3]}, index=["a", "b to c", feature.nan])
+    expected = DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b to c"])
     assert feature.labels == list(expected.index)
     assert allclose(evaluator.xagg, expected)
     assert allclose(evaluator.xagg_dev, expected)
-    assert allclose(evaluator.raw_xagg_dev, xagg)
-    assert allclose(evaluator.raw_xagg, xagg)
+    assert allclose(evaluator.raw_xagg_dev, expected)
+    assert allclose(evaluator.raw_xagg, expected)
+
+
+def test_get_best_combination_viable_without_dev(evaluator: BinaryCombinationEvaluator):
+    """Test the get_best_combination method with a feature that has no NaN values"""
+
+    feature = OrdinalFeature("feature", ["a", "b", "c"])
+
+    xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
+    evaluator.max_n_mod = 2
+
+    result = evaluator.get_best_combination(feature, xagg)
+    print(result)
+    assert evaluator.feature == feature
+    assert feature.dropna is evaluator.dropna
+
+    expected = {
+        "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
+        "combination": [["a"], ["b", "c"]],
+        "index_to_groupby": {"a": "a", "b": "b", "c": "b"},
+        "cramerv": 0.25,
+        "tschuprowt": 0.25,
+    }
+    assert allclose(result["xagg"], expected["xagg"])
+    assert result["combination"] == expected["combination"]
+    assert result["index_to_groupby"] == expected["index_to_groupby"]
+    assert result["cramerv"] == expected["cramerv"]
+    assert result["tschuprowt"] == expected["tschuprowt"]
+
+    expected = DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b to c"])
+    assert feature.labels == list(expected.index)
+    assert allclose(evaluator.xagg, expected)
+    assert evaluator.xagg_dev is None
+    assert evaluator.raw_xagg_dev is None
+    assert allclose(evaluator.raw_xagg, expected)
+
+
+def test_get_best_combination_not_viable(evaluator: BinaryCombinationEvaluator):
+    """Test the get_best_combination method with a feature that has no NaN values"""
+
+    feature = OrdinalFeature("feature", ["a", "b", "c"])
+
+    xagg = DataFrame({0: [0], 1: [2]}, index=["a"])
+    evaluator.max_n_mod = 2
+
+    with raises(ValueError):
+        evaluator.get_best_combination(feature, xagg, xagg)
+
+
+def test_get_best_combination_viable_with_nan_without_feature_nan(
+    evaluator: BinaryCombinationEvaluator,
+):
+    """Test the get_best_combination method with a feature that has no NaN values"""
+
+    feature = OrdinalFeature("feature", ["a", "b", "c", "d"])
+    feature.has_nan = False
+
+    xagg = DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 3]}, index=["a", "b", "c", "d"])
+    evaluator.max_n_mod = 2
+
+    result = evaluator.get_best_combination(feature, xagg)
+    print(result)
+    assert evaluator.feature == feature
+    assert feature.dropna is evaluator.dropna
+    expected = {
+        "xagg": DataFrame({0: [2, 0], 1: [2, 4]}, index=["a", "c"]),
+        "combination": [["a", "b"], ["c", "d"]],
+        "index_to_groupby": {"a": "a", "b": "a", "c": "c", "d": "c"},
+        "cramerv": 0.28867513459481287,
+        "tschuprowt": 0.28867513459481287,
+    }
+
+    assert allclose(result["xagg"], expected["xagg"])
+    assert result["combination"] == expected["combination"]
+    assert result["index_to_groupby"] == expected["index_to_groupby"]
+    assert result["cramerv"] == expected["cramerv"]
+    assert result["tschuprowt"] == expected["tschuprowt"]
+
+
+def test_get_best_combination_viable_with_nan_without_dropna(
+    evaluator: BinaryCombinationEvaluator,
+):
+    """Test the get_best_combination method with a feature that has no NaN values"""
+
+    feature = OrdinalFeature("feature", ["a", "b", "c"])
+    feature.has_nan = True
+
+    xagg = DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 3]}, index=["a", "b", "c", feature.nan])
+    evaluator.max_n_mod = 2
+    evaluator.dropna = False
+
+    result = evaluator.get_best_combination(feature, xagg, xagg)
+    print(result)
+    assert evaluator.feature == feature
+    assert feature.dropna is evaluator.dropna
+    expected = {
+        "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
+        "combination": [["a"], ["b", "c"]],
+        "index_to_groupby": {"a": "a", "b": "b", "c": "b"},
+        "cramerv": 0.25,
+        "tschuprowt": 0.25,
+    }
+
+    assert allclose(result["xagg"], expected["xagg"])
+    assert result["combination"] == expected["combination"]
+    assert result["index_to_groupby"] == expected["index_to_groupby"]
+    assert result["cramerv"] == expected["cramerv"]
+    assert result["tschuprowt"] == expected["tschuprowt"]
+
+    expected = DataFrame({0: [0, 2, 0], 1: [2, 1, 3]}, index=["a", "b to c", feature.nan])
+    assert list(evaluator.xagg.index) == list(expected.index)
+    assert allclose(evaluator.xagg, expected)
+    assert allclose(evaluator.xagg_dev, expected)
+    assert allclose(evaluator.raw_xagg_dev, expected)
+    assert allclose(evaluator.raw_xagg, expected)
+
+
+def test_get_best_combination_viable_with_nan(evaluator: BinaryCombinationEvaluator):
+
+    feature = OrdinalFeature("feature", ["a", "b", "c"])
+    feature.has_nan = True
+    assert feature.dropna is False
+
+    xagg = DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 3]}, index=["a", "b", "c", feature.nan])
+    evaluator.max_n_mod = 2
+    evaluator.dropna = True
+
+    result = evaluator.get_best_combination(feature, xagg, xagg)
+    print(result)
+    assert evaluator.feature == feature
+    assert feature.dropna is True
+    assert feature.dropna is evaluator.dropna
+
+    expected = {
+        "xagg": DataFrame({0: [0, 2], 1: [5, 1]}, index=["a", "b to c"]),
+        "combination": [["a", "__NAN__"], ["b to c"]],
+        "index_to_groupby": {"a": "a", "__NAN__": "a", "b to c": "b to c"},
+        "cramerv": 0.4472135954999579,
+        "tschuprowt": 0.4472135954999579,
+    }
+    assert allclose(result["xagg"], expected["xagg"])
+    assert result["combination"] == expected["combination"]
+    assert result["index_to_groupby"] == expected["index_to_groupby"]
+    assert result["cramerv"] == expected["cramerv"]
+    assert result["tschuprowt"] == expected["tschuprowt"]
+
+    expected = DataFrame({0: [0, 2], 1: [5, 1]}, index=["a, __NAN__", "b to c"])
+    assert feature.labels == list(expected.index)
+    assert allclose(evaluator.xagg, expected)
+    assert allclose(evaluator.xagg_dev, expected)
+    assert allclose(evaluator.raw_xagg_dev, expected)
+    assert allclose(evaluator.raw_xagg, expected)
