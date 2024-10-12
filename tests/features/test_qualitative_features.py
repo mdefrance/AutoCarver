@@ -4,7 +4,7 @@ from numpy import nan
 from pandas import DataFrame, Series
 from pytest import fixture, raises
 
-from AutoCarver.config import NAN
+from AutoCarver.config import Constants
 from AutoCarver.features.qualitative_features import (
     CategoricalFeature,
     OrdinalFeature,
@@ -398,17 +398,17 @@ def test_categorical_feature_update_ordinal_encoding(
         GroupedList({3: [3, 1]}),
         convert_labels=True,
     )
-    assert sample_categorical_feature.values == ["a", "c", NAN]
+    assert sample_categorical_feature.values == ["a", "c", Constants.NAN]
     assert sample_categorical_feature.content == {
         "a": ["1", "2", "3", "4", "5", "a"],
         "c": ["e", "f", "d", "c"],
-        NAN: ["b", NAN],
+        Constants.NAN: ["b", Constants.NAN],
     }
     assert sample_categorical_feature.labels == [0, 1, 2]
     assert sample_categorical_feature.value_per_label == {
         0: "a",
         1: "c",
-        2: NAN,
+        2: Constants.NAN,
     }
     print(sample_categorical_feature.label_per_value)
     assert sample_categorical_feature.label_per_value == {
@@ -422,7 +422,7 @@ def test_categorical_feature_update_ordinal_encoding(
         "e": 1,
         "f": 1,
         "d": 1,
-        NAN: 2,
+        Constants.NAN: 2,
         "b": 2,
     }
 
@@ -477,19 +477,25 @@ def test_categorical_feature_update_no_ordinal_encoding(
     # adding nans
     sample_categorical_feature.dropna = True
     print(sample_categorical_feature.content)
-    sample_categorical_feature.update(GroupedList({NAN: [NAN, "b"]}), convert_labels=True)
-    assert sample_categorical_feature.values == ["a", "d", NAN]
+    sample_categorical_feature.update(
+        GroupedList({Constants.NAN: [Constants.NAN, "b"]}), convert_labels=True
+    )
+    assert sample_categorical_feature.values == ["a", "d", Constants.NAN]
     print(sample_categorical_feature.content)
     assert sample_categorical_feature.content == {
         "a": ["1", "2", "3", "4", "5", "a"],
         "d": ["c", "e", "f", "d"],
-        "__NAN__": ["b", "__NAN__"],
+        Constants.NAN: ["b", Constants.NAN],
     }
-    assert sample_categorical_feature.labels == ["1, 2, 3, 4, 5, a", "c, d, e, f", f"b, {NAN}"]
+    assert sample_categorical_feature.labels == [
+        "1, 2, 3, 4, 5, a",
+        "c, d, e, f",
+        f"b, {Constants.NAN}",
+    ]
     assert sample_categorical_feature.value_per_label == {
         "1, 2, 3, 4, 5, a": "a",
         "c, d, e, f": "d",
-        f"b, {NAN}": NAN,
+        f"b, {Constants.NAN}": Constants.NAN,
     }
     print(sample_categorical_feature.label_per_value)
     assert sample_categorical_feature.label_per_value == {
@@ -503,8 +509,8 @@ def test_categorical_feature_update_no_ordinal_encoding(
         "e": "c, d, e, f",
         "f": "c, d, e, f",
         "d": "c, d, e, f",
-        NAN: f"b, {NAN}",
-        "b": f"b, {NAN}",
+        Constants.NAN: f"b, {Constants.NAN}",
+        "b": f"b, {Constants.NAN}",
     }
 
 
@@ -556,17 +562,17 @@ def test_ordinal_feature_update_ordinal_encoding(
     sample_ordinal_feature.dropna = True
     print(sample_ordinal_feature.content)
     sample_ordinal_feature.update(GroupedList({3: [3, 1]}), convert_labels=True)
-    assert sample_ordinal_feature.values == ["a", "c", NAN]
+    assert sample_ordinal_feature.values == ["a", "c", Constants.NAN]
     assert sample_ordinal_feature.content == {
         "a": ["1", "2", "3", "4", "5", "a"],
         "c": ["e", "f", "d", "c"],
-        NAN: ["b", NAN],
+        Constants.NAN: ["b", Constants.NAN],
     }
     assert sample_ordinal_feature.labels == [0, 1, 2]
     assert sample_ordinal_feature.value_per_label == {
         0: "a",
         1: "c",
-        2: NAN,
+        2: Constants.NAN,
     }
     print(sample_ordinal_feature.label_per_value)
     assert sample_ordinal_feature.label_per_value == {
@@ -580,7 +586,7 @@ def test_ordinal_feature_update_ordinal_encoding(
         "e": 1,
         "f": 1,
         "d": 1,
-        NAN: 2,
+        Constants.NAN: 2,
         "b": 2,
     }
 
@@ -633,19 +639,21 @@ def test_ordinal_feature_update_no_ordinal_encoding(
     # adding nans
     sample_ordinal_feature.dropna = True
     print(sample_ordinal_feature.content)
-    sample_ordinal_feature.update(GroupedList({NAN: [NAN, "b"]}), convert_labels=True)
-    assert sample_ordinal_feature.values == ["a", "d", NAN]
+    sample_ordinal_feature.update(
+        GroupedList({Constants.NAN: [Constants.NAN, "b"]}), convert_labels=True
+    )
+    assert sample_ordinal_feature.values == ["a", "d", Constants.NAN]
     print(sample_ordinal_feature.content)
     assert sample_ordinal_feature.content == {
         "a": ["1", "2", "3", "4", "5", "a"],
         "d": ["c", "e", "f", "d"],
-        "__NAN__": ["b", "__NAN__"],
+        Constants.NAN: ["b", Constants.NAN],
     }
-    assert sample_ordinal_feature.labels == ["1 to a", "c to f", f"b, {NAN}"]
+    assert sample_ordinal_feature.labels == ["1 to a", "c to f", f"b, {Constants.NAN}"]
     assert sample_ordinal_feature.value_per_label == {
         "1 to a": "a",
         "c to f": "d",
-        f"b, {NAN}": NAN,
+        f"b, {Constants.NAN}": Constants.NAN,
     }
     print(sample_ordinal_feature.label_per_value)
     assert sample_ordinal_feature.label_per_value == {
@@ -659,8 +667,8 @@ def test_ordinal_feature_update_no_ordinal_encoding(
         "e": "c to f",
         "f": "c to f",
         "d": "c to f",
-        NAN: f"b, {NAN}",
-        "b": f"b, {NAN}",
+        Constants.NAN: f"b, {Constants.NAN}",
+        "b": f"b, {Constants.NAN}",
     }
 
 
@@ -711,7 +719,7 @@ def test_categorical_feature_get_summary(sample_categorical_feature: Categorical
         {"feature": "Categorical('test_feature')", "label": 1, "content": "b"},
         {"feature": "Categorical('test_feature')", "label": 2, "content": "c"},
         {"feature": "Categorical('test_feature')", "label": 3, "content": ["e", "f", "d"]},
-        {"feature": "Categorical('test_feature')", "label": 4, "content": "__NAN__"},
+        {"feature": "Categorical('test_feature')", "label": 4, "content": Constants.NAN},
     ]
     assert summary == expected_summary
 
@@ -729,8 +737,8 @@ def test_categorical_feature_get_summary(sample_categorical_feature: Categorical
         {"feature": "Categorical('test_feature')", "label": 1, "content": "b"},
         {"feature": "Categorical('test_feature')", "label": 2, "content": "c"},
         {"feature": "Categorical('test_feature')", "label": 3, "content": ["e", "f", "d"]},
-        {"feature": "Categorical('test_feature')", "label": 4, "content": "__NAN__"},
-        {"feature": "Categorical('test_feature')", "label": 5, "content": "__OTHER__"},
+        {"feature": "Categorical('test_feature')", "label": 4, "content": Constants.NAN},
+        {"feature": "Categorical('test_feature')", "label": 5, "content": Constants.DEFAULT},
     ]
     assert summary == expected_summary
 
@@ -783,7 +791,7 @@ def test_ordinal_feature_get_summary(sample_ordinal_feature: OrdinalFeature) -> 
         {"feature": "Ordinal('test_feature')", "label": 1, "content": "b"},
         {"feature": "Ordinal('test_feature')", "label": 2, "content": "c"},
         {"feature": "Ordinal('test_feature')", "label": 3, "content": ["e", "f", "d"]},
-        {"feature": "Ordinal('test_feature')", "label": 4, "content": "__NAN__"},
+        {"feature": "Ordinal('test_feature')", "label": 4, "content": Constants.NAN},
     ]
     print(summary)
     assert summary == expected_summary
@@ -802,8 +810,8 @@ def test_ordinal_feature_get_summary(sample_ordinal_feature: OrdinalFeature) -> 
         {"feature": "Ordinal('test_feature')", "label": 1, "content": "b"},
         {"feature": "Ordinal('test_feature')", "label": 2, "content": "c"},
         {"feature": "Ordinal('test_feature')", "label": 3, "content": ["e", "f", "d"]},
-        {"feature": "Ordinal('test_feature')", "label": 4, "content": "__NAN__"},
-        {"feature": "Ordinal('test_feature')", "label": 5, "content": "__OTHER__"},
+        {"feature": "Ordinal('test_feature')", "label": 4, "content": Constants.NAN},
+        {"feature": "Ordinal('test_feature')", "label": 5, "content": Constants.DEFAULT},
     ]
     assert summary == expected_summary
 

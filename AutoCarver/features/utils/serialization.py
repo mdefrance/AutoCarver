@@ -5,7 +5,7 @@ from typing import Any, Union
 
 from numpy import floating, inf, integer, isfinite
 
-from ...config import INF
+from ...config import Constants
 from .grouped_list import GroupedList
 
 
@@ -25,7 +25,7 @@ def convert_value_to_base_type(value: Any) -> Union[str, float, int]:
 
     output = value  # str/float/int value
     if not isinstance(value, str) and not isfinite(value):  # numpy.inf value
-        output = INF
+        output = Constants.INF
     elif isinstance(value, integer):  # np.int value
         output = int(value)
     elif isinstance(value, floating):  # np.float value
@@ -48,7 +48,7 @@ def convert_value_to_numpy_type(value: Union[str, float, int]) -> Any:
         Deserialized value
     """
     output = value  # str/float/int value
-    if value == INF:  # numpy.inf value
+    if value == Constants.INF:  # numpy.inf value
         output = inf
 
     return output

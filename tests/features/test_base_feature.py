@@ -5,7 +5,7 @@ import json
 from pandas import DataFrame
 from pytest import raises
 
-from AutoCarver.config import DEFAULT, NAN
+from AutoCarver.config import Constants
 from AutoCarver.features import BaseFeature, GroupedList
 
 # removing abstractmethods for tests
@@ -18,9 +18,9 @@ def test_base_feature_initialization() -> None:
 
     assert feature.name == "test_feature"
     assert not feature.has_nan
-    assert feature.nan == NAN
+    assert feature.nan == Constants.NAN
     assert not feature.has_default
-    assert feature.default == DEFAULT
+    assert feature.default == Constants.DEFAULT
     assert not feature.dropna
     assert not feature.is_fitted
     assert feature.values is None

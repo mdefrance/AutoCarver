@@ -3,7 +3,7 @@
 from numpy import inf, nan
 from pandas import DataFrame, Series, notna
 
-from AutoCarver.config import DEFAULT
+from AutoCarver.config import Constants
 from AutoCarver.discretizers import Discretizer
 from AutoCarver.features import CategoricalFeature, Features, OrdinalFeature, QuantitativeFeature
 
@@ -170,7 +170,7 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
     ], "Rare values should be grouped to the closest one (OrdinalDiscretizer)"
 
     quali_expected = {
-        DEFAULT: ["Category A", "Category D", "Category F", DEFAULT],
+        Constants.DEFAULT: ["Category A", "Category D", "Category F", Constants.DEFAULT],
         "Category C": ["Category C"],
         "Category E": ["Category E"],
     }
@@ -179,7 +179,7 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
     ), "Values less frequent than min_freq should be grouped into default_value"
 
     quali_lownan_expected = {
-        DEFAULT: ["Category D", "Category F", DEFAULT],
+        Constants.DEFAULT: ["Category D", "Category F", Constants.DEFAULT],
         "Category C": ["Category C"],
         "Category E": ["Category E"],
     }
@@ -215,7 +215,7 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
         "4": [4.0, "4"],
         "1": [1.0, "1"],
         "3": [3.0, "3"],
-        DEFAULT: [0.5, "0.5", 6.0, "6", 5.0, "5", DEFAULT],
+        Constants.DEFAULT: [0.5, "0.5", 6.0, "6", 5.0, "5", Constants.DEFAULT],
     }
     assert features("Discrete_Qualitative_rarevalue_noorder").content == expected, (
         "Qualitative features with float values should be converted to string and there values "
@@ -226,7 +226,7 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
         "4": [4, "4"],
         "1": [1, "1"],
         "3": [3, "3"],
-        DEFAULT: [7, "7", 6, "6", 5, "5", DEFAULT],
+        Constants.DEFAULT: [7, "7", 6, "6", 5, "5", Constants.DEFAULT],
     }
     assert features("Discrete_Qualitative_noorder").content == expected, (
         "Qualitative features with int values should be converted to string and there values stored"

@@ -9,7 +9,7 @@ from pytest import fixture, raises
 
 from AutoCarver import BinaryCarver
 from AutoCarver.carvers.binary_carver import get_crosstab
-from AutoCarver.config import NAN
+from AutoCarver.config import Constants
 from AutoCarver.discretizers import ChainedDiscretizer
 from AutoCarver.features import Features, OrdinalFeature
 
@@ -274,11 +274,13 @@ def _binary_carver(
     # testing copy functionnality
     if copy:
         assert any(
-            x_discretized[feature_names].fillna(NAN) != x_train[feature_names].fillna(NAN)
+            x_discretized[feature_names].fillna(Constants.NAN)
+            != x_train[feature_names].fillna(Constants.NAN)
         ), "Not applied discretization inplace correctly"
     else:
         assert all(
-            x_discretized[feature_names].fillna(NAN) == x_train[feature_names].fillna(NAN)
+            x_discretized[feature_names].fillna(Constants.NAN)
+            == x_train[feature_names].fillna(Constants.NAN)
         ), "Not copied correctly"
 
     # testing json serialization

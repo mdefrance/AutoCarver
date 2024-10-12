@@ -7,7 +7,7 @@ from pandas import DataFrame
 from pytest import fixture, raises
 
 from AutoCarver import Features, MulticlassCarver
-from AutoCarver.config import NAN
+from AutoCarver.config import Constants
 from AutoCarver.discretizers import ChainedDiscretizer
 
 
@@ -211,8 +211,8 @@ def test_multiclass_carver(
     if copy:
         for feature in features:
             # unique values per feature
-            discretized = list(x_discretized[feature.version].fillna(NAN).unique())
-            train = list(x_train[feature.name].fillna(NAN).unique())
+            discretized = list(x_discretized[feature.version].fillna(Constants.NAN).unique())
+            train = list(x_train[feature.name].fillna(Constants.NAN).unique())
 
             assert any(val not in train for val in discretized) or any(
                 val not in discretized for val in train

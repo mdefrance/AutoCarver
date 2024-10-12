@@ -8,7 +8,7 @@ from pytest import raises
 
 from AutoCarver import ContinuousCarver
 from AutoCarver.carvers.continuous_carver import get_target_values_by_modality
-from AutoCarver.config import NAN
+from AutoCarver.config import Constants
 from AutoCarver.discretizers import ChainedDiscretizer
 from AutoCarver.features import Features, OrdinalFeature
 
@@ -236,7 +236,7 @@ def test_continuous_carver(
     # testing copy functionnality
     if copy:
         assert all(
-            x_discretized[feature_names].fillna(NAN) == x_train[feature_names].fillna(NAN)
+            x_discretized[feature_names].fillna(Constants.NAN) == x_train[feature_names].fillna(Constants.NAN)
         ), "Not copied correctly"
 
     # testing json serialization
