@@ -21,10 +21,18 @@ from dataclasses import dataclass
 
 @dataclass
 class AggregatedSample:
-    """Sample class to store xtab and xtab_dev"""
+    """Sample class to store aggregated samples
 
-    xagg: DataFrame
-    _raw: DataFrame = None
+    Attributes
+    ----------
+    xagg : DataFrame
+        Aggregated sample
+    raw : DataFrame
+        Raw aggregated sample
+    """
+
+    xagg: Union[DataFrame, Series]
+    _raw: Union[DataFrame, Series] = None
 
     def __post_init__(self):
         """Post initialization"""
@@ -38,7 +46,7 @@ class AggregatedSample:
         return self._raw
 
     @raw.setter
-    def raw(self, value: DataFrame) -> None:
+    def raw(self, value: Union[DataFrame, Series]) -> None:
         """Sets the raw value of the xagg"""
 
         # setting raw value
@@ -67,6 +75,10 @@ class AggregatedSample:
     def values(self) -> DataFrame:
         """Returns the values of the xagg"""
         return self.xagg.values
+
+    def groupby(self, *args, **kwargs) -> DataFrame:
+        """Groups the xagg by the specified indices"""
+        return self.xagg.groupby(*args, **kwargs)
 
 
 class CombinationEvaluator(ABC):
@@ -307,9 +319,7 @@ class CombinationEvaluator(ABC):
         """Helper to group XAGG's values by groupby (carver specific)"""
 
     @abstractmethod
-    def _association_measure(
-        self, xagg: Union[Series, DataFrame], n_obs: int = None
-    ) -> dict[str, float]:
+    def _association_measure(self, xagg: AggregatedSample, n_obs: int = None) -> dict[str, float]:
         """Helper to measure association between X and y (carver specific)"""
 
     @abstractmethod

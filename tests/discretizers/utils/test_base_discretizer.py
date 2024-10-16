@@ -829,3 +829,31 @@ def test_base_discretizer(x_train: DataFrame, dropna: bool) -> None:
     # checking that other columns are left unchanged
     feature = "Quantitative"
     assert all(x_discretized[feature] == x_discretized[feature]), "Others should not be modified"
+
+
+@fixture
+def sample_data():
+    X = DataFrame({"feature1": [1, 2, 3], "feature2": [4, 5, 6]})
+    y = Series([0, 1, 0])
+    return Sample(X=X, y=y)
+
+
+def test_initialization(sample_data):
+    assert isinstance(sample_data.X, DataFrame)
+    assert isinstance(sample_data.y, Series)
+
+
+def test_getitem(sample_data):
+    assert sample_data["X"].equals(sample_data.X)
+    assert sample_data["y"].equals(sample_data.y)
+    with raises(KeyError):
+        sample_data["invalid_key"]
+
+
+def test_iter(sample_data):
+    keys = list(iter(sample_data))
+    assert keys == ["X", "y"]
+
+
+def test_keys(sample_data):
+    assert sample_data.keys() == ["X", "y"]

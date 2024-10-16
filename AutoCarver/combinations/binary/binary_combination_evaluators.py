@@ -12,7 +12,7 @@ class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
 
     is_y_binary = True
 
-    def _compute_target_rates(self, xagg: DataFrame = None) -> DataFrame:
+    def _compute_target_rates(self, xagg: DataFrame) -> DataFrame:
         """Prints a binary xtab's statistics
 
         - there should bnot be nans in xagg
@@ -42,7 +42,7 @@ class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
 
         return stats
 
-    def _association_measure(self, xagg: DataFrame, n_obs: int = None) -> dict[str, float]:
+    def _association_measure(self, xagg: AggregatedSample, n_obs: int = None) -> dict[str, float]:
         """Computes measures of association between feature and target by crosstab.
 
         Parameters
@@ -62,7 +62,7 @@ class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
         n_mod_x = xagg.shape[0]
 
         # Chi2 statistic
-        chi2 = chi2_contingency(xagg)[0]
+        chi2 = chi2_contingency(xagg.values)[0]
 
         # Cramér's V
         cramerv = sqrt(chi2 / n_obs)

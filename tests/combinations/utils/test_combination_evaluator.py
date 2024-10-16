@@ -99,3 +99,28 @@ def test_aggregated_sample_columns(aggregated_sample):
 def test_aggregated_sample_values(aggregated_sample):
     """Test AggregatedSample values"""
     assert (aggregated_sample.values == aggregated_sample.xagg.values).all()
+
+
+@fixture
+def sample_data2():
+    data = {"category": ["A", "A", "B", "B"], "value1": [10, 20, 30, 40], "value2": [1, 2, 3, 4]}
+    xagg = DataFrame(data)
+    return AggregatedSample(xagg=xagg)
+
+
+def test_aggregated_sample_groupby_sum(sample_data2):
+    """Test AggregatedSample groupby sum"""
+    grouped = sample_data2.groupby("category").sum()
+    expected_data = {"value1": [30, 70], "value2": [3, 7]}
+    expected_index = ["A", "B"]
+    expected = DataFrame(expected_data, index=expected_index)
+    assert grouped.equals(expected)
+
+
+def test_aggregated_sample_groupby_mean(sample_data2):
+    """Test AggregatedSample groupby mean"""
+    grouped = sample_data2.groupby("category").mean()
+    expected_data = {"value1": [15.0, 35.0], "value2": [1.5, 3.5]}
+    expected_index = ["A", "B"]
+    expected = DataFrame(expected_data, index=expected_index)
+    assert grouped.equals(expected)

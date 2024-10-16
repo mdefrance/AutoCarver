@@ -4,13 +4,15 @@ from abc import ABC
 from numpy import mean
 from pandas import DataFrame, Series
 from scipy.stats import kruskal
-from ..utils.combination_evaluator import CombinationEvaluator
+from ..utils.combination_evaluator import CombinationEvaluator, AggregatedSample
 
 
 class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
+    """Continuous combination evaluator class."""
+
     is_y_continuous = True
 
-    def _association_measure(self, xagg: Series, n_obs: int = None) -> dict[str, float]:
+    def _association_measure(self, xagg: AggregatedSample, n_obs: int = None) -> dict[str, float]:
         """Computes measures of association between feature and quantitative target.
 
         Parameters
@@ -28,7 +30,7 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
         # Kruskal-Wallis' H
         return {"kruskal": kruskal(*tuple(xagg.values))[0]}
 
-    def _grouper(self, xagg: Series, groupby: dict[str:str]) -> Series:
+    def _grouper(self, xagg: AggregatedSample, groupby: dict[str:str]) -> Series:
         """Groups values of y
 
         Parameters
@@ -46,7 +48,7 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
         # TODO: convert this to the vectorial version like BinaryCarver
         return xagg.groupby(groupby).sum()
 
-    def _compute_target_rates(self, xagg: Series = None) -> DataFrame:
+    def _compute_target_rates(self, xagg: Series) -> DataFrame:
         """Prints a continuous yval's statistics
 
         Parameters
@@ -76,4 +78,6 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
 
 
 class KruksalCombinations(ContinuousCombinationEvaluator):
+    """Kruskal-Wallis' H combination evaluator class."""
+
     sort_by = "kruskal"
