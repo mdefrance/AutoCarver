@@ -256,8 +256,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
                 ):
                     raise ValueError(f"[{self.__name__}] X and y must have the same indices.")
 
-            return sample
-        return None
+        return sample
 
     __prepare_data = _prepare_data  # private copy
 

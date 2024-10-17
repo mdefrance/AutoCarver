@@ -5,13 +5,26 @@ import os
 
 from numpy import nan
 from pandas import DataFrame, Series
-from pytest import fixture, raises
+from pytest import fixture, raises, FixtureRequest
 
 from AutoCarver import BinaryCarver
 from AutoCarver.carvers.binary_carver import get_crosstab
 from AutoCarver.config import Constants
 from AutoCarver.discretizers import ChainedDiscretizer
 from AutoCarver.features import Features, OrdinalFeature
+from AutoCarver.combinations import (
+    CombinationEvaluator,
+    TschuprowtCombinations,
+    CramervCombinations,
+    KruskalCombinations,
+)
+from AutoCarver.carvers.utils.base_carver import Sample, Samples
+
+
+@fixture(params=[CramervCombinations, TschuprowtCombinations])
+def evaluator(request: FixtureRequest) -> CombinationEvaluator:
+    """CombinationEvaluator fixture."""
+    return request.param()
 
 
 @fixture(scope="module", params=["tschuprowt", "cramerv"])
@@ -21,6 +34,7 @@ def sort_by(request) -> str:
 
 
 def test_get_crosstab_basic():
+    """Test get_crosstab with basic data."""
     X = DataFrame({"feature": ["A", "B", "A", "B", "C"]})
     y = Series([1, 0, 1, 0, 1])
     feature = OrdinalFeature("feature", ["A", "B", "C"])
@@ -30,6 +44,7 @@ def test_get_crosstab_basic():
 
 
 def test_get_crosstab_with_nan():
+    """Test get_crosstab with missing values."""
     X = DataFrame({"feature": ["A", "B", "A", "B", None]})
     y = Series([1, 0, 1, 0, 1])
     feature = OrdinalFeature("feature", ["A", "B", "C"])
@@ -39,6 +54,7 @@ def test_get_crosstab_with_nan():
 
 
 def test_get_crosstab_unordered_labels():
+    """Test get_crosstab with unordered labels."""
     X = DataFrame({"feature": ["A", "B", "A", "B", "C"]})
     y = Series([1, 0, 1, 0, 1])
     feature = OrdinalFeature("feature", ["C", "A", "B"])
@@ -48,6 +64,7 @@ def test_get_crosstab_unordered_labels():
 
 
 def test_get_crosstab_missing_labels():
+    """Test get_crosstab with missing labels."""
     X = DataFrame({"feature": ["A", "B", "A", "B", "C"]})
     y = Series([1, 0, 1, 0, 1])
     feature = OrdinalFeature("feature", ["A", "B"])
@@ -57,6 +74,7 @@ def test_get_crosstab_missing_labels():
 
 
 def test_get_crosstab_extra_labels():
+    """Test get_crosstab with extra labels."""
     X = DataFrame({"feature": ["A", "B", "A", "B", "C"]})
     y = Series([1, 0, 1, 0, 1])
     feature = OrdinalFeature("feature", ["A", "B", "C", "D"])
@@ -65,7 +83,360 @@ def test_get_crosstab_extra_labels():
     assert result.equals(expected)
 
 
-def _binary_carver(
+def test_binary_carver_initialization():
+    """Test BinaryCarver initialization."""
+    features = Features(
+        categoricals=["feature1"],
+        ordinal_values={"feature2": ["low", "medium", "high"]},
+        ordinals=["feature2"],
+        quantitatives=["feature3"],
+    )
+    carver = BinaryCarver(min_freq=0.1, features=features, dropna=True)
+    assert carver.min_freq == 0.1
+    assert carver.features == features
+    assert carver.dropna is True
+    assert isinstance(carver.combinations, TschuprowtCombinations)
+    assert carver.combinations.max_n_mod == 5
+
+    max_n_mod = 8
+    carver = BinaryCarver(
+        min_freq=0.1, features=features, dropna=True, combinations=TschuprowtCombinations(max_n_mod)
+    )
+    assert isinstance(carver.combinations, TschuprowtCombinations)
+    assert carver.combinations.max_n_mod == max_n_mod
+
+    carver = BinaryCarver(
+        min_freq=0.1, features=features, combinations=CramervCombinations(max_n_mod)
+    )
+    assert isinstance(carver.combinations, CramervCombinations)
+    assert carver.combinations.max_n_mod == max_n_mod
+
+    with raises(ValueError):
+        BinaryCarver(min_freq=0.1, features=features, combinations=KruskalCombinations(max_n_mod))
+
+
+def test_binary_carver_prepare_data(evaluator: CombinationEvaluator):
+    """Test BinaryCarver _prepare_data method."""
+    features = Features(
+        categoricals=["feature1"],
+        ordinal_values={"feature2": ["low", "medium", "high"]},
+        ordinals=["feature2"],
+        quantitatives=["feature3"],
+    )
+    carver = BinaryCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator)
+    X = DataFrame(
+        {"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]}
+    )
+
+    # with wrong target
+    y = Series([0, 1, 2])
+    samples = Samples(train=Sample(X, y))
+
+    with raises(ValueError):
+        carver._prepare_data(samples)
+
+    # with right target
+    y = Series([0, 1, 0])
+    samples = Samples(train=Sample(X, y))
+
+    prepared_samples = carver._prepare_data(samples)
+    assert isinstance(prepared_samples, Samples)
+
+
+def test_binary_carver_aggregator(evaluator: CombinationEvaluator):
+    """Test BinaryCarver _aggregator method."""
+    features = Features(
+        categoricals=["feature1"],
+        ordinal_values={"feature2": ["low", "medium", "high"]},
+        ordinals=["feature2"],
+        quantitatives=["feature3"],
+    )
+    carver = BinaryCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator)
+    X = DataFrame(
+        {"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]}
+    )
+    y = Series([0, 1, 0])
+    xtabs = carver._aggregator(X, y)
+    print(xtabs)
+
+    expected = {
+        "feature1": DataFrame({0: [2, 0], 1: [0, 1]}, index=["A", "B"]),
+        "feature2": DataFrame({0: [1, 0, 1], 1: [0, 1, 0]}, index=["low", "medium", "high"]),
+        "feature3": DataFrame({0: [1, 0, 1], 1: [0, 1, 0]}, index=[1, 2, 3]),
+    }
+    assert isinstance(xtabs, dict)
+    assert "feature1" in xtabs
+    assert "feature2" in xtabs
+    assert "feature3" in xtabs
+    for feature in features.names:
+        assert all(xtabs[feature].index == expected[feature].index)
+        assert (xtabs[feature].values == expected[feature].values).all()
+
+
+def test_carve_feature_with_best_combination(evaluator):
+    """Test BinaryCarver _carve_feature method."""
+
+    features = Features(
+        categoricals=["feature1"],
+        ordinal_values={"feature2": ["low", "medium", "high"]},
+        ordinals=["feature2"],
+        quantitatives=["feature3"],
+    )
+    X = DataFrame(
+        {
+            "feature1": ["A", "B", "A", "C"],
+            "feature2": ["low", "medium", "high", "high"],
+            "feature3": [1, 2, 3, float("nan")],
+        }
+    )
+    y = Series([0, 1, 0, 1])
+    samples = Samples(train=Sample(X, y))
+
+    # initializing carver
+    carver = BinaryCarver(
+        features=features,
+        min_freq=0.1,
+        combinations=evaluator,
+        dropna=True,
+        verbose=False,
+    )
+    carver._prepare_data(samples)
+
+    # getting aggregated data
+    xaggs = carver._aggregator(samples.train.X, samples.train.y)
+    xaggs_dev = carver._aggregator(samples.dev.X, samples.dev.y)
+
+    # carving a feature
+    feature = features[0]
+    carver._carve_feature(feature, xaggs, xaggs_dev, "1/1")
+    print(feature.content)
+    assert feature in carver.features
+    assert feature.content == {"A": ["A"], "B": ["C", "B"]}
+
+    # carving a feature
+    feature = features[1]
+    carver._carve_feature(feature, xaggs, xaggs_dev, "1/1")
+    print(feature.content)
+    assert feature in carver.features
+    assert feature.content == {"low": ["low"], "medium": ["medium"], "high": ["high"]}
+
+    # carving a feature
+    feature = features[2]
+    carver._carve_feature(feature, xaggs, xaggs_dev, "1/1")
+    print(feature.content)
+    assert feature in carver.features
+    assert feature.content == {
+        1.0: [1.0],
+        float("inf"): [2.0, 3.0, float("inf")],
+        "__NAN__": ["__NAN__"],
+    }
+
+
+def test_carve_feature_without_best_combination(evaluator: CombinationEvaluator):
+    """Test _carve_feature method without best combination."""
+
+    features = Features(
+        categoricals=["feature1"],
+        ordinal_values={"feature2": ["low", "medium", "high"]},
+        ordinals=["feature2"],
+        quantitatives=["feature3"],
+    )
+    X = DataFrame(
+        {
+            "feature1": ["A", "B", "A", "C"],
+            "feature2": ["low", "medium", "high", "high"],
+            "feature3": [1, 2, 3, float("nan")],
+        }
+    )
+    y = Series([0, 1, 0, 1])
+    samples = Samples(train=Sample(X, y))
+
+    # initializing carver
+    carver = BinaryCarver(
+        features=features,
+        min_freq=0.9,
+        combinations=evaluator,
+        dropna=True,
+        verbose=False,
+    )
+    carver._prepare_data(samples)
+
+    # getting aggregated data
+    xaggs = carver._aggregator(samples.train.X, samples.train.y)
+    xaggs_dev = carver._aggregator(samples.dev.X, samples.dev.y)
+
+    # carving a feature
+    feature = features[0]
+    carver._carve_feature(feature, xaggs, xaggs_dev, "1/1")
+    print(feature.content)
+    assert feature not in carver.features
+    assert feature.content == {"A": ["A"], "__OTHER__": ["C", "B", "__OTHER__"]}
+
+
+def test_fit_with_best_combination(evaluator):
+    """Test BinaryCarver fit method with best combination."""
+
+    features = Features(
+        categoricals=["feature1"],
+        ordinal_values={"feature2": ["low", "medium", "high"]},
+        ordinals=["feature2"],
+        quantitatives=["feature3"],
+    )
+    X = DataFrame(
+        {
+            "feature1": ["A", "B", "A", "C"],
+            "feature2": ["low", "medium", "high", "high"],
+            "feature3": [1, 2, 3, float("nan")],
+        }
+    )
+    y = Series([0, 1, 0, 1])
+
+    # initializing carver
+    carver = BinaryCarver(
+        features=features,
+        min_freq=0.1,
+        combinations=evaluator,
+        dropna=True,
+        verbose=False,
+    )
+
+    # fitting carver
+    carver.fit(X, y)
+
+    feature = features[0]
+    print(feature.content)
+    assert feature in carver.features
+    assert feature.content == {"A": ["A"], "B": ["C", "B"]}
+
+    # carving a feature
+    feature = features[1]
+    print(feature.content)
+    assert feature in carver.features
+    assert feature.content == {"low": ["low"], "medium": ["medium"], "high": ["high"]}
+
+    # carving a feature
+    feature = features[2]
+    print(feature.content)
+    assert feature in carver.features
+    assert feature.content == {
+        1.0: [1.0],
+        float("inf"): [2.0, 3.0, float("inf")],
+        "__NAN__": ["__NAN__"],
+    }
+
+
+def test_fit_without_best_combination(evaluator: CombinationEvaluator):
+    """Test BinaryCarver fit method without best combination."""
+
+    features = Features(
+        categoricals=["feature1"],
+        ordinal_values={"feature2": ["low", "medium", "high"]},
+        ordinals=["feature2"],
+        quantitatives=["feature3"],
+    )
+    X = DataFrame(
+        {
+            "feature1": ["A", "B", "A", "C"],
+            "feature2": ["low", "medium", "high", "high"],
+            "feature3": [1, 2, 3, float("nan")],
+        }
+    )
+    y = Series([0, 1, 0, 1])
+
+    # initializing carver
+    carver = BinaryCarver(
+        features=features,
+        min_freq=0.9,
+        combinations=evaluator,
+        dropna=True,
+        verbose=False,
+    )
+
+    # fitting carver
+    carver.fit(X, y)
+
+    # carving a feature
+    assert len(features) == 0
+
+
+def test_binary_carver_fit_transform(evaluator: CombinationEvaluator):
+    """Test BinaryCarver fit_transform method."""
+    features = Features(
+        categoricals=["feature1"],
+        ordinal_values={"feature2": ["low", "medium", "high"]},
+        ordinals=["feature2"],
+        quantitatives=["feature3"],
+    )
+    carver = BinaryCarver(
+        min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False
+    )
+    X = DataFrame(
+        {
+            "feature1": ["A", "B", "A", "C"],
+            "feature2": ["low", "medium", "high", "high"],
+            "feature3": [1, 2, 3, float("nan")],
+        },
+        index=["a", "b", "c", "d"],
+    )
+    y = Series([0, 1, 0, 1], index=["a", "b", "c", "d"])
+    X_transformed = carver.fit_transform(X, y)
+
+    print(X_transformed)
+    expected = DataFrame(
+        {
+            "feature1": ["A", "B, C", "A", "C, C"],
+            "feature2": ["low", "medium", "high", "high"],
+            "feature3": ["x <= 1.0e+00", "1.0e+00 < x", "1.0e+00 < x", "__NAN__"],
+        },
+        index=["a", "b", "c", "d"],
+    )
+    assert isinstance(X_transformed, DataFrame)
+    assert all(X_transformed.index == expected.index)
+    assert all(X_transformed.index == X.index)
+    assert all(X_transformed.columns == expected.columns)
+    assert all(X.columns == expected.columns)
+    print(X.values, "\n", expected.values, "\n", X_transformed.values, "\n", (X.values == expected.values))
+    assert (X.values == expected.values).all()
+    assert (X_transformed.values == expected.values).all()
+
+
+
+def test_binary_carver_transform():
+    """Test BinaryCarver transform method."""
+    features = Features(
+        categoricals=["feature1"],
+        ordinal_values={"feature2": ["low", "medium", "high"]},
+        ordinals=["feature2"],
+        quantitatives=["feature3"],
+    )
+    carver = BinaryCarver(min_freq=0.1, features=features, dropna=True)
+    X = DataFrame(
+        {"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]}
+    )
+    y = Series([0, 1, 0])
+    carver.fit(X, y)
+    X_transformed = carver.transform(X)
+    assert isinstance(X_transformed, DataFrame)
+
+
+def test_binary_carver_save_load(tmp_path):
+    """Test BinaryCarver save and load methods."""
+    features = Features(
+        categoricals=["feature1"],
+        ordinal_values={"feature2": ["low", "medium", "high"]},
+        ordinals=["feature2"],
+        quantitatives=["feature3"],
+    )
+    carver = BinaryCarver(min_freq=0.1, features=features, dropna=True)
+    carver_file = tmp_path / "binary_carver.json"
+    carver.save(str(carver_file))
+    loaded_carver = BinaryCarver.load(str(carver_file))
+    assert carver.min_freq == loaded_carver.min_freq
+    assert carver.features == loaded_carver.features
+    assert carver.dropna == loaded_carver.dropna
+
+
+def test_binary_carver(
     tmp_path,
     x_train: DataFrame,
     x_train_wrong_2: DataFrame,
@@ -286,7 +657,7 @@ def _binary_carver(
     # testing json serialization
     carver_file = tmp_path / "test.json"
     auto_carver.save(str(carver_file))
-    loaded_carver = BinaryCarver.load_carver(str(carver_file))
+    loaded_carver = BinaryCarver.load(str(carver_file))
     os.remove(carver_file)
 
     # checking that reloading worked exactly the same

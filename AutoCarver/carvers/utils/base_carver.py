@@ -216,7 +216,8 @@ class BaseCarver(BaseDiscretizer, ABC):
 
         # filling up nans
         samples.train.X = self.features.fillna(samples.train.X)
-        samples.dev.X = self.features.fillna(samples.dev.X)
+        if samples.dev.X is not None:
+            samples.dev.X = self.features.fillna(samples.dev.X)
 
         return samples
 
