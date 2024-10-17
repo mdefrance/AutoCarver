@@ -24,6 +24,7 @@ class ContinuousCarver(BaseCarver):
     """
 
     __name__ = "ContinuousCarver"
+    is_y_continuous = True
 
     @extend_docstring(BaseCarver.__init__)
     def __init__(

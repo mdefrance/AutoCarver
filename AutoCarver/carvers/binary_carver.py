@@ -22,6 +22,7 @@ class BinaryCarver(BaseCarver):
     """
 
     __name__ = "BinaryCarver"
+    is_y_binary = True
 
     @extend_docstring(BaseCarver.__init__)
     def __init__(

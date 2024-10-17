@@ -4,12 +4,10 @@ for any task.
 
 import json
 from abc import abstractmethod, ABC
-from functools import partial
 from typing import Union
 from dataclasses import dataclass
 
 from pandas import DataFrame, Series
-from tqdm.autonotebook import tqdm
 
 from ...discretizers import BaseDiscretizer, Discretizer, Sample
 from ...features import BaseFeature, Features, GroupedList
@@ -29,7 +27,34 @@ else:
 
 @dataclass
 class Samples:
-    """store train and dev samples"""
+    """
+    A container for storing training and development samples.
+
+    Attributes:
+        train (Sample): The training sample, containing features (X) and target (y).
+        dev (Sample): The development sample, containing features (X) and target (y).
+
+    Example:
+        >>> import pandas as pd
+        >>> from base_carver import Sample, Samples
+        >>> X_train = pd.DataFrame({"feature1": [1, 2, 3], "feature2": [4, 5, 6]})
+        >>> y_train = pd.Series([0, 1, 0])
+        >>> X_dev = pd.DataFrame({"feature1": [7, 8, 9], "feature2": [10, 11, 12]})
+        >>> y_dev = pd.Series([1, 0, 1])
+        >>> train_sample = Sample(X=X_train, y=y_train)
+        >>> dev_sample = Sample(X=X_dev, y=y_dev)
+        >>> samples = Samples(train=train_sample, dev=dev_sample)
+        >>> print(samples.train.X)
+           feature1  feature2
+        0         1         4
+        1         2         5
+        2         3         6
+        >>> print(samples.dev.y)
+        0    1
+        1    0
+        2    1
+        dtype: int64
+    """
 
     train: Sample = Sample(X=None)
     dev: Sample = Sample(X=None)
@@ -44,6 +69,9 @@ class BaseCarver(BaseDiscretizer, ABC):
     """
 
     __name__ = "AutoCarver"
+    is_y_binary = False
+    is_y_continuous = False
+    is_y_multiclass = False
 
     def __init__(
         self,
@@ -122,7 +150,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         """
 
         # minimum frequency for discretizer
-        self.discretizer_min_freq = get_attribute(kwargs, "discretizer_min_freq", self.min_freq / 2)
+        self.discretizer_min_freq = get_attribute(kwargs, "discretizer_min_freq", min_freq / 2)
 
         # Initiating BaseDiscretizer
         super().__init__(
@@ -141,9 +169,6 @@ class BaseCarver(BaseDiscretizer, ABC):
         self.combinations.min_freq = self.min_freq
         self.combinations.verbose = self.verbose
         self.combinations.dropna = self.dropna
-
-        # progress bar if requested
-        self.tqdm = partial(tqdm, disable=not self.verbose)
 
     @property
     def pretty_print(self) -> bool:

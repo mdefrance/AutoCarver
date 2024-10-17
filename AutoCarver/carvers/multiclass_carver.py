@@ -25,6 +25,8 @@ class MulticlassCarver(BinaryCarver):
     """
 
     __name__ = "MulticlassCarver"
+    is_y_binary = False
+    is_y_multiclass = True
 
     @extend_docstring(BinaryCarver.__init__)
     def __init__(
