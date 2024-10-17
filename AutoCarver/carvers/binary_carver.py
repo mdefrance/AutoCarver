@@ -2,14 +2,13 @@
 for binary classification tasks.
 """
 
-from typing import Callable
-
 from numpy import unique
 from pandas import DataFrame, Series, crosstab
 
 from ..features import BaseFeature, Features
 from ..utils import extend_docstring
-from .utils.base_carver import BaseCarver
+from .utils.base_carver import BaseCarver, Samples
+from ..combinations import TschuprowtCombinations, BinaryCombinationEvaluator
 
 
 class BinaryCarver(BaseCarver):
@@ -27,12 +26,10 @@ class BinaryCarver(BaseCarver):
     @extend_docstring(BaseCarver.__init__)
     def __init__(
         self,
-        sort_by: str,
         min_freq: float,
         features: Features,
-        *,
-        max_n_mod: int = 5,
         dropna: bool = True,
+        combinations: BinaryCombinationEvaluator = None,
         **kwargs: dict,
     ) -> None:
         """
@@ -48,31 +45,27 @@ class BinaryCarver(BaseCarver):
             use ``"cramerv"`` for more output modalities.
         """
 
+        # default binary combinations
+        if combinations is None:
+            combinations = TschuprowtCombinations()
+
         # association measure used to find the best groups for binary targets
-        implemented_measures = ["tschuprowt", "cramerv"]
-        if sort_by not in implemented_measures:
+        if not combinations.is_y_binary:
             raise ValueError(
-                f"[{self.__name__}] Measure '{sort_by}' not implemented for binary targets. "
-                f"Choose from: {str(implemented_measures)}."
+                f"[{self.__name__}] {combinations} is not suited for binary targets. "
+                f"Choose from: TschuprowtCombinations, CramervCombinations."
             )
 
         # Initiating BaseCarver
         super().__init__(
-            min_freq=min_freq,
-            sort_by=sort_by,
             features=features,
-            max_n_mod=max_n_mod,
+            min_freq=min_freq,
+            combinations=combinations,
             dropna=dropna,
             **kwargs,
         )
 
-    def _prepare_data(
-        self,
-        X: DataFrame,
-        y: Series,
-        X_dev: DataFrame = None,
-        y_dev: Series = None,
-    ) -> tuple[DataFrame, DataFrame, dict[str, Callable]]:
+    def _prepare_data(self, samples: Samples) -> Samples:
         """Validates format and content of X and y.
 
         Parameters
@@ -98,16 +91,14 @@ class BinaryCarver(BaseCarver):
             Copies of (X, X_dev) and helpers to be used according to target type
         """
         # binary target, checking values
-        y_values = unique(y)
+        y_values = unique(samples.train.y)
         if not ((0 in y_values) and (1 in y_values)) or len(y_values) != 2:
             raise ValueError(
-                f"[{self.__name__}] y must be a binary Series (int or float, not object)"
+                f"[{self.__name__}] y must be a binary Series of 0 and 1 (int or float, not object)"
             )
 
         # Checking for binary target and discretizing X
-        x_copy, x_dev_copy = super()._prepare_data(X, y, X_dev=X_dev, y_dev=y_dev)
-
-        return x_copy, x_dev_copy
+        return super()._prepare_data(samples)
 
     def _aggregator(self, X: DataFrame, y: Series) -> dict[str, DataFrame]:
         """Computes crosstabs for specified features and ensures that the crosstab is ordered
@@ -133,21 +124,6 @@ class BinaryCarver(BaseCarver):
                 xtabs.update({feature.version: get_crosstab(X, y, feature)})
 
         return xtabs
-
-    def _target_rate(self, xagg: DataFrame) -> DataFrame:
-        """Computes target rate per row for a binary target (column) in a crosstab
-
-        Parameters
-        ----------
-        xagg : DataFrame
-            crosstab of X by y
-
-        Returns
-        -------
-        DataFrame
-            y mean by xagg index
-        """
-        return xagg[1].divide(xagg.sum(axis=1)).sort_values()
 
 
 def get_crosstab(X: DataFrame, y: Series, feature: BaseFeature) -> dict:

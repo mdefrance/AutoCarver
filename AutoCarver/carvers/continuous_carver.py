@@ -2,12 +2,13 @@
 for continuous regression tasks.
 """
 
-from numpy import mean, unique
+from numpy import unique
 from pandas import DataFrame, Series
 
 from ..features import BaseFeature, Features
 from ..utils import extend_docstring
-from .utils.base_carver import BaseCarver
+from .utils.base_carver import BaseCarver, Samples
+from ..combinations import ContinuousCombinationEvaluator, KruskalCombinations
 
 
 class ContinuousCarver(BaseCarver):
@@ -27,41 +28,37 @@ class ContinuousCarver(BaseCarver):
     @extend_docstring(BaseCarver.__init__)
     def __init__(
         self,
-        min_freq: float,
         features: Features,
-        *,
-        max_n_mod: int = 5,
+        min_freq: float,
         dropna: bool = True,
+        combinations: ContinuousCombinationEvaluator = None,
         **kwargs: dict,
     ) -> None:
         """
         Parameters
         ----------
         """
-        # association measure used to find the best groups for continuous targets
-        if "sort_by" in kwargs and kwargs.get("sort_by") != "kruskal":
+        # default binary combinations
+        if combinations is None:
+            combinations = KruskalCombinations()
+
+        # association measure used to find the best groups for binary targets
+        if not combinations.is_y_continuous:
             raise ValueError(
-                f"[{self.__name__}] Measure '{kwargs.get('sort_by')}' not implemented for "
-                "continuous targets. Use 'kruskal' instead."
+                f"[{self.__name__}] {combinations} is not suited for continuous targets. "
+                f"Choose from: KruskalCombinations."
             )
 
         # Initiating BaseCarver
         super().__init__(
-            min_freq=min_freq,
-            sort_by="kruskal",
             features=features,
-            max_n_mod=max_n_mod,
+            min_freq=min_freq,
+            combinations=combinations,
             dropna=dropna,
             **kwargs,
         )
 
-    def _prepare_data(
-        self,
-        X: DataFrame,
-        y: Series,
-        X_dev: DataFrame = None,
-        y_dev: Series = None,
-    ) -> tuple[DataFrame, DataFrame]:
+    def _prepare_data(self, samples: Samples) -> Samples:
         """Validates format and content of X and y.
 
         Parameters
@@ -87,20 +84,20 @@ class ContinuousCarver(BaseCarver):
             Copies of (X, X_dev) to be used according to target type
         """
         # Checking for binary target and copying X
-        x_copy, x_dev_copy = super()._prepare_data(X, y, X_dev=X_dev, y_dev=y_dev)
+        samples = super()._prepare_data(samples)
 
         # continuous target, checking values
-        y_values = unique(y)
+        y_values = unique(samples.train.y)
         if len(y_values) <= 2:
             raise ValueError(
                 f"[{self.__name__}] provided y is binary, consider using BinaryCarver instead."
             )
-        if str in y.apply(type).unique():
+        if str in samples.train.y.apply(type).unique():
             raise ValueError(
                 f"[{self.__name__}] y must be a continuous Series (int or float, not object)"
             )
 
-        return x_copy, x_dev_copy
+        return samples
 
     def _aggregator(self, X: DataFrame, y: Series) -> dict[str, DataFrame]:
         """Computes y values for modalities of specified features and ensures the ordering
@@ -130,21 +127,6 @@ class ContinuousCarver(BaseCarver):
                 yvals.update({feature.version: get_target_values_by_modality(X, y, feature)})
 
         return yvals
-
-    def _target_rate(self, xagg: Series) -> Series:
-        """Computes target average per group for a continuous target
-
-        Parameters
-        ----------
-        xagg : Series
-            _description_
-
-        Returns
-        -------
-        Series
-            _description_
-        """
-        return xagg.apply(mean).sort_values()
 
 
 def get_target_values_by_modality(X: DataFrame, y: Series, feature: BaseFeature) -> dict:

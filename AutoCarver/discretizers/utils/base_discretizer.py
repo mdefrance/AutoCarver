@@ -122,8 +122,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         # carver attributes
         self.min_freq = kwargs.get("min_freq")  # default to None
-        self.sort_by = kwargs.get("sort_by")  # default to None
-        self.max_n_mod = kwargs.get("max_n_mod")  # default to None
+        self.combinations = kwargs.get("combinations")  # default to None
 
     def __repr__(self, N_CHAR_MAX: int = 700) -> str:
         """Returns the string representation of the Discretizer"""
@@ -432,16 +431,22 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             JSON serialized object
         """
         # adding all parameters
-        return {
+        content = {
             "features": self.features.to_json(light_mode),
             "dropna": self.dropna,
             "min_freq": self.min_freq,
-            "sort_by": self.sort_by,
+            "combinations": self.combinations,
             "is_fitted": self.is_fitted,
             "n_jobs": self.n_jobs,
             "verbose": self.verbose,
             "ordinal_encoding": self.ordinal_encoding,
         }
+
+        # adding combinations if it exists
+        if self.combinations is not None:
+            content["combinations"] = self.combinations.to_json()
+
+        return content
 
     def save(self, file_name: str, light_mode: bool = False) -> None:
         """Saves pipeline to .json file.
@@ -467,7 +472,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             raise ValueError(f"[{self.__name__}] Provide a file_name that ends with .json.")
 
     @classmethod
-    def load_discretizer(cls, file_name: str) -> "BaseDiscretizer":
+    def load(cls, file_name: str) -> "BaseDiscretizer":
         """Allows one to load an Discretizer saved as a .json file.
 
         The Discretizer has to be saved with ``Discretizer.save()``, otherwise there
@@ -491,18 +496,18 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         features = Features.load(discretizer_json.pop("features"))
 
         # initiating BaseDiscretizer
-        loaded_discretizer = cls(features=features, **discretizer_json)
-
-        return loaded_discretizer
+        return cls(features=features, **discretizer_json)
 
     # def history(self, feature: str = None) -> DataFrame:
     #     """Historic of tested combinations and there association with the target.
 
     #     By default:
 
-    #         * ``str_default="__OTHER__"`` is added for features with non-representative modalities.
+    #         * ``str_default="__OTHER__"`` is added for features with non-representative
+    #  modalities.
     #         * ``str_nan="__NAN__"`` is added for features that contain ``numpy.nan``.
-    #         * Whatever the value of ``dropna``, the association is computed for non-missing values.
+    #         * Whatever the value of ``dropna``, the association is computed for non-missing
+    # values.
 
     #     Parameters
     #     ----------
@@ -589,7 +594,8 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
     #         A group value that will persist after completion
     #     """
     #     # checking for mode
-    #     assert mode in ["group", "replace"], " - [Discretizer] Choose mode in ['group', 'replace']"
+    #     assert mode in ["group", "replace"], " - [Discretizer] Choose mode in
+    # ['group', 'replace']"
 
     #     # checking for nans
     #     if isnan(discarded_value):

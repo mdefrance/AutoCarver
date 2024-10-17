@@ -2,7 +2,7 @@
 for multiclass classification tasks.
 """
 
-from typing import Any, Callable, Union
+from typing import Any
 
 from pandas import DataFrame, Series, unique
 
@@ -10,10 +10,11 @@ from ..discretizers import BaseDiscretizer
 from ..features import Features
 from ..utils import extend_docstring
 from .binary_carver import BinaryCarver
-from .utils.base_carver import BaseCarver
+from .utils.base_carver import Samples
+from ..combinations import BinaryCombinationEvaluator
 
 
-class MulticlassCarver(BaseCarver):
+class MulticlassCarver(BinaryCarver):
     """Automatic carving of continuous, discrete, categorical and ordinal
     features that maximizes association with a multiclass target.
 
@@ -28,22 +29,17 @@ class MulticlassCarver(BaseCarver):
     @extend_docstring(BinaryCarver.__init__)
     def __init__(
         self,
-        sort_by: str,
-        min_freq: float,
         features: Features,
-        *,
-        max_n_mod: int = 5,
+        min_freq: float,
         dropna: bool = True,
+        combinations: BinaryCombinationEvaluator = None,
         **kwargs: dict,
     ) -> None:
         """ """
-        # association measure used to find the best groups for binary targets
-        implemented_measures = ["tschuprowt", "cramerv"]
-        if sort_by not in implemented_measures:
-            raise ValueError(
-                f"[{self.__name__}] Measure '{sort_by}' not implemented for binary targets. "
-                f"Choose from: {str(implemented_measures)}."
-            )
+        # Initiating BinaryCarver
+        super().__init__(
+            features=features, min_freq=min_freq, combinations=combinations, dropna=dropna, **kwargs
+        )
 
         # warning user for
         if "copy" in kwargs:
@@ -51,23 +47,7 @@ class MulticlassCarver(BaseCarver):
                 "WARNING: can't set copy=True for MulticlassCarver (no inplace DataFrame.assign)."
             )
 
-        # Initiating BaseCarver
-        super().__init__(
-            min_freq=min_freq,
-            sort_by=sort_by,
-            features=features,
-            max_n_mod=max_n_mod,
-            dropna=dropna,
-            **kwargs,
-        )
-
-    def _prepare_data(
-        self,
-        X: DataFrame,
-        y: Series,
-        X_dev: DataFrame = None,
-        y_dev: Series = None,
-    ) -> tuple[DataFrame, DataFrame, dict[str, Callable]]:
+    def _prepare_data(self, samples: Samples) -> Samples:
         """Validates format and content of X and y.
 
         Parameters
@@ -93,31 +73,31 @@ class MulticlassCarver(BaseCarver):
             Copies of (X, X_dev) and helpers to be used according to target type
         """
         # converting target to str
-        y_copy = y.astype(str)
+        samples.train.y = samples.train.y.astype(str)
 
         # multiclass target, checking values
-        if len(unique(y_copy)) <= 2:
+        if len(unique(samples.train.y)) <= 2:
             raise ValueError(
                 f"[{self.__name__}] provided y is binary, consider using BinaryCarver instead."
             )
 
         # checking for dev target's values
-        y_dev_copy = y_dev
-        if y_dev is not None:
+        if samples.dev.y is not None:
             # converting target to str
-            y_dev_copy = y_dev.astype(str)
+            samples.dev.y = samples.dev.y.astype(str)
 
             # check that classes of y are classes of y_dev
-            unique_y_dev = y_dev.unique()
-            unique_y = y.unique()
+            unique_y_dev = samples.dev.y.unique()
+            unique_y = samples.train.y.unique()
             missing_y = [mod_y for mod_y in unique_y if mod_y not in unique_y_dev]
             missing_y_dev = [mod_y_dev for mod_y_dev in unique_y_dev if mod_y_dev not in unique_y]
             if len(missing_y) > 0 or len(missing_y_dev) > 0:
                 raise ValueError(
-                    f"[{self.__name__}] Mismatch between y and y_dev: {missing_y_dev+missing_y}"
+                    f"[{self.__name__}] Mismatched classes between y and y_dev"
+                    f": train({missing_y_dev}), dev({+missing_y})"
                 )
 
-        return X, y_copy, X_dev, y_dev_copy
+        return samples
 
     @extend_docstring(BinaryCarver.fit)
     def fit(
@@ -128,11 +108,14 @@ class MulticlassCarver(BaseCarver):
         X_dev: DataFrame = None,
         y_dev: Series = None,
     ) -> None:
+        # initiating samples
+        samples = Samples(train=Samples(X, y), dev=Samples(X_dev, y_dev))
+
         # preparing datasets and checking for wrong values
-        x_copy, y_copy, x_dev_copy, y_dev_copy = self._prepare_data(X, y, X_dev, y_dev)
+        samples = self._prepare_data(samples)
 
         # getting distinct y classes
-        y_classes = sorted(list(y_copy.unique()))[1:]  # removing one of the classes
+        y_classes = sorted(list(samples.train.y.unique()))[1:]  # removing one of the classes
 
         # adding versionned features
         self.features.add_feature_versions(y_classes)
@@ -146,24 +129,23 @@ class MulticlassCarver(BaseCarver):
                 )
 
             # identifying this y_class
-            target_class = get_one_vs_rest(y_copy, y_class)
-            target_class_dev = get_one_vs_rest(y_dev_copy, y_class)
+            train_y_class = get_one_vs_rest(samples.train.y, y_class)
+            dev_y_class = get_one_vs_rest(samples.dev.y, y_class)
 
             # features for specific group
             class_features = Features(self.features.get_version_group(y_class))
 
             # initiating BinaryCarver for y_class
             binary_carver = BinaryCarver(
-                min_freq=self.min_freq,
-                sort_by=self.sort_by,
                 features=class_features,
-                max_n_mod=self.max_n_mod,
+                min_freq=self.min_freq,
+                combinations=self.combinations,
                 **dict(self.kwargs, copy=True),  # copying x to keep raw columns as is
             )
 
             # fitting BinaryCarver for y_class
             binary_carver.fit_transform(
-                x_copy, target_class, X_dev=x_dev_copy, y_dev=target_class_dev
+                samples.train.X, train_y_class, X_dev=samples.dev.X, y_dev=dev_y_class
             )
 
             # filtering out dropped features whilst keeping other version tags
@@ -180,28 +162,13 @@ class MulticlassCarver(BaseCarver):
         BaseDiscretizer.__init__(self, features=self.features, **self.kwargs)
 
         # fitting BaseDiscretizer
-        BaseDiscretizer.fit(self, x_copy, y_copy)
+        BaseDiscretizer.fit(self, samples.train.X, samples.train.y)
 
         return self
-
-    def _aggregator(self, X: DataFrame, y: Series) -> Union[Series, DataFrame]:
-        """Helper that aggregates X by y into crosstab or means (carver specific)"""
-        _, _ = X, y
-
-    def _association_measure(self, xagg: DataFrame, n_obs: int) -> Union[Series, DataFrame]:
-        """Helper to measure association between X and y (carver specific)"""
-        _, _ = xagg, n_obs
-
-    def _grouper(self, xagg: DataFrame, groupby: list[str]) -> DataFrame:
-        """Helper to group XAGG's values by groupby (carver specific)"""
-        _, _ = xagg, groupby
-
-    def _printer(self, xagg: DataFrame = None) -> DataFrame:
-        """helper to print an XAGG (carver specific)"""
-        _ = xagg
 
 
 def get_one_vs_rest(y: Series, y_class: Any) -> Series:
     """converts a multiclass target into binary of specific y_class"""
     if y is not None:
         return (y == y_class).astype(int)
+    return None

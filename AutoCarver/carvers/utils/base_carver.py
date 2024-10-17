@@ -5,9 +5,9 @@ for any task.
 import json
 from abc import abstractmethod, ABC
 from functools import partial
-from typing import Any, Union
+from typing import Union
+from dataclasses import dataclass
 
-from numpy import isclose
 from pandas import DataFrame, Series
 from tqdm.autonotebook import tqdm
 
@@ -27,6 +27,14 @@ else:
     _has_idisplay = True
 
 
+@dataclass
+class Samples:
+    """store train and dev samples"""
+
+    train: Sample = Sample(X=None)
+    dev: Sample = Sample(X=None)
+
+
 class BaseCarver(BaseDiscretizer, ABC):
     """Automatic carving of continuous, discrete, categorical and ordinal
     features that maximizes association with a binary or continuous target.
@@ -39,11 +47,9 @@ class BaseCarver(BaseDiscretizer, ABC):
 
     def __init__(
         self,
-        min_freq: float,
         features: Features,
-        combinations_evaluator: CombinationEvaluator,
-        *,
-        max_n_mod: int = 5,
+        min_freq: float,
+        combinations: CombinationEvaluator,
         dropna: bool = True,
         **kwargs,
     ) -> None:
@@ -116,7 +122,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         """
 
         # minimum frequency for discretizer
-        self.discretizer_min_freq = get_attribute(kwargs, "discretizer_min_freq", min_freq / 2)
+        self.discretizer_min_freq = get_attribute(kwargs, "discretizer_min_freq", self.min_freq / 2)
 
         # Initiating BaseDiscretizer
         super().__init__(
@@ -125,14 +131,16 @@ class BaseCarver(BaseDiscretizer, ABC):
                 kwargs,
                 verbose=get_bool_attribute(kwargs, "verbose", False),
                 min_freq=min_freq,
-                max_n_mod=max_n_mod,
                 dropna=dropna,
                 discretizer_min_freq=self.discretizer_min_freq,
             ),
         )
 
         # setting combinations evaluator
-        self.combinations_evaluator = combinations_evaluator
+        self.combinations = combinations
+        self.combinations.min_freq = self.min_freq
+        self.combinations.verbose = self.verbose
+        self.combinations.dropna = self.dropna
 
         # progress bar if requested
         self.tqdm = partial(tqdm, disable=not self.verbose)
@@ -142,7 +150,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         """Returns the pretty_print attribute"""
         return self.verbose and _has_idisplay
 
-    def _prepare_data(self, train_sample: Sample, dev_sample: Sample) -> tuple[Sample, Sample]:
+    def _prepare_data(self, samples: Samples) -> Samples:
         """Validates format and content of X and y.
 
         Parameters
@@ -168,26 +176,24 @@ class BaseCarver(BaseDiscretizer, ABC):
             Copies of (X, X_dev)
         """
         # checking for not provided y
-        if train_sample.y is None:
-            raise ValueError(f"[{self.__name__}] y must be provided, got {train_sample.y}")
+        if samples.train.y is None:
+            raise ValueError(f"[{self.__name__}] y must be provided, got {samples.train.y}")
 
         # Checking for binary target and copying X
-        train_sample = super()._prepare_data(train_sample)
-        dev_sample = super()._prepare_data(dev_sample)
+        samples.train = super()._prepare_data(samples.train)
+        samples.dev = super()._prepare_data(samples.dev)
 
         # discretizing features according to min_freq
-        train_sample, dev_sample = discretize(
-            self.features, train_sample, dev_sample, **self.kwargs
-        )
+        samples = discretize(self.features, samples, **self.kwargs)
 
         # setting dropna to True for filling up nans
         self.features.dropna = True
 
         # filling up nans
-        train_sample.X = self.features.fillna(train_sample.X)
-        dev_sample.X = self.features.fillna(dev_sample.X)
+        samples.train.X = self.features.fillna(samples.train.X)
+        samples.dev.X = self.features.fillna(samples.dev.X)
 
-        return train_sample, dev_sample
+        return samples
 
     def fit(  # pylint: disable=W0222
         self,
@@ -217,15 +223,18 @@ class BaseCarver(BaseDiscretizer, ABC):
             Should have the same distribution as y.
         """
 
+        # initiating samples
+        samples = Samples(Sample(X, y), Sample(X_dev, y_dev))
+
         # preparing datasets and checking for wrong values
-        train_sample, dev_sample = self._prepare_data(Sample(X, y), Sample(X_dev, y_dev))
+        samples = self._prepare_data(samples)
 
         # logging if requested
         super().log_if_verbose("---------\n------")
 
         # computing crosstabs for each feature on train/test
-        xaggs = self._aggregator(**train_sample)
-        xaggs_dev = self._aggregator(**dev_sample)
+        xaggs = self._aggregator(**samples.train)
+        xaggs_dev = self._aggregator(**samples.dev)
 
         # getting all features to carve (features are removed from self.features)
         all_features = self.features.versions
@@ -265,16 +274,16 @@ class BaseCarver(BaseDiscretizer, ABC):
         self._print_xagg(feature, xagg=xagg, xagg_dev=xagg_dev, message="Raw distribution")
 
         # getting best combination
-        best_combination = self._get_best_combination(feature, xagg, xagg_dev=xagg_dev)
+        best_combination = self.combinations.get_best_combination(feature, xagg, xagg_dev=xagg_dev)
 
-        CombinationEvaluator()
-
-        # checking that a suitable combination has been found
+        # printing carved distribution, for found, suitable combination
         if best_combination is not None:
-            xagg, xagg_dev = best_combination  # unpacking
-
-            # printing carved distribution
-            self._print_xagg(feature, xagg=xagg, xagg_dev=xagg_dev, message="Carved distribution")
+            self._print_xagg(
+                feature,
+                xagg=self.combinations.samples.train.xagg,
+                xagg_dev=self.combinations.samples.dev.xagg,
+                message="Carved distribution",
+            )
 
         # no suitable combination has been found -> removing feature
         else:
@@ -284,166 +293,73 @@ class BaseCarver(BaseDiscretizer, ABC):
             )
             self.features.remove(feature.version)
 
-    # def _historize(
-    #     self,
-    #     feature: BaseFeature,
-    #     association: dict[Any],
-    #     n_combination: int = None,
-    #     associations_xagg: list[dict[str, Any]] = None,
-    #     train_viable: bool = None,
-    #     dev_viable: bool = None,
-    #     dropna: bool = False,
-    #     **viability_msg_params,
-    # ) -> None:
-    #     """historizes the viability tests results for specified feature
-
-    #     Parameters
-    #     ----------
-    #     feature : str
-    #         feature for which to historize the combination
-    #     viability : bool
-    #         result of viability test
-    #     order : GroupedList
-    #         order of the modalities and there respective groups
-    #     association : dict[Any]
-    #         index_to_groupby and self.sort_by values
-    #     viability_msg_params : dict
-    #         kwargs to determine the viability message
-    #     """
-    #     # Messages associated to each failed viability test
-    #     messages = []
-    #     if not viability_msg_params.get("ranks_train_dev", True):
-    #         messages += ["X_dev: inversion of target rates per modality"]
-    #     if not viability_msg_params.get("min_freq_dev", True):
-    #         messages += [f"X_dev: non-representative modality (min_freq={self.min_freq:2.2%})"]
-    #     if not viability_msg_params.get("distinct_rates_dev", True):
-    #         messages += ["X_dev: non-distinct target rates per consecutive modalities"]
-    #     if not viability_msg_params.get("min_freq_train", True):
-    #         messages += [f"X: non-representative modality (min_freq={self.min_freq:2.2%})"]
-    #     if not viability_msg_params.get("distinct_rates_train", True):
-    #         messages += ["X: non-distinct target rates per consecutive modalities"]
-
-    #     # viability has been checked on train
-    #     viability = None
-    #     if train_viable is not None:
-    #         # viability on train
-    #         viability = train_viable
-    #         if train_viable:
-    #             # viability has been checked on dev
-    #             if dev_viable is not None:
-    #                 # viability on dev
-    #                 viability = dev_viable
-    #                 if dev_viable:
-    #                     messages = ["Combination robust between X and X_dev"]
-    #             else:  # no x_dev provided
-    #                 messages = ["Combination viable on X"]
-    #     else:
-    #         messages = ["Raw X distribution"]
-
-    #     # viability not checked for following less associated combinations
-    #     associations_not_checked = []
-    #     if viability:
-    #         associations_not_checked = associations_xagg[n_combination + 1 :]
-
-    #     # storing combination and adding not tested combinations to the set to be historized
-    #     associations_to_historize = [association] + associations_not_checked
-    #     messages_to_historize = [messages] + [["Not checked"]] * len(associations_not_checked)
-    #     viability_to_historize = [viability] + [None] * len(associations_not_checked)
-
-    #     # historizing test results: list comprehension for faster processing (large number of combi)
-    #     feature.history += [
-    #         {
-    #             # Formats a combination for historization
-    #             "combination": [
-    #                 [
-    #                     value
-    #                     for modality in asso["index_to_groupby"].keys()
-    #                     for group_modality in feature.label_per_value.get(modality, modality)
-    #                     for value in feature.content.get(group_modality, group_modality)
-    #                     if asso["index_to_groupby"][modality] == final_group
-    #                 ]
-    #                 for final_group in Series(asso["index_to_groupby"].values()).unique()
-    #             ],
-    #             self.sort_by: asso[self.sort_by],
-    #             "viability": viab,
-    #             "viability_message": msg,
-    #             "grouping_nan": dropna,
-    #         }
-    #         # historizing all combinations
-    #         for asso, msg, viab in zip(
-    #             associations_to_historize, messages_to_historize, viability_to_historize
-    #         )
-    #     ]
-
     def _print_xagg(
         self,
         feature: BaseFeature,
-        xagg: DataFrame,
+        xagg: Union[DataFrame, Series],
         message: str,
         *,
-        xagg_dev: DataFrame = None,
+        xagg_dev: Union[DataFrame, Series] = None,
     ) -> None:
         """Prints crosstabs' target rates and frequencies per modality, in raw or html format
 
         Parameters
         ----------
-        xagg : DataFrame
+        xagg : Union[DataFrame, Series]
             Train crosstab
-        xagg_dev : DataFrame
+        xagg_dev : Union[DataFrame, Series]
             Dev crosstab, by default None
         pretty_print : bool, optional
             Whether to output html or not, by default False
         """
-        if self.verbose:  # verbose if requested
+        if self.verbose:
             print(f" [{self.__name__}] {message}")
 
-            # formatting XAGG
-            formatted_xagg = index_mapper(feature, xagg)
-            formatted_xagg_dev = index_mapper(feature, xagg_dev)
+            formatted_xagg, formatted_xagg_dev = self._format_xagg(feature, xagg, xagg_dev)
 
-            # getting pretty xtabs
-            nice_xagg = self._printer(formatted_xagg)
-            nice_xagg_dev = self._printer(formatted_xagg_dev)
+            nice_xagg, nice_xagg_dev = self._pretty_print(formatted_xagg, formatted_xagg_dev)
 
-            # case 0: no pretty hmtl printing
-            if not self.pretty_print:
-                print(nice_xagg, "\n")
-                if xagg_dev is not None:
-                    print("X_dev distribution\n", nice_xagg_dev, "\n")
+            if not self.pretty_print:  # no pretty hmtl printing
+                self._print_raw(nice_xagg, nice_xagg_dev, xagg_dev)
+            else:  # pretty html printing
+                self._print_html(nice_xagg, nice_xagg_dev)
 
-            # case 1: pretty html printing
-            else:
-                # getting prettier xtabs
-                nicer_xagg = prettier_xagg(nice_xagg, caption="X distribution")
-                nicer_xagg_dev = prettier_xagg(
-                    nice_xagg_dev, caption="X_dev distribution", hide_index=True
-                )
+    def _format_xagg(
+        self, feature: BaseFeature, xagg: DataFrame, xagg_dev: DataFrame = None
+    ) -> tuple[DataFrame, DataFrame]:
+        """Formats the XAGG DataFrame."""
+        formatted_xagg = index_mapper(feature, xagg)
+        formatted_xagg_dev = index_mapper(feature, xagg_dev)
+        return formatted_xagg, formatted_xagg_dev
 
-                # merging outputs
-                nicer_xaggs = nicer_xagg + "          " + nicer_xagg_dev
+    def _pretty_print(
+        self, formatted_xagg: DataFrame, formatted_xagg_dev: DataFrame
+    ) -> tuple[str, str]:
+        """Returns pretty-printed XAGG DataFrames."""
+        nice_xagg = self.combinations._compute_target_rates(formatted_xagg)
+        nice_xagg_dev = self.combinations._compute_target_rates(formatted_xagg_dev)
+        return nice_xagg, nice_xagg_dev
 
-                # displaying html of colored DataFrame
-                display_html(nicer_xaggs, raw=True)
+    def _print_raw(self, nice_xagg: str, nice_xagg_dev: str, xagg_dev: DataFrame = None) -> None:
+        """Prints raw XAGG DataFrames."""
+        print(nice_xagg, "\n")
+        if xagg_dev is not None:
+            print("X_dev distribution\n", nice_xagg_dev, "\n")
 
-    def save_carver(self, file_name: str, light_mode: bool = False) -> None:
-        """Saves pipeline to .json file.
+    def _print_html(self, nice_xagg: str, nice_xagg_dev: str) -> None:
+        """Prints XAGG DataFrames in HTML format."""
+        # getting prettier xtabs
+        nicer_xagg = prettier_xagg(nice_xagg, caption="X distribution")
+        nicer_xagg_dev = prettier_xagg(nice_xagg_dev, caption="X_dev distribution", hide_index=True)
 
-        Parameters
-        ----------
-        file_name : str
-            String of .json file name.
-        light_mode: bool, optional
-            Whether or not to save features' history and statistics, by default False
+        # merging outputs
+        nicer_xaggs = nicer_xagg + "          " + nicer_xagg_dev
 
-        Returns
-        -------
-        str
-            JSON serialized object
-        """
-        super().save(file_name, light_mode)
+        # displaying html of colored DataFrame
+        display_html(nicer_xaggs, raw=True)
 
     @classmethod
-    def load_carver(cls, file_name: str) -> "BaseDiscretizer":
+    def load(cls, file_name: str) -> "BaseCarver":
         """Allows one to load a Carver saved as a .json file.
 
         The Carver has to be saved with ``Carver.save()``, otherwise there
@@ -466,19 +382,19 @@ class BaseCarver(BaseDiscretizer, ABC):
         # deserializing features
         features = Features.load(carver_json.pop("features"))
 
-        # initiating BaseDiscretizer
-        loaded_carver = BaseDiscretizer(features=features, **carver_json)
+        # deserializing Combinations
+        combinations = CombinationEvaluator.load(carver_json.pop("combinations"))
 
-        return loaded_carver
+        # initiating BaseDiscretizer
+        return cls(features=features, combinations=combinations, **carver_json)
 
 
 def discretize(
     features: Features,
-    train_sample: Sample,
+    samples: Samples,
     discretizer_min_freq: float,
-    dev_sample: Sample,
     **kwargs: dict,
-) -> tuple[Sample, Sample]:
+) -> Samples:
     """Discretizes X and X_dev according to the frequency of each feature's modalities."""
 
     # discretizing all features, always copying, to keep discretization from start to finish
@@ -494,10 +410,10 @@ def discretize(
     )
 
     # fitting discretizer on X
-    train_sample.X = discretizer.fit_transform(**train_sample)
+    samples.train.X = discretizer.fit_transform(**samples.train)
 
     # applying discretizer on X_dev if provided
-    if dev_sample.X is not None:
-        dev_sample.X = discretizer.transform(**dev_sample)
+    if samples.dev.X is not None:
+        samples.dev.X = discretizer.transform(**samples.dev)
 
-    return train_sample, dev_sample
+    return samples

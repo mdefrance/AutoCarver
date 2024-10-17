@@ -77,7 +77,7 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
         return stats
 
 
-class KruksalCombinations(ContinuousCombinationEvaluator):
+class KruskalCombinations(ContinuousCombinationEvaluator):
     """Kruskal-Wallis' H combination evaluator class."""
 
     sort_by = "kruskal"

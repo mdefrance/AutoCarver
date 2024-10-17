@@ -1,5 +1,6 @@
 """ set of tests for the continuous_combinations module """
 
+import json
 from numpy import allclose, nan
 from pandas import DataFrame, Series, isna
 from pytest import FixtureRequest, fixture, raises
@@ -8,22 +9,82 @@ from scipy.stats import kruskal
 from AutoCarver.carvers.continuous_carver import get_target_values_by_modality
 from AutoCarver.combinations.continuous.continuous_combination_evaluators import (
     ContinuousCombinationEvaluator,
-    KruksalCombinations,
+    KruskalCombinations,
 )
 from AutoCarver.features import OrdinalFeature
 from AutoCarver.combinations.utils.combinations import consecutive_combinations, nan_combinations
 from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample
 
 
-@fixture(params=[KruksalCombinations])
+MAX_N_MOD = 5
+MIN_FREQ = 0.2
+
+
+@fixture(params=[KruskalCombinations])
 def evaluator(request: FixtureRequest) -> ContinuousCombinationEvaluator:
-    return request.param(max_n_mod=5, min_freq=0.2)
+    eval = request.param(max_n_mod=MAX_N_MOD)
+    eval.min_freq = MIN_FREQ
+    return eval
 
 
 def test_init(evaluator: ContinuousCombinationEvaluator):
     assert evaluator.is_y_binary is False
     assert evaluator.is_y_continuous is True
     assert evaluator.sort_by in ["kruskal"]
+
+
+def test_to_json(evaluator: ContinuousCombinationEvaluator):
+    expected_json = {
+        "max_n_mod": MAX_N_MOD,
+        "dropna": evaluator.dropna,
+        "min_freq": MIN_FREQ,
+        "verbose": evaluator.verbose,
+    }
+    assert evaluator.to_json() == expected_json
+
+
+def test_save(evaluator: ContinuousCombinationEvaluator, tmp_path):
+    file_name = tmp_path / "test.json"
+    evaluator.save(str(file_name))
+
+    with open(file_name, "r", encoding="utf-8") as json_file:
+        data = json.load(json_file)
+
+    expected_json = {
+        "max_n_mod": MAX_N_MOD,
+        "dropna": evaluator.dropna,
+        "min_freq": MIN_FREQ,
+        "verbose": evaluator.verbose,
+    }
+    assert data == expected_json
+
+
+def test_save_invalid_filename(evaluator: ContinuousCombinationEvaluator):
+    with raises(ValueError):
+        evaluator.save("invalid_file.txt")
+
+
+def test_load(tmp_path):
+    file_name = tmp_path / "test.json"
+    data = {
+        "max_n_mod": MAX_N_MOD,
+        "dropna": True,
+        "min_freq": MIN_FREQ,
+        "verbose": True,
+    }
+
+    with open(file_name, "w", encoding="utf-8") as json_file:
+        json.dump(data, json_file)
+
+    loaded_evaluator = KruskalCombinations.load(str(file_name))
+
+    assert loaded_evaluator.max_n_mod == MAX_N_MOD
+    assert loaded_evaluator.dropna is True
+    assert loaded_evaluator.min_freq == MIN_FREQ
+    assert loaded_evaluator.verbose is True
+    assert loaded_evaluator.sort_by == "kruskal"
+    assert loaded_evaluator.is_y_binary is False
+    assert loaded_evaluator.is_y_continuous is True
 
 
 def test_association_measure_basic(evaluator: ContinuousCombinationEvaluator):
@@ -202,7 +263,7 @@ def test_group_xagg_by_combinations(evaluator: ContinuousCombinationEvaluator):
 
     combinations = consecutive_combinations(feature.labels, 2)
 
-    evaluator.train_sample = AggregatedSample(xagg)
+    evaluator.samples.train = AggregatedSample(xagg)
 
     result = evaluator._group_xagg_by_combinations(combinations)
     print(result)
@@ -233,7 +294,7 @@ def test_group_xagg_by_combinations_with_nan(evaluator: ContinuousCombinationEva
 
     combinations = consecutive_combinations(feature.labels, 3)
 
-    evaluator.train_sample = AggregatedSample(xagg)
+    evaluator.samples.train = AggregatedSample(xagg)
 
     result = evaluator._group_xagg_by_combinations(combinations)
     print(result)
@@ -269,7 +330,7 @@ def test_compute_associations(evaluator: ContinuousCombinationEvaluator):
 
     combinations = consecutive_combinations(feature.labels, 2)
 
-    evaluator.train_sample = AggregatedSample(xagg)
+    evaluator.samples.train = AggregatedSample(xagg)
 
     grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
     result = evaluator._compute_associations(grouped_xaggs)
@@ -301,7 +362,7 @@ def test_compute_associations_with_unobserved(evaluator: ContinuousCombinationEv
 
     feature = OrdinalFeature("feature", ["A", "B", "C"])
     xagg = Series({"A": [0, 2, 0], "B": [2, 1], "C": []})
-    evaluator.train_sample = AggregatedSample(xagg)
+    evaluator.samples.train = AggregatedSample(xagg)
 
     combinations = consecutive_combinations(feature.labels, 3)
 
@@ -344,7 +405,7 @@ def test_compute_associations_with_three_rows(evaluator: ContinuousCombinationEv
 
     feature = OrdinalFeature("feature", ["A", "B", "C"])
     xagg = Series({"A": [0, 2, 0], "B": [2, 1], "C": [2, 0]})
-    evaluator.train_sample = AggregatedSample(xagg)
+    evaluator.samples.train = AggregatedSample(xagg)
 
     combinations = consecutive_combinations(feature.labels, 3)
 
@@ -406,7 +467,7 @@ def test_compute_associations_with_twenty_rows(evaluator: ContinuousCombinationE
             "T": [0, 40],
         }
     )
-    evaluator.train_sample = AggregatedSample(xagg)
+    evaluator.samples.train = AggregatedSample(xagg)
 
     combinations = consecutive_combinations(feature.labels, 7)
 
@@ -476,7 +537,7 @@ def test_viability_train(evaluator: ContinuousCombinationEvaluator):
 
     combinations = consecutive_combinations(feature.labels, 2)
 
-    evaluator.train_sample = AggregatedSample(xagg)
+    evaluator.samples.train = AggregatedSample(xagg)
 
     grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
     associations = evaluator._compute_associations(grouped_xaggs)
@@ -514,7 +575,7 @@ def test_viability_dev(evaluator: ContinuousCombinationEvaluator):
 
     combinations = consecutive_combinations(feature.labels, 2)
 
-    evaluator.train_sample = AggregatedSample(xagg)
+    evaluator.samples.train = AggregatedSample(xagg)
 
     grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
     associations = evaluator._compute_associations(grouped_xaggs)
@@ -526,7 +587,7 @@ def test_viability_dev(evaluator: ContinuousCombinationEvaluator):
         assert test_results.get("dev").get("viable") is None
 
     # test with xagg_dev but not viable on train
-    evaluator.dev_sample = AggregatedSample(Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0]}))
+    evaluator.samples.dev = AggregatedSample(Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0]}))
     for combination in associations:
         test_results = evaluator._test_viability_dev(
             {"train": {"viable": False, "min_freq": True, "distinct_rates": True}}, combination
@@ -559,7 +620,7 @@ def test_viability_dev(evaluator: ContinuousCombinationEvaluator):
         assert res["dev"] == exp["dev"]
 
     # test with xagg_dev wrong
-    evaluator.dev_sample = AggregatedSample(Series({"a": [10000, 2, 0], "b": [2, 1], "c": [2, 0]}))
+    evaluator.samples.dev = AggregatedSample(Series({"a": [10000, 2, 0], "b": [2, 1], "c": [2, 0]}))
     result = []
     for combination in associations:
         test_results = evaluator._test_viability_train(combination)
@@ -590,11 +651,11 @@ def test_get_viable_combination_without_dev(evaluator: ContinuousCombinationEval
     """Test the get_viable_combination method without a dev xagg"""
 
     feature = OrdinalFeature("feature", ["a", "b", "c"])
-    xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
+    xagg = Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0]})
 
     combinations = consecutive_combinations(feature.labels, 2)
 
-    evaluator.train_sample = AggregatedSample(xagg)
+    evaluator.samples.train = AggregatedSample(xagg)
 
     grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
     associations = evaluator._compute_associations(grouped_xaggs)
@@ -603,25 +664,23 @@ def test_get_viable_combination_without_dev(evaluator: ContinuousCombinationEval
     result = evaluator._get_viable_combination(associations)
     print(result)
     expected = {
-        "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
+        "xagg": Series({"a": [0, 2, 0], "b": [2, 1, 2, 0]}),
         "combination": [["a"], ["b", "c"]],
         "index_to_groupby": {"a": "a", "b": "b", "c": "b"},
-        "cramerv": 0.25,
-        "tschuprowt": 0.25,
+        "kruskal": 0.5833333333333333,
     }
-    assert allclose(result["xagg"], expected["xagg"])
+    assert result["xagg"].equals(expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["index_to_groupby"] == expected["index_to_groupby"]
-    assert result["cramerv"] == expected["cramerv"]
-    assert result["tschuprowt"] == expected["tschuprowt"]
+    assert result["kruskal"] == expected["kruskal"]
 
 
 def test_get_viable_combination_with_non_viable_train(evaluator: ContinuousCombinationEvaluator):
     """Test the get_viable_combination method with a non-viable train"""
 
     feature = OrdinalFeature("feature", ["a", "b", "c"])
-    xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
-    evaluator.train_sample = AggregatedSample(xagg)
+    xagg = Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0]})
+    evaluator.samples.train = AggregatedSample(xagg)
 
     combinations = consecutive_combinations(feature.labels, 2)
 
@@ -630,7 +689,7 @@ def test_get_viable_combination_with_non_viable_train(evaluator: ContinuousCombi
 
     # test with xagg_dev but not viable on train
     evaluator.min_freq = 0.6
-    evaluator.dev_sample = AggregatedSample(xagg)
+    evaluator.samples.dev = AggregatedSample(xagg)
     result = evaluator._get_viable_combination(associations)
     print(result)
 
@@ -641,8 +700,8 @@ def test_get_viable_combination_with_viable_train(evaluator: ContinuousCombinati
     """Test the get_viable_combination method with a viable train"""
 
     feature = OrdinalFeature("feature", ["a", "b", "c"])
-    xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
-    evaluator.train_sample = AggregatedSample(xagg)
+    xagg = Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0]})
+    evaluator.samples.train = AggregatedSample(xagg)
 
     combinations = consecutive_combinations(feature.labels, 2)
 
@@ -650,30 +709,28 @@ def test_get_viable_combination_with_viable_train(evaluator: ContinuousCombinati
     associations = evaluator._compute_associations(grouped_xaggs)
 
     # test with xagg_dev same as train
-    evaluator.dev_sample = AggregatedSample(xagg)
+    evaluator.samples.dev = AggregatedSample(xagg)
     result = evaluator._get_viable_combination(associations)
     print(result)
 
     expected = {
-        "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
+        "xagg": Series({"a": [0, 2, 0], "b": [2, 1, 2, 0]}),
         "combination": [["a"], ["b", "c"]],
         "index_to_groupby": {"a": "a", "b": "b", "c": "b"},
-        "cramerv": 0.25,
-        "tschuprowt": 0.25,
+        "kruskal": 0.5833333333333333,
     }
-    assert allclose(result["xagg"], expected["xagg"])
+    assert result["xagg"].equals(expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["index_to_groupby"] == expected["index_to_groupby"]
-    assert result["cramerv"] == expected["cramerv"]
-    assert result["tschuprowt"] == expected["tschuprowt"]
+    assert result["kruskal"] == expected["kruskal"]
 
 
 def test_get_viable_combination_with_not_viable_dev(evaluator: ContinuousCombinationEvaluator):
     """Test the get_viable_combination method with a non-viable dev"""
 
     feature = OrdinalFeature("feature", ["a", "b", "c"])
-    xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
-    evaluator.train_sample = AggregatedSample(xagg)
+    xagg = Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0]})
+    evaluator.samples.train = AggregatedSample(xagg)
 
     combinations = consecutive_combinations(feature.labels, 2)
 
@@ -681,9 +738,7 @@ def test_get_viable_combination_with_not_viable_dev(evaluator: ContinuousCombina
     associations = evaluator._compute_associations(grouped_xaggs)
 
     # test with xagg_dev wrong
-    evaluator.dev_sample = AggregatedSample(
-        DataFrame({0: [5, 0, 10], 1: [2, 5, 1]}, index=["a", "b", "c"])
-    )
+    evaluator.samples.dev = AggregatedSample(Series({"a": [0, 2, 1000], "b": [2, 1], "c": [2, 0]}))
     result = evaluator._get_viable_combination(associations)
     print(result)
     assert result is None
@@ -694,8 +749,8 @@ def test_apply_best_combination_with_viable(evaluator: ContinuousCombinationEval
 
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     evaluator.feature = feature
-    xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
-    evaluator.train_sample = AggregatedSample(xagg)
+    xagg = Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0]})
+    evaluator.samples.train = AggregatedSample(xagg)
 
     combinations = consecutive_combinations(feature.labels, 2)
 
@@ -703,18 +758,19 @@ def test_apply_best_combination_with_viable(evaluator: ContinuousCombinationEval
     associations = evaluator._compute_associations(grouped_xaggs)
 
     # test with xagg_dev same as train
-    evaluator.dev_sample = AggregatedSample(xagg)
+    evaluator.samples.dev = AggregatedSample(xagg)
 
     best_combination = evaluator._get_viable_combination(associations)
 
     evaluator._apply_best_combination(best_combination)
 
-    expected = DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b to c"])
+    expected = Series({"a": [0, 2, 0], "b to c": [2, 1, 2, 0]})
+    print(evaluator.samples.train.xagg)
     assert feature.labels == list(expected.index)
-    assert allclose(evaluator.train_sample.xagg, expected)
-    assert allclose(evaluator.dev_sample.xagg, expected)
-    assert allclose(evaluator.dev_sample.raw, expected)
-    assert allclose(evaluator.train_sample.raw, expected)
+    assert evaluator.samples.train.xagg.equals(expected)
+    assert evaluator.samples.dev.xagg.equals(expected)
+    assert evaluator.samples.dev.raw.equals(expected)
+    assert evaluator.samples.train.raw.equals(expected)
 
 
 def test_apply_best_combination_with_non_viable(evaluator: ContinuousCombinationEvaluator):
@@ -722,11 +778,11 @@ def test_apply_best_combination_with_non_viable(evaluator: ContinuousCombination
 
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     evaluator.feature = feature
-    xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
-    evaluator.train_sample = AggregatedSample(xagg)
+    xagg = Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0]})
+    evaluator.samples.train = AggregatedSample(xagg)
 
     # test with xagg_dev same as train
-    evaluator.dev_sample = AggregatedSample(xagg)
+    evaluator.samples.dev = AggregatedSample(xagg)
 
     best_combination = None
 
@@ -734,10 +790,10 @@ def test_apply_best_combination_with_non_viable(evaluator: ContinuousCombination
 
     expected = xagg
     assert feature.labels == list(expected.index)
-    assert allclose(evaluator.train_sample.xagg, expected)
-    assert allclose(evaluator.dev_sample.xagg, expected)
-    assert allclose(evaluator.dev_sample.raw, xagg)
-    assert allclose(evaluator.train_sample.raw, xagg)
+    assert evaluator.samples.train.xagg.equals(expected)
+    assert evaluator.samples.dev.xagg.equals(expected)
+    assert evaluator.samples.dev.raw.equals(expected)
+    assert evaluator.samples.train.raw.equals(expected)
 
 
 def test_best_association_with_combinations_viable(evaluator: ContinuousCombinationEvaluator):
@@ -746,9 +802,9 @@ def test_best_association_with_combinations_viable(evaluator: ContinuousCombinat
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     evaluator.feature = feature
 
-    xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
-    evaluator.train_sample = AggregatedSample(xagg)
-    evaluator.dev_sample = AggregatedSample(xagg)
+    xagg = Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0]})
+    evaluator.samples.train = AggregatedSample(xagg)
+    evaluator.samples.dev = AggregatedSample(xagg)
 
     combinations = consecutive_combinations(feature.labels, 2)
 
@@ -756,24 +812,22 @@ def test_best_association_with_combinations_viable(evaluator: ContinuousCombinat
     print(result)
 
     expected = {
-        "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
+        "xagg": Series({"a": [0, 2, 0], "b": [2, 1, 2, 0]}),
         "combination": [["a"], ["b", "c"]],
         "index_to_groupby": {"a": "a", "b": "b", "c": "b"},
-        "cramerv": 0.25,
-        "tschuprowt": 0.25,
+        "kruskal": 0.5833333333333333,
     }
-    assert allclose(result["xagg"], expected["xagg"])
+    assert result["xagg"].equals(expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["index_to_groupby"] == expected["index_to_groupby"]
-    assert result["cramerv"] == expected["cramerv"]
-    assert result["tschuprowt"] == expected["tschuprowt"]
+    assert result["kruskal"] == expected["kruskal"]
 
-    expected = DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b to c"])
+    expected = Series({"a": [0, 2, 0], "b to c": [2, 1, 2, 0]})
     assert feature.labels == list(expected.index)
-    assert allclose(evaluator.train_sample.xagg, expected)
-    assert allclose(evaluator.dev_sample.xagg, expected)
-    assert allclose(evaluator.dev_sample.raw, expected)
-    assert allclose(evaluator.train_sample.raw, expected)
+    assert evaluator.samples.train.xagg.equals(expected)
+    assert evaluator.samples.dev.xagg.equals(expected)
+    assert evaluator.samples.dev.raw.equals(expected)
+    assert evaluator.samples.train.raw.equals(expected)
 
 
 def test_best_association_with_combinations_non_viable(evaluator: ContinuousCombinationEvaluator):
@@ -782,11 +836,11 @@ def test_best_association_with_combinations_non_viable(evaluator: ContinuousComb
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     evaluator.feature = feature
 
-    xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
-    evaluator.train_sample = AggregatedSample(xagg)
+    xagg = Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0]})
+    evaluator.samples.train = AggregatedSample(xagg)
 
-    xagg_dev = DataFrame({0: [5, 0, 10], 1: [2, 5, 1]}, index=["a", "b", "c"])
-    evaluator.dev_sample = AggregatedSample(xagg_dev)
+    xagg_dev = Series({"a": [0, 2, 10], "b": [2, 1], "c": [2, 0]})
+    evaluator.samples.dev = AggregatedSample(xagg_dev)
 
     combinations = consecutive_combinations(feature.labels, 2)
 
@@ -795,10 +849,10 @@ def test_best_association_with_combinations_non_viable(evaluator: ContinuousComb
 
     assert result is None
     assert feature.labels == list(xagg.index)
-    assert allclose(evaluator.train_sample.xagg, xagg)
-    assert allclose(evaluator.dev_sample.xagg, xagg_dev)
-    assert allclose(evaluator.dev_sample.raw, xagg_dev)
-    assert allclose(evaluator.train_sample.raw, xagg)
+    assert evaluator.samples.train.xagg.equals(xagg)
+    assert evaluator.samples.dev.xagg.equals(xagg_dev)
+    assert evaluator.samples.dev.raw.equals(xagg_dev)
+    assert evaluator.samples.train.raw.equals(xagg)
 
 
 def test_best_association_with_nan_combinations_viable(evaluator: ContinuousCombinationEvaluator):
@@ -809,10 +863,10 @@ def test_best_association_with_nan_combinations_viable(evaluator: ContinuousComb
     feature.dropna = True
     evaluator.feature = feature
 
-    xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", feature.nan])
-    evaluator.train_sample = AggregatedSample(xagg)
+    xagg = Series({"a": [0, 2, 0], "b": [2, 1], feature.nan: [2, 0]})
+    evaluator.samples.train = AggregatedSample(xagg)
 
-    evaluator.dev_sample = AggregatedSample(xagg)
+    evaluator.samples.dev = AggregatedSample(xagg)
 
     combinations = nan_combinations(feature, 2)
 
@@ -820,25 +874,23 @@ def test_best_association_with_nan_combinations_viable(evaluator: ContinuousComb
     print(result)
 
     expected = {
-        "xagg": DataFrame({0: [0, 2], 1: [3, 0]}, index=["a", "b"]),
+        "xagg": Series({"a": [0, 2, 0, 2, 0], "b": [2, 1]}),
         "combination": [["a", "__NAN__"], ["b"]],
         "index_to_groupby": {"a": "a", "__NAN__": "a", "b": "b"},
-        "cramerv": 0.5833333333333333,
-        "tschuprowt": 0.5833333333333333,
+        "kruskal": 0.6999999999999975,
     }
-    assert allclose(result["xagg"], expected["xagg"])
+    assert result["xagg"].equals(expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["index_to_groupby"] == expected["index_to_groupby"]
-    assert result["cramerv"] == expected["cramerv"]
-    assert result["tschuprowt"] == expected["tschuprowt"]
-    print(evaluator.train_sample.xagg)
+    assert result["kruskal"] == expected["kruskal"]
+    print(evaluator.samples.train.xagg)
 
-    expected = DataFrame({0: [0, 2], 1: [3, 0]}, index=[f"a, {feature.nan}", "b"])
+    expected = Series({f"a, {feature.nan}": [0, 2, 0, 2, 0], "b": [2, 1]})
     assert feature.labels == list(expected.index)
-    assert allclose(evaluator.train_sample.xagg, expected)
-    assert allclose(evaluator.dev_sample.xagg, expected)
-    assert allclose(evaluator.dev_sample.raw, expected)
-    assert allclose(evaluator.train_sample.raw, expected)
+    assert evaluator.samples.train.xagg.equals(expected)
+    assert evaluator.samples.dev.xagg.equals(expected)
+    assert evaluator.samples.dev.raw.equals(expected)
+    assert evaluator.samples.train.raw.equals(expected)
 
 
 def test_get_best_combination_non_nan_viable(evaluator: ContinuousCombinationEvaluator):
@@ -847,10 +899,9 @@ def test_get_best_combination_non_nan_viable(evaluator: ContinuousCombinationEva
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     evaluator.feature = feature
 
-    xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
-    evaluator.train_sample = AggregatedSample(xagg)
-
-    evaluator.dev_sample = AggregatedSample(xagg)
+    xagg = Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0]})
+    evaluator.samples.train = AggregatedSample(xagg)
+    evaluator.samples.dev = AggregatedSample(xagg)
 
     evaluator.max_n_mod = 2
 
@@ -858,24 +909,22 @@ def test_get_best_combination_non_nan_viable(evaluator: ContinuousCombinationEva
     print(result)
 
     expected = {
-        "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
+        "xagg": Series({"a": [0, 2, 0], "b": [2, 1, 2, 0]}),
         "combination": [["a"], ["b", "c"]],
         "index_to_groupby": {"a": "a", "b": "b", "c": "b"},
-        "cramerv": 0.25,
-        "tschuprowt": 0.25,
+        "kruskal": 0.5833333333333333,
     }
-    assert allclose(result["xagg"], expected["xagg"])
+    assert result["xagg"].equals(expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["index_to_groupby"] == expected["index_to_groupby"]
-    assert result["cramerv"] == expected["cramerv"]
-    assert result["tschuprowt"] == expected["tschuprowt"]
+    assert result["kruskal"] == expected["kruskal"]
 
-    expected = DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b to c"])
+    expected = Series({"a": [0, 2, 0], "b to c": [2, 1, 2, 0]})
     assert feature.labels == list(expected.index)
-    assert allclose(evaluator.train_sample.xagg, expected)
-    assert allclose(evaluator.dev_sample.xagg, expected)
-    assert allclose(evaluator.dev_sample.raw, expected)
-    assert allclose(evaluator.train_sample.raw, expected)
+    assert evaluator.samples.train.xagg.equals(expected)
+    assert evaluator.samples.dev.xagg.equals(expected)
+    assert evaluator.samples.dev.raw.equals(expected)
+    assert evaluator.samples.train.raw.equals(expected)
 
 
 def test_get_best_combination_non_nan_not_viable(evaluator: ContinuousCombinationEvaluator):
@@ -884,10 +933,9 @@ def test_get_best_combination_non_nan_not_viable(evaluator: ContinuousCombinatio
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     evaluator.feature = feature
 
-    xagg = DataFrame({0: [0], 1: [2]}, index=["a"])
-    evaluator.train_sample = AggregatedSample(xagg)
-
-    evaluator.dev_sample = AggregatedSample(xagg)
+    xagg = Series({"a": [0, 2, 0]})
+    evaluator.samples.train = AggregatedSample(xagg)
+    evaluator.samples.dev = AggregatedSample(xagg)
 
     evaluator.max_n_mod = 2
 
@@ -903,35 +951,32 @@ def test_get_best_combination_non_nan_viable_with_nan(evaluator: ContinuousCombi
     feature.dropna = True
     evaluator.feature = feature
 
-    xagg = DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 3]}, index=["a", "b", "c", feature.nan])
-    evaluator.train_sample = AggregatedSample(xagg)
-
-    evaluator.dev_sample = AggregatedSample(xagg)
-
+    xagg = Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0], feature.nan: [-1, 5]})
+    evaluator.samples.train = AggregatedSample(xagg)
+    evaluator.samples.dev = AggregatedSample(xagg)
     evaluator.max_n_mod = 2
 
     result = evaluator._get_best_combination_non_nan()
     print(result)
 
     expected = {
-        "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
+        "xagg": Series({"a": [0, 2, 0], "b": [2, 1, 2, 0]}),
         "combination": [["a"], ["b", "c"]],
         "index_to_groupby": {"a": "a", "b": "b", "c": "b"},
-        "cramerv": 0.25,
-        "tschuprowt": 0.25,
+        "kruskal": 0.5833333333333333,
     }
-    assert allclose(result["xagg"], expected["xagg"])
+    assert result["xagg"].equals(expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["index_to_groupby"] == expected["index_to_groupby"]
-    assert result["cramerv"] == expected["cramerv"]
-    assert result["tschuprowt"] == expected["tschuprowt"]
+    assert result["kruskal"] == expected["kruskal"]
 
-    expected = DataFrame({0: [0, 2, 0], 1: [2, 1, 3]}, index=["a", "b to c", feature.nan])
+    expected = Series({"a": [0, 2, 0], "b to c": [2, 1, 2, 0], feature.nan: [-1, 5]})
+    print(evaluator.samples.train.xagg)
     assert feature.labels == list(expected.index)
-    assert allclose(evaluator.train_sample.xagg, expected)
-    assert allclose(evaluator.dev_sample.xagg, expected)
-    assert allclose(evaluator.dev_sample.raw, expected)
-    assert allclose(evaluator.train_sample.raw, expected)
+    assert evaluator.samples.train.xagg.equals(expected)
+    assert evaluator.samples.dev.xagg.equals(expected)
+    assert evaluator.samples.dev.raw.equals(expected)
+    assert evaluator.samples.train.raw.equals(expected)
 
 
 def test_get_best_combination_with_nan_viable(evaluator: ContinuousCombinationEvaluator):
@@ -940,11 +985,9 @@ def test_get_best_combination_with_nan_viable(evaluator: ContinuousCombinationEv
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     evaluator.feature = feature
 
-    xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
-    evaluator.train_sample = AggregatedSample(xagg)
-
-    evaluator.dev_sample = AggregatedSample(xagg)
-
+    xagg = Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0]})
+    evaluator.samples.train = AggregatedSample(xagg)
+    evaluator.samples.dev = AggregatedSample(xagg)
     evaluator.max_n_mod = 2
 
     best_combination = evaluator._get_best_combination_non_nan()
@@ -953,24 +996,23 @@ def test_get_best_combination_with_nan_viable(evaluator: ContinuousCombinationEv
     print(result)
 
     expected = {
-        "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
+        "xagg": Series({"a": [0, 2, 0], "b": [2, 1, 2, 0]}),
         "combination": [["a"], ["b", "c"]],
         "index_to_groupby": {"a": "a", "b": "b", "c": "b"},
-        "cramerv": 0.25,
-        "tschuprowt": 0.25,
+        "kruskal": 0.5833333333333333,
     }
-    assert allclose(result["xagg"], expected["xagg"])
+    assert result["xagg"].equals(expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["index_to_groupby"] == expected["index_to_groupby"]
-    assert result["cramerv"] == expected["cramerv"]
-    assert result["tschuprowt"] == expected["tschuprowt"]
+    assert result["kruskal"] == expected["kruskal"]
 
-    expected = DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b to c"])
+    expected = Series({"a": [0, 2, 0], "b to c": [2, 1, 2, 0]})
+    print(evaluator.samples.train.xagg)
     assert feature.labels == list(expected.index)
-    assert allclose(evaluator.train_sample.xagg, expected)
-    assert allclose(evaluator.dev_sample.xagg, expected)
-    assert allclose(evaluator.dev_sample.raw, expected)
-    assert allclose(evaluator.train_sample.raw, expected)
+    assert evaluator.samples.train.xagg.equals(expected)
+    assert evaluator.samples.dev.xagg.equals(expected)
+    assert evaluator.samples.dev.raw.equals(expected)
+    assert evaluator.samples.train.raw.equals(expected)
 
 
 def test_get_best_combination_with_nan_not_viable(evaluator: ContinuousCombinationEvaluator):
@@ -979,11 +1021,9 @@ def test_get_best_combination_with_nan_not_viable(evaluator: ContinuousCombinati
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     evaluator.feature = feature
 
-    xagg = DataFrame({0: [0], 1: [2]}, index=["a"])
-    evaluator.train_sample = AggregatedSample(xagg)
-
-    evaluator.dev_sample = AggregatedSample(xagg)
-
+    xagg = Series({"a": [0, 2, 0]})
+    evaluator.samples.train = AggregatedSample(xagg)
+    evaluator.samples.dev = AggregatedSample(xagg)
     evaluator.max_n_mod = 2
 
     best_combination = evaluator._get_best_combination_non_nan()
@@ -1001,11 +1041,9 @@ def test_get_best_combination_with_nan_viable_with_nan_without_combi(
     feature.dropna = True
     evaluator.feature = feature
 
-    xagg = DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 3]}, index=["a", "b", "c", feature.nan])
-    evaluator.train_sample = AggregatedSample(xagg)
-
-    evaluator.dev_sample = AggregatedSample(xagg)
-
+    xagg = Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0], feature.nan: [-1, 5]})
+    evaluator.samples.train = AggregatedSample(xagg)
+    evaluator.samples.dev = AggregatedSample(xagg)
     evaluator.max_n_mod = 2
 
     # test without best_combination
@@ -1036,11 +1074,9 @@ def test_get_best_combination_with_nan_viable_with_nan_without_feature_nan(
     feature.has_nan = False
     evaluator.feature = feature
 
-    xagg = DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 3]}, index=["a", "b", "c", "d"])
-    evaluator.train_sample = AggregatedSample(xagg)
-
-    evaluator.dev_sample = AggregatedSample(xagg)
-
+    xagg = Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0], "d": [-1, 5]})
+    evaluator.samples.train = AggregatedSample(xagg)
+    evaluator.samples.dev = AggregatedSample(xagg)
     evaluator.max_n_mod = 2
 
     best_combination = evaluator._get_best_combination_non_nan()
@@ -1058,17 +1094,14 @@ def test_get_best_combination_with_nan_viable_with_nan_without_dropna(
     feature.has_nan = False
     evaluator.feature = feature
 
-    xagg = DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 3]}, index=["a", "b", "c", feature.nan])
-    evaluator.train_sample = AggregatedSample(xagg)
-
-    evaluator.dev_sample = AggregatedSample(xagg)
-
+    xagg = Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0], feature.nan: [-1, 5]})
+    evaluator.samples.train = AggregatedSample(xagg)
+    evaluator.samples.dev = AggregatedSample(xagg)
     evaluator.max_n_mod = 2
 
-    best_combination = evaluator._get_best_combination_non_nan()
-
-    result = evaluator._get_best_combination_with_nan(best_combination)
-    assert result == best_combination
+    with raises(ValueError):
+        best_combination = evaluator._get_best_combination_non_nan()
+        evaluator._get_best_combination_with_nan(best_combination)
 
 
 def test_get_best_combination_with_nan_viable_with_nan(evaluator: ContinuousCombinationEvaluator):
@@ -1079,38 +1112,34 @@ def test_get_best_combination_with_nan_viable_with_nan(evaluator: ContinuousComb
     evaluator.feature = feature
     evaluator.dropna = True
 
-    xagg = DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 3]}, index=["a", "b", "c", feature.nan])
-    evaluator.train_sample = AggregatedSample(xagg)
-
-    evaluator.dev_sample = AggregatedSample(xagg)
-
+    xagg = Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0], feature.nan: [-1, 5]})
+    evaluator.samples.train = AggregatedSample(xagg)
+    evaluator.samples.dev = AggregatedSample(xagg)
     evaluator.max_n_mod = 2
 
     best_combination = evaluator._get_best_combination_non_nan()
-
     result = evaluator._get_best_combination_with_nan(best_combination)
     print(result)
     assert feature.dropna is True
 
     expected = {
-        "xagg": DataFrame({0: [0, 2], 1: [5, 1]}, index=["a", "b to c"]),
-        "combination": [["a", "__NAN__"], ["b to c"]],
-        "index_to_groupby": {"a": "a", "__NAN__": "a", "b to c": "b to c"},
-        "cramerv": 0.4472135954999579,
-        "tschuprowt": 0.4472135954999579,
+        "xagg": Series({"a": [0, 2, 0], "b to c": [2, 1, 2, 0, -1, 5]}),
+        "combination": [["a"], ["b to c", "__NAN__"]],
+        "index_to_groupby": {"a": "a", "b to c": "b to c", "__NAN__": "b to c"},
+        "kruskal": 0.2857142857142847,
     }
-    assert allclose(result["xagg"], expected["xagg"])
+    assert result["xagg"].equals(expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["index_to_groupby"] == expected["index_to_groupby"]
-    assert result["cramerv"] == expected["cramerv"]
-    assert result["tschuprowt"] == expected["tschuprowt"]
+    assert result["kruskal"] == expected["kruskal"]
 
-    expected = DataFrame({0: [0, 2], 1: [5, 1]}, index=["a, __NAN__", "b to c"])
+    expected = Series({"a": [0, 2, 0], "b to c, __NAN__": [2, 1, 2, 0, -1, 5]})
+    print(evaluator.samples.train.xagg)
     assert feature.labels == list(expected.index)
-    assert allclose(evaluator.train_sample.xagg, expected)
-    assert allclose(evaluator.dev_sample.xagg, expected)
-    assert allclose(evaluator.dev_sample.raw, expected)
-    assert allclose(evaluator.train_sample.raw, expected)
+    assert evaluator.samples.train.xagg.equals(expected)
+    assert evaluator.samples.dev.xagg.equals(expected)
+    assert evaluator.samples.dev.raw.equals(expected)
+    assert evaluator.samples.train.raw.equals(expected)
 
 
 def test_get_best_combination_viable(evaluator: ContinuousCombinationEvaluator):
@@ -1118,7 +1147,7 @@ def test_get_best_combination_viable(evaluator: ContinuousCombinationEvaluator):
 
     feature = OrdinalFeature("feature", ["a", "b", "c"])
 
-    xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
+    xagg = Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0]})
     evaluator.max_n_mod = 2
 
     result = evaluator.get_best_combination(feature, xagg, xagg)
@@ -1127,24 +1156,23 @@ def test_get_best_combination_viable(evaluator: ContinuousCombinationEvaluator):
     assert feature.dropna is evaluator.dropna
 
     expected = {
-        "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
+        "xagg": Series({"a": [0, 2, 0], "b": [2, 1, 2, 0]}),
         "combination": [["a"], ["b", "c"]],
         "index_to_groupby": {"a": "a", "b": "b", "c": "b"},
-        "cramerv": 0.25,
-        "tschuprowt": 0.25,
+        "kruskal": 0.5833333333333333,
     }
-    assert allclose(result["xagg"], expected["xagg"])
+    assert result["xagg"].equals(expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["index_to_groupby"] == expected["index_to_groupby"]
-    assert result["cramerv"] == expected["cramerv"]
-    assert result["tschuprowt"] == expected["tschuprowt"]
+    assert result["kruskal"] == expected["kruskal"]
 
-    expected = DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b to c"])
+    expected = Series({"a": [0, 2, 0], "b to c": [2, 1, 2, 0]})
+    print(evaluator.samples.train.xagg)
     assert feature.labels == list(expected.index)
-    assert allclose(evaluator.train_sample.xagg, expected)
-    assert allclose(evaluator.dev_sample.xagg, expected)
-    assert allclose(evaluator.dev_sample.raw, expected)
-    assert allclose(evaluator.train_sample.raw, expected)
+    assert evaluator.samples.train.xagg.equals(expected)
+    assert evaluator.samples.dev.xagg.equals(expected)
+    assert evaluator.samples.dev.raw.equals(expected)
+    assert evaluator.samples.train.raw.equals(expected)
 
 
 def test_get_best_combination_viable_without_dev(evaluator: ContinuousCombinationEvaluator):
@@ -1152,7 +1180,7 @@ def test_get_best_combination_viable_without_dev(evaluator: ContinuousCombinatio
 
     feature = OrdinalFeature("feature", ["a", "b", "c"])
 
-    xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
+    xagg = Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0]})
     evaluator.max_n_mod = 2
 
     result = evaluator.get_best_combination(feature, xagg)
@@ -1161,23 +1189,23 @@ def test_get_best_combination_viable_without_dev(evaluator: ContinuousCombinatio
     assert feature.dropna is evaluator.dropna
 
     expected = {
-        "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
+        "xagg": Series({"a": [0, 2, 0], "b": [2, 1, 2, 0]}),
         "combination": [["a"], ["b", "c"]],
         "index_to_groupby": {"a": "a", "b": "b", "c": "b"},
-        "cramerv": 0.25,
-        "tschuprowt": 0.25,
+        "kruskal": 0.5833333333333333,
     }
-    assert allclose(result["xagg"], expected["xagg"])
+    assert result["xagg"].equals(expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["index_to_groupby"] == expected["index_to_groupby"]
-    assert result["cramerv"] == expected["cramerv"]
-    assert result["tschuprowt"] == expected["tschuprowt"]
+    assert result["kruskal"] == expected["kruskal"]
 
-    expected = DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b to c"])
+    expected = Series({"a": [0, 2, 0], "b to c": [2, 1, 2, 0]})
+    print(evaluator.samples.train.xagg)
     assert feature.labels == list(expected.index)
-    assert allclose(evaluator.train_sample.xagg, expected)
-    assert evaluator.dev_sample.xagg is None
-    assert allclose(evaluator.train_sample.raw, expected)
+    assert evaluator.samples.train.xagg.equals(expected)
+    assert evaluator.samples.dev.xagg is None
+    assert evaluator.samples.dev.raw is None
+    assert evaluator.samples.train.raw.equals(expected)
 
 
 def test_get_best_combination_not_viable(evaluator: ContinuousCombinationEvaluator):
@@ -1185,7 +1213,7 @@ def test_get_best_combination_not_viable(evaluator: ContinuousCombinationEvaluat
 
     feature = OrdinalFeature("feature", ["a", "b", "c"])
 
-    xagg = DataFrame({0: [0], 1: [2]}, index=["a"])
+    xagg = Series({"a": [0, 2, 0]})
     evaluator.max_n_mod = 2
 
     with raises(ValueError):
@@ -1200,7 +1228,7 @@ def test_get_best_combination_viable_with_nan_without_feature_nan(
     feature = OrdinalFeature("feature", ["a", "b", "c", "d"])
     feature.has_nan = False
 
-    xagg = DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 3]}, index=["a", "b", "c", "d"])
+    xagg = Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0], "d": [-1, 5]})
     evaluator.max_n_mod = 2
 
     result = evaluator.get_best_combination(feature, xagg)
@@ -1208,18 +1236,15 @@ def test_get_best_combination_viable_with_nan_without_feature_nan(
     assert evaluator.feature == feature
     assert feature.dropna is evaluator.dropna
     expected = {
-        "xagg": DataFrame({0: [2, 0], 1: [2, 4]}, index=["a", "c"]),
-        "combination": [["a", "b"], ["c", "d"]],
-        "index_to_groupby": {"a": "a", "b": "a", "c": "c", "d": "c"},
-        "cramerv": 0.28867513459481287,
-        "tschuprowt": 0.28867513459481287,
+        "xagg": Series({"a": [0, 2, 0], "b": [2, 1, 2, 0, -1, 5]}),
+        "combination": [["a"], ["b", "c", "d"]],
+        "index_to_groupby": {"a": "a", "b": "b", "c": "b", "d": "b"},
+        "kruskal": 0.2857142857142847,
     }
-
-    assert allclose(result["xagg"], expected["xagg"])
+    assert result["xagg"].equals(expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["index_to_groupby"] == expected["index_to_groupby"]
-    assert result["cramerv"] == expected["cramerv"]
-    assert result["tschuprowt"] == expected["tschuprowt"]
+    assert result["kruskal"] == expected["kruskal"]
 
 
 def test_get_best_combination_viable_with_nan_without_dropna(
@@ -1230,7 +1255,7 @@ def test_get_best_combination_viable_with_nan_without_dropna(
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     feature.has_nan = True
 
-    xagg = DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 3]}, index=["a", "b", "c", feature.nan])
+    xagg = Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0], feature.nan: [-1, 5]})
     evaluator.max_n_mod = 2
     evaluator.dropna = False
 
@@ -1239,25 +1264,23 @@ def test_get_best_combination_viable_with_nan_without_dropna(
     assert evaluator.feature == feature
     assert feature.dropna is evaluator.dropna
     expected = {
-        "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
+        "xagg": Series({"a": [0, 2, 0], "b": [2, 1, 2, 0]}),
         "combination": [["a"], ["b", "c"]],
         "index_to_groupby": {"a": "a", "b": "b", "c": "b"},
-        "cramerv": 0.25,
-        "tschuprowt": 0.25,
+        "kruskal": 0.5833333333333333,
     }
-
-    assert allclose(result["xagg"], expected["xagg"])
+    assert result["xagg"].equals(expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["index_to_groupby"] == expected["index_to_groupby"]
-    assert result["cramerv"] == expected["cramerv"]
-    assert result["tschuprowt"] == expected["tschuprowt"]
+    assert result["kruskal"] == expected["kruskal"]
 
-    expected = DataFrame({0: [0, 2, 0], 1: [2, 1, 3]}, index=["a", "b to c", feature.nan])
-    assert list(evaluator.train_sample.index) == list(expected.index)
-    assert allclose(evaluator.train_sample.xagg, expected)
-    assert allclose(evaluator.dev_sample.xagg, expected)
-    assert allclose(evaluator.dev_sample.raw, expected)
-    assert allclose(evaluator.train_sample.raw, expected)
+    expected = Series({"a": [0, 2, 0], "b to c": [2, 1, 2, 0], feature.nan: [-1, 5]})
+    print(evaluator.samples.train.xagg)
+    assert feature.labels == list(expected.index)
+    assert evaluator.samples.train.xagg.equals(expected)
+    assert evaluator.samples.dev.xagg.equals(expected)
+    assert evaluator.samples.dev.raw.equals(expected)
+    assert evaluator.samples.train.raw.equals(expected)
 
 
 def test_get_best_combination_viable_with_nan(evaluator: ContinuousCombinationEvaluator):
@@ -1267,7 +1290,7 @@ def test_get_best_combination_viable_with_nan(evaluator: ContinuousCombinationEv
     feature.has_nan = True
     assert feature.dropna is False
 
-    xagg = DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 3]}, index=["a", "b", "c", feature.nan])
+    xagg = Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0], feature.nan: [-1, 5]})
     evaluator.max_n_mod = 2
     evaluator.dropna = True
 
@@ -1278,21 +1301,20 @@ def test_get_best_combination_viable_with_nan(evaluator: ContinuousCombinationEv
     assert feature.dropna is evaluator.dropna
 
     expected = {
-        "xagg": DataFrame({0: [0, 2], 1: [5, 1]}, index=["a", "b to c"]),
-        "combination": [["a", "__NAN__"], ["b to c"]],
-        "index_to_groupby": {"a": "a", "__NAN__": "a", "b to c": "b to c"},
-        "cramerv": 0.4472135954999579,
-        "tschuprowt": 0.4472135954999579,
+        "xagg": Series({"a": [0, 2, 0], "b to c": [2, 1, 2, 0, -1, 5]}),
+        "combination": [["a"], ["b to c", "__NAN__"]],
+        "index_to_groupby": {"a": "a", "b to c": "b to c", "__NAN__": "b to c"},
+        "kruskal": 0.2857142857142847,
     }
-    assert allclose(result["xagg"], expected["xagg"])
+    assert result["xagg"].equals(expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["index_to_groupby"] == expected["index_to_groupby"]
-    assert result["cramerv"] == expected["cramerv"]
-    assert result["tschuprowt"] == expected["tschuprowt"]
+    assert result["kruskal"] == expected["kruskal"]
 
-    expected = DataFrame({0: [0, 2], 1: [5, 1]}, index=["a, __NAN__", "b to c"])
+    expected = Series({"a": [0, 2, 0], "b to c, __NAN__": [2, 1, 2, 0, -1, 5]})
+    print(evaluator.samples.train.xagg)
     assert feature.labels == list(expected.index)
-    assert allclose(evaluator.train_sample.xagg, expected)
-    assert allclose(evaluator.dev_sample.xagg, expected)
-    assert allclose(evaluator.dev_sample.raw, expected)
-    assert allclose(evaluator.train_sample.raw, expected)
+    assert evaluator.samples.train.xagg.equals(expected)
+    assert evaluator.samples.dev.xagg.equals(expected)
+    assert evaluator.samples.dev.raw.equals(expected)
+    assert evaluator.samples.train.raw.equals(expected)

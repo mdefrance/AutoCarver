@@ -1,11 +1,14 @@
 """CombinationEvaluator class to evaluate
 the best combination of modalities for a feature."""
 
+import json
 from abc import ABC, abstractmethod
 from typing import Union
+from dataclasses import dataclass
 
 from pandas import DataFrame, Series
 from tqdm.autonotebook import tqdm
+from ...utils import get_attribute, get_bool_attribute
 
 from ...features import BaseFeature, GroupedList
 from .combinations import (
@@ -16,7 +19,6 @@ from .combinations import (
     xagg_apply_combination,
 )
 from .testing import _test_viability, is_viable
-from dataclasses import dataclass
 
 
 @dataclass
@@ -81,6 +83,14 @@ class AggregatedSample:
         return self.xagg.groupby(*args, **kwargs)
 
 
+@dataclass
+class AggregatedSamples:
+    """stores train and dev samples"""
+
+    train: AggregatedSample = AggregatedSample(None)
+    dev: AggregatedSample = AggregatedSample(None)
+
+
 class CombinationEvaluator(ABC):
     """CombinationEvaluator class to evaluate
     the best combination of modalities for a feature."""
@@ -93,20 +103,20 @@ class CombinationEvaluator(ABC):
 
     def __init__(
         self,
-        max_n_mod: int,
-        min_freq: float,
-        dropna: bool = False,
-        verbose: bool = False,
+        max_n_mod: int = 5,
+        **kwargs,
     ) -> None:
-        self.verbose = verbose
-        self.dropna = dropna
+        self.verbose = get_bool_attribute(kwargs, "verbose", False)
+        self.dropna = get_bool_attribute(kwargs, "verbose", False)
         self.max_n_mod = max_n_mod
-        self.min_freq = min_freq
+        self.min_freq = get_attribute(kwargs, "min_freq")
 
         # attributes to be set by get_best_combination
         self.feature: BaseFeature = None
-        self.train_sample: AggregatedSample = AggregatedSample(None)
-        self.dev_sample: AggregatedSample = AggregatedSample(None)
+        self.samples: AggregatedSamples = AggregatedSamples()
+
+    def __repr__(self) -> str:
+        return f"{self.__name__}(max_n_mod={self.max_n_mod})"
 
     def _group_xagg_by_combinations(self, combinations: list[list]) -> list[dict]:
         """groups xagg by combinations of indices"""
@@ -117,7 +127,7 @@ class CombinationEvaluator(ABC):
         # grouping tab by its indices
         return [
             {
-                "xagg": self._grouper(self.train_sample, index_to_groupby),
+                "xagg": self._grouper(self.samples.train, index_to_groupby),
                 "combination": combination,
                 "index_to_groupby": index_to_groupby,
             }
@@ -131,7 +141,7 @@ class CombinationEvaluator(ABC):
         """computes associations for each grouped xagg"""
 
         # number of observations (only used for crosstabs)
-        n_obs = self.train_sample.xagg.apply(sum).sum()
+        n_obs = self.samples.train.xagg.apply(sum).sum()
 
         # computing associations for each crosstab
         associations = [
@@ -182,10 +192,12 @@ class CombinationEvaluator(ABC):
             self.feature.update(labels, convert_labels=True)
 
             # applying best_combination to raw xagg and xagg_dev
-            self.train_sample.raw = xagg_apply_combination(
-                self.train_sample.raw, labels, self.feature
+            self.samples.train.raw = xagg_apply_combination(
+                self.samples.train.raw, labels, self.feature
             )
-            self.dev_sample.raw = xagg_apply_combination(self.dev_sample.raw, labels, self.feature)
+            self.samples.dev.raw = xagg_apply_combination(
+                self.samples.dev.raw, labels, self.feature
+            )
 
     def _get_best_combination_non_nan(self) -> dict:
         """Computes associations of the tab for each combination of non-nans
@@ -203,11 +215,11 @@ class CombinationEvaluator(ABC):
                 raw_labels.remove(self.feature.nan)
 
             # removing nans from crosstabs
-            self.dev_sample.xagg = filter_nan(self.dev_sample.raw, self.feature.nan)
-            self.train_sample.xagg = filter_nan(self.train_sample.raw, self.feature.nan)
+            self.samples.dev.xagg = filter_nan(self.samples.dev.raw, self.feature.nan)
+            self.samples.train.xagg = filter_nan(self.samples.train.raw, self.feature.nan)
 
         # checking for non-nan values
-        if self.train_sample.shape[0] > 1:
+        if self.samples.train.shape[0] > 1:
             # all possible consecutive combinations
             combinations = consecutive_combinations(raw_labels, self.max_n_mod)
 
@@ -238,10 +250,14 @@ class CombinationEvaluator(ABC):
     ) -> dict:
         """Computes best combination of modalities for the feature"""
 
+        # checking for min_freq
+        if self.min_freq is None:
+            raise ValueError("min_freq has to be set before calling get_best_combination")
+
         # setting feature and xtab
         self.feature = feature
-        self.train_sample = AggregatedSample(xagg)
-        self.dev_sample = AggregatedSample(xagg_dev)
+        self.samples.train = AggregatedSample(xagg)
+        self.samples.dev = AggregatedSample(xagg_dev)
 
         # setting dropna to user-requested value
         self.feature.dropna = self.dropna
@@ -268,7 +284,7 @@ class CombinationEvaluator(ABC):
         """testing the viability of the combination on xagg_dev"""
 
         # case 0: not viable on train or no test sample -> not testing for robustness
-        if not test_results.get("train").get("viable") or self.dev_sample.xagg is None:
+        if not test_results.get("train").get("viable") or self.samples.dev.xagg is None:
             return {**test_results, "dev": {"viable": None}}
         # case 1: test sample provided -> testing robustness
 
@@ -276,7 +292,7 @@ class CombinationEvaluator(ABC):
         train_target_rate = test_results.pop("train_rates")["target_rate"]
 
         # grouping the dev sample per modality
-        grouped_xagg_dev = self._grouper(self.dev_sample, combination["index_to_groupby"])
+        grouped_xagg_dev = self._grouper(self.samples.dev, combination["index_to_groupby"])
 
         # computing target rate and frequency per modality
         dev_rates = self._compute_target_rates(grouped_xagg_dev)
@@ -329,16 +345,165 @@ class CombinationEvaluator(ABC):
     def _historize_raw_combination(self):
         # historizing raw combination TODO
         raw_association = {
-            "index_to_groupby": {modality: modality for modality in self.train_sample.xagg.index},
+            "index_to_groupby": {modality: modality for modality in self.samples.train.xagg.index},
             self.sort_by: self._association_measure(
-                self.train_sample.xagg.dropna(),
-                n_obs=sum(self.train_sample.xagg.dropna().apply(sum)),
+                self.samples.train.xagg.dropna(),
+                n_obs=sum(self.samples.train.xagg.dropna().apply(sum)),
             )[self.sort_by],
         }
         self._historize(self.feature, raw_association, self.feature.labels)
 
+    def to_json(self) -> dict:
+        """Converts to JSON format.
+
+        To be used with ``json.dump``.
+
+        Returns
+        -------
+        dict
+            JSON serialized object
+        """
+        return {
+            "max_n_mod": self.max_n_mod,
+            "dropna": self.dropna,
+            "min_freq": self.min_freq,
+            "verbose": self.verbose,
+        }
+
+    def save(self, file_name: str) -> None:
+        """Saves pipeline to .json file.
+
+        Parameters
+        ----------
+        file_name : str
+            String of .json file name
+        """
+        # checking for input
+        if file_name.endswith(".json"):
+            with open(file_name, "w", encoding="utf-8") as json_file:
+                json.dump(self.to_json(), json_file)
+        # raising for non-json file name
+        else:
+            raise ValueError(f"[{self.__name__}] Provide a file_name that ends with .json.")
+
+    @classmethod
+    def load(cls, file_name: str) -> "CombinationEvaluator":
+        """Allows one to load a CombinationEvaluator saved as a .json file.
+
+        The CombinationEvaluator has to be saved with ``CombinationEvaluator.save()``, otherwise
+        there can be no guarantee for it to be restored.
+
+        Parameters
+        ----------
+        file_name : str
+            String of saved CombinationEvaluator's .json file name.
+
+        Returns
+        -------
+        CombinationEvaluator
+            A ready-to-use CombinationEvaluator
+        """
+        # reading file
+        with open(file_name, "r", encoding="utf-8") as json_file:
+            combinations_json = json.load(json_file)
+
+        # initiating BaseDiscretizer
+        return cls(**combinations_json)
+
     def _historize(self, *args, **kwargs) -> None:
         pass
+
+    # def _historize(
+    #     self,
+    #     feature: BaseFeature,
+    #     association: dict[Any],
+    #     n_combination: int = None,
+    #     associations_xagg: list[dict[str, Any]] = None,
+    #     train_viable: bool = None,
+    #     dev_viable: bool = None,
+    #     dropna: bool = False,
+    #     **viability_msg_params,
+    # ) -> None:
+    #     """historizes the viability tests results for specified feature
+
+    #     Parameters
+    #     ----------
+    #     feature : str
+    #         feature for which to historize the combination
+    #     viability : bool
+    #         result of viability test
+    #     order : GroupedList
+    #         order of the modalities and there respective groups
+    #     association : dict[Any]
+    #         index_to_groupby and self.sort_by values
+    #     viability_msg_params : dict
+    #         kwargs to determine the viability message
+    #     """
+    #     # Messages associated to each failed viability test
+    #     messages = []
+    #     if not viability_msg_params.get("ranks_train_dev", True):
+    #         messages += ["X_dev: inversion of target rates per modality"]
+    #     if not viability_msg_params.get("min_freq_dev", True):
+    #         messages += [f"X_dev: non-representative modality (min_freq={self.min_freq:2.2%})"]
+    #     if not viability_msg_params.get("distinct_rates_dev", True):
+    #         messages += ["X_dev: non-distinct target rates per consecutive modalities"]
+    #     if not viability_msg_params.get("min_freq_train", True):
+    #         messages += [f"X: non-representative modality (min_freq={self.min_freq:2.2%})"]
+    #     if not viability_msg_params.get("distinct_rates_train", True):
+    #         messages += ["X: non-distinct target rates per consecutive modalities"]
+
+    #     # viability has been checked on train
+    #     viability = None
+    #     if train_viable is not None:
+    #         # viability on train
+    #         viability = train_viable
+    #         if train_viable:
+    #             # viability has been checked on dev
+    #             if dev_viable is not None:
+    #                 # viability on dev
+    #                 viability = dev_viable
+    #                 if dev_viable:
+    #                     messages = ["Combination robust between X and X_dev"]
+    #             else:  # no x_dev provided
+    #                 messages = ["Combination viable on X"]
+    #     else:
+    #         messages = ["Raw X distribution"]
+
+    #     # viability not checked for following less associated combinations
+    #     associations_not_checked = []
+    #     if viability:
+    #         associations_not_checked = associations_xagg[n_combination + 1 :]
+
+    #     # storing combination and adding not tested combinations to the set to be historized
+    #     associations_to_historize = [association] + associations_not_checked
+    #     messages_to_historize = [messages] + [["Not checked"]] * len(associations_not_checked)
+    #     viability_to_historize = [viability] + [None] * len(associations_not_checked)
+
+    #     # historizing test results: list comprehension for faster processing (large number of
+    # combi)
+    #     feature.history += [
+    #         {
+    #             # Formats a combination for historization
+    #             "combination": [
+    #                 [
+    #                     value
+    #                     for modality in asso["index_to_groupby"].keys()
+    #                     for group_modality in feature.label_per_value.get(modality, modality)
+    #                     for value in feature.content.get(group_modality, group_modality)
+    #                     if asso["index_to_groupby"][modality] == final_group
+    #                 ]
+    #                 for final_group in Series(asso["index_to_groupby"].values()).unique()
+    #             ],
+    #             self.sort_by: asso[self.sort_by],
+    #             "viability": viab,
+    #             "viability_message": msg,
+    #             "grouping_nan": dropna,
+    #         }
+    #         # historizing all combinations
+    #         for asso, msg, viab in zip(
+    #             associations_to_historize, messages_to_historize, viability_to_historize
+    #         )
+    #     ]
 
 
 def filter_nan(xagg: Union[Series, DataFrame], str_nan: str) -> DataFrame:
