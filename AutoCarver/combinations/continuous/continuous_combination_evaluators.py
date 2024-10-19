@@ -12,7 +12,9 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
 
     is_y_continuous = True
 
-    def _association_measure(self, xagg: AggregatedSample, n_obs: int = None) -> dict[str, float]:
+    def _association_measure(
+        self, xagg: AggregatedSample, n_obs: int = None, tol: float = 1e-10
+    ) -> dict[str, float]:
         """Computes measures of association between feature and quantitative target.
 
         Parameters
@@ -25,7 +27,7 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
         dict[str, float]
             Kruskal-Wallis' H as a dict.
         """
-        _ = n_obs  # unused attribute
+        _, _ = n_obs, tol  # unused attribute
 
         # Kruskal-Wallis' H
         return {"kruskal": kruskal(*tuple(xagg.values))[0]}

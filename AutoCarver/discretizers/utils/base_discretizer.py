@@ -13,6 +13,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from ...features import BaseFeature, Features
 from ...utils import get_attribute, get_bool_attribute
 from .multiprocessing import apply_async_function
+from ...combinations import CombinationEvaluator
 
 
 @dataclass
@@ -35,6 +36,21 @@ class Sample:
 
     def keys(self):
         return ["X", "y"]
+
+    @property
+    def shape(self):
+        return self.X.shape
+
+    @property
+    def index(self):
+        return self.X.index
+
+    @property
+    def columns(self):
+        return self.X.columns
+
+    def __len__(self):
+        return len(self.X)
 
 
 class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
@@ -332,16 +348,16 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         # transforming quantitative features
         if len(self.features.quantitatives) > 0:
-            sample.X = self._transform_quantitative(**sample)
+            sample = self._transform_quantitative(sample)
 
         # transforming qualitative features
         if len(self.features.qualitatives) > 0:
-            sample.X = self._transform_qualitative(**sample)
+            sample = self._transform_qualitative(sample)
 
         # reinstating nans when not supposed to group them
         return self.features.unfillna(sample.X)
 
-    def _transform_quantitative(self, X: DataFrame, y: Series) -> DataFrame:
+    def _transform_quantitative(self, sample: Sample) -> Sample:
         """Applies discretization to a DataFrame's Quantitative columns.
 
         * Data types are defined by:
@@ -361,23 +377,23 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         DataFrame
             Discretized X.
         """
-        _ = y  # unused argument
-
         # transforming all features
         transformed = apply_async_function(
             transform_quantitative_feature,
             self.features.quantitatives,
             self.n_jobs,
-            X,
-            X.shape[0],
+            sample.X,
+            sample.shape[0],
         )
 
         # unpacking transformed series
-        X[[feature for feature, _ in transformed]] = DataFrame(dict(transformed), index=X.index)
+        sample.X[[feature for feature, _ in transformed]] = DataFrame(
+            dict(transformed), index=sample.index
+        )
 
-        return X
+        return sample
 
-    def _transform_qualitative(self, X: DataFrame, y: Series = None) -> DataFrame:
+    def _transform_qualitative(self, sample: Sample) -> Sample:
         """Applies discretization to a DataFrame's Qualitative columns.
 
         * Data types are defined by:
@@ -397,17 +413,15 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         DataFrame
             Discretized X.
         """
-        _ = y  # unused argument
-
         # list of qualitative features
         qualitatives = self.features.qualitatives
 
         # replacing values for there corresponding label
-        X.replace(
+        sample.X.replace(
             {feature.version: feature.label_per_value for feature in qualitatives}, inplace=True
         )
 
-        return X
+        return sample
 
     def log_if_verbose(self, prefix: str = " -") -> None:
         """prints logs if requested"""
@@ -442,7 +456,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         }
 
         # adding combinations if it exists
-        if self.combinations is not None:
+        if isinstance(self.combinations, CombinationEvaluator):
             content["combinations"] = self.combinations.to_json()
 
         return content

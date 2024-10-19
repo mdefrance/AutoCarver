@@ -13,7 +13,12 @@ from ...discretizers import BaseDiscretizer, Discretizer, Sample
 from ...features import BaseFeature, Features, GroupedList
 from ...utils import get_attribute, get_bool_attribute
 
-from ...combinations.utils import CombinationEvaluator
+from ...combinations import (
+    CombinationEvaluator,
+    KruskalCombinations,
+    CramervCombinations,
+    TschuprowtCombinations,
+)
 from .pretty_print import index_mapper, prettier_xagg
 
 # trying to import extra dependencies
@@ -409,7 +414,15 @@ class BaseCarver(BaseDiscretizer, ABC):
         features = Features.load(carver_json.pop("features"))
 
         # deserializing Combinations
-        combinations = CombinationEvaluator.load(carver_json.pop("combinations"))
+        combinations = carver_json.pop("combinations")
+        if combinations["sort_by"] == "tschuprowt":
+            combinations = TschuprowtCombinations.load(combinations)
+        elif combinations["sort_by"] == "cramerv":
+            combinations = CramervCombinations.load(combinations)
+        elif combinations["sort_by"] == "kruskal":
+            combinations = KruskalCombinations.load(combinations)
+        else:
+            combinations = CombinationEvaluator.load(combinations)
 
         # initiating BaseDiscretizer
         return cls(features=features, combinations=combinations, **carver_json)

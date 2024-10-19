@@ -12,6 +12,7 @@ from AutoCarver.combinations.binary.binary_combination_evaluators import (
     CramervCombinations,
     TschuprowtCombinations,
 )
+from AutoCarver.combinations.continuous.continuous_combination_evaluators import KruskalCombinations
 from AutoCarver.combinations.utils.combinations import consecutive_combinations, nan_combinations
 from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample
 from AutoCarver.features import OrdinalFeature
@@ -45,6 +46,7 @@ def test_init(evaluator: BinaryCombinationEvaluator):
 
 def test_to_json(evaluator: BinaryCombinationEvaluator):
     expected_json = {
+        "sort_by": evaluator.sort_by,
         "max_n_mod": MAX_N_MOD,
         "dropna": evaluator.dropna,
         "min_freq": MIN_FREQ,
@@ -61,6 +63,7 @@ def test_save(evaluator: BinaryCombinationEvaluator, tmp_path):
         data = json.load(json_file)
 
     expected_json = {
+        "sort_by": evaluator.sort_by,
         "max_n_mod": MAX_N_MOD,
         "dropna": evaluator.dropna,
         "min_freq": MIN_FREQ,
@@ -74,9 +77,11 @@ def test_save_invalid_filename(evaluator: BinaryCombinationEvaluator):
         evaluator.save("invalid_file.txt")
 
 
-def test_load(tmp_path):
+def test_load_tschuprowt(tmp_path):
+    """Test the load method for TschuprowtCombinations"""
     file_name = tmp_path / "test.json"
     data = {
+        "sort_by": "tschuprowt",
         "max_n_mod": MAX_N_MOD,
         "dropna": True,
         "min_freq": MIN_FREQ,
@@ -96,6 +101,27 @@ def test_load(tmp_path):
     assert loaded_evaluator.is_y_binary is True
     assert loaded_evaluator.is_y_continuous is False
 
+    with raises(ValueError):
+        CramervCombinations.load(str(file_name))
+
+    with raises(ValueError):
+        KruskalCombinations.load(str(file_name))
+
+
+def test_load_cramerv(tmp_path):
+    """Test the load method for CrmervCombinations"""
+    file_name = tmp_path / "test.json"
+    data = {
+        "sort_by": "cramerv",
+        "max_n_mod": MAX_N_MOD,
+        "dropna": True,
+        "min_freq": MIN_FREQ,
+        "verbose": True,
+    }
+
+    with open(file_name, "w", encoding="utf-8") as json_file:
+        json.dump(data, json_file)
+
     loaded_evaluator = CramervCombinations.load(str(file_name))
 
     assert loaded_evaluator.max_n_mod == MAX_N_MOD
@@ -105,6 +131,12 @@ def test_load(tmp_path):
     assert loaded_evaluator.sort_by == "cramerv"
     assert loaded_evaluator.is_y_binary is True
     assert loaded_evaluator.is_y_continuous is False
+
+    with raises(ValueError):
+        TschuprowtCombinations.load(str(file_name))
+
+    with raises(ValueError):
+        KruskalCombinations.load(str(file_name))
 
 
 def test_compute_target_rates_basic(evaluator: BinaryCombinationEvaluator):
@@ -198,10 +230,11 @@ def test_association_measure_basic(evaluator: BinaryCombinationEvaluator):
     n_obs = 105
     result = evaluator._association_measure(xagg, n_obs)
 
-    chi2 = chi2_contingency(xagg)[0]
+    tol = 1e-10
+    chi2 = chi2_contingency(xagg.values + tol)[0]
     cramerv = sqrt(chi2 / n_obs)
     tschuprowt = cramerv / sqrt(sqrt(xagg.shape[0] - 1))
-    expected = {"cramerv": cramerv, "tschuprowt": tschuprowt}
+    expected = {"cramerv": round(cramerv / tol) * tol, "tschuprowt": round(tschuprowt / tol) * tol}
     assert result == expected
 
 
@@ -210,10 +243,12 @@ def test_association_measure_with_zeros(evaluator: BinaryCombinationEvaluator):
     xagg = DataFrame({"A": [10, 0, 30], "B": [5, 15, 0]})
     n_obs = 105
     result = evaluator._association_measure(xagg, n_obs)
-    chi2 = chi2_contingency(xagg)[0]
+
+    tol = 1e-10
+    chi2 = chi2_contingency(xagg.values + tol)[0]
     cramerv = sqrt(chi2 / n_obs)
     tschuprowt = cramerv / sqrt(sqrt(xagg.shape[0] - 1))
-    expected = {"cramerv": cramerv, "tschuprowt": tschuprowt}
+    expected = {"cramerv": round(cramerv / tol) * tol, "tschuprowt": round(tschuprowt / tol) * tol}
 
     assert result == expected
 
@@ -403,10 +438,6 @@ def test_compute_associations_with_three_rows(evaluator: BinaryCombinationEvalua
 
     grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
 
-    # cannot compute associations with a modality that has no observations
-    with raises(ValueError):
-        evaluator._compute_associations(grouped_xaggs)
-
     # adding an observation to the xagg
     xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["A", "B", "C"])
     evaluator.samples.train = AggregatedSample(xagg)
@@ -420,8 +451,8 @@ def test_compute_associations_with_three_rows(evaluator: BinaryCombinationEvalua
             "xagg": DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["A", "B", "C"]),
             "combination": [["A"], ["B"], ["C"]],
             "index_to_groupby": {"A": "A", "B": "B", "C": "C"},
-            "cramerv": 1.0,
-            "tschuprowt": 0.8408964152537146,
+            "cramerv": 0.9999999999,
+            "tschuprowt": 0.8408964152,
         },
         {
             "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["A", "B"]),
@@ -504,8 +535,8 @@ def test_compute_associations_with_twenty_rows(evaluator: BinaryCombinationEvalu
                 "S": "S",
                 "T": "S",
             },
-            "cramerv": 0.6095153634119231,
-            "tschuprowt": 0.4076074900159042,
+            "cramerv": 0.6095153634,
+            "tschuprowt": 0.40760749,
         },
         "cramerv": {
             "xagg": DataFrame(
@@ -546,8 +577,8 @@ def test_compute_associations_with_twenty_rows(evaluator: BinaryCombinationEvalu
                 "S": "S",
                 "T": "T",
             },
-            "cramerv": 0.6357922702880253,
-            "tschuprowt": 0.40623508683361603,
+            "cramerv": 0.6357922703000001,
+            "tschuprowt": 0.40623508680000003,
         },
     }
     res = result[0]
@@ -926,8 +957,8 @@ def test_best_association_with_nan_combinations_viable(evaluator: BinaryCombinat
         "xagg": DataFrame({0: [0, 2], 1: [3, 0]}, index=["a", "b"]),
         "combination": [["a", "__NAN__"], ["b"]],
         "index_to_groupby": {"a": "a", "__NAN__": "a", "b": "b"},
-        "cramerv": 0.5833333333333333,
-        "tschuprowt": 0.5833333333333333,
+        "cramerv": 0.5833333333,
+        "tschuprowt": 0.5833333333,
     }
     assert allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
@@ -1198,9 +1229,10 @@ def test_get_best_combination_with_nan_viable_with_nan(evaluator: BinaryCombinat
         "xagg": DataFrame({0: [0, 2], 1: [5, 1]}, index=["a", "b to c"]),
         "combination": [["a", "__NAN__"], ["b to c"]],
         "index_to_groupby": {"a": "a", "__NAN__": "a", "b to c": "b to c"},
-        "cramerv": 0.4472135954999579,
-        "tschuprowt": 0.4472135954999579,
+        "cramerv": 0.4472135955,
+        "tschuprowt": 0.4472135955,
     }
+
     assert allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["index_to_groupby"] == expected["index_to_groupby"]
@@ -1290,8 +1322,8 @@ def test_get_best_combination_not_viable(evaluator: BinaryCombinationEvaluator):
     xagg = DataFrame({0: [0], 1: [2]}, index=["a"])
     evaluator.max_n_mod = 2
 
-    with raises(ValueError):
-        evaluator.get_best_combination(feature, xagg, xagg)
+    result = evaluator.get_best_combination(feature, xagg, xagg)
+    assert result is None
 
 
 def test_get_best_combination_viable_with_nan_without_feature_nan(
@@ -1313,8 +1345,8 @@ def test_get_best_combination_viable_with_nan_without_feature_nan(
         "xagg": DataFrame({0: [2, 0], 1: [2, 4]}, index=["a", "c"]),
         "combination": [["a", "b"], ["c", "d"]],
         "index_to_groupby": {"a": "a", "b": "a", "c": "c", "d": "c"},
-        "cramerv": 0.28867513459481287,
-        "tschuprowt": 0.28867513459481287,
+        "cramerv": 0.2886751346,
+        "tschuprowt": 0.2886751346,
     }
 
     assert allclose(result["xagg"], expected["xagg"])
@@ -1383,9 +1415,10 @@ def test_get_best_combination_viable_with_nan(evaluator: BinaryCombinationEvalua
         "xagg": DataFrame({0: [0, 2], 1: [5, 1]}, index=["a", "b to c"]),
         "combination": [["a", "__NAN__"], ["b to c"]],
         "index_to_groupby": {"a": "a", "__NAN__": "a", "b to c": "b to c"},
-        "cramerv": 0.4472135954999579,
-        "tschuprowt": 0.4472135954999579,
+        "cramerv": 0.4472135955,
+        "tschuprowt": 0.4472135955,
     }
+
     assert allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["index_to_groupby"] == expected["index_to_groupby"]

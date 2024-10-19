@@ -335,7 +335,9 @@ class CombinationEvaluator(ABC):
         """Helper to group XAGG's values by groupby (carver specific)"""
 
     @abstractmethod
-    def _association_measure(self, xagg: AggregatedSample, n_obs: int = None) -> dict[str, float]:
+    def _association_measure(
+        self, xagg: AggregatedSample, n_obs: int = None, tol: float = 1e-10
+    ) -> dict[str, float]:
         """Helper to measure association between X and y (carver specific)"""
 
     @abstractmethod
@@ -364,6 +366,7 @@ class CombinationEvaluator(ABC):
             JSON serialized object
         """
         return {
+            "sort_by": self.sort_by,
             "max_n_mod": self.max_n_mod,
             "dropna": self.dropna,
             "min_freq": self.min_freq,
@@ -387,7 +390,7 @@ class CombinationEvaluator(ABC):
             raise ValueError(f"[{self.__name__}] Provide a file_name that ends with .json.")
 
     @classmethod
-    def load(cls, file_name: str) -> "CombinationEvaluator":
+    def load(cls, file: Union[str, dict]) -> "CombinationEvaluator":
         """Allows one to load a CombinationEvaluator saved as a .json file.
 
         The CombinationEvaluator has to be saved with ``CombinationEvaluator.save()``, otherwise
@@ -395,8 +398,8 @@ class CombinationEvaluator(ABC):
 
         Parameters
         ----------
-        file_name : str
-            String of saved CombinationEvaluator's .json file name.
+        file_name : str | dict
+            String of saved CombinationEvaluator's .json file name or content of the file.
 
         Returns
         -------
@@ -404,8 +407,20 @@ class CombinationEvaluator(ABC):
             A ready-to-use CombinationEvaluator
         """
         # reading file
-        with open(file_name, "r", encoding="utf-8") as json_file:
-            combinations_json = json.load(json_file)
+        if isinstance(file, str):
+            with open(file, "r", encoding="utf-8") as json_file:
+                combinations_json = json.load(json_file)
+        elif isinstance(file, dict):
+            combinations_json = file
+        else:
+            raise ValueError(f"[{cls.__name__}] Provide a file_name or a dict.")
+
+        # checking for sort_by
+        if combinations_json.get("sort_by") is None:
+            if cls.sort_by is not None:
+                raise ValueError(f"[{cls.__name__}] sort_by has to be {cls.sort_by}")
+        elif combinations_json.get("sort_by") != cls.sort_by:
+            raise ValueError(f"[{cls.__name__}] sort_by has to be {cls.sort_by}")
 
         # initiating BaseDiscretizer
         return cls(**combinations_json)

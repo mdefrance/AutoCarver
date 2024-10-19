@@ -14,7 +14,10 @@ from AutoCarver.combinations.continuous.continuous_combination_evaluators import
 from AutoCarver.features import OrdinalFeature
 from AutoCarver.combinations.utils.combinations import consecutive_combinations, nan_combinations
 from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample
-
+from AutoCarver.combinations.binary.binary_combination_evaluators import (
+    TschuprowtCombinations,
+    CramervCombinations,
+)
 
 MAX_N_MOD = 5
 MIN_FREQ = 0.2
@@ -34,7 +37,9 @@ def test_init(evaluator: ContinuousCombinationEvaluator):
 
 
 def test_to_json(evaluator: ContinuousCombinationEvaluator):
+    """Test the to_json method"""
     expected_json = {
+        "sort_by": evaluator.sort_by,
         "max_n_mod": MAX_N_MOD,
         "dropna": evaluator.dropna,
         "min_freq": MIN_FREQ,
@@ -44,6 +49,7 @@ def test_to_json(evaluator: ContinuousCombinationEvaluator):
 
 
 def test_save(evaluator: ContinuousCombinationEvaluator, tmp_path):
+    """Test the save method"""
     file_name = tmp_path / "test.json"
     evaluator.save(str(file_name))
 
@@ -51,6 +57,7 @@ def test_save(evaluator: ContinuousCombinationEvaluator, tmp_path):
         data = json.load(json_file)
 
     expected_json = {
+        "sort_by": evaluator.sort_by,
         "max_n_mod": MAX_N_MOD,
         "dropna": evaluator.dropna,
         "min_freq": MIN_FREQ,
@@ -60,13 +67,16 @@ def test_save(evaluator: ContinuousCombinationEvaluator, tmp_path):
 
 
 def test_save_invalid_filename(evaluator: ContinuousCombinationEvaluator):
+    """Test the save method with an invalid filename"""
     with raises(ValueError):
         evaluator.save("invalid_file.txt")
 
 
 def test_load(tmp_path):
+    """Test the load method"""
     file_name = tmp_path / "test.json"
     data = {
+        "sort_by": "kruskal",
         "max_n_mod": MAX_N_MOD,
         "dropna": True,
         "min_freq": MIN_FREQ,
@@ -85,6 +95,12 @@ def test_load(tmp_path):
     assert loaded_evaluator.sort_by == "kruskal"
     assert loaded_evaluator.is_y_binary is False
     assert loaded_evaluator.is_y_continuous is True
+
+    with raises(ValueError):
+        TschuprowtCombinations.load(str(file_name))
+
+    with raises(ValueError):
+        CramervCombinations.load(str(file_name))
 
 
 def test_association_measure_basic(evaluator: ContinuousCombinationEvaluator):

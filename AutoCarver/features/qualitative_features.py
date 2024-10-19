@@ -204,6 +204,8 @@ class QualitativeFeature(BaseFeature):
 
 
 class CategoricalFeature(QualitativeFeature):
+    """Defines a categorical feature"""
+
     __name__ = "Categorical"
     is_categorical = True
 
@@ -219,8 +221,9 @@ class CategoricalFeature(QualitativeFeature):
 
 
 class OrdinalFeature(QualitativeFeature):
-    __name__ = "Ordinal"
+    """Defines an ordinal feature"""
 
+    __name__ = "Ordinal"
     is_ordinal = True
 
     def __init__(self, name: str, values: list[str], **kwargs: dict) -> None:

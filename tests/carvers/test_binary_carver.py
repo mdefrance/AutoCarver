@@ -359,7 +359,7 @@ def test_fit_without_best_combination(evaluator: CombinationEvaluator):
     assert len(features) == 0
 
 
-def test_binary_carver_fit_transform(evaluator: CombinationEvaluator):
+def test_binary_carver_fit_transform_with_small_data(evaluator: CombinationEvaluator):
     """Test BinaryCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
@@ -370,56 +370,305 @@ def test_binary_carver_fit_transform(evaluator: CombinationEvaluator):
     carver = BinaryCarver(
         min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False
     )
+    idx = ["a", "b", "c", "d"]
     X = DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
             "feature2": ["low", "medium", "high", "high"],
             "feature3": [1, 2, 3, float("nan")],
         },
-        index=["a", "b", "c", "d"],
+        index=idx,
     )
-    y = Series([0, 1, 0, 1], index=["a", "b", "c", "d"])
+    y = Series([0, 1, 0, 1], index=idx)
     X_transformed = carver.fit_transform(X, y)
 
+    print(carver.features("feature1").content)
     print(X_transformed)
     expected = DataFrame(
         {
-            "feature1": ["A", "B, C", "A", "C, C"],
+            "feature1": ["A", "B, C", "A", "B, C"],
             "feature2": ["low", "medium", "high", "high"],
             "feature3": ["x <= 1.0e+00", "1.0e+00 < x", "1.0e+00 < x", "__NAN__"],
         },
-        index=["a", "b", "c", "d"],
+        index=idx,
     )
     assert isinstance(X_transformed, DataFrame)
     assert all(X_transformed.index == expected.index)
     assert all(X_transformed.index == X.index)
     assert all(X_transformed.columns == expected.columns)
     assert all(X.columns == expected.columns)
-    print(X.values, "\n", expected.values, "\n", X_transformed.values, "\n", (X.values == expected.values))
-    assert (X.values == expected.values).all()
-    assert (X_transformed.values == expected.values).all()
+    print(
+        "X values",
+        X.values,
+        "\n\nX transfor",
+        X_transformed.values,
+        "\n",
+        (X.values == expected.values),
+        "\n",
+        (X_transformed.values == expected.values),
+    )
+    assert X.equals(expected)
+    assert X_transformed.equals(expected)
 
 
-
-def test_binary_carver_transform():
-    """Test BinaryCarver transform method."""
+def test_binary_carver_fit_transform_with_large_data(evaluator: CombinationEvaluator):
+    """Test BinaryCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
         ordinal_values={"feature2": ["low", "medium", "high"]},
         ordinals=["feature2"],
         quantitatives=["feature3"],
     )
-    carver = BinaryCarver(min_freq=0.1, features=features, dropna=True)
-    X = DataFrame(
-        {"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]}
+    carver = BinaryCarver(
+        min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False
     )
-    y = Series([0, 1, 0])
-    carver.fit(X, y)
-    X_transformed = carver.transform(X)
+    idx = [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g",
+        "h",
+        "i",
+        "j",
+        "k",
+        "l",
+        "m",
+        "n",
+        "o",
+        "p",
+        "q",
+    ]  # , "r", "s", "t", "u", "v"]
+    X = DataFrame(
+        {
+            "feature1": [
+                "A",
+                "B",
+                "A",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+            ],
+            "feature2": [
+                "low",
+                "medium",
+                "high",
+                "high",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+                "high",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+            ],
+            "feature3": [1, 2, 3, float("nan"), 3, 1, 2, 3, 1, 2, float("nan"), 3, 1, 2, 3, 1, 2],
+        },
+        index=idx,
+    )
+    y = Series([0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1], index=idx)
+    X_transformed = carver.fit_transform(X, y)
+
+    print(carver.features("feature1").content)
+    print(X_transformed)
+    expected = DataFrame(
+        {
+            "feature1": [
+                "A",
+                "B, C",
+                "A",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+            ],
+            "feature2": [
+                "low",
+                "medium to high",
+                "medium to high",
+                "medium to high",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+                "medium to high",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+            ],
+            "feature3": [
+                "x <= 1.0e+00",
+                "1.0e+00 < x <= 2.0e+00",
+                "2.0e+00 < x",
+                "1.0e+00 < x <= 2.0e+00",
+                "2.0e+00 < x",
+                "x <= 1.0e+00",
+                "1.0e+00 < x <= 2.0e+00",
+                "2.0e+00 < x",
+                "x <= 1.0e+00",
+                "1.0e+00 < x <= 2.0e+00",
+                "1.0e+00 < x <= 2.0e+00",
+                "2.0e+00 < x",
+                "x <= 1.0e+00",
+                "1.0e+00 < x <= 2.0e+00",
+                "2.0e+00 < x",
+                "x <= 1.0e+00",
+                "1.0e+00 < x <= 2.0e+00",
+            ],
+        },
+        index=idx,
+    )
     assert isinstance(X_transformed, DataFrame)
+    assert all(X_transformed.index == expected.index)
+    assert all(X_transformed.index == X.index)
+    assert all(X_transformed.columns == expected.columns)
+    assert all(X.columns == expected.columns)
+    print(
+        "X values",
+        X.values,
+        "\n\nX transfor",
+        X_transformed.values,
+        "\n",
+        (X.values == expected.values),
+    )
+    assert X.equals(expected)
+    assert X_transformed.equals(expected)
 
 
-def test_binary_carver_save_load(tmp_path):
+def test_binary_carver_fit_transform_with_target_only_nan(evaluator: CombinationEvaluator):
+    """Test BinaryCarver fit_transform method."""
+    features = Features(
+        categoricals=["feature1"],
+        ordinal_values={"feature2": ["low", "medium", "high"]},
+        ordinals=["feature2"],
+        quantitatives=["feature3"],
+    )
+    carver = BinaryCarver(
+        min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False
+    )
+    idx = ["a", "b", "c", "d"]
+    X = DataFrame(
+        {
+            "feature1": ["A", "B", "A", "C"],
+            "feature2": ["low", "medium", "high", "high"],
+            "feature3": [1, 2, 3, float("nan")],
+        },
+        index=idx,
+    )
+    y = Series([0, 0, 0, 1], index=idx)
+    X_transformed = carver.fit_transform(X, y)
+
+    print(carver.features("feature1").content)
+    print(X_transformed)
+    expected = DataFrame(
+        {
+            "feature1": ["A, B", "A, B", "A, B", "C"],
+            "feature2": ["low", "medium to high", "medium to high", "medium to high"],
+            "feature3": [1, 2, 3, float("nan")],
+        },
+        index=idx,
+    )
+    assert isinstance(X_transformed, DataFrame)
+    assert all(X_transformed.index == expected.index)
+    assert all(X_transformed.index == X.index)
+    assert all(X_transformed.columns == expected.columns)
+    assert all(X.columns == expected.columns)
+    print(
+        X.values,
+        "\n",
+        expected.values,
+        "\n",
+        X_transformed.values,
+        "\n",
+        (X.values == expected.values),
+    )
+    assert X.equals(expected)
+    assert X_transformed.equals(expected)
+
+
+def test_binary_carver_fit_transform_with_wrong_dev(evaluator: CombinationEvaluator):
+    """Test BinaryCarver fit_transform method."""
+    features = Features(
+        categoricals=["feature1"],
+        ordinal_values={"feature2": ["low", "medium", "high"]},
+        ordinals=["feature2"],
+        quantitatives=["feature3"],
+    )
+    carver = BinaryCarver(
+        min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False
+    )
+    idx = ["a", "b", "c", "d"]
+    X = DataFrame(
+        {
+            "feature1": ["A", "B", "A", "C"],
+            "feature2": ["low", "medium", "high", "high"],
+            "feature3": [1, 2, 3, float("nan")],
+        },
+        index=idx,
+    )
+    y = Series([0, 1, 0, 1], index=idx)
+    X_dev = DataFrame(
+        {
+            "feature1": ["A", "B", "A", "C"],
+            "feature2": ["low", "medium", "high", "high"],
+            "feature3": [1, 2, 3, float("nan")],
+        },
+        index=idx,
+    )
+    y_dev = Series([1, 0, 1, 0], index=idx)
+    X_transformed = carver.fit_transform(X, y, X_dev=X_dev, y_dev=y_dev)
+
+    print(X_transformed)
+    expected = X
+    assert isinstance(X_transformed, DataFrame)
+    assert all(X_transformed.index == expected.index)
+    assert all(X_transformed.index == X.index)
+    assert all(X_transformed.columns == expected.columns)
+    assert all(X.columns == expected.columns)
+    assert X.equals(expected)
+    assert X_transformed.equals(expected)
+
+    assert all(X_dev.index == expected.index)
+    assert all(X_dev.columns == expected.columns)
+    assert X_dev.equals(expected)
+    assert len(carver.features) == 0
+
+
+def test_binary_carver_save_load(tmp_path, evaluator: CombinationEvaluator):
     """Test BinaryCarver save and load methods."""
     features = Features(
         categoricals=["feature1"],
@@ -427,13 +676,22 @@ def test_binary_carver_save_load(tmp_path):
         ordinals=["feature2"],
         quantitatives=["feature3"],
     )
-    carver = BinaryCarver(min_freq=0.1, features=features, dropna=True)
+    carver = BinaryCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator)
     carver_file = tmp_path / "binary_carver.json"
     carver.save(str(carver_file))
     loaded_carver = BinaryCarver.load(str(carver_file))
     assert carver.min_freq == loaded_carver.min_freq
-    assert carver.features == loaded_carver.features
+    for feature in carver.features:
+        assert feature in loaded_carver.features
+        assert feature.content == loaded_carver.features[feature.name].content
     assert carver.dropna == loaded_carver.dropna
+    assert carver.verbose == loaded_carver.verbose
+    assert carver.copy == loaded_carver.copy
+    assert carver.combinations.__class__ == loaded_carver.combinations.__class__
+    assert carver.combinations.max_n_mod == loaded_carver.combinations.max_n_mod
+    assert carver.combinations.sort_by == loaded_carver.combinations.sort_by
+    assert carver.combinations.dropna == loaded_carver.combinations.dropna
+    assert carver.combinations.verbose == loaded_carver.combinations.verbose
 
 
 def test_binary_carver(

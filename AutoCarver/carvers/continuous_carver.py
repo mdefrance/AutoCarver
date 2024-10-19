@@ -84,21 +84,20 @@ class ContinuousCarver(BaseCarver):
         tuple[DataFrame, DataFrame]
             Copies of (X, X_dev) to be used according to target type
         """
-        # Checking for binary target and copying X
-        samples = super()._prepare_data(samples)
 
         # continuous target, checking values
-        y_values = unique(samples.train.y)
-        if len(y_values) <= 2:
-            raise ValueError(
-                f"[{self.__name__}] provided y is binary, consider using BinaryCarver instead."
-            )
         if str in samples.train.y.apply(type).unique():
             raise ValueError(
                 f"[{self.__name__}] y must be a continuous Series (int or float, not object)"
             )
 
-        return samples
+        y_values = unique(samples.train.y)
+        if len(y_values) <= 2:
+            raise ValueError(
+                f"[{self.__name__}] provided y is binary, consider using BinaryCarver instead."
+            )
+        # Checking for binary target and copying X
+        return super()._prepare_data(samples)
 
     def _aggregator(self, X: DataFrame, y: Series) -> dict[str, DataFrame]:
         """Computes y values for modalities of specified features and ensures the ordering

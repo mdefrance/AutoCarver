@@ -19,6 +19,13 @@ from AutoCarver.features import (
     QuantitativeFeature,
 )
 
+from AutoCarver.combinations import (
+    KruskalCombinations,
+    CramervCombinations,
+    TschuprowtCombinations,
+    CombinationEvaluator,
+)
+
 
 @fixture(params=[True, False])
 def dropna(request: FixtureRequest) -> str:
@@ -146,7 +153,7 @@ def test_init(features: Features, true_false: bool) -> None:
     assert not disc.ordinal_encoding
     assert disc.n_jobs == 1
     assert disc.min_freq is None
-    assert disc.sort_by is None
+    assert disc.combinations is None
 
     # test setting copy
     disc = BaseDiscretizer(features, copy=true_false)
@@ -177,8 +184,8 @@ def test_init(features: Features, true_false: bool) -> None:
     assert disc.min_freq == 0.2
 
     # test setting sort_by
-    disc = BaseDiscretizer(features, sort_by="test")
-    assert disc.sort_by == "test"
+    disc = BaseDiscretizer(features, combinations="test")
+    assert disc.combinations == "test"
 
 
 def test_remove_feature(features: Features) -> None:
@@ -295,7 +302,7 @@ def test_prepare_data(features: Features) -> None:
         }
     )
     y = Series([0, 0, 0, 1])
-    assert disc._prepare_data(Sample(None)) is None
+    assert disc._prepare_data(Sample(None)).X is None
     disc._prepare_data(Sample(X))
     disc._prepare_data(Sample(X, y))
 
@@ -357,7 +364,7 @@ def test_transform_qualitative() -> None:
     )
 
     # Call the method
-    result = disc._transform_qualitative(X, None)
+    result = disc._transform_qualitative(Sample(X=X, y=None)).X
     assert all(array(result.index) == array(index))
 
     # Assert the result
@@ -389,10 +396,11 @@ def test_transform_quantitative() -> None:
     )
 
     # Call the method
-    result = disc._transform_quantitative(X, None)
+    result = disc._transform_quantitative(Sample(X=X, y=None)).X
     assert all(array(result.index) == array(index))
 
     # Assert the result
+    print(result)
     expected = DataFrame(
         {
             "feature1": [
@@ -622,18 +630,29 @@ def test_transform(true_false: bool) -> None:
         ).all()
 
 
-def test_to_json(features: Features, true_false: bool) -> None:
+@fixture(params=[KruskalCombinations, CramervCombinations, TschuprowtCombinations, None])
+def combinations(request: FixtureRequest) -> str:
+    """sort_by parameter"""
+    if request.param is None:
+        return None
+    return request.param()
+
+
+def test_to_json(features: Features, true_false: bool, combinations: CombinationEvaluator) -> None:
     """tests base discretizer to_json method"""
 
     # Create a mock BaseDiscretizer instance
     min_freq = 0.1
-    sort_by = "cramerv"
+    if combinations is not None:
+        combinations.min_freq = min_freq
+        combinations.dropna = true_false
+        combinations.verbose = true_false
     n_jobs = 2
     discretizer = BaseDiscretizer(
         features,
         dropna=true_false,
         min_freq=min_freq,
-        sort_by=sort_by,
+        combinations=combinations,
         verbose=true_false,
         ordinal_encoding=true_false,
         n_jobs=n_jobs,
@@ -646,25 +665,40 @@ def test_to_json(features: Features, true_false: bool) -> None:
     assert "features" in result
     assert result["dropna"] == true_false
     assert result["min_freq"] == min_freq
-    assert result["sort_by"] == sort_by
+
+    if combinations is None:
+        assert result["combinations"] is None
+    else:
+        assert result["combinations"] == {
+            "sort_by": combinations.sort_by,
+            "max_n_mod": 5,
+            "dropna": true_false,
+            "min_freq": min_freq,
+            "verbose": true_false,
+        }
     assert result["is_fitted"] == true_false
     assert result["n_jobs"] == n_jobs
     assert result["verbose"] == true_false
     assert result["ordinal_encoding"] == true_false
 
 
-def test_save(tmp_path, features: Features, true_false: bool) -> None:
+def test_save(
+    tmp_path, features: Features, true_false: bool, combinations: CombinationEvaluator
+) -> None:
     """tests base discretizer save method"""
 
     # Create a mock BaseDiscretizer instance
     min_freq = 0.1
-    sort_by = "cramerv"
+    if combinations is not None:
+        combinations.min_freq = min_freq
+        combinations.dropna = true_false
+        combinations.verbose = true_false
     n_jobs = 2
     discretizer = BaseDiscretizer(
         features,
         dropna=true_false,
         min_freq=min_freq,
-        sort_by=sort_by,
+        combinations=combinations,
         verbose=true_false,
         ordinal_encoding=true_false,
         n_jobs=n_jobs,
@@ -685,18 +719,23 @@ def test_save(tmp_path, features: Features, true_false: bool) -> None:
         discretizer.save("wrong_path", light_mode=true_false)
 
 
-def test_load_discretizer(tmp_path, features: Features, true_false: bool) -> None:
+def test_load_discretizer(
+    tmp_path, features: Features, true_false: bool, combinations: CombinationEvaluator
+) -> None:
     """tests base discretizer load_discretizer method"""
 
     # Create a mock BaseDiscretizer instance
     min_freq = 0.1
-    sort_by = "cramerv"
     n_jobs = 2
+    if combinations is not None:
+        combinations.min_freq = min_freq
+        combinations.dropna = true_false
+        combinations.verbose = true_false
     discretizer = BaseDiscretizer(
         features,
         dropna=true_false,
         min_freq=min_freq,
-        sort_by=sort_by,
+        combinations=combinations,
         verbose=true_false,
         ordinal_encoding=true_false,
         n_jobs=n_jobs,
@@ -708,20 +747,30 @@ def test_load_discretizer(tmp_path, features: Features, true_false: bool) -> Non
     discretizer.save(str(file_path), light_mode=true_false)
 
     # loading
-    loaded = BaseDiscretizer.load_discretizer(str(file_path))
+    loaded = BaseDiscretizer.load(str(file_path))
 
     for feature in loaded.features:
         assert feature.name in discretizer.features
     assert loaded.dropna == discretizer.dropna
     assert loaded.min_freq == discretizer.min_freq
-    assert loaded.sort_by == discretizer.sort_by
+    if combinations is None:
+        assert loaded.combinations is None
+    else:
+        assert loaded.combinations == {
+            "sort_by": combinations.sort_by,
+            "max_n_mod": 5,
+            "dropna": true_false,
+            "min_freq": min_freq,
+            "verbose": true_false,
+        }
+
     assert loaded.is_fitted == discretizer.is_fitted
     assert loaded.n_jobs == discretizer.n_jobs
     assert loaded.verbose == discretizer.verbose
     assert loaded.ordinal_encoding == discretizer.ordinal_encoding
 
     with raises(FileNotFoundError):
-        _ = BaseDiscretizer.load_discretizer("wrong_path")
+        _ = BaseDiscretizer.load("wrong_path")
 
 
 # def test_summary() -> None:

@@ -2,7 +2,7 @@
 
 from abc import ABC
 from numpy import add, array, searchsorted, sqrt, unique, zeros
-from pandas import DataFrame
+from pandas import DataFrame, notna
 from scipy.stats import chi2_contingency
 from ..utils.combination_evaluator import CombinationEvaluator, AggregatedSample
 
@@ -42,7 +42,9 @@ class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
 
         return stats
 
-    def _association_measure(self, xagg: AggregatedSample, n_obs: int = None) -> dict[str, float]:
+    def _association_measure(
+        self, xagg: AggregatedSample, n_obs: int = None, tol: float = 1e-10
+    ) -> dict[str, float]:
         """Computes measures of association between feature and target by crosstab.
 
         Parameters
@@ -62,13 +64,17 @@ class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
         n_mod_x = xagg.shape[0]
 
         # Chi2 statistic
-        chi2 = chi2_contingency(xagg.values)[0]
+        chi2 = chi2_contingency(xagg.values + tol)[0]
 
         # Cramér's V
         cramerv = sqrt(chi2 / n_obs)
+        if notna(cramerv):
+            cramerv = round(cramerv / tol) * tol
 
         # Tschuprow's T
         tschuprowt = cramerv / sqrt(sqrt(n_mod_x - 1))
+        if notna(tschuprowt):
+            tschuprowt = round(tschuprowt / tol) * tol
 
         return {"cramerv": cramerv, "tschuprowt": tschuprowt}
 

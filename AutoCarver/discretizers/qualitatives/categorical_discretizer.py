@@ -140,7 +140,6 @@ class CategoricalDiscretizer(BaseDiscretizer):
 
         # computing target rate per modality for ordering
         target_rates = X[self.features.versions].apply(series_target_rate, y=y, axis=0)
-        print(target_rates)
 
         # sorting features' values based on target rates
         self.features.update(
@@ -152,7 +151,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
 def series_target_rate(x: Series, y: Series, dropna: bool = True, ascending=True) -> dict:
     """Target y rate per modality of x into a dictionnary"""
 
-    rates = y.groupby(x, dropna=dropna).mean().sort_values(ascending=ascending)
+    rates = y.groupby(x, dropna=dropna).mean().sort_index().sort_values(ascending=ascending)
 
     return rates.to_dict()
 

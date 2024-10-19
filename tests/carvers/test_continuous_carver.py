@@ -4,13 +4,20 @@
 import os
 
 from pandas import DataFrame, Series
-from pytest import raises
+from pytest import raises, fixture, FixtureRequest
 
 from AutoCarver import ContinuousCarver
 from AutoCarver.carvers.continuous_carver import get_target_values_by_modality
 from AutoCarver.config import Constants
 from AutoCarver.discretizers import ChainedDiscretizer
 from AutoCarver.features import Features, OrdinalFeature
+from AutoCarver.combinations import (
+    CombinationEvaluator,
+    KruskalCombinations,
+    TschuprowtCombinations,
+    CramervCombinations,
+)
+from AutoCarver.carvers.utils.base_carver import Sample, Samples
 
 
 def test_get_target_values_by_modality_basic():
@@ -58,7 +65,593 @@ def test_get_target_values_by_modality_extra_labels():
     assert result.equals(expected)
 
 
-def test_continuous_carver(
+@fixture(params=[KruskalCombinations])
+def evaluator(request: FixtureRequest) -> CombinationEvaluator:
+    """CombinationEvaluator fixture."""
+    return request.param()
+
+
+def test_continuous_carver_initialization():
+    """Test ContinuousCarver initialization."""
+    features = Features(
+        categoricals=["feature1"],
+        ordinal_values={"feature2": ["low", "medium", "high"]},
+        ordinals=["feature2"],
+        quantitatives=["feature3"],
+    )
+    min_freq = 0.1
+    carver = ContinuousCarver(min_freq=min_freq, features=features, dropna=True)
+    assert carver.min_freq == min_freq
+    assert carver.features == features
+    assert carver.dropna is True
+    assert isinstance(carver.combinations, KruskalCombinations)
+    assert carver.combinations.max_n_mod == 5
+
+    max_n_mod = 8
+    carver = ContinuousCarver(
+        min_freq=0.1, features=features, dropna=True, combinations=KruskalCombinations(max_n_mod)
+    )
+    assert isinstance(carver.combinations, KruskalCombinations)
+    assert carver.combinations.max_n_mod == max_n_mod
+
+    carver = ContinuousCarver(
+        min_freq=0.1, features=features, combinations=KruskalCombinations(max_n_mod)
+    )
+    assert isinstance(carver.combinations, KruskalCombinations)
+    assert carver.combinations.max_n_mod == max_n_mod
+
+    with raises(ValueError):
+        ContinuousCarver(
+            min_freq=0.1, features=features, combinations=CramervCombinations(max_n_mod)
+        )
+
+    with raises(ValueError):
+        ContinuousCarver(
+            min_freq=0.1, features=features, combinations=TschuprowtCombinations(max_n_mod)
+        )
+
+
+def test_continuous_carver_prepare_data(evaluator: CombinationEvaluator):
+    """Test ContinuousCarver _prepare_data method."""
+    features = Features(
+        categoricals=["feature1"],
+        ordinal_values={"feature2": ["low", "medium", "high"]},
+        ordinals=["feature2"],
+        quantitatives=["feature3"],
+    )
+    carver = ContinuousCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator)
+    X = DataFrame(
+        {"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]}
+    )
+
+    # with wrong target
+    y = Series([0, 1, 1])
+    samples = Samples(train=Sample(X, y))
+
+    with raises(ValueError):
+        carver._prepare_data(samples)
+
+    # with wrong target
+    y = Series([0.2, 1.5, "1"])
+    samples = Samples(train=Sample(X, y))
+
+    with raises(ValueError):
+        carver._prepare_data(samples)
+
+    # with right target
+    y = Series([0.1, 1.2, 0.5])
+    samples = Samples(train=Sample(X, y))
+
+    prepared_samples = carver._prepare_data(samples)
+    assert isinstance(prepared_samples, Samples)
+
+
+def test_continuous_carver_aggregator(evaluator: CombinationEvaluator):
+    """Test ContinuousCarver _aggregator method."""
+    features = Features(
+        categoricals=["feature1"],
+        ordinal_values={"feature2": ["low", "medium", "high"]},
+        ordinals=["feature2"],
+        quantitatives=["feature3"],
+    )
+    carver = ContinuousCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator)
+    X = DataFrame(
+        {"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]}
+    )
+    y = Series([0.1, 1.2, 0.5])
+    xtabs = carver._aggregator(X, y)
+    print(xtabs)
+
+    expected = {
+        "feature1": Series({"A": [0.1, 0.5], "B": [1.2]}),
+        "feature2": Series({"low": [0.1], "medium": [1.2], "high": [0.5]}),
+        "feature3": Series({1: [0.1], 2: [1.2], 3: [0.5]}),
+    }
+    assert isinstance(xtabs, dict)
+    assert "feature1" in xtabs
+    assert "feature2" in xtabs
+    assert "feature3" in xtabs
+    for feature in features.names:
+        assert all(xtabs[feature].index == expected[feature].index)
+        assert (xtabs[feature].values == expected[feature].values).all()
+
+
+def test_carve_feature_with_best_combination(evaluator):
+    """Test ContinuousCarver _carve_feature method."""
+
+    features = Features(
+        categoricals=["feature1"],
+        ordinal_values={"feature2": ["low", "medium", "high"]},
+        ordinals=["feature2"],
+        quantitatives=["feature3"],
+    )
+    X = DataFrame(
+        {
+            "feature1": ["A", "B", "A", "C"],
+            "feature2": ["low", "medium", "high", "high"],
+            "feature3": [1, 2, 3, float("nan")],
+        }
+    )
+    y = Series([0.1, 1.2, 0.5, 0.7])
+    samples = Samples(train=Sample(X, y))
+
+    # initializing carver
+    carver = ContinuousCarver(
+        features=features,
+        min_freq=0.1,
+        combinations=evaluator,
+        dropna=True,
+        verbose=False,
+    )
+    carver._prepare_data(samples)
+
+    # getting aggregated data
+    xaggs = carver._aggregator(samples.train.X, samples.train.y)
+    xaggs_dev = carver._aggregator(samples.dev.X, samples.dev.y)
+
+    # carving a feature
+    feature = features[0]
+    carver._carve_feature(feature, xaggs, xaggs_dev, "1/1")
+    print(feature.content)
+    assert feature in carver.features
+    assert feature.content == {"A": ["A"], "C": ["C"], "B": ["B"]}
+
+    # carving a feature
+    feature = features[1]
+    carver._carve_feature(feature, xaggs, xaggs_dev, "1/1")
+    print(feature.content)
+    assert feature in carver.features
+    assert feature.content == {"low": ["low"], "medium": ["medium"], "high": ["high"]}
+
+    # carving a feature
+    feature = features[2]
+    carver._carve_feature(feature, xaggs, xaggs_dev, "1/1")
+    print(feature.content)
+    assert feature in carver.features
+    assert feature.content == {
+        1.0: [1.0],
+        2.0: [2.0],
+        float("inf"): [3.0, float("inf")],
+        "__NAN__": ["__NAN__"],
+    }
+
+
+def test_carve_feature_without_best_combination(evaluator: CombinationEvaluator):
+    """Test _carve_feature method without best combination."""
+
+    features = Features(
+        categoricals=["feature1"],
+        ordinal_values={"feature2": ["low", "medium", "high"]},
+        ordinals=["feature2"],
+        quantitatives=["feature3"],
+    )
+    X = DataFrame(
+        {
+            "feature1": ["A", "B", "A", "C"],
+            "feature2": ["low", "medium", "high", "high"],
+            "feature3": [1, 2, 3, float("nan")],
+        }
+    )
+    y = Series([0.1, 1.2, 0.5, 0.7])
+    samples = Samples(train=Sample(X, y))
+
+    # initializing carver
+    carver = ContinuousCarver(
+        features=features,
+        min_freq=0.9,
+        combinations=evaluator,
+        dropna=True,
+        verbose=False,
+    )
+    carver._prepare_data(samples)
+
+    # getting aggregated data
+    xaggs = carver._aggregator(samples.train.X, samples.train.y)
+    xaggs_dev = carver._aggregator(samples.dev.X, samples.dev.y)
+
+    # carving a feature
+    feature = features[0]
+    carver._carve_feature(feature, xaggs, xaggs_dev, "1/1")
+    print(feature.content)
+    assert feature not in carver.features
+    assert feature.content == {"A": ["A"], "__OTHER__": ["C", "B", "__OTHER__"]}
+
+
+def test_fit_with_best_combination(evaluator):
+    """Test ContinuousCarver fit method with best combination."""
+
+    features = Features(
+        categoricals=["feature1"],
+        ordinal_values={"feature2": ["low", "medium", "high"]},
+        ordinals=["feature2"],
+        quantitatives=["feature3"],
+    )
+    X = DataFrame(
+        {
+            "feature1": ["A", "B", "A", "C"],
+            "feature2": ["low", "medium", "high", "high"],
+            "feature3": [1, 2, 3, float("nan")],
+        }
+    )
+    y = Series([0.1, 1.2, 0.5, 0.7])
+
+    # initializing carver
+    carver = ContinuousCarver(
+        features=features,
+        min_freq=0.1,
+        combinations=evaluator,
+        dropna=True,
+        verbose=False,
+    )
+
+    # fitting carver
+    carver.fit(X, y)
+
+    feature = features[0]
+    print(feature.content)
+    assert feature in carver.features
+    assert feature.content == {"A": ["A"], "C": ["C"], "B": ["B"]}
+
+    # carving a feature
+    feature = features[1]
+    print(feature.content)
+    assert feature in carver.features
+    assert feature.content == {"low": ["low"], "medium": ["medium"], "high": ["high"]}
+
+    # carving a feature
+    feature = features[2]
+    print(feature.content)
+    assert feature in carver.features
+    assert feature.content == {
+        1.0: [1.0],
+        2.0: [2.0],
+        float("inf"): [3.0, float("inf")],
+        "__NAN__": ["__NAN__"],
+    }
+
+
+def test_fit_without_best_combination(evaluator: CombinationEvaluator):
+    """Test ContinuousCarver fit method without best combination."""
+
+    features = Features(
+        categoricals=["feature1"],
+        ordinal_values={"feature2": ["low", "medium", "high"]},
+        ordinals=["feature2"],
+        quantitatives=["feature3"],
+    )
+    X = DataFrame(
+        {
+            "feature1": ["A", "B", "A", "C"],
+            "feature2": ["low", "medium", "high", "high"],
+            "feature3": [1, 2, 3, float("nan")],
+        }
+    )
+    y = Series([0.1, 1.2, 0.5, 0.7])
+
+    # initializing carver
+    carver = ContinuousCarver(
+        features=features,
+        min_freq=0.9,
+        combinations=evaluator,
+        dropna=True,
+        verbose=False,
+    )
+
+    # fitting carver
+    carver.fit(X, y)
+
+    # carving a feature
+    assert len(features) == 0
+
+
+def test_continuous_carver_fit_transform_with_small_data(evaluator: CombinationEvaluator):
+    """Test ContinuousCarver fit_transform method."""
+    features = Features(
+        categoricals=["feature1"],
+        ordinal_values={"feature2": ["low", "medium", "high"]},
+        ordinals=["feature2"],
+        quantitatives=["feature3"],
+    )
+    carver = ContinuousCarver(
+        min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False
+    )
+    idx = ["a", "b", "c", "d"]
+    X = DataFrame(
+        {
+            "feature1": ["A", "B", "A", "C"],
+            "feature2": ["low", "medium", "high", "high"],
+            "feature3": [1, 2, 3, float("nan")],
+        },
+        index=idx,
+    )
+    y = Series([0.1, 1.2, 0.5, 0.7], index=idx)
+    X_transformed = carver.fit_transform(X, y)
+
+    print(carver.features("feature1").content)
+    print(X_transformed)
+    expected = DataFrame(
+        {
+            "feature1": ["A", "B", "A", "C"],
+            "feature2": ["low", "medium", "high", "high"],
+            "feature3": ["x <= 1.0e+00", "1.0e+00 < x <= 2.0e+00", "2.0e+00 < x", "__NAN__"],
+        },
+        index=idx,
+    )
+    assert isinstance(X_transformed, DataFrame)
+    assert all(X_transformed.index == expected.index)
+    assert all(X_transformed.index == X.index)
+    assert all(X_transformed.columns == expected.columns)
+    assert all(X.columns == expected.columns)
+    print(
+        "X values",
+        X.values,
+        "\n\nX transfor",
+        X_transformed.values,
+        "\n",
+        (X.values == expected.values),
+        "\n",
+        (X_transformed.values == expected.values),
+    )
+    assert X.equals(expected)
+    assert X_transformed.equals(expected)
+
+
+def test_continuous_carver_fit_transform_with_large_data(evaluator: CombinationEvaluator):
+    """Test ContinuousCarver fit_transform method."""
+    features = Features(
+        categoricals=["feature1"],
+        ordinal_values={"feature2": ["low", "medium", "high"]},
+        ordinals=["feature2"],
+        quantitatives=["feature3"],
+    )
+    carver = ContinuousCarver(
+        min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False
+    )
+    idx = [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g",
+        "h",
+        "i",
+        "j",
+        "k",
+        "l",
+        "m",
+        "n",
+        "o",
+        "p",
+        "q",
+    ]  # , "r", "s", "t", "u", "v"]
+    X = DataFrame(
+        {
+            "feature1": [
+                "A",
+                "B",
+                "A",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+            ],
+            "feature2": [
+                "low",
+                "medium",
+                "high",
+                "high",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+                "high",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+            ],
+            "feature3": [1, 2, 3, float("nan"), 3, 1, 2, 3, 1, 2, float("nan"), 3, 1, 2, 3, 1, 2],
+        },
+        index=idx,
+    )
+    y = Series(
+        [0.1, 1.2, 0.5, 0.7, 1.1, 1.1, 1.2, 1.3, 1.4, 1.45, 1.6, 1.7, 1.8, 2.4, 2.5, 2.9, 3.9],
+        index=idx,
+    )
+    X_transformed = carver.fit_transform(X, y)
+
+    print(carver.features("feature1").content)
+    print(X_transformed)
+    expected = DataFrame(
+        {
+            "feature1": [
+                "A",
+                "B, C",
+                "A",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+            ],
+            "feature2": [
+                "low",
+                "medium to high",
+                "medium to high",
+                "medium to high",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+                "medium to high",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+            ],
+            "feature3": [
+                "x <= 1.0e+00",
+                "1.0e+00 < x <= 2.0e+00",
+                "2.0e+00 < x",
+                "__NAN__",
+                "2.0e+00 < x",
+                "x <= 1.0e+00",
+                "1.0e+00 < x <= 2.0e+00",
+                "2.0e+00 < x",
+                "x <= 1.0e+00",
+                "1.0e+00 < x <= 2.0e+00",
+                "__NAN__",
+                "2.0e+00 < x",
+                "x <= 1.0e+00",
+                "1.0e+00 < x <= 2.0e+00",
+                "2.0e+00 < x",
+                "x <= 1.0e+00",
+                "1.0e+00 < x <= 2.0e+00",
+            ],
+        },
+        index=idx,
+    )
+    assert isinstance(X_transformed, DataFrame)
+    assert all(X_transformed.index == expected.index)
+    assert all(X_transformed.index == X.index)
+    assert all(X_transformed.columns == expected.columns)
+    assert all(X.columns == expected.columns)
+    print(
+        "X values",
+        X.values,
+        "\n\nX transfor",
+        X_transformed.values,
+        "\n",
+        (X.values == expected.values),
+    )
+    assert X.equals(expected)
+    assert X_transformed.equals(expected)
+
+
+def test_continuous_carver_fit_transform_with_wrong_dev(evaluator: CombinationEvaluator):
+    """Test ContinuousCarver fit_transform method."""
+    features = Features(
+        categoricals=["feature1"],
+        ordinal_values={"feature2": ["low", "medium", "high"]},
+        ordinals=["feature2"],
+        quantitatives=["feature3"],
+    )
+    carver = ContinuousCarver(
+        min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False
+    )
+    idx = ["a", "b", "c", "d"]
+    X = DataFrame(
+        {
+            "feature1": ["A", "B", "A", "C"],
+            "feature2": ["low", "medium", "high", "high"],
+            "feature3": [1, 2, 3, float("nan")],
+        },
+        index=idx,
+    )
+    y = Series([0.1, 1.2, 0.5, 0.7], index=idx)
+    X_dev = DataFrame(
+        {
+            "feature1": ["A", "B", "A", "C"],
+            "feature2": ["low", "medium", "high", "high"],
+            "feature3": [1, 2, 3, float("nan")],
+        },
+        index=idx,
+    )
+    y_dev = Series([5.2, 0.1, 8.7, 0.5], index=idx)
+    X_transformed = carver.fit_transform(X, y, X_dev=X_dev, y_dev=y_dev)
+
+    print(X_transformed)
+    expected = X
+    assert isinstance(X_transformed, DataFrame)
+    assert all(X_transformed.index == expected.index)
+    assert all(X_transformed.index == X.index)
+    assert all(X_transformed.columns == expected.columns)
+    assert all(X.columns == expected.columns)
+    assert X.equals(expected)
+    assert X_transformed.equals(expected)
+
+    assert all(X_dev.index == expected.index)
+    assert all(X_dev.columns == expected.columns)
+    assert X_dev.equals(expected)
+    assert len(carver.features) == 0
+
+
+def test_continuous_carver_save_load(tmp_path, evaluator: CombinationEvaluator):
+    """Test ContinuousCarver save and load methods."""
+    features = Features(
+        categoricals=["feature1"],
+        ordinal_values={"feature2": ["low", "medium", "high"]},
+        ordinals=["feature2"],
+        quantitatives=["feature3"],
+    )
+    carver = ContinuousCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator)
+    carver_file = tmp_path / "binary_carver.json"
+    carver.save(str(carver_file))
+    loaded_carver = ContinuousCarver.load(str(carver_file))
+    assert carver.min_freq == loaded_carver.min_freq
+    for feature in carver.features:
+        assert feature in loaded_carver.features
+        assert feature.content == loaded_carver.features[feature.name].content
+    assert carver.dropna == loaded_carver.dropna
+    assert carver.verbose == loaded_carver.verbose
+    assert carver.copy == loaded_carver.copy
+    assert carver.combinations.__class__ == loaded_carver.combinations.__class__
+    assert carver.combinations.max_n_mod == loaded_carver.combinations.max_n_mod
+    assert carver.combinations.sort_by == loaded_carver.combinations.sort_by
+    assert carver.combinations.dropna == loaded_carver.combinations.dropna
+    assert carver.combinations.verbose == loaded_carver.combinations.verbose
+
+
+def _continuous_carver(
     x_train: DataFrame,
     x_train_wrong_2: DataFrame,
     x_dev_1: DataFrame,
@@ -236,7 +829,8 @@ def test_continuous_carver(
     # testing copy functionnality
     if copy:
         assert all(
-            x_discretized[feature_names].fillna(Constants.NAN) == x_train[feature_names].fillna(Constants.NAN)
+            x_discretized[feature_names].fillna(Constants.NAN)
+            == x_train[feature_names].fillna(Constants.NAN)
         ), "Not copied correctly"
 
     # testing json serialization
