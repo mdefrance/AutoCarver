@@ -651,7 +651,8 @@ def test_continuous_carver_save_load(tmp_path, evaluator: CombinationEvaluator):
     assert carver.combinations.verbose == loaded_carver.combinations.verbose
 
 
-def _continuous_carver(
+def test_continuous_carver(
+    tmp_path: Path,
     x_train: DataFrame,
     x_train_wrong_2: DataFrame,
     x_dev_1: DataFrame,
@@ -668,6 +669,7 @@ def _continuous_carver(
     discretizer_min_freq: float,
     ordinal_encoding: bool,
     dropna: bool,
+    evaluator: CombinationEvaluator,
     copy: bool,
 ) -> None:
     """Tests ContinuousCarver
@@ -742,17 +744,22 @@ def _continuous_carver(
         chained_orders=[level0_to_level1, level1_to_level2],
         copy=copy,
     )
-    x_discretized = chained_discretizer.fit_transform(x_train)
+    chained_discretizer.fit(x_train)
+    print(
+        "-----------unique values after chained\n\n\n\n",
+        x_train.Discrete_Qualitative_noorder.unique(),
+        "\n-----------unique values after chained\n\n\n\n",
+    )
 
     # minimum frequency and maximum number of modality
     min_freq = 0.1
-    max_n_mod = 4
+    evaluator.max_n_mod = 4
 
     # fitting continuous carver
     auto_carver = ContinuousCarver(
         min_freq=min_freq,
         features=features,
-        max_n_mod=max_n_mod,
+        combinations=evaluator,
         ordinal_encoding=ordinal_encoding,
         discretizer_min_freq=discretizer_min_freq,
         dropna=dropna,
@@ -772,10 +779,10 @@ def _continuous_carver(
 
     # testing that attributes where correctly used
     assert all(
-        x_discretized[feature_names].nunique() <= max_n_mod
+        x_discretized[feature_names].nunique() <= evaluator.max_n_mod
     ), "Too many buckets after carving of train sample"
     assert all(
-        x_dev_discretized[feature_names].nunique() <= max_n_mod
+        x_dev_discretized[feature_names].nunique() <= evaluator.max_n_mod
     ), "Too many buckets after carving of test sample"
 
     # checking that nans were not dropped if not requested
@@ -834,18 +841,17 @@ def _continuous_carver(
         ), "Not copied correctly"
 
     # testing json serialization
-    carver_file = "test.json"
-    auto_carver.save(carver_file)
-    loaded_carver = ContinuousCarver.load_carver(carver_file)
-    os.remove(carver_file)
+    carver_file = tmp_path / "test.json"
+    auto_carver.save(str(carver_file))
+    loaded_carver = ContinuousCarver.load(str(carver_file))
 
     # checking that reloading worked exactly the same
     assert all(
         loaded_carver.summary() == auto_carver.summary()
     ), "Non-identical summaries when loading from JSON"
+    loaded_x_train = loaded_carver.transform(raw_x_train)
     assert all(
-        x_discretized[feature_names]
-        == loaded_carver.transform(x_dev_1)[loaded_carver.features.names]
+        x_discretized[feature_names] == loaded_x_train[loaded_carver.features.names]
     ), "Non-identical discretized values when loading from JSON"
 
     # transform dev with unexpected modal for a feature that has_default
@@ -905,7 +911,7 @@ def _continuous_carver(
     auto_carver = ContinuousCarver(
         min_freq=min_freq,
         features=features,
-        max_n_mod=max_n_mod,
+        combinations=evaluator,
         ordinal_encoding=ordinal_encoding,
         discretizer_min_freq=discretizer_min_freq,
         dropna=dropna,

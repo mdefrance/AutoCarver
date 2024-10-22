@@ -3,20 +3,640 @@
 
 import os
 
-from pandas import DataFrame
-from pytest import fixture, raises
 
-from AutoCarver import Features, MulticlassCarver
+from pathlib import Path
+from pandas import DataFrame, Series
+from pytest import fixture, raises, FixtureRequest
+
+from AutoCarver.carvers.multiclass_carver import MulticlassCarver, get_one_vs_rest
 from AutoCarver.config import Constants
 from AutoCarver.discretizers import ChainedDiscretizer
+from AutoCarver.features import Features, OrdinalFeature
+from AutoCarver.combinations import (
+    CombinationEvaluator,
+    TschuprowtCombinations,
+    CramervCombinations,
+    KruskalCombinations,
+)
+from AutoCarver.carvers.utils.base_carver import Sample, Samples
+
+
+@fixture(params=[CramervCombinations, TschuprowtCombinations])
+def evaluator(request: FixtureRequest) -> CombinationEvaluator:
+    """CombinationEvaluator fixture."""
+    return request.param()
 
 
 @fixture(scope="module", params=["tschuprowt", "cramerv"])
 def sort_by(request) -> str:
+    """sorting measure"""
     return request.param
 
 
+def test_get_one_vs_rest_with_string_series():
+
+    y = Series(["A", "B", "A", "C", "B", "A"])
+    y_class = "A"
+    result = get_one_vs_rest(y, y_class)
+    expected = Series([1, 0, 1, 0, 0, 1])
+    result.equals(expected)
+
+
+def test_get_one_vs_rest_conversion():
+    y = Series([1, 2, 1, 3, 2, 1])
+    y_class = 1
+    result = get_one_vs_rest(y, y_class)
+    expected = Series([1, 0, 1, 0, 0, 1])
+    result.equals(expected)
+
+
+def test_get_one_vs_rest_different_class():
+    y = Series([1, 2, 1, 3, 2, 1])
+    y_class = 2
+    result = get_one_vs_rest(y, y_class)
+    expected = Series([0, 1, 0, 0, 1, 0])
+    result.equals(expected)
+
+
+def test_get_one_vs_rest_no_match():
+    y = Series([1, 2, 1, 3, 2, 1])
+    y_class = 4
+    result = get_one_vs_rest(y, y_class)
+    expected = Series([0, 0, 0, 0, 0, 0])
+    result.equals(expected)
+
+
+def test_get_one_vs_rest_none():
+    y = None
+    y_class = 1
+    result = get_one_vs_rest(y, y_class)
+    assert result is None
+
+
+def test_multiclass_carver_initialization():
+    """Test MulticlassCarver initialization."""
+    features = Features(
+        categoricals=["feature1"],
+        ordinal_values={"feature2": ["low", "medium", "high"]},
+        ordinals=["feature2"],
+        quantitatives=["feature3"],
+    )
+    carver = MulticlassCarver(min_freq=0.1, features=features, dropna=True)
+    assert carver.min_freq == 0.1
+    assert carver.features == features
+    assert carver.dropna is True
+    assert isinstance(carver.combinations, TschuprowtCombinations)
+    assert carver.combinations.max_n_mod == 5
+
+    max_n_mod = 8
+    carver = MulticlassCarver(
+        min_freq=0.1, features=features, dropna=True, combinations=TschuprowtCombinations(max_n_mod)
+    )
+    assert isinstance(carver.combinations, TschuprowtCombinations)
+    assert carver.combinations.max_n_mod == max_n_mod
+
+    carver = MulticlassCarver(
+        min_freq=0.1, features=features, combinations=CramervCombinations(max_n_mod)
+    )
+    assert isinstance(carver.combinations, CramervCombinations)
+    assert carver.combinations.max_n_mod == max_n_mod
+
+    with raises(ValueError):
+        MulticlassCarver(
+            min_freq=0.1, features=features, combinations=KruskalCombinations(max_n_mod)
+        )
+
+
+def test_multiclass_carver_prepare_data(evaluator: CombinationEvaluator):
+    """Test MulticlassCarver _prepare_data method."""
+    features = Features(
+        categoricals=["feature1"],
+        ordinal_values={"feature2": ["low", "medium", "high"]},
+        ordinals=["feature2"],
+        quantitatives=["feature3"],
+    )
+    carver = MulticlassCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator)
+    X = DataFrame(
+        {"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]}
+    )
+
+    # with wrong target
+    y = Series([0, 1, 0])
+    samples = Samples(train=Sample(X, y))
+
+    with raises(ValueError):
+        carver._prepare_data(samples)
+
+    # with right target
+    y = Series([0, 1, 2])
+    samples = Samples(train=Sample(X, y))
+
+    prepared_samples = carver._prepare_data(samples)
+    assert isinstance(prepared_samples, Samples)
+
+    # with wrong dev target
+    y_dev = Series([0, 1, 0])
+    y = Series([0, 1, 2])
+    samples = Samples(train=Sample(X, y), dev=Sample(X, y_dev))
+
+    with raises(ValueError):
+        carver._prepare_data(samples)
+
+
+def test_multiclass_carver_fit_transform_with_small_data(evaluator: CombinationEvaluator):
+    """Test MulticlassCarver fit_transform method."""
+    features = Features(
+        categoricals=["feature1"],
+        ordinal_values={"feature2": ["low", "medium", "high"]},
+        ordinals=["feature2"],
+        quantitatives=["feature3"],
+    )
+    carver = MulticlassCarver(
+        min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False
+    )
+    idx = ["a", "b", "c", "d"]
+    X = DataFrame(
+        {
+            "feature1": ["A", "B", "A", "C"],
+            "feature2": ["low", "medium", "high", "high"],
+            "feature3": [1, 2, 3, float("nan")],
+        },
+        index=idx,
+    )
+    y = Series([0, 1, 2, 1], index=idx)
+    X_transformed = carver.fit_transform(X, y)
+
+    print(X_transformed)
+    expected = DataFrame(
+        {
+            "feature1": ["A", "B", "A", "C"],
+            "feature2": ["low", "medium", "high", "high"],
+            "feature3": [1, 2, 3, float("nan")],
+            "feature1__y=1": ["A", "B, C", "A", "B, C"],
+            "feature1__y=2": ["A, C", "B", "A, C", "A, C"],
+            "feature2__y=1": ["low", "medium", "high", "high"],
+            "feature2__y=2": ["low", "medium to high", "medium to high", "medium to high"],
+            "feature3__y=1": ["x <= 1.0e+00", "1.0e+00 < x", "1.0e+00 < x", "__NAN__"],
+            "feature3__y=2": [
+                "x <= 1.0e+00",
+                "1.0e+00 < x <= 2.0e+00",
+                "2.0e+00 < x",
+                "x <= 1.0e+00",
+            ],
+        },
+        index=idx,
+    )
+    print(X_transformed.columns)
+    assert isinstance(X_transformed, DataFrame)
+    assert all(X_transformed.index == expected.index)
+    assert all(X_transformed.index == X.index)
+    assert all(X_transformed.columns == expected.columns)
+    print(
+        "X values",
+        X.values,
+        "\n\nX transfor",
+        X_transformed.values,
+        "\n",
+        "\n",
+        (X_transformed.values == expected.values),
+    )
+    assert X_transformed.equals(expected)
+
+
+def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationEvaluator):
+    """Test MulticlassCarver fit_transform method."""
+    features = Features(
+        categoricals=["feature1"],
+        ordinal_values={"feature2": ["low", "medium", "high"]},
+        ordinals=["feature2"],
+        quantitatives=["feature3"],
+    )
+    carver = MulticlassCarver(
+        min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False
+    )
+    idx = [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g",
+        "h",
+        "i",
+        "j",
+        "k",
+        "l",
+        "m",
+        "n",
+        "o",
+        "p",
+        "q",
+    ]  # , "r", "s", "t", "u", "v"]
+    X = DataFrame(
+        {
+            "feature1": [
+                "A",
+                "B",
+                "A",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+            ],
+            "feature2": [
+                "low",
+                "medium",
+                "high",
+                "high",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+                "high",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+            ],
+            "feature3": [1, 2, 3, float("nan"), 3, 1, 2, 3, 1, 2, float("nan"), 3, 1, 2, 3, 1, 2],
+        },
+        index=idx,
+    )
+    y = Series([3, 1, 0, 1, 0, 2, 2, 2, 3, 1, 1, 0, 1, 1, 1, 3, 3], index=idx)
+    X_transformed = carver.fit_transform(X, y)
+
+    print(X_transformed)
+    expected = DataFrame(
+        {
+            "feature1": [
+                "A",
+                "B",
+                "A",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+            ],
+            "feature2": [
+                "low",
+                "medium",
+                "high",
+                "high",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+                "high",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+            ],
+            "feature3": [
+                1.0,
+                2.0,
+                3.0,
+                float("nan"),
+                3.0,
+                1.0,
+                2.0,
+                3.0,
+                1.0,
+                2.0,
+                float("nan"),
+                3.0,
+                1.0,
+                2.0,
+                3.0,
+                1.0,
+                2.0,
+            ],
+            "feature1__y=1": [
+                "A",
+                "B, C",
+                "A",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+            ],
+            "feature1__y=2": [
+                "A, B",
+                "A, B",
+                "A, B",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+            ],
+            "feature1__y=3": [
+                "A",
+                "B, C",
+                "A",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+            ],
+            "feature2__y=1": [
+                "low",
+                "medium to high",
+                "medium to high",
+                "medium to high",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+                "medium to high",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+            ],
+            "feature2__y=2": [
+                "low",
+                "medium to high",
+                "medium to high",
+                "medium to high",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+                "medium to high",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+            ],
+            "feature2__y=3": [
+                "low",
+                "medium to high",
+                "medium to high",
+                "medium to high",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+                "medium to high",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+            ],
+            "feature3__y=1": [
+                "x <= 1.0e+00",
+                "1.0e+00 < x",
+                "1.0e+00 < x",
+                "__NAN__",
+                "1.0e+00 < x",
+                "x <= 1.0e+00",
+                "1.0e+00 < x",
+                "1.0e+00 < x",
+                "x <= 1.0e+00",
+                "1.0e+00 < x",
+                "__NAN__",
+                "1.0e+00 < x",
+                "x <= 1.0e+00",
+                "1.0e+00 < x",
+                "1.0e+00 < x",
+                "x <= 1.0e+00",
+                "1.0e+00 < x",
+            ],
+            "feature3__y=3": [
+                "x <= 1.0e+00",
+                "1.0e+00 < x <= 2.0e+00",
+                "2.0e+00 < x",
+                "2.0e+00 < x",
+                "2.0e+00 < x",
+                "x <= 1.0e+00",
+                "1.0e+00 < x <= 2.0e+00",
+                "2.0e+00 < x",
+                "x <= 1.0e+00",
+                "1.0e+00 < x <= 2.0e+00",
+                "2.0e+00 < x",
+                "2.0e+00 < x",
+                "x <= 1.0e+00",
+                "1.0e+00 < x <= 2.0e+00",
+                "2.0e+00 < x",
+                "x <= 1.0e+00",
+                "1.0e+00 < x <= 2.0e+00",
+            ],
+        },
+        index=idx,
+    )
+    print(X_transformed.to_dict(orient="list"))
+    print(X_transformed.columns)
+    assert isinstance(X_transformed, DataFrame)
+    assert all(X_transformed.index == expected.index)
+    assert all(X_transformed.index == X.index)
+    assert all(X_transformed.columns == expected.columns)
+    assert X_transformed.equals(expected)
+
+
+def test_multiclass_carver_fit_transform_with_target_only_nan(evaluator: CombinationEvaluator):
+    """Test MulticlassCarver fit_transform method."""
+    features = Features(
+        categoricals=["feature1"],
+        ordinal_values={"feature2": ["low", "medium", "high"]},
+        ordinals=["feature2"],
+        quantitatives=["feature3"],
+    )
+    carver = MulticlassCarver(
+        min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False
+    )
+    idx = ["a", "b", "c", "d"]
+    X = DataFrame(
+        {
+            "feature1": ["A", "B", "A", "C"],
+            "feature2": ["low", "medium", "high", "high"],
+            "feature3": [1, 2, 3, float("nan")],
+        },
+        index=idx,
+    )
+    y = Series([2, 0, 0, 1], index=idx)
+    X_transformed = carver.fit_transform(X, y)
+
+    print(X_transformed.to_dict(orient="list"))
+    expected = DataFrame(
+        {
+            "feature1": ["A", "B", "A", "C"],
+            "feature2": ["low", "medium", "high", "high"],
+            "feature3": [1.0, 2.0, 3.0, float("nan")],
+            "feature1__y=1": ["A, B", "A, B", "A, B", "C"],
+            "feature1__y=2": ["A, C", "B", "A, C", "A, C"],
+            "feature2__y=1": ["low", "medium to high", "medium to high", "medium to high"],
+            "feature2__y=2": ["low", "medium", "high", "high"],
+            "feature3__y=2": ["x <= 1.0e+00", "1.0e+00 < x", "1.0e+00 < x", "1.0e+00 < x"],
+        },
+        index=idx,
+    )
+    assert isinstance(X_transformed, DataFrame)
+    assert all(X_transformed.index == expected.index)
+    assert all(X_transformed.index == X.index)
+    assert all(X_transformed.columns == expected.columns)
+    print(
+        X.values,
+        "\n",
+        expected.values,
+        "\n",
+        X_transformed.values,
+        "\n",
+        (X.values == expected.values),
+    )
+    assert X_transformed.equals(expected)
+
+
+def test_multiclass_carver_fit_transform_with_wrong_dev(evaluator: CombinationEvaluator):
+    """Test MulticlassCarver fit_transform method."""
+    features = Features(
+        categoricals=["feature1"],
+        ordinal_values={"feature2": ["low", "medium", "high"]},
+        ordinals=["feature2"],
+        quantitatives=["feature3"],
+    )
+    carver = MulticlassCarver(
+        min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False
+    )
+    idx = ["a", "b", "c", "d"]
+    X = DataFrame(
+        {
+            "feature1": ["A", "B", "A", "C"],
+            "feature2": ["low", "medium", "high", "high"],
+            "feature3": [1, 2, 3, float("nan")],
+        },
+        index=idx,
+    )
+    y = Series([0, 1, 0, 2], index=idx)
+    X_dev = DataFrame(
+        {
+            "feature1": ["A", "B", "A", "C"],
+            "feature2": ["low", "medium", "high", "high"],
+            "feature3": [1, 2, 3, float("nan")],
+        },
+        index=idx,
+    )
+    y_dev = Series([2, 0, 1, 0], index=idx)
+    X_transformed = carver.fit_transform(X, y, X_dev=X_dev, y_dev=y_dev)
+
+    print(X_transformed.to_dict(orient="list"))
+    expected = DataFrame(
+        {
+            "feature1": ["A", "B", "A", "C"],
+            "feature2": ["low", "medium", "high", "high"],
+            "feature3": [1.0, 2.0, 3.0, float("nan")],
+            "feature2__y=1": ["low", "medium to high", "medium to high", "medium to high"],
+            "feature3__y=1": ["x <= 1.0e+00", "1.0e+00 < x", "1.0e+00 < x", "x <= 1.0e+00"],
+        },
+        index=idx,
+    )
+    assert isinstance(X_transformed, DataFrame)
+    assert all(X_transformed.index == expected.index)
+    assert all(X_transformed.index == X.index)
+    assert all(X_transformed.columns == expected.columns)
+    assert X_transformed.equals(expected)
+
+    assert len(carver.features) == 0
+
+
+def test_multiclass_carver_save_load(tmp_path: Path, evaluator: CombinationEvaluator):
+    """Test MulticlassCarver save and load methods."""
+    features = Features(
+        categoricals=["feature1"],
+        ordinal_values={"feature2": ["low", "medium", "high"]},
+        ordinals=["feature2"],
+        quantitatives=["feature3"],
+    )
+    carver = MulticlassCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator)
+    carver_file = tmp_path / "multilclass_carver.json"
+    carver.save(str(carver_file))
+    loaded_carver = MulticlassCarver.load(str(carver_file))
+    assert carver.min_freq == loaded_carver.min_freq
+    for feature in carver.features:
+        assert feature in loaded_carver.features
+        assert feature.content == loaded_carver.features[feature.name].content
+    assert carver.dropna == loaded_carver.dropna
+    assert carver.verbose == loaded_carver.verbose
+    assert carver.copy == loaded_carver.copy
+    assert carver.combinations.__class__ == loaded_carver.combinations.__class__
+    assert carver.combinations.max_n_mod == loaded_carver.combinations.max_n_mod
+    assert carver.combinations.sort_by == loaded_carver.combinations.sort_by
+    assert carver.combinations.dropna == loaded_carver.combinations.dropna
+    assert carver.combinations.verbose == loaded_carver.combinations.verbose
+
+
 def test_multiclass_carver(
+    tmp_path: Path,
     x_train: DataFrame,
     x_train_wrong_2: DataFrame,
     x_dev_1: DataFrame,
@@ -33,7 +653,7 @@ def test_multiclass_carver(
     discretizer_min_freq: float,
     ordinal_encoding: bool,
     dropna: bool,
-    sort_by: str,  # pylint: disable=W0621
+    evaluator: CombinationEvaluator,
     copy: bool,
 ) -> None:
     """Tests MulticlassCarver
@@ -112,20 +732,20 @@ def test_multiclass_carver(
 
     # minimum frequency and maximum number of modality
     min_freq = 0.1
-    max_n_mod = 4
+    evaluator.max_n_mod = 4
 
     # fitting with provided measure
     auto_carver = MulticlassCarver(
-        sort_by=sort_by,
         min_freq=min_freq,
         features=features,
-        max_n_mod=max_n_mod,
+        combinations=evaluator,
         discretizer_min_freq=discretizer_min_freq,
         ordinal_encoding=ordinal_encoding,
         dropna=dropna,
         copy=copy,
         verbose=False,
     )
+    print("combiiiiiiiiiiiiiiiiiiiiiiii", auto_carver.combinations, "\n")
     x_discretized = auto_carver.fit_transform(
         x_train,
         x_train[target],
@@ -150,10 +770,10 @@ def test_multiclass_carver(
 
     # testing that attributes where correctly used
     assert all(
-        x_discretized[feature_versions].nunique() <= max_n_mod
+        x_discretized[feature_versions].nunique() <= evaluator.max_n_mod
     ), "Too many buckets after carving of train sample"
     assert all(
-        x_dev_discretized[feature_versions].nunique() <= max_n_mod
+        x_dev_discretized[feature_versions].nunique() <= evaluator.max_n_mod
     ), "Too many buckets after carving of test sample"
 
     # checking that nans were not dropped if not requested
@@ -219,10 +839,10 @@ def test_multiclass_carver(
             ), f"Not copied correctly ({feature})"
 
     # testing json serialization
-    carver_file = "test.json"
-    auto_carver.save(carver_file)
-    loaded_carver = MulticlassCarver.load_carver(carver_file)
-    os.remove(carver_file)
+    carver_file = tmp_path / "test.json"
+    print(auto_carver.to_json())
+    auto_carver.save(str(carver_file))
+    loaded_carver = MulticlassCarver.load(str(carver_file))
 
     # checking that reloading worked exactly the same
     assert all(
@@ -288,9 +908,8 @@ def test_multiclass_carver(
     # fitting carver
     auto_carver = MulticlassCarver(
         min_freq=min_freq,
-        sort_by=sort_by,
         features=features,
-        max_n_mod=max_n_mod,
+        combinations=evaluator,
         ordinal_encoding=ordinal_encoding,
         discretizer_min_freq=discretizer_min_freq,
         dropna=dropna,

@@ -3,7 +3,7 @@
 
 import os
 
-from numpy import nan
+from pathlib import Path
 from pandas import DataFrame, Series
 from pytest import fixture, raises, FixtureRequest
 
@@ -668,7 +668,7 @@ def test_binary_carver_fit_transform_with_wrong_dev(evaluator: CombinationEvalua
     assert len(carver.features) == 0
 
 
-def test_binary_carver_save_load(tmp_path, evaluator: CombinationEvaluator):
+def test_binary_carver_save_load(tmp_path: Path, evaluator: CombinationEvaluator):
     """Test BinaryCarver save and load methods."""
     features = Features(
         categoricals=["feature1"],
@@ -695,7 +695,7 @@ def test_binary_carver_save_load(tmp_path, evaluator: CombinationEvaluator):
 
 
 def test_binary_carver(
-    tmp_path,
+    tmp_path: Path,
     x_train: DataFrame,
     x_train_wrong_2: DataFrame,
     x_dev_1: DataFrame,
@@ -712,7 +712,7 @@ def test_binary_carver(
     discretizer_min_freq: float,
     ordinal_encoding: bool,
     dropna: bool,
-    sort_by: str,  # pylint: disable=W0621
+    evaluator: CombinationEvaluator,
     copy: bool,
 ) -> None:
     """Tests BinaryCarver
@@ -758,6 +758,10 @@ def test_binary_carver(
     copy : bool
         Whether or not to copy the input dataset
     """
+
+    print("dropna", dropna)
+    print("copy", copy)
+    print("ordinal_encoding", ordinal_encoding)
     # copying x_train for comparison purposes
     raw_x_train = x_train.copy()
 
@@ -777,15 +781,14 @@ def test_binary_carver(
 
     # minimum frequency and maximum number of modality
     min_freq = 0.1
-    max_n_mod = 4
+    evaluator.max_n_mod = 4
 
     # testing with uneligible features
     with raises(ValueError):
         auto_carver = BinaryCarver(
             min_freq=min_freq,
-            sort_by=sort_by,
+            combinations=evaluator,
             features=features,
-            max_n_mod=max_n_mod,
             ordinal_encoding=ordinal_encoding,
             discretizer_min_freq=discretizer_min_freq,
             dropna=dropna,
@@ -823,9 +826,8 @@ def test_binary_carver(
     # fitting with provided measure
     auto_carver = BinaryCarver(
         min_freq=min_freq,
-        sort_by=sort_by,
+        combinations=evaluator,
         features=features,
-        max_n_mod=max_n_mod,
         ordinal_encoding=ordinal_encoding,
         discretizer_min_freq=discretizer_min_freq,
         dropna=dropna,
@@ -845,10 +847,10 @@ def test_binary_carver(
 
     # testing that attributes where correctly used
     assert all(
-        x_discretized[feature_names].nunique() <= max_n_mod
+        x_discretized[feature_names].nunique() <= evaluator.max_n_mod
     ), "Too many buckets after carving of train sample"
     assert all(
-        x_dev_discretized[feature_names].nunique() <= max_n_mod
+        x_dev_discretized[feature_names].nunique() <= evaluator.max_n_mod
     ), "Too many buckets after carving of test sample"
 
     # checking that nans were not dropped if not requested
@@ -916,15 +918,14 @@ def test_binary_carver(
     carver_file = tmp_path / "test.json"
     auto_carver.save(str(carver_file))
     loaded_carver = BinaryCarver.load(str(carver_file))
-    os.remove(carver_file)
 
     # checking that reloading worked exactly the same
     assert all(
         loaded_carver.summary() == auto_carver.summary()
     ), "Non-identical summaries when loading from JSON"
+    loaded_x_train = loaded_carver.transform(raw_x_train)
     assert all(
-        x_discretized[feature_names]
-        == loaded_carver.transform(x_dev_1)[loaded_carver.features.names]
+        x_dev_discretized[feature_names] == loaded_x_train[loaded_carver.features.names]
     ), "Non-identical discretized values when loading from JSON"
 
     # transform dev with unexpected modal for a feature that has_default
@@ -982,9 +983,8 @@ def test_binary_carver(
     # fitting carver
     auto_carver = BinaryCarver(
         min_freq=min_freq,
-        sort_by=sort_by,
+        combinations=evaluator,
         features=features,
-        max_n_mod=max_n_mod,
         ordinal_encoding=ordinal_encoding,
         discretizer_min_freq=discretizer_min_freq,
         dropna=dropna,

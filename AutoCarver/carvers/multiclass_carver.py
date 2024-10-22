@@ -6,7 +6,7 @@ from typing import Any
 
 from pandas import DataFrame, Series, unique
 
-from ..discretizers import BaseDiscretizer
+from ..discretizers.utils.base_discretizer import BaseDiscretizer, Sample
 from ..features import Features
 from ..utils import extend_docstring
 from .binary_carver import BinaryCarver
@@ -44,7 +44,7 @@ class MulticlassCarver(BinaryCarver):
         )
 
         # warning user for
-        if "copy" in kwargs:
+        if "copy" in kwargs and kwargs["copy"] is True:
             print(
                 "WARNING: can't set copy=True for MulticlassCarver (no inplace DataFrame.assign)."
             )
@@ -96,7 +96,7 @@ class MulticlassCarver(BinaryCarver):
             if len(missing_y) > 0 or len(missing_y_dev) > 0:
                 raise ValueError(
                     f"[{self.__name__}] Mismatched classes between y and y_dev"
-                    f": train({missing_y_dev}), dev({+missing_y})"
+                    f": train({missing_y_dev}), dev({missing_y})"
                 )
 
         return samples
@@ -111,7 +111,7 @@ class MulticlassCarver(BinaryCarver):
         y_dev: Series = None,
     ) -> None:
         # initiating samples
-        samples = Samples(train=Samples(X, y), dev=Samples(X_dev, y_dev))
+        samples = Samples(train=Sample(X, y), dev=Sample(X_dev, y_dev))
 
         # preparing datasets and checking for wrong values
         samples = self._prepare_data(samples)
@@ -140,9 +140,12 @@ class MulticlassCarver(BinaryCarver):
             # initiating BinaryCarver for y_class
             binary_carver = BinaryCarver(
                 features=class_features,
-                min_freq=self.min_freq,
                 combinations=self.combinations,
-                **dict(self.kwargs, copy=True),  # copying x to keep raw columns as is
+                **dict(
+                    self.kwargs,
+                    copy=True,
+                    min_freq=self.min_freq,
+                ),  # copying x to keep raw columns as is
             )
 
             # fitting BinaryCarver for y_class
@@ -161,7 +164,16 @@ class MulticlassCarver(BinaryCarver):
                 print("---------\n")
 
         # initiating BaseDiscretizer with features for each y_class
-        BaseDiscretizer.__init__(self, features=self.features, **self.kwargs)
+        BaseDiscretizer.__init__(
+            self,
+            features=self.features,
+            **dict(
+                self.kwargs,
+                min_freq=self.min_freq,
+                dropna=self.dropna,
+                combinations=self.combinations,
+            ),
+        )
 
         # fitting BaseDiscretizer
         BaseDiscretizer.fit(self, samples.train.X, samples.train.y)

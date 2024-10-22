@@ -218,7 +218,6 @@ def get_remaining_quantiles(remaining_len_df: array, initial_len_df: int, q: int
 
     # updating number of quantiles taking into account identified over-represented modalities
     new_q = round(remaining_len_df / initial_len_df * q)
-    print(new_q, q, remaining_len_df / initial_len_df * q)
 
     # list of quantiles needed
     return linspace(0, 1, new_q + 1)[1:-1]
