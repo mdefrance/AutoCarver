@@ -1,6 +1,6 @@
 """ Defines a set of features"""
 
-from typing import Type, Union
+from typing import Union
 
 from numpy import nan
 from pandas import DataFrame, Series

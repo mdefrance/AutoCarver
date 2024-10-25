@@ -347,7 +347,8 @@ class CombinationEvaluator(ABC):
     def _historize_raw_combination(self):
         # historizing raw combination TODO
         # raw_association = {
-        #     "index_to_groupby": {modality: modality for modality in self.samples.train.xagg.index},
+        #     "index_to_groupby":
+        # {modality: modality for modality in self.samples.train.xagg.index},
         #     self.sort_by: self._association_measure(
         #         self.samples.train.xagg.dropna(),
         #         n_obs=sum(self.samples.train.xagg.dropna().apply(sum)),

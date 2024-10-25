@@ -47,7 +47,8 @@ class Chi2Measure(BaseMeasure):
         Returns
         -------
         tuple[bool, dict[str, Any]]
-            Whether ``x`` is sufficiently associated to ``y`` and Pearson's chi2 between ``x`` and ``y``
+            Whether ``x`` is sufficiently associated to ``y`` and Pearson's chi2 between ``x``
+            and ``y``
         """
         # computing crosstab between x and y
         xtab = crosstab(x, y)
@@ -58,6 +59,8 @@ class Chi2Measure(BaseMeasure):
 
 
 class CramervMeasure(Chi2Measure):
+    """Computes Carmér's V between a Qualitative feature and a binary target."""
+
     __name__ = "CramerV"
 
     def compute_association(self, x: Series, y: Series, chi2_value: float = None) -> float:
@@ -77,7 +80,8 @@ class CramervMeasure(Chi2Measure):
         Returns
         -------
         tuple[bool, dict[str, Any]]
-            Whether ``x`` is sufficiently associated to ``y`` and Carmér's V between ``x`` and ``y``.
+            Whether ``x`` is sufficiently associated to ``y`` and Carmér's V between ``x``
+            and ``y``.
         """
         # computing Chi2 if not provided
         if chi2_value is None:
@@ -117,7 +121,8 @@ class TschuprowtMeasure(Chi2Measure):
         Returns
         -------
         tuple[bool, dict[str, Any]]
-            Whether ``x`` is sufficiently associated to ``y`` and Tschuprow's T between ``x`` and ``y``.
+            Whether ``x`` is sufficiently associated to ``y`` and Tschuprow's T between ``x``
+            and ``y``.
         """
 
         # computing Chi2 if not provided

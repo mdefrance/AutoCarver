@@ -14,7 +14,8 @@ from .measures import BaseMeasure
 
 # trying to import extra dependencies
 try:
-    from IPython.display import display_html
+    # from IPython.display import display_html
+    pass
 except ImportError:
     _has_idisplay = False
 else:
@@ -324,7 +325,8 @@ class BaseSelector(ABC):
     #                 cmap="coolwarm", subset=subset
     #             )
     #             # printing inline notebook
-    #             nicer_association = nicer_association.set_table_attributes("style='display:inline'")
+    #             nicer_association = nicer_association.set_table_attributes(
+    # "style='display:inline'")
 
     #             # lower precision
     #             nicer_association = nicer_association.format(precision=4)
