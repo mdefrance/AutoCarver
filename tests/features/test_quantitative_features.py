@@ -4,7 +4,7 @@ from numpy import inf, nan
 from pandas import DataFrame
 from pytest import fixture, raises
 
-from AutoCarver.config import NAN
+from AutoCarver.config import Constants
 from AutoCarver.features.quantitative_features import (
     QuantitativeFeature,
     format_quantiles,
@@ -130,13 +130,13 @@ def test_quantitative_feature_make_labels(sample_quantitative_feature: Quantitat
     # setting dropna true
     sample_quantitative_feature.dropna = True
     labels = sample_quantitative_feature.make_labels()
-    assert sample_quantitative_feature.values == [0.1, 0.5, 0.9, inf, NAN]
+    assert sample_quantitative_feature.values == [0.1, 0.5, 0.9, inf, Constants.NAN]
     assert labels == [
         "x <= 1.0e-01",
         "1.0e-01 < x <= 5.0e-01",
         "5.0e-01 < x <= 9.0e-01",
         "9.0e-01 < x",
-        NAN,
+        Constants.NAN,
     ]
     # resetting dropna
     sample_quantitative_feature.dropna = False
@@ -207,11 +207,11 @@ def test_quantitative_feature_update_no_ordinal_encoding(
     sample_quantitative_feature.dropna = True
     print(sample_quantitative_feature.label_per_value)
     sample_quantitative_feature.update(
-        GroupedList({NAN: [NAN, "x <= 5.0e-01"]}), convert_labels=True
+        GroupedList({Constants.NAN: [Constants.NAN, "x <= 5.0e-01"]}), convert_labels=True
     )
     assert sample_quantitative_feature.values == [0.5, 0.9, inf]
     assert sample_quantitative_feature.content == {
-        0.5: [NAN, 0.1, 0.5],
+        0.5: [Constants.NAN, 0.1, 0.5],
         0.9: [0.9],
         inf: [inf],
     }
@@ -226,7 +226,7 @@ def test_quantitative_feature_update_no_ordinal_encoding(
         "9.0e-01 < x": inf,
     }
     assert sample_quantitative_feature.label_per_value == {
-        NAN: "x <= 5.0e-01",
+        Constants.NAN: "x <= 5.0e-01",
         0.1: "x <= 5.0e-01",
         0.5: "x <= 5.0e-01",
         0.9: "5.0e-01 < x <= 9.0e-01",
@@ -272,7 +272,7 @@ def test_quantitative_feature_update_ordinal_encoding(
     assert sample_quantitative_feature.values == [0.1, 0.5, inf]
     assert sample_quantitative_feature.content == {
         0.1: [0.1],
-        0.5: [NAN, 0.5],
+        0.5: [Constants.NAN, 0.5],
         inf: [0.9, inf],
     }
     assert sample_quantitative_feature.labels == [0, 1, 2]
@@ -281,7 +281,13 @@ def test_quantitative_feature_update_ordinal_encoding(
         1: 0.5,
         2: inf,
     }
-    assert sample_quantitative_feature.label_per_value == {0.1: 0, 0.5: 1, NAN: 1, 0.9: 2, inf: 2}
+    assert sample_quantitative_feature.label_per_value == {
+        0.1: 0,
+        0.5: 1,
+        Constants.NAN: 1,
+        0.9: 2,
+        inf: 2,
+    }
 
 
 def test_get_summary(sample_quantitative_feature: QuantitativeFeature) -> None:
