@@ -8,7 +8,7 @@ from .qualitatives import (
     QualitativeDiscretizer,
 )
 from .quantitatives import ContinuousDiscretizer, QuantitativeDiscretizer
-from .utils import BaseDiscretizer, StringDiscretizer, Sample
+from .utils import BaseDiscretizer, Sample, StringDiscretizer
 
 __all__ = [
     "BaseDiscretizer",

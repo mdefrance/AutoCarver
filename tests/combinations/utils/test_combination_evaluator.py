@@ -3,7 +3,7 @@
 from pandas import DataFrame, Series
 from pytest import fixture
 
-from AutoCarver.combinations.utils.combination_evaluator import filter_nan, AggregatedSample
+from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample, filter_nan
 
 
 def test_filter_nan_with_dataframe():

@@ -3,14 +3,14 @@ the best combination of modalities for a feature."""
 
 import json
 from abc import ABC, abstractmethod
-from typing import Union
 from dataclasses import dataclass
+from typing import Union
 
 from pandas import DataFrame, Series
 from tqdm.autonotebook import tqdm
-from ...utils import get_attribute, get_bool_attribute
 
 from ...features import BaseFeature, GroupedList
+from ...utils import get_attribute, get_bool_attribute
 from .combinations import (
     consecutive_combinations,
     format_combinations,

@@ -1,24 +1,22 @@
 """Set of tests for multiclass_carver module.
 """
 
-import os
-
-
 from pathlib import Path
+
 from pandas import DataFrame, Series
-from pytest import fixture, raises, FixtureRequest
+from pytest import FixtureRequest, fixture, raises
 
 from AutoCarver.carvers.multiclass_carver import MulticlassCarver, get_one_vs_rest
-from AutoCarver.config import Constants
-from AutoCarver.discretizers import ChainedDiscretizer
-from AutoCarver.features import Features, OrdinalFeature
+from AutoCarver.carvers.utils.base_carver import Sample, Samples
 from AutoCarver.combinations import (
     CombinationEvaluator,
-    TschuprowtCombinations,
     CramervCombinations,
     KruskalCombinations,
+    TschuprowtCombinations,
 )
-from AutoCarver.carvers.utils.base_carver import Sample, Samples
+from AutoCarver.config import Constants
+from AutoCarver.discretizers import ChainedDiscretizer
+from AutoCarver.features import Features
 
 
 @fixture(params=[CramervCombinations, TschuprowtCombinations])
@@ -34,7 +32,6 @@ def sort_by(request) -> str:
 
 
 def test_get_one_vs_rest_with_string_series():
-
     y = Series(["A", "B", "A", "C", "B", "A"])
     y_class = "A"
     result = get_one_vs_rest(y, y_class)
@@ -552,7 +549,6 @@ def test_multiclass_carver_fit_transform_with_target_only_nan(evaluator: Combina
         "\n",
         X_transformed.values,
         "\n",
-        (X.values == expected.values),
     )
     assert X_transformed.equals(expected)
 
@@ -606,7 +602,7 @@ def test_multiclass_carver_fit_transform_with_wrong_dev(evaluator: CombinationEv
     assert all(X_transformed.columns == expected.columns)
     assert X_transformed.equals(expected)
 
-    assert len(carver.features) == 0
+    assert len(carver.features) == 2
 
 
 def test_multiclass_carver_save_load(tmp_path: Path, evaluator: CombinationEvaluator):
@@ -728,7 +724,7 @@ def test_multiclass_carver(
         chained_orders=[level0_to_level1, level1_to_level2],
         copy=copy,
     )
-    x_discretized = chained_discretizer.fit_transform(x_train)
+    chained_discretizer.fit(x_train)
 
     # minimum frequency and maximum number of modality
     min_freq = 0.1

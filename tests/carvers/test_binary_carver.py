@@ -2,23 +2,23 @@
 """
 
 import os
-
 from pathlib import Path
+
 from pandas import DataFrame, Series
-from pytest import fixture, raises, FixtureRequest
+from pytest import FixtureRequest, fixture, raises
 
 from AutoCarver import BinaryCarver
 from AutoCarver.carvers.binary_carver import get_crosstab
+from AutoCarver.carvers.utils.base_carver import Sample, Samples
+from AutoCarver.combinations import (
+    CombinationEvaluator,
+    CramervCombinations,
+    KruskalCombinations,
+    TschuprowtCombinations,
+)
 from AutoCarver.config import Constants
 from AutoCarver.discretizers import ChainedDiscretizer
 from AutoCarver.features import Features, OrdinalFeature
-from AutoCarver.combinations import (
-    CombinationEvaluator,
-    TschuprowtCombinations,
-    CramervCombinations,
-    KruskalCombinations,
-)
-from AutoCarver.carvers.utils.base_carver import Sample, Samples
 
 
 @fixture(params=[CramervCombinations, TschuprowtCombinations])

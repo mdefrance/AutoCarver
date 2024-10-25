@@ -4,13 +4,13 @@ from numpy import inf, nan
 from pandas import DataFrame, Series
 from pytest import raises
 
-from AutoCarver.discretizers.utils.base_discretizer import Sample
 from AutoCarver.discretizers.quantitatives.quantitative_discretizer import (
     QuantitativeDiscretizer,
     check_frequencies,
     check_quantitative_dtypes,
     min_value_counts,
 )
+from AutoCarver.discretizers.utils.base_discretizer import Sample
 from AutoCarver.features import Features, GroupedList, QuantitativeFeature
 
 

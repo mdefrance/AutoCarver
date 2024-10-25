@@ -3,22 +3,21 @@ for any task.
 """
 
 import json
-from abc import abstractmethod, ABC
-from typing import Union
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from typing import Union
 
 from pandas import DataFrame, Series
 
+from ...combinations import (
+    CombinationEvaluator,
+    CramervCombinations,
+    KruskalCombinations,
+    TschuprowtCombinations,
+)
 from ...discretizers import BaseDiscretizer, Discretizer, Sample
 from ...features import BaseFeature, Features, GroupedList
 from ...utils import get_attribute, get_bool_attribute
-
-from ...combinations import (
-    CombinationEvaluator,
-    KruskalCombinations,
-    CramervCombinations,
-    TschuprowtCombinations,
-)
 from .pretty_print import index_mapper, prettier_xagg
 
 # trying to import extra dependencies

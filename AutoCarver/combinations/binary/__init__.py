@@ -2,8 +2,8 @@
 
 from .binary_combination_evaluators import (
     BinaryCombinationEvaluator,
-    TschuprowtCombinations,
     CramervCombinations,
+    TschuprowtCombinations,
 )
 
 __all__ = ["BinaryCombinationEvaluator", "TschuprowtCombinations", "CramervCombinations"]

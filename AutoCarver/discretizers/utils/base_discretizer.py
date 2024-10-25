@@ -10,10 +10,10 @@ from numpy import nan, select
 from pandas import DataFrame, Series
 from sklearn.base import BaseEstimator, TransformerMixin
 
+from ...combinations import CombinationEvaluator
 from ...features import BaseFeature, Features
 from ...utils import get_attribute, get_bool_attribute
 from .multiprocessing import apply_async_function
-from ...combinations import CombinationEvaluator
 
 
 @dataclass

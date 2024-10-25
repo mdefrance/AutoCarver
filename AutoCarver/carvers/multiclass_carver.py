@@ -6,12 +6,12 @@ from typing import Any
 
 from pandas import DataFrame, Series, unique
 
+from ..combinations import BinaryCombinationEvaluator
 from ..discretizers.utils.base_discretizer import BaseDiscretizer, Sample
 from ..features import Features
 from ..utils import extend_docstring
 from .binary_carver import BinaryCarver
 from .utils.base_carver import Samples
-from ..combinations import BinaryCombinationEvaluator
 
 
 class MulticlassCarver(BinaryCarver):

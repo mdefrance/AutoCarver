@@ -1,6 +1,7 @@
 """Tests for the binary_combinations module."""
 
 import json
+
 from numpy import allclose, nan, sqrt
 from pandas import DataFrame, Series, isna
 from pytest import FixtureRequest, fixture, raises
@@ -13,8 +14,8 @@ from AutoCarver.combinations.binary.binary_combination_evaluators import (
     TschuprowtCombinations,
 )
 from AutoCarver.combinations.continuous.continuous_combination_evaluators import KruskalCombinations
-from AutoCarver.combinations.utils.combinations import consecutive_combinations, nan_combinations
 from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample
+from AutoCarver.combinations.utils.combinations import consecutive_combinations, nan_combinations
 from AutoCarver.features import OrdinalFeature
 
 MAX_N_MOD = 5

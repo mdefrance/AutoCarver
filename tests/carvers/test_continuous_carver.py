@@ -1,23 +1,23 @@
 """Set of tests for continuous_carver module.
 """
 
-import os
+from pathlib import Path
 
 from pandas import DataFrame, Series
-from pytest import raises, fixture, FixtureRequest
+from pytest import FixtureRequest, fixture, raises
 
 from AutoCarver import ContinuousCarver
 from AutoCarver.carvers.continuous_carver import get_target_values_by_modality
+from AutoCarver.carvers.utils.base_carver import Sample, Samples
+from AutoCarver.combinations import (
+    CombinationEvaluator,
+    CramervCombinations,
+    KruskalCombinations,
+    TschuprowtCombinations,
+)
 from AutoCarver.config import Constants
 from AutoCarver.discretizers import ChainedDiscretizer
 from AutoCarver.features import Features, OrdinalFeature
-from AutoCarver.combinations import (
-    CombinationEvaluator,
-    KruskalCombinations,
-    TschuprowtCombinations,
-    CramervCombinations,
-)
-from AutoCarver.carvers.utils.base_carver import Sample, Samples
 
 
 def test_get_target_values_by_modality_basic():

@@ -4,12 +4,12 @@ from numpy import nan
 from pandas import DataFrame, Series
 from pytest import raises
 
-from AutoCarver.discretizers.utils.base_discretizer import Sample
 from AutoCarver.discretizers.qualitatives.categorical_discretizer import (
     CategoricalDiscretizer,
     series_target_rate,
     series_value_counts,
 )
+from AutoCarver.discretizers.utils.base_discretizer import Sample
 from AutoCarver.features import CategoricalFeature, Features, GroupedList
 
 

@@ -3,8 +3,8 @@
 from numpy import nan
 from pandas import DataFrame, Series
 
-from AutoCarver.discretizers.utils.base_discretizer import Sample
 from AutoCarver.discretizers.qualitatives.qualitative_discretizer import QualitativeDiscretizer
+from AutoCarver.discretizers.utils.base_discretizer import Sample
 from AutoCarver.features import CategoricalFeature, Features, GroupedList, OrdinalFeature
 
 

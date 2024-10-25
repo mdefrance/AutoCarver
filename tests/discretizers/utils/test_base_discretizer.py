@@ -6,10 +6,16 @@ from numpy import array, inf, nan
 from pandas import DataFrame, Series
 from pytest import FixtureRequest, fixture, raises
 
+from AutoCarver.combinations import (
+    CombinationEvaluator,
+    CramervCombinations,
+    KruskalCombinations,
+    TschuprowtCombinations,
+)
 from AutoCarver.discretizers.utils.base_discretizer import (
     BaseDiscretizer,
-    transform_quantitative_feature,
     Sample,
+    transform_quantitative_feature,
 )
 from AutoCarver.features import (
     CategoricalFeature,
@@ -17,13 +23,6 @@ from AutoCarver.features import (
     GroupedList,
     OrdinalFeature,
     QuantitativeFeature,
-)
-
-from AutoCarver.combinations import (
-    KruskalCombinations,
-    CramervCombinations,
-    TschuprowtCombinations,
-    CombinationEvaluator,
 )
 
 

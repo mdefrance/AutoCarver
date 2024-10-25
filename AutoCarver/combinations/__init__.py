@@ -1,15 +1,15 @@
 """ Set of combination tools for Carvers"""
 
-from .utils.combination_evaluator import CombinationEvaluator
 from .binary.binary_combination_evaluators import (
     BinaryCombinationEvaluator,
-    TschuprowtCombinations,
     CramervCombinations,
+    TschuprowtCombinations,
 )
 from .continuous.continuous_combination_evaluators import (
     ContinuousCombinationEvaluator,
     KruskalCombinations,
 )
+from .utils.combination_evaluator import CombinationEvaluator
 
 __all__ = [
     "CombinationEvaluator",

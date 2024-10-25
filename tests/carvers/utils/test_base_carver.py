@@ -1,12 +1,12 @@
 """ Set of tests for base carver module."""
 
 from pandas import DataFrame, Series
-from pytest import fixture, raises, FixtureRequest
-from AutoCarver.discretizers.utils.base_discretizer import Sample
-from AutoCarver.carvers.utils.base_carver import BaseCarver, Samples, discretize
-from AutoCarver.combinations import KruskalCombinations, CramervCombinations, TschuprowtCombinations
-from AutoCarver.features import Features
+from pytest import FixtureRequest, fixture, raises
 
+from AutoCarver.carvers.utils.base_carver import BaseCarver, Samples, discretize
+from AutoCarver.combinations import CramervCombinations, KruskalCombinations, TschuprowtCombinations
+from AutoCarver.discretizers.utils.base_discretizer import Sample
+from AutoCarver.features import Features
 
 # removing abstractmethod
 BaseCarver.__abstractmethods__ = set()
@@ -55,7 +55,6 @@ def test_attributes(sample_data):
 
 @fixture
 def samples(sample_data):
-
     train_sample, dev_sample = sample_data
     return Samples(train=train_sample, dev=dev_sample)
 

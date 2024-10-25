@@ -4,11 +4,11 @@ from abc import ABC, abstractmethod
 from math import ceil
 from random import seed, shuffle
 from typing import Union
-from warnings import warn
 
 from pandas import DataFrame, Series
 
 from ..features import BaseFeature, Features
+from ..utils import get_bool_attribute
 from .filters import BaseFilter
 from .measures import BaseMeasure
 
@@ -171,23 +171,19 @@ class BaseSelector(ABC):
         self.filters = self._initiate_filters(filters)
 
         # whether to print info
-        self.verbose = bool(max(kwargs.get("verbose", True), kwargs.get("pretty_print", False)))
-        self.pretty_print = False
-        if self.verbose and kwargs.get("pretty_print", True):
-            if _has_idisplay:  # checking for installed dependencies
-                self.pretty_print = True
-            else:
-                warn(
-                    "Package not found: IPython. Defaulting to raw verbose. "
-                    "Install extra dependencies with pip install autocarver[jupyter]",
-                    UserWarning,
-                )
+        self.verbose = get_bool_attribute(kwargs, "verbose", False)
 
         # keyword arguments
         self.kwargs = kwargs
 
     def __repr__(self) -> str:
+        """Returns the name of the selector"""
         return self.__name__
+
+    @property
+    def pretty_print(self) -> bool:
+        """Returns the pretty_print attribute"""
+        return self.verbose and _has_idisplay
 
     @abstractmethod
     def _initiate_measures(self, requested_measures: list[BaseMeasure] = None) -> list[BaseMeasure]:

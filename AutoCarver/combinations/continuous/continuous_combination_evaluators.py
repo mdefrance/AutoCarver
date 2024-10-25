@@ -1,10 +1,12 @@
 """ Module for continuous combination evaluators. """
 
 from abc import ABC
+
 from numpy import mean
 from pandas import DataFrame, Series
 from scipy.stats import kruskal
-from ..utils.combination_evaluator import CombinationEvaluator, AggregatedSample
+
+from ..utils.combination_evaluator import AggregatedSample, CombinationEvaluator
 
 
 class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):

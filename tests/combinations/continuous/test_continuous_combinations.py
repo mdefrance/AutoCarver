@@ -1,23 +1,24 @@
 """ set of tests for the continuous_combinations module """
 
 import json
+
 from numpy import allclose, nan
 from pandas import DataFrame, Series, isna
 from pytest import FixtureRequest, fixture, raises
 from scipy.stats import kruskal
 
 from AutoCarver.carvers.continuous_carver import get_target_values_by_modality
+from AutoCarver.combinations.binary.binary_combination_evaluators import (
+    CramervCombinations,
+    TschuprowtCombinations,
+)
 from AutoCarver.combinations.continuous.continuous_combination_evaluators import (
     ContinuousCombinationEvaluator,
     KruskalCombinations,
 )
-from AutoCarver.features import OrdinalFeature
-from AutoCarver.combinations.utils.combinations import consecutive_combinations, nan_combinations
 from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample
-from AutoCarver.combinations.binary.binary_combination_evaluators import (
-    TschuprowtCombinations,
-    CramervCombinations,
-)
+from AutoCarver.combinations.utils.combinations import consecutive_combinations, nan_combinations
+from AutoCarver.features import OrdinalFeature
 
 MAX_N_MOD = 5
 MIN_FREQ = 0.2
@@ -1121,7 +1122,6 @@ def test_get_best_combination_with_nan_viable_with_nan_without_dropna(
 
 
 def test_get_best_combination_with_nan_viable_with_nan(evaluator: ContinuousCombinationEvaluator):
-
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     feature.has_nan = True
     feature.dropna = True  # has to be set to True
@@ -1231,9 +1231,8 @@ def test_get_best_combination_not_viable(evaluator: ContinuousCombinationEvaluat
 
     xagg = Series({"a": [0, 2, 0]})
     evaluator.max_n_mod = 2
-
-    with raises(ValueError):
-        evaluator.get_best_combination(feature, xagg, xagg)
+    result = evaluator.get_best_combination(feature, xagg, xagg)
+    assert result is None
 
 
 def test_get_best_combination_viable_with_nan_without_feature_nan(

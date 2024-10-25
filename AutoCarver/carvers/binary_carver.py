@@ -5,10 +5,10 @@ for binary classification tasks.
 from numpy import unique
 from pandas import DataFrame, Series, crosstab
 
+from ..combinations import BinaryCombinationEvaluator, TschuprowtCombinations
 from ..features import BaseFeature, Features
 from ..utils import extend_docstring
 from .utils.base_carver import BaseCarver, Samples
-from ..combinations import TschuprowtCombinations, BinaryCombinationEvaluator
 
 
 class BinaryCarver(BaseCarver):
