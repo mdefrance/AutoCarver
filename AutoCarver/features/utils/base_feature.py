@@ -119,7 +119,7 @@ class BaseFeature(ABC):
         self.statistics: dict[str:Any] = kwargs.get("statistics", {})
 
         # initiating feature's combination history
-        self.history: list[dict, Any] = kwargs.get("history", [])
+        self.history: list[dict] = kwargs.get("history", [])
 
         # initiating base ordering (quantitative features)
         self.raw_order: list[str] = kwargs.get("raw_order", [])
@@ -129,6 +129,7 @@ class BaseFeature(ABC):
         self.version_tag: str = kwargs.get("version_tag", self.name)
 
     def __repr__(self) -> str:
+        """Feature representation"""
         return f"{self.__name__}('{self.version}')"
 
     @property
@@ -263,6 +264,11 @@ class BaseFeature(ABC):
         # default labels are values
         return self.values
 
+    @abstractmethod
+    def get_summary(self) -> dict:
+        """returns a summary of the feature"""
+        # TODO add statistics
+
     def update_labels(self) -> None:
         """updates label for each value of the feature"""
 
@@ -339,6 +345,10 @@ class BaseFeature(ABC):
 
         # updating feature's values
         self.update(values, replace=True)
+
+    def _historize(self, combination: dict) -> None:
+        """historizes a combination"""
+        self.history.append(combination)
 
     def to_json(self, light_mode: bool = False) -> dict:
         """Converts to JSON format.

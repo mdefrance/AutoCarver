@@ -58,7 +58,29 @@ def _test_viability(rates: DataFrame, min_freq: float, train_target_rate: Series
         )
 
         # return tests on dev
-        return {"dev": test_results}
+        return {"dev": add_info(test_results, min_freq)}
 
     # return tests on train
-    return {"train": test_results, "train_rates": rates}
+    return {
+        "train": add_info(test_results, min_freq),
+        "train_rates": rates,
+        "viable": test_results["viable"],
+    }
+
+
+def add_info(test_results: dict, min_freq: float) -> dict:
+    """adds information to test results"""
+
+    # - adding information to test results
+    messages: list[str] = []
+    if not test_results.get("ranks_train_dev", True):
+        messages += ["Inversion of target rates per modality"]
+    if not test_results.get("min_freq", True):
+        messages += [f"Non-representative modality for min_freq={min_freq:2.2%}"]
+    if not test_results.get("distinct_rates", True):
+        messages += ["non-distinct target rates per consecutive modalities"]
+
+    return {
+        "viable": test_results["viable"],
+        "info": "; ".join(messages),
+    }
