@@ -6,7 +6,6 @@ from typing import Any
 
 from pandas import DataFrame, Series, unique
 
-from ..combinations import BinaryCombinationEvaluator
 from ..discretizers.utils.base_discretizer import BaseDiscretizer, Sample
 from ..features import Features
 from ..utils import extend_docstring
@@ -34,13 +33,13 @@ class MulticlassCarver(BinaryCarver):
         features: Features,
         min_freq: float,
         dropna: bool = True,
-        combinations: BinaryCombinationEvaluator = None,
+        max_n_mod: int = 5,
         **kwargs: dict,
     ) -> None:
         """ """
         # Initiating BinaryCarver
         super().__init__(
-            features=features, min_freq=min_freq, combinations=combinations, dropna=dropna, **kwargs
+            features=features, min_freq=min_freq, dropna=dropna, max_n_mod=max_n_mod, **kwargs
         )
 
         # warning user for

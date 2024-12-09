@@ -5,7 +5,7 @@ for binary classification tasks.
 from numpy import unique
 from pandas import DataFrame, Series, crosstab
 
-from ..combinations import BinaryCombinationEvaluator, TschuprowtCombinations
+from ..combinations import TschuprowtCombinations
 from ..features import BaseFeature, Features
 from ..utils import extend_docstring
 from .utils.base_carver import BaseCarver, Samples
@@ -30,7 +30,7 @@ class BinaryCarver(BaseCarver):
         min_freq: float,
         features: Features,
         dropna: bool = True,
-        combinations: BinaryCombinationEvaluator = None,
+        max_n_mod: int = 5,
         **kwargs: dict,
     ) -> None:
         """
@@ -47,8 +47,9 @@ class BinaryCarver(BaseCarver):
         """
 
         # default binary combinations
+        combinations = kwargs.get("combinations")
         if combinations is None:
-            combinations = TschuprowtCombinations()
+            combinations = TschuprowtCombinations(max_n_mod=max_n_mod)
 
         # association measure used to find the best groups for binary targets
         if not combinations.is_y_binary:

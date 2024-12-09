@@ -329,7 +329,7 @@ class CombinationEvaluator(ABC):
             test_results = self._test_viability_dev(test_results, combination)
 
             # historizing combinations and tests
-            self._historize_combination(test_results)
+            self._historize_combination(combination, test_results)
 
             # best combination found: breaking the loop on combinations
             if test_results["viable"]:
@@ -364,22 +364,45 @@ class CombinationEvaluator(ABC):
         """historizes the remaining combinations that have not been tested"""
 
         # historizing all remaining combinations
-        # for combination in associations[n_combination + 1 :]:
-        #     self._historize(combination, None, None, None, None, None, None, None)
+        for combination in associations[n_combination + 1 :]:
+
+            # historizing not tested combination
+            self.feature.history.append(
+                {**clean_combination(combination, self.feature), "info": "Not checked"}
+            )
 
     def _historize_combination(self, combination: dict, test_results: dict) -> None:
         """historizes the test results of the combination"""
 
-        # adding combination to test results
-        test_results.update({"index_to_groupby": combination["index_to_groupby"]})
+        # keeping only relevant information
+        test_results.update(clean_combination(combination, self.feature))
 
-        # setting feature's statistics
+        # checking for viability
         if test_results["viable"]:
+
+            # setting feature's statistics (selected combination)
             self.feature.statistics = test_results.pop("train_rates")
-            test_results.update({"info": "Combination robust between X and X_dev"})
+
+            # adding info
+            info = f"Best for {self.sort_by} and max_n_mod={self.max_n_mod}"
+
+            # adding dropna info if its the case
+            if test_results.get("dropna"):
+                info += " (dropna=True)"
+
+        # not viable on train or dev
+        else:
+            info = "Not viable"
+
+            # removing train rates if still in there
+            if "train_rates" in test_results:
+                test_results.pop("train_rates")
+
+        # saving info
+        test_results.update({"info": info})
 
         # historizing test results
-        self.feature._historize(test_results)
+        self.feature.history.append(test_results)
 
     def _historize_raw_combination(self):
         """historizes the raw combination"""
@@ -395,15 +418,25 @@ class CombinationEvaluator(ABC):
             self.samples.train.raw, n_obs=sum(self.samples.train.raw.apply(sum))
         )
 
+        # computing number of modalities
+        n_mod = self.samples.train.raw.shape[0]
+
+        # creating info message
+        info = "Raw distribution"
+
+        # adding info if n_mod > max_n_mod
+        if n_mod > self.max_n_mod:
+            info += f" (n_mod={n_mod}>max_n_mod={self.max_n_mod})"
+
         # historizing raw combination
         combination = {
-            "index_to_groupby": {modality: modality for modality in self.samples.train.raw.index},
-            self.sort_by: raw_association[self.sort_by],
-            "info": "Raw X distribution",
+            "info": info,
+            **raw_association,
+            "combination": {modality: modality for modality in self.samples.train.raw.index},
         }
 
         # historizing within feature
-        self.feature._historize(combination)
+        self.feature.history.append({**combination, "n_mod": n_mod, "dropna": False})
 
     def to_json(self) -> dict:
         """Converts to JSON format.
@@ -475,96 +508,96 @@ class CombinationEvaluator(ABC):
         # initiating BaseDiscretizer
         return cls(**combinations_json)
 
-    def _historize(
-        self,
-        feature: BaseFeature,
-        association: dict[Any],
-        n_combination: int = None,
-        associations_xagg: list[dict[str, Any]] = None,
-        train_viable: bool = None,
-        dev_viable: bool = None,
-        dropna: bool = False,
-        **viability_msg_params,
-    ) -> None:
-        """historizes the viability tests results for specified feature
+    # def _historize(
+    #     self,
+    #     feature: BaseFeature,
+    #     association: dict[Any],
+    #     n_combination: int = None,
+    #     associations_xagg: list[dict[str, Any]] = None,
+    #     train_viable: bool = None,
+    #     dev_viable: bool = None,
+    #     dropna: bool = False,
+    #     **viability_msg_params,
+    # ) -> None:
+    #     """historizes the viability tests results for specified feature
 
-        Parameters
-        ----------
-        feature : str
-            feature for which to historize the combination
-        viability : bool
-            result of viability test
-        order : GroupedList
-            order of the modalities and there respective groups
-        association : dict[Any]
-            index_to_groupby and self.sort_by values
-        viability_msg_params : dict
-            kwargs to determine the viability message
-        """
-        # # Messages associated to each failed viability test
-        # messages = []
-        # if not viability_msg_params.get("ranks_train_dev", True):
-        #     messages += ["X_dev: inversion of target rates per modality"]
-        # if not viability_msg_params.get("min_freq_dev", True):
-        #     messages += [f"X_dev: non-representative modality (min_freq={self.min_freq:2.2%})"]
-        # if not viability_msg_params.get("distinct_rates_dev", True):
-        #     messages += ["X_dev: non-distinct target rates per consecutive modalities"]
-        # if not viability_msg_params.get("min_freq_train", True):
-        #     messages += [f"X: non-representative modality (min_freq={self.min_freq:2.2%})"]
-        # if not viability_msg_params.get("distinct_rates_train", True):
-        #     messages += ["X: non-distinct target rates per consecutive modalities"]
+    #     Parameters
+    #     ----------
+    #     feature : str
+    #         feature for which to historize the combination
+    #     viability : bool
+    #         result of viability test
+    #     order : GroupedList
+    #         order of the modalities and there respective groups
+    #     association : dict[Any]
+    #         index_to_groupby and self.sort_by values
+    #     viability_msg_params : dict
+    #         kwargs to determine the viability message
+    #     """
+    #     # # Messages associated to each failed viability test
+    #     # messages = []
+    #     # if not viability_msg_params.get("ranks_train_dev", True):
+    #     #     messages += ["X_dev: inversion of target rates per modality"]
+    #     # if not viability_msg_params.get("min_freq_dev", True):
+    #     #     messages += [f"X_dev: non-representative modality (min_freq={self.min_freq:2.2%})"]
+    #     # if not viability_msg_params.get("distinct_rates_dev", True):
+    #     #     messages += ["X_dev: non-distinct target rates per consecutive modalities"]
+    #     # if not viability_msg_params.get("min_freq_train", True):
+    #     #     messages += [f"X: non-representative modality (min_freq={self.min_freq:2.2%})"]
+    #     # if not viability_msg_params.get("distinct_rates_train", True):
+    #     #     messages += ["X: non-distinct target rates per consecutive modalities"]
 
-        # # viability has been checked on train
-        # viability = None
-        # if train_viable is not None:
-        #     # viability on train
-        #     viability = train_viable
-        #     if train_viable:
-        #         # viability has been checked on dev
-        #         if dev_viable is not None:
-        #             # viability on dev
-        #             viability = dev_viable
-        #             if dev_viable:
-        #                 messages = ["Combination robust between X and X_dev"]
-        #         else:  # no x_dev provided
-        #             messages = ["Combination viable on X"]
-        # else:
-        #     messages = ["Raw X distribution"]
+    #     # # viability has been checked on train
+    #     # viability = None
+    #     # if train_viable is not None:
+    #     #     # viability on train
+    #     #     viability = train_viable
+    #     #     if train_viable:
+    #     #         # viability has been checked on dev
+    #     #         if dev_viable is not None:
+    #     #             # viability on dev
+    #     #             viability = dev_viable
+    #     #             if dev_viable:
+    #     #                 messages = ["Combination robust between X and X_dev"]
+    #     #         else:  # no x_dev provided
+    #     #             messages = ["Combination viable on X"]
+    #     # else:
+    #     #     messages = ["Raw X distribution"]
 
-        # viability not checked for following less associated combinations
-        associations_not_checked = []
-        if viability:
-            associations_not_checked = associations_xagg[n_combination + 1 :]
+    #     # viability not checked for following less associated combinations
+    #     associations_not_checked = []
+    #     if viability:
+    #         associations_not_checked = associations_xagg[n_combination + 1 :]
 
-        # storing combination and adding not tested combinations to the set to be historized
-        associations_to_historize = [association] + associations_not_checked
-        messages_to_historize = [messages] + [["Not checked"]] * len(associations_not_checked)
-        viability_to_historize = [viability] + [None] * len(associations_not_checked)
+    #     # storing combination and adding not tested combinations to the set to be historized
+    #     associations_to_historize = [association] + associations_not_checked
+    #     messages_to_historize = [messages] + [["Not checked"]] * len(associations_not_checked)
+    #     viability_to_historize = [viability] + [None] * len(associations_not_checked)
 
-        # historizing test results: list comprehension for faster processing (large number of combi)
-        feature.history += [
-            {
-                # Formats a combination for historization
-                "combination": [
-                    [
-                        value
-                        for modality in asso["index_to_groupby"].keys()
-                        for group_modality in feature.label_per_value.get(modality, modality)
-                        for value in feature.content.get(group_modality, group_modality)
-                        if asso["index_to_groupby"][modality] == final_group
-                    ]
-                    for final_group in Series(asso["index_to_groupby"].values()).unique()
-                ],
-                self.sort_by: asso[self.sort_by],
-                "viability": viab,
-                "viability_message": msg,
-                "grouping_nan": dropna,
-            }
-            # historizing all combinations
-            for asso, msg, viab in zip(
-                associations_to_historize, messages_to_historize, viability_to_historize
-            )
-        ]
+    #     # historizing test results: list comprehension for faster processing (large number of combi)
+    #     feature.history += [
+    #         {
+    #             # Formats a combination for historization
+    #             "combination": [
+    #                 [
+    #                     value
+    #                     for modality in asso["index_to_groupby"].keys()
+    #                     for group_modality in feature.label_per_value.get(modality, modality)
+    #                     for value in feature.content.get(group_modality, group_modality)
+    #                     if asso["index_to_groupby"][modality] == final_group
+    #                 ]
+    #                 for final_group in Series(asso["index_to_groupby"].values()).unique()
+    #             ],
+    #             self.sort_by: asso[self.sort_by],
+    #             "viability": viab,
+    #             "viability_message": msg,
+    #             "grouping_nan": dropna,
+    #         }
+    #         # historizing all combinations
+    #         for asso, msg, viab in zip(
+    #             associations_to_historize, messages_to_historize, viability_to_historize
+    #         )
+    #     ]
 
 
 def filter_nan(xagg: Union[Series, DataFrame], str_nan: str) -> DataFrame:
@@ -579,3 +612,22 @@ def filter_nan(xagg: Union[Series, DataFrame], str_nan: str) -> DataFrame:
             filtered_xagg = xagg.drop(str_nan, axis=0)
 
     return filtered_xagg
+
+
+def clean_combination(combination: dict, feature: BaseFeature) -> dict:
+    """Cleans a combination to remove unwanted keys"""
+
+    # removing unwanted keys
+    index_to_groupby = combination.pop("index_to_groupby")
+
+    # checking if dropna was used
+    dropna = feature.nan in index_to_groupby
+
+    # computing number of modalities
+    n_mod = len(combination["combination"])
+
+    # removing unwanted keys
+    unwanted_keys = ["xagg", "combination"]
+    filtered = {k: v for k, v in combination.items() if k not in unwanted_keys}
+
+    return {**filtered, "n_mod": n_mod, "dropna": dropna, "combination": index_to_groupby}

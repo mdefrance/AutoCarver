@@ -179,6 +179,16 @@ class BaseCarver(BaseDiscretizer, ABC):
         """Returns the pretty_print attribute"""
         return self.verbose and _has_idisplay
 
+    @property
+    def max_n_mod(self) -> int:
+        """Returns the max_n_mod attribute"""
+        return self.combinations.max_n_mod
+
+    @property.setter
+    def max_n_mod(self, value: int) -> None:
+        """Sets the max_n_mod attribute"""
+        self.combinations.max_n_mod = value
+
     def _prepare_data(self, samples: Samples) -> Samples:
         """Validates format and content of X and y.
 

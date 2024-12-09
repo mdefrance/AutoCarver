@@ -5,7 +5,7 @@ for continuous regression tasks.
 from numpy import unique
 from pandas import DataFrame, Series
 
-from ..combinations import ContinuousCombinationEvaluator, KruskalCombinations
+from ..combinations import KruskalCombinations
 from ..features import BaseFeature, Features
 from ..utils import extend_docstring
 from .utils.base_carver import BaseCarver, Samples
@@ -32,7 +32,7 @@ class ContinuousCarver(BaseCarver):
         features: Features,
         min_freq: float,
         dropna: bool = True,
-        combinations: ContinuousCombinationEvaluator = None,
+        max_n_mod: int = 5,
         **kwargs: dict,
     ) -> None:
         """
@@ -40,8 +40,9 @@ class ContinuousCarver(BaseCarver):
         ----------
         """
         # default binary combinations
+        combinations = kwargs.get("combinations")
         if combinations is None:
-            combinations = KruskalCombinations()
+            combinations = KruskalCombinations(max_n_mod=max_n_mod)
 
         # association measure used to find the best groups for binary targets
         if not combinations.is_y_continuous:
