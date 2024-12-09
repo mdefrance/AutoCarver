@@ -220,7 +220,6 @@ class CombinationEvaluator(ABC):
 
         # checking for non-nan values
         if self.samples.train.shape[0] > 1:
-
             # historizing raw combination
             self._historize_raw_combination()
 
@@ -365,7 +364,6 @@ class CombinationEvaluator(ABC):
 
         # historizing all remaining combinations
         for combination in associations[n_combination + 1 :]:
-
             # historizing not tested combination
             self.feature.history.append(
                 {**clean_combination(combination, self.feature), "info": "Not checked"}
@@ -379,7 +377,6 @@ class CombinationEvaluator(ABC):
 
         # checking for viability
         if test_results["viable"]:
-
             # setting feature's statistics (selected combination)
             self.feature.statistics = test_results.pop("train_rates")
 
