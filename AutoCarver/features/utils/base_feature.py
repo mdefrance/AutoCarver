@@ -3,7 +3,7 @@
 
 import json
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Union
 
 from pandas import DataFrame, Series
 
@@ -116,7 +116,7 @@ class BaseFeature(ABC):
         self.max_n_chars = kwargs.get("max_n_chars", 50)
 
         # initiating feature's trained statistics
-        self.statistics: dict[str:Any] = kwargs.get("statistics", {})
+        self.statistics: dict[str:Any] = kwargs.get("statistics", None)
 
         # initiating feature's combination history
         self.history: list[dict] = kwargs.get("history", [])
@@ -282,10 +282,29 @@ class BaseFeature(ABC):
         # saving updated labels
         self.labels = labels
 
+        # updating statistics labels
+        self._update_statistics_label()
+
+    def _update_statistics_label(self) -> None:
+        """updates feature's statistics index with labels"""
+
+        # updating feature's statistics
+        if self.statistics is not None and isinstance(self.statistics, DataFrame):
+            to_rename = {value: label for value, label in zip(self.values, self.labels)}
+            self.statistics.rename(index=to_rename, inplace=True)
+
+    def _update_statistics_value(
+        self, kept_label: Union[str, float], kept_value: Union[str, float]
+    ) -> None:
+        """updates feature's statistics index with values"""
+
+        # updating feature's statistics
+        if self.statistics is not None and isinstance(self.statistics, DataFrame):
+            self.statistics.rename(index={kept_label: kept_value}, inplace=True)
+
     @abstractmethod
     def _specific_update(self, values: GroupedList, convert_labels: bool = False) -> None:
         """update content of values specifically per feature type"""
-        pass
 
     def update(
         self,

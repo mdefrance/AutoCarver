@@ -184,7 +184,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         """Returns the max_n_mod attribute"""
         return self.combinations.max_n_mod
 
-    @property.setter
+    @max_n_mod.setter
     def max_n_mod(self, value: int) -> None:
         """Sets the max_n_mod attribute"""
         self.combinations.max_n_mod = value

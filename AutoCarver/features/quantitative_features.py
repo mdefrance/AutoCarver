@@ -8,6 +8,8 @@ from .utils.grouped_list import GroupedList
 
 
 class QuantitativeFeature(BaseFeature):
+    """defines a quantitative feature"""
+
     __name__ = "Quantitative"
     is_quantitative = True
 
@@ -36,6 +38,7 @@ class QuantitativeFeature(BaseFeature):
         else:
             # iterating over each grouped values
             for kept_label, grouped_labels in values.content.items():
+
                 # converting labels to values
                 kept_value = self.value_per_label.get(kept_label)
                 grouped_values = [self.value_per_label.get(label) for label in grouped_labels]
@@ -63,6 +66,9 @@ class QuantitativeFeature(BaseFeature):
                 # updating values if any to group
                 if len(grouped_values) > 0:
                     self.values.group(grouped_values, kept_value)
+
+                # updating statistics
+                self._update_statistics_value(kept_label, kept_value)
 
     def make_labels(self) -> GroupedList:
         """gives labels per quantile (values for continuous features)

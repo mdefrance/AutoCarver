@@ -10,6 +10,8 @@ from .utils.grouped_list import GroupedList
 
 
 class QualitativeFeature(BaseFeature):
+    """defines a qualitative feature"""
+
     __name__ = "Qualitative"
     is_qualitative = True
 
@@ -152,6 +154,9 @@ class QualitativeFeature(BaseFeature):
                 # updating values if any to group
                 if len(grouped_values) > 0:
                     self.values.group(grouped_values, kept_value)
+
+                # updating statistics
+                self._update_statistics_value(kept_label, kept_value)
 
     @abstractmethod
     def _specific_formatting(self, ordered_content: list[str]) -> str:
