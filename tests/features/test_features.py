@@ -591,7 +591,7 @@ def test_features_get_summaries(features):
     for feature in features:
         if feature.values is None:
             feature.values = GroupedList([1, 2, 3])
-    summaries = features.get_summaries()
+    summaries = features.summary
     assert isinstance(summaries, DataFrame)
     summary_features = list(summaries.reset_index(drop=False)["feature"])
     for feature in features:

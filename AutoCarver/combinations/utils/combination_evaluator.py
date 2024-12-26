@@ -365,9 +365,9 @@ class CombinationEvaluator(ABC):
         # historizing all remaining combinations
         for combination in associations[n_combination + 1 :]:
             # historizing not tested combination
-            self.feature.history.append(
+            self.feature.history = [
                 {**clean_combination(combination, self.feature), "info": "Not checked"}
-            )
+            ]
 
     def _historize_combination(self, combination: dict, test_results: dict) -> None:
         """historizes the test results of the combination"""
@@ -398,7 +398,7 @@ class CombinationEvaluator(ABC):
         test_results.update({"info": info})
 
         # historizing test results
-        self.feature.history.append(test_results)
+        self.feature.history = [test_results]
 
     def _historize_raw_combination(self):
         """historizes the raw combination"""
@@ -432,7 +432,7 @@ class CombinationEvaluator(ABC):
         }
 
         # historizing within feature
-        self.feature.history.append({**combination, "n_mod": n_mod, "dropna": False})
+        self.feature.history = [{**combination, "n_mod": n_mod, "dropna": False}]
 
     def to_json(self) -> dict:
         """Converts to JSON format.

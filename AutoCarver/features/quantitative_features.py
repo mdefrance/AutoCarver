@@ -120,7 +120,8 @@ class QuantitativeFeature(BaseFeature):
             # adding group summary
             summary += [{"feature": str(self), "label": group_label, "content": values}]
 
-        return summary
+        # adding statistics and history
+        return self._add_statistics_to_summary(summary)
 
 
 class DatetimeFeature(BaseFeature):

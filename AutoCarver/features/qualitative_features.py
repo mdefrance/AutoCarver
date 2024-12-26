@@ -97,7 +97,8 @@ class QualitativeFeature(BaseFeature):
             # adding group summary
             summary += [{"feature": str(self), "label": group_label, "content": values}]
 
-        return summary
+        # adding statistics and history
+        return self._add_statistics_to_summary(summary)
 
     def _specific_update(self, values: GroupedList, convert_labels: bool = False) -> None:
         """update content of values specifically per feature type"""

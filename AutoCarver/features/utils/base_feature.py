@@ -154,6 +154,7 @@ class BaseFeature(ABC):
     @history.setter
     def history(self, value: list[dict]) -> None:
         """Feature's combination history"""
+        # initiating history
         if self._history is None:
             self._history: list[dict] = []
         self._history += value
@@ -278,7 +279,7 @@ class BaseFeature(ABC):
             # updating label_per_value
             for grouped_value in self.values.get(value):
                 self.label_per_value.update({grouped_value: label})
-            
+
             # updating value_per_label
             self.value_per_label.update({label: value})
 
@@ -293,7 +294,52 @@ class BaseFeature(ABC):
     @abstractmethod
     def get_summary(self) -> dict:
         """returns a summary of the feature"""
-        # TODO add statistics
+
+    def _add_statistics_to_summary(self, summary: list[dict]) -> list[dict]:
+        """adds statistics to summary"""
+        # adding statistics
+        if self.statistics is not None:
+            # iterating over each modality
+            for label_content in summary:
+                label = label_content["label"]
+                statistics = self.statistics.loc[label].to_dict()
+                label_content.update(statistics)
+
+        # adding hisory
+        history = self.history
+        if len(history) > 0:
+            selected = {}
+
+            # checking for viable combination without dropna
+            viable = history["viable"].fillna(False)
+            if viable.any():
+
+                # checking for viable combination with dropna
+                dropna = history["dropna"].fillna(False)
+                if dropna.any():
+
+                    # best_combination with dropna
+                    if history[dropna].viable.any():
+                        selected = history[viable & dropna].iloc[0].to_dict()
+
+                # best_combination for without dropna
+                else:
+                    selected = history[viable].iloc[0].to_dict()
+
+            # TODO checking for match between selected combination and summary
+            # removing unwanted keys
+            selected.pop("viable", None)
+            selected.pop("dropna", None)
+            selected.pop("combination", None)
+            selected.pop("info", None)
+            selected.pop("train", None)
+            selected.pop("dev", None)
+
+            # adding selected combination to summary
+            for label_content in summary:
+                label_content.update(selected)
+
+        return summary
 
     def update_labels(self) -> None:
         """updates label for each value of the feature"""

@@ -55,6 +55,8 @@ from .utils.grouped_list import GroupedList
 
 
 class Features:
+    """A set of typed features"""
+
     __name__ = "Features"
 
     def __init__(
@@ -65,6 +67,8 @@ class Features:
         ordinal_values: dict[str, list[str]] = None,
         **kwargs: dict,
     ) -> None:
+        """Initiates a set of features"""
+
         # ordered values per ordinal features
         self.ordinal_values = ordinal_values
 
@@ -355,14 +359,25 @@ class Features:
 
         return [feature for feature in self if feature.version_tag == y_class]
 
-    def get_summaries(self) -> DataFrame:
-        """returns summaries of features' values' content"""
+    @property
+    def summary(self) -> DataFrame:
+        """Returns summaries of features' values' content"""
         # iterating over each feature
         summaries = []
         for feature in self:
             summaries += feature.get_summary()
+        
+        # converting to DataFrame
+        summaries = DataFrame(summaries)
 
-        return DataFrame(summaries).set_index(["feature", "label"])
+        # defining indices to set
+        indices = []
+        for col in summaries.columns:
+            if col not in ["feature", "label", "content", "target_rate", "frequency"]:
+                indices += [col]
+        indices = ["feature"] + indices + ["label"]
+
+        return summaries.set_index(indices)
 
     def to_json(self, light_mode: bool = False) -> dict:
         """Converts a feature to JSON format"""
