@@ -1,7 +1,6 @@
 """ TODO: initiate features from dataset
 """
 
-import json
 from abc import ABC, abstractmethod
 from typing import Any, Union
 
@@ -104,7 +103,7 @@ class BaseFeature(ABC):
         self.values = None  # current values
         self._labels = None  # current labels
         self.label_per_value: dict[str, str] = {}  # current label for all existing values
-        self.value_per_label: dict[str, str] = {}  # a value for each current label
+        self.value_per_label: dict[str, str] = {}  # label for all existing values
 
         # initating feature dtypes
         self.is_ordinal = kwargs.get("is_ordinal", self.is_ordinal)
@@ -116,10 +115,10 @@ class BaseFeature(ABC):
         self.max_n_chars = kwargs.get("max_n_chars", 50)
 
         # initiating feature's trained statistics
-        self.statistics: dict[str:Any] = kwargs.get("statistics", None)
+        self._statistics: dict[str:Any] = kwargs.get("statistics", None)
 
         # initiating feature's combination history
-        self.history: list[dict] = kwargs.get("history", [])
+        self._history: list[dict] = kwargs.get("history", None)
 
         # initiating base ordering (quantitative features)
         self.raw_order: list[str] = kwargs.get("raw_order", [])
@@ -131,6 +130,33 @@ class BaseFeature(ABC):
     def __repr__(self) -> str:
         """Feature representation"""
         return f"{self.__name__}('{self.version}')"
+
+    @property
+    def statistics(self) -> DataFrame:
+        """Feature's trained statistics"""
+        if self._statistics is not None:
+            if not isinstance(self._statistics, DataFrame):
+                return DataFrame(self._statistics)
+        return self._statistics
+
+    @statistics.setter
+    def statistics(self, value: DataFrame) -> None:
+        """Feature's trained statistics"""
+        self._statistics = value
+
+    @property
+    def history(self) -> DataFrame:
+        """Feature's combination history"""
+        if self._history is not None:
+            return DataFrame(self._history)
+        return []
+
+    @history.setter
+    def history(self, value: list[dict]) -> None:
+        """Feature's combination history"""
+        if self._history is None:
+            self._history: list[dict] = []
+        self._history += value
 
     @property
     def has_default(self) -> bool:
@@ -246,14 +272,14 @@ class BaseFeature(ABC):
     def labels(self, values: GroupedList) -> None:
         """updates labels per values and values per label associated to feature's labels"""
 
-        # updating label_per_value and value_per_label accordingly
+        # updating label_per_value accordingly
         self.value_per_label = {}
         for value, label in zip(self.values, values):
             # updating label_per_value
             for grouped_value in self.values.get(value):
                 self.label_per_value.update({grouped_value: label})
-
-            # udpating value_per_label
+            
+            # updating value_per_label
             self.value_per_label.update({label: value})
 
         self._labels = list(values)
@@ -384,6 +410,11 @@ class BaseFeature(ABC):
         str
             JSON serialized object
         """
+        # serializing statistics and history
+        statistics = None
+        if isinstance(self.statistics, DataFrame):
+            statistics = self.statistics.to_dict()
+
         # minimal output json
         feature = {
             "name": self.name,
@@ -403,11 +434,12 @@ class BaseFeature(ABC):
             "is_quantitative": self.is_quantitative,
             "raw_order": self.raw_order,
             "ordinal_encoding": self.ordinal_encoding,
+            "statistics": statistics,
         }
 
         # enriched mode (larger json)
         if not light_mode:
-            feature.update({"statistics": self.statistics, "history": self.history})
+            feature.update({"history": self.history})
 
         return json_serialize_feature(feature)
 
@@ -418,13 +450,8 @@ class BaseFeature(ABC):
         # deserializing content into grouped list of values
         values = json_deserialize_content(feature_json)
 
-        # loading history
-        history = []
-        if "history" in feature_json:
-            history = json.loads(feature_json.pop("history"))
-
         # initiating feature without content
-        feature = cls(**dict(feature_json, history=history, load_mode=True))
+        feature = cls(**dict(feature_json, load_mode=True))
 
         # updating feature with deserialized content
         if values is not None:

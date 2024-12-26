@@ -31,7 +31,7 @@ def test_base_feature_initialization() -> None:
     assert not feature.is_categorical
     assert not feature.is_qualitative
     assert not feature.is_quantitative
-    assert isinstance(feature.statistics, dict) and len(feature.statistics) == 0
+    assert feature.statistics is None
     assert isinstance(feature.history, list) and len(feature.history) == 0
     assert isinstance(feature.raw_order, list) and len(feature.raw_order) == 0
     assert feature.version == "test_feature"
@@ -279,7 +279,7 @@ def test_base_feature_to_json() -> None:
     assert json_output["is_categorical"]
     assert json_output["values"] == feature.values
     assert not json_output["ordinal_encoding"]
-    assert "statistics" not in json_output
+    assert "statistics" in json_output
     assert "history" not in json_output
     json.dumps(json_output)
 
@@ -302,7 +302,7 @@ def test_base_feature_to_json() -> None:
     assert json_output["is_categorical"]
     assert json_output["values"] == feature.values
     assert json_output["ordinal_encoding"]
-    assert "statistics" not in json_output
+    assert "statistics" in json_output
     assert "history" not in json_output
 
     json_output = feature.to_json(light_mode=False)
@@ -322,7 +322,7 @@ def test_base_feature_load() -> None:
     feature.nan = "nan_value"
     feature.has_nan = True
     feature.update_labels()
-    feature.statistics = {"test": "value"}
+    feature.statistics = DataFrame([{"test": "value"}])
     feature.history = [
         {"combination": [["value1"], ["value2"]]},
         {"combination": [["value1"], ["value3"]]},
@@ -346,8 +346,8 @@ def test_base_feature_load() -> None:
     assert loaded_feature.label_per_value == feature.label_per_value
     assert loaded_feature.value_per_label == feature.value_per_label
     assert loaded_feature.raw_order == feature.raw_order
-    assert loaded_feature.statistics == feature.statistics
-    assert loaded_feature.history == feature.history
+    assert loaded_feature.statistics.equals(feature.statistics)
+    assert loaded_feature.history.equals(feature.history)
     assert not loaded_feature.ordinal_encoding
 
     # ordinal encoding true
@@ -358,7 +358,7 @@ def test_base_feature_load() -> None:
     feature.nan = "nan_value"
     feature.has_nan = True
     feature.ordinal_encoding = True
-    feature.statistics = {"test": "value"}
+    feature.statistics = DataFrame([{"test": "value"}])
     feature.history = [
         {"combination": [["value1"], ["value2"]]},
         {"combination": [["value1"], ["value3"]]},
@@ -382,6 +382,6 @@ def test_base_feature_load() -> None:
     assert loaded_feature.label_per_value == feature.label_per_value
     assert loaded_feature.value_per_label == feature.value_per_label
     assert loaded_feature.raw_order == feature.raw_order
-    assert len(loaded_feature.statistics) == 0
+    assert len(loaded_feature.statistics) == 1
     assert len(loaded_feature.history) == 0
     assert loaded_feature.ordinal_encoding

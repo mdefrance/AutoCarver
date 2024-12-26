@@ -113,30 +113,6 @@ def convert_values_to_numpy_types(
     return output
 
 
-def json_serialize_history(history: list[dict]) -> dict:
-    """JSON serializes a feature's history
-
-    Parameters
-    ----------
-    _history : dict
-        _history to serialize
-
-    Returns
-    -------
-    dict
-        JSON serialized _history
-    """
-
-    # converting history to a json
-    return dumps(
-        [
-            json_serialize_combination(combination)
-            for combination in history
-            if "combination" in combination
-        ]
-    )
-
-
 def json_serialize_feature(feature: dict) -> str:
     """JSON serializes a feature's dict"""
 
@@ -147,11 +123,6 @@ def json_serialize_feature(feature: dict) -> str:
     # serializing content
     content = feature.get("content")
     feature.update({"content": dumps(convert_values_to_base_types(content))})
-
-    # serializing history
-    if "history" in feature:
-        history = feature.get("history")
-        feature.update({"history": json_serialize_history(history)})
 
     return feature
 
