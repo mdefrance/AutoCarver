@@ -16,6 +16,7 @@ from AutoCarver.combinations.binary.binary_combination_evaluators import (
 from AutoCarver.combinations.continuous.continuous_combination_evaluators import KruskalCombinations
 from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample
 from AutoCarver.combinations.utils.combinations import consecutive_combinations, nan_combinations
+from AutoCarver.combinations.utils.testing import TestKeys, TestMessages
 from AutoCarver.features import OrdinalFeature
 
 MAX_N_MOD = 5
@@ -24,9 +25,9 @@ MIN_FREQ = 0.2
 
 @fixture(params=[TschuprowtCombinations, CramervCombinations])
 def evaluator(request: FixtureRequest) -> BinaryCombinationEvaluator:
-    eval = request.param(max_n_mod=MAX_N_MOD)
-    eval.min_freq = MIN_FREQ
-    return eval
+    combi_eval = request.param(max_n_mod=MAX_N_MOD)
+    combi_eval.min_freq = MIN_FREQ
+    return combi_eval
 
 
 def test_init(evaluator: BinaryCombinationEvaluator):
@@ -610,13 +611,13 @@ def test_viability_train(evaluator: BinaryCombinationEvaluator):
 
     expected = [
         {
-            "train": {"viable": True, "min_freq": True, "distinct_rates": True},
+            "train": {TestKeys.VIABLE.value: True},
             "train_rates": DataFrame(
                 {"target_rate": [1.0, 0.333333], "frequency": [0.4, 0.6]}, index=["a", "c"]
             ),
         },
         {
-            "train": {"viable": True, "min_freq": True, "distinct_rates": True},
+            "train": {TestKeys.VIABLE.value: True},
             "train_rates": DataFrame(
                 {"target_rate": [0.5, 1.0], "frequency": [0.8, 0.2]}, index=["a", "c"]
             ),
@@ -624,7 +625,7 @@ def test_viability_train(evaluator: BinaryCombinationEvaluator):
     ]
     for res, exp in zip(result, expected):
         assert allclose(res["train_rates"], exp["train_rates"])
-        assert res["train"] == exp["train"]
+        assert res["train"][TestKeys.VIABLE.value] == exp["train"][TestKeys.VIABLE.value]
 
 
 def test_viability_dev(evaluator: BinaryCombinationEvaluator):
@@ -644,7 +645,7 @@ def test_viability_dev(evaluator: BinaryCombinationEvaluator):
     for combination in associations:
         test_results = evaluator._test_viability_train(combination)
         test_results = evaluator._test_viability_dev(test_results, combination)
-        assert test_results.get("dev").get("viable") is None
+        assert test_results.get("dev").get(TestKeys.VIABLE.value) is None
 
     # test with xagg_dev but not viable on train
     evaluator.samples.dev = AggregatedSample(
@@ -652,39 +653,18 @@ def test_viability_dev(evaluator: BinaryCombinationEvaluator):
     )
     for combination in associations:
         test_results = evaluator._test_viability_dev(
-            {"train": {"viable": False, "min_freq": True, "distinct_rates": True}}, combination
+            {"train": {TestKeys.VIABLE.value: False}}, combination
         )
-        assert test_results.get("dev").get("viable") is None
+        assert test_results.get("dev").get(TestKeys.VIABLE.value) is None
 
     # test with xagg_dev same as train
     result = []
     for combination in associations:
         test_results = evaluator._test_viability_train(combination)
         result += [evaluator._test_viability_dev(test_results, combination)]
-
-    expected = [
-        {
-            "train": {"viable": True, "min_freq": True, "distinct_rates": True},
-            "dev": {
-                "viable": True,
-                "min_freq": True,
-                "distinct_rates": True,
-                "ranks_train_dev": True,
-            },
-        },
-        {
-            "train": {"viable": True, "min_freq": True, "distinct_rates": True},
-            "dev": {
-                "viable": True,
-                "min_freq": True,
-                "distinct_rates": True,
-                "ranks_train_dev": True,
-            },
-        },
-    ]
-    for res, exp in zip(result, expected):
-        assert res["train"] == exp["train"]
-        assert res["dev"] == exp["dev"]
+    for res in result:
+        assert res["train"][TestKeys.VIABLE.value] is True
+        assert res["dev"][TestKeys.VIABLE.value] is True
 
     # test with xagg_dev wrong
     evaluator.samples.dev = AggregatedSample(
@@ -698,22 +678,12 @@ def test_viability_dev(evaluator: BinaryCombinationEvaluator):
 
     expected = [
         {
-            "train": {"viable": True, "min_freq": True, "distinct_rates": True},
-            "dev": {
-                "viable": False,
-                "min_freq": True,
-                "distinct_rates": True,
-                "ranks_train_dev": False,
-            },
+            "train": {TestKeys.VIABLE.value: True, TestKeys.INFO: TestMessages.PASSED_TESTS},
+            "dev": {TestKeys.VIABLE.value: False, TestKeys.INFO: TestMessages.INVERSION_RATES},
         },
         {
-            "train": {"viable": True, "min_freq": True, "distinct_rates": True},
-            "dev": {
-                "viable": False,
-                "min_freq": True,
-                "distinct_rates": True,
-                "ranks_train_dev": False,
-            },
+            "train": {TestKeys.VIABLE.value: True, TestKeys.INFO: TestMessages.PASSED_TESTS},
+            "dev": {TestKeys.VIABLE.value: False, TestKeys.INFO: TestMessages.INVERSION_RATES},
         },
     ]
     for res, exp in zip(result, expected):
@@ -730,6 +700,7 @@ def test_get_viable_combination_without_dev(evaluator: BinaryCombinationEvaluato
     combinations = consecutive_combinations(feature.labels, 2)
 
     evaluator.samples.train = AggregatedSample(xagg)
+    evaluator.feature = feature
 
     grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
     associations = evaluator._compute_associations(grouped_xaggs)
@@ -893,13 +864,11 @@ def test_best_association_with_combinations_viable(evaluator: BinaryCombinationE
     expected = {
         "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
         "combination": [["a"], ["b", "c"]],
-        "index_to_groupby": {"a": "a", "b": "b", "c": "b"},
         "cramerv": 0.25,
         "tschuprowt": 0.25,
     }
     assert allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
-    assert result["index_to_groupby"] == expected["index_to_groupby"]
     assert result["cramerv"] == expected["cramerv"]
     assert result["tschuprowt"] == expected["tschuprowt"]
 
@@ -957,13 +926,11 @@ def test_best_association_with_nan_combinations_viable(evaluator: BinaryCombinat
     expected = {
         "xagg": DataFrame({0: [0, 2], 1: [3, 0]}, index=["a", "b"]),
         "combination": [["a", "__NAN__"], ["b"]],
-        "index_to_groupby": {"a": "a", "__NAN__": "a", "b": "b"},
         "cramerv": 0.5833333333,
         "tschuprowt": 0.5833333333,
     }
     assert allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
-    assert result["index_to_groupby"] == expected["index_to_groupby"]
     assert result["cramerv"] == expected["cramerv"]
     assert result["tschuprowt"] == expected["tschuprowt"]
     print(evaluator.samples.train.xagg)
@@ -995,13 +962,11 @@ def test_get_best_combination_non_nan_viable(evaluator: BinaryCombinationEvaluat
     expected = {
         "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
         "combination": [["a"], ["b", "c"]],
-        "index_to_groupby": {"a": "a", "b": "b", "c": "b"},
         "cramerv": 0.25,
         "tschuprowt": 0.25,
     }
     assert allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
-    assert result["index_to_groupby"] == expected["index_to_groupby"]
     assert result["cramerv"] == expected["cramerv"]
     assert result["tschuprowt"] == expected["tschuprowt"]
 
@@ -1051,13 +1016,11 @@ def test_get_best_combination_non_nan_viable_with_nan(evaluator: BinaryCombinati
     expected = {
         "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
         "combination": [["a"], ["b", "c"]],
-        "index_to_groupby": {"a": "a", "b": "b", "c": "b"},
         "cramerv": 0.25,
         "tschuprowt": 0.25,
     }
     assert allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
-    assert result["index_to_groupby"] == expected["index_to_groupby"]
     assert result["cramerv"] == expected["cramerv"]
     assert result["tschuprowt"] == expected["tschuprowt"]
 
@@ -1229,14 +1192,12 @@ def test_get_best_combination_with_nan_viable_with_nan(evaluator: BinaryCombinat
     expected = {
         "xagg": DataFrame({0: [0, 2], 1: [5, 1]}, index=["a", "b to c"]),
         "combination": [["a", "__NAN__"], ["b to c"]],
-        "index_to_groupby": {"a": "a", "__NAN__": "a", "b to c": "b to c"},
         "cramerv": 0.4472135955,
         "tschuprowt": 0.4472135955,
     }
 
     assert allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
-    assert result["index_to_groupby"] == expected["index_to_groupby"]
     assert result["cramerv"] == expected["cramerv"]
     assert result["tschuprowt"] == expected["tschuprowt"]
 
@@ -1264,13 +1225,11 @@ def test_get_best_combination_viable(evaluator: BinaryCombinationEvaluator):
     expected = {
         "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
         "combination": [["a"], ["b", "c"]],
-        "index_to_groupby": {"a": "a", "b": "b", "c": "b"},
         "cramerv": 0.25,
         "tschuprowt": 0.25,
     }
     assert allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
-    assert result["index_to_groupby"] == expected["index_to_groupby"]
     assert result["cramerv"] == expected["cramerv"]
     assert result["tschuprowt"] == expected["tschuprowt"]
 
@@ -1298,13 +1257,11 @@ def test_get_best_combination_viable_without_dev(evaluator: BinaryCombinationEva
     expected = {
         "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
         "combination": [["a"], ["b", "c"]],
-        "index_to_groupby": {"a": "a", "b": "b", "c": "b"},
         "cramerv": 0.25,
         "tschuprowt": 0.25,
     }
     assert allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
-    assert result["index_to_groupby"] == expected["index_to_groupby"]
     assert result["cramerv"] == expected["cramerv"]
     assert result["tschuprowt"] == expected["tschuprowt"]
 
@@ -1345,14 +1302,12 @@ def test_get_best_combination_viable_with_nan_without_feature_nan(
     expected = {
         "xagg": DataFrame({0: [2, 0], 1: [2, 4]}, index=["a", "c"]),
         "combination": [["a", "b"], ["c", "d"]],
-        "index_to_groupby": {"a": "a", "b": "a", "c": "c", "d": "c"},
         "cramerv": 0.2886751346,
         "tschuprowt": 0.2886751346,
     }
 
     assert allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
-    assert result["index_to_groupby"] == expected["index_to_groupby"]
     assert result["cramerv"] == expected["cramerv"]
     assert result["tschuprowt"] == expected["tschuprowt"]
 
@@ -1376,14 +1331,12 @@ def test_get_best_combination_viable_with_nan_without_dropna(
     expected = {
         "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
         "combination": [["a"], ["b", "c"]],
-        "index_to_groupby": {"a": "a", "b": "b", "c": "b"},
         "cramerv": 0.25,
         "tschuprowt": 0.25,
     }
 
     assert allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
-    assert result["index_to_groupby"] == expected["index_to_groupby"]
     assert result["cramerv"] == expected["cramerv"]
     assert result["tschuprowt"] == expected["tschuprowt"]
 
@@ -1415,14 +1368,12 @@ def test_get_best_combination_viable_with_nan(evaluator: BinaryCombinationEvalua
     expected = {
         "xagg": DataFrame({0: [0, 2], 1: [5, 1]}, index=["a", "b to c"]),
         "combination": [["a", "__NAN__"], ["b to c"]],
-        "index_to_groupby": {"a": "a", "__NAN__": "a", "b to c": "b to c"},
         "cramerv": 0.4472135955,
         "tschuprowt": 0.4472135955,
     }
 
     assert allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
-    assert result["index_to_groupby"] == expected["index_to_groupby"]
     assert result["cramerv"] == expected["cramerv"]
     assert result["tschuprowt"] == expected["tschuprowt"]
 

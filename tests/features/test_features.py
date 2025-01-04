@@ -6,6 +6,9 @@ import json
 from pandas import DataFrame
 from pytest import fixture, raises
 
+from AutoCarver.features.qualitative_features import get_categorical_features, get_ordinal_features
+from AutoCarver.features.quantitative_features import get_quantitative_features
+
 from AutoCarver.features import (
     BaseFeature,
     CategoricalFeature,
@@ -561,10 +564,6 @@ def test_features_to_dict(features):
     assert all(feature.version in feature_dict for feature in features)
     assert not any(feature.name in feature_dict for feature in features)
     assert all(feature_dict.get(feature.version) == feature for feature in features)
-
-
-from AutoCarver.features.qualitative_features import get_categorical_features, get_ordinal_features
-from AutoCarver.features.quantitative_features import get_quantitative_features
 
 
 def test_features_load(features):

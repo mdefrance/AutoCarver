@@ -1,7 +1,27 @@
 """ set of tests for combinations within carvers"""
 
+from enum import Enum
 from numpy import isclose
 from pandas import DataFrame, Series
+
+
+class TestKeys(str, Enum):
+    """keys for test results"""
+
+    RANKS_TRAIN_DEV = "ranks_train_dev"
+    MIN_FREQ = "min_freq"
+    DISTINCT_RATES = "distinct_rates"
+    VIABLE = "viable"
+    INFO = "info"
+
+
+class TestMessages(str, Enum):
+    """messages for test results"""
+
+    INVERSION_RATES = "Inversion of target rates per modality"
+    NON_REPRESENTATIVE = "Non-representative modality for min_freq={min_freq:2.2%}"
+    NON_DISTINCT_RATES = "Non-distinct target rates per consecutive modalities"
+    PASSED_TESTS = "passed tests"
 
 
 def _test_distinct_target_rates_between_modalities(target_rates: Series) -> bool:
@@ -29,12 +49,13 @@ def _test_modality_ordering(train_target_rate: Series, dev_target_rate: Series) 
 def is_viable(test_results: dict):
     """checks if combination is viable on train and dev (if provided)"""
 
-    return test_results["train"]["viable"] and (
-        test_results["dev"]["viable"] or test_results["dev"]["viable"] is None
+    return test_results["train"][TestKeys.VIABLE.value] and (
+        test_results["dev"][TestKeys.VIABLE.value]
+        or test_results["dev"][TestKeys.VIABLE.value] is None
     )
 
 
-def _test_viability(rates: DataFrame, min_freq: float, train_target_rate: Series = None) -> dict:
+def test_viability(rates: DataFrame, min_freq: float, train_target_rate: Series = None) -> dict:
     """tests viability of the rates"""
 
     # - minimum frequency is reached for all modalities
@@ -45,16 +66,19 @@ def _test_viability(rates: DataFrame, min_freq: float, train_target_rate: Series
 
     # gathering results
     test_results = {
-        "viable": min_freq and distinct_rates,
-        "min_freq": min_freq,
-        "distinct_rates": distinct_rates,
+        TestKeys.VIABLE.value: min_freq and distinct_rates,
+        TestKeys.MIN_FREQ.value: min_freq,
+        TestKeys.DISTINCT_RATES.value: distinct_rates,
     }
 
     # adding ranking test if train_rates where provided
     if train_target_rate is not None:
         ordering = _test_modality_ordering(train_target_rate, rates["target_rate"])
         test_results.update(
-            {"ranks_train_dev": ordering, "viable": test_results["viable"] and ordering}
+            {
+                TestKeys.RANKS_TRAIN_DEV.value: ordering,
+                TestKeys.VIABLE.value: test_results[TestKeys.VIABLE.value] and ordering,
+            }
         )
 
         # return tests on dev
@@ -64,23 +88,25 @@ def _test_viability(rates: DataFrame, min_freq: float, train_target_rate: Series
     return {
         "train": add_info(test_results, min_freq),
         "train_rates": rates,
-        "viable": test_results["viable"],
+        TestKeys.VIABLE.value: test_results[TestKeys.VIABLE.value],
     }
 
 
-def add_info(test_results: dict, min_freq: float) -> dict:
-    """adds information to test results"""
+def add_info(test_results: dict[str, bool], min_freq: float) -> dict[str, str]:
+    """Adds information to test results."""
 
-    # - adding information to test results
     messages: list[str] = []
-    if not test_results.get("ranks_train_dev", True):
-        messages += ["Inversion of target rates per modality"]
-    if not test_results.get("min_freq", True):
-        messages += [f"Non-representative modality for min_freq={min_freq:2.2%}"]
-    if not test_results.get("distinct_rates", True):
-        messages += ["non-distinct target rates per consecutive modalities"]
+    if not test_results.get(TestKeys.RANKS_TRAIN_DEV.value, True):
+        messages.append(TestMessages.INVERSION_RATES.value)
+    if not test_results.get(TestKeys.MIN_FREQ.value, True):
+        messages.append(TestMessages.NON_REPRESENTATIVE.value.format(min_freq=min_freq))
+    if not test_results.get(TestKeys.DISTINCT_RATES.value, True):
+        messages.append(TestMessages.NON_DISTINCT_RATES.value)
+
+    if not messages:
+        messages.append(TestMessages.PASSED_TESTS.value)
 
     return {
-        "viable": test_results["viable"],
-        "info": "; ".join(messages),
+        TestKeys.VIABLE.value: test_results[TestKeys.VIABLE.value],
+        TestKeys.INFO.value: "; ".join(messages),
     }

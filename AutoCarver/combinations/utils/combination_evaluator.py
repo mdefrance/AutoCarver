@@ -18,7 +18,7 @@ from .combinations import (
     order_apply_combination,
     xagg_apply_combination,
 )
-from .testing import _test_viability, is_viable
+from .testing import test_viability, is_viable, TestKeys
 
 
 @dataclass
@@ -278,17 +278,18 @@ class CombinationEvaluator(ABC):
         train_rates = self._compute_target_rates(combination["xagg"])
 
         # viability on train sample:
-        return _test_viability(train_rates, self.min_freq)
+        return test_viability(train_rates, self.min_freq)
 
     def _test_viability_dev(self, test_results: dict, combination: dict) -> dict:
         """testing the viability of the combination on xagg_dev"""
 
         # case 0: not viable on train or no test sample -> not testing for robustness
-        if not test_results["viable"] or self.samples.dev.xagg is None:
+        print("test_results", test_results)
+        if not test_results["train"][TestKeys.VIABLE.value] or self.samples.dev.xagg is None:
             return {
                 "train": test_results["train"],
-                "dev": {"viable": None},
-                "viable": test_results["viable"],
+                "dev": {TestKeys.VIABLE.value: None},
+                TestKeys.VIABLE.value: test_results["train"][TestKeys.VIABLE.value],
             }
 
         # case 1: test sample provided and viable on train -> testing robustness
@@ -302,11 +303,11 @@ class CombinationEvaluator(ABC):
         dev_rates = self._compute_target_rates(grouped_xagg_dev)
 
         # viability on dev sample:
-        dev_results = _test_viability(dev_rates, self.min_freq, train_target_rate)
+        dev_results = test_viability(dev_rates, self.min_freq, train_target_rate)
         test_results = {**test_results, **dev_results}
 
         # checking for viability on both samples
-        test_results["viable"] = is_viable(test_results)
+        test_results[TestKeys.VIABLE.value] = is_viable(test_results)
 
         return test_results
 
@@ -331,7 +332,7 @@ class CombinationEvaluator(ABC):
             self._historize_combination(combination, test_results)
 
             # best combination found: breaking the loop on combinations
-            if test_results["viable"]:
+            if test_results[TestKeys.VIABLE.value]:
                 viable_combination = combination
 
                 # historizing remaining combinations/not tested
@@ -376,7 +377,7 @@ class CombinationEvaluator(ABC):
         test_results.update(clean_combination(combination, self.feature))
 
         # checking for viability
-        if test_results["viable"]:
+        if test_results[TestKeys.VIABLE.value]:
             # setting feature's statistics (selected combination)
             self.feature.statistics = test_results.pop("train_rates")
 
