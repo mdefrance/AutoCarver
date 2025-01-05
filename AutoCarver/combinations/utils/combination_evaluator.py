@@ -278,19 +278,16 @@ class CombinationEvaluator(ABC):
         train_rates = self._compute_target_rates(combination["xagg"])
 
         # viability on train sample:
-        return test_viability(train_rates, self.min_freq)
+        result = test_viability(train_rates, self.min_freq)
+
+        return result
 
     def _test_viability_dev(self, test_results: dict, combination: dict) -> dict:
         """testing the viability of the combination on xagg_dev"""
 
         # case 0: not viable on train or no test sample -> not testing for robustness
-        print("test_results", test_results)
-        if not test_results["train"][TestKeys.VIABLE.value] or self.samples.dev.xagg is None:
-            return {
-                "train": test_results["train"],
-                "dev": {TestKeys.VIABLE.value: None},
-                TestKeys.VIABLE.value: test_results["train"][TestKeys.VIABLE.value],
-            }
+        if not test_results[TestKeys.VIABLE.value] or self.samples.dev.xagg is None:
+            return {**test_results, "dev": {TestKeys.VIABLE.value: None}}
 
         # case 1: test sample provided and viable on train -> testing robustness
         # getting train target rates
@@ -520,7 +517,9 @@ def filter_nan(xagg: Union[Series, DataFrame], str_nan: str) -> DataFrame:
     return filtered_xagg
 
 
-def clean_combination(combination: dict, feature: BaseFeature) -> dict:
+def clean_combination(
+    combination: dict, feature: BaseFeature, remove_train_rates: bool = False
+) -> dict:
     """Cleans a combination to remove unwanted keys"""
 
     # removing unwanted keys
@@ -532,8 +531,12 @@ def clean_combination(combination: dict, feature: BaseFeature) -> dict:
     # computing number of modalities
     n_mod = len(combination["combination"])
 
-    # removing unwanted keys
+    # listing unwanted keys
     unwanted_keys = ["xagg", "combination"]
+    if not remove_train_rates:
+        unwanted_keys.append("train_rates")
+
+    # filtering unwanted keys
     filtered = {k: v for k, v in combination.items() if k not in unwanted_keys}
 
     return {**filtered, "n_mod": n_mod, "dropna": dropna, "combination": index_to_groupby}

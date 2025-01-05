@@ -653,7 +653,7 @@ def test_viability_dev(evaluator: BinaryCombinationEvaluator):
     )
     for combination in associations:
         test_results = evaluator._test_viability_dev(
-            {"train": {TestKeys.VIABLE.value: False}}, combination
+            {"train": {TestKeys.VIABLE.value: False}, TestKeys.VIABLE.value: False}, combination
         )
         assert test_results.get("dev").get(TestKeys.VIABLE.value) is None
 
@@ -711,13 +711,11 @@ def test_get_viable_combination_without_dev(evaluator: BinaryCombinationEvaluato
     expected = {
         "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
         "combination": [["a"], ["b", "c"]],
-        "index_to_groupby": {"a": "a", "b": "b", "c": "b"},
         "cramerv": 0.25,
         "tschuprowt": 0.25,
     }
     assert allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
-    assert result["index_to_groupby"] == expected["index_to_groupby"]
     assert result["cramerv"] == expected["cramerv"]
     assert result["tschuprowt"] == expected["tschuprowt"]
 
@@ -728,6 +726,7 @@ def test_get_viable_combination_with_non_viable_train(evaluator: BinaryCombinati
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
     evaluator.samples.train = AggregatedSample(xagg)
+    evaluator.feature = feature
 
     combinations = consecutive_combinations(feature.labels, 2)
 
@@ -749,6 +748,7 @@ def test_get_viable_combination_with_viable_train(evaluator: BinaryCombinationEv
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
     evaluator.samples.train = AggregatedSample(xagg)
+    evaluator.feature = feature
 
     combinations = consecutive_combinations(feature.labels, 2)
 
@@ -763,13 +763,11 @@ def test_get_viable_combination_with_viable_train(evaluator: BinaryCombinationEv
     expected = {
         "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
         "combination": [["a"], ["b", "c"]],
-        "index_to_groupby": {"a": "a", "b": "b", "c": "b"},
         "cramerv": 0.25,
         "tschuprowt": 0.25,
     }
     assert allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
-    assert result["index_to_groupby"] == expected["index_to_groupby"]
     assert result["cramerv"] == expected["cramerv"]
     assert result["tschuprowt"] == expected["tschuprowt"]
 
@@ -780,6 +778,7 @@ def test_get_viable_combination_with_not_viable_dev(evaluator: BinaryCombination
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
     evaluator.samples.train = AggregatedSample(xagg)
+    evaluator.feature = feature
 
     combinations = consecutive_combinations(feature.labels, 2)
 
