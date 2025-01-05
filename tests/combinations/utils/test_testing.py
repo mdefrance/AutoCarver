@@ -268,7 +268,7 @@ def test_viability_empty_rates():
     min_freq = 0.1
     result = _test_viability(rates, min_freq)
     expected = {
-        "train": {"viable": True, TestKeys.INFO.value: "passed tests"},
+        "train": {"viable": True, TestKeys.INFO.value: TestMessages.PASSED_TESTS.value},
         "train_rates": rates,
     }
     assert result["train"] == expected["train"]

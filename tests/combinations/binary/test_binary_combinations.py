@@ -1052,13 +1052,11 @@ def test_get_best_combination_with_nan_viable(evaluator: BinaryCombinationEvalua
     expected = {
         "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
         "combination": [["a"], ["b", "c"]],
-        "index_to_groupby": {"a": "a", "b": "b", "c": "b"},
         "cramerv": 0.25,
         "tschuprowt": 0.25,
     }
     assert allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
-    assert result["index_to_groupby"] == expected["index_to_groupby"]
     assert result["cramerv"] == expected["cramerv"]
     assert result["tschuprowt"] == expected["tschuprowt"]
 

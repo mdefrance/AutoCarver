@@ -21,7 +21,7 @@ class TestMessages(str, Enum):
     INVERSION_RATES = "Inversion of target rates per modality"
     NON_REPRESENTATIVE = "Non-representative modality for min_freq={min_freq:2.2%}"
     NON_DISTINCT_RATES = "Non-distinct target rates per consecutive modalities"
-    PASSED_TESTS = "passed tests"
+    PASSED_TESTS = ""
 
 
 def _test_distinct_target_rates_between_modalities(target_rates: Series) -> bool:
