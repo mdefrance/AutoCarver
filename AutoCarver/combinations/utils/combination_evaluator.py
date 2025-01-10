@@ -18,7 +18,7 @@ from .combinations import (
     order_apply_combination,
     xagg_apply_combination,
 )
-from .testing import test_viability, is_viable, TestKeys
+from .testing import TestKeys, is_viable, test_viability
 
 
 @dataclass
@@ -219,7 +219,6 @@ class CombinationEvaluator(ABC):
 
         # checking that a combination was found
         if best_association is not None:
-
             # resetting samples' indices to values
             self.samples.set_indices_to_values(self.feature)
 

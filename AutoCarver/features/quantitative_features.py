@@ -38,7 +38,6 @@ class QuantitativeFeature(BaseFeature):
         else:
             # iterating over each grouped values
             for kept_label, grouped_labels in values.content.items():
-
                 # converting labels to values
                 kept_value = self.value_per_label.get(kept_label)
                 grouped_values = [self.value_per_label.get(label) for label in grouped_labels]

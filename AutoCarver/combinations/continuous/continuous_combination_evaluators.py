@@ -2,9 +2,9 @@
 
 from abc import ABC
 
-from numpy import mean, median, var, std
+from numpy import mean, median, std, var
 from pandas import DataFrame, Series
-from scipy.stats import kruskal, mode, iqr
+from scipy.stats import iqr, kruskal, mode
 
 from ..utils.combination_evaluator import AggregatedSample, CombinationEvaluator
 

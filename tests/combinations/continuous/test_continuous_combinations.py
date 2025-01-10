@@ -18,8 +18,8 @@ from AutoCarver.combinations.continuous.continuous_combination_evaluators import
 )
 from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample
 from AutoCarver.combinations.utils.combinations import consecutive_combinations, nan_combinations
-from AutoCarver.features import OrdinalFeature
 from AutoCarver.combinations.utils.testing import TestKeys, TestMessages
+from AutoCarver.features import OrdinalFeature
 
 MAX_N_MOD = 5
 MIN_FREQ = 0.2
@@ -580,7 +580,6 @@ def test_viability_train(evaluator: ContinuousCombinationEvaluator):
         },
     ]
     for res, exp in zip(result, expected):
-
         assert all(res["train_rates"].index == exp["train_rates"].index)
         assert allclose(res["train_rates"], exp["train_rates"])
         assert res["train"][TestKeys.VIABLE.value] == exp["train"][TestKeys.VIABLE.value]

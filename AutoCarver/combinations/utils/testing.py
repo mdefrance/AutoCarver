@@ -1,6 +1,7 @@
 """ set of tests for combinations within carvers"""
 
 from enum import Enum
+
 from numpy import isclose
 from pandas import DataFrame, Series
 

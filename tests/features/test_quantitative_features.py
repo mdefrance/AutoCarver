@@ -258,9 +258,9 @@ def test_quantitative_feature_update_ordinal_encoding(
     assert sample_quantitative_feature.content == {0.1: [0.1], 0.5: [0.5], inf: [0.9, inf]}
     assert sample_quantitative_feature.labels == [0, 1, 2]
     assert sample_quantitative_feature.value_per_label == {
-        0: 'x <= 1.0e-01',
-        1: '1.0e-01 < x <= 5.0e-01',
-        2: '5.0e-01 < x',
+        0: "x <= 1.0e-01",
+        1: "1.0e-01 < x <= 5.0e-01",
+        2: "5.0e-01 < x",
     }
     assert sample_quantitative_feature.label_per_value == {
         0.1: 0,
@@ -281,9 +281,9 @@ def test_quantitative_feature_update_ordinal_encoding(
     }
     assert sample_quantitative_feature.labels == [0, 1, 2]
     assert sample_quantitative_feature.value_per_label == {
-        0: 'x <= 1.0e-01',
-        1: '1.0e-01 < x <= 5.0e-01',
-        2: '5.0e-01 < x',
+        0: "x <= 1.0e-01",
+        1: "1.0e-01 < x <= 5.0e-01",
+        2: "5.0e-01 < x",
     }
     assert sample_quantitative_feature.label_per_value == {
         0.1: 0,

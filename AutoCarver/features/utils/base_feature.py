@@ -285,7 +285,6 @@ class BaseFeature(ABC):
         # default labels are values
         return self._labels
 
-
     @labels.setter
     def labels(self, raw_labels: GroupedList) -> None:
         """updates labels per values and values per label associated to feature's labels"""
@@ -307,7 +306,6 @@ class BaseFeature(ABC):
         # iterating over values and labels
         self.value_per_label = {}
         for value, label, raw_label in zip(self.values, self._labels, raw_labels):
-
             # updating label_per_value
             for grouped_value in self.values.get(value):
                 self.label_per_value.update({grouped_value: label})
@@ -319,7 +317,6 @@ class BaseFeature(ABC):
 
             # updating value_per_label
             self.value_per_label.update({label: value_to_keep})
-
 
     @abstractmethod
     def make_labels(self) -> GroupedList:
@@ -349,11 +346,9 @@ class BaseFeature(ABC):
             # checking for viable combination without dropna
             viable = history["viable"].fillna(False)
             if viable.any():
-
                 # checking for requested dropna
                 dropna = history["dropna"].fillna(False)
                 if dropna.any():
-
                     # checking for viable combination with dropna
                     if history[dropna].viable.any():
                         selected = history[viable & dropna].iloc[0].to_dict()
@@ -376,7 +371,6 @@ class BaseFeature(ABC):
                 label_content.update(selected)
 
         return summary
-
 
     def update_labels(self) -> None:
         """updates label for each value of the feature"""

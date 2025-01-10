@@ -4,15 +4,15 @@ from pandas import DataFrame, Series
 from pytest import raises
 
 from AutoCarver.combinations.utils.testing import (
+    TestKeys,
+    TestMessages,
     _test_distinct_target_rates_between_modalities,
     _test_minimum_frequency_per_modality,
     _test_modality_ordering,
-    test_viability as _test_viability,
-    is_viable,
-    TestKeys,
-    TestMessages,
     add_info,
+    is_viable,
 )
+from AutoCarver.combinations.utils.testing import test_viability as _test_viability
 
 
 def test_distinct_target_rates_between_modalities_distinct():
@@ -92,8 +92,7 @@ def test_modality_ordering_same_order():
 
 
 def test_modality_ordering_different_order_same_values():
-    """Test modality ordering when train and dev target rates have different orders but same values.
-    """
+    """Test modality ordering when train and dev target rates have different orders but same values."""
     train_target_rate = Series([0.1, 0.2, 0.3, 0.4], index=["a", "b", "c", "d"])
     dev_target_rate = Series([0.4, 0.3, 0.2, 0.1], index=["d", "c", "b", "a"])
     result = _test_modality_ordering(train_target_rate, dev_target_rate)

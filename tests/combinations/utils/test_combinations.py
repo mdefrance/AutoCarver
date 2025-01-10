@@ -409,7 +409,9 @@ def test_xagg_apply_combination_mixed_groups():
     order = GroupedList(["a", "b", "c", "d", "e"])
     combination = [["a", "b"], ["c"], ["d", "e"]]
     order = order_apply_combination(order, combination)
-    feature = OrdinalFeature("test", values=GroupedList({"a": ["a", "b"], "c": ["c"], "d": ["d", "e"]}))
+    feature = OrdinalFeature(
+        "test", values=GroupedList({"a": ["a", "b"], "c": ["c"], "d": ["d", "e"]})
+    )
 
     result = xagg_apply_combination(xagg, feature)
     expected = DataFrame({"A": [3, 3, 9], "B": [13, 8, 19]}, index=["a", "c", "d"])
@@ -431,9 +433,7 @@ def test_xagg_apply_combination_with_nan():
 
     result = xagg_apply_combination(xagg, feature)
     print(result)
-    expected = DataFrame(
-        {"A": [3, 7, 5], "B": [11, 15, 10]}, index=["a", "c", feature.nan]
-    )
+    expected = DataFrame({"A": [3, 7, 5], "B": [11, 15, 10]}, index=["a", "c", feature.nan])
     assert result.equals(expected)
 
     # dropped nan
@@ -449,9 +449,7 @@ def test_xagg_apply_combination_with_nan():
 
     result = xagg_apply_combination(xagg, feature)
     print(result)
-    expected = DataFrame(
-        {"A": [3, 7, 5], "B": [11, 15, 10]}, index=["a", "c", feature.nan]
-    )
+    expected = DataFrame({"A": [3, 7, 5], "B": [11, 15, 10]}, index=["a", "c", feature.nan])
     assert result.equals(expected)
 
 

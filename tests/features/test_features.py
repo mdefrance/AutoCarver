@@ -6,9 +6,6 @@ import json
 from pandas import DataFrame
 from pytest import fixture, raises
 
-from AutoCarver.features.qualitative_features import get_categorical_features, get_ordinal_features
-from AutoCarver.features.quantitative_features import get_quantitative_features
-
 from AutoCarver.features import (
     BaseFeature,
     CategoricalFeature,
@@ -27,6 +24,8 @@ from AutoCarver.features.features import (  # Replace 'your_module' with the act
     make_versions,
     remove_version,
 )
+from AutoCarver.features.qualitative_features import get_categorical_features, get_ordinal_features
+from AutoCarver.features.quantitative_features import get_quantitative_features
 from AutoCarver.features.utils import GroupedList
 
 

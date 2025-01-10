@@ -745,7 +745,7 @@ def test_continuous_carver(
         copy=copy,
     )
     chained_discretizer.fit(x_train)
-    
+
     # minimum frequency and maximum number of modality
     min_freq = 0.1
     evaluator.max_n_mod = 4

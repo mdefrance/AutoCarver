@@ -2,7 +2,7 @@
 
 from abc import ABC
 
-from numpy import add, array, searchsorted, sqrt, unique, zeros, log
+from numpy import add, array, log, searchsorted, sqrt, unique, zeros
 from pandas import DataFrame, notna
 from scipy.stats import chi2_contingency
 

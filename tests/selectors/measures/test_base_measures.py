@@ -14,7 +14,8 @@ from AutoCarver.selectors import (
 )
 from AutoCarver.selectors.measures import ReversibleMeasure
 
-# setting BaseMeasure, OutlierMeasure, AbsoluteMeasure, ReversibleMeasure as non abstract classes for the duration of the test
+# setting BaseMeasure, OutlierMeasure, AbsoluteMeasure, ReversibleMeasure as non abstract classes 
+# for the duration of the test
 OutlierMeasure.__abstractmethods__ = set()
 AbsoluteMeasure.__abstractmethods__ = set()
 BaseMeasure.__abstractmethods__ = set()
@@ -215,6 +216,6 @@ def test_mode_measure(mode_measure: ModeMeasure) -> None:
 
 def test_reverse_xy(reversible_measure: ReversibleMeasure) -> None:
     """tests reversible measure"""
-    assert reversible_measure.reversed == False
-    assert reversible_measure.reverse_xy() == True
-    assert reversible_measure.reversed == True
+    assert reversible_measure.reversed is False
+    assert reversible_measure.reverse_xy() is True
+    assert reversible_measure.reversed is True
