@@ -96,5 +96,5 @@ def test_filter(
     feature = sample_ranks[0]
     filter.threshold = 0.5
     valid = filter._validate(feature, 0.6, "feature3")
-    assert valid == False
-    assert feature.statistics["filters"][filter.__name__]["valid"] == False
+    assert valid is False
+    assert feature.statistics["filters"][filter.__name__]["valid"] is False

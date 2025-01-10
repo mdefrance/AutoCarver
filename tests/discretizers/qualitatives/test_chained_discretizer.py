@@ -4,7 +4,6 @@ from numpy import isnan, nan
 from pandas import DataFrame
 from pytest import raises
 
-from AutoCarver.discretizers import ChainedDiscretizer
 from AutoCarver.discretizers.qualitatives.chained_discretizer import (
     ChainedDiscretizer,
     check_frequencies,

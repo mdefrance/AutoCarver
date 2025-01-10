@@ -1,7 +1,6 @@
 """Set of tests for binary_carver module.
 """
 
-import os
 from pathlib import Path
 
 from pandas import DataFrame, Series

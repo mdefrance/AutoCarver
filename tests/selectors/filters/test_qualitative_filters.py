@@ -77,4 +77,4 @@ def test_filter(
     # testing _validate
     filter.threshold = 0.5
     valid = filter._validate(0.6)
-    assert valid == False
+    assert valid is False

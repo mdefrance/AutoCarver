@@ -36,7 +36,8 @@ def init_df(seed: int, size: int = 10000) -> DataFrame:
         + ["High"] * int(7 * 100)
         + ["High+"] * int(40 * 100)  # 47 %
     )
-    # qual_ord_features = ['Low-', 'Low', 'Low+', 'Medium-', 'Medium', 'Medium+', 'High-', 'High', 'High+']
+    # qual_ord_features = ['Low-', 'Low', 'Low+', 'Medium-', 'Medium', 'Medium+', 'High-', 'High',
+    # 'High+']
     ordinal_data = random.choice(qual_ord_features, size=size)
 
     # adding binary target associated to qualitative ordinal feature

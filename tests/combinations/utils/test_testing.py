@@ -92,7 +92,9 @@ def test_modality_ordering_same_order():
 
 
 def test_modality_ordering_different_order_same_values():
-    """Test modality ordering when train and dev target rates have different orders but same values."""
+    """Test modality ordering when train and dev target rates have different orders but same
+    values.
+    """
     train_target_rate = Series([0.1, 0.2, 0.3, 0.4], index=["a", "b", "c", "d"])
     dev_target_rate = Series([0.4, 0.3, 0.2, 0.1], index=["d", "c", "b", "a"])
     result = _test_modality_ordering(train_target_rate, dev_target_rate)

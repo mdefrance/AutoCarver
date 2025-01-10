@@ -76,7 +76,7 @@ def test_is_next_modality_closer_by_target_rate_closer():
     idx = 1
     target_rates = array([0.1, 0.3, 0.4])
     result = is_next_modality_closer_by_target_rate(idx, target_rates)
-    assert result == True
+    assert result is True
 
 
 def test_is_next_modality_closer_by_target_rate_not_closer():
@@ -84,7 +84,7 @@ def test_is_next_modality_closer_by_target_rate_not_closer():
     idx = 1
     target_rates = array([0.4, 0.3, 0.1])
     result = is_next_modality_closer_by_target_rate(idx, target_rates)
-    assert result == False
+    assert result is False
 
 
 def test_is_next_modality_closer_by_target_rate_equal_distance():
@@ -92,7 +92,7 @@ def test_is_next_modality_closer_by_target_rate_equal_distance():
     idx = 1
     target_rates = array([0.2, 0.3, 0.4])
     result = is_next_modality_closer_by_target_rate(idx, target_rates)
-    assert result == False
+    assert result is False
 
 
 def test_is_next_modality_closer_by_target_rate_negative_values():
@@ -100,7 +100,7 @@ def test_is_next_modality_closer_by_target_rate_negative_values():
     idx = 1
     target_rates = array([-0.1, -0.3, -0.4])
     result = is_next_modality_closer_by_target_rate(idx, target_rates)
-    assert result == True
+    assert result is True
 
 
 def test_is_next_modality_closer_by_target_rate_zero_values():
@@ -108,7 +108,7 @@ def test_is_next_modality_closer_by_target_rate_zero_values():
     idx = 1
     target_rates = array([0.1, 0.0, -0.1])
     result = is_next_modality_closer_by_target_rate(idx, target_rates)
-    assert result == False
+    assert result is False
 
 
 def test_is_next_modality_closer_no_frequency():
@@ -120,12 +120,12 @@ def test_is_next_modality_closer_no_frequency():
     target_rates = array([0.1, 0.2, 0.3])
     min_freq = 0.15
     result = is_next_modality_closer(idx, frequencies, target_rates, min_freq)
-    assert result == False
+    assert result is False
 
     # bigger frequency for the next modality
     frequencies = array([0.3, 0.0, 0.2])
     result = is_next_modality_closer(idx, frequencies, target_rates, min_freq)
-    assert result == True
+    assert result is True
 
 
 def test_is_next_modality_closer_underrepresented():
@@ -137,12 +137,12 @@ def test_is_next_modality_closer_underrepresented():
     target_rates = array([0.1, 0.2, 0.3])
     min_freq = 0.15
     result = is_next_modality_closer(idx, frequencies, target_rates, min_freq)
-    assert result == True
+    assert result is True
 
     # previous modality is underrepresented
     frequencies = array([0.1, 0.2, 0.3])
     result = is_next_modality_closer(idx, frequencies, target_rates, min_freq)
-    assert result == False
+    assert result is False
 
 
 def test_is_next_modality_closer_both_underrepresented():
@@ -154,12 +154,12 @@ def test_is_next_modality_closer_both_underrepresented():
     target_rates = array([0.05, 0.2, 0.3])
     min_freq = 0.15
     result = is_next_modality_closer(idx, frequencies, target_rates, min_freq)
-    assert result == True
+    assert result is True
 
     # previous modality is closer by target rate
     target_rates = array([0.1, 0.2, 0.35])
     result = is_next_modality_closer(idx, frequencies, target_rates, min_freq)
-    assert result == False
+    assert result is False
 
 
 def test_is_next_modality_closer_both_overrepresented():
@@ -171,12 +171,12 @@ def test_is_next_modality_closer_both_overrepresented():
     target_rates = array([0.05, 0.2, 0.3])
     min_freq = 0.15
     result = is_next_modality_closer(idx, frequencies, target_rates, min_freq)
-    assert result == True
+    assert result is True
 
     # previous modality is closer by target rate
     target_rates = array([0.1, 0.2, 0.35])
     result = is_next_modality_closer(idx, frequencies, target_rates, min_freq)
-    assert result == False
+    assert result is False
 
 
 def test_compute_stats_basic():

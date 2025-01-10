@@ -14,7 +14,7 @@ from AutoCarver.selectors import (
 )
 from AutoCarver.selectors.measures import ReversibleMeasure
 
-# setting BaseMeasure, OutlierMeasure, AbsoluteMeasure, ReversibleMeasure as non abstract classes 
+# setting BaseMeasure, OutlierMeasure, AbsoluteMeasure, ReversibleMeasure as non abstract classes
 # for the duration of the test
 OutlierMeasure.__abstractmethods__ = set()
 AbsoluteMeasure.__abstractmethods__ = set()
