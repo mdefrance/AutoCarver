@@ -358,7 +358,10 @@ def test_base_feature_load() -> None:
     feature.nan = "nan_value"
     feature.has_nan = True
     feature.ordinal_encoding = True
-    feature.statistics = DataFrame([{"test": "value"}])
+    feature.statistics = DataFrame(
+        [{"col1": "value1", "col2": "value1"}, {"col1": "value2", "col2": "value2"}],
+        index=["a", "c"],
+    )
     feature.history = [
         {"combination": [["value1"], ["value2"]]},
         {"combination": [["value1"], ["value3"]]},
@@ -382,6 +385,10 @@ def test_base_feature_load() -> None:
     assert loaded_feature.label_per_value == feature.label_per_value
     assert loaded_feature.value_per_label == feature.value_per_label
     assert loaded_feature.raw_order == feature.raw_order
-    assert len(loaded_feature.statistics) == 1
+    print(loaded_feature.statistics)
+    assert isinstance(loaded_feature.statistics, DataFrame)
+    assert loaded_feature.statistics.shape[0] == 2
+    assert loaded_feature.statistics.shape[1] == 2
+    assert all(loaded_feature.statistics.index == [0, 1])
     assert len(loaded_feature.history) == 0
     assert loaded_feature.ordinal_encoding

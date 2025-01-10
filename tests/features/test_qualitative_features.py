@@ -259,7 +259,12 @@ def test_categorical_feature_make_labels(sample_categorical_feature: Categorical
     sample_categorical_feature.ordinal_encoding = True
     result = sample_categorical_feature.make_labels()
     assert result == ["1, 2, 3, 4, 5, a", "b", "c", "d, e, f"]
-    assert sample_categorical_feature.value_per_label == {0: "a", 1: "b", 2: "c", 3: "d"}
+    assert sample_categorical_feature.value_per_label == {
+        0: "1, 2, 3, 4, 5, a",
+        1: "b",
+        2: "c",
+        3: "d, e, f",
+    }
     assert sample_categorical_feature.label_per_value == {
         "1": 0,
         "2": 0,
@@ -286,7 +291,7 @@ def test_ordinal_feature_make_labels(sample_ordinal_feature: OrdinalFeature) -> 
     sample_ordinal_feature.ordinal_encoding = True
     result = sample_ordinal_feature.make_labels()
     assert result == ["1 to a", "b", "c", "d to f"]
-    assert sample_ordinal_feature.value_per_label == {0: "a", 1: "b", 2: "c", 3: "d"}
+    assert sample_ordinal_feature.value_per_label == {0: "1 to a", 1: "b", 2: "c", 3: "d to f"}
     assert sample_ordinal_feature.label_per_value == {
         "1": 0,
         "2": 0,
@@ -372,9 +377,9 @@ def test_categorical_feature_update_ordinal_encoding(
     }
     assert sample_categorical_feature.labels == [0, 1, 2]
     assert sample_categorical_feature.value_per_label == {
-        0: "a",
+        0: '1, 2, 3, 4, 5, a',
         1: "b",
-        2: "c",
+        2: 'c, d, e, f',
     }
     print(sample_categorical_feature.label_per_value)
     assert sample_categorical_feature.label_per_value == {
@@ -406,9 +411,9 @@ def test_categorical_feature_update_ordinal_encoding(
     }
     assert sample_categorical_feature.labels == [0, 1, 2]
     assert sample_categorical_feature.value_per_label == {
-        0: "a",
-        1: "c",
-        2: Constants.NAN,
+        0: '1, 2, 3, 4, 5, a',
+        1: 'c, d, e, f',
+        2: 'b, __NAN__',
     }
     print(sample_categorical_feature.label_per_value)
     assert sample_categorical_feature.label_per_value == {
@@ -539,9 +544,9 @@ def test_ordinal_feature_update_ordinal_encoding(
     }
     assert sample_ordinal_feature.labels == [0, 1, 2]
     assert sample_ordinal_feature.value_per_label == {
-        0: "a",
+        0: '1 to a',
         1: "b",
-        2: "c",
+        2: 'c to f',
     }
     print(sample_ordinal_feature.label_per_value)
     assert sample_ordinal_feature.label_per_value == {
@@ -570,9 +575,9 @@ def test_ordinal_feature_update_ordinal_encoding(
     }
     assert sample_ordinal_feature.labels == [0, 1, 2]
     assert sample_ordinal_feature.value_per_label == {
-        0: "a",
-        1: "c",
-        2: Constants.NAN,
+        0: "1 to a",
+        1: 'c to f',
+        2: 'b, __NAN__',
     }
     print(sample_ordinal_feature.label_per_value)
     assert sample_ordinal_feature.label_per_value == {

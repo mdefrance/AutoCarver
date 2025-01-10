@@ -47,7 +47,7 @@ class BinaryCarver(BaseCarver):
         """
 
         # default binary combinations
-        combinations = kwargs.get("combinations")
+        combinations = kwargs.pop("combinations", None)
         if combinations is None:
             combinations = TschuprowtCombinations(max_n_mod=max_n_mod)
 

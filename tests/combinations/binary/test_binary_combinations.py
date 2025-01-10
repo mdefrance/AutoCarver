@@ -25,12 +25,14 @@ MIN_FREQ = 0.2
 
 @fixture(params=[TschuprowtCombinations, CramervCombinations])
 def evaluator(request: FixtureRequest) -> BinaryCombinationEvaluator:
+    """Fixture for BinaryCombinationEvaluator used in tests."""
     combi_eval = request.param(max_n_mod=MAX_N_MOD)
     combi_eval.min_freq = MIN_FREQ
     return combi_eval
 
 
 def test_init(evaluator: BinaryCombinationEvaluator):
+    """Test initialization of BinaryCombinationEvaluator."""
     assert evaluator.is_y_binary is True
     assert evaluator.is_y_continuous is False
     assert evaluator.sort_by in ["cramerv", "tschuprowt"]
@@ -47,6 +49,7 @@ def test_init(evaluator: BinaryCombinationEvaluator):
 
 
 def test_to_json(evaluator: BinaryCombinationEvaluator):
+    """Test to_json method of BinaryCombinationEvaluator."""
     expected_json = {
         "sort_by": evaluator.sort_by,
         "max_n_mod": MAX_N_MOD,
@@ -58,6 +61,7 @@ def test_to_json(evaluator: BinaryCombinationEvaluator):
 
 
 def test_save(evaluator: BinaryCombinationEvaluator, tmp_path):
+    """Test save method of BinaryCombinationEvaluator."""
     file_name = tmp_path / "test.json"
     evaluator.save(str(file_name))
 
@@ -75,12 +79,13 @@ def test_save(evaluator: BinaryCombinationEvaluator, tmp_path):
 
 
 def test_save_invalid_filename(evaluator: BinaryCombinationEvaluator):
+    """Test save method with an invalid filename."""
     with raises(ValueError):
         evaluator.save("invalid_file.txt")
 
 
 def test_load_tschuprowt(tmp_path):
-    """Test the load method for TschuprowtCombinations"""
+    """Test the load method for TschuprowtCombinations."""
     file_name = tmp_path / "test.json"
     data = {
         "sort_by": "tschuprowt",
@@ -111,7 +116,7 @@ def test_load_tschuprowt(tmp_path):
 
 
 def test_load_cramerv(tmp_path):
-    """Test the load method for CrmervCombinations"""
+    """Test the load method for CramervCombinations."""
     file_name = tmp_path / "test.json"
     data = {
         "sort_by": "cramerv",
@@ -142,6 +147,7 @@ def test_load_cramerv(tmp_path):
 
 
 def test_compute_target_rates_basic(evaluator: BinaryCombinationEvaluator):
+    """Test _compute_target_rates with a basic xagg."""
     xagg = DataFrame({0: [10, 20, 30], 1: [5, 15, 25]}, index=["a", "b", "c"])
     result = evaluator._compute_target_rates(xagg)
     expected = DataFrame(
@@ -156,6 +162,7 @@ def test_compute_target_rates_basic(evaluator: BinaryCombinationEvaluator):
 
 
 def test_compute_target_rates_empty(evaluator: BinaryCombinationEvaluator):
+    """Test _compute_target_rates with an empty xagg."""
     xagg = DataFrame(columns=[0, 1])
     result = evaluator._compute_target_rates(xagg)
     expected = DataFrame(columns=["target_rate", "frequency"])
@@ -163,11 +170,13 @@ def test_compute_target_rates_empty(evaluator: BinaryCombinationEvaluator):
 
 
 def test_compute_target_rates_none(evaluator: BinaryCombinationEvaluator):
+    """Test _compute_target_rates with None."""
     result = evaluator._compute_target_rates(None)
     assert result is None
 
 
 def test_compute_target_rates_single_row(evaluator: BinaryCombinationEvaluator):
+    """Test _compute_target_rates with a single row."""
     xagg = DataFrame({0: [10], 1: [5]}, index=["a"])
     result = evaluator._compute_target_rates(xagg)
     expected = DataFrame({"target_rate": [0.333333], "frequency": [1.0]}, index=["a"])
@@ -176,6 +185,7 @@ def test_compute_target_rates_single_row(evaluator: BinaryCombinationEvaluator):
 
 
 def test_compute_target_rates_single_column(evaluator: BinaryCombinationEvaluator):
+    """Test _compute_target_rates with a single column."""
     xagg = DataFrame({1: [5, 15, 25]}, index=["a", "b", "c"])
     result = evaluator._compute_target_rates(xagg)
     expected = DataFrame(
@@ -187,6 +197,7 @@ def test_compute_target_rates_single_column(evaluator: BinaryCombinationEvaluato
 
 
 def test_compute_target_rates_with_nan(evaluator: BinaryCombinationEvaluator):
+    """Test _compute_target_rates with NaN values."""
     X = DataFrame({"feature": ["a", "b", "a", "b", nan]})
     y = Series([1, 0, 1, 0, 1])
     feature = OrdinalFeature("feature", ["a", "b", "c"])
@@ -202,7 +213,7 @@ def test_compute_target_rates_with_nan(evaluator: BinaryCombinationEvaluator):
 
 
 def test_compute_target_rates_all_nan(evaluator: BinaryCombinationEvaluator):
-    """Test with a xagg with all nan values"""
+    """Test _compute_target_rates with all NaN values."""
     X = DataFrame({"feature": ["a", "b", "a", "b", "c"]})
     y = Series([nan, nan, nan, nan, nan])
     feature = OrdinalFeature("feature", ["a", "b", "c"])
@@ -212,7 +223,7 @@ def test_compute_target_rates_all_nan(evaluator: BinaryCombinationEvaluator):
 
 
 def test_compute_target_rates_some_nan(evaluator: BinaryCombinationEvaluator):
-    """Test with a xagg with some nan values"""
+    """Test _compute_target_rates with some NaN values."""
     X = DataFrame({"feature": ["a", "b", "a", "b", "c"]})
     y = Series([1, nan, 1, 0, 1])
     feature = OrdinalFeature("feature", ["a", "b", "c"])
@@ -227,7 +238,7 @@ def test_compute_target_rates_some_nan(evaluator: BinaryCombinationEvaluator):
 
 
 def test_association_measure_basic(evaluator: BinaryCombinationEvaluator):
-    """Test with a basic xagg"""
+    """Test _association_measure with a basic xagg."""
     xagg = DataFrame({"A": [10, 20, 30], "B": [5, 15, 25]})
     n_obs = 105
     result = evaluator._association_measure(xagg, n_obs)
@@ -241,7 +252,7 @@ def test_association_measure_basic(evaluator: BinaryCombinationEvaluator):
 
 
 def test_association_measure_with_zeros(evaluator: BinaryCombinationEvaluator):
-    """Test with a xagg with zeros"""
+    """Test _association_measure with zeros in xagg."""
     xagg = DataFrame({"A": [10, 0, 30], "B": [5, 15, 0]})
     n_obs = 105
     result = evaluator._association_measure(xagg, n_obs)
@@ -256,7 +267,7 @@ def test_association_measure_with_zeros(evaluator: BinaryCombinationEvaluator):
 
 
 def test_association_measure_with_nan(evaluator: BinaryCombinationEvaluator):
-    """Test with a xagg with nan values"""
+    """Test _association_measure with NaN values in xagg."""
     xagg = DataFrame({"A": [10, nan, 30], "B": [5, 15, nan]})
     n_obs = 105
     result = evaluator._association_measure(xagg, n_obs)
@@ -266,7 +277,7 @@ def test_association_measure_with_nan(evaluator: BinaryCombinationEvaluator):
 
 
 def test_association_measure_single_row(evaluator: BinaryCombinationEvaluator):
-    """Test with a single row"""
+    """Test _association_measure with a single row."""
     xagg = DataFrame({"A": [10], "B": [5]})
     n_obs = 15
     result = evaluator._association_measure(xagg, n_obs)
@@ -275,7 +286,7 @@ def test_association_measure_single_row(evaluator: BinaryCombinationEvaluator):
 
 
 def test_association_measure_single_column(evaluator: BinaryCombinationEvaluator):
-    """Test with a single column"""
+    """Test _association_measure with a single column."""
     xagg = DataFrame({"A": [10, 20, 30]})
     n_obs = 60
     result = evaluator._association_measure(xagg, n_obs)
@@ -284,7 +295,7 @@ def test_association_measure_single_column(evaluator: BinaryCombinationEvaluator
 
 
 def test_grouper_basic(evaluator: BinaryCombinationEvaluator):
-    """Test with a basic groupby"""
+    """Test _grouper with a basic groupby."""
     xagg = DataFrame({"A": [1, 2, 3], "B": [4, 5, 6]}, index=["a", "b", "c"])
     groupby = {"a": "group1", "b": "group1", "c": "group2"}
     result = evaluator._grouper(xagg, groupby)
@@ -297,7 +308,7 @@ def test_grouper_basic(evaluator: BinaryCombinationEvaluator):
 
 
 def test_grouper_with_duplicates(evaluator: BinaryCombinationEvaluator):
-    """Test with a groupby that has duplicates"""
+    """Test _grouper with duplicates in groupby."""
     xagg = DataFrame({"A": [1, 2, 3, 4], "B": [4, 5, 6, 7]}, index=["a", "b", "a", "c"])
     groupby = {"a": "group1", "b": "group1", "c": "group2"}
     result = evaluator._grouper(xagg, groupby)
@@ -306,7 +317,7 @@ def test_grouper_with_duplicates(evaluator: BinaryCombinationEvaluator):
 
 
 def test_grouper_no_groupby(evaluator: BinaryCombinationEvaluator):
-    """Test with no groupby"""
+    """Test _grouper with no groupby."""
     xagg = DataFrame({"A": [1, 2, 3], "B": [4, 5, 6]}, index=["a", "b", "c"])
     groupby = {}
     result = evaluator._grouper(xagg, groupby)
@@ -315,7 +326,7 @@ def test_grouper_no_groupby(evaluator: BinaryCombinationEvaluator):
 
 
 def test_grouper_partial_groupby(evaluator: BinaryCombinationEvaluator):
-    """Test with a groupby that does not cover all the xagg index"""
+    """Test _grouper with a partial groupby."""
     xagg = DataFrame({"A": [1, 2, 3], "B": [4, 5, 6]}, index=["a", "b", "c"])
     groupby = {"a": "group1"}
     result = evaluator._grouper(xagg, groupby)
@@ -325,8 +336,7 @@ def test_grouper_partial_groupby(evaluator: BinaryCombinationEvaluator):
 
 
 def test_group_xagg_by_combinations(evaluator: BinaryCombinationEvaluator):
-    """Test the _group_xagg_by_combinations method"""
-
+    """Test _group_xagg_by_combinations method."""
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
 
@@ -356,8 +366,7 @@ def test_group_xagg_by_combinations(evaluator: BinaryCombinationEvaluator):
 
 
 def test_group_xagg_by_combinations_with_nan(evaluator: BinaryCombinationEvaluator):
-    """Test with a xagg with nan values"""
-
+    """Test _group_xagg_by_combinations with NaN values."""
     feature = OrdinalFeature("feature", ["A", "B", "C"])
     xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 0]}, index=["A", "B", "C"])
 
@@ -392,8 +401,7 @@ def test_group_xagg_by_combinations_with_nan(evaluator: BinaryCombinationEvaluat
 
 
 def test_compute_associations(evaluator: BinaryCombinationEvaluator):
-    """Test the compute_associations method"""
-
+    """Test _compute_associations method."""
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
 
@@ -430,8 +438,7 @@ def test_compute_associations(evaluator: BinaryCombinationEvaluator):
 
 
 def test_compute_associations_with_three_rows(evaluator: BinaryCombinationEvaluator):
-    """Test with a small xagg"""
-
+    """Test _compute_associations with a small xagg."""
     feature = OrdinalFeature("feature", ["A", "B", "C"])
     xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 0]}, index=["A", "B", "C"])
     evaluator.samples.train = AggregatedSample(xagg)
@@ -480,7 +487,7 @@ def test_compute_associations_with_three_rows(evaluator: BinaryCombinationEvalua
 
 
 def test_compute_associations_with_twenty_rows(evaluator: BinaryCombinationEvaluator):
-    """Test with a larger xagg"""
+    """Test _compute_associations with a larger xagg."""
     feature = OrdinalFeature("feature", [chr(i) for i in range(65, 85)])  # A to T
     xagg = DataFrame(
         {
@@ -584,6 +591,7 @@ def test_compute_associations_with_twenty_rows(evaluator: BinaryCombinationEvalu
         },
     }
     res = result[0]
+    print("expected res", res, "\n")
     exp = expected[evaluator.sort_by]
     assert allclose(res["xagg"], exp["xagg"])
     assert res["combination"] == exp["combination"]
@@ -593,8 +601,7 @@ def test_compute_associations_with_twenty_rows(evaluator: BinaryCombinationEvalu
 
 
 def test_viability_train(evaluator: BinaryCombinationEvaluator):
-    """Test the viability of the combination on xagg_train"""
-
+    """Test the viability of the combination on xagg_train."""
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
 
@@ -629,8 +636,7 @@ def test_viability_train(evaluator: BinaryCombinationEvaluator):
 
 
 def test_viability_dev(evaluator: BinaryCombinationEvaluator):
-    """Test the viability of the combination on xagg_dev"""
-
+    """Test the viability of the combination on xagg_dev."""
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
 
@@ -692,8 +698,7 @@ def test_viability_dev(evaluator: BinaryCombinationEvaluator):
 
 
 def test_get_viable_combination_without_dev(evaluator: BinaryCombinationEvaluator):
-    """Test the get_viable_combination method without a dev xagg"""
-
+    """Test the get_viable_combination method without a dev xagg."""
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
 
@@ -721,8 +726,7 @@ def test_get_viable_combination_without_dev(evaluator: BinaryCombinationEvaluato
 
 
 def test_get_viable_combination_with_non_viable_train(evaluator: BinaryCombinationEvaluator):
-    """Test the get_viable_combination method with a non-viable train"""
-
+    """Test the get_viable_combination method with a non-viable train."""
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
     evaluator.samples.train = AggregatedSample(xagg)
@@ -743,8 +747,7 @@ def test_get_viable_combination_with_non_viable_train(evaluator: BinaryCombinati
 
 
 def test_get_viable_combination_with_viable_train(evaluator: BinaryCombinationEvaluator):
-    """Test the get_viable_combination method with a viable train"""
-
+    """Test the get_viable_combination method with a viable train."""
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
     evaluator.samples.train = AggregatedSample(xagg)
@@ -773,8 +776,7 @@ def test_get_viable_combination_with_viable_train(evaluator: BinaryCombinationEv
 
 
 def test_get_viable_combination_with_not_viable_dev(evaluator: BinaryCombinationEvaluator):
-    """Test the get_viable_combination method with a non-viable dev"""
-
+    """Test the get_viable_combination method with a non-viable dev."""
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
     evaluator.samples.train = AggregatedSample(xagg)
@@ -795,8 +797,7 @@ def test_get_viable_combination_with_not_viable_dev(evaluator: BinaryCombination
 
 
 def test_apply_best_combination_with_viable(evaluator: BinaryCombinationEvaluator):
-    """Test the apply_best_combination method with a viable combination"""
-
+    """Test the apply_best_combination method with a viable combination."""
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     evaluator.feature = feature
     xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
@@ -823,8 +824,7 @@ def test_apply_best_combination_with_viable(evaluator: BinaryCombinationEvaluato
 
 
 def test_apply_best_combination_with_non_viable(evaluator: BinaryCombinationEvaluator):
-    """Test the apply best combination with a non-viable combination"""
-
+    """Test the apply best combination with a non-viable combination."""
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     evaluator.feature = feature
     xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
@@ -846,8 +846,7 @@ def test_apply_best_combination_with_non_viable(evaluator: BinaryCombinationEval
 
 
 def test_best_association_with_combinations_viable(evaluator: BinaryCombinationEvaluator):
-    """Test the best association with viable combinations"""
-
+    """Test the best association with viable combinations."""
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     evaluator.feature = feature
 
@@ -880,8 +879,7 @@ def test_best_association_with_combinations_viable(evaluator: BinaryCombinationE
 
 
 def test_best_association_with_combinations_non_viable(evaluator: BinaryCombinationEvaluator):
-    """Test the best association with no viable combinations"""
-
+    """Test the best association with no viable combinations."""
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     evaluator.feature = feature
 
@@ -905,8 +903,7 @@ def test_best_association_with_combinations_non_viable(evaluator: BinaryCombinat
 
 
 def test_best_association_with_nan_combinations_viable(evaluator: BinaryCombinationEvaluator):
-    """Test the best association with a feature that has NaN values"""
-
+    """Test the best association with a feature that has NaN values."""
     feature = OrdinalFeature("feature", ["a", "b"])
     feature.has_nan = True
     feature.dropna = True
@@ -943,8 +940,7 @@ def test_best_association_with_nan_combinations_viable(evaluator: BinaryCombinat
 
 
 def test_get_best_combination_non_nan_viable(evaluator: BinaryCombinationEvaluator):
-    """Test the get_best_combination method with a feature that has no NaN values"""
-
+    """Test the get_best_combination method with a feature that has no NaN values."""
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     evaluator.feature = feature
 
@@ -978,8 +974,7 @@ def test_get_best_combination_non_nan_viable(evaluator: BinaryCombinationEvaluat
 
 
 def test_get_best_combination_non_nan_not_viable(evaluator: BinaryCombinationEvaluator):
-    """Test the get_best_combination method with a feature that has no NaN values"""
-
+    """Test the get_best_combination method with a feature that has no NaN values."""
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     evaluator.feature = feature
 
@@ -995,8 +990,7 @@ def test_get_best_combination_non_nan_not_viable(evaluator: BinaryCombinationEva
 
 
 def test_get_best_combination_non_nan_viable_with_nan(evaluator: BinaryCombinationEvaluator):
-    """Test the get_best_combination method with a feature that has no NaN values"""
-
+    """Test the get_best_combination method with a feature that has no NaN values."""
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     feature.has_nan = True
     feature.dropna = True
@@ -1022,7 +1016,7 @@ def test_get_best_combination_non_nan_viable_with_nan(evaluator: BinaryCombinati
     assert result["combination"] == expected["combination"]
     assert result["cramerv"] == expected["cramerv"]
     assert result["tschuprowt"] == expected["tschuprowt"]
-
+    print("trainxagg", evaluator.samples.train.xagg, "\n")
     expected = DataFrame({0: [0, 2, 0], 1: [2, 1, 3]}, index=["a", "b to c", feature.nan])
     assert feature.labels == list(expected.index)
     assert allclose(evaluator.samples.train.xagg, expected)
@@ -1032,8 +1026,7 @@ def test_get_best_combination_non_nan_viable_with_nan(evaluator: BinaryCombinati
 
 
 def test_get_best_combination_with_nan_viable(evaluator: BinaryCombinationEvaluator):
-    """Test the get_best_combination method with a feature that has no NaN values"""
-
+    """Test the get_best_combination method with a feature that has no NaN values."""
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     evaluator.feature = feature
 
@@ -1069,8 +1062,7 @@ def test_get_best_combination_with_nan_viable(evaluator: BinaryCombinationEvalua
 
 
 def test_get_best_combination_with_nan_not_viable(evaluator: BinaryCombinationEvaluator):
-    """Test the get_best_combination method with a feature that has no NaN values"""
-
+    """Test the get_best_combination method with a feature that has no NaN values."""
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     evaluator.feature = feature
 
@@ -1089,8 +1081,7 @@ def test_get_best_combination_with_nan_not_viable(evaluator: BinaryCombinationEv
 def test_get_best_combination_with_nan_viable_with_nan_without_combi(
     evaluator: BinaryCombinationEvaluator,
 ):
-    """Test the get_best_combination method with a feature that has no NaN values"""
-
+    """Test the get_best_combination method with a feature that has no NaN values."""
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     feature.has_nan = True
     feature.dropna = True
@@ -1125,8 +1116,7 @@ def test_get_best_combination_with_nan_viable_with_nan_without_combi(
 def test_get_best_combination_with_nan_viable_with_nan_without_feature_nan(
     evaluator: BinaryCombinationEvaluator,
 ):
-    """Test the get_best_combination method with a feature that has no NaN values"""
-
+    """Test the get_best_combination method with a feature that has no NaN values."""
     feature = OrdinalFeature("feature", ["a", "b", "c", "d"])
     feature.has_nan = False
     evaluator.feature = feature
@@ -1147,8 +1137,7 @@ def test_get_best_combination_with_nan_viable_with_nan_without_feature_nan(
 def test_get_best_combination_with_nan_viable_with_nan_without_dropna(
     evaluator: BinaryCombinationEvaluator,
 ):
-    """Test the get_best_combination method with a feature that has no NaN values"""
-
+    """Test the get_best_combination method with a feature that has no NaN values."""
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     feature.has_nan = False
     evaluator.feature = feature
@@ -1159,14 +1148,12 @@ def test_get_best_combination_with_nan_viable_with_nan_without_dropna(
     evaluator.max_n_mod = 2
 
     best_combination = evaluator._get_best_combination_non_nan()
-
     result = evaluator._get_best_combination_with_nan(best_combination)
     assert result == best_combination
 
 
 def test_get_best_combination_with_nan_viable_with_nan(evaluator: BinaryCombinationEvaluator):
-    """Test the get_best_combination method with a feature that has no NaN values"""
-
+    """Test the get_best_combination method with a feature that has no NaN values."""
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     feature.has_nan = True
     feature.dropna = True  # has to be set to True
@@ -1207,8 +1194,7 @@ def test_get_best_combination_with_nan_viable_with_nan(evaluator: BinaryCombinat
 
 
 def test_get_best_combination_viable(evaluator: BinaryCombinationEvaluator):
-    """Test the get_best_combination method with a feature that has no NaN values"""
-
+    """Test the get_best_combination method with a feature that has no NaN values."""
     feature = OrdinalFeature("feature", ["a", "b", "c"])
 
     xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
@@ -1239,8 +1225,7 @@ def test_get_best_combination_viable(evaluator: BinaryCombinationEvaluator):
 
 
 def test_get_best_combination_viable_without_dev(evaluator: BinaryCombinationEvaluator):
-    """Test the get_best_combination method with a feature that has no NaN values"""
-
+    """Test the get_best_combination method with a feature that has no NaN values."""
     feature = OrdinalFeature("feature", ["a", "b", "c"])
 
     xagg = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
@@ -1270,8 +1255,7 @@ def test_get_best_combination_viable_without_dev(evaluator: BinaryCombinationEva
 
 
 def test_get_best_combination_not_viable(evaluator: BinaryCombinationEvaluator):
-    """Test the get_best_combination method with a feature that has no NaN values"""
-
+    """Test the get_best_combination method with a feature that has no NaN values."""
     feature = OrdinalFeature("feature", ["a", "b", "c"])
 
     xagg = DataFrame({0: [0], 1: [2]}, index=["a"])
@@ -1284,8 +1268,7 @@ def test_get_best_combination_not_viable(evaluator: BinaryCombinationEvaluator):
 def test_get_best_combination_viable_with_nan_without_feature_nan(
     evaluator: BinaryCombinationEvaluator,
 ):
-    """Test the get_best_combination method with a feature that has no NaN values"""
-
+    """Test the get_best_combination method with a feature that has no NaN values."""
     feature = OrdinalFeature("feature", ["a", "b", "c", "d"])
     feature.has_nan = False
 
@@ -1312,8 +1295,7 @@ def test_get_best_combination_viable_with_nan_without_feature_nan(
 def test_get_best_combination_viable_with_nan_without_dropna(
     evaluator: BinaryCombinationEvaluator,
 ):
-    """Test the get_best_combination method with a feature that has no NaN values"""
-
+    """Test the get_best_combination method with a feature that has no NaN values."""
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     feature.has_nan = True
 
@@ -1346,8 +1328,7 @@ def test_get_best_combination_viable_with_nan_without_dropna(
 
 
 def test_get_best_combination_viable_with_nan(evaluator: BinaryCombinationEvaluator):
-    """Test the get_best_combination method with a feature that has NaN values"""
-
+    """Test the get_best_combination method with a feature that has NaN values."""
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     feature.has_nan = True
     assert feature.dropna is False

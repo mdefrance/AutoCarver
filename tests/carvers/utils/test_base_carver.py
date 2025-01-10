@@ -8,12 +8,20 @@ from AutoCarver.combinations import CramervCombinations, KruskalCombinations, Ts
 from AutoCarver.discretizers.utils.base_discretizer import Sample
 from AutoCarver.features import Features
 
+try:
+    from IPython.display import display_html
+except ImportError:
+    _has_idisplay = False
+else:
+    _has_idisplay = True
+
 # removing abstractmethod
 BaseCarver.__abstractmethods__ = set()
 
 
 @fixture
 def sample_data():
+    """Fixture for sample data used in tests."""
     X_train = DataFrame({"feature1": [1, 2, 3, float("nan")], "feature2": [4, 5, 6, 7]})
     y_train = Series([0, 1, 0, 0])
     X_dev = DataFrame(
@@ -26,6 +34,7 @@ def sample_data():
 
 
 def test_initialization_default():
+    """Test default initialization of Samples."""
     samples = Samples()
     assert samples.train.X is None
     assert samples.dev.X is None
@@ -34,6 +43,7 @@ def test_initialization_default():
 
 
 def test_initialization_with_values(sample_data):
+    """Test initialization of Samples with provided values."""
     train_sample, dev_sample = sample_data
     samples = Samples(train=train_sample, dev=dev_sample)
     assert samples.train.X.equals(train_sample.X)
@@ -43,6 +53,7 @@ def test_initialization_with_values(sample_data):
 
 
 def test_attributes(sample_data):
+    """Test attributes of Samples."""
     train_sample, dev_sample = sample_data
     samples = Samples(train=train_sample, dev=dev_sample)
     assert isinstance(samples.train, Sample)
@@ -55,21 +66,25 @@ def test_attributes(sample_data):
 
 @fixture
 def samples(sample_data):
+    """Fixture for Samples used in tests."""
     train_sample, dev_sample = sample_data
     return Samples(train=train_sample, dev=dev_sample)
 
 
 @fixture(params=[KruskalCombinations, CramervCombinations, TschuprowtCombinations])
 def evaluator(request: FixtureRequest):
+    """Fixture for evaluator used in tests."""
     return request.param()
 
 
 @fixture
 def features():
+    """Fixture for features used in tests."""
     return Features(["feature1", "feature2"])
 
 
 def test_initialization(features, evaluator):
+    """Test initialization of BaseCarver."""
     carver = BaseCarver(
         features=features,
         min_freq=0.1,
@@ -88,21 +103,15 @@ def test_initialization(features, evaluator):
     assert carver.combinations.dropna is True
 
 
-try:
-    from IPython.display import display_html
-except ImportError:
-    _has_idisplay = False
-else:
-    _has_idisplay = True
-
-
 def test_pretty_print(features, evaluator):
+    """Test pretty_print property of BaseCarver."""
     carver = BaseCarver(features=features, min_freq=0.1, combinations=evaluator, verbose=True)
 
     assert carver.pretty_print == (carver.verbose and _has_idisplay)
 
 
 def test_prepare_data_raises_value_error(features, evaluator, samples):
+    """Test _prepare_data method raises ValueError when y is None."""
     carver = BaseCarver(features=features, min_freq=0.1, combinations=evaluator, verbose=True)
     samples.train.y = None
     with raises(ValueError):
@@ -110,6 +119,7 @@ def test_prepare_data_raises_value_error(features, evaluator, samples):
 
 
 def test_prepare_data(features, evaluator, samples):
+    """Test _prepare_data method of BaseCarver."""
     carver = BaseCarver(features=features, min_freq=0.1, combinations=evaluator, verbose=True)
     prepared_samples = carver._prepare_data(samples)
     print(prepared_samples.train.X)
@@ -139,6 +149,7 @@ def test_prepare_data(features, evaluator, samples):
 
 
 def test_discretize_train(features, samples):
+    """Test discretize function for train samples."""
     discretizer_min_freq = 0.1
     samples.dev = Sample(X=None)
     samples = discretize(features, samples, discretizer_min_freq)
@@ -147,6 +158,7 @@ def test_discretize_train(features, samples):
 
 
 def test_discretize_dev(features, samples):
+    """Test discretize function for dev samples."""
     discretizer_min_freq = 0.1
     samples = discretize(features, samples, discretizer_min_freq)
     assert samples.train.X is not None

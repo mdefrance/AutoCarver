@@ -366,7 +366,7 @@ class Features:
         summaries = []
         for feature in self:
             summaries += feature.get_summary()
-        
+
         # converting to DataFrame
         summaries = DataFrame(summaries)
 

@@ -2,7 +2,7 @@
 
 from abc import ABC
 
-from numpy import add, array, searchsorted, sqrt, unique, zeros
+from numpy import add, array, searchsorted, sqrt, unique, zeros, log
 from pandas import DataFrame, notna
 from scipy.stats import chi2_contingency
 
@@ -17,7 +17,7 @@ class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
     def _compute_target_rates(self, xagg: DataFrame) -> DataFrame:
         """Prints a binary xtab's statistics
 
-        - there should bnot be nans in xagg
+        - there should not be nans in xagg
 
         Parameters
         ----------
@@ -33,12 +33,17 @@ class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
         stats = None
         if xagg is not None:
             # target rate and frequency statistics per modality
+            target_rate = xagg[1].divide(xagg.sum(axis=1))
+            frequency = xagg.sum(axis=1) / xagg.sum().sum()
+            # odds_ratio = target_rate / (1 - target_rate)
+            # log_odds = log(odds_ratio)
+
             stats = DataFrame(
                 {
-                    # target rate per modality
-                    "target_rate": xagg[1].divide(xagg.sum(axis=1)),
-                    # frequency per modality
-                    "frequency": xagg.sum(axis=1) / xagg.sum().sum(),
+                    "target_rate": target_rate,
+                    "frequency": frequency,
+                    # "odds_ratio": odds_ratio,
+                    # "log_odds": log_odds,
                 }
             )
 

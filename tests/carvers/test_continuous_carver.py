@@ -745,12 +745,7 @@ def test_continuous_carver(
         copy=copy,
     )
     chained_discretizer.fit(x_train)
-    print(
-        "-----------unique values after chained\n\n\n\n",
-        x_train.Discrete_Qualitative_noorder.unique(),
-        "\n-----------unique values after chained\n\n\n\n",
-    )
-
+    
     # minimum frequency and maximum number of modality
     min_freq = 0.1
     evaluator.max_n_mod = 4
@@ -846,6 +841,8 @@ def test_continuous_carver(
     loaded_carver = ContinuousCarver.load(str(carver_file))
 
     # checking that reloading worked exactly the same
+    print("\n\ninput carver", auto_carver.summary())
+    print("\n\nLoaded carver", loaded_carver.summary())
     assert all(
         loaded_carver.summary() == auto_carver.summary()
     ), "Non-identical summaries when loading from JSON"

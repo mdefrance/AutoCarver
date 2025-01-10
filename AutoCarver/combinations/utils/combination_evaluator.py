@@ -90,6 +90,39 @@ class AggregatedSamples:
     train: AggregatedSample = AggregatedSample(None)
     dev: AggregatedSample = AggregatedSample(None)
 
+    def set(self, train: DataFrame, dev: DataFrame = None) -> None:
+        """Sets the train and dev samples"""
+
+        # setting train and dev samples
+        self.train = AggregatedSample(train)
+        self.dev = AggregatedSample(dev)
+
+    def dropna(self, feature_nan: str) -> None:
+        """Removes nans from the samples"""
+
+        # removing nans from crosstabs
+        self.dev.xagg = filter_nan(self.dev.raw, feature_nan)
+        self.train.xagg = filter_nan(self.train.raw, feature_nan)
+
+    def set_indices_to_values(self, feature: BaseFeature) -> None:
+        """Resets the index of the samples"""
+
+        # renaming index to feature values
+        if self.train.raw is not None:
+            self.train.raw.rename(index=feature.value_per_label, inplace=True)
+        if self.dev.raw is not None:
+            self.dev.raw.rename(index=feature.value_per_label, inplace=True)
+
+    def __repr__(self) -> str:
+        return f"AggregatedSamples(train={self.train.shape}, dev={self.dev.shape})"
+
+    def apply_combination(self, feature: BaseFeature) -> None:
+        """Applies best combination to xagg"""
+
+        # applying best_combination to xaggs
+        self.train.raw = xagg_apply_combination(self.train.raw, feature)
+        self.dev.raw = xagg_apply_combination(self.dev.raw, feature)
+
 
 class CombinationEvaluator(ABC):
     """CombinationEvaluator class to evaluate
@@ -114,6 +147,7 @@ class CombinationEvaluator(ABC):
         # attributes to be set by get_best_combination
         self.feature: BaseFeature = None
         self.samples: AggregatedSamples = AggregatedSamples()
+        self._statistics_cache = None
 
     def __repr__(self) -> str:
         return f"{self.__name__}(max_n_mod={self.max_n_mod})"
@@ -185,19 +219,21 @@ class CombinationEvaluator(ABC):
 
         # checking that a combination was found
         if best_association is not None:
+
+            # resetting samples' indices to values
+            self.samples.set_indices_to_values(self.feature)
+
             # applying best_combination to feature labels
             labels = order_apply_combination(self.feature.labels, best_association["combination"])
 
-            # updating feature's values and xagg indices accordingly
+            # updating feature's values according to combination
             self.feature.update(labels, convert_labels=True)
 
             # applying best_combination to raw xagg and xagg_dev
-            self.samples.train.raw = xagg_apply_combination(
-                self.samples.train.raw, labels, self.feature
-            )
-            self.samples.dev.raw = xagg_apply_combination(
-                self.samples.dev.raw, labels, self.feature
-            )
+            self.samples.apply_combination(self.feature)
+
+            # udpating statistics
+            self.feature.statistics = self._compute_target_rates(self.samples.train.raw)
 
     def _get_best_combination_non_nan(self) -> dict:
         """Computes associations of the tab for each combination of non-nans
@@ -215,8 +251,7 @@ class CombinationEvaluator(ABC):
                 raw_labels.remove(self.feature.nan)
 
             # removing nans from crosstabs
-            self.samples.dev.xagg = filter_nan(self.samples.dev.raw, self.feature.nan)
-            self.samples.train.xagg = filter_nan(self.samples.train.raw, self.feature.nan)
+            self.samples.dropna(self.feature.nan)
 
         # checking for non-nan values
         if self.samples.train.shape[0] > 1:
@@ -257,13 +292,12 @@ class CombinationEvaluator(ABC):
         if self.min_freq is None:
             raise ValueError("min_freq has to be set before calling get_best_combination")
 
-        # setting feature and xtab
-        self.feature = feature
-        self.samples.train = AggregatedSample(xagg)
-        self.samples.dev = AggregatedSample(xagg_dev)
-
         # setting dropna to user-requested value
+        self.feature = feature
         self.feature.dropna = self.dropna
+
+        # setting samples
+        self.samples.set(train=xagg, dev=xagg_dev)
 
         # getting best combination without NaNs
         best_combination = self._get_best_combination_non_nan()
@@ -376,6 +410,7 @@ class CombinationEvaluator(ABC):
         # checking for viability
         if test_results[TestKeys.VIABLE.value]:
             # setting feature's statistics (selected combination)
+            # self.feature.statistics = test_results.pop("train_rates")
             self.feature.statistics = test_results.pop("train_rates")
 
             # adding info
@@ -401,11 +436,8 @@ class CombinationEvaluator(ABC):
     def _historize_raw_combination(self):
         """historizes the raw combination"""
 
-        # computing target rate and frequency per value
-        target_rates = self._compute_target_rates(self.samples.train.raw)
-
         # setting feature's statistics
-        self.feature.statistics = target_rates
+        self.feature.statistics = self._compute_target_rates(self.samples.train.raw)
 
         # computing association of sample
         raw_association = self._association_measure(

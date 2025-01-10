@@ -920,6 +920,8 @@ def test_binary_carver(
     loaded_carver = BinaryCarver.load(str(carver_file))
 
     # checking that reloading worked exactly the same
+    print("\n\ninput carver", auto_carver.summary())
+    print("\n\nLoaded carver", loaded_carver.summary())
     assert all(
         loaded_carver.summary() == auto_carver.summary()
     ), "Non-identical summaries when loading from JSON"

@@ -15,6 +15,17 @@ class QualitativeFeature(BaseFeature):
     __name__ = "Qualitative"
     is_qualitative = True
 
+    # def _update_value_per_label(self, raw_labels: list[str]) -> None:
+    #     """updates value per label and label per value"""
+    #     self.value_per_label = {}
+    #     for value, label, raw_label in zip(self.values, self._labels, raw_labels):
+    #         # updating label_per_value
+    #         for grouped_value in self.values.get(value):
+    #             self.label_per_value.update({grouped_value: label})
+
+    #         # updating value_per_label
+    #         self.value_per_label.update({label: raw_label})
+
     def fit(self, X: DataFrame, y: Series = None) -> None:
         """TODO fit stats"""
 
@@ -44,7 +55,9 @@ class QualitativeFeature(BaseFeature):
         unique_labels = unique(X[self.version])
 
         # converting to labels
-        unique_values = [self.value_per_label.get(label, label) for label in unique_labels]
+        unique_values = unique_labels[:]
+        if not self.ordinal_encoding:
+            unique_values = [self.value_per_label.get(label, label) for label in unique_labels]
 
         # unexpected values for this feature
         unexpected = [
@@ -154,6 +167,14 @@ class QualitativeFeature(BaseFeature):
 
                 # updating values if any to group
                 if len(grouped_values) > 0:
+                    # if ordinal_encoding, converting values to unique values
+                    if self.ordinal_encoding:
+                        r_value_per_label = {
+                            v: self.values[k] for k, v in self.value_per_label.items()
+                        }
+                        grouped_values = [r_value_per_label[value] for value in grouped_values]
+
+                    # grouping values
                     self.values.group(grouped_values, kept_value)
 
                 # updating statistics

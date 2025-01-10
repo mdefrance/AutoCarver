@@ -2,9 +2,9 @@
 
 from abc import ABC
 
-from numpy import mean
+from numpy import mean, median, var, std
 from pandas import DataFrame, Series
-from scipy.stats import kruskal
+from scipy.stats import kruskal, mode, iqr
 
 from ..utils.combination_evaluator import AggregatedSample, CombinationEvaluator
 
@@ -73,6 +73,18 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
                 {
                     # target rate per modality
                     "target_rate": xagg.apply(mean),
+                    # # median per modality
+                    # "median": xagg.apply(median),
+                    # # variance per modality
+                    # "variance": xagg.apply(var),
+                    # # standard deviation per modality
+                    # "std_dev": xagg.apply(std),
+                    # # mode per modality
+                    # "mode": xagg.apply(lambda x: mode(x)[0][0]),
+                    # # range per modality
+                    # "range": xagg.apply(lambda x: x.max() - x.min()),
+                    # # interquartile range per modality
+                    # "iqr": xagg.apply(iqr),
                     # frequency per modality
                     "frequency": xagg.apply(len) / xagg.apply(len).sum(),
                 }

@@ -40,7 +40,7 @@ class ContinuousCarver(BaseCarver):
         ----------
         """
         # default binary combinations
-        combinations = kwargs.get("combinations")
+        combinations = kwargs.pop("combinations", None)
         if combinations is None:
             combinations = KruskalCombinations(max_n_mod=max_n_mod)
 

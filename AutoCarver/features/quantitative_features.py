@@ -65,6 +65,13 @@ class QuantitativeFeature(BaseFeature):
 
                 # updating values if any to group
                 if len(grouped_values) > 0:
+                    # if ordinal_encoding, converting values to unique values
+                    if self.ordinal_encoding:
+                        r_value_per_label = {
+                            v: self.values[k] for k, v in self.value_per_label.items()
+                        }
+                        grouped_values = [r_value_per_label[value] for value in grouped_values]
+                        kept_value = r_value_per_label[kept_value]
                     self.values.group(grouped_values, kept_value)
 
                 # updating statistics

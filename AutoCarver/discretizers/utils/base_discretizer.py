@@ -52,6 +52,14 @@ class Sample:
     def __len__(self):
         return len(self.X)
 
+    def fillna(self, features: Features) -> None:
+        """fills up nans for features that have some"""
+        self.X = features.fillna(self.X)
+
+    def unfillna(self, features: Features) -> DataFrame:
+        """reinstating nans when not supposed to group them"""
+        return features.unfillna(self.X)
+
 
 class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
     """Applies discretization using a dict of GroupedList to transform a DataFrame's columns."""
@@ -341,7 +349,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         sample = self.__prepare_data(Sample(X, y))
 
         # filling up nans for features that have some
-        sample.X = self.features.fillna(sample.X)
+        sample.fillna(self.features)
 
         # checking that all unique values in X are in features
         self.features.check_values(sample.X)
@@ -355,7 +363,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             sample = self._transform_qualitative(sample)
 
         # reinstating nans when not supposed to group them
-        return self.features.unfillna(sample.X)
+        return sample.unfillna(self.features)
 
     def _transform_quantitative(self, sample: Sample) -> Sample:
         """Applies discretization to a DataFrame's Quantitative columns.
@@ -511,53 +519,6 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         # initiating BaseDiscretizer
         return cls(features=features, **discretizer_json)
 
-    # def history(self, feature: str = None) -> DataFrame:
-    #     """Historic of tested combinations and there association with the target.
-
-    #     By default:
-
-    #         * ``str_default="__OTHER__"`` is added for features with non-representative
-    #  modalities.
-    #         * ``str_nan="__NAN__"`` is added for features that contain ``numpy.nan``.
-    #         * Whatever the value of ``dropna``, the association is computed for non-missing
-    # values.
-
-    #     Parameters
-    #     ----------
-    #     feature : str, optional
-    #         Specify for which feature to return the history, by default ``None``
-
-    #     Returns
-    #     -------
-    #     DataFrame
-    #         Historic of features' tested combinations.
-    #     """
-    #     # checking for an history
-    #     if self._history is not None:
-    #         # getting feature's history
-    #         if feature is not None:
-    #             assert (
-    #                 feature in self._history.keys()
-    #             ), f"Carving of feature {feature} was not requested."
-    #             histo = self._history[feature]
-
-    #         # getting all features' history
-    #         else:
-    #             histo = []
-    #             for feature in self._history.keys():
-    #                 feature_histories = self._history[feature]
-    #                 for feature_history in feature_histories:
-    #                     feature_history.update({"feature": feature})
-    #                 histo += feature_histories
-
-    #         # formatting combinations
-    #         # history["combination"] = history["combination"].apply(format_for_history)
-
-    #         return DataFrame(histo)
-
-    #     else:
-    #         return self._history
-
     def summary(self, feature: str = None) -> DataFrame:
         """Summarizes the data discretization process.
 
@@ -581,7 +542,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             summary = self.features(feature).get_summary()
             return DataFrame(summary).set_index(["feature", "label"])
 
-        return self.features.get_summaries()
+        return self.features.summary
 
     # def update(
     #     self,

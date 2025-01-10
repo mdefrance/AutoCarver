@@ -134,15 +134,31 @@ class BaseFeature(ABC):
     @property
     def statistics(self) -> DataFrame:
         """Feature's trained statistics"""
-        if self._statistics is not None:
-            if not isinstance(self._statistics, DataFrame):
-                return DataFrame(self._statistics)
-        return self._statistics
+        # conversion to dataframe
+        stats = self._statistics
+        if stats is not None:
+            stats = DataFrame(stats)
+
+        # convertion to ordinal encoding if requested
+        if self.ordinal_encoding and stats is not None:
+            stats_copy = stats.copy()
+            rev_value_per_label = {v: k for k, v in self.value_per_label.items()}
+
+            # adding nan to the dictionary
+            rev_value_per_label[self.nan] = self.label_per_value.get(self.nan)
+            stats_copy.index = list(map(rev_value_per_label.get, stats_copy.index))
+            return stats_copy
+        return stats
 
     @statistics.setter
     def statistics(self, value: DataFrame) -> None:
         """Feature's trained statistics"""
-        self._statistics = value
+        if isinstance(value, DataFrame):
+            self._statistics = value.to_dict()
+        elif isinstance(value, Series):
+            self._statistics = value.to_frame().to_dict()
+        else:
+            raise ValueError(f"Trying to set statistics with type {type(value)}")
 
     @property
     def history(self) -> DataFrame:
@@ -269,21 +285,41 @@ class BaseFeature(ABC):
         # default labels are values
         return self._labels
 
+
     @labels.setter
-    def labels(self, values: GroupedList) -> None:
+    def labels(self, raw_labels: GroupedList) -> None:
         """updates labels per values and values per label associated to feature's labels"""
 
+        # requested float output (AutoCarver) -> converting to integers
+        labels = raw_labels[:]
+        if self.ordinal_encoding:
+            labels = [n for n, _ in enumerate(labels)]
+
+        # updating list of labels
+        self._labels = list(labels)
+
         # updating label_per_value accordingly
+        self._update_value_per_label(raw_labels=raw_labels)
+
+    def _update_value_per_label(self, raw_labels: list[str]) -> None:
+        """updates value per label and label per value"""
+
+        # iterating over values and labels
         self.value_per_label = {}
-        for value, label in zip(self.values, values):
+        for value, label, raw_label in zip(self.values, self._labels, raw_labels):
+
             # updating label_per_value
             for grouped_value in self.values.get(value):
                 self.label_per_value.update({grouped_value: label})
 
-            # updating value_per_label
-            self.value_per_label.update({label: value})
+            # getting value
+            value_to_keep = value
+            if self.ordinal_encoding:
+                value_to_keep = raw_label
 
-        self._labels = list(values)
+            # updating value_per_label
+            self.value_per_label.update({label: value_to_keep})
+
 
     @abstractmethod
     def make_labels(self) -> GroupedList:
@@ -314,11 +350,11 @@ class BaseFeature(ABC):
             viable = history["viable"].fillna(False)
             if viable.any():
 
-                # checking for viable combination with dropna
+                # checking for requested dropna
                 dropna = history["dropna"].fillna(False)
                 if dropna.any():
 
-                    # best_combination with dropna
+                    # checking for viable combination with dropna
                     if history[dropna].viable.any():
                         selected = history[viable & dropna].iloc[0].to_dict()
 
@@ -341,29 +377,15 @@ class BaseFeature(ABC):
 
         return summary
 
+
     def update_labels(self) -> None:
         """updates label for each value of the feature"""
 
         # initiating labels for qualitative features
-        labels = self.make_labels()
-
-        # requested float output (AutoCarver) -> converting to integers
-        if self.ordinal_encoding:
-            labels = [n for n, _ in enumerate(labels)]
+        raw_labels = self.make_labels()
 
         # saving updated labels
-        self.labels = labels
-
-        # updating statistics labels
-        self._update_statistics_label()
-
-    def _update_statistics_label(self) -> None:
-        """updates feature's statistics index with labels"""
-
-        # updating feature's statistics
-        if self.statistics is not None and isinstance(self.statistics, DataFrame):
-            to_rename = {value: label for value, label in zip(self.values, self.labels)}
-            self.statistics.rename(index=to_rename, inplace=True)
+        self.labels = raw_labels
 
     def _update_statistics_value(
         self, kept_label: Union[str, float], kept_value: Union[str, float]
@@ -456,10 +478,6 @@ class BaseFeature(ABC):
         str
             JSON serialized object
         """
-        # serializing statistics and history
-        statistics = None
-        if isinstance(self.statistics, DataFrame):
-            statistics = self.statistics.to_dict()
 
         # minimal output json
         feature = {
@@ -480,12 +498,12 @@ class BaseFeature(ABC):
             "is_quantitative": self.is_quantitative,
             "raw_order": self.raw_order,
             "ordinal_encoding": self.ordinal_encoding,
-            "statistics": statistics,
+            "statistics": self._statistics,
         }
 
         # enriched mode (larger json)
         if not light_mode:
-            feature.update({"history": self.history})
+            feature.update({"history": self._history})
 
         return json_serialize_feature(feature)
 
