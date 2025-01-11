@@ -86,8 +86,7 @@ def test_binary_carver_initialization():
     """Test BinaryCarver initialization."""
     features = Features(
         categoricals=["feature1"],
-        ordinal_values={"feature2": ["low", "medium", "high"]},
-        ordinals=["feature2"],
+        ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
     carver = BinaryCarver(min_freq=0.1, features=features, dropna=True)
@@ -118,8 +117,7 @@ def test_binary_carver_prepare_data(evaluator: CombinationEvaluator):
     """Test BinaryCarver _prepare_data method."""
     features = Features(
         categoricals=["feature1"],
-        ordinal_values={"feature2": ["low", "medium", "high"]},
-        ordinals=["feature2"],
+        ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
     carver = BinaryCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator)
@@ -146,8 +144,7 @@ def test_binary_carver_aggregator(evaluator: CombinationEvaluator):
     """Test BinaryCarver _aggregator method."""
     features = Features(
         categoricals=["feature1"],
-        ordinal_values={"feature2": ["low", "medium", "high"]},
-        ordinals=["feature2"],
+        ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
     carver = BinaryCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator)
@@ -177,8 +174,7 @@ def test_carve_feature_with_best_combination(evaluator):
 
     features = Features(
         categoricals=["feature1"],
-        ordinal_values={"feature2": ["low", "medium", "high"]},
-        ordinals=["feature2"],
+        ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
     X = DataFrame(
@@ -236,8 +232,7 @@ def test_carve_feature_without_best_combination(evaluator: CombinationEvaluator)
 
     features = Features(
         categoricals=["feature1"],
-        ordinal_values={"feature2": ["low", "medium", "high"]},
-        ordinals=["feature2"],
+        ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
     X = DataFrame(
@@ -277,8 +272,7 @@ def test_fit_with_best_combination(evaluator):
 
     features = Features(
         categoricals=["feature1"],
-        ordinal_values={"feature2": ["low", "medium", "high"]},
-        ordinals=["feature2"],
+        ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
     X = DataFrame(
@@ -329,8 +323,7 @@ def test_fit_without_best_combination(evaluator: CombinationEvaluator):
 
     features = Features(
         categoricals=["feature1"],
-        ordinal_values={"feature2": ["low", "medium", "high"]},
-        ordinals=["feature2"],
+        ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
     X = DataFrame(
@@ -362,8 +355,7 @@ def test_binary_carver_fit_transform_with_small_data(evaluator: CombinationEvalu
     """Test BinaryCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
-        ordinal_values={"feature2": ["low", "medium", "high"]},
-        ordinals=["feature2"],
+        ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
     carver = BinaryCarver(
@@ -414,8 +406,7 @@ def test_binary_carver_fit_transform_with_large_data(evaluator: CombinationEvalu
     """Test BinaryCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
-        ordinal_values={"feature2": ["low", "medium", "high"]},
-        ordinals=["feature2"],
+        ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
     carver = BinaryCarver(
@@ -572,8 +563,7 @@ def test_binary_carver_fit_transform_with_target_only_nan(evaluator: Combination
     """Test BinaryCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
-        ordinal_values={"feature2": ["low", "medium", "high"]},
-        ordinals=["feature2"],
+        ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
     carver = BinaryCarver(
@@ -623,8 +613,7 @@ def test_binary_carver_fit_transform_with_wrong_dev(evaluator: CombinationEvalua
     """Test BinaryCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
-        ordinal_values={"feature2": ["low", "medium", "high"]},
-        ordinals=["feature2"],
+        ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
     carver = BinaryCarver(
@@ -671,8 +660,7 @@ def test_binary_carver_save_load(tmp_path: Path, evaluator: CombinationEvaluator
     """Test BinaryCarver save and load methods."""
     features = Features(
         categoricals=["feature1"],
-        ordinal_values={"feature2": ["low", "medium", "high"]},
-        ordinals=["feature2"],
+        ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
     carver = BinaryCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator)
@@ -773,8 +761,7 @@ def test_binary_carver(
     # defining features
     features = Features(
         categoricals=qualitative_features,
-        ordinal_values=values_orders,
-        ordinals=ordinal_features,
+        ordinals=values_orders,
         quantitatives=quantitative_features,
     )
 
@@ -805,8 +792,7 @@ def test_binary_carver(
     # defining features
     features = Features(
         categoricals=qualitative_features,
-        ordinal_values=values_orders,
-        ordinals=ordinal_features,
+        ordinals=values_orders,
         quantitatives=quantitative_features,
     )
     # removing wrong features
@@ -972,8 +958,7 @@ def test_binary_carver(
 
     # defining features
     features = Features(
-        ordinal_values=values_orders,
-        ordinals=ordinal_features,
+        ordinals=values_orders,
     )
 
     # removing wrong features

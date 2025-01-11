@@ -178,7 +178,6 @@ def test_qualitative_discretizer(x_train: DataFrame, target: str):
         "Qualitative_highnan",
         "Discrete_Quantitative",
     ]
-    ordinals = ["Qualitative_Ordinal", "Qualitative_Ordinal_lownan"]
     ordinal_values = {
         "Qualitative_Ordinal": [
             "Low-",
@@ -208,8 +207,7 @@ def test_qualitative_discretizer(x_train: DataFrame, target: str):
     str_default = "__default_test__"
     features = Features(
         categoricals=categoricals,
-        ordinals=ordinals,
-        ordinal_values=ordinal_values,
+        ordinals=ordinal_values,
         default=str_default,
     )
 

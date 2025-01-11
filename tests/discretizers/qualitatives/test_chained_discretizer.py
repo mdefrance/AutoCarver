@@ -171,8 +171,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
 
     # defining features
     features = Features(
-        ordinals=chained_features,
-        ordinal_values=ordinal_values,
+        ordinals=ordinal_values,
     )
 
     # fitting discretizer
@@ -298,8 +297,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
 
     # defining features
     features = Features(
-        ordinals=chained_features,
-        ordinal_values=ordinal_values,
+        ordinals=ordinal_values,
     )
 
     # fitting discretizer
@@ -345,8 +343,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
 
         # defining features
         features = Features(
-            ordinals=chained_features,
-            ordinal_values=ordinal_values,
+            ordinals=ordinal_values,
         )
 
         # fitting discretizer
@@ -372,8 +369,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
 
         # defining features
         features = Features(
-            ordinals=chained_features,
-            ordinal_values=ordinal_values,
+            ordinals=ordinal_values,
         )
 
         # fitting discretizer
@@ -422,8 +418,7 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
 
         # defining features
         features = Features(
-            ordinals=chained_features,
-            ordinal_values=ordinal_values,
+            ordinals=ordinal_values,
         )
 
         # fitting discretizer

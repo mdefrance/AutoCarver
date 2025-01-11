@@ -207,6 +207,7 @@ def test_keep_versions(mock_features):
 
 @fixture
 def mock_categoricals():
+    """fixture for mock categorical features"""
     return [
         CategoricalFeature(name="cat1"),
         CategoricalFeature(name="cat2"),
@@ -215,6 +216,7 @@ def mock_categoricals():
 
 @fixture
 def mock_ordinals():
+    """fixture for mock ordinal features"""
     return [
         OrdinalFeature(name="ord1", values=["low", "medium", "high"]),
         OrdinalFeature(name="ord2", values=["low", "medium", "high"]),
@@ -223,6 +225,7 @@ def mock_ordinals():
 
 @fixture
 def mock_quantitatives():
+    """fixture for mock quantitative features"""
     return [
         QuantitativeFeature(name="quant1"),
         QuantitativeFeature(name="quant2"),
@@ -231,21 +234,23 @@ def mock_quantitatives():
 
 @fixture
 def features(mock_categoricals, mock_ordinals, mock_quantitatives):
+    """fixture for Features"""
     return Features(
         categoricals=[f.name for f in mock_categoricals],
         quantitatives=[f.name for f in mock_quantitatives],
-        ordinals=[f.name for f in mock_ordinals],
-        ordinal_values={"ord1": ["low", "medium", "high"], "ord2": ["low", "medium", "high"]},
+        ordinals=mock_ordinals,
     )
 
 
 def test_features_initialization(features, mock_categoricals, mock_ordinals, mock_quantitatives):
+    """test Features initialization"""
     assert len(features.categoricals) == len(mock_categoricals)
     assert len(features.ordinals) == len(mock_ordinals)
     assert len(features.quantitatives) == len(mock_quantitatives)
 
 
 def test_features_call(features, mock_categoricals, mock_ordinals, mock_quantitatives):
+    """test Features call"""
     assert features("cat1") == features.categoricals[0]
     assert features("ord1") == features.ordinals[0]
     assert features("quant1") == features.quantitatives[0]
@@ -255,17 +260,20 @@ def test_features_call(features, mock_categoricals, mock_ordinals, mock_quantita
 
 
 def test_features_len(features):
+    """test Features len"""
     assert len(features) == len(features.categoricals) + len(features.ordinals) + len(
         features.quantitatives
     )
 
 
 def test_features_iter(features):
+    """test Features iteration"""
     feature_list = list(iter(features))
     assert feature_list == features.to_list()
 
 
 def test_features_getitem(features):
+    """test Features getitem"""
     # list mode
     assert features[0] == features.categoricals[0]
     with raises(IndexError):
@@ -280,18 +288,21 @@ def test_features_getitem(features):
 
 
 def test_features_get_names(features):
+    """test Features get_names"""
     names = features.names
     expected_names = get_names(features)
     assert names == expected_names
 
 
 def test_features_get_versions(features):
+    """test Features get_versions"""
     versions = features.versions
     expected_versions = get_versions(features)
     assert versions == expected_versions
 
 
 def test_features_remove_by_name(features):
+    """test Features remove by name"""
     # removing a categorical feature by name
     features.remove("cat1")
     assert len(features.categoricals) == 1
@@ -319,6 +330,7 @@ def test_features_remove_by_name(features):
 
 
 def test_features_remove_by_version(features):
+    """test Features remove by version"""
     # removing a categorical feature by version
     features.categoricals[0].version = "cat1_v2"
     features.remove("cat1_v2")
@@ -342,6 +354,7 @@ def test_features_remove_by_version(features):
 
 
 def test_features_keep(features):
+    """test Features keep"""
     # keeping a categorical feature by name
     features_copy = Features(features)
     features_copy.keep(["cat1"])
@@ -480,30 +493,35 @@ def test_features_keep(features):
 
 
 def test_features_get_qualitatives(features):
+    """test Features get_qualitatives"""
     qualitatives = features.qualitatives
     assert len(qualitatives) == 4
     assert all(isinstance(feature, QualitativeFeature) for feature in qualitatives)
 
 
 def test_features_get_quantitatives(features):
+    """test Features get_quantitatives"""
     quantitatives = features.quantitatives
     assert len(quantitatives) == 2
     assert all(isinstance(feature, QuantitativeFeature) for feature in quantitatives)
 
 
 def test_features_get_ordinals(features):
+    """test Features get_ordinals"""
     ordinals = features.ordinals
     assert len(ordinals) == 2
     assert all(isinstance(feature, OrdinalFeature) for feature in ordinals)
 
 
 def test_features_get_categoricals(features):
+    """test Features get_categoricals"""
     categoricals = features.categoricals
     assert len(categoricals) == 2
     assert all(isinstance(feature, CategoricalFeature) for feature in categoricals)
 
 
 def test_features_set_dropna(features):
+    """test dropna setter"""
     for feature in features:
         feature.values = GroupedList([1, 2, 3])
     features.dropna = True
@@ -534,6 +552,7 @@ def test_features_content(features):
 
 
 def test_features_to_json(features):
+    """test to_json functionnality"""
     json_data = features.to_json(False)
     assert isinstance(json_data, dict)
     assert all(isinstance(value, dict) for value in json_data.values())
@@ -543,6 +562,7 @@ def test_features_to_json(features):
 
 
 def test_features_to_list(features):
+    """test to_list functionnality"""
     feature_list = features.to_list()
     assert isinstance(feature_list, list)
     assert len(feature_list) == len(features.categoricals) + len(features.ordinals) + len(
@@ -551,6 +571,7 @@ def test_features_to_list(features):
 
 
 def test_features_to_dict(features):
+    """test to_dict functionnality"""
     for feature in features:
         feature.version = feature.name + "_v2"
         feature.values = GroupedList([1, 2, 3])
@@ -566,6 +587,7 @@ def test_features_to_dict(features):
 
 
 def test_features_load(features):
+    """test load functionnality"""
     json_data = features.to_json()
     loaded_features = Features.load(json_data)
     assert isinstance(loaded_features, Features)
@@ -586,6 +608,7 @@ def test_features_load(features):
 
 
 def test_features_get_summaries(features):
+    """test get_summaries functionnality"""
     for feature in features:
         if feature.values is None:
             feature.values = GroupedList([1, 2, 3])
@@ -597,6 +620,7 @@ def test_features_get_summaries(features):
 
 
 def test_features_add_feature_versions(features):
+    """test add_feature_versions functionnality"""
     raw_categoricals = features.categoricals
     raw_ordinals = features.ordinals
     raw_quantitatives = features.quantitatives

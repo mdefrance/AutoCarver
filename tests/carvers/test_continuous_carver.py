@@ -75,8 +75,7 @@ def test_continuous_carver_initialization():
     """Test ContinuousCarver initialization."""
     features = Features(
         categoricals=["feature1"],
-        ordinal_values={"feature2": ["low", "medium", "high"]},
-        ordinals=["feature2"],
+        ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
     min_freq = 0.1
@@ -115,8 +114,7 @@ def test_continuous_carver_prepare_data(evaluator: CombinationEvaluator):
     """Test ContinuousCarver _prepare_data method."""
     features = Features(
         categoricals=["feature1"],
-        ordinal_values={"feature2": ["low", "medium", "high"]},
-        ordinals=["feature2"],
+        ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
     carver = ContinuousCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator)
@@ -150,8 +148,7 @@ def test_continuous_carver_aggregator(evaluator: CombinationEvaluator):
     """Test ContinuousCarver _aggregator method."""
     features = Features(
         categoricals=["feature1"],
-        ordinal_values={"feature2": ["low", "medium", "high"]},
-        ordinals=["feature2"],
+        ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
     carver = ContinuousCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator)
@@ -181,8 +178,7 @@ def test_carve_feature_with_best_combination(evaluator):
 
     features = Features(
         categoricals=["feature1"],
-        ordinal_values={"feature2": ["low", "medium", "high"]},
-        ordinals=["feature2"],
+        ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
     X = DataFrame(
@@ -241,8 +237,7 @@ def test_carve_feature_without_best_combination(evaluator: CombinationEvaluator)
 
     features = Features(
         categoricals=["feature1"],
-        ordinal_values={"feature2": ["low", "medium", "high"]},
-        ordinals=["feature2"],
+        ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
     X = DataFrame(
@@ -282,8 +277,7 @@ def test_fit_with_best_combination(evaluator):
 
     features = Features(
         categoricals=["feature1"],
-        ordinal_values={"feature2": ["low", "medium", "high"]},
-        ordinals=["feature2"],
+        ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
     X = DataFrame(
@@ -335,8 +329,7 @@ def test_fit_without_best_combination(evaluator: CombinationEvaluator):
 
     features = Features(
         categoricals=["feature1"],
-        ordinal_values={"feature2": ["low", "medium", "high"]},
-        ordinals=["feature2"],
+        ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
     X = DataFrame(
@@ -368,8 +361,7 @@ def test_continuous_carver_fit_transform_with_small_data(evaluator: CombinationE
     """Test ContinuousCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
-        ordinal_values={"feature2": ["low", "medium", "high"]},
-        ordinals=["feature2"],
+        ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
     carver = ContinuousCarver(
@@ -420,8 +412,7 @@ def test_continuous_carver_fit_transform_with_large_data(evaluator: CombinationE
     """Test ContinuousCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
-        ordinal_values={"feature2": ["low", "medium", "high"]},
-        ordinals=["feature2"],
+        ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
     carver = ContinuousCarver(
@@ -581,8 +572,7 @@ def test_continuous_carver_fit_transform_with_wrong_dev(evaluator: CombinationEv
     """Test ContinuousCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
-        ordinal_values={"feature2": ["low", "medium", "high"]},
-        ordinals=["feature2"],
+        ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
     carver = ContinuousCarver(
@@ -629,8 +619,7 @@ def test_continuous_carver_save_load(tmp_path, evaluator: CombinationEvaluator):
     """Test ContinuousCarver save and load methods."""
     features = Features(
         categoricals=["feature1"],
-        ordinal_values={"feature2": ["low", "medium", "high"]},
-        ordinals=["feature2"],
+        ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
     carver = ContinuousCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator)
@@ -727,8 +716,7 @@ def test_continuous_carver(
     # defining features
     features = Features(
         categoricals=qualitative_features,
-        ordinal_values=values_orders,
-        ordinals=ordinal_features,
+        ordinals=values_orders,
         quantitatives=quantitative_features,
     )
 
@@ -895,8 +883,7 @@ def test_continuous_carver(
     # defining features
     print(ordinal_features, values_orders)
     features = Features(
-        ordinal_values=values_orders,
-        ordinals=ordinal_features,
+        ordinals=values_orders,
     )
 
     # removing wrong features

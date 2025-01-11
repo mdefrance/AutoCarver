@@ -120,12 +120,12 @@ def test_is_next_modality_closer_no_frequency():
     target_rates = array([0.1, 0.2, 0.3])
     min_freq = 0.15
     result = is_next_modality_closer(idx, frequencies, target_rates, min_freq)
-    assert result is False
+    assert not result
 
     # bigger frequency for the next modality
     frequencies = array([0.3, 0.0, 0.2])
     result = is_next_modality_closer(idx, frequencies, target_rates, min_freq)
-    assert result is True
+    assert result
 
 
 def test_is_next_modality_closer_underrepresented():
@@ -609,12 +609,11 @@ def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:
     groupedlist_lownan = GroupedList(order)
 
     # storing per feature orders
-    ordinals = ["Qualitative_Ordinal", "Qualitative_Ordinal_lownan"]
     ordinal_values = {
         "Qualitative_Ordinal": groupedlist,
         "Qualitative_Ordinal_lownan": groupedlist_lownan,
     }
-    features = Features(ordinals=ordinals, ordinal_values=ordinal_values)
+    features = Features(ordinals=ordinal_values)
 
     # minimum frequency per modality + apply(find_common_modalities) outputs a Series
     min_freq = 0.01
@@ -658,7 +657,7 @@ def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:
     min_freq = 0.08
 
     # discretizing features
-    features = Features(ordinals=ordinals, ordinal_values=ordinal_values)
+    features = Features(ordinals=ordinal_values)
     discretizer = OrdinalDiscretizer(ordinals=features, min_freq=min_freq, copy=True)
     discretizer.fit_transform(x_train, x_train[target])
 

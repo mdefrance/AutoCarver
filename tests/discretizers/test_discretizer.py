@@ -104,11 +104,6 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
         "Discrete_Qualitative_lownan_noorder",
         "Discrete_Qualitative_rarevalue_noorder",
     ]
-    ordinals = [
-        "Qualitative_Ordinal",
-        "Qualitative_Ordinal_lownan",
-        "Discrete_Qualitative_highnan",
-    ]
     ordinal_values = {
         "Qualitative_Ordinal": [
             "Low-",
@@ -137,8 +132,7 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
     features = Features(
         categoricals=categoricals,
         quantitatives=quantitatives,
-        ordinals=ordinals,
-        ordinal_values=ordinal_values,
+        ordinals=ordinal_values,
     )
 
     # minimum frequency per modality + apply(find_common_modalities) outputs a Series

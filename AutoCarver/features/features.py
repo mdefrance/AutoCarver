@@ -51,7 +51,25 @@ from .utils.grouped_list import GroupedList
 #                 )
 
 
-# # def get_dtype()
+def check_ordinal_features(
+    ordinals: Union[list[OrdinalFeature], dict[str, list[str]]]
+) -> list[OrdinalFeature]:
+    """Checks that ordinals are correctly formatted"""
+
+    # checking for ordinal types
+    if isinstance(ordinals, (Features, list)):
+        for feature in ordinals:
+            if not isinstance(feature, OrdinalFeature):
+                raise TypeError(
+                    "Ordinals should be a list of OrdinalFeature or a dict of ordinal values."
+                )
+        ordinal_features = ordinals
+    elif isinstance(ordinals, dict):
+        ordinal_features = list(ordinals.keys())
+    else:
+        raise TypeError("Ordinals should be a list of OrdinalFeature or a dict of ordinal values.")
+
+    return ordinal_features
 
 
 class Features:
@@ -61,22 +79,24 @@ class Features:
 
     def __init__(
         self,
-        categoricals: list[str] = None,
-        quantitatives: list[str] = None,
-        ordinals: list[str] = None,
-        ordinal_values: dict[str, list[str]] = None,
+        categoricals: list[Union[CategoricalFeature, str]] = None,
+        quantitatives: list[Union[QuantitativeFeature, str]] = None,
+        ordinals: Union[list[OrdinalFeature], dict[str, list[str]]] = None,
         **kwargs: dict,
     ) -> None:
         """Initiates a set of features"""
+        # initiating ordinal values if not provided
+        if ordinals is None:
+            ordinals = {}
 
-        # ordered values per ordinal features
-        self.ordinal_values = ordinal_values
+        # getting list of ordinal features by name of BaseFeature
+        ordinal_features = check_ordinal_features(ordinals)
 
         # casting features accordingly
         all_features = cast_features(categoricals, CategoricalFeature, **kwargs)
         all_features += cast_features(quantitatives, QuantitativeFeature, **kwargs)
         all_features += cast_features(
-            ordinals, OrdinalFeature, ordinal_values=self.ordinal_values, **kwargs
+            ordinal_features, OrdinalFeature, ordinal_values=ordinals, **kwargs
         )
 
         # ensuring features are grouped accordingly (already initiated features)
