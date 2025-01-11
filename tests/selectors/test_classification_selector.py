@@ -10,6 +10,7 @@ from AutoCarver.selectors.measures import BaseMeasure
 
 
 def test_classification_selector_initiate_default(features_object: Features) -> None:
+    """tests initiation of default measures and filters"""
     # checking for default measures
     n_best, max_num_features_per_chunk = 2, 100
     selector = ClassificationSelector(

@@ -34,7 +34,7 @@ class QualitativeFilter(BaseFilter):
             valid = self._validate(worst_correlation)
 
             # update feature accordingly (update stats)
-            self.update_feature(
+            self._update_feature(
                 feature, worst_correlation, valid, info={"correlation_with": correlation_with}
             )
 

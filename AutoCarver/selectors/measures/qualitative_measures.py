@@ -102,6 +102,8 @@ class CramervMeasure(Chi2Measure):
 
 
 class TschuprowtMeasure(Chi2Measure):
+    """Computes Tschuprow's T between a Qualitative feature and a binary target."""
+
     __name__ = "TschuprowT"
 
     def compute_association(self, x: Series, y: Series, chi2_value: float = None) -> float:

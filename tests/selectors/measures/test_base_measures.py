@@ -77,27 +77,25 @@ def test_update_feature(base_measure: BaseMeasure) -> None:
     value = THRESHOLD - 1
     base_measure.value = value
     feature = BaseFeature("test")
-    base_measure.update_feature(feature)
+    base_measure._update_feature(feature)
     expected_statistics = {
-        "measures": {
-            "BaseMeasure": {
-                "value": value,
-                "threshold": THRESHOLD,
-                "valid": False,
-                "info": {
-                    "higher_is_better": True,
-                    "correlation_with": "target",
-                    "is_default": False,
-                },
-            }
+        "BaseMeasure": {
+            "value": value,
+            "threshold": THRESHOLD,
+            "valid": False,
+            "info": {
+                "higher_is_better": True,
+                "correlation_with": "target",
+                "is_default": False,
+            },
         }
     }
-    assert feature.statistics == expected_statistics
+    assert feature.measures == expected_statistics
 
     # not set value
     base_measure.value = None
     with raises(ValueError):
-        base_measure.update_feature(feature)
+        base_measure._update_feature(feature)
 
 
 def test_base_validate(base_measure: BaseMeasure) -> None:

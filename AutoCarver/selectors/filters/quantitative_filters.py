@@ -137,7 +137,7 @@ class QuantitativeFilter(BaseFilter):
             valid = False
 
         # update feature accordingly (update stats)
-        self.update_feature(
+        self._update_feature(
             feature,
             worst_correlation,
             valid,

@@ -404,7 +404,7 @@ def sort_features_per_measure(
 
 def get_measure_value(feature: BaseFeature, measure: BaseMeasure) -> float:
     """gives value of measure for specified feature"""
-    return feature.statistics.get("measures").get(measure.__name__).get("value")
+    return feature.measures.get(measure.__name__).get("value")
 
 
 def apply_measures(
@@ -439,7 +439,7 @@ def apply_measures(
             measure.compute_association(X[feature.version], y)
 
             # updating feature accordingly
-            measure.update_feature(feature)
+            measure._update_feature(feature)
 
 
 def apply_filters(

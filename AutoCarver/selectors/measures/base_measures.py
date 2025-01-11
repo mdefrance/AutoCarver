@@ -9,6 +9,8 @@ from ...features import BaseFeature
 
 
 class BaseMeasure(ABC):
+    """Base measure of association between x and y"""
+
     is_x_quantitative = False
     is_x_qualitative = False
 
@@ -71,21 +73,15 @@ class BaseMeasure(ABC):
             }
         }
 
-    def update_feature(self, feature: BaseFeature) -> None:
+    def _update_feature(self, feature: BaseFeature) -> None:
         """adds measure to specified feature"""
 
         # checking for a value
         if self.value is None:
             raise ValueError(f"[{self}] Use compute_association first!")
 
-        # existing stats
-        measures = feature.statistics.get("measures", {})
-
-        # adding new measure
-        measures.update(self.to_dict())
-
         # updating statistics of the feature accordingly
-        feature.statistics.update({"measures": measures})
+        feature.measures.update(self.to_dict())
 
     def reverse_xy(self) -> bool:
         """reverses values of x and y in compute_association"""
@@ -95,6 +91,8 @@ class BaseMeasure(ABC):
 
 
 class AbsoluteMeasure(BaseMeasure):
+    """Absolute measure of association between x and y"""
+
     # info
     # absolute_threshold = False
 
@@ -106,6 +104,8 @@ class AbsoluteMeasure(BaseMeasure):
 
 
 class OutlierMeasure(BaseMeasure):
+    """Outlier measure of association between x and y"""
+
     is_default = True
     is_x_quantitative = True
     is_x_qualitative = False
@@ -132,6 +132,8 @@ class OutlierMeasure(BaseMeasure):
 
 
 class NanMeasure(OutlierMeasure):
+    """Measure of the percentage of NaNs"""
+
     __name__ = "NaN"
     is_x_quantitative = True
     is_x_qualitative = True
@@ -159,6 +161,8 @@ class NanMeasure(OutlierMeasure):
 
 
 class ModeMeasure(OutlierMeasure):
+    """Measure of the percentage of the mode"""
+
     __name__ = "Mode"
     is_x_quantitative = True
     is_x_qualitative = True

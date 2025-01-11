@@ -153,11 +153,11 @@ def test_remove_duplicates() -> None:
 def test_sort_features_per_measure(measure: BaseMeasure) -> None:
     """function test of sort_features_per_measure"""
     feature1 = BaseFeature("feature1")
-    feature1.statistics = {"measures": {measure.__name__: {"value": 0.5}}}
+    feature1.measures = {measure.__name__: {"value": 0.5}}
     feature2 = BaseFeature("feature2")
-    feature2.statistics = {"measures": {measure.__name__: {"value": 0.2}}}
+    feature2.measures = {measure.__name__: {"value": 0.2}}
     feature3 = BaseFeature("feature3")
-    feature3.statistics = {"measures": {measure.__name__: {"value": 0.8}}}
+    feature3.measures = {measure.__name__: {"value": 0.8}}
     features = [feature1, feature2, feature3]
     sorted_features = sort_features_per_measure(features, measure)
     assert sorted_features[0] == feature2
@@ -183,18 +183,18 @@ def test_apply_measures(
     apply_measures(qualitative_features, X, y, qualitative_measures, default_measures=False)
     for feature in qualitative_features:
         for measure in qualitative_measures:
-            assert measure.compute_association(X[feature.version], y) == feature.statistics.get(
-                "measures"
-            ).get(measure.__name__).get("value")
+            assert measure.compute_association(X[feature.version], y) == feature.measures.get(
+                measure.__name__
+            ).get("value")
 
     # applying quantitative measures
     apply_measures(quantitative_features, X, y, quantitative_measures, default_measures=True)
     apply_measures(quantitative_features, X, y, quantitative_measures, default_measures=False)
     for feature in quantitative_features:
         for measure in quantitative_measures:
-            assert measure.compute_association(X[feature.version], y) == feature.statistics.get(
-                "measures"
-            ).get(measure.__name__).get("value")
+            assert measure.compute_association(X[feature.version], y) == feature.measures.get(
+                measure.__name__
+            ).get("value")
 
     # type mismatch
     with raises(TypeError):
@@ -220,7 +220,7 @@ def test_apply_filters(
     filtered = apply_filters(features, X, filters, default_filters=True)
     assert len(filtered) == len(features)
 
-    features[-1].statistics = {"measures": {"measure_name": {"valid": False}}}
+    features[-1].measures = {"measure_name": {"valid": False}}
     filtered = apply_filters(features, X, filters, default_filters=True)
     assert len(filtered) == (len(features) - 1)
 

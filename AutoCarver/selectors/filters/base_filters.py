@@ -9,6 +9,8 @@ from ...features import BaseFeature
 
 
 class BaseFilter(ABC):
+    """Base filter class."""
+
     __name__ = "BaseFilter"
 
     is_measure = False
@@ -31,7 +33,7 @@ class BaseFilter(ABC):
     def filter(self, X: DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:
         """filters out features from ranks"""
 
-    def update_feature(
+    def _update_feature(
         self,
         feature: BaseFeature,
         value: float,
@@ -40,26 +42,23 @@ class BaseFilter(ABC):
     ) -> None:
         """adds measure to specified feature"""
 
-        # existing stats
-        filters = feature.statistics.get("filters", {})
-
-        # updating statistics
-        filters.update(
-            {
-                self.__name__: {
-                    "value": value,
-                    "threshold": self.threshold,
-                    "valid": valid,
-                    "info": {"higher_is_better": self.higher_is_better, **info},
-                }
+        # filter state info
+        filter_state = {
+            self.__name__: {
+                "value": value,
+                "threshold": self.threshold,
+                "valid": valid,
+                "info": {"higher_is_better": self.higher_is_better, **info},
             }
-        )
+        }
 
         # updating statistics of the feature accordingly
-        feature.statistics.update({"filters": filters})
+        feature.filters.update(filter_state)
 
 
 class ValidFilter(BaseFilter):
+    """Valid filter class."""
+
     __name__ = "Valid"
     is_default = True
     is_x_quantitative = True
@@ -72,11 +71,10 @@ class ValidFilter(BaseFilter):
         # iterating over each feature
         filtered = []
         for feature in ranks:
-            # getting feature's measures
-            measures = feature.statistics.get("measures", {})
-
             # checking for non-valid measures, keeping feature
-            if len(measures) == 0 or all(measure.get("valid") for measure in measures.values()):
+            if len(feature.measures) == 0 or all(
+                measure.get("valid") for measure in feature.measures.values()
+            ):
                 filtered += [feature]
 
         return filtered

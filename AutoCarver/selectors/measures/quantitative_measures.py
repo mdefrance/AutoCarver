@@ -30,6 +30,8 @@ class ReversibleMeasure(BaseMeasure):
 
 
 class KruskalMeasure(ReversibleMeasure):
+    """Kruskal-Wallis' test statistic between a Quantitative feature and a Qualitative target."""
+
     __name__ = "Kruskal"
     is_x_quantitative = True
     is_y_qualitative = True
@@ -69,6 +71,9 @@ class KruskalMeasure(ReversibleMeasure):
 
 
 class RMeasure(BaseMeasure):
+    """Square root of the coefficient of determination of linear regression model of
+    a Quantitative feature by a Binary target."""
+
     __name__ = "R"
     is_x_quantitative = True
     is_y_qualitative = True
@@ -119,6 +124,9 @@ class RMeasure(BaseMeasure):
 
 
 class PearsonMeasure(AbsoluteMeasure):
+    """Pearson's linear correlation coefficient between a Quantitative feature and a Quantitative
+    target."""
+
     __name__ = "Pearson"
     is_x_quantitative = True
     is_y_quantitative = True
@@ -150,6 +158,9 @@ class PearsonMeasure(AbsoluteMeasure):
 
 
 class SpearmanMeasure(AbsoluteMeasure):
+    """Spearman's rank correlation coefficient between a Quantitative feature and a Quantitative
+    target."""
+
     __name__ = "Spearman"
     is_x_quantitative = True
     is_y_quantitative = True
@@ -180,6 +191,8 @@ class SpearmanMeasure(AbsoluteMeasure):
 
 
 class DistanceMeasure(AbsoluteMeasure):
+    """Distance correlation between a Quantitative feature and a Quantitative target."""
+
     __name__ = "Distance"
     is_x_quantitative = True
     is_y_quantitative = True
@@ -210,6 +223,8 @@ class DistanceMeasure(AbsoluteMeasure):
 
 
 class ZscoreOutlierMeasure(OutlierMeasure):
+    """Z-score based outlier measure"""
+
     __name__ = "ZScore"
 
     def compute_association(self, x: Series, y: Series = None) -> float:
@@ -245,6 +260,8 @@ class ZscoreOutlierMeasure(OutlierMeasure):
 
 
 class IqrOutlierMeasure(OutlierMeasure):
+    """Interquartile range based outlier measure"""
+
     __name__ = "IQR"
 
     def compute_association(self, x: Series, y: Series = None) -> float:

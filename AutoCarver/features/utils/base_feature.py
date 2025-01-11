@@ -117,6 +117,10 @@ class BaseFeature(ABC):
         # initiating feature's trained statistics
         self._statistics: dict[str:Any] = kwargs.get("statistics", None)
 
+        # TODO add measures and filters
+        self.measures = kwargs.get("measures", {})
+        self.filters = kwargs.get("filters", {})
+
         # initiating feature's combination history
         self._history: list[dict] = kwargs.get("history", None)
 
@@ -153,10 +157,20 @@ class BaseFeature(ABC):
     @statistics.setter
     def statistics(self, value: DataFrame) -> None:
         """Feature's trained statistics"""
+
+        # case for binary targets
         if isinstance(value, DataFrame):
             self._statistics = value.to_dict()
+
+        # case for continuous targets
         elif isinstance(value, Series):
             self._statistics = value.to_frame().to_dict()
+
+        # case for selectors
+        elif isinstance(value, dict):
+            if self._statistics is None:
+                self._statistics = {}
+            self._statistics.update(value)
         else:
             raise ValueError(f"Trying to set statistics with type {type(value)}")
 

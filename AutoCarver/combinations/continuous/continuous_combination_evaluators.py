@@ -2,11 +2,14 @@
 
 from abc import ABC
 
-from numpy import mean, median, std, var
+from numpy import mean
 from pandas import DataFrame, Series
-from scipy.stats import iqr, kruskal, mode
+from scipy.stats import kruskal
 
 from ..utils.combination_evaluator import AggregatedSample, CombinationEvaluator
+
+# from numpy import mean, median, std, var
+# from scipy.stats import iqr, kruskal, mode
 
 
 class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
