@@ -346,11 +346,11 @@ def test_base_selector_init_valid_parameters(features_object: Features) -> None:
     # n_best < len(features)
     n_best, max_num_features_per_chunk = 2, 100
     selector = BaseSelector(
-        n_best=n_best,
+        n_best_per_type=n_best,
         features=features_object,
         max_num_features_per_chunk=max_num_features_per_chunk,
     )
-    assert selector.n_best == n_best
+    assert selector.n_best_per_type == n_best
     assert selector.features == features_object
     assert selector.max_num_features_per_chunk == max_num_features_per_chunk
 
@@ -358,7 +358,7 @@ def test_base_selector_init_valid_parameters(features_object: Features) -> None:
     n_best, max_num_features_per_chunk = 100, 100
     with raises(ValueError):
         BaseSelector(
-            n_best=n_best,
+            n_best_per_type=n_best,
             features=features_object,
             max_num_features_per_chunk=max_num_features_per_chunk,
         )
@@ -367,7 +367,7 @@ def test_base_selector_init_valid_parameters(features_object: Features) -> None:
     n_best, max_num_features_per_chunk = 100, 1
     with raises(ValueError):
         BaseSelector(
-            n_best=n_best,
+            n_best_per_type=n_best,
             features=features_object,
             max_num_features_per_chunk=max_num_features_per_chunk,
         )
@@ -385,7 +385,7 @@ def test_base_selector_select(
     # keeping all features
     n_best, max_num_features_per_chunk = 2, 100
     selector = BaseSelector(
-        n_best=n_best,
+        n_best_per_type=n_best,
         features=features_object,
         max_num_features_per_chunk=max_num_features_per_chunk,
         measures=measures,
@@ -401,7 +401,7 @@ def test_base_selector_select(
     # keeping best feature per type
     n_best, max_num_features_per_chunk = 1, 100
     selector = BaseSelector(
-        n_best=n_best,
+        n_best_per_type=n_best,
         features=features_object,
         max_num_features_per_chunk=max_num_features_per_chunk,
         measures=measures,
@@ -450,7 +450,7 @@ def test_base_selector_get_best_features_across_chunks_no_chunking(
 
     n_best, max_num_features_per_chunk = 1, 100
     selector = BaseSelector(
-        n_best=n_best,
+        n_best_per_type=n_best,
         features=features_object,
         max_num_features_per_chunk=max_num_features_per_chunk,
         measures=measures,
@@ -499,7 +499,7 @@ def test_base_selector_get_best_features_across_chunks_with_chunking(
 
     n_best, max_num_features_per_chunk = 1, 10
     selector = BaseSelector(
-        n_best=n_best,
+        n_best_per_type=n_best,
         features=features_object,
         max_num_features_per_chunk=max_num_features_per_chunk,
         measures=measures,

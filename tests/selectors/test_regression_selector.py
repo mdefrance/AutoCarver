@@ -14,7 +14,7 @@ def test_regression_selector_initiate_default(features_object: Features) -> None
     # checking for default measures
     n_best, max_num_features_per_chunk = 2, 100
     selector = RegressionSelector(
-        n_best=n_best,
+        n_best_per_type=n_best,
         features=features_object,
         max_num_features_per_chunk=max_num_features_per_chunk,
     )
@@ -37,7 +37,7 @@ def test_regression_selector_initiate_measures(
     default_measures = get_default_metrics(measures)
     if len(default_measures) > 0:
         selector = RegressionSelector(
-            n_best=n_best,
+            n_best_per_type=n_best,
             features=features_object,
             max_num_features_per_chunk=max_num_features_per_chunk,
             measures=default_measures,
@@ -60,7 +60,7 @@ def test_regression_selector_initiate_measures(
     ]
     if len(regression_measures) > 0:
         selector = RegressionSelector(
-            n_best=n_best,
+            n_best_per_type=n_best,
             features=features_object,
             max_num_features_per_chunk=max_num_features_per_chunk,
             measures=regression_measures,
@@ -78,7 +78,7 @@ def test_regression_selector_initiate_measures(
     if len(classification_measures) > 0:
         with raises(ValueError):
             selector = RegressionSelector(
-                n_best=n_best,
+                n_best_per_type=n_best,
                 features=features_object,
                 max_num_features_per_chunk=max_num_features_per_chunk,
                 measures=classification_measures,
@@ -97,7 +97,7 @@ def test_regression_selector_initiate_filters(
     default_filters = get_default_metrics(filters)
     if len(default_filters) > 0:
         selector = RegressionSelector(
-            n_best=n_best,
+            n_best_per_type=n_best,
             features=features_object,
             max_num_features_per_chunk=max_num_features_per_chunk,
             filters=default_filters,
@@ -113,7 +113,7 @@ def test_regression_selector_initiate_filters(
     filters = remove_default_metrics(filters)
     if len(filters) > 0:
         selector = RegressionSelector(
-            n_best=n_best,
+            n_best_per_type=n_best,
             features=features_object,
             max_num_features_per_chunk=max_num_features_per_chunk,
             filters=filters,

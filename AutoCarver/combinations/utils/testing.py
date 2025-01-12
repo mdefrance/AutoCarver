@@ -20,7 +20,7 @@ class TestMessages(str, Enum):
     """messages for test results"""
 
     INVERSION_RATES = "Inversion of target rates per modality"
-    NON_REPRESENTATIVE = "Non-representative modality for min_freq={min_freq:2.2%}"
+    NON_REPRESENTATIVE = "Non-representative modality for min_freq={min_freq:6.2%}"
     NON_DISTINCT_RATES = "Non-distinct target rates per consecutive modalities"
     PASSED_TESTS = ""
 

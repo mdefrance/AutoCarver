@@ -34,13 +34,13 @@ class BaseSelector(ABC):
 
     def __init__(
         self,
-        n_best: int,
+        n_best_per_type: int,
         features: Features,
-        *,
-        measures: list[BaseMeasure] = None,
-        filters: list[BaseFilter] = None,
-        max_num_features_per_chunk: int = 100,
-        **kwargs: dict,
+        # *,
+        # measures: list[BaseMeasure] = None,
+        # filters: list[BaseFilter] = None,
+        # max_num_features_per_chunk: int = 100,
+        **kwargs,
     ) -> None:
         # measures : list[Callable], optional
         #     List of association measures to be used, by default ``None``.
@@ -145,31 +145,31 @@ class BaseSelector(ABC):
         --------
         See `Selectors examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
         """
-        # TODO print a config that says what the user has selectes (measures+filters)
+        # TODO print a config that says what the user has selected (measures+filters)
         # features and values
         self.features = features
         if isinstance(features, list):
             self.features = Features(features)
 
         # number of features selected
-        self.n_best = n_best
-        if not (0 < int(self.n_best) <= len(self.features)):
-            raise ValueError("Must set 0 < n_best <= len(features)")
+        self.n_best_per_type = n_best_per_type
+        if not (0 < int(self.n_best_per_type) <= len(self.features)):
+            raise ValueError("Must set 0 < n_best_per_type <= len(features)")
 
         # feature sample size per iteration
         # maximum number of features per chunk
-        self.max_num_features_per_chunk = max_num_features_per_chunk
-        if max_num_features_per_chunk <= 2:
+        self.max_num_features_per_chunk = kwargs.get("max_num_features_per_chunk", 100)
+        if self.max_num_features_per_chunk <= 2:
             raise ValueError("Must set 2 < max_num_features_per_chunk")
 
         # random state for chunk shuffling
         self.random_state = kwargs.get("random_state", 0)
 
         # adding default measures
-        self.measures = self._initiate_measures(measures)
+        self.measures = self._initiate_measures(kwargs.get("measures"))
 
         # adding default filter
-        self.filters = self._initiate_filters(filters)
+        self.filters = self._initiate_filters(kwargs.get("filters"))
 
         # whether to print info
         self.verbose = get_bool_attribute(kwargs, "verbose", False)
@@ -189,15 +189,13 @@ class BaseSelector(ABC):
     @abstractmethod
     def _initiate_measures(self, requested_measures: list[BaseMeasure] = None) -> list[BaseMeasure]:
         """initiates the list of measures with default values"""
-        return requested_measures
 
     @abstractmethod
     def _initiate_filters(self, requested_filters: list[BaseFilter] = None) -> list[BaseFilter]:
         """initiates the list of measures with default values"""
-        return requested_filters
 
     def select(self, X: DataFrame, y: Series) -> list[BaseFeature]:
-        """Selects the ``n_best`` features of the DataFrame, by association with the target
+        """Selects the ``n_best_per_type`` features of the DataFrame, by association with the target
 
         Parameters
         ----------
@@ -217,8 +215,11 @@ class BaseSelector(ABC):
         # list of best_features
         best_features: list[BaseFeature] = []
 
+        # checking for quantitative and qualitative features
+        features = get_typed_features(self.features)
+
         # checking for quantitative features before selection
-        quantitatives = self.features.quantitatives
+        quantitatives = features.get("quantitatives")
         if len(quantitatives) > 0:
             # getting qualitative measures and filters
             measures = get_quantitative_metrics(self.measures)
@@ -228,7 +229,7 @@ class BaseSelector(ABC):
             best_features += self._select_features(quantitatives, X, y, measures, filters)
 
         # checking for qualitative features before selection
-        qualitatives = self.features.qualitatives
+        qualitatives = features.get("qualitatives")
         if len(qualitatives) > 0:
             # getting qualitative measures and filters
             measures = get_qualitative_metrics(self.measures)
@@ -287,10 +288,10 @@ class BaseSelector(ABC):
             for chunk in chunks:
                 # fitting association on features
                 best_features += get_best_features(
-                    chunk, X, y, measures, filters, max(int(self.n_best // len(chunks)), 1)
+                    chunk, X, y, measures, filters, max(int(self.n_best_per_type // len(chunks)), 1)
                 )
 
-        return get_best_features(best_features, X, y, measures, filters, self.n_best)
+        return get_best_features(best_features, X, y, measures, filters, self.n_best_per_type)
 
     # def _print_associations(self, association: DataFrame, message: str = "") -> None:
     #     """EDA of fitted associations
@@ -333,6 +334,24 @@ class BaseSelector(ABC):
 
     #             # displaying html of colored DataFrame
     #             display_html(nicer_association._repr_html_(), raw=True)  # pylint: disable=W0212
+
+
+def get_typed_features(features: Features) -> dict[str, list[BaseFeature]]:
+    """returns quantitative and qualitative features from list of features"""
+    return {
+        "quantitatives": [feature for feature in features if is_quantitative(feature)],
+        "qualitatives": [feature for feature in features if is_qualitative(feature)],
+    }
+
+
+def is_quantitative(feature: BaseFeature) -> bool:
+    """checks if feature is quantitative"""
+    return feature.is_quantitative and not feature.is_fitted
+
+
+def is_qualitative(feature: BaseFeature) -> bool:
+    """checks if feature is qualitative"""
+    return feature.is_qualitative or feature.is_fitted
 
 
 def make_random_chunks(elements: list, max_chunk_sizes: int, random_state: int = None) -> list:
@@ -427,8 +446,8 @@ def apply_measures(
         for measure in used_measures:
             # checking for mismatched data types
             if not (
-                (feature.is_quantitative and measure.is_x_quantitative)
-                or (feature.is_qualitative and measure.is_x_qualitative)
+                (is_quantitative(feature) and measure.is_x_quantitative)
+                or (is_qualitative(feature) and measure.is_x_qualitative)
             ):
                 raise TypeError(
                     f"Type mismatch, provided feature {feature}, with measure {measure} that has "
@@ -463,8 +482,8 @@ def apply_filters(
         # checking for mismatched data types
         for feature in features:
             if not (
-                (feature.is_quantitative and filter_.is_x_quantitative)
-                or (feature.is_qualitative and filter_.is_x_qualitative)
+                (is_quantitative(feature) and filter_.is_x_quantitative)
+                or (is_qualitative(feature) and filter_.is_x_qualitative)
             ):
                 raise TypeError(
                     f"Type mismatch, provided feature {feature}, with filter {filter_} that has "

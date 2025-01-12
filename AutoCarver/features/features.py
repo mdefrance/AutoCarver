@@ -140,6 +140,11 @@ class Features:
 
     def __call__(self, feature_name: str) -> BaseFeature:
         """Returns specified feature by name"""
+
+        # case for dataframes
+        if isinstance(feature_name, DataFrame):
+            return [feature.version for feature in self if feature.version in feature_name.columns]
+
         # looking for feature names
         self_dict = self.to_dict()
         if feature_name in self_dict:
@@ -161,18 +166,22 @@ class Features:
         return iter(self.to_list())
 
     def __getitem__(
-        self, index: Union[int, str, list[int], list[str]]
+        self, index: Union[int, str, list[int], list[str], slice]
     ) -> Union[BaseFeature, list[BaseFeature]]:
         """Get item by index in list of features, by feature name or with a list of
         indices/feature names
         """
-        # list index request
-        if isinstance(index, int):
+        # list index/slice request
+        if isinstance(index, (int, slice)):
             return self.to_list()[index]
 
         # feature name request
         if isinstance(index, str):
             return self(index)
+
+        # dataframe request
+        if isinstance(index, DataFrame):
+            index = list(index.columns)
 
         # list request and element to search for
         if isinstance(index, list) and len(index) > 0:

@@ -4,7 +4,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Union
 
-from pandas import DataFrame, Series
+from pandas import DataFrame, Series, option_context
 
 from ...config import Constants
 from .grouped_list import GroupedList
@@ -358,7 +358,8 @@ class BaseFeature(ABC):
             selected = {}
 
             # checking for viable combination without dropna
-            viable = history["viable"].fillna(False)
+            with option_context("future.no_silent_downcasting", True):
+                viable = history["viable"].fillna(False).astype(bool)
             if viable.any():
                 # checking for requested dropna
                 dropna = history["dropna"].fillna(False)
