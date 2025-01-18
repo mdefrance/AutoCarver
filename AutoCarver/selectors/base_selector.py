@@ -174,6 +174,9 @@ class BaseSelector(ABC):
         # whether to print info
         self.verbose = get_bool_attribute(kwargs, "verbose", False)
 
+        # target name
+        self.target_name = None
+
         # keyword arguments
         self.kwargs = kwargs
 
@@ -194,6 +197,63 @@ class BaseSelector(ABC):
     def _initiate_filters(self, requested_filters: list[BaseFilter] = None) -> list[BaseFilter]:
         """initiates the list of measures with default values"""
 
+    def _select_quantitatives(
+        self, quantitatives: list[BaseFeature], X: DataFrame, y: Series
+    ) -> list[BaseFeature]:
+        """Selects the best quantitative features"""
+
+        # checking for quantitative features before selection
+        best_quantitatives: list[BaseFeature] = []
+        if len(quantitatives) > 0:
+
+            # getting qualitative measures and filters
+            measures = get_quantitative_metrics(self.measures)
+            filters = get_quantitative_metrics(self.filters)
+
+            # getting best features
+            best_quantitatives = self._select_features(quantitatives, X, y, measures, filters)
+
+        return best_quantitatives
+
+    def _select_qualitatives(
+        self, qualitatives: list[BaseFeature], X: DataFrame, y: Series
+    ) -> list[BaseFeature]:
+        """Selects the best qualitative features"""
+
+        # checking for qualitative features before selection
+        best_qualitatives: list[BaseFeature] = []
+        if len(qualitatives) > 0:
+
+            # getting qualitative measures and filters
+            measures = get_qualitative_metrics(self.measures)
+            filters = get_qualitative_metrics(self.filters)
+
+            # getting best features
+            best_qualitatives = self._select_features(qualitatives, X, y, measures, filters)
+
+        return best_qualitatives
+
+    def _initiate_features_measures(
+        self, features: list[BaseFeature], remove_default: bool = True
+    ) -> None:
+        """initiates the list of measures with default values"""
+        # iterating over each feature
+        for feature in features:
+
+            # removing all measures
+            if remove_default:
+                feature.measures = {}
+                feature.filters = {}
+
+            # keeping only default measures
+            else:
+                for measure_name, measure in feature.measures.items():
+                    if not measure.get("info").get("is_default"):
+                        feature.measures.pop(measure_name)
+                for filter_name, measure in feature.filters.items():
+                    if not measure.get("info").get("is_default"):
+                        feature.filters.pop(filter_name)
+
     def select(self, X: DataFrame, y: Series) -> list[BaseFeature]:
         """Selects the ``n_best_per_type`` features of the DataFrame, by association with the target
 
@@ -212,32 +272,25 @@ class BaseSelector(ABC):
             List of selected features
         """
 
-        # list of best_features
-        best_features: list[BaseFeature] = []
+        # getting target name
+        if isinstance(y, Series):
+            self.target_name = y.name
+
+        # initiating features measures and filters
+        self._initiate_features_measures(self.features, remove_default=True)
 
         # checking for quantitative and qualitative features
         features = get_typed_features(self.features)
 
-        # checking for quantitative features before selection
-        quantitatives = features.get("quantitatives")
-        if len(quantitatives) > 0:
-            # getting qualitative measures and filters
-            measures = get_quantitative_metrics(self.measures)
-            filters = get_quantitative_metrics(self.filters)
+        # selecting quantitative features
+        best_features = self._select_quantitatives(features.get("quantitatives"), X, y)
 
-            # getting best features
-            best_features += self._select_features(quantitatives, X, y, measures, filters)
+        # selecting qualitative features
+        best_features += self._select_qualitatives(features.get("qualitatives"), X, y)
 
-        # checking for qualitative features before selection
-        qualitatives = features.get("qualitatives")
-        if len(qualitatives) > 0:
-            # getting qualitative measures and filters
-            measures = get_qualitative_metrics(self.measures)
-            filters = get_qualitative_metrics(self.filters)
-
-            # getting best features
-            best_features += self._select_features(qualitatives, X, y, measures, filters)
-
+        # converting to Features
+        if len(best_features) > 0:
+            return Features(best_features)
         return best_features
 
     def _select_features(
@@ -290,6 +343,9 @@ class BaseSelector(ABC):
                 best_features += get_best_features(
                     chunk, X, y, measures, filters, max(int(self.n_best_per_type // len(chunks)), 1)
                 )
+
+        # initiating features measures and filters for final prediction
+        self._initiate_features_measures(best_features, remove_default=False)
 
         return get_best_features(best_features, X, y, measures, filters, self.n_best_per_type)
 
@@ -516,14 +572,42 @@ def get_best_features(
     # getting best feature for each sortable measure
     best_features = []
     for measure in measures:
-        # sorting features according to measure
-        sorted_features = sort_features_per_measure(features, measure)
-
-        # applying filters
-        filtered_features = apply_filters(sorted_features, X, filters)
-
         # getting best features according to measure
-        best_features += filtered_features[:n_best]
+        best_features += select_with_measure(X, features, measure, filters, n_best)
 
     # deduplicating best features
     return remove_duplicates(best_features)
+
+
+def select_with_measure(
+    X: DataFrame,
+    features: list[BaseFeature],
+    measure: BaseMeasure,
+    filters: list[BaseFilter],
+    n_best: int,
+) -> list[BaseFeature]:
+    """Selects the ``n_best`` features of the DataFrame, by association with the target"""
+
+    # sorting features according to measure
+    sorted_features = sort_features_per_measure(features, measure)
+
+    # applying filters
+    filtered_features = apply_filters(sorted_features, X, filters)
+
+    # adding info to features
+    for rank, feature in enumerate(filtered_features):
+        feature.measures.update(make_rank_info(rank, measure, n_best))
+
+    # getting best features according to measure
+    return filtered_features[:n_best]
+
+
+def make_rank_info(rank: int, measure: BaseMeasure, n_best: int) -> dict:
+    """makes a dict with rank and measure info"""
+    return {
+        f"{measure.__name__}_Rank": {
+            "value": rank,
+            "threshold": n_best,
+            "info": {"is_default": False, "higher_is_better": False},
+        }
+    }

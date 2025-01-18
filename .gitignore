@@ -12,3 +12,4 @@ test_package.ipynb
 *.exe
 weighted_test.ipynb
 continuous_regression_example.ipynb
+docs/source/examples/Carvers/BinaryClassification/binay_carver.json

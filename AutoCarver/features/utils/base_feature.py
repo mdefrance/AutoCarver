@@ -117,7 +117,7 @@ class BaseFeature(ABC):
         # initiating feature's trained statistics
         self._statistics: dict[str:Any] = kwargs.get("statistics", None)
 
-        # TODO add measures and filters
+        # measures and filters used by selectors
         self.measures = kwargs.get("measures", {})
         self.filters = kwargs.get("filters", {})
 
@@ -508,6 +508,8 @@ class BaseFeature(ABC):
             "raw_order": self.raw_order,
             "ordinal_encoding": self.ordinal_encoding,
             "statistics": self._statistics,
+            "measures": self.measures,
+            "filters": self.filters,
         }
 
         # enriched mode (larger json)

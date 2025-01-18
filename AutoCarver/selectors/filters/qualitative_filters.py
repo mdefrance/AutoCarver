@@ -109,7 +109,7 @@ class CramervFilter(QualitativeFilter):
         Maximum Cramér's V with a better feature
     """
 
-    __name__ = "CramerV"
+    __name__ = "CramervFilter"
 
     def __init__(self, threshold: float = 1.0) -> None:
         super().__init__(threshold)
@@ -136,7 +136,7 @@ class TschuprowtFilter(QualitativeFilter):
         Maximum Tschuprow's T with a better feature
     """
 
-    __name__ = "TschuprowT"
+    __name__ = "TschuprowtFilter"
 
     def __init__(self, threshold: float = 1.0) -> None:
         super().__init__(threshold)

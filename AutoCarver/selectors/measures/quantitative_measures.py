@@ -32,7 +32,7 @@ class ReversibleMeasure(BaseMeasure):
 class KruskalMeasure(ReversibleMeasure):
     """Kruskal-Wallis' test statistic between a Quantitative feature and a Qualitative target."""
 
-    __name__ = "Kruskal"
+    __name__ = "KruskalMeasure"
     is_x_quantitative = True
     is_y_qualitative = True
 
@@ -74,7 +74,7 @@ class RMeasure(BaseMeasure):
     """Square root of the coefficient of determination of linear regression model of
     a Quantitative feature by a Binary target."""
 
-    __name__ = "R"
+    __name__ = "RMeasure"
     is_x_quantitative = True
     is_y_qualitative = True
     is_y_binary = True
@@ -127,7 +127,7 @@ class PearsonMeasure(AbsoluteMeasure):
     """Pearson's linear correlation coefficient between a Quantitative feature and a Quantitative
     target."""
 
-    __name__ = "Pearson"
+    __name__ = "PearsonMeasure"
     is_x_quantitative = True
     is_y_quantitative = True
 
@@ -161,7 +161,7 @@ class SpearmanMeasure(AbsoluteMeasure):
     """Spearman's rank correlation coefficient between a Quantitative feature and a Quantitative
     target."""
 
-    __name__ = "Spearman"
+    __name__ = "SpearmanMeasure"
     is_x_quantitative = True
     is_y_quantitative = True
 
@@ -193,7 +193,7 @@ class SpearmanMeasure(AbsoluteMeasure):
 class DistanceMeasure(AbsoluteMeasure):
     """Distance correlation between a Quantitative feature and a Quantitative target."""
 
-    __name__ = "Distance"
+    __name__ = "DistanceMeasure"
     is_x_quantitative = True
     is_y_quantitative = True
 

@@ -61,7 +61,7 @@ class Chi2Measure(BaseMeasure):
 class CramervMeasure(Chi2Measure):
     """Computes Carmér's V between a Qualitative feature and a binary target."""
 
-    __name__ = "CramerV"
+    __name__ = "CramervMeasure"
 
     def compute_association(self, x: Series, y: Series, chi2_value: float = None) -> float:
         """Computes Carmér's V between ``x`` and ``y`` from ``chi2_measure``.
@@ -104,7 +104,7 @@ class CramervMeasure(Chi2Measure):
 class TschuprowtMeasure(Chi2Measure):
     """Computes Tschuprow's T between a Qualitative feature and a binary target."""
 
-    __name__ = "TschuprowT"
+    __name__ = "TschuprowtMeasure"
 
     def compute_association(self, x: Series, y: Series, chi2_value: float = None) -> float:
         """Computes Tschuprow's T between ``x`` and ``y`` from ``chi2_measure``.

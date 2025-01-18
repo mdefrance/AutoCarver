@@ -171,7 +171,7 @@ class SpearmanFilter(QuantitativeFilter):
         Maximum Spearman's rho with a better features
     """
 
-    __name__ = "Spearman"
+    __name__ = "SpearmanFilter"
 
     def __init__(self, threshold: float = 1.0) -> None:
         super().__init__(threshold)
@@ -198,7 +198,7 @@ class PearsonFilter(QuantitativeFilter):
         Maximum Pearson's r with a better feature
     """
 
-    __name__ = "Pearson"
+    __name__ = "PearsonFilter"
 
     def __init__(self, threshold: float = 1.0) -> None:
         super().__init__(threshold)
