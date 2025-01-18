@@ -7,10 +7,10 @@ from typing import Union
 
 from pandas import DataFrame, Series
 
-from ..features import BaseFeature, Features
-from ..utils import get_bool_attribute
-from .filters import BaseFilter
-from .measures import BaseMeasure
+from ...features import BaseFeature, Features
+from ...utils import get_bool_attribute
+from ..filters import BaseFilter
+from ..measures import BaseMeasure
 
 # trying to import extra dependencies
 try:

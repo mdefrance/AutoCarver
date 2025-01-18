@@ -1,6 +1,6 @@
 """Tools to select the best Quantitative and Qualitative features for a Regression task."""
 
-from .base_selector import BaseSelector
+from .utils.base_selector import BaseSelector
 from .filters import BaseFilter, SpearmanFilter, TschuprowtFilter, ValidFilter
 from .measures import BaseMeasure, KruskalMeasure, ModeMeasure, NanMeasure, SpearmanMeasure
 
