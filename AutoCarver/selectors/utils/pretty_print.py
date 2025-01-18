@@ -6,7 +6,7 @@ from ...features import BaseFeature
 
 
 def format_measure(feature: BaseFeature, measure: dict) -> dict:
-    """ Format measure for display """
+    """Format measure for display"""
     # formatting measure
     formatted = {}
     for measure_name, measure_value in measure.items():
@@ -17,13 +17,13 @@ def format_measure(feature: BaseFeature, measure: dict) -> dict:
             correlation_with = measure_value.get("info", {}).get("correlation_with")
             # formatting target correlation
             if correlation_with != "target" and correlation_with is not None:
-                formatted.update({f"{measure_name}_with": correlation_with})
+                formatted.update({f"{measure_name}_With": correlation_with})
 
     return formatted
 
 
 def format_ranked_features(features: list[BaseFeature]) -> DataFrame:
-    """  formats ranked features for display """
+    """formats ranked features for display"""
 
     # adding measures and filters
     measures = []
@@ -36,3 +36,34 @@ def format_ranked_features(features: list[BaseFeature]) -> DataFrame:
         sort_by = ranks[0]
         return DataFrame(measures).sort_values(by=sort_by, ascending=False)
     return DataFrame(measures)
+
+
+def prettier_measures(association: DataFrame) -> str:
+    """Pretty display of measures and filters per feature on the same line"""
+
+    # finding columns with indicators to colorize
+    subset = [
+        column
+        for column in association.columns
+        # checking for an association indicator
+        if any(column.endswith(indic) for indic in ["Measure", "Rank", "Filter"])
+    ]
+
+    # adding coolwarm color gradient
+    nicer_association = association.style.background_gradient(cmap="coolwarm", subset=subset)
+    # printing inline notebook
+    nicer_association = nicer_association.set_table_attributes("style='display:inline'")
+
+    # finding columns with indicators to colorize
+    subset = [
+        column
+        for column in association.columns
+        # checking for an association indicator
+        if any(column.endswith(indic) for indic in ["Measure", "Filter"])
+    ]
+
+    # lower precision for specific columns
+    nicer_association = nicer_association.format({measure: "{:.4f}" for measure in subset})
+
+    # conversion to html
+    return nicer_association._repr_html_()

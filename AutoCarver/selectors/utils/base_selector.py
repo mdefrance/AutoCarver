@@ -11,11 +11,11 @@ from ...features import BaseFeature, Features
 from ...utils import get_bool_attribute
 from ..filters import BaseFilter
 from ..measures import BaseMeasure
+from .pretty_print import format_ranked_features, prettier_measures
 
 # trying to import extra dependencies
 try:
-    # from IPython.display import display_html
-    pass
+    from IPython.display import display_html
 except ImportError:
     _has_idisplay = False
 else:
@@ -326,9 +326,6 @@ class BaseSelector(ABC):
     ) -> list[BaseFeature]:
         """gets best features per chunk of maximum size as set by max_num_features_per_chunk"""
 
-        # keeping all features per default
-        best_features = features[:]
-
         # too many features: chunking and selecting best amongst chunks
         if len(features) > self.max_num_features_per_chunk:
             # making random chunks of features
@@ -337,59 +334,63 @@ class BaseSelector(ABC):
             )
 
             # iterating over each feature samples
-            best_features = []
-            for chunk in chunks:
+            features: list[BaseFeature] = []
+            for n_chunk, chunk in enumerate(chunks):
                 # fitting association on features
-                best_features += get_best_features(
+                features += get_best_features(
                     chunk, X, y, measures, filters, max(int(self.n_best_per_type // len(chunks)), 1)
                 )
 
+                # printing association
+                self._print_measures(chunk, f"Selected Features from chunk {n_chunk}")
+
         # initiating features measures and filters for final prediction
-        self._initiate_features_measures(best_features, remove_default=False)
+        self._initiate_features_measures(features, remove_default=False)
 
-        return get_best_features(best_features, X, y, measures, filters, self.n_best_per_type)
+        # selecting from remaining features
+        best_features = get_best_features(
+            features, X, y, measures, filters, self.n_best_per_type
+        )
 
-    # def _print_associations(self, association: DataFrame, message: str = "") -> None:
-    #     """EDA of fitted associations
+        # printing association
+        self._print_measures(features, "Selected Features")
 
-    #     Parameters
-    #     ----------
-    #     association : DataFrame
-    #         _description_
-    #     pretty_print : bool, optional
-    #         _description_, by default False
-    #     """
-    #     # checking for verbose
-    #     if self.verbose:
-    #         print(f"\n - [{self.__name__}] Association between X and y{message}")
+        return best_features
 
-    #         # printing raw DataFrame
-    #         if not self.pretty_print:
-    #             print(association)
+    def _print_measures(self, features: list[BaseFeature], message: str) -> None:
+        """Prints crosstabs' target rates and frequencies per modality, in raw or html format
 
-    #         # adding colors and displaying DataFrame as html
-    #         else:
-    #             # finding columns with indicators to colorize
-    #             subset = [
-    #                 column
-    #                 for column in association.columns
-    #                 # checking for an association indicator
-    #                 if any(indic in column for indic in ["pct_", "_measure", "_filter"])
-    #             ]
+        Parameters
+        ----------
+        xagg : Union[DataFrame, Series]
+            Train crosstab
+        xagg_dev : Union[DataFrame, Series]
+            Dev crosstab, by default None
+        pretty_print : bool, optional
+            Whether to output html or not, by default False
+        """
+        if self.verbose:
+            print(f" [{self.__name__}] {message}")
 
-    #             # adding coolwarm color gradient
-    #             nicer_association = association.style.background_gradient(
-    #                 cmap="coolwarm", subset=subset
-    #             )
-    #             # printing inline notebook
-    #             nicer_association = nicer_association.set_table_attributes(
-    # "style='display:inline'")
+            # formatting measures to print
+            formatted_measures = format_ranked_features(features)
 
-    #             # lower precision
-    #             nicer_association = nicer_association.format(precision=4)
+            if not self.pretty_print:  # no pretty hmtl printing
+                self._print_raw(formatted_measures)
+            else:  # pretty html printing
+                self._print_html(formatted_measures)
 
-    #             # displaying html of colored DataFrame
-    #             display_html(nicer_association._repr_html_(), raw=True)  # pylint: disable=W0212
+    def _print_raw(self, formatted_measures: DataFrame) -> None:
+        """Prints raw XAGG DataFrames."""
+        print(formatted_measures, "\n")
+
+    def _print_html(self, formatted_measures: DataFrame) -> None:
+        """Prints XAGG DataFrames in HTML format."""
+        # getting prettier xtabs
+        nicer_association = prettier_measures(formatted_measures)
+
+        # displaying html of colored DataFrame
+        display_html(nicer_association, raw=True)  # pylint: disable=W0212
 
 
 def get_typed_features(features: Features) -> dict[str, list[BaseFeature]]:
@@ -605,7 +606,7 @@ def select_with_measure(
 def make_rank_info(rank: int, measure: BaseMeasure, n_best: int) -> dict:
     """makes a dict with rank and measure info"""
     return {
-        f"{measure.__name__}_Rank": {
+        f"{measure.__name__.replace('Measure', '')}_Rank": {
             "value": rank,
             "threshold": n_best,
             "info": {"is_default": False, "higher_is_better": False},
