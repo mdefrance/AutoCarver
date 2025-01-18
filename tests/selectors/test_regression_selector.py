@@ -4,7 +4,7 @@ from pytest import raises
 
 from AutoCarver.features import Features
 from AutoCarver.selectors import RegressionSelector
-from AutoCarver.selectors.base_selector import get_default_metrics, remove_default_metrics
+from AutoCarver.selectors.utils.base_selector import get_default_metrics, remove_default_metrics
 from AutoCarver.selectors.filters import BaseFilter
 from AutoCarver.selectors.measures import BaseMeasure
 

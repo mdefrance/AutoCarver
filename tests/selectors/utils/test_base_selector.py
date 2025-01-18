@@ -10,7 +10,7 @@ from AutoCarver.features import (
     get_quantitative_features,
 )
 from AutoCarver.selectors import BaseFilter, BaseMeasure
-from AutoCarver.selectors.base_selector import (
+from AutoCarver.selectors.utils.base_selector import (
     BaseSelector,
     apply_filters,
     apply_measures,
@@ -392,7 +392,7 @@ def test_base_selector_select(
         filters=filters,
     )
     best_features = selector.select(X, y)
-    assert isinstance(best_features, list)
+    assert isinstance(best_features, Features)
     for feature in features_object.quantitatives:
         assert feature in best_features
     for feature in features_object.qualitatives:

@@ -192,10 +192,12 @@ class BaseSelector(ABC):
     @abstractmethod
     def _initiate_measures(self, requested_measures: list[BaseMeasure] = None) -> list[BaseMeasure]:
         """initiates the list of measures with default values"""
+        return requested_measures
 
     @abstractmethod
     def _initiate_filters(self, requested_filters: list[BaseFilter] = None) -> list[BaseFilter]:
         """initiates the list of measures with default values"""
+        return requested_filters
 
     def _select_quantitatives(
         self, quantitatives: list[BaseFeature], X: DataFrame, y: Series
@@ -342,15 +344,13 @@ class BaseSelector(ABC):
                 )
 
                 # printing association
-                self._print_measures(chunk, f"Selected Features from chunk {n_chunk}")
+                self._print_measures(chunk, f"Selected Features from chunk {n_chunk}/{len(chunks)}")
 
         # initiating features measures and filters for final prediction
         self._initiate_features_measures(features, remove_default=False)
 
         # selecting from remaining features
-        best_features = get_best_features(
-            features, X, y, measures, filters, self.n_best_per_type
-        )
+        best_features = get_best_features(features, X, y, measures, filters, self.n_best_per_type)
 
         # printing association
         self._print_measures(features, "Selected Features")
@@ -475,7 +475,11 @@ def sort_features_per_measure(
     features: list[BaseFeature], measure: BaseMeasure
 ) -> list[BaseFeature]:
     """sorts features according to specified measure"""
-    return sorted(features, key=lambda feature: get_measure_value(feature, measure))
+    return sorted(
+        features,
+        key=lambda feature: get_measure_value(feature, measure),
+        reverse=not measure.info.get("higher_is_better"),
+    )
 
 
 def get_measure_value(feature: BaseFeature, measure: BaseMeasure) -> float:
@@ -502,14 +506,7 @@ def apply_measures(
         # iterating over each measure
         for measure in used_measures:
             # checking for mismatched data types
-            if not (
-                (is_quantitative(feature) and measure.is_x_quantitative)
-                or (is_qualitative(feature) and measure.is_x_qualitative)
-            ):
-                raise TypeError(
-                    f"Type mismatch, provided feature {feature}, with measure {measure} that has "
-                    f"measure.is_x_quantitative={measure.is_x_quantitative}"
-                )
+            check_measure_mismatch(feature, measure)
 
             # computing association for feature
             measure.compute_association(X[feature.version], y)
@@ -535,22 +532,27 @@ def apply_filters(
     filtered = features[:]
 
     # iterating over each filter
-    for filter_ in used_filters:
+    for measure in used_filters:
         # checking for mismatched data types
         for feature in features:
-            if not (
-                (is_quantitative(feature) and filter_.is_x_quantitative)
-                or (is_qualitative(feature) and filter_.is_x_qualitative)
-            ):
-                raise TypeError(
-                    f"Type mismatch, provided feature {feature}, with filter {filter_} that has "
-                    f"filter.is_x_quantitative={filter_.is_x_quantitative}"
-                )
+            check_measure_mismatch(feature, measure)
 
         # applying filter
-        filtered = filter_.filter(X, filtered)
+        filtered = measure.filter(X, filtered)
 
     return filtered
+
+
+def check_measure_mismatch(feature: BaseFeature, measure: Union[BaseMeasure, BaseFilter]) -> None:
+    """checks for mismatched data types between feature and measure"""
+    if not (
+        (is_quantitative(feature) and measure.is_x_quantitative)
+        or (is_qualitative(feature) and measure.is_x_qualitative)
+    ):
+        raise TypeError(
+            f"Type mismatch, provided feature {feature}, with {measure} that has "
+            f"is_x_quantitative={measure.is_x_quantitative}"
+        )
 
 
 def get_best_features(
@@ -592,12 +594,15 @@ def select_with_measure(
     # sorting features according to measure
     sorted_features = sort_features_per_measure(features, measure)
 
+    # reversing features
+    sorted_features.reverse()
+
     # applying filters
     filtered_features = apply_filters(sorted_features, X, filters)
 
     # adding info to features
     for rank, feature in enumerate(filtered_features):
-        feature.measures.update(make_rank_info(rank, measure, n_best))
+        feature.measures.update(make_rank_info(len(filtered_features) - rank, measure, n_best))
 
     # getting best features according to measure
     return filtered_features[:n_best]

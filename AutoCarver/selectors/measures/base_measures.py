@@ -134,7 +134,7 @@ class OutlierMeasure(BaseMeasure):
 class NanMeasure(OutlierMeasure):
     """Measure of the percentage of NaNs"""
 
-    __name__ = "NaN"
+    __name__ = "NaNMeasure"
     is_x_quantitative = True
     is_x_qualitative = True
 
@@ -163,7 +163,7 @@ class NanMeasure(OutlierMeasure):
 class ModeMeasure(OutlierMeasure):
     """Measure of the percentage of the mode"""
 
-    __name__ = "Mode"
+    __name__ = "ModeMeasure"
     is_x_quantitative = True
     is_x_qualitative = True
 
