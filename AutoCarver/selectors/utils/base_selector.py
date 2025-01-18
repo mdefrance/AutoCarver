@@ -207,7 +207,6 @@ class BaseSelector(ABC):
         # checking for quantitative features before selection
         best_quantitatives: list[BaseFeature] = []
         if len(quantitatives) > 0:
-
             # getting qualitative measures and filters
             measures = get_quantitative_metrics(self.measures)
             filters = get_quantitative_metrics(self.filters)
@@ -225,7 +224,6 @@ class BaseSelector(ABC):
         # checking for qualitative features before selection
         best_qualitatives: list[BaseFeature] = []
         if len(qualitatives) > 0:
-
             # getting qualitative measures and filters
             measures = get_qualitative_metrics(self.measures)
             filters = get_qualitative_metrics(self.filters)
@@ -241,7 +239,6 @@ class BaseSelector(ABC):
         """initiates the list of measures with default values"""
         # iterating over each feature
         for feature in features:
-
             # removing all measures
             if remove_default:
                 feature.measures = {}
@@ -249,12 +246,7 @@ class BaseSelector(ABC):
 
             # keeping only default measures
             else:
-                for measure_name, measure in feature.measures.items():
-                    if not measure.get("info").get("is_default"):
-                        feature.measures.pop(measure_name)
-                for filter_name, measure in feature.filters.items():
-                    if not measure.get("info").get("is_default"):
-                        feature.filters.pop(filter_name)
+                remove_non_default_metrics_from_features(feature)
 
     def select(self, X: DataFrame, y: Series) -> list[BaseFeature]:
         """Selects the ``n_best_per_type`` features of the DataFrame, by association with the target
@@ -466,6 +458,25 @@ def remove_default_metrics(
     return [metric for metric in metrics if not metric.is_default]
 
 
+def remove_non_default_metrics_from_features(feature: BaseFeature) -> None:
+    """removes default measures from feature"""
+    # removing non default measures
+    measures = dict(feature.measures)
+    for measure_name, measure in feature.measures.items():
+        if not measure.get("info").get("is_default"):
+            measures.pop(measure_name)
+
+    # removing non default filters
+    filters = dict(feature.filters)
+    for filter_name, measure in feature.filters.items():
+        if not measure.get("info").get("is_default"):
+            filters.pop(filter_name)
+
+    # updating feature
+    feature.measures = measures
+    feature.filters = filters
+
+
 def remove_duplicates(features: list[BaseFeature]) -> list[BaseFeature]:
     """removes duplicated features, keeping its first appearance"""
     return [features[i] for i in range(len(features)) if features[i] not in features[:i]]
@@ -605,15 +616,30 @@ def select_with_measure(
         feature.measures.update(make_rank_info(len(filtered_features) - rank, measure, n_best))
 
     # getting best features according to measure
-    return filtered_features[:n_best]
+    return select_from_rank(filtered_features, measure)
+
+
+def select_from_rank(features: list[BaseFeature], measure: BaseMeasure) -> list[BaseFeature]:
+    """Selects the ``n_best`` features of the DataFrame, by association with the target"""
+    return [
+        feature
+        for feature in features
+        if feature.measures.get(make_rank_name(measure)).get("valid")
+    ]
+
+
+def make_rank_name(measure: BaseMeasure) -> str:
+    """makes a name for the rank info"""
+    return f"{measure.__name__.replace('Measure', '')}Rank"
 
 
 def make_rank_info(rank: int, measure: BaseMeasure, n_best: int) -> dict:
     """makes a dict with rank and measure info"""
     return {
-        f"{measure.__name__.replace('Measure', '')}_Rank": {
+        make_rank_name(measure): {
             "value": rank,
             "threshold": n_best,
+            "valid": rank <= n_best,
             "info": {"is_default": False, "higher_is_better": False},
         }
     }

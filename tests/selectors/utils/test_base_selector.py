@@ -239,13 +239,14 @@ def test_apply_filters(
     assert len(filtered) == (len(quantitative_features) - 1)
 
 
-def _get_best_features(
+def test_get_best_features(
     features: list[BaseFeature],
     X: DataFrame,
     y: Series,
     measures: list[BaseMeasure],
     filters: list[BaseFilter],
 ) -> None:
+    """testing function get_best_features"""
     # sorting out features
     qualitative_features = get_qualitative_features(features)
     quantitative_features = get_quantitative_features(features)
@@ -408,20 +409,26 @@ def test_base_selector_select(
         filters=filters,
     )
     best_features = selector.select(X, y)
-    assert len(best_features) == 2
-    quantitative_sorted_features = sort_features_per_measure(
-        get_quantitative_features(features_object),
-        remove_default_metrics(get_quantitative_metrics(measures))[0],
-    )
-    assert len(get_quantitative_features(best_features)) == 1
-    assert get_quantitative_features(best_features)[0] == quantitative_sorted_features[0]
+    print("best_features", best_features)
 
+    # checking that one feature has been selected per type
+    assert len(best_features) == 2
+
+    # checking that one feature has been selected in qualitatives
     qualitative_sorted_features = sort_features_per_measure(
         get_qualitative_features(features_object),
         remove_default_metrics(get_qualitative_metrics(measures))[0],
     )
     assert len(get_qualitative_features(best_features)) == 1
     assert get_qualitative_features(best_features)[0] == qualitative_sorted_features[0]
+
+    # checking that one feature has been selected in quantitatives
+    quantitative_sorted_features = sort_features_per_measure(
+        get_quantitative_features(features_object),
+        remove_default_metrics(get_quantitative_metrics(measures))[0],
+    )
+    assert len(get_quantitative_features(best_features)) == 1
+    assert get_quantitative_features(best_features)[0] == quantitative_sorted_features[0]
 
 
 def test_base_selector_get_best_features_across_chunks_no_chunking(
@@ -431,6 +438,7 @@ def test_base_selector_get_best_features_across_chunks_no_chunking(
     measures: list[BaseMeasure],
     filters: list[BaseFilter],
 ) -> None:
+    """tests BaseSelector get_best_features_across_chunks function"""
     # generating several correlated features
     new_features = []
     new_X = {}
@@ -480,6 +488,7 @@ def test_base_selector_get_best_features_across_chunks_with_chunking(
     measures: list[BaseMeasure],
     filters: list[BaseFilter],
 ) -> None:
+    """testing get_best_features across chunks"""
     # generating several correlated features
     new_features = []
     new_X = {}

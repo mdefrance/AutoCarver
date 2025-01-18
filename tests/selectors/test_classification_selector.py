@@ -4,9 +4,9 @@ from pytest import raises
 
 from AutoCarver.features import Features
 from AutoCarver.selectors import ClassificationSelector
-from AutoCarver.selectors.utils.base_selector import get_default_metrics, remove_default_metrics
 from AutoCarver.selectors.filters import BaseFilter
 from AutoCarver.selectors.measures import BaseMeasure
+from AutoCarver.selectors.utils.base_selector import get_default_metrics, remove_default_metrics
 
 
 def test_classification_selector_initiate_default(features_object: Features) -> None:
@@ -19,9 +19,9 @@ def test_classification_selector_initiate_default(features_object: Features) -> 
         max_num_features_per_chunk=max_num_features_per_chunk,
     )
 
-    assert any(measure.__name__ == "Mode" for measure in selector.measures)
-    assert any(measure.__name__ == "NaN" for measure in selector.measures)
-    assert any(filter_.__name__ == "Valid" for filter_ in selector.filters)
+    assert any(measure.__name__ == "ModeMeasure" for measure in selector.measures)
+    assert any(measure.__name__ == "NaNMeasure" for measure in selector.measures)
+    assert any(measure.__name__ == "Valid" for measure in selector.filters)
     assert len(remove_default_metrics(selector.measures)) >= 1
     assert len(remove_default_metrics(selector.filters)) >= 1
 
@@ -42,15 +42,9 @@ def test_classification_selector_initiate_measures(
             max_num_features_per_chunk=max_num_features_per_chunk,
             measures=default_measures,
         )
-        assert any(measure.__name__ == "Mode" for measure in selector.measures)
-        assert any(measure.__name__ == "NaN" for measure in selector.measures)
-        assert (
-            len(selector.measures)
-            == len(
-                [measure for measure in default_measures if measure.__name__ not in ["Mode", "NaN"]]
-            )
-            + 2
-        )
+        assert any(measure.__name__ == "ModeMeasure" for measure in selector.measures)
+        assert any(measure.__name__ == "NaNMeasure" for measure in selector.measures)
+        assert len(selector.measures) == 3
 
     # adding qualitative target measures
     classification_measures = [
@@ -65,8 +59,8 @@ def test_classification_selector_initiate_measures(
             max_num_features_per_chunk=max_num_features_per_chunk,
             measures=classification_measures,
         )
-        assert any(measure.__name__ == "Mode" for measure in selector.measures)
-        assert any(measure.__name__ == "NaN" for measure in selector.measures)
+        assert any(measure.__name__ == "ModeMeasure" for measure in selector.measures)
+        assert any(measure.__name__ == "NaNMeasure" for measure in selector.measures)
         assert len(selector.measures) == len(classification_measures) + 2
 
     # checking error for quantitative target measures

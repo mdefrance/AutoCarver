@@ -50,7 +50,6 @@ from pytest import FixtureRequest, fixture
 
 from AutoCarver.features import BaseFeature, Features
 from AutoCarver.selectors import BaseFilter, BaseMeasure
-from AutoCarver.selectors.utils.base_selector import BaseSelector
 from AutoCarver.selectors.filters import (
     CramervFilter,
     PearsonFilter,
@@ -71,6 +70,7 @@ from AutoCarver.selectors.measures import (
     TschuprowtMeasure,
     ZscoreOutlierMeasure,
 )
+from AutoCarver.selectors.utils.base_selector import BaseSelector
 
 # setting BaseSelector, BaseFeature as non abstract classes for the duration of the test
 BaseSelector.__abstractmethods__ = set()

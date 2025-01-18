@@ -31,7 +31,7 @@ def format_ranked_features(features: list[BaseFeature]) -> DataFrame:
         measures.append(format_measure(feature, {**feature.measures, **feature.filters}))
 
     # finding a sorting measure
-    ranks = [col for col in measures[0].keys() if col.endswith("_Rank")]
+    ranks = [col for col in measures[0].keys() if col.endswith("Rank")]
     if len(ranks) > 0:
         sort_by = ranks[0]
         return DataFrame(measures).sort_values(by=sort_by, ascending=False)

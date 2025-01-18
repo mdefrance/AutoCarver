@@ -1,8 +1,8 @@
 """Tools to select the best Quantitative and Qualitative features for a Classification task."""
 
-from .utils.base_selector import BaseSelector
 from .filters import BaseFilter, SpearmanFilter, TschuprowtFilter, ValidFilter
 from .measures import BaseMeasure, KruskalMeasure, ModeMeasure, NanMeasure, TschuprowtMeasure
+from .utils.base_selector import BaseSelector
 
 
 class ClassificationSelector(BaseSelector):

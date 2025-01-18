@@ -818,9 +818,7 @@ def test_base_discretizer(x_train: DataFrame, dropna: bool) -> None:
         "Qualitative_Ordinal": groupedlist,
         "Qualitative_Ordinal_lownan": groupedlist_lownan,
     }
-    features = Features(
-        ordinals=ordinal_values, nan=str_nan, dropna=dropna
-    )
+    features = Features(ordinals=ordinal_values, nan=str_nan, dropna=dropna)
     features.fit(x_train)
     feature = features("Qualitative_Ordinal_lownan")
     print(feature.has_nan, feature.dropna, feature.content)
