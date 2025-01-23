@@ -15,6 +15,7 @@ from .qualitative_features import (
 from .quantitative_features import QuantitativeFeature, get_quantitative_features
 from .utils.base_feature import BaseFeature
 from .utils.grouped_list import GroupedList
+from ..utils.attributes import get_bool_attribute
 
 # class AutoFeatures(Features):
 #     """TODO"""
@@ -127,6 +128,7 @@ class Features:
 
         self._dropna = False
         self._ordinal_encoding = False
+        self.is_fitted = get_bool_attribute(kwargs, "is_fitted", False)
 
     def __repr__(self) -> str:
         """Returns names of all features"""
@@ -410,7 +412,9 @@ class Features:
 
     def to_json(self, light_mode: bool = False) -> dict:
         """Converts a feature to JSON format"""
-        return {feature.version: feature.to_json(light_mode) for feature in self}
+        features_json = {feature.version: feature.to_json(light_mode) for feature in self}
+        features_json.update({"is_fitted": self.is_fitted})
+        return features_json
 
     def to_list(self) -> list[BaseFeature]:
         """Returns a list of all features"""
@@ -423,6 +427,9 @@ class Features:
     @classmethod
     def load(cls, features_json: dict) -> "Features":
         """Loads a set of features"""
+
+        # checking for fitted features
+        is_fitted = features_json.pop("is_fitted", None)
 
         # casting each feature to there corresponding type
         unpacked_features: list[BaseFeature] = []
@@ -440,7 +447,7 @@ class Features:
                 unpacked_features += [QuantitativeFeature.load(feature)]
 
         # initiating features
-        return cls(unpacked_features)
+        return cls(unpacked_features, is_fitted=is_fitted)
 
 
 def remove_version(removed_version: str, features: list[BaseFeature]) -> list[BaseFeature]:

@@ -613,7 +613,7 @@ def select_with_measure(
 
     # adding info to features
     for rank, feature in enumerate(filtered_features):
-        feature.measures.update(make_rank_info(len(filtered_features) - rank, measure, n_best))
+        feature.measures.update(make_rank_info(rank, measure, n_best, len(filtered_features)))
 
     # getting best features according to measure
     return select_from_rank(filtered_features, measure)
@@ -633,13 +633,13 @@ def make_rank_name(measure: BaseMeasure) -> str:
     return f"{measure.__name__.replace('Measure', '')}Rank"
 
 
-def make_rank_info(rank: int, measure: BaseMeasure, n_best: int) -> dict:
+def make_rank_info(rank: int, measure: BaseMeasure, n_best: int, n_features: int) -> dict:
     """makes a dict with rank and measure info"""
     return {
         make_rank_name(measure): {
-            "value": rank,
-            "threshold": n_best,
-            "valid": rank <= n_best,
-            "info": {"is_default": False, "higher_is_better": False},
+            "value": n_features - rank,
+            "threshold": n_features - n_best,
+            "valid": rank < n_best,
+            "info": {"is_default": False, "higher_is_better": True},
         }
     }
