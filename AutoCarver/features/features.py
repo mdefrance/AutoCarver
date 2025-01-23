@@ -5,6 +5,7 @@ from typing import Union
 from numpy import nan
 from pandas import DataFrame, Series
 
+from ..utils.attributes import get_bool_attribute
 from .qualitative_features import (
     CategoricalFeature,
     OrdinalFeature,
@@ -15,7 +16,6 @@ from .qualitative_features import (
 from .quantitative_features import QuantitativeFeature, get_quantitative_features
 from .utils.base_feature import BaseFeature
 from .utils.grouped_list import GroupedList
-from ..utils.attributes import get_bool_attribute
 
 # class AutoFeatures(Features):
 #     """TODO"""
