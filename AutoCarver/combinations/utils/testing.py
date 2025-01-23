@@ -20,7 +20,7 @@ class TestMessages(str, Enum):
     """messages for test results"""
 
     INVERSION_RATES = "Inversion of target rates per modality"
-    NON_REPRESENTATIVE = "Non-representative modality for min_freq={min_freq:6.2%}"
+    NON_REPRESENTATIVE = "Non-representative modality for min_freq={min_freq:2.2%}"
     NON_DISTINCT_RATES = "Non-distinct target rates per consecutive modalities"
     PASSED_TESTS = ""
 
@@ -60,15 +60,15 @@ def test_viability(rates: DataFrame, min_freq: float, train_target_rate: Series 
     """tests viability of the rates"""
 
     # - minimum frequency is reached for all modalities
-    min_freq = _test_minimum_frequency_per_modality(rates["frequency"], min_freq)
+    min_freq_test = _test_minimum_frequency_per_modality(rates["frequency"], min_freq)
 
     # - target rates are distinct for all modalities
     distinct_rates = _test_distinct_target_rates_between_modalities(rates["target_rate"])
 
     # gathering results
     test_results = {
-        TestKeys.VIABLE.value: min_freq and distinct_rates,
-        TestKeys.MIN_FREQ.value: min_freq,
+        TestKeys.VIABLE.value: min_freq_test and distinct_rates,
+        TestKeys.MIN_FREQ.value: min_freq_test,
         TestKeys.DISTINCT_RATES.value: distinct_rates,
     }
 
