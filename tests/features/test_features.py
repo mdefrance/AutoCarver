@@ -555,7 +555,11 @@ def test_features_to_json(features):
     """test to_json functionnality"""
     json_data = features.to_json(False)
     assert isinstance(json_data, dict)
-    assert all(isinstance(value, dict) for value in json_data.values())
+    for name, json_feature in json_data.items():
+        if name != "is_fitted":
+            assert isinstance(json_feature, dict)
+        else:
+            assert isinstance(json_feature, bool)
     assert all(feature.version in json_data for feature in features)
     assert all(json_data.get(feature.version) == feature.to_json(False) for feature in features)
     json.dumps(json_data)
