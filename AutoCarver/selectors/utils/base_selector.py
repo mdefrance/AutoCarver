@@ -486,11 +486,31 @@ def sort_features_per_measure(
     features: list[BaseFeature], measure: BaseMeasure
 ) -> list[BaseFeature]:
     """sorts features according to specified measure"""
-    return sorted(
-        features,
-        key=lambda feature: get_measure_value(feature, measure),
-        reverse=not measure.info.get("higher_is_better"),
-    )
+    # checking if features are already ranked
+    ranked = False
+    for feature in features:
+        if make_rank_name(measure) in feature.measures:
+            ranked = True
+
+    # setting reverse mode
+    reverse = not measure.info.get("higher_is_better")
+    if ranked:
+        reverse = False
+
+    # sorting features according to measure
+    return sorted(features, key=lambda feature: get_feature_rank(feature, measure), reverse=reverse)
+
+
+def get_feature_rank(feature: BaseFeature, measure: BaseMeasure) -> float:
+    """gives rank of feature according to measure"""
+    if make_rank_name(measure) not in feature.measures:
+        return get_measure_value(feature, measure)
+    return get_measure_rank(feature, measure)
+
+
+def get_measure_rank(feature: BaseFeature, measure: BaseMeasure) -> int:
+    """gives rank of feature according to measure"""
+    return feature.measures.get(make_rank_name(measure)).get("value")
 
 
 def get_measure_value(feature: BaseFeature, measure: BaseMeasure) -> float:
@@ -637,9 +657,9 @@ def make_rank_info(rank: int, measure: BaseMeasure, n_best: int, n_features: int
     """makes a dict with rank and measure info"""
     return {
         make_rank_name(measure): {
-            "value": n_features - rank,
+            "value": rank,
             "threshold": n_features - n_best,
             "valid": rank < n_best,
-            "info": {"is_default": False, "higher_is_better": True},
+            "info": {"is_default": False, "higher_is_better": False},
         }
     }

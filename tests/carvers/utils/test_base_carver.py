@@ -10,6 +10,8 @@ from AutoCarver.features import Features
 
 try:
     from IPython.display import display_html
+
+    _ = display_html
 except ImportError:
     _has_idisplay = False
 else:

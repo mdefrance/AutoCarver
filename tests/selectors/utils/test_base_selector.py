@@ -470,6 +470,10 @@ def test_base_selector_get_best_features_across_chunks_no_chunking(
         get_quantitative_features(features_object),
         remove_default_metrics(get_quantitative_metrics(measures))[0],
     )
+    print("best_features", best_features)
+    print("get_quantitative_features(features_object)", get_quantitative_features(features_object))
+    print("quantitative_sorted_features", quantitative_sorted_features)
+    print("get_quantitative_features(best_features)", get_quantitative_features(best_features))
     assert len(get_quantitative_features(best_features)) == 1
     assert get_quantitative_features(best_features)[0] == quantitative_sorted_features[0]
 
@@ -516,31 +520,58 @@ def test_base_selector_get_best_features_across_chunks_with_chunking(
     )
     best_features = selector.select(X, y)
     assert len(best_features) == 2
+    assert len(get_quantitative_features(best_features)) == 1
+    assert len(get_qualitative_features(best_features)) == 1
+    best_quantitative = get_quantitative_features(best_features)[0]
+    best_qualitative = get_qualitative_features(best_features)[0]
 
-    # looking for first chunk
+    # looking for chunk containing best quantitative feature
     quantitative_chunks = make_random_chunks(
         get_quantitative_features(features_object),
         max_num_features_per_chunk,
         selector.random_state,
     )
-    print(quantitative_chunks[0][0] in features_object.quantitatives, quantitative_chunks[0])
+    print("number of chunks", len(quantitative_chunks))
+    quantitative_chunk = next(chunk for chunk in quantitative_chunks if best_quantitative in chunk)
 
+    # sorting chunk
     quantitative_sorted_features = sort_features_per_measure(
-        quantitative_chunks[0],
+        quantitative_chunk,
         remove_default_metrics(get_quantitative_metrics(measures))[0],
     )
-    assert len(get_quantitative_features(best_features)) == 1
-    assert get_quantitative_features(best_features)[0] == quantitative_sorted_features[0]
 
-    # looking for first chunk
+    # best quantitative should be selected from its chunk
+    assert best_quantitative == quantitative_sorted_features[0]
+
+    # sorting all quantitative features
+    quantitative_sorted_features = sort_features_per_measure(
+        get_quantitative_features(features_object),
+        remove_default_metrics(get_quantitative_metrics(measures))[0],
+    )
+    # best quantitative should be selected from all quantitative features
+    assert best_quantitative == quantitative_sorted_features[0]
+
+    # looking for chunk containing best qualitative feature
     qualitative_chunks = make_random_chunks(
         get_qualitative_features(features_object),
         max_num_features_per_chunk,
         selector.random_state,
     )
+    qualitative_chunk = next(chunk for chunk in qualitative_chunks if best_qualitative in chunk)
+
+    # sorting chunk
     qualitative_sorted_features = sort_features_per_measure(
-        qualitative_chunks[0],
+        qualitative_chunk,
         remove_default_metrics(get_qualitative_metrics(measures))[0],
     )
-    assert len(get_qualitative_features(best_features)) == 1
-    assert get_qualitative_features(best_features)[0] == qualitative_sorted_features[0]
+
+    # best qualitative should be selected from all quzlitative features
+    assert best_qualitative == qualitative_sorted_features[0]
+
+    # sorting all qualitative features
+    qualitative_sorted_features = sort_features_per_measure(
+        get_qualitative_features(features_object),
+        remove_default_metrics(get_qualitative_metrics(measures))[0],
+    )
+    # best qualitative should be selected from all qualitative features
+    assert best_qualitative == qualitative_sorted_features[0]

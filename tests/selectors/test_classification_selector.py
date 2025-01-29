@@ -20,7 +20,7 @@ def test_classification_selector_initiate_default(features_object: Features) -> 
     )
 
     assert any(measure.__name__ == "ModeMeasure" for measure in selector.measures)
-    assert any(measure.__name__ == "NaNMeasure" for measure in selector.measures)
+    assert any(measure.__name__ == "NanMeasure" for measure in selector.measures)
     assert any(measure.__name__ == "Valid" for measure in selector.filters)
     assert len(remove_default_metrics(selector.measures)) >= 1
     assert len(remove_default_metrics(selector.filters)) >= 1
@@ -43,7 +43,7 @@ def test_classification_selector_initiate_measures(
             measures=default_measures,
         )
         assert any(measure.__name__ == "ModeMeasure" for measure in selector.measures)
-        assert any(measure.__name__ == "NaNMeasure" for measure in selector.measures)
+        assert any(measure.__name__ == "NanMeasure" for measure in selector.measures)
         assert len(selector.measures) == 3
 
     # adding qualitative target measures
@@ -60,7 +60,7 @@ def test_classification_selector_initiate_measures(
             measures=classification_measures,
         )
         assert any(measure.__name__ == "ModeMeasure" for measure in selector.measures)
-        assert any(measure.__name__ == "NaNMeasure" for measure in selector.measures)
+        assert any(measure.__name__ == "NanMeasure" for measure in selector.measures)
         assert len(selector.measures) == len(classification_measures) + 2
 
     # checking error for quantitative target measures

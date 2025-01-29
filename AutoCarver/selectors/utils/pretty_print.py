@@ -17,7 +17,7 @@ def format_measure(feature: BaseFeature, measure: dict) -> dict:
             correlation_with = measure_value.get("info", {}).get("correlation_with")
             # formatting target correlation
             if correlation_with != "target" and correlation_with is not None:
-                formatted.update({f"{measure_name}_With": correlation_with})
+                formatted.update({measure_name.replace("Filter", "With"): correlation_with})
 
     return formatted
 
@@ -34,7 +34,7 @@ def format_ranked_features(features: list[BaseFeature]) -> DataFrame:
     ranks = [col for col in measures[0].keys() if col.endswith("Rank")]
     if len(ranks) > 0:
         sort_by = ranks[0]
-        return DataFrame(measures).sort_values(by=sort_by, ascending=False)
+        return DataFrame(measures).sort_values(by=sort_by, ascending=True)
     return DataFrame(measures)
 
 
@@ -46,7 +46,7 @@ def prettier_measures(association: DataFrame) -> str:
         column
         for column in association.columns
         # checking for an association indicator
-        if any(column.endswith(indic) for indic in ["Measure", "Rank", "Filter"])
+        if any(column.endswith(indic) for indic in ["Measure", "Filter"])
     ]
 
     # adding coolwarm color gradient
