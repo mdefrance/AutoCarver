@@ -5,7 +5,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Carvers &mdash; AutoCarver Beta release documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
   
@@ -16,7 +16,7 @@
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
         <script src="_static/documentation_options.js?v=39f3c58d"></script>
-        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
@@ -42,7 +42,7 @@
               <img src="_static/auto_carver_symbol_small.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                6.0.4
+                6.0.5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -64,7 +64,6 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Carvers</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#classification-tasks">Classification tasks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#regression-tasks">Regression tasks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#saving-and-loading">Saving and Loading</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="selectors.html">Selectors</a></li>
@@ -133,86 +132,77 @@ This implementation has been simplified taking into account the binary target <s
 <p>For two combinations of modalities of <span class="math notranslate nohighlight">\(x\)</span>, a higher <span class="math notranslate nohighlight">\(T\)</span> or <span class="math notranslate nohighlight">\(V\)</span> value indicates a stronger relationship with the binary target <span class="math notranslate nohighlight">\(y\)</span>.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="AutoCarver.BinaryCarver">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.</span></span><span class="sig-name descname"><span class="pre">BinaryCarver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sort_by</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantitative_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualitative_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ordinal_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values_orders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="discretizers.html#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.utils.grouped_list.GroupedList"><span class="pre">GroupedList</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_n_mod</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq_mod</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dtype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropna</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.BinaryCarver" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.</span></span><span class="sig-name descname"><span class="pre">BinaryCarver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropna</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_n_mod</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.BinaryCarver" title="Link to this definition"></a></dt>
 <dd><p>Automatic carving of continuous, discrete, categorical and ordinal
 features that maximizes association with a binary target.</p>
 <p class="rubric">Examples</p>
-<p><a class="reference external" href="https://autocarver.readthedocs.io/en/latest/examples/BinaryClassification/binary_classification_example.html">Binary Classification Example</a></p>
+<p><a class="reference external" href="https://autocarver.readthedocs.io/en/latest/examples/Carvers/BinaryClassification/binary_classification_example.html">Binary Classification Example</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>sort_by</strong> (<em>str</em>) – <p>Metric to be used to perform association measure between features and target.</p>
+<li><p><strong>features</strong> (<em>Features</em>) – A set of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> to be carved.</p></li>
+<li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per modality per feature.</p>
 <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;tschuprowt&quot;</span></code>, for <a class="reference internal" href="selectors.html#tschuprowt"><span class="std std-ref">Tschuprow’s T</span></a>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;cramerv&quot;</span></code>, for <a class="reference internal" href="selectors.html#cramerv"><span class="std std-ref">Cramér’s V</span></a>.</p></li>
+<li><p>Features need at least one modality more frequent than <code class="xref py py-attr docutils literal notranslate"><span class="pre">min_freq</span></code></p></li>
+<li><p>Defines number of quantiles of continuous features</p></li>
+<li><p>Minimum frequency of modality of quantitative feature</p></li>
 </ul>
-<p><strong>Tip</strong>: use <code class="docutils literal notranslate"><span class="pre">&quot;tschuprowt&quot;</span></code> for more robust, or less output modalities,
-use <code class="docutils literal notranslate"><span class="pre">&quot;cramerv&quot;</span></code> for more output modalities.</p>
-</p></li>
-<li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per grouped modalities.</p>
-<ul>
-<li><p>Features whose most frequent modality is less than <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> will not be carved.</p></li>
-<li><p>Sets the number of quantiles in which to discretize the continuous features.</p></li>
-<li><p>Sets the minimum frequency of a quantitative feature’s modality.</p></li>
-</ul>
-<p><strong>Tip</strong>: should be set between <code class="docutils literal notranslate"><span class="pre">0.01</span></code> (slower, preciser, less robust) and <code class="docutils literal notranslate"><span class="pre">0.2</span></code>
+<p><em>Tip</em>: should be set between <code class="docutils literal notranslate"><span class="pre">0.01</span></code> (slower, preciser, less robust) and <code class="docutils literal notranslate"><span class="pre">0.2</span></code>
 (faster, more robust)</p>
 </p></li>
-<li><p><strong>quantitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of quantitative features (continuous and discrete) to be carved,
-by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
-<li><p><strong>qualitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of qualitative features (non-ordinal) to be carved,
-by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
-<li><p><strong>ordinal_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of ordinal features to be carved. For those features a list of
-values has to be provided in the <code class="docutils literal notranslate"><span class="pre">values_orders</span></code> dict, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
-<li><p><strong>values_orders</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="discretizers.html#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.GroupedList"><em>GroupedList</em></a><em>]</em><em>, </em><em>optional</em>) – Dict of feature’s column names and there associated ordering.
-If lists are passed, a <code class="xref py py-class docutils literal notranslate"><span class="pre">GroupedList</span></code> will automatically be initiated,
-by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
-<li><p><strong>max_n_mod</strong> (<em>int</em><em>, </em><em>optional</em>) – <p>Maximum number of modality per feature, by default <code class="docutils literal notranslate"><span class="pre">5</span></code></p>
-<p>All combinations of modalities for groups of modalities of sizes from 1 to
-<code class="docutils literal notranslate"><span class="pre">max_n_mod</span></code> will be tested.
-The combination with the best association will be selected.</p>
-<p><strong>Tip</strong>: set between <code class="docutils literal notranslate"><span class="pre">3</span></code> (faster, more robust) and <code class="docutils literal notranslate"><span class="pre">7</span></code> (slower, less robust)</p>
-</p></li>
-<li><p><strong>min_freq_mod</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum frequency per final modality, by default <code class="docutils literal notranslate"><span class="pre">None</span></code> for <code class="docutils literal notranslate"><span class="pre">min_freq/2</span></code></p></li>
-<li><p><strong>output_dtype</strong> (<em>str</em><em>, </em><em>optional</em>) – <p>To be choosen amongst <code class="docutils literal notranslate"><span class="pre">[&quot;float&quot;,</span> <span class="pre">&quot;str&quot;]</span></code>, by default <code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code></p>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code>, sets the rank of modalities as label.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;str&quot;</span></code>, sets one modality of group as label.</p></li>
-</ul>
-</p></li>
 <li><p><strong>dropna</strong> (<em>bool</em><em>, </em><em>optional</em>) – <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, try to group <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code> with other modalities.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">False</span></code>, <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code> are ignored (not grouped), by default <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, try to group <code class="docutils literal notranslate"><span class="pre">nan</span></code> with other modalities.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">False</span></code>, <code class="docutils literal notranslate"><span class="pre">nan</span></code> are ignored (not grouped), by default <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
 </ul>
 </p></li>
-<li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, feature processing at transform is applied to a copy of the provided
-DataFrame, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>max_n_mod</strong> (<em>int</em><em>, </em><em>optional</em>) – <p>Maximum number of modality per feature, by default <code class="docutils literal notranslate"><span class="pre">5</span></code></p>
+<ul>
+<li><p>The combination with the best association will be selected.</p></li>
+<li><p>All combinations of sizes from 1 to <code class="xref py py-attr docutils literal notranslate"><span class="pre">max_n_mod</span></code> are tested out.</p></li>
+</ul>
+<p><em>Tip</em>: set between <code class="docutils literal notranslate"><span class="pre">3</span></code> (faster, more robust) and <code class="docutils literal notranslate"><span class="pre">7</span></code> (slower, less robust)</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ordinal_encoding</strong> (<em>bool</em><em>, </em><em>optional</em>) – <p>Whether or not to ordinal encode <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>, by default <code class="docutils literal notranslate"><span class="pre">True</span></code></p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, sets the rank of modalities as label.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">False</span></code>, sets one modality of group as label.</p></li>
+</ul>
+</p></li>
+<li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – Copying input data, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>discretizer_min_freq</strong> (<em>float</em><em>, </em><em>optional</em>) – Specific <code class="xref py py-attr docutils literal notranslate"><span class="pre">min_freq</span></code> used by discretizers, by default <code class="docutils literal notranslate"><span class="pre">None</span></code> for <code class="docutils literal notranslate"><span class="pre">min_freq/2</span></code></p></li>
 <li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, without IPython: prints raw steps for X, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, with IPython: adds HTML tables of target rates for X and X_dev</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, without <code class="docutils literal notranslate"><span class="pre">IPython</span></code>: prints raw statitics</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, with <code class="docutils literal notranslate"><span class="pre">IPython</span></code>: prints HTML statistics, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
 </ul>
-<p><strong>Tip</strong>: IPython displaying can be turned off by setting <code class="docutils literal notranslate"><span class="pre">pretty_print=False</span></code></p>
 </p></li>
-<li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of processes used by multiprocessing, by default <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
-<li><p><strong>**kwargs</strong> (<em>dict</em>) – Pass values for <code class="docutils literal notranslate"><span class="pre">str_default</span></code> and <code class="docutils literal notranslate"><span class="pre">str_nan</span></code> (default string values),
-as long as <code class="docutils literal notranslate"><span class="pre">pretty_print</span></code> to turn off IPython</p></li>
+<li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>optional</em>) – Processes for multiprocessing, by default <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
+<li><p><strong>combinations</strong> (<em>BinaryCombinationEvaluator</em><em>, </em><em>optional</em>) – <p>Metric to perform association measure between <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> and target.</p>
+<ul>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">TschuprowtCombinations</span></code>, for <a class="reference internal" href="selectors.html#tschuprowt"><span class="std std-ref">Tschuprow’s T</span></a>.</p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">CramervCombinations</span></code>, for <a class="reference internal" href="selectors.html#cramerv"><span class="std std-ref">Cramér’s V</span></a>.</p></li>
+</ul>
+<p><em>Tip</em>: use <code class="xref py py-class docutils literal notranslate"><span class="pre">TschuprowtCombinations</span></code> for more robust, or less output modalities,
+use <code class="xref py py-class docutils literal notranslate"><span class="pre">CramervCombinations</span></code> for more output modalities.</p>
+</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="AutoCarver.BinaryCarver.fit">
 <span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_dev</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_dev</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.BinaryCarver.fit" title="Link to this definition"></a></dt>
-<dd><p>Finds the combination of modalities of X that provides the best association with y.</p>
+<dd><p>Finds the combination of modalities of X that provides the best association with y.
+If provided, X_dev set should be large enough to have the same distribution as X.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>DataFrame</em>) – Training dataset, to determine features’ optimal carving.
-Needs to have columns has specified in <code class="docutils literal notranslate"><span class="pre">features</span></code> attribute.</p></li>
+<li><p><strong>X</strong> (<em>DataFrame</em>) – Dataset to determine <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>’ optimal carving.</p></li>
 <li><p><strong>y</strong> (<em>Series</em>) – Target with wich the association is maximized.</p></li>
-<li><p><strong>X_dev</strong> (<em>DataFrame</em><em>, </em><em>optional</em>) – Development dataset, to evaluate robustness of carved features, by default <code class="docutils literal notranslate"><span class="pre">None</span></code>
-Should have the same distribution as X.</p></li>
-<li><p><strong>y_dev</strong> (<em>Series</em><em>, </em><em>optional</em>) – Target of the development dataset, by default <code class="docutils literal notranslate"><span class="pre">None</span></code>
-Should have the same distribution as y.</p></li>
+<li><p><strong>X_dev</strong> (<em>DataFrame</em><em>, </em><em>optional</em>) – Dataset to evaluate robustness of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>y_dev</strong> (<em>Series</em><em>, </em><em>optional</em>) – Target associated to <code class="docutils literal notranslate"><span class="pre">X_dev</span></code>, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 </ul>
 </dd>
 </dl>
@@ -241,66 +231,69 @@ and returns a transformed version of <cite>X</cite>.</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
+<dl class="py property">
 <dt class="sig sig-object py" id="AutoCarver.BinaryCarver.history">
-<span class="sig-name descname"><span class="pre">history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#AutoCarver.BinaryCarver.history" title="Link to this definition"></a></dt>
-<dd><p>Historic of tested combinations and there association with the target.</p>
-<p>By default:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">str_default=&quot;__OTHER__&quot;</span></code> is added for features with non-representative modalities.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">str_nan=&quot;__NAN__&quot;</span></code> is added for features that contain <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code>.</p></li>
-<li><p>Whatever the value of <code class="docutils literal notranslate"><span class="pre">dropna</span></code>, the association is computed for non-missing values.</p></li>
-</ul>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>feature</strong> (<em>str</em><em>, </em><em>optional</em>) – Specify for which feature to return the history, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Historic of features’ tested combinations.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>DataFrame</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="AutoCarver.BinaryCarver.summary">
-<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#AutoCarver.BinaryCarver.summary" title="Link to this definition"></a></dt>
-<dd><p>Summarizes the data discretization process.</p>
-<p>By default:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">str_default=&quot;__OTHER__&quot;</span></code> is added for non-representative modalities.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">str_nan=&quot;__NAN__&quot;</span></code> is adde for features that contain <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code>.</p></li>
-</ul>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>feature</strong> (<em>str</em><em>, </em><em>optional</em>) – Specify for which feature to return the summary, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A summary of features’ values per modalities.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>DataFrame</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="AutoCarver.BinaryCarver.to_json">
-<span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#AutoCarver.BinaryCarver.to_json" title="Link to this definition"></a></dt>
-<dd><p>Converts to .json format.</p>
-<p>To be used with <code class="docutils literal notranslate"><span class="pre">json.dump</span></code>.</p>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">history</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DataFrame</span></em><a class="headerlink" href="#AutoCarver.BinaryCarver.history" title="Link to this definition"></a></dt>
+<dd><p>History of discretization process</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>JSON serialized object</p>
+<dd class="field-odd"><p>History of tests and <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>’ association with target</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>str</p>
+<dd class="field-even"><p>DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoCarver.BinaryCarver.load">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BaseCarver</span></span></span><a class="headerlink" href="#AutoCarver.BinaryCarver.load" title="Link to this definition"></a></dt>
+<dd><p>Allows one to load a Carver saved as a .json file.</p>
+<p>The Carver has to be saved with <code class="docutils literal notranslate"><span class="pre">Carver.save()</span></code>, otherwise there
+can be no guarantee for it to be restored.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file_name</strong> (<em>str</em>) – String of saved Carver’s .json file name.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A fitted Carver.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>BaseDiscretizer</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoCarver.BinaryCarver.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">light_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.BinaryCarver.save" title="Link to this definition"></a></dt>
+<dd><p>Saves pipeline to .json file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_name</strong> (<em>str</em>) – String of .json file name.</p></li>
+<li><p><strong>light_mode</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to save features’ history and statistics, by default False</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>JSON serialized object</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="AutoCarver.BinaryCarver.summary">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">summary</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DataFrame</span></em><a class="headerlink" href="#AutoCarver.BinaryCarver.summary" title="Link to this definition"></a></dt>
+<dd><p>Summary of discretization process</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Summary of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>’ values per modalities</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>DataFrame</p>
 </dd>
 </dl>
 </dd></dl>
@@ -313,7 +306,7 @@ and returns a transformed version of <cite>X</cite>.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>X</strong> (<em>DataFrame</em>) – Dataset to be carved.
-Needs to have columns has specified in <code class="docutils literal notranslate"><span class="pre">features</span></code> attribute.</p></li>
+Needs to have columns from provided <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>.</p></li>
 <li><p><strong>y</strong> (<em>Series</em><em>, </em><em>optional</em>) – Target, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 </ul>
 </dd>
@@ -322,27 +315,6 @@ Needs to have columns has specified in <code class="docutils literal notranslate
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>DataFrame</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="AutoCarver.BinaryCarver.update_discretizer">
-<span class="sig-name descname"><span class="pre">update_discretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discarded_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kept_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.BinaryCarver.update_discretizer" title="Link to this definition"></a></dt>
-<dd><p>Allows one to update the discretization groups</p>
-<p>Use with caution: no viability checks are performed.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>feature</strong> (<em>str</em>) – Specify for which feature to update the discritezer</p></li>
-<li><p><strong>mode</strong> (<em>str</em>) – <ul>
-<li><p>For <code class="docutils literal notranslate"><span class="pre">mode=&quot;replace&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">discarded_value</span></code> will be replaced by <code class="docutils literal notranslate"><span class="pre">kept_value</span></code></p></li>
-<li><p>For <code class="docutils literal notranslate"><span class="pre">mode=&quot;group&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">discarded_value</span></code> will be grouped with <code class="docutils literal notranslate"><span class="pre">kept_value</span></code></p></li>
-</ul>
-</p></li>
-<li><p><strong>discarded_value</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>float</em><em>]</em>) – A group value that won’t exist after completion</p></li>
-<li><p><strong>new_value</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>float</em><em>]</em>) – A group value that will persist after completion</p></li>
-</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -358,86 +330,77 @@ Needs to have columns has specified in <code class="docutils literal notranslate
 <p>For two combinations of modalities of a feature <span class="math notranslate nohighlight">\(x\)</span>, a higher <span class="math notranslate nohighlight">\(T\)</span> or <span class="math notranslate nohighlight">\(V\)</span> value indicates a stronger relationship with the binary target <span class="math notranslate nohighlight">\(Y\)</span>.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="AutoCarver.MulticlassCarver">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.</span></span><span class="sig-name descname"><span class="pre">MulticlassCarver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sort_by</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantitative_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualitative_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ordinal_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values_orders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="discretizers.html#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.utils.grouped_list.GroupedList"><span class="pre">GroupedList</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_n_mod</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq_mod</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dtype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropna</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.MulticlassCarver" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.</span></span><span class="sig-name descname"><span class="pre">MulticlassCarver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropna</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_n_mod</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.MulticlassCarver" title="Link to this definition"></a></dt>
 <dd><p>Automatic carving of continuous, discrete, categorical and ordinal
 features that maximizes association with a multiclass target.</p>
 <p class="rubric">Examples</p>
-<p><a class="reference external" href="https://autocarver.readthedocs.io/en/latest/examples/MulticlassClassification/multiclass_classification_example.html">Multiclass Classification Example</a></p>
+<p><a class="reference external" href="https://autocarver.readthedocs.io/en/latest/examples/Carvers/MulticlassClassification/multiclass_classification_example.html">Multiclass Classification Example</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>sort_by</strong> (<em>str</em>) – <p>Metric to be used to perform association measure between features and target.</p>
+<li><p><strong>features</strong> (<em>Features</em>) – A set of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> to be carved.</p></li>
+<li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per modality per feature.</p>
 <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;tschuprowt&quot;</span></code>, for <a class="reference internal" href="selectors.html#tschuprowt"><span class="std std-ref">Tschuprow’s T</span></a>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;cramerv&quot;</span></code>, for <a class="reference internal" href="selectors.html#cramerv"><span class="std std-ref">Cramér’s V</span></a>.</p></li>
+<li><p>Features need at least one modality more frequent than <code class="xref py py-attr docutils literal notranslate"><span class="pre">min_freq</span></code></p></li>
+<li><p>Defines number of quantiles of continuous features</p></li>
+<li><p>Minimum frequency of modality of quantitative feature</p></li>
 </ul>
-<p><strong>Tip</strong>: use <code class="docutils literal notranslate"><span class="pre">&quot;tschuprowt&quot;</span></code> for more robust, or less output modalities,
-use <code class="docutils literal notranslate"><span class="pre">&quot;cramerv&quot;</span></code> for more output modalities.</p>
-</p></li>
-<li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per grouped modalities.</p>
-<ul>
-<li><p>Features whose most frequent modality is less than <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> will not be carved.</p></li>
-<li><p>Sets the number of quantiles in which to discretize the continuous features.</p></li>
-<li><p>Sets the minimum frequency of a quantitative feature’s modality.</p></li>
-</ul>
-<p><strong>Tip</strong>: should be set between <code class="docutils literal notranslate"><span class="pre">0.01</span></code> (slower, preciser, less robust) and <code class="docutils literal notranslate"><span class="pre">0.2</span></code>
+<p><em>Tip</em>: should be set between <code class="docutils literal notranslate"><span class="pre">0.01</span></code> (slower, preciser, less robust) and <code class="docutils literal notranslate"><span class="pre">0.2</span></code>
 (faster, more robust)</p>
 </p></li>
-<li><p><strong>quantitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of quantitative features (continuous and discrete) to be carved,
-by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
-<li><p><strong>qualitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of qualitative features (non-ordinal) to be carved,
-by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
-<li><p><strong>ordinal_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of ordinal features to be carved. For those features a list of
-values has to be provided in the <code class="docutils literal notranslate"><span class="pre">values_orders</span></code> dict, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
-<li><p><strong>values_orders</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="discretizers.html#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.GroupedList"><em>GroupedList</em></a><em>]</em><em>, </em><em>optional</em>) – Dict of feature’s column names and there associated ordering.
-If lists are passed, a <code class="xref py py-class docutils literal notranslate"><span class="pre">GroupedList</span></code> will automatically be initiated,
-by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
-<li><p><strong>max_n_mod</strong> (<em>int</em><em>, </em><em>optional</em>) – <p>Maximum number of modality per feature, by default <code class="docutils literal notranslate"><span class="pre">5</span></code></p>
-<p>All combinations of modalities for groups of modalities of sizes from 1 to
-<code class="docutils literal notranslate"><span class="pre">max_n_mod</span></code> will be tested.
-The combination with the best association will be selected.</p>
-<p><strong>Tip</strong>: set between <code class="docutils literal notranslate"><span class="pre">3</span></code> (faster, more robust) and <code class="docutils literal notranslate"><span class="pre">7</span></code> (slower, less robust)</p>
-</p></li>
-<li><p><strong>min_freq_mod</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum frequency per final modality, by default <code class="docutils literal notranslate"><span class="pre">None</span></code> for <code class="docutils literal notranslate"><span class="pre">min_freq/2</span></code></p></li>
-<li><p><strong>output_dtype</strong> (<em>str</em><em>, </em><em>optional</em>) – <p>To be choosen amongst <code class="docutils literal notranslate"><span class="pre">[&quot;float&quot;,</span> <span class="pre">&quot;str&quot;]</span></code>, by default <code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code></p>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code>, sets the rank of modalities as label.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;str&quot;</span></code>, sets one modality of group as label.</p></li>
-</ul>
-</p></li>
 <li><p><strong>dropna</strong> (<em>bool</em><em>, </em><em>optional</em>) – <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, try to group <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code> with other modalities.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">False</span></code>, <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code> are ignored (not grouped), by default <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, try to group <code class="docutils literal notranslate"><span class="pre">nan</span></code> with other modalities.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">False</span></code>, <code class="docutils literal notranslate"><span class="pre">nan</span></code> are ignored (not grouped), by default <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
 </ul>
 </p></li>
-<li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, feature processing at transform is applied to a copy of the provided
-DataFrame, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>max_n_mod</strong> (<em>int</em><em>, </em><em>optional</em>) – <p>Maximum number of modality per feature, by default <code class="docutils literal notranslate"><span class="pre">5</span></code></p>
+<ul>
+<li><p>The combination with the best association will be selected.</p></li>
+<li><p>All combinations of sizes from 1 to <code class="xref py py-attr docutils literal notranslate"><span class="pre">max_n_mod</span></code> are tested out.</p></li>
+</ul>
+<p><em>Tip</em>: set between <code class="docutils literal notranslate"><span class="pre">3</span></code> (faster, more robust) and <code class="docutils literal notranslate"><span class="pre">7</span></code> (slower, less robust)</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ordinal_encoding</strong> (<em>bool</em><em>, </em><em>optional</em>) – <p>Whether or not to ordinal encode <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>, by default <code class="docutils literal notranslate"><span class="pre">True</span></code></p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, sets the rank of modalities as label.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">False</span></code>, sets one modality of group as label.</p></li>
+</ul>
+</p></li>
+<li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – Copying input data, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>discretizer_min_freq</strong> (<em>float</em><em>, </em><em>optional</em>) – Specific <code class="xref py py-attr docutils literal notranslate"><span class="pre">min_freq</span></code> used by discretizers, by default <code class="docutils literal notranslate"><span class="pre">None</span></code> for <code class="docutils literal notranslate"><span class="pre">min_freq/2</span></code></p></li>
 <li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, without IPython: prints raw steps for X, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, with IPython: adds HTML tables of target rates for X and X_dev</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, without <code class="docutils literal notranslate"><span class="pre">IPython</span></code>: prints raw statitics</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, with <code class="docutils literal notranslate"><span class="pre">IPython</span></code>: prints HTML statistics, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
 </ul>
-<p><strong>Tip</strong>: IPython displaying can be turned off by setting <code class="docutils literal notranslate"><span class="pre">pretty_print=False</span></code></p>
 </p></li>
-<li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of processes used by multiprocessing, by default <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
-<li><p><strong>**kwargs</strong> (<em>dict</em>) – Pass values for <code class="docutils literal notranslate"><span class="pre">str_default</span></code> and <code class="docutils literal notranslate"><span class="pre">str_nan</span></code> (default string values),
-as long as <code class="docutils literal notranslate"><span class="pre">pretty_print</span></code> to turn off IPython</p></li>
+<li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>optional</em>) – Processes for multiprocessing, by default <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
+<li><p><strong>combinations</strong> (<em>BinaryCombinationEvaluator</em><em>, </em><em>optional</em>) – <p>Metric to perform association measure between <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> and target.</p>
+<ul>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">TschuprowtCombinations</span></code>, for <a class="reference internal" href="selectors.html#tschuprowt"><span class="std std-ref">Tschuprow’s T</span></a>.</p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">CramervCombinations</span></code>, for <a class="reference internal" href="selectors.html#cramerv"><span class="std std-ref">Cramér’s V</span></a>.</p></li>
+</ul>
+<p><em>Tip</em>: use <code class="xref py py-class docutils literal notranslate"><span class="pre">TschuprowtCombinations</span></code> for more robust, or less output modalities,
+use <code class="xref py py-class docutils literal notranslate"><span class="pre">CramervCombinations</span></code> for more output modalities.</p>
+</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="AutoCarver.MulticlassCarver.fit">
 <span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_dev</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_dev</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.MulticlassCarver.fit" title="Link to this definition"></a></dt>
-<dd><p>Finds the combination of modalities of X that provides the best association with y.</p>
+<dd><p>Finds the combination of modalities of X that provides the best association with y.
+If provided, X_dev set should be large enough to have the same distribution as X.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>DataFrame</em>) – Training dataset, to determine features’ optimal carving.
-Needs to have columns has specified in <code class="docutils literal notranslate"><span class="pre">features</span></code> attribute.</p></li>
+<li><p><strong>X</strong> (<em>DataFrame</em>) – Dataset to determine <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>’ optimal carving.</p></li>
 <li><p><strong>y</strong> (<em>Series</em>) – Target with wich the association is maximized.</p></li>
-<li><p><strong>X_dev</strong> (<em>DataFrame</em><em>, </em><em>optional</em>) – Development dataset, to evaluate robustness of carved features, by default <code class="docutils literal notranslate"><span class="pre">None</span></code>
-Should have the same distribution as X.</p></li>
-<li><p><strong>y_dev</strong> (<em>Series</em><em>, </em><em>optional</em>) – Target of the development dataset, by default <code class="docutils literal notranslate"><span class="pre">None</span></code>
-Should have the same distribution as y.</p></li>
+<li><p><strong>X_dev</strong> (<em>DataFrame</em><em>, </em><em>optional</em>) – Dataset to evaluate robustness of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>y_dev</strong> (<em>Series</em><em>, </em><em>optional</em>) – Target associated to <code class="docutils literal notranslate"><span class="pre">X_dev</span></code>, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 </ul>
 </dd>
 </dl>
@@ -466,66 +429,69 @@ and returns a transformed version of <cite>X</cite>.</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
+<dl class="py property">
 <dt class="sig sig-object py" id="AutoCarver.MulticlassCarver.history">
-<span class="sig-name descname"><span class="pre">history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#AutoCarver.MulticlassCarver.history" title="Link to this definition"></a></dt>
-<dd><p>Historic of tested combinations and there association with the target.</p>
-<p>By default:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">str_default=&quot;__OTHER__&quot;</span></code> is added for features with non-representative modalities.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">str_nan=&quot;__NAN__&quot;</span></code> is added for features that contain <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code>.</p></li>
-<li><p>Whatever the value of <code class="docutils literal notranslate"><span class="pre">dropna</span></code>, the association is computed for non-missing values.</p></li>
-</ul>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>feature</strong> (<em>str</em><em>, </em><em>optional</em>) – Specify for which feature to return the history, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Historic of features’ tested combinations.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>DataFrame</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="AutoCarver.MulticlassCarver.summary">
-<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#AutoCarver.MulticlassCarver.summary" title="Link to this definition"></a></dt>
-<dd><p>Summarizes the data discretization process.</p>
-<p>By default:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">str_default=&quot;__OTHER__&quot;</span></code> is added for non-representative modalities.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">str_nan=&quot;__NAN__&quot;</span></code> is adde for features that contain <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code>.</p></li>
-</ul>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>feature</strong> (<em>str</em><em>, </em><em>optional</em>) – Specify for which feature to return the summary, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A summary of features’ values per modalities.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>DataFrame</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="AutoCarver.MulticlassCarver.to_json">
-<span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#AutoCarver.MulticlassCarver.to_json" title="Link to this definition"></a></dt>
-<dd><p>Converts to .json format.</p>
-<p>To be used with <code class="docutils literal notranslate"><span class="pre">json.dump</span></code>.</p>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">history</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DataFrame</span></em><a class="headerlink" href="#AutoCarver.MulticlassCarver.history" title="Link to this definition"></a></dt>
+<dd><p>History of discretization process</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>JSON serialized object</p>
+<dd class="field-odd"><p>History of tests and <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>’ association with target</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>str</p>
+<dd class="field-even"><p>DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoCarver.MulticlassCarver.load">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BaseCarver</span></span></span><a class="headerlink" href="#AutoCarver.MulticlassCarver.load" title="Link to this definition"></a></dt>
+<dd><p>Allows one to load a Carver saved as a .json file.</p>
+<p>The Carver has to be saved with <code class="docutils literal notranslate"><span class="pre">Carver.save()</span></code>, otherwise there
+can be no guarantee for it to be restored.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file_name</strong> (<em>str</em>) – String of saved Carver’s .json file name.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A fitted Carver.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>BaseDiscretizer</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoCarver.MulticlassCarver.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">light_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.MulticlassCarver.save" title="Link to this definition"></a></dt>
+<dd><p>Saves pipeline to .json file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_name</strong> (<em>str</em>) – String of .json file name.</p></li>
+<li><p><strong>light_mode</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to save features’ history and statistics, by default False</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>JSON serialized object</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="AutoCarver.MulticlassCarver.summary">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">summary</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DataFrame</span></em><a class="headerlink" href="#AutoCarver.MulticlassCarver.summary" title="Link to this definition"></a></dt>
+<dd><p>Summary of discretization process</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Summary of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>’ values per modalities</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>DataFrame</p>
 </dd>
 </dl>
 </dd></dl>
@@ -538,7 +504,7 @@ and returns a transformed version of <cite>X</cite>.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>X</strong> (<em>DataFrame</em>) – Dataset to be carved.
-Needs to have columns has specified in <code class="docutils literal notranslate"><span class="pre">features</span></code> attribute.</p></li>
+Needs to have columns from provided <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>.</p></li>
 <li><p><strong>y</strong> (<em>Series</em><em>, </em><em>optional</em>) – Target, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 </ul>
 </dd>
@@ -547,27 +513,6 @@ Needs to have columns has specified in <code class="docutils literal notranslate
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>DataFrame</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="AutoCarver.MulticlassCarver.update_discretizer">
-<span class="sig-name descname"><span class="pre">update_discretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discarded_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kept_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.MulticlassCarver.update_discretizer" title="Link to this definition"></a></dt>
-<dd><p>Allows one to update the discretization groups</p>
-<p>Use with caution: no viability checks are performed.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>feature</strong> (<em>str</em>) – Specify for which feature to update the discritezer</p></li>
-<li><p><strong>mode</strong> (<em>str</em>) – <ul>
-<li><p>For <code class="docutils literal notranslate"><span class="pre">mode=&quot;replace&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">discarded_value</span></code> will be replaced by <code class="docutils literal notranslate"><span class="pre">kept_value</span></code></p></li>
-<li><p>For <code class="docutils literal notranslate"><span class="pre">mode=&quot;group&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">discarded_value</span></code> will be grouped with <code class="docutils literal notranslate"><span class="pre">kept_value</span></code></p></li>
-</ul>
-</p></li>
-<li><p><strong>discarded_value</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>float</em><em>]</em>) – A group value that won’t exist after completion</p></li>
-<li><p><strong>new_value</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>float</em><em>]</em>) – A group value that will persist after completion</p></li>
-</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -587,79 +532,73 @@ It is used to determine whether or not <span class="math notranslate nohighlight
 <p>For two combinations of modalities of <span class="math notranslate nohighlight">\(x\)</span>, a higher <span class="math notranslate nohighlight">\(H\)</span> value indicates that there is a greater difference between the medians of the samples.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="AutoCarver.ContinuousCarver">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.</span></span><span class="sig-name descname"><span class="pre">ContinuousCarver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantitative_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualitative_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ordinal_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values_orders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="discretizers.html#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.utils.grouped_list.GroupedList"><span class="pre">GroupedList</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_n_mod</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq_mod</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dtype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropna</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.ContinuousCarver" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.</span></span><span class="sig-name descname"><span class="pre">ContinuousCarver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropna</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_n_mod</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.ContinuousCarver" title="Link to this definition"></a></dt>
 <dd><p>Automatic carving of continuous, discrete, categorical and ordinal
 features that maximizes association with a continuous target.</p>
 <p>For continuous targets, <a class="reference internal" href="selectors.html#kruskal"><span class="std std-ref">Kruskal-Wallis’ H test statistic</span></a> is used as association measure to sort combinations.</p>
 <p class="rubric">Examples</p>
-<p><a class="reference external" href="https://autocarver.readthedocs.io/en/latest/examples/MulticlassClassification/multiclass_classification_example.html">Continuous Regression Example</a></p>
+<p><a class="reference external" href="https://autocarver.readthedocs.io/en/latest/examples/Carvers/ContinuousRegression/continuous_regression_example.html">Continuous Regression Example</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per grouped modalities.</p>
+<li><p><strong>features</strong> (<em>Features</em>) – A set of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> to be carved.</p></li>
+<li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per modality per feature.</p>
 <ul>
-<li><p>Features whose most frequent modality is less than <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> will not be carved.</p></li>
-<li><p>Sets the number of quantiles in which to discretize the continuous features.</p></li>
-<li><p>Sets the minimum frequency of a quantitative feature’s modality.</p></li>
+<li><p>Features need at least one modality more frequent than <code class="xref py py-attr docutils literal notranslate"><span class="pre">min_freq</span></code></p></li>
+<li><p>Defines number of quantiles of continuous features</p></li>
+<li><p>Minimum frequency of modality of quantitative feature</p></li>
 </ul>
-<p><strong>Tip</strong>: should be set between <code class="docutils literal notranslate"><span class="pre">0.01</span></code> (slower, preciser, less robust) and <code class="docutils literal notranslate"><span class="pre">0.2</span></code>
+<p><em>Tip</em>: should be set between <code class="docutils literal notranslate"><span class="pre">0.01</span></code> (slower, preciser, less robust) and <code class="docutils literal notranslate"><span class="pre">0.2</span></code>
 (faster, more robust)</p>
 </p></li>
-<li><p><strong>quantitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of quantitative features (continuous and discrete) to be carved,
-by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
-<li><p><strong>qualitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of qualitative features (non-ordinal) to be carved,
-by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
-<li><p><strong>ordinal_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of ordinal features to be carved. For those features a list of
-values has to be provided in the <code class="docutils literal notranslate"><span class="pre">values_orders</span></code> dict, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
-<li><p><strong>values_orders</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="discretizers.html#AutoCarver.discretizers.GroupedList" title="AutoCarver.discretizers.GroupedList"><em>GroupedList</em></a><em>]</em><em>, </em><em>optional</em>) – Dict of feature’s column names and there associated ordering.
-If lists are passed, a <code class="xref py py-class docutils literal notranslate"><span class="pre">GroupedList</span></code> will automatically be initiated,
-by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
-<li><p><strong>max_n_mod</strong> (<em>int</em><em>, </em><em>optional</em>) – <p>Maximum number of modality per feature, by default <code class="docutils literal notranslate"><span class="pre">5</span></code></p>
-<p>All combinations of modalities for groups of modalities of sizes from 1 to
-<code class="docutils literal notranslate"><span class="pre">max_n_mod</span></code> will be tested.
-The combination with the best association will be selected.</p>
-<p><strong>Tip</strong>: set between <code class="docutils literal notranslate"><span class="pre">3</span></code> (faster, more robust) and <code class="docutils literal notranslate"><span class="pre">7</span></code> (slower, less robust)</p>
-</p></li>
-<li><p><strong>min_freq_mod</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum frequency per final modality, by default <code class="docutils literal notranslate"><span class="pre">None</span></code> for <code class="docutils literal notranslate"><span class="pre">min_freq/2</span></code></p></li>
-<li><p><strong>output_dtype</strong> (<em>str</em><em>, </em><em>optional</em>) – <p>To be choosen amongst <code class="docutils literal notranslate"><span class="pre">[&quot;float&quot;,</span> <span class="pre">&quot;str&quot;]</span></code>, by default <code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code></p>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code>, sets the rank of modalities as label.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;str&quot;</span></code>, sets one modality of group as label.</p></li>
-</ul>
-</p></li>
 <li><p><strong>dropna</strong> (<em>bool</em><em>, </em><em>optional</em>) – <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, try to group <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code> with other modalities.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">False</span></code>, <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code> are ignored (not grouped), by default <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, try to group <code class="docutils literal notranslate"><span class="pre">nan</span></code> with other modalities.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">False</span></code>, <code class="docutils literal notranslate"><span class="pre">nan</span></code> are ignored (not grouped), by default <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
 </ul>
 </p></li>
-<li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, feature processing at transform is applied to a copy of the provided
-DataFrame, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>max_n_mod</strong> (<em>int</em><em>, </em><em>optional</em>) – <p>Maximum number of modality per feature, by default <code class="docutils literal notranslate"><span class="pre">5</span></code></p>
+<ul>
+<li><p>The combination with the best association will be selected.</p></li>
+<li><p>All combinations of sizes from 1 to <code class="xref py py-attr docutils literal notranslate"><span class="pre">max_n_mod</span></code> are tested out.</p></li>
+</ul>
+<p><em>Tip</em>: set between <code class="docutils literal notranslate"><span class="pre">3</span></code> (faster, more robust) and <code class="docutils literal notranslate"><span class="pre">7</span></code> (slower, less robust)</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ordinal_encoding</strong> (<em>bool</em><em>, </em><em>optional</em>) – <p>Whether or not to ordinal encode <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>, by default <code class="docutils literal notranslate"><span class="pre">True</span></code></p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, sets the rank of modalities as label.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">False</span></code>, sets one modality of group as label.</p></li>
+</ul>
+</p></li>
+<li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – Copying input data, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>discretizer_min_freq</strong> (<em>float</em><em>, </em><em>optional</em>) – Specific <code class="xref py py-attr docutils literal notranslate"><span class="pre">min_freq</span></code> used by discretizers, by default <code class="docutils literal notranslate"><span class="pre">None</span></code> for <code class="docutils literal notranslate"><span class="pre">min_freq/2</span></code></p></li>
 <li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, without IPython: prints raw steps for X, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, with IPython: adds HTML tables of target rates for X and X_dev</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, without <code class="docutils literal notranslate"><span class="pre">IPython</span></code>: prints raw statitics</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, with <code class="docutils literal notranslate"><span class="pre">IPython</span></code>: prints HTML statistics, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
 </ul>
-<p><strong>Tip</strong>: IPython displaying can be turned off by setting <code class="docutils literal notranslate"><span class="pre">pretty_print=False</span></code></p>
 </p></li>
-<li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of processes used by multiprocessing, by default <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
-<li><p><strong>**kwargs</strong> (<em>dict</em>) – Pass values for <code class="docutils literal notranslate"><span class="pre">str_default</span></code> and <code class="docutils literal notranslate"><span class="pre">str_nan</span></code> (default string values),
-as long as <code class="docutils literal notranslate"><span class="pre">pretty_print</span></code> to turn off IPython</p></li>
+<li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>optional</em>) – Processes for multiprocessing, by default <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
+<li><p><strong>combinations</strong> (<em>ContinuousCombinationEvaluator</em><em>, </em><em>optional</em>) – <p>Metric to perform association measure between <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> and target.</p>
+<p>Currently, only <code class="xref py py-class docutils literal notranslate"><span class="pre">KruskalCombinations</span></code> is implemented, see <a class="reference internal" href="selectors.html#kruskal"><span class="std std-ref">Kruskal-Wallis’ H test statistic</span></a>.</p>
+</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="AutoCarver.ContinuousCarver.fit">
 <span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_dev</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_dev</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.ContinuousCarver.fit" title="Link to this definition"></a></dt>
-<dd><p>Finds the combination of modalities of X that provides the best association with y.</p>
+<dd><p>Finds the combination of modalities of X that provides the best association with y.
+If provided, X_dev set should be large enough to have the same distribution as X.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>DataFrame</em>) – Training dataset, to determine features’ optimal carving.
-Needs to have columns has specified in <code class="docutils literal notranslate"><span class="pre">features</span></code> attribute.</p></li>
+<li><p><strong>X</strong> (<em>DataFrame</em>) – Dataset to determine <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>’ optimal carving.</p></li>
 <li><p><strong>y</strong> (<em>Series</em>) – Target with wich the association is maximized.</p></li>
-<li><p><strong>X_dev</strong> (<em>DataFrame</em><em>, </em><em>optional</em>) – Development dataset, to evaluate robustness of carved features, by default <code class="docutils literal notranslate"><span class="pre">None</span></code>
-Should have the same distribution as X.</p></li>
-<li><p><strong>y_dev</strong> (<em>Series</em><em>, </em><em>optional</em>) – Target of the development dataset, by default <code class="docutils literal notranslate"><span class="pre">None</span></code>
-Should have the same distribution as y.</p></li>
+<li><p><strong>X_dev</strong> (<em>DataFrame</em><em>, </em><em>optional</em>) – Dataset to evaluate robustness of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>y_dev</strong> (<em>Series</em><em>, </em><em>optional</em>) – Target associated to <code class="docutils literal notranslate"><span class="pre">X_dev</span></code>, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 </ul>
 </dd>
 </dl>
@@ -688,66 +627,69 @@ and returns a transformed version of <cite>X</cite>.</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
+<dl class="py property">
 <dt class="sig sig-object py" id="AutoCarver.ContinuousCarver.history">
-<span class="sig-name descname"><span class="pre">history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#AutoCarver.ContinuousCarver.history" title="Link to this definition"></a></dt>
-<dd><p>Historic of tested combinations and there association with the target.</p>
-<p>By default:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">str_default=&quot;__OTHER__&quot;</span></code> is added for features with non-representative modalities.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">str_nan=&quot;__NAN__&quot;</span></code> is added for features that contain <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code>.</p></li>
-<li><p>Whatever the value of <code class="docutils literal notranslate"><span class="pre">dropna</span></code>, the association is computed for non-missing values.</p></li>
-</ul>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>feature</strong> (<em>str</em><em>, </em><em>optional</em>) – Specify for which feature to return the history, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Historic of features’ tested combinations.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>DataFrame</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="AutoCarver.ContinuousCarver.summary">
-<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#AutoCarver.ContinuousCarver.summary" title="Link to this definition"></a></dt>
-<dd><p>Summarizes the data discretization process.</p>
-<p>By default:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">str_default=&quot;__OTHER__&quot;</span></code> is added for non-representative modalities.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">str_nan=&quot;__NAN__&quot;</span></code> is adde for features that contain <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code>.</p></li>
-</ul>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>feature</strong> (<em>str</em><em>, </em><em>optional</em>) – Specify for which feature to return the summary, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A summary of features’ values per modalities.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>DataFrame</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="AutoCarver.ContinuousCarver.to_json">
-<span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#AutoCarver.ContinuousCarver.to_json" title="Link to this definition"></a></dt>
-<dd><p>Converts to .json format.</p>
-<p>To be used with <code class="docutils literal notranslate"><span class="pre">json.dump</span></code>.</p>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">history</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DataFrame</span></em><a class="headerlink" href="#AutoCarver.ContinuousCarver.history" title="Link to this definition"></a></dt>
+<dd><p>History of discretization process</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>JSON serialized object</p>
+<dd class="field-odd"><p>History of tests and <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>’ association with target</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>str</p>
+<dd class="field-even"><p>DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoCarver.ContinuousCarver.load">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BaseCarver</span></span></span><a class="headerlink" href="#AutoCarver.ContinuousCarver.load" title="Link to this definition"></a></dt>
+<dd><p>Allows one to load a Carver saved as a .json file.</p>
+<p>The Carver has to be saved with <code class="docutils literal notranslate"><span class="pre">Carver.save()</span></code>, otherwise there
+can be no guarantee for it to be restored.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file_name</strong> (<em>str</em>) – String of saved Carver’s .json file name.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A fitted Carver.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>BaseDiscretizer</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoCarver.ContinuousCarver.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">light_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.ContinuousCarver.save" title="Link to this definition"></a></dt>
+<dd><p>Saves pipeline to .json file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_name</strong> (<em>str</em>) – String of .json file name.</p></li>
+<li><p><strong>light_mode</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to save features’ history and statistics, by default False</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>JSON serialized object</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="AutoCarver.ContinuousCarver.summary">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">summary</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DataFrame</span></em><a class="headerlink" href="#AutoCarver.ContinuousCarver.summary" title="Link to this definition"></a></dt>
+<dd><p>Summary of discretization process</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Summary of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>’ values per modalities</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>DataFrame</p>
 </dd>
 </dl>
 </dd></dl>
@@ -760,7 +702,7 @@ and returns a transformed version of <cite>X</cite>.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>X</strong> (<em>DataFrame</em>) – Dataset to be carved.
-Needs to have columns has specified in <code class="docutils literal notranslate"><span class="pre">features</span></code> attribute.</p></li>
+Needs to have columns from provided <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>.</p></li>
 <li><p><strong>y</strong> (<em>Series</em><em>, </em><em>optional</em>) – Target, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 </ul>
 </dd>
@@ -773,67 +715,9 @@ Needs to have columns has specified in <code class="docutils literal notranslate
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="AutoCarver.ContinuousCarver.update_discretizer">
-<span class="sig-name descname"><span class="pre">update_discretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discarded_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kept_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.ContinuousCarver.update_discretizer" title="Link to this definition"></a></dt>
-<dd><p>Allows one to update the discretization groups</p>
-<p>Use with caution: no viability checks are performed.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>feature</strong> (<em>str</em>) – Specify for which feature to update the discritezer</p></li>
-<li><p><strong>mode</strong> (<em>str</em>) – <ul>
-<li><p>For <code class="docutils literal notranslate"><span class="pre">mode=&quot;replace&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">discarded_value</span></code> will be replaced by <code class="docutils literal notranslate"><span class="pre">kept_value</span></code></p></li>
-<li><p>For <code class="docutils literal notranslate"><span class="pre">mode=&quot;group&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">discarded_value</span></code> will be grouped with <code class="docutils literal notranslate"><span class="pre">kept_value</span></code></p></li>
-</ul>
-</p></li>
-<li><p><strong>discarded_value</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>float</em><em>]</em>) – A group value that won’t exist after completion</p></li>
-<li><p><strong>new_value</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>float</em><em>]</em>) – A group value that will persist after completion</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 </section>
-</section>
-<section id="saving-and-loading">
-<h2>Saving and Loading<a class="headerlink" href="#saving-and-loading" title="Link to this heading"></a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="AutoCarver.BaseCarver.to_json">
-<span class="sig-prename descclassname"><span class="pre">AutoCarver.BaseCarver.</span></span><span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#AutoCarver.BaseCarver.to_json" title="Link to this definition"></a></dt>
-<dd><p>Converts to .json format.</p>
-<p>To be used with <code class="docutils literal notranslate"><span class="pre">json.dump</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>JSON serialized object</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="AutoCarver.load_carver">
-<span class="sig-prename descclassname"><span class="pre">AutoCarver.</span></span><span class="sig-name descname"><span class="pre">load_carver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">auto_carver_json</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BaseDiscretizer</span></span></span><a class="headerlink" href="#AutoCarver.load_carver" title="Link to this definition"></a></dt>
-<dd><p>Allows one to load an AutoCarver saved as a .json file.</p>
-<p>The AutoCarver has to be saved with <code class="docutils literal notranslate"><span class="pre">json.dump(f,</span> <span class="pre">AutoCarver.to_json())</span></code>, otherwise there
-can be no guarantee for it to be restored.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>auto_carver_json</strong> (<em>str</em>) – Loaded .json file using <code class="docutils literal notranslate"><span class="pre">json.load(f)</span></code>.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A fitted AutoCarver.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>BaseDiscretizer</p>
-</dd>
-</dl>
-</dd></dl>
-
 </section>
 </section>
 

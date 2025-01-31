@@ -86,71 +86,54 @@ class BaseCarver(BaseDiscretizer, ABC):
         **kwargs,
     ) -> None:
         """
+        Parameters
+        ----------
+        features : Features
+            A set of :class:`Features` to be carved.
+
         min_freq : float
-            Minimum frequency per grouped modalities.
+            Minimum frequency per modality per feature.
 
-            * Features whose most frequent modality is less than ``min_freq`` will not be carved.
-            * Sets the number of quantiles in which to discretize the continuous features.
-            * Sets the minimum frequency of a quantitative feature's modality.
+            * Features need at least one modality more frequent than :attr:`min_freq`
+            * Defines number of quantiles of continuous features
+            * Minimum frequency of modality of quantitative feature
 
-            **Tip**: should be set between ``0.01`` (slower, preciser, less robust) and ``0.2``
+            *Tip*: should be set between ``0.01`` (slower, preciser, less robust) and ``0.2``
             (faster, more robust)
 
-        quantitative_features : list[str], optional
-            List of column names of quantitative features (continuous and discrete) to be carved,
-            by default ``None``
-
-        qualitative_features : list[str], optional
-            List of column names of qualitative features (non-ordinal) to be carved,
-            by default ``None``
-
-        ordinal_features : list[str], optional
-            List of column names of ordinal features to be carved. For those features a list of
-            values has to be provided in the ``values_orders`` dict, by default ``None``
-
-        values_orders : dict[str, GroupedList], optional
-            Dict of feature's column names and there associated ordering.
-            If lists are passed, a :class:`GroupedList` will automatically be initiated,
-            by default ``None``
+        dropna : bool, optional
+            * ``True``, try to group ``nan`` with other modalities.
+            * ``False``, ``nan`` are ignored (not grouped), by default ``True``
 
         max_n_mod : int, optional
             Maximum number of modality per feature, by default ``5``
 
-            All combinations of modalities for groups of modalities of sizes from 1 to
-            ``max_n_mod`` will be tested.
-            The combination with the best association will be selected.
+            * The combination with the best association will be selected.
+            * All combinations of sizes from 1 to :attr:`max_n_mod` are tested out.
 
-            **Tip**: set between ``3`` (faster, more robust) and ``7`` (slower, less robust)
+            *Tip*: set between ``3`` (faster, more robust) and ``7`` (slower, less robust)
 
-        min_freq_mod : float, optional
-            Minimum frequency per final modality, by default ``None`` for ``min_freq/2``
-
+        Keyword Arguments
+        -----------------
         ordinal_encoding : bool, optional
-            Whether or not to ordinal encode features, by default ``True``
+            Whether or not to ordinal encode :class:`Features`, by default ``True``
 
             * ``True``, sets the rank of modalities as label.
             * ``False``, sets one modality of group as label.
 
-        dropna : bool, optional
-            * ``True``, try to group ``numpy.nan`` with other modalities.
-            * ``False``, ``numpy.nan`` are ignored (not grouped), by default ``True``
-
         copy : bool, optional
-            If ``True``, feature processing at transform is applied to a copy of the provided
-            DataFrame, by default ``False``
+            Copying input data, by default ``False``
+
+        discretizer_min_freq : float, optional
+            Specific :attr:`min_freq` used by discretizers, by default ``None`` for ``min_freq/2``
 
         verbose : bool, optional
-            * ``True``, without IPython: prints raw steps for X, by default ``False``
-            * ``True``, with IPython: adds HTML tables of target rates for X and X_dev
-
-            **Tip**: IPython displaying can be turned off by setting ``pretty_print=False``
+            * ``True``, without ``IPython``: prints raw statitics
+            * ``True``, with ``IPython``: prints HTML statistics, by default ``False``
 
         n_jobs : int, optional
-            Number of processes used by multiprocessing, by default ``1``
+            Processes for multiprocessing, by default ``1``
 
-        **kwargs: dict
-            Pass values for ``str_default`` and ``str_nan`` (default string values),
-            as long as ``pretty_print`` to turn off IPython
         """
 
         # minimum frequency for discretizer
@@ -162,6 +145,7 @@ class BaseCarver(BaseDiscretizer, ABC):
             **dict(
                 kwargs,
                 verbose=get_bool_attribute(kwargs, "verbose", False),
+                ordinal_encoding=get_bool_attribute(kwargs, "ordinal_encoding", True),
                 min_freq=min_freq,
                 dropna=dropna,
                 discretizer_min_freq=self.discretizer_min_freq,
@@ -244,23 +228,21 @@ class BaseCarver(BaseDiscretizer, ABC):
         y_dev: Series = None,
     ) -> None:
         """Finds the combination of modalities of X that provides the best association with y.
+        If provided, X_dev set should be large enough to have the same distribution as X.
 
         Parameters
         ----------
         X : DataFrame
-            Training dataset, to determine features' optimal carving.
-            Needs to have columns has specified in ``features`` attribute.
+            Dataset to determine :class:`Features`' optimal carving.
 
         y : Series
             Target with wich the association is maximized.
 
         X_dev : DataFrame, optional
-            Development dataset, to evaluate robustness of carved features, by default ``None``
-            Should have the same distribution as X.
+            Dataset to evaluate robustness of :class:`Features`, by default ``None``
 
         y_dev : Series, optional
-            Target of the development dataset, by default ``None``
-            Should have the same distribution as y.
+            Target associated to ``X_dev``, by default ``None``
         """
 
         # checking for fitted features
@@ -274,7 +256,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         samples = self._prepare_data(samples)
 
         # logging if requested
-        super().log_if_verbose("---------\n------")
+        super()._log_if_verbose("---------\n------")
 
         # computing crosstabs for each feature on train/test
         xaggs = self._aggregator(**samples.train)
@@ -448,7 +430,7 @@ def discretize(
     features: Features,
     samples: Samples,
     discretizer_min_freq: float,
-    **kwargs: dict,
+    **kwargs,
 ) -> Samples:
     """Discretizes X and X_dev according to the frequency of each feature's modalities."""
 

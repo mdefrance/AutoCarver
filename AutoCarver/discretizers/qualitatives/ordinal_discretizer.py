@@ -28,7 +28,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
         self,
         ordinals: list[OrdinalFeature],
         min_freq: float,
-        **kwargs: dict,
+        **kwargs,
     ):
         """
         Parameters
@@ -84,7 +84,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
         sample = self._prepare_data(Sample(X, y))
 
         # verbose if requested
-        self.log_if_verbose()
+        self._log_if_verbose()
 
         # grouping rare modalities for each feature
         common_modalities = {

@@ -28,7 +28,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         self,
         quantitatives: list[QuantitativeFeature],
         min_freq: float,
-        **kwargs: dict,
+        **kwargs,
     ) -> None:
         """
         Parameters
@@ -89,7 +89,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
         # verbose if requested
-        self.log_if_verbose("------\n---")
+        self._log_if_verbose("------\n---")
 
         # checking data before bucketization
         sample = self._prepare_data(Sample(X, y))

@@ -10,12 +10,13 @@ from scipy.stats import kruskal, pearsonr, spearmanr
 from statsmodels.formula.api import ols
 
 from .base_measures import AbsoluteMeasure, BaseMeasure, OutlierMeasure
+from ...utils import extend_docstring
 
 
 class ReversibleMeasure(BaseMeasure):
     """A reversible measure"""
 
-    def __init__(self, threshold: float = 1) -> None:
+    def __init__(self, threshold: float = 0.0) -> None:
         super().__init__(threshold)
         self.reversed = False
 
@@ -36,23 +37,8 @@ class KruskalMeasure(ReversibleMeasure):
     is_x_quantitative = True
     is_y_qualitative = True
 
+    @extend_docstring(BaseMeasure.compute_association)
     def compute_association(self, x: Series, y: Series) -> float:
-        """Kruskal-Wallis' test statistic between ``x`` for each value taken by ``y``.
-
-        Parameters
-        ----------
-        x : Series
-            Quantitative feature
-        y : Series
-            Qualitative target feature
-        thresh_kruskal : float, optional
-            Minimum Kruskal-Wallis association, by default ``0``
-
-        Returns
-        -------
-        tuple[bool, dict[str, Any]]
-            Whether ``x`` is sufficiently associated to ``y`` and Kruskal-Wallis' H test statistic
-        """
 
         # reversing if requested
         if self.reversed:
@@ -79,25 +65,9 @@ class RMeasure(BaseMeasure):
     is_y_qualitative = True
     is_y_binary = True
 
+    @extend_docstring(BaseMeasure.compute_association)
     def compute_association(self, x: Series, y: Series) -> float:
-        """Square root of the coefficient of determination of linear regression model of
-        ``x`` by ``y``.
-
-        Parameters
-        ----------
-        x : Series
-            Quantitative feature
-        y : Series
-            Binary target feature
-        thresh_R : float, optional
-            Minimum R association, by default ``0``
-
-        Returns
-        -------
-        tuple[bool, dict[str, Any]]
-            Whether ``x`` is sufficiently associated to ``y`` and the square root of the
-            coefficient of determination
-        """
+        """ """
         # # reversing if requested
         # if self.reversed:
         #     x, y = y, x
@@ -131,23 +101,9 @@ class PearsonMeasure(AbsoluteMeasure):
     is_x_quantitative = True
     is_y_quantitative = True
 
+    @extend_docstring(BaseMeasure.compute_association)
     def compute_association(self, x: Series, y: Series) -> float:
-        """Pearson's linear correlation coefficient between ``x`` and ``y``.
-
-        Parameters
-        ----------
-        x : Series
-            Quantitative feature
-        y : Series
-            Quantitative target feature
-        thresh_pearson : float, optional
-            Minimum r association, by default ``0``
-
-        Returns
-        -------
-        tuple[bool, dict[str, Any]]
-            Whether ``x`` is sufficiently associated to ``y`` and Pearson's r
-        """
+        """ """
         # ckecking for nans
         nans = x.isnull() | x.isna()
 
@@ -165,23 +121,9 @@ class SpearmanMeasure(AbsoluteMeasure):
     is_x_quantitative = True
     is_y_quantitative = True
 
+    @extend_docstring(BaseMeasure.compute_association)
     def compute_association(self, x: Series, y: Series) -> float:
-        """Spearman's rank correlation coefficient between ``x`` and ``y``.
-
-        Parameters
-        ----------
-        x : Series
-            Quantitative feature
-        y : Series
-            Quantitative target feature
-        thresh_spearman : float, optional
-            Minimum rho association, by default ``0``
-
-        Returns
-        -------
-        tuple[bool, dict[str, Any]]
-            Whether ``x`` is sufficiently associated to ``y`` and Spearman's rho
-        """
+        """ """
         # ckecking for nans
         nans = x.isnull() | x.isna()
         # computing spearman's rho
@@ -197,23 +139,9 @@ class DistanceMeasure(AbsoluteMeasure):
     is_x_quantitative = True
     is_y_quantitative = True
 
+    @extend_docstring(BaseMeasure.compute_association)
     def compute_association(self, x: Series, y: Series) -> float:
-        """Distance correlation between ``x`` and ``y``.
-
-        Parameters
-        ----------
-        x : Series
-            Quantitative feature
-        y : Series
-            Quantitative target feature
-        thresh_distance : float, optional
-            Minimum distance association, by default ``0``
-
-        Returns
-        -------
-        tuple[bool, dict[str, Any]]
-            Whether ``x`` is sufficiently associated to ``y`` and Distance Correlation
-        """
+        """ """
         # ckecking for nans
         nans = x.isnull()
 
@@ -223,27 +151,13 @@ class DistanceMeasure(AbsoluteMeasure):
 
 
 class ZscoreOutlierMeasure(OutlierMeasure):
-    """Z-score based outlier measure"""
+    """Z-Score based outlier measure"""
 
     __name__ = "ZScore"
 
+    @extend_docstring(OutlierMeasure.compute_association)
     def compute_association(self, x: Series, y: Series = None) -> float:
-        """Computes outliers percentage based on the z-score
-
-        Parameters
-        ----------
-        x : Series
-            Quantitative feature
-        y : Series, optional
-            Any target feature, by default ``None``
-        thresh_zscore : float, optional
-            Maximum percentage of Outliers in a feature, by default ``1.0``
-
-        Returns
-        -------
-        tuple[bool, dict[str, Any]]
-            Whether or not there are too many outliers and the outlier measurement
-        """
+        """ """
 
         mean = x.mean()  # mean of the feature
         std = x.std()  # standard deviation of the feature
@@ -264,23 +178,9 @@ class IqrOutlierMeasure(OutlierMeasure):
 
     __name__ = "IQR"
 
+    @extend_docstring(OutlierMeasure.compute_association)
     def compute_association(self, x: Series, y: Series = None) -> float:
-        """Computes outliers percentage based on the interquartile range
-
-        Parameters
-        ----------
-        x : Series
-            Quantitative feature
-        y : Series, optional
-            Any target feature, by default ``None``
-        thresh_iqr : float, optional
-            Maximum percentage of Outliers in a feature, by default ``1.0``
-
-        Returns
-        -------
-        tuple[bool, dict[str, Any]]
-            Whether or not there are too many outliers and the outlier measurement
-        """
+        """ """
         q3 = x.quantile(0.75)  # 3rd quartile
         q1 = x.quantile(0.25)  # 1st quartile
         iqr = q3 - q1  # inter quartile range

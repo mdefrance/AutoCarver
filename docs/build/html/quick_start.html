@@ -5,7 +5,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Quick Start &mdash; AutoCarver Beta release documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
   
@@ -16,7 +16,7 @@
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
         <script src="_static/documentation_options.js?v=39f3c58d"></script>
-        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="_static/js/theme.js"></script>
@@ -40,7 +40,7 @@
               <img src="_static/auto_carver_symbol_small.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                6.0.4
+                6.0.5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -142,7 +142,7 @@ Ordinal features can be added, alongside there expected ordering.</p>
 <h2>Using AutoCarver<a class="headerlink" href="#using-autocarver" title="Link to this heading"></a></h2>
 <section id="fitting-autocarver">
 <h3>Fitting AutoCarver<a class="headerlink" href="#fitting-autocarver" title="Link to this heading"></a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">AutoCarver</span> <span class="kn">import</span> <span class="n">BinaryCarver</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">AutoCarver</span><span class="w"> </span><span class="kn">import</span> <span class="n">BinaryCarver</span>
 
 <span class="c1"># intiating AutoCarver</span>
 <span class="n">binary_carver</span> <span class="o">=</span> <span class="n">BinaryCarver</span><span class="p">(</span>
@@ -170,7 +170,7 @@ Ordinal features can be added, alongside there expected ordering.</p>
 <section id="saving-autocarver">
 <h3>Saving AutoCarver<a class="headerlink" href="#saving-autocarver" title="Link to this heading"></a></h3>
 <p>All <strong>Carvers</strong> can safely be stored as a <code class="docutils literal notranslate"><span class="pre">.json</span></code> file.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 
 <span class="c1"># storing as json file</span>
 <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;my_carver.json&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">my_carver_json</span><span class="p">:</span>
@@ -181,9 +181,9 @@ Ordinal features can be added, alongside there expected ordering.</p>
 <section id="loading-autocarver">
 <h3>Loading AutoCarver<a class="headerlink" href="#loading-autocarver" title="Link to this heading"></a></h3>
 <p><strong>Carvers</strong> can safely be loaded from a .json file.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 
-<span class="kn">from</span> <span class="nn">AutoCarver</span> <span class="kn">import</span> <span class="n">load_carver</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">AutoCarver</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_carver</span>
 
 <span class="c1"># loading json file</span>
 <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;my_carver.json&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">my_carver_json</span><span class="p">:</span>
@@ -194,7 +194,7 @@ Ordinal features can be added, alongside there expected ordering.</p>
 </section>
 <section id="feature-selection">
 <h2>Feature Selection<a class="headerlink" href="#feature-selection" title="Link to this heading"></a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">AutoCarver.selectors</span> <span class="kn">import</span> <span class="n">ClassificationSelector</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">AutoCarver.selectors</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassificationSelector</span>
 
 <span class="c1"># select the best 25 most target associated qualitative features</span>
 <span class="n">classification_selector</span> <span class="o">=</span> <span class="n">ClassificationSelector</span><span class="p">(</span>

@@ -15,9 +15,10 @@ class BinaryCarver(BaseCarver):
     """Automatic carving of continuous, discrete, categorical and ordinal
     features that maximizes association with a binary target.
 
+
     Examples
     --------
-    `Binary Classification Example <https://autocarver.readthedocs.io/en/latest/examples/
+    `Binary Classification Example <https://autocarver.readthedocs.io/en/latest/examples/Carvers/
     BinaryClassification/binary_classification_example.html>`_
     """
 
@@ -27,23 +28,23 @@ class BinaryCarver(BaseCarver):
     @extend_docstring(BaseCarver.__init__)
     def __init__(
         self,
-        min_freq: float,
         features: Features,
+        min_freq: float,
         dropna: bool = True,
         max_n_mod: int = 5,
-        **kwargs: dict,
+        **kwargs,
     ) -> None:
         """
-        Parameters
-        ----------
-        sort_by : str
-            Metric to be used to perform association measure between features and target.
+        Keyword Arguments
+        -----------------
+        combinations : BinaryCombinationEvaluator, optional
+            Metric to perform association measure between :class:`Features` and target.
 
-            * ``"tschuprowt"``, for :ref:`Tschuprowt`.
-            * ``"cramerv"``, for :ref:`Cramerv`.
+            * :class:`TschuprowtCombinations`, for :ref:`Tschuprowt`.
+            * :class:`CramervCombinations`, for :ref:`Cramerv`.
 
-            **Tip**: use ``"tschuprowt"`` for more robust, or less output modalities,
-            use ``"cramerv"`` for more output modalities.
+            *Tip*: use :class:`TschuprowtCombinations` for more robust, or less output modalities,
+            use :class:`CramervCombinations` for more output modalities.
         """
 
         # default binary combinations

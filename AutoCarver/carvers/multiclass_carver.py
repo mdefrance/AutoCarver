@@ -17,10 +17,11 @@ class MulticlassCarver(BinaryCarver):
     """Automatic carving of continuous, discrete, categorical and ordinal
     features that maximizes association with a multiclass target.
 
+
     Examples
     --------
     `Multiclass Classification Example <https://autocarver.readthedocs.io/en/latest/examples/
-    MulticlassClassification/multiclass_classification_example.html>`_
+    Carvers/MulticlassClassification/multiclass_classification_example.html>`_
     """
 
     __name__ = "MulticlassCarver"
@@ -34,7 +35,7 @@ class MulticlassCarver(BinaryCarver):
         min_freq: float,
         dropna: bool = True,
         max_n_mod: int = 5,
-        **kwargs: dict,
+        **kwargs,
     ) -> None:
         """ """
         # Initiating BinaryCarver

@@ -103,10 +103,8 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         #     Multiclass target: Dict of raw DataFrame columns associated to the names of copies
         # that will be created.
         """
-        values_orders : dict[str, GroupedList], optional
-            Dict of column names and there associated ordering.
-            If lists are passed, a :class:`GroupedList` will automatically be initiated,
-            by default ``None``
+        features : Features
+            A set of Features (quantitative, categorical or ordinal) to be dicretized
 
         copy : bool, optional
             If ``True``, applies transform to a copy of the provided DataFrame, by default ``False``
@@ -325,7 +323,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         ----------
         X : DataFrame
             Dataset to be carved.
-            Needs to have columns has specified in ``features`` attribute.
+            Needs to have columns from provided :class:`Features`.
         y : Series, optional
             Target, by default ``None``
 
@@ -431,7 +429,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         return sample
 
-    def log_if_verbose(self, prefix: str = " -") -> None:
+    def _log_if_verbose(self, prefix: str = " -") -> None:
         """prints logs if requested"""
         if self.verbose:
             print(f"{prefix} [{self.__name__}] Fit {str(self.features)}")
@@ -519,30 +517,27 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         # initiating BaseDiscretizer
         return cls(features=features, **discretizer_json)
 
-    def summary(self, feature: str = None) -> DataFrame:
-        """Summarizes the data discretization process.
-
-        By default:
-
-            * ``str_default="__OTHER__"`` is added for non-representative modalities.
-            * ``str_nan="__NAN__"`` is adde for features that contain ``numpy.nan``.
-
-        Parameters
-        ----------
-        feature : str, optional
-            Specify for which feature to return the summary, by default ``None``
+    @property
+    def summary(self) -> DataFrame:
+        """Summary of discretization process
 
         Returns
         -------
         DataFrame
-            A summary of features' values per modalities.
+            Summary of :class:`Features`' values per modalities
         """
-        # checking for requested specific feature
-        if feature is not None:
-            summary = self.features(feature).get_summary()
-            return DataFrame(summary).set_index(["feature", "label"])
-
         return self.features.summary
+
+    @property
+    def history(self) -> DataFrame:
+        """History of discretization process
+
+        Returns
+        -------
+        DataFrame
+            History of tests and :class:`Features`' association with target
+        """
+        return self.features.history
 
     # def update(
     #     self,

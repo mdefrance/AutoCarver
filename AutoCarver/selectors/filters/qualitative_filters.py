@@ -6,6 +6,7 @@ from pandas import DataFrame
 from ...features import BaseFeature, get_versions
 from ..measures import CramervMeasure, TschuprowtMeasure
 from .base_filters import BaseFilter
+from ...utils.extend_docstring import extend_docstring
 
 
 class QualitativeFilter(BaseFilter):
@@ -18,6 +19,7 @@ class QualitativeFilter(BaseFilter):
 
     is_x_qualitative = True
 
+    @extend_docstring(BaseFilter.filter)
     def filter(self, X: DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:
         # filtering ranks to avoid correlation with already removed features
         filtered_ranks = ranks[:]
@@ -90,54 +92,22 @@ class QualitativeFilter(BaseFilter):
 
 
 class CramervFilter(QualitativeFilter):
-    """Computes maximum Cramer's V between ``X`` and ``X`` (qualitative).
-    Features too correlated to a feature more associated with the target
-    are excluded (according to provided ``ranks``).
-
-    Parameters
-    ----------
-    X : DataFrame
-        Contains columns named after ``ranks``'s index (feature names)
-    ranks : DataFrame
-        Ranked features as index of the association table
-    thresh_corr : float, optional
-        Maximum Cramér's V bewteen features, by default ``1``
-
-    Returns
-    -------
-    dict[str, Any]
-        Maximum Cramér's V with a better feature
-    """
+    """Computes maximum Cramer's V between qualitative features of ``X``"""
 
     __name__ = "CramervFilter"
 
+    @extend_docstring(QualitativeFilter.filter)
     def __init__(self, threshold: float = 1.0) -> None:
         super().__init__(threshold)
         self.measure = CramervMeasure(threshold)
 
 
 class TschuprowtFilter(QualitativeFilter):
-    """Computes max Tschuprow's T between X and X (qualitative).
-    Features too correlated to a feature more associated with the target
-    are excluded (according to provided ``ranks``).
-
-    Parameters
-    ----------
-    X : DataFrame
-        Contains columns named after ``ranks``'s index (feature names)
-    ranks : DataFrame
-        Ranked features as index of the association table
-    thresh_corr : float, optional
-        Maximum Tschuprow's T bewteen features, by default ``1``
-
-    Returns
-    -------
-    dict[str, Any]
-        Maximum Tschuprow's T with a better feature
-    """
+    """Computes maximum Tschuprow's T between qualitative features of ``X``"""
 
     __name__ = "TschuprowtFilter"
 
+    @extend_docstring(QualitativeFilter.filter)
     def __init__(self, threshold: float = 1.0) -> None:
         super().__init__(threshold)
         self.measure = TschuprowtMeasure(threshold)

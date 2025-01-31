@@ -26,124 +26,88 @@ class BaseSelector(ABC):
     """A pipeline of measures to perform a feature pre-selection that maximizes association
     with a binary target.
 
-    * Best features are the n_best of each measure
-    * Get your best features with ``Selector.select()``!
+    Examples
+    --------
+    See `Selectors examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
     """
 
     __name__ = "BaseSelector"
 
     def __init__(
         self,
-        n_best_per_type: int,
         features: Features,
+        n_best_per_type: int,
         # *,
         # measures: list[BaseMeasure] = None,
         # filters: list[BaseFilter] = None,
         # max_num_features_per_chunk: int = 100,
         **kwargs,
     ) -> None:
-        # measures : list[Callable], optional
-        #     List of association measures to be used, by default ``None``.
-        #     Ranks features based on last provided measure of the list.
-        #     See :ref:`Measures`.
-        #     Implemented measures are:
+        # quantitative_measures : list[Callable], optional
+        #     List of association measures to be used for ``quantitative_features``.
+        #     :ref:`Implemented measures <Measures>` are:
 
-        #     * [Quantitative Features] For association evaluation: ``kruskal_measure`` (default),
-        # ``R_measure``
-        #     * [Quantitative Features] For outlier detection: ``zscore_measure``, ``iqr_measure``
-        #     * [Qualitative Features] For association evaluation: ``chi2_measure``,
-        # ``cramerv_measure``, ``tschuprowt_measure`` (default)
+        #     * For association evaluation:
+        #         * :ref:`Kruskal-Wallis' H <kruskal>` (default)
+        #         * :ref:`R`
+        #     * For outlier detection:
+        #         * :ref:`Standard score <zscore>`
+        #         * :ref:`Interquartile range <iqr>`
 
-        # filters : list[Callable], optional
-        #     List of filters to be used, by default ``None``.
-        #     See :ref:`Filters`.
-        #     Implemented filters are:
+        # qualitative_measures : list[Callable], optional
+        #     List of association measures to be used for ``qualitative_features``.
+        #     :ref:`Implemented measures <Measures>` are:
 
-        #     * [Quantitative Features] For linear correlation: ``spearman_filter`` (default),
-        # ``pearson_filter``
-        #     * [Qualitative Features] For correlation: ``cramerv_filter``, ``tschuprowt_filter``
-        #  (default)
+        #     * For association evaluation:
+        #         * :ref:`Pearson's chi² <chi2>`
+        #         * :ref:`cramerv`
+        #         * :ref:`tschuprowt` (default)
 
+        # quantitative_filters : list[Callable], optional
+        #     List of filters to be used for ``quantitative_features``.
+        #     :ref:`Implemented filters <Filters>` are:
+
+        #     * For linear correlation:
+        #         * :ref:`pearson_filter`
+        #         * :ref:`Spearman's rho <spearman_filter>` (default)
+
+        # qualitative_filters : list[Callable], optional
+        #     List of filters to be used for ``qualitative_features``.
+        #     :ref:`Implemented filters <Filters>` are:
+
+        #     * For correlation:
+        #         * :ref:`cramerv_filter`
+        #         * :ref:`tschuprowt_filter` (default)
+
+        # **kwargs
+        #     Allows one to set thresholds for provided ``quantitative_measures``/
+        #     ``qualitative_measures`` and ``quantitative_filters``/``qualitative_filters``
+        #     (see :ref:`Measures` and :ref:`Filters`) passed as keyword arguments.
         """
         Parameters
         ----------
-        n_best : int
-            Number of best features to select. Best features are:
+        features : Features
+            A set of :class:`Features` to select from
 
-            * The first ``n_best`` of each provided data types as set in:
-                * ``quantitative_features``
-                * ``qualitative_features``
-            * The first ``n_best`` for each provided measures as set in:
-                * ``quantitative_measures``
-                * ``qualitative_measures``
+        n_best_per_type : int
+            Number of quantitative and/or qualitative :class:`Features` to  select
 
-        quantitative_features : list[str]
-            List of column names of quantitative features to chose from, by default ``None``.
-            Must be set if ``qualitative_features=None``.
 
-        qualitative_features : list[str]
-            List of column names of qualitative features to chose from, by default ``None``.
-            Must be set if ``quantitative_features=None``.
+        Keyword Arguments
+        -----------------
+        max_num_features_per_chunk : int, optional
+            Maximum number of features per chunk, by default ``100``.
 
-        quantitative_measures : list[Callable], optional
-            List of association measures to be used for ``quantitative_features``.
-            :ref:`Implemented measures <Measures>` are:
+            Chunking is used to speed up the selection process when there is a large number
+            of :class:`Features`.
 
-            * For association evaluation:
-                * :ref:`Kruskal-Wallis' H <kruskal>` (default)
-                * :ref:`R`
-            * For outlier detection:
-                * :ref:`Standard score <zscore>`
-                * :ref:`Interquartile range <iqr>`
-
-        qualitative_measures : list[Callable], optional
-            List of association measures to be used for ``qualitative_features``.
-            :ref:`Implemented measures <Measures>` are:
-
-            * For association evaluation:
-                * :ref:`Pearson's chi² <chi2>`
-                * :ref:`cramerv`
-                * :ref:`tschuprowt` (default)
-
-        quantitative_filters : list[Callable], optional
-            List of filters to be used for ``quantitative_features``.
-            :ref:`Implemented filters <Filters>` are:
-
-            * For linear correlation:
-                * :ref:`pearson_filter`
-                * :ref:`Spearman's rho <spearman_filter>` (default)
-
-        qualitative_filters : list[Callable], optional
-            List of filters to be used for ``qualitative_features``.
-            :ref:`Implemented filters <Filters>` are:
-
-            * For correlation:
-                * :ref:`cramerv_filter`
-                * :ref:`tschuprowt_filter` (default)
-
-        colsample : float, optional
-            Size of sampled list of features for sped up computation, between ``0`` and ``1``,
-            by default ``1.0``, all features are used.
-
-            For ``colsample=0.5``, Selector will search for the best features in
-            ``features[:len(features)//2]`` and then in ``features[len(features)//2:]``.
-
-            **Tip:** for better performance, should be set such as ``len(features)//2 < 200``.
+            1. :class:`Features` are split in ``n_chunks`` of :attr:`max_num_features_per_chunk`
+            2. ``n_best_per_type//n_chunks`` of each chunk are selected
+            3. best features are selected from the remaining features
 
         verbose : bool, optional
-            * ``True``, without IPython: prints raw selection steps for X, by default ``False``
-            * ``True``, with IPython: adds HTML tables to the output.
-
-            **Tip**: IPython displaying can be turned off by setting ``pretty_print=False``.
-
-        **kwargs
-            Allows one to set thresholds for provided ``quantitative_measures``/
-            ``qualitative_measures`` and ``quantitative_filters``/``qualitative_filters``
-            (see :ref:`Measures` and :ref:`Filters`) passed as keyword arguments.
-
-        Examples
-        --------
-        See `Selectors examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
+            * ``True``, without ``IPython``: prints raw statitics
+            * ``True``, with ``IPython``: prints HTML statistics, by default ``False``
         """
         # TODO print a config that says what the user has selected (measures+filters)
         # features and values
@@ -176,9 +140,6 @@ class BaseSelector(ABC):
 
         # target name
         self.target_name = None
-
-        # keyword arguments
-        self.kwargs = kwargs
 
     def __repr__(self) -> str:
         """Returns the name of the selector"""
@@ -248,22 +209,21 @@ class BaseSelector(ABC):
             else:
                 remove_non_default_metrics_from_features(feature)
 
-    def select(self, X: DataFrame, y: Series) -> list[BaseFeature]:
-        """Selects the ``n_best_per_type`` features of the DataFrame, by association with the target
+    def select(self, X: DataFrame, y: Series) -> Features:
+        """Selects the :attr:`n_best_per_type` :class:`Features` of ``X``
 
         Parameters
         ----------
         X : DataFrame
             Dataset to determine optimal features.
-            Needs to have columns has specified in ``features`` attribute.
 
         y : Series
             Target with wich the association is evaluated.
 
         Returns
         -------
-        list[str]
-            List of selected features
+        Features
+            Selected :class:`Features`
         """
 
         # getting target name

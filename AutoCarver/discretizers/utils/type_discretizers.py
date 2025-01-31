@@ -24,7 +24,7 @@ class StringDiscretizer(BaseDiscretizer):
     def __init__(
         self,
         features: list[BaseFeature],
-        **kwargs: dict,
+        **kwargs
     ) -> None:
         """
         Parameters
@@ -40,7 +40,7 @@ class StringDiscretizer(BaseDiscretizer):
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series = None) -> None:  # pylint: disable=W0222
-        self.log_if_verbose()  # verbose if requested
+        self._log_if_verbose()  # verbose if requested
 
         # checking for binary target and copying X
         sample = self._prepare_data(Sample(X, y))
@@ -105,7 +105,7 @@ class TimedeltaDiscretizer(BaseDiscretizer):
     def __init__(
         self,
         features: list[BaseFeature],
-        **kwargs: dict,
+        **kwargs
     ) -> None:
         """
         Parameters
@@ -121,7 +121,7 @@ class TimedeltaDiscretizer(BaseDiscretizer):
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series = None) -> None:  # pylint: disable=W0222
-        self.log_if_verbose()  # verbose if requested
+        self._log_if_verbose()  # verbose if requested
 
         # checking for binary target and copying X
         sample = self._prepare_data(Sample(X, y))

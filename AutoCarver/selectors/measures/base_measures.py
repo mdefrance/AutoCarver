@@ -28,6 +28,12 @@ class BaseMeasure(ABC):
     __name__ = "BaseMeasure"
 
     def __init__(self, threshold: float = 0.0) -> None:
+        """
+        Parameters
+        ----------
+        threshold : float, optional
+            Minimum threshold to reach, by default ``0.0``
+        """
         self.threshold = threshold
         self.value = None
         self._info = {}
@@ -37,7 +43,20 @@ class BaseMeasure(ABC):
 
     @abstractmethod
     def compute_association(self, x: Series, y: Series) -> float:
-        """computes the measure of association between x and y"""
+        """Computes association measure between ``x`` and ``y``
+
+        Parameters
+        ----------
+        x : Series
+            Feature
+        y : Series
+            Target feature
+
+        Returns
+        -------
+        float
+            Measure of association between ``x`` and ``y``
+        """
 
     @property
     def info(self) -> dict:
@@ -57,7 +76,14 @@ class BaseMeasure(ABC):
         self._info.update(content)
 
     def validate(self) -> bool:
-        """checks if measured correlation is above specified threshold -> keep the feature"""
+        """Checks if :attr:`threshold` is reached
+
+        Returns
+        -------
+        bool
+            Whether the test is passed or not
+        """
+
         if not isnull(self.value) and notna(self.value):
             return self.value >= self.threshold
         return False
@@ -97,14 +123,20 @@ class AbsoluteMeasure(BaseMeasure):
     # absolute_threshold = False
 
     def validate(self) -> bool:
-        """checks if measured correlation is above specified threshold -> keep the feature"""
+        """Checks if :attr:`threshold` is reached
+
+        Returns
+        -------
+        bool
+            Whether the test is passed or not
+        """
         if not isnull(self.value) and notna(self.value):
             return abs(self.value) >= self.threshold
         return False
 
 
 class OutlierMeasure(BaseMeasure):
-    """Outlier measure of association between x and y"""
+    """Outlier measure of association for a Quantitative feature"""
 
     is_default = True
     is_x_quantitative = True
@@ -116,15 +148,38 @@ class OutlierMeasure(BaseMeasure):
     correlation_with = "itself"
 
     def __init__(self, threshold: float = 1.0) -> None:
+        """
+        Parameters
+        ----------
+        threshold : float, optional
+            Maximum threshold to reach, by default ``1.0``
+        """
         super().__init__(threshold)
 
     @abstractmethod
     def compute_association(self, x: Series, y: Series = None) -> float:
-        """computes the measure of association between x and y"""
+        """Computes outlier measure on ``x``
+
+        Parameters
+        ----------
+        x : Series
+            Feature
+        y : Series, optional
+            Target feature, by default ``None``
+
+        Returns
+        -------
+        float
+            Measure of outliers on ``x``
+        """
 
     def validate(self) -> bool:
-        """checks if measured outlier rate is below specified threshold -> keep the feature
-        (by default keeps feature if outliermeasure is not defined)
+        """Checks if :attr:`threshold` is reached
+
+        Returns
+        -------
+        bool
+            Whether the test is passed or not
         """
         if not isnull(self.value) and notna(self.value):
             return self.value < self.threshold
@@ -139,21 +194,19 @@ class NanMeasure(OutlierMeasure):
     is_x_qualitative = True
 
     def compute_association(self, x: Series, y: Series = None) -> float:
-        """Measure of the percentage of NaNs
+        """Computes frequency of ``nan`` in ``x``
 
         Parameters
         ----------
         x : Series
-            Feature to measure
+            Feature
         y : Series, optional
-            Binary target feature, by default ``None``
-        thresh_nan : float, optional
-            Maximum percentage of NaNs in a feature, by default ``0.999``
+            Target feature, by default ``None``
 
         Returns
         -------
-        tuple[bool, dict[str, Any]]
-            Whether or not there are to many NaNs and the percentage of NaNs
+        float
+            Measure of ``nan`` in ``x``
         """
         _ = y
         self.value = (x.isna() | x.isnull()).mean()
@@ -168,21 +221,19 @@ class ModeMeasure(OutlierMeasure):
     is_x_qualitative = True
 
     def compute_association(self, x: Series, y: Series = None) -> float:
-        """Measure of the percentage of NaNs
+        """Computes frequency of ``x``'s mode
 
         Parameters
         ----------
         x : Series
-            Feature to measure
+            Feature
         y : Series, optional
-            Binary target feature, by default ``None``
-        thresh_nan : float, optional
-            Maximum percentage of NaNs in a feature, by default ``0.999``
+            Target feature, by default ``None``
 
         Returns
         -------
-        tuple[bool, dict[str, Any]]
-            Whether or not there are to many NaNs and the percentage of NaNs
+        float
+            Measure of ``x``'s mode
         """
         _ = y
         mode = x.mode(dropna=True).values[0]  # computing mode

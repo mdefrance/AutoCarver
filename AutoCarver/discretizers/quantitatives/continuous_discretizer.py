@@ -34,7 +34,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
         self,
         quantitatives: list[QuantitativeFeature],
         min_freq: float,
-        **kwargs: dict,
+        **kwargs,
     ) -> None:
         """
         Parameters
@@ -62,7 +62,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series = None) -> None:  # pylint: disable=W0222
-        self.log_if_verbose()  # verbose if requested
+        self._log_if_verbose()  # verbose if requested
 
         # fitting each feature
         all_orders = imap_unordered_function(

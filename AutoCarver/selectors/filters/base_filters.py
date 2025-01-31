@@ -22,7 +22,14 @@ class BaseFilter(ABC):
     # info
     higher_is_better = False
 
-    def __init__(self, threshold: float = 1.0):
+    def __init__(self, threshold: float = 1.0) -> None:
+        """
+        Parameters
+        ----------
+        threshold : float, optional
+            Maximum threshold to reach, by default ``1.0``
+        """
+
         self.measure = None
         self.threshold = threshold
 
@@ -31,7 +38,20 @@ class BaseFilter(ABC):
 
     @abstractmethod
     def filter(self, X: DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:
-        """filters out features from ranks"""
+        """Filters out ranked features that reach the association threshold
+
+        Parameters
+        ----------
+        X : DataFrame
+            DataFrame containing features
+        ranks : list[BaseFeature]
+            List of ranked features to filter, from most to least associated
+
+        Returns
+        -------
+        list[BaseFeature]
+            Filtered list of features
+        """
 
     def _update_feature(
         self,

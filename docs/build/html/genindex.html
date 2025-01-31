@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Index &mdash; AutoCarver Beta release documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
   
@@ -15,7 +15,7 @@
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
         <script src="_static/documentation_options.js?v=39f3c58d"></script>
-        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="_static/js/theme.js"></script>
@@ -37,7 +37,7 @@
               <img src="_static/auto_carver_symbol_small.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                6.0.4
+                6.0.5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -93,37 +93,25 @@
 <h1 id="index">Index</h1>
 
 <div class="genindex-jumpbox">
- <a href="#A"><strong>A</strong></a>
- | <a href="#B"><strong>B</strong></a>
+ <a href="#B"><strong>B</strong></a>
  | <a href="#C"><strong>C</strong></a>
  | <a href="#D"><strong>D</strong></a>
  | <a href="#F"><strong>F</strong></a>
- | <a href="#G"><strong>G</strong></a>
  | <a href="#H"><strong>H</strong></a>
  | <a href="#I"><strong>I</strong></a>
  | <a href="#K"><strong>K</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
- | <a href="#N"><strong>N</strong></a>
  | <a href="#O"><strong>O</strong></a>
  | <a href="#P"><strong>P</strong></a>
  | <a href="#Q"><strong>Q</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
- | <a href="#U"><strong>U</strong></a>
  | <a href="#V"><strong>V</strong></a>
  | <a href="#Z"><strong>Z</strong></a>
  
 </div>
-<h2 id="A">A</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="discretizers.html#AutoCarver.discretizers.GroupedList.append">append() (AutoCarver.discretizers.GroupedList method)</a>
-</li>
-  </ul></td>
-</tr></table>
-
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -139,21 +127,37 @@
 </li>
       <li><a href="discretizers.html#AutoCarver.discretizers.ChainedDiscretizer">ChainedDiscretizer (class in AutoCarver.discretizers)</a>
 </li>
-      <li><a href="selectors.html#AutoCarver.selectors.measures.chi2_measure">chi2_measure() (in module AutoCarver.selectors.measures)</a>
+      <li><a href="selectors.html#AutoCarver.selectors.measures.Chi2Measure">Chi2Measure (class in AutoCarver.selectors.measures)</a>
 </li>
       <li><a href="selectors.html#AutoCarver.selectors.ClassificationSelector">ClassificationSelector (class in AutoCarver.selectors)</a>
 </li>
+      <li><a href="selectors.html#AutoCarver.selectors.measures.Chi2Measure.compute_association">compute_association() (AutoCarver.selectors.measures.Chi2Measure method)</a>
+
+      <ul>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.CramervMeasure.compute_association">(AutoCarver.selectors.measures.CramervMeasure method)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.DistanceMeasure.compute_association">(AutoCarver.selectors.measures.DistanceMeasure method)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.IqrOutlierMeasure.compute_association">(AutoCarver.selectors.measures.IqrOutlierMeasure method)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.KruskalMeasure.compute_association">(AutoCarver.selectors.measures.KruskalMeasure method)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.RMeasure.compute_association">(AutoCarver.selectors.measures.RMeasure method)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.TschuprowtMeasure.compute_association">(AutoCarver.selectors.measures.TschuprowtMeasure method)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.ZscoreOutlierMeasure.compute_association">(AutoCarver.selectors.measures.ZscoreOutlierMeasure method)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="discretizers.html#AutoCarver.discretizers.GroupedList.contains">contains() (AutoCarver.discretizers.GroupedList method)</a>
-</li>
       <li><a href="carvers.html#AutoCarver.ContinuousCarver">ContinuousCarver (class in AutoCarver)</a>
 </li>
       <li><a href="discretizers.html#AutoCarver.discretizers.ContinuousDiscretizer">ContinuousDiscretizer (class in AutoCarver.discretizers)</a>
 </li>
-      <li><a href="selectors.html#AutoCarver.selectors.filters.cramerv_filter">cramerv_filter() (in module AutoCarver.selectors.filters)</a>
+      <li><a href="selectors.html#AutoCarver.selectors.filters.CramervFilter">CramervFilter (class in AutoCarver.selectors.filters)</a>
 </li>
-      <li><a href="selectors.html#AutoCarver.selectors.measures.cramerv_measure">cramerv_measure() (in module AutoCarver.selectors.measures)</a>
+      <li><a href="selectors.html#AutoCarver.selectors.measures.CramervMeasure">CramervMeasure (class in AutoCarver.selectors.measures)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -165,9 +169,7 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="selectors.html#AutoCarver.selectors.measures.distance_measure">distance_measure() (in module AutoCarver.selectors.measures)</a>
-</li>
-      <li><a href="selectors.html#AutoCarver.selectors.measures.dtype_measure">dtype_measure() (in module AutoCarver.selectors.measures)</a>
+      <li><a href="selectors.html#AutoCarver.selectors.measures.DistanceMeasure">DistanceMeasure (class in AutoCarver.selectors.measures)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -175,6 +177,16 @@
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="selectors.html#AutoCarver.selectors.filters.CramervFilter.filter">filter() (AutoCarver.selectors.filters.CramervFilter method)</a>
+
+      <ul>
+        <li><a href="selectors.html#AutoCarver.selectors.filters.PearsonFilter.filter">(AutoCarver.selectors.filters.PearsonFilter method)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.filters.SpearmanFilter.filter">(AutoCarver.selectors.filters.SpearmanFilter method)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.filters.TschuprowtFilter.filter">(AutoCarver.selectors.filters.TschuprowtFilter method)</a>
+</li>
+      </ul></li>
       <li><a href="carvers.html#AutoCarver.BinaryCarver.fit">fit() (AutoCarver.BinaryCarver method)</a>
 
       <ul>
@@ -228,35 +240,15 @@
   </ul></td>
 </tr></table>
 
-<h2 id="G">G</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="discretizers.html#AutoCarver.discretizers.GroupedList.get">get() (AutoCarver.discretizers.GroupedList method)</a>
-</li>
-      <li><a href="discretizers.html#AutoCarver.discretizers.GroupedList.get_group">get_group() (AutoCarver.discretizers.GroupedList method)</a>
-</li>
-      <li><a href="discretizers.html#AutoCarver.discretizers.GroupedList.get_repr">get_repr() (AutoCarver.discretizers.GroupedList method)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="discretizers.html#AutoCarver.discretizers.GroupedList.group">group() (AutoCarver.discretizers.GroupedList method)</a>
-</li>
-      <li><a href="discretizers.html#AutoCarver.discretizers.GroupedList.group_list">group_list() (AutoCarver.discretizers.GroupedList method)</a>
-</li>
-      <li><a href="discretizers.html#AutoCarver.discretizers.GroupedList">GroupedList (class in AutoCarver.discretizers)</a>
-</li>
-  </ul></td>
-</tr></table>
-
 <h2 id="H">H</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="carvers.html#AutoCarver.BinaryCarver.history">history() (AutoCarver.BinaryCarver method)</a>
+      <li><a href="carvers.html#AutoCarver.BinaryCarver.history">history (AutoCarver.BinaryCarver property)</a>
 
       <ul>
-        <li><a href="carvers.html#AutoCarver.ContinuousCarver.history">(AutoCarver.ContinuousCarver method)</a>
+        <li><a href="carvers.html#AutoCarver.ContinuousCarver.history">(AutoCarver.ContinuousCarver property)</a>
 </li>
-        <li><a href="carvers.html#AutoCarver.MulticlassCarver.history">(AutoCarver.MulticlassCarver method)</a>
+        <li><a href="carvers.html#AutoCarver.MulticlassCarver.history">(AutoCarver.MulticlassCarver property)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -265,7 +257,7 @@
 <h2 id="I">I</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="selectors.html#AutoCarver.selectors.measures.iqr_measure">iqr_measure() (in module AutoCarver.selectors.measures)</a>
+      <li><a href="selectors.html#AutoCarver.selectors.measures.IqrOutlierMeasure">IqrOutlierMeasure (class in AutoCarver.selectors.measures)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -273,7 +265,7 @@
 <h2 id="K">K</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="selectors.html#AutoCarver.selectors.measures.kruskal_measure">kruskal_measure() (in module AutoCarver.selectors.measures)</a>
+      <li><a href="selectors.html#AutoCarver.selectors.measures.KruskalMeasure">KruskalMeasure (class in AutoCarver.selectors.measures)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -281,31 +273,21 @@
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="carvers.html#AutoCarver.load_carver">load_carver() (in module AutoCarver)</a>
+      <li><a href="carvers.html#AutoCarver.BinaryCarver.load">load() (AutoCarver.BinaryCarver class method)</a>
+
+      <ul>
+        <li><a href="carvers.html#AutoCarver.ContinuousCarver.load">(AutoCarver.ContinuousCarver class method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="discretizers.html#AutoCarver.discretizers.load_discretizer">load_discretizer() (in module AutoCarver.discretizers)</a>
+        <li><a href="carvers.html#AutoCarver.MulticlassCarver.load">(AutoCarver.MulticlassCarver class method)</a>
 </li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="selectors.html#AutoCarver.selectors.measures.mode_measure">mode_measure() (in module AutoCarver.selectors.measures)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="carvers.html#AutoCarver.MulticlassCarver">MulticlassCarver (class in AutoCarver)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="N">N</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="selectors.html#AutoCarver.selectors.measures.nans_measure">nans_measure() (in module AutoCarver.selectors.measures)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -321,11 +303,7 @@
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="selectors.html#AutoCarver.selectors.filters.pearson_filter">pearson_filter() (in module AutoCarver.selectors.filters)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="discretizers.html#AutoCarver.discretizers.GroupedList.pop">pop() (AutoCarver.discretizers.GroupedList method)</a>
+      <li><a href="selectors.html#AutoCarver.selectors.filters.PearsonFilter">PearsonFilter (class in AutoCarver.selectors.filters)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -345,15 +323,11 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="selectors.html#AutoCarver.selectors.measures.R_measure">R_measure() (in module AutoCarver.selectors.measures)</a>
-</li>
       <li><a href="selectors.html#AutoCarver.selectors.RegressionSelector">RegressionSelector (class in AutoCarver.selectors)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="discretizers.html#AutoCarver.discretizers.GroupedList.remove">remove() (AutoCarver.discretizers.GroupedList method)</a>
-</li>
-      <li><a href="discretizers.html#AutoCarver.discretizers.GroupedList.replace_group_leader">replace_group_leader() (AutoCarver.discretizers.GroupedList method)</a>
+      <li><a href="selectors.html#AutoCarver.selectors.measures.RMeasure">RMeasure (class in AutoCarver.selectors.measures)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -361,42 +335,46 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="carvers.html#AutoCarver.BinaryCarver.save">save() (AutoCarver.BinaryCarver method)</a>
+
+      <ul>
+        <li><a href="carvers.html#AutoCarver.ContinuousCarver.save">(AutoCarver.ContinuousCarver method)</a>
+</li>
+        <li><a href="carvers.html#AutoCarver.MulticlassCarver.save">(AutoCarver.MulticlassCarver method)</a>
+</li>
+      </ul></li>
       <li><a href="selectors.html#AutoCarver.selectors.ClassificationSelector.select">select() (AutoCarver.selectors.ClassificationSelector method)</a>
 
       <ul>
         <li><a href="selectors.html#AutoCarver.selectors.RegressionSelector.select">(AutoCarver.selectors.RegressionSelector method)</a>
 </li>
       </ul></li>
-      <li><a href="discretizers.html#AutoCarver.discretizers.GroupedList.sort">sort() (AutoCarver.discretizers.GroupedList method)</a>
-</li>
-      <li><a href="discretizers.html#AutoCarver.discretizers.GroupedList.sort_by">sort_by() (AutoCarver.discretizers.GroupedList method)</a>
-</li>
-      <li><a href="selectors.html#AutoCarver.selectors.filters.spearman_filter">spearman_filter() (in module AutoCarver.selectors.filters)</a>
+      <li><a href="selectors.html#AutoCarver.selectors.filters.SpearmanFilter">SpearmanFilter (class in AutoCarver.selectors.filters)</a>
 </li>
       <li><a href="discretizers.html#AutoCarver.discretizers.StringDiscretizer">StringDiscretizer (class in AutoCarver.discretizers)</a>
 </li>
-      <li><a href="carvers.html#AutoCarver.BinaryCarver.summary">summary() (AutoCarver.BinaryCarver method)</a>
+      <li><a href="carvers.html#AutoCarver.BinaryCarver.summary">summary (AutoCarver.BinaryCarver property)</a>
 
       <ul>
-        <li><a href="carvers.html#AutoCarver.ContinuousCarver.summary">(AutoCarver.ContinuousCarver method)</a>
+        <li><a href="carvers.html#AutoCarver.ContinuousCarver.summary">(AutoCarver.ContinuousCarver property)</a>
 </li>
-        <li><a href="discretizers.html#AutoCarver.discretizers.CategoricalDiscretizer.summary">(AutoCarver.discretizers.CategoricalDiscretizer method)</a>
+        <li><a href="discretizers.html#AutoCarver.discretizers.CategoricalDiscretizer.summary">(AutoCarver.discretizers.CategoricalDiscretizer property)</a>
 </li>
-        <li><a href="discretizers.html#AutoCarver.discretizers.ChainedDiscretizer.summary">(AutoCarver.discretizers.ChainedDiscretizer method)</a>
+        <li><a href="discretizers.html#AutoCarver.discretizers.ChainedDiscretizer.summary">(AutoCarver.discretizers.ChainedDiscretizer property)</a>
 </li>
-        <li><a href="discretizers.html#AutoCarver.discretizers.ContinuousDiscretizer.summary">(AutoCarver.discretizers.ContinuousDiscretizer method)</a>
+        <li><a href="discretizers.html#AutoCarver.discretizers.ContinuousDiscretizer.summary">(AutoCarver.discretizers.ContinuousDiscretizer property)</a>
 </li>
-        <li><a href="discretizers.html#AutoCarver.discretizers.Discretizer.summary">(AutoCarver.discretizers.Discretizer method)</a>
+        <li><a href="discretizers.html#AutoCarver.discretizers.Discretizer.summary">(AutoCarver.discretizers.Discretizer property)</a>
 </li>
-        <li><a href="discretizers.html#AutoCarver.discretizers.OrdinalDiscretizer.summary">(AutoCarver.discretizers.OrdinalDiscretizer method)</a>
+        <li><a href="discretizers.html#AutoCarver.discretizers.OrdinalDiscretizer.summary">(AutoCarver.discretizers.OrdinalDiscretizer property)</a>
 </li>
-        <li><a href="discretizers.html#AutoCarver.discretizers.QualitativeDiscretizer.summary">(AutoCarver.discretizers.QualitativeDiscretizer method)</a>
+        <li><a href="discretizers.html#AutoCarver.discretizers.QualitativeDiscretizer.summary">(AutoCarver.discretizers.QualitativeDiscretizer property)</a>
 </li>
-        <li><a href="discretizers.html#AutoCarver.discretizers.QuantitativeDiscretizer.summary">(AutoCarver.discretizers.QuantitativeDiscretizer method)</a>
+        <li><a href="discretizers.html#AutoCarver.discretizers.QuantitativeDiscretizer.summary">(AutoCarver.discretizers.QuantitativeDiscretizer property)</a>
 </li>
-        <li><a href="discretizers.html#AutoCarver.discretizers.StringDiscretizer.summary">(AutoCarver.discretizers.StringDiscretizer method)</a>
+        <li><a href="discretizers.html#AutoCarver.discretizers.StringDiscretizer.summary">(AutoCarver.discretizers.StringDiscretizer property)</a>
 </li>
-        <li><a href="carvers.html#AutoCarver.MulticlassCarver.summary">(AutoCarver.MulticlassCarver method)</a>
+        <li><a href="carvers.html#AutoCarver.MulticlassCarver.summary">(AutoCarver.MulticlassCarver property)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -405,13 +383,9 @@
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="carvers.html#AutoCarver.BinaryCarver.to_json">to_json() (AutoCarver.BinaryCarver method)</a>
+      <li><a href="discretizers.html#AutoCarver.discretizers.CategoricalDiscretizer.to_json">to_json() (AutoCarver.discretizers.CategoricalDiscretizer method)</a>
 
       <ul>
-        <li><a href="carvers.html#AutoCarver.ContinuousCarver.to_json">(AutoCarver.ContinuousCarver method)</a>
-</li>
-        <li><a href="discretizers.html#AutoCarver.discretizers.CategoricalDiscretizer.to_json">(AutoCarver.discretizers.CategoricalDiscretizer method)</a>
-</li>
         <li><a href="discretizers.html#AutoCarver.discretizers.ChainedDiscretizer.to_json">(AutoCarver.discretizers.ChainedDiscretizer method)</a>
 </li>
         <li><a href="discretizers.html#AutoCarver.discretizers.ContinuousDiscretizer.to_json">(AutoCarver.discretizers.ContinuousDiscretizer method)</a>
@@ -426,15 +400,9 @@
 </li>
         <li><a href="discretizers.html#AutoCarver.discretizers.StringDiscretizer.to_json">(AutoCarver.discretizers.StringDiscretizer method)</a>
 </li>
-        <li><a href="carvers.html#AutoCarver.MulticlassCarver.to_json">(AutoCarver.MulticlassCarver method)</a>
-</li>
-        <li><a href="carvers.html#AutoCarver.BaseCarver.to_json">(in module AutoCarver.BaseCarver)</a>
-</li>
         <li><a href="discretizers.html#AutoCarver.discretizers.BaseDiscretizer.to_json">(in module AutoCarver.discretizers.BaseDiscretizer)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="carvers.html#AutoCarver.BinaryCarver.transform">transform() (AutoCarver.BinaryCarver method)</a>
 
       <ul>
@@ -459,41 +427,43 @@
         <li><a href="carvers.html#AutoCarver.MulticlassCarver.transform">(AutoCarver.MulticlassCarver method)</a>
 </li>
       </ul></li>
-      <li><a href="selectors.html#AutoCarver.selectors.filters.tschuprowt_filter">tschuprowt_filter() (in module AutoCarver.selectors.filters)</a>
-</li>
-      <li><a href="selectors.html#AutoCarver.selectors.measures.tschuprowt_measure">tschuprowt_measure() (in module AutoCarver.selectors.measures)</a>
-</li>
   </ul></td>
-</tr></table>
-
-<h2 id="U">U</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="discretizers.html#AutoCarver.discretizers.GroupedList.update">update() (AutoCarver.discretizers.GroupedList method)</a>
+      <li><a href="selectors.html#AutoCarver.selectors.filters.TschuprowtFilter">TschuprowtFilter (class in AutoCarver.selectors.filters)</a>
 </li>
-      <li><a href="carvers.html#AutoCarver.BinaryCarver.update_discretizer">update_discretizer() (AutoCarver.BinaryCarver method)</a>
-
-      <ul>
-        <li><a href="carvers.html#AutoCarver.ContinuousCarver.update_discretizer">(AutoCarver.ContinuousCarver method)</a>
+      <li><a href="selectors.html#AutoCarver.selectors.measures.TschuprowtMeasure">TschuprowtMeasure (class in AutoCarver.selectors.measures)</a>
 </li>
-        <li><a href="carvers.html#AutoCarver.MulticlassCarver.update_discretizer">(AutoCarver.MulticlassCarver method)</a>
-</li>
-      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="V">V</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="discretizers.html#AutoCarver.discretizers.GroupedList.values">values() (AutoCarver.discretizers.GroupedList method)</a>
+      <li><a href="selectors.html#AutoCarver.selectors.measures.Chi2Measure.validate">validate() (AutoCarver.selectors.measures.Chi2Measure method)</a>
+
+      <ul>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.CramervMeasure.validate">(AutoCarver.selectors.measures.CramervMeasure method)</a>
 </li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.DistanceMeasure.validate">(AutoCarver.selectors.measures.DistanceMeasure method)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.IqrOutlierMeasure.validate">(AutoCarver.selectors.measures.IqrOutlierMeasure method)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.KruskalMeasure.validate">(AutoCarver.selectors.measures.KruskalMeasure method)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.RMeasure.validate">(AutoCarver.selectors.measures.RMeasure method)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.TschuprowtMeasure.validate">(AutoCarver.selectors.measures.TschuprowtMeasure method)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.ZscoreOutlierMeasure.validate">(AutoCarver.selectors.measures.ZscoreOutlierMeasure method)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="Z">Z</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="selectors.html#AutoCarver.selectors.measures.zscore_measure">zscore_measure() (in module AutoCarver.selectors.measures)</a>
+      <li><a href="selectors.html#AutoCarver.selectors.measures.ZscoreOutlierMeasure">ZscoreOutlierMeasure (class in AutoCarver.selectors.measures)</a>
 </li>
   </ul></td>
 </tr></table>

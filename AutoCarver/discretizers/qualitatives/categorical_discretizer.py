@@ -27,7 +27,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
         self,
         categoricals: list[CategoricalFeature],
         min_freq: float,
-        **kwargs: dict,
+        **kwargs,
     ) -> None:
         """
         Parameters
@@ -80,7 +80,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
         # copying dataframe and checking data before bucketization
         sample = self._prepare_data(Sample(X, y))
 
-        self.log_if_verbose()  # verbose if requested
+        self._log_if_verbose()  # verbose if requested
 
         # grouping modalities less frequent than min_freq into feature.default
         sample.X = self._group_rare_modalities(sample.X)

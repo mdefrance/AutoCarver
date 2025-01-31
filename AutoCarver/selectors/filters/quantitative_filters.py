@@ -6,6 +6,7 @@ from pandas import DataFrame
 
 from ...features import BaseFeature, get_versions
 from .base_filters import BaseFilter
+from ...utils.extend_docstring import extend_docstring
 
 # from statsmodels.stats.outliers_influence import variance_inflation_factor
 
@@ -63,17 +64,13 @@ class QuantitativeFilter(BaseFilter):
     """Computes max association between X and X (quantitative) excluding features
     that are correlated to a feature more associated with the target
     (defined by the ranks).
-
-    Parameters
-    ----------
-    thresh_corr, float: default 1.
-        Maximum association between features
     """
 
     __name__ = "QuantitativeFilter"
 
     is_x_quantitative = True
 
+    @extend_docstring(BaseFilter.filter)
     def filter(self, X: DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:
         # computing correlation between features
         X_corr = self._compute_correlation(X, ranks)
@@ -152,54 +149,22 @@ class QuantitativeFilter(BaseFilter):
 
 
 class SpearmanFilter(QuantitativeFilter):
-    """Computes maximum Spearman's rho between X and X (quantitative).
-    Features too correlated to a feature more associated with the target
-    are excluded (according to provided ``ranks``).
-
-    Parameters
-    ----------
-    X : DataFrame
-        Contains columns named after ``ranks``'s index (feature names)
-    ranks : DataFrame
-        Ranked features as index of the association table
-    thresh_corr : float, optional
-        Maximum Spearman's rho bewteen features, by default ``1``
-
-    Returns
-    -------
-    dict[str, Any]
-        Maximum Spearman's rho with a better features
-    """
+    """Computes maximum Spearman's rho between quantitative features of ``X``"""
 
     __name__ = "SpearmanFilter"
 
+    @extend_docstring(QuantitativeFilter.__init__)
     def __init__(self, threshold: float = 1.0) -> None:
         super().__init__(threshold)
         self.measure = "spearman"
 
 
 class PearsonFilter(QuantitativeFilter):
-    """Computes maximum Pearson's r between X and X (quantitative).
-    Features too correlated to a feature more associated with the target
-    are excluded (according to provided ``ranks``).
-
-    Parameters
-    ----------
-    X : DataFrame
-        Contains columns named after ``ranks``'s index (feature names)
-    ranks : DataFrame
-        Ranked features as index of the association table
-    thresh_corr : float, optional
-        Maximum Pearson's r bewteen features, by default ``1``
-
-    Returns
-    -------
-    dict[str, Any]
-        Maximum Pearson's r with a better feature
-    """
+    """Computes maximum Pearson's r between quantitative features of ``X``"""
 
     __name__ = "PearsonFilter"
 
+    @extend_docstring(QuantitativeFilter.__init__)
     def __init__(self, threshold: float = 1.0) -> None:
         super().__init__(threshold)
         self.measure = "pearson"

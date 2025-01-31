@@ -30,7 +30,7 @@ class Discretizer(BaseDiscretizer):
         self,
         features: Features,
         min_freq: float,
-        **kwargs: dict,
+        **kwargs,
     ) -> None:
         """
         Parameters

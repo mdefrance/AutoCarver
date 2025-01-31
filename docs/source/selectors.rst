@@ -99,7 +99,9 @@ where:
 The Distance Correlation is computed using `scipy.spatial.distance.correlation <https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.correlation.html>`_.
 
 
-.. autofunction:: AutoCarver.selectors.measures.distance_measure
+
+.. autoclass:: AutoCarver.selectors.measures.DistanceMeasure
+    :members: compute_association, validate
 
 
 
@@ -143,7 +145,8 @@ where:
  * :math:`\bar{x_r}=\sum_{i=1}^{n_y}{\sum_{j=1}^{n_{y=i}}}x_r^{ij}` is the sample mean of :math:`x_r`
 
 
-.. autofunction:: AutoCarver.selectors.measures.kruskal_measure
+.. autoclass:: AutoCarver.selectors.measures.KruskalMeasure
+    :members: compute_association, validate
 
 
 .. note::
@@ -189,7 +192,9 @@ where:
 
 
 
-.. autofunction:: AutoCarver.selectors.measures.R_measure
+
+.. autoclass:: AutoCarver.selectors.measures.RMeasure
+    :members: compute_association, validate
 
 
 .. note::
@@ -217,7 +222,10 @@ where:
  * :math:`\bar{x}=\frac{1}{n}\sum_{j=1}^n{x_j}` is the sample mean of :math:`x`
  * :math:`S=\sqrt{\frac{1}{n-1}\sum_{j=1}^n{(x_j - \bar{x})^2}}` is the sample standard deviation of :math:`x`
 
-.. autofunction:: AutoCarver.selectors.measures.zscore_measure
+
+.. autoclass:: AutoCarver.selectors.measures.ZscoreOutlierMeasure
+    :members: compute_association, validate
+
 
 .. note::
 
@@ -249,7 +257,9 @@ Any observation :math:`x_i` of feature :math:`x`, can be considered an outlier i
 
     Q1 - 1.5 IQR \leq x_i \leq Q3 + 1.5 IQR
 
-.. autofunction:: AutoCarver.selectors.measures.iqr_measure
+
+.. autoclass:: AutoCarver.selectors.measures.IqrOutlierMeasure
+    :members: compute_association, validate
 
 
 .. note::
@@ -288,7 +298,8 @@ where:
  * :math:`n_{i.}=\sum_{i=1}^{n_x}n_{ij}` is the total number of observations that take modality :math:`i` of :math:`x`
  * :math:`n_{.j}=\sum_{j=1}^{n_y}n_{ij}` is the total number of observations that take modality :math:`j` of :math:`y`
 
-.. autofunction:: AutoCarver.selectors.measures.chi2_measure
+.. autoclass:: AutoCarver.selectors.measures.Chi2Measure
+    :members: compute_association, validate
 
 .. note::
 
@@ -312,7 +323,8 @@ where:
  * :math:`n_x` is the number of modalities of :math:`x`
  * :math:`n_y` is the number of modalities of :math:`y`
  
-.. autofunction:: AutoCarver.selectors.measures.cramerv_measure
+.. autoclass:: AutoCarver.selectors.measures.CramervMeasure
+    :members: compute_association, validate
 
 .. note::
 
@@ -338,54 +350,14 @@ where:
  * :math:`n_x` is the number of modalities of :math:`x`
  * :math:`n_y` is the number of modalities of :math:`y`
  
-.. autofunction:: AutoCarver.selectors.measures.tschuprowt_measure
-
+.. autoclass:: AutoCarver.selectors.measures.TschuprowtMeasure
+    :members: compute_association, validate
 
    
 .. note::
 
-    * ``tschuprowt_measure`` is the default measure for qualitative features in classification tasks (i.e. when ``ClassificationSelector.qualitative_filters=None`` and ``ClassificationSelector.qualitative_features`` is provided).
-    * If ``thresh_tschuprowt`` is reached, feature will automatically be dropped.
-
-
-
-
-
-Base data information
-.....................
-   
-.. note::
-    Those measures are performed by default and don't need to be added in the attributes.
-
-
-Missing values
-^^^^^^^^^^^^^^
-
-.. autofunction:: AutoCarver.selectors.measures.nans_measure
-
-.. note::
-
-    * ``nans_measure`` is evaluated by default in all **Selectors**.
-    * If ``thresh_nan`` is reached, feature will automatically be dropped.
-
-
-Data types
-^^^^^^^^^^
-
-.. autofunction:: AutoCarver.selectors.measures.dtype_measure
-    
-.. note::
-    ``dtype_measure`` is evaluated by default in all **Selectors**.
-
-Mode
-^^^^
-
-.. autofunction:: AutoCarver.selectors.measures.mode_measure
-
-.. note::
-
-    * ``mode_measure`` is evaluated by default in all **Selectors**.
-    * If ``thresh_mode`` is reached, feature will automatically be dropped.
+    * :class:`TschuprowtMeasure` is the default measure for qualitative features in classification tasks (i.e. when ``ClassificationSelector.qualitative_filters=None`` and ``ClassificationSelector.qualitative_features`` is provided).
+    * If :attr:`TschuprowtMeasure.threshold` is reached, feature will automatically be dropped.
 
 
 
@@ -427,6 +399,12 @@ where:
 
 .. autofunction:: AutoCarver.selectors.filters.pearson_filter
 
+
+.. autoclass:: AutoCarver.selectors.filters.PearsonFilter
+    :members: filter
+
+
+
 .. note::
 
     If ``thresh_corr`` is reached, feature will automatically be dropped.
@@ -453,8 +431,10 @@ where:
  * :math:`x_{2_{r}}` is the ranked version of :math:`x_2`
  * :math:`r_{x_{1_{r}}x_{2_{r}}}` is Pearson's :math:`r` linear correlation coefficient between :math:`x_{1_{r}}` and :math:`x_{2_{r}}`
 
-.. autofunction:: AutoCarver.selectors.filters.spearman_filter
-    
+
+.. autoclass:: AutoCarver.selectors.filters.SpearmanFilter
+    :members: filter
+
 .. note::
 
     * ``spearman_filter`` is the default filter for quantitative features (i.e. when ``quantitative_filters=None`` and ``quantitative_features`` is provided).
@@ -509,8 +489,8 @@ where:
  * :math:`n_{x_2}` is the number of modalities of :math:`x_2`
  
 
-.. autofunction:: AutoCarver.selectors.filters.cramerv_filter
-    
+.. autoclass:: AutoCarver.selectors.filters.CramervFilter
+    :members: filter
 
 .. note::
     
@@ -537,8 +517,9 @@ where:
  * :math:`n_{x_2}` is the number of modalities of :math:`x_2`
  
 
-.. autofunction:: AutoCarver.selectors.filters.tschuprowt_filter
 
+.. autoclass:: AutoCarver.selectors.filters.TschuprowtFilter
+    :members: filter
 
 .. note::
 

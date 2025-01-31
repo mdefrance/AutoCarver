@@ -43,7 +43,8 @@ For two combinations of modalities of :math:`x`, a higher :math:`T` or :math:`V`
 
 
 .. autoclass:: AutoCarver.BinaryCarver
-    :members: fit, transform, fit_transform, to_json, summary, history, update_discretizer
+    :members: fit, transform, fit_transform, save, load, summary, history
+
 
 
 .. _MulticlassCarver:
@@ -61,7 +62,7 @@ For two combinations of modalities of a feature :math:`x`, a higher :math:`T` or
 
 
 .. autoclass:: AutoCarver.MulticlassCarver
-    :members: fit, transform, fit_transform, to_json, summary, history, update_discretizer
+    :members: fit, transform, fit_transform, save, load, summary, history
 
 
 
@@ -84,14 +85,5 @@ It is used to determine whether or not :math:`y` is distributed the same when :m
 For two combinations of modalities of :math:`x`, a higher :math:`H` value indicates that there is a greater difference between the medians of the samples.
 
 .. autoclass:: AutoCarver.ContinuousCarver
-    :members: fit, transform, fit_transform, to_json, summary, history, update_discretizer
+    :members: fit, transform, fit_transform, save, load, summary, history
 
-
-
-
-Saving and Loading
-------------------
-
-.. autofunction:: AutoCarver.BaseCarver.to_json
-
-.. autofunction:: AutoCarver.load_carver

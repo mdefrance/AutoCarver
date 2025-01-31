@@ -83,7 +83,7 @@ class Features:
         categoricals: list[Union[CategoricalFeature, str]] = None,
         quantitatives: list[Union[QuantitativeFeature, str]] = None,
         ordinals: Union[list[OrdinalFeature], dict[str, list[str]]] = None,
-        **kwargs: dict,
+        **kwargs,
     ) -> None:
         """Initiates a set of features"""
         # initiating ordinal values if not provided
@@ -501,7 +501,7 @@ def cast_features(
     features: list[str],
     target_class: type = BaseFeature,
     ordinal_values: dict[str, list[str]] = None,
-    **kwargs: dict,
+    **kwargs,
 ) -> list[BaseFeature]:
     """converts a list of string feature names to there corresponding Feature class"""
 

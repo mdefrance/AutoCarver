@@ -7,6 +7,7 @@ from pandas import Series, crosstab, notna
 from scipy.stats import chi2_contingency
 
 from .base_measures import BaseMeasure
+from ...utils import extend_docstring
 
 # X continue y continue distance correlation
 # X binaire y continue kruskal y, x
@@ -33,23 +34,9 @@ class Chi2Measure(BaseMeasure):
     is_x_qualitative = True
     is_y_qualitative = True
 
+    @extend_docstring(BaseMeasure.compute_association)
     def compute_association(self, x: Series, y: Series) -> float:
-        """
-        Parameters
-        ----------
-        x : Series
-            Qualitative feature
-        y : Series
-            Qualitative target feature
-        thresh_chi2 : float, optional
-            Minimum Chi2 association, by default ``0``
 
-        Returns
-        -------
-        tuple[bool, dict[str, Any]]
-            Whether ``x`` is sufficiently associated to ``y`` and Pearson's chi2 between ``x``
-            and ``y``
-        """
         # computing crosstab between x and y
         xtab = crosstab(x, y)
 
@@ -63,29 +50,11 @@ class CramervMeasure(Chi2Measure):
 
     __name__ = "CramervMeasure"
 
-    def compute_association(self, x: Series, y: Series, chi2_value: float = None) -> float:
-        """Computes Carmér's V between ``x`` and ``y`` from ``chi2_measure``.
+    @extend_docstring(Chi2Measure.compute_association)
+    def compute_association(self, x: Series, y: Series) -> float:
 
-        Parameters
-        ----------
-        x : Series
-            Qualitative feature
-        y : Series
-            Qualitative target feature
-        thresh_cramerv : float, optional
-            Minimum Cramér's V association, by default ``0``
-        chi2_statistic : float, optional
-            Pearson's chi2 between ``x`` and ``y``, by default ``None``
-
-        Returns
-        -------
-        tuple[bool, dict[str, Any]]
-            Whether ``x`` is sufficiently associated to ``y`` and Carmér's V between ``x``
-            and ``y``.
-        """
         # computing Chi2 if not provided
-        if chi2_value is None:
-            chi2_value = super().compute_association(x, y)
+        chi2_value = super().compute_association(x, y)
 
         # number of non-missing observations
         n_obs = (notna(x) & notna(y)).sum()
@@ -106,30 +75,11 @@ class TschuprowtMeasure(Chi2Measure):
 
     __name__ = "TschuprowtMeasure"
 
-    def compute_association(self, x: Series, y: Series, chi2_value: float = None) -> float:
-        """Computes Tschuprow's T between ``x`` and ``y`` from ``chi2_measure``.
-
-        Parameters
-        ----------
-        x : Series
-            Feature to measure
-        y : Series
-            Binary target feature
-        thresh_tschuprowt : float, optional
-            Minimum Tschuprow's T association, by default ``0``
-        chi2_statistic : float, optional
-            Pearson's chi2 between ``x`` and ``y``, by default ``None``
-
-        Returns
-        -------
-        tuple[bool, dict[str, Any]]
-            Whether ``x`` is sufficiently associated to ``y`` and Tschuprow's T between ``x``
-            and ``y``.
-        """
+    @extend_docstring(Chi2Measure.compute_association)
+    def compute_association(self, x: Series, y: Series) -> float:
 
         # computing Chi2 if not provided
-        if chi2_value is None:
-            chi2_value = super().compute_association(x, y)
+        chi2_value = super().compute_association(x, y)
 
         # number of non-missing observations
         n_obs = (notna(x) & notna(y)).sum()

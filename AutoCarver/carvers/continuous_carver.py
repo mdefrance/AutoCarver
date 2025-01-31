@@ -19,8 +19,8 @@ class ContinuousCarver(BaseCarver):
 
     Examples
     --------
-    `Continuous Regression Example <https://autocarver.readthedocs.io/en/latest/examples/Multiclass
-    Classification/multiclass_classification_example.html>`_
+    `Continuous Regression Example <https://autocarver.readthedocs.io/en/latest/examples/Carvers/
+    ContinuousRegression/continuous_regression_example.html>`_
     """
 
     __name__ = "ContinuousCarver"
@@ -33,11 +33,15 @@ class ContinuousCarver(BaseCarver):
         min_freq: float,
         dropna: bool = True,
         max_n_mod: int = 5,
-        **kwargs: dict,
+        **kwargs,
     ) -> None:
         """
-        Parameters
-        ----------
+        Keyword Arguments
+        -----------------
+        combinations : ContinuousCombinationEvaluator, optional
+            Metric to perform association measure between :class:`Features` and target.
+
+            Currently, only :class:`KruskalCombinations` is implemented, see :ref:`Kruskal`.
         """
         # default binary combinations
         combinations = kwargs.pop("combinations", None)
