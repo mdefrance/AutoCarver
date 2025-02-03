@@ -56,6 +56,7 @@
 <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="discretizers.html">Discretizers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="combinations.html">Combinations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="carvers.html">Carvers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="selectors.html">Selectors</a></li>
 </ul>
@@ -142,7 +143,11 @@
 </li>
         <li><a href="selectors.html#AutoCarver.selectors.measures.KruskalMeasure.compute_association">(AutoCarver.selectors.measures.KruskalMeasure method)</a>
 </li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.PearsonMeasure.compute_association">(AutoCarver.selectors.measures.PearsonMeasure method)</a>
+</li>
         <li><a href="selectors.html#AutoCarver.selectors.measures.RMeasure.compute_association">(AutoCarver.selectors.measures.RMeasure method)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.SpearmanMeasure.compute_association">(AutoCarver.selectors.measures.SpearmanMeasure method)</a>
 </li>
         <li><a href="selectors.html#AutoCarver.selectors.measures.TschuprowtMeasure.compute_association">(AutoCarver.selectors.measures.TschuprowtMeasure method)</a>
 </li>
@@ -154,6 +159,8 @@
       <li><a href="carvers.html#AutoCarver.ContinuousCarver">ContinuousCarver (class in AutoCarver)</a>
 </li>
       <li><a href="discretizers.html#AutoCarver.discretizers.ContinuousDiscretizer">ContinuousDiscretizer (class in AutoCarver.discretizers)</a>
+</li>
+      <li><a href="combinations.html#AutoCarver.combinations.CramervCombinations">CramervCombinations (class in AutoCarver.combinations)</a>
 </li>
       <li><a href="selectors.html#AutoCarver.selectors.filters.CramervFilter">CramervFilter (class in AutoCarver.selectors.filters)</a>
 </li>
@@ -265,6 +272,10 @@
 <h2 id="K">K</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="combinations.html#AutoCarver.combinations.KruskalCombinations">KruskalCombinations (class in AutoCarver.combinations)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="selectors.html#AutoCarver.selectors.measures.KruskalMeasure">KruskalMeasure (class in AutoCarver.selectors.measures)</a>
 </li>
   </ul></td>
@@ -276,6 +287,12 @@
       <li><a href="carvers.html#AutoCarver.BinaryCarver.load">load() (AutoCarver.BinaryCarver class method)</a>
 
       <ul>
+        <li><a href="combinations.html#AutoCarver.combinations.CramervCombinations.load">(AutoCarver.combinations.CramervCombinations class method)</a>
+</li>
+        <li><a href="combinations.html#AutoCarver.combinations.KruskalCombinations.load">(AutoCarver.combinations.KruskalCombinations class method)</a>
+</li>
+        <li><a href="combinations.html#AutoCarver.combinations.TschuprowtCombinations.load">(AutoCarver.combinations.TschuprowtCombinations class method)</a>
+</li>
         <li><a href="carvers.html#AutoCarver.ContinuousCarver.load">(AutoCarver.ContinuousCarver class method)</a>
 </li>
         <li><a href="carvers.html#AutoCarver.MulticlassCarver.load">(AutoCarver.MulticlassCarver class method)</a>
@@ -304,6 +321,10 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="selectors.html#AutoCarver.selectors.filters.PearsonFilter">PearsonFilter (class in AutoCarver.selectors.filters)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="selectors.html#AutoCarver.selectors.measures.PearsonMeasure">PearsonMeasure (class in AutoCarver.selectors.measures)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -338,6 +359,12 @@
       <li><a href="carvers.html#AutoCarver.BinaryCarver.save">save() (AutoCarver.BinaryCarver method)</a>
 
       <ul>
+        <li><a href="combinations.html#AutoCarver.combinations.CramervCombinations.save">(AutoCarver.combinations.CramervCombinations method)</a>
+</li>
+        <li><a href="combinations.html#AutoCarver.combinations.KruskalCombinations.save">(AutoCarver.combinations.KruskalCombinations method)</a>
+</li>
+        <li><a href="combinations.html#AutoCarver.combinations.TschuprowtCombinations.save">(AutoCarver.combinations.TschuprowtCombinations method)</a>
+</li>
         <li><a href="carvers.html#AutoCarver.ContinuousCarver.save">(AutoCarver.ContinuousCarver method)</a>
 </li>
         <li><a href="carvers.html#AutoCarver.MulticlassCarver.save">(AutoCarver.MulticlassCarver method)</a>
@@ -351,8 +378,12 @@
       </ul></li>
       <li><a href="selectors.html#AutoCarver.selectors.filters.SpearmanFilter">SpearmanFilter (class in AutoCarver.selectors.filters)</a>
 </li>
+      <li><a href="selectors.html#AutoCarver.selectors.measures.SpearmanMeasure">SpearmanMeasure (class in AutoCarver.selectors.measures)</a>
+</li>
       <li><a href="discretizers.html#AutoCarver.discretizers.StringDiscretizer">StringDiscretizer (class in AutoCarver.discretizers)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="carvers.html#AutoCarver.BinaryCarver.summary">summary (AutoCarver.BinaryCarver property)</a>
 
       <ul>
@@ -429,6 +460,8 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="combinations.html#AutoCarver.combinations.TschuprowtCombinations">TschuprowtCombinations (class in AutoCarver.combinations)</a>
+</li>
       <li><a href="selectors.html#AutoCarver.selectors.filters.TschuprowtFilter">TschuprowtFilter (class in AutoCarver.selectors.filters)</a>
 </li>
       <li><a href="selectors.html#AutoCarver.selectors.measures.TschuprowtMeasure">TschuprowtMeasure (class in AutoCarver.selectors.measures)</a>
@@ -450,7 +483,11 @@
 </li>
         <li><a href="selectors.html#AutoCarver.selectors.measures.KruskalMeasure.validate">(AutoCarver.selectors.measures.KruskalMeasure method)</a>
 </li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.PearsonMeasure.validate">(AutoCarver.selectors.measures.PearsonMeasure method)</a>
+</li>
         <li><a href="selectors.html#AutoCarver.selectors.measures.RMeasure.validate">(AutoCarver.selectors.measures.RMeasure method)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.SpearmanMeasure.validate">(AutoCarver.selectors.measures.SpearmanMeasure method)</a>
 </li>
         <li><a href="selectors.html#AutoCarver.selectors.measures.TschuprowtMeasure.validate">(AutoCarver.selectors.measures.TschuprowtMeasure method)</a>
 </li>

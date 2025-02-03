@@ -6,8 +6,8 @@ from math import sqrt
 from pandas import Series, crosstab, notna
 from scipy.stats import chi2_contingency
 
-from .base_measures import BaseMeasure
 from ...utils import extend_docstring
+from .base_measures import BaseMeasure
 
 # X continue y continue distance correlation
 # X binaire y continue kruskal y, x
@@ -36,7 +36,6 @@ class Chi2Measure(BaseMeasure):
 
     @extend_docstring(BaseMeasure.compute_association)
     def compute_association(self, x: Series, y: Series) -> float:
-
         # computing crosstab between x and y
         xtab = crosstab(x, y)
 
@@ -52,7 +51,6 @@ class CramervMeasure(Chi2Measure):
 
     @extend_docstring(Chi2Measure.compute_association)
     def compute_association(self, x: Series, y: Series) -> float:
-
         # computing Chi2 if not provided
         chi2_value = super().compute_association(x, y)
 
@@ -77,7 +75,6 @@ class TschuprowtMeasure(Chi2Measure):
 
     @extend_docstring(Chi2Measure.compute_association)
     def compute_association(self, x: Series, y: Series) -> float:
-
         # computing Chi2 if not provided
         chi2_value = super().compute_association(x, y)
 

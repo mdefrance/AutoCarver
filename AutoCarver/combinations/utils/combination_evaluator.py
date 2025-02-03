@@ -139,6 +139,40 @@ class CombinationEvaluator(ABC):
         max_n_mod: int = 5,
         **kwargs,
     ) -> None:
+        """
+        Parameters
+        ----------
+        max_n_mod : int, optional
+            Maximum number of modalities per feature, by default ``5``
+
+            * The combination with the best association will be selected.
+            * All combinations of sizes from 1 to :attr:`max_n_mod` are tested out.
+
+            .. tip::
+                Set between ``3`` (faster, more robust) and ``7`` (slower, less robust)
+
+        Keyword Arguments
+        -----------------
+        min_freq : float, optional
+            Minimum frequency per modality per feature, by default ``None``
+
+            * Features need at least one modality more frequent than :attr:`min_freq`
+            * Defines number of quantiles of continuous features
+            * Minimum frequency of modality of quantitative features
+
+            .. tip::
+                Set between ``0.01`` (slower, less robust) and ``0.2`` (faster, more robust)
+
+        dropna : bool, optional
+            * ``True``, try to group ``nan`` with other modalities.
+            * ``False``, ``nan`` are ignored (not grouped), by default ``False``
+
+        verbose : bool, optional
+            * ``True``, without ``IPython``: prints raw statitics
+            * ``True``, with ``IPython``: prints HTML statistics, by default ``False``
+        """
+
+        # setting attributes
         self.verbose = get_bool_attribute(kwargs, "verbose", False)
         self.dropna = get_bool_attribute(kwargs, "verbose", False)
         self.max_n_mod = max_n_mod
@@ -482,7 +516,7 @@ class CombinationEvaluator(ABC):
         }
 
     def save(self, file_name: str) -> None:
-        """Saves pipeline to .json file.
+        """Saves :class:`CombinationEvaluator` to .json file.
 
         Parameters
         ----------
@@ -499,20 +533,17 @@ class CombinationEvaluator(ABC):
 
     @classmethod
     def load(cls, file: Union[str, dict]) -> "CombinationEvaluator":
-        """Allows one to load a CombinationEvaluator saved as a .json file.
-
-        The CombinationEvaluator has to be saved with ``CombinationEvaluator.save()``, otherwise
-        there can be no guarantee for it to be restored.
+        """Allows one to load a :class:`CombinationEvaluator` saved as a .json file.
 
         Parameters
         ----------
-        file_name : str | dict
-            String of saved CombinationEvaluator's .json file name or content of the file.
+        file : str | dict
+            String of .json file name or content of the file.
 
         Returns
         -------
         CombinationEvaluator
-            A ready-to-use CombinationEvaluator
+            A ready-to-use :class:`CombinationEvaluator`
         """
         # reading file
         if isinstance(file, str):

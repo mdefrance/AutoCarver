@@ -96,22 +96,23 @@ class BaseCarver(BaseDiscretizer, ABC):
 
             * Features need at least one modality more frequent than :attr:`min_freq`
             * Defines number of quantiles of continuous features
-            * Minimum frequency of modality of quantitative feature
+            * Minimum frequency of modality of quantitative features
 
-            *Tip*: should be set between ``0.01`` (slower, preciser, less robust) and ``0.2``
-            (faster, more robust)
+            .. tip::
+                Set between ``0.01`` (slower, less robust) and ``0.2`` (faster, more robust)
 
         dropna : bool, optional
             * ``True``, try to group ``nan`` with other modalities.
             * ``False``, ``nan`` are ignored (not grouped), by default ``True``
 
         max_n_mod : int, optional
-            Maximum number of modality per feature, by default ``5``
+            Maximum number of modalities per feature, by default ``5``
 
             * The combination with the best association will be selected.
             * All combinations of sizes from 1 to :attr:`max_n_mod` are tested out.
 
-            *Tip*: set between ``3`` (faster, more robust) and ``7`` (slower, less robust)
+            .. tip::
+                Set between ``3`` (faster, more robust) and ``7`` (slower, less robust)
 
         Keyword Arguments
         -----------------

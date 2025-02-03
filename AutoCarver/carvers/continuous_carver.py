@@ -41,7 +41,7 @@ class ContinuousCarver(BaseCarver):
         combinations : ContinuousCombinationEvaluator, optional
             Metric to perform association measure between :class:`Features` and target.
 
-            Currently, only :class:`KruskalCombinations` is implemented, see :ref:`Kruskal`.
+            Currently, only :ref:`KruskalCombinations` are implemented.
         """
         # default binary combinations
         combinations = kwargs.pop("combinations", None)

@@ -21,11 +21,7 @@ class StringDiscretizer(BaseDiscretizer):
     __name__ = "StringDiscretizer"
 
     @extend_docstring(BaseDiscretizer.__init__)
-    def __init__(
-        self,
-        features: list[BaseFeature],
-        **kwargs
-    ) -> None:
+    def __init__(self, features: list[BaseFeature], **kwargs) -> None:
         """
         Parameters
         ----------
@@ -102,11 +98,7 @@ class TimedeltaDiscretizer(BaseDiscretizer):
     __name__ = "TimedeltaDiscretizer"
 
     @extend_docstring(BaseDiscretizer.__init__)
-    def __init__(
-        self,
-        features: list[BaseFeature],
-        **kwargs
-    ) -> None:
+    def __init__(self, features: list[BaseFeature], **kwargs) -> None:
         """
         Parameters
         ----------

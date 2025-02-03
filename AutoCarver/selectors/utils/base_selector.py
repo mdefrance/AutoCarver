@@ -95,10 +95,28 @@ class BaseSelector(ABC):
 
         Keyword Arguments
         -----------------
+        measures : list[BaseMeasure], optional
+            List of association measures to be used, by default ``None``.
+
+            Selects :attr:`n_best_per_type` features for each measure provided.
+            Implemented measures are:
+
+            * :class:`QuantitativeFeature`: see available :ref:`QuantiMeasures`
+            * :class:`QualitativeFeature`: see available :ref:`QualiMeasures`
+
+        filters : list[BaseFilter], optional
+            List of filters to be used, by default ``None``.
+
+            Filters out features that do not pass the threshold of each filter.
+            Implemented filters are:
+
+            * :class:`QuantitativeFeature`: see available :ref:`QuantiFilters`
+            * :class:`QualitativeFeature`: see available :ref:`QualiFilters`
+
         max_num_features_per_chunk : int, optional
             Maximum number of features per chunk, by default ``100``.
 
-            Chunking is used to speed up the selection process when there is a large number
+            Chunking is used to speed up the selection process for large numbers
             of :class:`Features`.
 
             1. :class:`Features` are split in ``n_chunks`` of :attr:`max_num_features_per_chunk`

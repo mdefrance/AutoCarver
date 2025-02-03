@@ -117,20 +117,6 @@
 <li><p>Whatever the optimization task: <a class="reference internal" href="#classificationselector"><span class="std std-ref">Classification tasks</span></a> or <a class="reference internal" href="#regressionselector"><span class="std std-ref">Regression tasks</span></a></p></li>
 </ul>
 </div></blockquote>
-<p>By default, quantitative features are:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>Ranked according to <a class="reference internal" href="#kruskal"><span class="std std-ref">Kruskal-Wallis’ H test statistic</span></a></p></li>
-<li><p>Filtered according to <a class="reference internal" href="#spearman-filter"><span class="std std-ref">Spearman’s rho correlation coefficient</span></a></p></li>
-</ul>
-</div></blockquote>
-<p>By default, qualitative features are:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>Ranked according to <a class="reference internal" href="#tschuprowt"><span class="std std-ref">Tschuprow’s T</span></a></p></li>
-<li><p>Filtered according to <a class="reference internal" href="#tschuprowt-filter"><span class="std std-ref">Tschuprow’s T</span></a></p></li>
-</ul>
-</div></blockquote>
 <p>In general, associations are computed according to the provided data types of <span class="math notranslate nohighlight">\(x\)</span> and <span class="math notranslate nohighlight">\(y\)</span>:</p>
 <table class="docutils align-default">
 <tbody>
@@ -166,8 +152,24 @@ with a qualitative target.</p>
 </dd>
 <dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
+<li><p><strong>measures</strong> (<em>list</em><em>[</em><em>BaseMeasure</em><em>]</em><em>, </em><em>optional</em>) – <p>List of association measures to be used, by default <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<p>Selects <code class="xref py py-attr docutils literal notranslate"><span class="pre">n_best_per_type</span></code> features for each measure provided.
+Implemented measures are:</p>
+<ul>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantitativeFeature</span></code>: see available <a class="reference internal" href="#quantimeasures"><span class="std std-ref">Quantitative measures</span></a></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">QualitativeFeature</span></code>: see available <a class="reference internal" href="#qualimeasures"><span class="std std-ref">Qualitative measures</span></a></p></li>
+</ul>
+</p></li>
+<li><p><strong>filters</strong> (<em>list</em><em>[</em><em>BaseFilter</em><em>]</em><em>, </em><em>optional</em>) – <p>List of filters to be used, by default <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<p>Filters out features that do not pass the threshold of each filter.
+Implemented filters are:</p>
+<ul>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantitativeFeature</span></code>: see available <a class="reference internal" href="#quantifilters"><span class="std std-ref">Quantitative filters</span></a></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">QualitativeFeature</span></code>: see available <a class="reference internal" href="#qualifilters"><span class="std std-ref">Qualitative filters</span></a></p></li>
+</ul>
+</p></li>
 <li><p><strong>max_num_features_per_chunk</strong> (<em>int</em><em>, </em><em>optional</em>) – <p>Maximum number of features per chunk, by default <code class="docutils literal notranslate"><span class="pre">100</span></code>.</p>
-<p>Chunking is used to speed up the selection process when there is a large number
+<p>Chunking is used to speed up the selection process for large numbers
 of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>.</p>
 <ol class="arabic simple">
 <li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> are split in <code class="docutils literal notranslate"><span class="pre">n_chunks</span></code> of <code class="xref py py-attr docutils literal notranslate"><span class="pre">max_num_features_per_chunk</span></code></p></li>
@@ -178,24 +180,6 @@ of <code class="xref py py-class docutils literal notranslate"><span class="pre"
 <li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, without <code class="docutils literal notranslate"><span class="pre">IPython</span></code>: prints raw statitics</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, with <code class="docutils literal notranslate"><span class="pre">IPython</span></code>: prints HTML statistics, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
-</ul>
-</p></li>
-<li><p><strong>measures</strong> (<em>list</em><em>[</em><em>BaseMeasure</em><em>]</em><em>, </em><em>optional</em>) – <p>List of association measures to be used, by default <code class="docutils literal notranslate"><span class="pre">None</span></code>.
-Ranks features based on last provided measure of the list.
-See <a class="reference internal" href="#measures"><span class="std std-ref">Association measures, X by y</span></a>.
-Implemented measures are:</p>
-<ul>
-<li><p>[Quantitative Features] For association evaluation: <code class="docutils literal notranslate"><span class="pre">kruskal_measure</span></code> (default), <code class="docutils literal notranslate"><span class="pre">R_measure</span></code></p></li>
-<li><p>[Quantitative Features] For outlier detection: <code class="docutils literal notranslate"><span class="pre">zscore_measure</span></code>, <code class="docutils literal notranslate"><span class="pre">iqr_measure</span></code></p></li>
-<li><p>[Qualitative Features] For association evaluation: <code class="docutils literal notranslate"><span class="pre">chi2_measure</span></code>, <code class="docutils literal notranslate"><span class="pre">cramerv_measure</span></code>, <code class="docutils literal notranslate"><span class="pre">tschuprowt_measure</span></code> (default)</p></li>
-</ul>
-</p></li>
-<li><p><strong>filters</strong> (<em>list</em><em>[</em><em>BaseFilter</em><em>]</em><em>, </em><em>optional</em>) – <p>List of filters to be used, by default <code class="docutils literal notranslate"><span class="pre">None</span></code>.
-See <a class="reference internal" href="#filters"><span class="std std-ref">Association filters, X by X</span></a>.
-Implemented filters are:</p>
-<ul>
-<li><p>[Quantitative Features] For linear correlation: <code class="docutils literal notranslate"><span class="pre">spearman_filter</span></code> (default), <code class="docutils literal notranslate"><span class="pre">pearson_filter</span></code></p></li>
-<li><p>[Qualitative Features] For correlation: <code class="docutils literal notranslate"><span class="pre">cramerv_filter</span></code>, <code class="docutils literal notranslate"><span class="pre">tschuprowt_filter</span></code> (default)</p></li>
 </ul>
 </p></li>
 </ul>
@@ -241,8 +225,24 @@ with a quantitative target.</p>
 </dd>
 <dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
+<li><p><strong>measures</strong> (<em>list</em><em>[</em><em>BaseMeasure</em><em>]</em><em>, </em><em>optional</em>) – <p>List of association measures to be used, by default <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<p>Selects <code class="xref py py-attr docutils literal notranslate"><span class="pre">n_best_per_type</span></code> features for each measure provided.
+Implemented measures are:</p>
+<ul>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantitativeFeature</span></code>: see available <a class="reference internal" href="#quantimeasures"><span class="std std-ref">Quantitative measures</span></a></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">QualitativeFeature</span></code>: see available <a class="reference internal" href="#qualimeasures"><span class="std std-ref">Qualitative measures</span></a></p></li>
+</ul>
+</p></li>
+<li><p><strong>filters</strong> (<em>list</em><em>[</em><em>BaseFilter</em><em>]</em><em>, </em><em>optional</em>) – <p>List of filters to be used, by default <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<p>Filters out features that do not pass the threshold of each filter.
+Implemented filters are:</p>
+<ul>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantitativeFeature</span></code>: see available <a class="reference internal" href="#quantifilters"><span class="std std-ref">Quantitative filters</span></a></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">QualitativeFeature</span></code>: see available <a class="reference internal" href="#qualifilters"><span class="std std-ref">Qualitative filters</span></a></p></li>
+</ul>
+</p></li>
 <li><p><strong>max_num_features_per_chunk</strong> (<em>int</em><em>, </em><em>optional</em>) – <p>Maximum number of features per chunk, by default <code class="docutils literal notranslate"><span class="pre">100</span></code>.</p>
-<p>Chunking is used to speed up the selection process when there is a large number
+<p>Chunking is used to speed up the selection process for large numbers
 of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>.</p>
 <ol class="arabic simple">
 <li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> are split in <code class="docutils literal notranslate"><span class="pre">n_chunks</span></code> of <code class="xref py py-attr docutils literal notranslate"><span class="pre">max_num_features_per_chunk</span></code></p></li>
@@ -253,24 +253,6 @@ of <code class="xref py py-class docutils literal notranslate"><span class="pre"
 <li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, without <code class="docutils literal notranslate"><span class="pre">IPython</span></code>: prints raw statitics</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, with <code class="docutils literal notranslate"><span class="pre">IPython</span></code>: prints HTML statistics, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
-</ul>
-</p></li>
-<li><p><strong>measures</strong> (<em>list</em><em>[</em><em>BaseMeasure</em><em>]</em><em>, </em><em>optional</em>) – <p>List of association measures to be used, by default <code class="docutils literal notranslate"><span class="pre">None</span></code>.
-Ranks features based on last provided measure of the list.
-See <a class="reference internal" href="#measures"><span class="std std-ref">Association measures, X by y</span></a>.
-Implemented measures are:</p>
-<ul>
-<li><p>[Quantitative Features] For association evaluation: <code class="docutils literal notranslate"><span class="pre">kruskal_measure</span></code> (default), <code class="docutils literal notranslate"><span class="pre">R_measure</span></code></p></li>
-<li><p>[Quantitative Features] For outlier detection: <code class="docutils literal notranslate"><span class="pre">zscore_measure</span></code>, <code class="docutils literal notranslate"><span class="pre">iqr_measure</span></code></p></li>
-<li><p>[Qualitative Features] For association evaluation: <code class="docutils literal notranslate"><span class="pre">chi2_measure</span></code>, <code class="docutils literal notranslate"><span class="pre">cramerv_measure</span></code>, <code class="docutils literal notranslate"><span class="pre">tschuprowt_measure</span></code> (default)</p></li>
-</ul>
-</p></li>
-<li><p><strong>filters</strong> (<em>list</em><em>[</em><em>BaseFilter</em><em>]</em><em>, </em><em>optional</em>) – <p>List of filters to be used, by default <code class="docutils literal notranslate"><span class="pre">None</span></code>.
-See <a class="reference internal" href="#filters"><span class="std std-ref">Association filters, X by X</span></a>.
-Implemented filters are:</p>
-<ul>
-<li><p>[Quantitative Features] For linear correlation: <code class="docutils literal notranslate"><span class="pre">spearman_filter</span></code> (default), <code class="docutils literal notranslate"><span class="pre">pearson_filter</span></code></p></li>
-<li><p>[Qualitative Features] For correlation: <code class="docutils literal notranslate"><span class="pre">cramerv_filter</span></code>, <code class="docutils literal notranslate"><span class="pre">tschuprowt_filter</span></code> (default)</p></li>
 </ul>
 </p></li>
 </ul>
@@ -302,7 +284,136 @@ Implemented filters are:</p>
 <section id="association-measures-x-by-y">
 <span id="measures"></span><h2>Association measures, X by y<a class="headerlink" href="#association-measures-x-by-y" title="Link to this heading"></a></h2>
 <section id="quantitative-measures">
-<h3>Quantitative measures<a class="headerlink" href="#quantitative-measures" title="Link to this heading"></a></h3>
+<span id="quantimeasures"></span><h3>Quantitative measures<a class="headerlink" href="#quantitative-measures" title="Link to this heading"></a></h3>
+<section id="pearson-s-r">
+<h4>Pearson’s <span class="math notranslate nohighlight">\(r\)</span><a class="headerlink" href="#pearson-s-r" title="Link to this heading"></a></h4>
+<p>For a <strong>quantititative</strong> feature <span class="math notranslate nohighlight">\(x\)</span>, the association with a <strong>quantitative</strong> target <span class="math notranslate nohighlight">\(y\)</span> is computed using <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.corr.html">pandas.DataFrame.corr</a>.</p>
+<p>Pearson’s <span class="math notranslate nohighlight">\(r\)</span>, as known as the bivariate correlation, is a measure of linear correlation between quantitative features.
+It is computed using the following formula:</p>
+<div class="math notranslate nohighlight">
+\[r_{xy}= \frac{\sum_{i=1}^{n}{(x^i-\bar{x})(y^i-\bar{y})}}{\sqrt{\sum_{i=1}^{n}{(x^i-\bar{x})^2}}  \sqrt{\sum_{i=1}^{n}{(y^i-\bar{y})^2}}}\]</div>
+<p>where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(n\)</span> is the number of observations</p></li>
+<li><p><span class="math notranslate nohighlight">\(x^i\)</span> is the <span class="math notranslate nohighlight">\(i\)</span> th observation of <span class="math notranslate nohighlight">\(x\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(y^i\)</span> is the <span class="math notranslate nohighlight">\(i\)</span> th observation of <span class="math notranslate nohighlight">\(y\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(\bar{x}=\frac{1}{n}\sum_{i=1}^n{x^i}\)</span> is the sample mean of <span class="math notranslate nohighlight">\(x\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(\bar{y}=\frac{1}{n}\sum_{i=1}^n{y^i}\)</span> is the sample mean of <span class="math notranslate nohighlight">\(y\)</span></p></li>
+</ul>
+</div></blockquote>
+<dl class="py class">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.PearsonMeasure">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.selectors.measures.</span></span><span class="sig-name descname"><span class="pre">PearsonMeasure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.selectors.measures.PearsonMeasure" title="Link to this definition"></a></dt>
+<dd><p>Pearson’s linear correlation coefficient between a Quantitative feature and target.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>threshold</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum threshold to reach, by default <code class="docutils literal notranslate"><span class="pre">0.0</span></code></p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.PearsonMeasure.compute_association">
+<span class="sig-name descname"><span class="pre">compute_association</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#AutoCarver.selectors.measures.PearsonMeasure.compute_association" title="Link to this definition"></a></dt>
+<dd><p>Computes association measure between <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>Series</em>) – Feature</p></li>
+<li><p><strong>y</strong> (<em>Series</em>) – Target feature</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Measure of association between <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.PearsonMeasure.validate">
+<span class="sig-name descname"><span class="pre">validate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#AutoCarver.selectors.measures.PearsonMeasure.validate" title="Link to this definition"></a></dt>
+<dd><p>Checks if <code class="xref py py-attr docutils literal notranslate"><span class="pre">threshold</span></code> is reached</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Whether the test is passed or not</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="spearman-s-rho">
+<h4>Spearman’s <span class="math notranslate nohighlight">\(\rho\)</span><a class="headerlink" href="#spearman-s-rho" title="Link to this heading"></a></h4>
+<p>For a <strong>quantitative</strong> feature <span class="math notranslate nohighlight">\(x\)</span>, the corresponding order feature <span class="math notranslate nohighlight">\(x_o\)</span> is the sorted sample of <span class="math notranslate nohighlight">\(x\)</span> such that any <span class="math notranslate nohighlight">\(i\)</span> in <span class="math notranslate nohighlight">\((1, n-1)\)</span> verifies <span class="math notranslate nohighlight">\(x_o^i \leq x_o^{i+1}\)</span>, where <span class="math notranslate nohighlight">\(n\)</span> is the number of observations. For the same feature <span class="math notranslate nohighlight">\(x\)</span>, the corresponding rank <span class="math notranslate nohighlight">\(x_r\)</span> is the index of <span class="math notranslate nohighlight">\(x\)</span>’s values in <span class="math notranslate nohighlight">\(x_o\)</span>.</p>
+<p>Spearman’s <span class="math notranslate nohighlight">\(\rho\)</span> is Pearson’s <span class="math notranslate nohighlight">\(r\)</span> computed on the rank features. As so, Spearman’s <span class="math notranslate nohighlight">\(\rho\)</span> is computed with the following formula:</p>
+<div class="math notranslate nohighlight">
+\[\rho=r_{x_{r}y_{r}}\]</div>
+<p>where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(x_{r}\)</span> is the ranked version of <span class="math notranslate nohighlight">\(x\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(y_{r}\)</span> is the ranked version of <span class="math notranslate nohighlight">\(y\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(r_{x_{r}y_{r}}\)</span> is Pearson’s <span class="math notranslate nohighlight">\(r\)</span> linear correlation coefficient between <span class="math notranslate nohighlight">\(x_{r}\)</span> and <span class="math notranslate nohighlight">\(y_{r}\)</span></p></li>
+</ul>
+</div></blockquote>
+<dl class="py class">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.SpearmanMeasure">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.selectors.measures.</span></span><span class="sig-name descname"><span class="pre">SpearmanMeasure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.selectors.measures.SpearmanMeasure" title="Link to this definition"></a></dt>
+<dd><p>Spearman’s rank correlation coefficient between a Quantitative feature and target.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>threshold</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum threshold to reach, by default <code class="docutils literal notranslate"><span class="pre">0.0</span></code></p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.SpearmanMeasure.compute_association">
+<span class="sig-name descname"><span class="pre">compute_association</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#AutoCarver.selectors.measures.SpearmanMeasure.compute_association" title="Link to this definition"></a></dt>
+<dd><p>Computes association measure between <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>Series</em>) – Feature</p></li>
+<li><p><strong>y</strong> (<em>Series</em>) – Target feature</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Measure of association between <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.SpearmanMeasure.validate">
+<span class="sig-name descname"><span class="pre">validate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#AutoCarver.selectors.measures.SpearmanMeasure.validate" title="Link to this definition"></a></dt>
+<dd><p>Checks if <code class="xref py py-attr docutils literal notranslate"><span class="pre">threshold</span></code> is reached</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Whether the test is passed or not</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">SpearmanMeasure</span></code> is the default measure for each <code class="xref py py-class docutils literal notranslate"><span class="pre">QuantitativeFeature</span></code> when using <code class="xref py py-class docutils literal notranslate"><span class="pre">RegressionSelector</span></code>.</p></li>
+</ul>
+</div>
+</section>
 <section id="distance-correlation">
 <span id="distance"></span><h4>Distance Correlation<a class="headerlink" href="#distance-correlation" title="Link to this heading"></a></h4>
 <p>For two <strong>quantitative</strong> features <span class="math notranslate nohighlight">\(x\)</span> and <span class="math notranslate nohighlight">\(y\)</span>, the Distance Correlation can be computed using the following formula:</p>
@@ -323,7 +434,7 @@ Implemented filters are:</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="AutoCarver.selectors.measures.DistanceMeasure">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.selectors.measures.</span></span><span class="sig-name descname"><span class="pre">DistanceMeasure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.selectors.measures.DistanceMeasure" title="Link to this definition"></a></dt>
-<dd><p>Distance correlation between a Quantitative feature and a Quantitative target.</p>
+<dd><p>Distance correlation between a Quantitative feature and target.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>threshold</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum threshold to reach, by default <code class="docutils literal notranslate"><span class="pre">0.0</span></code></p>
@@ -365,13 +476,6 @@ Implemented filters are:</p>
 
 </dd></dl>
 
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">distance_measure</span></code> is the default measure for quantitative features in regression tasks (i.e. when <code class="docutils literal notranslate"><span class="pre">RegressionSelector.quantitative_filters=None</span></code> and <code class="docutils literal notranslate"><span class="pre">RegressionSelector.quantitative_features</span></code> is provided).</p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">thresh_distance</span></code> is reached, feature will automatically be dropped.</p></li>
-</ul>
-</div>
 </section>
 <section id="kruskal-wallis-h-test-statistic">
 <span id="kruskal"></span><h4>Kruskal-Wallis’ <span class="math notranslate nohighlight">\(H\)</span> test statistic<a class="headerlink" href="#kruskal-wallis-h-test-statistic" title="Link to this heading"></a></h4>
@@ -442,9 +546,8 @@ It is computed using the following formula:</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">kruskal_measure</span></code> is the default measure for quantitative features in classification tasks (i.e. when <code class="docutils literal notranslate"><span class="pre">ClassificationSelector.quantitative_filters=None</span></code> and <code class="docutils literal notranslate"><span class="pre">ClassificationSelector.quantitative_features</span></code> is provided).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">kruskal_measure</span></code> is the default measure for qualitative features in regression tasks (i.e. when <code class="docutils literal notranslate"><span class="pre">RegressionSelector.qualitative_filters=None</span></code> and <code class="docutils literal notranslate"><span class="pre">RegressionSelector.qualitative_features</span></code> is provided).</p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">thresh_kruskal</span></code> is reached, feature will automatically be dropped.</p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">KruskalMeasure</span></code> is the default measure for each <code class="xref py py-class docutils literal notranslate"><span class="pre">QualitativeFeature</span></code> when using <code class="xref py py-class docutils literal notranslate"><span class="pre">RegressionSelector</span></code>.</p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">KruskalMeasure</span></code> is the default measure for each <code class="xref py py-class docutils literal notranslate"><span class="pre">QuantitativeFeature</span></code> when using <code class="xref py py-class docutils literal notranslate"><span class="pre">ClassificationSelector</span></code>.</p></li>
 </ul>
 </div>
 </section>
@@ -520,13 +623,11 @@ a Quantitative feature by a Binary target.</p>
 
 </dd></dl>
 
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>If <code class="docutils literal notranslate"><span class="pre">thresh_R</span></code> is reached, feature will automatically be dropped.</p>
-</div>
 </section>
-<section id="outlier-detection-standard-score">
-<span id="zscore"></span><h4>Outlier Detection: Standard score<a class="headerlink" href="#outlier-detection-standard-score" title="Link to this heading"></a></h4>
+<section id="outlier-detection-measures">
+<span id="outliersmeasures"></span><h4>Outlier Detection Measures<a class="headerlink" href="#outlier-detection-measures" title="Link to this heading"></a></h4>
+<section id="standard-score">
+<span id="zscore"></span><h5>Standard Score<a class="headerlink" href="#standard-score" title="Link to this heading"></a></h5>
 <p>Standard score can be applied as a measure of deviation to determine outlier for <strong>quantitative</strong> features.
 For a feature <span class="math notranslate nohighlight">\(x\)</span> it is computed for any oservation <span class="math notranslate nohighlight">\(x_i\)</span> as follows:</p>
 <div class="math notranslate nohighlight">
@@ -584,13 +685,9 @@ For a feature <span class="math notranslate nohighlight">\(x\)</span> it is comp
 
 </dd></dl>
 
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>If <code class="docutils literal notranslate"><span class="pre">thresh_zscore</span></code> is reached, feature will automatically be dropped.</p>
-</div>
 </section>
-<section id="outlier-detection-interquartile-range">
-<span id="iqr"></span><h4>Outlier Detection: Interquartile range<a class="headerlink" href="#outlier-detection-interquartile-range" title="Link to this heading"></a></h4>
+<section id="interquartile-range">
+<span id="iqr"></span><h5>Interquartile range<a class="headerlink" href="#interquartile-range" title="Link to this heading"></a></h5>
 <p>Interquartile range is widely used as an outlier detection metric for <strong>quantitative</strong> features.
 For a feature <span class="math notranslate nohighlight">\(x\)</span> it is computed as follows:</p>
 <div class="math notranslate nohighlight">
@@ -650,14 +747,11 @@ For a feature <span class="math notranslate nohighlight">\(x\)</span> it is comp
 
 </dd></dl>
 
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>If <code class="docutils literal notranslate"><span class="pre">thresh_iqr</span></code> is reached, feature will automatically be dropped.</p>
-</div>
+</section>
 </section>
 </section>
 <section id="qualitative-measures">
-<h3>Qualitative measures<a class="headerlink" href="#qualitative-measures" title="Link to this heading"></a></h3>
+<span id="qualimeasures"></span><h3>Qualitative measures<a class="headerlink" href="#qualitative-measures" title="Link to this heading"></a></h3>
 <section id="pearson-s-chi-2-test-statistic">
 <span id="chi2"></span><h4>Pearson’s <span class="math notranslate nohighlight">\(\chi^2\)</span> test statistic<a class="headerlink" href="#pearson-s-chi-2-test-statistic" title="Link to this heading"></a></h4>
 <p>For a <strong>qualititative</strong> feature <span class="math notranslate nohighlight">\(x\)</span>, the association with a <strong>qualitative</strong> target <span class="math notranslate nohighlight">\(y\)</span> is computed based on the <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.crosstab.html">pandas.crosstab</a>.</p>
@@ -722,10 +816,6 @@ Computes Chi2 statistic on the <code class="docutils literal notranslate"><span 
 
 </dd></dl>
 
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>If <code class="docutils literal notranslate"><span class="pre">thresh_chi2</span></code> is reached, feature will automatically be dropped.</p>
-</div>
 </section>
 <section id="cramer-s-v">
 <span id="cramerv"></span><h4>Cramér’s <span class="math notranslate nohighlight">\(V\)</span><a class="headerlink" href="#cramer-s-v" title="Link to this heading"></a></h4>
@@ -785,10 +875,6 @@ Computes Chi2 statistic on the <code class="docutils literal notranslate"><span 
 
 </dd></dl>
 
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>If <code class="docutils literal notranslate"><span class="pre">thresh_cramerv</span></code> is reached, feature will automatically be dropped.</p>
-</div>
 </section>
 <section id="tschuprow-s-t">
 <span id="tschuprowt"></span><h4>Tschuprow’s <span class="math notranslate nohighlight">\(T\)</span><a class="headerlink" href="#tschuprow-s-t" title="Link to this heading"></a></h4>
@@ -851,8 +937,7 @@ Computes Chi2 statistic on the <code class="docutils literal notranslate"><span 
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ul class="simple">
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">TschuprowtMeasure</span></code> is the default measure for qualitative features in classification tasks (i.e. when <code class="docutils literal notranslate"><span class="pre">ClassificationSelector.qualitative_filters=None</span></code> and <code class="docutils literal notranslate"><span class="pre">ClassificationSelector.qualitative_features</span></code> is provided).</p></li>
-<li><p>If <code class="xref py py-attr docutils literal notranslate"><span class="pre">TschuprowtMeasure.threshold</span></code> is reached, feature will automatically be dropped.</p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">TschuprowtMeasure</span></code> is the default measure for each <code class="xref py py-class docutils literal notranslate"><span class="pre">QualitativeFeature</span></code> when using <code class="xref py py-class docutils literal notranslate"><span class="pre">ClassificationSelector</span></code>.</p></li>
 </ul>
 </div>
 </section>
@@ -861,9 +946,9 @@ Computes Chi2 statistic on the <code class="docutils literal notranslate"><span 
 <section id="association-filters-x-by-x">
 <span id="filters"></span><h2>Association filters, X by X<a class="headerlink" href="#association-filters-x-by-x" title="Link to this heading"></a></h2>
 <section id="quantitative-filters">
-<h3>Quantitative filters<a class="headerlink" href="#quantitative-filters" title="Link to this heading"></a></h3>
-<section id="pearson-s-r">
-<span id="pearson-filter"></span><h4>Pearson’s <span class="math notranslate nohighlight">\(r\)</span><a class="headerlink" href="#pearson-s-r" title="Link to this heading"></a></h4>
+<span id="quantifilters"></span><h3>Quantitative filters<a class="headerlink" href="#quantitative-filters" title="Link to this heading"></a></h3>
+<section id="pearson-filter">
+<span id="id4"></span><h4>Pearson’s <span class="math notranslate nohighlight">\(r\)</span><a class="headerlink" href="#pearson-filter" title="Link to this heading"></a></h4>
 <p>For a <strong>quantititative</strong> feature <span class="math notranslate nohighlight">\(x_1\)</span>, the association with a <strong>quantitative</strong> feature <span class="math notranslate nohighlight">\(x_2\)</span> is computed using <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.corr.html">pandas.DataFrame.corr</a>.</p>
 <p>Pearson’s <span class="math notranslate nohighlight">\(r\)</span>, as known as the bivariate correlation, is a measure of linear correlation between quantitative features.
 It is computed using the following formula:</p>
@@ -910,13 +995,9 @@ It is computed using the following formula:</p>
 
 </dd></dl>
 
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>If <code class="docutils literal notranslate"><span class="pre">thresh_corr</span></code> is reached, feature will automatically be dropped.</p>
-</div>
 </section>
-<section id="spearman-s-rho">
-<span id="spearman-filter"></span><h4>Spearman’s <span class="math notranslate nohighlight">\(\rho\)</span><a class="headerlink" href="#spearman-s-rho" title="Link to this heading"></a></h4>
+<section id="spearman-filter">
+<span id="id6"></span><h4>Spearman’s <span class="math notranslate nohighlight">\(\rho\)</span><a class="headerlink" href="#spearman-filter" title="Link to this heading"></a></h4>
 <p>For a <strong>quantitative</strong> feature <span class="math notranslate nohighlight">\(x\)</span>, the corresponding order feature <span class="math notranslate nohighlight">\(x_o\)</span> is the sorted sample of <span class="math notranslate nohighlight">\(x\)</span> such that any <span class="math notranslate nohighlight">\(i\)</span> in <span class="math notranslate nohighlight">\((1, n-1)\)</span> verifies <span class="math notranslate nohighlight">\(x_o^i \leq x_o^{i+1}\)</span>, where <span class="math notranslate nohighlight">\(n\)</span> is the number of observations. For the same feature <span class="math notranslate nohighlight">\(x\)</span>, the corresponding rank <span class="math notranslate nohighlight">\(x_r\)</span> is the index of <span class="math notranslate nohighlight">\(x\)</span>’s values in <span class="math notranslate nohighlight">\(x_o\)</span>.</p>
 <p>Spearman’s <span class="math notranslate nohighlight">\(\rho\)</span> is Pearson’s <span class="math notranslate nohighlight">\(r\)</span> computed on the rank features. As so, Spearman’s <span class="math notranslate nohighlight">\(\rho\)</span> is computed with the following formula:</p>
 <div class="math notranslate nohighlight">
@@ -963,16 +1044,15 @@ It is computed using the following formula:</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">spearman_filter</span></code> is the default filter for quantitative features (i.e. when <code class="docutils literal notranslate"><span class="pre">quantitative_filters=None</span></code> and <code class="docutils literal notranslate"><span class="pre">quantitative_features</span></code> is provided).</p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">thresh_corr</span></code> is reached, feature will automatically be dropped.</p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">SpearmanFilter</span></code> is the default filter as inter-<code class="xref py py-class docutils literal notranslate"><span class="pre">QuantitativeFeature</span></code> association measure.</p></li>
 </ul>
 </div>
 </section>
 </section>
 <section id="qualitative-filters">
-<h3>Qualitative filters<a class="headerlink" href="#qualitative-filters" title="Link to this heading"></a></h3>
+<span id="qualifilters"></span><h3>Qualitative filters<a class="headerlink" href="#qualitative-filters" title="Link to this heading"></a></h3>
 <section id="cramerv-filter">
-<span id="id4"></span><h4>Cramér’s <span class="math notranslate nohighlight">\(V\)</span><a class="headerlink" href="#cramerv-filter" title="Link to this heading"></a></h4>
+<span id="id7"></span><h4>Cramér’s <span class="math notranslate nohighlight">\(V\)</span><a class="headerlink" href="#cramerv-filter" title="Link to this heading"></a></h4>
 <p>For a <strong>qualititative</strong> feature <span class="math notranslate nohighlight">\(x_1\)</span>, the association with a <strong>qualitative</strong> feature <span class="math notranslate nohighlight">\(x_2\)</span> is computed based on the <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.crosstab.html">pandas.crosstab</a>.</p>
 <p>Pearson’s <span class="math notranslate nohighlight">\(\chi^2\)</span> statistics is then computed using <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chi2_contingency.html">scipy.stats.chi2_contingency</a> to perform association measuring.
 The formula is the following:</p>
@@ -1041,13 +1121,9 @@ The formula is the following:</p>
 
 </dd></dl>
 
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>If <code class="docutils literal notranslate"><span class="pre">thresh_corr</span></code> is reached, feature will automatically be dropped.</p>
-</div>
 </section>
 <section id="tschuprowt-filter">
-<span id="id7"></span><h4>Tschuprow’s <span class="math notranslate nohighlight">\(T\)</span><a class="headerlink" href="#tschuprowt-filter" title="Link to this heading"></a></h4>
+<span id="id10"></span><h4>Tschuprow’s <span class="math notranslate nohighlight">\(T\)</span><a class="headerlink" href="#tschuprowt-filter" title="Link to this heading"></a></h4>
 <p>Based on Pearson’s <span class="math notranslate nohighlight">\(\chi^2\)</span>, Tschuprow’s <span class="math notranslate nohighlight">\(T\)</span> is computed using the following formula:</p>
 <div class="math notranslate nohighlight">
 \[T=\sqrt{\frac{\chi^2}{n\sqrt{(n_{x_1}-1)(n_{x_2}-1)}}}\]</div>
@@ -1103,8 +1179,7 @@ The formula is the following:</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">tschuprowt_filter</span></code> is the default filter for qualitative features (i.e. when <code class="docutils literal notranslate"><span class="pre">qualitative_filters=None</span></code> and <code class="docutils literal notranslate"><span class="pre">qualititative_features</span></code> is provided).</p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">thresh_corr</span></code> is reached, feature will automatically be dropped.</p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">TschuprowtFilter</span></code> is the default filter as inter-<code class="xref py py-class docutils literal notranslate"><span class="pre">QualitativeFeature</span></code> association measure.</p></li>
 </ul>
 </div>
 </section>

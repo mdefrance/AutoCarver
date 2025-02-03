@@ -13,15 +13,6 @@ It allows one to select features:
     * Whatever there type: quantitative or qualitative
     * Whatever the optimization task: :ref:`ClassificationSelector` or :ref:`RegressionSelector`
 
-By default, quantitative features are:
-
- * Ranked according to :ref:`kruskal`
- * Filtered according to :ref:`Spearman's rho correlation coefficient <spearman_filter>`
-
-By default, qualitative features are:
-
- * Ranked according to :ref:`tschuprowt`
- * Filtered according to :ref:`tschuprowt_filter`
 
 In general, associations are computed according to the provided data types of :math:`x` and :math:`y`:
 
@@ -66,9 +57,69 @@ Association measures, X by y
 ----------------------------
 
 
+.. _QuantiMeasures:
 
 Quantitative measures
 .....................
+
+
+Pearson's :math:`r`
+^^^^^^^^^^^^^^^^^^^
+
+For a **quantititative** feature :math:`x`, the association with a **quantitative** target :math:`y` is computed using `pandas.DataFrame.corr <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.corr.html>`_.
+
+Pearson's :math:`r`, as known as the bivariate correlation, is a measure of linear correlation between quantitative features.
+It is computed using the following formula:
+
+.. math::
+
+    r_{xy}= \frac{\sum_{i=1}^{n}{(x^i-\bar{x})(y^i-\bar{y})}}{\sqrt{\sum_{i=1}^{n}{(x^i-\bar{x})^2}}  \sqrt{\sum_{i=1}^{n}{(y^i-\bar{y})^2}}}
+
+where:
+
+ * :math:`n` is the number of observations
+ * :math:`x^i` is the :math:`i` th observation of :math:`x`
+ * :math:`y^i` is the :math:`i` th observation of :math:`y`
+ * :math:`\bar{x}=\frac{1}{n}\sum_{i=1}^n{x^i}` is the sample mean of :math:`x`
+ * :math:`\bar{y}=\frac{1}{n}\sum_{i=1}^n{y^i}` is the sample mean of :math:`y`
+
+
+
+.. autoclass:: AutoCarver.selectors.measures.PearsonMeasure
+    :members: compute_association, validate
+
+
+Spearman's :math:`\rho`
+^^^^^^^^^^^^^^^^^^^^^^^
+
+
+For a **quantitative** feature :math:`x`, the corresponding order feature :math:`x_o` is the sorted sample of :math:`x` such that any :math:`i` in :math:`(1, n-1)` verifies :math:`x_o^i \leq x_o^{i+1}`, where :math:`n` is the number of observations. For the same feature :math:`x`, the corresponding rank :math:`x_r` is the index of :math:`x`'s values in :math:`x_o`.
+
+Spearman's :math:`\rho` is Pearson's :math:`r` computed on the rank features. As so, Spearman's :math:`\rho` is computed with the following formula:
+
+.. math::
+
+    \rho=r_{x_{r}y_{r}}
+
+where:
+
+ * :math:`x_{r}` is the ranked version of :math:`x`
+ * :math:`y_{r}` is the ranked version of :math:`y`
+ * :math:`r_{x_{r}y_{r}}` is Pearson's :math:`r` linear correlation coefficient between :math:`x_{r}` and :math:`y_{r}`
+
+
+
+.. autoclass:: AutoCarver.selectors.measures.SpearmanMeasure
+    :members: compute_association, validate
+
+
+
+
+.. note::
+
+    * :class:`SpearmanMeasure` is the default measure for each :class:`QuantitativeFeature` when using :class:`RegressionSelector`.
+
+
 
 
 .. _distance:
@@ -102,13 +153,6 @@ The Distance Correlation is computed using `scipy.spatial.distance.correlation <
 
 .. autoclass:: AutoCarver.selectors.measures.DistanceMeasure
     :members: compute_association, validate
-
-
-
-.. note::
-
-    * ``distance_measure`` is the default measure for quantitative features in regression tasks (i.e. when ``RegressionSelector.quantitative_filters=None`` and ``RegressionSelector.quantitative_features`` is provided).
-    * If ``thresh_distance`` is reached, feature will automatically be dropped.
 
 
 
@@ -149,12 +193,12 @@ where:
     :members: compute_association, validate
 
 
+
+
 .. note::
 
-    * ``kruskal_measure`` is the default measure for quantitative features in classification tasks (i.e. when ``ClassificationSelector.quantitative_filters=None`` and ``ClassificationSelector.quantitative_features`` is provided).
-    * ``kruskal_measure`` is the default measure for qualitative features in regression tasks (i.e. when ``RegressionSelector.qualitative_filters=None`` and ``RegressionSelector.qualitative_features`` is provided).
-    * If ``thresh_kruskal`` is reached, feature will automatically be dropped.
-
+    * :class:`KruskalMeasure` is the default measure for each :class:`QualitativeFeature` when using :class:`RegressionSelector`.
+    * :class:`KruskalMeasure` is the default measure for each :class:`QuantitativeFeature` when using :class:`ClassificationSelector`.
 
     
 
@@ -197,17 +241,20 @@ where:
     :members: compute_association, validate
 
 
-.. note::
 
-    If ``thresh_R`` is reached, feature will automatically be dropped.
 
+
+.. _OutliersMeasures:
+
+Outlier Detection Measures
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 
 .. _zscore:
 
-Outlier Detection: Standard score
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Standard Score
+""""""""""""""
 
 Standard score can be applied as a measure of deviation to determine outlier for **quantitative** features.
 For a feature :math:`x` it is computed for any oservation :math:`x_i` as follows:
@@ -227,16 +274,10 @@ where:
     :members: compute_association, validate
 
 
-.. note::
-
-    If ``thresh_zscore`` is reached, feature will automatically be dropped.
-
-
-
 .. _iqr:
 
-Outlier Detection: Interquartile range
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Interquartile range
+"""""""""""""""""""
 
 Interquartile range is widely used as an outlier detection metric for **quantitative** features.
 For a feature :math:`x` it is computed as follows:
@@ -262,13 +303,9 @@ Any observation :math:`x_i` of feature :math:`x`, can be considered an outlier i
     :members: compute_association, validate
 
 
-.. note::
-
-    If ``thresh_iqr`` is reached, feature will automatically be dropped.
 
 
-
-
+.. _QualiMeasures:
 
 
 Qualitative measures
@@ -301,9 +338,6 @@ where:
 .. autoclass:: AutoCarver.selectors.measures.Chi2Measure
     :members: compute_association, validate
 
-.. note::
-
-    If ``thresh_chi2`` is reached, feature will automatically be dropped.
 
 
 .. _Cramerv:
@@ -326,9 +360,6 @@ where:
 .. autoclass:: AutoCarver.selectors.measures.CramervMeasure
     :members: compute_association, validate
 
-.. note::
-
-    If ``thresh_cramerv`` is reached, feature will automatically be dropped.
 
 
 .. _Tschuprowt:
@@ -353,11 +384,10 @@ where:
 .. autoclass:: AutoCarver.selectors.measures.TschuprowtMeasure
     :members: compute_association, validate
 
-   
+
 .. note::
 
-    * :class:`TschuprowtMeasure` is the default measure for qualitative features in classification tasks (i.e. when ``ClassificationSelector.qualitative_filters=None`` and ``ClassificationSelector.qualitative_features`` is provided).
-    * If :attr:`TschuprowtMeasure.threshold` is reached, feature will automatically be dropped.
+    * :class:`TschuprowtMeasure` is the default measure for each :class:`QualitativeFeature` when using :class:`ClassificationSelector`.
 
 
 
@@ -369,6 +399,9 @@ where:
 
 Association filters, X by X 
 ---------------------------
+
+
+.. _QuantiFilters:
 
 Quantitative filters
 ....................
@@ -397,17 +430,10 @@ where:
  * :math:`\bar{x_2}=\frac{1}{n}\sum_{i=1}^n{x_2^i}` is the sample mean of :math:`x_2`
 
 
-.. autofunction:: AutoCarver.selectors.filters.pearson_filter
-
 
 .. autoclass:: AutoCarver.selectors.filters.PearsonFilter
     :members: filter
 
-
-
-.. note::
-
-    If ``thresh_corr`` is reached, feature will automatically be dropped.
 
 
 
@@ -435,16 +461,15 @@ where:
 .. autoclass:: AutoCarver.selectors.filters.SpearmanFilter
     :members: filter
 
+
 .. note::
 
-    * ``spearman_filter`` is the default filter for quantitative features (i.e. when ``quantitative_filters=None`` and ``quantitative_features`` is provided).
-    * If ``thresh_corr`` is reached, feature will automatically be dropped.
+    * :class:`SpearmanFilter` is the default filter as inter-:class:`QuantitativeFeature` association measure.
 
 
 
 
-
-
+.. _QualiFilters:
 
 
 Qualitative filters
@@ -492,10 +517,6 @@ where:
 .. autoclass:: AutoCarver.selectors.filters.CramervFilter
     :members: filter
 
-.. note::
-    
-    If ``thresh_corr`` is reached, feature will automatically be dropped.
-
 
 
 .. _tschuprowt_filter:
@@ -521,8 +542,8 @@ where:
 .. autoclass:: AutoCarver.selectors.filters.TschuprowtFilter
     :members: filter
 
+
 .. note::
 
-    * ``tschuprowt_filter`` is the default filter for qualitative features (i.e. when ``qualitative_filters=None`` and ``qualititative_features`` is provided).
-    * If ``thresh_corr`` is reached, feature will automatically be dropped.
+    * :class:`TschuprowtFilter` is the default filter as inter-:class:`QualitativeFeature` association measure.
 

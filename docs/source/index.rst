@@ -19,6 +19,7 @@ Welcome to AutoCarver's documentation!
    :caption: Documentation
 
    discretizers
+   combinations
    carvers
    selectors
 

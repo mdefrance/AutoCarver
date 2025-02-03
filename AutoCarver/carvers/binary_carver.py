@@ -40,11 +40,9 @@ class BinaryCarver(BaseCarver):
         combinations : BinaryCombinationEvaluator, optional
             Metric to perform association measure between :class:`Features` and target.
 
-            * :class:`TschuprowtCombinations`, for :ref:`Tschuprowt`.
-            * :class:`CramervCombinations`, for :ref:`Cramerv`.
-
-            *Tip*: use :class:`TschuprowtCombinations` for more robust, or less output modalities,
-            use :class:`CramervCombinations` for more output modalities.
+            .. tip::
+                * Use :ref:`TschuprowtCombinations` for less, more robust, modalities
+                * Use :ref:`CramervCombinations` for more, less robust, modalities
         """
 
         # default binary combinations

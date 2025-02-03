@@ -120,12 +120,12 @@ class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
 
 
 class TschuprowtCombinations(BinaryCombinationEvaluator):
-    """Tschuprowt combination evaluator class."""
+    """Tschuprow's T based combination evaluation toolkit"""
 
     sort_by = "tschuprowt"
 
 
 class CramervCombinations(BinaryCombinationEvaluator):
-    """Cramerv combination evaluator class."""
+    """Cramér's V based combination evaluation toolkit"""
 
     sort_by = "cramerv"

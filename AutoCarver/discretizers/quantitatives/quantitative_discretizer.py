@@ -43,7 +43,8 @@ class QuantitativeDiscretizer(BaseDiscretizer):
             * Sets the number of quantiles in which to discretize the continuous features.
             * Sets the minimum frequency of a quantitative feature's modality.
 
-            **Tip**: set between ``0.02`` (slower, less robust) and ``0.05`` (faster, more robust)
+            .. tip::
+                Set between ``0.02`` (slower, less robust) and ``0.05`` (faster, more robust)
 
         input_dtypes : Union[str, dict[str, str]], optional
             Input data type, converted to a dict of the provided type for each feature,

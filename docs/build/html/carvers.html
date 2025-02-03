@@ -26,7 +26,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Selectors" href="selectors.html" />
-    <link rel="prev" title="Discretizers" href="discretizers.html" /> 
+    <link rel="prev" title="Combinations" href="combinations.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -61,6 +61,7 @@
 <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="discretizers.html">Discretizers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="combinations.html">Combinations</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Carvers</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#classification-tasks">Classification tasks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#regression-tasks">Regression tasks</a></li>
@@ -104,8 +105,8 @@
 <p>The core of <strong>AutoCarver</strong> resides in its <strong>Carvers</strong>, they provide the following Data Optimization steps:</p>
 <blockquote>
 <div><ol class="arabic simple">
-<li><p>Identifying the most associated combination from all ordered combinations of modalities.</p></li>
-<li><p>Testing all combinations of NaNs grouped to one of those modalities.</p></li>
+<li><p>Identifying the most associated combination from all ordered combinations of modalities</p></li>
+<li><p>Testing all combinations of <a href="#id2"><span class="problematic" id="id3">``</span></a>nan``s grouped to one of those modalities</p></li>
 </ol>
 </div></blockquote>
 <dl class="simple">
@@ -120,7 +121,7 @@
 <h2>Classification tasks<a class="headerlink" href="#classification-tasks" title="Link to this heading"></a></h2>
 <section id="binary-classification">
 <span id="binarycarver"></span><h3>Binary Classification<a class="headerlink" href="#binary-classification" title="Link to this heading"></a></h3>
-<p>Within <code class="xref py py-class docutils literal notranslate"><span class="pre">BinaryCarver</span></code>, a binary target consists of a column <span class="math notranslate nohighlight">\(y\)</span> that only contains <span class="math notranslate nohighlight">\(0\)</span> and <span class="math notranslate nohighlight">\(1\)</span> (no <code class="docutils literal notranslate"><span class="pre">str</span></code>).</p>
+<p>Within <code class="xref py py-class docutils literal notranslate"><span class="pre">BinaryCarver</span></code>, a binary target consists of a column <span class="math notranslate nohighlight">\(y\)</span> that only contains <span class="math notranslate nohighlight">\(0\)</span> and <span class="math notranslate nohighlight">\(1\)</span> (no <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>).</p>
 <p>At the basis of <code class="xref py py-class docutils literal notranslate"><span class="pre">BinaryCarver</span></code>’s’ built-in association measures lays <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.crosstab.html">pandas.crosstab</a>.
 It is computed only once per feature <span class="math notranslate nohighlight">\(x\)</span> against the binary target <span class="math notranslate nohighlight">\(y\)</span>.
 The crosstab between <span class="math notranslate nohighlight">\(y\)</span> and each possible combination of modalities of <span class="math notranslate nohighlight">\(x\)</span> is then obtained via a vectorized, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ufunc.at.html">numpy.add</a>. powered, implementation of <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.groupby.html">pandas.groupby</a>.</p>
@@ -145,22 +146,27 @@ features that maximizes association with a binary target.</p>
 <ul>
 <li><p>Features need at least one modality more frequent than <code class="xref py py-attr docutils literal notranslate"><span class="pre">min_freq</span></code></p></li>
 <li><p>Defines number of quantiles of continuous features</p></li>
-<li><p>Minimum frequency of modality of quantitative feature</p></li>
+<li><p>Minimum frequency of modality of quantitative features</p></li>
 </ul>
-<p><em>Tip</em>: should be set between <code class="docutils literal notranslate"><span class="pre">0.01</span></code> (slower, preciser, less robust) and <code class="docutils literal notranslate"><span class="pre">0.2</span></code>
-(faster, more robust)</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Set between <code class="docutils literal notranslate"><span class="pre">0.01</span></code> (slower, less robust) and <code class="docutils literal notranslate"><span class="pre">0.2</span></code> (faster, more robust)</p>
+</div>
 </p></li>
 <li><p><strong>dropna</strong> (<em>bool</em><em>, </em><em>optional</em>) – <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, try to group <code class="docutils literal notranslate"><span class="pre">nan</span></code> with other modalities.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">False</span></code>, <code class="docutils literal notranslate"><span class="pre">nan</span></code> are ignored (not grouped), by default <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
 </ul>
 </p></li>
-<li><p><strong>max_n_mod</strong> (<em>int</em><em>, </em><em>optional</em>) – <p>Maximum number of modality per feature, by default <code class="docutils literal notranslate"><span class="pre">5</span></code></p>
+<li><p><strong>max_n_mod</strong> (<em>int</em><em>, </em><em>optional</em>) – <p>Maximum number of modalities per feature, by default <code class="docutils literal notranslate"><span class="pre">5</span></code></p>
 <ul>
 <li><p>The combination with the best association will be selected.</p></li>
 <li><p>All combinations of sizes from 1 to <code class="xref py py-attr docutils literal notranslate"><span class="pre">max_n_mod</span></code> are tested out.</p></li>
 </ul>
-<p><em>Tip</em>: set between <code class="docutils literal notranslate"><span class="pre">3</span></code> (faster, more robust) and <code class="docutils literal notranslate"><span class="pre">7</span></code> (slower, less robust)</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Set between <code class="docutils literal notranslate"><span class="pre">3</span></code> (faster, more robust) and <code class="docutils literal notranslate"><span class="pre">7</span></code> (slower, less robust)</p>
+</div>
 </p></li>
 </ul>
 </dd>
@@ -181,12 +187,13 @@ features that maximizes association with a binary target.</p>
 </p></li>
 <li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>optional</em>) – Processes for multiprocessing, by default <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
 <li><p><strong>combinations</strong> (<em>BinaryCombinationEvaluator</em><em>, </em><em>optional</em>) – <p>Metric to perform association measure between <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> and target.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
 <ul>
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">TschuprowtCombinations</span></code>, for <a class="reference internal" href="selectors.html#tschuprowt"><span class="std std-ref">Tschuprow’s T</span></a>.</p></li>
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">CramervCombinations</span></code>, for <a class="reference internal" href="selectors.html#cramerv"><span class="std std-ref">Cramér’s V</span></a>.</p></li>
+<li><p>Use <a class="reference internal" href="combinations.html#tschuprowtcombinations"><span class="std std-ref">Tschuprow’s T Combinations</span></a> for less, more robust, modalities</p></li>
+<li><p>Use <a class="reference internal" href="combinations.html#cramervcombinations"><span class="std std-ref">Cramér’s V Combinations</span></a> for more, less robust, modalities</p></li>
 </ul>
-<p><em>Tip</em>: use <code class="xref py py-class docutils literal notranslate"><span class="pre">TschuprowtCombinations</span></code> for more robust, or less output modalities,
-use <code class="xref py py-class docutils literal notranslate"><span class="pre">CramervCombinations</span></code> for more output modalities.</p>
+</div>
 </p></li>
 </ul>
 </dd>
@@ -343,22 +350,27 @@ features that maximizes association with a multiclass target.</p>
 <ul>
 <li><p>Features need at least one modality more frequent than <code class="xref py py-attr docutils literal notranslate"><span class="pre">min_freq</span></code></p></li>
 <li><p>Defines number of quantiles of continuous features</p></li>
-<li><p>Minimum frequency of modality of quantitative feature</p></li>
+<li><p>Minimum frequency of modality of quantitative features</p></li>
 </ul>
-<p><em>Tip</em>: should be set between <code class="docutils literal notranslate"><span class="pre">0.01</span></code> (slower, preciser, less robust) and <code class="docutils literal notranslate"><span class="pre">0.2</span></code>
-(faster, more robust)</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Set between <code class="docutils literal notranslate"><span class="pre">0.01</span></code> (slower, less robust) and <code class="docutils literal notranslate"><span class="pre">0.2</span></code> (faster, more robust)</p>
+</div>
 </p></li>
 <li><p><strong>dropna</strong> (<em>bool</em><em>, </em><em>optional</em>) – <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, try to group <code class="docutils literal notranslate"><span class="pre">nan</span></code> with other modalities.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">False</span></code>, <code class="docutils literal notranslate"><span class="pre">nan</span></code> are ignored (not grouped), by default <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
 </ul>
 </p></li>
-<li><p><strong>max_n_mod</strong> (<em>int</em><em>, </em><em>optional</em>) – <p>Maximum number of modality per feature, by default <code class="docutils literal notranslate"><span class="pre">5</span></code></p>
+<li><p><strong>max_n_mod</strong> (<em>int</em><em>, </em><em>optional</em>) – <p>Maximum number of modalities per feature, by default <code class="docutils literal notranslate"><span class="pre">5</span></code></p>
 <ul>
 <li><p>The combination with the best association will be selected.</p></li>
 <li><p>All combinations of sizes from 1 to <code class="xref py py-attr docutils literal notranslate"><span class="pre">max_n_mod</span></code> are tested out.</p></li>
 </ul>
-<p><em>Tip</em>: set between <code class="docutils literal notranslate"><span class="pre">3</span></code> (faster, more robust) and <code class="docutils literal notranslate"><span class="pre">7</span></code> (slower, less robust)</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Set between <code class="docutils literal notranslate"><span class="pre">3</span></code> (faster, more robust) and <code class="docutils literal notranslate"><span class="pre">7</span></code> (slower, less robust)</p>
+</div>
 </p></li>
 </ul>
 </dd>
@@ -379,12 +391,13 @@ features that maximizes association with a multiclass target.</p>
 </p></li>
 <li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>optional</em>) – Processes for multiprocessing, by default <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
 <li><p><strong>combinations</strong> (<em>BinaryCombinationEvaluator</em><em>, </em><em>optional</em>) – <p>Metric to perform association measure between <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> and target.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
 <ul>
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">TschuprowtCombinations</span></code>, for <a class="reference internal" href="selectors.html#tschuprowt"><span class="std std-ref">Tschuprow’s T</span></a>.</p></li>
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">CramervCombinations</span></code>, for <a class="reference internal" href="selectors.html#cramerv"><span class="std std-ref">Cramér’s V</span></a>.</p></li>
+<li><p>Use <a class="reference internal" href="combinations.html#tschuprowtcombinations"><span class="std std-ref">Tschuprow’s T Combinations</span></a> for less, more robust, modalities</p></li>
+<li><p>Use <a class="reference internal" href="combinations.html#cramervcombinations"><span class="std std-ref">Cramér’s V Combinations</span></a> for more, less robust, modalities</p></li>
 </ul>
-<p><em>Tip</em>: use <code class="xref py py-class docutils literal notranslate"><span class="pre">TschuprowtCombinations</span></code> for more robust, or less output modalities,
-use <code class="xref py py-class docutils literal notranslate"><span class="pre">CramervCombinations</span></code> for more output modalities.</p>
+</div>
 </p></li>
 </ul>
 </dd>
@@ -546,22 +559,27 @@ features that maximizes association with a continuous target.</p>
 <ul>
 <li><p>Features need at least one modality more frequent than <code class="xref py py-attr docutils literal notranslate"><span class="pre">min_freq</span></code></p></li>
 <li><p>Defines number of quantiles of continuous features</p></li>
-<li><p>Minimum frequency of modality of quantitative feature</p></li>
+<li><p>Minimum frequency of modality of quantitative features</p></li>
 </ul>
-<p><em>Tip</em>: should be set between <code class="docutils literal notranslate"><span class="pre">0.01</span></code> (slower, preciser, less robust) and <code class="docutils literal notranslate"><span class="pre">0.2</span></code>
-(faster, more robust)</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Set between <code class="docutils literal notranslate"><span class="pre">0.01</span></code> (slower, less robust) and <code class="docutils literal notranslate"><span class="pre">0.2</span></code> (faster, more robust)</p>
+</div>
 </p></li>
 <li><p><strong>dropna</strong> (<em>bool</em><em>, </em><em>optional</em>) – <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, try to group <code class="docutils literal notranslate"><span class="pre">nan</span></code> with other modalities.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">False</span></code>, <code class="docutils literal notranslate"><span class="pre">nan</span></code> are ignored (not grouped), by default <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
 </ul>
 </p></li>
-<li><p><strong>max_n_mod</strong> (<em>int</em><em>, </em><em>optional</em>) – <p>Maximum number of modality per feature, by default <code class="docutils literal notranslate"><span class="pre">5</span></code></p>
+<li><p><strong>max_n_mod</strong> (<em>int</em><em>, </em><em>optional</em>) – <p>Maximum number of modalities per feature, by default <code class="docutils literal notranslate"><span class="pre">5</span></code></p>
 <ul>
 <li><p>The combination with the best association will be selected.</p></li>
 <li><p>All combinations of sizes from 1 to <code class="xref py py-attr docutils literal notranslate"><span class="pre">max_n_mod</span></code> are tested out.</p></li>
 </ul>
-<p><em>Tip</em>: set between <code class="docutils literal notranslate"><span class="pre">3</span></code> (faster, more robust) and <code class="docutils literal notranslate"><span class="pre">7</span></code> (slower, less robust)</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Set between <code class="docutils literal notranslate"><span class="pre">3</span></code> (faster, more robust) and <code class="docutils literal notranslate"><span class="pre">7</span></code> (slower, less robust)</p>
+</div>
 </p></li>
 </ul>
 </dd>
@@ -582,7 +600,7 @@ features that maximizes association with a continuous target.</p>
 </p></li>
 <li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>optional</em>) – Processes for multiprocessing, by default <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
 <li><p><strong>combinations</strong> (<em>ContinuousCombinationEvaluator</em><em>, </em><em>optional</em>) – <p>Metric to perform association measure between <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> and target.</p>
-<p>Currently, only <code class="xref py py-class docutils literal notranslate"><span class="pre">KruskalCombinations</span></code> is implemented, see <a class="reference internal" href="selectors.html#kruskal"><span class="std std-ref">Kruskal-Wallis’ H test statistic</span></a>.</p>
+<p>Currently, only <a class="reference internal" href="combinations.html#kruskalcombinations"><span class="std std-ref">Kruskal’s H Combinations</span></a> are implemented.</p>
 </p></li>
 </ul>
 </dd>
@@ -725,7 +743,7 @@ Needs to have columns from provided <code class="xref py py-class docutils liter
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="discretizers.html" class="btn btn-neutral float-left" title="Discretizers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="combinations.html" class="btn btn-neutral float-left" title="Combinations" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="selectors.html" class="btn btn-neutral float-right" title="Selectors" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

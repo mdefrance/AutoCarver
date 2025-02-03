@@ -9,8 +9,8 @@ from scipy.spatial.distance import correlation
 from scipy.stats import kruskal, pearsonr, spearmanr
 from statsmodels.formula.api import ols
 
-from .base_measures import AbsoluteMeasure, BaseMeasure, OutlierMeasure
 from ...utils import extend_docstring
+from .base_measures import AbsoluteMeasure, BaseMeasure, OutlierMeasure
 
 
 class ReversibleMeasure(BaseMeasure):
@@ -39,7 +39,6 @@ class KruskalMeasure(ReversibleMeasure):
 
     @extend_docstring(BaseMeasure.compute_association)
     def compute_association(self, x: Series, y: Series) -> float:
-
         # reversing if requested
         if self.reversed:
             x, y = y, x
@@ -94,8 +93,7 @@ class RMeasure(BaseMeasure):
 
 
 class PearsonMeasure(AbsoluteMeasure):
-    """Pearson's linear correlation coefficient between a Quantitative feature and a Quantitative
-    target."""
+    """Pearson's linear correlation coefficient between a Quantitative feature and target."""
 
     __name__ = "PearsonMeasure"
     is_x_quantitative = True
@@ -103,7 +101,6 @@ class PearsonMeasure(AbsoluteMeasure):
 
     @extend_docstring(BaseMeasure.compute_association)
     def compute_association(self, x: Series, y: Series) -> float:
-        """ """
         # ckecking for nans
         nans = x.isnull() | x.isna()
 
@@ -114,8 +111,7 @@ class PearsonMeasure(AbsoluteMeasure):
 
 
 class SpearmanMeasure(AbsoluteMeasure):
-    """Spearman's rank correlation coefficient between a Quantitative feature and a Quantitative
-    target."""
+    """Spearman's rank correlation coefficient between a Quantitative feature and target."""
 
     __name__ = "SpearmanMeasure"
     is_x_quantitative = True
@@ -123,7 +119,6 @@ class SpearmanMeasure(AbsoluteMeasure):
 
     @extend_docstring(BaseMeasure.compute_association)
     def compute_association(self, x: Series, y: Series) -> float:
-        """ """
         # ckecking for nans
         nans = x.isnull() | x.isna()
         # computing spearman's rho
@@ -133,7 +128,7 @@ class SpearmanMeasure(AbsoluteMeasure):
 
 
 class DistanceMeasure(AbsoluteMeasure):
-    """Distance correlation between a Quantitative feature and a Quantitative target."""
+    """Distance correlation between a Quantitative feature and target."""
 
     __name__ = "DistanceMeasure"
     is_x_quantitative = True
@@ -141,7 +136,6 @@ class DistanceMeasure(AbsoluteMeasure):
 
     @extend_docstring(BaseMeasure.compute_association)
     def compute_association(self, x: Series, y: Series) -> float:
-        """ """
         # ckecking for nans
         nans = x.isnull()
 
@@ -157,8 +151,6 @@ class ZscoreOutlierMeasure(OutlierMeasure):
 
     @extend_docstring(OutlierMeasure.compute_association)
     def compute_association(self, x: Series, y: Series = None) -> float:
-        """ """
-
         mean = x.mean()  # mean of the feature
         std = x.std()  # standard deviation of the feature
         zscore = (x - mean) / std  # zscore per observation
@@ -180,7 +172,6 @@ class IqrOutlierMeasure(OutlierMeasure):
 
     @extend_docstring(OutlierMeasure.compute_association)
     def compute_association(self, x: Series, y: Series = None) -> float:
-        """ """
         q3 = x.quantile(0.75)  # 3rd quartile
         q1 = x.quantile(0.25)  # 1st quartile
         iqr = q3 - q1  # inter quartile range

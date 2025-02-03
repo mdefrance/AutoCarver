@@ -97,6 +97,6 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
 
 
 class KruskalCombinations(ContinuousCombinationEvaluator):
-    """Kruskal-Wallis' H combination evaluator class."""
+    """Kruskal-Wallis' H based combination evaluation toolkit"""
 
     sort_by = "kruskal"

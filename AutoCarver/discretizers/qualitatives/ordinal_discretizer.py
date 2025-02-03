@@ -44,8 +44,8 @@ class OrdinalDiscretizer(BaseDiscretizer):
             * Sets the number of quantiles in which to discretize the continuous features.
             * Sets the minimum frequency of a quantitative feature's modality.
 
-            **Tip**: should be set between ``0.02`` (slower, preciser, less robust) and ``0.05``
-            (faster, more robust)
+            .. tip::
+                Set between ``0.02`` (slower, less robust) and ``0.05`` (faster, more robust)
         """
         # Initiating BaseDiscretizer
         super().__init__(ordinals, **dict(kwargs, min_freq=min_freq))

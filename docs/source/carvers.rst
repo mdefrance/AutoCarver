@@ -5,8 +5,8 @@ Carvers
 
 The core of **AutoCarver** resides in its **Carvers**, they provide the following Data Optimization steps: 
 
-   1. Identifying the most associated combination from all ordered combinations of modalities.
-   2. Testing all combinations of NaNs grouped to one of those modalities.
+   1. Identifying the most associated combination from all ordered combinations of modalities
+   2. Testing all combinations of ``nan``s grouped to one of those modalities
 
 Target-specific tools allow for association optimization per desired task:
  * :ref:`BinaryCarver` 
@@ -24,7 +24,7 @@ Classification tasks
 Binary Classification
 ^^^^^^^^^^^^^^^^^^^^^
 
-Within :class:`BinaryCarver`, a binary target consists of a column :math:`y` that only contains :math:`0` and :math:`1` (no ``str``).
+Within :class:`BinaryCarver`, a binary target consists of a column :math:`y` that only contains :math:`0` and :math:`1` (no :class:`str`).
 
 At the basis of :class:`BinaryCarver`'s' built-in association measures lays `pandas.crosstab <https://pandas.pydata.org/docs/reference/api/pandas.crosstab.html>`_.
 It is computed only once per feature :math:`x` against the binary target :math:`y`.
