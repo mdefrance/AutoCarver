@@ -86,7 +86,7 @@ where:
 
 
 .. autoclass:: AutoCarver.selectors.measures.PearsonMeasure
-    :members: compute_association, validate
+    :members: compute_association, validate, is_x_quantitative, is_y_quantitative, higher_is_better, is_absolute
 
 
 Spearman's :math:`\rho`
@@ -110,7 +110,7 @@ where:
 
 
 .. autoclass:: AutoCarver.selectors.measures.SpearmanMeasure
-    :members: compute_association, validate
+    :members: compute_association, validate, is_x_quantitative, is_y_quantitative, higher_is_better, is_absolute
 
 
 
@@ -152,7 +152,7 @@ The Distance Correlation is computed using `scipy.spatial.distance.correlation <
 
 
 .. autoclass:: AutoCarver.selectors.measures.DistanceMeasure
-    :members: compute_association, validate
+    :members: compute_association, validate, is_x_quantitative, is_y_quantitative, higher_is_better, is_absolute
 
 
 
@@ -190,7 +190,7 @@ where:
 
 
 .. autoclass:: AutoCarver.selectors.measures.KruskalMeasure
-    :members: compute_association, validate
+    :members: compute_association, validate, is_x_quantitative, is_y_qualitative, higher_is_better, is_reversible
 
 
 
@@ -238,10 +238,7 @@ where:
 
 
 .. autoclass:: AutoCarver.selectors.measures.RMeasure
-    :members: compute_association, validate
-
-
-
+    :members: compute_association, validate, is_x_quantitative, is_y_qualitative, is_y_binary, higher_is_better
 
 
 .. _OutliersMeasures:
@@ -271,7 +268,7 @@ where:
 
 
 .. autoclass:: AutoCarver.selectors.measures.ZscoreOutlierMeasure
-    :members: compute_association, validate
+    :members: compute_association, validate, is_x_quantitative, is_x_qualitative, higher_is_better
 
 
 .. _iqr:
@@ -300,7 +297,7 @@ Any observation :math:`x_i` of feature :math:`x`, can be considered an outlier i
 
 
 .. autoclass:: AutoCarver.selectors.measures.IqrOutlierMeasure
-    :members: compute_association, validate
+    :members: compute_association, validate, is_x_quantitative, is_x_qualitative, higher_is_better
 
 
 
@@ -336,7 +333,7 @@ where:
  * :math:`n_{.j}=\sum_{j=1}^{n_y}n_{ij}` is the total number of observations that take modality :math:`j` of :math:`y`
 
 .. autoclass:: AutoCarver.selectors.measures.Chi2Measure
-    :members: compute_association, validate
+    :members: compute_association, validate, is_x_qualitative, is_y_qualitative, higher_is_better
 
 
 
@@ -358,7 +355,7 @@ where:
  * :math:`n_y` is the number of modalities of :math:`y`
  
 .. autoclass:: AutoCarver.selectors.measures.CramervMeasure
-    :members: compute_association, validate
+    :members: compute_association, validate, is_x_qualitative, is_y_qualitative, higher_is_better
 
 
 
@@ -382,7 +379,7 @@ where:
  * :math:`n_y` is the number of modalities of :math:`y`
  
 .. autoclass:: AutoCarver.selectors.measures.TschuprowtMeasure
-    :members: compute_association, validate
+    :members: compute_association, validate, is_x_qualitative, is_y_qualitative, higher_is_better
 
 
 .. note::
@@ -432,7 +429,7 @@ where:
 
 
 .. autoclass:: AutoCarver.selectors.filters.PearsonFilter
-    :members: filter
+    :members: filter, is_x_quantitative, higher_is_better, is_absolute
 
 
 
@@ -459,7 +456,7 @@ where:
 
 
 .. autoclass:: AutoCarver.selectors.filters.SpearmanFilter
-    :members: filter
+    :members: filter, is_x_quantitative, higher_is_better, is_absolute
 
 
 .. note::
@@ -515,7 +512,7 @@ where:
  
 
 .. autoclass:: AutoCarver.selectors.filters.CramervFilter
-    :members: filter
+    :members: filter, is_x_qualitative, higher_is_better
 
 
 
@@ -540,7 +537,7 @@ where:
 
 
 .. autoclass:: AutoCarver.selectors.filters.TschuprowtFilter
-    :members: filter
+    :members: filter, is_x_qualitative, higher_is_better
 
 
 .. note::

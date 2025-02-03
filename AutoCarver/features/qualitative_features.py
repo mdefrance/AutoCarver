@@ -7,10 +7,11 @@ from pandas import DataFrame, Series, notna, unique
 
 from .utils.base_feature import BaseFeature
 from .utils.grouped_list import GroupedList
+from ..utils import extend_docstring
 
 
 class QualitativeFeature(BaseFeature):
-    """defines a qualitative feature"""
+    """Defines a qualitative feature"""
 
     __name__ = "Qualitative"
     is_qualitative = True
@@ -251,9 +252,17 @@ class OrdinalFeature(QualitativeFeature):
     """Defines an ordinal feature"""
 
     __name__ = "Ordinal"
+
     is_ordinal = True
 
+    @extend_docstring(BaseFeature.__init__, append=False)
     def __init__(self, name: str, values: list[str], **kwargs: dict) -> None:
+        """
+        Parameters
+        ----------
+        values : list[str]
+            Ordered list of all unique values for the feature
+        """
         super().__init__(name, **kwargs)
 
         # checking for values

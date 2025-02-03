@@ -55,6 +55,7 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="discretizers.html">Discretizers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="combinations.html">Combinations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="carvers.html">Carvers</a></li>
@@ -98,11 +99,13 @@
  | <a href="#C"><strong>C</strong></a>
  | <a href="#D"><strong>D</strong></a>
  | <a href="#F"><strong>F</strong></a>
+ | <a href="#G"><strong>G</strong></a>
  | <a href="#H"><strong>H</strong></a>
  | <a href="#I"><strong>I</strong></a>
  | <a href="#K"><strong>K</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
+ | <a href="#N"><strong>N</strong></a>
  | <a href="#O"><strong>O</strong></a>
  | <a href="#P"><strong>P</strong></a>
  | <a href="#Q"><strong>Q</strong></a>
@@ -125,6 +128,10 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="discretizers.html#AutoCarver.discretizers.CategoricalDiscretizer">CategoricalDiscretizer (class in AutoCarver.discretizers)</a>
+</li>
+      <li><a href="features.html#AutoCarver.features.CategoricalFeature">CategoricalFeature (class in AutoCarver.features)</a>
+</li>
+      <li><a href="features.html#AutoCarver.Features.categoricals">categoricals (AutoCarver.Features property)</a>
 </li>
       <li><a href="discretizers.html#AutoCarver.discretizers.ChainedDiscretizer">ChainedDiscretizer (class in AutoCarver.discretizers)</a>
 </li>
@@ -184,6 +191,8 @@
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="features.html#AutoCarver.Features">Features (class in AutoCarver)</a>
+</li>
       <li><a href="selectors.html#AutoCarver.selectors.filters.CramervFilter.filter">filter() (AutoCarver.selectors.filters.CramervFilter method)</a>
 
       <ul>
@@ -247,8 +256,70 @@
   </ul></td>
 </tr></table>
 
+<h2 id="G">G</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="features.html#AutoCarver.features.CategoricalFeature.get_summary">get_summary() (AutoCarver.features.CategoricalFeature method)</a>
+
+      <ul>
+        <li><a href="features.html#AutoCarver.features.OrdinalFeature.get_summary">(AutoCarver.features.OrdinalFeature method)</a>
+</li>
+        <li><a href="features.html#AutoCarver.features.QuantitativeFeature.get_summary">(AutoCarver.features.QuantitativeFeature method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
 <h2 id="H">H</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="features.html#AutoCarver.features.CategoricalFeature.has_default">has_default (AutoCarver.features.CategoricalFeature property)</a>
+
+      <ul>
+        <li><a href="features.html#AutoCarver.features.OrdinalFeature.has_default">(AutoCarver.features.OrdinalFeature property)</a>
+</li>
+        <li><a href="features.html#AutoCarver.features.QuantitativeFeature.has_default">(AutoCarver.features.QuantitativeFeature property)</a>
+</li>
+      </ul></li>
+      <li><a href="features.html#AutoCarver.features.CategoricalFeature.has_nan">has_nan (AutoCarver.features.CategoricalFeature property)</a>
+
+      <ul>
+        <li><a href="features.html#AutoCarver.features.OrdinalFeature.has_nan">(AutoCarver.features.OrdinalFeature property)</a>
+</li>
+        <li><a href="features.html#AutoCarver.features.QuantitativeFeature.has_nan">(AutoCarver.features.QuantitativeFeature property)</a>
+</li>
+      </ul></li>
+      <li><a href="selectors.html#AutoCarver.selectors.filters.CramervFilter.higher_is_better">higher_is_better (AutoCarver.selectors.filters.CramervFilter attribute)</a>
+
+      <ul>
+        <li><a href="selectors.html#AutoCarver.selectors.filters.PearsonFilter.higher_is_better">(AutoCarver.selectors.filters.PearsonFilter attribute)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.filters.SpearmanFilter.higher_is_better">(AutoCarver.selectors.filters.SpearmanFilter attribute)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.filters.TschuprowtFilter.higher_is_better">(AutoCarver.selectors.filters.TschuprowtFilter attribute)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.Chi2Measure.higher_is_better">(AutoCarver.selectors.measures.Chi2Measure attribute)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.CramervMeasure.higher_is_better">(AutoCarver.selectors.measures.CramervMeasure attribute)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.DistanceMeasure.higher_is_better">(AutoCarver.selectors.measures.DistanceMeasure attribute)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.IqrOutlierMeasure.higher_is_better">(AutoCarver.selectors.measures.IqrOutlierMeasure attribute)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.KruskalMeasure.higher_is_better">(AutoCarver.selectors.measures.KruskalMeasure attribute)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.PearsonMeasure.higher_is_better">(AutoCarver.selectors.measures.PearsonMeasure attribute)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.RMeasure.higher_is_better">(AutoCarver.selectors.measures.RMeasure attribute)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.SpearmanMeasure.higher_is_better">(AutoCarver.selectors.measures.SpearmanMeasure attribute)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.TschuprowtMeasure.higher_is_better">(AutoCarver.selectors.measures.TschuprowtMeasure attribute)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.ZscoreOutlierMeasure.higher_is_better">(AutoCarver.selectors.measures.ZscoreOutlierMeasure attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="carvers.html#AutoCarver.BinaryCarver.history">history (AutoCarver.BinaryCarver property)</a>
 
@@ -266,6 +337,100 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="selectors.html#AutoCarver.selectors.measures.IqrOutlierMeasure">IqrOutlierMeasure (class in AutoCarver.selectors.measures)</a>
 </li>
+      <li><a href="selectors.html#AutoCarver.selectors.filters.PearsonFilter.is_absolute">is_absolute (AutoCarver.selectors.filters.PearsonFilter attribute)</a>
+
+      <ul>
+        <li><a href="selectors.html#AutoCarver.selectors.filters.SpearmanFilter.is_absolute">(AutoCarver.selectors.filters.SpearmanFilter attribute)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.DistanceMeasure.is_absolute">(AutoCarver.selectors.measures.DistanceMeasure attribute)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.PearsonMeasure.is_absolute">(AutoCarver.selectors.measures.PearsonMeasure attribute)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.SpearmanMeasure.is_absolute">(AutoCarver.selectors.measures.SpearmanMeasure attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="features.html#AutoCarver.features.CategoricalFeature.is_categorical">is_categorical (AutoCarver.features.CategoricalFeature attribute)</a>
+
+      <ul>
+        <li><a href="features.html#AutoCarver.features.OrdinalFeature.is_categorical">(AutoCarver.features.OrdinalFeature attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="features.html#AutoCarver.features.CategoricalFeature.is_ordinal">is_ordinal (AutoCarver.features.CategoricalFeature attribute)</a>
+
+      <ul>
+        <li><a href="features.html#AutoCarver.features.OrdinalFeature.is_ordinal">(AutoCarver.features.OrdinalFeature attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="features.html#AutoCarver.features.CategoricalFeature.is_qualitative">is_qualitative (AutoCarver.features.CategoricalFeature attribute)</a>
+
+      <ul>
+        <li><a href="features.html#AutoCarver.features.OrdinalFeature.is_qualitative">(AutoCarver.features.OrdinalFeature attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="features.html#AutoCarver.features.QuantitativeFeature.is_quantitative">is_quantitative (AutoCarver.features.QuantitativeFeature attribute)</a>
+</li>
+      <li><a href="selectors.html#AutoCarver.selectors.measures.KruskalMeasure.is_reversible">is_reversible (AutoCarver.selectors.measures.KruskalMeasure attribute)</a>
+</li>
+      <li><a href="selectors.html#AutoCarver.selectors.filters.CramervFilter.is_x_qualitative">is_x_qualitative (AutoCarver.selectors.filters.CramervFilter attribute)</a>
+
+      <ul>
+        <li><a href="selectors.html#AutoCarver.selectors.filters.TschuprowtFilter.is_x_qualitative">(AutoCarver.selectors.filters.TschuprowtFilter attribute)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.Chi2Measure.is_x_qualitative">(AutoCarver.selectors.measures.Chi2Measure attribute)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.CramervMeasure.is_x_qualitative">(AutoCarver.selectors.measures.CramervMeasure attribute)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.IqrOutlierMeasure.is_x_qualitative">(AutoCarver.selectors.measures.IqrOutlierMeasure attribute)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.TschuprowtMeasure.is_x_qualitative">(AutoCarver.selectors.measures.TschuprowtMeasure attribute)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.ZscoreOutlierMeasure.is_x_qualitative">(AutoCarver.selectors.measures.ZscoreOutlierMeasure attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="selectors.html#AutoCarver.selectors.filters.PearsonFilter.is_x_quantitative">is_x_quantitative (AutoCarver.selectors.filters.PearsonFilter attribute)</a>
+
+      <ul>
+        <li><a href="selectors.html#AutoCarver.selectors.filters.SpearmanFilter.is_x_quantitative">(AutoCarver.selectors.filters.SpearmanFilter attribute)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.DistanceMeasure.is_x_quantitative">(AutoCarver.selectors.measures.DistanceMeasure attribute)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.IqrOutlierMeasure.is_x_quantitative">(AutoCarver.selectors.measures.IqrOutlierMeasure attribute)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.KruskalMeasure.is_x_quantitative">(AutoCarver.selectors.measures.KruskalMeasure attribute)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.PearsonMeasure.is_x_quantitative">(AutoCarver.selectors.measures.PearsonMeasure attribute)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.RMeasure.is_x_quantitative">(AutoCarver.selectors.measures.RMeasure attribute)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.SpearmanMeasure.is_x_quantitative">(AutoCarver.selectors.measures.SpearmanMeasure attribute)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.ZscoreOutlierMeasure.is_x_quantitative">(AutoCarver.selectors.measures.ZscoreOutlierMeasure attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="selectors.html#AutoCarver.selectors.measures.RMeasure.is_y_binary">is_y_binary (AutoCarver.selectors.measures.RMeasure attribute)</a>
+</li>
+      <li><a href="selectors.html#AutoCarver.selectors.measures.Chi2Measure.is_y_qualitative">is_y_qualitative (AutoCarver.selectors.measures.Chi2Measure attribute)</a>
+
+      <ul>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.CramervMeasure.is_y_qualitative">(AutoCarver.selectors.measures.CramervMeasure attribute)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.KruskalMeasure.is_y_qualitative">(AutoCarver.selectors.measures.KruskalMeasure attribute)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.RMeasure.is_y_qualitative">(AutoCarver.selectors.measures.RMeasure attribute)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.TschuprowtMeasure.is_y_qualitative">(AutoCarver.selectors.measures.TschuprowtMeasure attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="selectors.html#AutoCarver.selectors.measures.DistanceMeasure.is_y_quantitative">is_y_quantitative (AutoCarver.selectors.measures.DistanceMeasure attribute)</a>
+
+      <ul>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.PearsonMeasure.is_y_quantitative">(AutoCarver.selectors.measures.PearsonMeasure attribute)</a>
+</li>
+        <li><a href="selectors.html#AutoCarver.selectors.measures.SpearmanMeasure.is_y_quantitative">(AutoCarver.selectors.measures.SpearmanMeasure attribute)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -295,6 +460,8 @@
 </li>
         <li><a href="carvers.html#AutoCarver.ContinuousCarver.load">(AutoCarver.ContinuousCarver class method)</a>
 </li>
+        <li><a href="features.html#AutoCarver.Features.load">(AutoCarver.Features class method)</a>
+</li>
         <li><a href="carvers.html#AutoCarver.MulticlassCarver.load">(AutoCarver.MulticlassCarver class method)</a>
 </li>
       </ul></li>
@@ -309,10 +476,24 @@
   </ul></td>
 </tr></table>
 
+<h2 id="N">N</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="features.html#AutoCarver.Features.names">names (AutoCarver.Features property)</a>
+</li>
+  </ul></td>
+</tr></table>
+
 <h2 id="O">O</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="discretizers.html#AutoCarver.discretizers.OrdinalDiscretizer">OrdinalDiscretizer (class in AutoCarver.discretizers)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="features.html#AutoCarver.features.OrdinalFeature">OrdinalFeature (class in AutoCarver.features)</a>
+</li>
+      <li><a href="features.html#AutoCarver.Features.ordinals">ordinals (AutoCarver.Features property)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -334,9 +515,15 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="discretizers.html#AutoCarver.discretizers.QualitativeDiscretizer">QualitativeDiscretizer (class in AutoCarver.discretizers)</a>
 </li>
+      <li><a href="features.html#AutoCarver.Features.qualitatives">qualitatives (AutoCarver.Features property)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="discretizers.html#AutoCarver.discretizers.QuantitativeDiscretizer">QuantitativeDiscretizer (class in AutoCarver.discretizers)</a>
+</li>
+      <li><a href="features.html#AutoCarver.features.QuantitativeFeature">QuantitativeFeature (class in AutoCarver.features)</a>
+</li>
+      <li><a href="features.html#AutoCarver.Features.quantitatives">quantitatives (AutoCarver.Features property)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -405,6 +592,8 @@
 </li>
         <li><a href="discretizers.html#AutoCarver.discretizers.StringDiscretizer.summary">(AutoCarver.discretizers.StringDiscretizer property)</a>
 </li>
+        <li><a href="features.html#AutoCarver.Features.summary">(AutoCarver.Features property)</a>
+</li>
         <li><a href="carvers.html#AutoCarver.MulticlassCarver.summary">(AutoCarver.MulticlassCarver property)</a>
 </li>
       </ul></li>
@@ -430,6 +619,8 @@
         <li><a href="discretizers.html#AutoCarver.discretizers.QuantitativeDiscretizer.to_json">(AutoCarver.discretizers.QuantitativeDiscretizer method)</a>
 </li>
         <li><a href="discretizers.html#AutoCarver.discretizers.StringDiscretizer.to_json">(AutoCarver.discretizers.StringDiscretizer method)</a>
+</li>
+        <li><a href="features.html#AutoCarver.Features.to_json">(AutoCarver.Features method)</a>
 </li>
         <li><a href="discretizers.html#AutoCarver.discretizers.BaseDiscretizer.to_json">(in module AutoCarver.discretizers.BaseDiscretizer)</a>
 </li>
@@ -494,6 +685,10 @@
         <li><a href="selectors.html#AutoCarver.selectors.measures.ZscoreOutlierMeasure.validate">(AutoCarver.selectors.measures.ZscoreOutlierMeasure method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="features.html#AutoCarver.Features.versions">versions (AutoCarver.Features property)</a>
+</li>
   </ul></td>
 </tr></table>
 

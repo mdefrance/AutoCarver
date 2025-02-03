@@ -67,23 +67,39 @@ class BaseFeature(ABC):
     """
 
     __name__ = "Feature"
+
     is_quantitative = False
+    """Whether or not feature is quantitative"""
+
     is_qualitative = False
+    """Whether or not feature is qualitative"""
+
     is_categorical = False
+    """Whether or not feature is categorical"""
+
     is_ordinal = False
+    """Whether or not feature is ordinal"""
 
     def __init__(self, name: str, **kwargs: dict) -> None:
-        """Initializes a feature.
-
+        """
         Parameters
         ----------
         name : str
-            Name of the feature.
+            Name of the feature
+
+        Keyword Arguments
+        -----------------
+        ordinal_encoding : bool, optional
+            Whether or not to ordinal encode labels, by default ``False``
+        nan : str, optional
+            Label for missing values, by default ``"__NAN__"``
+        default : str, optional
+            Label for default values, by default ``"__OTHER__"``
         """
         self.name = name
 
         # whether or not feature has some NaNs
-        self.has_nan = kwargs.get("has_nan", False)
+        self._has_nan = kwargs.get("has_nan", False)
         self.nan = kwargs.get("nan", Constants.NAN)
 
         # whether or not feature has some default values
@@ -134,6 +150,18 @@ class BaseFeature(ABC):
     def __repr__(self) -> str:
         """Feature representation"""
         return f"{self.__name__}('{self.version}')"
+
+    @property
+    def has_nan(self) -> bool:
+        """wether or not feature has nans"""
+        return self._has_nan
+
+    @has_nan.setter
+    def has_nan(self, value: bool) -> None:
+        """sets has_nan attribute"""
+        if not isinstance(value, bool):
+            raise ValueError(f"Trying to set has_nan with type {type(value)}")
+        self._has_nan = value
 
     @property
     def statistics(self) -> DataFrame:

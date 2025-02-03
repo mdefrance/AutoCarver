@@ -16,6 +16,8 @@ from .base_measures import AbsoluteMeasure, BaseMeasure, OutlierMeasure
 class ReversibleMeasure(BaseMeasure):
     """A reversible measure"""
 
+    is_reversible = True
+
     def __init__(self, threshold: float = 0.0) -> None:
         super().__init__(threshold)
         self.reversed = False
@@ -66,7 +68,7 @@ class RMeasure(BaseMeasure):
 
     @extend_docstring(BaseMeasure.compute_association)
     def compute_association(self, x: Series, y: Series) -> float:
-        """ """
+
         # # reversing if requested
         # if self.reversed:
         #     x, y = y, x
@@ -96,6 +98,7 @@ class PearsonMeasure(AbsoluteMeasure):
     """Pearson's linear correlation coefficient between a Quantitative feature and target."""
 
     __name__ = "PearsonMeasure"
+
     is_x_quantitative = True
     is_y_quantitative = True
 

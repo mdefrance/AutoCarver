@@ -18,6 +18,7 @@ Welcome to AutoCarver's documentation!
    :maxdepth: 1
    :caption: Documentation
 
+   features
    discretizers
    combinations
    carvers

@@ -12,7 +12,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 
 from ...combinations import CombinationEvaluator
 from ...features import BaseFeature, Features
-from ...utils import get_attribute, get_bool_attribute
+from ...utils import get_attribute, get_bool_attribute, extend_docstring
 from .multiprocessing import apply_async_function
 
 
@@ -517,26 +517,14 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         # initiating BaseDiscretizer
         return cls(features=features, **discretizer_json)
 
+    @extend_docstring(Features.summary)
     @property
     def summary(self) -> DataFrame:
-        """Summary of discretization process
-
-        Returns
-        -------
-        DataFrame
-            Summary of :class:`Features`' values per modalities
-        """
         return self.features.summary
 
     @property
     def history(self) -> DataFrame:
-        """History of discretization process
-
-        Returns
-        -------
-        DataFrame
-            History of tests and :class:`Features`' association with target
-        """
+        """History of discretization process for all features"""
         return self.features.history
 
     # def update(

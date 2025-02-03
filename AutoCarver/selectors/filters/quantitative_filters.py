@@ -69,6 +69,7 @@ class QuantitativeFilter(BaseFilter):
     __name__ = "QuantitativeFilter"
 
     is_x_quantitative = True
+    is_absolute = True
 
     @extend_docstring(BaseFilter.filter)
     def filter(self, X: DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:

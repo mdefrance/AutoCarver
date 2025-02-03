@@ -60,7 +60,9 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="discretizers.html">Discretizers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="combinations.html">Combinations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="carvers.html">Carvers</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Selectors</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#classification-tasks">Classification tasks</a></li>
@@ -139,14 +141,14 @@
 <span id="classificationselector"></span><h2>Classification tasks<a class="headerlink" href="#classification-tasks" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="AutoCarver.selectors.ClassificationSelector">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.selectors.</span></span><span class="sig-name descname"><span class="pre">ClassificationSelector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_best_per_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.selectors.ClassificationSelector" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.selectors.</span></span><span class="sig-name descname"><span class="pre">ClassificationSelector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.features.features.Features"><span class="pre">Features</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_best_per_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.selectors.ClassificationSelector" title="Link to this definition"></a></dt>
 <dd><p>A pipeline of measures to perform a feature pre-selection that maximizes association
 with a qualitative target.</p>
 <p>Get your best features with <code class="docutils literal notranslate"><span class="pre">ClassificationSelector.select()</span></code>!</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>features</strong> (<em>Features</em>) – A set of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> to select from</p></li>
+<li><p><strong>features</strong> (<a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.Features"><em>Features</em></a>) – A set of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> to select from</p></li>
 <li><p><strong>n_best_per_type</strong> (<em>int</em>) – Number of quantitative and/or qualitative <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> to  select</p></li>
 </ul>
 </dd>
@@ -187,7 +189,7 @@ of <code class="xref py py-class docutils literal notranslate"><span class="pre"
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="AutoCarver.selectors.ClassificationSelector.select">
-<span class="sig-name descname"><span class="pre">select</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Features</span></span></span><a class="headerlink" href="#AutoCarver.selectors.ClassificationSelector.select" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">select</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.features.features.Features"><span class="pre">Features</span></a></span></span><a class="headerlink" href="#AutoCarver.selectors.ClassificationSelector.select" title="Link to this definition"></a></dt>
 <dd><p>Selects the <code class="xref py py-attr docutils literal notranslate"><span class="pre">n_best_per_type</span></code> <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> of <code class="docutils literal notranslate"><span class="pre">X</span></code></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -200,7 +202,7 @@ of <code class="xref py py-class docutils literal notranslate"><span class="pre"
 <dd class="field-even"><p>Selected <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code></p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Features</p>
+<dd class="field-odd"><p><a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.Features">Features</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -212,14 +214,14 @@ of <code class="xref py py-class docutils literal notranslate"><span class="pre"
 <span id="regressionselector"></span><h2>Regression tasks<a class="headerlink" href="#regression-tasks" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="AutoCarver.selectors.RegressionSelector">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.selectors.</span></span><span class="sig-name descname"><span class="pre">RegressionSelector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_best_per_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.selectors.RegressionSelector" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.selectors.</span></span><span class="sig-name descname"><span class="pre">RegressionSelector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.features.features.Features"><span class="pre">Features</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_best_per_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.selectors.RegressionSelector" title="Link to this definition"></a></dt>
 <dd><p>A pipeline of measures to perform a feature pre-selection that maximizes association
 with a quantitative target.</p>
 <p>Get your best features with <code class="docutils literal notranslate"><span class="pre">RegressionSelector.select()</span></code>!</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>features</strong> (<em>Features</em>) – A set of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> to select from</p></li>
+<li><p><strong>features</strong> (<a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.Features"><em>Features</em></a>) – A set of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> to select from</p></li>
 <li><p><strong>n_best_per_type</strong> (<em>int</em>) – Number of quantitative and/or qualitative <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> to  select</p></li>
 </ul>
 </dd>
@@ -260,7 +262,7 @@ of <code class="xref py py-class docutils literal notranslate"><span class="pre"
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="AutoCarver.selectors.RegressionSelector.select">
-<span class="sig-name descname"><span class="pre">select</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Features</span></span></span><a class="headerlink" href="#AutoCarver.selectors.RegressionSelector.select" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">select</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.features.features.Features"><span class="pre">Features</span></a></span></span><a class="headerlink" href="#AutoCarver.selectors.RegressionSelector.select" title="Link to this definition"></a></dt>
 <dd><p>Selects the <code class="xref py py-attr docutils literal notranslate"><span class="pre">n_best_per_type</span></code> <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> of <code class="docutils literal notranslate"><span class="pre">X</span></code></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -273,7 +275,7 @@ of <code class="xref py py-class docutils literal notranslate"><span class="pre"
 <dd class="field-even"><p>Selected <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code></p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Features</p>
+<dd class="field-odd"><p><a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.Features">Features</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -329,6 +331,30 @@ It is computed using the following formula:</p>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.PearsonMeasure.higher_is_better">
+<span class="sig-name descname"><span class="pre">higher_is_better</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.PearsonMeasure.higher_is_better" title="Link to this definition"></a></dt>
+<dd><p>wether higher values are better or not</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.PearsonMeasure.is_absolute">
+<span class="sig-name descname"><span class="pre">is_absolute</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.PearsonMeasure.is_absolute" title="Link to this definition"></a></dt>
+<dd><p>wether the measure needs absolute value for comparison or not</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.PearsonMeasure.is_x_quantitative">
+<span class="sig-name descname"><span class="pre">is_x_quantitative</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.PearsonMeasure.is_x_quantitative" title="Link to this definition"></a></dt>
+<dd><p>wether x is quantitative or not</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.PearsonMeasure.is_y_quantitative">
+<span class="sig-name descname"><span class="pre">is_y_quantitative</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.PearsonMeasure.is_y_quantitative" title="Link to this definition"></a></dt>
+<dd><p>wether y is quantitative or not</p>
 </dd></dl>
 
 <dl class="py method">
@@ -389,6 +415,30 @@ It is computed using the following formula:</p>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.SpearmanMeasure.higher_is_better">
+<span class="sig-name descname"><span class="pre">higher_is_better</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.SpearmanMeasure.higher_is_better" title="Link to this definition"></a></dt>
+<dd><p>wether higher values are better or not</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.SpearmanMeasure.is_absolute">
+<span class="sig-name descname"><span class="pre">is_absolute</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.SpearmanMeasure.is_absolute" title="Link to this definition"></a></dt>
+<dd><p>wether the measure needs absolute value for comparison or not</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.SpearmanMeasure.is_x_quantitative">
+<span class="sig-name descname"><span class="pre">is_x_quantitative</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.SpearmanMeasure.is_x_quantitative" title="Link to this definition"></a></dt>
+<dd><p>wether x is quantitative or not</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.SpearmanMeasure.is_y_quantitative">
+<span class="sig-name descname"><span class="pre">is_y_quantitative</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.SpearmanMeasure.is_y_quantitative" title="Link to this definition"></a></dt>
+<dd><p>wether y is quantitative or not</p>
 </dd></dl>
 
 <dl class="py method">
@@ -460,6 +510,30 @@ It is computed using the following formula:</p>
 </dl>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.DistanceMeasure.higher_is_better">
+<span class="sig-name descname"><span class="pre">higher_is_better</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.DistanceMeasure.higher_is_better" title="Link to this definition"></a></dt>
+<dd><p>wether higher values are better or not</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.DistanceMeasure.is_absolute">
+<span class="sig-name descname"><span class="pre">is_absolute</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.DistanceMeasure.is_absolute" title="Link to this definition"></a></dt>
+<dd><p>wether the measure needs absolute value for comparison or not</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.DistanceMeasure.is_x_quantitative">
+<span class="sig-name descname"><span class="pre">is_x_quantitative</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.DistanceMeasure.is_x_quantitative" title="Link to this definition"></a></dt>
+<dd><p>wether x is quantitative or not</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.DistanceMeasure.is_y_quantitative">
+<span class="sig-name descname"><span class="pre">is_y_quantitative</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.DistanceMeasure.is_y_quantitative" title="Link to this definition"></a></dt>
+<dd><p>wether y is quantitative or not</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="AutoCarver.selectors.measures.DistanceMeasure.validate">
 <span class="sig-name descname"><span class="pre">validate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#AutoCarver.selectors.measures.DistanceMeasure.validate" title="Link to this definition"></a></dt>
@@ -525,6 +599,30 @@ It is computed using the following formula:</p>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.KruskalMeasure.higher_is_better">
+<span class="sig-name descname"><span class="pre">higher_is_better</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.KruskalMeasure.higher_is_better" title="Link to this definition"></a></dt>
+<dd><p>wether higher values are better or not</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.KruskalMeasure.is_reversible">
+<span class="sig-name descname"><span class="pre">is_reversible</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.KruskalMeasure.is_reversible" title="Link to this definition"></a></dt>
+<dd><p>wether the measure’s input can be reversed depending on there type or not</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.KruskalMeasure.is_x_quantitative">
+<span class="sig-name descname"><span class="pre">is_x_quantitative</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.KruskalMeasure.is_x_quantitative" title="Link to this definition"></a></dt>
+<dd><p>wether x is quantitative or not</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.KruskalMeasure.is_y_qualitative">
+<span class="sig-name descname"><span class="pre">is_y_qualitative</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.KruskalMeasure.is_y_qualitative" title="Link to this definition"></a></dt>
+<dd><p>wether y is qualitative or not</p>
 </dd></dl>
 
 <dl class="py method">
@@ -607,6 +705,30 @@ a Quantitative feature by a Binary target.</p>
 </dl>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.RMeasure.higher_is_better">
+<span class="sig-name descname"><span class="pre">higher_is_better</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.RMeasure.higher_is_better" title="Link to this definition"></a></dt>
+<dd><p>wether higher values are better or not</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.RMeasure.is_x_quantitative">
+<span class="sig-name descname"><span class="pre">is_x_quantitative</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.RMeasure.is_x_quantitative" title="Link to this definition"></a></dt>
+<dd><p>wether x is quantitative or not</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.RMeasure.is_y_binary">
+<span class="sig-name descname"><span class="pre">is_y_binary</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.RMeasure.is_y_binary" title="Link to this definition"></a></dt>
+<dd><p>wether y is binary or not</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.RMeasure.is_y_qualitative">
+<span class="sig-name descname"><span class="pre">is_y_qualitative</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.RMeasure.is_y_qualitative" title="Link to this definition"></a></dt>
+<dd><p>wether y is qualitative or not</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="AutoCarver.selectors.measures.RMeasure.validate">
 <span class="sig-name descname"><span class="pre">validate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#AutoCarver.selectors.measures.RMeasure.validate" title="Link to this definition"></a></dt>
@@ -669,6 +791,24 @@ For a feature <span class="math notranslate nohighlight">\(x\)</span> it is comp
 </dl>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.ZscoreOutlierMeasure.higher_is_better">
+<span class="sig-name descname"><span class="pre">higher_is_better</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.ZscoreOutlierMeasure.higher_is_better" title="Link to this definition"></a></dt>
+<dd><p>wether higher values are better or not</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.ZscoreOutlierMeasure.is_x_qualitative">
+<span class="sig-name descname"><span class="pre">is_x_qualitative</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.ZscoreOutlierMeasure.is_x_qualitative" title="Link to this definition"></a></dt>
+<dd><p>wether x is qualitative or not</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.ZscoreOutlierMeasure.is_x_quantitative">
+<span class="sig-name descname"><span class="pre">is_x_quantitative</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.ZscoreOutlierMeasure.is_x_quantitative" title="Link to this definition"></a></dt>
+<dd><p>wether x is quantitative or not</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="AutoCarver.selectors.measures.ZscoreOutlierMeasure.validate">
 <span class="sig-name descname"><span class="pre">validate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#AutoCarver.selectors.measures.ZscoreOutlierMeasure.validate" title="Link to this definition"></a></dt>
@@ -729,6 +869,24 @@ For a feature <span class="math notranslate nohighlight">\(x\)</span> it is comp
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.IqrOutlierMeasure.higher_is_better">
+<span class="sig-name descname"><span class="pre">higher_is_better</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.IqrOutlierMeasure.higher_is_better" title="Link to this definition"></a></dt>
+<dd><p>wether higher values are better or not</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.IqrOutlierMeasure.is_x_qualitative">
+<span class="sig-name descname"><span class="pre">is_x_qualitative</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.IqrOutlierMeasure.is_x_qualitative" title="Link to this definition"></a></dt>
+<dd><p>wether x is qualitative or not</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.IqrOutlierMeasure.is_x_quantitative">
+<span class="sig-name descname"><span class="pre">is_x_quantitative</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.IqrOutlierMeasure.is_x_quantitative" title="Link to this definition"></a></dt>
+<dd><p>wether x is quantitative or not</p>
 </dd></dl>
 
 <dl class="py method">
@@ -800,6 +958,24 @@ Computes Chi2 statistic on the <code class="docutils literal notranslate"><span 
 </dl>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.Chi2Measure.higher_is_better">
+<span class="sig-name descname"><span class="pre">higher_is_better</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.Chi2Measure.higher_is_better" title="Link to this definition"></a></dt>
+<dd><p>wether higher values are better or not</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.Chi2Measure.is_x_qualitative">
+<span class="sig-name descname"><span class="pre">is_x_qualitative</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.Chi2Measure.is_x_qualitative" title="Link to this definition"></a></dt>
+<dd><p>wether x is qualitative or not</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.Chi2Measure.is_y_qualitative">
+<span class="sig-name descname"><span class="pre">is_y_qualitative</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.Chi2Measure.is_y_qualitative" title="Link to this definition"></a></dt>
+<dd><p>wether y is qualitative or not</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="AutoCarver.selectors.measures.Chi2Measure.validate">
 <span class="sig-name descname"><span class="pre">validate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#AutoCarver.selectors.measures.Chi2Measure.validate" title="Link to this definition"></a></dt>
@@ -859,6 +1035,24 @@ Computes Chi2 statistic on the <code class="docutils literal notranslate"><span 
 </dl>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.CramervMeasure.higher_is_better">
+<span class="sig-name descname"><span class="pre">higher_is_better</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.CramervMeasure.higher_is_better" title="Link to this definition"></a></dt>
+<dd><p>wether higher values are better or not</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.CramervMeasure.is_x_qualitative">
+<span class="sig-name descname"><span class="pre">is_x_qualitative</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.CramervMeasure.is_x_qualitative" title="Link to this definition"></a></dt>
+<dd><p>wether x is qualitative or not</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.CramervMeasure.is_y_qualitative">
+<span class="sig-name descname"><span class="pre">is_y_qualitative</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.CramervMeasure.is_y_qualitative" title="Link to this definition"></a></dt>
+<dd><p>wether y is qualitative or not</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="AutoCarver.selectors.measures.CramervMeasure.validate">
 <span class="sig-name descname"><span class="pre">validate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#AutoCarver.selectors.measures.CramervMeasure.validate" title="Link to this definition"></a></dt>
@@ -916,6 +1110,24 @@ Computes Chi2 statistic on the <code class="docutils literal notranslate"><span 
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.TschuprowtMeasure.higher_is_better">
+<span class="sig-name descname"><span class="pre">higher_is_better</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.TschuprowtMeasure.higher_is_better" title="Link to this definition"></a></dt>
+<dd><p>wether higher values are better or not</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.TschuprowtMeasure.is_x_qualitative">
+<span class="sig-name descname"><span class="pre">is_x_qualitative</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.TschuprowtMeasure.is_x_qualitative" title="Link to this definition"></a></dt>
+<dd><p>wether x is qualitative or not</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.measures.TschuprowtMeasure.is_y_qualitative">
+<span class="sig-name descname"><span class="pre">is_y_qualitative</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.measures.TschuprowtMeasure.is_y_qualitative" title="Link to this definition"></a></dt>
+<dd><p>wether y is qualitative or not</p>
 </dd></dl>
 
 <dl class="py method">
@@ -993,6 +1205,24 @@ It is computed using the following formula:</p>
 </dl>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.filters.PearsonFilter.higher_is_better">
+<span class="sig-name descname"><span class="pre">higher_is_better</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#AutoCarver.selectors.filters.PearsonFilter.higher_is_better" title="Link to this definition"></a></dt>
+<dd><p>wether higher values are better or not</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.filters.PearsonFilter.is_absolute">
+<span class="sig-name descname"><span class="pre">is_absolute</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.filters.PearsonFilter.is_absolute" title="Link to this definition"></a></dt>
+<dd><p>wether the measure needs absolute value for comparison or not</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.filters.PearsonFilter.is_x_quantitative">
+<span class="sig-name descname"><span class="pre">is_x_quantitative</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.filters.PearsonFilter.is_x_quantitative" title="Link to this definition"></a></dt>
+<dd><p>wether x is quantitative or not</p>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -1037,6 +1267,24 @@ It is computed using the following formula:</p>
 <dd class="field-odd"><p>list[BaseFeature]</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.filters.SpearmanFilter.higher_is_better">
+<span class="sig-name descname"><span class="pre">higher_is_better</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#AutoCarver.selectors.filters.SpearmanFilter.higher_is_better" title="Link to this definition"></a></dt>
+<dd><p>wether higher values are better or not</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.filters.SpearmanFilter.is_absolute">
+<span class="sig-name descname"><span class="pre">is_absolute</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.filters.SpearmanFilter.is_absolute" title="Link to this definition"></a></dt>
+<dd><p>wether the measure needs absolute value for comparison or not</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.filters.SpearmanFilter.is_x_quantitative">
+<span class="sig-name descname"><span class="pre">is_x_quantitative</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.filters.SpearmanFilter.is_x_quantitative" title="Link to this definition"></a></dt>
+<dd><p>wether x is quantitative or not</p>
 </dd></dl>
 
 </dd></dl>
@@ -1119,6 +1367,18 @@ The formula is the following:</p>
 </dl>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.filters.CramervFilter.higher_is_better">
+<span class="sig-name descname"><span class="pre">higher_is_better</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#AutoCarver.selectors.filters.CramervFilter.higher_is_better" title="Link to this definition"></a></dt>
+<dd><p>wether higher values are better or not</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.filters.CramervFilter.is_x_qualitative">
+<span class="sig-name descname"><span class="pre">is_x_qualitative</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.filters.CramervFilter.is_x_qualitative" title="Link to this definition"></a></dt>
+<dd><p>wether x is qualitative or not</p>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -1172,6 +1432,18 @@ The formula is the following:</p>
 <dd class="field-odd"><p>list[BaseFeature]</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.filters.TschuprowtFilter.higher_is_better">
+<span class="sig-name descname"><span class="pre">higher_is_better</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#AutoCarver.selectors.filters.TschuprowtFilter.higher_is_better" title="Link to this definition"></a></dt>
+<dd><p>wether higher values are better or not</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.selectors.filters.TschuprowtFilter.is_x_qualitative">
+<span class="sig-name descname"><span class="pre">is_x_qualitative</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.selectors.filters.TschuprowtFilter.is_x_qualitative" title="Link to this definition"></a></dt>
+<dd><p>wether x is qualitative or not</p>
 </dd></dl>
 
 </dd></dl>

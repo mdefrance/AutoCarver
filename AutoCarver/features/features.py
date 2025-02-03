@@ -85,7 +85,26 @@ class Features:
         ordinals: Union[list[OrdinalFeature], dict[str, list[str]]] = None,
         **kwargs,
     ) -> None:
-        """Initiates a set of features"""
+        """
+        Parameters
+        ----------
+        categoricals : list[Union[CategoricalFeature, str]], optional
+            List of categorical features or column names, by default ``None``
+        quantitatives : list[Union[QuantitativeFeature, str]], optional
+            List of quantitative features or column names, by default ``None``
+        ordinals : Union[list[OrdinalFeature], dict[str, list[str]]], optional
+            List of ordinal features or dict column names with associated value ordering,
+            by default ``None``
+
+        Keyword Arguments
+        -----------------
+        ordinal_encoding : bool, optional
+            Whether or not to ordinal encode labels, by default ``False``
+        nan : str, optional
+            Label for missing values, by default ``"__NAN__"``
+        default : str, optional
+            Label for default values, by default ``"__OTHER__"``
+        """
         # initiating ordinal values if not provided
         if ordinals is None:
             ordinals = {}
@@ -294,7 +313,13 @@ class Features:
 
     @property
     def content(self) -> dict:
-        """Returns per feature content"""
+        """Returns per feature content
+
+        Returns
+        -------
+        dict
+            per feature content
+        """
         # returning all features' content
         return {feature.version: feature.content for feature in self}
 
@@ -392,7 +417,7 @@ class Features:
 
     @property
     def summary(self) -> DataFrame:
-        """Returns summaries of features' values' content"""
+        """Summary of discretization process for all features"""
         # iterating over each feature
         summaries = []
         for feature in self:
@@ -411,7 +436,15 @@ class Features:
         return summaries.set_index(indices)
 
     def to_json(self, light_mode: bool = False) -> dict:
-        """Converts a feature to JSON format"""
+        """Serializes :class:`Features` for JSON saving
+
+        Parameters
+        ----------
+        light_mode : bool, optional
+            Whether or not to serialize in light mode (without statistics and history),
+            by default ``False``
+
+        """
         features_json = {feature.version: feature.to_json(light_mode) for feature in self}
         features_json.update({"is_fitted": self.is_fitted})
         return features_json
@@ -426,7 +459,18 @@ class Features:
 
     @classmethod
     def load(cls, features_json: dict) -> "Features":
-        """Loads a set of features"""
+        """Allows one to load a set of :class:`Features`
+
+        Parameters
+        ----------
+        features_json : dict
+            Dictionary of serialized :class:`Features`
+
+        Returns
+        -------
+        Features
+            Loaded :class:`Features`.
+        """
 
         # checking for fitted features
         is_fitted = features_json.pop("is_fitted", None)

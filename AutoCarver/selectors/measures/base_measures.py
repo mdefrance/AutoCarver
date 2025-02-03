@@ -11,21 +11,41 @@ from ...features import BaseFeature
 class BaseMeasure(ABC):
     """Base measure of association between x and y"""
 
+    __name__ = "BaseMeasure"
+
     is_x_quantitative = False
+    """ wether x is quantitative or not """
+
     is_x_qualitative = False
+    """ wether x is qualitative or not """
 
     is_y_qualitative = False
+    """ wether y is qualitative or not """
+
     is_y_quantitative = False
+    """ wether y is quantitative or not """
+
     is_y_binary = False
+    """ wether y is binary or not """
+
     is_sortable = True
+    """ wether the metric can be sorted or not """
 
     # info
     is_default = False
-    higher_is_better = True
-    correlation_with = "target"
-    # absolute_threshold = False
+    """ wether the measure is an association measure or not """
 
-    __name__ = "BaseMeasure"
+    higher_is_better = True
+    """ wether higher values are better or not """
+
+    correlation_with = "target"
+    """ info about correlation with which other feature """
+
+    is_absolute = False
+    """ wether the measure needs absolute value for comparison or not """
+
+    is_reversible = False
+    """ wether the measure's input can be reversed depending on there type or not """
 
     def __init__(self, threshold: float = 0.0) -> None:
         """
@@ -119,8 +139,7 @@ class BaseMeasure(ABC):
 class AbsoluteMeasure(BaseMeasure):
     """Absolute measure of association between x and y"""
 
-    # info
-    # absolute_threshold = False
+    is_absolute = True
 
     def validate(self) -> bool:
         """Checks if :attr:`threshold` is reached

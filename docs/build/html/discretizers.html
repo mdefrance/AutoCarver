@@ -24,7 +24,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Combinations" href="combinations.html" />
-    <link rel="prev" title="Quick Start" href="quick_start.html" /> 
+    <link rel="prev" title="Features" href="features.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -58,6 +58,7 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Discretizers</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#discretizer-a-complete-discretization-pipeline">Discretizer, a complete discretization pipeline</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#quantitative-data">Quantitative Data</a></li>
@@ -149,7 +150,7 @@
 <span id="discretizer"></span><h2>Discretizer, a complete discretization pipeline<a class="headerlink" href="#discretizer-a-complete-discretization-pipeline" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="AutoCarver.discretizers.Discretizer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.</span></span><span class="sig-name descname"><span class="pre">Discretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.Discretizer" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.</span></span><span class="sig-name descname"><span class="pre">Discretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.features.features.Features"><span class="pre">Features</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.Discretizer" title="Link to this definition"></a></dt>
 <dd><p>Automatic discretization pipeline of continuous, discrete, categorical and ordinal features.</p>
 <p>Pipeline steps: <a class="reference internal" href="#quantitativediscretizer"><span class="std std-ref">Complete pipeline for continuous and discrete features</span></a>, <a class="reference internal" href="#qualitativediscretizer"><span class="std std-ref">Complete pipeline for categorical and ordinal features</span></a>.</p>
 <p>Modalities/values of features are grouped according to there respective orders:</p>
@@ -234,15 +235,7 @@ and returns a transformed version of <cite>X</cite>.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="AutoCarver.discretizers.Discretizer.summary">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">summary</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DataFrame</span></em><a class="headerlink" href="#AutoCarver.discretizers.Discretizer.summary" title="Link to this definition"></a></dt>
-<dd><p>Summary of discretization process</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Summary of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>’ values per modalities</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>DataFrame</p>
-</dd>
-</dl>
+<dd><p>Summary of discretization process for all features</p>
 </dd></dl>
 
 <dl class="py method">
@@ -293,7 +286,7 @@ Needs to have columns from provided <code class="xref py py-class docutils liter
 <span id="quantitativediscretizer"></span><h3>Complete pipeline for continuous and discrete features<a class="headerlink" href="#complete-pipeline-for-continuous-and-discrete-features" title="Link to this heading"></a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="AutoCarver.discretizers.QuantitativeDiscretizer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.</span></span><span class="sig-name descname"><span class="pre">QuantitativeDiscretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">quantitatives</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">QuantitativeFeature</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.QuantitativeDiscretizer" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.</span></span><span class="sig-name descname"><span class="pre">QuantitativeDiscretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">quantitatives</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="features.html#AutoCarver.features.QuantitativeFeature" title="AutoCarver.features.quantitative_features.QuantitativeFeature"><span class="pre">QuantitativeFeature</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.QuantitativeDiscretizer" title="Link to this definition"></a></dt>
 <dd><p>Automatic discretization pipeline of continuous and discrete features.</p>
 <p>Pipeline steps: <a class="reference internal" href="#continuousdiscretizer"><span class="std std-ref">Continuous Discretizer</span></a>, <a class="reference internal" href="#ordinaldiscretizer"><span class="std std-ref">Ordinal Discretizer</span></a></p>
 <p>Modalities/values of features are grouped according to there respective orders:</p>
@@ -382,15 +375,7 @@ and returns a transformed version of <cite>X</cite>.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="AutoCarver.discretizers.QuantitativeDiscretizer.summary">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">summary</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DataFrame</span></em><a class="headerlink" href="#AutoCarver.discretizers.QuantitativeDiscretizer.summary" title="Link to this definition"></a></dt>
-<dd><p>Summary of discretization process</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Summary of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>’ values per modalities</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>DataFrame</p>
-</dd>
-</dl>
+<dd><p>Summary of discretization process for all features</p>
 </dd></dl>
 
 <dl class="py method">
@@ -439,7 +424,7 @@ Needs to have columns from provided <code class="xref py py-class docutils liter
 <span id="continuousdiscretizer"></span><h3>Continuous Discretizer<a class="headerlink" href="#continuous-discretizer" title="Link to this heading"></a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="AutoCarver.discretizers.ContinuousDiscretizer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.</span></span><span class="sig-name descname"><span class="pre">ContinuousDiscretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">quantitatives</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">QuantitativeFeature</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.ContinuousDiscretizer" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.</span></span><span class="sig-name descname"><span class="pre">ContinuousDiscretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">quantitatives</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="features.html#AutoCarver.features.QuantitativeFeature" title="AutoCarver.features.quantitative_features.QuantitativeFeature"><span class="pre">QuantitativeFeature</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.ContinuousDiscretizer" title="Link to this definition"></a></dt>
 <dd><p>Automatic discretizing of continuous and discrete features, building simple groups of
 quantiles of values.</p>
 <p>Quantile discretization creates a lot of modalities (for example: up to 100 modalities for
@@ -525,15 +510,7 @@ and returns a transformed version of <cite>X</cite>.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="AutoCarver.discretizers.ContinuousDiscretizer.summary">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">summary</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DataFrame</span></em><a class="headerlink" href="#AutoCarver.discretizers.ContinuousDiscretizer.summary" title="Link to this definition"></a></dt>
-<dd><p>Summary of discretization process</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Summary of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>’ values per modalities</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>DataFrame</p>
-</dd>
-</dl>
+<dd><p>Summary of discretization process for all features</p>
 </dd></dl>
 
 <dl class="py method">
@@ -676,15 +653,7 @@ and returns a transformed version of <cite>X</cite>.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="AutoCarver.discretizers.QualitativeDiscretizer.summary">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">summary</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DataFrame</span></em><a class="headerlink" href="#AutoCarver.discretizers.QualitativeDiscretizer.summary" title="Link to this definition"></a></dt>
-<dd><p>Summary of discretization process</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Summary of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>’ values per modalities</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>DataFrame</p>
-</dd>
-</dl>
+<dd><p>Summary of discretization process for all features</p>
 </dd></dl>
 
 <dl class="py method">
@@ -733,7 +702,7 @@ Needs to have columns from provided <code class="xref py py-class docutils liter
 <span id="categoricaldiscretizer"></span><h3>Categorical Discretizer<a class="headerlink" href="#categorical-discretizer" title="Link to this heading"></a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="AutoCarver.discretizers.CategoricalDiscretizer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.</span></span><span class="sig-name descname"><span class="pre">CategoricalDiscretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">categoricals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">CategoricalFeature</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.CategoricalDiscretizer" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.</span></span><span class="sig-name descname"><span class="pre">CategoricalDiscretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">categoricals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="features.html#AutoCarver.features.CategoricalFeature" title="AutoCarver.features.qualitative_features.CategoricalFeature"><span class="pre">CategoricalFeature</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.CategoricalDiscretizer" title="Link to this definition"></a></dt>
 <dd><p>Automatic discretization of categorical features, building simple groups frequent enough.</p>
 <p>Groups a qualitative features’ values less frequent than <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> into a <code class="docutils literal notranslate"><span class="pre">str_default</span></code>
 string.</p>
@@ -812,15 +781,7 @@ and returns a transformed version of <cite>X</cite>.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="AutoCarver.discretizers.CategoricalDiscretizer.summary">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">summary</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DataFrame</span></em><a class="headerlink" href="#AutoCarver.discretizers.CategoricalDiscretizer.summary" title="Link to this definition"></a></dt>
-<dd><p>Summary of discretization process</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Summary of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>’ values per modalities</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>DataFrame</p>
-</dd>
-</dl>
+<dd><p>Summary of discretization process for all features</p>
 </dd></dl>
 
 <dl class="py method">
@@ -869,7 +830,7 @@ Needs to have columns from provided <code class="xref py py-class docutils liter
 <span id="ordinaldiscretizer"></span><h3>Ordinal Discretizer<a class="headerlink" href="#ordinal-discretizer" title="Link to this heading"></a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="AutoCarver.discretizers.OrdinalDiscretizer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.</span></span><span class="sig-name descname"><span class="pre">OrdinalDiscretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ordinals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">OrdinalFeature</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.OrdinalDiscretizer" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.</span></span><span class="sig-name descname"><span class="pre">OrdinalDiscretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ordinals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="features.html#AutoCarver.features.OrdinalFeature" title="AutoCarver.features.qualitative_features.OrdinalFeature"><span class="pre">OrdinalFeature</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.OrdinalDiscretizer" title="Link to this definition"></a></dt>
 <dd><p>Automatic discretization of ordinal features, grouping less frequent modalities with the
 closest modlity in target rate or by frequency.</p>
 <p>NaNs are left untouched.</p>
@@ -949,15 +910,7 @@ and returns a transformed version of <cite>X</cite>.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="AutoCarver.discretizers.OrdinalDiscretizer.summary">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">summary</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DataFrame</span></em><a class="headerlink" href="#AutoCarver.discretizers.OrdinalDiscretizer.summary" title="Link to this definition"></a></dt>
-<dd><p>Summary of discretization process</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Summary of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>’ values per modalities</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>DataFrame</p>
-</dd>
-</dl>
+<dd><p>Summary of discretization process for all features</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1095,15 +1048,7 @@ and returns a transformed version of <cite>X</cite>.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="AutoCarver.discretizers.ChainedDiscretizer.summary">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">summary</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DataFrame</span></em><a class="headerlink" href="#AutoCarver.discretizers.ChainedDiscretizer.summary" title="Link to this definition"></a></dt>
-<dd><p>Summary of discretization process</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Summary of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>’ values per modalities</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>DataFrame</p>
-</dd>
-</dl>
+<dd><p>Summary of discretization process for all features</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1220,15 +1165,7 @@ and returns a transformed version of <cite>X</cite>.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="AutoCarver.discretizers.StringDiscretizer.summary">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">summary</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DataFrame</span></em><a class="headerlink" href="#AutoCarver.discretizers.StringDiscretizer.summary" title="Link to this definition"></a></dt>
-<dd><p>Summary of discretization process</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Summary of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>’ values per modalities</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>DataFrame</p>
-</dd>
-</dl>
+<dd><p>Summary of discretization process for all features</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1309,7 +1246,7 @@ All modalities are stored inside the <code class="xref py py-class docutils lite
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="quick_start.html" class="btn btn-neutral float-left" title="Quick Start" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="features.html" class="btn btn-neutral float-left" title="Features" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="combinations.html" class="btn btn-neutral float-right" title="Combinations" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

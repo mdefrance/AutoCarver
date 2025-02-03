@@ -13,14 +13,21 @@ class BaseFilter(ABC):
 
     __name__ = "BaseFilter"
 
-    is_measure = False
-    is_filter = True
     is_x_quantitative = False
+    """ wether x is quantitative or not """
+
     is_x_qualitative = False
-    is_default = False
+    """ wether x is qualitative or not """
 
     # info
+    is_default = False
+    """ wether the filter is an association measure or not """
+
     higher_is_better = False
+    """ wether higher values are better or not """
+
+    is_absolute = False
+    """ wether the measure needs absolute value for comparison or not """
 
     def __init__(self, threshold: float = 1.0) -> None:
         """

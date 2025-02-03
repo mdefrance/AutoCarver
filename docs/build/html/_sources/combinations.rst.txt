@@ -8,8 +8,8 @@ Combinations
 from all possible combinations with up to :attr:`max_n_mod` modalities.
 
 
-Binary targets
---------------
+Classification tasks
+--------------------
 
 .. _CramervCombinations:
 
@@ -31,8 +31,8 @@ See :ref:`Tschuprowt` for more details on the metric.
 .. autoclass:: AutoCarver.combinations.TschuprowtCombinations
     :members: save, load
 
-Continuous targets
-------------------
+Regression tasks
+----------------
 
 .. _KruskalCombinations:
 
