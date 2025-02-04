@@ -75,7 +75,6 @@
 <p class="caption" role="heading"><span class="caption-text">Examples</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="carvers_examples.html">Carvers Examples</a></li>
-<li class="toctree-l1"><a class="reference internal" href="discretizers_examples.html">Discretizers Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="selectors_examples.html">Selectors Examples</a></li>
 </ul>
 
@@ -141,14 +140,14 @@
 <span id="classificationselector"></span><h2>Classification tasks<a class="headerlink" href="#classification-tasks" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="AutoCarver.selectors.ClassificationSelector">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.selectors.</span></span><span class="sig-name descname"><span class="pre">ClassificationSelector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.features.features.Features"><span class="pre">Features</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_best_per_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.selectors.ClassificationSelector" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.selectors.</span></span><span class="sig-name descname"><span class="pre">ClassificationSelector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="features.html#AutoCarver.features.Features" title="AutoCarver.features.features.Features"><span class="pre">Features</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_best_per_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.selectors.ClassificationSelector" title="Link to this definition"></a></dt>
 <dd><p>A pipeline of measures to perform a feature pre-selection that maximizes association
 with a qualitative target.</p>
 <p>Get your best features with <code class="docutils literal notranslate"><span class="pre">ClassificationSelector.select()</span></code>!</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>features</strong> (<a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.Features"><em>Features</em></a>) – A set of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> to select from</p></li>
+<li><p><strong>features</strong> (<a class="reference internal" href="features.html#AutoCarver.features.Features" title="AutoCarver.features.Features"><em>Features</em></a>) – A set of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> to select from</p></li>
 <li><p><strong>n_best_per_type</strong> (<em>int</em>) – Number of quantitative and/or qualitative <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> to  select</p></li>
 </ul>
 </dd>
@@ -189,7 +188,7 @@ of <code class="xref py py-class docutils literal notranslate"><span class="pre"
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="AutoCarver.selectors.ClassificationSelector.select">
-<span class="sig-name descname"><span class="pre">select</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.features.features.Features"><span class="pre">Features</span></a></span></span><a class="headerlink" href="#AutoCarver.selectors.ClassificationSelector.select" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">select</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="features.html#AutoCarver.features.Features" title="AutoCarver.features.features.Features"><span class="pre">Features</span></a></span></span><a class="headerlink" href="#AutoCarver.selectors.ClassificationSelector.select" title="Link to this definition"></a></dt>
 <dd><p>Selects the <code class="xref py py-attr docutils literal notranslate"><span class="pre">n_best_per_type</span></code> <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> of <code class="docutils literal notranslate"><span class="pre">X</span></code></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -202,7 +201,7 @@ of <code class="xref py py-class docutils literal notranslate"><span class="pre"
 <dd class="field-even"><p>Selected <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code></p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.Features">Features</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="features.html#AutoCarver.features.Features" title="AutoCarver.features.Features">Features</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -214,14 +213,14 @@ of <code class="xref py py-class docutils literal notranslate"><span class="pre"
 <span id="regressionselector"></span><h2>Regression tasks<a class="headerlink" href="#regression-tasks" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="AutoCarver.selectors.RegressionSelector">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.selectors.</span></span><span class="sig-name descname"><span class="pre">RegressionSelector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.features.features.Features"><span class="pre">Features</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_best_per_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.selectors.RegressionSelector" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.selectors.</span></span><span class="sig-name descname"><span class="pre">RegressionSelector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="features.html#AutoCarver.features.Features" title="AutoCarver.features.features.Features"><span class="pre">Features</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_best_per_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.selectors.RegressionSelector" title="Link to this definition"></a></dt>
 <dd><p>A pipeline of measures to perform a feature pre-selection that maximizes association
 with a quantitative target.</p>
 <p>Get your best features with <code class="docutils literal notranslate"><span class="pre">RegressionSelector.select()</span></code>!</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>features</strong> (<a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.Features"><em>Features</em></a>) – A set of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> to select from</p></li>
+<li><p><strong>features</strong> (<a class="reference internal" href="features.html#AutoCarver.features.Features" title="AutoCarver.features.Features"><em>Features</em></a>) – A set of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> to select from</p></li>
 <li><p><strong>n_best_per_type</strong> (<em>int</em>) – Number of quantitative and/or qualitative <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> to  select</p></li>
 </ul>
 </dd>
@@ -262,7 +261,7 @@ of <code class="xref py py-class docutils literal notranslate"><span class="pre"
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="AutoCarver.selectors.RegressionSelector.select">
-<span class="sig-name descname"><span class="pre">select</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.features.features.Features"><span class="pre">Features</span></a></span></span><a class="headerlink" href="#AutoCarver.selectors.RegressionSelector.select" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">select</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="features.html#AutoCarver.features.Features" title="AutoCarver.features.features.Features"><span class="pre">Features</span></a></span></span><a class="headerlink" href="#AutoCarver.selectors.RegressionSelector.select" title="Link to this definition"></a></dt>
 <dd><p>Selects the <code class="xref py py-attr docutils literal notranslate"><span class="pre">n_best_per_type</span></code> <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> of <code class="docutils literal notranslate"><span class="pre">X</span></code></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -275,7 +274,7 @@ of <code class="xref py py-class docutils literal notranslate"><span class="pre"
 <dd class="field-even"><p>Selected <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code></p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.Features">Features</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="features.html#AutoCarver.features.Features" title="AutoCarver.features.Features">Features</a></p>
 </dd>
 </dl>
 </dd></dl>

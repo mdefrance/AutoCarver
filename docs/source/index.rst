@@ -29,6 +29,5 @@ Welcome to AutoCarver's documentation!
    :caption: Examples
 
    carvers_examples
-   discretizers_examples
    selectors_examples
 

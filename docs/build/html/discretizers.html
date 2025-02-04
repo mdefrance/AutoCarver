@@ -72,7 +72,6 @@
 <p class="caption" role="heading"><span class="caption-text">Examples</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="carvers_examples.html">Carvers Examples</a></li>
-<li class="toctree-l1"><a class="reference internal" href="discretizers_examples.html">Discretizers Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="selectors_examples.html">Selectors Examples</a></li>
 </ul>
 
@@ -148,7 +147,7 @@
 <span id="discretizer"></span><h2>Discretizer, a complete discretization pipeline<a class="headerlink" href="#discretizer-a-complete-discretization-pipeline" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="AutoCarver.discretizers.Discretizer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.</span></span><span class="sig-name descname"><span class="pre">Discretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.features.features.Features"><span class="pre">Features</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.Discretizer" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.</span></span><span class="sig-name descname"><span class="pre">Discretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="features.html#AutoCarver.features.Features" title="AutoCarver.features.features.Features"><span class="pre">Features</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.Discretizer" title="Link to this definition"></a></dt>
 <dd><p>Automatic discretization pipeline of continuous, discrete, categorical and ordinal features.</p>
 <p>Pipeline steps: <a class="reference internal" href="#quantitativediscretizer"><span class="std std-ref">Complete pipeline for continuous and discrete features</span></a>, <a class="reference internal" href="#qualitativediscretizer"><span class="std std-ref">Complete pipeline for categorical and ordinal features</span></a>.</p>
 <p>Modalities/values of features are grouped according to there respective orders:</p>
@@ -160,7 +159,7 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>features</strong> (<a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.Features"><em>Features</em></a>) – A set of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> to be processed</p></li>
+<li><p><strong>features</strong> (<a class="reference internal" href="features.html#AutoCarver.features.Features" title="AutoCarver.features.Features"><em>Features</em></a>) – A set of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> to be processed</p></li>
 <li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per modality per feature</p>
 <ul>
 <li><p>Features need at least one modality more frequent than <code class="xref py py-attr docutils literal notranslate"><span class="pre">min_freq</span></code></p></li>
@@ -936,7 +935,7 @@ than <code class="docutils literal notranslate"><span class="pre">min_freq</span
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>features</strong> (<a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.Features"><em>Features</em></a>) – A set of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> to be processed</p></li>
+<li><p><strong>features</strong> (<a class="reference internal" href="features.html#AutoCarver.features.Features" title="AutoCarver.features.Features"><em>Features</em></a>) – A set of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> to be processed</p></li>
 <li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per modality per feature</p>
 <ul>
 <li><p>Features need at least one modality more frequent than <code class="xref py py-attr docutils literal notranslate"><span class="pre">min_freq</span></code></p></li>
@@ -1056,7 +1055,7 @@ Needs to have columns from provided <code class="xref py py-class docutils liter
 <p><code class="xref py py-class docutils literal notranslate"><span class="pre">StringDiscretizer</span></code> is used as a data preparation tool to convert qualitative data to <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> type.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="AutoCarver.discretizers.StringDiscretizer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.</span></span><span class="sig-name descname"><span class="pre">StringDiscretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.features.features.Features"><span class="pre">Features</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.StringDiscretizer" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.</span></span><span class="sig-name descname"><span class="pre">StringDiscretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="features.html#AutoCarver.features.Features" title="AutoCarver.features.features.Features"><span class="pre">Features</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.StringDiscretizer" title="Link to this definition"></a></dt>
 <dd><p>Converts specified columns of a DataFrame into strings.
 First step of a Qualitative discretization pipeline.</p>
 <ul class="simple">
@@ -1065,7 +1064,7 @@ First step of a Qualitative discretization pipeline.</p>
 </ul>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>features</strong> (<a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.Features"><em>Features</em></a>) – A set of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> to be processed</p>
+<dd class="field-odd"><p><strong>features</strong> (<a class="reference internal" href="features.html#AutoCarver.features.Features" title="AutoCarver.features.Features"><em>Features</em></a>) – A set of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> to be processed</p>
 </dd>
 <dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">

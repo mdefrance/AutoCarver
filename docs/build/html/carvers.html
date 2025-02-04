@@ -73,7 +73,6 @@
 <p class="caption" role="heading"><span class="caption-text">Examples</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="carvers_examples.html">Carvers Examples</a></li>
-<li class="toctree-l1"><a class="reference internal" href="discretizers_examples.html">Discretizers Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="selectors_examples.html">Selectors Examples</a></li>
 </ul>
 
@@ -134,7 +133,7 @@ This implementation has been simplified taking into account the binary target <s
 <p>For two combinations of modalities of <span class="math notranslate nohighlight">\(x\)</span>, a higher <span class="math notranslate nohighlight">\(T\)</span> or <span class="math notranslate nohighlight">\(V\)</span> value indicates a stronger relationship with the binary target <span class="math notranslate nohighlight">\(y\)</span>.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="AutoCarver.BinaryCarver">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.</span></span><span class="sig-name descname"><span class="pre">BinaryCarver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.features.features.Features"><span class="pre">Features</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropna</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_n_mod</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.BinaryCarver" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.</span></span><span class="sig-name descname"><span class="pre">BinaryCarver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="features.html#AutoCarver.features.Features" title="AutoCarver.features.features.Features"><span class="pre">Features</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropna</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_n_mod</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.BinaryCarver" title="Link to this definition"></a></dt>
 <dd><p>Automatic carving of continuous, discrete, categorical and ordinal
 features that maximizes association with a binary target.</p>
 <p class="rubric">Examples</p>
@@ -161,15 +160,9 @@ features that maximizes association with a binary target.</p>
 </dd>
 <dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – Copying input data, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
-<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, without <code class="docutils literal notranslate"><span class="pre">IPython</span></code>: prints raw statitics</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, with <code class="docutils literal notranslate"><span class="pre">IPython</span></code>: prints HTML statistics, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
-</ul>
-</p></li>
-<li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>optional</em>) – Processes for multiprocessing, by default <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
-<li><p><strong>ordinal_encoding</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to ordinal encode <a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.Features"><code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code></a>, by default <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
-<li><p><strong>combinations</strong> (<em>BinaryCombinationEvaluator</em><em>, </em><em>optional</em>) – <p>Metric to perform association measure between <a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.Features"><code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code></a> and target.</p>
+<li><p><strong>discretizer_min_freq</strong> (<em>float</em><em>, </em><em>optional</em>) – Specific <code class="xref py py-attr docutils literal notranslate"><span class="pre">min_freq</span></code> used by discretizers, by default <code class="docutils literal notranslate"><span class="pre">None</span></code> for <code class="docutils literal notranslate"><span class="pre">min_freq/2</span></code></p></li>
+<li><p><strong>ordinal_encoding</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to ordinal encode <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>, by default <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
+<li><p><strong>combinations</strong> (<em>BinaryCombinationEvaluator</em><em>, </em><em>optional</em>) – <p>Metric to perform association measure between <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> and target.</p>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
 <ul>
@@ -189,9 +182,9 @@ If provided, X_dev set should be large enough to have the same distribution as X
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>DataFrame</em>) – Dataset to determine <a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.Features"><code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code></a>’ optimal carving.</p></li>
+<li><p><strong>X</strong> (<em>DataFrame</em>) – Dataset to determine <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>’ optimal carving.</p></li>
 <li><p><strong>y</strong> (<em>Series</em>) – Target with wich the association is maximized.</p></li>
-<li><p><strong>X_dev</strong> (<em>DataFrame</em><em>, </em><em>optional</em>) – Dataset to evaluate robustness of <a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.Features"><code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code></a>, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>X_dev</strong> (<em>DataFrame</em><em>, </em><em>optional</em>) – Dataset to evaluate robustness of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 <li><p><strong>y_dev</strong> (<em>Series</em><em>, </em><em>optional</em>) – Target associated to <code class="docutils literal notranslate"><span class="pre">X_dev</span></code>, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 </ul>
 </dd>
@@ -280,7 +273,7 @@ can be no guarantee for it to be restored.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>X</strong> (<em>DataFrame</em>) – Dataset to be carved.
-Needs to have columns from provided <a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.Features"><code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code></a>.</p></li>
+Needs to have columns from provided <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>.</p></li>
 <li><p><strong>y</strong> (<em>Series</em><em>, </em><em>optional</em>) – Target, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 </ul>
 </dd>
@@ -304,7 +297,7 @@ Needs to have columns from provided <a class="reference internal" href="features
 <p>For two combinations of modalities of a feature <span class="math notranslate nohighlight">\(x\)</span>, a higher <span class="math notranslate nohighlight">\(T\)</span> or <span class="math notranslate nohighlight">\(V\)</span> value indicates a stronger relationship with the binary target <span class="math notranslate nohighlight">\(Y\)</span>.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="AutoCarver.MulticlassCarver">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.</span></span><span class="sig-name descname"><span class="pre">MulticlassCarver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.features.features.Features"><span class="pre">Features</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropna</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_n_mod</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.MulticlassCarver" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.</span></span><span class="sig-name descname"><span class="pre">MulticlassCarver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="features.html#AutoCarver.features.Features" title="AutoCarver.features.features.Features"><span class="pre">Features</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropna</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_n_mod</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.MulticlassCarver" title="Link to this definition"></a></dt>
 <dd><p>Automatic carving of continuous, discrete, categorical and ordinal
 features that maximizes association with a multiclass target.</p>
 <p class="rubric">Examples</p>
@@ -331,15 +324,9 @@ features that maximizes association with a multiclass target.</p>
 </dd>
 <dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – Copying input data, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
-<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, without <code class="docutils literal notranslate"><span class="pre">IPython</span></code>: prints raw statitics</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, with <code class="docutils literal notranslate"><span class="pre">IPython</span></code>: prints HTML statistics, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
-</ul>
-</p></li>
-<li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>optional</em>) – Processes for multiprocessing, by default <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
-<li><p><strong>ordinal_encoding</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to ordinal encode <a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.Features"><code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code></a>, by default <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
-<li><p><strong>combinations</strong> (<em>BinaryCombinationEvaluator</em><em>, </em><em>optional</em>) – <p>Metric to perform association measure between <a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.Features"><code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code></a> and target.</p>
+<li><p><strong>discretizer_min_freq</strong> (<em>float</em><em>, </em><em>optional</em>) – Specific <code class="xref py py-attr docutils literal notranslate"><span class="pre">min_freq</span></code> used by discretizers, by default <code class="docutils literal notranslate"><span class="pre">None</span></code> for <code class="docutils literal notranslate"><span class="pre">min_freq/2</span></code></p></li>
+<li><p><strong>ordinal_encoding</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to ordinal encode <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>, by default <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
+<li><p><strong>combinations</strong> (<em>BinaryCombinationEvaluator</em><em>, </em><em>optional</em>) – <p>Metric to perform association measure between <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> and target.</p>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
 <ul>
@@ -357,11 +344,11 @@ features that maximizes association with a multiclass target.</p>
 <dd><dl>
 <dt>Finds the combination of modalities of X that provides the best association with y.</dt><dd><p>If provided, X_dev set should be large enough to have the same distribution as X.</p>
 <dl class="simple">
-<dt>X<span class="classifier">DataFrame</span></dt><dd><p>Dataset to determine <a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.Features"><code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code></a>’ optimal carving.</p>
+<dt>X<span class="classifier">DataFrame</span></dt><dd><p>Dataset to determine <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>’ optimal carving.</p>
 </dd>
 <dt>y<span class="classifier">Series</span></dt><dd><p>Target with wich the association is maximized.</p>
 </dd>
-<dt>X_dev<span class="classifier">DataFrame, optional</span></dt><dd><p>Dataset to evaluate robustness of <a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.Features"><code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code></a>, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+<dt>X_dev<span class="classifier">DataFrame, optional</span></dt><dd><p>Dataset to evaluate robustness of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 <dt>y_dev<span class="classifier">Series, optional</span></dt><dd><p>Target associated to <code class="docutils literal notranslate"><span class="pre">X_dev</span></code>, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
@@ -452,7 +439,7 @@ can be no guarantee for it to be restored.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>X</strong> (<em>DataFrame</em>) – Dataset to be carved.
-Needs to have columns from provided <a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.Features"><code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code></a>.</p></li>
+Needs to have columns from provided <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>.</p></li>
 <li><p><strong>y</strong> (<em>Series</em><em>, </em><em>optional</em>) – Target, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 </ul>
 </dd>
@@ -480,7 +467,7 @@ It is used to determine whether or not <span class="math notranslate nohighlight
 <p>For two combinations of modalities of <span class="math notranslate nohighlight">\(x\)</span>, a higher <span class="math notranslate nohighlight">\(H\)</span> value indicates that there is a greater difference between the medians of the samples.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="AutoCarver.ContinuousCarver">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.</span></span><span class="sig-name descname"><span class="pre">ContinuousCarver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.features.features.Features"><span class="pre">Features</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropna</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_n_mod</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.ContinuousCarver" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.</span></span><span class="sig-name descname"><span class="pre">ContinuousCarver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="features.html#AutoCarver.features.Features" title="AutoCarver.features.features.Features"><span class="pre">Features</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropna</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_n_mod</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.ContinuousCarver" title="Link to this definition"></a></dt>
 <dd><p>Automatic carving of continuous, discrete, categorical and ordinal
 features that maximizes association with a continuous target.</p>
 <p>For continuous targets, <a class="reference internal" href="selectors.html#kruskal"><span class="std std-ref">Kruskal-Wallis’ H test statistic</span></a> is used as association measure to sort combinations.</p>
@@ -508,15 +495,8 @@ features that maximizes association with a continuous target.</p>
 </dd>
 <dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>ordinal_encoding</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to ordinal encode <a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.Features"><code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code></a>, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
-<li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – Copying input data, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
-<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, without <code class="docutils literal notranslate"><span class="pre">IPython</span></code>: prints raw statitics</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, with <code class="docutils literal notranslate"><span class="pre">IPython</span></code>: prints HTML statistics, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
-</ul>
-</p></li>
-<li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>optional</em>) – Processes for multiprocessing, by default <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
-<li><p><strong>combinations</strong> (<em>ContinuousCombinationEvaluator</em><em>, </em><em>optional</em>) – <p>Metric to perform association measure between <a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.Features"><code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code></a> and target.</p>
+<li><p><strong>discretizer_min_freq</strong> (<em>float</em><em>, </em><em>optional</em>) – Specific <code class="xref py py-attr docutils literal notranslate"><span class="pre">min_freq</span></code> used by discretizers, by default <code class="docutils literal notranslate"><span class="pre">None</span></code> for <code class="docutils literal notranslate"><span class="pre">min_freq/2</span></code></p></li>
+<li><p><strong>combinations</strong> (<em>ContinuousCombinationEvaluator</em><em>, </em><em>optional</em>) – <p>Metric to perform association measure between <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> and target.</p>
 <p>Currently, only <a class="reference internal" href="combinations.html#kruskalcombinations"><span class="std std-ref">Kruskal’s H Combinations</span></a> are implemented.</p>
 </p></li>
 </ul>
@@ -530,9 +510,9 @@ If provided, X_dev set should be large enough to have the same distribution as X
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>DataFrame</em>) – Dataset to determine <a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.Features"><code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code></a>’ optimal carving.</p></li>
+<li><p><strong>X</strong> (<em>DataFrame</em>) – Dataset to determine <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>’ optimal carving.</p></li>
 <li><p><strong>y</strong> (<em>Series</em>) – Target with wich the association is maximized.</p></li>
-<li><p><strong>X_dev</strong> (<em>DataFrame</em><em>, </em><em>optional</em>) – Dataset to evaluate robustness of <a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.Features"><code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code></a>, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>X_dev</strong> (<em>DataFrame</em><em>, </em><em>optional</em>) – Dataset to evaluate robustness of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 <li><p><strong>y_dev</strong> (<em>Series</em><em>, </em><em>optional</em>) – Target associated to <code class="docutils literal notranslate"><span class="pre">X_dev</span></code>, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 </ul>
 </dd>
@@ -621,7 +601,7 @@ can be no guarantee for it to be restored.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>X</strong> (<em>DataFrame</em>) – Dataset to be carved.
-Needs to have columns from provided <a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.Features"><code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code></a>.</p></li>
+Needs to have columns from provided <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>.</p></li>
 <li><p><strong>y</strong> (<em>Series</em><em>, </em><em>optional</em>) – Target, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 </ul>
 </dd>
