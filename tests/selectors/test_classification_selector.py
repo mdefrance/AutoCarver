@@ -4,8 +4,8 @@ from pytest import raises
 
 from AutoCarver.features import Features
 from AutoCarver.selectors import ClassificationSelector
-from AutoCarver.selectors.filters import BaseFilter
-from AutoCarver.selectors.measures import BaseMeasure
+from AutoCarver.selectors.filters import BaseFilter, ValidFilter
+from AutoCarver.selectors.measures import BaseMeasure, ModeMeasure, NanMeasure, OutlierMeasure
 from AutoCarver.selectors.utils.base_selector import get_default_metrics, remove_default_metrics
 
 
@@ -19,9 +19,11 @@ def test_classification_selector_initiate_default(features_object: Features) -> 
         max_num_features_per_chunk=max_num_features_per_chunk,
     )
 
-    assert any(measure.__name__ == "ModeMeasure" for measure in selector.measures)
-    assert any(measure.__name__ == "NanMeasure" for measure in selector.measures)
-    assert any(measure.__name__ == "Valid" for measure in selector.filters)
+    assert any(measure.__name__ == ModeMeasure.__name__ for measure in selector.measures)
+    assert any(measure.__name__ == NanMeasure.__name__ for measure in selector.measures)
+    print(selector.filters)
+    print([m.__name__ for m in selector.filters], ValidFilter.__name__)
+    assert any(measure.__name__ == ValidFilter.__name__ for measure in selector.filters)
     assert len(remove_default_metrics(selector.measures)) >= 1
     assert len(remove_default_metrics(selector.filters)) >= 1
 
@@ -42,9 +44,14 @@ def test_classification_selector_initiate_measures(
             max_num_features_per_chunk=max_num_features_per_chunk,
             measures=default_measures,
         )
-        assert any(measure.__name__ == "ModeMeasure" for measure in selector.measures)
-        assert any(measure.__name__ == "NanMeasure" for measure in selector.measures)
-        assert len(selector.measures) == 3
+        assert any(measure.__name__ == ModeMeasure.__name__ for measure in selector.measures)
+        assert any(measure.__name__ == NanMeasure.__name__ for measure in selector.measures)
+        print("default_measures", default_measures)
+        print("selector.measures", selector.measures)
+        print([isinstance(measure, OutlierMeasure) for measure in default_measures])
+        assert len(selector.measures) == 2 + sum(
+            not isinstance(measure, (NanMeasure, ModeMeasure)) for measure in default_measures
+        )
 
     # adding qualitative target measures
     classification_measures = [
@@ -59,8 +66,8 @@ def test_classification_selector_initiate_measures(
             max_num_features_per_chunk=max_num_features_per_chunk,
             measures=classification_measures,
         )
-        assert any(measure.__name__ == "ModeMeasure" for measure in selector.measures)
-        assert any(measure.__name__ == "NanMeasure" for measure in selector.measures)
+        assert any(measure.__name__ == ModeMeasure.__name__ for measure in selector.measures)
+        assert any(measure.__name__ == NanMeasure.__name__ for measure in selector.measures)
         assert len(selector.measures) == len(classification_measures) + 2
 
     # checking error for quantitative target measures
@@ -96,10 +103,16 @@ def test_classification_selector_initiate_filters(
             max_num_features_per_chunk=max_num_features_per_chunk,
             filters=default_filters,
         )
-        assert any(filter_.__name__ == "Valid" for filter_ in selector.filters)
+        assert any(filter_.__name__ == ValidFilter.__name__ for filter_ in selector.filters)
         assert (
             len(selector.filters)
-            == len([filter_ for filter_ in default_filters if filter_.__name__ not in ["Valid"]])
+            == len(
+                [
+                    filter_
+                    for filter_ in default_filters
+                    if filter_.__name__ not in [ValidFilter.__name__]
+                ]
+            )
             + 1
         )
 
@@ -112,5 +125,5 @@ def test_classification_selector_initiate_filters(
             max_num_features_per_chunk=max_num_features_per_chunk,
             filters=filters,
         )
-        assert any(filter_.__name__ == "Valid" for filter_ in selector.filters)
+        assert any(filter_.__name__ == ValidFilter.__name__ for filter_ in selector.filters)
         assert len(selector.filters) == len(filters) + 1

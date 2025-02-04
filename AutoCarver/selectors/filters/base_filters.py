@@ -86,7 +86,7 @@ class BaseFilter(ABC):
 class ValidFilter(BaseFilter):
     """Valid filter class."""
 
-    __name__ = "Valid"
+    __name__ = "ValidFilter"
     is_default = True
     is_x_quantitative = True
     is_x_qualitative = True

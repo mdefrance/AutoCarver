@@ -351,7 +351,7 @@ def test_fit_without_best_combination(evaluator: CombinationEvaluator):
     assert len(features) == 0
 
 
-def test_binary_carver_fit_transform_with_small_data(evaluator: CombinationEvaluator):
+def test_binary_carver_fit_transform_with_small_data_not_ordinal(evaluator: CombinationEvaluator):
     """Test BinaryCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
@@ -359,7 +359,12 @@ def test_binary_carver_fit_transform_with_small_data(evaluator: CombinationEvalu
         quantitatives=["feature3"],
     )
     carver = BinaryCarver(
-        min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False
+        min_freq=0.1,
+        features=features,
+        dropna=True,
+        ordinal_encoding=False,
+        combinations=evaluator,
+        copy=False,
     )
     idx = ["a", "b", "c", "d"]
     X = DataFrame(
@@ -402,7 +407,7 @@ def test_binary_carver_fit_transform_with_small_data(evaluator: CombinationEvalu
     assert X_transformed.equals(expected)
 
 
-def test_binary_carver_fit_transform_with_large_data(evaluator: CombinationEvaluator):
+def test_binary_carver_fit_transform_with_small_data_ordinal(evaluator: CombinationEvaluator):
     """Test BinaryCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
@@ -411,6 +416,62 @@ def test_binary_carver_fit_transform_with_large_data(evaluator: CombinationEvalu
     )
     carver = BinaryCarver(
         min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False
+    )
+    idx = ["a", "b", "c", "d"]
+    X = DataFrame(
+        {
+            "feature1": ["A", "B", "A", "C"],
+            "feature2": ["low", "medium", "high", "high"],
+            "feature3": [1, 2, 3, float("nan")],
+        },
+        index=idx,
+    )
+    y = Series([0, 1, 0, 1], index=idx)
+    X_transformed = carver.fit_transform(X, y)
+
+    print(carver.features("feature1").content)
+    print(X_transformed)
+    expected = DataFrame(
+        {
+            "feature1": [0, 1, 0, 1],
+            "feature2": [0, 1, 2, 2],
+            "feature3": [0, 1, 1, 2],
+        },
+        index=idx,
+    )
+    assert isinstance(X_transformed, DataFrame)
+    assert all(X_transformed.index == expected.index)
+    assert all(X_transformed.index == X.index)
+    assert all(X_transformed.columns == expected.columns)
+    assert all(X.columns == expected.columns)
+    print(
+        "X values",
+        X.values,
+        "\n\nX transfor",
+        X_transformed.values,
+        "\n",
+        (X.values == expected.values),
+        "\n",
+        (X_transformed.values == expected.values),
+    )
+    assert X.equals(expected)
+    assert X_transformed.equals(expected)
+
+
+def test_binary_carver_fit_transform_with_large_data(evaluator: CombinationEvaluator):
+    """Test BinaryCarver fit_transform method."""
+    features = Features(
+        categoricals=["feature1"],
+        ordinals={"feature2": ["low", "medium", "high"]},
+        quantitatives=["feature3"],
+    )
+    carver = BinaryCarver(
+        min_freq=0.1,
+        features=features,
+        dropna=True,
+        combinations=evaluator,
+        copy=False,
+        ordinal_encoding=False,
     )
     idx = [
         "a",
@@ -567,7 +628,12 @@ def test_binary_carver_fit_transform_with_target_only_nan(evaluator: Combination
         quantitatives=["feature3"],
     )
     carver = BinaryCarver(
-        min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False
+        min_freq=0.1,
+        features=features,
+        dropna=True,
+        combinations=evaluator,
+        copy=False,
+        ordinal_encoding=False,
     )
     idx = ["a", "b", "c", "d"]
     X = DataFrame(
@@ -905,10 +971,10 @@ def test_binary_carver(
     loaded_carver = BinaryCarver.load(str(carver_file))
 
     # checking that reloading worked exactly the same
-    print("\n\ninput carver", auto_carver.summary())
-    print("\n\nLoaded carver", loaded_carver.summary())
+    print("\n\ninput carver", auto_carver.summary)
+    print("\n\nLoaded carver", loaded_carver.summary)
     assert all(
-        loaded_carver.summary() == auto_carver.summary()
+        loaded_carver.summary == auto_carver.summary
     ), "Non-identical summaries when loading from JSON"
     loaded_x_train = loaded_carver.transform(raw_x_train)
     assert all(

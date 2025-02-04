@@ -138,7 +138,9 @@ def test_multiclass_carver_prepare_data(evaluator: CombinationEvaluator):
         carver._prepare_data(samples)
 
 
-def test_multiclass_carver_fit_transform_with_small_data(evaluator: CombinationEvaluator):
+def test_multiclass_carver_fit_transform_with_small_data_not_ordinal(
+    evaluator: CombinationEvaluator,
+):
     """Test MulticlassCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
@@ -146,7 +148,12 @@ def test_multiclass_carver_fit_transform_with_small_data(evaluator: CombinationE
         quantitatives=["feature3"],
     )
     carver = MulticlassCarver(
-        min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False
+        min_freq=0.1,
+        features=features,
+        dropna=True,
+        combinations=evaluator,
+        copy=False,
+        ordinal_encoding=False,
     )
     idx = ["a", "b", "c", "d"]
     X = DataFrame(
@@ -197,7 +204,7 @@ def test_multiclass_carver_fit_transform_with_small_data(evaluator: CombinationE
     assert X_transformed.equals(expected)
 
 
-def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationEvaluator):
+def test_multiclass_carver_fit_transform_with_small_data_ordinal(evaluator: CombinationEvaluator):
     """Test MulticlassCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
@@ -206,6 +213,65 @@ def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationE
     )
     carver = MulticlassCarver(
         min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False
+    )
+    idx = ["a", "b", "c", "d"]
+    X = DataFrame(
+        {
+            "feature1": ["A", "B", "A", "C"],
+            "feature2": ["low", "medium", "high", "high"],
+            "feature3": [1, 2, 3, float("nan")],
+        },
+        index=idx,
+    )
+    y = Series([0, 1, 2, 1], index=idx)
+    X_transformed = carver.fit_transform(X, y)
+
+    print(X_transformed)
+    expected = DataFrame(
+        {
+            "feature1": ["A", "B", "A", "C"],
+            "feature2": ["low", "medium", "high", "high"],
+            "feature3": [1, 2, 3, float("nan")],
+            "feature1__y=1": [0, 1, 0, 1],
+            "feature1__y=2": [1, 0, 1, 1],
+            "feature2__y=1": [0, 1, 2, 2],
+            "feature2__y=2": [0, 1, 1, 1],
+            "feature3__y=1": [0, 1, 1, 2],
+            "feature3__y=2": [0, 1, 2, 0],
+        },
+        index=idx,
+    )
+    print(X_transformed.columns)
+    assert isinstance(X_transformed, DataFrame)
+    assert all(X_transformed.index == expected.index)
+    assert all(X_transformed.index == X.index)
+    assert all(X_transformed.columns == expected.columns)
+    print(
+        "X values\n",
+        X.values,
+        "\n\nX transfor\n",
+        X_transformed.values,
+        "\n",
+        "\n",
+        (X_transformed.values == expected.values),
+    )
+    assert X_transformed.equals(expected)
+
+
+def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationEvaluator):
+    """Test MulticlassCarver fit_transform method."""
+    features = Features(
+        categoricals=["feature1"],
+        ordinals={"feature2": ["low", "medium", "high"]},
+        quantitatives=["feature3"],
+    )
+    carver = MulticlassCarver(
+        min_freq=0.1,
+        features=features,
+        dropna=True,
+        combinations=evaluator,
+        copy=False,
+        ordinal_encoding=False,
     )
     idx = [
         "a",
@@ -505,7 +571,12 @@ def test_multiclass_carver_fit_transform_with_target_only_nan(evaluator: Combina
         quantitatives=["feature3"],
     )
     carver = MulticlassCarver(
-        min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False
+        min_freq=0.1,
+        features=features,
+        dropna=True,
+        combinations=evaluator,
+        copy=False,
+        ordinal_encoding=False,
     )
     idx = ["a", "b", "c", "d"]
     X = DataFrame(
@@ -556,7 +627,12 @@ def test_multiclass_carver_fit_transform_with_wrong_dev(evaluator: CombinationEv
         quantitatives=["feature3"],
     )
     carver = MulticlassCarver(
-        min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False
+        min_freq=0.1,
+        features=features,
+        dropna=True,
+        combinations=evaluator,
+        copy=False,
+        ordinal_encoding=False,
     )
     idx = ["a", "b", "c", "d"]
     X = DataFrame(
@@ -834,7 +910,7 @@ def test_multiclass_carver(
 
     # checking that reloading worked exactly the same
     assert all(
-        loaded_carver.summary() == auto_carver.summary()
+        loaded_carver.summary == auto_carver.summary
     ), "Non-identical summaries when loading from JSON"
     assert all(
         x_discretized[feature_versions]
