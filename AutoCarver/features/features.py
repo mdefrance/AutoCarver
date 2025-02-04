@@ -88,20 +88,31 @@ class Features:
         """
         Parameters
         ----------
+
         categoricals : list[Union[CategoricalFeature, str]], optional
             List of categorical features or column names, by default ``None``
+
         quantitatives : list[Union[QuantitativeFeature, str]], optional
             List of quantitative features or column names, by default ``None``
+
         ordinals : Union[list[OrdinalFeature], dict[str, list[str]]], optional
             List of ordinal features or dict column names with associated value ordering,
             by default ``None``
 
+
+        .. warning::
+            At least one of categoricals, ordinals or quantitatives should be provided.
+
+
         Keyword Arguments
         -----------------
+
         ordinal_encoding : bool, optional
             Whether or not to ordinal encode labels, by default ``False``
+
         nan : str, optional
             Label for missing values, by default ``"__NAN__"``
+
         default : str, optional
             Label for default values, by default ``"__OTHER__"``
         """

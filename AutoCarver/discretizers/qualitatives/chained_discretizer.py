@@ -32,28 +32,10 @@ class ChainedDiscretizer(BaseDiscretizer):
         """
         Parameters
         ----------
-        qualitative_features : list[str]
-            List of column names of qualitative features (non-ordinal) to be discretized
 
         chained_orders : list[GroupedList]
             A list of interlocked higher level groups for each modalities of each ordinal feature.
             Values of ``chained_orders[0]`` have to be grouped in ``chained_order[1]`` etc.
-
-        min_freq : float
-            Minimum frequency per grouped modalities.
-
-            * Features whose most frequent modality is < than ``min_freq`` will not be discretized.
-            * Sets the number of quantiles in which to discretize the continuous features.
-            * Sets the minimum frequency of a quantitative feature's modality.
-
-            .. tip::
-                Set between ``0.02`` (slower, less robust) and ``0.05`` (faster, more robust)
-
-        unknown_handling : str, optional
-            Whether or not to remove unknown values, by default ``'raise'``.
-
-            * ``'raise'``, unknown values raise an ``AssertionError``.
-            * ``'drop'``, unknown values are grouped with ``str_nan``.
         """
         # not dropping nans whatsoever
         kwargs = dict(kwargs, dropna=False)
@@ -273,7 +255,7 @@ def check_frequencies(features: Features, X: DataFrame, min_freq: float, name: s
         raise ValueError(error_msg)
 
 
-def ensure_qualitative_dtypes(features: Features, X: DataFrame, **kwargs: dict) -> DataFrame:
+def ensure_qualitative_dtypes(features: Features, X: DataFrame, **kwargs) -> DataFrame:
     """Checks features' data types and converts int/float to str"""
 
     # getting per feature data types

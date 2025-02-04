@@ -117,7 +117,7 @@
 <section id="Installation">
 <h2>Installation<a class="headerlink" href="#Installation" title="Link to this heading"></a></h2>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># %pip install AutoCarver[jupyter]</span>
@@ -131,7 +131,7 @@
 <p>The Titanic dataset is a well-known and frequently used dataset in the field of machine learning and data science. It provides information about the passengers on board the Titanic, the famous ship that sank on its maiden voyage in 1912. The dataset is often used for predictive modeling, classification, and regression tasks.</p>
 <p>The dataset includes various features such as passengers’ names, ages, genders, ticket classes, cabin information, and whether they survived or not. The primary goal when working with the Titanic dataset is often to build predictive models that can infer whether a passenger survived or perished based on their individual characteristics (binary classification).</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
@@ -148,7 +148,7 @@
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -244,7 +244,7 @@
 <section id="Target-type-and-Carver-selection">
 <h2>Target type and Carver selection<a class="headerlink" href="#Target-type-and-Carver-selection" title="Link to this heading"></a></h2>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">target</span> <span class="o">=</span> <span class="s2">&quot;Survived&quot;</span>
@@ -254,7 +254,7 @@
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -270,7 +270,7 @@ Name: count, dtype: int64
 <section id="Data-Sampling">
 <h2>Data Sampling<a class="headerlink" href="#Data-Sampling" title="Link to this heading"></a></h2>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_test_split</span>
@@ -284,7 +284,7 @@ Name: count, dtype: int64
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -296,7 +296,7 @@ Name: count, dtype: int64
 <section id="Setting-up-Features-to-Carver">
 <h2>Setting up Features to Carver<a class="headerlink" href="#Setting-up-Features-to-Carver" title="Link to this heading"></a></h2>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">train_set</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
@@ -304,7 +304,7 @@ Name: count, dtype: int64
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -397,7 +397,7 @@ Name: count, dtype: int64
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># column data types</span>
@@ -406,7 +406,7 @@ Name: count, dtype: int64
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -423,7 +423,7 @@ dtype: object
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># values taken by Parents/Children Aboard</span>
@@ -432,7 +432,7 @@ dtype: object
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -449,7 +449,7 @@ Name: count, dtype: int64
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># values taken by Pclass</span>
@@ -458,7 +458,7 @@ Name: count, dtype: int64
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -474,7 +474,7 @@ Name: count, dtype: int64
 <p><code class="docutils literal notranslate"><span class="pre">&quot;Sex&quot;</span></code> is the only quantitative categorical feature, it’s added to the list of <code class="docutils literal notranslate"><span class="pre">qualitative_features</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">&quot;Fare&quot;</span></code> is the only quantitative continuous features, whilst <code class="docutils literal notranslate"><span class="pre">&quot;Age&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Siblings/Spouses</span> <span class="pre">Aboard&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;Parents/Children</span> <span class="pre">Aboard&quot;</span></code> can be considered as quantitative discrete features. Those four features will be added to the list of <code class="docutils literal notranslate"><span class="pre">quantitative_features</span></code>.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">AutoCarver</span><span class="w"> </span><span class="kn">import</span> <span class="n">Features</span>
@@ -499,7 +499,7 @@ C:\Users\defra\Desktop\git\PROJECTS\AutoCarver\AutoCarver\combinations\utils\com
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -521,7 +521,7 @@ C:\Users\defra\Desktop\git\PROJECTS\AutoCarver\AutoCarver\combinations\utils\com
 <li><p>For qualitative features, to define the threshold under which a modality is grouped to either a default value or its closest modality.</p></li>
 </ul>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">min_freq</span> <span class="o">=</span> <span class="mf">0.05</span>
@@ -534,7 +534,7 @@ C:\Users\defra\Desktop\git\PROJECTS\AutoCarver\AutoCarver\combinations\utils\com
 <h3>Optional: Desired number of modalities<a class="headerlink" href="#Optional:-Desired-number-of-modalities" title="Link to this heading"></a></h3>
 <p>The attribute <code class="docutils literal notranslate"><span class="pre">max_n_mod</span></code> allows one to choose the maximum number of modalities per carved feature. It is used by <strong>Carvers</strong> has the upper limit of number of modalities per consecutive combination of modalities.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">max_n_mod</span> <span class="o">=</span> <span class="mi">5</span>
@@ -547,7 +547,7 @@ C:\Users\defra\Desktop\git\PROJECTS\AutoCarver\AutoCarver\combinations\utils\com
 <h3>Optional: Grouping NaNs<a class="headerlink" href="#Optional:-Grouping-NaNs" title="Link to this heading"></a></h3>
 <p>The attribute <code class="docutils literal notranslate"><span class="pre">dropna</span></code> allows one to choose whether or not <code class="docutils literal notranslate"><span class="pre">nan</span></code> should be grouped with another modality. If set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, <strong>Carvers</strong> will first find the most suitable combination of non-<code class="docutils literal notranslate"><span class="pre">nan</span></code> values, and then test out all possible combinations with <code class="docutils literal notranslate"><span class="pre">nan</span></code>.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dropna</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># anyway, there are no nan in this dataset</span>
@@ -591,7 +591,7 @@ C:\Users\defra\Desktop\git\PROJECTS\AutoCarver\AutoCarver\combinations\utils\com
 </li>
 </ul>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">AutoCarver</span><span class="w"> </span><span class="kn">import</span> <span class="n">BinaryCarver</span>
@@ -639,63 +639,63 @@ C:\Users\defra\Desktop\git\PROJECTS\AutoCarver\AutoCarver\combinations\utils\com
 </div>
 <div class="output_area rendered_html docutils container">
 <style type="text/css">
-#T_cba33_row0_col0, #T_cba33_row1_col1 {
+#T_50a88_row0_col0, #T_50a88_row1_col1 {
   background-color: #3b4cc0;
   color: #f1f1f1;
 }
-#T_cba33_row0_col1, #T_cba33_row1_col0 {
+#T_50a88_row0_col1, #T_50a88_row1_col0 {
   background-color: #b40426;
   color: #f1f1f1;
 }
 </style>
-<table id="T_cba33" style='display:inline'>
+<table id="T_50a88" style='display:inline'>
   <caption>X distribution</caption>
   <thead>
     <tr>
       <th class="blank level0" >&nbsp;</th>
-      <th id="T_cba33_level0_col0" class="col_heading level0 col0" >target_rate</th>
-      <th id="T_cba33_level0_col1" class="col_heading level0 col1" >frequency</th>
+      <th id="T_50a88_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_50a88_level0_col1" class="col_heading level0 col1" >frequency</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th id="T_cba33_level0_row0" class="row_heading level0 row0" >male</th>
-      <td id="T_cba33_row0_col0" class="data row0 col0" >0.1878</td>
-      <td id="T_cba33_row0_col1" class="data row0 col1" >0.6364</td>
+      <th id="T_50a88_level0_row0" class="row_heading level0 row0" >male</th>
+      <td id="T_50a88_row0_col0" class="data row0 col0" >0.1878</td>
+      <td id="T_50a88_row0_col1" class="data row0 col1" >0.6364</td>
     </tr>
     <tr>
-      <th id="T_cba33_level0_row1" class="row_heading level0 row1" >female</th>
-      <td id="T_cba33_row1_col0" class="data row1 col0" >0.7315</td>
-      <td id="T_cba33_row1_col1" class="data row1 col1" >0.3636</td>
+      <th id="T_50a88_level0_row1" class="row_heading level0 row1" >female</th>
+      <td id="T_50a88_row1_col0" class="data row1 col0" >0.7315</td>
+      <td id="T_50a88_row1_col1" class="data row1 col1" >0.3636</td>
     </tr>
   </tbody>
 </table>
           <style type="text/css">
-#T_da5f0_row0_col0, #T_da5f0_row1_col1 {
+#T_e8c9d_row0_col0, #T_e8c9d_row1_col1 {
   background-color: #3b4cc0;
   color: #f1f1f1;
 }
-#T_da5f0_row0_col1, #T_da5f0_row1_col0 {
+#T_e8c9d_row0_col1, #T_e8c9d_row1_col0 {
   background-color: #b40426;
   color: #f1f1f1;
 }
 </style>
-<table id="T_da5f0" style='display:inline'>
+<table id="T_e8c9d" style='display:inline'>
   <caption>X_dev distribution</caption>
   <thead>
     <tr>
-      <th id="T_da5f0_level0_col0" class="col_heading level0 col0" >target_rate</th>
-      <th id="T_da5f0_level0_col1" class="col_heading level0 col1" >frequency</th>
+      <th id="T_e8c9d_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_e8c9d_level0_col1" class="col_heading level0 col1" >frequency</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td id="T_da5f0_row0_col0" class="data row0 col0" >0.1949</td>
-      <td id="T_da5f0_row0_col1" class="data row0 col1" >0.6655</td>
+      <td id="T_e8c9d_row0_col0" class="data row0 col0" >0.1949</td>
+      <td id="T_e8c9d_row0_col1" class="data row0 col1" >0.6655</td>
     </tr>
     <tr>
-      <td id="T_da5f0_row1_col0" class="data row1 col0" >0.7653</td>
-      <td id="T_da5f0_row1_col1" class="data row1 col1" >0.3345</td>
+      <td id="T_e8c9d_row1_col0" class="data row1 col0" >0.7653</td>
+      <td id="T_e8c9d_row1_col1" class="data row1 col1" >0.3345</td>
     </tr>
   </tbody>
 </table></div>
@@ -733,63 +733,63 @@ Testing robustness    :   0%|          | 0/1 [00:00&lt;?, ?it/s]
 </div>
 <div class="output_area rendered_html docutils container">
 <style type="text/css">
-#T_eab00_row0_col0, #T_eab00_row1_col1 {
+#T_a8ae8_row0_col0, #T_a8ae8_row1_col1 {
   background-color: #3b4cc0;
   color: #f1f1f1;
 }
-#T_eab00_row0_col1, #T_eab00_row1_col0 {
+#T_a8ae8_row0_col1, #T_a8ae8_row1_col0 {
   background-color: #b40426;
   color: #f1f1f1;
 }
 </style>
-<table id="T_eab00" style='display:inline'>
+<table id="T_a8ae8" style='display:inline'>
   <caption>X distribution</caption>
   <thead>
     <tr>
       <th class="blank level0" >&nbsp;</th>
-      <th id="T_eab00_level0_col0" class="col_heading level0 col0" >target_rate</th>
-      <th id="T_eab00_level0_col1" class="col_heading level0 col1" >frequency</th>
+      <th id="T_a8ae8_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_a8ae8_level0_col1" class="col_heading level0 col1" >frequency</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th id="T_eab00_level0_row0" class="row_heading level0 row0" >male</th>
-      <td id="T_eab00_row0_col0" class="data row0 col0" >0.1878</td>
-      <td id="T_eab00_row0_col1" class="data row0 col1" >0.6364</td>
+      <th id="T_a8ae8_level0_row0" class="row_heading level0 row0" >male</th>
+      <td id="T_a8ae8_row0_col0" class="data row0 col0" >0.1878</td>
+      <td id="T_a8ae8_row0_col1" class="data row0 col1" >0.6364</td>
     </tr>
     <tr>
-      <th id="T_eab00_level0_row1" class="row_heading level0 row1" >female</th>
-      <td id="T_eab00_row1_col0" class="data row1 col0" >0.7315</td>
-      <td id="T_eab00_row1_col1" class="data row1 col1" >0.3636</td>
+      <th id="T_a8ae8_level0_row1" class="row_heading level0 row1" >female</th>
+      <td id="T_a8ae8_row1_col0" class="data row1 col0" >0.7315</td>
+      <td id="T_a8ae8_row1_col1" class="data row1 col1" >0.3636</td>
     </tr>
   </tbody>
 </table>
           <style type="text/css">
-#T_42688_row0_col0, #T_42688_row1_col1 {
+#T_7bf0a_row0_col0, #T_7bf0a_row1_col1 {
   background-color: #3b4cc0;
   color: #f1f1f1;
 }
-#T_42688_row0_col1, #T_42688_row1_col0 {
+#T_7bf0a_row0_col1, #T_7bf0a_row1_col0 {
   background-color: #b40426;
   color: #f1f1f1;
 }
 </style>
-<table id="T_42688" style='display:inline'>
+<table id="T_7bf0a" style='display:inline'>
   <caption>X_dev distribution</caption>
   <thead>
     <tr>
-      <th id="T_42688_level0_col0" class="col_heading level0 col0" >target_rate</th>
-      <th id="T_42688_level0_col1" class="col_heading level0 col1" >frequency</th>
+      <th id="T_7bf0a_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_7bf0a_level0_col1" class="col_heading level0 col1" >frequency</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td id="T_42688_row0_col0" class="data row0 col0" >0.1949</td>
-      <td id="T_42688_row0_col1" class="data row0 col1" >0.6655</td>
+      <td id="T_7bf0a_row0_col0" class="data row0 col0" >0.1949</td>
+      <td id="T_7bf0a_row0_col1" class="data row0 col1" >0.6655</td>
     </tr>
     <tr>
-      <td id="T_42688_row1_col0" class="data row1 col0" >0.7653</td>
-      <td id="T_42688_row1_col1" class="data row1 col1" >0.3345</td>
+      <td id="T_7bf0a_row1_col0" class="data row1 col0" >0.7653</td>
+      <td id="T_7bf0a_row1_col1" class="data row1 col1" >0.3345</td>
     </tr>
   </tbody>
 </table></div>
@@ -808,88 +808,88 @@ Testing robustness    :   0%|          | 0/1 [00:00&lt;?, ?it/s]
 </div>
 <div class="output_area rendered_html docutils container">
 <style type="text/css">
-#T_0f74d_row0_col0, #T_0f74d_row2_col1 {
+#T_f17ff_row0_col0, #T_f17ff_row2_col1 {
   background-color: #b40426;
   color: #f1f1f1;
 }
-#T_0f74d_row0_col1 {
+#T_f17ff_row0_col1 {
   background-color: #536edd;
   color: #f1f1f1;
 }
-#T_0f74d_row1_col0 {
+#T_f17ff_row1_col0 {
   background-color: #f0cdbb;
   color: #000000;
 }
-#T_0f74d_row1_col1, #T_0f74d_row2_col0 {
+#T_f17ff_row1_col1, #T_f17ff_row2_col0 {
   background-color: #3b4cc0;
   color: #f1f1f1;
 }
 </style>
-<table id="T_0f74d" style='display:inline'>
+<table id="T_f17ff" style='display:inline'>
   <caption>X distribution</caption>
   <thead>
     <tr>
       <th class="blank level0" >&nbsp;</th>
-      <th id="T_0f74d_level0_col0" class="col_heading level0 col0" >target_rate</th>
-      <th id="T_0f74d_level0_col1" class="col_heading level0 col1" >frequency</th>
+      <th id="T_f17ff_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_f17ff_level0_col1" class="col_heading level0 col1" >frequency</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th id="T_0f74d_level0_row0" class="row_heading level0 row0" >1</th>
-      <td id="T_0f74d_row0_col0" class="data row0 col0" >0.6197</td>
-      <td id="T_0f74d_row0_col1" class="data row0 col1" >0.2391</td>
+      <th id="T_f17ff_level0_row0" class="row_heading level0 row0" >1</th>
+      <td id="T_f17ff_row0_col0" class="data row0 col0" >0.6197</td>
+      <td id="T_f17ff_row0_col1" class="data row0 col1" >0.2391</td>
     </tr>
     <tr>
-      <th id="T_0f74d_level0_row1" class="row_heading level0 row1" >2</th>
-      <td id="T_0f74d_row1_col0" class="data row1 col0" >0.4683</td>
-      <td id="T_0f74d_row1_col1" class="data row1 col1" >0.2121</td>
+      <th id="T_f17ff_level0_row1" class="row_heading level0 row1" >2</th>
+      <td id="T_f17ff_row1_col0" class="data row1 col0" >0.4683</td>
+      <td id="T_f17ff_row1_col1" class="data row1 col1" >0.2121</td>
     </tr>
     <tr>
-      <th id="T_0f74d_level0_row2" class="row_heading level0 row2" >3</th>
-      <td id="T_0f74d_row2_col0" class="data row2 col0" >0.2515</td>
-      <td id="T_0f74d_row2_col1" class="data row2 col1" >0.5488</td>
+      <th id="T_f17ff_level0_row2" class="row_heading level0 row2" >3</th>
+      <td id="T_f17ff_row2_col0" class="data row2 col0" >0.2515</td>
+      <td id="T_f17ff_row2_col1" class="data row2 col1" >0.5488</td>
     </tr>
   </tbody>
 </table>
           <style type="text/css">
-#T_9e684_row0_col0, #T_9e684_row2_col1 {
+#T_c9bdb_row0_col0, #T_c9bdb_row2_col1 {
   background-color: #b40426;
   color: #f1f1f1;
 }
-#T_9e684_row0_col1 {
+#T_c9bdb_row0_col1 {
   background-color: #6b8df0;
   color: #f1f1f1;
 }
-#T_9e684_row1_col0 {
+#T_c9bdb_row1_col0 {
   background-color: #f2cab5;
   color: #000000;
 }
-#T_9e684_row1_col1, #T_9e684_row2_col0 {
+#T_c9bdb_row1_col1, #T_c9bdb_row2_col0 {
   background-color: #3b4cc0;
   color: #f1f1f1;
 }
 </style>
-<table id="T_9e684" style='display:inline'>
+<table id="T_c9bdb" style='display:inline'>
   <caption>X_dev distribution</caption>
   <thead>
     <tr>
-      <th id="T_9e684_level0_col0" class="col_heading level0 col0" >target_rate</th>
-      <th id="T_9e684_level0_col1" class="col_heading level0 col1" >frequency</th>
+      <th id="T_c9bdb_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_c9bdb_level0_col1" class="col_heading level0 col1" >frequency</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td id="T_9e684_row0_col0" class="data row0 col0" >0.6486</td>
-      <td id="T_9e684_row0_col1" class="data row0 col1" >0.2526</td>
+      <td id="T_c9bdb_row0_col0" class="data row0 col0" >0.6486</td>
+      <td id="T_c9bdb_row0_col1" class="data row0 col1" >0.2526</td>
     </tr>
     <tr>
-      <td id="T_9e684_row1_col0" class="data row1 col0" >0.4828</td>
-      <td id="T_9e684_row1_col1" class="data row1 col1" >0.1980</td>
+      <td id="T_c9bdb_row1_col0" class="data row1 col0" >0.4828</td>
+      <td id="T_c9bdb_row1_col1" class="data row1 col1" >0.1980</td>
     </tr>
     <tr>
-      <td id="T_9e684_row2_col0" class="data row2 col0" >0.2298</td>
-      <td id="T_9e684_row2_col1" class="data row2 col1" >0.5495</td>
+      <td id="T_c9bdb_row2_col0" class="data row2 col0" >0.2298</td>
+      <td id="T_c9bdb_row2_col1" class="data row2 col1" >0.5495</td>
     </tr>
   </tbody>
 </table></div>
@@ -899,8 +899,8 @@ Testing robustness    :   0%|          | 0/1 [00:00&lt;?, ?it/s]
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Grouping modalities   :  67%|██████▋   | 2/3 [00:00&lt;00:00, 1911.72it/s]
-Computing associations: 100%|██████████| 3/3 [00:00&lt;00:00, 2545.60it/s]
+Grouping modalities   :  67%|██████▋   | 2/3 [00:00&lt;00:00, 1991.60it/s]
+Computing associations: 100%|██████████| 3/3 [00:00&lt;?, ?it/s]
 Testing robustness    :   0%|          | 0/3 [00:00&lt;?, ?it/s]
 </pre></div></div>
 </div>
@@ -927,63 +927,63 @@ Testing robustness    :   0%|          | 0/3 [00:00&lt;?, ?it/s]
 </div>
 <div class="output_area rendered_html docutils container">
 <style type="text/css">
-#T_463b6_row0_col0, #T_463b6_row1_col1 {
+#T_26370_row0_col0, #T_26370_row1_col1 {
   background-color: #b40426;
   color: #f1f1f1;
 }
-#T_463b6_row0_col1, #T_463b6_row1_col0 {
+#T_26370_row0_col1, #T_26370_row1_col0 {
   background-color: #3b4cc0;
   color: #f1f1f1;
 }
 </style>
-<table id="T_463b6" style='display:inline'>
+<table id="T_26370" style='display:inline'>
   <caption>X distribution</caption>
   <thead>
     <tr>
       <th class="blank level0" >&nbsp;</th>
-      <th id="T_463b6_level0_col0" class="col_heading level0 col0" >target_rate</th>
-      <th id="T_463b6_level0_col1" class="col_heading level0 col1" >frequency</th>
+      <th id="T_26370_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_26370_level0_col1" class="col_heading level0 col1" >frequency</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th id="T_463b6_level0_row0" class="row_heading level0 row0" >1 to 2</th>
-      <td id="T_463b6_row0_col0" class="data row0 col0" >0.5485</td>
-      <td id="T_463b6_row0_col1" class="data row0 col1" >0.4512</td>
+      <th id="T_26370_level0_row0" class="row_heading level0 row0" >1 to 2</th>
+      <td id="T_26370_row0_col0" class="data row0 col0" >0.5485</td>
+      <td id="T_26370_row0_col1" class="data row0 col1" >0.4512</td>
     </tr>
     <tr>
-      <th id="T_463b6_level0_row1" class="row_heading level0 row1" >3</th>
-      <td id="T_463b6_row1_col0" class="data row1 col0" >0.2515</td>
-      <td id="T_463b6_row1_col1" class="data row1 col1" >0.5488</td>
+      <th id="T_26370_level0_row1" class="row_heading level0 row1" >3</th>
+      <td id="T_26370_row1_col0" class="data row1 col0" >0.2515</td>
+      <td id="T_26370_row1_col1" class="data row1 col1" >0.5488</td>
     </tr>
   </tbody>
 </table>
           <style type="text/css">
-#T_d4990_row0_col0, #T_d4990_row1_col1 {
+#T_21c4e_row0_col0, #T_21c4e_row1_col1 {
   background-color: #b40426;
   color: #f1f1f1;
 }
-#T_d4990_row0_col1, #T_d4990_row1_col0 {
+#T_21c4e_row0_col1, #T_21c4e_row1_col0 {
   background-color: #3b4cc0;
   color: #f1f1f1;
 }
 </style>
-<table id="T_d4990" style='display:inline'>
+<table id="T_21c4e" style='display:inline'>
   <caption>X_dev distribution</caption>
   <thead>
     <tr>
-      <th id="T_d4990_level0_col0" class="col_heading level0 col0" >target_rate</th>
-      <th id="T_d4990_level0_col1" class="col_heading level0 col1" >frequency</th>
+      <th id="T_21c4e_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_21c4e_level0_col1" class="col_heading level0 col1" >frequency</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td id="T_d4990_row0_col0" class="data row0 col0" >0.5758</td>
-      <td id="T_d4990_row0_col1" class="data row0 col1" >0.4505</td>
+      <td id="T_21c4e_row0_col0" class="data row0 col0" >0.5758</td>
+      <td id="T_21c4e_row0_col1" class="data row0 col1" >0.4505</td>
     </tr>
     <tr>
-      <td id="T_d4990_row1_col0" class="data row1 col0" >0.2298</td>
-      <td id="T_d4990_row1_col1" class="data row1 col1" >0.5495</td>
+      <td id="T_21c4e_row1_col0" class="data row1 col0" >0.2298</td>
+      <td id="T_21c4e_row1_col1" class="data row1 col1" >0.5495</td>
     </tr>
   </tbody>
 </table></div>
@@ -1002,577 +1002,577 @@ Testing robustness    :   0%|          | 0/3 [00:00&lt;?, ?it/s]
 </div>
 <div class="output_area rendered_html docutils container">
 <style type="text/css">
-#T_079ff_row0_col0, #T_079ff_row9_col1 {
+#T_ba5db_row0_col0, #T_ba5db_row9_col1 {
   background-color: #b40426;
   color: #f1f1f1;
 }
-#T_079ff_row0_col1, #T_079ff_row18_col1 {
+#T_ba5db_row0_col1, #T_ba5db_row18_col1 {
   background-color: #90b2fe;
   color: #000000;
 }
-#T_079ff_row1_col0, #T_079ff_row27_col0 {
+#T_ba5db_row1_col0, #T_ba5db_row27_col0 {
   background-color: #c83836;
   color: #f1f1f1;
 }
-#T_079ff_row1_col1, #T_079ff_row2_col1, #T_079ff_row27_col1 {
+#T_ba5db_row1_col1, #T_ba5db_row2_col1, #T_ba5db_row27_col1 {
   background-color: #7295f4;
   color: #f1f1f1;
 }
-#T_079ff_row2_col0 {
+#T_ba5db_row2_col0 {
   background-color: #dcdddd;
   color: #000000;
 }
-#T_079ff_row3_col0, #T_079ff_row31_col0 {
+#T_ba5db_row3_col0, #T_ba5db_row31_col0 {
   background-color: #6687ed;
   color: #f1f1f1;
 }
-#T_079ff_row3_col1, #T_079ff_row12_col1, #T_079ff_row14_col0, #T_079ff_row26_col0, #T_079ff_row31_col1 {
+#T_ba5db_row3_col1, #T_ba5db_row12_col1, #T_ba5db_row14_col0, #T_ba5db_row26_col0, #T_ba5db_row31_col1 {
   background-color: #81a4fb;
   color: #f1f1f1;
 }
-#T_079ff_row4_col0, #T_079ff_row11_col1, #T_079ff_row16_col1, #T_079ff_row18_col0 {
+#T_ba5db_row4_col0, #T_ba5db_row11_col1, #T_ba5db_row16_col1, #T_ba5db_row18_col0 {
   background-color: #f2c9b4;
   color: #000000;
 }
-#T_079ff_row4_col1, #T_079ff_row7_col1, #T_079ff_row15_col1, #T_079ff_row29_col1 {
+#T_ba5db_row4_col1, #T_ba5db_row7_col1, #T_ba5db_row15_col1, #T_ba5db_row29_col1 {
   background-color: #afcafc;
   color: #000000;
 }
-#T_079ff_row5_col0 {
+#T_ba5db_row5_col0 {
   background-color: #a9c6fd;
   color: #000000;
 }
-#T_079ff_row5_col1, #T_079ff_row23_col1 {
+#T_ba5db_row5_col1, #T_ba5db_row23_col1 {
   background-color: #d24b40;
   color: #f1f1f1;
 }
-#T_079ff_row6_col0, #T_079ff_row25_col0 {
+#T_ba5db_row6_col0, #T_ba5db_row25_col0 {
   background-color: #ccd9ed;
   color: #000000;
 }
-#T_079ff_row6_col1, #T_079ff_row25_col1 {
+#T_ba5db_row6_col1, #T_ba5db_row25_col1 {
   background-color: #ecd3c5;
   color: #000000;
 }
-#T_079ff_row7_col0, #T_079ff_row10_col1 {
+#T_ba5db_row7_col0, #T_ba5db_row10_col1 {
   background-color: #3b4cc0;
   color: #f1f1f1;
 }
-#T_079ff_row8_col0 {
+#T_ba5db_row8_col0 {
   background-color: #6180e9;
   color: #f1f1f1;
 }
-#T_079ff_row8_col1 {
+#T_ba5db_row8_col1 {
   background-color: #d7dce3;
   color: #000000;
 }
-#T_079ff_row9_col0 {
+#T_ba5db_row9_col0 {
   background-color: #dadce0;
   color: #000000;
 }
-#T_079ff_row10_col0 {
+#T_ba5db_row10_col0 {
   background-color: #cfdaea;
   color: #000000;
 }
-#T_079ff_row11_col0 {
+#T_ba5db_row11_col0 {
   background-color: #f7b599;
   color: #000000;
 }
-#T_079ff_row12_col0 {
+#T_ba5db_row12_col0 {
   background-color: #445acc;
   color: #f1f1f1;
 }
-#T_079ff_row13_col0 {
+#T_ba5db_row13_col0 {
   background-color: #ead4c8;
   color: #000000;
 }
-#T_079ff_row13_col1 {
+#T_ba5db_row13_col1 {
   background-color: #df634e;
   color: #f1f1f1;
 }
-#T_079ff_row14_col1, #T_079ff_row29_col0 {
+#T_ba5db_row14_col1, #T_ba5db_row29_col0 {
   background-color: #cbd8ee;
   color: #000000;
 }
-#T_079ff_row15_col0 {
+#T_ba5db_row15_col0 {
   background-color: #e2dad5;
   color: #000000;
 }
-#T_079ff_row16_col0 {
+#T_ba5db_row16_col0 {
   background-color: #98b9ff;
   color: #000000;
 }
-#T_079ff_row17_col0, #T_079ff_row19_col0 {
+#T_ba5db_row17_col0, #T_ba5db_row19_col0 {
   background-color: #c9d7f0;
   color: #000000;
 }
-#T_079ff_row17_col1, #T_079ff_row19_col1, #T_079ff_row20_col1, #T_079ff_row24_col1, #T_079ff_row30_col1 {
+#T_ba5db_row17_col1, #T_ba5db_row19_col1, #T_ba5db_row20_col1, #T_ba5db_row24_col1, #T_ba5db_row30_col1 {
   background-color: #6384eb;
   color: #f1f1f1;
 }
-#T_079ff_row20_col0 {
+#T_ba5db_row20_col0 {
   background-color: #a1c0ff;
   color: #000000;
 }
-#T_079ff_row21_col0 {
+#T_ba5db_row21_col0 {
   background-color: #ead5c9;
   color: #000000;
 }
-#T_079ff_row21_col1 {
+#T_ba5db_row21_col1 {
   background-color: #f08b6e;
   color: #f1f1f1;
 }
-#T_079ff_row22_col0 {
+#T_ba5db_row22_col0 {
   background-color: #d5dbe5;
   color: #000000;
 }
-#T_079ff_row22_col1 {
+#T_ba5db_row22_col1 {
   background-color: #9fbfff;
   color: #000000;
 }
-#T_079ff_row23_col0 {
+#T_ba5db_row23_col0 {
   background-color: #cad8ef;
   color: #000000;
 }
-#T_079ff_row24_col0 {
+#T_ba5db_row24_col0 {
   background-color: #e9d5cb;
   color: #000000;
 }
-#T_079ff_row26_col1 {
+#T_ba5db_row26_col1 {
   background-color: #5572df;
   color: #f1f1f1;
 }
-#T_079ff_row28_col0 {
+#T_ba5db_row28_col0 {
   background-color: #8db0fe;
   color: #000000;
 }
-#T_079ff_row28_col1 {
+#T_ba5db_row28_col1 {
   background-color: #485fd1;
   color: #f1f1f1;
 }
-#T_079ff_row30_col0 {
+#T_ba5db_row30_col0 {
   background-color: #4f69d9;
   color: #f1f1f1;
 }
 </style>
-<table id="T_079ff" style='display:inline'>
+<table id="T_ba5db" style='display:inline'>
   <caption>X distribution</caption>
   <thead>
     <tr>
       <th class="blank level0" >&nbsp;</th>
-      <th id="T_079ff_level0_col0" class="col_heading level0 col0" >target_rate</th>
-      <th id="T_079ff_level0_col1" class="col_heading level0 col1" >frequency</th>
+      <th id="T_ba5db_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_ba5db_level0_col1" class="col_heading level0 col1" >frequency</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th id="T_079ff_level0_row0" class="row_heading level0 row0" >x <= 2.0e+00</th>
-      <td id="T_079ff_row0_col0" class="data row0 col0" >0.7500</td>
-      <td id="T_079ff_row0_col1" class="data row0 col1" >0.0269</td>
+      <th id="T_ba5db_level0_row0" class="row_heading level0 row0" >x <= 2.0e+00</th>
+      <td id="T_ba5db_row0_col0" class="data row0 col0" >0.7500</td>
+      <td id="T_ba5db_row0_col1" class="data row0 col1" >0.0269</td>
     </tr>
     <tr>
-      <th id="T_079ff_level0_row1" class="row_heading level0 row1" >2.0e+00 < x <= 4.0e+00</th>
-      <td id="T_079ff_row1_col0" class="data row1 col0" >0.7143</td>
-      <td id="T_079ff_row1_col1" class="data row1 col1" >0.0236</td>
+      <th id="T_ba5db_level0_row1" class="row_heading level0 row1" >2.0e+00 < x <= 4.0e+00</th>
+      <td id="T_ba5db_row1_col0" class="data row1 col0" >0.7143</td>
+      <td id="T_ba5db_row1_col1" class="data row1 col1" >0.0236</td>
     </tr>
     <tr>
-      <th id="T_079ff_level0_row2" class="row_heading level0 row2" >4.0e+00 < x <= 8.0e+00</th>
-      <td id="T_079ff_row2_col0" class="data row2 col0" >0.4286</td>
-      <td id="T_079ff_row2_col1" class="data row2 col1" >0.0236</td>
+      <th id="T_ba5db_level0_row2" class="row_heading level0 row2" >4.0e+00 < x <= 8.0e+00</th>
+      <td id="T_ba5db_row2_col0" class="data row2 col0" >0.4286</td>
+      <td id="T_ba5db_row2_col1" class="data row2 col1" >0.0236</td>
     </tr>
     <tr>
-      <th id="T_079ff_level0_row3" class="row_heading level0 row3" >8.0e+00 < x <= 1.4e+01</th>
-      <td id="T_079ff_row3_col0" class="data row3 col0" >0.2000</td>
-      <td id="T_079ff_row3_col1" class="data row3 col1" >0.0253</td>
+      <th id="T_ba5db_level0_row3" class="row_heading level0 row3" >8.0e+00 < x <= 1.4e+01</th>
+      <td id="T_ba5db_row3_col0" class="data row3 col0" >0.2000</td>
+      <td id="T_ba5db_row3_col1" class="data row3 col1" >0.0253</td>
     </tr>
     <tr>
-      <th id="T_079ff_level0_row4" class="row_heading level0 row4" >1.4e+01 < x <= 1.6e+01</th>
-      <td id="T_079ff_row4_col0" class="data row4 col0" >0.5000</td>
-      <td id="T_079ff_row4_col1" class="data row4 col1" >0.0303</td>
+      <th id="T_ba5db_level0_row4" class="row_heading level0 row4" >1.4e+01 < x <= 1.6e+01</th>
+      <td id="T_ba5db_row4_col0" class="data row4 col0" >0.5000</td>
+      <td id="T_ba5db_row4_col1" class="data row4 col1" >0.0303</td>
     </tr>
     <tr>
-      <th id="T_079ff_level0_row5" class="row_heading level0 row5" >1.6e+01 < x <= 1.8e+01</th>
-      <td id="T_079ff_row5_col0" class="data row5 col0" >0.3226</td>
-      <td id="T_079ff_row5_col1" class="data row5 col1" >0.0522</td>
+      <th id="T_ba5db_level0_row5" class="row_heading level0 row5" >1.6e+01 < x <= 1.8e+01</th>
+      <td id="T_ba5db_row5_col0" class="data row5 col0" >0.3226</td>
+      <td id="T_ba5db_row5_col1" class="data row5 col1" >0.0522</td>
     </tr>
     <tr>
-      <th id="T_079ff_level0_row6" class="row_heading level0 row6" >1.8e+01 < x <= 1.9e+01</th>
-      <td id="T_079ff_row6_col0" class="data row6 col0" >0.3913</td>
-      <td id="T_079ff_row6_col1" class="data row6 col1" >0.0387</td>
+      <th id="T_ba5db_level0_row6" class="row_heading level0 row6" >1.8e+01 < x <= 1.9e+01</th>
+      <td id="T_ba5db_row6_col0" class="data row6 col0" >0.3913</td>
+      <td id="T_ba5db_row6_col1" class="data row6 col1" >0.0387</td>
     </tr>
     <tr>
-      <th id="T_079ff_level0_row7" class="row_heading level0 row7" >1.9e+01 < x <= 2.0e+01</th>
-      <td id="T_079ff_row7_col0" class="data row7 col0" >0.1111</td>
-      <td id="T_079ff_row7_col1" class="data row7 col1" >0.0303</td>
+      <th id="T_ba5db_level0_row7" class="row_heading level0 row7" >1.9e+01 < x <= 2.0e+01</th>
+      <td id="T_ba5db_row7_col0" class="data row7 col0" >0.1111</td>
+      <td id="T_ba5db_row7_col1" class="data row7 col1" >0.0303</td>
     </tr>
     <tr>
-      <th id="T_079ff_level0_row8" class="row_heading level0 row8" >2.0e+01 < x <= 2.1e+01</th>
-      <td id="T_079ff_row8_col0" class="data row8 col0" >0.1905</td>
-      <td id="T_079ff_row8_col1" class="data row8 col1" >0.0354</td>
+      <th id="T_ba5db_level0_row8" class="row_heading level0 row8" >2.0e+01 < x <= 2.1e+01</th>
+      <td id="T_ba5db_row8_col0" class="data row8 col0" >0.1905</td>
+      <td id="T_ba5db_row8_col1" class="data row8 col1" >0.0354</td>
     </tr>
     <tr>
-      <th id="T_079ff_level0_row9" class="row_heading level0 row9" >2.1e+01 < x <= 2.2e+01</th>
-      <td id="T_079ff_row9_col0" class="data row9 col0" >0.4242</td>
-      <td id="T_079ff_row9_col1" class="data row9 col1" >0.0556</td>
+      <th id="T_ba5db_level0_row9" class="row_heading level0 row9" >2.1e+01 < x <= 2.2e+01</th>
+      <td id="T_ba5db_row9_col0" class="data row9 col0" >0.4242</td>
+      <td id="T_ba5db_row9_col1" class="data row9 col1" >0.0556</td>
     </tr>
     <tr>
-      <th id="T_079ff_level0_row10" class="row_heading level0 row10" >2.2e+01 < x <= 2.4e+01</th>
-      <td id="T_079ff_row10_col0" class="data row10 col0" >0.4000</td>
-      <td id="T_079ff_row10_col1" class="data row10 col1" >0.0168</td>
+      <th id="T_ba5db_level0_row10" class="row_heading level0 row10" >2.2e+01 < x <= 2.4e+01</th>
+      <td id="T_ba5db_row10_col0" class="data row10 col0" >0.4000</td>
+      <td id="T_ba5db_row10_col1" class="data row10 col1" >0.0168</td>
     </tr>
     <tr>
-      <th id="T_079ff_level0_row11" class="row_heading level0 row11" >2.4e+01 < x <= 2.4e+01</th>
-      <td id="T_079ff_row11_col0" class="data row11 col0" >0.5417</td>
-      <td id="T_079ff_row11_col1" class="data row11 col1" >0.0404</td>
+      <th id="T_ba5db_level0_row11" class="row_heading level0 row11" >2.4e+01 < x <= 2.4e+01</th>
+      <td id="T_ba5db_row11_col0" class="data row11 col0" >0.5417</td>
+      <td id="T_ba5db_row11_col1" class="data row11 col1" >0.0404</td>
     </tr>
     <tr>
-      <th id="T_079ff_level0_row12" class="row_heading level0 row12" >2.4e+01 < x <= 2.5e+01</th>
-      <td id="T_079ff_row12_col0" class="data row12 col0" >0.1333</td>
-      <td id="T_079ff_row12_col1" class="data row12 col1" >0.0253</td>
+      <th id="T_ba5db_level0_row12" class="row_heading level0 row12" >2.4e+01 < x <= 2.5e+01</th>
+      <td id="T_ba5db_row12_col0" class="data row12 col0" >0.1333</td>
+      <td id="T_ba5db_row12_col1" class="data row12 col1" >0.0253</td>
     </tr>
     <tr>
-      <th id="T_079ff_level0_row13" class="row_heading level0 row13" >2.5e+01 < x <= 2.7e+01</th>
-      <td id="T_079ff_row13_col0" class="data row13 col0" >0.4667</td>
-      <td id="T_079ff_row13_col1" class="data row13 col1" >0.0505</td>
+      <th id="T_ba5db_level0_row13" class="row_heading level0 row13" >2.5e+01 < x <= 2.7e+01</th>
+      <td id="T_ba5db_row13_col0" class="data row13 col0" >0.4667</td>
+      <td id="T_ba5db_row13_col1" class="data row13 col1" >0.0505</td>
     </tr>
     <tr>
-      <th id="T_079ff_level0_row14" class="row_heading level0 row14" >2.7e+01 < x <= 2.8e+01</th>
-      <td id="T_079ff_row14_col0" class="data row14 col0" >0.2500</td>
-      <td id="T_079ff_row14_col1" class="data row14 col1" >0.0337</td>
+      <th id="T_ba5db_level0_row14" class="row_heading level0 row14" >2.7e+01 < x <= 2.8e+01</th>
+      <td id="T_ba5db_row14_col0" class="data row14 col0" >0.2500</td>
+      <td id="T_ba5db_row14_col1" class="data row14 col1" >0.0337</td>
     </tr>
     <tr>
-      <th id="T_079ff_level0_row15" class="row_heading level0 row15" >2.8e+01 < x <= 2.9e+01</th>
-      <td id="T_079ff_row15_col0" class="data row15 col0" >0.4444</td>
-      <td id="T_079ff_row15_col1" class="data row15 col1" >0.0303</td>
+      <th id="T_ba5db_level0_row15" class="row_heading level0 row15" >2.8e+01 < x <= 2.9e+01</th>
+      <td id="T_ba5db_row15_col0" class="data row15 col0" >0.4444</td>
+      <td id="T_ba5db_row15_col1" class="data row15 col1" >0.0303</td>
     </tr>
     <tr>
-      <th id="T_079ff_level0_row16" class="row_heading level0 row16" >2.9e+01 < x <= 3.0e+01</th>
-      <td id="T_079ff_row16_col0" class="data row16 col0" >0.2917</td>
-      <td id="T_079ff_row16_col1" class="data row16 col1" >0.0404</td>
+      <th id="T_ba5db_level0_row16" class="row_heading level0 row16" >2.9e+01 < x <= 3.0e+01</th>
+      <td id="T_ba5db_row16_col0" class="data row16 col0" >0.2917</td>
+      <td id="T_ba5db_row16_col1" class="data row16 col1" >0.0404</td>
     </tr>
     <tr>
-      <th id="T_079ff_level0_row17" class="row_heading level0 row17" >3.0e+01 < x <= 3.1e+01</th>
-      <td id="T_079ff_row17_col0" class="data row17 col0" >0.3846</td>
-      <td id="T_079ff_row17_col1" class="data row17 col1" >0.0219</td>
+      <th id="T_ba5db_level0_row17" class="row_heading level0 row17" >3.0e+01 < x <= 3.1e+01</th>
+      <td id="T_ba5db_row17_col0" class="data row17 col0" >0.3846</td>
+      <td id="T_ba5db_row17_col1" class="data row17 col1" >0.0219</td>
     </tr>
     <tr>
-      <th id="T_079ff_level0_row18" class="row_heading level0 row18" >3.1e+01 < x <= 3.2e+01</th>
-      <td id="T_079ff_row18_col0" class="data row18 col0" >0.5000</td>
-      <td id="T_079ff_row18_col1" class="data row18 col1" >0.0269</td>
+      <th id="T_ba5db_level0_row18" class="row_heading level0 row18" >3.1e+01 < x <= 3.2e+01</th>
+      <td id="T_ba5db_row18_col0" class="data row18 col0" >0.5000</td>
+      <td id="T_ba5db_row18_col1" class="data row18 col1" >0.0269</td>
     </tr>
     <tr>
-      <th id="T_079ff_level0_row19" class="row_heading level0 row19" >3.2e+01 < x <= 3.3e+01</th>
-      <td id="T_079ff_row19_col0" class="data row19 col0" >0.3846</td>
-      <td id="T_079ff_row19_col1" class="data row19 col1" >0.0219</td>
+      <th id="T_ba5db_level0_row19" class="row_heading level0 row19" >3.2e+01 < x <= 3.3e+01</th>
+      <td id="T_ba5db_row19_col0" class="data row19 col0" >0.3846</td>
+      <td id="T_ba5db_row19_col1" class="data row19 col1" >0.0219</td>
     </tr>
     <tr>
-      <th id="T_079ff_level0_row20" class="row_heading level0 row20" >3.3e+01 < x <= 3.4e+01</th>
-      <td id="T_079ff_row20_col0" class="data row20 col0" >0.3077</td>
-      <td id="T_079ff_row20_col1" class="data row20 col1" >0.0219</td>
+      <th id="T_ba5db_level0_row20" class="row_heading level0 row20" >3.3e+01 < x <= 3.4e+01</th>
+      <td id="T_ba5db_row20_col0" class="data row20 col0" >0.3077</td>
+      <td id="T_ba5db_row20_col1" class="data row20 col1" >0.0219</td>
     </tr>
     <tr>
-      <th id="T_079ff_level0_row21" class="row_heading level0 row21" >3.4e+01 < x <= 3.6e+01</th>
-      <td id="T_079ff_row21_col0" class="data row21 col0" >0.4643</td>
-      <td id="T_079ff_row21_col1" class="data row21 col1" >0.0471</td>
+      <th id="T_ba5db_level0_row21" class="row_heading level0 row21" >3.4e+01 < x <= 3.6e+01</th>
+      <td id="T_ba5db_row21_col0" class="data row21 col0" >0.4643</td>
+      <td id="T_ba5db_row21_col1" class="data row21 col1" >0.0471</td>
     </tr>
     <tr>
-      <th id="T_079ff_level0_row22" class="row_heading level0 row22" >3.6e+01 < x <= 3.8e+01</th>
-      <td id="T_079ff_row22_col0" class="data row22 col0" >0.4118</td>
-      <td id="T_079ff_row22_col1" class="data row22 col1" >0.0286</td>
+      <th id="T_ba5db_level0_row22" class="row_heading level0 row22" >3.6e+01 < x <= 3.8e+01</th>
+      <td id="T_ba5db_row22_col0" class="data row22 col0" >0.4118</td>
+      <td id="T_ba5db_row22_col1" class="data row22 col1" >0.0286</td>
     </tr>
     <tr>
-      <th id="T_079ff_level0_row23" class="row_heading level0 row23" >3.8e+01 < x <= 4.1e+01</th>
-      <td id="T_079ff_row23_col0" class="data row23 col0" >0.3871</td>
-      <td id="T_079ff_row23_col1" class="data row23 col1" >0.0522</td>
+      <th id="T_ba5db_level0_row23" class="row_heading level0 row23" >3.8e+01 < x <= 4.1e+01</th>
+      <td id="T_ba5db_row23_col0" class="data row23 col0" >0.3871</td>
+      <td id="T_ba5db_row23_col1" class="data row23 col1" >0.0522</td>
     </tr>
     <tr>
-      <th id="T_079ff_level0_row24" class="row_heading level0 row24" >4.1e+01 < x <= 4.2e+01</th>
-      <td id="T_079ff_row24_col0" class="data row24 col0" >0.4615</td>
-      <td id="T_079ff_row24_col1" class="data row24 col1" >0.0219</td>
+      <th id="T_ba5db_level0_row24" class="row_heading level0 row24" >4.1e+01 < x <= 4.2e+01</th>
+      <td id="T_ba5db_row24_col0" class="data row24 col0" >0.4615</td>
+      <td id="T_ba5db_row24_col1" class="data row24 col1" >0.0219</td>
     </tr>
     <tr>
-      <th id="T_079ff_level0_row25" class="row_heading level0 row25" >4.2e+01 < x <= 4.5e+01</th>
-      <td id="T_079ff_row25_col0" class="data row25 col0" >0.3913</td>
-      <td id="T_079ff_row25_col1" class="data row25 col1" >0.0387</td>
+      <th id="T_ba5db_level0_row25" class="row_heading level0 row25" >4.2e+01 < x <= 4.5e+01</th>
+      <td id="T_ba5db_row25_col0" class="data row25 col0" >0.3913</td>
+      <td id="T_ba5db_row25_col1" class="data row25 col1" >0.0387</td>
     </tr>
     <tr>
-      <th id="T_079ff_level0_row26" class="row_heading level0 row26" >4.5e+01 < x <= 4.7e+01</th>
-      <td id="T_079ff_row26_col0" class="data row26 col0" >0.2500</td>
-      <td id="T_079ff_row26_col1" class="data row26 col1" >0.0202</td>
+      <th id="T_ba5db_level0_row26" class="row_heading level0 row26" >4.5e+01 < x <= 4.7e+01</th>
+      <td id="T_ba5db_row26_col0" class="data row26 col0" >0.2500</td>
+      <td id="T_ba5db_row26_col1" class="data row26 col1" >0.0202</td>
     </tr>
     <tr>
-      <th id="T_079ff_level0_row27" class="row_heading level0 row27" >4.7e+01 < x <= 4.9e+01</th>
-      <td id="T_079ff_row27_col0" class="data row27 col0" >0.7143</td>
-      <td id="T_079ff_row27_col1" class="data row27 col1" >0.0236</td>
+      <th id="T_ba5db_level0_row27" class="row_heading level0 row27" >4.7e+01 < x <= 4.9e+01</th>
+      <td id="T_ba5db_row27_col0" class="data row27 col0" >0.7143</td>
+      <td id="T_ba5db_row27_col1" class="data row27 col1" >0.0236</td>
     </tr>
     <tr>
-      <th id="T_079ff_level0_row28" class="row_heading level0 row28" >4.9e+01 < x <= 5.1e+01</th>
-      <td id="T_079ff_row28_col0" class="data row28 col0" >0.2727</td>
-      <td id="T_079ff_row28_col1" class="data row28 col1" >0.0185</td>
+      <th id="T_ba5db_level0_row28" class="row_heading level0 row28" >4.9e+01 < x <= 5.1e+01</th>
+      <td id="T_ba5db_row28_col0" class="data row28 col0" >0.2727</td>
+      <td id="T_ba5db_row28_col1" class="data row28 col1" >0.0185</td>
     </tr>
     <tr>
-      <th id="T_079ff_level0_row29" class="row_heading level0 row29" >5.1e+01 < x <= 5.6e+01</th>
-      <td id="T_079ff_row29_col0" class="data row29 col0" >0.3889</td>
-      <td id="T_079ff_row29_col1" class="data row29 col1" >0.0303</td>
+      <th id="T_ba5db_level0_row29" class="row_heading level0 row29" >5.1e+01 < x <= 5.6e+01</th>
+      <td id="T_ba5db_row29_col0" class="data row29 col0" >0.3889</td>
+      <td id="T_ba5db_row29_col1" class="data row29 col1" >0.0303</td>
     </tr>
     <tr>
-      <th id="T_079ff_level0_row30" class="row_heading level0 row30" >5.6e+01 < x <= 6.1e+01</th>
-      <td id="T_079ff_row30_col0" class="data row30 col0" >0.1538</td>
-      <td id="T_079ff_row30_col1" class="data row30 col1" >0.0219</td>
+      <th id="T_ba5db_level0_row30" class="row_heading level0 row30" >5.6e+01 < x <= 6.1e+01</th>
+      <td id="T_ba5db_row30_col0" class="data row30 col0" >0.1538</td>
+      <td id="T_ba5db_row30_col1" class="data row30 col1" >0.0219</td>
     </tr>
     <tr>
-      <th id="T_079ff_level0_row31" class="row_heading level0 row31" >6.1e+01 < x</th>
-      <td id="T_079ff_row31_col0" class="data row31 col0" >0.2000</td>
-      <td id="T_079ff_row31_col1" class="data row31 col1" >0.0253</td>
+      <th id="T_ba5db_level0_row31" class="row_heading level0 row31" >6.1e+01 < x</th>
+      <td id="T_ba5db_row31_col0" class="data row31 col0" >0.2000</td>
+      <td id="T_ba5db_row31_col1" class="data row31 col1" >0.0253</td>
     </tr>
   </tbody>
 </table>
           <style type="text/css">
-#T_0d67d_row0_col0 {
+#T_073c4_row0_col0 {
   background-color: #dcdddd;
   color: #000000;
 }
-#T_0d67d_row0_col1, #T_0d67d_row16_col1 {
+#T_073c4_row0_col1, #T_073c4_row16_col1 {
   background-color: #9dbdff;
   color: #000000;
 }
-#T_0d67d_row1_col0, #T_0d67d_row5_col1, #T_0d67d_row20_col0 {
+#T_073c4_row1_col0, #T_073c4_row5_col1, #T_073c4_row20_col0 {
   background-color: #b40426;
   color: #f1f1f1;
 }
-#T_0d67d_row1_col1, #T_0d67d_row20_col1, #T_0d67d_row24_col1, #T_0d67d_row25_col0 {
+#T_073c4_row1_col1, #T_073c4_row20_col1, #T_073c4_row24_col1, #T_073c4_row25_col0 {
   background-color: #3b4cc0;
   color: #f1f1f1;
 }
-#T_0d67d_row2_col0, #T_0d67d_row19_col0, #T_0d67d_row28_col0 {
+#T_073c4_row2_col0, #T_073c4_row19_col0, #T_073c4_row28_col0 {
   background-color: #e16751;
   color: #f1f1f1;
 }
-#T_0d67d_row2_col1, #T_0d67d_row7_col1, #T_0d67d_row9_col1, #T_0d67d_row19_col1, #T_0d67d_row26_col1, #T_0d67d_row27_col1, #T_0d67d_row28_col1, #T_0d67d_row29_col1 {
+#T_073c4_row2_col1, #T_073c4_row7_col1, #T_073c4_row9_col1, #T_073c4_row19_col1, #T_073c4_row26_col1, #T_073c4_row27_col1, #T_073c4_row28_col1, #T_073c4_row29_col1 {
   background-color: #5f7fe8;
   color: #f1f1f1;
 }
-#T_0d67d_row3_col0, #T_0d67d_row30_col0 {
+#T_073c4_row3_col0, #T_073c4_row30_col0 {
   background-color: #f4987a;
   color: #000000;
 }
-#T_0d67d_row3_col1, #T_0d67d_row6_col1, #T_0d67d_row11_col1, #T_0d67d_row12_col1 {
+#T_073c4_row3_col1, #T_073c4_row6_col1, #T_073c4_row11_col1, #T_073c4_row12_col1 {
   background-color: #b1cbfc;
   color: #000000;
 }
-#T_0d67d_row4_col0, #T_0d67d_row15_col1, #T_0d67d_row22_col0, #T_0d67d_row25_col1, #T_0d67d_row31_col0 {
+#T_073c4_row4_col0, #T_073c4_row15_col1, #T_073c4_row22_col0, #T_073c4_row25_col1, #T_073c4_row31_col0 {
   background-color: #7396f5;
   color: #f1f1f1;
 }
-#T_0d67d_row4_col1, #T_0d67d_row17_col1, #T_0d67d_row22_col1, #T_0d67d_row31_col1 {
+#T_073c4_row4_col1, #T_073c4_row17_col1, #T_073c4_row22_col1, #T_073c4_row31_col1 {
   background-color: #88abfd;
   color: #000000;
 }
-#T_0d67d_row5_col0, #T_0d67d_row15_col0 {
+#T_073c4_row5_col0, #T_073c4_row15_col0 {
   background-color: #d5dbe5;
   color: #000000;
 }
-#T_0d67d_row6_col0 {
+#T_073c4_row6_col0 {
   background-color: #5875e1;
   color: #f1f1f1;
 }
-#T_0d67d_row7_col0, #T_0d67d_row16_col0 {
+#T_073c4_row7_col0, #T_073c4_row16_col0 {
   background-color: #a3c2fe;
   color: #000000;
 }
-#T_0d67d_row8_col0 {
+#T_073c4_row8_col0 {
   background-color: #3f53c6;
   color: #f1f1f1;
 }
-#T_0d67d_row8_col1 {
+#T_073c4_row8_col1 {
   background-color: #e4d9d2;
   color: #000000;
 }
-#T_0d67d_row9_col0, #T_0d67d_row26_col0 {
+#T_073c4_row9_col0, #T_073c4_row26_col0 {
   background-color: #465ecf;
   color: #f1f1f1;
 }
-#T_0d67d_row10_col0, #T_0d67d_row23_col0 {
+#T_073c4_row10_col0, #T_073c4_row23_col0 {
   background-color: #506bda;
   color: #f1f1f1;
 }
-#T_0d67d_row10_col1, #T_0d67d_row23_col1 {
+#T_073c4_row10_col1, #T_073c4_row23_col1 {
   background-color: #f7aa8c;
   color: #000000;
 }
-#T_0d67d_row11_col0, #T_0d67d_row12_col0, #T_0d67d_row24_col0, #T_0d67d_row27_col0, #T_0d67d_row29_col0 {
+#T_073c4_row11_col0, #T_073c4_row12_col0, #T_073c4_row24_col0, #T_073c4_row27_col0, #T_073c4_row29_col0 {
   background-color: #f0cdbb;
   color: #000000;
 }
-#T_0d67d_row13_col0 {
+#T_073c4_row13_col0 {
   background-color: #aec9fc;
   color: #000000;
 }
-#T_0d67d_row13_col1, #T_0d67d_row21_col1 {
+#T_073c4_row13_col1, #T_073c4_row21_col1 {
   background-color: #f39475;
   color: #000000;
 }
-#T_0d67d_row14_col0 {
+#T_073c4_row14_col0 {
   background-color: #7a9df8;
   color: #f1f1f1;
 }
-#T_0d67d_row14_col1 {
+#T_073c4_row14_col1 {
   background-color: #dc5d4a;
   color: #f1f1f1;
 }
-#T_0d67d_row17_col0 {
+#T_073c4_row17_col0 {
   background-color: #ee8669;
   color: #f1f1f1;
 }
-#T_0d67d_row18_col0 {
+#T_073c4_row18_col0 {
   background-color: #c7d7f0;
   color: #000000;
 }
-#T_0d67d_row18_col1, #T_0d67d_row30_col1 {
+#T_073c4_row18_col1, #T_073c4_row30_col1 {
   background-color: #4c66d6;
   color: #f1f1f1;
 }
-#T_0d67d_row21_col0 {
+#T_073c4_row21_col0 {
   background-color: #f5a081;
   color: #000000;
 }
 </style>
-<table id="T_0d67d" style='display:inline'>
+<table id="T_073c4" style='display:inline'>
   <caption>X_dev distribution</caption>
   <thead>
     <tr>
-      <th id="T_0d67d_level0_col0" class="col_heading level0 col0" >target_rate</th>
-      <th id="T_0d67d_level0_col1" class="col_heading level0 col1" >frequency</th>
+      <th id="T_073c4_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_073c4_level0_col1" class="col_heading level0 col1" >frequency</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td id="T_0d67d_row0_col0" class="data row0 col0" >0.4444</td>
-      <td id="T_0d67d_row0_col1" class="data row0 col1" >0.0307</td>
+      <td id="T_073c4_row0_col0" class="data row0 col0" >0.4444</td>
+      <td id="T_073c4_row0_col1" class="data row0 col1" >0.0307</td>
     </tr>
     <tr>
-      <td id="T_0d67d_row1_col0" class="data row1 col0" >0.7500</td>
-      <td id="T_0d67d_row1_col1" class="data row1 col1" >0.0137</td>
+      <td id="T_073c4_row1_col0" class="data row1 col0" >0.7500</td>
+      <td id="T_073c4_row1_col1" class="data row1 col1" >0.0137</td>
     </tr>
     <tr>
-      <td id="T_0d67d_row2_col0" class="data row2 col0" >0.6667</td>
-      <td id="T_0d67d_row2_col1" class="data row2 col1" >0.0205</td>
+      <td id="T_073c4_row2_col0" class="data row2 col0" >0.6667</td>
+      <td id="T_073c4_row2_col1" class="data row2 col1" >0.0205</td>
     </tr>
     <tr>
-      <td id="T_0d67d_row3_col0" class="data row3 col0" >0.6000</td>
-      <td id="T_0d67d_row3_col1" class="data row3 col1" >0.0341</td>
+      <td id="T_073c4_row3_col0" class="data row3 col0" >0.6000</td>
+      <td id="T_073c4_row3_col1" class="data row3 col1" >0.0341</td>
     </tr>
     <tr>
-      <td id="T_0d67d_row4_col0" class="data row4 col0" >0.2500</td>
-      <td id="T_0d67d_row4_col1" class="data row4 col1" >0.0273</td>
+      <td id="T_073c4_row4_col0" class="data row4 col0" >0.2500</td>
+      <td id="T_073c4_row4_col1" class="data row4 col1" >0.0273</td>
     </tr>
     <tr>
-      <td id="T_0d67d_row5_col0" class="data row5 col0" >0.4286</td>
-      <td id="T_0d67d_row5_col1" class="data row5 col1" >0.0717</td>
+      <td id="T_073c4_row5_col0" class="data row5 col0" >0.4286</td>
+      <td id="T_073c4_row5_col1" class="data row5 col1" >0.0717</td>
     </tr>
     <tr>
-      <td id="T_0d67d_row6_col0" class="data row6 col0" >0.2000</td>
-      <td id="T_0d67d_row6_col1" class="data row6 col1" >0.0341</td>
+      <td id="T_073c4_row6_col0" class="data row6 col0" >0.2000</td>
+      <td id="T_073c4_row6_col1" class="data row6 col1" >0.0341</td>
     </tr>
     <tr>
-      <td id="T_0d67d_row7_col0" class="data row7 col0" >0.3333</td>
-      <td id="T_0d67d_row7_col1" class="data row7 col1" >0.0205</td>
+      <td id="T_073c4_row7_col0" class="data row7 col0" >0.3333</td>
+      <td id="T_073c4_row7_col1" class="data row7 col1" >0.0205</td>
     </tr>
     <tr>
-      <td id="T_0d67d_row8_col0" class="data row8 col0" >0.1538</td>
-      <td id="T_0d67d_row8_col1" class="data row8 col1" >0.0444</td>
+      <td id="T_073c4_row8_col0" class="data row8 col0" >0.1538</td>
+      <td id="T_073c4_row8_col1" class="data row8 col1" >0.0444</td>
     </tr>
     <tr>
-      <td id="T_0d67d_row9_col0" class="data row9 col0" >0.1667</td>
-      <td id="T_0d67d_row9_col1" class="data row9 col1" >0.0205</td>
+      <td id="T_073c4_row9_col0" class="data row9 col0" >0.1667</td>
+      <td id="T_073c4_row9_col1" class="data row9 col1" >0.0205</td>
     </tr>
     <tr>
-      <td id="T_0d67d_row10_col0" class="data row10 col0" >0.1875</td>
-      <td id="T_0d67d_row10_col1" class="data row10 col1" >0.0546</td>
+      <td id="T_073c4_row10_col0" class="data row10 col0" >0.1875</td>
+      <td id="T_073c4_row10_col1" class="data row10 col1" >0.0546</td>
     </tr>
     <tr>
-      <td id="T_0d67d_row11_col0" class="data row11 col0" >0.5000</td>
-      <td id="T_0d67d_row11_col1" class="data row11 col1" >0.0341</td>
+      <td id="T_073c4_row11_col0" class="data row11 col0" >0.5000</td>
+      <td id="T_073c4_row11_col1" class="data row11 col1" >0.0341</td>
     </tr>
     <tr>
-      <td id="T_0d67d_row12_col0" class="data row12 col0" >0.5000</td>
-      <td id="T_0d67d_row12_col1" class="data row12 col1" >0.0341</td>
+      <td id="T_073c4_row12_col0" class="data row12 col0" >0.5000</td>
+      <td id="T_073c4_row12_col1" class="data row12 col1" >0.0341</td>
     </tr>
     <tr>
-      <td id="T_0d67d_row13_col0" class="data row13 col0" >0.3529</td>
-      <td id="T_0d67d_row13_col1" class="data row13 col1" >0.0580</td>
+      <td id="T_073c4_row13_col0" class="data row13 col0" >0.3529</td>
+      <td id="T_073c4_row13_col1" class="data row13 col1" >0.0580</td>
     </tr>
     <tr>
-      <td id="T_0d67d_row14_col0" class="data row14 col0" >0.2632</td>
-      <td id="T_0d67d_row14_col1" class="data row14 col1" >0.0648</td>
+      <td id="T_073c4_row14_col0" class="data row14 col0" >0.2632</td>
+      <td id="T_073c4_row14_col1" class="data row14 col1" >0.0648</td>
     </tr>
     <tr>
-      <td id="T_0d67d_row15_col0" class="data row15 col0" >0.4286</td>
-      <td id="T_0d67d_row15_col1" class="data row15 col1" >0.0239</td>
+      <td id="T_073c4_row15_col0" class="data row15 col0" >0.4286</td>
+      <td id="T_073c4_row15_col1" class="data row15 col1" >0.0239</td>
     </tr>
     <tr>
-      <td id="T_0d67d_row16_col0" class="data row16 col0" >0.3333</td>
-      <td id="T_0d67d_row16_col1" class="data row16 col1" >0.0307</td>
+      <td id="T_073c4_row16_col0" class="data row16 col0" >0.3333</td>
+      <td id="T_073c4_row16_col1" class="data row16 col1" >0.0307</td>
     </tr>
     <tr>
-      <td id="T_0d67d_row17_col0" class="data row17 col0" >0.6250</td>
-      <td id="T_0d67d_row17_col1" class="data row17 col1" >0.0273</td>
+      <td id="T_073c4_row17_col0" class="data row17 col0" >0.6250</td>
+      <td id="T_073c4_row17_col1" class="data row17 col1" >0.0273</td>
     </tr>
     <tr>
-      <td id="T_0d67d_row18_col0" class="data row18 col0" >0.4000</td>
-      <td id="T_0d67d_row18_col1" class="data row18 col1" >0.0171</td>
+      <td id="T_073c4_row18_col0" class="data row18 col0" >0.4000</td>
+      <td id="T_073c4_row18_col1" class="data row18 col1" >0.0171</td>
     </tr>
     <tr>
-      <td id="T_0d67d_row19_col0" class="data row19 col0" >0.6667</td>
-      <td id="T_0d67d_row19_col1" class="data row19 col1" >0.0205</td>
+      <td id="T_073c4_row19_col0" class="data row19 col0" >0.6667</td>
+      <td id="T_073c4_row19_col1" class="data row19 col1" >0.0205</td>
     </tr>
     <tr>
-      <td id="T_0d67d_row20_col0" class="data row20 col0" >0.7500</td>
-      <td id="T_0d67d_row20_col1" class="data row20 col1" >0.0137</td>
+      <td id="T_073c4_row20_col0" class="data row20 col0" >0.7500</td>
+      <td id="T_073c4_row20_col1" class="data row20 col1" >0.0137</td>
     </tr>
     <tr>
-      <td id="T_0d67d_row21_col0" class="data row21 col0" >0.5882</td>
-      <td id="T_0d67d_row21_col1" class="data row21 col1" >0.0580</td>
+      <td id="T_073c4_row21_col0" class="data row21 col0" >0.5882</td>
+      <td id="T_073c4_row21_col1" class="data row21 col1" >0.0580</td>
     </tr>
     <tr>
-      <td id="T_0d67d_row22_col0" class="data row22 col0" >0.2500</td>
-      <td id="T_0d67d_row22_col1" class="data row22 col1" >0.0273</td>
+      <td id="T_073c4_row22_col0" class="data row22 col0" >0.2500</td>
+      <td id="T_073c4_row22_col1" class="data row22 col1" >0.0273</td>
     </tr>
     <tr>
-      <td id="T_0d67d_row23_col0" class="data row23 col0" >0.1875</td>
-      <td id="T_0d67d_row23_col1" class="data row23 col1" >0.0546</td>
+      <td id="T_073c4_row23_col0" class="data row23 col0" >0.1875</td>
+      <td id="T_073c4_row23_col1" class="data row23 col1" >0.0546</td>
     </tr>
     <tr>
-      <td id="T_0d67d_row24_col0" class="data row24 col0" >0.5000</td>
-      <td id="T_0d67d_row24_col1" class="data row24 col1" >0.0137</td>
+      <td id="T_073c4_row24_col0" class="data row24 col0" >0.5000</td>
+      <td id="T_073c4_row24_col1" class="data row24 col1" >0.0137</td>
     </tr>
     <tr>
-      <td id="T_0d67d_row25_col0" class="data row25 col0" >0.1429</td>
-      <td id="T_0d67d_row25_col1" class="data row25 col1" >0.0239</td>
+      <td id="T_073c4_row25_col0" class="data row25 col0" >0.1429</td>
+      <td id="T_073c4_row25_col1" class="data row25 col1" >0.0239</td>
     </tr>
     <tr>
-      <td id="T_0d67d_row26_col0" class="data row26 col0" >0.1667</td>
-      <td id="T_0d67d_row26_col1" class="data row26 col1" >0.0205</td>
+      <td id="T_073c4_row26_col0" class="data row26 col0" >0.1667</td>
+      <td id="T_073c4_row26_col1" class="data row26 col1" >0.0205</td>
     </tr>
     <tr>
-      <td id="T_0d67d_row27_col0" class="data row27 col0" >0.5000</td>
-      <td id="T_0d67d_row27_col1" class="data row27 col1" >0.0205</td>
+      <td id="T_073c4_row27_col0" class="data row27 col0" >0.5000</td>
+      <td id="T_073c4_row27_col1" class="data row27 col1" >0.0205</td>
     </tr>
     <tr>
-      <td id="T_0d67d_row28_col0" class="data row28 col0" >0.6667</td>
-      <td id="T_0d67d_row28_col1" class="data row28 col1" >0.0205</td>
+      <td id="T_073c4_row28_col0" class="data row28 col0" >0.6667</td>
+      <td id="T_073c4_row28_col1" class="data row28 col1" >0.0205</td>
     </tr>
     <tr>
-      <td id="T_0d67d_row29_col0" class="data row29 col0" >0.5000</td>
-      <td id="T_0d67d_row29_col1" class="data row29 col1" >0.0205</td>
+      <td id="T_073c4_row29_col0" class="data row29 col0" >0.5000</td>
+      <td id="T_073c4_row29_col1" class="data row29 col1" >0.0205</td>
     </tr>
     <tr>
-      <td id="T_0d67d_row30_col0" class="data row30 col0" >0.6000</td>
-      <td id="T_0d67d_row30_col1" class="data row30 col1" >0.0171</td>
+      <td id="T_073c4_row30_col0" class="data row30 col0" >0.6000</td>
+      <td id="T_073c4_row30_col1" class="data row30 col1" >0.0171</td>
     </tr>
     <tr>
-      <td id="T_0d67d_row31_col0" class="data row31 col0" >0.2500</td>
-      <td id="T_0d67d_row31_col1" class="data row31 col1" >0.0273</td>
+      <td id="T_073c4_row31_col0" class="data row31 col0" >0.2500</td>
+      <td id="T_073c4_row31_col1" class="data row31 col1" >0.0273</td>
     </tr>
   </tbody>
 </table></div>
@@ -1582,9 +1582,9 @@ Testing robustness    :   0%|          | 0/3 [00:00&lt;?, ?it/s]
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Grouping modalities   : 100%|█████████▉| 36455/36456 [00:04&lt;00:00, 7739.25it/s]
-Computing associations: 100%|██████████| 36456/36456 [00:07&lt;00:00, 4647.04it/s]
-Testing robustness    :   1%|          | 302/36456 [00:00&lt;01:20, 451.30it/s]
+Grouping modalities   : 100%|█████████▉| 36455/36456 [00:05&lt;00:00, 7101.34it/s]
+Computing associations: 100%|██████████| 36456/36456 [00:08&lt;00:00, 4076.83it/s]
+Testing robustness    :   1%|          | 302/36456 [00:00&lt;01:37, 372.69it/s]
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
@@ -1602,63 +1602,63 @@ Testing robustness    :   1%|          | 302/36456 [00:00&lt;01:20, 451.30it/s]
 </div>
 <div class="output_area rendered_html docutils container">
 <style type="text/css">
-#T_92f12_row0_col0, #T_92f12_row1_col1 {
+#T_132ff_row0_col0, #T_132ff_row1_col1 {
   background-color: #b40426;
   color: #f1f1f1;
 }
-#T_92f12_row0_col1, #T_92f12_row1_col0 {
+#T_132ff_row0_col1, #T_132ff_row1_col0 {
   background-color: #3b4cc0;
   color: #f1f1f1;
 }
 </style>
-<table id="T_92f12" style='display:inline'>
+<table id="T_132ff" style='display:inline'>
   <caption>X distribution</caption>
   <thead>
     <tr>
       <th class="blank level0" >&nbsp;</th>
-      <th id="T_92f12_level0_col0" class="col_heading level0 col0" >target_rate</th>
-      <th id="T_92f12_level0_col1" class="col_heading level0 col1" >frequency</th>
+      <th id="T_132ff_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_132ff_level0_col1" class="col_heading level0 col1" >frequency</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th id="T_92f12_level0_row0" class="row_heading level0 row0" >x <= 8.0e+00</th>
-      <td id="T_92f12_row0_col0" class="data row0 col0" >0.6364</td>
-      <td id="T_92f12_row0_col1" class="data row0 col1" >0.0741</td>
+      <th id="T_132ff_level0_row0" class="row_heading level0 row0" >x <= 8.0e+00</th>
+      <td id="T_132ff_row0_col0" class="data row0 col0" >0.6364</td>
+      <td id="T_132ff_row0_col1" class="data row0 col1" >0.0741</td>
     </tr>
     <tr>
-      <th id="T_92f12_level0_row1" class="row_heading level0 row1" >8.0e+00 < x</th>
-      <td id="T_92f12_row1_col0" class="data row1 col0" >0.3655</td>
-      <td id="T_92f12_row1_col1" class="data row1 col1" >0.9259</td>
+      <th id="T_132ff_level0_row1" class="row_heading level0 row1" >8.0e+00 < x</th>
+      <td id="T_132ff_row1_col0" class="data row1 col0" >0.3655</td>
+      <td id="T_132ff_row1_col1" class="data row1 col1" >0.9259</td>
     </tr>
   </tbody>
 </table>
           <style type="text/css">
-#T_24186_row0_col0, #T_24186_row1_col1 {
+#T_39b79_row0_col0, #T_39b79_row1_col1 {
   background-color: #b40426;
   color: #f1f1f1;
 }
-#T_24186_row0_col1, #T_24186_row1_col0 {
+#T_39b79_row0_col1, #T_39b79_row1_col0 {
   background-color: #3b4cc0;
   color: #f1f1f1;
 }
 </style>
-<table id="T_24186" style='display:inline'>
+<table id="T_39b79" style='display:inline'>
   <caption>X_dev distribution</caption>
   <thead>
     <tr>
-      <th id="T_24186_level0_col0" class="col_heading level0 col0" >target_rate</th>
-      <th id="T_24186_level0_col1" class="col_heading level0 col1" >frequency</th>
+      <th id="T_39b79_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_39b79_level0_col1" class="col_heading level0 col1" >frequency</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td id="T_24186_row0_col0" class="data row0 col0" >0.5789</td>
-      <td id="T_24186_row0_col1" class="data row0 col1" >0.0648</td>
+      <td id="T_39b79_row0_col0" class="data row0 col0" >0.5789</td>
+      <td id="T_39b79_row0_col1" class="data row0 col1" >0.0648</td>
     </tr>
     <tr>
-      <td id="T_24186_row1_col0" class="data row1 col0" >0.3723</td>
-      <td id="T_24186_row1_col1" class="data row1 col1" >0.9352</td>
+      <td id="T_39b79_row1_col0" class="data row1 col0" >0.3723</td>
+      <td id="T_39b79_row1_col1" class="data row1 col1" >0.9352</td>
     </tr>
   </tbody>
 </table></div>
@@ -1677,610 +1677,610 @@ Testing robustness    :   1%|          | 302/36456 [00:00&lt;01:20, 451.30it/s]
 </div>
 <div class="output_area rendered_html docutils container">
 <style type="text/css">
-#T_99017_row0_col0, #T_99017_row3_col1 {
+#T_05def_row0_col0, #T_05def_row3_col1 {
   background-color: #3b4cc0;
   color: #f1f1f1;
 }
-#T_99017_row0_col1, #T_99017_row7_col1, #T_99017_row9_col1, #T_99017_row31_col1 {
+#T_05def_row0_col1, #T_05def_row7_col1, #T_05def_row9_col1, #T_05def_row31_col1 {
   background-color: #7295f4;
   color: #f1f1f1;
 }
-#T_99017_row1_col0 {
+#T_05def_row1_col0 {
   background-color: #6b8df0;
   color: #f1f1f1;
 }
-#T_99017_row1_col1, #T_99017_row13_col1, #T_99017_row14_col1, #T_99017_row22_col1, #T_99017_row24_col1, #T_99017_row27_col1, #T_99017_row29_col1 {
+#T_05def_row1_col1, #T_05def_row13_col1, #T_05def_row14_col1, #T_05def_row22_col1, #T_05def_row24_col1, #T_05def_row27_col1, #T_05def_row29_col1 {
   background-color: #6687ed;
   color: #f1f1f1;
 }
-#T_99017_row2_col0 {
+#T_05def_row2_col0 {
   background-color: #9ebeff;
   color: #000000;
 }
-#T_99017_row2_col1, #T_99017_row19_col1 {
+#T_05def_row2_col1, #T_05def_row19_col1 {
   background-color: #96b7ff;
   color: #000000;
 }
-#T_99017_row3_col0, #T_99017_row10_col1, #T_99017_row11_col1, #T_99017_row16_col1, #T_99017_row17_col1, #T_99017_row23_col1, #T_99017_row26_col1, #T_99017_row30_col1, #T_99017_row32_col1 {
+#T_05def_row3_col0, #T_05def_row10_col1, #T_05def_row11_col1, #T_05def_row16_col1, #T_05def_row17_col1, #T_05def_row23_col1, #T_05def_row26_col1, #T_05def_row30_col1, #T_05def_row32_col1 {
   background-color: #5a78e4;
   color: #f1f1f1;
 }
-#T_99017_row4_col0 {
+#T_05def_row4_col0 {
   background-color: #c0d4f5;
   color: #000000;
 }
-#T_99017_row4_col1, #T_99017_row31_col0 {
+#T_05def_row4_col1, #T_05def_row31_col0 {
   background-color: #b40426;
   color: #f1f1f1;
 }
-#T_99017_row5_col0, #T_99017_row13_col0, #T_99017_row18_col0, #T_99017_row22_col0 {
+#T_05def_row5_col0, #T_05def_row13_col0, #T_05def_row18_col0, #T_05def_row22_col0 {
   background-color: #bad0f8;
   color: #000000;
 }
-#T_99017_row5_col1 {
+#T_05def_row5_col1 {
   background-color: #cedaeb;
   color: #000000;
 }
-#T_99017_row6_col0 {
+#T_05def_row6_col0 {
   background-color: #6e90f2;
   color: #f1f1f1;
 }
-#T_99017_row6_col1, #T_99017_row12_col0 {
+#T_05def_row6_col1, #T_05def_row12_col0 {
   background-color: #f0cdbb;
   color: #000000;
 }
-#T_99017_row7_col0 {
+#T_05def_row7_col0 {
   background-color: #edd1c2;
   color: #000000;
 }
-#T_99017_row8_col0 {
+#T_05def_row8_col0 {
   background-color: #5d7ce6;
   color: #f1f1f1;
 }
-#T_99017_row8_col1 {
+#T_05def_row8_col1 {
   background-color: #f7b093;
   color: #000000;
 }
-#T_99017_row9_col0 {
+#T_05def_row9_col0 {
   background-color: #6788ee;
   color: #f1f1f1;
 }
-#T_99017_row10_col0, #T_99017_row11_col0 {
+#T_05def_row10_col0, #T_05def_row11_col0 {
   background-color: #c3d5f4;
   color: #000000;
 }
-#T_99017_row12_col1 {
+#T_05def_row12_col1 {
   background-color: #c0282f;
   color: #f1f1f1;
 }
-#T_99017_row14_col0 {
+#T_05def_row14_col0 {
   background-color: #85a8fc;
   color: #f1f1f1;
 }
-#T_99017_row15_col0 {
+#T_05def_row15_col0 {
   background-color: #f7b89c;
   color: #000000;
 }
-#T_99017_row15_col1, #T_99017_row20_col1, #T_99017_row28_col1 {
+#T_05def_row15_col1, #T_05def_row20_col1, #T_05def_row28_col1 {
   background-color: #445acc;
   color: #f1f1f1;
 }
-#T_99017_row16_col0 {
+#T_05def_row16_col0 {
   background-color: #f7bca1;
   color: #000000;
 }
-#T_99017_row17_col0 {
+#T_05def_row17_col0 {
   background-color: #dadce0;
   color: #000000;
 }
-#T_99017_row18_col1 {
+#T_05def_row18_col1 {
   background-color: #e16751;
   color: #f1f1f1;
 }
-#T_99017_row19_col0 {
+#T_05def_row19_col0 {
   background-color: #f7b99e;
   color: #000000;
 }
-#T_99017_row20_col0 {
+#T_05def_row20_col0 {
   background-color: #9abbff;
   color: #000000;
 }
-#T_99017_row21_col0 {
+#T_05def_row21_col0 {
   background-color: #e4d9d2;
   color: #000000;
 }
-#T_99017_row21_col1 {
+#T_05def_row21_col1 {
   background-color: #4f69d9;
   color: #f1f1f1;
 }
-#T_99017_row23_col0 {
+#T_05def_row23_col0 {
   background-color: #a7c5fe;
   color: #000000;
 }
-#T_99017_row24_col0 {
+#T_05def_row24_col0 {
   background-color: #e5d8d1;
   color: #000000;
 }
-#T_99017_row25_col0 {
+#T_05def_row25_col0 {
   background-color: #93b5fe;
   color: #000000;
 }
-#T_99017_row25_col1 {
+#T_05def_row25_col1 {
   background-color: #7da0f9;
   color: #f1f1f1;
 }
-#T_99017_row26_col0, #T_99017_row30_col0 {
+#T_05def_row26_col0, #T_05def_row30_col0 {
   background-color: #d75445;
   color: #f1f1f1;
 }
-#T_99017_row27_col0 {
+#T_05def_row27_col0 {
   background-color: #f3c8b2;
   color: #000000;
 }
-#T_99017_row28_col0 {
+#T_05def_row28_col0 {
   background-color: #d6dce4;
   color: #000000;
 }
-#T_99017_row29_col0 {
+#T_05def_row29_col0 {
   background-color: #d1493f;
   color: #f1f1f1;
 }
-#T_99017_row32_col0 {
+#T_05def_row32_col0 {
   background-color: #eb7d62;
   color: #f1f1f1;
 }
 </style>
-<table id="T_99017" style='display:inline'>
+<table id="T_05def" style='display:inline'>
   <caption>X distribution</caption>
   <thead>
     <tr>
       <th class="blank level0" >&nbsp;</th>
-      <th id="T_99017_level0_col0" class="col_heading level0 col0" >target_rate</th>
-      <th id="T_99017_level0_col1" class="col_heading level0 col1" >frequency</th>
+      <th id="T_05def_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_05def_level0_col1" class="col_heading level0 col1" >frequency</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th id="T_99017_level0_row0" class="row_heading level0 row0" >x <= 6.86e+00</th>
-      <td id="T_99017_row0_col0" class="data row0 col0" >0.0000</td>
-      <td id="T_99017_row0_col1" class="data row0 col1" >0.0269</td>
+      <th id="T_05def_level0_row0" class="row_heading level0 row0" >x <= 6.86e+00</th>
+      <td id="T_05def_row0_col0" class="data row0 col0" >0.0000</td>
+      <td id="T_05def_row0_col1" class="data row0 col1" >0.0269</td>
     </tr>
     <tr>
-      <th id="T_99017_level0_row1" class="row_heading level0 row1" >6.86e+00 < x <= 7.14e+00</th>
-      <td id="T_99017_row1_col0" class="data row1 col0" >0.1333</td>
-      <td id="T_99017_row1_col1" class="data row1 col1" >0.0253</td>
+      <th id="T_05def_level0_row1" class="row_heading level0 row1" >6.86e+00 < x <= 7.14e+00</th>
+      <td id="T_05def_row1_col0" class="data row1 col0" >0.1333</td>
+      <td id="T_05def_row1_col1" class="data row1 col1" >0.0253</td>
     </tr>
     <tr>
-      <th id="T_99017_level0_row2" class="row_heading level0 row2" >7.14e+00 < x <= 7.23e+00</th>
-      <td id="T_99017_row2_col0" class="data row2 col0" >0.2632</td>
-      <td id="T_99017_row2_col1" class="data row2 col1" >0.0320</td>
+      <th id="T_05def_level0_row2" class="row_heading level0 row2" >7.14e+00 < x <= 7.23e+00</th>
+      <td id="T_05def_row2_col0" class="data row2 col0" >0.2632</td>
+      <td id="T_05def_row2_col1" class="data row2 col1" >0.0320</td>
     </tr>
     <tr>
-      <th id="T_99017_level0_row3" class="row_heading level0 row3" >7.23e+00 < x <= 7.25e+00</th>
-      <td id="T_99017_row3_col0" class="data row3 col0" >0.0909</td>
-      <td id="T_99017_row3_col1" class="data row3 col1" >0.0185</td>
+      <th id="T_05def_level0_row3" class="row_heading level0 row3" >7.23e+00 < x <= 7.25e+00</th>
+      <td id="T_05def_row3_col0" class="data row3 col0" >0.0909</td>
+      <td id="T_05def_row3_col1" class="data row3 col1" >0.0185</td>
     </tr>
     <tr>
-      <th id="T_99017_level0_row4" class="row_heading level0 row4" >7.25e+00 < x <= 7.75e+00</th>
-      <td id="T_99017_row4_col0" class="data row4 col0" >0.3500</td>
-      <td id="T_99017_row4_col1" class="data row4 col1" >0.0673</td>
+      <th id="T_05def_level0_row4" class="row_heading level0 row4" >7.25e+00 < x <= 7.75e+00</th>
+      <td id="T_05def_row4_col0" class="data row4 col0" >0.3500</td>
+      <td id="T_05def_row4_col1" class="data row4 col1" >0.0673</td>
     </tr>
     <tr>
-      <th id="T_99017_level0_row5" class="row_heading level0 row5" >7.75e+00 < x <= 7.85e+00</th>
-      <td id="T_99017_row5_col0" class="data row5 col0" >0.3333</td>
-      <td id="T_99017_row5_col1" class="data row5 col1" >0.0404</td>
+      <th id="T_05def_level0_row5" class="row_heading level0 row5" >7.75e+00 < x <= 7.85e+00</th>
+      <td id="T_05def_row5_col0" class="data row5 col0" >0.3333</td>
+      <td id="T_05def_row5_col1" class="data row5 col1" >0.0404</td>
     </tr>
     <tr>
-      <th id="T_99017_level0_row6" class="row_heading level0 row6" >7.85e+00 < x <= 7.90e+00</th>
-      <td id="T_99017_row6_col0" class="data row6 col0" >0.1429</td>
-      <td id="T_99017_row6_col1" class="data row6 col1" >0.0471</td>
+      <th id="T_05def_level0_row6" class="row_heading level0 row6" >7.85e+00 < x <= 7.90e+00</th>
+      <td id="T_05def_row6_col0" class="data row6 col0" >0.1429</td>
+      <td id="T_05def_row6_col1" class="data row6 col1" >0.0471</td>
     </tr>
     <tr>
-      <th id="T_99017_level0_row7" class="row_heading level0 row7" >7.90e+00 < x <= 8.03e+00</th>
-      <td id="T_99017_row7_col0" class="data row7 col0" >0.5000</td>
-      <td id="T_99017_row7_col1" class="data row7 col1" >0.0269</td>
+      <th id="T_05def_level0_row7" class="row_heading level0 row7" >7.90e+00 < x <= 8.03e+00</th>
+      <td id="T_05def_row7_col0" class="data row7 col0" >0.5000</td>
+      <td id="T_05def_row7_col1" class="data row7 col1" >0.0269</td>
     </tr>
     <tr>
-      <th id="T_99017_level0_row8" class="row_heading level0 row8" >8.03e+00 < x <= 8.05e+00</th>
-      <td id="T_99017_row8_col0" class="data row8 col0" >0.0968</td>
-      <td id="T_99017_row8_col1" class="data row8 col1" >0.0522</td>
+      <th id="T_05def_level0_row8" class="row_heading level0 row8" >8.03e+00 < x <= 8.05e+00</th>
+      <td id="T_05def_row8_col0" class="data row8 col0" >0.0968</td>
+      <td id="T_05def_row8_col1" class="data row8 col1" >0.0522</td>
     </tr>
     <tr>
-      <th id="T_99017_level0_row9" class="row_heading level0 row9" >8.05e+00 < x <= 9.00e+00</th>
-      <td id="T_99017_row9_col0" class="data row9 col0" >0.1250</td>
-      <td id="T_99017_row9_col1" class="data row9 col1" >0.0269</td>
+      <th id="T_05def_level0_row9" class="row_heading level0 row9" >8.05e+00 < x <= 9.00e+00</th>
+      <td id="T_05def_row9_col0" class="data row9 col0" >0.1250</td>
+      <td id="T_05def_row9_col1" class="data row9 col1" >0.0269</td>
     </tr>
     <tr>
-      <th id="T_99017_level0_row10" class="row_heading level0 row10" >9.00e+00 < x <= 9.84e+00</th>
-      <td id="T_99017_row10_col0" class="data row10 col0" >0.3571</td>
-      <td id="T_99017_row10_col1" class="data row10 col1" >0.0236</td>
+      <th id="T_05def_level0_row10" class="row_heading level0 row10" >9.00e+00 < x <= 9.84e+00</th>
+      <td id="T_05def_row10_col0" class="data row10 col0" >0.3571</td>
+      <td id="T_05def_row10_col1" class="data row10 col1" >0.0236</td>
     </tr>
     <tr>
-      <th id="T_99017_level0_row11" class="row_heading level0 row11" >9.84e+00 < x <= 1.05e+01</th>
-      <td id="T_99017_row11_col0" class="data row11 col0" >0.3571</td>
-      <td id="T_99017_row11_col1" class="data row11 col1" >0.0236</td>
+      <th id="T_05def_level0_row11" class="row_heading level0 row11" >9.84e+00 < x <= 1.05e+01</th>
+      <td id="T_05def_row11_col0" class="data row11 col0" >0.3571</td>
+      <td id="T_05def_row11_col1" class="data row11 col1" >0.0236</td>
     </tr>
     <tr>
-      <th id="T_99017_level0_row12" class="row_heading level0 row12" >1.05e+01 < x <= 1.30e+01</th>
-      <td id="T_99017_row12_col0" class="data row12 col0" >0.5128</td>
-      <td id="T_99017_row12_col1" class="data row12 col1" >0.0657</td>
+      <th id="T_05def_level0_row12" class="row_heading level0 row12" >1.05e+01 < x <= 1.30e+01</th>
+      <td id="T_05def_row12_col0" class="data row12 col0" >0.5128</td>
+      <td id="T_05def_row12_col1" class="data row12 col1" >0.0657</td>
     </tr>
     <tr>
-      <th id="T_99017_level0_row13" class="row_heading level0 row13" >1.30e+01 < x <= 1.45e+01</th>
-      <td id="T_99017_row13_col0" class="data row13 col0" >0.3333</td>
-      <td id="T_99017_row13_col1" class="data row13 col1" >0.0253</td>
+      <th id="T_05def_level0_row13" class="row_heading level0 row13" >1.30e+01 < x <= 1.45e+01</th>
+      <td id="T_05def_row13_col0" class="data row13 col0" >0.3333</td>
+      <td id="T_05def_row13_col1" class="data row13 col1" >0.0253</td>
     </tr>
     <tr>
-      <th id="T_99017_level0_row14" class="row_heading level0 row14" >1.45e+01 < x <= 1.55e+01</th>
-      <td id="T_99017_row14_col0" class="data row14 col0" >0.2000</td>
-      <td id="T_99017_row14_col1" class="data row14 col1" >0.0253</td>
+      <th id="T_05def_level0_row14" class="row_heading level0 row14" >1.45e+01 < x <= 1.55e+01</th>
+      <td id="T_05def_row14_col0" class="data row14 col0" >0.2000</td>
+      <td id="T_05def_row14_col1" class="data row14 col1" >0.0253</td>
     </tr>
     <tr>
-      <th id="T_99017_level0_row15" class="row_heading level0 row15" >1.55e+01 < x <= 1.67e+01</th>
-      <td id="T_99017_row15_col0" class="data row15 col0" >0.5833</td>
-      <td id="T_99017_row15_col1" class="data row15 col1" >0.0202</td>
+      <th id="T_05def_level0_row15" class="row_heading level0 row15" >1.55e+01 < x <= 1.67e+01</th>
+      <td id="T_05def_row15_col0" class="data row15 col0" >0.5833</td>
+      <td id="T_05def_row15_col1" class="data row15 col1" >0.0202</td>
     </tr>
     <tr>
-      <th id="T_99017_level0_row16" class="row_heading level0 row16" >1.67e+01 < x <= 2.02e+01</th>
-      <td id="T_99017_row16_col0" class="data row16 col0" >0.5714</td>
-      <td id="T_99017_row16_col1" class="data row16 col1" >0.0236</td>
+      <th id="T_05def_level0_row16" class="row_heading level0 row16" >1.67e+01 < x <= 2.02e+01</th>
+      <td id="T_05def_row16_col0" class="data row16 col0" >0.5714</td>
+      <td id="T_05def_row16_col1" class="data row16 col1" >0.0236</td>
     </tr>
     <tr>
-      <th id="T_99017_level0_row17" class="row_heading level0 row17" >2.02e+01 < x <= 2.30e+01</th>
-      <td id="T_99017_row17_col0" class="data row17 col0" >0.4286</td>
-      <td id="T_99017_row17_col1" class="data row17 col1" >0.0236</td>
+      <th id="T_05def_level0_row17" class="row_heading level0 row17" >2.02e+01 < x <= 2.30e+01</th>
+      <td id="T_05def_row17_col0" class="data row17 col0" >0.4286</td>
+      <td id="T_05def_row17_col1" class="data row17 col1" >0.0236</td>
     </tr>
     <tr>
-      <th id="T_99017_level0_row18" class="row_heading level0 row18" >2.30e+01 < x <= 2.60e+01</th>
-      <td id="T_99017_row18_col0" class="data row18 col0" >0.3333</td>
-      <td id="T_99017_row18_col1" class="data row18 col1" >0.0606</td>
+      <th id="T_05def_level0_row18" class="row_heading level0 row18" >2.30e+01 < x <= 2.60e+01</th>
+      <td id="T_05def_row18_col0" class="data row18 col0" >0.3333</td>
+      <td id="T_05def_row18_col1" class="data row18 col1" >0.0606</td>
     </tr>
     <tr>
-      <th id="T_99017_level0_row19" class="row_heading level0 row19" >2.60e+01 < x <= 2.66e+01</th>
-      <td id="T_99017_row19_col0" class="data row19 col0" >0.5789</td>
-      <td id="T_99017_row19_col1" class="data row19 col1" >0.0320</td>
+      <th id="T_05def_level0_row19" class="row_heading level0 row19" >2.60e+01 < x <= 2.66e+01</th>
+      <td id="T_05def_row19_col0" class="data row19 col0" >0.5789</td>
+      <td id="T_05def_row19_col1" class="data row19 col1" >0.0320</td>
     </tr>
     <tr>
-      <th id="T_99017_level0_row20" class="row_heading level0 row20" >2.66e+01 < x <= 2.79e+01</th>
-      <td id="T_99017_row20_col0" class="data row20 col0" >0.2500</td>
-      <td id="T_99017_row20_col1" class="data row20 col1" >0.0202</td>
+      <th id="T_05def_level0_row20" class="row_heading level0 row20" >2.66e+01 < x <= 2.79e+01</th>
+      <td id="T_05def_row20_col0" class="data row20 col0" >0.2500</td>
+      <td id="T_05def_row20_col1" class="data row20 col1" >0.0202</td>
     </tr>
     <tr>
-      <th id="T_99017_level0_row21" class="row_heading level0 row21" >2.79e+01 < x <= 3.00e+01</th>
-      <td id="T_99017_row21_col0" class="data row21 col0" >0.4615</td>
-      <td id="T_99017_row21_col1" class="data row21 col1" >0.0219</td>
+      <th id="T_05def_level0_row21" class="row_heading level0 row21" >2.79e+01 < x <= 3.00e+01</th>
+      <td id="T_05def_row21_col0" class="data row21 col0" >0.4615</td>
+      <td id="T_05def_row21_col1" class="data row21 col1" >0.0219</td>
     </tr>
     <tr>
-      <th id="T_99017_level0_row22" class="row_heading level0 row22" >3.00e+01 < x <= 3.14e+01</th>
-      <td id="T_99017_row22_col0" class="data row22 col0" >0.3333</td>
-      <td id="T_99017_row22_col1" class="data row22 col1" >0.0253</td>
+      <th id="T_05def_level0_row22" class="row_heading level0 row22" >3.00e+01 < x <= 3.14e+01</th>
+      <td id="T_05def_row22_col0" class="data row22 col0" >0.3333</td>
+      <td id="T_05def_row22_col1" class="data row22 col1" >0.0253</td>
     </tr>
     <tr>
-      <th id="T_99017_level0_row23" class="row_heading level0 row23" >3.14e+01 < x <= 3.85e+01</th>
-      <td id="T_99017_row23_col0" class="data row23 col0" >0.2857</td>
-      <td id="T_99017_row23_col1" class="data row23 col1" >0.0236</td>
+      <th id="T_05def_level0_row23" class="row_heading level0 row23" >3.14e+01 < x <= 3.85e+01</th>
+      <td id="T_05def_row23_col0" class="data row23 col0" >0.2857</td>
+      <td id="T_05def_row23_col1" class="data row23 col1" >0.0236</td>
     </tr>
     <tr>
-      <th id="T_99017_level0_row24" class="row_heading level0 row24" >3.85e+01 < x <= 4.24e+01</th>
-      <td id="T_99017_row24_col0" class="data row24 col0" >0.4667</td>
-      <td id="T_99017_row24_col1" class="data row24 col1" >0.0253</td>
+      <th id="T_05def_level0_row24" class="row_heading level0 row24" >3.85e+01 < x <= 4.24e+01</th>
+      <td id="T_05def_row24_col0" class="data row24 col0" >0.4667</td>
+      <td id="T_05def_row24_col1" class="data row24 col1" >0.0253</td>
     </tr>
     <tr>
-      <th id="T_99017_level0_row25" class="row_heading level0 row25" >4.24e+01 < x <= 5.20e+01</th>
-      <td id="T_99017_row25_col0" class="data row25 col0" >0.2353</td>
-      <td id="T_99017_row25_col1" class="data row25 col1" >0.0286</td>
+      <th id="T_05def_level0_row25" class="row_heading level0 row25" >4.24e+01 < x <= 5.20e+01</th>
+      <td id="T_05def_row25_col0" class="data row25 col0" >0.2353</td>
+      <td id="T_05def_row25_col1" class="data row25 col1" >0.0286</td>
     </tr>
     <tr>
-      <th id="T_99017_level0_row26" class="row_heading level0 row26" >5.20e+01 < x <= 5.65e+01</th>
-      <td id="T_99017_row26_col0" class="data row26 col0" >0.7857</td>
-      <td id="T_99017_row26_col1" class="data row26 col1" >0.0236</td>
+      <th id="T_05def_level0_row26" class="row_heading level0 row26" >5.20e+01 < x <= 5.65e+01</th>
+      <td id="T_05def_row26_col0" class="data row26 col0" >0.7857</td>
+      <td id="T_05def_row26_col1" class="data row26 col1" >0.0236</td>
     </tr>
     <tr>
-      <th id="T_99017_level0_row27" class="row_heading level0 row27" >5.65e+01 < x <= 6.95e+01</th>
-      <td id="T_99017_row27_col0" class="data row27 col0" >0.5333</td>
-      <td id="T_99017_row27_col1" class="data row27 col1" >0.0253</td>
+      <th id="T_05def_level0_row27" class="row_heading level0 row27" >5.65e+01 < x <= 6.95e+01</th>
+      <td id="T_05def_row27_col0" class="data row27 col0" >0.5333</td>
+      <td id="T_05def_row27_col1" class="data row27 col1" >0.0253</td>
     </tr>
     <tr>
-      <th id="T_99017_level0_row28" class="row_heading level0 row28" >6.95e+01 < x <= 7.73e+01</th>
-      <td id="T_99017_row28_col0" class="data row28 col0" >0.4167</td>
-      <td id="T_99017_row28_col1" class="data row28 col1" >0.0202</td>
+      <th id="T_05def_level0_row28" class="row_heading level0 row28" >6.95e+01 < x <= 7.73e+01</th>
+      <td id="T_05def_row28_col0" class="data row28 col0" >0.4167</td>
+      <td id="T_05def_row28_col1" class="data row28 col1" >0.0202</td>
     </tr>
     <tr>
-      <th id="T_99017_level0_row29" class="row_heading level0 row29" >7.73e+01 < x <= 8.32e+01</th>
-      <td id="T_99017_row29_col0" class="data row29 col0" >0.8000</td>
-      <td id="T_99017_row29_col1" class="data row29 col1" >0.0253</td>
+      <th id="T_05def_level0_row29" class="row_heading level0 row29" >7.73e+01 < x <= 8.32e+01</th>
+      <td id="T_05def_row29_col0" class="data row29 col0" >0.8000</td>
+      <td id="T_05def_row29_col1" class="data row29 col1" >0.0253</td>
     </tr>
     <tr>
-      <th id="T_99017_level0_row30" class="row_heading level0 row30" >8.32e+01 < x <= 1.11e+02</th>
-      <td id="T_99017_row30_col0" class="data row30 col0" >0.7857</td>
-      <td id="T_99017_row30_col1" class="data row30 col1" >0.0236</td>
+      <th id="T_05def_level0_row30" class="row_heading level0 row30" >8.32e+01 < x <= 1.11e+02</th>
+      <td id="T_05def_row30_col0" class="data row30 col0" >0.7857</td>
+      <td id="T_05def_row30_col1" class="data row30 col1" >0.0236</td>
     </tr>
     <tr>
-      <th id="T_99017_level0_row31" class="row_heading level0 row31" >1.11e+02 < x <= 1.52e+02</th>
-      <td id="T_99017_row31_col0" class="data row31 col0" >0.8750</td>
-      <td id="T_99017_row31_col1" class="data row31 col1" >0.0269</td>
+      <th id="T_05def_level0_row31" class="row_heading level0 row31" >1.11e+02 < x <= 1.52e+02</th>
+      <td id="T_05def_row31_col0" class="data row31 col0" >0.8750</td>
+      <td id="T_05def_row31_col1" class="data row31 col1" >0.0269</td>
     </tr>
     <tr>
-      <th id="T_99017_level0_row32" class="row_heading level0 row32" >1.52e+02 < x</th>
-      <td id="T_99017_row32_col0" class="data row32 col0" >0.7143</td>
-      <td id="T_99017_row32_col1" class="data row32 col1" >0.0236</td>
+      <th id="T_05def_level0_row32" class="row_heading level0 row32" >1.52e+02 < x</th>
+      <td id="T_05def_row32_col0" class="data row32 col0" >0.7143</td>
+      <td id="T_05def_row32_col1" class="data row32 col1" >0.0236</td>
     </tr>
   </tbody>
 </table>
           <style type="text/css">
-#T_1d142_row0_col0 {
+#T_f8ae8_row0_col0 {
   background-color: #6384eb;
   color: #f1f1f1;
 }
-#T_1d142_row0_col1, #T_1d142_row2_col0, #T_1d142_row4_col0, #T_1d142_row13_col0, #T_1d142_row16_col1, #T_1d142_row27_col1, #T_1d142_row30_col1 {
+#T_f8ae8_row0_col1, #T_f8ae8_row2_col0, #T_f8ae8_row4_col0, #T_f8ae8_row13_col0, #T_f8ae8_row16_col1, #T_f8ae8_row27_col1, #T_f8ae8_row30_col1 {
   background-color: #9bbcff;
   color: #000000;
 }
-#T_1d142_row1_col0, #T_1d142_row3_col0, #T_1d142_row3_col1, #T_1d142_row10_col0, #T_1d142_row24_col0 {
+#T_f8ae8_row1_col0, #T_f8ae8_row3_col0, #T_f8ae8_row3_col1, #T_f8ae8_row10_col0, #T_f8ae8_row24_col0 {
   background-color: #3b4cc0;
   color: #f1f1f1;
 }
-#T_1d142_row1_col1, #T_1d142_row7_col1, #T_1d142_row24_col1, #T_1d142_row28_col1 {
+#T_f8ae8_row1_col1, #T_f8ae8_row7_col1, #T_f8ae8_row24_col1, #T_f8ae8_row28_col1 {
   background-color: #465ecf;
   color: #f1f1f1;
 }
-#T_1d142_row2_col1, #T_1d142_row10_col1, #T_1d142_row22_col1, #T_1d142_row23_col1 {
+#T_f8ae8_row2_col1, #T_f8ae8_row10_col1, #T_f8ae8_row22_col1, #T_f8ae8_row23_col1 {
   background-color: #8db0fe;
   color: #000000;
 }
-#T_1d142_row4_col1, #T_1d142_row15_col0, #T_1d142_row23_col0, #T_1d142_row31_col0 {
+#T_f8ae8_row4_col1, #T_f8ae8_row15_col0, #T_f8ae8_row23_col0, #T_f8ae8_row31_col0 {
   background-color: #efcebd;
   color: #000000;
 }
-#T_1d142_row5_col0 {
+#T_f8ae8_row5_col0 {
   background-color: #6b8df0;
   color: #f1f1f1;
 }
-#T_1d142_row5_col1 {
+#T_f8ae8_row5_col1 {
   background-color: #e7d7ce;
   color: #000000;
 }
-#T_1d142_row6_col0, #T_1d142_row13_col1, #T_1d142_row31_col1 {
+#T_f8ae8_row6_col0, #T_f8ae8_row13_col1, #T_f8ae8_row31_col1 {
   background-color: #5470de;
   color: #f1f1f1;
 }
-#T_1d142_row6_col1, #T_1d142_row11_col1 {
+#T_f8ae8_row6_col1, #T_f8ae8_row11_col1 {
   background-color: #dddcdc;
   color: #000000;
 }
-#T_1d142_row7_col0 {
+#T_f8ae8_row7_col0 {
   background-color: #bcd2f7;
   color: #000000;
 }
-#T_1d142_row8_col0, #T_1d142_row9_col0 {
+#T_f8ae8_row8_col0, #T_f8ae8_row9_col0 {
   background-color: #799cf8;
   color: #f1f1f1;
 }
-#T_1d142_row8_col1, #T_1d142_row9_col1 {
+#T_f8ae8_row8_col1, #T_f8ae8_row9_col1 {
   background-color: #c5d6f2;
   color: #000000;
 }
-#T_1d142_row11_col0, #T_1d142_row15_col1, #T_1d142_row17_col1 {
+#T_f8ae8_row11_col0, #T_f8ae8_row15_col1, #T_f8ae8_row17_col1 {
   background-color: #aac7fd;
   color: #000000;
 }
-#T_1d142_row12_col0 {
+#T_f8ae8_row12_col0 {
   background-color: #cedaeb;
   color: #000000;
 }
-#T_1d142_row12_col1, #T_1d142_row19_col0 {
+#T_f8ae8_row12_col1, #T_f8ae8_row19_col0 {
   background-color: #b40426;
   color: #f1f1f1;
 }
-#T_1d142_row14_col0 {
+#T_f8ae8_row14_col0 {
   background-color: #e4d9d2;
   color: #000000;
 }
-#T_1d142_row14_col1, #T_1d142_row32_col1 {
+#T_f8ae8_row14_col1, #T_f8ae8_row32_col1 {
   background-color: #b9d0f9;
   color: #000000;
 }
-#T_1d142_row16_col0 {
+#T_f8ae8_row16_col0 {
   background-color: #e1dad6;
   color: #000000;
 }
-#T_1d142_row17_col0, #T_1d142_row25_col0 {
+#T_f8ae8_row17_col0, #T_f8ae8_row25_col0 {
   background-color: #f7ac8e;
   color: #000000;
 }
-#T_1d142_row18_col0 {
+#T_f8ae8_row18_col0 {
   background-color: #f4c6af;
   color: #000000;
 }
-#T_1d142_row18_col1 {
+#T_f8ae8_row18_col1 {
   background-color: #f5c4ac;
   color: #000000;
 }
-#T_1d142_row19_col1, #T_1d142_row29_col1 {
+#T_f8ae8_row19_col1, #T_f8ae8_row29_col1 {
   background-color: #7ea1fa;
   color: #f1f1f1;
 }
-#T_1d142_row20_col0 {
+#T_f8ae8_row20_col0 {
   background-color: #86a9fc;
   color: #f1f1f1;
 }
-#T_1d142_row20_col1, #T_1d142_row21_col1, #T_1d142_row25_col1 {
+#T_f8ae8_row20_col1, #T_f8ae8_row21_col1, #T_f8ae8_row25_col1 {
   background-color: #6282ea;
   color: #f1f1f1;
 }
-#T_1d142_row21_col0 {
+#T_f8ae8_row21_col0 {
   background-color: #d4dbe6;
   color: #000000;
 }
-#T_1d142_row22_col0 {
+#T_f8ae8_row22_col0 {
   background-color: #f6a283;
   color: #000000;
 }
-#T_1d142_row26_col0, #T_1d142_row28_col0 {
+#T_f8ae8_row26_col0, #T_f8ae8_row28_col0 {
   background-color: #f18d6f;
   color: #f1f1f1;
 }
-#T_1d142_row26_col1 {
+#T_f8ae8_row26_col1 {
   background-color: #6f92f3;
   color: #f1f1f1;
 }
-#T_1d142_row27_col0 {
+#T_f8ae8_row27_col0 {
   background-color: #f6bea4;
   color: #000000;
 }
-#T_1d142_row29_col0 {
+#T_f8ae8_row29_col0 {
   background-color: #e7745b;
   color: #f1f1f1;
 }
-#T_1d142_row30_col0 {
+#T_f8ae8_row30_col0 {
   background-color: #d44e41;
   color: #f1f1f1;
 }
-#T_1d142_row32_col0 {
+#T_f8ae8_row32_col0 {
   background-color: #e36c55;
   color: #f1f1f1;
 }
 </style>
-<table id="T_1d142" style='display:inline'>
+<table id="T_f8ae8" style='display:inline'>
   <caption>X_dev distribution</caption>
   <thead>
     <tr>
-      <th id="T_1d142_level0_col0" class="col_heading level0 col0" >target_rate</th>
-      <th id="T_1d142_level0_col1" class="col_heading level0 col1" >frequency</th>
+      <th id="T_f8ae8_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_f8ae8_level0_col1" class="col_heading level0 col1" >frequency</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td id="T_1d142_row0_col0" class="data row0 col0" >0.1111</td>
-      <td id="T_1d142_row0_col1" class="data row0 col1" >0.0307</td>
+      <td id="T_f8ae8_row0_col0" class="data row0 col0" >0.1111</td>
+      <td id="T_f8ae8_row0_col1" class="data row0 col1" >0.0307</td>
     </tr>
     <tr>
-      <td id="T_1d142_row1_col0" class="data row1 col0" >0.0000</td>
-      <td id="T_1d142_row1_col1" class="data row1 col1" >0.0102</td>
+      <td id="T_f8ae8_row1_col0" class="data row1 col0" >0.0000</td>
+      <td id="T_f8ae8_row1_col1" class="data row1 col1" >0.0102</td>
     </tr>
     <tr>
-      <td id="T_1d142_row2_col0" class="data row2 col0" >0.2500</td>
-      <td id="T_1d142_row2_col1" class="data row2 col1" >0.0273</td>
+      <td id="T_f8ae8_row2_col0" class="data row2 col0" >0.2500</td>
+      <td id="T_f8ae8_row2_col1" class="data row2 col1" >0.0273</td>
     </tr>
     <tr>
-      <td id="T_1d142_row3_col0" class="data row3 col0" >0.0000</td>
-      <td id="T_1d142_row3_col1" class="data row3 col1" >0.0068</td>
+      <td id="T_f8ae8_row3_col0" class="data row3 col0" >0.0000</td>
+      <td id="T_f8ae8_row3_col1" class="data row3 col1" >0.0068</td>
     </tr>
     <tr>
-      <td id="T_1d142_row4_col0" class="data row4 col0" >0.2500</td>
-      <td id="T_1d142_row4_col1" class="data row4 col1" >0.0546</td>
+      <td id="T_f8ae8_row4_col0" class="data row4 col0" >0.2500</td>
+      <td id="T_f8ae8_row4_col1" class="data row4 col1" >0.0546</td>
     </tr>
     <tr>
-      <td id="T_1d142_row5_col0" class="data row5 col0" >0.1333</td>
-      <td id="T_1d142_row5_col1" class="data row5 col1" >0.0512</td>
+      <td id="T_f8ae8_row5_col0" class="data row5 col0" >0.1333</td>
+      <td id="T_f8ae8_row5_col1" class="data row5 col1" >0.0512</td>
     </tr>
     <tr>
-      <td id="T_1d142_row6_col0" class="data row6 col0" >0.0714</td>
-      <td id="T_1d142_row6_col1" class="data row6 col1" >0.0478</td>
+      <td id="T_f8ae8_row6_col0" class="data row6 col0" >0.0714</td>
+      <td id="T_f8ae8_row6_col1" class="data row6 col1" >0.0478</td>
     </tr>
     <tr>
-      <td id="T_1d142_row7_col0" class="data row7 col0" >0.3333</td>
-      <td id="T_1d142_row7_col1" class="data row7 col1" >0.0102</td>
+      <td id="T_f8ae8_row7_col0" class="data row7 col0" >0.3333</td>
+      <td id="T_f8ae8_row7_col1" class="data row7 col1" >0.0102</td>
     </tr>
     <tr>
-      <td id="T_1d142_row8_col0" class="data row8 col0" >0.1667</td>
-      <td id="T_1d142_row8_col1" class="data row8 col1" >0.0410</td>
+      <td id="T_f8ae8_row8_col0" class="data row8 col0" >0.1667</td>
+      <td id="T_f8ae8_row8_col1" class="data row8 col1" >0.0410</td>
     </tr>
     <tr>
-      <td id="T_1d142_row9_col0" class="data row9 col0" >0.1667</td>
-      <td id="T_1d142_row9_col1" class="data row9 col1" >0.0410</td>
+      <td id="T_f8ae8_row9_col0" class="data row9 col0" >0.1667</td>
+      <td id="T_f8ae8_row9_col1" class="data row9 col1" >0.0410</td>
     </tr>
     <tr>
-      <td id="T_1d142_row10_col0" class="data row10 col0" >0.0000</td>
-      <td id="T_1d142_row10_col1" class="data row10 col1" >0.0273</td>
+      <td id="T_f8ae8_row10_col0" class="data row10 col0" >0.0000</td>
+      <td id="T_f8ae8_row10_col1" class="data row10 col1" >0.0273</td>
     </tr>
     <tr>
-      <td id="T_1d142_row11_col0" class="data row11 col0" >0.2857</td>
-      <td id="T_1d142_row11_col1" class="data row11 col1" >0.0478</td>
+      <td id="T_f8ae8_row11_col0" class="data row11 col0" >0.2857</td>
+      <td id="T_f8ae8_row11_col1" class="data row11 col1" >0.0478</td>
     </tr>
     <tr>
-      <td id="T_1d142_row12_col0" class="data row12 col0" >0.3846</td>
-      <td id="T_1d142_row12_col1" class="data row12 col1" >0.0887</td>
+      <td id="T_f8ae8_row12_col0" class="data row12 col0" >0.3846</td>
+      <td id="T_f8ae8_row12_col1" class="data row12 col1" >0.0887</td>
     </tr>
     <tr>
-      <td id="T_1d142_row13_col0" class="data row13 col0" >0.2500</td>
-      <td id="T_1d142_row13_col1" class="data row13 col1" >0.0137</td>
+      <td id="T_f8ae8_row13_col0" class="data row13 col0" >0.2500</td>
+      <td id="T_f8ae8_row13_col1" class="data row13 col1" >0.0137</td>
     </tr>
     <tr>
-      <td id="T_1d142_row14_col0" class="data row14 col0" >0.4545</td>
-      <td id="T_1d142_row14_col1" class="data row14 col1" >0.0375</td>
+      <td id="T_f8ae8_row14_col0" class="data row14 col0" >0.4545</td>
+      <td id="T_f8ae8_row14_col1" class="data row14 col1" >0.0375</td>
     </tr>
     <tr>
-      <td id="T_1d142_row15_col0" class="data row15 col0" >0.5000</td>
-      <td id="T_1d142_row15_col1" class="data row15 col1" >0.0341</td>
+      <td id="T_f8ae8_row15_col0" class="data row15 col0" >0.5000</td>
+      <td id="T_f8ae8_row15_col1" class="data row15 col1" >0.0341</td>
     </tr>
     <tr>
-      <td id="T_1d142_row16_col0" class="data row16 col0" >0.4444</td>
-      <td id="T_1d142_row16_col1" class="data row16 col1" >0.0307</td>
+      <td id="T_f8ae8_row16_col0" class="data row16 col0" >0.4444</td>
+      <td id="T_f8ae8_row16_col1" class="data row16 col1" >0.0307</td>
     </tr>
     <tr>
-      <td id="T_1d142_row17_col0" class="data row17 col0" >0.6000</td>
-      <td id="T_1d142_row17_col1" class="data row17 col1" >0.0341</td>
+      <td id="T_f8ae8_row17_col0" class="data row17 col0" >0.6000</td>
+      <td id="T_f8ae8_row17_col1" class="data row17 col1" >0.0341</td>
     </tr>
     <tr>
-      <td id="T_1d142_row18_col0" class="data row18 col0" >0.5294</td>
-      <td id="T_1d142_row18_col1" class="data row18 col1" >0.0580</td>
+      <td id="T_f8ae8_row18_col0" class="data row18 col0" >0.5294</td>
+      <td id="T_f8ae8_row18_col1" class="data row18 col1" >0.0580</td>
     </tr>
     <tr>
-      <td id="T_1d142_row19_col0" class="data row19 col0" >0.8571</td>
-      <td id="T_1d142_row19_col1" class="data row19 col1" >0.0239</td>
+      <td id="T_f8ae8_row19_col0" class="data row19 col0" >0.8571</td>
+      <td id="T_f8ae8_row19_col1" class="data row19 col1" >0.0239</td>
     </tr>
     <tr>
-      <td id="T_1d142_row20_col0" class="data row20 col0" >0.2000</td>
-      <td id="T_1d142_row20_col1" class="data row20 col1" >0.0171</td>
+      <td id="T_f8ae8_row20_col0" class="data row20 col0" >0.2000</td>
+      <td id="T_f8ae8_row20_col1" class="data row20 col1" >0.0171</td>
     </tr>
     <tr>
-      <td id="T_1d142_row21_col0" class="data row21 col0" >0.4000</td>
-      <td id="T_1d142_row21_col1" class="data row21 col1" >0.0171</td>
+      <td id="T_f8ae8_row21_col0" class="data row21 col0" >0.4000</td>
+      <td id="T_f8ae8_row21_col1" class="data row21 col1" >0.0171</td>
     </tr>
     <tr>
-      <td id="T_1d142_row22_col0" class="data row22 col0" >0.6250</td>
-      <td id="T_1d142_row22_col1" class="data row22 col1" >0.0273</td>
+      <td id="T_f8ae8_row22_col0" class="data row22 col0" >0.6250</td>
+      <td id="T_f8ae8_row22_col1" class="data row22 col1" >0.0273</td>
     </tr>
     <tr>
-      <td id="T_1d142_row23_col0" class="data row23 col0" >0.5000</td>
-      <td id="T_1d142_row23_col1" class="data row23 col1" >0.0273</td>
+      <td id="T_f8ae8_row23_col0" class="data row23 col0" >0.5000</td>
+      <td id="T_f8ae8_row23_col1" class="data row23 col1" >0.0273</td>
     </tr>
     <tr>
-      <td id="T_1d142_row24_col0" class="data row24 col0" >0.0000</td>
-      <td id="T_1d142_row24_col1" class="data row24 col1" >0.0102</td>
+      <td id="T_f8ae8_row24_col0" class="data row24 col0" >0.0000</td>
+      <td id="T_f8ae8_row24_col1" class="data row24 col1" >0.0102</td>
     </tr>
     <tr>
-      <td id="T_1d142_row25_col0" class="data row25 col0" >0.6000</td>
-      <td id="T_1d142_row25_col1" class="data row25 col1" >0.0171</td>
+      <td id="T_f8ae8_row25_col0" class="data row25 col0" >0.6000</td>
+      <td id="T_f8ae8_row25_col1" class="data row25 col1" >0.0171</td>
     </tr>
     <tr>
-      <td id="T_1d142_row26_col0" class="data row26 col0" >0.6667</td>
-      <td id="T_1d142_row26_col1" class="data row26 col1" >0.0205</td>
+      <td id="T_f8ae8_row26_col0" class="data row26 col0" >0.6667</td>
+      <td id="T_f8ae8_row26_col1" class="data row26 col1" >0.0205</td>
     </tr>
     <tr>
-      <td id="T_1d142_row27_col0" class="data row27 col0" >0.5556</td>
-      <td id="T_1d142_row27_col1" class="data row27 col1" >0.0307</td>
+      <td id="T_f8ae8_row27_col0" class="data row27 col0" >0.5556</td>
+      <td id="T_f8ae8_row27_col1" class="data row27 col1" >0.0307</td>
     </tr>
     <tr>
-      <td id="T_1d142_row28_col0" class="data row28 col0" >0.6667</td>
-      <td id="T_1d142_row28_col1" class="data row28 col1" >0.0102</td>
+      <td id="T_f8ae8_row28_col0" class="data row28 col0" >0.6667</td>
+      <td id="T_f8ae8_row28_col1" class="data row28 col1" >0.0102</td>
     </tr>
     <tr>
-      <td id="T_1d142_row29_col0" class="data row29 col0" >0.7143</td>
-      <td id="T_1d142_row29_col1" class="data row29 col1" >0.0239</td>
+      <td id="T_f8ae8_row29_col0" class="data row29 col0" >0.7143</td>
+      <td id="T_f8ae8_row29_col1" class="data row29 col1" >0.0239</td>
     </tr>
     <tr>
-      <td id="T_1d142_row30_col0" class="data row30 col0" >0.7778</td>
-      <td id="T_1d142_row30_col1" class="data row30 col1" >0.0307</td>
+      <td id="T_f8ae8_row30_col0" class="data row30 col0" >0.7778</td>
+      <td id="T_f8ae8_row30_col1" class="data row30 col1" >0.0307</td>
     </tr>
     <tr>
-      <td id="T_1d142_row31_col0" class="data row31 col0" >0.5000</td>
-      <td id="T_1d142_row31_col1" class="data row31 col1" >0.0137</td>
+      <td id="T_f8ae8_row31_col0" class="data row31 col0" >0.5000</td>
+      <td id="T_f8ae8_row31_col1" class="data row31 col1" >0.0137</td>
     </tr>
     <tr>
-      <td id="T_1d142_row32_col0" class="data row32 col0" >0.7273</td>
-      <td id="T_1d142_row32_col1" class="data row32 col1" >0.0375</td>
+      <td id="T_f8ae8_row32_col0" class="data row32 col0" >0.7273</td>
+      <td id="T_f8ae8_row32_col1" class="data row32 col1" >0.0375</td>
     </tr>
   </tbody>
 </table></div>
@@ -2290,8 +2290,8 @@ Testing robustness    :   1%|          | 302/36456 [00:00&lt;01:20, 451.30it/s]
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Grouping modalities   : 100%|█████████▉| 41447/41448 [00:05&lt;00:00, 7759.96it/s]
-Computing associations: 100%|██████████| 41448/41448 [00:08&lt;00:00, 4667.14it/s]
+Grouping modalities   : 100%|█████████▉| 41447/41448 [00:06&lt;00:00, 6159.57it/s]
+Computing associations: 100%|██████████| 41448/41448 [00:09&lt;00:00, 4154.29it/s]
 Testing robustness    :   0%|          | 0/41448 [00:00&lt;?, ?it/s]
 </pre></div></div>
 </div>
@@ -2310,63 +2310,63 @@ Testing robustness    :   0%|          | 0/41448 [00:00&lt;?, ?it/s]
 </div>
 <div class="output_area rendered_html docutils container">
 <style type="text/css">
-#T_e1a5a_row0_col0, #T_e1a5a_row1_col1 {
+#T_45085_row0_col0, #T_45085_row1_col1 {
   background-color: #3b4cc0;
   color: #f1f1f1;
 }
-#T_e1a5a_row0_col1, #T_e1a5a_row1_col0 {
+#T_45085_row0_col1, #T_45085_row1_col0 {
   background-color: #b40426;
   color: #f1f1f1;
 }
 </style>
-<table id="T_e1a5a" style='display:inline'>
+<table id="T_45085" style='display:inline'>
   <caption>X distribution</caption>
   <thead>
     <tr>
       <th class="blank level0" >&nbsp;</th>
-      <th id="T_e1a5a_level0_col0" class="col_heading level0 col0" >target_rate</th>
-      <th id="T_e1a5a_level0_col1" class="col_heading level0 col1" >frequency</th>
+      <th id="T_45085_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_45085_level0_col1" class="col_heading level0 col1" >frequency</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th id="T_e1a5a_level0_row0" class="row_heading level0 row0" >x <= 5.2e+01</th>
-      <td id="T_e1a5a_row0_col0" class="data row0 col0" >0.3198</td>
-      <td id="T_e1a5a_row0_col1" class="data row0 col1" >0.8316</td>
+      <th id="T_45085_level0_row0" class="row_heading level0 row0" >x <= 5.2e+01</th>
+      <td id="T_45085_row0_col0" class="data row0 col0" >0.3198</td>
+      <td id="T_45085_row0_col1" class="data row0 col1" >0.8316</td>
     </tr>
     <tr>
-      <th id="T_e1a5a_level0_row1" class="row_heading level0 row1" >5.2e+01 < x</th>
-      <td id="T_e1a5a_row1_col0" class="data row1 col0" >0.7100</td>
-      <td id="T_e1a5a_row1_col1" class="data row1 col1" >0.1684</td>
+      <th id="T_45085_level0_row1" class="row_heading level0 row1" >5.2e+01 < x</th>
+      <td id="T_45085_row1_col0" class="data row1 col0" >0.7100</td>
+      <td id="T_45085_row1_col1" class="data row1 col1" >0.1684</td>
     </tr>
   </tbody>
 </table>
           <style type="text/css">
-#T_0f2aa_row0_col0, #T_0f2aa_row1_col1 {
+#T_6bc64_row0_col0, #T_6bc64_row1_col1 {
   background-color: #3b4cc0;
   color: #f1f1f1;
 }
-#T_0f2aa_row0_col1, #T_0f2aa_row1_col0 {
+#T_6bc64_row0_col1, #T_6bc64_row1_col0 {
   background-color: #b40426;
   color: #f1f1f1;
 }
 </style>
-<table id="T_0f2aa" style='display:inline'>
+<table id="T_6bc64" style='display:inline'>
   <caption>X_dev distribution</caption>
   <thead>
     <tr>
-      <th id="T_0f2aa_level0_col0" class="col_heading level0 col0" >target_rate</th>
-      <th id="T_0f2aa_level0_col1" class="col_heading level0 col1" >frequency</th>
+      <th id="T_6bc64_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_6bc64_level0_col1" class="col_heading level0 col1" >frequency</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td id="T_0f2aa_row0_col0" class="data row0 col0" >0.3279</td>
-      <td id="T_0f2aa_row0_col1" class="data row0 col1" >0.8328</td>
+      <td id="T_6bc64_row0_col0" class="data row0 col0" >0.3279</td>
+      <td id="T_6bc64_row0_col1" class="data row0 col1" >0.8328</td>
     </tr>
     <tr>
-      <td id="T_0f2aa_row1_col0" class="data row1 col0" >0.6735</td>
-      <td id="T_0f2aa_row1_col1" class="data row1 col1" >0.1672</td>
+      <td id="T_6bc64_row1_col0" class="data row1 col0" >0.6735</td>
+      <td id="T_6bc64_row1_col1" class="data row1 col1" >0.1672</td>
     </tr>
   </tbody>
 </table></div>
@@ -2385,138 +2385,138 @@ Testing robustness    :   0%|          | 0/41448 [00:00&lt;?, ?it/s]
 </div>
 <div class="output_area rendered_html docutils container">
 <style type="text/css">
-#T_fe88b_row0_col0 {
+#T_6a198_row0_col0 {
   background-color: #f7ba9f;
   color: #000000;
 }
-#T_fe88b_row0_col1, #T_fe88b_row2_col0 {
+#T_6a198_row0_col1, #T_6a198_row2_col0 {
   background-color: #b40426;
   color: #f1f1f1;
 }
-#T_fe88b_row1_col0 {
+#T_6a198_row1_col0 {
   background-color: #d44e41;
   color: #f1f1f1;
 }
-#T_fe88b_row1_col1 {
+#T_6a198_row1_col1 {
   background-color: #a6c4fe;
   color: #000000;
 }
-#T_fe88b_row2_col1 {
+#T_6a198_row2_col1 {
   background-color: #4055c8;
   color: #f1f1f1;
 }
-#T_fe88b_row3_col0 {
+#T_6a198_row3_col0 {
   background-color: #90b2fe;
   color: #000000;
 }
-#T_fe88b_row3_col1 {
+#T_6a198_row3_col1 {
   background-color: #4257c9;
   color: #f1f1f1;
 }
-#T_fe88b_row4_col0, #T_fe88b_row4_col1 {
+#T_6a198_row4_col0, #T_6a198_row4_col1 {
   background-color: #3b4cc0;
   color: #f1f1f1;
 }
 </style>
-<table id="T_fe88b" style='display:inline'>
+<table id="T_6a198" style='display:inline'>
   <caption>X distribution</caption>
   <thead>
     <tr>
       <th class="blank level0" >&nbsp;</th>
-      <th id="T_fe88b_level0_col0" class="col_heading level0 col0" >target_rate</th>
-      <th id="T_fe88b_level0_col1" class="col_heading level0 col1" >frequency</th>
+      <th id="T_6a198_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_6a198_level0_col1" class="col_heading level0 col1" >frequency</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th id="T_fe88b_level0_row0" class="row_heading level0 row0" >x <= 0.0e+00</th>
-      <td id="T_fe88b_row0_col0" class="data row0 col0" >0.3614</td>
-      <td id="T_fe88b_row0_col1" class="data row0 col1" >0.6801</td>
+      <th id="T_6a198_level0_row0" class="row_heading level0 row0" >x <= 0.0e+00</th>
+      <td id="T_6a198_row0_col0" class="data row0 col0" >0.3614</td>
+      <td id="T_6a198_row0_col1" class="data row0 col1" >0.6801</td>
     </tr>
     <tr>
-      <th id="T_fe88b_level0_row1" class="row_heading level0 row1" >0.0e+00 < x <= 1.0e+00</th>
-      <td id="T_fe88b_row1_col0" class="data row1 col0" >0.5000</td>
-      <td id="T_fe88b_row1_col1" class="data row1 col1" >0.2323</td>
+      <th id="T_6a198_level0_row1" class="row_heading level0 row1" >0.0e+00 < x <= 1.0e+00</th>
+      <td id="T_6a198_row1_col0" class="data row1 col0" >0.5000</td>
+      <td id="T_6a198_row1_col1" class="data row1 col1" >0.2323</td>
     </tr>
     <tr>
-      <th id="T_fe88b_level0_row2" class="row_heading level0 row2" >1.0e+00 < x <= 2.0e+00</th>
-      <td id="T_fe88b_row2_col0" class="data row2 col0" >0.5500</td>
-      <td id="T_fe88b_row2_col1" class="data row2 col1" >0.0337</td>
+      <th id="T_6a198_level0_row2" class="row_heading level0 row2" >1.0e+00 < x <= 2.0e+00</th>
+      <td id="T_6a198_row2_col0" class="data row2 col0" >0.5500</td>
+      <td id="T_6a198_row2_col1" class="data row2 col1" >0.0337</td>
     </tr>
     <tr>
-      <th id="T_fe88b_level0_row3" class="row_heading level0 row3" >2.0e+00 < x <= 4.0e+00</th>
-      <td id="T_fe88b_row3_col0" class="data row3 col0" >0.1429</td>
-      <td id="T_fe88b_row3_col1" class="data row3 col1" >0.0354</td>
+      <th id="T_6a198_level0_row3" class="row_heading level0 row3" >2.0e+00 < x <= 4.0e+00</th>
+      <td id="T_6a198_row3_col0" class="data row3 col0" >0.1429</td>
+      <td id="T_6a198_row3_col1" class="data row3 col1" >0.0354</td>
     </tr>
     <tr>
-      <th id="T_fe88b_level0_row4" class="row_heading level0 row4" >4.0e+00 < x</th>
-      <td id="T_fe88b_row4_col0" class="data row4 col0" >0.0000</td>
-      <td id="T_fe88b_row4_col1" class="data row4 col1" >0.0185</td>
+      <th id="T_6a198_level0_row4" class="row_heading level0 row4" >4.0e+00 < x</th>
+      <td id="T_6a198_row4_col0" class="data row4 col0" >0.0000</td>
+      <td id="T_6a198_row4_col1" class="data row4 col1" >0.0185</td>
     </tr>
   </tbody>
 </table>
           <style type="text/css">
-#T_ab7fc_row0_col0 {
+#T_0fd40_row0_col0 {
   background-color: #e4d9d2;
   color: #000000;
 }
-#T_ab7fc_row0_col1, #T_ab7fc_row1_col0 {
+#T_0fd40_row0_col1, #T_0fd40_row1_col0 {
   background-color: #b40426;
   color: #f1f1f1;
 }
-#T_ab7fc_row1_col1 {
+#T_0fd40_row1_col1 {
   background-color: #b1cbfc;
   color: #000000;
 }
-#T_ab7fc_row2_col0 {
+#T_0fd40_row2_col0 {
   background-color: #c4d5f3;
   color: #000000;
 }
-#T_ab7fc_row2_col1 {
+#T_0fd40_row2_col1 {
   background-color: #455cce;
   color: #f1f1f1;
 }
-#T_ab7fc_row3_col0 {
+#T_0fd40_row3_col0 {
   background-color: #dfdbd9;
   color: #000000;
 }
-#T_ab7fc_row3_col1 {
+#T_0fd40_row3_col1 {
   background-color: #4c66d6;
   color: #f1f1f1;
 }
-#T_ab7fc_row4_col0, #T_ab7fc_row4_col1 {
+#T_0fd40_row4_col0, #T_0fd40_row4_col1 {
   background-color: #3b4cc0;
   color: #f1f1f1;
 }
 </style>
-<table id="T_ab7fc" style='display:inline'>
+<table id="T_0fd40" style='display:inline'>
   <caption>X_dev distribution</caption>
   <thead>
     <tr>
-      <th id="T_ab7fc_level0_col0" class="col_heading level0 col0" >target_rate</th>
-      <th id="T_ab7fc_level0_col1" class="col_heading level0 col1" >frequency</th>
+      <th id="T_0fd40_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_0fd40_level0_col1" class="col_heading level0 col1" >frequency</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td id="T_ab7fc_row0_col0" class="data row0 col0" >0.3200</td>
-      <td id="T_ab7fc_row0_col1" class="data row0 col1" >0.6826</td>
+      <td id="T_0fd40_row0_col0" class="data row0 col0" >0.3200</td>
+      <td id="T_0fd40_row0_col1" class="data row0 col1" >0.6826</td>
     </tr>
     <tr>
-      <td id="T_ab7fc_row1_col0" class="data row1 col0" >0.6056</td>
-      <td id="T_ab7fc_row1_col1" class="data row1 col1" >0.2423</td>
+      <td id="T_0fd40_row1_col0" class="data row1 col0" >0.6056</td>
+      <td id="T_0fd40_row1_col1" class="data row1 col1" >0.2423</td>
     </tr>
     <tr>
-      <td id="T_ab7fc_row2_col0" class="data row2 col0" >0.2500</td>
-      <td id="T_ab7fc_row2_col1" class="data row2 col1" >0.0273</td>
+      <td id="T_0fd40_row2_col0" class="data row2 col0" >0.2500</td>
+      <td id="T_0fd40_row2_col1" class="data row2 col1" >0.0273</td>
     </tr>
     <tr>
-      <td id="T_ab7fc_row3_col0" class="data row3 col0" >0.3077</td>
-      <td id="T_ab7fc_row3_col1" class="data row3 col1" >0.0444</td>
+      <td id="T_0fd40_row3_col0" class="data row3 col0" >0.3077</td>
+      <td id="T_0fd40_row3_col1" class="data row3 col1" >0.0444</td>
     </tr>
     <tr>
-      <td id="T_ab7fc_row4_col0" class="data row4 col0" >0.0000</td>
-      <td id="T_ab7fc_row4_col1" class="data row4 col1" >0.0034</td>
+      <td id="T_0fd40_row4_col0" class="data row4 col0" >0.0000</td>
+      <td id="T_0fd40_row4_col1" class="data row4 col1" >0.0034</td>
     </tr>
   </tbody>
 </table></div>
@@ -2526,9 +2526,9 @@ Testing robustness    :   0%|          | 0/41448 [00:00&lt;?, ?it/s]
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Grouping modalities   :  93%|█████████▎| 14/15 [00:00&lt;00:00, 11272.85it/s]
-Computing associations: 100%|██████████| 15/15 [00:00&lt;00:00, 4943.39it/s]
-Testing robustness    :  67%|██████▋   | 10/15 [00:00&lt;00:00, 469.59it/s]
+Grouping modalities   :  93%|█████████▎| 14/15 [00:00&lt;?, ?it/s]
+Computing associations: 100%|██████████| 15/15 [00:00&lt;00:00, 1134.62it/s]
+Testing robustness    :  67%|██████▋   | 10/15 [00:00&lt;00:00, 534.73it/s]
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
@@ -2554,88 +2554,88 @@ Testing robustness    :  67%|██████▋   | 10/15 [00:00&lt;00:00, 46
 </div>
 <div class="output_area rendered_html docutils container">
 <style type="text/css">
-#T_dfdac_row0_col0 {
+#T_f13de_row0_col0 {
   background-color: #c0d4f5;
   color: #000000;
 }
-#T_dfdac_row0_col1, #T_dfdac_row1_col0 {
+#T_f13de_row0_col1, #T_f13de_row1_col0 {
   background-color: #b40426;
   color: #f1f1f1;
 }
-#T_dfdac_row1_col1 {
+#T_f13de_row1_col1 {
   background-color: #8badfd;
   color: #000000;
 }
-#T_dfdac_row2_col0, #T_dfdac_row2_col1 {
+#T_f13de_row2_col0, #T_f13de_row2_col1 {
   background-color: #3b4cc0;
   color: #f1f1f1;
 }
 </style>
-<table id="T_dfdac" style='display:inline'>
+<table id="T_f13de" style='display:inline'>
   <caption>X distribution</caption>
   <thead>
     <tr>
       <th class="blank level0" >&nbsp;</th>
-      <th id="T_dfdac_level0_col0" class="col_heading level0 col0" >target_rate</th>
-      <th id="T_dfdac_level0_col1" class="col_heading level0 col1" >frequency</th>
+      <th id="T_f13de_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_f13de_level0_col1" class="col_heading level0 col1" >frequency</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th id="T_dfdac_level0_row0" class="row_heading level0 row0" >x <= 0.0e+00</th>
-      <td id="T_dfdac_row0_col0" class="data row0 col0" >0.3614</td>
-      <td id="T_dfdac_row0_col1" class="data row0 col1" >0.6801</td>
+      <th id="T_f13de_level0_row0" class="row_heading level0 row0" >x <= 0.0e+00</th>
+      <td id="T_f13de_row0_col0" class="data row0 col0" >0.3614</td>
+      <td id="T_f13de_row0_col1" class="data row0 col1" >0.6801</td>
     </tr>
     <tr>
-      <th id="T_dfdac_level0_row1" class="row_heading level0 row1" >0.0e+00 < x <= 1.0e+00</th>
-      <td id="T_dfdac_row1_col0" class="data row1 col0" >0.5000</td>
-      <td id="T_dfdac_row1_col1" class="data row1 col1" >0.2323</td>
+      <th id="T_f13de_level0_row1" class="row_heading level0 row1" >0.0e+00 < x <= 1.0e+00</th>
+      <td id="T_f13de_row1_col0" class="data row1 col0" >0.5000</td>
+      <td id="T_f13de_row1_col1" class="data row1 col1" >0.2323</td>
     </tr>
     <tr>
-      <th id="T_dfdac_level0_row2" class="row_heading level0 row2" >1.0e+00 < x</th>
-      <td id="T_dfdac_row2_col0" class="data row2 col0" >0.2692</td>
-      <td id="T_dfdac_row2_col1" class="data row2 col1" >0.0875</td>
+      <th id="T_f13de_level0_row2" class="row_heading level0 row2" >1.0e+00 < x</th>
+      <td id="T_f13de_row2_col0" class="data row2 col0" >0.2692</td>
+      <td id="T_f13de_row2_col1" class="data row2 col1" >0.0875</td>
     </tr>
   </tbody>
 </table>
           <style type="text/css">
-#T_bf3aa_row0_col0 {
+#T_fd6d8_row0_col0 {
   background-color: #6788ee;
   color: #f1f1f1;
 }
-#T_bf3aa_row0_col1, #T_bf3aa_row1_col0 {
+#T_fd6d8_row0_col1, #T_fd6d8_row1_col0 {
   background-color: #b40426;
   color: #f1f1f1;
 }
-#T_bf3aa_row1_col1 {
+#T_fd6d8_row1_col1 {
   background-color: #96b7ff;
   color: #000000;
 }
-#T_bf3aa_row2_col0, #T_bf3aa_row2_col1 {
+#T_fd6d8_row2_col0, #T_fd6d8_row2_col1 {
   background-color: #3b4cc0;
   color: #f1f1f1;
 }
 </style>
-<table id="T_bf3aa" style='display:inline'>
+<table id="T_fd6d8" style='display:inline'>
   <caption>X_dev distribution</caption>
   <thead>
     <tr>
-      <th id="T_bf3aa_level0_col0" class="col_heading level0 col0" >target_rate</th>
-      <th id="T_bf3aa_level0_col1" class="col_heading level0 col1" >frequency</th>
+      <th id="T_fd6d8_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_fd6d8_level0_col1" class="col_heading level0 col1" >frequency</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td id="T_bf3aa_row0_col0" class="data row0 col0" >0.3200</td>
-      <td id="T_bf3aa_row0_col1" class="data row0 col1" >0.6826</td>
+      <td id="T_fd6d8_row0_col0" class="data row0 col0" >0.3200</td>
+      <td id="T_fd6d8_row0_col1" class="data row0 col1" >0.6826</td>
     </tr>
     <tr>
-      <td id="T_bf3aa_row1_col0" class="data row1 col0" >0.6056</td>
-      <td id="T_bf3aa_row1_col1" class="data row1 col1" >0.2423</td>
+      <td id="T_fd6d8_row1_col0" class="data row1 col0" >0.6056</td>
+      <td id="T_fd6d8_row1_col1" class="data row1 col1" >0.2423</td>
     </tr>
     <tr>
-      <td id="T_bf3aa_row2_col0" class="data row2 col0" >0.2727</td>
-      <td id="T_bf3aa_row2_col1" class="data row2 col1" >0.0751</td>
+      <td id="T_fd6d8_row2_col0" class="data row2 col0" >0.2727</td>
+      <td id="T_fd6d8_row2_col1" class="data row2 col1" >0.0751</td>
     </tr>
   </tbody>
 </table></div>
@@ -2654,113 +2654,113 @@ Testing robustness    :  67%|██████▋   | 10/15 [00:00&lt;00:00, 46
 </div>
 <div class="output_area rendered_html docutils container">
 <style type="text/css">
-#T_6f97f_row0_col0 {
+#T_fbfab_row0_col0 {
   background-color: #4c66d6;
   color: #f1f1f1;
 }
-#T_6f97f_row0_col1, #T_6f97f_row2_col0 {
+#T_fbfab_row0_col1, #T_fbfab_row2_col0 {
   background-color: #b40426;
   color: #f1f1f1;
 }
-#T_6f97f_row1_col0 {
+#T_fbfab_row1_col0 {
   background-color: #ca3b37;
   color: #f1f1f1;
 }
-#T_6f97f_row1_col1 {
+#T_fbfab_row1_col1 {
   background-color: #7597f6;
   color: #f1f1f1;
 }
-#T_6f97f_row2_col1 {
+#T_fbfab_row2_col1 {
   background-color: #5f7fe8;
   color: #f1f1f1;
 }
-#T_6f97f_row3_col0, #T_6f97f_row3_col1 {
+#T_fbfab_row3_col0, #T_fbfab_row3_col1 {
   background-color: #3b4cc0;
   color: #f1f1f1;
 }
 </style>
-<table id="T_6f97f" style='display:inline'>
+<table id="T_fbfab" style='display:inline'>
   <caption>X distribution</caption>
   <thead>
     <tr>
       <th class="blank level0" >&nbsp;</th>
-      <th id="T_6f97f_level0_col0" class="col_heading level0 col0" >target_rate</th>
-      <th id="T_6f97f_level0_col1" class="col_heading level0 col1" >frequency</th>
+      <th id="T_fbfab_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_fbfab_level0_col1" class="col_heading level0 col1" >frequency</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th id="T_6f97f_level0_row0" class="row_heading level0 row0" >x <= 0.0e+00</th>
-      <td id="T_6f97f_row0_col0" class="data row0 col0" >0.3447</td>
-      <td id="T_6f97f_row0_col1" class="data row0 col1" >0.7374</td>
+      <th id="T_fbfab_level0_row0" class="row_heading level0 row0" >x <= 0.0e+00</th>
+      <td id="T_fbfab_row0_col0" class="data row0 col0" >0.3447</td>
+      <td id="T_fbfab_row0_col1" class="data row0 col1" >0.7374</td>
     </tr>
     <tr>
-      <th id="T_6f97f_level0_row1" class="row_heading level0 row1" >0.0e+00 < x <= 1.0e+00</th>
-      <td id="T_6f97f_row1_col0" class="data row1 col0" >0.5057</td>
-      <td id="T_6f97f_row1_col1" class="data row1 col1" >0.1465</td>
+      <th id="T_fbfab_level0_row1" class="row_heading level0 row1" >0.0e+00 < x <= 1.0e+00</th>
+      <td id="T_fbfab_row1_col0" class="data row1 col0" >0.5057</td>
+      <td id="T_fbfab_row1_col1" class="data row1 col1" >0.1465</td>
     </tr>
     <tr>
-      <th id="T_6f97f_level0_row2" class="row_heading level0 row2" >1.0e+00 < x <= 2.0e+00</th>
-      <td id="T_6f97f_row2_col0" class="data row2 col0" >0.5167</td>
-      <td id="T_6f97f_row2_col1" class="data row2 col1" >0.1010</td>
+      <th id="T_fbfab_level0_row2" class="row_heading level0 row2" >1.0e+00 < x <= 2.0e+00</th>
+      <td id="T_fbfab_row2_col0" class="data row2 col0" >0.5167</td>
+      <td id="T_fbfab_row2_col1" class="data row2 col1" >0.1010</td>
     </tr>
     <tr>
-      <th id="T_6f97f_level0_row3" class="row_heading level0 row3" >2.0e+00 < x</th>
-      <td id="T_6f97f_row3_col0" class="data row3 col0" >0.3333</td>
-      <td id="T_6f97f_row3_col1" class="data row3 col1" >0.0152</td>
+      <th id="T_fbfab_level0_row3" class="row_heading level0 row3" >2.0e+00 < x</th>
+      <td id="T_fbfab_row3_col0" class="data row3 col0" >0.3333</td>
+      <td id="T_fbfab_row3_col1" class="data row3 col1" >0.0152</td>
     </tr>
   </tbody>
 </table>
           <style type="text/css">
-#T_81103_row0_col0 {
+#T_03fce_row0_col0 {
   background-color: #b1cbfc;
   color: #000000;
 }
-#T_81103_row0_col1, #T_81103_row1_col0 {
+#T_03fce_row0_col1, #T_03fce_row1_col0 {
   background-color: #b40426;
   color: #f1f1f1;
 }
-#T_81103_row1_col1 {
+#T_03fce_row1_col1 {
   background-color: #5b7ae5;
   color: #f1f1f1;
 }
-#T_81103_row2_col0 {
+#T_03fce_row2_col0 {
   background-color: #ead4c8;
   color: #000000;
 }
-#T_81103_row2_col1 {
+#T_03fce_row2_col1 {
   background-color: #4c66d6;
   color: #f1f1f1;
 }
-#T_81103_row3_col0, #T_81103_row3_col1 {
+#T_03fce_row3_col0, #T_03fce_row3_col1 {
   background-color: #3b4cc0;
   color: #f1f1f1;
 }
 </style>
-<table id="T_81103" style='display:inline'>
+<table id="T_03fce" style='display:inline'>
   <caption>X_dev distribution</caption>
   <thead>
     <tr>
-      <th id="T_81103_level0_col0" class="col_heading level0 col0" >target_rate</th>
-      <th id="T_81103_level0_col1" class="col_heading level0 col1" >frequency</th>
+      <th id="T_03fce_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_03fce_level0_col1" class="col_heading level0 col1" >frequency</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td id="T_81103_row0_col0" class="data row0 col0" >0.3475</td>
-      <td id="T_81103_row0_col1" class="data row0 col1" >0.8055</td>
+      <td id="T_03fce_row0_col0" class="data row0 col0" >0.3475</td>
+      <td id="T_03fce_row0_col1" class="data row0 col1" >0.8055</td>
     </tr>
     <tr>
-      <td id="T_81103_row1_col0" class="data row1 col0" >0.6774</td>
-      <td id="T_81103_row1_col1" class="data row1 col1" >0.1058</td>
+      <td id="T_03fce_row1_col0" class="data row1 col0" >0.6774</td>
+      <td id="T_03fce_row1_col1" class="data row1 col1" >0.1058</td>
     </tr>
     <tr>
-      <td id="T_81103_row2_col0" class="data row2 col0" >0.4500</td>
-      <td id="T_81103_row2_col1" class="data row2 col1" >0.0683</td>
+      <td id="T_03fce_row2_col0" class="data row2 col0" >0.4500</td>
+      <td id="T_03fce_row2_col1" class="data row2 col1" >0.0683</td>
     </tr>
     <tr>
-      <td id="T_81103_row3_col0" class="data row3 col0" >0.1667</td>
-      <td id="T_81103_row3_col1" class="data row3 col1" >0.0205</td>
+      <td id="T_03fce_row3_col0" class="data row3 col0" >0.1667</td>
+      <td id="T_03fce_row3_col1" class="data row3 col1" >0.0205</td>
     </tr>
   </tbody>
 </table></div>
@@ -2770,8 +2770,8 @@ Testing robustness    :  67%|██████▋   | 10/15 [00:00&lt;00:00, 46
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Grouping modalities   :  86%|████████▌ | 6/7 [00:00&lt;00:00, 5386.52it/s]
-Computing associations: 100%|██████████| 7/7 [00:00&lt;00:00, 3073.07it/s]
+Grouping modalities   :  86%|████████▌ | 6/7 [00:00&lt;?, ?it/s]
+Computing associations: 100%|██████████| 7/7 [00:00&lt;00:00, 601.57it/s]
 Testing robustness    :   0%|          | 0/7 [00:00&lt;?, ?it/s]
 </pre></div></div>
 </div>
@@ -2798,63 +2798,63 @@ Testing robustness    :   0%|          | 0/7 [00:00&lt;?, ?it/s]
 </div>
 <div class="output_area rendered_html docutils container">
 <style type="text/css">
-#T_fb2d6_row0_col0, #T_fb2d6_row1_col1 {
+#T_f6581_row0_col0, #T_f6581_row1_col1 {
   background-color: #3b4cc0;
   color: #f1f1f1;
 }
-#T_fb2d6_row0_col1, #T_fb2d6_row1_col0 {
+#T_f6581_row0_col1, #T_f6581_row1_col0 {
   background-color: #b40426;
   color: #f1f1f1;
 }
 </style>
-<table id="T_fb2d6" style='display:inline'>
+<table id="T_f6581" style='display:inline'>
   <caption>X distribution</caption>
   <thead>
     <tr>
       <th class="blank level0" >&nbsp;</th>
-      <th id="T_fb2d6_level0_col0" class="col_heading level0 col0" >target_rate</th>
-      <th id="T_fb2d6_level0_col1" class="col_heading level0 col1" >frequency</th>
+      <th id="T_f6581_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_f6581_level0_col1" class="col_heading level0 col1" >frequency</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th id="T_fb2d6_level0_row0" class="row_heading level0 row0" >x <= 0.0e+00</th>
-      <td id="T_fb2d6_row0_col0" class="data row0 col0" >0.3447</td>
-      <td id="T_fb2d6_row0_col1" class="data row0 col1" >0.7374</td>
+      <th id="T_f6581_level0_row0" class="row_heading level0 row0" >x <= 0.0e+00</th>
+      <td id="T_f6581_row0_col0" class="data row0 col0" >0.3447</td>
+      <td id="T_f6581_row0_col1" class="data row0 col1" >0.7374</td>
     </tr>
     <tr>
-      <th id="T_fb2d6_level0_row1" class="row_heading level0 row1" >0.0e+00 < x</th>
-      <td id="T_fb2d6_row1_col0" class="data row1 col0" >0.5000</td>
-      <td id="T_fb2d6_row1_col1" class="data row1 col1" >0.2626</td>
+      <th id="T_f6581_level0_row1" class="row_heading level0 row1" >0.0e+00 < x</th>
+      <td id="T_f6581_row1_col0" class="data row1 col0" >0.5000</td>
+      <td id="T_f6581_row1_col1" class="data row1 col1" >0.2626</td>
     </tr>
   </tbody>
 </table>
           <style type="text/css">
-#T_39cba_row0_col0, #T_39cba_row1_col1 {
+#T_1807e_row0_col0, #T_1807e_row1_col1 {
   background-color: #3b4cc0;
   color: #f1f1f1;
 }
-#T_39cba_row0_col1, #T_39cba_row1_col0 {
+#T_1807e_row0_col1, #T_1807e_row1_col0 {
   background-color: #b40426;
   color: #f1f1f1;
 }
 </style>
-<table id="T_39cba" style='display:inline'>
+<table id="T_1807e" style='display:inline'>
   <caption>X_dev distribution</caption>
   <thead>
     <tr>
-      <th id="T_39cba_level0_col0" class="col_heading level0 col0" >target_rate</th>
-      <th id="T_39cba_level0_col1" class="col_heading level0 col1" >frequency</th>
+      <th id="T_1807e_level0_col0" class="col_heading level0 col0" >target_rate</th>
+      <th id="T_1807e_level0_col1" class="col_heading level0 col1" >frequency</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td id="T_39cba_row0_col0" class="data row0 col0" >0.3475</td>
-      <td id="T_39cba_row0_col1" class="data row0 col1" >0.8055</td>
+      <td id="T_1807e_row0_col0" class="data row0 col0" >0.3475</td>
+      <td id="T_1807e_row0_col1" class="data row0 col1" >0.8055</td>
     </tr>
     <tr>
-      <td id="T_39cba_row1_col0" class="data row1 col0" >0.5439</td>
-      <td id="T_39cba_row1_col1" class="data row1 col1" >0.1945</td>
+      <td id="T_1807e_row1_col0" class="data row1 col0" >0.5439</td>
+      <td id="T_1807e_row1_col1" class="data row1 col1" >0.1945</td>
     </tr>
   </tbody>
 </table></div>
@@ -2864,7 +2864,7 @@ Testing robustness    :   0%|          | 0/7 [00:00&lt;?, ?it/s]
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-C:\Users\defra\Desktop\git\PROJECTS\AutoCarver\AutoCarver\discretizers\utils\base_discretizer.py:426: FutureWarning: Downcasting behavior in `replace` is deprecated and will be removed in a future version. To retain the old behavior, explicitly call `result.infer_objects(copy=False)`. To opt-in to the future behavior, set `pd.set_option(&#39;future.no_silent_downcasting&#39;, True)`
+C:\Users\defra\Desktop\git\PROJECTS\AutoCarver\AutoCarver\discretizers\utils\base_discretizer.py:413: FutureWarning: Downcasting behavior in `replace` is deprecated and will be removed in a future version. To retain the old behavior, explicitly call `result.infer_objects(copy=False)`. To opt-in to the future behavior, set `pd.set_option(&#39;future.no_silent_downcasting&#39;, True)`
   sample.X.replace(
 </pre></div></div>
 </div>
@@ -2874,7 +2874,7 @@ C:\Users\defra\Desktop\git\PROJECTS\AutoCarver\AutoCarver\discretizers\utils\bas
 <section id="Carving-Summary">
 <h3>Carving Summary<a class="headerlink" href="#Carving-Summary" title="Link to this heading"></a></h3>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">auto_carver</span><span class="o">.</span><span class="n">summary</span>
@@ -2882,7 +2882,7 @@ C:\Users\defra\Desktop\git\PROJECTS\AutoCarver\AutoCarver\discretizers\utils\bas
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -3050,7 +3050,7 @@ C:\Users\defra\Desktop\git\PROJECTS\AutoCarver\AutoCarver\discretizers\utils\bas
 <section id="Detailed-overview-of-tested-combinations">
 <h3>Detailed overview of tested combinations<a class="headerlink" href="#Detailed-overview-of-tested-combinations" title="Link to this heading"></a></h3>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">features</span><span class="p">[</span><span class="s2">&quot;Pclass&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">history</span>
@@ -3058,7 +3058,7 @@ C:\Users\defra\Desktop\git\PROJECTS\AutoCarver\AutoCarver\discretizers\utils\bas
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -3164,7 +3164,7 @@ C:\Users\defra\Desktop\git\PROJECTS\AutoCarver\AutoCarver\discretizers\utils\bas
 <h3>Saving<a class="headerlink" href="#Saving" title="Link to this heading"></a></h3>
 <p>All <strong>Carvers</strong> can safely be stored as a .json file.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">auto_carver</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;binary_carver.json&quot;</span><span class="p">)</span>
@@ -3176,7 +3176,7 @@ C:\Users\defra\Desktop\git\PROJECTS\AutoCarver\AutoCarver\discretizers\utils\bas
 <h3>Loading<a class="headerlink" href="#Loading" title="Link to this heading"></a></h3>
 <p><strong>Carvers</strong> can safely be loaded from a .json file.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">auto_carver</span> <span class="o">=</span> <span class="n">BinaryCarver</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;binary_carver.json&quot;</span><span class="p">)</span>
@@ -3188,7 +3188,7 @@ C:\Users\defra\Desktop\git\PROJECTS\AutoCarver\AutoCarver\discretizers\utils\bas
 <section id="Applying-AutoCarver">
 <h2>Applying AutoCarver<a class="headerlink" href="#Applying-AutoCarver" title="Link to this heading"></a></h2>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dev_set_processed</span> <span class="o">=</span> <span class="n">auto_carver</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">dev_set</span><span class="p">)</span>
@@ -3200,12 +3200,12 @@ C:\Users\defra\Desktop\git\PROJECTS\AutoCarver\AutoCarver\discretizers\utils\bas
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-C:\Users\defra\Desktop\git\PROJECTS\AutoCarver\AutoCarver\discretizers\utils\base_discretizer.py:426: FutureWarning: Downcasting behavior in `replace` is deprecated and will be removed in a future version. To retain the old behavior, explicitly call `result.infer_objects(copy=False)`. To opt-in to the future behavior, set `pd.set_option(&#39;future.no_silent_downcasting&#39;, True)`
+C:\Users\defra\Desktop\git\PROJECTS\AutoCarver\AutoCarver\discretizers\utils\base_discretizer.py:413: FutureWarning: Downcasting behavior in `replace` is deprecated and will be removed in a future version. To retain the old behavior, explicitly call `result.infer_objects(copy=False)`. To opt-in to the future behavior, set `pd.set_option(&#39;future.no_silent_downcasting&#39;, True)`
   sample.X.replace(
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dev_set_processed</span><span class="p">[</span><span class="n">auto_carver</span><span class="o">.</span><span class="n">features</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">u</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">dropna</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
@@ -3213,7 +3213,7 @@ C:\Users\defra\Desktop\git\PROJECTS\AutoCarver\AutoCarver\discretizers\utils\bas
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -3289,7 +3289,7 @@ C:\Users\defra\Desktop\git\PROJECTS\AutoCarver\AutoCarver\discretizers\utils\bas
 <h3>Number of features to select<a class="headerlink" href="#Number-of-features-to-select" title="Link to this heading"></a></h3>
 <p>The attribute <code class="docutils literal notranslate"><span class="pre">n_best_per_type</span></code> allows one to choose the number of features to be selected per data type (quantitative and qualitative).</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">n_best_per_type</span> <span class="o">=</span> <span class="mi">4</span>  <span class="c1"># here the number of features is low, ClassificationSelector will only be used to compute useful statistics</span>
@@ -3301,7 +3301,7 @@ C:\Users\defra\Desktop\git\PROJECTS\AutoCarver\AutoCarver\discretizers\utils\bas
 <section id="Using-Selectors">
 <h2>Using Selectors<a class="headerlink" href="#Using-Selectors" title="Link to this heading"></a></h2>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">AutoCarver</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassificationSelector</span>
@@ -3330,138 +3330,138 @@ C:\Users\defra\Desktop\git\PROJECTS\AutoCarver\AutoCarver\discretizers\utils\bas
 </div>
 <div class="output_area rendered_html docutils container">
 <style type="text/css">
-#T_b16af_row0_col1, #T_b16af_row0_col5, #T_b16af_row1_col1, #T_b16af_row1_col2, #T_b16af_row2_col1, #T_b16af_row3_col1, #T_b16af_row4_col1, #T_b16af_row5_col1, #T_b16af_row5_col3 {
+#T_ea292_row0_col1, #T_ea292_row0_col5, #T_ea292_row1_col1, #T_ea292_row1_col2, #T_ea292_row2_col1, #T_ea292_row3_col1, #T_ea292_row4_col1, #T_ea292_row5_col1, #T_ea292_row5_col3 {
   background-color: #3b4cc0;
   color: #f1f1f1;
 }
-#T_b16af_row0_col2 {
+#T_ea292_row0_col2 {
   background-color: #86a9fc;
   color: #f1f1f1;
 }
-#T_b16af_row0_col3, #T_b16af_row3_col2, #T_b16af_row4_col5 {
+#T_ea292_row0_col3, #T_ea292_row3_col2, #T_ea292_row4_col5 {
   background-color: #b40426;
   color: #f1f1f1;
 }
-#T_b16af_row1_col3 {
+#T_ea292_row1_col3 {
   background-color: #ccd9ed;
   color: #000000;
 }
-#T_b16af_row1_col5, #T_b16af_row3_col5 {
+#T_ea292_row1_col5, #T_ea292_row3_col5 {
   background-color: #80a3fa;
   color: #f1f1f1;
 }
-#T_b16af_row2_col2 {
+#T_ea292_row2_col2 {
   background-color: #f49a7b;
   color: #000000;
 }
-#T_b16af_row2_col3 {
+#T_ea292_row2_col3 {
   background-color: #c9d7f0;
   color: #000000;
 }
-#T_b16af_row2_col5 {
+#T_ea292_row2_col5 {
   background-color: #e57058;
   color: #f1f1f1;
 }
-#T_b16af_row3_col3 {
+#T_ea292_row3_col3 {
   background-color: #4a63d3;
   color: #f1f1f1;
 }
-#T_b16af_row4_col2 {
+#T_ea292_row4_col2 {
   background-color: #dcdddd;
   color: #000000;
 }
-#T_b16af_row4_col3 {
+#T_ea292_row4_col3 {
   background-color: #485fd1;
   color: #f1f1f1;
 }
-#T_b16af_row5_col2 {
+#T_ea292_row5_col2 {
   background-color: #afcafc;
   color: #000000;
 }
-#T_b16af_row5_col5 {
+#T_ea292_row5_col5 {
   background-color: #df634e;
   color: #f1f1f1;
 }
 </style>
-<table id="T_b16af" style='display:inline'>
+<table id="T_ea292" style='display:inline'>
   <thead>
     <tr>
       <th class="blank level0" >&nbsp;</th>
-      <th id="T_b16af_level0_col0" class="col_heading level0 col0" >feature</th>
-      <th id="T_b16af_level0_col1" class="col_heading level0 col1" >NanMeasure</th>
-      <th id="T_b16af_level0_col2" class="col_heading level0 col2" >ModeMeasure</th>
-      <th id="T_b16af_level0_col3" class="col_heading level0 col3" >TschuprowtMeasure</th>
-      <th id="T_b16af_level0_col4" class="col_heading level0 col4" >TschuprowtRank</th>
-      <th id="T_b16af_level0_col5" class="col_heading level0 col5" >TschuprowtFilter</th>
-      <th id="T_b16af_level0_col6" class="col_heading level0 col6" >TschuprowtWith</th>
+      <th id="T_ea292_level0_col0" class="col_heading level0 col0" >feature</th>
+      <th id="T_ea292_level0_col1" class="col_heading level0 col1" >NanMeasure</th>
+      <th id="T_ea292_level0_col2" class="col_heading level0 col2" >ModeMeasure</th>
+      <th id="T_ea292_level0_col3" class="col_heading level0 col3" >TschuprowtMeasure</th>
+      <th id="T_ea292_level0_col4" class="col_heading level0 col4" >TschuprowtRank</th>
+      <th id="T_ea292_level0_col5" class="col_heading level0 col5" >TschuprowtFilter</th>
+      <th id="T_ea292_level0_col6" class="col_heading level0 col6" >TschuprowtWith</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th id="T_b16af_level0_row0" class="row_heading level0 row0" >0</th>
-      <td id="T_b16af_row0_col0" class="data row0 col0" >Categorical('Sex')</td>
-      <td id="T_b16af_row0_col1" class="data row0 col1" >0.0000</td>
-      <td id="T_b16af_row0_col2" class="data row0 col2" >0.6364</td>
-      <td id="T_b16af_row0_col3" class="data row0 col3" >0.5337</td>
-      <td id="T_b16af_row0_col4" class="data row0 col4" >0</td>
-      <td id="T_b16af_row0_col5" class="data row0 col5" >0.0000</td>
-      <td id="T_b16af_row0_col6" class="data row0 col6" >itself</td>
+      <th id="T_ea292_level0_row0" class="row_heading level0 row0" >0</th>
+      <td id="T_ea292_row0_col0" class="data row0 col0" >Categorical('Sex')</td>
+      <td id="T_ea292_row0_col1" class="data row0 col1" >0.0000</td>
+      <td id="T_ea292_row0_col2" class="data row0 col2" >0.6364</td>
+      <td id="T_ea292_row0_col3" class="data row0 col3" >0.5337</td>
+      <td id="T_ea292_row0_col4" class="data row0 col4" >0</td>
+      <td id="T_ea292_row0_col5" class="data row0 col5" >0.0000</td>
+      <td id="T_ea292_row0_col6" class="data row0 col6" >itself</td>
     </tr>
     <tr>
-      <th id="T_b16af_level0_row1" class="row_heading level0 row1" >1</th>
-      <td id="T_b16af_row1_col0" class="data row1 col0" >Ordinal('Pclass')</td>
-      <td id="T_b16af_row1_col1" class="data row1 col1" >0.0000</td>
-      <td id="T_b16af_row1_col2" class="data row1 col2" >0.5488</td>
-      <td id="T_b16af_row1_col3" class="data row1 col3" >0.3001</td>
-      <td id="T_b16af_row1_col4" class="data row1 col4" >1</td>
-      <td id="T_b16af_row1_col5" class="data row1 col5" >0.0988</td>
-      <td id="T_b16af_row1_col6" class="data row1 col6" >Sex</td>
+      <th id="T_ea292_level0_row1" class="row_heading level0 row1" >1</th>
+      <td id="T_ea292_row1_col0" class="data row1 col0" >Ordinal('Pclass')</td>
+      <td id="T_ea292_row1_col1" class="data row1 col1" >0.0000</td>
+      <td id="T_ea292_row1_col2" class="data row1 col2" >0.5488</td>
+      <td id="T_ea292_row1_col3" class="data row1 col3" >0.3001</td>
+      <td id="T_ea292_row1_col4" class="data row1 col4" >1</td>
+      <td id="T_ea292_row1_col5" class="data row1 col5" >0.0988</td>
+      <td id="T_ea292_row1_col6" class="data row1 col6" >Sex</td>
     </tr>
     <tr>
-      <th id="T_b16af_level0_row2" class="row_heading level0 row2" >3</th>
-      <td id="T_b16af_row2_col0" class="data row2 col0" >Quantitative('Fare')</td>
-      <td id="T_b16af_row2_col1" class="data row2 col1" >0.0000</td>
-      <td id="T_b16af_row2_col2" class="data row2 col2" >0.8316</td>
-      <td id="T_b16af_row2_col3" class="data row2 col3" >0.2953</td>
-      <td id="T_b16af_row2_col4" class="data row2 col4" >2</td>
-      <td id="T_b16af_row2_col5" class="data row2 col5" >0.3922</td>
-      <td id="T_b16af_row2_col6" class="data row2 col6" >Pclass</td>
+      <th id="T_ea292_level0_row2" class="row_heading level0 row2" >3</th>
+      <td id="T_ea292_row2_col0" class="data row2 col0" >Quantitative('Fare')</td>
+      <td id="T_ea292_row2_col1" class="data row2 col1" >0.0000</td>
+      <td id="T_ea292_row2_col2" class="data row2 col2" >0.8316</td>
+      <td id="T_ea292_row2_col3" class="data row2 col3" >0.2953</td>
+      <td id="T_ea292_row2_col4" class="data row2 col4" >2</td>
+      <td id="T_ea292_row2_col5" class="data row2 col5" >0.3922</td>
+      <td id="T_ea292_row2_col6" class="data row2 col6" >Pclass</td>
     </tr>
     <tr>
-      <th id="T_b16af_level0_row3" class="row_heading level0 row3" >2</th>
-      <td id="T_b16af_row3_col0" class="data row3 col0" >Quantitative('Age')</td>
-      <td id="T_b16af_row3_col1" class="data row3 col1" >0.0000</td>
-      <td id="T_b16af_row3_col2" class="data row3 col2" >0.9259</td>
-      <td id="T_b16af_row3_col3" class="data row3 col3" >0.1392</td>
-      <td id="T_b16af_row3_col4" class="data row3 col4" >3</td>
-      <td id="T_b16af_row3_col5" class="data row3 col5" >0.1002</td>
-      <td id="T_b16af_row3_col6" class="data row3 col6" >Sex</td>
+      <th id="T_ea292_level0_row3" class="row_heading level0 row3" >2</th>
+      <td id="T_ea292_row3_col0" class="data row3 col0" >Quantitative('Age')</td>
+      <td id="T_ea292_row3_col1" class="data row3 col1" >0.0000</td>
+      <td id="T_ea292_row3_col2" class="data row3 col2" >0.9259</td>
+      <td id="T_ea292_row3_col3" class="data row3 col3" >0.1392</td>
+      <td id="T_ea292_row3_col4" class="data row3 col4" >3</td>
+      <td id="T_ea292_row3_col5" class="data row3 col5" >0.1002</td>
+      <td id="T_ea292_row3_col6" class="data row3 col6" >Sex</td>
     </tr>
     <tr>
-      <th id="T_b16af_level0_row4" class="row_heading level0 row4" >5</th>
-      <td id="T_b16af_row4_col0" class="data row4 col0" >Quantitative('Parents/Children Aboard')</td>
-      <td id="T_b16af_row4_col1" class="data row4 col1" >0.0000</td>
-      <td id="T_b16af_row4_col2" class="data row4 col2" >0.7374</td>
-      <td id="T_b16af_row4_col3" class="data row4 col3" >0.1364</td>
-      <td id="T_b16af_row4_col4" class="data row4 col4" >4</td>
-      <td id="T_b16af_row4_col5" class="data row4 col5" >0.4666</td>
-      <td id="T_b16af_row4_col6" class="data row4 col6" >Age</td>
+      <th id="T_ea292_level0_row4" class="row_heading level0 row4" >5</th>
+      <td id="T_ea292_row4_col0" class="data row4 col0" >Quantitative('Parents/Children Aboard')</td>
+      <td id="T_ea292_row4_col1" class="data row4 col1" >0.0000</td>
+      <td id="T_ea292_row4_col2" class="data row4 col2" >0.7374</td>
+      <td id="T_ea292_row4_col3" class="data row4 col3" >0.1364</td>
+      <td id="T_ea292_row4_col4" class="data row4 col4" >4</td>
+      <td id="T_ea292_row4_col5" class="data row4 col5" >0.4666</td>
+      <td id="T_ea292_row4_col6" class="data row4 col6" >Age</td>
     </tr>
     <tr>
-      <th id="T_b16af_level0_row5" class="row_heading level0 row5" >4</th>
-      <td id="T_b16af_row5_col0" class="data row5 col0" >Quantitative('Siblings/Spouses Aboard')</td>
-      <td id="T_b16af_row5_col1" class="data row5 col1" >0.0000</td>
-      <td id="T_b16af_row5_col2" class="data row5 col2" >0.6801</td>
-      <td id="T_b16af_row5_col3" class="data row5 col3" >0.1175</td>
-      <td id="T_b16af_row5_col4" class="data row5 col4" >5</td>
-      <td id="T_b16af_row5_col5" class="data row5 col5" >0.4060</td>
-      <td id="T_b16af_row5_col6" class="data row5 col6" >Parents/Children Aboard</td>
+      <th id="T_ea292_level0_row5" class="row_heading level0 row5" >4</th>
+      <td id="T_ea292_row5_col0" class="data row5 col0" >Quantitative('Siblings/Spouses Aboard')</td>
+      <td id="T_ea292_row5_col1" class="data row5 col1" >0.0000</td>
+      <td id="T_ea292_row5_col2" class="data row5 col2" >0.6801</td>
+      <td id="T_ea292_row5_col3" class="data row5 col3" >0.1175</td>
+      <td id="T_ea292_row5_col4" class="data row5 col4" >5</td>
+      <td id="T_ea292_row5_col5" class="data row5 col5" >0.4060</td>
+      <td id="T_ea292_row5_col6" class="data row5 col6" >Parents/Children Aboard</td>
     </tr>
   </tbody>
 </table></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -3470,7 +3470,7 @@ Features([&#39;Sex&#39;, &#39;Pclass&#39;, &#39;Fare&#39;, &#39;Age&#39;])
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">train_set_processed</span><span class="p">[</span><span class="n">best_features</span><span class="p">]</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
@@ -3478,7 +3478,7 @@ Features([&#39;Sex&#39;, &#39;Pclass&#39;, &#39;Fare&#39;, &#39;Age&#39;])
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -3567,7 +3567,7 @@ Features([&#39;Sex&#39;, &#39;Pclass&#39;, &#39;Fare&#39;, &#39;Age&#39;])
 <h1>Modeling<a class="headerlink" href="#Modeling" title="Link to this heading"></a></h1>
 <p>Fitting model on train data</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">xgboost</span><span class="w"> </span><span class="kn">import</span> <span class="n">XGBClassifier</span>
@@ -3680,7 +3680,7 @@ File <span class="ansi-green-intense-fg ansi-bold">c:\Users\defra\AppData\Local\
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -3700,7 +3700,7 @@ XGBClassifier(base_score=None, booster=None, callbacks=None,
 </div>
 <p>Saving model</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">save_model</span><span class="p">(</span><span class="s2">&quot;binary_xgboost.json&quot;</span><span class="p">)</span>
@@ -3709,7 +3709,7 @@ XGBClassifier(base_score=None, booster=None, callbacks=None,
 </div>
 <p>Prediction on dev dataset and performance</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">roc_auc_score</span>
@@ -3720,7 +3720,7 @@ XGBClassifier(base_score=None, booster=None, callbacks=None,
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
 </div>
 <div class="output_area docutils container">

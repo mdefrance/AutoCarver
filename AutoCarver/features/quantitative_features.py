@@ -8,7 +8,7 @@ from .utils.grouped_list import GroupedList
 
 
 class QuantitativeFeature(BaseFeature):
-    """defines a quantitative feature"""
+    """Defines a quantitative feature"""
 
     __name__ = "Quantitative"
     is_quantitative = True
@@ -133,7 +133,7 @@ class QuantitativeFeature(BaseFeature):
 class DatetimeFeature(BaseFeature):
     """TODO"""
 
-    def __init__(self, name: str, reference_date: str, **kwargs: dict) -> None:
+    def __init__(self, name: str, reference_date: str, **kwargs) -> None:
         super().__init__(name, **kwargs)
         self.is_quantitative = True
         self.reference_date = reference_date  # date of reference to compare with

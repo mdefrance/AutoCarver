@@ -17,7 +17,7 @@ from ...combinations import (
 )
 from ...discretizers import BaseDiscretizer, Discretizer, Sample
 from ...features import BaseFeature, Features, GroupedList
-from ...utils import get_attribute, get_bool_attribute
+from ...utils import extend_docstring, get_attribute, get_bool_attribute
 from .pretty_print import index_mapper, prettier_xagg
 
 # trying to import extra dependencies
@@ -77,6 +77,7 @@ class BaseCarver(BaseDiscretizer, ABC):
     is_y_continuous = False
     is_y_multiclass = False
 
+    @extend_docstring(BaseDiscretizer.__init__)
     def __init__(
         self,
         features: Features,
@@ -88,18 +89,6 @@ class BaseCarver(BaseDiscretizer, ABC):
         """
         Parameters
         ----------
-        features : Features
-            A set of :class:`Features` to be carved.
-
-        min_freq : float
-            Minimum frequency per modality per feature.
-
-            * Features need at least one modality more frequent than :attr:`min_freq`
-            * Defines number of quantiles of continuous features
-            * Minimum frequency of modality of quantitative features
-
-            .. tip::
-                Set between ``0.01`` (slower, less robust) and ``0.2`` (faster, more robust)
 
         dropna : bool, optional
             * ``True``, try to group ``nan`` with other modalities.
@@ -116,25 +105,9 @@ class BaseCarver(BaseDiscretizer, ABC):
 
         Keyword Arguments
         -----------------
-        ordinal_encoding : bool, optional
-            Whether or not to ordinal encode :class:`Features`, by default ``True``
-
-            * ``True``, sets the rank of modalities as label.
-            * ``False``, sets one modality of group as label.
-
-        copy : bool, optional
-            Copying input data, by default ``False``
 
         discretizer_min_freq : float, optional
             Specific :attr:`min_freq` used by discretizers, by default ``None`` for ``min_freq/2``
-
-        verbose : bool, optional
-            * ``True``, without ``IPython``: prints raw statitics
-            * ``True``, with ``IPython``: prints HTML statistics, by default ``False``
-
-        n_jobs : int, optional
-            Processes for multiprocessing, by default ``1``
-
         """
 
         # minimum frequency for discretizer

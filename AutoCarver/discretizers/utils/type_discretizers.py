@@ -20,14 +20,8 @@ class StringDiscretizer(BaseDiscretizer):
 
     __name__ = "StringDiscretizer"
 
-    @extend_docstring(BaseDiscretizer.__init__)
-    def __init__(self, features: list[BaseFeature], **kwargs) -> None:
-        """
-        Parameters
-        ----------
-        features : list[str]
-            List of column names of qualitative features to be converted as string
-        """
+    @extend_docstring(BaseDiscretizer.__init__, exclude=["min_freq"])
+    def __init__(self, features: Features, **kwargs) -> None:
         # initiating features
         features = Features(features, **kwargs)
 

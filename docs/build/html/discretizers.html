@@ -63,8 +63,6 @@
 <li class="toctree-l2"><a class="reference internal" href="#discretizer-a-complete-discretization-pipeline">Discretizer, a complete discretization pipeline</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#quantitative-data">Quantitative Data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#qualitative-data">Qualitative Data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#groupedlist">GroupedList</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#saving-and-loading">Saving and Loading</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="combinations.html">Combinations</a></li>
@@ -140,10 +138,10 @@
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ul class="simple">
-<li><p>Representativity threshold of modalities is user selected (<code class="docutils literal notranslate"><span class="pre">min_freq</span></code> attribute).</p></li>
-<li><p>At this step, if any, <code class="docutils literal notranslate"><span class="pre">numpy.nan</span></code> are set as there own modality (no given order).</p></li>
-<li><p>Helps improve modality relevancy and reduces the set of possible combinations to test from.</p></li>
-<li><p>Included in all carving pipelines: <code class="xref py py-class docutils literal notranslate"><span class="pre">BinaryCarver</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">MulticlassCarver</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ContinuousCarver</span></code>.</p></li>
+<li><p>Representativity threshold of modalities is user selected (<code class="xref py py-attr docutils literal notranslate"><span class="pre">min_freq</span></code>)</p></li>
+<li><p>At this step, if any, <a href="#id2"><span class="problematic" id="id3">``</span></a>nan``s are set as there own modality (no given order)</p></li>
+<li><p>Helps improve modality relevancy and reduces the set of possible combinations to test from</p></li>
+<li><p>Included in all carving pipelines: <code class="xref py py-class docutils literal notranslate"><span class="pre">BinaryCarver</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">MulticlassCarver</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ContinuousCarver</span></code></p></li>
 </ul>
 </div>
 <section id="discretizer-a-complete-discretization-pipeline">
@@ -159,38 +157,33 @@
 <li><p>[Ordinal features] user-specified order.</p></li>
 <li><p>[Continuous/Discrete features] real order of the values.</p></li>
 </ul>
-<dl class="simple">
-<dt>features<span class="classifier">Features</span></dt><dd><p>A set of Features (quantitative, categorical or ordinal) to be dicretized</p>
-</dd>
-<dt>copy<span class="classifier">bool, optional</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, applies transform to a copy of the provided DataFrame, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
-</dd>
-<dt>verbose<span class="classifier">bool, optional</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, prints raw Discretizers Fit and Transform steps, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
-</dd>
-<dt>n_jobs<span class="classifier">int, optional</span></dt><dd><p>Number of processes used by multiprocessing, by default <code class="docutils literal notranslate"><span class="pre">1</span></code></p>
-</dd>
-<dt><a href="#id2"><span class="problematic" id="id3">**</span></a>kwargs: dict</dt><dd><p>Pass values for <code class="docutils literal notranslate"><span class="pre">str_default</span></code> and <code class="docutils literal notranslate"><span class="pre">str_nan</span></code> (default string values)</p>
-</dd>
-</dl>
-<p class="rubric">Examples</p>
-<p>See <a class="reference external" href="https://autocarver.readthedocs.io/en/latest/index.html">Discretizers examples</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>quantitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – List of column names of quantitative features (continuous and discrete) to be dicretized</p></li>
-<li><p><strong>qualitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – List of column names of qualitative features (non-ordinal) to be discretized</p></li>
-<li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per grouped modalities.</p>
+<li><p><strong>features</strong> (<a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.Features"><em>Features</em></a>) – A set of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> to be processed</p></li>
+<li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per modality per feature</p>
 <ul>
-<li><p>Features whose most frequent modality is &lt; <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> will not be discretized.</p></li>
-<li><p>Sets the number of quantiles in which to discretize the continuous features.</p></li>
-<li><p>Sets the minimum frequency of a quantitative feature’s modality.</p></li>
+<li><p>Features need at least one modality more frequent than <code class="xref py py-attr docutils literal notranslate"><span class="pre">min_freq</span></code></p></li>
+<li><p>Defines number of quantiles of continuous features</p></li>
+<li><p>Minimum frequency of modality of quantitative features</p></li>
 </ul>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
-<p>Set between <code class="docutils literal notranslate"><span class="pre">0.02</span></code> (slower, less robust) and <code class="docutils literal notranslate"><span class="pre">0.05</span></code> (faster, more robust)</p>
+<p>Set between <code class="docutils literal notranslate"><span class="pre">0.01</span></code> (slower, less robust) and <code class="docutils literal notranslate"><span class="pre">0.2</span></code> (faster, more robust)</p>
 </div>
 </p></li>
-<li><p><strong>ordinal_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of ordinal features to be discretized. For those features a list
-of values has to be provided in the <code class="docutils literal notranslate"><span class="pre">values_orders</span></code> dict, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ordinal_encoding</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to ordinal encode <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – Copying input data, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – <ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, without <code class="docutils literal notranslate"><span class="pre">IPython</span></code>: prints raw statitics</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, with <code class="docutils literal notranslate"><span class="pre">IPython</span></code>: prints HTML statistics, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+</ul>
+</p></li>
+<li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>optional</em>) – Processes for multiprocessing, by default <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
 </ul>
 </dd>
 </dl>
@@ -198,15 +191,15 @@ of values has to be provided in the <code class="docutils literal notranslate"><
 <dt class="sig sig-object py" id="AutoCarver.discretizers.Discretizer.fit">
 <span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.Discretizer.fit" title="Link to this definition"></a></dt>
 <dd><p>Learns simple discretization of values of X according to values of y.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>DataFrame</em>) – Training dataset, to determine features’ optimal carving
-Needs to have columns has specified in <code class="docutils literal notranslate"><span class="pre">features</span></code> attribute.</p></li>
-<li><p><strong>y</strong> (<em>Series</em>) – Target with wich the association is maximized.</p></li>
-</ul>
+<blockquote>
+<div><dl class="simple">
+<dt>X<span class="classifier">DataFrame</span></dt><dd><p>Training dataset, to determine features’ optimal carving
+Needs to have columns has specified in <code class="docutils literal notranslate"><span class="pre">features</span></code> attribute.</p>
+</dd>
+<dt>y<span class="classifier">Series</span></dt><dd><p>Target with wich the association is maximized.</p>
 </dd>
 </dl>
+</div></blockquote>
 </dd></dl>
 
 <dl class="py method">
@@ -295,42 +288,33 @@ Needs to have columns from provided <code class="xref py py-class docutils liter
 <li><p>[Continuous/Discrete features] real order of the values.</p></li>
 </ul>
 </div></blockquote>
-<dl class="simple">
-<dt>features<span class="classifier">Features</span></dt><dd><p>A set of Features (quantitative, categorical or ordinal) to be dicretized</p>
-</dd>
-<dt>copy<span class="classifier">bool, optional</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, applies transform to a copy of the provided DataFrame, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
-</dd>
-<dt>verbose<span class="classifier">bool, optional</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, prints raw Discretizers Fit and Transform steps, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
-</dd>
-<dt>n_jobs<span class="classifier">int, optional</span></dt><dd><p>Number of processes used by multiprocessing, by default <code class="docutils literal notranslate"><span class="pre">1</span></code></p>
-</dd>
-<dt><a href="#id4"><span class="problematic" id="id5">**</span></a>kwargs: dict</dt><dd><p>Pass values for <code class="docutils literal notranslate"><span class="pre">str_default</span></code> and <code class="docutils literal notranslate"><span class="pre">str_nan</span></code> (default string values)</p>
-</dd>
-</dl>
-<p class="rubric">Examples</p>
-<p>See <a class="reference external" href="https://autocarver.readthedocs.io/en/latest/index.html">Discretizers examples</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>quantitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – List of column names of quantitative features (continuous and discrete) to be dicretized</p></li>
-<li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per grouped modalities.</p>
+<li><p><strong>quantitatives</strong> (<em>list</em><em>[</em><a class="reference internal" href="features.html#AutoCarver.features.QuantitativeFeature" title="AutoCarver.features.QuantitativeFeature"><em>QuantitativeFeature</em></a><em>]</em>) – Quantitative features to process</p></li>
+<li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per modality per feature</p>
 <ul>
-<li><p>Features whose most frequent modality is &lt; <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> will not be discretized.</p></li>
-<li><p>Sets the number of quantiles in which to discretize the continuous features.</p></li>
-<li><p>Sets the minimum frequency of a quantitative feature’s modality.</p></li>
+<li><p>Features need at least one modality more frequent than <code class="xref py py-attr docutils literal notranslate"><span class="pre">min_freq</span></code></p></li>
+<li><p>Defines number of quantiles of continuous features</p></li>
+<li><p>Minimum frequency of modality of quantitative features</p></li>
 </ul>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
-<p>Set between <code class="docutils literal notranslate"><span class="pre">0.02</span></code> (slower, less robust) and <code class="docutils literal notranslate"><span class="pre">0.05</span></code> (faster, more robust)</p>
+<p>Set between <code class="docutils literal notranslate"><span class="pre">0.01</span></code> (slower, less robust) and <code class="docutils literal notranslate"><span class="pre">0.2</span></code> (faster, more robust)</p>
 </div>
 </p></li>
-<li><p><strong>input_dtypes</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – <p>Input data type, converted to a dict of the provided type for each feature,
-by default <code class="docutils literal notranslate"><span class="pre">&quot;str&quot;</span></code></p>
-<ul>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">&quot;str&quot;</span></code>, features are considered as qualitative.</p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code>, features are considered as quantitative.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ordinal_encoding</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to ordinal encode <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – Copying input data, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – <ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, without <code class="docutils literal notranslate"><span class="pre">IPython</span></code>: prints raw statitics</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, with <code class="docutils literal notranslate"><span class="pre">IPython</span></code>: prints HTML statistics, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
 </ul>
 </p></li>
+<li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>optional</em>) – Processes for multiprocessing, by default <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
 </ul>
 </dd>
 </dl>
@@ -338,15 +322,15 @@ by default <code class="docutils literal notranslate"><span class="pre">&quot;st
 <dt class="sig sig-object py" id="AutoCarver.discretizers.QuantitativeDiscretizer.fit">
 <span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.QuantitativeDiscretizer.fit" title="Link to this definition"></a></dt>
 <dd><p>Learns simple discretization of values of X according to values of y.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>DataFrame</em>) – Training dataset, to determine features’ optimal carving
-Needs to have columns has specified in <code class="docutils literal notranslate"><span class="pre">features</span></code> attribute.</p></li>
-<li><p><strong>y</strong> (<em>Series</em>) – Target with wich the association is maximized.</p></li>
-</ul>
+<blockquote>
+<div><dl class="simple">
+<dt>X<span class="classifier">DataFrame</span></dt><dd><p>Training dataset, to determine features’ optimal carving
+Needs to have columns has specified in <code class="docutils literal notranslate"><span class="pre">features</span></code> attribute.</p>
+</dd>
+<dt>y<span class="classifier">Series</span></dt><dd><p>Target with wich the association is maximized.</p>
 </dd>
 </dl>
+</div></blockquote>
 </dd></dl>
 
 <dl class="py method">
@@ -437,35 +421,33 @@ Set <code class="docutils literal notranslate"><span class="pre">min_freq</span>
 <li><p>The number of quantiles is set as <code class="docutils literal notranslate"><span class="pre">(1-freq_frequent_modals)/(min_freq)</span></code>.</p></li>
 <li><p>Nans are considered as a modality (and are taken into account in <code class="docutils literal notranslate"><span class="pre">freq_frequent_modals</span></code>).</p></li>
 </ul>
-<dl class="simple">
-<dt>features<span class="classifier">Features</span></dt><dd><p>A set of Features (quantitative, categorical or ordinal) to be dicretized</p>
-</dd>
-<dt>copy<span class="classifier">bool, optional</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, applies transform to a copy of the provided DataFrame, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
-</dd>
-<dt>verbose<span class="classifier">bool, optional</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, prints raw Discretizers Fit and Transform steps, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
-</dd>
-<dt>n_jobs<span class="classifier">int, optional</span></dt><dd><p>Number of processes used by multiprocessing, by default <code class="docutils literal notranslate"><span class="pre">1</span></code></p>
-</dd>
-<dt><a href="#id7"><span class="problematic" id="id8">**</span></a>kwargs: dict</dt><dd><p>Pass values for <code class="docutils literal notranslate"><span class="pre">str_default</span></code> and <code class="docutils literal notranslate"><span class="pre">str_nan</span></code> (default string values)</p>
-</dd>
-</dl>
-<p class="rubric">Examples</p>
-<p>See <a class="reference external" href="https://autocarver.readthedocs.io/en/latest/index.html">Discretizers examples</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – List of column names of quantitative features (continuous and discrete) to be dicretized</p></li>
-<li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per grouped modalities.</p>
+<li><p><strong>quantitatives</strong> (<em>list</em><em>[</em><a class="reference internal" href="features.html#AutoCarver.features.QuantitativeFeature" title="AutoCarver.features.QuantitativeFeature"><em>QuantitativeFeature</em></a><em>]</em>) – Quantitative features to process</p></li>
+<li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per modality per feature</p>
 <ul>
-<li><p>Features whose most frequent modality is less than <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> won’t be discretized.</p></li>
-<li><p>Sets the number of quantiles in which to discretize the continuous features.</p></li>
-<li><p>Sets the minimum frequency of a quantitative feature’s modality.</p></li>
+<li><p>Features need at least one modality more frequent than <code class="xref py py-attr docutils literal notranslate"><span class="pre">min_freq</span></code></p></li>
+<li><p>Defines number of quantiles of continuous features</p></li>
+<li><p>Minimum frequency of modality of quantitative features</p></li>
 </ul>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
-<p>Set between <code class="docutils literal notranslate"><span class="pre">0.02</span></code> (slower, less robust) and <code class="docutils literal notranslate"><span class="pre">0.05</span></code> (faster, more robust)</p>
+<p>Set between <code class="docutils literal notranslate"><span class="pre">0.01</span></code> (slower, less robust) and <code class="docutils literal notranslate"><span class="pre">0.2</span></code> (faster, more robust)</p>
 </div>
 </p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ordinal_encoding</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to ordinal encode <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – Copying input data, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – <ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, without <code class="docutils literal notranslate"><span class="pre">IPython</span></code>: prints raw statitics</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, with <code class="docutils literal notranslate"><span class="pre">IPython</span></code>: prints HTML statistics, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+</ul>
+</p></li>
+<li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>optional</em>) – Processes for multiprocessing, by default <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
 </ul>
 </dd>
 </dl>
@@ -473,15 +455,15 @@ Set <code class="docutils literal notranslate"><span class="pre">min_freq</span>
 <dt class="sig sig-object py" id="AutoCarver.discretizers.ContinuousDiscretizer.fit">
 <span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.ContinuousDiscretizer.fit" title="Link to this definition"></a></dt>
 <dd><p>Learns simple discretization of values of X according to values of y.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>DataFrame</em>) – Training dataset, to determine features’ optimal carving
-Needs to have columns has specified in <code class="docutils literal notranslate"><span class="pre">features</span></code> attribute.</p></li>
-<li><p><strong>y</strong> (<em>Series</em>) – Target with wich the association is maximized.</p></li>
-</ul>
+<blockquote>
+<div><dl class="simple">
+<dt>X<span class="classifier">DataFrame</span></dt><dd><p>Training dataset, to determine features’ optimal carving
+Needs to have columns has specified in <code class="docutils literal notranslate"><span class="pre">features</span></code> attribute.</p>
+</dd>
+<dt>y<span class="classifier">Series</span></dt><dd><p>Target with wich the association is maximized.</p>
 </dd>
 </dl>
+</div></blockquote>
 </dd></dl>
 
 <dl class="py method">
@@ -571,44 +553,33 @@ Needs to have columns from provided <code class="xref py py-class docutils liter
 <li><p>[Categorical features] order based on modality target rate.</p></li>
 <li><p>[Ordinal features] user-specified order.</p></li>
 </ul>
-<dl class="simple">
-<dt>features<span class="classifier">Features</span></dt><dd><p>A set of Features (quantitative, categorical or ordinal) to be dicretized</p>
-</dd>
-<dt>copy<span class="classifier">bool, optional</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, applies transform to a copy of the provided DataFrame, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
-</dd>
-<dt>verbose<span class="classifier">bool, optional</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, prints raw Discretizers Fit and Transform steps, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
-</dd>
-<dt>n_jobs<span class="classifier">int, optional</span></dt><dd><p>Number of processes used by multiprocessing, by default <code class="docutils literal notranslate"><span class="pre">1</span></code></p>
-</dd>
-<dt><a href="#id10"><span class="problematic" id="id11">**</span></a>kwargs: dict</dt><dd><p>Pass values for <code class="docutils literal notranslate"><span class="pre">str_default</span></code> and <code class="docutils literal notranslate"><span class="pre">str_nan</span></code> (default string values)</p>
-</dd>
-</dl>
-<p class="rubric">Examples</p>
-<p>See <a class="reference external" href="https://autocarver.readthedocs.io/en/latest/index.html">Discretizers examples</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>qualitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – List of column names of qualitative features (non-ordinal) to be discretized</p></li>
-<li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per grouped modalities.</p>
+<li><p><strong>qualitatives</strong> (<em>list</em><em>[</em><em>QualitativeFeature</em><em>]</em>) – Qualitative features to process</p></li>
+<li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per modality per feature</p>
 <ul>
-<li><p>Features whose most frequent modality is &lt; <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> will not be discretized.</p></li>
-<li><p>Sets the number of quantiles in which to discretize the continuous features.</p></li>
-<li><p>Sets the minimum frequency of a quantitative feature’s modality.</p></li>
+<li><p>Features need at least one modality more frequent than <code class="xref py py-attr docutils literal notranslate"><span class="pre">min_freq</span></code></p></li>
+<li><p>Defines number of quantiles of continuous features</p></li>
+<li><p>Minimum frequency of modality of quantitative features</p></li>
 </ul>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
-<p>Set between <code class="docutils literal notranslate"><span class="pre">0.02</span></code> (slower, less robust) and <code class="docutils literal notranslate"><span class="pre">0.05</span></code> (faster, more robust)</p>
+<p>Set between <code class="docutils literal notranslate"><span class="pre">0.01</span></code> (slower, less robust) and <code class="docutils literal notranslate"><span class="pre">0.2</span></code> (faster, more robust)</p>
 </div>
 </p></li>
-<li><p><strong>ordinal_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names of ordinal features to be discretized. For those features a list
-of values has to be provided in the <code class="docutils literal notranslate"><span class="pre">values_orders</span></code> dict, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
-<li><p><strong>input_dtypes</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – <p>Input data type, converted to a dict of the provided type for each feature,
-by default <code class="docutils literal notranslate"><span class="pre">&quot;str&quot;</span></code></p>
-<ul>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">&quot;str&quot;</span></code>, features are considered as qualitative.</p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code>, features are considered as quantitative.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ordinal_encoding</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to ordinal encode <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – Copying input data, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – <ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, without <code class="docutils literal notranslate"><span class="pre">IPython</span></code>: prints raw statitics</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, with <code class="docutils literal notranslate"><span class="pre">IPython</span></code>: prints HTML statistics, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
 </ul>
 </p></li>
+<li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>optional</em>) – Processes for multiprocessing, by default <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
 </ul>
 </dd>
 </dl>
@@ -616,15 +587,15 @@ by default <code class="docutils literal notranslate"><span class="pre">&quot;st
 <dt class="sig sig-object py" id="AutoCarver.discretizers.QualitativeDiscretizer.fit">
 <span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.QualitativeDiscretizer.fit" title="Link to this definition"></a></dt>
 <dd><p>Learns simple discretization of values of X according to values of y.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>DataFrame</em>) – Training dataset, to determine features’ optimal carving
-Needs to have columns has specified in <code class="docutils literal notranslate"><span class="pre">features</span></code> attribute.</p></li>
-<li><p><strong>y</strong> (<em>Series</em>) – Target with wich the association is maximized.</p></li>
-</ul>
+<blockquote>
+<div><dl class="simple">
+<dt>X<span class="classifier">DataFrame</span></dt><dd><p>Training dataset, to determine features’ optimal carving
+Needs to have columns has specified in <code class="docutils literal notranslate"><span class="pre">features</span></code> attribute.</p>
+</dd>
+<dt>y<span class="classifier">Series</span></dt><dd><p>Target with wich the association is maximized.</p>
 </dd>
 </dl>
+</div></blockquote>
 </dd></dl>
 
 <dl class="py method">
@@ -708,35 +679,33 @@ Needs to have columns from provided <code class="xref py py-class docutils liter
 string.</p>
 <p>NaNs are left untouched.</p>
 <p>Only use for qualitative non-ordinal features.</p>
-<dl class="simple">
-<dt>features<span class="classifier">Features</span></dt><dd><p>A set of Features (quantitative, categorical or ordinal) to be dicretized</p>
-</dd>
-<dt>copy<span class="classifier">bool, optional</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, applies transform to a copy of the provided DataFrame, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
-</dd>
-<dt>verbose<span class="classifier">bool, optional</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, prints raw Discretizers Fit and Transform steps, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
-</dd>
-<dt>n_jobs<span class="classifier">int, optional</span></dt><dd><p>Number of processes used by multiprocessing, by default <code class="docutils literal notranslate"><span class="pre">1</span></code></p>
-</dd>
-<dt><a href="#id13"><span class="problematic" id="id14">**</span></a>kwargs: dict</dt><dd><p>Pass values for <code class="docutils literal notranslate"><span class="pre">str_default</span></code> and <code class="docutils literal notranslate"><span class="pre">str_nan</span></code> (default string values)</p>
-</dd>
-</dl>
-<p class="rubric">Examples</p>
-<p>See <a class="reference external" href="https://autocarver.readthedocs.io/en/latest/index.html">Discretizers examples</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – List of column names of qualitative features (non-ordinal) to be discretized</p></li>
-<li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per grouped modalities.</p>
+<li><p><strong>categoricals</strong> (<em>list</em><em>[</em><a class="reference internal" href="features.html#AutoCarver.features.CategoricalFeature" title="AutoCarver.features.CategoricalFeature"><em>CategoricalFeature</em></a><em>]</em>) – Categorical features to process</p></li>
+<li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per modality per feature</p>
 <ul>
-<li><p>Features whose most frequent modality is &lt; <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> will not be discretized.</p></li>
-<li><p>Sets the number of quantiles in which to discretize the continuous features.</p></li>
-<li><p>Sets the minimum frequency of a quantitative feature’s modality.</p></li>
+<li><p>Features need at least one modality more frequent than <code class="xref py py-attr docutils literal notranslate"><span class="pre">min_freq</span></code></p></li>
+<li><p>Defines number of quantiles of continuous features</p></li>
+<li><p>Minimum frequency of modality of quantitative features</p></li>
 </ul>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
-<p>Set between <code class="docutils literal notranslate"><span class="pre">0.02</span></code> (slower, less robust) and <code class="docutils literal notranslate"><span class="pre">0.05</span></code> (faster, more robust)</p>
+<p>Set between <code class="docutils literal notranslate"><span class="pre">0.01</span></code> (slower, less robust) and <code class="docutils literal notranslate"><span class="pre">0.2</span></code> (faster, more robust)</p>
 </div>
 </p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ordinal_encoding</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to ordinal encode <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – Copying input data, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – <ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, without <code class="docutils literal notranslate"><span class="pre">IPython</span></code>: prints raw statitics</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, with <code class="docutils literal notranslate"><span class="pre">IPython</span></code>: prints HTML statistics, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+</ul>
+</p></li>
+<li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>optional</em>) – Processes for multiprocessing, by default <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
 </ul>
 </dd>
 </dl>
@@ -744,15 +713,15 @@ string.</p>
 <dt class="sig sig-object py" id="AutoCarver.discretizers.CategoricalDiscretizer.fit">
 <span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.CategoricalDiscretizer.fit" title="Link to this definition"></a></dt>
 <dd><p>Learns simple discretization of values of X according to values of y.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>DataFrame</em>) – Training dataset, to determine features’ optimal carving
-Needs to have columns has specified in <code class="docutils literal notranslate"><span class="pre">features</span></code> attribute.</p></li>
-<li><p><strong>y</strong> (<em>Series</em>) – Target with wich the association is maximized.</p></li>
-</ul>
+<blockquote>
+<div><dl class="simple">
+<dt>X<span class="classifier">DataFrame</span></dt><dd><p>Training dataset, to determine features’ optimal carving
+Needs to have columns has specified in <code class="docutils literal notranslate"><span class="pre">features</span></code> attribute.</p>
+</dd>
+<dt>y<span class="classifier">Series</span></dt><dd><p>Target with wich the association is maximized.</p>
 </dd>
 </dl>
+</div></blockquote>
 </dd></dl>
 
 <dl class="py method">
@@ -836,36 +805,33 @@ closest modlity in target rate or by frequency.</p>
 <p>NaNs are left untouched.</p>
 <p>Only use for qualitative ordinal features.</p>
 <p>Fisrt fits <a class="reference internal" href="#stringdiscretizer"><span class="std std-ref">String Discretizer</span></a> if neccesary.</p>
-<dl class="simple">
-<dt>features<span class="classifier">Features</span></dt><dd><p>A set of Features (quantitative, categorical or ordinal) to be dicretized</p>
-</dd>
-<dt>copy<span class="classifier">bool, optional</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, applies transform to a copy of the provided DataFrame, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
-</dd>
-<dt>verbose<span class="classifier">bool, optional</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, prints raw Discretizers Fit and Transform steps, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
-</dd>
-<dt>n_jobs<span class="classifier">int, optional</span></dt><dd><p>Number of processes used by multiprocessing, by default <code class="docutils literal notranslate"><span class="pre">1</span></code></p>
-</dd>
-<dt><a href="#id16"><span class="problematic" id="id17">**</span></a>kwargs: dict</dt><dd><p>Pass values for <code class="docutils literal notranslate"><span class="pre">str_default</span></code> and <code class="docutils literal notranslate"><span class="pre">str_nan</span></code> (default string values)</p>
-</dd>
-</dl>
-<p class="rubric">Examples</p>
-<p>See <a class="reference external" href="https://autocarver.readthedocs.io/en/latest/index.html">Discretizers examples</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ordinal_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – List of column names of ordinal features to be discretized. For those features a list
-of values has to be provided in the <code class="docutils literal notranslate"><span class="pre">values_orders</span></code> dict.</p></li>
-<li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per grouped modalities.</p>
+<li><p><strong>ordinals</strong> (<em>list</em><em>[</em><a class="reference internal" href="features.html#AutoCarver.features.OrdinalFeature" title="AutoCarver.features.OrdinalFeature"><em>OrdinalFeature</em></a><em>]</em>) – Ordinal features to process</p></li>
+<li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per modality per feature</p>
 <ul>
-<li><p>Features whose most frequent modality is &lt; than <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> won’t be discretized.</p></li>
-<li><p>Sets the number of quantiles in which to discretize the continuous features.</p></li>
-<li><p>Sets the minimum frequency of a quantitative feature’s modality.</p></li>
+<li><p>Features need at least one modality more frequent than <code class="xref py py-attr docutils literal notranslate"><span class="pre">min_freq</span></code></p></li>
+<li><p>Defines number of quantiles of continuous features</p></li>
+<li><p>Minimum frequency of modality of quantitative features</p></li>
 </ul>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
-<p>Set between <code class="docutils literal notranslate"><span class="pre">0.02</span></code> (slower, less robust) and <code class="docutils literal notranslate"><span class="pre">0.05</span></code> (faster, more robust)</p>
+<p>Set between <code class="docutils literal notranslate"><span class="pre">0.01</span></code> (slower, less robust) and <code class="docutils literal notranslate"><span class="pre">0.2</span></code> (faster, more robust)</p>
 </div>
 </p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ordinal_encoding</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to ordinal encode <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – Copying input data, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – <ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, without <code class="docutils literal notranslate"><span class="pre">IPython</span></code>: prints raw statitics</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, with <code class="docutils literal notranslate"><span class="pre">IPython</span></code>: prints HTML statistics, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+</ul>
+</p></li>
+<li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>optional</em>) – Processes for multiprocessing, by default <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
 </ul>
 </dd>
 </dl>
@@ -873,15 +839,15 @@ of values has to be provided in the <code class="docutils literal notranslate"><
 <dt class="sig sig-object py" id="AutoCarver.discretizers.OrdinalDiscretizer.fit">
 <span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.OrdinalDiscretizer.fit" title="Link to this definition"></a></dt>
 <dd><p>Learns simple discretization of values of X according to values of y.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>DataFrame</em>) – Training dataset, to determine features’ optimal carving
-Needs to have columns has specified in <code class="docutils literal notranslate"><span class="pre">features</span></code> attribute.</p></li>
-<li><p><strong>y</strong> (<em>Series</em>) – Target with wich the association is maximized.</p></li>
-</ul>
+<blockquote>
+<div><dl class="simple">
+<dt>X<span class="classifier">DataFrame</span></dt><dd><p>Training dataset, to determine features’ optimal carving
+Needs to have columns has specified in <code class="docutils literal notranslate"><span class="pre">features</span></code> attribute.</p>
+</dd>
+<dt>y<span class="classifier">Series</span></dt><dd><p>Target with wich the association is maximized.</p>
 </dd>
 </dl>
+</div></blockquote>
 </dd></dl>
 
 <dl class="py method">
@@ -959,7 +925,7 @@ Needs to have columns from provided <code class="xref py py-class docutils liter
 <span id="chaineddiscretizer"></span><h3>Chained Discretizer<a class="headerlink" href="#chained-discretizer" title="Link to this heading"></a></h3>
 <p><code class="xref py py-class docutils literal notranslate"><span class="pre">ChainedDiscretizer</span></code> can be used prior to using any carving pipeline or any other discretizer to group categorical modalities more intelligently.
 By providing a set of modality groups, the user can introduce use case specific knowledge into the discretization process.
-The fitted ordering can then be passed as <code class="docutils literal notranslate"><span class="pre">values_orders</span></code> parameter for further discretization.</p>
+The fitted <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> can then be as parameter for further discretization.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="AutoCarver.discretizers.ChainedDiscretizer">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.</span></span><span class="sig-name descname"><span class="pre">ChainedDiscretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">BaseFeature</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chained_orders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">GroupedList</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.ChainedDiscretizer" title="Link to this definition"></a></dt>
@@ -967,43 +933,35 @@ The fitted ordering can then be passed as <code class="docutils literal notransl
 level groups.</p>
 <p>For each provided <code class="xref py py-class docutils literal notranslate"><span class="pre">GroupedList</span></code> from <code class="docutils literal notranslate"><span class="pre">chained_orders</span></code> attribute, values less frequent
 than <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> are grouped in there respective group, as defined by <code class="xref py py-class docutils literal notranslate"><span class="pre">GroupedList</span></code>.</p>
-<dl class="simple">
-<dt>features<span class="classifier">Features</span></dt><dd><p>A set of Features (quantitative, categorical or ordinal) to be dicretized</p>
-</dd>
-<dt>copy<span class="classifier">bool, optional</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, applies transform to a copy of the provided DataFrame, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
-</dd>
-<dt>verbose<span class="classifier">bool, optional</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, prints raw Discretizers Fit and Transform steps, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
-</dd>
-<dt>n_jobs<span class="classifier">int, optional</span></dt><dd><p>Number of processes used by multiprocessing, by default <code class="docutils literal notranslate"><span class="pre">1</span></code></p>
-</dd>
-<dt><a href="#id19"><span class="problematic" id="id20">**</span></a>kwargs: dict</dt><dd><p>Pass values for <code class="docutils literal notranslate"><span class="pre">str_default</span></code> and <code class="docutils literal notranslate"><span class="pre">str_nan</span></code> (default string values)</p>
-</dd>
-</dl>
-<p class="rubric">Examples</p>
-<p>See <a class="reference external" href="https://autocarver.readthedocs.io/en/latest/index.html">Discretizers examples</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>qualitative_features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – List of column names of qualitative features (non-ordinal) to be discretized</p></li>
-<li><p><strong>chained_orders</strong> (<em>list</em><em>[</em><em>GroupedList</em><em>]</em>) – A list of interlocked higher level groups for each modalities of each ordinal feature.
-Values of <code class="docutils literal notranslate"><span class="pre">chained_orders[0]</span></code> have to be grouped in <code class="docutils literal notranslate"><span class="pre">chained_order[1]</span></code> etc.</p></li>
-<li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per grouped modalities.</p>
+<li><p><strong>features</strong> (<a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.Features"><em>Features</em></a>) – A set of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> to be processed</p></li>
+<li><p><strong>min_freq</strong> (<em>float</em>) – <p>Minimum frequency per modality per feature</p>
 <ul>
-<li><p>Features whose most frequent modality is &lt; than <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> will not be discretized.</p></li>
-<li><p>Sets the number of quantiles in which to discretize the continuous features.</p></li>
-<li><p>Sets the minimum frequency of a quantitative feature’s modality.</p></li>
+<li><p>Features need at least one modality more frequent than <code class="xref py py-attr docutils literal notranslate"><span class="pre">min_freq</span></code></p></li>
+<li><p>Defines number of quantiles of continuous features</p></li>
+<li><p>Minimum frequency of modality of quantitative features</p></li>
 </ul>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
-<p>Set between <code class="docutils literal notranslate"><span class="pre">0.02</span></code> (slower, less robust) and <code class="docutils literal notranslate"><span class="pre">0.05</span></code> (faster, more robust)</p>
+<p>Set between <code class="docutils literal notranslate"><span class="pre">0.01</span></code> (slower, less robust) and <code class="docutils literal notranslate"><span class="pre">0.2</span></code> (faster, more robust)</p>
 </div>
 </p></li>
-<li><p><strong>unknown_handling</strong> (<em>str</em><em>, </em><em>optional</em>) – <p>Whether or not to remove unknown values, by default <code class="docutils literal notranslate"><span class="pre">'raise'</span></code>.</p>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">'raise'</span></code>, unknown values raise an <code class="docutils literal notranslate"><span class="pre">AssertionError</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">'drop'</span></code>, unknown values are grouped with <code class="docutils literal notranslate"><span class="pre">str_nan</span></code>.</p></li>
+<li><p><strong>chained_orders</strong> (<em>list</em><em>[</em><em>GroupedList</em><em>]</em>) – A list of interlocked higher level groups for each modalities of each ordinal feature.
+Values of <code class="docutils literal notranslate"><span class="pre">chained_orders[0]</span></code> have to be grouped in <code class="docutils literal notranslate"><span class="pre">chained_order[1]</span></code> etc.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ordinal_encoding</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to ordinal encode <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – Copying input data, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – <ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, without <code class="docutils literal notranslate"><span class="pre">IPython</span></code>: prints raw statitics</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, with <code class="docutils literal notranslate"><span class="pre">IPython</span></code>: prints HTML statistics, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
 </ul>
 </p></li>
+<li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>optional</em>) – Processes for multiprocessing, by default <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
 </ul>
 </dd>
 </dl>
@@ -1011,15 +969,15 @@ Values of <code class="docutils literal notranslate"><span class="pre">chained_o
 <dt class="sig sig-object py" id="AutoCarver.discretizers.ChainedDiscretizer.fit">
 <span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.ChainedDiscretizer.fit" title="Link to this definition"></a></dt>
 <dd><p>Learns simple discretization of values of X according to values of y.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>DataFrame</em>) – Training dataset, to determine features’ optimal carving
-Needs to have columns has specified in <code class="docutils literal notranslate"><span class="pre">features</span></code> attribute.</p></li>
-<li><p><strong>y</strong> (<em>Series</em>) – Target with wich the association is maximized.</p></li>
-</ul>
+<blockquote>
+<div><dl class="simple">
+<dt>X<span class="classifier">DataFrame</span></dt><dd><p>Training dataset, to determine features’ optimal carving
+Needs to have columns has specified in <code class="docutils literal notranslate"><span class="pre">features</span></code> attribute.</p>
+</dd>
+<dt>y<span class="classifier">Series</span></dt><dd><p>Target with wich the association is maximized.</p>
 </dd>
 </dl>
+</div></blockquote>
 </dd></dl>
 
 <dl class="py method">
@@ -1095,48 +1053,46 @@ Needs to have columns from provided <code class="xref py py-class docutils liter
 </section>
 <section id="string-discretizer">
 <span id="stringdiscretizer"></span><h3>String Discretizer<a class="headerlink" href="#string-discretizer" title="Link to this heading"></a></h3>
-<p><code class="xref py py-class docutils literal notranslate"><span class="pre">StringDiscretizer</span></code> is used as a data preparation tool to convert qualitative data to <code class="docutils literal notranslate"><span class="pre">str</span></code> type.</p>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">StringDiscretizer</span></code> is used as a data preparation tool to convert qualitative data to <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> type.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="AutoCarver.discretizers.StringDiscretizer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.</span></span><span class="sig-name descname"><span class="pre">StringDiscretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">BaseFeature</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.StringDiscretizer" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.</span></span><span class="sig-name descname"><span class="pre">StringDiscretizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.features.features.Features"><span class="pre">Features</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.discretizers.StringDiscretizer" title="Link to this definition"></a></dt>
 <dd><p>Converts specified columns of a DataFrame into strings.
 First step of a Qualitative discretization pipeline.</p>
 <ul class="simple">
 <li><p>Keeps NaN inplace</p></li>
 <li><p>Converts floats of int to int</p></li>
 </ul>
-<dl class="simple">
-<dt>features<span class="classifier">Features</span></dt><dd><p>A set of Features (quantitative, categorical or ordinal) to be dicretized</p>
-</dd>
-<dt>copy<span class="classifier">bool, optional</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, applies transform to a copy of the provided DataFrame, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
-</dd>
-<dt>verbose<span class="classifier">bool, optional</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, prints raw Discretizers Fit and Transform steps, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
-</dd>
-<dt>n_jobs<span class="classifier">int, optional</span></dt><dd><p>Number of processes used by multiprocessing, by default <code class="docutils literal notranslate"><span class="pre">1</span></code></p>
-</dd>
-<dt><a href="#id22"><span class="problematic" id="id23">**</span></a>kwargs: dict</dt><dd><p>Pass values for <code class="docutils literal notranslate"><span class="pre">str_default</span></code> and <code class="docutils literal notranslate"><span class="pre">str_nan</span></code> (default string values)</p>
-</dd>
-</dl>
-<p class="rubric">Examples</p>
-<p>See <a class="reference external" href="https://autocarver.readthedocs.io/en/latest/index.html">Discretizers examples</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – List of column names of qualitative features to be converted as string</p>
+<dd class="field-odd"><p><strong>features</strong> (<a class="reference internal" href="features.html#AutoCarver.Features" title="AutoCarver.Features"><em>Features</em></a>) – A set of <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code> to be processed</p>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ordinal_encoding</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to ordinal encode <code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code>, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – Copying input data, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – <ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, without <code class="docutils literal notranslate"><span class="pre">IPython</span></code>: prints raw statitics</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>, with <code class="docutils literal notranslate"><span class="pre">IPython</span></code>: prints HTML statistics, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+</ul>
+</p></li>
+<li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>optional</em>) – Processes for multiprocessing, by default <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
+</ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="AutoCarver.discretizers.StringDiscretizer.fit">
 <span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.StringDiscretizer.fit" title="Link to this definition"></a></dt>
 <dd><p>Learns simple discretization of values of X according to values of y.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>DataFrame</em>) – Training dataset, to determine features’ optimal carving
-Needs to have columns has specified in <code class="docutils literal notranslate"><span class="pre">features</span></code> attribute.</p></li>
-<li><p><strong>y</strong> (<em>Series</em>) – Target with wich the association is maximized.</p></li>
-</ul>
+<blockquote>
+<div><dl class="simple">
+<dt>X<span class="classifier">DataFrame</span></dt><dd><p>Training dataset, to determine features’ optimal carving
+Needs to have columns has specified in <code class="docutils literal notranslate"><span class="pre">features</span></code> attribute.</p>
+</dd>
+<dt>y<span class="classifier">Series</span></dt><dd><p>Target with wich the association is maximized.</p>
 </dd>
 </dl>
+</div></blockquote>
 </dd></dl>
 
 <dl class="py method">
@@ -1210,35 +1166,6 @@ Needs to have columns from provided <code class="xref py py-class docutils liter
 </dd></dl>
 
 </section>
-</section>
-<section id="groupedlist">
-<span id="id25"></span><h2>GroupedList<a class="headerlink" href="#groupedlist" title="Link to this heading"></a></h2>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p><strong>AutoCarver</strong> would not exist without <code class="xref py py-class docutils literal notranslate"><span class="pre">GroupedList</span></code>. It allows for a complete historization of the data processing steps, thanks to its <code class="docutils literal notranslate"><span class="pre">content</span></code> dictionnary attribute.
-All modalities are stored inside the <code class="xref py py-class docutils literal notranslate"><span class="pre">GroupedList</span></code> and can safely be linked to there respective group label.</p>
-</div>
-</section>
-<section id="saving-and-loading">
-<h2>Saving and Loading<a class="headerlink" href="#saving-and-loading" title="Link to this heading"></a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="AutoCarver.discretizers.BaseDiscretizer.to_json">
-<span class="sig-prename descclassname"><span class="pre">AutoCarver.discretizers.BaseDiscretizer.</span></span><span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">light_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#AutoCarver.discretizers.BaseDiscretizer.to_json" title="Link to this definition"></a></dt>
-<dd><p>Converts to JSON format.</p>
-<p>To be used with <code class="docutils literal notranslate"><span class="pre">json.dump</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>light_mode</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to save features’ history and statistics, by default False</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>JSON serialized object</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-
 </section>
 </section>
 

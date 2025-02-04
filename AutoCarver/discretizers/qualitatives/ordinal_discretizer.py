@@ -23,7 +23,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
 
     __name__ = "OrdinalDiscretizer"
 
-    @extend_docstring(BaseDiscretizer.__init__)
+    @extend_docstring(BaseDiscretizer.__init__, append=False, exclude=["features"])
     def __init__(
         self,
         ordinals: list[OrdinalFeature],
@@ -33,19 +33,8 @@ class OrdinalDiscretizer(BaseDiscretizer):
         """
         Parameters
         ----------
-        ordinal_features : list[str]
-            List of column names of ordinal features to be discretized. For those features a list
-            of values has to be provided in the ``values_orders`` dict.
-
-        min_freq : float
-            Minimum frequency per grouped modalities.
-
-            * Features whose most frequent modality is < than ``min_freq`` won't be discretized.
-            * Sets the number of quantiles in which to discretize the continuous features.
-            * Sets the minimum frequency of a quantitative feature's modality.
-
-            .. tip::
-                Set between ``0.02`` (slower, less robust) and ``0.05`` (faster, more robust)
+        ordinals : list[OrdinalFeature]
+            Ordinal features to process
         """
         # Initiating BaseDiscretizer
         super().__init__(ordinals, **dict(kwargs, min_freq=min_freq))

@@ -8,7 +8,7 @@ The `AutoCarver.features` module defines a set of features used in the AutoCarve
 Features
 --------
 
-.. autoclass:: AutoCarver.Features
+.. autoclass:: AutoCarver.features.Features
     :members: qualitatives, categoricals, ordinals, quantitatives, names, versions, summary, history, load, to_json
 
 Qualitatitve features

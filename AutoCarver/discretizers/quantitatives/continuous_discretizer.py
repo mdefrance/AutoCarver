@@ -29,7 +29,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
 
     __name__ = "ContinuousDiscretizer"
 
-    @extend_docstring(BaseDiscretizer.__init__)
+    @extend_docstring(BaseDiscretizer.__init__, append=False, exclude=["features"])
     def __init__(
         self,
         quantitatives: list[QuantitativeFeature],
@@ -39,18 +39,9 @@ class ContinuousDiscretizer(BaseDiscretizer):
         """
         Parameters
         ----------
-        features : list[str]
-            List of column names of quantitative features (continuous and discrete) to be dicretized
 
-        min_freq : float
-            Minimum frequency per grouped modalities.
-
-            * Features whose most frequent modality is less than ``min_freq`` won't be discretized.
-            * Sets the number of quantiles in which to discretize the continuous features.
-            * Sets the minimum frequency of a quantitative feature's modality.
-
-            .. tip::
-                Set between ``0.02`` (slower, less robust) and ``0.05`` (faster, more robust)
+        quantitatives : list[QuantitativeFeature]
+            Quantitative features to process
         """
 
         # Initiating BaseDiscretizer

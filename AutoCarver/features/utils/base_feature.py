@@ -80,7 +80,7 @@ class BaseFeature(ABC):
     is_ordinal = False
     """Whether or not feature is ordinal"""
 
-    def __init__(self, name: str, **kwargs: dict) -> None:
+    def __init__(self, name: str, **kwargs) -> None:
         """
         Parameters
         ----------

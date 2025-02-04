@@ -15,7 +15,7 @@ To install core features, use the following:
 Unabling pretty printing (recommended for development)
 ------------------------------------------------------
 
-To enable ``pretty_print`` features (nice colorful html tables in jupyter), use the following:
+To enable HTML outputs (nice colorful tables within jupyter), use the following:
 
 ::
 

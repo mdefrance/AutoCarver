@@ -130,14 +130,19 @@
 </pre></div>
 </div>
 </section>
-<section id="picking-up-columns-to-carve">
-<h3>Picking up columns to Carve<a class="headerlink" href="#picking-up-columns-to-carve" title="Link to this heading"></a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">quantitative_features</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Quantitative&#39;</span><span class="p">,</span> <span class="s1">&#39;Discrete_Quantitative_highnan&#39;</span><span class="p">,</span> <span class="s1">&#39;Discrete_Quantitative_lownan&#39;</span><span class="p">,</span> <span class="s1">&#39;Discrete_Quantitative&#39;</span><span class="p">,</span> <span class="s1">&#39;Discrete_Quantitative_rarevalue&#39;</span><span class="p">]</span>
-<span class="n">qualitative_features</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Qualitative&quot;</span><span class="p">,</span> <span class="s2">&quot;Qualitative_grouped&quot;</span><span class="p">,</span> <span class="s2">&quot;Qualitative_lownan&quot;</span><span class="p">,</span> <span class="s2">&quot;Qualitative_highnan&quot;</span><span class="p">,</span> <span class="s2">&quot;Discrete_Qualitative_noorder&quot;</span><span class="p">,</span> <span class="s2">&quot;Discrete_Qualitative_lownan_noorder&quot;</span><span class="p">,</span> <span class="s2">&quot;Discrete_Qualitative_rarevalue_noorder&quot;</span><span class="p">]</span>
+<section id="setting-up-features-to-carve">
+<h3>Setting up Features to Carve<a class="headerlink" href="#setting-up-features-to-carve" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">AutoCarver</span><span class="w"> </span><span class="kn">import</span> <span class="n">Features</span>
+
+<span class="n">features</span> <span class="o">=</span> <span class="n">Features</span><span class="p">(</span>
+    <span class="n">quantitatives</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;quantitative1&#39;</span><span class="p">,</span> <span class="s1">&#39;quantitative2&#39;</span><span class="p">,</span> <span class="s1">&#39;discrete1&#39;</span><span class="p">,</span> <span class="s1">&#39;discrete2_with_nan&#39;</span><span class="p">],</span>
+    <span class="n">categoricals</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;categorical1&#39;</span><span class="p">,</span> <span class="s1">&#39;categorical2&#39;</span><span class="p">,</span> <span class="s1">&#39;categorical3_with_nan&#39;</span><span class="p">],</span>
+    <span class="n">ordinal</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;ordinal1&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;low&#39;</span><span class="p">,</span> <span class="s1">&#39;medium&#39;</span><span class="p">,</span> <span class="s1">&#39;high&#39;</span><span class="p">],</span> <span class="s1">&#39;ordinal2_with_nan&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;low&#39;</span><span class="p">,</span> <span class="s1">&#39;medium&#39;</span><span class="p">,</span> <span class="s1">&#39;high&#39;</span><span class="p">]},</span>
+<span class="p">)</span>
 </pre></div>
 </div>
-<p>Qualitative features will automatically be converted to <code class="docutils literal notranslate"><span class="pre">str</span></code> if necessary.
-Ordinal features can be added, alongside there expected ordering.</p>
+<p>Qualitative features will automatically be converted to <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> if necessary.
+Ordinal features are added, alongside there expected ordering.</p>
 </section>
 </section>
 <section id="using-autocarver">
@@ -148,11 +153,9 @@ Ordinal features can be added, alongside there expected ordering.</p>
 
 <span class="c1"># intiating AutoCarver</span>
 <span class="n">binary_carver</span> <span class="o">=</span> <span class="n">BinaryCarver</span><span class="p">(</span>
-    <span class="n">quantitative_features</span><span class="o">=</span><span class="n">quantitative_features</span><span class="p">,</span>
-    <span class="n">qualitative_features</span><span class="o">=</span><span class="n">qualitative_features</span><span class="p">,</span>
+    <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span>
     <span class="n">min_freq</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span>  <span class="c1"># minimum frequency per modality</span>
     <span class="n">max_n_mod</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>  <span class="c1"># maximum number of modality per Carved feature</span>
-    <span class="n">sort_by</span><span class="o">=</span><span class="s1">&#39;tschuprowt&#39;</span><span class="p">,</span>  <span class="c1"># measure used to select the best combination of modalities</span>
     <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># showing statistics</span>
 <span class="p">)</span>
 
@@ -171,25 +174,17 @@ Ordinal features can be added, alongside there expected ordering.</p>
 </section>
 <section id="saving-autocarver">
 <h3>Saving AutoCarver<a class="headerlink" href="#saving-autocarver" title="Link to this heading"></a></h3>
-<p>All <strong>Carvers</strong> can safely be stored as a <code class="docutils literal notranslate"><span class="pre">.json</span></code> file.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
-
-<span class="c1"># storing as json file</span>
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;my_carver.json&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">my_carver_json</span><span class="p">:</span>
-    <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">binary_carver</span><span class="o">.</span><span class="n">to_json</span><span class="p">(),</span> <span class="n">my_carver_json</span><span class="p">)</span>
+<p>All <strong>Carvers</strong> can safely be serialized as a <code class="docutils literal notranslate"><span class="pre">.json</span></code> file.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">binary_carver</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;my_carver.json&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="loading-autocarver">
 <h3>Loading AutoCarver<a class="headerlink" href="#loading-autocarver" title="Link to this heading"></a></h3>
-<p><strong>Carvers</strong> can safely be loaded from a .json file.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<p><strong>Carvers</strong> can safely be loaded from a <code class="docutils literal notranslate"><span class="pre">.json</span></code> file.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">AutoCarver</span><span class="w"> </span><span class="kn">import</span> <span class="n">BinaryCarver</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">AutoCarver</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_carver</span>
-
-<span class="c1"># loading json file</span>
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;my_carver.json&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">my_carver_json</span><span class="p">:</span>
-    <span class="n">binary_carver</span> <span class="o">=</span> <span class="n">load_carver</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">my_carver_json</span><span class="p">))</span>
+<span class="n">binary_carver</span> <span class="o">=</span> <span class="n">BinaryCarver</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;my_carver.json&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -198,10 +193,10 @@ Ordinal features can be added, alongside there expected ordering.</p>
 <h2>Feature Selection<a class="headerlink" href="#feature-selection" title="Link to this heading"></a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">AutoCarver.selectors</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassificationSelector</span>
 
-<span class="c1"># select the best 25 most target associated qualitative features</span>
+<span class="c1"># select the best 25 most target associated features</span>
 <span class="n">classification_selector</span> <span class="o">=</span> <span class="n">ClassificationSelector</span><span class="p">(</span>
-    <span class="n">qualitative_features</span><span class="o">=</span><span class="n">qualitative_features</span> <span class="o">+</span> <span class="n">quantitative_features</span><span class="p">,</span>  <span class="c1"># features to select from</span>
-    <span class="n">n_best</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span>  <span class="c1"># number of features to select</span>
+    <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span>  <span class="c1"># features to select from</span>
+    <span class="n">n_best_per_type</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span>  <span class="c1"># number of features to select per data type</span>
     <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># displays statistics</span>
 <span class="p">)</span>
 <span class="n">best_features</span> <span class="o">=</span> <span class="n">classification_selector</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">train_set_discretized</span><span class="p">,</span> <span class="n">train_set_discretized</span><span class="p">[</span><span class="n">target</span><span class="p">])</span>

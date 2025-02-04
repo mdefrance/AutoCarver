@@ -63,8 +63,8 @@ I. Data Preparation: conversion to ordinal data buckets
 
 .. note::
 
-   * Representativity threshold of modalities is user selected (``min_freq`` attribute).
-   * At this step, if any, ``numpy.nan`` are set as there own modality (no given order).
+   * Representativity threshold of modalities is user selected (:attr:`min_freq`).
+   * At this step, if any, ``nan`` are set as there own modality (no given order).
    * Helps improve modality relevancy and reduces the set of possible combinations to test from.
    * Included in all carving pipelines: :class:`BinaryCarver`, :class:`MulticlassCarver`, :class:`ContinuousCarver`.
 
@@ -85,8 +85,8 @@ Target-specific tools allow for association optimization per desired task:
 
 .. note::
 
-   * The user chooses the maximum number of modality per feature (``max_n_mod`` attribute).
-   * The user chooses whether or not to group NaNs to other values (``dropna`` attribute).
+   * The user chooses the maximum number of modality per feature (:attr:`max_n_mod`).
+   * The user chooses whether or not to group NaNs to other values (:attr:`dropna`).
 
 
 

@@ -256,7 +256,7 @@ class OrdinalFeature(QualitativeFeature):
     is_ordinal = True
 
     @extend_docstring(BaseFeature.__init__, append=False)
-    def __init__(self, name: str, values: list[str], **kwargs: dict) -> None:
+    def __init__(self, name: str, values: list[str], **kwargs) -> None:
         """
         Parameters
         ----------

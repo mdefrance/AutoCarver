@@ -32,31 +32,6 @@ class Discretizer(BaseDiscretizer):
         min_freq: float,
         **kwargs,
     ) -> None:
-        """
-        Parameters
-        ----------
-        quantitative_features : list[str]
-            List of column names of quantitative features (continuous and discrete) to be dicretized
-
-        qualitative_features : list[str]
-            List of column names of qualitative features (non-ordinal) to be discretized
-
-        min_freq : float
-            Minimum frequency per grouped modalities.
-
-            * Features whose most frequent modality is < ``min_freq`` will not be discretized.
-            * Sets the number of quantiles in which to discretize the continuous features.
-            * Sets the minimum frequency of a quantitative feature's modality.
-
-            .. tip::
-
-                Set between ``0.02`` (slower, less robust) and ``0.05`` (faster, more robust)
-
-        ordinal_features : list[str], optional
-            List of column names of ordinal features to be discretized. For those features a list
-            of values has to be provided in the ``values_orders`` dict, by default ``None``
-        """
-
         # Initiating BaseDiscretizer
         super().__init__(features, **dict(kwargs, min_freq=min_freq))
 

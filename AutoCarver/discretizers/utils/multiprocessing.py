@@ -9,7 +9,7 @@ from pandas import DataFrame
 from ...features import BaseFeature
 
 
-def imap_unordered_function(fun: Callable, features: list[str], n_jobs: int, **kwargs: dict):
+def imap_unordered_function(fun: Callable, features: list[str], n_jobs: int, **kwargs):
     """converts a function to a multiprocessing imap_unordered format or list comprehension"""
 
     # initiating list of function results

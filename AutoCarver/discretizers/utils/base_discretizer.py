@@ -62,7 +62,12 @@ class Sample:
 
 
 class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
-    """Applies discretization using a dict of GroupedList to transform a DataFrame's columns."""
+    """Applies discretization using a dict of GroupedList to transform a DataFrame's columns.
+
+    Examples
+    --------
+    See `Discretizers examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
+    """
 
     __name__ = "BaseDiscretizer"
 
@@ -71,56 +76,38 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         features: Features,
         **kwargs,
     ) -> None:
-        # features : list[str]
-        #     List of column names of features (continuous, discrete, categorical or ordinal)
-        # to be dicretized
-
-        # input_dtypes : Union[str, dict[str, str]], optional
-        #     Input data type, converted to a dict of the provided type for each feature,
-        # by default ``"str"``
-
-        #     * If ``"str"``, features are considered as qualitative.
-        #     * If ``"float"``, features are considered as quantitative.
-
-        # ordinal_encoding : str, optional
-        #     To be choosen amongst ``["float", "str"]``, by default ``"str"``
-
-        #     * If ``"float"``, grouped modalities will be converted to there corresponding
-        #  floating rank.
-        #     * If ``"str"``, a per-group modality will be set for all the modalities of a group.
-
-        # dropna : bool, optional
-        #     * If ``True``, ``numpy.nan`` will be attributed there label.
-        #     * If ``False``, ``numpy.nan`` will be restored after discretization,
-        # by default ``True``
-
-        # str_default : str, optional
-        #     String representation for default qualitative values, i.e. values less frequent than
-        # ``min_freq``, by default ``"__OTHER__"``
-
-        # features_casting : dict[str, list[str]], optional
-        #     By default ``None``, target is considered as continuous or binary.
-        #     Multiclass target: Dict of raw DataFrame columns associated to the names of copies
-        # that will be created.
         """
+        Parameters
+        ----------
+
         features : Features
-            A set of Features (quantitative, categorical or ordinal) to be dicretized
+            A set of :class:`Features` to be processed
+
+        min_freq : float
+            Minimum frequency per modality per feature
+
+            * Features need at least one modality more frequent than :attr:`min_freq`
+            * Defines number of quantiles of continuous features
+            * Minimum frequency of modality of quantitative features
+
+            .. tip::
+                Set between ``0.01`` (slower, less robust) and ``0.2`` (faster, more robust)
+
+        Keyword Arguments
+        -----------------
+
+        ordinal_encoding : bool, optional
+            Whether or not to ordinal encode :class:`Features`, by default ``False``
 
         copy : bool, optional
-            If ``True``, applies transform to a copy of the provided DataFrame, by default ``False``
+            Copying input data, by default ``False``
 
         verbose : bool, optional
-            If ``True``, prints raw Discretizers Fit and Transform steps, by default ``False``
+            * ``True``, without ``IPython``: prints raw statitics
+            * ``True``, with ``IPython``: prints HTML statistics, by default ``False``
 
         n_jobs : int, optional
-            Number of processes used by multiprocessing, by default ``1``
-
-        **kwargs: dict
-            Pass values for ``str_default`` and ``str_nan`` (default string values)
-
-        Examples
-        --------
-        See `Discretizers examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
+            Processes for multiprocessing, by default ``1``
         """
         # features and values
         self.features = features

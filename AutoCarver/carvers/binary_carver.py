@@ -25,7 +25,7 @@ class BinaryCarver(BaseCarver):
     __name__ = "BinaryCarver"
     is_y_binary = True
 
-    @extend_docstring(BaseCarver.__init__)
+    @extend_docstring(BaseCarver.__init__, exclude=["ordinal_encoding"])
     def __init__(
         self,
         features: Features,
@@ -37,6 +37,10 @@ class BinaryCarver(BaseCarver):
         """
         Keyword Arguments
         -----------------
+
+        ordinal_encoding : bool, optional
+            Whether or not to ordinal encode :class:`Features`, by default ``True``
+
         combinations : BinaryCombinationEvaluator, optional
             Metric to perform association measure between :class:`Features` and target.
 
