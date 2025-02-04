@@ -680,7 +680,7 @@ def test_ordinal_feature_update_no_ordinal_encoding(
 def test_categorical_feature_get_summary(sample_categorical_feature: CategoricalFeature) -> None:
     """test function get_summary"""
 
-    summary = sample_categorical_feature.get_summary()
+    summary = sample_categorical_feature.summary
 
     expected_summary = [
         {
@@ -695,7 +695,7 @@ def test_categorical_feature_get_summary(sample_categorical_feature: Categorical
     assert summary == expected_summary
 
     sample_categorical_feature.ordinal_encoding = True
-    summary = sample_categorical_feature.get_summary()
+    summary = sample_categorical_feature.summary
 
     expected_summary = [
         {
@@ -713,7 +713,7 @@ def test_categorical_feature_get_summary(sample_categorical_feature: Categorical
     sample_categorical_feature.fit(DataFrame({sample_categorical_feature.version: ["a", "b", nan]}))
     sample_categorical_feature.dropna = True
     sample_categorical_feature.ordinal_encoding = True
-    summary = sample_categorical_feature.get_summary()
+    summary = sample_categorical_feature.summary
 
     expected_summary = [
         {
@@ -731,7 +731,7 @@ def test_categorical_feature_get_summary(sample_categorical_feature: Categorical
     # adding some default
     sample_categorical_feature.has_default = True
     sample_categorical_feature.ordinal_encoding = True
-    summary = sample_categorical_feature.get_summary()
+    summary = sample_categorical_feature.summary
 
     expected_summary = [
         {
@@ -751,7 +751,7 @@ def test_categorical_feature_get_summary(sample_categorical_feature: Categorical
 def test_ordinal_feature_get_summary(sample_ordinal_feature: OrdinalFeature) -> None:
     """test function get_summary"""
 
-    summary = sample_ordinal_feature.get_summary()
+    summary = sample_ordinal_feature.summary
 
     expected_summary = [
         {
@@ -766,7 +766,7 @@ def test_ordinal_feature_get_summary(sample_ordinal_feature: OrdinalFeature) -> 
     assert summary == expected_summary
 
     sample_ordinal_feature.ordinal_encoding = True
-    summary = sample_ordinal_feature.get_summary()
+    summary = sample_ordinal_feature.summary
 
     expected_summary = [
         {
@@ -785,7 +785,7 @@ def test_ordinal_feature_get_summary(sample_ordinal_feature: OrdinalFeature) -> 
     sample_ordinal_feature.fit(DataFrame({sample_ordinal_feature.version: ["a", "b", nan]}))
     sample_ordinal_feature.dropna = True
     sample_ordinal_feature.ordinal_encoding = True
-    summary = sample_ordinal_feature.get_summary()
+    summary = sample_ordinal_feature.summary
 
     expected_summary = [
         {
@@ -804,7 +804,7 @@ def test_ordinal_feature_get_summary(sample_ordinal_feature: OrdinalFeature) -> 
     # adding some default
     sample_ordinal_feature.has_default = True
     sample_ordinal_feature.ordinal_encoding = True
-    summary = sample_ordinal_feature.get_summary()
+    summary = sample_ordinal_feature.summary
 
     expected_summary = [
         {

@@ -153,7 +153,7 @@ class BaseFeature(ABC):
 
     @property
     def has_nan(self) -> bool:
-        """wether or not feature has nans"""
+        """Wether or not feature has nans"""
         return self._has_nan
 
     @has_nan.setter
@@ -219,7 +219,7 @@ class BaseFeature(ABC):
 
     @property
     def has_default(self) -> bool:
-        """whether or not to the feature has default values"""
+        """Whether or not the feature has default values"""
         return self._has_default
 
     @has_default.setter
@@ -367,8 +367,13 @@ class BaseFeature(ABC):
         return self.values
 
     @abstractmethod
-    def get_summary(self) -> dict:
+    def _make_summary(self) -> dict:
         """returns a summary of the feature"""
+
+    @property
+    def summary(self) -> dict:
+        """Summary of feature's discretization process"""
+        return self._make_summary()
 
     def _add_statistics_to_summary(self, summary: list[dict]) -> list[dict]:
         """adds statistics to summary"""

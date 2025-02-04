@@ -421,7 +421,7 @@ class Features:
         # iterating over each feature
         summaries = []
         for feature in self:
-            summaries += feature.get_summary()
+            summaries += feature.summary
 
         # converting to DataFrame
         summaries = DataFrame(summaries)

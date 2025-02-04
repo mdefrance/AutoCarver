@@ -15,14 +15,14 @@ Qualitatitve features
 ---------------------
 
 .. autoclass:: AutoCarver.features.CategoricalFeature
-    :members: is_qualitative, is_categorical, is_ordinal, has_nan, has_default, get_summary
+    :members: is_qualitative, is_categorical, is_ordinal, has_nan, has_default, summary, history
 
 .. autoclass:: AutoCarver.features.OrdinalFeature
-    :members: is_qualitative, is_categorical, is_ordinal, has_nan, has_default, get_summary
+    :members: is_qualitative, is_categorical, is_ordinal, has_nan, has_default, summary, history
 
 
 Quantitative features
 ---------------------
 
 .. autoclass:: AutoCarver.features.QuantitativeFeature
-    :members: is_quantitative, has_nan, has_default, get_summary
+    :members: is_quantitative, has_nan, has_default, summary, history

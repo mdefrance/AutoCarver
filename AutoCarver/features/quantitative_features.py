@@ -109,7 +109,7 @@ class QuantitativeFeature(BaseFeature):
 
         return labels
 
-    def get_summary(self):
+    def _make_summary(self):
         """returns summary of feature's values' content"""
         # getting feature's labels
         labels = self.make_labels()

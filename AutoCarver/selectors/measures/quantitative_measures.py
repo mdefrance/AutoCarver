@@ -68,7 +68,6 @@ class RMeasure(BaseMeasure):
 
     @extend_docstring(BaseMeasure.compute_association)
     def compute_association(self, x: Series, y: Series) -> float:
-
         # # reversing if requested
         # if self.reversed:
         #     x, y = y, x

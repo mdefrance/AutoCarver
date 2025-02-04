@@ -12,7 +12,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 
 from ...combinations import CombinationEvaluator
 from ...features import BaseFeature, Features
-from ...utils import get_attribute, get_bool_attribute, extend_docstring
+from ...utils import extend_docstring, get_attribute, get_bool_attribute
 from .multiprocessing import apply_async_function
 
 

@@ -297,7 +297,7 @@ def test_quantitative_feature_update_ordinal_encoding(
 def test_get_summary(sample_quantitative_feature: QuantitativeFeature) -> None:
     """test function get_summary"""
 
-    summary = sample_quantitative_feature.get_summary()
+    summary = sample_quantitative_feature.summary
     expected_summary = [
         {
             "feature": "Quantitative('test_feature')",
@@ -323,7 +323,7 @@ def test_get_summary(sample_quantitative_feature: QuantitativeFeature) -> None:
     assert summary == expected_summary
 
     sample_quantitative_feature.ordinal_encoding = True
-    summary = sample_quantitative_feature.get_summary()
+    summary = sample_quantitative_feature.summary
     expected_summary = [
         {"feature": "Quantitative('test_feature')", "label": 0, "content": "x <= 1.0e-01"},
         {
@@ -346,7 +346,7 @@ def test_get_summary(sample_quantitative_feature: QuantitativeFeature) -> None:
     )
     sample_quantitative_feature.ordinal_encoding = True
     sample_quantitative_feature.dropna = True
-    summary = sample_quantitative_feature.get_summary()
+    summary = sample_quantitative_feature.summary
     print(summary)
     expected_summary = [
         {"feature": "Quantitative('test_feature')", "label": 0, "content": "x <= 1.0e-01"},

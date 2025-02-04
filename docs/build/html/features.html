@@ -218,22 +218,22 @@ by default <code class="docutils literal notranslate"><span class="pre">False</s
 </ul>
 </dd>
 </dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="AutoCarver.features.CategoricalFeature.get_summary">
-<span class="sig-name descname"><span class="pre">get_summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.features.CategoricalFeature.get_summary" title="Link to this definition"></a></dt>
-<dd><p>returns summary of feature’s values’ content</p>
-</dd></dl>
-
 <dl class="py property">
 <dt class="sig sig-object py" id="AutoCarver.features.CategoricalFeature.has_default">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_default</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#AutoCarver.features.CategoricalFeature.has_default" title="Link to this definition"></a></dt>
-<dd><p>whether or not to the feature has default values</p>
+<dd><p>whether or not the feature has default values</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="AutoCarver.features.CategoricalFeature.has_nan">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_nan</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#AutoCarver.features.CategoricalFeature.has_nan" title="Link to this definition"></a></dt>
 <dd><p>wether or not feature has nans</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="AutoCarver.features.CategoricalFeature.history">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">history</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DataFrame</span></em><a class="headerlink" href="#AutoCarver.features.CategoricalFeature.history" title="Link to this definition"></a></dt>
+<dd><p>Feature’s combination history</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -252,6 +252,12 @@ by default <code class="docutils literal notranslate"><span class="pre">False</s
 <dt class="sig sig-object py" id="AutoCarver.features.CategoricalFeature.is_qualitative">
 <span class="sig-name descname"><span class="pre">is_qualitative</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.features.CategoricalFeature.is_qualitative" title="Link to this definition"></a></dt>
 <dd><p>Whether or not feature is qualitative</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="AutoCarver.features.CategoricalFeature.summary">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">summary</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span></em><a class="headerlink" href="#AutoCarver.features.CategoricalFeature.summary" title="Link to this definition"></a></dt>
+<dd><p>summary of feature’s discretization process</p>
 </dd></dl>
 
 </dd></dl>
@@ -275,22 +281,22 @@ by default <code class="docutils literal notranslate"><span class="pre">False</s
 </ul>
 </dd>
 </dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="AutoCarver.features.OrdinalFeature.get_summary">
-<span class="sig-name descname"><span class="pre">get_summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.features.OrdinalFeature.get_summary" title="Link to this definition"></a></dt>
-<dd><p>returns summary of feature’s values’ content</p>
-</dd></dl>
-
 <dl class="py property">
 <dt class="sig sig-object py" id="AutoCarver.features.OrdinalFeature.has_default">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_default</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#AutoCarver.features.OrdinalFeature.has_default" title="Link to this definition"></a></dt>
-<dd><p>whether or not to the feature has default values</p>
+<dd><p>whether or not the feature has default values</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="AutoCarver.features.OrdinalFeature.has_nan">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_nan</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#AutoCarver.features.OrdinalFeature.has_nan" title="Link to this definition"></a></dt>
 <dd><p>wether or not feature has nans</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="AutoCarver.features.OrdinalFeature.history">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">history</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DataFrame</span></em><a class="headerlink" href="#AutoCarver.features.OrdinalFeature.history" title="Link to this definition"></a></dt>
+<dd><p>Feature’s combination history</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -309,6 +315,12 @@ by default <code class="docutils literal notranslate"><span class="pre">False</s
 <dt class="sig sig-object py" id="AutoCarver.features.OrdinalFeature.is_qualitative">
 <span class="sig-name descname"><span class="pre">is_qualitative</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.features.OrdinalFeature.is_qualitative" title="Link to this definition"></a></dt>
 <dd><p>Whether or not feature is qualitative</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="AutoCarver.features.OrdinalFeature.summary">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">summary</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span></em><a class="headerlink" href="#AutoCarver.features.OrdinalFeature.summary" title="Link to this definition"></a></dt>
+<dd><p>summary of feature’s discretization process</p>
 </dd></dl>
 
 </dd></dl>
@@ -332,16 +344,10 @@ by default <code class="docutils literal notranslate"><span class="pre">False</s
 </ul>
 </dd>
 </dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="AutoCarver.features.QuantitativeFeature.get_summary">
-<span class="sig-name descname"><span class="pre">get_summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.features.QuantitativeFeature.get_summary" title="Link to this definition"></a></dt>
-<dd><p>returns summary of feature’s values’ content</p>
-</dd></dl>
-
 <dl class="py property">
 <dt class="sig sig-object py" id="AutoCarver.features.QuantitativeFeature.has_default">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_default</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#AutoCarver.features.QuantitativeFeature.has_default" title="Link to this definition"></a></dt>
-<dd><p>whether or not to the feature has default values</p>
+<dd><p>whether or not the feature has default values</p>
 </dd></dl>
 
 <dl class="py property">
@@ -350,10 +356,22 @@ by default <code class="docutils literal notranslate"><span class="pre">False</s
 <dd><p>wether or not feature has nans</p>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="AutoCarver.features.QuantitativeFeature.history">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">history</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DataFrame</span></em><a class="headerlink" href="#AutoCarver.features.QuantitativeFeature.history" title="Link to this definition"></a></dt>
+<dd><p>Feature’s combination history</p>
+</dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="AutoCarver.features.QuantitativeFeature.is_quantitative">
 <span class="sig-name descname"><span class="pre">is_quantitative</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.features.QuantitativeFeature.is_quantitative" title="Link to this definition"></a></dt>
 <dd><p>Whether or not feature is quantitative</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="AutoCarver.features.QuantitativeFeature.summary">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">summary</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span></em><a class="headerlink" href="#AutoCarver.features.QuantitativeFeature.summary" title="Link to this definition"></a></dt>
+<dd><p>summary of feature’s discretization process</p>
 </dd></dl>
 
 </dd></dl>
