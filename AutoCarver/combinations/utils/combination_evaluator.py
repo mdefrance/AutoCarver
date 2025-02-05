@@ -3,7 +3,7 @@ the best combination of modalities for a feature."""
 
 import json
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Union
 
 from pandas import DataFrame, Series
@@ -87,8 +87,8 @@ class AggregatedSample:
 class AggregatedSamples:
     """stores train and dev samples"""
 
-    train: AggregatedSample = AggregatedSample(None)
-    dev: AggregatedSample = AggregatedSample(None)
+    train: AggregatedSample = field(default_factory=AggregatedSample(None))
+    dev: AggregatedSample = field(default_factory=AggregatedSample(None))
 
     def set(self, train: DataFrame, dev: DataFrame = None) -> None:
         """Sets the train and dev samples"""
