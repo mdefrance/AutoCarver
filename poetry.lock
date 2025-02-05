@@ -3045,4 +3045,4 @@ tests = ["Flake8-pyproject", "black", "flake8", "icecream", "isort", "pylint", "
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9, <3.13"
-content-hash = "060b4e9dda00dbca98cd31e917d04e5c91a3f505b867d6950a6c4f48de5d1540"
+content-hash = "d8f5d4e3979770e48ac9f891db76d72fcdaff32dd28a6f18b107f82301b853be"
