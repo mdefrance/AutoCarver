@@ -60,8 +60,8 @@ class Samples:
         dtype: int64
     """
 
-    train: Sample = field(default_factory=lambda _: Sample(X=None))
-    dev: Sample = field(default_factory=lambda _: Sample(X=None))
+    train: Sample = field(default_factory=lambda: Sample(X=None))
+    dev: Sample = field(default_factory=lambda: Sample(X=None))
 
 
 class BaseCarver(BaseDiscretizer, ABC):
