@@ -1,11 +1,13 @@
 """Base tools to convert values into specific types.
 """
-from multiprocessing import Pool
 
 from pandas import DataFrame, Series
 
-from .base_discretizers import BaseDiscretizer, extend_docstring, nan_unique
-from .grouped_list import GroupedList
+from ...features import BaseFeature, Features, GroupedList
+from ...features.qualitative_features import nan_unique
+from ...utils import extend_docstring
+from .base_discretizer import BaseDiscretizer, Sample
+from .multiprocessing import apply_async_function
 
 
 class StringDiscretizer(BaseDiscretizer):
@@ -16,73 +18,29 @@ class StringDiscretizer(BaseDiscretizer):
     * Converts floats of int to int
     """
 
-    @extend_docstring(BaseDiscretizer.__init__)
-    def __init__(
-        self,
-        qualitative_features: list[str],
-        *,
-        values_orders: dict[str, GroupedList] = None,
-        copy: bool = False,
-        verbose: bool = False,
-        n_jobs: int = 1,
-        **kwargs: dict,
-    ) -> None:
-        """
-        Parameters
-        ----------
-        qualitative_features : list[str]
-            List of column names of qualitative features (non-ordinal) to be discretized
-        """
+    __name__ = "StringDiscretizer"
+
+    @extend_docstring(BaseDiscretizer.__init__, exclude=["min_freq"])
+    def __init__(self, features: Features, **kwargs) -> None:
+        # initiating features
+        features = Features(features, **kwargs)
+
         # Initiating BaseDiscretizer
-        super().__init__(
-            features=qualitative_features,
-            values_orders=values_orders,
-            input_dtypes="str",
-            output_dtype="str",
-            str_nan=kwargs.get("str_nan", "__NAN__"),
-            copy=copy,
-            verbose=verbose,
-            n_jobs=n_jobs,
-        )
+        super().__init__(features=features, **kwargs)
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series = None) -> None:  # pylint: disable=W0222
-        if self.verbose:  # verbose if requested
-            print(f" - [StringDiscretizer] Fit {str(self.features)}")
+        self._log_if_verbose()  # verbose if requested
 
         # checking for binary target and copying X
-        x_copy = self._prepare_data(X, y)  # X[self.features].fillna(self.str_nan)
+        sample = self._prepare_data(Sample(X, y))
 
-        # no multiprocessing
-        if self.n_jobs <= 1:
-            all_orders = [
-                fit_feature(feature, x_copy[feature], self.str_nan) for feature in self.features
-            ]
-        # asynchronous conversion each feature's value
-        else:
-            with Pool(processes=self.n_jobs) as pool:
-                all_orders_async = [
-                    pool.apply_async(
-                        fit_feature,
-                        (feature, x_copy[feature], self.str_nan),
-                    )
-                    for feature in self.features
-                ]
+        # transforming all features
+        all_orders = apply_async_function(fit_feature, self.features, self.n_jobs, sample.X)
 
-                #  waiting for the results
-                all_orders = [result.get() for result in all_orders_async]
-
-        for feature, values_order in all_orders:
-            # updating values_orders accordingly
-            # case 0: non-ordinal features, updating as is (no order provided)
-            if feature not in self.values_orders:
-                self.values_orders.update({feature: values_order})
-            # case 1: ordinal features, adding to content dict (order provided)
-            else:
-                # currently known order (only with strings)
-                known_order = self.values_orders[feature]
-                known_order.update(values_order.content)
-                self.values_orders.update({feature: known_order})
+        # updating features accordingly
+        self.features.update(dict(all_orders), replace=True)
+        self.features.fit(**sample)
 
         # discretizing features based on each feature's values_order
         super().fit(X, y)
@@ -90,29 +48,78 @@ class StringDiscretizer(BaseDiscretizer):
         return self
 
 
-def fit_feature(feature, df_feature, str_nan):
+def fit_feature(feature: BaseFeature, df_feature: Series):
     """fits one feature"""
 
     # unique feature values
     unique_values = nan_unique(df_feature)
-    values_order = GroupedList(unique_values)
+
+    # initiating feature values
+    order = GroupedList(unique_values)
+    if feature.values is not None:
+        order = GroupedList(feature.values)
 
     # formatting values
     for value in unique_values:
         # case 0: the value is an integer
         if isinstance(value, float) and float.is_integer(value):
             str_value = str(int(value))  # converting value to string
+
         # case 1: converting to string
         else:
             str_value = str(value)
 
-        # checking for string values already in the order
-        if str_value not in values_order:
-            values_order.append(str_value)  # adding string value to the order
-            values_order.group(value, str_value)  # grouping integer value into the string value
+        # adding missing str_value to the order (for provided orders)
+        if str_value not in order:
+            order.append(str_value)
 
-    # adding str_nan
-    if any(df_feature.isna()):
-        values_order.append(str_nan)
+        # adding float/int values to the order (for provided orders)
+        if value not in order:
+            order.append(value)
 
-    return feature, values_order
+        # grouping float/int value into the str value
+        order.group(value, str_value)
+
+    return feature.version, order
+
+
+class TimedeltaDiscretizer(BaseDiscretizer):
+    """TODO Converts specified columns of a DataFrame into float timedeltas.
+
+    * Keeps NaN inplace
+    """
+
+    __name__ = "TimedeltaDiscretizer"
+
+    @extend_docstring(BaseDiscretizer.__init__)
+    def __init__(self, features: list[BaseFeature], **kwargs) -> None:
+        """
+        Parameters
+        ----------
+        features : list[str]
+            List of column names of qualitative features to be converted as string
+        """
+        # initiating features
+        features = Features(features, **kwargs)
+
+        # Initiating BaseDiscretizer
+        super().__init__(features=features, **kwargs)
+
+    @extend_docstring(BaseDiscretizer.fit)
+    def fit(self, X: DataFrame, y: Series = None) -> None:  # pylint: disable=W0222
+        self._log_if_verbose()  # verbose if requested
+
+        # checking for binary target and copying X
+        sample = self._prepare_data(Sample(X, y))
+
+        # transforming all features
+        all_orders = apply_async_function(fit_feature, self.features, self.n_jobs, sample.X)
+
+        # updating features accordingly
+        self.features.update(dict(all_orders), replace=True)
+        self.features.fit(**sample)
+
+        # discretizing features based on each feature's values_order
+        super().fit(X, y)
+
+        return self

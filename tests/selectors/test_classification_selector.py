@@ -1,101 +1,129 @@
 """Set of tests for ClassificationSelector module."""
 
-from pandas import DataFrame
-from pytest import FixtureRequest, fixture
+from pytest import raises
 
-from AutoCarver import selectors
+from AutoCarver.features import Features
 from AutoCarver.selectors import ClassificationSelector
+from AutoCarver.selectors.filters import BaseFilter, ValidFilter
+from AutoCarver.selectors.measures import BaseMeasure, ModeMeasure, NanMeasure, OutlierMeasure
+from AutoCarver.selectors.utils.base_selector import get_default_metrics, remove_default_metrics
 
 
-@fixture(params=["binary_target", "multiclass_target"])
-def target(request: type[FixtureRequest]) -> str:
-    return request.param
-
-
-def test_classification_selector(
-    x_train: DataFrame,
-    target: str,
-    quantitative_features: list[str],
-    qualitative_features: list[str],
-    ordinal_features: list[str],
-    n_best: int,
-) -> None:
-    """Tests ClassificationSelector
-
-    Parameters
-    ----------
-    x_train : DataFrame
-        Simulated Train DataFrame
-    target: str
-        Target feature
-    quantitative_features : list[str]
-        List of quantitative raw features to be carved
-    qualitative_features : list[str]
-        List of qualitative raw features to be carved
-    ordinal_features : list[str]
-        List of ordinal raw features to be carved
-    n_best: int
-        Number of features to be selected
-    """
-
-    # select the n_best most target associated qualitative features
-    feature_selector = ClassificationSelector(
-        n_best=n_best,
-        qualitative_features=qualitative_features + ordinal_features,
-        quantitative_features=quantitative_features,
-        verbose=False,
+def test_classification_selector_initiate_default(features_object: Features) -> None:
+    """tests initiation of default measures and filters"""
+    # checking for default measures
+    n_best, max_num_features_per_chunk = 2, 100
+    selector = ClassificationSelector(
+        n_best_per_type=n_best,
+        features=features_object,
+        max_num_features_per_chunk=max_num_features_per_chunk,
     )
-    best_features = feature_selector.select(x_train, x_train[target])
 
-    # checking that the right features where selected
-    expected = {
-        3: {
-            "binary_target": [
-                "Discrete_Quantitative_highnan",
-                "Quantitative",
-                "Discrete_Quantitative",
-                "Qualitative_Ordinal_lownan",
-                "Qualitative_Ordinal",
-                "Qualitative_highnan",
-            ],
-            "multiclass_target": [
-                "Discrete_Quantitative_rarevalue",
-                "Discrete_Quantitative_highnan",
-                "Quantitative",
-                "Discrete_Qualitative_highnan",
-                "Discrete_Qualitative_rarevalue_noorder",
-                "Discrete_Qualitative_noorder",
-            ],
-        },
-        5: {
-            "binary_target": [
-                "Discrete_Quantitative_highnan",
-                "Quantitative",
-                "Discrete_Quantitative",
-                "Discrete_Quantitative_lownan",
-                "Discrete_Quantitative_rarevalue",
-                "Qualitative_Ordinal_lownan",
-                "Qualitative_Ordinal",
-                "Qualitative_highnan",
-                "Qualitative_grouped",
-                "Qualitative_lownan",
-            ],
-            "multiclass_target": [
-                "Discrete_Quantitative_rarevalue",
-                "Discrete_Quantitative_highnan",
-                "Quantitative",
-                "Discrete_Quantitative_lownan",
-                "Discrete_Quantitative",
-                "Discrete_Qualitative_highnan",
-                "Discrete_Qualitative_noorder",
-                "Discrete_Qualitative_rarevalue_noorder",
-                "Qualitative_Ordinal",
-                "Qualitative_Ordinal_lownan",
-            ],
-        },
-    }
-    assert all(feature in best_features for feature in expected[n_best][target]) and all(
-        feature in expected[n_best][target] for feature in best_features
-    ), "Not correctly selected features"
-    # checking for correctly selected number of features -> not possible
-    # assert len(list(feature for feature in best_features if feature in quantitative_features)) <= n_best
+    assert any(measure.__name__ == ModeMeasure.__name__ for measure in selector.measures)
+    assert any(measure.__name__ == NanMeasure.__name__ for measure in selector.measures)
+    print(selector.filters)
+    print([m.__name__ for m in selector.filters], ValidFilter.__name__)
+    assert any(measure.__name__ == ValidFilter.__name__ for measure in selector.filters)
+    assert len(remove_default_metrics(selector.measures)) >= 1
+    assert len(remove_default_metrics(selector.filters)) >= 1
+
+
+def test_classification_selector_initiate_measures(
+    features_object: Features, measures: list[BaseMeasure]
+) -> None:
+    """tests initiation of measures"""
+
+    n_best, max_num_features_per_chunk = 2, 100
+
+    # adding default measure
+    default_measures = get_default_metrics(measures)
+    if len(default_measures) > 0:
+        selector = ClassificationSelector(
+            n_best_per_type=n_best,
+            features=features_object,
+            max_num_features_per_chunk=max_num_features_per_chunk,
+            measures=default_measures,
+        )
+        assert any(measure.__name__ == ModeMeasure.__name__ for measure in selector.measures)
+        assert any(measure.__name__ == NanMeasure.__name__ for measure in selector.measures)
+        print("default_measures", default_measures)
+        print("selector.measures", selector.measures)
+        print([isinstance(measure, OutlierMeasure) for measure in default_measures])
+        assert len(selector.measures) == 2 + sum(
+            not isinstance(measure, (NanMeasure, ModeMeasure)) for measure in default_measures
+        )
+
+    # adding qualitative target measures
+    classification_measures = [
+        measure
+        for measure in remove_default_metrics(measures)
+        if measure.is_y_qualitative or (measure.reverse_xy() and measure.is_y_qualitative)
+    ]
+    if len(classification_measures) > 0:
+        selector = ClassificationSelector(
+            n_best_per_type=n_best,
+            features=features_object,
+            max_num_features_per_chunk=max_num_features_per_chunk,
+            measures=classification_measures,
+        )
+        assert any(measure.__name__ == ModeMeasure.__name__ for measure in selector.measures)
+        assert any(measure.__name__ == NanMeasure.__name__ for measure in selector.measures)
+        assert len(selector.measures) == len(classification_measures) + 2
+
+    # checking error for quantitative target measures
+    regression_measures = [
+        measure
+        for measure in remove_default_metrics(measures)
+        if not (measure.is_y_qualitative or (measure.reverse_xy() and measure.is_y_qualitative))
+    ]
+    if len(regression_measures) > 0:
+        with raises(ValueError):
+            selector = ClassificationSelector(
+                n_best_per_type=n_best,
+                features=features_object,
+                max_num_features_per_chunk=max_num_features_per_chunk,
+                measures=regression_measures,
+            )
+
+
+def test_classification_selector_initiate_filters(
+    features_object: Features, filters: list[BaseFilter]
+) -> None:
+    """tests initiation of filters"""
+
+    # checking for default filters
+    n_best, max_num_features_per_chunk = 2, 100
+
+    # adding default filter
+    default_filters = get_default_metrics(filters)
+    if len(default_filters) > 0:
+        selector = ClassificationSelector(
+            n_best_per_type=n_best,
+            features=features_object,
+            max_num_features_per_chunk=max_num_features_per_chunk,
+            filters=default_filters,
+        )
+        assert any(filter_.__name__ == ValidFilter.__name__ for filter_ in selector.filters)
+        assert (
+            len(selector.filters)
+            == len(
+                [
+                    filter_
+                    for filter_ in default_filters
+                    if filter_.__name__ not in [ValidFilter.__name__]
+                ]
+            )
+            + 1
+        )
+
+    # adding filters
+    filters = remove_default_metrics(filters)
+    if len(filters) > 0:
+        selector = ClassificationSelector(
+            n_best_per_type=n_best,
+            features=features_object,
+            max_num_features_per_chunk=max_num_features_per_chunk,
+            filters=filters,
+        )
+        assert any(filter_.__name__ == ValidFilter.__name__ for filter_ in selector.filters)
+        assert len(selector.filters) == len(filters) + 1

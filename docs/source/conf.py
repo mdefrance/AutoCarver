@@ -1,20 +1,25 @@
 """ Config for sphinx documentation
 """
 
-import configparser
 import os
 import sys
 from inspect import getsourcefile
 
 import toml
 
+
 # -- Path setup --------------------------------------------------------------
-path = "../../"
-print(os.listdir(path))
-sys.path.insert(0, path)
+def setup_path_and_check_autocarver():
+    """Setup path to AutoCarver and check if it is installed"""
+    path = "../../"
+    sys.path.insert(0, path)
+
+    import AutoCarver
+
+    _ = AutoCarver
 
 
-import AutoCarver
+setup_path_and_check_autocarver()
 
 # make copy of notebooks in docs folder, as they must be here for sphinx to
 # pick them up properly.

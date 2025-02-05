@@ -1,13 +1,8 @@
 """Tools to select the best Quantitative and Qualitative features for a Regression task."""
 
-from typing import Callable
-
-from ..discretizers import extend_docstring
-from .base_selector import BaseSelector
-from .filters.qualitative_filters import tschuprowt_filter
-from .filters.quantitative_filters import spearman_filter
-from .measures.base_measures import reverse_xy
-from .measures.quantitative_measures import distance_measure, kruskal_measure
+from .filters import BaseFilter, SpearmanFilter, TschuprowtFilter, ValidFilter
+from .measures import BaseMeasure, KruskalMeasure, ModeMeasure, NanMeasure, SpearmanMeasure
+from .utils.base_selector import BaseSelector
 
 
 class RegressionSelector(BaseSelector):
@@ -17,43 +12,48 @@ class RegressionSelector(BaseSelector):
     Get your best features with ``RegressionSelector.select()``!
     """
 
-    @extend_docstring(BaseSelector.__init__)
-    def __init__(
-        self,
-        n_best: int,
-        qualitative_features: list[str] = None,
-        quantitative_features: list[str] = None,
-        *,
-        quantitative_measures: list[Callable] = None,
-        qualitative_measures: list[Callable] = None,
-        quantitative_filters: list[Callable] = None,
-        qualitative_filters: list[Callable] = None,
-        colsample: float = 1.0,
-        verbose: bool = False,
-        **kwargs,
-    ) -> None:
-        # default measures
-        if quantitative_measures is None:
-            quantitative_measures = [distance_measure]
-        if qualitative_measures is None:
-            qualitative_measures = [reverse_xy(kruskal_measure)]
-        measures = {"float": quantitative_measures, "str": qualitative_measures}
+    __name__ = "RegressionSelector"
 
-        # default filters
-        if quantitative_filters is None:
-            quantitative_filters = [spearman_filter]
-        if qualitative_filters is None:
-            qualitative_filters = [tschuprowt_filter]
-        filters = {"float": quantitative_filters, "str": qualitative_filters}
+    def _initiate_measures(self, requested_measures: list[BaseMeasure] = None) -> list[BaseMeasure]:
+        """initiates the list of measures with default values"""
 
-        # initiating BaseSelector with the corresponding list of measures
-        super().__init__(
-            n_best=n_best,
-            quantitative_features=quantitative_features,
-            qualitative_features=qualitative_features,
-            measures=measures,
-            filters=filters,
-            colsample=colsample,
-            verbose=verbose,
-            **kwargs,
-        )
+        # initating to requested ones
+        measures = requested_measures
+
+        # if no measure were passed
+        if measures is None:
+            measures = [NanMeasure(), ModeMeasure(), SpearmanMeasure(), KruskalMeasure()]
+
+        # adding default measure of mode
+        if all(measure.__name__ != ModeMeasure.__name__ for measure in measures):
+            measures = [ModeMeasure()] + measures
+
+        # adding default measure of nan
+        if all(measure.__name__ != NanMeasure.__name__ for measure in measures):
+            measures = [NanMeasure()] + measures
+
+        # checking for measures for qualitative target
+        if not all(
+            measure.is_y_quantitative
+            or (measure.reverse_xy() and measure.is_y_quantitative)
+            or measure.is_default
+            for measure in measures
+        ):
+            raise ValueError(f"[{self}] Provide measures for quantitative target!")
+        return measures
+
+    def _initiate_filters(self, requested_filters: list[BaseFilter] = None) -> list[BaseFilter]:
+        """initiates the list of measures with default values"""
+
+        # initating to requested ones
+        filters = requested_filters
+
+        # if no measure were passed
+        if filters is None:
+            filters = [ValidFilter(), TschuprowtFilter(), SpearmanFilter()]
+
+        # adding default validity filter (based on measures)
+        if all(filter.__name__ != ValidFilter.__name__ for filter in filters):
+            filters = [ValidFilter()] + filters
+
+        return filters

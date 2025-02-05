@@ -36,7 +36,8 @@ def init_df(seed: int, size: int = 10000) -> DataFrame:
         + ["High"] * int(7 * 100)
         + ["High+"] * int(40 * 100)  # 47 %
     )
-    # qual_ord_features = ['Low-', 'Low', 'Low+', 'Medium-', 'Medium', 'Medium+', 'High-', 'High', 'High+']
+    # qual_ord_features = ['Low-', 'Low', 'Low+', 'Medium-', 'Medium', 'Medium+', 'High-', 'High',
+    # 'High+']
     ordinal_data = random.choice(qual_ord_features, size=size)
 
     # adding binary target associated to qualitative ordinal feature
@@ -273,5 +274,5 @@ def x_dev_wrong_3(x_dev_1: DataFrame) -> DataFrame:
 
 
 @fixture(params=["continuous_target", "binary_target"])
-def target(request: type[FixtureRequest]) -> str:
+def target(request: FixtureRequest) -> str:
     return request.param

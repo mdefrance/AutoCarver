@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Features &mdash; AutoCarver Beta release documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=39f3c58d"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Discretizers" href="discretizers.html" />
+    <link rel="prev" title="Quick Start" href="quick_start.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/auto_carver_symbol_small.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                6.0.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Features</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#qualitatitve-features">Qualitatitve features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#quantitative-features">Quantitative features</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="discretizers.html">Discretizers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="combinations.html">Combinations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="carvers.html">Carvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="selectors.html">Selectors</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="carvers_examples.html">Carvers Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="selectors_examples.html">Selectors Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">AutoCarver</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Features</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/features.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="features">
+<span id="id1"></span><h1>Features<a class="headerlink" href="#features" title="Link to this heading"></a></h1>
+<p>The <cite>AutoCarver.features</cite> module defines a set of features used in the AutoCarver project. This module includes classes and functions to handle different types of features, such as qualitative and quantitative features.</p>
+<section id="id2">
+<h2>Features<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="AutoCarver.features.Features">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.features.</span></span><span class="sig-name descname"><span class="pre">Features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">categoricals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#AutoCarver.features.CategoricalFeature" title="AutoCarver.features.qualitative_features.CategoricalFeature"><span class="pre">CategoricalFeature</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantitatives</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#AutoCarver.features.QuantitativeFeature" title="AutoCarver.features.quantitative_features.QuantitativeFeature"><span class="pre">QuantitativeFeature</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ordinals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#AutoCarver.features.OrdinalFeature" title="AutoCarver.features.qualitative_features.OrdinalFeature"><span class="pre">OrdinalFeature</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.features.Features" title="Link to this definition"></a></dt>
+<dd><p>A set of typed features</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>categoricals</strong> (<em>list</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="#AutoCarver.features.CategoricalFeature" title="AutoCarver.features.CategoricalFeature"><em>CategoricalFeature</em></a><em>, </em><em>str</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – List of categorical features or column names, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>quantitatives</strong> (<em>list</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="#AutoCarver.features.QuantitativeFeature" title="AutoCarver.features.QuantitativeFeature"><em>QuantitativeFeature</em></a><em>, </em><em>str</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – List of quantitative features or column names, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>ordinals</strong> (<em>Union</em><em>[</em><em>list</em><em>[</em><a class="reference internal" href="#AutoCarver.features.OrdinalFeature" title="AutoCarver.features.OrdinalFeature"><em>OrdinalFeature</em></a><em>]</em><em>, </em><em>dict</em><em>[</em><em>str</em><em>, </em><em>list</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – List of ordinal features or dict column names with associated value ordering,
+by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>At least one of categoricals, ordinals or quantitatives should be provided.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ordinal_encoding</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to ordinal encode labels, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>nan</strong> (<em>str</em><em>, </em><em>optional</em>) – Label for missing values, by default <code class="docutils literal notranslate"><span class="pre">&quot;__NAN__&quot;</span></code></p></li>
+<li><p><strong>default</strong> (<em>str</em><em>, </em><em>optional</em>) – Label for default values, by default <code class="docutils literal notranslate"><span class="pre">&quot;__OTHER__&quot;</span></code></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="AutoCarver.features.Features.categoricals">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">categoricals</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#AutoCarver.features.CategoricalFeature" title="AutoCarver.features.qualitative_features.CategoricalFeature"><span class="pre">CategoricalFeature</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#AutoCarver.features.Features.categoricals" title="Link to this definition"></a></dt>
+<dd><p>Returns all categorical features</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoCarver.features.Features.load">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features_json</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#AutoCarver.features.Features" title="AutoCarver.features.features.Features"><span class="pre">Features</span></a></span></span><a class="headerlink" href="#AutoCarver.features.Features.load" title="Link to this definition"></a></dt>
+<dd><p>Allows one to load a set of <a class="reference internal" href="#AutoCarver.features.Features" title="AutoCarver.features.Features"><code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>features_json</strong> (<em>dict</em>) – Dictionary of serialized <a class="reference internal" href="#AutoCarver.features.Features" title="AutoCarver.features.Features"><code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code></a></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Loaded <a class="reference internal" href="#AutoCarver.features.Features" title="AutoCarver.features.Features"><code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code></a>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#AutoCarver.features.Features" title="AutoCarver.features.Features">Features</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="AutoCarver.features.Features.names">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">names</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#AutoCarver.features.Features.names" title="Link to this definition"></a></dt>
+<dd><p>Returns names of all features</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="AutoCarver.features.Features.ordinals">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ordinals</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#AutoCarver.features.OrdinalFeature" title="AutoCarver.features.qualitative_features.OrdinalFeature"><span class="pre">OrdinalFeature</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#AutoCarver.features.Features.ordinals" title="Link to this definition"></a></dt>
+<dd><p>Returns all ordinal features</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="AutoCarver.features.Features.qualitatives">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">qualitatives</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">QualitativeFeature</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#AutoCarver.features.Features.qualitatives" title="Link to this definition"></a></dt>
+<dd><p>Returns all qualitative features</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="AutoCarver.features.Features.quantitatives">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">quantitatives</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#AutoCarver.features.QuantitativeFeature" title="AutoCarver.features.quantitative_features.QuantitativeFeature"><span class="pre">QuantitativeFeature</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#AutoCarver.features.Features.quantitatives" title="Link to this definition"></a></dt>
+<dd><p>Returns all quantitative features</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="AutoCarver.features.Features.summary">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">summary</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DataFrame</span></em><a class="headerlink" href="#AutoCarver.features.Features.summary" title="Link to this definition"></a></dt>
+<dd><p>Summary of discretization process for all features</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoCarver.features.Features.to_json">
+<span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">light_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#AutoCarver.features.Features.to_json" title="Link to this definition"></a></dt>
+<dd><p>Serializes <a class="reference internal" href="#AutoCarver.features.Features" title="AutoCarver.features.Features"><code class="xref py py-class docutils literal notranslate"><span class="pre">Features</span></code></a> for JSON saving</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>light_mode</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to serialize in light mode (without statistics and history),
+by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="AutoCarver.features.Features.versions">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">versions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#AutoCarver.features.Features.versions" title="Link to this definition"></a></dt>
+<dd><p>Returns versions of all features</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="qualitatitve-features">
+<h2>Qualitatitve features<a class="headerlink" href="#qualitatitve-features" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="AutoCarver.features.CategoricalFeature">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.features.</span></span><span class="sig-name descname"><span class="pre">CategoricalFeature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.features.CategoricalFeature" title="Link to this definition"></a></dt>
+<dd><p>Defines a categorical feature</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name of the feature</p>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ordinal_encoding</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to ordinal encode labels, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>nan</strong> (<em>str</em><em>, </em><em>optional</em>) – Label for missing values, by default <code class="docutils literal notranslate"><span class="pre">&quot;__NAN__&quot;</span></code></p></li>
+<li><p><strong>default</strong> (<em>str</em><em>, </em><em>optional</em>) – Label for default values, by default <code class="docutils literal notranslate"><span class="pre">&quot;__OTHER__&quot;</span></code></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="AutoCarver.features.CategoricalFeature.has_default">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_default</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#AutoCarver.features.CategoricalFeature.has_default" title="Link to this definition"></a></dt>
+<dd><p>Whether or not the feature has default values</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="AutoCarver.features.CategoricalFeature.has_nan">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_nan</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#AutoCarver.features.CategoricalFeature.has_nan" title="Link to this definition"></a></dt>
+<dd><p>Wether or not feature has nans</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="AutoCarver.features.CategoricalFeature.history">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">history</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DataFrame</span></em><a class="headerlink" href="#AutoCarver.features.CategoricalFeature.history" title="Link to this definition"></a></dt>
+<dd><p>Feature’s combination history</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.features.CategoricalFeature.is_categorical">
+<span class="sig-name descname"><span class="pre">is_categorical</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.features.CategoricalFeature.is_categorical" title="Link to this definition"></a></dt>
+<dd><p>Whether or not feature is categorical</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.features.CategoricalFeature.is_ordinal">
+<span class="sig-name descname"><span class="pre">is_ordinal</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#AutoCarver.features.CategoricalFeature.is_ordinal" title="Link to this definition"></a></dt>
+<dd><p>Whether or not feature is ordinal</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.features.CategoricalFeature.is_qualitative">
+<span class="sig-name descname"><span class="pre">is_qualitative</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.features.CategoricalFeature.is_qualitative" title="Link to this definition"></a></dt>
+<dd><p>Whether or not feature is qualitative</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="AutoCarver.features.CategoricalFeature.summary">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">summary</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span></em><a class="headerlink" href="#AutoCarver.features.CategoricalFeature.summary" title="Link to this definition"></a></dt>
+<dd><p>Summary of feature’s discretization process</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="AutoCarver.features.OrdinalFeature">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.features.</span></span><span class="sig-name descname"><span class="pre">OrdinalFeature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.features.OrdinalFeature" title="Link to this definition"></a></dt>
+<dd><p>Defines an ordinal feature</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>values</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – Ordered list of all unique values for the feature</p>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="AutoCarver.features.OrdinalFeature.has_default">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_default</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#AutoCarver.features.OrdinalFeature.has_default" title="Link to this definition"></a></dt>
+<dd><p>Whether or not the feature has default values</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="AutoCarver.features.OrdinalFeature.has_nan">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_nan</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#AutoCarver.features.OrdinalFeature.has_nan" title="Link to this definition"></a></dt>
+<dd><p>Wether or not feature has nans</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="AutoCarver.features.OrdinalFeature.history">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">history</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DataFrame</span></em><a class="headerlink" href="#AutoCarver.features.OrdinalFeature.history" title="Link to this definition"></a></dt>
+<dd><p>Feature’s combination history</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.features.OrdinalFeature.is_categorical">
+<span class="sig-name descname"><span class="pre">is_categorical</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#AutoCarver.features.OrdinalFeature.is_categorical" title="Link to this definition"></a></dt>
+<dd><p>Whether or not feature is categorical</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.features.OrdinalFeature.is_ordinal">
+<span class="sig-name descname"><span class="pre">is_ordinal</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.features.OrdinalFeature.is_ordinal" title="Link to this definition"></a></dt>
+<dd><p>Whether or not feature is ordinal</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.features.OrdinalFeature.is_qualitative">
+<span class="sig-name descname"><span class="pre">is_qualitative</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.features.OrdinalFeature.is_qualitative" title="Link to this definition"></a></dt>
+<dd><p>Whether or not feature is qualitative</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="AutoCarver.features.OrdinalFeature.summary">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">summary</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span></em><a class="headerlink" href="#AutoCarver.features.OrdinalFeature.summary" title="Link to this definition"></a></dt>
+<dd><p>Summary of feature’s discretization process</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="quantitative-features">
+<h2>Quantitative features<a class="headerlink" href="#quantitative-features" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="AutoCarver.features.QuantitativeFeature">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoCarver.features.</span></span><span class="sig-name descname"><span class="pre">QuantitativeFeature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoCarver.features.QuantitativeFeature" title="Link to this definition"></a></dt>
+<dd><p>Defines a quantitative feature</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name of the feature</p>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ordinal_encoding</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to ordinal encode labels, by default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>nan</strong> (<em>str</em><em>, </em><em>optional</em>) – Label for missing values, by default <code class="docutils literal notranslate"><span class="pre">&quot;__NAN__&quot;</span></code></p></li>
+<li><p><strong>default</strong> (<em>str</em><em>, </em><em>optional</em>) – Label for default values, by default <code class="docutils literal notranslate"><span class="pre">&quot;__OTHER__&quot;</span></code></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="AutoCarver.features.QuantitativeFeature.has_default">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_default</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#AutoCarver.features.QuantitativeFeature.has_default" title="Link to this definition"></a></dt>
+<dd><p>Whether or not the feature has default values</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="AutoCarver.features.QuantitativeFeature.has_nan">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_nan</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#AutoCarver.features.QuantitativeFeature.has_nan" title="Link to this definition"></a></dt>
+<dd><p>Wether or not feature has nans</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="AutoCarver.features.QuantitativeFeature.history">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">history</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DataFrame</span></em><a class="headerlink" href="#AutoCarver.features.QuantitativeFeature.history" title="Link to this definition"></a></dt>
+<dd><p>Feature’s combination history</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoCarver.features.QuantitativeFeature.is_quantitative">
+<span class="sig-name descname"><span class="pre">is_quantitative</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#AutoCarver.features.QuantitativeFeature.is_quantitative" title="Link to this definition"></a></dt>
+<dd><p>Whether or not feature is quantitative</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="AutoCarver.features.QuantitativeFeature.summary">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">summary</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span></em><a class="headerlink" href="#AutoCarver.features.QuantitativeFeature.summary" title="Link to this definition"></a></dt>
+<dd><p>Summary of feature’s discretization process</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="quick_start.html" class="btn btn-neutral float-left" title="Quick Start" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="discretizers.html" class="btn btn-neutral float-right" title="Discretizers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Mario Defrance.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

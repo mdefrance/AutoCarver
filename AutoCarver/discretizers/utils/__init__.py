@@ -1,18 +1,6 @@
 """ Loads Discretization base tools."""
 
-from .base_discretizers import BaseDiscretizer, extend_docstring
-from .grouped_list import GroupedList
-from .qualitative_discretizers import CategoricalDiscretizer, ChainedDiscretizer, OrdinalDiscretizer
-from .quantitative_discretizers import ContinuousDiscretizer
+from .base_discretizer import BaseDiscretizer, Sample
 from .type_discretizers import StringDiscretizer
 
-__all__ = [
-    "BaseDiscretizer",
-    "extend_docstring",
-    "GroupedList",
-    "CategoricalDiscretizer",
-    "ChainedDiscretizer",
-    "OrdinalDiscretizer",
-    "ContinuousDiscretizer",
-    "StringDiscretizer",
-]
+__all__ = ["BaseDiscretizer", "StringDiscretizer", "Sample"]

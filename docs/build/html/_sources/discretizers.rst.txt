@@ -28,10 +28,10 @@ Discretizers
 
 .. note::
 
-   * Representativity threshold of modalities is user selected (``min_freq`` attribute).
-   * At this step, if any, ``numpy.nan`` are set as there own modality (no given order).
-   * Helps improve modality relevancy and reduces the set of possible combinations to test from.
-   * Included in all carving pipelines: :class:`BinaryCarver`, :class:`MulticlassCarver`, :class:`ContinuousCarver`.
+   * Representativity threshold of modalities is user selected (:attr:`min_freq`)
+   * At this step, if any, ``nan``s are set as there own modality (no given order)
+   * Helps improve modality relevancy and reduces the set of possible combinations to test from
+   * Included in all carving pipelines: :class:`BinaryCarver`, :class:`MulticlassCarver`, :class:`ContinuousCarver`
 
 .. _Discretizer:
 
@@ -103,7 +103,7 @@ Chained Discretizer
 
 :class:`ChainedDiscretizer` can be used prior to using any carving pipeline or any other discretizer to group categorical modalities more intelligently.
 By providing a set of modality groups, the user can introduce use case specific knowledge into the discretization process.
-The fitted ordering can then be passed as ``values_orders`` parameter for further discretization. 
+The fitted :class:`Features` can then be as parameter for further discretization. 
 
 .. autoclass:: AutoCarver.discretizers.ChainedDiscretizer
     :members: fit, transform, fit_transform, to_json, summary
@@ -114,29 +114,8 @@ The fitted ordering can then be passed as ``values_orders`` parameter for furthe
 String Discretizer
 ^^^^^^^^^^^^^^^^^^
 
-:class:`StringDiscretizer` is used as a data preparation tool to convert qualitative data to ``str`` type.
+:class:`StringDiscretizer` is used as a data preparation tool to convert qualitative data to :class:`str` type.
 
 .. autoclass:: AutoCarver.discretizers.StringDiscretizer
     :members: fit, transform, fit_transform, to_json, summary
 
-
-.. _GroupedList:
-
-GroupedList
------------
-
-.. note::
-    **AutoCarver** would not exist without :class:`GroupedList`. It allows for a complete historization of the data processing steps, thanks to its ``content`` dictionnary attribute.
-    All modalities are stored inside the :class:`GroupedList` and can safely be linked to there respective group label. 
-
-.. autoclass:: AutoCarver.discretizers.GroupedList
-    :members:
-
-
-
-Saving and Loading
-------------------
-
-.. autofunction:: AutoCarver.discretizers.BaseDiscretizer.to_json
-
-.. autofunction:: AutoCarver.discretizers.load_discretizer

@@ -17,8 +17,7 @@
     },
     "python.formatting.provider": "none",
     "python.testing.pytestArgs": [
-        "tests",
-        "--disable-warnings",
+        "tests"
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,

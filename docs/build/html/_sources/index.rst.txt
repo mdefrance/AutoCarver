@@ -18,7 +18,9 @@ Welcome to AutoCarver's documentation!
    :maxdepth: 1
    :caption: Documentation
 
+   features
    discretizers
+   combinations
    carvers
    selectors
 
@@ -27,6 +29,5 @@ Welcome to AutoCarver's documentation!
    :caption: Examples
 
    carvers_examples
-   discretizers_examples
    selectors_examples
 

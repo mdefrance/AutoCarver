@@ -1,170 +1,260 @@
 """ Base measures that defines Quantitative and Qualitative features.
 """
-from typing import Any, Callable
 
-from pandas import Series
+from abc import ABC, abstractmethod
 
+from pandas import Series, isnull, notna
 
-def reverse_xy(measure: Callable):
-    """Reverses places of x and y in measure"""
-
-    def reversed_measure(
-        x: Series,
-        y: Series,
-        **kwargs,
-    ) -> tuple[bool, dict[str, Any]]:
-        """Reversed version of the measure"""
-        return measure(y, x, **kwargs)
-
-    # setting name of passed measure
-    reversed_measure.__name__ = measure.__name__
-
-    return reversed_measure
+from ...features import BaseFeature
 
 
-def make_measure(
-    measure: Callable,
-    active: bool,
-    association: dict[str, Any],
-    x: Series,
-    y: Series,
-    **kwargs,
-) -> tuple[bool, dict[str, Any]]:
-    """Wrapper to make measures from base metrics
+class BaseMeasure(ABC):
+    """Base measure of association between x and y"""
 
-    Parameters
-    ----------
-    measure : Callable
-        _description_
-    active : bool
-        _description_
-    association : dict[str, Any]
-        _description_
-    x : Series
-        Feature to measure
-    y : Series
-        Binary target feature
+    __name__ = "BaseMeasure"
 
-    Returns
-    -------
-    tuple[bool, dict[str, Any]]
-        _description_
-    """
-    # check that previous steps where passed for computational optimization
-    if active:
-        # use the measure
-        active, measurement = measure(x, y, **kwargs)
+    is_x_quantitative = False
+    """ wether x is quantitative or not """
 
-        # update association table
-        association.update(measurement)
+    is_x_qualitative = False
+    """ wether x is qualitative or not """
 
-    return active, association
+    is_y_qualitative = False
+    """ wether y is qualitative or not """
 
+    is_y_quantitative = False
+    """ wether y is quantitative or not """
 
-def nans_measure(
-    x: Series,
-    y: Series = None,
-    thresh_nan: float = 0.999,
-    **kwargs,
-) -> tuple[bool, dict[str, Any]]:
-    """Measure of the percentage of NaNs
+    is_y_binary = False
+    """ wether y is binary or not """
 
-    Parameters
-    ----------
-    x : Series
-        Feature to measure
-    y : Series, optional
-        Binary target feature, by default ``None``
-    thresh_nan : float, optional
-        Maximum percentage of NaNs in a feature, by default ``0.999``
+    is_sortable = True
+    """ wether the metric can be sorted or not """
 
-    Returns
-    -------
-    tuple[bool, dict[str, Any]]
-        Whether or not there are to many NaNs and the percentage of NaNs
-    """
-    _, _ = y, kwargs  # unused attributes
+    # info
+    is_default = False
+    """ wether the measure is an association measure or not """
 
-    nans = x.isnull()  # ckecking for nans
-    pct_nan = nans.mean()  # Computing percentage of nans
+    higher_is_better = True
+    """ wether higher values are better or not """
 
-    # updating association
-    measurement = {"pct_nan": pct_nan}
+    correlation_with = "target"
+    """ info about correlation with which other feature """
 
-    # Excluding feature that have to many NaNs
-    active = pct_nan < thresh_nan
-    if not active:
-        print(
-            f"Feature {x.name} will be discarded (more than {thresh_nan:2.2%} of nans). Otherwise,"
-            " set a greater value for thresh_nan."
+    is_absolute = False
+    """ wether the measure needs absolute value for comparison or not """
+
+    is_reversible = False
+    """ wether the measure's input can be reversed depending on there type or not """
+
+    def __init__(self, threshold: float = 0.0) -> None:
+        """
+        Parameters
+        ----------
+        threshold : float, optional
+            Minimum threshold to reach, by default ``0.0``
+        """
+        self.threshold = threshold
+        self.value = None
+        self._info = {}
+
+    def __repr__(self) -> str:
+        return self.__name__
+
+    @abstractmethod
+    def compute_association(self, x: Series, y: Series) -> float:
+        """Computes association measure between ``x`` and ``y``
+
+        Parameters
+        ----------
+        x : Series
+            Feature
+        y : Series
+            Target feature
+
+        Returns
+        -------
+        float
+            Measure of association between ``x`` and ``y``
+        """
+
+    @property
+    def info(self) -> dict:
+        """gives info about the measure"""
+
+        return dict(
+            self._info,
+            # adding default info about the measure
+            higher_is_better=self.higher_is_better,
+            correlation_with=self.correlation_with,
+            is_default=self.is_default,
         )
 
-    return active, measurement
+    @info.setter
+    def info(self, content: dict) -> None:
+        """updates info"""
+        self._info.update(content)
+
+    def validate(self) -> bool:
+        """Checks if :attr:`threshold` is reached
+
+        Returns
+        -------
+        bool
+            Whether the test is passed or not
+        """
+
+        if not isnull(self.value) and notna(self.value):
+            return self.value >= self.threshold
+        return False
+
+    def to_dict(self) -> dict:
+        """converts to a dict"""
+        return {
+            self.__name__: {
+                "value": self.value,
+                "threshold": self.threshold,
+                "valid": self.validate(),
+                "info": self.info,
+            }
+        }
+
+    def _update_feature(self, feature: BaseFeature) -> None:
+        """adds measure to specified feature"""
+
+        # checking for a value
+        if self.value is None:
+            raise ValueError(f"[{self}] Use compute_association first!")
+
+        # updating statistics of the feature accordingly
+        feature.measures.update(self.to_dict())
+
+    def reverse_xy(self) -> bool:
+        """reverses values of x and y in compute_association"""
+
+        # when its not implemented
+        return False
 
 
-def dtype_measure(
-    x: Series,
-    y: Series = None,
-    **kwargs,
-) -> tuple[bool, dict[str, Any]]:
-    """Feature's dtype
+class AbsoluteMeasure(BaseMeasure):
+    """Absolute measure of association between x and y"""
 
-    Parameters
-    ----------
-    x : Series
-        Feature to measure
-    y : Series, optional
-        Binary target feature, by default ``None``
+    is_absolute = True
 
-    Returns
-    -------
-    tuple[bool, dict[str, Any]]
-        True and the feature's dtype
-    """
-    _, _ = y, kwargs  # unused attributes
+    def validate(self) -> bool:
+        """Checks if :attr:`threshold` is reached
 
-    # getting dtype
-    measurement = {"dtype": x.dtype}
-
-    return True, measurement
+        Returns
+        -------
+        bool
+            Whether the test is passed or not
+        """
+        if not isnull(self.value) and notna(self.value):
+            return abs(self.value) >= self.threshold
+        return False
 
 
-def mode_measure(
-    x: Series,
-    y: Series = None,
-    thresh_mode: float = 0.999,
-    **kwargs,
-) -> tuple[bool, dict[str, Any]]:
-    """Measure of the percentage of the Mode
+class OutlierMeasure(BaseMeasure):
+    """Outlier measure of association for a Quantitative feature"""
 
-    Parameters
-    ----------
-    x : Series
-        Feature to measure
-    y : Series, optional
-        Binary target feature, by default ``None``
-    thresh_mode : float, optional
-        Maximum percentage of a feature's mode, by default ``0.999``
+    is_default = True
+    is_x_quantitative = True
+    is_x_qualitative = False
+    is_sortable = False
 
-    Returns
-    -------
-    tuple[bool, dict[str, Any]]
-        Whether or not the mode is overrepresented and the percentage of mode
-    """
-    _, _ = y, kwargs  # unused attributes
+    # info
+    higher_is_better = False
+    correlation_with = "itself"
 
-    mode = x.mode(dropna=True).values[0]  # computing mode
-    pct_mode = (x == mode).mean()  # Computing percentage of the mode
+    def __init__(self, threshold: float = 1.0) -> None:
+        """
+        Parameters
+        ----------
+        threshold : float, optional
+            Maximum threshold to reach, by default ``1.0``
+        """
+        super().__init__(threshold)
 
-    # updating association
-    measurement = {"pct_mode": pct_mode, "mode": mode}
+    @abstractmethod
+    def compute_association(self, x: Series, y: Series = None) -> float:
+        """Computes outlier measure on ``x``
 
-    # Excluding feature with too frequent modes
-    active = pct_mode < thresh_mode
-    if not active:
-        print(
-            f"Feature {x.name} will be discarded (more than {thresh_mode:2.2%} of its mode). "
-            "Otherwise, set a greater value for thresh_mode."
-        )
+        Parameters
+        ----------
+        x : Series
+            Feature
+        y : Series, optional
+            Target feature, by default ``None``
 
-    return active, measurement
+        Returns
+        -------
+        float
+            Measure of outliers on ``x``
+        """
+
+    def validate(self) -> bool:
+        """Checks if :attr:`threshold` is reached
+
+        Returns
+        -------
+        bool
+            Whether the test is passed or not
+        """
+        if not isnull(self.value) and notna(self.value):
+            return self.value < self.threshold
+        return True
+
+
+class NanMeasure(OutlierMeasure):
+    """Measure of the percentage of NaNs"""
+
+    __name__ = "NanMeasure"
+    is_x_quantitative = True
+    is_x_qualitative = True
+
+    def compute_association(self, x: Series, y: Series = None) -> float:
+        """Computes frequency of ``nan`` in ``x``
+
+        Parameters
+        ----------
+        x : Series
+            Feature
+        y : Series, optional
+            Target feature, by default ``None``
+
+        Returns
+        -------
+        float
+            Measure of ``nan`` in ``x``
+        """
+        _ = y
+        self.value = (x.isna() | x.isnull()).mean()
+        return self.value
+
+
+class ModeMeasure(OutlierMeasure):
+    """Measure of the percentage of the mode"""
+
+    __name__ = "ModeMeasure"
+    is_x_quantitative = True
+    is_x_qualitative = True
+
+    def compute_association(self, x: Series, y: Series = None) -> float:
+        """Computes frequency of ``x``'s mode
+
+        Parameters
+        ----------
+        x : Series
+            Feature
+        y : Series, optional
+            Target feature, by default ``None``
+
+        Returns
+        -------
+        float
+            Measure of ``x``'s mode
+        """
+        _ = y
+        mode = x.mode(dropna=True).values[0]  # computing mode
+        self.value = (x == mode).mean()  # Computing percentage of the mode
+        return self.value

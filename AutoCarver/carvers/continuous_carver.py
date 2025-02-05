@@ -2,13 +2,13 @@
 for continuous regression tasks.
 """
 
-from numpy import mean, unique
+from numpy import unique
 from pandas import DataFrame, Series
-from scipy.stats import kruskal
 
-from ..discretizers import GroupedList
-from ..discretizers.utils.base_discretizers import extend_docstring
-from .base_carver import BaseCarver
+from ..combinations import KruskalCombinations
+from ..features import BaseFeature, Features
+from ..utils import extend_docstring
+from .utils.base_carver import BaseCarver, Samples
 
 
 class ContinuousCarver(BaseCarver):
@@ -19,65 +19,52 @@ class ContinuousCarver(BaseCarver):
 
     Examples
     --------
-    `Continuous Regression Example <https://autocarver.readthedocs.io/en/latest/examples/Multiclass
-    Classification/multiclass_classification_example.html>`_
+    `Continuous Regression Example <https://autocarver.readthedocs.io/en/latest/examples/Carvers/
+    ContinuousRegression/continuous_regression_example.html>`_
     """
+
+    __name__ = "ContinuousCarver"
+    is_y_continuous = True
 
     @extend_docstring(BaseCarver.__init__)
     def __init__(
         self,
+        features: Features,
         min_freq: float,
-        *,
-        quantitative_features: list[str] = None,
-        qualitative_features: list[str] = None,
-        ordinal_features: list[str] = None,
-        values_orders: dict[str, GroupedList] = None,
-        max_n_mod: int = 5,
-        min_freq_mod: float = None,
-        output_dtype: str = "float",
         dropna: bool = True,
-        copy: bool = False,
-        verbose: bool = False,
-        n_jobs: int = 1,
-        **kwargs: dict,
+        max_n_mod: int = 5,
+        **kwargs,
     ) -> None:
         """
-        Parameters
-        ----------
+        Keyword Arguments
+        -----------------
+        combinations : ContinuousCombinationEvaluator, optional
+            Metric to perform association measure between :class:`Features` and target.
+
+            Currently, only :ref:`KruskalCombinations` are implemented.
         """
-        # association measure used to find the best groups for continuous targets
-        if "sort_by" in kwargs:
-            assert kwargs.get("sort_by") == "kruskal", (
-                f" - [ContinuousCarver] Measure '{kwargs.get('sort_by')}' not yet implemented for "
-                "continuous targets. Only 'kruskal' measure is implemented for continuous targets."
+        # default binary combinations
+        combinations = kwargs.pop("combinations", None)
+        if combinations is None:
+            combinations = KruskalCombinations(max_n_mod=max_n_mod)
+
+        # association measure used to find the best groups for binary targets
+        if not combinations.is_y_continuous:
+            raise ValueError(
+                f"[{self.__name__}] {combinations} is not suited for continuous targets. "
+                f"Choose from: KruskalCombinations."
             )
-            kwargs.pop("sort_by")
 
         # Initiating BaseCarver
         super().__init__(
+            features=features,
             min_freq=min_freq,
-            sort_by="kruskal",
-            quantitative_features=quantitative_features,
-            qualitative_features=qualitative_features,
-            ordinal_features=ordinal_features,
-            values_orders=values_orders,
-            max_n_mod=max_n_mod,
-            min_freq_mod=min_freq_mod,
-            output_dtype=output_dtype,
+            combinations=combinations,
             dropna=dropna,
-            copy=copy,
-            verbose=verbose,
-            n_jobs=n_jobs,
             **kwargs,
         )
 
-    def _prepare_data(
-        self,
-        X: DataFrame,
-        y: Series,
-        X_dev: DataFrame = None,
-        y_dev: Series = None,
-    ) -> tuple[DataFrame, DataFrame]:
+    def _prepare_data(self, samples: Samples) -> Samples:
         """Validates format and content of X and y.
 
         Parameters
@@ -102,24 +89,22 @@ class ContinuousCarver(BaseCarver):
         tuple[DataFrame, DataFrame]
             Copies of (X, X_dev) to be used according to target type
         """
-        # Checking for binary target and copying X
-        x_copy, x_dev_copy = super()._prepare_data(X, y, X_dev=X_dev, y_dev=y_dev)
 
         # continuous target, checking values
-        y_values = unique(y)
-        assert (
-            len(y_values) > 2
-        ), " - [ContinuousCarver] provided y is binary, consider using BinaryCarver instead."
-        not_numeric = str in y.apply(type).unique()
-        assert (
-            not not_numeric
-        ), " - [ContinuousCarver] y must be a continuous Series (int or float, not object)"
+        if str in samples.train.y.apply(type).unique():
+            raise ValueError(
+                f"[{self.__name__}] y must be a continuous Series (int or float, not object)"
+            )
 
-        return x_copy, x_dev_copy
+        y_values = unique(samples.train.y)
+        if len(y_values) <= 2:
+            raise ValueError(
+                f"[{self.__name__}] provided y is binary, consider using BinaryCarver instead."
+            )
+        # Checking for binary target and copying X
+        return super()._prepare_data(samples)
 
-    def _aggregator(
-        self, features: list[str], X: DataFrame, y: Series, labels_orders: dict[str, GroupedList]
-    ) -> dict[str, DataFrame]:
+    def _aggregator(self, X: DataFrame, y: Series) -> dict[str, DataFrame]:
         """Computes y values for modalities of specified features and ensures the ordering
         according to the known labels
 
@@ -140,113 +125,21 @@ class ContinuousCarver(BaseCarver):
             _description_
         """
         # checking for empty datasets
-        yvals = {feature: None for feature in features}
+        yvals = {feature.version: None for feature in self.features}
         if X is not None:
-            # crosstab for each feature
-            for feature in features:
-                # computing crosstab with str_nan
-                yval = y.groupby(X[feature]).apply(lambda u: list(u))  # pylint: disable=W0108
-
-                # reordering according to known_order
-                yval = yval.reindex(labels_orders[feature], fill_value=[])
-
-                # storing results
-                yvals.update({feature: yval})
+            # list of y values for each modality of X
+            for feature in self.features:
+                yvals.update({feature.version: get_target_values_by_modality(X, y, feature)})
 
         return yvals
 
-    def _grouper(self, yval: Series, groupby: dict[str:str]) -> Series:
-        """Groups values of y
 
-        Parameters
-        ----------
-        yval : Series
-            _description_
-        groupby : _type_
-            _description_
+def get_target_values_by_modality(X: DataFrame, y: Series, feature: BaseFeature) -> dict:
+    """Computes y values for modalities of specified features and ensures the ordering
+    according to the known labels"""
 
-        Returns
-        -------
-        Series
-            _description_
-        """
-        # TODO: convert this to the vectorial version like BinaryCarver
-        return yval.groupby(groupby).sum()
+    # list of y values for each modality of X
+    yval = y.groupby(X[feature.version]).apply(lambda u: list(u))
 
-    def _association_measure(self, yval: Series, **kwargs) -> dict[str, float]:
-        """Computes measures of association between feature and quantitative target.
-
-        Parameters
-        ----------
-        yval : DataFrame
-            Values taken by y for each of x's modalities.
-
-        Returns
-        -------
-        dict[str, float]
-            Kruskal-Wallis' H as a dict.
-        """
-        _ = kwargs  # unused attribute
-
-        # Kruskal-Wallis' H
-        return {"kruskal": kruskal(*tuple(yval.values))[0]}
-
-    def _target_rate(self, yval: Series) -> Series:
-        """Computes target average per group for a continuous target
-
-        Parameters
-        ----------
-        yval : Series
-            _description_
-
-        Returns
-        -------
-        Series
-            _description_
-        """
-        return yval.apply(mean).sort_values()
-
-    def _printer(self, yval: Series = None) -> DataFrame:
-        """Prints a continuous yval's statistics
-
-        Parameters
-        ----------
-        yval : Series
-            A series of values of y by modalities of x, by default None
-
-        Returns
-        -------
-        DataFrame
-            Target rate and frequency per modality
-        """
-        # checking for an xtab
-        stats = None
-        if yval is not None:
-            # target rate and frequency statistics per modality
-            stats = DataFrame(
-                {
-                    # target rate per modality
-                    "target_rate": yval.apply(mean),
-                    # frequency per modality
-                    "frequency": yval.apply(len) / yval.apply(len).sum(),
-                }
-            )
-
-        return stats
-
-    @extend_docstring(BaseCarver.fit)
-    def fit(
-        self,
-        X: DataFrame,
-        y: Series,
-        *,
-        X_dev: DataFrame = None,
-        y_dev: Series = None,
-    ) -> None:
-        # preparing datasets and checking for wrong values
-        x_copy, x_dev_copy = self._prepare_data(X, y, X_dev, y_dev)
-
-        # Fitting BaseCarver
-        super().fit(x_copy, y, X_dev=x_dev_copy, y_dev=y_dev)
-
-        return self
+    # reindexing to ensure the right order
+    return yval.reindex(feature.labels, fill_value=[])

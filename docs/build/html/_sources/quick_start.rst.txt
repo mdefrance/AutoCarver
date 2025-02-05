@@ -38,16 +38,21 @@ Data Sampling
 
 
 
-Picking up columns to Carve
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Setting up Features to Carve
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: python
 
-    quantitative_features = ['Quantitative', 'Discrete_Quantitative_highnan', 'Discrete_Quantitative_lownan', 'Discrete_Quantitative', 'Discrete_Quantitative_rarevalue']
-    qualitative_features = ["Qualitative", "Qualitative_grouped", "Qualitative_lownan", "Qualitative_highnan", "Discrete_Qualitative_noorder", "Discrete_Qualitative_lownan_noorder", "Discrete_Qualitative_rarevalue_noorder"]
+    from AutoCarver import Features
 
-Qualitative features will automatically be converted to ``str`` if necessary.
-Ordinal features can be added, alongside there expected ordering.
+    features = Features(
+        quantitatives=['quantitative1', 'quantitative2', 'discrete1', 'discrete2_with_nan'],
+        categoricals=['categorical1', 'categorical2', 'categorical3_with_nan'],
+        ordinal={'ordinal1': ['low', 'medium', 'high'], 'ordinal2_with_nan': ['low', 'medium', 'high']},
+    )
+
+Qualitative features will automatically be converted to :class:`str` if necessary.
+Ordinal features are added, alongside there expected ordering.
 
 
 
@@ -64,11 +69,9 @@ Fitting AutoCarver
 
     # intiating AutoCarver
     binary_carver = BinaryCarver(
-        quantitative_features=quantitative_features,
-        qualitative_features=qualitative_features,
+        features=features,
         min_freq=0.02,  # minimum frequency per modality
         max_n_mod=5,  # maximum number of modality per Carved feature
-        sort_by='tschuprowt',  # measure used to select the best combination of modalities
         verbose=True,  # showing statistics
     )
 
@@ -91,31 +94,23 @@ Applying AutoCarver
 Saving AutoCarver
 ^^^^^^^^^^^^^^^^^
 
-All **Carvers** can safely be stored as a ``.json`` file.
+All **Carvers** can safely be serialized as a ``.json`` file.
 
 .. code-block:: python
 
-    import json
-
-    # storing as json file
-    with open('my_carver.json', 'w') as my_carver_json:
-        json.dump(binary_carver.to_json(), my_carver_json)
+    binary_carver.save('my_carver.json')
 
 
 Loading AutoCarver
 ^^^^^^^^^^^^^^^^^^
 
-**Carvers** can safely be loaded from a .json file.
+**Carvers** can safely be loaded from a ``.json`` file.
 
 .. code-block:: python
 
-    import json
+    from AutoCarver import BinaryCarver
 
-    from AutoCarver import load_carver
-
-    # loading json file
-    with open('my_carver.json', 'r') as my_carver_json:
-        binary_carver = load_carver(json.load(my_carver_json))
+    binary_carver = BinaryCarver.load('my_carver.json')
 
 
 
@@ -126,10 +121,10 @@ Feature Selection
 
     from AutoCarver.selectors import ClassificationSelector
 
-    # select the best 25 most target associated qualitative features
+    # select the best 25 most target associated features
     classification_selector = ClassificationSelector(
-        qualitative_features=qualitative_features + quantitative_features,  # features to select from
-        n_best=25,  # number of features to select
+        features=features,  # features to select from
+        n_best_per_type=25,  # number of features to select per data type
         verbose=True,  # displays statistics
     )
     best_features = classification_selector.select(train_set_discretized, train_set_discretized[target])
