@@ -4,7 +4,7 @@ for any task.
 
 import json
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Union
 
 from pandas import DataFrame, Series
@@ -60,8 +60,8 @@ class Samples:
         dtype: int64
     """
 
-    train: Sample = Sample(X=None)
-    dev: Sample = Sample(X=None)
+    train: Sample = field(default_factory=lambda _: Sample(X=None))
+    dev: Sample = field(default_factory=lambda _: Sample(X=None))
 
 
 class BaseCarver(BaseDiscretizer, ABC):

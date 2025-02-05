@@ -87,8 +87,8 @@ class AggregatedSample:
 class AggregatedSamples:
     """stores train and dev samples"""
 
-    train: AggregatedSample = field(default_factory=AggregatedSample(None))
-    dev: AggregatedSample = field(default_factory=AggregatedSample(None))
+    train: AggregatedSample = field(default_factory=lambda _: AggregatedSample(None))
+    dev: AggregatedSample = field(default_factory=lambda _: AggregatedSample(None))
 
     def set(self, train: DataFrame, dev: DataFrame = None) -> None:
         """Sets the train and dev samples"""
