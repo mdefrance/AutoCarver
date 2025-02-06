@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "AutoCarver"
-version = "7.0.3"
+version = "7.0.4"
 description = "Automatic Discretization of Features with Optimal Target Association"
 authors = ["Mario DEFRANCE <defrancemario@gmail.com>"]
 license = "MIT"

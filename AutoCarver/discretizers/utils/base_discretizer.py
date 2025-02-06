@@ -143,6 +143,26 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         return f"{self.__name__}({str_features})"
 
     @property
+    def categoricals(self) -> list[str]:
+        """Returns the list of categorical features"""
+        return self.features.categoricals
+
+    @property
+    def quantitatives(self) -> list[str]:
+        """Returns the list of quantitative features"""
+        return self.features.quantitatives
+
+    @property
+    def qualitatives(self) -> list[str]:
+        """Returns the list of qualitative features"""
+        return self.features.qualitatives
+
+    @property
+    def ordinals(self) -> list[str]:
+        """Returns the list of ordinal features"""
+        return self.features.ordinals
+
+    @property
     def verbose(self) -> bool:
         """Returns the verbose attribute"""
         return self._verbose
