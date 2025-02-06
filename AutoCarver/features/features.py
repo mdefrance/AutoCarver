@@ -143,18 +143,7 @@ class Features:
             )
 
         # checking that qualitatitve and quantitative features are distinct
-        ordinal_names = get_versions(self.ordinals)  # unique version but non-unique names
-        categorcial_names = get_versions(self.categoricals)
-        quantitative_names = get_versions(self.quantitatives)
-        if (
-            any(feature in ordinal_names + quantitative_names for feature in categorcial_names)
-            or any(feature in categorcial_names + ordinal_names for feature in quantitative_names)
-            or any(feature in categorcial_names + quantitative_names for feature in ordinal_names)
-        ):
-            raise ValueError(
-                f"[{self}] One of provided features is in quantitatives and in "
-                "categoricals and/or in ordinals. Please, check inputs!"
-            )
+        check_duplicate_features(self.categoricals, self.quantitatives, self.ordinals)
 
         self._dropna = False
         self._ordinal_encoding = False
@@ -603,3 +592,36 @@ def get_names(features: list[BaseFeature]) -> list[str]:
 def get_versions(features: list[BaseFeature]) -> list[str]:
     """Gives version names from Features"""
     return [feature.version for feature in features]
+
+
+def check_duplicate_features(
+    ordinals: list[OrdinalFeature],
+    categoricals: list[CategoricalFeature],
+    quantitatives: list[QuantitativeFeature],
+) -> None:
+    """Checks that features are distinct"""
+
+    # getting feature names
+    ordinal_names = get_versions(ordinals)
+    categorcial_names = get_versions(categoricals)
+    quantitative_names = get_versions(quantitatives)
+
+    # checking for duplicates
+    duplicate = [feature in ordinal_names + quantitative_names for feature in categorcial_names]
+    if any(duplicate):
+        raise ValueError(
+            f"Provided categoricals found in ordinals/quantitatives: {duplicate}. "
+            "Please, check inputs!"
+        )
+    duplicate = [feature in ordinal_names + categorcial_names for feature in quantitative_names]
+    if any(duplicate):
+        raise ValueError(
+            f"Provided quantitatives found in ordinals/categoricals: {duplicate}. "
+            "Please, check inputs!"
+        )
+    duplicate = [feature in quantitative_names + categorcial_names for feature in ordinal_names]
+    if any(duplicate):
+        raise ValueError(
+            f"Provided ordinals found in categoricals/quantitatives: {duplicate}. "
+            "Please, check inputs!"
+        )

@@ -63,6 +63,12 @@ class Samples:
     train: Sample = field(default_factory=lambda: Sample(X=None))
     dev: Sample = field(default_factory=lambda: Sample(X=None))
 
+    def fillna(self, features: Features) -> None:
+        """fills up nans in X and X_dev"""
+        self.train.X = features.fillna(self.train.X)
+        if self.dev.X is not None:
+            self.dev.X = features.fillna(self.dev.X)
+
 
 class BaseCarver(BaseDiscretizer, ABC):
     """Automatic carving of continuous, discrete, categorical and ordinal
@@ -187,9 +193,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         self.features.dropna = True
 
         # filling up nans
-        samples.train.X = self.features.fillna(samples.train.X)
-        if samples.dev.X is not None:
-            samples.dev.X = self.features.fillna(samples.dev.X)
+        samples.fillna(self.features)
 
         return samples
 
