@@ -202,7 +202,7 @@ def min_decimals_to_differentiate(sorted_numbers: list[float], min_decimals: int
     decimal_places = -int(floor(log10(smallest_diff)))
 
     # minimum of 0
-    return max(decimal_places, min_decimals)
+    return max(decimal_places, min_decimals) + 1
 
 
 def get_quantitative_features(features: list[BaseFeature]) -> list[QuantitativeFeature]:
