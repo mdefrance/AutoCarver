@@ -1,7 +1,7 @@
 """ Loads Features tools."""
 
 from .features import Features, get_names, get_versions
-from .qualitative_features import (
+from .qualitatives import (
     CategoricalFeature,
     OrdinalFeature,
     QualitativeFeature,
@@ -9,7 +9,7 @@ from .qualitative_features import (
     get_ordinal_features,
     get_qualitative_features,
 )
-from .quantitative_features import QuantitativeFeature, get_quantitative_features
+from .quantitatives import QuantitativeFeature, get_quantitative_features
 from .utils.base_feature import BaseFeature
 from .utils.grouped_list import GroupedList
 

@@ -130,15 +130,6 @@ class QuantitativeFeature(BaseFeature):
         return self._add_statistics_to_summary(summary)
 
 
-class DatetimeFeature(BaseFeature):
-    """TODO"""
-
-    def __init__(self, name: str, reference_date: str, **kwargs) -> None:
-        super().__init__(name, **kwargs)
-        self.is_quantitative = True
-        self.reference_date = reference_date  # date of reference to compare with
-
-
 def format_quantiles(a_list: list[float]) -> list[str]:
     """Formats a list of float quantiles into a list of boundaries.
 
