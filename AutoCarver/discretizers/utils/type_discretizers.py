@@ -4,7 +4,7 @@
 from pandas import DataFrame, Series
 
 from ...features import BaseFeature, Features, GroupedList
-from ...features.qualitative_features import nan_unique
+from ...features.qualitatives import nan_unique
 from ...utils import extend_docstring
 from .base_discretizer import BaseDiscretizer, Sample
 from .multiprocessing import apply_async_function

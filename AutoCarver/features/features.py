@@ -6,14 +6,14 @@ from numpy import nan
 from pandas import DataFrame, Series
 
 from ..utils.attributes import get_bool_attribute
-from .qualitative_features import (
+from .qualitatives import (
     CategoricalFeature,
     OrdinalFeature,
     QualitativeFeature,
     get_categorical_features,
     get_ordinal_features,
 )
-from .quantitative_features import QuantitativeFeature, get_quantitative_features
+from .quantitatives import QuantitativeFeature, get_quantitative_features
 from .utils.base_feature import BaseFeature
 from .utils.grouped_list import GroupedList
 

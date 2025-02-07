@@ -5,7 +5,7 @@ from pandas import DataFrame
 from pytest import fixture, raises
 
 from AutoCarver.config import Constants
-from AutoCarver.features.quantitative_features import (
+from AutoCarver.features.quantitatives.quantitative_feature import (
     QuantitativeFeature,
     format_quantiles,
     get_quantitative_features,
