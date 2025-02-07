@@ -60,12 +60,12 @@ def test_transform_quantitative_feature(features: Features) -> None:
     )
     assert feature_version == feature.version
     assert [
-        "x <= 2.0e+00",
-        "x <= 2.0e+00",
-        "2.0e+00 < x <= 4.5e+00",
-        "2.0e+00 < x <= 4.5e+00",
-        "2.0e+00 < x <= 4.5e+00",
-        "4.5e+00 < x",
+        "x <= 2.00e+00",
+        "x <= 2.00e+00",
+        "2.00e+00 < x <= 4.50e+00",
+        "2.00e+00 < x <= 4.50e+00",
+        "2.00e+00 < x <= 4.50e+00",
+        "4.50e+00 < x",
     ] == list_feature
 
     # with values to group, with nan in df_feature (nan not grouped)
@@ -80,13 +80,13 @@ def test_transform_quantitative_feature(features: Features) -> None:
     )
     assert feature_version == feature.version
     assert [
-        "x <= 2.0e+00",
-        "x <= 2.0e+00",
-        "2.0e+00 < x <= 4.5e+00",
-        "2.0e+00 < x <= 4.5e+00",
-        "2.0e+00 < x <= 4.5e+00",
+        "x <= 2.00e+00",
+        "x <= 2.00e+00",
+        "2.00e+00 < x <= 4.50e+00",
+        "2.00e+00 < x <= 4.50e+00",
+        "2.00e+00 < x <= 4.50e+00",
         feature.nan,
-        "4.5e+00 < x",
+        "4.50e+00 < x",
     ] == list_feature
 
     # with values to group, with nan in df_feature (grouped nans)
@@ -103,13 +103,13 @@ def test_transform_quantitative_feature(features: Features) -> None:
     )
     assert feature_version == feature.version
     assert [
-        "x <= 2.0e+00",
-        "x <= 2.0e+00",
-        "2.0e+00 < x <= 4.5e+00",
-        "2.0e+00 < x <= 4.5e+00",
-        "2.0e+00 < x <= 4.5e+00",
-        "4.5e+00 < x",
-        "4.5e+00 < x",
+        "x <= 2.00e+00",
+        "x <= 2.00e+00",
+        "2.00e+00 < x <= 4.50e+00",
+        "2.00e+00 < x <= 4.50e+00",
+        "2.00e+00 < x <= 4.50e+00",
+        "4.50e+00 < x",
+        "4.50e+00 < x",
     ] == list_feature
 
     # with values to group, with feature.nan in df_feature (grouped nans)
@@ -125,13 +125,13 @@ def test_transform_quantitative_feature(features: Features) -> None:
     )
     assert feature_version == feature.version
     assert [
-        "x <= 2.0e+00",
-        "x <= 2.0e+00",
-        "2.0e+00 < x <= 4.5e+00",
-        "2.0e+00 < x <= 4.5e+00",
-        "2.0e+00 < x <= 4.5e+00",
-        "4.5e+00 < x",
-        "4.5e+00 < x",
+        "x <= 2.00e+00",
+        "x <= 2.00e+00",
+        "2.00e+00 < x <= 4.50e+00",
+        "2.00e+00 < x <= 4.50e+00",
+        "2.00e+00 < x <= 4.50e+00",
+        "4.50e+00 < x",
+        "4.50e+00 < x",
     ] == list_feature
 
 
@@ -403,20 +403,20 @@ def test_transform_quantitative() -> None:
     expected = DataFrame(
         {
             "feature1": [
-                "x <= 2.0e+00",
-                "x <= 2.0e+00",
-                "2.0e+00 < x <= 4.5e+00",
-                "2.0e+00 < x <= 4.5e+00",
-                "2.0e+00 < x <= 4.5e+00",
-                "4.5e+00 < x",
+                "x <= 2.00e+00",
+                "x <= 2.00e+00",
+                "2.00e+00 < x <= 4.50e+00",
+                "2.00e+00 < x <= 4.50e+00",
+                "2.00e+00 < x <= 4.50e+00",
+                "4.50e+00 < x",
             ],
             "feature2": [
-                "x <= 2.0e+01",
-                "x <= 2.0e+01",
-                "2.0e+01 < x <= 4.5e+01",
-                "2.0e+01 < x <= 4.5e+01",
-                "2.0e+01 < x <= 4.5e+01",
-                "4.5e+01 < x",
+                "x <= 2.00e+01",
+                "x <= 2.00e+01",
+                "2.00e+01 < x <= 4.50e+01",
+                "2.00e+01 < x <= 4.50e+01",
+                "2.00e+01 < x <= 4.50e+01",
+                "4.50e+01 < x",
             ],
         },
         index=index,
@@ -474,13 +474,13 @@ def test_transform(true_false: bool) -> None:
             "feature1": ["1", "2", "3", "2", "3", "4", "4"],
             "feature2": ["A", "A", "B", "X", "X", feature2.default, "X"],
             "feature3": [
-                "x <= 2.0e+00",
-                "x <= 2.0e+00",
-                "2.0e+00 < x <= 4.5e+00",
-                "2.0e+00 < x <= 4.5e+00",
-                "2.0e+00 < x <= 4.5e+00",
-                "4.5e+00 < x",
-                "4.5e+00 < x",
+                "x <= 2.00e+00",
+                "x <= 2.00e+00",
+                "2.00e+00 < x <= 4.50e+00",
+                "2.00e+00 < x <= 4.50e+00",
+                "2.00e+00 < x <= 4.50e+00",
+                "4.50e+00 < x",
+                "4.50e+00 < x",
             ],
         },
         index=index,
@@ -545,12 +545,12 @@ def test_transform(true_false: bool) -> None:
             "feature2": ["A", "A", "B", "X", feature2.nan, feature2.default, "X"],
             "feature3": [
                 feature3.nan,
-                "x <= 2.0e+00",
-                "2.0e+00 < x <= 4.5e+00",
-                "2.0e+00 < x <= 4.5e+00",
-                "2.0e+00 < x <= 4.5e+00",
-                "4.5e+00 < x",
-                "4.5e+00 < x",
+                "x <= 2.00e+00",
+                "2.00e+00 < x <= 4.50e+00",
+                "2.00e+00 < x <= 4.50e+00",
+                "2.00e+00 < x <= 4.50e+00",
+                "4.50e+00 < x",
+                "4.50e+00 < x",
             ],
         },
         index=index,
@@ -612,12 +612,12 @@ def test_transform(true_false: bool) -> None:
             "feature2": ["A", "A", "B", "X", nan, feature2.default, "X"],
             "feature3": [
                 nan,
-                "x <= 2.0e+00",
-                "2.0e+00 < x <= 4.5e+00",
-                "2.0e+00 < x <= 4.5e+00",
-                "2.0e+00 < x <= 4.5e+00",
-                "4.5e+00 < x",
-                "4.5e+00 < x",
+                "x <= 2.00e+00",
+                "2.00e+00 < x <= 4.50e+00",
+                "2.00e+00 < x <= 4.50e+00",
+                "2.00e+00 < x <= 4.50e+00",
+                "4.50e+00 < x",
+                "4.50e+00 < x",
             ],
         },
         index=index,
