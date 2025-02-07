@@ -5,9 +5,9 @@ from abc import abstractmethod
 from numpy import floating, integer
 from pandas import DataFrame, Series, notna, unique
 
-from ..utils import extend_docstring
-from .utils.base_feature import BaseFeature
-from .utils.grouped_list import GroupedList
+from ...utils import extend_docstring
+from ..utils.base_feature import BaseFeature
+from ..utils.grouped_list import GroupedList
 
 
 class QualitativeFeature(BaseFeature):
