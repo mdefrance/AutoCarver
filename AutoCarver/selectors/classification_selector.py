@@ -1,6 +1,12 @@
 """Tools to select the best Quantitative and Qualitative features for a Classification task."""
 
-from .filters import BaseFilter, SpearmanFilter, TschuprowtFilter, ValidFilter
+from .filters import (
+    BaseFilter,
+    NonDefaultValidFilter,
+    SpearmanFilter,
+    TschuprowtFilter,
+    ValidFilter,
+)
 from .measures import BaseMeasure, KruskalMeasure, ModeMeasure, NanMeasure, TschuprowtMeasure
 from .utils.base_selector import BaseSelector
 
@@ -9,7 +15,6 @@ class ClassificationSelector(BaseSelector):
     """A pipeline of measures to perform a feature pre-selection that maximizes association
     with a qualitative target.
 
-    Get your best features with ``ClassificationSelector.select()``!
     """
 
     __name__ = "ClassificationSelector"
@@ -25,12 +30,14 @@ class ClassificationSelector(BaseSelector):
             measures = [NanMeasure(), ModeMeasure(), TschuprowtMeasure(), KruskalMeasure()]
 
         # adding default measure of mode
-        if all(measure.__name__ != ModeMeasure.__name__ for measure in measures):
-            measures = [ModeMeasure()] + measures
+        mode_measure = ModeMeasure()
+        if all(measure.__name__ != mode_measure.__name__ for measure in measures):
+            measures = [mode_measure] + measures
 
         # adding default measure of nan
-        if all(measure.__name__ != NanMeasure.__name__ for measure in measures):
-            measures = [NanMeasure()] + measures
+        nan_measure = NanMeasure()
+        if all(measure.__name__ != nan_measure.__name__ for measure in measures):
+            measures = [nan_measure] + measures
 
         # checking for measures for quantitative target
         if not all(
@@ -53,7 +60,13 @@ class ClassificationSelector(BaseSelector):
             filters = [ValidFilter(), TschuprowtFilter(), SpearmanFilter()]
 
         # adding default validity filter (based on measures)
-        if all(filter.__name__ != ValidFilter.__name__ for filter in filters):
-            filters = [ValidFilter()] + filters
+        valid_filter = ValidFilter()
+        if all(filter.__name__ != valid_filter.__name__ for filter in filters):
+            filters = [valid_filter] + filters
+
+        # adding default validity filter (based on measures)
+        valid_filter = NonDefaultValidFilter()
+        if all(filter.__name__ != valid_filter.__name__ for filter in filters):
+            filters = [valid_filter] + filters
 
         return filters

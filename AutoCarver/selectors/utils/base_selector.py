@@ -155,6 +155,7 @@ class BaseSelector(ABC):
 
         # whether to print info
         self.verbose = get_bool_attribute(kwargs, "verbose", False)
+        self._message = ""
 
         # target name
         self.target_name = None
@@ -190,6 +191,9 @@ class BaseSelector(ABC):
             measures = get_quantitative_metrics(self.measures)
             filters = get_quantitative_metrics(self.filters)
 
+            # setting message for pretty print
+            self._message = "Quantitative "
+
             # getting best features
             best_quantitatives = self._select_features(quantitatives, X, y, measures, filters)
 
@@ -206,6 +210,9 @@ class BaseSelector(ABC):
             # getting qualitative measures and filters
             measures = get_qualitative_metrics(self.measures)
             filters = get_qualitative_metrics(self.filters)
+
+            # setting message for pretty print
+            self._message = "Qualitative "
 
             # getting best features
             best_qualitatives = self._select_features(qualitatives, X, y, measures, filters)
@@ -314,7 +321,7 @@ class BaseSelector(ABC):
                 )
 
                 # printing association
-                self._print_measures(chunk, f"Selected Features from chunk {n_chunk}/{len(chunks)}")
+                self._print_measures(chunk, f"from chunk {n_chunk}/{len(chunks)}")
 
         # initiating features measures and filters for final prediction
         self._initiate_features_measures(features, remove_default=False)
@@ -323,11 +330,11 @@ class BaseSelector(ABC):
         best_features = get_best_features(features, X, y, measures, filters, self.n_best_per_type)
 
         # printing association
-        self._print_measures(features, "Selected Features")
+        self._print_measures(features)
 
         return best_features
 
-    def _print_measures(self, features: list[BaseFeature], message: str) -> None:
+    def _print_measures(self, features: list[BaseFeature], message: str = "") -> None:
         """Prints crosstabs' target rates and frequencies per modality, in raw or html format
 
         Parameters
@@ -340,10 +347,11 @@ class BaseSelector(ABC):
             Whether to output html or not, by default False
         """
         if self.verbose:
-            print(f" [{self.__name__}] {message}")
-
             # formatting measures to print
             formatted_measures = format_ranked_features(features)
+
+            if not formatted_measures.empty:
+                print(f" [{self.__name__}] Selected {self._message}Features {message}")
 
             if not self.pretty_print:  # no pretty hmtl printing
                 self._print_raw(formatted_measures)

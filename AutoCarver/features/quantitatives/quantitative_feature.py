@@ -3,8 +3,8 @@
 from numpy import diff, floor, inf, isfinite, log10, nan  # pylint: disable=E0611
 from pandas import isna
 
-from .utils.base_feature import BaseFeature
-from .utils.grouped_list import GroupedList
+from ..utils.base_feature import BaseFeature
+from ..utils.grouped_list import GroupedList
 
 
 class QuantitativeFeature(BaseFeature):
@@ -128,15 +128,6 @@ class QuantitativeFeature(BaseFeature):
 
         # adding statistics and history
         return self._add_statistics_to_summary(summary)
-
-
-class DatetimeFeature(BaseFeature):
-    """TODO"""
-
-    def __init__(self, name: str, reference_date: str, **kwargs) -> None:
-        super().__init__(name, **kwargs)
-        self.is_quantitative = True
-        self.reference_date = reference_date  # date of reference to compare with
 
 
 def format_quantiles(a_list: list[float]) -> list[str]:

@@ -461,7 +461,7 @@ where:
 
 .. note::
 
-    * :class:`SpearmanFilter` is the default filter as inter-:class:`QuantitativeFeature` association measure.
+    * :class:`SpearmanFilter` is the default filter used for inter-:class:`QuantitativeFeature` association measure.
 
 
 
@@ -542,5 +542,5 @@ where:
 
 .. note::
 
-    * :class:`TschuprowtFilter` is the default filter as inter-:class:`QualitativeFeature` association measure.
+    * :class:`TschuprowtFilter` is the default filter used for inter-:class:`QualitativeFeature` association measure.
 
