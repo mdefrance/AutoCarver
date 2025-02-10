@@ -263,4 +263,3 @@ def nan_unique(x: Series, sort: bool = False) -> list[str]:
 def get_qualitative_features(features: list[BaseFeature]) -> list[QualitativeFeature]:
     """returns qualitative features amongst provided features"""
     return [feature for feature in features if feature.is_qualitative]
-

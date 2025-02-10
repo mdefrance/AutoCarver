@@ -1,7 +1,7 @@
 """ set of qualitative features"""
 
-from .ordinal_feature import OrdinalFeature, get_ordinal_features
 from .categorical_feature import CategoricalFeature, get_categorical_features
+from .ordinal_feature import OrdinalFeature, get_ordinal_features
 from .qualitative_feature import QualitativeFeature, get_qualitative_features, nan_unique
 
 __all__ = [

@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from typing import Union
 
 from pandas import DataFrame, Series
-from tqdm.autonotebook import tqdm
+from tqdm import tqdm
 
 from ...features import BaseFeature, GroupedList
 from ...utils import get_attribute, get_bool_attribute

@@ -4,7 +4,7 @@ from pytest import raises
 
 from AutoCarver.features import Features
 from AutoCarver.selectors import RegressionSelector
-from AutoCarver.selectors.filters import BaseFilter, ValidFilter
+from AutoCarver.selectors.filters import BaseFilter, NonDefaultValidFilter, ValidFilter
 from AutoCarver.selectors.measures import BaseMeasure, ModeMeasure, NanMeasure
 from AutoCarver.selectors.utils.base_selector import get_default_metrics, remove_default_metrics
 
@@ -19,9 +19,14 @@ def test_regression_selector_initiate_default(features_object: Features) -> None
         max_num_features_per_chunk=max_num_features_per_chunk,
     )
 
-    assert any(measure.__name__ == ModeMeasure.__name__ for measure in selector.measures)
-    assert any(measure.__name__ == NanMeasure.__name__ for measure in selector.measures)
-    assert any(filter_.__name__ == ValidFilter.__name__ for filter_ in selector.filters)
+    mode_measure = ModeMeasure()
+    assert any(measure.__name__ == mode_measure.__name__ for measure in selector.measures)
+    nan_measure = NanMeasure()
+    assert any(measure.__name__ == nan_measure.__name__ for measure in selector.measures)
+    valid_filter = NonDefaultValidFilter()
+    assert any(measure.__name__ == valid_filter.__name__ for measure in selector.filters)
+    valid_filter = ValidFilter()
+    assert any(measure.__name__ == valid_filter.__name__ for measure in selector.filters)
     assert len(remove_default_metrics(selector.measures)) >= 1
     assert len(remove_default_metrics(selector.filters)) >= 1
 
@@ -42,8 +47,10 @@ def test_regression_selector_initiate_measures(
             max_num_features_per_chunk=max_num_features_per_chunk,
             measures=default_measures,
         )
-        assert any(measure.__name__ == ModeMeasure.__name__ for measure in selector.measures)
-        assert any(measure.__name__ == NanMeasure.__name__ for measure in selector.measures)
+        mode_measure = ModeMeasure()
+        assert any(measure.__name__ == mode_measure.__name__ for measure in selector.measures)
+        nan_measure = NanMeasure()
+        assert any(measure.__name__ == nan_measure.__name__ for measure in selector.measures)
         assert len(selector.measures) == 2 + sum(
             not isinstance(measure, (NanMeasure, ModeMeasure)) for measure in default_measures
         )
@@ -61,8 +68,10 @@ def test_regression_selector_initiate_measures(
             max_num_features_per_chunk=max_num_features_per_chunk,
             measures=regression_measures,
         )
-        assert any(measure.__name__ == ModeMeasure.__name__ for measure in selector.measures)
-        assert any(measure.__name__ == NanMeasure.__name__ for measure in selector.measures)
+        mode_measure = ModeMeasure()
+        assert any(measure.__name__ == mode_measure.__name__ for measure in selector.measures)
+        nan_measure = NanMeasure()
+        assert any(measure.__name__ == nan_measure.__name__ for measure in selector.measures)
         assert len(selector.measures) == len(regression_measures) + 2
 
     # checking error for quantitative target measures
@@ -98,7 +107,10 @@ def test_regression_selector_initiate_filters(
             max_num_features_per_chunk=max_num_features_per_chunk,
             filters=default_filters,
         )
-        assert any(filter_.__name__ == ValidFilter.__name__ for filter_ in selector.filters)
+        valid_filter = NonDefaultValidFilter()
+        assert any(measure.__name__ == valid_filter.__name__ for measure in selector.filters)
+        valid_filter = ValidFilter()
+        assert any(measure.__name__ == valid_filter.__name__ for measure in selector.filters)
         assert (
             len(selector.filters)
             == len(
@@ -120,5 +132,8 @@ def test_regression_selector_initiate_filters(
             max_num_features_per_chunk=max_num_features_per_chunk,
             filters=filters,
         )
-        assert any(filter_.__name__ == ValidFilter.__name__ for filter_ in selector.filters)
-        assert len(selector.filters) == len(filters) + 1
+        valid_filter = NonDefaultValidFilter()
+        assert any(measure.__name__ == valid_filter.__name__ for measure in selector.filters)
+        valid_filter = ValidFilter()
+        assert any(measure.__name__ == valid_filter.__name__ for measure in selector.filters)
+        assert len(selector.filters) == len(filters) + 2

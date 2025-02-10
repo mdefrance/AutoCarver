@@ -31,10 +31,11 @@ def format_ranked_features(features: list[BaseFeature]) -> DataFrame:
         measures.append(format_measure(feature, {**feature.measures, **feature.filters}))
 
     # finding a sorting measure
-    ranks = [col for col in measures[0].keys() if col.endswith("Rank")]
-    if len(ranks) > 0:
-        sort_by = ranks[0]
-        return DataFrame(measures).sort_values(by=sort_by, ascending=True)
+    if len(measures) > 0:
+        ranks = [col for measure in measures for col in measure.keys() if col.endswith("Rank")]
+        if len(ranks) > 0:
+            sort_by = ranks[0]
+            return DataFrame(measures).sort_values(by=sort_by, ascending=True)
     return DataFrame(measures)
 
 
@@ -61,6 +62,9 @@ def prettier_measures(association: DataFrame) -> str:
         # checking for an association indicator
         if any(column.endswith(indic) for indic in ["Measure", "Filter"])
     ]
+
+    # adding numerical columns
+    subset += association.select_dtypes(include=["number"]).columns.tolist()
 
     # lower precision for specific columns
     nicer_association = nicer_association.format({measure: "{:.4f}" for measure in subset})

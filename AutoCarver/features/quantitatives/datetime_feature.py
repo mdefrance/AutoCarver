@@ -8,5 +8,4 @@ class DatetimeFeature(QuantitativeFeature):
 
     def __init__(self, name: str, reference_date: str, **kwargs) -> None:
         super().__init__(name, **kwargs)
-        self.is_quantitative = True
         self.reference_date = reference_date  # date of reference to compare with

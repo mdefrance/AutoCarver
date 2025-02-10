@@ -3,7 +3,6 @@
 from ...utils import extend_docstring
 from ..utils.base_feature import BaseFeature
 from ..utils.grouped_list import GroupedList
-
 from .qualitative_feature import QualitativeFeature
 
 

@@ -86,7 +86,8 @@ class BaseFilter(ABC):
 class ValidFilter(BaseFilter):
     """Valid filter class."""
 
-    __name__ = "ValidFilter"
+    __name__ = "Valid"
+
     is_default = True
     is_x_quantitative = True
     is_x_qualitative = True
@@ -105,3 +106,11 @@ class ValidFilter(BaseFilter):
                 filtered += [feature]
 
         return filtered
+
+
+class NonDefaultValidFilter(ValidFilter):
+    """Valid filter class for non-default metrics."""
+
+    __name__ = "NonDefaultValid"
+
+    is_default = False
