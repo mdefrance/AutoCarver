@@ -215,9 +215,9 @@ def test_compute_target_rates_basic(evaluator: ContinuousCombinationEvaluator):
     feature = OrdinalFeature("feature", ["A", "B", "C"])
     xagg = get_target_values_by_modality(X, y, feature)
 
-    result = evaluator._compute_target_rates(xagg)
+    result = evaluator.target_rate.compute(xagg)
     expected = DataFrame(
-        {"target_rate": [2.0, 3.0, 5.0], "frequency": [2 / 5, 2 / 5, 1 / 5]}, index=["A", "B", "C"]
+        {"target_mean": [2.0, 3.0, 5.0], "frequency": [2 / 5, 2 / 5, 1 / 5]}, index=["A", "B", "C"]
     )
     assert result.equals(expected)
 
@@ -228,9 +228,9 @@ def test_compute_target_rates_with_nan(evaluator: ContinuousCombinationEvaluator
     feature = OrdinalFeature("feature", ["A", "B", "C"])
     xagg = get_target_values_by_modality(X, y, feature)
 
-    result = evaluator._compute_target_rates(xagg)
+    result = evaluator.target_rate.compute(xagg)
     expected = DataFrame(
-        {"target_rate": [2.0, 3.0, None], "frequency": [2 / 4, 2 / 4, 0]}, index=["A", "B", "C"]
+        {"target_mean": [2.0, 3.0, None], "frequency": [2 / 4, 2 / 4, 0]}, index=["A", "B", "C"]
     )
     assert result.equals(expected)
 
@@ -241,9 +241,9 @@ def test_compute_target_rates_unordered_labels(evaluator: ContinuousCombinationE
     feature = OrdinalFeature("feature", ["C", "A", "B"])
     xagg = get_target_values_by_modality(X, y, feature)
 
-    result = evaluator._compute_target_rates(xagg)
+    result = evaluator.target_rate.compute(xagg)
     expected = DataFrame(
-        {"target_rate": [5.0, 2.0, 3.0], "frequency": [1 / 5, 2 / 5, 2 / 5]}, index=["C", "A", "B"]
+        {"target_mean": [5.0, 2.0, 3.0], "frequency": [1 / 5, 2 / 5, 2 / 5]}, index=["C", "A", "B"]
     )
     assert result.equals(expected)
 
@@ -254,8 +254,8 @@ def test_compute_target_rates_missing_labels(evaluator: ContinuousCombinationEva
     feature = OrdinalFeature("feature", ["A", "B"])
     xagg = get_target_values_by_modality(X, y, feature)
 
-    result = evaluator._compute_target_rates(xagg)
-    expected = DataFrame({"target_rate": [2.0, 3.0], "frequency": [2 / 4, 2 / 4]}, index=["A", "B"])
+    result = evaluator.target_rate.compute(xagg)
+    expected = DataFrame({"target_mean": [2.0, 3.0], "frequency": [2 / 4, 2 / 4]}, index=["A", "B"])
     assert result.equals(expected)
 
 
@@ -265,9 +265,9 @@ def test_compute_target_rates_extra_labels(evaluator: ContinuousCombinationEvalu
     feature = OrdinalFeature("feature", ["A", "B", "C", "D"])
     xagg = get_target_values_by_modality(X, y, feature)
 
-    result = evaluator._compute_target_rates(xagg)
+    result = evaluator.target_rate.compute(xagg)
     expected = DataFrame(
-        {"target_rate": [2.0, 3.0, 5.0, None], "frequency": [2 / 5, 2 / 5, 1 / 5, 0]},
+        {"target_mean": [2.0, 3.0, 5.0, None], "frequency": [2 / 5, 2 / 5, 1 / 5, 0]},
         index=["A", "B", "C", "D"],
     )
     assert result.equals(expected)
@@ -568,14 +568,14 @@ def test_viability_train(evaluator: ContinuousCombinationEvaluator):
         {
             "train": {TestKeys.VIABLE.value: True},
             "train_rates": DataFrame(
-                {"target_rate": [0.666667, 1.250000], "frequency": [0.428571, 0.571429]},
+                {"target_mean": [0.666667, 1.250000], "frequency": [0.428571, 0.571429]},
                 index=["a", "b"],
             ),
         },
         {
             "train": {TestKeys.VIABLE.value: False},
             "train_rates": DataFrame(
-                {"target_rate": [1.0, 1.0], "frequency": [0.714286, 0.285714]}, index=["a", "c"]
+                {"target_mean": [1.0, 1.0], "frequency": [0.714286, 0.285714]}, index=["a", "c"]
             ),
         },
     ]

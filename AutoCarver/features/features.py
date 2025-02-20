@@ -429,7 +429,7 @@ class Features:
         # defining indices to set
         indices = []
         for col in summaries.columns:
-            if col not in ["feature", "label", "content", "target_rate", "frequency"]:
+            if col not in ["feature", "label", "content", "target_mean", "frequency"]:
                 indices += [col]
         indices = ["feature"] + indices + ["label"]
 

@@ -7,15 +7,9 @@ from AutoCarver.carvers.utils.base_carver import BaseCarver, Samples, discretize
 from AutoCarver.combinations import CramervCombinations, KruskalCombinations, TschuprowtCombinations
 from AutoCarver.discretizers.utils.base_discretizer import Sample
 from AutoCarver.features import Features
+from AutoCarver.utils.dependencies import has_idisplay
 
-try:
-    from IPython.display import display_html
-
-    _ = display_html
-except ImportError:
-    _has_idisplay = False
-else:
-    _has_idisplay = True
+_has_idisplay = has_idisplay()
 
 # removing abstractmethod
 BaseCarver.__abstractmethods__ = set()

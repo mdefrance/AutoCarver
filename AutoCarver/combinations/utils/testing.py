@@ -56,14 +56,16 @@ def is_viable(test_results: dict):
     )
 
 
-def test_viability(rates: DataFrame, min_freq: float, train_target_rate: Series = None) -> dict:
+def test_viability(
+    rates: DataFrame, min_freq: float, target_rate: str, train_target_rate: Series = None
+) -> dict:
     """tests viability of the rates"""
 
     # - minimum frequency is reached for all modalities
     min_freq_test = _test_minimum_frequency_per_modality(rates["frequency"], min_freq)
 
     # - target rates are distinct for all modalities
-    distinct_rates = _test_distinct_target_rates_between_modalities(rates["target_rate"])
+    distinct_rates = _test_distinct_target_rates_between_modalities(rates[target_rate])
 
     # gathering results
     test_results = {
@@ -74,7 +76,7 @@ def test_viability(rates: DataFrame, min_freq: float, train_target_rate: Series 
 
     # adding ranking test if train_rates where provided
     if train_target_rate is not None:
-        ordering = _test_modality_ordering(train_target_rate, rates["target_rate"])
+        ordering = _test_modality_ordering(train_target_rate, rates[target_rate])
         test_results.update(
             {
                 TestKeys.RANKS_TRAIN_DEV.value: ordering,

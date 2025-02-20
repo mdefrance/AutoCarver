@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Setting things up &mdash; AutoCarver Beta release documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/nbsphinx-code-cells.css?v=2aa19091" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=39f3c58d"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="prev" title="Selectors Examples" href="../../../selectors_examples.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/auto_carver_symbol_small.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                7.0.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quick_start.html">Quick Start</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../discretizers.html">Discretizers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../combinations.html">Combinations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../carvers.html">Carvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../selectors.html">Selectors</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../carvers_examples.html">Carvers Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../selectors_examples.html">Selectors Examples</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../selectors_examples.html#binary-classification-example">Binary Classification Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../selectors_examples.html#multiclass-classification-example">Multiclass Classification Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../selectors_examples.html#continuous-regression-example">Continuous Regression Example</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">AutoCarver</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../selectors_examples.html">Selectors Examples</a></li>
+      <li class="breadcrumb-item active">Setting things up</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/examples/Selectors/Classification/setting_selector_metrics.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Setting-things-up">
+<h1>Setting things up<a class="headerlink" href="#Setting-things-up" title="Link to this heading"></a></h1>
+<section id="About-this-notebook">
+<h2>About this notebook<a class="headerlink" href="#About-this-notebook" title="Link to this heading"></a></h2>
+<p>In this notebook, we focus on enhancing the predictive performance of the Titanic Dataset by leveraging <code class="docutils literal notranslate"><span class="pre">ClassificationSelector</span></code>, a powerful tool designed to quickly identify and select the best features for classification tasks. Unlike traditional preprocessing methods, this notebook does not involve any preprocessing with BinaryCarver. Instead, our goal is to streamline the feature selection process to improve the efficiency and accuracy of our classification models.</p>
+<p>The Titanic Dataset, derived from the historic 1912 Titanic passenger records, contains a variety of features such as socio-economic status, age, and cabin location. Using <code class="docutils literal notranslate"><span class="pre">ClassificationSelector</span></code>, we aim to identify the most relevant features that contribute to predicting survival outcomes, ensuring that our dataset is optimized for binary classification tasks.</p>
+<p>Throughout this notebook, we will explore the capabilities of <code class="docutils literal notranslate"><span class="pre">ClassificationSelector</span></code> in evaluating and selecting features. By focusing on feature importance and relevance, we aim to build a robust dataset that enhances the performance of our classification models without the need for extensive preprocessing.</p>
+<p>Join us as we utilize <code class="docutils literal notranslate"><span class="pre">ClassificationSelector</span></code> to efficiently refine the Titanic Dataset, paving the way for accurate and impactful binary classification models.</p>
+<p>Let’s dive in and uncover the potential of <code class="docutils literal notranslate"><span class="pre">ClassificationSelector</span></code> in optimizing the Titanic Dataset for predictive modeling.</p>
+</section>
+<section id="Installation">
+<h2>Installation<a class="headerlink" href="#Installation" title="Link to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># %pip install AutoCarver[jupyter]</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Titanic-Data">
+<h2>Titanic Data<a class="headerlink" href="#Titanic-Data" title="Link to this heading"></a></h2>
+<p>In this example notebook, we will use the Titanic dataset.</p>
+<p>The Titanic dataset is a well-known and frequently used dataset in the field of machine learning and data science. It provides information about the passengers on board the Titanic, the famous ship that sank on its maiden voyage in 1912. The dataset is often used for predictive modeling, classification, and regression tasks.</p>
+<p>The dataset includes various features such as passengers’ names, ages, genders, ticket classes, cabin information, and whether they survived or not. The primary goal when working with the Titanic dataset is often to build predictive models that can infer whether a passenger survived or perished based on their individual characteristics (binary classification).</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="c1"># URL to the Titanic dataset on Kaggle</span>
+<span class="n">titanic_url</span> <span class="o">=</span> <span class="s2">&quot;https://web.stanford.edu/class/archive/cs/cs109/cs109.1166/stuff/titanic.csv&quot;</span>
+
+<span class="c1"># Use pandas to read the CSV file directly from the URL</span>
+<span class="n">titanic_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">titanic_url</span><span class="p">)</span>
+
+<span class="c1"># Display the first few rows of the dataset</span>
+<span class="n">titanic_data</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Survived</th>
+      <th>Pclass</th>
+      <th>Name</th>
+      <th>Sex</th>
+      <th>Age</th>
+      <th>Siblings/Spouses Aboard</th>
+      <th>Parents/Children Aboard</th>
+      <th>Fare</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>3</td>
+      <td>Mr. Owen Harris Braund</td>
+      <td>male</td>
+      <td>22.0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>7.2500</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1</td>
+      <td>1</td>
+      <td>Mrs. John Bradley (Florence Briggs Thayer) Cum...</td>
+      <td>female</td>
+      <td>38.0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>71.2833</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1</td>
+      <td>3</td>
+      <td>Miss. Laina Heikkinen</td>
+      <td>female</td>
+      <td>26.0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>7.9250</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1</td>
+      <td>1</td>
+      <td>Mrs. Jacques Heath (Lily May Peel) Futrelle</td>
+      <td>female</td>
+      <td>35.0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>53.1000</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0</td>
+      <td>3</td>
+      <td>Mr. William Henry Allen</td>
+      <td>male</td>
+      <td>35.0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>8.0500</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+</section>
+<section id="Target-type-and-Selector-selection">
+<h2>Target type and Selector selection<a class="headerlink" href="#Target-type-and-Selector-selection" title="Link to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">target</span> <span class="o">=</span> <span class="s2">&quot;Survived&quot;</span>
+
+<span class="n">titanic_data</span><span class="p">[</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">dropna</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Survived
+0    545
+1    342
+Name: count, dtype: int64
+</pre></div></div>
+</div>
+<p>The target <code class="docutils literal notranslate"><span class="pre">&quot;Survived&quot;</span></code> is a binary target of type <code class="docutils literal notranslate"><span class="pre">int64</span></code> used in a classification task. Hence we will use <code class="docutils literal notranslate"><span class="pre">AutoCarver.selectors.ClassificationSelector</span></code> in following code blocks.</p>
+</section>
+<section id="Data-Sampling">
+<h2>Data Sampling<a class="headerlink" href="#Data-Sampling" title="Link to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_test_split</span>
+
+<span class="c1"># stratified sampling by target</span>
+<span class="n">train_set</span><span class="p">,</span> <span class="n">dev_set</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">titanic_data</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.33</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">stratify</span><span class="o">=</span><span class="n">titanic_data</span><span class="p">[</span><span class="n">target</span><span class="p">])</span>
+
+<span class="c1"># checking target rate per dataset</span>
+<span class="n">train_set</span><span class="p">[</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">dev_set</span><span class="p">[</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(np.float64(0.38552188552188554), np.float64(0.3856655290102389))
+</pre></div></div>
+</div>
+</section>
+<section id="Setting-up-Features-to-select">
+<h2>Setting up Features to select<a class="headerlink" href="#Setting-up-Features-to-select" title="Link to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">train_set</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Survived</th>
+      <th>Pclass</th>
+      <th>Name</th>
+      <th>Sex</th>
+      <th>Age</th>
+      <th>Siblings/Spouses Aboard</th>
+      <th>Parents/Children Aboard</th>
+      <th>Fare</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>617</th>
+      <td>0</td>
+      <td>3</td>
+      <td>Mr. Antoni Yasbeck</td>
+      <td>male</td>
+      <td>27.0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>14.4542</td>
+    </tr>
+    <tr>
+      <th>489</th>
+      <td>0</td>
+      <td>1</td>
+      <td>Mr. Harry Markland Molson</td>
+      <td>male</td>
+      <td>55.0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>30.5000</td>
+    </tr>
+    <tr>
+      <th>871</th>
+      <td>1</td>
+      <td>3</td>
+      <td>Miss. Adele Kiamie Najib</td>
+      <td>female</td>
+      <td>15.0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>7.2250</td>
+    </tr>
+    <tr>
+      <th>654</th>
+      <td>0</td>
+      <td>3</td>
+      <td>Mrs. John (Catherine) Bourke</td>
+      <td>female</td>
+      <td>32.0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>15.5000</td>
+    </tr>
+    <tr>
+      <th>653</th>
+      <td>0</td>
+      <td>3</td>
+      <td>Mr. Alexander Radeff</td>
+      <td>male</td>
+      <td>27.0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>7.8958</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># column data types</span>
+<span class="n">train_set</span><span class="o">.</span><span class="n">dtypes</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Survived                     int64
+Pclass                       int64
+Name                        object
+Sex                         object
+Age                        float64
+Siblings/Spouses Aboard      int64
+Parents/Children Aboard      int64
+Fare                       float64
+dtype: object
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># values taken by Parents/Children Aboard</span>
+<span class="n">train_set</span><span class="p">[</span><span class="s2">&quot;Parents/Children Aboard&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Parents/Children Aboard
+0    438
+1     87
+2     60
+3      3
+5      3
+4      2
+6      1
+Name: count, dtype: int64
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># values taken by Pclass</span>
+<span class="n">train_set</span><span class="p">[</span><span class="s2">&quot;Pclass&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Pclass
+3    326
+1    142
+2    126
+Name: count, dtype: int64
+</pre></div></div>
+</div>
+<p>The feature <code class="docutils literal notranslate"><span class="pre">&quot;Pclass&quot;</span></code> is of type <code class="docutils literal notranslate"><span class="pre">&quot;int64&quot;</span></code>, but it can be considered a qualitative ordinal feature rather than a quantitative discrete feature (socio-economic status). Thus we will add it to the list of <code class="docutils literal notranslate"><span class="pre">ordinal_features</span></code> and set the ordering of its values in <code class="docutils literal notranslate"><span class="pre">values_orders</span></code> (string values).</p>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;Sex&quot;</span></code> is the only quantitative categorical feature, it’s added to the list of <code class="docutils literal notranslate"><span class="pre">qualitative_features</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;Fare&quot;</span></code> is the only quantitative continuous features, whilst <code class="docutils literal notranslate"><span class="pre">&quot;Age&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Siblings/Spouses</span> <span class="pre">Aboard&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;Parents/Children</span> <span class="pre">Aboard&quot;</span></code> can be considered as quantitative discrete features. Those four features will be added to the list of <code class="docutils literal notranslate"><span class="pre">quantitative_features</span></code>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">AutoCarver</span><span class="w"> </span><span class="kn">import</span> <span class="n">Features</span>
+
+<span class="c1"># initiating Features to carve</span>
+<span class="n">features</span> <span class="o">=</span> <span class="n">Features</span><span class="p">(</span>
+    <span class="n">categoricals</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Sex&quot;</span><span class="p">],</span>
+    <span class="n">quantitatives</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Age&quot;</span><span class="p">,</span> <span class="s2">&quot;Fare&quot;</span><span class="p">,</span> <span class="s2">&quot;Siblings/Spouses Aboard&quot;</span><span class="p">,</span> <span class="s2">&quot;Parents/Children Aboard&quot;</span><span class="p">],</span>
+    <span class="n">ordinals</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;Pclass&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="s2">&quot;3&quot;</span><span class="p">]},</span>  <span class="c1"># user-specified ordering for ordinal features</span>
+<span class="p">)</span>
+<span class="n">features</span><span class="p">[</span><span class="s2">&quot;Pclass&quot;</span><span class="p">],</span> <span class="n">features</span><span class="p">[</span><span class="s2">&quot;Sex&quot;</span><span class="p">],</span> <span class="n">features</span><span class="p">[</span><span class="s2">&quot;Age&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(Ordinal(&#39;Pclass&#39;), Categorical(&#39;Sex&#39;), Quantitative(&#39;Age&#39;))
+</pre></div></div>
+</div>
+</section>
+</section>
+<section id="Feature-Selection">
+<h1>Feature Selection<a class="headerlink" href="#Feature-Selection" title="Link to this heading"></a></h1>
+<section id="Selectors-settings">
+<h2>Selectors settings<a class="headerlink" href="#Selectors-settings" title="Link to this heading"></a></h2>
+<section id="Number-of-features-to-select">
+<h3>Number of features to select<a class="headerlink" href="#Number-of-features-to-select" title="Link to this heading"></a></h3>
+<p>The attribute <code class="docutils literal notranslate"><span class="pre">n_best_per_type</span></code> allows one to choose the number of features to be selected per data type (quantitative and qualitative).</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">n_best_per_type</span> <span class="o">=</span> <span class="mi">4</span>  <span class="c1"># here the number of features is low, ClassificationSelector will only be used to compute useful statistics</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Optional:-Setting-association-measure-between-X-and-y">
+<h3><em>Optional:</em> Setting association measure between X and y<a class="headerlink" href="#Optional:-Setting-association-measure-between-X-and-y" title="Link to this heading"></a></h3>
+<p>Make sure to check out available <a class="reference external" href="https://autocarver.readthedocs.io/en/latest/selectors.html#association-measures-x-by-y">association measures</a>!</p>
+<p>Lets say one wants to:</p>
+<ul class="simple">
+<li><p>Use Cramér’s V as the association measure between each <code class="docutils literal notranslate"><span class="pre">QualitativeFeature</span></code> and the binary target <code class="docutils literal notranslate"><span class="pre">Survived</span></code> (with at least 30% association)</p></li>
+<li><p>Use the coefficient of determination as the association measure between each <code class="docutils literal notranslate"><span class="pre">QuantitativeFeature</span></code> and the binary target <code class="docutils literal notranslate"><span class="pre">Survived</span></code> (with at least 7% association)</p></li>
+<li><p>Remove features that have more than 30% of missing values</p></li>
+<li><p>Remove features that have more than 30% of outliers according to Zscore</p></li>
+</ul>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">AutoCarver.selectors</span><span class="w"> </span><span class="kn">import</span> <span class="n">CramervMeasure</span><span class="p">,</span> <span class="n">RMeasure</span><span class="p">,</span> <span class="n">ZscoreOutlierMeasure</span><span class="p">,</span> <span class="n">NanMeasure</span>
+
+<span class="c1"># adding Nan measure for all features with a threshold at 30% of missing values</span>
+<span class="n">measures</span> <span class="o">=</span> <span class="p">[</span><span class="n">NanMeasure</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)]</span>
+
+<span class="c1"># adding Z-score outlier measure for quantitative features with a threshold at 30% of outliers</span>
+<span class="n">measures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ZscoreOutlierMeasure</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.3</span><span class="p">))</span>
+
+<span class="c1"># adding Cramerv&#39;s V measure for categorical features with a threshold at 30% association</span>
+<span class="n">measures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CramervMeasure</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.3</span><span class="p">))</span>
+
+<span class="c1"># adding R measure for quantitative features with a threshold at 7% association</span>
+<span class="n">measures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">RMeasure</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.07</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Optional:-Setting-association-measure-columns-of-X">
+<h3><em>Optional:</em> Setting association measure columns of X<a class="headerlink" href="#Optional:-Setting-association-measure-columns-of-X" title="Link to this heading"></a></h3>
+<p>Make sure to check out available <a class="reference external" href="https://autocarver.readthedocs.io/en/latest/selectors.html#association-filters-x-by-x">association filters</a>!</p>
+<p>Lets say one wants to:</p>
+<ul class="simple">
+<li><p>Use Cramér’s V as the association measure between <code class="docutils literal notranslate"><span class="pre">QualitativeFeature</span></code>s (with at most 30% association)</p></li>
+<li><p>Use Pearson’s r as the association measure between <code class="docutils literal notranslate"><span class="pre">QuantitativeFeature</span></code>s (with at most 30% association)</p></li>
+</ul>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">AutoCarver.selectors</span><span class="w"> </span><span class="kn">import</span> <span class="n">CramervFilter</span><span class="p">,</span> <span class="n">PearsonFilter</span>
+
+<span class="c1"># adding Cramerv&#39;s V filter for categorical features with a threshold at 25% association</span>
+<span class="n">filters</span> <span class="o">=</span> <span class="p">[</span><span class="n">CramervFilter</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)]</span>
+
+<span class="c1"># adding Pearson filter for quantitative features with a threshold at 25% association</span>
+<span class="n">filters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">PearsonFilter</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.25</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+<section id="Using-Selectors">
+<h2>Using Selectors<a class="headerlink" href="#Using-Selectors" title="Link to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[39]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">AutoCarver</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassificationSelector</span>
+
+<span class="c1"># select the most target associated qualitative features</span>
+<span class="n">feature_selector</span> <span class="o">=</span> <span class="n">ClassificationSelector</span><span class="p">(</span>
+    <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span>
+    <span class="n">n_best_per_type</span><span class="o">=</span><span class="n">n_best_per_type</span><span class="p">,</span>
+    <span class="n">measures</span><span class="o">=</span><span class="n">measures</span><span class="p">,</span>
+    <span class="n">filters</span><span class="o">=</span><span class="n">filters</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># displays statistics</span>
+<span class="p">)</span>
+<span class="n">best_features</span> <span class="o">=</span> <span class="n">feature_selector</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">train_set</span><span class="p">,</span> <span class="n">train_set</span><span class="p">[</span><span class="n">target</span><span class="p">])</span>
+<span class="n">best_features</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+ [ClassificationSelector] Selected Quantitative Features
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<style type="text/css">
+#T_19c04_row0_col4, #T_19c04_row3_col6 {
+  background-color: #b40426;
+  color: #f1f1f1;
+}
+#T_19c04_row0_col6, #T_19c04_row2_col4 {
+  background-color: #3b4cc0;
+  color: #f1f1f1;
+}
+#T_19c04_row1_col4 {
+  background-color: #445acc;
+  color: #f1f1f1;
+}
+#T_19c04_row1_col6 {
+  background-color: #e2dad5;
+  color: #000000;
+}
+#T_19c04_row2_col6 {
+  background-color: #000000;
+  color: #f1f1f1;
+}
+#T_19c04_row3_col4 {
+  background-color: #6180e9;
+  color: #f1f1f1;
+}
+</style>
+<table id="T_19c04" style='display:inline'>
+  <thead>
+    <tr>
+      <th class="blank level0" >&nbsp;</th>
+      <th id="T_19c04_level0_col0" class="col_heading level0 col0" >feature</th>
+      <th id="T_19c04_level0_col1" class="col_heading level0 col1" >Mode</th>
+      <th id="T_19c04_level0_col2" class="col_heading level0 col2" >Nan</th>
+      <th id="T_19c04_level0_col3" class="col_heading level0 col3" >ZScore</th>
+      <th id="T_19c04_level0_col4" class="col_heading level0 col4" >RMeasure</th>
+      <th id="T_19c04_level0_col5" class="col_heading level0 col5" >RRank</th>
+      <th id="T_19c04_level0_col6" class="col_heading level0 col6" >PearsonFilter</th>
+      <th id="T_19c04_level0_col7" class="col_heading level0 col7" >PearsonWith</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th id="T_19c04_level0_row0" class="row_heading level0 row0" >1</th>
+      <td id="T_19c04_row0_col0" class="data row0 col0" >Quantitative('Fare')</td>
+      <td id="T_19c04_row0_col1" class="data row0 col1" >0.0522</td>
+      <td id="T_19c04_row0_col2" class="data row0 col2" >0.0000</td>
+      <td id="T_19c04_row0_col3" class="data row0 col3" >0.0286</td>
+      <td id="T_19c04_row0_col4" class="data row0 col4" >0.2782</td>
+      <td id="T_19c04_row0_col5" class="data row0 col5" >0.0000</td>
+      <td id="T_19c04_row0_col6" class="data row0 col6" >0.0000</td>
+      <td id="T_19c04_row0_col7" class="data row0 col7" >itself</td>
+    </tr>
+    <tr>
+      <th id="T_19c04_level0_row1" class="row_heading level0 row1" >0</th>
+      <td id="T_19c04_row1_col0" class="data row1 col0" >Quantitative('Age')</td>
+      <td id="T_19c04_row1_col1" class="data row1 col1" >0.0556</td>
+      <td id="T_19c04_row1_col2" class="data row1 col2" >0.0000</td>
+      <td id="T_19c04_row1_col3" class="data row1 col3" >0.0034</td>
+      <td id="T_19c04_row1_col4" class="data row1 col4" >0.0765</td>
+      <td id="T_19c04_row1_col5" class="data row1 col5" >1.0000</td>
+      <td id="T_19c04_row1_col6" class="data row1 col6" >0.1356</td>
+      <td id="T_19c04_row1_col7" class="data row1 col7" >Fare</td>
+    </tr>
+    <tr>
+      <th id="T_19c04_level0_row2" class="row_heading level0 row2" >2</th>
+      <td id="T_19c04_row2_col0" class="data row2 col0" >Quantitative('Siblings/Spouses Aboard')</td>
+      <td id="T_19c04_row2_col1" class="data row2 col1" >0.6801</td>
+      <td id="T_19c04_row2_col2" class="data row2 col2" >0.0000</td>
+      <td id="T_19c04_row2_col3" class="data row2 col3" >0.0185</td>
+      <td id="T_19c04_row2_col4" class="data row2 col4" >0.0697</td>
+      <td id="T_19c04_row2_col5" class="data row2 col5" >nan</td>
+      <td id="T_19c04_row2_col6" class="data row2 col6" >nan</td>
+      <td id="T_19c04_row2_col7" class="data row2 col7" >nan</td>
+    </tr>
+    <tr>
+      <th id="T_19c04_level0_row3" class="row_heading level0 row3" >3</th>
+      <td id="T_19c04_row3_col0" class="data row3 col0" >Quantitative('Parents/Children Aboard')</td>
+      <td id="T_19c04_row3_col1" class="data row3 col1" >0.7374</td>
+      <td id="T_19c04_row3_col2" class="data row3 col2" >0.0000</td>
+      <td id="T_19c04_row3_col3" class="data row3 col3" >0.0152</td>
+      <td id="T_19c04_row3_col4" class="data row3 col4" >0.0955</td>
+      <td id="T_19c04_row3_col5" class="data row3 col5" >nan</td>
+      <td id="T_19c04_row3_col6" class="data row3 col6" >0.2611</td>
+      <td id="T_19c04_row3_col7" class="data row3 col7" >Fare</td>
+    </tr>
+  </tbody>
+</table></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+ [ClassificationSelector] Selected Qualitative Features
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<style type="text/css">
+#T_3a655_row0_col3, #T_3a655_row1_col5 {
+  background-color: #b40426;
+  color: #f1f1f1;
+}
+#T_3a655_row0_col5, #T_3a655_row1_col3 {
+  background-color: #3b4cc0;
+  color: #f1f1f1;
+}
+</style>
+<table id="T_3a655" style='display:inline'>
+  <thead>
+    <tr>
+      <th class="blank level0" >&nbsp;</th>
+      <th id="T_3a655_level0_col0" class="col_heading level0 col0" >feature</th>
+      <th id="T_3a655_level0_col1" class="col_heading level0 col1" >Mode</th>
+      <th id="T_3a655_level0_col2" class="col_heading level0 col2" >Nan</th>
+      <th id="T_3a655_level0_col3" class="col_heading level0 col3" >CramervMeasure</th>
+      <th id="T_3a655_level0_col4" class="col_heading level0 col4" >CramervRank</th>
+      <th id="T_3a655_level0_col5" class="col_heading level0 col5" >CramervFilter</th>
+      <th id="T_3a655_level0_col6" class="col_heading level0 col6" >CramervWith</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th id="T_3a655_level0_row0" class="row_heading level0 row0" >0</th>
+      <td id="T_3a655_row0_col0" class="data row0 col0" >Categorical('Sex')</td>
+      <td id="T_3a655_row0_col1" class="data row0 col1" >0.6364</td>
+      <td id="T_3a655_row0_col2" class="data row0 col2" >0.0000</td>
+      <td id="T_3a655_row0_col3" class="data row0 col3" >0.5337</td>
+      <td id="T_3a655_row0_col4" class="data row0 col4" >0.0000</td>
+      <td id="T_3a655_row0_col5" class="data row0 col5" >0.0000</td>
+      <td id="T_3a655_row0_col6" class="data row0 col6" >itself</td>
+    </tr>
+    <tr>
+      <th id="T_3a655_level0_row1" class="row_heading level0 row1" >1</th>
+      <td id="T_3a655_row1_col0" class="data row1 col0" >Ordinal('Pclass')</td>
+      <td id="T_3a655_row1_col1" class="data row1 col1" >0.5488</td>
+      <td id="T_3a655_row1_col2" class="data row1 col2" >0.0000</td>
+      <td id="T_3a655_row1_col3" class="data row1 col3" >0.3210</td>
+      <td id="T_3a655_row1_col4" class="data row1 col4" >1.0000</td>
+      <td id="T_3a655_row1_col5" class="data row1 col5" >0.1060</td>
+      <td id="T_3a655_row1_col6" class="data row1 col6" >Sex</td>
+    </tr>
+  </tbody>
+</table></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[39]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Features([&#39;Sex&#39;, &#39;Pclass&#39;, &#39;Fare&#39;, &#39;Age&#39;])
+</pre></div></div>
+</div>
+<ul class="simple">
+<li><p>Amongst qualitatives, feature <code class="docutils literal notranslate"><span class="pre">Sex</span></code> is the most associated with the target <code class="docutils literal notranslate"><span class="pre">Survived</span></code>:</p>
+<ul>
+<li><p>Cramér’s V value is <code class="docutils literal notranslate"><span class="pre">CramervMeasure=0.5337</span></code>, which is above threshold of <code class="docutils literal notranslate"><span class="pre">0.3</span></code></p></li>
+<li><p>It has 0 % of NaNs (<code class="docutils literal notranslate"><span class="pre">Nan=0.0000</span></code>), which is below threshold of <code class="docutils literal notranslate"><span class="pre">0.3</span></code></p></li>
+</ul>
+</li>
+<li><p>For feature <code class="docutils literal notranslate"><span class="pre">Siblings/Spouses</span> <span class="pre">Aboard</span></code> is the least associated with the target <code class="docutils literal notranslate"><span class="pre">Survived</span></code>:</p>
+<ul>
+<li><p>coefficient of determination R’s value is <code class="docutils literal notranslate"><span class="pre">RMeasure=0.0697</span></code>, which is below threshold of <code class="docutils literal notranslate"><span class="pre">0.07</span></code></p></li>
+<li><p>the feature is discarded</p></li>
+</ul>
+</li>
+<li><p>For feature <code class="docutils literal notranslate"><span class="pre">Parents/Children</span> <span class="pre">Aboard</span></code> is the second most associated with the target <code class="docutils literal notranslate"><span class="pre">Survived</span></code>:</p>
+<ul>
+<li><p>coefficient of determination R’s value is <code class="docutils literal notranslate"><span class="pre">RMeasure=0.0955</span></code>, which is above threshold of <code class="docutils literal notranslate"><span class="pre">0.07</span></code></p></li>
+<li><p>Pearson’s r with Feature <code class="docutils literal notranslate"><span class="pre">Fare</span></code> is <code class="docutils literal notranslate"><span class="pre">PearsonFilter=0.2611</span></code>, which is above threshold of <code class="docutils literal notranslate"><span class="pre">0.25</span></code></p></li>
+<li><p>the feature is discarded</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="What's-next?">
+<h2>What’s next?<a class="headerlink" href="#What's-next?" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Thanks to <strong>Selectors</strong>, you’ve selected the best features for your classification task!</p></li>
+<li><p>You can now proceed with your model, but first, make sure to ckeck out <a class="reference external" href="https://autocarver.readthedocs.io/en/latest/carvers_examples.html">Carvers Examples</a> in order to maximize your feature’s predictive power!</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../../../selectors_examples.html" class="btn btn-neutral float-left" title="Selectors Examples" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Mario Defrance.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

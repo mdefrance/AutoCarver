@@ -18,6 +18,7 @@ from .combinations import (
     order_apply_combination,
     xagg_apply_combination,
 )
+from .target_rate import TargetRate
 from .testing import TestKeys, is_viable, test_viability
 
 
@@ -182,6 +183,12 @@ class CombinationEvaluator(ABC):
         self.feature: BaseFeature = None
         self.samples: AggregatedSamples = AggregatedSamples()
         self._statistics_cache = None
+        self._init_target_rate(get_attribute(kwargs, "target_rate"))
+
+    @abstractmethod
+    def _init_target_rate(self, target_rate: TargetRate) -> None:
+        """Initializes target rate."""
+        self.target_rate = target_rate
 
     def __repr__(self) -> str:
         return f"{self.__name__}(max_n_mod={self.max_n_mod})"
@@ -266,7 +273,7 @@ class CombinationEvaluator(ABC):
             self.samples.apply_combination(self.feature)
 
             # udpating statistics
-            self.feature.statistics = self._compute_target_rates(self.samples.train.raw)
+            self.feature.statistics = self.target_rate.compute(self.samples.train.raw)
 
     def _get_best_combination_non_nan(self) -> dict:
         """Computes associations of the tab for each combination of non-nans
@@ -342,10 +349,10 @@ class CombinationEvaluator(ABC):
         """testing the viability of the combination on xagg_train"""
 
         # computing target rate and frequency per value
-        train_rates = self._compute_target_rates(combination["xagg"])
+        train_rates = self.target_rate.compute(combination["xagg"])
 
         # viability on train sample:
-        result = test_viability(train_rates, self.min_freq)
+        result = test_viability(train_rates, self.min_freq, self.target_rate.__name__)
 
         return result
 
@@ -358,16 +365,18 @@ class CombinationEvaluator(ABC):
 
         # case 1: test sample provided and viable on train -> testing robustness
         # getting train target rates
-        train_target_rate = test_results["train_rates"]["target_rate"]
+        train_target_rate = test_results["train_rates"][self.target_rate.__name__]
 
         # grouping the dev sample per modality
         grouped_xagg_dev = self._grouper(self.samples.dev, combination["index_to_groupby"])
 
         # computing target rate and frequency per modality
-        dev_rates = self._compute_target_rates(grouped_xagg_dev)
+        dev_rates = self.target_rate.compute(grouped_xagg_dev)
 
         # viability on dev sample:
-        dev_results = test_viability(dev_rates, self.min_freq, train_target_rate)
+        dev_results = test_viability(
+            dev_rates, self.min_freq, self.target_rate.__name__, train_target_rate
+        )
         test_results = {**test_results, **dev_results}
 
         # checking for viability on both samples
@@ -418,10 +427,6 @@ class CombinationEvaluator(ABC):
     ) -> dict[str, float]:
         """Helper to measure association between X and y (carver specific)"""
 
-    @abstractmethod
-    def _compute_target_rates(self, xagg: Union[Series, DataFrame]) -> DataFrame:
-        """helper to print an XAGG (carver specific)"""
-
     def _historize_remaining_combinations(
         self, associations: list[dict], n_combination: int
     ) -> None:
@@ -470,7 +475,7 @@ class CombinationEvaluator(ABC):
         """historizes the raw combination"""
 
         # setting feature's statistics
-        self.feature.statistics = self._compute_target_rates(self.samples.train.raw)
+        self.feature.statistics = self.target_rate.compute(self.samples.train.raw)
 
         # computing association of sample
         raw_association = self._association_measure(

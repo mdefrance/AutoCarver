@@ -8,18 +8,15 @@ from typing import Union
 from pandas import DataFrame, Series
 
 from ...features import BaseFeature, Features
-from ...utils import get_bool_attribute
+from ...utils import get_bool_attribute, has_idisplay
 from ..filters import BaseFilter
 from ..measures import BaseMeasure
 from .pretty_print import format_ranked_features, prettier_measures
 
 # trying to import extra dependencies
-try:
+_has_idisplay = has_idisplay()
+if _has_idisplay:
     from IPython.display import display_html
-except ImportError:
-    _has_idisplay = False
-else:
-    _has_idisplay = True
 
 
 class BaseSelector(ABC):
