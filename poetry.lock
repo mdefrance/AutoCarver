@@ -1031,7 +1031,7 @@ testing = ["Django", "attrs", "colorama", "docopt", "pytest (<9.0.0)"]
 name = "jinja2"
 version = "3.1.5"
 description = "A very fast and expressive template engine."
-optional = true
+optional = false
 python-versions = ">=3.7"
 files = [
     {file = "jinja2-3.1.5-py3-none-any.whl", hash = "sha256:aba0f4dc9ed8013c424088f68a5c226f7d6097ed89b246d7749c2ec4175c6adb"},
@@ -1282,7 +1282,7 @@ files = [
 name = "markupsafe"
 version = "3.0.2"
 description = "Safely add untrusted strings to HTML/XML markup."
-optional = true
+optional = false
 python-versions = ">=3.9"
 files = [
     {file = "MarkupSafe-3.0.2-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:7e94c425039cde14257288fd61dcfb01963e658efbc0ff54f5306b06054700f8"},
@@ -3095,4 +3095,4 @@ tests = ["Flake8-pyproject", "black", "flake8", "icecream", "isort", "pylint", "
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9, <3.13"
-content-hash = "f6c5686ce7072946dcc82963f772a38af30d9968d4da4b02cc12db8e3db8fa25"
+content-hash = "e7f3b1133fb92c4a75698168bf77ef88fac153d6117a4f60b6d8d6a40721b708"

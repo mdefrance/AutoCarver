@@ -220,54 +220,54 @@ def test_add_info_multiple_failures():
 
 def test_viability_min_freq_and_distinct_rates():
     """Test viability when minimum frequency and distinct rates are met."""
-    rates = DataFrame({"frequency": [0.2, 0.3, 0.4], "target_rate": [0.1, 0.2, 0.3]})
+    rates = DataFrame({"frequency": [0.2, 0.3, 0.4], "target_mean": [0.1, 0.2, 0.3]})
     min_freq = 0.1
-    result = _test_viability(rates, min_freq)
+    result = _test_viability(rates, min_freq, "target_mean")
     assert result["train"][TestKeys.VIABLE.value] is True
     assert result["train_rates"].equals(rates)
 
 
 def test_viability_min_freq_not_met():
     """Test viability when minimum frequency is not met."""
-    rates = DataFrame({"frequency": [0.05, 0.3, 0.4], "target_rate": [0.1, 0.2, 0.3]})
+    rates = DataFrame({"frequency": [0.05, 0.3, 0.4], "target_mean": [0.1, 0.2, 0.3]})
     min_freq = 0.1
-    result = _test_viability(rates, min_freq)
+    result = _test_viability(rates, min_freq, "target_mean")
     assert result["train"][TestKeys.VIABLE.value] is False
     assert result["train_rates"].equals(rates)
 
 
 def test_viability_distinct_rates_not_met():
     """Test viability when distinct rates are not met."""
-    rates = DataFrame({"frequency": [0.2, 0.3, 0.4], "target_rate": [0.1, 0.1, 0.3]})
+    rates = DataFrame({"frequency": [0.2, 0.3, 0.4], "target_mean": [0.1, 0.1, 0.3]})
     min_freq = 0.1
-    result = _test_viability(rates, min_freq)
+    result = _test_viability(rates, min_freq, "target_mean")
     assert result["train"][TestKeys.VIABLE.value] is False
     assert result["train_rates"].equals(rates)
 
 
 def test_viability_with_train_target_rate():
     """Test viability with train target rate provided."""
-    rates = DataFrame({"frequency": [0.2, 0.3, 0.4], "target_rate": [0.1, 0.2, 0.3]})
+    rates = DataFrame({"frequency": [0.2, 0.3, 0.4], "target_mean": [0.1, 0.2, 0.3]})
     train_target_rate = Series([0.1, 0.2, 0.3])
     min_freq = 0.1
-    result = _test_viability(rates, min_freq, train_target_rate)
+    result = _test_viability(rates, min_freq, "target_mean", train_target_rate)
     assert result["dev"][TestKeys.VIABLE.value] is True
 
 
 def test_viability_with_train_target_rate_ordering_not_met():
     """Test viability when train target rate ordering is not met."""
-    rates = DataFrame({"frequency": [0.2, 0.3, 0.4], "target_rate": [0.1, 0.2, 0.3]})
+    rates = DataFrame({"frequency": [0.2, 0.3, 0.4], "target_mean": [0.1, 0.2, 0.3]})
     train_target_rate = Series([0.3, 0.2, 0.1])
     min_freq = 0.1
-    result = _test_viability(rates, min_freq, train_target_rate)
+    result = _test_viability(rates, min_freq, "target_mean", train_target_rate)
     assert result["dev"][TestKeys.VIABLE.value] is False
 
 
 def test_viability_empty_rates():
     """Test viability with empty rates."""
-    rates = DataFrame({"frequency": [], "target_rate": []})
+    rates = DataFrame({"frequency": [], "target_mean": []})
     min_freq = 0.1
-    result = _test_viability(rates, min_freq)
+    result = _test_viability(rates, min_freq, "target_mean")
     expected = {
         "train": {"viable": True, TestKeys.INFO.value: TestMessages.PASSED_TESTS.value},
         "train_rates": rates,

@@ -1,7 +1,8 @@
 """ defines a target rate"""
 
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
 from typing import Union
+
 from pandas import DataFrame, Series
 
 

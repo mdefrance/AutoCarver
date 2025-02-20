@@ -18,8 +18,8 @@ from .combinations import (
     order_apply_combination,
     xagg_apply_combination,
 )
-from .testing import TestKeys, is_viable, test_viability
 from .target_rate import TargetRate
+from .testing import TestKeys, is_viable, test_viability
 
 
 @dataclass

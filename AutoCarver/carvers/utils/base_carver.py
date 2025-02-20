@@ -17,16 +17,13 @@ from ...combinations import (
 )
 from ...discretizers import BaseDiscretizer, Discretizer, Sample
 from ...features import BaseFeature, Features, GroupedList
-from ...utils import extend_docstring, get_attribute, get_bool_attribute
+from ...utils import extend_docstring, get_attribute, get_bool_attribute, has_idisplay
 from .pretty_print import index_mapper, prettier_xagg
 
 # trying to import extra dependencies
-try:
+_has_idisplay = has_idisplay()
+if _has_idisplay:
     from IPython.display import display_html
-except ImportError:
-    _has_idisplay = False
-else:
-    _has_idisplay = True
 
 
 @dataclass

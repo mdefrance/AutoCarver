@@ -152,7 +152,7 @@ def test_compute_target_rates_basic(evaluator: BinaryCombinationEvaluator):
     result = evaluator.target_rate.compute(xagg)
     expected = DataFrame(
         {
-            "target_rate": [0.333333, 0.428571, 0.454545],
+            "target_mean": [0.333333, 0.428571, 0.454545],
             "frequency": [0.142857, 0.333333, 0.523810],
         },
         index=["a", "b", "c"],
@@ -165,7 +165,8 @@ def test_compute_target_rates_empty(evaluator: BinaryCombinationEvaluator):
     """Test _compute_target_rates with an empty xagg."""
     xagg = DataFrame(columns=[0, 1])
     result = evaluator.target_rate.compute(xagg)
-    expected = DataFrame(columns=["target_rate", "frequency"])
+    print(result)
+    expected = DataFrame(columns=["target_mean", "frequency"])
     assert result.equals(expected)
 
 
@@ -179,7 +180,7 @@ def test_compute_target_rates_single_row(evaluator: BinaryCombinationEvaluator):
     """Test _compute_target_rates with a single row."""
     xagg = DataFrame({0: [10], 1: [5]}, index=["a"])
     result = evaluator.target_rate.compute(xagg)
-    expected = DataFrame({"target_rate": [0.333333], "frequency": [1.0]}, index=["a"])
+    expected = DataFrame({"target_mean": [0.333333], "frequency": [1.0]}, index=["a"])
     print(result)
     assert allclose(result, expected)
 
@@ -189,7 +190,7 @@ def test_compute_target_rates_single_column(evaluator: BinaryCombinationEvaluato
     xagg = DataFrame({1: [5, 15, 25]}, index=["a", "b", "c"])
     result = evaluator.target_rate.compute(xagg)
     expected = DataFrame(
-        {"target_rate": [1.0, 1.0, 1.0], "frequency": [0.111111, 0.333333, 0.555556]},
+        {"target_mean": [1.0, 1.0, 1.0], "frequency": [0.111111, 0.333333, 0.555556]},
         index=["a", "b", "c"],
     )
     print(result)
@@ -205,7 +206,7 @@ def test_compute_target_rates_with_nan(evaluator: BinaryCombinationEvaluator):
     print(xagg)
     result = evaluator.target_rate.compute(xagg)
     expected = DataFrame(
-        {"target_rate": [1.0, 0.0, nan], "frequency": [0.5, 0.5, 0.0]},
+        {"target_mean": [1.0, 0.0, nan], "frequency": [0.5, 0.5, 0.0]},
         index=["a", "b", "c"],
     )
     print(result)
@@ -230,7 +231,7 @@ def test_compute_target_rates_some_nan(evaluator: BinaryCombinationEvaluator):
     xagg = get_crosstab(X, y, feature)
     result = evaluator.target_rate.compute(xagg)
     expected = DataFrame(
-        {"target_rate": [1.0, 0, 1.0], "frequency": [0.5, 0.25, 0.25]},
+        {"target_mean": [1.0, 0, 1.0], "frequency": [0.5, 0.25, 0.25]},
         index=["a", "b", "c"],
     )
     print(result)
@@ -620,13 +621,13 @@ def test_viability_train(evaluator: BinaryCombinationEvaluator):
         {
             "train": {TestKeys.VIABLE.value: True},
             "train_rates": DataFrame(
-                {"target_rate": [1.0, 0.333333], "frequency": [0.4, 0.6]}, index=["a", "c"]
+                {"target_mean": [1.0, 0.333333], "frequency": [0.4, 0.6]}, index=["a", "c"]
             ),
         },
         {
             "train": {TestKeys.VIABLE.value: True},
             "train_rates": DataFrame(
-                {"target_rate": [0.5, 1.0], "frequency": [0.8, 0.2]}, index=["a", "c"]
+                {"target_mean": [0.5, 1.0], "frequency": [0.8, 0.2]}, index=["a", "c"]
             ),
         },
     ]

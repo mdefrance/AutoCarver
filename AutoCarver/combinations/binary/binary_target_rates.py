@@ -2,8 +2,8 @@
 
 from abc import ABC
 
-from pandas import DataFrame, Series
 from numpy import log
+from pandas import DataFrame, Series
 
 from ..utils import TargetRate
 
