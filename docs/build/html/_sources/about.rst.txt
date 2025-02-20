@@ -1,8 +1,6 @@
 About
 =====
 
-.. warning::
-   Work in progress! Sorry for the potential errors and lack of documentation.
 
 Why AutoCarver?
 ---------------

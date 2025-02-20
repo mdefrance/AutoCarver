@@ -7,8 +7,7 @@ from pandas import DataFrame, notna
 from scipy.stats import chi2_contingency
 
 from ..utils.combination_evaluator import AggregatedSample, CombinationEvaluator
-
-# from numpy import add, array, log, searchsorted, sqrt, unique, zeros
+from .binary_target_rates import BinaryTargetRate, TargetMean
 
 
 class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
@@ -16,40 +15,14 @@ class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
 
     is_y_binary = True
 
-    def _compute_target_rates(self, xagg: DataFrame) -> DataFrame:
-        """Prints a binary xtab's statistics
-
-        - there should not be nans in xagg
-
-        Parameters
-        ----------
-        xagg : Dataframe
-            A crosstab, by default None
-
-        Returns
-        -------
-        DataFrame
-            Target rate and frequency per modality
-        """
-        # checking for an xtab
-        stats = None
-        if xagg is not None:
-            # target rate and frequency statistics per modality
-            target_rate = xagg[1].divide(xagg.sum(axis=1))
-            frequency = xagg.sum(axis=1) / xagg.sum().sum()
-            # odds_ratio = target_rate / (1 - target_rate)
-            # log_odds = log(odds_ratio)
-
-            stats = DataFrame(
-                {
-                    "target_rate": target_rate,
-                    "frequency": frequency,
-                    # "odds_ratio": odds_ratio,
-                    # "log_odds": log_odds,
-                }
-            )
-
-        return stats
+    def _init_target_rate(self, target_rate: BinaryTargetRate) -> None:
+        """Initializes target rate."""
+        if target_rate is None:
+            self.target_rate = TargetMean()
+        elif not isinstance(target_rate, BinaryTargetRate):
+            raise ValueError("target_rate must be a BinaryTargetRate")
+        else:
+            self.target_rate = target_rate
 
     def _association_measure(
         self, xagg: AggregatedSample, n_obs: int = None, tol: float = 1e-10

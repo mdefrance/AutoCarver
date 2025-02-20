@@ -215,7 +215,7 @@ def test_compute_target_rates_basic(evaluator: ContinuousCombinationEvaluator):
     feature = OrdinalFeature("feature", ["A", "B", "C"])
     xagg = get_target_values_by_modality(X, y, feature)
 
-    result = evaluator._compute_target_rates(xagg)
+    result = evaluator.target_rate.compute(xagg)
     expected = DataFrame(
         {"target_rate": [2.0, 3.0, 5.0], "frequency": [2 / 5, 2 / 5, 1 / 5]}, index=["A", "B", "C"]
     )
@@ -228,7 +228,7 @@ def test_compute_target_rates_with_nan(evaluator: ContinuousCombinationEvaluator
     feature = OrdinalFeature("feature", ["A", "B", "C"])
     xagg = get_target_values_by_modality(X, y, feature)
 
-    result = evaluator._compute_target_rates(xagg)
+    result = evaluator.target_rate.compute(xagg)
     expected = DataFrame(
         {"target_rate": [2.0, 3.0, None], "frequency": [2 / 4, 2 / 4, 0]}, index=["A", "B", "C"]
     )
@@ -241,7 +241,7 @@ def test_compute_target_rates_unordered_labels(evaluator: ContinuousCombinationE
     feature = OrdinalFeature("feature", ["C", "A", "B"])
     xagg = get_target_values_by_modality(X, y, feature)
 
-    result = evaluator._compute_target_rates(xagg)
+    result = evaluator.target_rate.compute(xagg)
     expected = DataFrame(
         {"target_rate": [5.0, 2.0, 3.0], "frequency": [1 / 5, 2 / 5, 2 / 5]}, index=["C", "A", "B"]
     )
@@ -254,7 +254,7 @@ def test_compute_target_rates_missing_labels(evaluator: ContinuousCombinationEva
     feature = OrdinalFeature("feature", ["A", "B"])
     xagg = get_target_values_by_modality(X, y, feature)
 
-    result = evaluator._compute_target_rates(xagg)
+    result = evaluator.target_rate.compute(xagg)
     expected = DataFrame({"target_rate": [2.0, 3.0], "frequency": [2 / 4, 2 / 4]}, index=["A", "B"])
     assert result.equals(expected)
 
@@ -265,7 +265,7 @@ def test_compute_target_rates_extra_labels(evaluator: ContinuousCombinationEvalu
     feature = OrdinalFeature("feature", ["A", "B", "C", "D"])
     xagg = get_target_values_by_modality(X, y, feature)
 
-    result = evaluator._compute_target_rates(xagg)
+    result = evaluator.target_rate.compute(xagg)
     expected = DataFrame(
         {"target_rate": [2.0, 3.0, 5.0, None], "frequency": [2 / 5, 2 / 5, 1 / 5, 0]},
         index=["A", "B", "C", "D"],

@@ -149,7 +149,7 @@ def test_load_cramerv(tmp_path):
 def test_compute_target_rates_basic(evaluator: BinaryCombinationEvaluator):
     """Test _compute_target_rates with a basic xagg."""
     xagg = DataFrame({0: [10, 20, 30], 1: [5, 15, 25]}, index=["a", "b", "c"])
-    result = evaluator._compute_target_rates(xagg)
+    result = evaluator.target_rate.compute(xagg)
     expected = DataFrame(
         {
             "target_rate": [0.333333, 0.428571, 0.454545],
@@ -164,21 +164,21 @@ def test_compute_target_rates_basic(evaluator: BinaryCombinationEvaluator):
 def test_compute_target_rates_empty(evaluator: BinaryCombinationEvaluator):
     """Test _compute_target_rates with an empty xagg."""
     xagg = DataFrame(columns=[0, 1])
-    result = evaluator._compute_target_rates(xagg)
+    result = evaluator.target_rate.compute(xagg)
     expected = DataFrame(columns=["target_rate", "frequency"])
     assert result.equals(expected)
 
 
 def test_compute_target_rates_none(evaluator: BinaryCombinationEvaluator):
     """Test _compute_target_rates with None."""
-    result = evaluator._compute_target_rates(None)
+    result = evaluator.target_rate.compute(None)
     assert result is None
 
 
 def test_compute_target_rates_single_row(evaluator: BinaryCombinationEvaluator):
     """Test _compute_target_rates with a single row."""
     xagg = DataFrame({0: [10], 1: [5]}, index=["a"])
-    result = evaluator._compute_target_rates(xagg)
+    result = evaluator.target_rate.compute(xagg)
     expected = DataFrame({"target_rate": [0.333333], "frequency": [1.0]}, index=["a"])
     print(result)
     assert allclose(result, expected)
@@ -187,7 +187,7 @@ def test_compute_target_rates_single_row(evaluator: BinaryCombinationEvaluator):
 def test_compute_target_rates_single_column(evaluator: BinaryCombinationEvaluator):
     """Test _compute_target_rates with a single column."""
     xagg = DataFrame({1: [5, 15, 25]}, index=["a", "b", "c"])
-    result = evaluator._compute_target_rates(xagg)
+    result = evaluator.target_rate.compute(xagg)
     expected = DataFrame(
         {"target_rate": [1.0, 1.0, 1.0], "frequency": [0.111111, 0.333333, 0.555556]},
         index=["a", "b", "c"],
@@ -203,7 +203,7 @@ def test_compute_target_rates_with_nan(evaluator: BinaryCombinationEvaluator):
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     xagg = get_crosstab(X, y, feature)
     print(xagg)
-    result = evaluator._compute_target_rates(xagg)
+    result = evaluator.target_rate.compute(xagg)
     expected = DataFrame(
         {"target_rate": [1.0, 0.0, nan], "frequency": [0.5, 0.5, 0.0]},
         index=["a", "b", "c"],
@@ -219,7 +219,7 @@ def test_compute_target_rates_all_nan(evaluator: BinaryCombinationEvaluator):
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     xagg = get_crosstab(X, y, feature)
     with raises(KeyError):
-        evaluator._compute_target_rates(xagg)
+        evaluator.target_rate.compute(xagg)
 
 
 def test_compute_target_rates_some_nan(evaluator: BinaryCombinationEvaluator):
@@ -228,7 +228,7 @@ def test_compute_target_rates_some_nan(evaluator: BinaryCombinationEvaluator):
     y = Series([1, nan, 1, 0, 1])
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     xagg = get_crosstab(X, y, feature)
-    result = evaluator._compute_target_rates(xagg)
+    result = evaluator.target_rate.compute(xagg)
     expected = DataFrame(
         {"target_rate": [1.0, 0, 1.0], "frequency": [0.5, 0.25, 0.25]},
         index=["a", "b", "c"],

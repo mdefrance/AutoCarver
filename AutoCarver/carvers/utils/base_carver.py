@@ -343,8 +343,8 @@ class BaseCarver(BaseDiscretizer, ABC):
         self, formatted_xagg: DataFrame, formatted_xagg_dev: DataFrame
     ) -> tuple[str, str]:
         """Returns pretty-printed XAGG DataFrames."""
-        nice_xagg = self.combinations._compute_target_rates(formatted_xagg)
-        nice_xagg_dev = self.combinations._compute_target_rates(formatted_xagg_dev)
+        nice_xagg = self.combinations.target_rate.compute(formatted_xagg)
+        nice_xagg_dev = self.combinations.target_rate.compute(formatted_xagg_dev)
         return nice_xagg, nice_xagg_dev
 
     def _print_raw(self, nice_xagg: str, nice_xagg_dev: str, xagg_dev: DataFrame = None) -> None:
