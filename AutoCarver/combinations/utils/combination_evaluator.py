@@ -138,7 +138,6 @@ class CombinationEvaluator(ABC):
     def __init__(
         self,
         max_n_mod: int = 5,
-        target_rate: TargetRate = None,
         **kwargs,
     ) -> None:
         """
@@ -184,7 +183,7 @@ class CombinationEvaluator(ABC):
         self.feature: BaseFeature = None
         self.samples: AggregatedSamples = AggregatedSamples()
         self._statistics_cache = None
-        self._init_target_rate(target_rate)
+        self._init_target_rate(get_attribute(kwargs, "target_rate"))
 
     @abstractmethod
     def _init_target_rate(self, target_rate: TargetRate) -> None:
