@@ -222,7 +222,13 @@ class BaseCarver(BaseDiscretizer, ABC):
 
         # checking for fitted features
         if self.features.is_fitted:
-            raise ValueError(f"[{self.__name__}] features are already fitted!")
+            raise ValueError(
+                f"[{self.__name__}] features are already fitted or previous fit failed. "
+                "Please reset your features."
+            )
+
+        # setting is_fitted
+        self.features.is_fitted = True
 
         # initiating samples
         samples = Samples(Sample(X, y), Sample(X_dev, y_dev))
@@ -247,9 +253,6 @@ class BaseCarver(BaseDiscretizer, ABC):
 
         # discretizing features based on each feature's values_order
         super().fit(X, y)
-
-        # setting is_fitted
-        self.features.is_fitted = True
 
         return self
 

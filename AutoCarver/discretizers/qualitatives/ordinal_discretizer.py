@@ -206,11 +206,11 @@ def is_next_modality_closer(
         return next_freq < previous_freq
 
     # case 2: next modality is the only below min_freq -> underrepresented modality is choosen
-    elif next_freq < min_freq <= previous_freq:
+    if next_freq < min_freq <= previous_freq:
         return True
 
     # case 3: both are below or above min_freq -> closest modality by target rate
-    elif both_below_min_freq or both_above_min_freq:
+    if both_below_min_freq or both_above_min_freq:
         return is_next_modality_closer_by_target_rate(idx, target_rates)
 
     # by default closest modality is the previous one
