@@ -6,8 +6,7 @@ from pandas import DataFrame, Series
 from ...features import BaseFeature, Features, GroupedList
 from ...features.qualitatives import nan_unique
 from ...utils import extend_docstring
-from .base_discretizer import BaseDiscretizer, Sample
-from .multiprocessing import apply_async_function
+from ..utils import BaseDiscretizer, Sample, apply_async_function
 
 
 class StringDiscretizer(BaseDiscretizer):
@@ -29,7 +28,7 @@ class StringDiscretizer(BaseDiscretizer):
         super().__init__(features=features, **kwargs)
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: DataFrame, y: Series = None) -> None:  # pylint: disable=W0222
+    def fit(self, X: DataFrame, y: Series = None) -> None:
         self._log_if_verbose()  # verbose if requested
 
         # checking for binary target and copying X
@@ -81,45 +80,3 @@ def fit_feature(feature: BaseFeature, df_feature: Series):
         order.group(value, str_value)
 
     return feature.version, order
-
-
-class TimedeltaDiscretizer(BaseDiscretizer):
-    """TODO Converts specified columns of a DataFrame into float timedeltas.
-
-    * Keeps NaN inplace
-    """
-
-    __name__ = "TimedeltaDiscretizer"
-
-    @extend_docstring(BaseDiscretizer.__init__)
-    def __init__(self, features: list[BaseFeature], **kwargs) -> None:
-        """
-        Parameters
-        ----------
-        features : list[str]
-            List of column names of qualitative features to be converted as string
-        """
-        # initiating features
-        features = Features(features, **kwargs)
-
-        # Initiating BaseDiscretizer
-        super().__init__(features=features, **kwargs)
-
-    @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: DataFrame, y: Series = None) -> None:  # pylint: disable=W0222
-        self._log_if_verbose()  # verbose if requested
-
-        # checking for binary target and copying X
-        sample = self._prepare_data(Sample(X, y))
-
-        # transforming all features
-        all_orders = apply_async_function(fit_feature, self.features, self.n_jobs, sample.X)
-
-        # updating features accordingly
-        self.features.update(dict(all_orders), replace=True)
-        self.features.fit(**sample)
-
-        # discretizing features based on each feature's values_order
-        super().fit(X, y)
-
-        return self

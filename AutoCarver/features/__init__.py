@@ -9,7 +9,14 @@ from .qualitatives import (
     get_ordinal_features,
     get_qualitative_features,
 )
-from .quantitatives import QuantitativeFeature, get_quantitative_features
+from .quantitatives import (
+    QuantitativeFeature,
+    get_quantitative_features,
+    DatetimeFeature,
+    NumericalFeature,
+    get_datetime_features,
+    get_numerical_features,
+)
 from .utils.base_feature import BaseFeature
 from .utils.grouped_list import GroupedList
 
@@ -27,4 +34,8 @@ __all__ = [
     "OrdinalFeature",
     "QuantitativeFeature",
     "QualitativeFeature",
+    "DatetimeFeature",
+    "NumericalFeature",
+    "get_datetime_features",
+    "get_numerical_features",
 ]

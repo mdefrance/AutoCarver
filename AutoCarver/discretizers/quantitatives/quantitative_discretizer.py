@@ -6,6 +6,7 @@ from pandas import DataFrame, Series, unique
 
 from ...features import Features, QuantitativeFeature
 from ...utils import extend_docstring
+from ..dtypes import TimedeltaDiscretizer
 from ..qualitatives import OrdinalDiscretizer
 from ..utils.base_discretizer import BaseDiscretizer, Sample
 from .continuous_discretizer import ContinuousDiscretizer
@@ -63,6 +64,12 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         DataFrame
             A formatted copy of X
         """
+
+        # fitting time delta features
+        if len(self.features.datetimes) > 0:
+            discretizer = TimedeltaDiscretizer(features=self.features.datetimes, **self.kwargs)
+            discretizer.fit(sample.X)
+
         # checking for binary target and copying X
         sample = super()._prepare_data(sample)
 

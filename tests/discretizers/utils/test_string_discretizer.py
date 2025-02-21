@@ -3,7 +3,7 @@
 from numpy import nan
 from pandas import DataFrame, Series
 
-from AutoCarver.discretizers.utils.type_discretizers import StringDiscretizer, fit_feature
+from AutoCarver.discretizers.dtypes.string_discretizer import StringDiscretizer, fit_feature
 from AutoCarver.features import CategoricalFeature, Features, OrdinalFeature
 
 

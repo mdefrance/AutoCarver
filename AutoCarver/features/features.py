@@ -13,7 +13,13 @@ from .qualitatives import (
     get_categorical_features,
     get_ordinal_features,
 )
-from .quantitatives import QuantitativeFeature, get_quantitative_features
+from .quantitatives import (
+    DatetimeFeature,
+    NumericalFeature,
+    QuantitativeFeature,
+    get_datetime_features,
+    get_numerical_features,
+)
 from .utils.base_feature import BaseFeature
 from .utils.grouped_list import GroupedList
 
@@ -81,8 +87,9 @@ class Features:
     def __init__(
         self,
         categoricals: list[Union[CategoricalFeature, str]] = None,
-        quantitatives: list[Union[QuantitativeFeature, str]] = None,
         ordinals: Union[list[OrdinalFeature], dict[str, list[str]]] = None,
+        numericals: list[Union[NumericalFeature, str]] = None,
+        datetimes: list[Union[DatetimeFeature, tuple[str, ...]]] = None,
         **kwargs,
     ) -> None:
         """
@@ -116,6 +123,12 @@ class Features:
         default : str, optional
             Label for default values, by default ``"__OTHER__"``
         """
+        # checking inputs
+        if "quantitatives" in kwargs:
+            raise DeprecationWarning("quantitatives is deprecated, use numercials instead")
+        if "qualitatives" in kwargs:
+            raise DeprecationWarning("qualitatives is deprecated, use categoricals instead")
+
         # initiating ordinal values if not provided
         if ordinals is None:
             ordinals = {}
@@ -125,7 +138,8 @@ class Features:
 
         # casting features accordingly
         all_features = cast_features(categoricals, CategoricalFeature, **kwargs)
-        all_features += cast_features(quantitatives, QuantitativeFeature, **kwargs)
+        all_features += cast_features(numericals, NumericalFeature, **kwargs)
+        all_features += cast_features(datetimes, DatetimeFeature, **kwargs)
         all_features += cast_features(
             ordinal_features, OrdinalFeature, ordinal_values=ordinals, **kwargs
         )
@@ -133,12 +147,13 @@ class Features:
         # ensuring features are grouped accordingly (already initiated features)
         self._categoricals = get_categorical_features(all_features)
         self._ordinals = get_ordinal_features(all_features)
-        self._quantitatives = get_quantitative_features(all_features)
+        self._numericals = get_numerical_features(all_features)
+        self._datetimes = get_datetime_features(all_features)
 
         # checking that features were passed as input
-        if len(self.categoricals) == 0 and len(self.quantitatives) == 0 and len(self.ordinals) == 0:
+        if len(self.qualitatives) == 0 and len(self.quantitatives) == 0:
             raise ValueError(
-                f"[{self}] No feature passed as input. Please provide column names"
+                f"[{self.__name__}] No feature passed as input. Please provide column names"
                 " by setting categoricals, quantitatives or ordinals."
             )
 
@@ -228,11 +243,6 @@ class Features:
         return get_versions(self.to_list())
 
     @property
-    def qualitatives(self) -> list[QualitativeFeature]:
-        """Returns all qualitative features"""
-        return self.categoricals + self.ordinals
-
-    @property
     def categoricals(self) -> list[CategoricalFeature]:
         """Returns all categorical features"""
         return self._categoricals
@@ -263,19 +273,44 @@ class Features:
         self._ordinals = values
 
     @property
+    def qualitatives(self) -> list[QualitativeFeature]:
+        """Returns all qualitative features"""
+        return self.categoricals + self.ordinals
+
+    @property
+    def datetimes(self) -> list[DatetimeFeature]:
+        """Returns all datetime features"""
+        return self._datetimes
+
+    @datetimes.setter
+    def datetimes(self, values: list[DatetimeFeature]) -> None:
+        """sets datetime features"""
+
+        if not all(isinstance(feature, DatetimeFeature) for feature in values):
+            raise AttributeError(
+                f"[{self}] Trying to set datetime feature with wrongly typed feature"
+            )
+        self._datetimes = values
+
+    @property
+    def numericals(self) -> list[NumericalFeature]:
+        """Returns all numerical features"""
+        return self._numericals
+
+    @numericals.setter
+    def numericals(self, values: list[NumericalFeature]) -> None:
+        """sets numerical features"""
+
+        if not all(isinstance(feature, NumericalFeature) for feature in values):
+            raise AttributeError(
+                f"[{self}] Trying to set numerical feature with wrongly typed feature"
+            )
+        self._numericals = values
+
+    @property
     def quantitatives(self) -> list[QuantitativeFeature]:
         """Returns all quantitative features"""
-        return self._quantitatives
-
-    @quantitatives.setter
-    def quantitatives(self, values: list[QuantitativeFeature]) -> None:
-        """sets quantitative features"""
-
-        if not all(isinstance(feature, QuantitativeFeature) for feature in values):
-            raise AttributeError(
-                f"[{self}] Trying to set quantitative feature with wrongly typed feature"
-            )
-        self._quantitatives = values
+        return self.numericals + self.datetimes
 
     @property
     def dropna(self) -> bool:
@@ -414,6 +449,17 @@ class Features:
         """Returns all features with specified version_tag"""
 
         return [feature for feature in self if feature.version_tag == y_class]
+
+    def convert_to_timedeltas(self, X: DataFrame) -> DataFrame:
+        """Converts features to timedeltas if needed"""
+
+        # converting datetime features to timedeltas
+        for feature in self.datetimes:
+            # checking for fitted feature
+            if feature.unit is not None:
+                X[feature.version] = feature.convert_to_timedelta(X)
+
+        return X
 
     @property
     def summary(self) -> DataFrame:
@@ -558,7 +604,7 @@ def cast_features(
         ordinal_values: dict[str, list[str]] = {}
 
     # initiating list of converted features
-    converted_features: list[target_class] = []
+    converted_features = []
 
     # iterating over each feature
     for feature in features:
@@ -567,6 +613,11 @@ def cast_features(
             converted_features += [
                 target_class(feature, values=ordinal_values.get(feature), **kwargs)
             ]
+
+        # case of tuple (datetime feature)
+        elif isinstance(feature, tuple) and target_class == DatetimeFeature:
+            converted_features += [DatetimeFeature(*feature, **kwargs)]
+
         # already a BaseFeature
         elif isinstance(feature, BaseFeature):
             converted_features += [feature]

@@ -7,8 +7,8 @@ from pandas import DataFrame, Series, unique
 
 from ...features import BaseFeature, Features, GroupedList
 from ...utils import extend_docstring
+from ..dtypes import StringDiscretizer
 from ..utils.base_discretizer import BaseDiscretizer, Sample
-from ..utils.type_discretizers import StringDiscretizer
 
 
 class ChainedDiscretizer(BaseDiscretizer):

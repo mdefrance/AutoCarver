@@ -70,13 +70,15 @@ class BaseFeature(ABC):
 
     is_quantitative = False
     """Whether or not feature is quantitative"""
+    is_numerical = False
+    """Whether or not feature is quantitative"""
+    is_datetime = False
+    """Whether or not feature is quantitative"""
 
     is_qualitative = False
     """Whether or not feature is qualitative"""
-
     is_categorical = False
     """Whether or not feature is categorical"""
-
     is_ordinal = False
     """Whether or not feature is ordinal"""
 

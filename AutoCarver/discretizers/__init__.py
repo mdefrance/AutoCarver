@@ -1,6 +1,7 @@
 """ Loads Discretization tools."""
 
 from .discretizer import Discretizer
+from .dtypes import StringDiscretizer
 from .qualitatives import (
     CategoricalDiscretizer,
     ChainedDiscretizer,
@@ -9,7 +10,6 @@ from .qualitatives import (
 )
 from .quantitatives import ContinuousDiscretizer, QuantitativeDiscretizer
 from .utils import BaseDiscretizer, Sample
-from .dtypes import StringDiscretizer
 
 __all__ = [
     "BaseDiscretizer",

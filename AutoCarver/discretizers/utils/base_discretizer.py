@@ -61,6 +61,26 @@ class Sample:
         return features.unfillna(self.X)
 
 
+def check_missing_columns(features: Features, x_copy: DataFrame, by_version: bool = False) -> None:
+    """Checks for missing columns in a DataFrame by feature name"""
+
+    # checking for feature names in columns
+    missing_columns = [feature for feature in features if feature.name not in x_copy]
+    if by_version:
+        missing_columns = [feature for feature in features if feature.version not in x_copy]
+
+    # checking for reference date in columns
+    missing_columns += [
+        feature.reference for feature in features.datetimes if feature.reference not in x_copy
+    ]
+
+    if len(missing_columns) > 0:
+        raise ValueError(
+            f"Requested discretization of {str(missing_columns)} but "
+            "columns are missing from provided X. Please check your inputs! "
+        )
+
+
 class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
     """Applies discretization using a dict of GroupedList to transform a DataFrame's columns.
 
@@ -233,23 +253,16 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             x_copy = X.copy()
 
         # checking for input columns by feature name
-        missing_columns = [feature for feature in self.features if feature.name not in x_copy]
-        if len(missing_columns) > 0:
-            raise ValueError(
-                f"[{self.__name__}] Requested discretization of {str(missing_columns)} but "
-                "those columns are missing from provided X. Please check your inputs! "
-            )
+        check_missing_columns(self.features, x_copy)
+
+        # setting timedelta features
+        x_copy = self.features.convert_to_timedeltas(x_copy)
 
         # casting features for multiclass targets
         x_copy = self._cast_features(x_copy)
 
         # checking for input columns by feature version
-        missing_columns = [feature for feature in self.features if feature.version not in x_copy]
-        if len(missing_columns) > 0:
-            raise ValueError(
-                f"[{self.__name__}] Requested discretization of {str(missing_columns)} but "
-                "those columns are missing from provided X. Please check your inputs! "
-            )
+        check_missing_columns(self.features, x_copy, by_version=True)
 
         return x_copy
 
