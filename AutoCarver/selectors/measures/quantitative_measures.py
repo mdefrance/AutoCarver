@@ -1,5 +1,4 @@
-""" Measures of association between a Quantitative feature and binary target.
-"""
+"""Measures of association between a Quantitative feature and binary target."""
 
 from math import sqrt
 
@@ -46,14 +45,21 @@ class KruskalMeasure(ReversibleMeasure):
             x, y = y, x
 
         # ckecking for nans
-        nans = x.isnull()
+        nans = x.isnull() | x.isna()
 
         # getting y values
         y_values = y.unique()
 
         # computing Kruskal-Wallis statistic
-        kw = kruskal(*tuple(x[(~nans) & (y == y_value)] for y_value in y_values))
-        self.value = kw[0] if kw else nan
+        self.value = nan
+        if not all(nans):
+            try:
+                kw = kruskal(*tuple(x[(~nans) & (y == y_value)] for y_value in y_values))
+                if kw:
+                    self.value = kw[0]
+            # when all identic values
+            except ValueError:
+                self.value = nan
         return self.value
 
 
@@ -106,9 +112,12 @@ class PearsonMeasure(AbsoluteMeasure):
         # ckecking for nans
         nans = x.isnull() | x.isna()
 
-        # computing spearman's r
-        r = pearsonr(x[~nans], y[~nans])
-        self.value = r[0] if r else nan
+        # computing pearson's r
+        self.value = nan
+        if not all(nans):
+            r = pearsonr(x[~nans], y[~nans])
+            if r:
+                self.value = abs(r[0])
         return self.value
 
 
@@ -124,8 +133,11 @@ class SpearmanMeasure(AbsoluteMeasure):
         # ckecking for nans
         nans = x.isnull() | x.isna()
         # computing spearman's rho
-        rho = spearmanr(x[~nans], y[~nans])
-        self.value = rho[0] if rho else nan
+        self.value = nan
+        if not all(nans):
+            rho = spearmanr(x[~nans], y[~nans])
+            if rho:
+                self.value = abs(rho[0])
         return self.value
 
 
@@ -142,7 +154,9 @@ class DistanceMeasure(AbsoluteMeasure):
         nans = x.isnull()
 
         # computing distance correlation
-        self.value = correlation(x[~nans], y[~nans])
+        self.value = nan
+        if not all(nans):
+            self.value = correlation(x[~nans], y[~nans])
         return self.value
 
 
