@@ -7,7 +7,7 @@ from abc import ABC
 from dataclasses import dataclass
 
 from numpy import nan, select
-from pandas import DataFrame, Series
+from pandas import DataFrame, Series, concat
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from ...combinations import CombinationEvaluator
@@ -207,7 +207,9 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         # duplicating features with versions disctinct from names (= multiclass target)
         if len(casted_columns) > 0:  # checking for casted feature to not break inplace
-            X = X.assign(**casted_columns)
+            # converting to DataFrame to avoid PerformanceWarning
+            casted_columns = DataFrame(casted_columns)
+            X = concat([X, casted_columns], axis=1)
 
         return X
 
