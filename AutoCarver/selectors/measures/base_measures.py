@@ -1,5 +1,4 @@
-""" Base measures that defines Quantitative and Qualitative features.
-"""
+"""Base measures that defines Quantitative and Qualitative features."""
 
 from abc import ABC, abstractmethod
 
@@ -88,6 +87,7 @@ class BaseMeasure(ABC):
             higher_is_better=self.higher_is_better,
             correlation_with=self.correlation_with,
             is_default=self.is_default,
+            is_absolute=self.is_absolute,
         )
 
     @info.setter

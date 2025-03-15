@@ -7,7 +7,7 @@ from abc import ABC
 from dataclasses import dataclass
 
 from numpy import nan, select
-from pandas import DataFrame, Series
+from pandas import DataFrame, Series, concat
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from ...combinations import CombinationEvaluator
@@ -24,6 +24,7 @@ class Sample:
     y: Series = None
 
     def __getitem__(self, key):
+        """Returns the DataFrame or the Series"""
         if key == "X":
             return self.X
         if key == "y":
@@ -32,21 +33,26 @@ class Sample:
         raise KeyError(key)
 
     def __iter__(self):
+        """Returns an iterator over the DataFrame"""
         return iter(["X", "y"])
 
     def keys(self):
+        """Returns the keys of the DataFrame"""
         return ["X", "y"]
 
     @property
     def shape(self):
+        """Returns the shape of the DataFrame"""
         return self.X.shape
 
     @property
     def index(self):
+        """Returns the index of the DataFrame"""
         return self.X.index
 
     @property
     def columns(self):
+        """Returns the columns of the DataFrame"""
         return self.X.columns
 
     def __len__(self):
@@ -207,7 +213,9 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         # duplicating features with versions disctinct from names (= multiclass target)
         if len(casted_columns) > 0:  # checking for casted feature to not break inplace
-            X = X.assign(**casted_columns)
+            # converting to DataFrame to avoid PerformanceWarning
+            casted_columns = DataFrame(casted_columns)
+            X = concat([X, casted_columns], axis=1)
 
         return X
 
