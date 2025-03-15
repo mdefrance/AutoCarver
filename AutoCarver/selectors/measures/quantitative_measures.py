@@ -52,14 +52,14 @@ class KruskalMeasure(ReversibleMeasure):
 
         # computing Kruskal-Wallis statistic
         self.value = nan
-        if not all(nans):
+        if has_values(x, y, nans):
             try:
                 kw = kruskal(*tuple(x[(~nans) & (y == y_value)] for y_value in y_values))
                 if kw:
                     self.value = kw[0]
             # when all identic values
             except ValueError:
-                self.value = nan
+                pass
         return self.value
 
 
@@ -82,7 +82,7 @@ class RMeasure(BaseMeasure):
         nans = x.isnull() | x.isna()
 
         # checking values of y
-        if len(y[~nans].unique()) != 2:
+        if y[~nans].nunique() != 2:
             raise ValueError(f"[{self}] Provided y is not binary")
 
         # grouping feature and target
@@ -97,6 +97,17 @@ class RMeasure(BaseMeasure):
         )
 
         return self.value
+
+
+def has_values(x: Series, y: Series, nans: Series) -> bool:
+    """Checks if x and y have values"""
+    # only nan values
+    if all(nans):
+        return False
+    # only one unique value
+    if x[~nans].nunique() <= 1 or y[~nans].nunique() <= 1:
+        return False
+    return True
 
 
 class PearsonMeasure(AbsoluteMeasure):
@@ -114,10 +125,10 @@ class PearsonMeasure(AbsoluteMeasure):
 
         # computing pearson's r
         self.value = nan
-        if not all(nans):
+        if has_values(x, y, nans):
             r = pearsonr(x[~nans], y[~nans])
             if r:
-                self.value = abs(r[0])
+                self.value = r[0]
         return self.value
 
 
@@ -134,10 +145,10 @@ class SpearmanMeasure(AbsoluteMeasure):
         nans = x.isnull() | x.isna()
         # computing spearman's rho
         self.value = nan
-        if not all(nans):
+        if has_values(x, y, nans):
             rho = spearmanr(x[~nans], y[~nans])
             if rho:
-                self.value = abs(rho[0])
+                self.value = rho[0]
         return self.value
 
 

@@ -5,6 +5,7 @@ from math import ceil
 from random import seed, shuffle
 from typing import Union
 
+from numpy import isnan
 from pandas import DataFrame, Series
 
 from ...features import BaseFeature, Features
@@ -414,28 +415,28 @@ def make_random_chunks(elements: list, max_chunk_sizes: int, random_state: int =
 
 
 def get_qualitative_metrics(
-    metrics: list[Union[BaseMeasure, BaseFilter]]
+    metrics: list[Union[BaseMeasure, BaseFilter]],
 ) -> list[Union[BaseMeasure, BaseFilter]]:
     """returns filtered list of measures/filters that apply on qualitative features"""
     return [metric for metric in metrics if metric.is_x_qualitative]
 
 
 def get_quantitative_metrics(
-    metrics: list[Union[BaseMeasure, BaseFilter]]
+    metrics: list[Union[BaseMeasure, BaseFilter]],
 ) -> list[Union[BaseMeasure, BaseFilter]]:
     """returns filtered list of measures/filters that apply on quantitative features"""
     return [metric for metric in metrics if metric.is_x_quantitative]
 
 
 def get_default_metrics(
-    metrics: list[Union[BaseMeasure, BaseFilter]]
+    metrics: list[Union[BaseMeasure, BaseFilter]],
 ) -> list[Union[BaseMeasure, BaseFilter]]:
     """returns filtered list of measures/filters that are default"""
     return [metric for metric in metrics if metric.is_default]
 
 
 def remove_default_metrics(
-    metrics: list[Union[BaseMeasure, BaseFilter]]
+    metrics: list[Union[BaseMeasure, BaseFilter]],
 ) -> list[Union[BaseMeasure, BaseFilter]]:
     """returns filtered list of measures/filters that are non-default"""
     return [metric for metric in metrics if not metric.is_default]
@@ -498,7 +499,14 @@ def get_measure_rank(feature: BaseFeature, measure: BaseMeasure) -> int:
 
 def get_measure_value(feature: BaseFeature, measure: BaseMeasure) -> float:
     """gives value of measure for specified feature"""
-    return feature.measures.get(measure.__name__).get("value")
+    value = feature.measures.get(measure.__name__).get("value")
+    # getting absolute value
+    if measure.is_absolute:
+        value = abs(value)
+    # replacing nan with -inf
+    if isnan(value):
+        value = float("-inf")
+    return value
 
 
 def apply_measures(
