@@ -133,7 +133,7 @@ class BaseSelector(ABC):
 
         # number of features selected
         self.n_best_per_type = n_best_per_type
-        if not (0 < int(self.n_best_per_type) <= len(self.features)):
+        if not 0 < int(self.n_best_per_type) <= len(self.features):
             raise ValueError("Must set 0 < n_best_per_type <= len(features)")
 
         # feature sample size per iteration
@@ -366,7 +366,7 @@ class BaseSelector(ABC):
         nicer_association = prettier_measures(formatted_measures)
 
         # displaying html of colored DataFrame
-        display_html(nicer_association, raw=True)  # pylint: disable=W0212
+        display_html(nicer_association, raw=True)  # pylint: disable=E0606
 
 
 def get_typed_features(features: Features) -> dict[str, list[BaseFeature]]:

@@ -24,6 +24,7 @@ class Sample:
     y: Series = None
 
     def __getitem__(self, key):
+        """Returns the DataFrame or the Series"""
         if key == "X":
             return self.X
         if key == "y":
@@ -32,21 +33,26 @@ class Sample:
         raise KeyError(key)
 
     def __iter__(self):
+        """Returns an iterator over the DataFrame"""
         return iter(["X", "y"])
 
     def keys(self):
+        """Returns the keys of the DataFrame"""
         return ["X", "y"]
 
     @property
     def shape(self):
+        """Returns the shape of the DataFrame"""
         return self.X.shape
 
     @property
     def index(self):
+        """Returns the index of the DataFrame"""
         return self.X.index
 
     @property
     def columns(self):
+        """Returns the columns of the DataFrame"""
         return self.X.columns
 
     def __len__(self):
