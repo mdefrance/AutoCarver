@@ -166,8 +166,8 @@ class DistanceMeasure(AbsoluteMeasure):
 
         # computing distance correlation
         self.value = nan
-        if not all(nans):
-            self.value = correlation(x[~nans], y[~nans])
+        if has_values(x, y, nans):
+            self.value = correlation(x[~nans], y[~nans]) - 1
         return self.value
 
 
