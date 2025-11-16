@@ -3,7 +3,7 @@
 Selectors
 =========
 
-**AutoCarver** implements **Selectors**, they provide the following, association-centric, Data Selection steps: 
+**AutoCarver** implements **Selectors**, they provide the following, association-centric, Data Selection steps:
 
    1. Measuring association with a target and ranking features accordingly.
    2. Filtering out features too asociated to a better ranked feature.
@@ -53,7 +53,7 @@ Regression tasks
 
 .. _Measures:
 
-Association measures, X by y 
+Association measures, X by y
 ----------------------------
 
 
@@ -200,14 +200,14 @@ where:
     * :class:`KruskalMeasure` is the default measure for each :class:`QualitativeFeature` when using :class:`RegressionSelector`.
     * :class:`KruskalMeasure` is the default measure for each :class:`QuantitativeFeature` when using :class:`ClassificationSelector`.
 
-    
+
 
 .. _R:
 
 
 Coefficient of determination :math:`R`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
- 
+
 For a **binary** feature :math:`y` and a **quantitative** feature :math:`x` the following linear regression model is fitted using `statsmodels.formula.api.ols <https://www.statsmodels.org/dev/generated/statsmodels.formula.api.ols.html>`_:
 
 .. math::
@@ -216,7 +216,7 @@ For a **binary** feature :math:`y` and a **quantitative** feature :math:`x` the 
 
 where:
  * :math:`\alpha` and :math:`\beta` are the coefficient of the linear regression model
- * :math:`\epsilon` is the residual of the linear regression model 
+ * :math:`\epsilon` is the residual of the linear regression model
 
 The determination coefficient, often denoted as :math:`R^2`, is a statistical measure that quantifies the goodness of fit of a linear regression model.
 In this specific case, it is equal to the square of Pearson's :math:`r` correlation coefficient between :math:`x` and :math:`y`.
@@ -345,7 +345,7 @@ Cramér's :math:`V`
 Based on Pearson's :math:`\chi^2`, Cramér's :math:`V` is computed using the following formula:
 
 .. math::
-    
+
     V=\sqrt{\frac{\chi^2}{n\min(n_x-1, n_y-1)}}
 
 where:
@@ -353,7 +353,7 @@ where:
  * :math:`n` is the number of observations
  * :math:`n_x` is the number of modalities of :math:`x`
  * :math:`n_y` is the number of modalities of :math:`y`
- 
+
 .. autoclass:: AutoCarver.selectors.measures.CramervMeasure
     :members: compute_association, validate, is_x_qualitative, is_y_qualitative, higher_is_better
 
@@ -369,7 +369,7 @@ Tschuprow's :math:`T`
 Based on Pearson's :math:`\chi^2`, Tschuprow's :math:`T` is computed using the following formula:
 
 .. math::
-    
+
     T=\sqrt{\frac{\chi^2}{n\sqrt{(n_x-1)(n_y-1)}}}
 
 where:
@@ -377,7 +377,7 @@ where:
  * :math:`n` is the number of observations
  * :math:`n_x` is the number of modalities of :math:`x`
  * :math:`n_y` is the number of modalities of :math:`y`
- 
+
 .. autoclass:: AutoCarver.selectors.measures.TschuprowtMeasure
     :members: compute_association, validate, is_x_qualitative, is_y_qualitative, higher_is_better
 
@@ -394,7 +394,7 @@ where:
 
 .. _Filters:
 
-Association filters, X by X 
+Association filters, X by X
 ---------------------------
 
 
@@ -501,7 +501,7 @@ where:
 Based on Pearson's :math:`\chi^2`, Cramér's :math:`V` is computed using the following formula:
 
 .. math::
-    
+
     V=\sqrt{ \frac{ \chi^2 }{ n\min(n_{x_1}-1, n_{x_2}-1) } }
 
 where:
@@ -509,7 +509,7 @@ where:
  * :math:`n` is the number of observations
  * :math:`n_{x_1}` is the number of modalities of :math:`x_1`
  * :math:`n_{x_2}` is the number of modalities of :math:`x_2`
- 
+
 
 .. autoclass:: AutoCarver.selectors.filters.CramervFilter
     :members: filter, is_x_qualitative, higher_is_better
@@ -525,7 +525,7 @@ Tschuprow's :math:`T`
 Based on Pearson's :math:`\chi^2`, Tschuprow's :math:`T` is computed using the following formula:
 
 .. math::
-    
+
     T=\sqrt{\frac{\chi^2}{n\sqrt{(n_{x_1}-1)(n_{x_2}-1)}}}
 
 where:
@@ -533,7 +533,7 @@ where:
  * :math:`n` is the number of observations
  * :math:`n_{x_1}` is the number of modalities of :math:`x_1`
  * :math:`n_{x_2}` is the number of modalities of :math:`x_2`
- 
+
 
 
 .. autoclass:: AutoCarver.selectors.filters.TschuprowtFilter
@@ -543,4 +543,3 @@ where:
 .. note::
 
     * :class:`TschuprowtFilter` is the default filter used for inter-:class:`QualitativeFeature` association measure.
-

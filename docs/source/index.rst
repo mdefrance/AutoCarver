@@ -30,4 +30,3 @@ Welcome to AutoCarver's documentation!
 
    carvers_examples
    selectors_examples
-

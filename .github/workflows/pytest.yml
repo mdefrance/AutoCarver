@@ -24,7 +24,7 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-      
+
       #----------------------------------------------
       #  -----  install & configure poetry  -----
       #----------------------------------------------
@@ -57,7 +57,7 @@ jobs:
         run: |
           source .venv/bin/activate
           python -m pytest -v --cov ${{ github.workspace }}/tests/
-      
+
       - name: Pylint
         run: |
           cd ${{ github.workspace }}
@@ -113,5 +113,3 @@ jobs:
         run: |
           source $VENV
           python -m pytest -v --cov ${{ github.workspace }}/tests/
-          
-  

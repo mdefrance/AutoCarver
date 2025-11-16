@@ -4,7 +4,7 @@
 Combinations
 ============
 
-**Combinations** are at the core of **Carvers**. They are used to identify the best combination 
+**Combinations** are at the core of **Carvers**. They are used to identify the best combination
 from all possible combinations with up to :attr:`max_n_mod` modalities.
 
 
