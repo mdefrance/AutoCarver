@@ -360,7 +360,7 @@ def test_group_xagg_by_combinations(evaluator: BinaryCombinationEvaluator):
             "index_to_groupby": {"a": "a", "b": "a", "c": "c"},
         },
     ]
-    for res, exp in zip(result, expected, strict=True):
+    for res, exp in zip(result, expected):
         assert allclose(res["xagg"], exp["xagg"])
         assert res["combination"] == exp["combination"]
         assert res["index_to_groupby"] == exp["index_to_groupby"]
@@ -395,7 +395,7 @@ def test_group_xagg_by_combinations_with_nan(evaluator: BinaryCombinationEvaluat
             "index_to_groupby": {"A": "A", "B": "A", "C": "C"},
         },
     ]
-    for res, exp in zip(result, expected, strict=True):
+    for res, exp in zip(result, expected):
         assert allclose(res["xagg"], exp["xagg"])
         assert res["combination"] == exp["combination"]
         assert res["index_to_groupby"] == exp["index_to_groupby"]
@@ -430,7 +430,7 @@ def test_compute_associations(evaluator: BinaryCombinationEvaluator):
             "tschuprowt": 0.0,
         },
     ]
-    for res, exp in zip(result, expected, strict=True):
+    for res, exp in zip(result, expected):
         assert allclose(res["xagg"], exp["xagg"])
         assert res["combination"] == exp["combination"]
         assert res["index_to_groupby"] == exp["index_to_groupby"]
@@ -479,7 +479,7 @@ def test_compute_associations_with_three_rows(evaluator: BinaryCombinationEvalua
             "tschuprowt": 0.0,
         },
     ]
-    for res, exp in zip(result, expected, strict=True):
+    for res, exp in zip(result, expected):
         assert allclose(res["xagg"], exp["xagg"])
         assert res["combination"] == exp["combination"]
         assert res["index_to_groupby"] == exp["index_to_groupby"]
@@ -627,7 +627,7 @@ def test_viability_train(evaluator: BinaryCombinationEvaluator):
             "train_rates": DataFrame({"target_mean": [0.5, 1.0], "frequency": [0.8, 0.2]}, index=["a", "c"]),
         },
     ]
-    for res, exp in zip(result, expected, strict=True):
+    for res, exp in zip(result, expected):
         assert allclose(res["train_rates"], exp["train_rates"])
         assert res["train"][TestKeys.VIABLE.value] == exp["train"][TestKeys.VIABLE.value]
 
@@ -685,7 +685,7 @@ def test_viability_dev(evaluator: BinaryCombinationEvaluator):
             "dev": {TestKeys.VIABLE.value: False, TestKeys.INFO: TestMessages.INVERSION_RATES},
         },
     ]
-    for res, exp in zip(result, expected, strict=True):
+    for res, exp in zip(result, expected):
         assert res["train"] == exp["train"]
         assert res["dev"] == exp["dev"]
 

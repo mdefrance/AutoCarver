@@ -47,7 +47,7 @@ class QuantitativeFeature(BaseFeature):
                     raise AttributeError(f"{self} no {kept_label}, in value_per_label: {self.value_per_label}")
 
                 # checking that grouped values exists
-                for grouped_value, grouped_label in zip(grouped_values, grouped_labels, strict=True):
+                for grouped_value, grouped_label in zip(grouped_values, grouped_labels):
                     if grouped_value is None:
                         print(f"{self} no {grouped_label}, in value_per_label: {self.value_per_label}")
 
@@ -158,7 +158,7 @@ def format_quantiles(a_list: list[float]) -> list[str]:
         upper_bounds = formatted_list + [nan]
         lower_bounds = [nan] + formatted_list
         order: list[str] = []
-        for lower, upper in zip(lower_bounds, upper_bounds, strict=True):
+        for lower, upper in zip(lower_bounds, upper_bounds):
             if isna(lower):
                 order += [f"x <= {upper}"]
             elif isna(upper):

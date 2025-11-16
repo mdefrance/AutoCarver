@@ -344,7 +344,7 @@ class BaseFeature(ABC):
 
         # iterating over values and labels
         self.value_per_label = {}
-        for value, label, raw_label in zip(self.values, self._labels, raw_labels, strict=True):
+        for value, label, raw_label in zip(self.values, self._labels, raw_labels):
             # updating label_per_value
             for grouped_value in self.values.get(value):
                 self.label_per_value.update({grouped_value: label})
