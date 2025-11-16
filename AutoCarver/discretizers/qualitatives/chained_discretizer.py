@@ -179,7 +179,7 @@ class ChainedDiscretizer(BaseDiscretizer):
 
                 # historizing in the feature's order
                 order = GroupedList(feature.values)
-                for discarded, kept in zip(values_to_group, groups_value):
+                for discarded, kept in zip(values_to_group, groups_value, strict=True):
                     order.group(discarded, kept)
 
                 # updating feature accordingly
@@ -250,7 +250,7 @@ def ensure_qualitative_dtypes(features: Features, X: DataFrame, **kwargs) -> Dat
     )
 
     # identifying features that are not str
-    not_object = dtypes.apply(lambda u: any(dtype != str for dtype in u))
+    not_object = dtypes.apply(lambda u: any(dtype is not str for dtype in u))
 
     # converting detected non-string features
     if any(not_object):

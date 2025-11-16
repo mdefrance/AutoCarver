@@ -137,7 +137,7 @@ class QualitativeFeature(BaseFeature):
                     raise AttributeError(f"{self} no {kept_label}, in value_per_label: {self.value_per_label}")
 
                 # checking that grouped values exists
-                for grouped_value, grouped_label in zip(grouped_values, grouped_labels):
+                for grouped_value, grouped_label in zip(grouped_values, grouped_labels, strict=True):
                     if grouped_value is None:
                         print(f"{self} no {grouped_label}, in value_per_label: {self.value_per_label}")
 

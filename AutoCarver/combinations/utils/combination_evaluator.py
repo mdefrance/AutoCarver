@@ -208,6 +208,7 @@ class CombinationEvaluator(ABC):
             for combination, index_to_groupby in zip(
                 combinations,
                 tqdm(indices_to_groupby, desc="Grouping modalities   ", disable=not self.verbose),
+                strict=True,
             )
         ]
 

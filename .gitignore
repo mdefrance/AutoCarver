@@ -20,3 +20,5 @@ docs/source/examples/Carvers/MulticlassClassification/multiclass_carver.json
 docs/source/examples/Carvers/MulticlassClassification/multiclass_xgboost.json
 .venv/
 .vscode/
+.mypy_cache/
+.ruff_cache/

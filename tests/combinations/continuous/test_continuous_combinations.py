@@ -292,7 +292,7 @@ def test_group_xagg_by_combinations(evaluator: ContinuousCombinationEvaluator):
             "index_to_groupby": {"a": "a", "b": "a", "c": "c"},
         },
     ]
-    for res, exp in zip(result, expected):
+    for res, exp in zip(result, expected, strict=True):
         assert list(res["xagg"]) == list(exp["xagg"])
         assert res["combination"] == exp["combination"]
         assert res["index_to_groupby"] == exp["index_to_groupby"]
@@ -328,7 +328,7 @@ def test_group_xagg_by_combinations_with_nan(evaluator: ContinuousCombinationEva
             "index_to_groupby": {"A": "A", "B": "A", "C": "C"},
         },
     ]
-    for res, exp in zip(result, expected):
+    for res, exp in zip(result, expected, strict=True):
         assert list(res["xagg"]) == list(exp["xagg"])
         assert res["combination"] == exp["combination"]
         assert res["index_to_groupby"] == exp["index_to_groupby"]
@@ -362,7 +362,7 @@ def test_compute_associations(evaluator: ContinuousCombinationEvaluator):
             "kruskal": 0.0,
         },
     ]
-    for res, exp in zip(result, expected):
+    for res, exp in zip(result, expected, strict=True):
         assert list(res["xagg"]) == list(exp["xagg"])
         assert res["combination"] == exp["combination"]
         assert res["index_to_groupby"] == exp["index_to_groupby"]
@@ -404,7 +404,7 @@ def test_compute_associations_with_unobserved(evaluator: ContinuousCombinationEv
             "kruskal": nan,
         },
     ]
-    for res, exp in zip(result, expected):
+    for res, exp in zip(result, expected, strict=True):
         print(res, exp)
         assert list(res["xagg"]) == list(exp["xagg"])
         assert res["combination"] == exp["combination"]
@@ -445,7 +445,7 @@ def test_compute_associations_with_three_rows(evaluator: ContinuousCombinationEv
             "kruskal": 0.0,
         },
     ]
-    for res, exp in zip(result, expected):
+    for res, exp in zip(result, expected, strict=True):
         assert list(res["xagg"]) == list(exp["xagg"])
         assert res["combination"] == exp["combination"]
         assert res["index_to_groupby"] == exp["index_to_groupby"]
@@ -571,7 +571,7 @@ def test_viability_train(evaluator: ContinuousCombinationEvaluator):
             "train_rates": DataFrame({"target_mean": [1.0, 1.0], "frequency": [0.714286, 0.285714]}, index=["a", "c"]),
         },
     ]
-    for res, exp in zip(result, expected):
+    for res, exp in zip(result, expected, strict=True):
         assert all(res["train_rates"].index == exp["train_rates"].index)
         assert allclose(res["train_rates"], exp["train_rates"])
         assert res["train"][TestKeys.VIABLE.value] == exp["train"][TestKeys.VIABLE.value]
@@ -624,7 +624,7 @@ def test_viability_dev(evaluator: ContinuousCombinationEvaluator):
             "dev": {TestKeys.VIABLE.value: None},
         },
     ]
-    for res, exp in zip(result, expected):
+    for res, exp in zip(result, expected, strict=True):
         assert res["train"] == exp["train"]
         assert res["dev"] == exp["dev"]
 
@@ -655,7 +655,7 @@ def test_viability_dev(evaluator: ContinuousCombinationEvaluator):
             "dev": {TestKeys.VIABLE.value: None},
         },
     ]
-    for res, exp in zip(result, expected):
+    for res, exp in zip(result, expected, strict=True):
         assert res["train"] == exp["train"]
         assert res["dev"] == exp["dev"]
 

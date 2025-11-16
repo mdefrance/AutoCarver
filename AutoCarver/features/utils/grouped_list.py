@@ -148,7 +148,7 @@ class GroupedList(list):
         # checking that element of the list are keys of the content dict
         if not len(self) == len(self.content):
             raise ValueError(f"[{self}] Keys missing from content dict or element missing from list")
-        if any(list_element != dict_key for list_element, dict_key in zip(self, list(self.content.keys()))):
+        if any(list_elt != dict_key for list_elt, dict_key in zip(self, list(self.content.keys()), strict=True)):
             raise ValueError(f"[{self}] Not the same ordering between list and content dict")
 
     def _group_single_value(self, discarded: Any, kept: Any) -> None:
