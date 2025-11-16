@@ -1,5 +1,6 @@
 """Defines a set of features"""
 
+
 from numpy import nan
 from pandas import DataFrame, Series
 

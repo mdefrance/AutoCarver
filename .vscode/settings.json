@@ -1,0 +1,24 @@
+{
+    "python.defaultInterpreterPath": "C:\\Users\\defra\\AppData\\Local\\pypoetry\\Cache\\virtualenvs\\autocarver-i96ERKJw-py3.9",
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnSave": true,
+    },
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CSV": true,
+        "**/.DS_Store": true,
+        "**/.pytest_cache": true,
+        "**/__pycache__": true,
+        "**/AutoCarver.egg-info": true,
+        "**/.ipynb_checkpoints": true,
+    },
+    "python.formatting.provider": "none",
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+}
