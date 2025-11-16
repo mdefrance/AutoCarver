@@ -9,7 +9,7 @@ from ...config import Constants
 from .grouped_list import GroupedList
 
 
-def convert_value_to_base_type(value: Any) -> str | float | int:
+def convert_value_to_base_type(value: Any) -> Any:
     """Converts a value to python's base types (str, int, float) for JSON serialization.
 
     Parameters
