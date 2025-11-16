@@ -251,7 +251,7 @@ class CombinationEvaluator(ABC):
         best_combination = self._get_viable_combination(associations)
 
         # applying best combination to feature labels and xtab
-        self._apply_best_combination(best_combination)
+        best_combination = self._apply_best_combination(best_combination)
 
         return best_combination
 
@@ -273,7 +273,13 @@ class CombinationEvaluator(ABC):
             self.samples.apply_combination(self.feature)
 
             # udpating statistics
-            self.feature.statistics = self.target_rate.compute(self.samples.train.raw)
+            statistics = self.target_rate.compute(self.samples.train.raw)
+            self.feature.statistics = statistics
+            
+            # updating combination with needed info
+            best_association.update({"statistics": statistics, "labels": labels, "feature": self.feature.version})
+
+        return best_association
 
     def _get_best_combination_non_nan(self) -> dict:
         """Computes associations of the tab for each combination of non-nans

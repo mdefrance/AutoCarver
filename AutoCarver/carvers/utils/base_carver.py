@@ -3,6 +3,7 @@ for any task.
 """
 
 import json
+import sys
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Union
@@ -16,9 +17,10 @@ from ...combinations import (
     TschuprowtCombinations,
 )
 from ...discretizers import BaseDiscretizer, Discretizer, Sample
-from ...features import BaseFeature, Features, GroupedList
+from ...features import BaseFeature, Features
 from ...utils import extend_docstring, get_attribute, get_bool_attribute, has_idisplay
 from .pretty_print import index_mapper, prettier_xagg
+from .multiprocessing import parallelize
 
 # trying to import extra dependencies
 _has_idisplay = has_idisplay()
@@ -247,9 +249,20 @@ class BaseCarver(BaseDiscretizer, ABC):
         all_features = self.features.versions
 
         # carving each feature
-        for n, feature in enumerate(all_features):
-            num_iter = f"{n+1}/{len(all_features)}"  # logging iteration number
-            self._carve_feature(self.features(feature), xaggs, xaggs_dev, num_iter)
+        # for n, feature in enumerate(all_features):
+        #     num_iter = f"{n+1}/{len(all_features)}"  # logging iteration number
+
+        #     self._carve_feature(self.features(feature), xaggs, xaggs_dev, num_iter)
+
+        # applying parralelized carving
+        parallelize(
+            self.combinations.get_best_combination,
+            self.features,
+            self.n_jobs,
+            xaggs=xaggs,
+            xaggs_dev=xaggs_dev,
+            printer=self._print_carving_process,
+        )
 
         # discretizing features based on each feature's values_order
         super().fit(X, y)
@@ -260,28 +273,31 @@ class BaseCarver(BaseDiscretizer, ABC):
     def _aggregator(self, X: DataFrame, y: Series) -> Union[Series, DataFrame]:
         """Helper that aggregates X by y into crosstab or means (carver specific)"""
 
-    def _carve_feature(
+    def _print_carving_process(
         self,
         feature: BaseFeature,
-        xaggs: dict[str, Union[Series, DataFrame]],
-        xaggs_dev: dict[str, Union[Series, DataFrame]],
-        num_iter: str,
-    ) -> dict[str, GroupedList]:
+        xagg: Union[Series, DataFrame],
+        xagg_dev: Union[Series, DataFrame],
+        # xaggs: dict[str, Union[Series, DataFrame]],
+        # xaggs_dev: dict[str, Union[Series, DataFrame]],
+        # num_iter: str,
+    ) -> None:
         """Carves a feature into buckets that maximize association with the target"""
 
         # verbose if requested
         if self.verbose:
-            print(f"--- [{self.__name__}] Fit {feature} ({num_iter})")
+            print(f"--- [{self.__name__}] Fit {feature}")
 
         # getting xtabs on train/test
-        xagg = xaggs[feature.version]
-        xagg_dev = xaggs_dev[feature.version]
+        # xagg = xaggs[feature.version]
+        # xagg_dev = xaggs_dev[feature.version]
 
         # printing raw distribution
         self._print_xagg(feature, xagg=xagg, xagg_dev=xagg_dev, message="Raw distribution")
 
         # getting best combination
         best_combination = self.combinations.get_best_combination(feature, xagg, xagg_dev=xagg_dev)
+        print(best_combination)
 
         # printing carved distribution, for found, suitable combination
         if best_combination is not None:
@@ -299,6 +315,9 @@ class BaseCarver(BaseDiscretizer, ABC):
                 "X_dev or dropping the feature (X not representative of X_dev for this feature)."
             )
             self.features.remove(feature.version)
+
+        # ensuring prints are displayed
+        sys.stdout.flush()
 
     def _print_xagg(
         self,

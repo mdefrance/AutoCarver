@@ -1,4 +1,4 @@
-""" Set of tools used for multiprocessing"""
+"""Set of tools used for multiprocessing"""
 
 from functools import partial
 from multiprocessing import Pool
@@ -28,7 +28,7 @@ def imap_unordered_function(fun: Callable, features: list[str], n_jobs: int, **k
 
 
 def apply_async_function(
-    fun: Callable, features: list[BaseFeature], n_jobs: int, X: DataFrame, *args: list
+    fun: Callable, features: list[BaseFeature], n_jobs: int, X: DataFrame, *args
 ):
     """converts a function to a multiprocessing apply_async format or list comprehension"""
 
