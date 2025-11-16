@@ -95,7 +95,7 @@ def test_viability(
     }
 
 
-def add_info(test_results: dict[str, bool], min_freq: float) -> dict[str, str]:
+def add_info(test_results: dict[str, bool], min_freq: float) -> dict[str, str | bool]:
     """Adds information to test results."""
 
     messages: list[str] = []
