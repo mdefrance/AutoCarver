@@ -23,7 +23,9 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
         else:
             self.target_rate = target_rate
 
-    def _association_measure(self, xagg: AggregatedSample, n_obs: int = None, tol: float = 1e-10) -> dict[str, float]:
+    def _association_measure(
+        self, xagg: AggregatedSample, n_obs: int | None = None, tol: float = 1e-10
+    ) -> dict[str, float]:
         """Computes measures of association between feature and quantitative target.
 
         Parameters
@@ -41,7 +43,7 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
         # Kruskal-Wallis' H
         return {"kruskal": kruskal(*tuple(xagg.values))[0]}
 
-    def _grouper(self, xagg: AggregatedSample, groupby: dict[str:str]) -> Series:
+    def _grouper(self, xagg: AggregatedSample, groupby: dict[str, str]) -> Series:
         """Groups values of y
 
         Parameters

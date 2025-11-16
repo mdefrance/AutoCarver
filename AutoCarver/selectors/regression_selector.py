@@ -19,7 +19,7 @@ class RegressionSelector(BaseSelector):
 
     __name__ = "RegressionSelector"
 
-    def _initiate_measures(self, requested_measures: list[BaseMeasure] = None) -> list[BaseMeasure]:
+    def _initiate_measures(self, requested_measures: list[BaseMeasure] | None = None) -> list[BaseMeasure]:
         """initiates the list of measures with default values"""
 
         # initating to requested ones
@@ -47,7 +47,7 @@ class RegressionSelector(BaseSelector):
             raise ValueError(f"[{self}] Provide measures for quantitative target!")
         return measures
 
-    def _initiate_filters(self, requested_filters: list[BaseFilter] = None) -> list[BaseFilter]:
+    def _initiate_filters(self, requested_filters: list[BaseFilter] | None = None) -> list[BaseFilter]:
         """initiates the list of measures with default values"""
 
         # initating to requested ones

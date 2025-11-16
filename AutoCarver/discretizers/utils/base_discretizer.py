@@ -300,7 +300,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
     __prepare_data = _prepare_data  # private copy
 
-    def fit(self, X: DataFrame = None, y: Series = None) -> None:
+    def fit(self, X: DataFrame | None = None, y: Series | None = None) -> None:
         """Learns simple discretization of values of X according to values of y.
 
         Parameters
@@ -333,7 +333,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         return self
 
-    def transform(self, X: DataFrame, y: Series = None) -> DataFrame:
+    def transform(self, X: DataFrame, y: Series | None = None) -> DataFrame:
         """Applies discretization to a DataFrame's columns.
 
         Parameters

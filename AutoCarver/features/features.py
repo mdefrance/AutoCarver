@@ -330,7 +330,7 @@ class Features:
             # checking for unexpected values
             feature.check_values(X)
 
-    def fit(self, X: DataFrame, y: Series = None) -> None:
+    def fit(self, X: DataFrame, y: Series | None = None) -> None:
         """fits all features to there respective column in DataFrame X"""
         # iterating over all features
         for feature in self:
@@ -524,7 +524,7 @@ def make_version_name(feature_name: str, y_class: str) -> str:
 def cast_features(
     features: list[str],
     target_class: type = BaseFeature,
-    ordinal_values: dict[str, list[str]] = None,
+    ordinal_values: dict[str, list[str]] | None = None,
     **kwargs,
 ) -> list[BaseFeature]:
     """converts a list of string feature names to there corresponding Feature class"""

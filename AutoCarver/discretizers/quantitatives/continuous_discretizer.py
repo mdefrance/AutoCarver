@@ -54,7 +54,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
         return round(1 / self.min_freq)
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: DataFrame, y: Series = None) -> "ContinuousDiscretizer":  # pylint: disable=W0222
+    def fit(self, X: DataFrame, y: Series | None = None) -> "ContinuousDiscretizer":  # pylint: disable=W0222
         self._log_if_verbose()  # verbose if requested
 
         # fitting each feature

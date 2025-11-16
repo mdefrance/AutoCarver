@@ -107,7 +107,7 @@ class GroupedList(list):
         """
         return [value for values in self.content.values() for value in values]
 
-    def get(self, key: Any, default: Any = None) -> list[Any]:
+    def get(self, key: Any, default: Any | None = None) -> list[Any]:
         """List of values content in key
 
         Parameters

@@ -30,10 +30,10 @@ def combinations_at_index(
 def consecutive_combinations(
     raw_order: list[Any],
     max_group_size: int,
-    remaining_groups: int = None,
-    current_combination: list[Any] = None,
-    next_index: int = None,
-    all_combinations: list[list[Any]] = None,
+    remaining_groups: int | None = None,
+    current_combination: list[Any] | None = None,
+    next_index: int | None = None,
+    all_combinations: list[list[Any]] | None = None,
 ) -> list[list[Any]]:
     """Computes all possible combinations of values of order up to max_group_size."""
 

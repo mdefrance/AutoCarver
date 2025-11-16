@@ -164,7 +164,7 @@ def json_deserialize_content(json_serialized_feature: dict) -> dict:
 
     Returns
     -------
-    dict[str: GroupedList]
+    dict[str, GroupedList]
         content deserialized
     """
 

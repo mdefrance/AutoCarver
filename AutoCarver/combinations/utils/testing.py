@@ -52,7 +52,9 @@ def is_viable(test_results: dict):
     )
 
 
-def test_viability(rates: DataFrame, min_freq: float, target_rate: str, train_target_rate: Series = None) -> dict:
+def test_viability(
+    rates: DataFrame, min_freq: float, target_rate: str, train_target_rate: Series | None = None
+) -> dict:
     """tests viability of the rates"""
 
     # - minimum frequency is reached for all modalities

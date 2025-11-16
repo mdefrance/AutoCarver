@@ -175,7 +175,7 @@ class ZscoreOutlierMeasure(OutlierMeasure):
     __name__ = "ZScore"
 
     @extend_docstring(OutlierMeasure.compute_association)
-    def compute_association(self, x: Series, y: Series = None) -> float:
+    def compute_association(self, x: Series, y: Series | None = None) -> float:
         mean = x.mean()  # mean of the feature
         std = x.std()  # standard deviation of the feature
         zscore = (x - mean) / std  # zscore per observation
@@ -196,7 +196,7 @@ class IqrOutlierMeasure(OutlierMeasure):
     __name__ = "IQR"
 
     @extend_docstring(OutlierMeasure.compute_association)
-    def compute_association(self, x: Series, y: Series = None) -> float:
+    def compute_association(self, x: Series, y: Series | None = None) -> float:
         q3 = x.quantile(0.75)  # 3rd quartile
         q1 = x.quantile(0.25)  # 1st quartile
         iqr = q3 - q1  # inter quartile range

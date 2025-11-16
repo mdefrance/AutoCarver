@@ -26,7 +26,7 @@ class QualitativeFeature(BaseFeature):
     #         # updating value_per_label
     #         self.value_per_label.update({label: raw_label})
 
-    def fit(self, X: DataFrame, y: Series = None) -> None:
+    def fit(self, X: DataFrame, y: Series | None = None) -> None:
         """TODO fit stats"""
 
         # checking for feature's unique non-nan values

@@ -130,7 +130,7 @@ class BaseFeature(ABC):
         self.max_n_chars = kwargs.get("max_n_chars", 50)
 
         # initiating feature's trained statistics
-        self._statistics: dict[str:Any] = kwargs.get("statistics", None)
+        self._statistics: dict[str, Any] = kwargs.get("statistics", None)
 
         # measures and filters used by selectors
         self.measures = kwargs.get("measures", {})
@@ -465,7 +465,7 @@ class BaseFeature(ABC):
         # updating labels accordingly
         self.update_labels()
 
-    def fit(self, X: DataFrame, y: Series = None) -> None:
+    def fit(self, X: DataFrame, y: Series | None = None) -> None:
         """Fits the feature to a DataFrame"""
         _, _ = X, y  # unused attributes
 
