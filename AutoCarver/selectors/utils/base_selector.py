@@ -3,6 +3,7 @@
 from abc import ABC, abstractmethod
 from math import ceil
 from random import seed, shuffle
+from typing import Any
 
 from numpy import isnan
 from pandas import DataFrame, Series
@@ -378,7 +379,7 @@ def is_qualitative(feature: BaseFeature) -> bool:
     return feature.is_qualitative or feature.is_fitted
 
 
-def make_random_chunks(elements: list, max_chunk_sizes: int, random_state: int = None) -> list:
+def make_random_chunks(elements: list[Any], max_chunk_sizes: int, random_state: int | None = None) -> list[Any]:
     """makes a specific number of random chunks of of a list"""
 
     # copying in order to not moidy initial list

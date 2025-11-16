@@ -171,8 +171,8 @@ class GroupedList(list):
                 raise ValueError(f"[{self}] {kept} not in list")
 
             # accessing values content in each value
-            content_discarded = self.content.get(discarded)
-            content_kept = self.content.get(kept)
+            content_discarded = self.content[discarded]
+            content_kept = self.content[kept]
 
             # updating content dict
             self.content.update({kept: content_discarded + content_kept, discarded: []})

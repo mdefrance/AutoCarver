@@ -74,9 +74,9 @@ class Features:
 
     def __init__(
         self,
-        categoricals: list[CategoricalFeature | str] = None,
-        quantitatives: list[QuantitativeFeature | str] = None,
-        ordinals: list[OrdinalFeature] | dict[str, list[str]] = None,
+        categoricals: list[CategoricalFeature | str] | None = None,
+        quantitatives: list[QuantitativeFeature | str] | None = None,
+        ordinals: list[OrdinalFeature] | dict[str, list[str]] | None = None,
         **kwargs,
     ) -> None:
         """

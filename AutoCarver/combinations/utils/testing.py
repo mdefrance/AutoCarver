@@ -89,7 +89,7 @@ def test_viability(rates: DataFrame, min_freq: float, target_rate: str, train_ta
     }
 
 
-def add_info(test_results: dict[str, bool], min_freq: float) -> dict[str, str]:
+def add_info(test_results: dict[str, bool], min_freq: float) -> dict[str, str | bool]:
     """Adds information to test results."""
 
     messages: list[str] = []

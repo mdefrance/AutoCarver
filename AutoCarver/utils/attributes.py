@@ -1,7 +1,9 @@
 """function to get boolean attributes from kwargs"""
 
+from typing import Any
 
-def get_attribute(kwargs: dict, attribute: str, default_value: any = None) -> any:
+
+def get_attribute(kwargs: dict, attribute: str, default_value: Any = None) -> Any:
     """returns value from kwargs"""
 
     # getting attribute value

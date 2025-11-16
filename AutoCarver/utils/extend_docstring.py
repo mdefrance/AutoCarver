@@ -6,7 +6,7 @@ from collections.abc import Callable
 class extend_docstring:
     """Used to extend a Child's method docstring with the Parent's method docstring"""
 
-    def __init__(self, method: Callable, append: bool = True, exclude: list[str] = None) -> None:
+    def __init__(self, method: Callable, append: bool = True, exclude: list[str] | None = None) -> None:
         self.doc = method.__doc__
         self.append = append
         self.exclude = exclude or []
