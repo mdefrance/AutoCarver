@@ -34,7 +34,7 @@ class AggregatedSample:
     """
 
     xagg: DataFrame | Series
-    _raw: DataFrame | Series = None
+    _raw: DataFrame | Series | None = None
 
     def __post_init__(self):
         """Post initialization"""
@@ -90,7 +90,7 @@ class AggregatedSamples:
     train: AggregatedSample = field(default_factory=lambda: AggregatedSample(None))
     dev: AggregatedSample = field(default_factory=lambda: AggregatedSample(None))
 
-    def set(self, train: DataFrame, dev: DataFrame = None) -> None:
+    def set(self, train: DataFrame, dev: DataFrame | None = None) -> None:
         """Sets the train and dev samples"""
 
         # setting train and dev samples
@@ -317,7 +317,7 @@ class CombinationEvaluator(ABC):
 
         return best_combination
 
-    def get_best_combination(self, feature: BaseFeature, xagg: DataFrame, xagg_dev: DataFrame = None) -> dict:
+    def get_best_combination(self, feature: BaseFeature, xagg: DataFrame, xagg_dev: DataFrame | None = None) -> dict:
         """Computes best combination of modalities for the feature"""
 
         # checking for min_freq
@@ -412,7 +412,9 @@ class CombinationEvaluator(ABC):
         """Helper to group XAGG's values by groupby (carver specific)"""
 
     @abstractmethod
-    def _association_measure(self, xagg: AggregatedSample, n_obs: int = None, tol: float = 1e-10) -> dict[str, float]:
+    def _association_measure(
+        self, xagg: AggregatedSample, n_obs: int | None = None, tol: float = 1e-10
+    ) -> dict[str, float]:
         """Helper to measure association between X and y (carver specific)"""
 
     def _historize_remaining_combinations(self, associations: list[dict], n_combination: int) -> None:

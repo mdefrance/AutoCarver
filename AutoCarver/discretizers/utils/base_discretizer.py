@@ -14,6 +14,11 @@ from ...combinations import CombinationEvaluator
 from ...features import BaseFeature, Features
 from ...utils import extend_docstring, get_attribute, get_bool_attribute
 from .multiprocessing import apply_async_function
+from .qualitatives import (
+    CategoricalFeature,
+    QualitativeFeature,
+)
+from .quantitatives import QuantitativeFeature
 
 
 @dataclass
@@ -149,17 +154,17 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         return f"{self.__name__}({str_features})"
 
     @property
-    def categoricals(self) -> list[str]:
+    def categoricals(self) -> list[CategoricalFeature]:
         """Returns the list of categorical features"""
         return self.features.categoricals
 
     @property
-    def quantitatives(self) -> list[str]:
+    def quantitatives(self) -> list[QuantitativeFeature]:
         """Returns the list of quantitative features"""
         return self.features.quantitatives
 
     @property
-    def qualitatives(self) -> list[str]:
+    def qualitatives(self) -> list[QualitativeFeature]:
         """Returns the list of qualitative features"""
         return self.features.qualitatives
 

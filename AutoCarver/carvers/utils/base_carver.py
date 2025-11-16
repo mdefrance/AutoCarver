@@ -15,7 +15,7 @@ from ...combinations import (
     TschuprowtCombinations,
 )
 from ...discretizers import BaseDiscretizer, Discretizer, Sample
-from ...features import BaseFeature, Features, GroupedList
+from ...features import BaseFeature, Features
 from ...utils import extend_docstring, get_attribute, get_bool_attribute, has_idisplay
 from .pretty_print import index_mapper, prettier_xagg
 
@@ -200,7 +200,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         *,
         X_dev: DataFrame = None,
         y_dev: Series = None,
-    ) -> None:
+    ) -> "BaseCarver":
         """Finds the combination of modalities of X that provides the best association with y.
         If provided, X_dev set should be large enough to have the same distribution as X.
 
@@ -264,7 +264,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         xaggs: dict[str, Series | DataFrame],
         xaggs_dev: dict[str, Series | DataFrame],
         num_iter: str,
-    ) -> dict[str, GroupedList]:
+    ) -> None:
         """Carves a feature into buckets that maximize association with the target"""
 
         # verbose if requested

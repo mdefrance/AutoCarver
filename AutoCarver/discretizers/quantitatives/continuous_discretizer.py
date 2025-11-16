@@ -3,6 +3,7 @@ for a binary classification model.
 """
 
 from numpy import array, digitize, in1d, inf, isnan, linspace, quantile, sort, unique
+from numpy.typing import NDArray
 from pandas import DataFrame, Series
 
 from ...features import GroupedList, QuantitativeFeature, get_versions
@@ -53,7 +54,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
         return round(1 / self.min_freq)
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: DataFrame, y: Series = None) -> None:  # pylint: disable=W0222
+    def fit(self, X: DataFrame, y: Series = None) -> "ContinuousDiscretizer":  # pylint: disable=W0222
         self._log_if_verbose()  # verbose if requested
 
         # fitting each feature
@@ -75,7 +76,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
         return self
 
 
-def fit_feature(feature: QuantitativeFeature, X: DataFrame, q: float) -> tuple[str, GroupedList]:
+def fit_feature(feature: QuantitativeFeature, X: DataFrame, q: int) -> tuple[str, GroupedList]:
     """Fits one feature"""
 
     # getting quantiles for specified feature
@@ -88,7 +89,7 @@ def fit_feature(feature: QuantitativeFeature, X: DataFrame, q: float) -> tuple[s
 
 
 def find_quantiles(
-    df_feature: array,
+    df_feature: NDArray,
     q: int,
 ) -> list[float]:
     """Finds quantiles of a Series recursively.
@@ -125,8 +126,8 @@ def find_quantiles(
 def np_find_quantiles(
     df_feature: array,
     q: int,
-    initial_len_df: int = None,
-    quantiles: list[float] = None,
+    initial_len_df: int | None = None,
+    quantiles: list[float] | None = None,
 ) -> list[float]:
     """Finds quantiles of a Series recursively.
 
