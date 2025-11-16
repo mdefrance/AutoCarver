@@ -22,4 +22,3 @@ docs/source/examples/Carvers/MulticlassClassification/multiclass_xgboost.json
 .vscode/
 .mypy_cache/
 .ruff_cache/
-docs/build/
