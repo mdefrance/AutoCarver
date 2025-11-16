@@ -1,7 +1,7 @@
 """Sets of helper functions for BaseDiscretizer JSON serialization"""
 
 from json import dumps, loads
-from typing import Any
+from typing import Any, overload
 
 from numpy import floating, inf, integer, isfinite
 
@@ -54,8 +54,20 @@ def convert_value_to_numpy_type(value: str | float | int) -> Any:
     return output
 
 
+@overload
+def convert_values_to_base_types(iterable: list[Any]) -> list[str | int | float]: ...
+
+
+@overload
+def convert_values_to_base_types(iterable: dict[str, list[Any]]) -> dict[str, list[str | int | float]]: ...
+
+
+@overload
+def convert_values_to_base_types(iterable: None) -> None: ...
+
+
 def convert_values_to_base_types(
-    iterable: list[Any] | dict[str, list[Any]],
+    iterable: list[Any] | dict[str, list[Any]] | None,
 ) -> list[str | int | float] | dict[str, Any] | None:
     """Converts a list or a dict of lists values to python's base types (str, int, float)
     for JSON serialization.
@@ -82,9 +94,21 @@ def convert_values_to_base_types(
     return None
 
 
+@overload
+def convert_values_to_numpy_types(iterable: list[str | int | float]) -> list[Any]: ...
+
+
+@overload
+def convert_values_to_numpy_types(iterable: dict[str, list[str | int | float]]) -> dict[str, list[Any]]: ...
+
+
+@overload
+def convert_values_to_numpy_types(iterable: None) -> None: ...
+
+
 def convert_values_to_numpy_types(
-    iterable: list[str | int | float] | dict[str, list[str | int | float]],
-) -> list[Any] | dict[str, list[Any]]:
+    iterable: list[str | int | float] | dict[str, list[str | int | float]] | None,
+) -> list[Any] | dict[str, list[Any]] | None:
     """Converts a list or a dict of lists values to numpy types for JSON deserialization.
 
     Parameters
@@ -98,19 +122,18 @@ def convert_values_to_numpy_types(
         List or dict of lists of values deserialized
     """
     # list input
-    output = None
     if isinstance(iterable, list):
-        output = [convert_value_to_numpy_type(value) for value in iterable]
+        return [convert_value_to_numpy_type(value) for value in iterable]
     # dict input
     elif isinstance(iterable, dict):
-        output = {
+        return {
             convert_value_to_numpy_type(key): convert_values_to_numpy_types(values) for key, values in iterable.items()
         }
 
-    return output
+    return None
 
 
-def json_serialize_feature(feature: dict) -> str:
+def json_serialize_feature(feature: dict[Any, Any]) -> dict[Any, Any]:
     """JSON serializes a feature's dict"""
 
     # serializing values
@@ -124,7 +147,7 @@ def json_serialize_feature(feature: dict) -> str:
     return feature
 
 
-def json_serialize_combination(combination: dict) -> str:
+def json_serialize_combination(combination: dict[Any, Any]) -> dict[Any, Any]:
     """JSON serializes a combination
 
     Parameters
@@ -154,7 +177,7 @@ def json_serialize_combination(combination: dict) -> str:
     return json_serialized_combination
 
 
-def json_deserialize_content(json_serialized_feature: dict) -> dict:
+def json_deserialize_content(json_serialized_feature: dict[Any, Any]) -> dict[Any, Any]:
     """JSON deserializes a content
 
     Parameters
