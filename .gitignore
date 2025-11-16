@@ -18,3 +18,4 @@ docs/source/examples/Carvers/ContinuousRegression/continuous_carver.json
 docs/source/examples/Carvers/ContinuousRegression/regression_xgboost.json
 docs/source/examples/Carvers/MulticlassClassification/multiclass_carver.json
 docs/source/examples/Carvers/MulticlassClassification/multiclass_xgboost.json
+.venv/
