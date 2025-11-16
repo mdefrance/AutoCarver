@@ -3,7 +3,7 @@
 from typing import Any
 
 
-def get_attribute(kwargs: dict, attribute: str, default_value: Any = None) -> Any:
+def get_attribute(kwargs: dict, attribute: str, default_value: Any | None = None) -> Any:
     """returns value from kwargs"""
 
     # getting attribute value
