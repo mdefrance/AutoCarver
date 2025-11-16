@@ -3,7 +3,7 @@
 Discretizers
 ============
 
-**AutoCarver** implements **Discretizers**. It provides the following Data Preparation tools: 
+**AutoCarver** implements **Discretizers**. It provides the following Data Preparation tools:
 
 +------------------------------------+-------------------------------------------------------------------------+
 | Discretizer / Data Type            | Data Preparation                                                        |
@@ -103,7 +103,7 @@ Chained Discretizer
 
 :class:`ChainedDiscretizer` can be used prior to using any carving pipeline or any other discretizer to group categorical modalities more intelligently.
 By providing a set of modality groups, the user can introduce use case specific knowledge into the discretization process.
-The fitted :class:`Features` can then be as parameter for further discretization. 
+The fitted :class:`Features` can then be as parameter for further discretization.
 
 .. autoclass:: AutoCarver.discretizers.ChainedDiscretizer
     :members: fit, transform, fit_transform, to_json, summary
@@ -118,4 +118,3 @@ String Discretizer
 
 .. autoclass:: AutoCarver.discretizers.StringDiscretizer
     :members: fit, transform, fit_transform, to_json, summary
-

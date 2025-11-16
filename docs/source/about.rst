@@ -31,12 +31,12 @@ Key Features:
 Under the hood feature overview
 -------------------------------
 
-**AutoCarver** is a two step pipeline. 
+**AutoCarver** is a two step pipeline.
 
 I. Data Preparation: conversion to ordinal data buckets
 .......................................................
 
-**AutoCarver** implements :ref:`Discretizers`, They provide the following Data Preparation tools: 
+**AutoCarver** implements :ref:`Discretizers`, They provide the following Data Preparation tools:
 
 +------------------------------------+-------------------------------------------------------------------------+
 | Discretizer / Data Type            | Data Preparation                                                        |
@@ -71,13 +71,13 @@ I. Data Preparation: conversion to ordinal data buckets
 II. Data Optimization: maximization of bucket association
 .........................................................
 
-The core of **AutoCarver** resides in its :ref:`Carvers`, they provide the following Data Optimization steps: 
+The core of **AutoCarver** resides in its :ref:`Carvers`, they provide the following Data Optimization steps:
 
    1. Identifying the most associated combination from all ordered combinations of modalities.
    2. Testing all combinations of NaNs grouped to one of those modalities.
 
 Target-specific tools allow for association optimization per desired task:
- * :ref:`BinaryCarver` 
+ * :ref:`BinaryCarver`
  * :ref:`MulticlassCarver`
  * :ref:`ContinuousCarver`
 
@@ -91,7 +91,7 @@ Target-specific tools allow for association optimization per desired task:
 III. (Optional) Data Selection: model feature pre-selection
 ...........................................................
 
-**AutoCarver** implements :ref:`Selectors`, they provide the following, association-centric, Data Selection steps: 
+**AutoCarver** implements :ref:`Selectors`, they provide the following, association-centric, Data Selection steps:
 
    1. Measuring association with a binary or continuous target and ranking features accordingly.
    2. Filtering out features too asociated to a better ranked feature.
