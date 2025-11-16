@@ -1,4 +1,4 @@
-""" Constants used throughout the modules. """
+"""Constants used throughout the modules."""
 
 from dataclasses import dataclass
 from typing import Final

@@ -14,9 +14,7 @@ def test_discretizer_initialization():
     feature2 = QuantitativeFeature("feature2")
     feature3 = CategoricalFeature("feature3")
     feature4 = OrdinalFeature("feature4", values=["a", "b", "c"])
-    features = Features(
-        quantitatives=[feature1, feature2], categoricals=[feature3], ordinals=[feature4]
-    )
+    features = Features(quantitatives=[feature1, feature2], categoricals=[feature3], ordinals=[feature4])
     min_freq = 0.05
     discretizer = Discretizer(features=features, min_freq=min_freq)
     assert discretizer.min_freq == min_freq
@@ -33,9 +31,7 @@ def test_discretizer_fit():
     feature2 = QuantitativeFeature("feature2")
     feature3 = CategoricalFeature("feature3")
     feature4 = OrdinalFeature("feature4", values=["a", "b"])
-    features = Features(
-        quantitatives=[feature1, feature2], categoricals=[feature3], ordinals=[feature4]
-    )
+    features = Features(quantitatives=[feature1, feature2], categoricals=[feature3], ordinals=[feature4])
     min_freq = 0.3
     discretizer = Discretizer(features=features, min_freq=min_freq)
 
@@ -143,9 +139,7 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
     x_discretized = discretizer.fit_transform(x_train, x_train[target])
     x_dev_discretized = discretizer.transform(x_dev_1)
 
-    assert all(
-        x_discretized["Quantitative"].value_counts(normalize=True) >= min_freq
-    ), "Non-nan value were not grouped"
+    assert all(x_discretized["Quantitative"].value_counts(normalize=True) >= min_freq), "Non-nan value were not grouped"
 
     assert features("Discrete_Quantitative_lownan").values == [
         1.0,
@@ -168,18 +162,18 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
         "Category C": ["Category C"],
         "Category E": ["Category E"],
     }
-    assert (
-        features("Qualitative").content == quali_expected
-    ), "Values less frequent than min_freq should be grouped into default_value"
+    assert features("Qualitative").content == quali_expected, (
+        "Values less frequent than min_freq should be grouped into default_value"
+    )
 
     quali_lownan_expected = {
         Constants.DEFAULT: ["Category D", "Category F", Constants.DEFAULT],
         "Category C": ["Category C"],
         "Category E": ["Category E"],
     }
-    assert (
-        features("Qualitative_lownan").content == quali_lownan_expected
-    ), "If any, NaN values should be put into str_nan and kept by themselves"
+    assert features("Qualitative_lownan").content == quali_lownan_expected, (
+        "If any, NaN values should be put into str_nan and kept by themselves"
+    )
 
     expected_ordinal = {
         "Low+": ["Low-", "Low", "Low+"],
@@ -188,9 +182,7 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
         "High": ["Medium+", "High-", "High"],
         "High+": ["High+"],
     }
-    assert (
-        features("Qualitative_Ordinal").content == expected_ordinal
-    ), "Values not correctly grouped"
+    assert features("Qualitative_Ordinal").content == expected_ordinal, "Values not correctly grouped"
 
     expected_ordinal_lownan = {
         "Low+": ["Low", "Low-", "Low+"],
@@ -199,9 +191,7 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
         "High": ["Medium+", "High-", "High"],
         "High+": ["High+"],
     }
-    assert (
-        features("Qualitative_Ordinal_lownan").content == expected_ordinal_lownan
-    ), "NaNs should stay by themselves."
+    assert features("Qualitative_Ordinal_lownan").content == expected_ordinal_lownan, "NaNs should stay by themselves."
 
     # Testing out qualitative with int/float values inside -> StringDiscretizer
     expected = {
@@ -244,9 +234,5 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
         test_unique = [val for val in test_unique if notna(val)]
         train_unique = x_discretized[feature.name].unique()
         train_unique = [val for val in train_unique if notna(val)]
-        assert all(
-            value in test_unique for value in train_unique
-        ), "Missing value from test (at transform step)"
-        assert all(
-            value in train_unique for value in test_unique
-        ), "Missing value from train (at transform step)"
+        assert all(value in test_unique for value in train_unique), "Missing value from test (at transform step)"
+        assert all(value in train_unique for value in test_unique), "Missing value from train (at transform step)"

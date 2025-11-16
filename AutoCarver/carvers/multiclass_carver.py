@@ -39,15 +39,11 @@ class MulticlassCarver(BinaryCarver):
     ) -> None:
         """ """
         # Initiating BinaryCarver
-        super().__init__(
-            features=features, min_freq=min_freq, dropna=dropna, max_n_mod=max_n_mod, **kwargs
-        )
+        super().__init__(features=features, min_freq=min_freq, dropna=dropna, max_n_mod=max_n_mod, **kwargs)
 
         # warning user for
         if "copy" in kwargs and kwargs["copy"] is True:
-            print(
-                "WARNING: can't set copy=True for MulticlassCarver (no inplace DataFrame.assign)."
-            )
+            print("WARNING: can't set copy=True for MulticlassCarver (no inplace DataFrame.assign).")
 
     def _prepare_data(self, samples: Samples) -> Samples:
         """Validates format and content of X and y.
@@ -79,9 +75,7 @@ class MulticlassCarver(BinaryCarver):
 
         # multiclass target, checking values
         if len(unique(samples.train.y)) <= 2:
-            raise ValueError(
-                f"[{self.__name__}] provided y is binary, consider using BinaryCarver instead."
-            )
+            raise ValueError(f"[{self.__name__}] provided y is binary, consider using BinaryCarver instead.")
 
         # checking for dev target's values
         if samples.dev.y is not None:
@@ -125,10 +119,7 @@ class MulticlassCarver(BinaryCarver):
         # iterating over each class minus one
         for n, y_class in enumerate(y_classes):
             if self.verbose:  # verbose if requested
-                print(
-                    f"\n---------\n[{self.__name__}] Fit y={y_class} ({n+1}/{len(y_classes)})"
-                    "\n------"
-                )
+                print(f"\n---------\n[{self.__name__}] Fit y={y_class} ({n + 1}/{len(y_classes)})\n------")
 
             # identifying this y_class
             train_y_class = get_one_vs_rest(samples.train.y, y_class)
@@ -149,15 +140,11 @@ class MulticlassCarver(BinaryCarver):
             )
 
             # fitting BinaryCarver for y_class
-            binary_carver.fit_transform(
-                samples.train.X, train_y_class, X_dev=samples.dev.X, y_dev=dev_y_class
-            )
+            binary_carver.fit_transform(samples.train.X, train_y_class, X_dev=samples.dev.X, y_dev=dev_y_class)
 
             # filtering out dropped features whilst keeping other version tags
             kept_features = binary_carver.features.versions
-            kept_features += [
-                feature.version for feature in self.features if feature.version_tag != y_class
-            ]
+            kept_features += [feature.version for feature in self.features if feature.version_tag != y_class]
             self.features.keep(kept_features)
 
             if self.verbose:  # verbose if requested

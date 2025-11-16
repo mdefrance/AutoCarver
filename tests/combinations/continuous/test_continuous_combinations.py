@@ -1,4 +1,4 @@
-""" set of tests for the continuous_combinations module """
+"""set of tests for the continuous_combinations module"""
 
 import json
 
@@ -55,7 +55,7 @@ def test_save(evaluator: ContinuousCombinationEvaluator, tmp_path):
     file_name = tmp_path / "test.json"
     evaluator.save(str(file_name))
 
-    with open(file_name, "r", encoding="utf-8") as json_file:
+    with open(file_name, encoding="utf-8") as json_file:
         data = json.load(json_file)
 
     expected_json = {
@@ -216,9 +216,7 @@ def test_compute_target_rates_basic(evaluator: ContinuousCombinationEvaluator):
     xagg = get_target_values_by_modality(X, y, feature)
 
     result = evaluator.target_rate.compute(xagg)
-    expected = DataFrame(
-        {"target_mean": [2.0, 3.0, 5.0], "frequency": [2 / 5, 2 / 5, 1 / 5]}, index=["A", "B", "C"]
-    )
+    expected = DataFrame({"target_mean": [2.0, 3.0, 5.0], "frequency": [2 / 5, 2 / 5, 1 / 5]}, index=["A", "B", "C"])
     assert result.equals(expected)
 
 
@@ -229,9 +227,7 @@ def test_compute_target_rates_with_nan(evaluator: ContinuousCombinationEvaluator
     xagg = get_target_values_by_modality(X, y, feature)
 
     result = evaluator.target_rate.compute(xagg)
-    expected = DataFrame(
-        {"target_mean": [2.0, 3.0, None], "frequency": [2 / 4, 2 / 4, 0]}, index=["A", "B", "C"]
-    )
+    expected = DataFrame({"target_mean": [2.0, 3.0, None], "frequency": [2 / 4, 2 / 4, 0]}, index=["A", "B", "C"])
     assert result.equals(expected)
 
 
@@ -242,9 +238,7 @@ def test_compute_target_rates_unordered_labels(evaluator: ContinuousCombinationE
     xagg = get_target_values_by_modality(X, y, feature)
 
     result = evaluator.target_rate.compute(xagg)
-    expected = DataFrame(
-        {"target_mean": [5.0, 2.0, 3.0], "frequency": [1 / 5, 2 / 5, 2 / 5]}, index=["C", "A", "B"]
-    )
+    expected = DataFrame({"target_mean": [5.0, 2.0, 3.0], "frequency": [1 / 5, 2 / 5, 2 / 5]}, index=["C", "A", "B"])
     assert result.equals(expected)
 
 
@@ -574,9 +568,7 @@ def test_viability_train(evaluator: ContinuousCombinationEvaluator):
         },
         {
             "train": {TestKeys.VIABLE.value: False},
-            "train_rates": DataFrame(
-                {"target_mean": [1.0, 1.0], "frequency": [0.714286, 0.285714]}, index=["a", "c"]
-            ),
+            "train_rates": DataFrame({"target_mean": [1.0, 1.0], "frequency": [0.714286, 0.285714]}, index=["a", "c"]),
         },
     ]
     for res, exp in zip(result, expected):

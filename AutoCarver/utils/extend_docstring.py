@@ -1,6 +1,6 @@
-""" tools for docstrings"""
+"""tools for docstrings"""
 
-from typing import Callable
+from collections.abc import Callable
 
 
 class extend_docstring:

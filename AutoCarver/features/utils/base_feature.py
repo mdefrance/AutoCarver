@@ -1,8 +1,7 @@
-""" TODO: initiate features from dataset
-"""
+"""TODO: initiate features from dataset"""
 
 from abc import ABC, abstractmethod
-from typing import Any, Union
+from typing import Any
 
 from pandas import DataFrame, Series, option_context
 
@@ -299,9 +298,7 @@ class BaseFeature(ABC):
         elif not value and self.dropna:
             # checking for values merged with nans
             if self.values is not None and len(self.values.get(self.nan)) > 1:
-                raise RuntimeError(
-                    "Can not set feature dropna=False has values were grouped with nans."
-                )
+                raise RuntimeError("Can not set feature dropna=False has values were grouped with nans.")
 
             # dropping nans from values
             values = GroupedList(self.values)
@@ -429,9 +426,7 @@ class BaseFeature(ABC):
         # saving updated labels
         self.labels = raw_labels
 
-    def _update_statistics_value(
-        self, kept_label: Union[str, float], kept_value: Union[str, float]
-    ) -> None:
+    def _update_statistics_value(self, kept_label: str | float, kept_value: str | float) -> None:
         """updates feature's statistics index with values"""
 
         # updating feature's statistics

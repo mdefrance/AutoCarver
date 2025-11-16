@@ -1,4 +1,4 @@
-""" Set of tests for base carver module."""
+"""Set of tests for base carver module."""
 
 from pandas import DataFrame, Series
 from pytest import FixtureRequest, fixture, raises
@@ -20,9 +20,7 @@ def sample_data():
     """Fixture for sample data used in tests."""
     X_train = DataFrame({"feature1": [1, 2, 3, float("nan")], "feature2": [4, 5, 6, 7]})
     y_train = Series([0, 1, 0, 0])
-    X_dev = DataFrame(
-        {"feature1": [float("nan"), 2, 1, float("nan"), 2, 1], "feature2": [6, 5, 4, 6, 5, 4]}
-    )
+    X_dev = DataFrame({"feature1": [float("nan"), 2, 1, float("nan"), 2, 1], "feature2": [6, 5, 4, 6, 5, 4]})
     y_dev = Series([1, 0, 1, 1, 0, 1])
     train_sample = Sample(X=X_train, y=y_train)
     dev_sample = Sample(X=X_dev, y=y_dev)
@@ -121,9 +119,7 @@ def test_prepare_data(features, evaluator, samples):
     print(prepared_samples.train.X)
     print(samples.train.X)
 
-    expected_train = DataFrame(
-        {"feature1": ["1", "2", "3", features[0].nan], "feature2": ["4", "5", "6", "7"]}
-    )
+    expected_train = DataFrame({"feature1": ["1", "2", "3", features[0].nan], "feature2": ["4", "5", "6", "7"]})
     expected_dev = DataFrame(
         {
             "feature1": [features[0].nan, "2", "1", features[0].nan, "2", "1"],

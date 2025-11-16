@@ -1,4 +1,4 @@
-""" Defines an ordinal feature"""
+"""Defines an ordinal feature"""
 
 from ...utils import extend_docstring
 from ..utils.base_feature import BaseFeature
@@ -29,9 +29,7 @@ class OrdinalFeature(QualitativeFeature):
 
         # checking for nan ordering
         if self.nan in values and not kwargs.get("load_mode", False):
-            raise ValueError(
-                f"[{self}] Ordering for '{self.nan}' can't be set by user, only fitted on data."
-            )
+            raise ValueError(f"[{self}] Ordering for '{self.nan}' can't be set by user, only fitted on data.")
 
         # checking for str values
         if not all(isinstance(value, str) for value in values):

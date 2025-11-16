@@ -1,4 +1,4 @@
-""" Defines a categorical feature"""
+"""Defines a categorical feature"""
 
 from abc import abstractmethod
 
@@ -61,9 +61,7 @@ class QualitativeFeature(BaseFeature):
 
         # unexpected values for this feature
         unexpected = [
-            value
-            for value in unique_values
-            if not self.values.contains(value) and notna(value) and value != self.nan
+            value for value in unique_values if not self.values.contains(value) and notna(value) and value != self.nan
         ]
         if len(unexpected) > 0:
             # feature does not have a default value
@@ -136,16 +134,12 @@ class QualitativeFeature(BaseFeature):
 
                 # checking that kept values exists
                 if kept_label not in self.value_per_label:
-                    raise AttributeError(
-                        f"{self} no {kept_label}, in value_per_label: {self.value_per_label}"
-                    )
+                    raise AttributeError(f"{self} no {kept_label}, in value_per_label: {self.value_per_label}")
 
                 # checking that grouped values exists
                 for grouped_value, grouped_label in zip(grouped_values, grouped_labels):
                     if grouped_value is None:
-                        print(
-                            f"{self} no {grouped_label}, in value_per_label: {self.value_per_label}"
-                        )
+                        print(f"{self} no {grouped_label}, in value_per_label: {self.value_per_label}")
 
                 # choosing which value to keep: getting group of kept_value
                 kept_value = self.values.get_group(kept_value)
@@ -160,18 +154,14 @@ class QualitativeFeature(BaseFeature):
 
                 # deduplicating
                 grouped_values = [
-                    value
-                    for num, value in enumerate(grouped_values)
-                    if value not in grouped_values[num + 1 :]
+                    value for num, value in enumerate(grouped_values) if value not in grouped_values[num + 1 :]
                 ]
 
                 # updating values if any to group
                 if len(grouped_values) > 0:
                     # if ordinal_encoding, converting values to unique values
                     if self.ordinal_encoding:
-                        r_value_per_label = {
-                            v: self.values[k] for k, v in self.value_per_label.items()
-                        }
+                        r_value_per_label = {v: self.values[k] for k, v in self.value_per_label.items()}
                         grouped_values = [r_value_per_label[value] for value in grouped_values]
 
                     # grouping values
@@ -208,9 +198,11 @@ class QualitativeFeature(BaseFeature):
             # removing nan
             and value != self.nan
             # removing floats
-            and not isinstance(value, floating) and not isinstance(value, float)
+            and not isinstance(value, floating)
+            and not isinstance(value, float)
             # removing ints
-            and not isinstance(value, integer) and not isinstance(value, int)
+            and not isinstance(value, integer)
+            and not isinstance(value, int)
         ]
         # removing duplicates
         ordered_content = list(dict.fromkeys(ordered_content))

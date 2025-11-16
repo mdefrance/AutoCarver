@@ -1,5 +1,4 @@
-""" Filters based on association measure between features and a binary target.
-"""
+"""Filters based on association measure between features and a binary target."""
 
 from abc import ABC, abstractmethod
 
@@ -100,9 +99,7 @@ class ValidFilter(BaseFilter):
         filtered = []
         for feature in ranks:
             # checking for non-valid measures, keeping feature
-            if len(feature.measures) == 0 or all(
-                measure.get("valid") for measure in feature.measures.values()
-            ):
+            if len(feature.measures) == 0 or all(measure.get("valid") for measure in feature.measures.values()):
                 filtered += [feature]
 
         return filtered

@@ -92,15 +92,11 @@ class ContinuousCarver(BaseCarver):
 
         # continuous target, checking values
         if str in samples.train.y.apply(type).unique():
-            raise ValueError(
-                f"[{self.__name__}] y must be a continuous Series (int or float, not object)"
-            )
+            raise ValueError(f"[{self.__name__}] y must be a continuous Series (int or float, not object)")
 
         y_values = unique(samples.train.y)
         if len(y_values) <= 2:
-            raise ValueError(
-                f"[{self.__name__}] provided y is binary, consider using BinaryCarver instead."
-            )
+            raise ValueError(f"[{self.__name__}] provided y is binary, consider using BinaryCarver instead.")
         # Checking for binary target and copying X
         return super()._prepare_data(samples)
 

@@ -1,4 +1,4 @@
-""" Loads feature selection tools."""
+"""Loads feature selection tools."""
 
 # from .base_selector import BaseSelector
 from .classification_selector import ClassificationSelector

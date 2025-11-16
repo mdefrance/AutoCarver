@@ -1,4 +1,4 @@
-""" laods base selectors """
+"""laods base selectors"""
 
 from .base_selector import BaseSelector
 

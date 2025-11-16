@@ -1,4 +1,4 @@
-""" set of tests for quantitative features"""
+"""set of tests for quantitative features"""
 
 from numpy import nan
 from pandas import DataFrame
@@ -65,16 +65,12 @@ def test_categorical_feature_format_modalities(
     # adding nans
     # with smaller max_n_chars
     sample_categorical_feature.max_n_chars = 4
-    result = sample_categorical_feature._format_modalities(
-        group, content + [sample_categorical_feature.nan]
-    )
+    result = sample_categorical_feature._format_modalities(group, content + [sample_categorical_feature.nan])
     assert result == f"1, 2..., {sample_categorical_feature.nan}"
 
     # with smaller max_n_chars
     sample_categorical_feature.max_n_chars = 30
-    result = sample_categorical_feature._format_modalities(
-        group, content + [sample_categorical_feature.nan]
-    )
+    result = sample_categorical_feature._format_modalities(group, content + [sample_categorical_feature.nan])
     assert result == f"1, 2, 3, 4, 5, a, {sample_categorical_feature.nan}"
 
     # empty content
@@ -173,9 +169,7 @@ def test_categorical_feature_update_ordinal_encoding(
         )
 
     # fitting some nans
-    sample_categorical_feature.fit(
-        DataFrame({sample_categorical_feature.version: ["a", "c", "f", "1", nan]})
-    )
+    sample_categorical_feature.fit(DataFrame({sample_categorical_feature.version: ["a", "c", "f", "1", nan]}))
     sample_categorical_feature.ordinal_encoding = True
     sample_categorical_feature.update(
         GroupedList({2: [2, 3]}),
@@ -256,13 +250,9 @@ def test_categorical_feature_update_no_ordinal_encoding(
         )
 
     # fitting some nans
-    sample_categorical_feature.fit(
-        DataFrame({sample_categorical_feature.version: ["a", "c", "f", "1", nan]})
-    )
+    sample_categorical_feature.fit(DataFrame({sample_categorical_feature.version: ["a", "c", "f", "1", nan]}))
     sample_categorical_feature.ordinal_encoding = False
-    sample_categorical_feature.update(
-        GroupedList({"d, e, f": ["c", "d, e, f"]}), convert_labels=True
-    )
+    sample_categorical_feature.update(GroupedList({"d, e, f": ["c", "d, e, f"]}), convert_labels=True)
     print(sample_categorical_feature.content)
     assert sample_categorical_feature.values == ["a", "b", "d"]
     assert sample_categorical_feature.content == {
@@ -295,9 +285,7 @@ def test_categorical_feature_update_no_ordinal_encoding(
     # adding nans
     sample_categorical_feature.dropna = True
     print(sample_categorical_feature.content)
-    sample_categorical_feature.update(
-        GroupedList({Constants.NAN: [Constants.NAN, "b"]}), convert_labels=True
-    )
+    sample_categorical_feature.update(GroupedList({Constants.NAN: [Constants.NAN, "b"]}), convert_labels=True)
     assert sample_categorical_feature.values == ["a", "d", Constants.NAN]
     print(sample_categorical_feature.content)
     assert sample_categorical_feature.content == {
@@ -469,9 +457,7 @@ def test_fit_with_existing_raw_order(sample_categorical_feature: CategoricalFeat
     assert sample_categorical_feature.raw_order == ["value1", "value2"]
 
 
-def test_fit_check_values_called(
-    sample_categorical_feature: CategoricalFeature, monkeypatch
-) -> None:
+def test_fit_check_values_called(sample_categorical_feature: CategoricalFeature, monkeypatch) -> None:
     """test fit funtion"""
 
     sample_categorical_feature.values = None

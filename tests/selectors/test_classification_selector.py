@@ -32,9 +32,7 @@ def test_classification_selector_initiate_default(features_object: Features) -> 
     assert len(remove_default_metrics(selector.filters)) >= 1
 
 
-def test_classification_selector_initiate_measures(
-    features_object: Features, measures: list[BaseMeasure]
-) -> None:
+def test_classification_selector_initiate_measures(features_object: Features, measures: list[BaseMeasure]) -> None:
     """tests initiation of measures"""
 
     n_best, max_num_features_per_chunk = 2, 100
@@ -94,9 +92,7 @@ def test_classification_selector_initiate_measures(
             )
 
 
-def test_classification_selector_initiate_filters(
-    features_object: Features, filters: list[BaseFilter]
-) -> None:
+def test_classification_selector_initiate_filters(features_object: Features, filters: list[BaseFilter]) -> None:
     """tests initiation of filters"""
 
     # checking for default filters
@@ -117,14 +113,7 @@ def test_classification_selector_initiate_filters(
         assert any(measure.__name__ == valid_filter.__name__ for measure in selector.filters)
         assert (
             len(selector.filters)
-            == len(
-                [
-                    filter_
-                    for filter_ in default_filters
-                    if filter_.__name__ not in [ValidFilter.__name__]
-                ]
-            )
-            + 1
+            == len([filter_ for filter_ in default_filters if filter_.__name__ not in [ValidFilter.__name__]]) + 1
         )
 
     # adding filters

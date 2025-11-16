@@ -98,9 +98,7 @@ class BinaryCarver(BaseCarver):
         # binary target, checking values
         y_values = unique(samples.train.y)
         if not ((0 in y_values) and (1 in y_values)) or len(y_values) != 2:
-            raise ValueError(
-                f"[{self.__name__}] y must be a binary Series of 0 and 1 (int or float, not object)"
-            )
+            raise ValueError(f"[{self.__name__}] y must be a binary Series of 0 and 1 (int or float, not object)")
 
         # Checking for binary target and discretizing X
         return super()._prepare_data(samples)

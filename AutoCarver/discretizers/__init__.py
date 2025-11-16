@@ -1,4 +1,4 @@
-""" Loads Discretization tools."""
+"""Loads Discretization tools."""
 
 from .discretizer import Discretizer
 from .qualitatives import (

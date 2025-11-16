@@ -1,4 +1,4 @@
-""" Loads association measures."""
+"""Loads association measures."""
 
 from .base_measures import AbsoluteMeasure, BaseMeasure, ModeMeasure, NanMeasure, OutlierMeasure
 from .qualitative_measures import Chi2Measure, CramervMeasure, TschuprowtMeasure

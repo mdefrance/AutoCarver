@@ -1,4 +1,4 @@
-""" set of tests for combinations within carvers"""
+"""set of tests for combinations within carvers"""
 
 from enum import Enum
 
@@ -41,24 +41,18 @@ def _test_minimum_frequency_per_modality(frequencies: Series, min_freq: float) -
 def _test_modality_ordering(train_target_rate: Series, dev_target_rate: Series) -> bool:
     """tests whether train and dev targets rates are similarly ranked between datasets"""
     # - grouped values have the same ranks in train/test
-    return all(
-        train_target_rate.sort_index().sort_values().index
-        == dev_target_rate.sort_index().sort_values().index
-    )
+    return all(train_target_rate.sort_index().sort_values().index == dev_target_rate.sort_index().sort_values().index)
 
 
 def is_viable(test_results: dict):
     """checks if combination is viable on train and dev (if provided)"""
 
     return test_results["train"][TestKeys.VIABLE.value] and (
-        test_results["dev"][TestKeys.VIABLE.value]
-        or test_results["dev"][TestKeys.VIABLE.value] is None
+        test_results["dev"][TestKeys.VIABLE.value] or test_results["dev"][TestKeys.VIABLE.value] is None
     )
 
 
-def test_viability(
-    rates: DataFrame, min_freq: float, target_rate: str, train_target_rate: Series = None
-) -> dict:
+def test_viability(rates: DataFrame, min_freq: float, target_rate: str, train_target_rate: Series = None) -> dict:
     """tests viability of the rates"""
 
     # - minimum frequency is reached for all modalities

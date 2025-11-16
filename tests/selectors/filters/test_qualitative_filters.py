@@ -33,9 +33,7 @@ def filter(request: FixtureRequest) -> QualitativeFilter:
     return request.param(THRESHOLD)
 
 
-def test_qualitative_filter(
-    filter: QualitativeFilter, sample_data: DataFrame, sample_ranks: list[BaseFeature]
-) -> None:
+def test_qualitative_filter(filter: QualitativeFilter, sample_data: DataFrame, sample_ranks: list[BaseFeature]) -> None:
     # test with negatively and 100% correlated features
     filter.threshold = 0.3
     filtered_features = filter.filter(sample_data, sample_ranks)
@@ -57,9 +55,7 @@ def test_qualitative_filter(
     assert len(filtered_features) == 1, "sould keep the best feature"
 
 
-def test_filter(
-    filter: QualitativeFilter, sample_data: DataFrame, sample_ranks: list[BaseFeature]
-) -> None:
+def test_filter(filter: QualitativeFilter, sample_data: DataFrame, sample_ranks: list[BaseFeature]) -> None:
     # testing type
     assert filter.is_x_qualitative, "x should be qulitative"
     assert not filter.is_x_quantitative, "x should be qualitative"
@@ -68,9 +64,7 @@ def test_filter(
     assert isinstance(filter.measure, BaseMeasure), "measure should be a BaseMeasure"
 
     # testing _compute_worst_correlation
-    correlation_with, worst_correlation = filter._compute_worst_correlation(
-        sample_data, sample_ranks[1], sample_ranks
-    )
+    correlation_with, worst_correlation = filter._compute_worst_correlation(sample_data, sample_ranks[1], sample_ranks)
     assert isinstance(worst_correlation, float)
     assert isinstance(correlation_with, str)
 

@@ -4,7 +4,6 @@ the best combination of modalities for a feature."""
 import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Union
 
 from pandas import DataFrame, Series
 from tqdm import tqdm
@@ -34,8 +33,8 @@ class AggregatedSample:
         Raw aggregated sample
     """
 
-    xagg: Union[DataFrame, Series]
-    _raw: Union[DataFrame, Series] = None
+    xagg: DataFrame | Series
+    _raw: DataFrame | Series = None
 
     def __post_init__(self):
         """Post initialization"""
@@ -49,7 +48,7 @@ class AggregatedSample:
         return self._raw
 
     @raw.setter
-    def raw(self, value: Union[DataFrame, Series]) -> None:
+    def raw(self, value: DataFrame | Series) -> None:
         """Sets the raw value of the xagg"""
 
         # setting raw value
@@ -221,17 +220,11 @@ class CombinationEvaluator(ABC):
         # computing associations for each crosstab
         associations = [
             {**grouped_xagg, **self._association_measure(grouped_xagg["xagg"], n_obs=n_obs)}
-            for grouped_xagg in tqdm(
-                grouped_xaggs, desc="Computing associations", disable=not self.verbose
-            )
+            for grouped_xagg in tqdm(grouped_xaggs, desc="Computing associations", disable=not self.verbose)
         ]
 
         # sorting associations according to specified metric
-        return (
-            DataFrame(associations)
-            .sort_values(self.sort_by, ascending=False)
-            .to_dict(orient="records")
-        )
+        return DataFrame(associations).sort_values(self.sort_by, ascending=False).to_dict(orient="records")
 
     def _get_best_association(self, combinations: list[list[str]]) -> dict:
         """Computes associations of the tab for each combination
@@ -323,9 +316,7 @@ class CombinationEvaluator(ABC):
 
         return best_combination
 
-    def get_best_combination(
-        self, feature: BaseFeature, xagg: DataFrame, xagg_dev: DataFrame = None
-    ) -> dict:
+    def get_best_combination(self, feature: BaseFeature, xagg: DataFrame, xagg_dev: DataFrame = None) -> dict:
         """Computes best combination of modalities for the feature"""
 
         # checking for min_freq
@@ -374,9 +365,7 @@ class CombinationEvaluator(ABC):
         dev_rates = self.target_rate.compute(grouped_xagg_dev)
 
         # viability on dev sample:
-        dev_results = test_viability(
-            dev_rates, self.min_freq, self.target_rate.__name__, train_target_rate
-        )
+        dev_results = test_viability(dev_rates, self.min_freq, self.target_rate.__name__, train_target_rate)
         test_results = {**test_results, **dev_results}
 
         # checking for viability on both samples
@@ -418,26 +407,20 @@ class CombinationEvaluator(ABC):
         return viable_combination
 
     @abstractmethod
-    def _grouper(self, xagg: AggregatedSample, groupby: dict[str, str]) -> Union[Series, DataFrame]:
+    def _grouper(self, xagg: AggregatedSample, groupby: dict[str, str]) -> Series | DataFrame:
         """Helper to group XAGG's values by groupby (carver specific)"""
 
     @abstractmethod
-    def _association_measure(
-        self, xagg: AggregatedSample, n_obs: int = None, tol: float = 1e-10
-    ) -> dict[str, float]:
+    def _association_measure(self, xagg: AggregatedSample, n_obs: int = None, tol: float = 1e-10) -> dict[str, float]:
         """Helper to measure association between X and y (carver specific)"""
 
-    def _historize_remaining_combinations(
-        self, associations: list[dict], n_combination: int
-    ) -> None:
+    def _historize_remaining_combinations(self, associations: list[dict], n_combination: int) -> None:
         """historizes the remaining combinations that have not been tested"""
 
         # historizing all remaining combinations
         for combination in associations[n_combination + 1 :]:
             # historizing not tested combination
-            self.feature.history = [
-                {**clean_combination(combination, self.feature), "info": "Not checked"}
-            ]
+            self.feature.history = [{**clean_combination(combination, self.feature), "info": "Not checked"}]
 
     def _historize_combination(self, combination: dict, test_results: dict) -> None:
         """historizes the test results of the combination"""
@@ -537,7 +520,7 @@ class CombinationEvaluator(ABC):
             raise ValueError(f"[{self.__name__}] Provide a file_name that ends with .json.")
 
     @classmethod
-    def load(cls, file: Union[str, dict]) -> "CombinationEvaluator":
+    def load(cls, file: str | dict) -> "CombinationEvaluator":
         """Allows one to load a :class:`CombinationEvaluator` saved as a .json file.
 
         Parameters
@@ -552,7 +535,7 @@ class CombinationEvaluator(ABC):
         """
         # reading file
         if isinstance(file, str):
-            with open(file, "r", encoding="utf-8") as json_file:
+            with open(file, encoding="utf-8") as json_file:
                 combinations_json = json.load(json_file)
         elif isinstance(file, dict):
             combinations_json = file
@@ -570,7 +553,7 @@ class CombinationEvaluator(ABC):
         return cls(**combinations_json)
 
 
-def filter_nan(xagg: Union[Series, DataFrame], str_nan: str) -> DataFrame:
+def filter_nan(xagg: Series | DataFrame, str_nan: str) -> DataFrame:
     """Filters out nans from crosstab or y values"""
 
     # cehcking for values in crosstab
@@ -584,9 +567,7 @@ def filter_nan(xagg: Union[Series, DataFrame], str_nan: str) -> DataFrame:
     return filtered_xagg
 
 
-def clean_combination(
-    combination: dict, feature: BaseFeature, remove_train_rates: bool = False
-) -> dict:
+def clean_combination(combination: dict, feature: BaseFeature, remove_train_rates: bool = False) -> dict:
     """Cleans a combination to remove unwanted keys"""
 
     # removing unwanted keys

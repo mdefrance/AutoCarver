@@ -40,7 +40,5 @@ def test_valid_filter(valid_filter: ValidFilter) -> None:
     feature1.measures = {"nan": {"valid": True}, "mode": {"valid": True}}
     feature2 = BaseFeature("feature2")
     feature2.measures = {"nan": {"valid": False}, "mode": {"valid": True}}
-    assert valid_filter.filter(None, [feature1, feature2]) == [
-        feature1
-    ], "should remove non valid measures"
+    assert valid_filter.filter(None, [feature1, feature2]) == [feature1], "should remove non valid measures"
     assert valid_filter.is_default, "should be default"

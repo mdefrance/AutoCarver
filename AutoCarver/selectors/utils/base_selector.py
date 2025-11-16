@@ -3,7 +3,6 @@
 from abc import ABC, abstractmethod
 from math import ceil
 from random import seed, shuffle
-from typing import Union
 
 from numpy import isnan
 from pandas import DataFrame, Series
@@ -177,9 +176,7 @@ class BaseSelector(ABC):
         """initiates the list of measures with default values"""
         return requested_filters
 
-    def _select_quantitatives(
-        self, quantitatives: list[BaseFeature], X: DataFrame, y: Series
-    ) -> list[BaseFeature]:
+    def _select_quantitatives(self, quantitatives: list[BaseFeature], X: DataFrame, y: Series) -> list[BaseFeature]:
         """Selects the best quantitative features"""
 
         # checking for quantitative features before selection
@@ -197,9 +194,7 @@ class BaseSelector(ABC):
 
         return best_quantitatives
 
-    def _select_qualitatives(
-        self, qualitatives: list[BaseFeature], X: DataFrame, y: Series
-    ) -> list[BaseFeature]:
+    def _select_qualitatives(self, qualitatives: list[BaseFeature], X: DataFrame, y: Series) -> list[BaseFeature]:
         """Selects the best qualitative features"""
 
         # checking for qualitative features before selection
@@ -217,9 +212,7 @@ class BaseSelector(ABC):
 
         return best_qualitatives
 
-    def _initiate_features_measures(
-        self, features: list[BaseFeature], remove_default: bool = True
-    ) -> None:
+    def _initiate_features_measures(self, features: list[BaseFeature], remove_default: bool = True) -> None:
         """initiates the list of measures with default values"""
         # iterating over each feature
         for feature in features:
@@ -306,9 +299,7 @@ class BaseSelector(ABC):
         # too many features: chunking and selecting best amongst chunks
         if len(features) > self.max_num_features_per_chunk:
             # making random chunks of features
-            chunks = make_random_chunks(
-                features, self.max_num_features_per_chunk, self.random_state
-            )
+            chunks = make_random_chunks(features, self.max_num_features_per_chunk, self.random_state)
 
             # iterating over each feature samples
             features: list[BaseFeature] = []
@@ -415,29 +406,29 @@ def make_random_chunks(elements: list, max_chunk_sizes: int, random_state: int =
 
 
 def get_qualitative_metrics(
-    metrics: list[Union[BaseMeasure, BaseFilter]],
-) -> list[Union[BaseMeasure, BaseFilter]]:
+    metrics: list[BaseMeasure | BaseFilter],
+) -> list[BaseMeasure | BaseFilter]:
     """returns filtered list of measures/filters that apply on qualitative features"""
     return [metric for metric in metrics if metric.is_x_qualitative]
 
 
 def get_quantitative_metrics(
-    metrics: list[Union[BaseMeasure, BaseFilter]],
-) -> list[Union[BaseMeasure, BaseFilter]]:
+    metrics: list[BaseMeasure | BaseFilter],
+) -> list[BaseMeasure | BaseFilter]:
     """returns filtered list of measures/filters that apply on quantitative features"""
     return [metric for metric in metrics if metric.is_x_quantitative]
 
 
 def get_default_metrics(
-    metrics: list[Union[BaseMeasure, BaseFilter]],
-) -> list[Union[BaseMeasure, BaseFilter]]:
+    metrics: list[BaseMeasure | BaseFilter],
+) -> list[BaseMeasure | BaseFilter]:
     """returns filtered list of measures/filters that are default"""
     return [metric for metric in metrics if metric.is_default]
 
 
 def remove_default_metrics(
-    metrics: list[Union[BaseMeasure, BaseFilter]],
-) -> list[Union[BaseMeasure, BaseFilter]]:
+    metrics: list[BaseMeasure | BaseFilter],
+) -> list[BaseMeasure | BaseFilter]:
     """returns filtered list of measures/filters that are non-default"""
     return [metric for metric in metrics if not metric.is_default]
 
@@ -466,9 +457,7 @@ def remove_duplicates(features: list[BaseFeature]) -> list[BaseFeature]:
     return [features[i] for i in range(len(features)) if features[i] not in features[:i]]
 
 
-def sort_features_per_measure(
-    features: list[BaseFeature], measure: BaseMeasure
-) -> list[BaseFeature]:
+def sort_features_per_measure(features: list[BaseFeature], measure: BaseMeasure) -> list[BaseFeature]:
     """sorts features according to specified measure"""
     # checking if features are already ranked
     ranked = False
@@ -565,7 +554,7 @@ def apply_filters(
     return filtered
 
 
-def check_measure_mismatch(feature: BaseFeature, measure: Union[BaseMeasure, BaseFilter]) -> None:
+def check_measure_mismatch(feature: BaseFeature, measure: BaseMeasure | BaseFilter) -> None:
     """checks for mismatched data types between feature and measure"""
     if not (
         (is_quantitative(feature) and measure.is_x_quantitative)
@@ -632,11 +621,7 @@ def select_with_measure(
 
 def select_from_rank(features: list[BaseFeature], measure: BaseMeasure) -> list[BaseFeature]:
     """Selects the ``n_best`` features of the DataFrame, by association with the target"""
-    return [
-        feature
-        for feature in features
-        if feature.measures.get(make_rank_name(measure)).get("valid")
-    ]
+    return [feature for feature in features if feature.measures.get(make_rank_name(measure)).get("valid")]
 
 
 def make_rank_name(measure: BaseMeasure) -> str:

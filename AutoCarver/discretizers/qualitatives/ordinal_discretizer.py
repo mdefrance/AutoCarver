@@ -95,9 +95,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
         return self
 
 
-def find_common_modalities(
-    df_feature: Series, y: Series, min_freq: float, labels: list[str]
-) -> GroupedList:
+def find_common_modalities(df_feature: Series, y: Series, min_freq: float, labels: list[str]) -> GroupedList:
     """finds common modalities of a ordinal feature"""
 
     # converting to grouped list
@@ -152,10 +150,7 @@ def compute_stats(df_feature: Series, y: Series, labels: GroupedList) -> tuple[a
     stats = vstack(
         (
             # frequencies
-            df_feature[not_nans]
-            .value_counts(dropna=False, normalize=False)
-            .reindex(labels, fill_value=0)
-            .values,
+            df_feature[not_nans].value_counts(dropna=False, normalize=False).reindex(labels, fill_value=0).values,
             # target rates
             y[not_nans].groupby(df_feature[not_nans]).sum().reindex(labels).values,
         )
@@ -164,9 +159,7 @@ def compute_stats(df_feature: Series, y: Series, labels: GroupedList) -> tuple[a
     return stats, len_df
 
 
-def find_closest_modality(
-    idx: int, frequencies: array, target_rates: array, min_freq: float
-) -> int:
+def find_closest_modality(idx: int, frequencies: array, target_rates: array, min_freq: float) -> int:
     """Finds the closest modality in terms of frequency and target rate"""
 
     # case 0: only one modality
@@ -189,9 +182,7 @@ def find_closest_modality(
     return idx - 1
 
 
-def is_next_modality_closer(
-    idx: int, frequencies: array, target_rates: array, min_freq: float
-) -> bool:
+def is_next_modality_closer(idx: int, frequencies: array, target_rates: array, min_freq: float) -> bool:
     """Determines if the next modality is closer than the previous to the current one"""
 
     # Extract relevant frequencies and target rates

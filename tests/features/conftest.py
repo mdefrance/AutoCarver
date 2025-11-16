@@ -1,4 +1,4 @@
-""" Defines fixtures for features pytests"""
+"""Defines fixtures for features pytests"""
 
 from pytest import fixture
 

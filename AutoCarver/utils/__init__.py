@@ -1,4 +1,4 @@
-""" Loads utils."""
+"""Loads utils."""
 
 from .attributes import get_attribute, get_bool_attribute
 from .dependencies import has_idisplay

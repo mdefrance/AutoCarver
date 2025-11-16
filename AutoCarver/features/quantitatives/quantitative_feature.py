@@ -1,4 +1,4 @@
-""" Defines a continuous feature"""
+"""Defines a continuous feature"""
 
 from numpy import diff, floor, inf, isfinite, log10, nan  # pylint: disable=E0611
 from pandas import isna
@@ -44,16 +44,12 @@ class QuantitativeFeature(BaseFeature):
 
                 # checking that kept values exists
                 if kept_label not in self.value_per_label:
-                    raise AttributeError(
-                        f"{self} no {kept_label}, in value_per_label: {self.value_per_label}"
-                    )
+                    raise AttributeError(f"{self} no {kept_label}, in value_per_label: {self.value_per_label}")
 
                 # checking that grouped values exists
                 for grouped_value, grouped_label in zip(grouped_values, grouped_labels):
                     if grouped_value is None:
-                        print(
-                            f"{self} no {grouped_label}, in value_per_label: {self.value_per_label}"
-                        )
+                        print(f"{self} no {grouped_label}, in value_per_label: {self.value_per_label}")
 
                 # choosing which value to keep
                 which_to_keep = [value for value in grouped_values if value != self.nan]
@@ -66,9 +62,7 @@ class QuantitativeFeature(BaseFeature):
                 if len(grouped_values) > 0:
                     # if ordinal_encoding, converting values to unique values
                     if self.ordinal_encoding:
-                        r_value_per_label = {
-                            v: self.values[k] for k, v in self.value_per_label.items()
-                        }
+                        r_value_per_label = {v: self.values[k] for k, v in self.value_per_label.items()}
                         grouped_values = [r_value_per_label[value] for value in grouped_values]
                         kept_value = r_value_per_label[kept_value]
                     self.values.group(grouped_values, kept_value)

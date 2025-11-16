@@ -1,5 +1,4 @@
-""" Filters based on association measures between Quantitative features.
-"""
+"""Filters based on association measures between Quantitative features."""
 
 from numpy import ones, triu
 from pandas import DataFrame
@@ -87,9 +86,7 @@ class QuantitativeFilter(BaseFilter):
         # getting upper right part of the correlation matrix and removing autocorrelation
         return X_corr.where(triu(ones(X_corr.shape), k=1).astype(bool))
 
-    def _filter_correlated_features(
-        self, X_corr: DataFrame, ranks: list[BaseFeature]
-    ) -> list[BaseFeature]:
+    def _filter_correlated_features(self, X_corr: DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:
         """filtering out features too correlated with a better ranked feature"""
 
         # iterating over each feature by target association order
@@ -112,22 +109,16 @@ class QuantitativeFilter(BaseFilter):
 
         return filtered
 
-    def _compute_worst_correlation(
-        self, X_corr: DataFrame, feature: BaseFeature
-    ) -> tuple[str, float]:
+    def _compute_worst_correlation(self, X_corr: DataFrame, feature: BaseFeature) -> tuple[str, float]:
         """Computes correlation with better features (filtering out X_corr)"""
 
         # correlation with more associated features
         corr_with_better_features = X_corr.loc[: feature.version, feature.version].fillna(0)
 
         # worst/maximum absolute correlation with better features
-        return corr_with_better_features.agg(
-            [lambda x: x.abs().idxmax(), lambda x: max(x.min(), x.max(), key=abs)]
-        )
+        return corr_with_better_features.agg([lambda x: x.abs().idxmax(), lambda x: max(x.min(), x.max(), key=abs)])
 
-    def _validate(
-        self, feature: BaseFeature, worst_correlation: float, correlation_with: str
-    ) -> bool:
+    def _validate(self, feature: BaseFeature, worst_correlation: float, correlation_with: str) -> bool:
         """Checks if the worst correlation of a feature is above specified threshold"""
         # dropping the feature if it was too correlated to a better feature
         valid = True
@@ -139,11 +130,7 @@ class QuantitativeFilter(BaseFilter):
             feature,
             worst_correlation,
             valid,
-            info={
-                "correlation_with": (
-                    correlation_with if correlation_with != feature.version else "itself"
-                )
-            },
+            info={"correlation_with": (correlation_with if correlation_with != feature.version else "itself")},
         )
 
         return valid

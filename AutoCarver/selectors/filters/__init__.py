@@ -1,4 +1,4 @@
-""" Loads association filters."""
+"""Loads association filters."""
 
 from .base_filters import BaseFilter, NonDefaultValidFilter, ValidFilter
 from .qualitative_filters import CramervFilter, QualitativeFilter, TschuprowtFilter

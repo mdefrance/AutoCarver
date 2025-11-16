@@ -369,9 +369,7 @@ def test_categorical_discretizer(x_train: DataFrame, target: str) -> None:
         "binary_target": ["Category D", str_default, "Category F", "Category C", "Category E"],
         "continuous_target": [str_default, "Category C", "Category E", "Category F", "Category D"],
     }
-    assert (
-        features("Qualitative").values == quali_expected_order[target]
-    ), "Incorrect ordering by target rate"
+    assert features("Qualitative").values == quali_expected_order[target], "Incorrect ordering by target rate"
 
     quali_expected = {
         str_default: ["Category A", str_default],
@@ -380,9 +378,9 @@ def test_categorical_discretizer(x_train: DataFrame, target: str) -> None:
         "Category E": ["Category E"],
         "Category D": ["Category D"],
     }
-    assert (
-        features("Qualitative").content == quali_expected
-    ), "Values less frequent than min_freq should be grouped into default_value"
+    assert features("Qualitative").content == quali_expected, (
+        "Values less frequent than min_freq should be grouped into default_value"
+    )
 
     quali_lownan_expected_order = {
         "binary_target": [
@@ -398,9 +396,9 @@ def test_categorical_discretizer(x_train: DataFrame, target: str) -> None:
             "Category D",
         ],
     }
-    assert (
-        features("Qualitative_lownan").values == quali_lownan_expected_order[target]
-    ), "Incorrect ordering by target rate"
+    assert features("Qualitative_lownan").values == quali_lownan_expected_order[target], (
+        "Incorrect ordering by target rate"
+    )
 
     quali_lownan_expected = {
         "Category C": ["Category C"],
@@ -408,9 +406,9 @@ def test_categorical_discretizer(x_train: DataFrame, target: str) -> None:
         "Category E": ["Category E"],
         "Category D": ["Category D"],
     }
-    assert (
-        features("Qualitative_lownan").content == quali_lownan_expected
-    ), "If any, NaN values should be put into str_nan and kept by themselves"
+    assert features("Qualitative_lownan").content == quali_lownan_expected, (
+        "If any, NaN values should be put into str_nan and kept by themselves"
+    )
 
     quali_highnan_expected_order = {
         "binary_target": [
@@ -426,9 +424,9 @@ def test_categorical_discretizer(x_train: DataFrame, target: str) -> None:
             "Category D",
         ],
     }
-    assert (
-        features("Qualitative_highnan").values == quali_highnan_expected_order[target]
-    ), "Incorrect ordering by target rate"
+    assert features("Qualitative_highnan").values == quali_highnan_expected_order[target], (
+        "Incorrect ordering by target rate"
+    )
 
     quali_highnan_expected = {
         str_default: ["Category A", str_default],
@@ -436,6 +434,6 @@ def test_categorical_discretizer(x_train: DataFrame, target: str) -> None:
         "Category E": ["Category E"],
         "Category D": ["Category D"],
     }
-    assert (
-        features("Qualitative_highnan").content == quali_highnan_expected
-    ), "If any, NaN values should be put into str_nan and kept by themselves"
+    assert features("Qualitative_highnan").content == quali_highnan_expected, (
+        "If any, NaN values should be put into str_nan and kept by themselves"
+    )

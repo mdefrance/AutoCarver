@@ -1,5 +1,4 @@
-""" Filters based on association measures between Qualitative features.
-"""
+"""Filters based on association measures between Qualitative features."""
 
 from pandas import DataFrame
 
@@ -28,17 +27,13 @@ class QualitativeFilter(BaseFilter):
         filtered: list[BaseFeature] = []
         for feature in ranks:
             # maximum correlation with a better feature
-            correlation_with, worst_correlation = self._compute_worst_correlation(
-                X, feature, filtered_ranks
-            )
+            correlation_with, worst_correlation = self._compute_worst_correlation(X, feature, filtered_ranks)
 
             # checking for too much correlation
             valid = self._validate(worst_correlation)
 
             # update feature accordingly (update stats)
-            self._update_feature(
-                feature, worst_correlation, valid, info={"correlation_with": correlation_with}
-            )
+            self._update_feature(feature, worst_correlation, valid, info={"correlation_with": correlation_with})
 
             # keeping feature
             if valid:
@@ -67,9 +62,7 @@ class QualitativeFilter(BaseFilter):
         # iterating over each better feature
         for better_feature in better_features:
             # computing association with the better feature
-            correlation = self.measure.compute_association(
-                X[feature.version], X[better_feature.version]
-            )
+            correlation = self.measure.compute_association(X[feature.version], X[better_feature.version])
 
             # updating association if it's greater than previous better features
             if correlation > worst_correlation:

@@ -1,4 +1,4 @@
-""" Defines fixtures for all pytests"""
+"""Defines fixtures for all pytests"""
 
 from numpy import arange, nan, random
 from pandas import DataFrame
@@ -41,9 +41,7 @@ def init_df(seed: int, size: int = 10000) -> DataFrame:
     ordinal_data = random.choice(qual_ord_features, size=size)
 
     # adding binary target associated to qualitative ordinal feature
-    binary = [
-        1 - (qual_ord_features.index(val) / (len(qual_ord_features) - 1)) for val in ordinal_data
-    ]
+    binary = [1 - (qual_ord_features.index(val) / (len(qual_ord_features) - 1)) for val in ordinal_data]
 
     # Generate random qualitative features
     qual_features = (
@@ -60,9 +58,7 @@ def init_df(seed: int, size: int = 10000) -> DataFrame:
     quantitative_data = random.rand(size) * 1000
 
     # Generate random discrete quantitative feature
-    discrete_quantitative_data = random.choice(
-        arange(1, 8), size=size, p=[0.3, 0.25, 0.2, 0.15, 0.05, 0.03, 0.02]
-    )
+    discrete_quantitative_data = random.choice(arange(1, 8), size=size, p=[0.3, 0.25, 0.2, 0.15, 0.05, 0.03, 0.02])
 
     # Create DataFrame
     data = {
@@ -75,9 +71,7 @@ def init_df(seed: int, size: int = 10000) -> DataFrame:
     df = DataFrame(data)
 
     # binary target
-    df["binary_target"] = df["Binary"].apply(
-        lambda u: random.choice([0, 1], p=[1 - (u * 1 / 3), (u * 1 / 3)])
-    )
+    df["binary_target"] = df["Binary"].apply(lambda u: random.choice([0, 1], p=[1 - (u * 1 / 3), (u * 1 / 3)]))
 
     # continuous target
     df["continuous_target"] = random.rand(size) * 10000
@@ -171,9 +165,7 @@ def x_train_wrong_2(x_train: DataFrame) -> DataFrame:
     x_wrong_2 = x_train.copy()
 
     # adding some unknown values
-    x_wrong_2["Qualitative_Ordinal_lownan"] = x_wrong_2["Qualitative_Ordinal_lownan"].replace(
-        "Medium", "unknown"
-    )
+    x_wrong_2["Qualitative_Ordinal_lownan"] = x_wrong_2["Qualitative_Ordinal_lownan"].replace("Medium", "unknown")
 
     return x_wrong_2
 
