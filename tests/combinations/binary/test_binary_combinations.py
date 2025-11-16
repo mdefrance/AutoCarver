@@ -65,7 +65,7 @@ def test_save(evaluator: BinaryCombinationEvaluator, tmp_path):
     file_name = tmp_path / "test.json"
     evaluator.save(str(file_name))
 
-    with open(file_name, encoding="utf-8") as json_file:
+    with open(file_name, "r", encoding="utf-8") as json_file:
         data = json.load(json_file)
 
     expected_json = {
@@ -620,11 +620,15 @@ def test_viability_train(evaluator: BinaryCombinationEvaluator):
     expected = [
         {
             "train": {TestKeys.VIABLE.value: True},
-            "train_rates": DataFrame({"target_mean": [1.0, 0.333333], "frequency": [0.4, 0.6]}, index=["a", "c"]),
+            "train_rates": DataFrame(
+                {"target_mean": [1.0, 0.333333], "frequency": [0.4, 0.6]}, index=["a", "c"]
+            ),
         },
         {
             "train": {TestKeys.VIABLE.value: True},
-            "train_rates": DataFrame({"target_mean": [0.5, 1.0], "frequency": [0.8, 0.2]}, index=["a", "c"]),
+            "train_rates": DataFrame(
+                {"target_mean": [0.5, 1.0], "frequency": [0.8, 0.2]}, index=["a", "c"]
+            ),
         },
     ]
     for res, exp in zip(result, expected):
@@ -651,7 +655,9 @@ def test_viability_dev(evaluator: BinaryCombinationEvaluator):
         assert test_results.get("dev").get(TestKeys.VIABLE.value) is None
 
     # test with xagg_dev but not viable on train
-    evaluator.samples.dev = AggregatedSample(DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"]))
+    evaluator.samples.dev = AggregatedSample(
+        DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
+    )
     for combination in associations:
         test_results = evaluator._test_viability_dev(
             {"train": {TestKeys.VIABLE.value: False}, TestKeys.VIABLE.value: False}, combination
@@ -668,7 +674,9 @@ def test_viability_dev(evaluator: BinaryCombinationEvaluator):
         assert res["dev"][TestKeys.VIABLE.value] is True
 
     # test with xagg_dev wrong
-    evaluator.samples.dev = AggregatedSample(DataFrame({0: [5, 0, 10], 1: [2, 5, 1]}, index=["a", "b", "c"]))
+    evaluator.samples.dev = AggregatedSample(
+        DataFrame({0: [5, 0, 10], 1: [2, 5, 1]}, index=["a", "b", "c"])
+    )
     result = []
     for combination in associations:
         test_results = evaluator._test_viability_train(combination)
@@ -781,7 +789,9 @@ def test_get_viable_combination_with_not_viable_dev(evaluator: BinaryCombination
     associations = evaluator._compute_associations(grouped_xaggs)
 
     # test with xagg_dev wrong
-    evaluator.samples.dev = AggregatedSample(DataFrame({0: [5, 0, 10], 1: [2, 5, 1]}, index=["a", "b", "c"]))
+    evaluator.samples.dev = AggregatedSample(
+        DataFrame({0: [5, 0, 10], 1: [2, 5, 1]}, index=["a", "b", "c"])
+    )
     result = evaluator._get_viable_combination(associations)
     print(result)
     assert result is None

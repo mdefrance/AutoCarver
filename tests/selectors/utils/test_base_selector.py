@@ -1,4 +1,4 @@
-"""set of tests for base selector"""
+""" set of tests for base selector"""
 
 from pandas import DataFrame, Series
 from pytest import raises
@@ -165,7 +165,9 @@ def test_sort_features_per_measure(measure: BaseMeasure) -> None:
     assert sorted_features[2] == feature3
 
 
-def test_apply_measures(features: list[BaseFeature], X: DataFrame, y: Series, measures: list[BaseMeasure]) -> None:
+def test_apply_measures(
+    features: list[BaseFeature], X: DataFrame, y: Series, measures: list[BaseMeasure]
+) -> None:
     """testing function apply_measures"""
 
     # sorting out measures
@@ -181,18 +183,18 @@ def test_apply_measures(features: list[BaseFeature], X: DataFrame, y: Series, me
     apply_measures(qualitative_features, X, y, qualitative_measures, default_measures=False)
     for feature in qualitative_features:
         for measure in qualitative_measures:
-            assert measure.compute_association(X[feature.version], y) == feature.measures.get(measure.__name__).get(
-                "value"
-            )
+            assert measure.compute_association(X[feature.version], y) == feature.measures.get(
+                measure.__name__
+            ).get("value")
 
     # applying quantitative measures
     apply_measures(quantitative_features, X, y, quantitative_measures, default_measures=True)
     apply_measures(quantitative_features, X, y, quantitative_measures, default_measures=False)
     for feature in quantitative_features:
         for measure in quantitative_measures:
-            assert measure.compute_association(X[feature.version], y) == feature.measures.get(measure.__name__).get(
-                "value"
-            )
+            assert measure.compute_association(X[feature.version], y) == feature.measures.get(
+                measure.__name__
+            ).get("value")
 
     # type mismatch
     with raises(TypeError):
@@ -201,7 +203,9 @@ def test_apply_measures(features: list[BaseFeature], X: DataFrame, y: Series, me
         apply_measures(qualitative_features, X, y, quantitative_measures, default_measures=False)
 
 
-def test_apply_filters(features: list[BaseFeature], X: DataFrame, filters: list[BaseFilter]) -> None:
+def test_apply_filters(
+    features: list[BaseFeature], X: DataFrame, filters: list[BaseFilter]
+) -> None:
     """testing function apply_filters"""
 
     # sorting out filters
@@ -257,11 +261,15 @@ def test_get_best_features(
 
     # non sortable measures
     with raises(ValueError):
-        get_best_features(quantitative_features, X, y, quantitative_measures, quantitative_filters, 1)
+        get_best_features(
+            quantitative_features, X, y, quantitative_measures, quantitative_filters, 1
+        )
     # when default_measure is OutlierMeasure there are no default_measure for qualtitatives
     if any(not measure.is_sortable for measure in qualitative_measures):
         with raises(ValueError):
-            get_best_features(qualitative_features, X, y, qualitative_measures, qualitative_filters, 1)
+            get_best_features(
+                qualitative_features, X, y, qualitative_measures, qualitative_filters, 1
+            )
 
     # sorting out measures
     quantitative_measures = remove_default_metrics(quantitative_measures)
@@ -269,38 +277,50 @@ def test_get_best_features(
 
     # getting all quantitative features
     n_best = len(quantitative_features)
-    best_features = get_best_features(quantitative_features, X, y, quantitative_measures, quantitative_filters, n_best)
+    best_features = get_best_features(
+        quantitative_features, X, y, quantitative_measures, quantitative_filters, n_best
+    )
     assert len(best_features) == len(quantitative_features)
     for feature in quantitative_features:
         assert feature in best_features
 
     # getting all qualitative features
     n_best = len(qualitative_features)
-    best_features = get_best_features(qualitative_features, X, y, qualitative_measures, qualitative_filters, n_best)
+    best_features = get_best_features(
+        qualitative_features, X, y, qualitative_measures, qualitative_filters, n_best
+    )
     assert len(best_features) == len(qualitative_features)
     for feature in qualitative_features:
         assert feature in best_features
 
     # testing out quantitative measures
     n_best = 1
-    best_features = get_best_features(quantitative_features, X, y, quantitative_measures, quantitative_filters, n_best)
+    best_features = get_best_features(
+        quantitative_features, X, y, quantitative_measures, quantitative_filters, n_best
+    )
     assert len(best_features) == n_best
 
     # testing out qualitative measures
     n_best = 1
-    best_features = get_best_features(qualitative_features, X, y, qualitative_measures, qualitative_filters, n_best)
+    best_features = get_best_features(
+        qualitative_features, X, y, qualitative_measures, qualitative_filters, n_best
+    )
     assert len(best_features) == n_best
 
     # testing out quantitative filters
     n_best = len(quantitative_features)
     quantitative_filters[-1].threshold = 0
-    best_features = get_best_features(quantitative_features, X, y, quantitative_measures, quantitative_filters, n_best)
+    best_features = get_best_features(
+        quantitative_features, X, y, quantitative_measures, quantitative_filters, n_best
+    )
     assert len(best_features) == 1
 
     # testing out qualitative filters
     n_best = len(quantitative_features)
     qualitative_filters[-1].threshold = 0
-    best_features = get_best_features(qualitative_features, X, y, qualitative_measures, qualitative_filters, n_best)
+    best_features = get_best_features(
+        qualitative_features, X, y, qualitative_measures, qualitative_filters, n_best
+    )
     assert len(best_features) == 1
 
     # mismatched qualitatitve features and measures
@@ -311,10 +331,14 @@ def test_get_best_features(
         get_best_features(qualitative_features, X, y, qualitative_measures, quantitative_filters, 1)
     # mismatched quantitatitve features and measures
     with raises(TypeError):
-        get_best_features(quantitative_features, X, y, qualitative_measures, quantitative_filters, 1)
+        get_best_features(
+            quantitative_features, X, y, qualitative_measures, quantitative_filters, 1
+        )
     # mismatched quantitative features and filters
     with raises(TypeError):
-        get_best_features(quantitative_features, X, y, quantitative_measures, qualitative_filters, 1)
+        get_best_features(
+            quantitative_features, X, y, quantitative_measures, qualitative_filters, 1
+        )
 
 
 def test_base_selector_init_valid_parameters(features_object: Features) -> None:

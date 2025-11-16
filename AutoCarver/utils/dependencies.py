@@ -1,4 +1,4 @@
-"""checks for installed extra dependencies"""
+""" checks for installed extra dependencies"""
 
 
 def has_idisplay() -> bool:

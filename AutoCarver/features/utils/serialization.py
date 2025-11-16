@@ -1,7 +1,7 @@
 """Sets of helper functions for BaseDiscretizer JSON serialization"""
 
 from json import dumps, loads
-from typing import Any
+from typing import Any, Union
 
 from numpy import floating, inf, integer, isfinite
 
@@ -9,7 +9,7 @@ from ...config import Constants
 from .grouped_list import GroupedList
 
 
-def convert_value_to_base_type(value: Any) -> str | float | int:
+def convert_value_to_base_type(value: Any) -> Union[str, float, int]:
     """Converts a value to python's base types (str, int, float) for JSON serialization.
 
     Parameters
@@ -34,7 +34,7 @@ def convert_value_to_base_type(value: Any) -> str | float | int:
     return output
 
 
-def convert_value_to_numpy_type(value: str | float | int) -> Any:
+def convert_value_to_numpy_type(value: Union[str, float, int]) -> Any:
     """Converts a list or a dict of lists values to numpy types for JSON deserialization.
 
     Parameters
@@ -55,8 +55,8 @@ def convert_value_to_numpy_type(value: str | float | int) -> Any:
 
 
 def convert_values_to_base_types(
-    iterable: list[Any] | dict[str, list[Any]],
-) -> list[str | int | float] | dict[str, list[str | int | float]]:
+    iterable: Union[list[Any], dict[str, list[Any]]]
+) -> Union[list[Union[str, int, float]], dict[str, list[Union[str, int, float]]]]:
     """Converts a list or a dict of lists values to python's base types (str, int, float)
     for JSON serialization.
 
@@ -77,15 +77,16 @@ def convert_values_to_base_types(
     # dict input
     elif isinstance(iterable, dict):
         output = {
-            convert_value_to_base_type(key): convert_values_to_base_types(values) for key, values in iterable.items()
+            convert_value_to_base_type(key): convert_values_to_base_types(values)
+            for key, values in iterable.items()
         }
 
     return output
 
 
 def convert_values_to_numpy_types(
-    iterable: list[str | int | float] | dict[str, list[str | int | float]],
-) -> list[Any] | dict[str, list[Any]]:
+    iterable: Union[list[Union[str, int, float]], dict[str, list[Union[str, int, float]]]]
+) -> Union[list[Any], dict[str, list[Any]]]:
     """Converts a list or a dict of lists values to numpy types for JSON deserialization.
 
     Parameters
@@ -105,7 +106,8 @@ def convert_values_to_numpy_types(
     # dict input
     elif isinstance(iterable, dict):
         output = {
-            convert_value_to_numpy_type(key): convert_values_to_numpy_types(values) for key, values in iterable.items()
+            convert_value_to_numpy_type(key): convert_values_to_numpy_types(values)
+            for key, values in iterable.items()
         }
 
     return output

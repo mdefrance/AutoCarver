@@ -2,8 +2,7 @@
 for any task.
 """
 
-from collections.abc import Generator
-from typing import Any
+from typing import Any, Generator
 
 from pandas import DataFrame
 

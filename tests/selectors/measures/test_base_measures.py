@@ -121,7 +121,9 @@ def test_base_validate(base_measure: BaseMeasure) -> None:
 
     # null value
     base_measure.value = None
-    assert not base_measure.validate(), "when value is missing, should default to false (remove low correlation)"
+    assert (
+        not base_measure.validate()
+    ), "when value is missing, should default to false (remove low correlation)"
 
 
 def test_outlier_validate(outlier_measure: OutlierMeasure) -> None:
@@ -179,7 +181,9 @@ def test_absolute_validate(absolute_measure: AbsoluteMeasure) -> None:
 
     # null value
     absolute_measure.value = None
-    assert not absolute_measure.validate(), "when value is missing, should default to false (remove low correlation)"
+    assert (
+        not absolute_measure.validate()
+    ), "when value is missing, should default to false (remove low correlation)"
 
 
 def test_nan_measure(nan_measure: NanMeasure) -> None:

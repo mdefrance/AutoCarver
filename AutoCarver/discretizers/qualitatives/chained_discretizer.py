@@ -55,20 +55,26 @@ class ChainedDiscretizer(BaseDiscretizer):
                 # looking for known and unknwon values in next_level
 
                 # checking for unknown values
-                next_unknown = [value for value in next_values if value not in known_values and value != next_group]
+                next_unknown = [
+                    value
+                    for value in next_values
+                    if value not in known_values and value != next_group
+                ]
                 if len(next_unknown) > 0:
                     raise ValueError(
                         f"[{self.__name__}] Values {str(next_unknown)}, provided in "
-                        f"chained_orders[{n + 1}] are missing from chained_orders[{n}]. Please make "
+                        f"chained_orders[{n+1}] are missing from chained_orders[{n}]. Please make "
                         "sure values are kept trhough each level."
                     )
 
                 # checking for known values
-                next_known = [value for value in next_values if value in known_values and value != next_group]
+                next_known = [
+                    value for value in next_values if value in known_values and value != next_group
+                ]
                 if len(next_known) == 0:
                     raise ValueError(
                         f"[{self.__name__}] For key '{next_group}', the provided chained_orders"
-                        f"[{n + 1}] has no values from chained_orders[:{n + 1}]. Please provide some"
+                        f"[{n+1}] has no values from chained_orders[:{n+1}]. Please provide some"
                         " existing values."
                     )
 
@@ -76,7 +82,11 @@ class ChainedDiscretizer(BaseDiscretizer):
                 highest_index = known_values.index(next_known[-1])
 
                 # adding next_group to the order at the right place in the amongst known_values
-                known_values = known_values[: highest_index + 1] + [next_group] + known_values[highest_index + 1 :]
+                known_values = (
+                    known_values[: highest_index + 1]
+                    + [next_group]
+                    + known_values[highest_index + 1 :]
+                )
 
         # saving resulting known values
         self.known_values = known_values
@@ -158,7 +168,9 @@ class ChainedDiscretizer(BaseDiscretizer):
             for level_order in self.chained_orders:
                 # computing frequencies of each modality
                 frequencies = (
-                    sample.X[feature.version].value_counts(normalize=True, dropna=False).drop(nan, errors="ignore")
+                    sample.X[feature.version]
+                    .value_counts(normalize=True, dropna=False)
+                    .drop(nan, errors="ignore")
                 )
                 values, frequencies = frequencies.index, frequencies.values
 
@@ -172,10 +184,14 @@ class ChainedDiscretizer(BaseDiscretizer):
                 groups_value = [level_order.get_group(value) for value in values_to_group]
 
                 # values of the feature to input (needed for next levels of the order)
-                df_to_input = [sample.X[feature.version] == discarded for discarded in values_to_group]
+                df_to_input = [
+                    sample.X[feature.version] == discarded for discarded in values_to_group
+                ]
 
                 # inputing non frequent values
-                sample.X[feature.version] = select(df_to_input, groups_value, default=sample.X[feature.version])
+                sample.X[feature.version] = select(
+                    df_to_input, groups_value, default=sample.X[feature.version]
+                )
 
                 # historizing in the feature's order
                 order = GroupedList(feature.values)
@@ -230,7 +246,7 @@ def check_frequencies(features: Features, X: DataFrame, min_freq: float, name: s
         too_common = [
             (
                 f" - {features(feature)}: most frequent value has "
-                f"freq={max_freq[feature]:2.2%} > (1-min_freq)={1 - min_freq:2.2%}"
+                f"freq={max_freq[feature]:2.2%} > (1-min_freq)={1-min_freq:2.2%}"
             )
             for feature in too_common
         ]
@@ -255,7 +271,9 @@ def ensure_qualitative_dtypes(features: Features, X: DataFrame, **kwargs) -> Dat
     # converting detected non-string features
     if any(not_object):
         # converting non-str features into qualitative features
-        to_convert = [feature for feature in features if feature.version in not_object.index[not_object]]
+        to_convert = [
+            feature for feature in features if feature.version in not_object.index[not_object]
+        ]
         string_discretizer = StringDiscretizer(features=to_convert, **kwargs)
         X = string_discretizer.fit_transform(X)
 

@@ -1,4 +1,4 @@
-"""Define the quantitative features."""
+""" Define the quantitative features. """
 
 from .datetime_feature import DatetimeFeature
 from .numerical_feature import NumericalFeature

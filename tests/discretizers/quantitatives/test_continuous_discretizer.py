@@ -780,7 +780,9 @@ def test_continuous_discretizer(x_train: DataFrame):
     x_discretized = discretizer.transform(x_train)
     features.dropna = False
 
-    assert all(x_discretized.Quantitative.value_counts(normalize=True) == min_freq), "Wrong quantiles"
+    assert all(
+        x_discretized.Quantitative.value_counts(normalize=True) == min_freq
+    ), "Wrong quantiles"
 
     assert features("Discrete_Quantitative_highnan").values == [
         2.0,

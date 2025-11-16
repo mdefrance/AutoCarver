@@ -170,7 +170,9 @@ def test_quanti_binary_compute_association(
     assert quanti_binary_measure.value == association, "not stored measurement"
 
     # with nans
-    association = quanti_binary_measure.compute_association(series_data.replace(1, nan), binary_series_data)
+    association = quanti_binary_measure.compute_association(
+        series_data.replace(1, nan), binary_series_data
+    )
     assert association is not None, "not correctly computed association"
     assert quanti_binary_measure.value == association, "not stored measurement"
 
@@ -186,7 +188,9 @@ def test_quanti_quali_compute_association(
     assert quanti_quali_measure.value == association, "not stored measurement"
 
     # with nans
-    association = quanti_quali_measure.compute_association(series_data.replace(1, nan), quali_series_data)
+    association = quanti_quali_measure.compute_association(
+        series_data.replace(1, nan), quali_series_data
+    )
     print(
         quanti_quali_measure.__name__,
         quanti_quali_measure.value,
@@ -195,9 +199,9 @@ def test_quanti_quali_compute_association(
         quanti_quali_measure.threshold,
     )
     assert association is not None, "not correctly computed association"
-    assert quanti_quali_measure.value == association or (isna(quanti_quali_measure.value) and isna(association)), (
-        "not stored measurement"
-    )
+    assert quanti_quali_measure.value == association or (
+        isna(quanti_quali_measure.value) and isna(association)
+    ), "not stored measurement"
 
 
 def test_quanti_quanli_reverse_xy(
@@ -211,7 +215,9 @@ def test_quanti_quanli_reverse_xy(
     assert association == association_reversed, "not same correlation when reversed"
 
 
-def test_quanti_quanti_compute_association(quanti_quanti_measure: BaseMeasure, series_data: Series) -> None:
+def test_quanti_quanti_compute_association(
+    quanti_quanti_measure: BaseMeasure, series_data: Series
+) -> None:
     """checks that correlation measurement works"""
 
     # without nans
@@ -220,7 +226,9 @@ def test_quanti_quanti_compute_association(quanti_quanti_measure: BaseMeasure, s
     assert quanti_quanti_measure.value == association, "not stored measurement"
 
     # with nans
-    association = quanti_quanti_measure.compute_association(series_data.replace(1, nan), series_data)
+    association = quanti_quanti_measure.compute_association(
+        series_data.replace(1, nan), series_data
+    )
     assert association is not None, "not correctly computed association"
     assert quanti_quanti_measure.value == association, "not stored measurement"
 
@@ -318,17 +326,23 @@ def test_quanti_quanti_validate_with_computed_association_below_threshold(
         quanti_quanti_measure.threshold,
         quanti_quanti_measure.validate(),
     )
-    assert not quanti_quanti_measure.validate(), "kept feature with lower than threshold correlation"
+    assert (
+        not quanti_quanti_measure.validate()
+    ), "kept feature with lower than threshold correlation"
 
     # with nans
-    quanti_quanti_measure.compute_association(series_data.replace(1, nan), (series_data <= 2).astype(int))
+    quanti_quanti_measure.compute_association(
+        series_data.replace(1, nan), (series_data <= 2).astype(int)
+    )
     print(
         quanti_quanti_measure.__name__,
         quanti_quanti_measure.value,
         quanti_quanti_measure.threshold,
         quanti_quanti_measure.validate(),
     )
-    assert not quanti_quanti_measure.validate(), "kept feature with lower than threshold correlation"
+    assert (
+        not quanti_quanti_measure.validate()
+    ), "kept feature with lower than threshold correlation"
 
     # test with negative value
     quanti_quanti_measure.value = -0.5
@@ -380,7 +394,9 @@ def test_quanti_binary_validate_with_computed_association_below_threshold(
         quanti_binary_measure.threshold,
         quanti_binary_measure.validate(),
     )
-    assert not quanti_binary_measure.validate(), "kept feature with lower than threshold correlation"
+    assert (
+        not quanti_binary_measure.validate()
+    ), "kept feature with lower than threshold correlation"
 
     # with nans
     quanti_binary_measure.compute_association(series_data.replace(1, nan), binary_series_data)
@@ -390,7 +406,9 @@ def test_quanti_binary_validate_with_computed_association_below_threshold(
         quanti_binary_measure.threshold,
         quanti_binary_measure.validate(),
     )
-    assert not quanti_binary_measure.validate(), "kept feature with lower than threshold correlation"
+    assert (
+        not quanti_binary_measure.validate()
+    ), "kept feature with lower than threshold correlation"
 
 
 def test_quanti_binary_validate_with_computed_association_above_threshold(

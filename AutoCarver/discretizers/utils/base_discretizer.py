@@ -288,7 +288,9 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
                 self._prepare_y(sample.y)
 
                 # checking for matching indices
-                if not len(sample.y.index) == len(sample.X.index) or not all(sample.y.index == sample.X.index):
+                if not len(sample.y.index) == len(sample.X.index) or not all(
+                    sample.y.index == sample.X.index
+                ):
                     raise ValueError(f"[{self.__name__}] X and y must have the same indices.")
 
         return sample
@@ -312,7 +314,8 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         # checking for previous fits of the discretizer that could cause unwanted errors
         if self.is_fitted:
             raise RuntimeError(
-                f"[{self.__name__}] Already fitted. Fitting it anew could break it. Please initialize a new one."
+                f"[{self.__name__}] Already fitted. "
+                "Fitting it anew could break it. Please initialize a new one."
             )
 
         # checking that all features were fitted
@@ -405,7 +408,9 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         )
 
         # unpacking transformed series
-        sample.X[[feature for feature, _ in transformed]] = DataFrame(dict(transformed), index=sample.index)
+        sample.X[[feature for feature, _ in transformed]] = DataFrame(
+            dict(transformed), index=sample.index
+        )
 
         return sample
 
@@ -433,7 +438,9 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         qualitatives = self.features.qualitatives
 
         # replacing values for there corresponding label
-        sample.X.replace({feature.version: feature.label_per_value for feature in qualitatives}, inplace=True)
+        sample.X.replace(
+            {feature.version: feature.label_per_value for feature in qualitatives}, inplace=True
+        )
 
         return sample
 
@@ -516,7 +523,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             A fitted Discretizer.
         """
         # reading file
-        with open(file_name, encoding="utf-8") as json_file:
+        with open(file_name, "r", encoding="utf-8") as json_file:
             discretizer_json = json.load(json_file)
 
         # deserializing features
@@ -614,7 +621,9 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
     #         self.labels_per_values = self._get_labels_per_values(self.ordinal_encoding)
 
 
-def transform_quantitative_feature(feature: BaseFeature, df_feature: Series, x_len: int) -> tuple[str, list]:
+def transform_quantitative_feature(
+    feature: BaseFeature, df_feature: Series, x_len: int
+) -> tuple[str, list]:
     """Transforms a quantitative feature"""
 
     # keeping track of original index
@@ -639,7 +648,9 @@ def transform_quantitative_feature(feature: BaseFeature, df_feature: Series, x_l
     values_to_group = [df_feature <= value for value in feature.values if value != feature.nan]
 
     # corressponding group for each value
-    group_labels = [[feature.label_per_value[value]] * x_len for value in feature.values if value != feature.nan]
+    group_labels = [
+        [feature.label_per_value[value]] * x_len for value in feature.values if value != feature.nan
+    ]
 
     # checking for values to group
     # if len(values_to_group) > 0:  # TODO check if this is needed

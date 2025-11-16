@@ -41,7 +41,9 @@ class ClassificationSelector(BaseSelector):
 
         # checking for measures for quantitative target
         if not all(
-            measure.is_y_qualitative or (measure.reverse_xy() and measure.is_y_qualitative) or measure.is_default
+            measure.is_y_qualitative
+            or (measure.reverse_xy() and measure.is_y_qualitative)
+            or measure.is_default
             for measure in measures
         ):
             raise ValueError(f"[{self}] Provide measures for qualitative target!")

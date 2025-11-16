@@ -1,4 +1,4 @@
-"""Defines fixtures for carvers pytests"""
+""" Defines fixtures for carvers pytests"""
 
 from pytest import FixtureRequest, fixture
 

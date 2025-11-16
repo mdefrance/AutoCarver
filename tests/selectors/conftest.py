@@ -1,4 +1,4 @@
-"""Defines fixtures for carvers pytests"""
+""" Defines fixtures for carvers pytests"""
 
 # from pytest import FixtureRequest, fixture
 
@@ -43,6 +43,7 @@
 # def n_best(request: FixtureRequest) -> int:
 #     """Number of features to be selected"""
 #     return request.param
+
 
 from pandas import DataFrame, Series
 from pytest import FixtureRequest, fixture
@@ -122,7 +123,9 @@ def default_filter(request: FixtureRequest) -> BaseFilter:
 
 
 @fixture
-def filters(quanti_filter: BaseFilter, quali_filter: BaseFilter, default_filter: BaseFilter) -> list[BaseFilter]:
+def filters(
+    quanti_filter: BaseFilter, quali_filter: BaseFilter, default_filter: BaseFilter
+) -> list[BaseFilter]:
     return [default_filter, quanti_filter, quali_filter]
 
 

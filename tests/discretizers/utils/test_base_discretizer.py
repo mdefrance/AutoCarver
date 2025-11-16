@@ -55,7 +55,9 @@ def test_transform_quantitative_feature(features: Features) -> None:
     feature.update(GroupedList([2, 4.5, inf]))
 
     df_feature = Series([1, 2, 3, 4, 4.5, 5], name=feature.version)
-    feature_version, list_feature = transform_quantitative_feature(feature, df_feature, len(df_feature))
+    feature_version, list_feature = transform_quantitative_feature(
+        feature, df_feature, len(df_feature)
+    )
     assert feature_version == feature.version
     assert [
         "x <= 2.00e+00",
@@ -73,7 +75,9 @@ def test_transform_quantitative_feature(features: Features) -> None:
     feature.dropna = True
 
     df_feature = Series([1, 2, 3, 4, 4.5, nan, 5], name=feature.version)
-    feature_version, list_feature = transform_quantitative_feature(feature, df_feature, len(df_feature))
+    feature_version, list_feature = transform_quantitative_feature(
+        feature, df_feature, len(df_feature)
+    )
     assert feature_version == feature.version
     assert [
         "x <= 2.00e+00",
@@ -94,7 +98,9 @@ def test_transform_quantitative_feature(features: Features) -> None:
     print(feature.values.content)
 
     df_feature = Series([1, 2, 3, 4, 4.5, nan, 5], name=feature.version)
-    feature_version, list_feature = transform_quantitative_feature(feature, df_feature, len(df_feature))
+    feature_version, list_feature = transform_quantitative_feature(
+        feature, df_feature, len(df_feature)
+    )
     assert feature_version == feature.version
     assert [
         "x <= 2.00e+00",
@@ -114,7 +120,9 @@ def test_transform_quantitative_feature(features: Features) -> None:
     print(feature.values.content)
 
     df_feature = Series([1, 2, 3, 4, 4.5, "__NAN__", 5], name=feature.version)
-    feature_version, list_feature = transform_quantitative_feature(feature, df_feature, len(df_feature))
+    feature_version, list_feature = transform_quantitative_feature(
+        feature, df_feature, len(df_feature)
+    )
     assert feature_version == feature.version
     assert [
         "x <= 2.00e+00",
@@ -382,7 +390,9 @@ def test_transform_quantitative() -> None:
 
     # Create sample data
     index = [1, 2, 3, 4, 5, 6]
-    X = DataFrame({"feature1": [1, 2, 3, 4, 4.5, 5], "feature2": [10, 20, 30, 40, 45, 50]}, index=index)
+    X = DataFrame(
+        {"feature1": [1, 2, 3, 4, 4.5, 5], "feature2": [10, 20, 30, 40, 45, 50]}, index=index
+    )
 
     # Call the method
     result = disc._transform_quantitative(Sample(X=X, y=None)).X
@@ -613,7 +623,10 @@ def test_transform(true_false: bool) -> None:
         index=index,
     )
     for feature in ["feature1", "feature2", "feature3"]:
-        assert ((result[feature] == expected[feature]) | (result[feature].isna() & expected[feature].isna())).all()
+        assert (
+            (result[feature] == expected[feature])
+            | (result[feature].isna() & expected[feature].isna())
+        ).all()
 
 
 @fixture(params=[KruskalCombinations, CramervCombinations, TschuprowtCombinations, None])
@@ -668,7 +681,9 @@ def test_to_json(features: Features, true_false: bool, combinations: Combination
     assert result["ordinal_encoding"] == true_false
 
 
-def test_save(tmp_path, features: Features, true_false: bool, combinations: CombinationEvaluator) -> None:
+def test_save(
+    tmp_path, features: Features, true_false: bool, combinations: CombinationEvaluator
+) -> None:
     """tests base discretizer save method"""
 
     # Create a mock BaseDiscretizer instance
@@ -694,7 +709,7 @@ def test_save(tmp_path, features: Features, true_false: bool, combinations: Comb
     discretizer.save(str(file_path), light_mode=true_false)
 
     assert file_path.exists()
-    with open(file_path, encoding="utf-8") as f:
+    with open(file_path, "r", encoding="utf-8") as f:
         saved_data = json.load(f)
     assert saved_data == discretizer.to_json(light_mode=true_false)
 
@@ -703,7 +718,9 @@ def test_save(tmp_path, features: Features, true_false: bool, combinations: Comb
         discretizer.save("wrong_path", light_mode=true_false)
 
 
-def test_load_discretizer(tmp_path, features: Features, true_false: bool, combinations: CombinationEvaluator) -> None:
+def test_load_discretizer(
+    tmp_path, features: Features, true_false: bool, combinations: CombinationEvaluator
+) -> None:
     """tests base discretizer load_discretizer method"""
 
     # Create a mock BaseDiscretizer instance
@@ -850,9 +867,9 @@ def test_base_discretizer(x_train: DataFrame, dropna: bool) -> None:
     non_nans = x_expected[feature].notna()
     print(x_expected.loc[non_nans, feature].value_counts())
     print(x_discretized.loc[non_nans, feature].value_counts())
-    assert all(x_expected.loc[non_nans, feature] == x_discretized.loc[non_nans, feature]), (
-        "incorrect discretization with nans"
-    )
+    assert all(
+        x_expected.loc[non_nans, feature] == x_discretized.loc[non_nans, feature]
+    ), "incorrect discretization with nans"
 
     # checking that other columns are left unchanged
     feature = "Quantitative"

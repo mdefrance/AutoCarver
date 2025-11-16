@@ -1,4 +1,4 @@
-"""Loads Qualitative Discretization tools."""
+""" Loads Qualitative Discretization tools."""
 
 from .categorical_discretizer import CategoricalDiscretizer
 from .chained_discretizer import ChainedDiscretizer

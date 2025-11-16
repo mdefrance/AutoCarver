@@ -1,4 +1,4 @@
-"""Defines a datetime feature"""
+""" Defines a datetime feature"""
 
 from .quantitative_feature import QuantitativeFeature
 

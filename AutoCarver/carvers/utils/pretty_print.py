@@ -1,4 +1,4 @@
-"""Set of tools used for pretty printing"""
+""" Set of tools used for pretty printing"""
 
 from pandas import DataFrame
 

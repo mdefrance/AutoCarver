@@ -1,4 +1,4 @@
-"""Set of combination tools for Carvers"""
+""" Set of combination tools for Carvers"""
 
 from .binary.binary_combination_evaluators import (
     BinaryCombinationEvaluator,

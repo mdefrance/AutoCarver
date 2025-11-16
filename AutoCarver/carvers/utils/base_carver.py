@@ -5,6 +5,7 @@ for any task.
 import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from typing import Union
 
 from pandas import DataFrame, Series
 
@@ -222,7 +223,8 @@ class BaseCarver(BaseDiscretizer, ABC):
         # checking for fitted features
         if self.features.is_fitted:
             raise ValueError(
-                f"[{self.__name__}] features are already fitted or previous fit failed. Please reset your features."
+                f"[{self.__name__}] features are already fitted or previous fit failed. "
+                "Please reset your features."
             )
 
         # setting is_fitted
@@ -246,7 +248,7 @@ class BaseCarver(BaseDiscretizer, ABC):
 
         # carving each feature
         for n, feature in enumerate(all_features):
-            num_iter = f"{n + 1}/{len(all_features)}"  # logging iteration number
+            num_iter = f"{n+1}/{len(all_features)}"  # logging iteration number
             self._carve_feature(self.features(feature), xaggs, xaggs_dev, num_iter)
 
         # discretizing features based on each feature's values_order
@@ -255,14 +257,14 @@ class BaseCarver(BaseDiscretizer, ABC):
         return self
 
     @abstractmethod
-    def _aggregator(self, X: DataFrame, y: Series) -> Series | DataFrame:
+    def _aggregator(self, X: DataFrame, y: Series) -> Union[Series, DataFrame]:
         """Helper that aggregates X by y into crosstab or means (carver specific)"""
 
     def _carve_feature(
         self,
         feature: BaseFeature,
-        xaggs: dict[str, Series | DataFrame],
-        xaggs_dev: dict[str, Series | DataFrame],
+        xaggs: dict[str, Union[Series, DataFrame]],
+        xaggs_dev: dict[str, Union[Series, DataFrame]],
         num_iter: str,
     ) -> dict[str, GroupedList]:
         """Carves a feature into buckets that maximize association with the target"""
@@ -301,10 +303,10 @@ class BaseCarver(BaseDiscretizer, ABC):
     def _print_xagg(
         self,
         feature: BaseFeature,
-        xagg: DataFrame | Series,
+        xagg: Union[DataFrame, Series],
         message: str,
         *,
-        xagg_dev: DataFrame | Series = None,
+        xagg_dev: Union[DataFrame, Series] = None,
     ) -> None:
         """Prints crosstabs' target rates and frequencies per modality, in raw or html format
 
@@ -337,7 +339,9 @@ class BaseCarver(BaseDiscretizer, ABC):
         formatted_xagg_dev = index_mapper(feature, xagg_dev)
         return formatted_xagg, formatted_xagg_dev
 
-    def _pretty_print(self, formatted_xagg: DataFrame, formatted_xagg_dev: DataFrame) -> tuple[str, str]:
+    def _pretty_print(
+        self, formatted_xagg: DataFrame, formatted_xagg_dev: DataFrame
+    ) -> tuple[str, str]:
         """Returns pretty-printed XAGG DataFrames."""
         nice_xagg = self.combinations.target_rate.compute(formatted_xagg)
         nice_xagg_dev = self.combinations.target_rate.compute(formatted_xagg_dev)
@@ -379,7 +383,7 @@ class BaseCarver(BaseDiscretizer, ABC):
             A fitted Carver.
         """
         # reading file
-        with open(file_name, encoding="utf-8") as json_file:
+        with open(file_name, "r", encoding="utf-8") as json_file:
             carver_json = json.load(json_file)
 
         # deserializing features

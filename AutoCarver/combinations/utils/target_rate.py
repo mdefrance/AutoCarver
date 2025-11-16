@@ -1,6 +1,7 @@
-"""defines a target rate"""
+""" defines a target rate"""
 
 from abc import ABC, abstractmethod
+from typing import Union
 
 from pandas import DataFrame, Series
 
@@ -11,7 +12,7 @@ class TargetRate(ABC):
     __name__ = "target_rate"
 
     @abstractmethod
-    def _compute(self, xagg: DataFrame | Series) -> Series:
+    def _compute(self, xagg: Union[DataFrame, Series]) -> Series:
         """Computes the target rate.
 
         Parameters
@@ -26,7 +27,7 @@ class TargetRate(ABC):
         """
 
     @abstractmethod
-    def compute(self, xagg: DataFrame | Series) -> Series:
+    def compute(self, xagg: Union[DataFrame, Series]) -> Series:
         """Computes the target rate.
 
         Parameters

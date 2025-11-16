@@ -1,4 +1,4 @@
-"""function to get boolean attributes from kwargs"""
+""" function to get boolean attributes from kwargs """
 
 
 def get_attribute(kwargs: dict, attribute: str, default_value: any = None) -> any:

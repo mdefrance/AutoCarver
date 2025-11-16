@@ -1,4 +1,4 @@
-"""set of target rates for binary classification"""
+""" set of target rates for binary classification """
 
 from abc import ABC
 

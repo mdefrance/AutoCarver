@@ -1,4 +1,5 @@
-"""Set of tests for features module."""
+"""Set of tests for features module.
+"""
 
 import json
 
@@ -73,7 +74,9 @@ def test_make_versions(mock_features):
     assert all(new_name in initial_names for new_name in new_features_names)
     new_features_versions = get_versions(new_features)
     assert all(
-        make_version_name(f.name, y_class) in new_features_versions for f in mock_features for y_class in y_classes
+        make_version_name(f.name, y_class) in new_features_versions
+        for f in mock_features
+        for y_class in y_classes
     )
     assert (
         sum(isinstance(new_feature, QualitativeFeature) for new_feature in new_features)
@@ -82,10 +85,16 @@ def test_make_versions(mock_features):
     assert sum(isinstance(new_feature, CategoricalFeature) for new_feature in new_features) == len(
         y_classes
     )  # ordinal features also are categorical
-    assert sum(isinstance(new_feature, OrdinalFeature) for new_feature in new_features) == len(y_classes)
-    assert sum(isinstance(new_feature, QuantitativeFeature) for new_feature in new_features) == len(y_classes)
+    assert sum(isinstance(new_feature, OrdinalFeature) for new_feature in new_features) == len(
+        y_classes
+    )
+    assert sum(isinstance(new_feature, QuantitativeFeature) for new_feature in new_features) == len(
+        y_classes
+    )
     for y_class in y_classes:
-        assert sum(new_feature.version_tag == y_class for new_feature in new_features) == len(mock_features)
+        assert sum(new_feature.version_tag == y_class for new_feature in new_features) == len(
+            mock_features
+        )
 
 
 def test_get_names(mock_features):
@@ -109,7 +118,9 @@ def test_cast_features(mock_features):
     # ordinal with strings
     feature_names = ["feature1", "feature2"]
     ordinal_values = {"feature1": ["low", "medium", "high"], "feature2": ["low", "medium", "high"]}
-    casted_features = cast_features(feature_names, target_class=OrdinalFeature, ordinal_values=ordinal_values)
+    casted_features = cast_features(
+        feature_names, target_class=OrdinalFeature, ordinal_values=ordinal_values
+    )
     assert len(casted_features) == 2
     assert isinstance(casted_features[0], OrdinalFeature)
     assert isinstance(casted_features[1], OrdinalFeature)
@@ -151,7 +162,9 @@ def test_cast_features(mock_features):
     feature3 = QuantitativeFeature(name="feature1")
     feature1.version = "feature1_v0"
 
-    casted_features = cast_features([feature1, feature2, feature3], target_class=QuantitativeFeature)
+    casted_features = cast_features(
+        [feature1, feature2, feature3], target_class=QuantitativeFeature
+    )
 
     assert len(casted_features) == 2
     assert feature1.version in get_versions(casted_features)
@@ -248,7 +261,9 @@ def test_features_call(features, mock_categoricals, mock_ordinals, mock_quantita
 
 def test_features_len(features):
     """test Features len"""
-    assert len(features) == len(features.categoricals) + len(features.ordinals) + len(features.quantitatives)
+    assert len(features) == len(features.categoricals) + len(features.ordinals) + len(
+        features.quantitatives
+    )
 
 
 def test_features_iter(features):
@@ -554,7 +569,9 @@ def test_features_to_list(features):
     """test to_list functionnality"""
     feature_list = features.to_list()
     assert isinstance(feature_list, list)
-    assert len(feature_list) == len(features.categoricals) + len(features.ordinals) + len(features.quantitatives)
+    assert len(feature_list) == len(features.categoricals) + len(features.ordinals) + len(
+        features.quantitatives
+    )
 
 
 def test_features_to_dict(features):
@@ -564,7 +581,9 @@ def test_features_to_dict(features):
         feature.values = GroupedList([1, 2, 3])
     feature_dict = features.to_dict()
     assert isinstance(feature_dict, dict)
-    assert len(feature_dict) == len(features.categoricals) + len(features.ordinals) + len(features.quantitatives)
+    assert len(feature_dict) == len(features.categoricals) + len(features.ordinals) + len(
+        features.quantitatives
+    )
     assert all(isinstance(value, BaseFeature) for value in feature_dict.values())
     assert all(feature.version in feature_dict for feature in features)
     assert not any(feature.name in feature_dict for feature in features)
@@ -633,7 +652,9 @@ def test_features_init() -> None:
     feature2 = QuantitativeFeature("feature2")
     feature3 = CategoricalFeature("feature3")
     feature4 = OrdinalFeature("feature4", values=["a", "b", "c"])
-    features = Features(quantitatives=[feature1, feature2], categoricals=[feature3], ordinals=[feature4])
+    features = Features(
+        quantitatives=[feature1, feature2], categoricals=[feature3], ordinals=[feature4]
+    )
     assert feature1 in features
     assert feature2 in features
     assert feature3 in features

@@ -1,4 +1,5 @@
-"""Base tools to convert values into specific types."""
+"""Base tools to convert values into specific types.
+"""
 
 from pandas import DataFrame, Series
 

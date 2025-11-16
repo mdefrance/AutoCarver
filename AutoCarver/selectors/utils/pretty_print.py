@@ -1,4 +1,4 @@
-"""Pretty print functions for selectors"""
+""" Pretty print functions for selectors """
 
 from pandas import DataFrame
 

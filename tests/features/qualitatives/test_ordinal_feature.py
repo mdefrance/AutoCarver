@@ -1,4 +1,4 @@
-"""set of tests for quantitative features"""
+""" set of tests for quantitative features"""
 
 from numpy import nan
 from pandas import DataFrame
@@ -16,7 +16,9 @@ BaseFeature.__abstractmethods__ = set()
 def sample_ordinal_feature() -> OrdinalFeature:
     """Create a sample OrdinalFeature for testing"""
 
-    feature = OrdinalFeature("test_feature", values=["1", "2", "3", "4", "5", "a", "b", "c", "d", "e", "f"])
+    feature = OrdinalFeature(
+        "test_feature", values=["1", "2", "3", "4", "5", "a", "b", "c", "d", "e", "f"]
+    )
     feature.update(
         GroupedList({"a": ["1", "2", "3", "4", "5", "a"], "b": ["b"], "c": ["c"], "d": ["e", "f"]}),
         replace=True,
@@ -62,12 +64,16 @@ def test_ordinal_feature_format_modalities(sample_ordinal_feature: OrdinalFeatur
     # adding nans
     # with smaller max_n_chars
     sample_ordinal_feature.max_n_chars = 4
-    result = sample_ordinal_feature._format_modalities(group, content + [sample_ordinal_feature.nan])
+    result = sample_ordinal_feature._format_modalities(
+        group, content + [sample_ordinal_feature.nan]
+    )
     assert result == f"1 to a, {sample_ordinal_feature.nan}"
 
     # with smaller max_n_chars
     sample_ordinal_feature.max_n_chars = 30
-    result = sample_ordinal_feature._format_modalities(group, content + [sample_ordinal_feature.nan])
+    result = sample_ordinal_feature._format_modalities(
+        group, content + [sample_ordinal_feature.nan]
+    )
     assert result == f"1 to a, {sample_ordinal_feature.nan}"
 
     # empty content
@@ -114,10 +120,14 @@ def test_ordinal_feature_update_ordinal_encoding(
     """testing update"""
 
     with raises(AttributeError):  # only already known labels
-        sample_ordinal_feature.update(GroupedList({0: [0], 1: [1], "test": ["tests", "test2"]}), convert_labels=True)
+        sample_ordinal_feature.update(
+            GroupedList({0: [0], 1: [1], "test": ["tests", "test2"]}), convert_labels=True
+        )
 
     # fitting some nans
-    sample_ordinal_feature.fit(DataFrame({sample_ordinal_feature.version: ["a", "c", "f", "1", nan]}))
+    sample_ordinal_feature.fit(
+        DataFrame({sample_ordinal_feature.version: ["a", "c", "f", "1", nan]})
+    )
     sample_ordinal_feature.ordinal_encoding = True
     sample_ordinal_feature.update(GroupedList({2: [2, 3]}), convert_labels=True)
     print(sample_ordinal_feature.content)
@@ -187,10 +197,14 @@ def test_ordinal_feature_update_no_ordinal_encoding(
     """testing update"""
 
     with raises(AttributeError):  # only already known labels
-        sample_ordinal_feature.update(GroupedList({0: [0], 1: [1], "test": ["tests", "test2"]}), convert_labels=True)
+        sample_ordinal_feature.update(
+            GroupedList({0: [0], 1: [1], "test": ["tests", "test2"]}), convert_labels=True
+        )
 
     # fitting some nans
-    sample_ordinal_feature.fit(DataFrame({sample_ordinal_feature.version: ["a", "c", "f", "1", nan]}))
+    sample_ordinal_feature.fit(
+        DataFrame({sample_ordinal_feature.version: ["a", "c", "f", "1", nan]})
+    )
     sample_ordinal_feature.ordinal_encoding = False
     sample_ordinal_feature.update(GroupedList({"d to f": ["c", "d to f"]}), convert_labels=True)
     print(sample_ordinal_feature.content)
@@ -225,7 +239,9 @@ def test_ordinal_feature_update_no_ordinal_encoding(
     # adding nans
     sample_ordinal_feature.dropna = True
     print(sample_ordinal_feature.content)
-    sample_ordinal_feature.update(GroupedList({Constants.NAN: [Constants.NAN, "b"]}), convert_labels=True)
+    sample_ordinal_feature.update(
+        GroupedList({Constants.NAN: [Constants.NAN, "b"]}), convert_labels=True
+    )
     assert sample_ordinal_feature.values == ["a", "d", Constants.NAN]
     print(sample_ordinal_feature.content)
     assert sample_ordinal_feature.content == {

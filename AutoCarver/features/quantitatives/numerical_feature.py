@@ -1,4 +1,4 @@
-"""Defines a continuous/discrete feature"""
+""" Defines a continuous/discrete feature"""
 
 from .quantitative_feature import QuantitativeFeature
 

@@ -1,4 +1,4 @@
-"""set of tests for quantitative features"""
+""" set of tests for quantitative features"""
 
 from pandas import Series
 from pytest import fixture
@@ -99,7 +99,9 @@ def test_nan_unique():
 def sample_ordinal_feature() -> OrdinalFeature:
     """Create a sample CategoricalFeature for testing"""
 
-    feature = OrdinalFeature("test_feature", values=["1", "2", "3", "4", "5", "a", "b", "c", "d", "e", "f"])
+    feature = OrdinalFeature(
+        "test_feature", values=["1", "2", "3", "4", "5", "a", "b", "c", "d", "e", "f"]
+    )
     feature.update(
         GroupedList({"a": ["1", "2", "3", "4", "5", "a"], "b": ["b"], "c": ["c"], "d": ["e", "f"]}),
         replace=True,

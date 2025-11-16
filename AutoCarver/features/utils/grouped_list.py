@@ -2,7 +2,7 @@
 for a binary classification model.
 """
 
-from typing import Any
+from typing import Any, Union
 
 from numpy import ndarray, sort
 from pandas import isna
@@ -14,7 +14,7 @@ class GroupedList(list):
     def __repr__(self) -> str:
         return f"GroupedList({super().__repr__()})"
 
-    def __init__(self, iterable: ndarray | dict | list | tuple = ()) -> None:
+    def __init__(self, iterable: Union[ndarray, dict, list, tuple] = ()) -> None:
         """
         Parameters
         ----------
@@ -42,7 +42,12 @@ class GroupedList(list):
             keys_copy = keys[:]  # copying initial keys
             for key in keys_copy:
                 # checking that the value is not comprised in an other key
-                all_values = [val for iter_key, values in iterable.items() for val in values if key != iter_key]
+                all_values = [
+                    val
+                    for iter_key, values in iterable.items()
+                    for val in values
+                    if key != iter_key
+                ]
                 if key not in all_values:
                     # checking that key is missing from its values
                     if key not in iterable[key]:
@@ -147,8 +152,13 @@ class GroupedList(list):
 
         # checking that element of the list are keys of the content dict
         if not len(self) == len(self.content):
-            raise ValueError(f"[{self}] Keys missing from content dict or element missing from list")
-        if any(list_element != dict_key for list_element, dict_key in zip(self, list(self.content.keys()))):
+            raise ValueError(
+                f"[{self}] Keys missing from content dict or element missing from list"
+            )
+        if any(
+            list_element != dict_key
+            for list_element, dict_key in zip(self, list(self.content.keys()))
+        ):
             raise ValueError(f"[{self}] Not the same ordering between list and content dict")
 
     def _group_single_value(self, discarded: Any, kept: Any) -> None:
@@ -180,7 +190,7 @@ class GroupedList(list):
             # removing discarded from the list
             self.remove(discarded)
 
-    def group(self, to_discard: list[str] | str, to_keep: str) -> None:
+    def group(self, to_discard: Union[list[str], str], to_keep: str) -> None:
         """Groups the discarded value with the kept value
 
         Parameters
@@ -232,7 +242,9 @@ class GroupedList(list):
         """
 
         # should provide a dict of lists
-        if not isinstance(new_value, dict) or not all(isinstance(value, list) for value in new_value.values()):
+        if not isinstance(new_value, dict) or not all(
+            isinstance(value, list) for value in new_value.values()
+        ):
             raise ValueError(f"[{self}] Provide a dictionnary of lists (values)")
 
         # adding missing keys to there list of values
@@ -288,9 +300,15 @@ class GroupedList(list):
 
         # checking that all values are given an order
         if not all(o in self for o in ordering):
-            raise ValueError(f"[{self}] Unknown values in ordering: {str([v for v in ordering if v not in self])}")
+            raise ValueError(
+                f"[{self}] Unknown values in ordering: "
+                f"{str([v for v in ordering if v not in self])}"
+            )
         if not all(s in ordering for s in self):
-            raise ValueError(f"[{self}] Missing value from ordering: {str([v for v in self if v not in ordering])}")
+            raise ValueError(
+                f"[{self}] Missing value from ordering:"
+                f" {str([v for v in self if v not in ordering])}"
+            )
 
         # ordering the content
         sorted_list = GroupedList({k: self.get(k) for k in ordering})
@@ -336,7 +354,11 @@ class GroupedList(list):
             Corresponding key (group)
         """
 
-        found = [key for key, values in self.content.items() if any(is_equal(value, elt) for elt in values)]
+        found = [
+            key
+            for key, values in self.content.items()
+            if any(is_equal(value, elt) for elt in values)
+        ]
 
         if any(found):
             return found[0]

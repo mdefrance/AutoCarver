@@ -15,7 +15,9 @@ from AutoCarver.features import CategoricalFeature, Features, OrdinalFeature
 def test_check_frequencies_basic():
     """Test check_frequencies with basic input"""
     features = Features(["feature1", "feature2"])
-    df = DataFrame({"feature1": ["A", "B", "A", "C", "B", "A"], "feature2": ["X", "Y", "X", "Z", "Y", "X"]})
+    df = DataFrame(
+        {"feature1": ["A", "B", "A", "C", "B", "A"], "feature2": ["X", "Y", "X", "Z", "Y", "X"]}
+    )
     min_freq = 1 / 6
     check_frequencies(features, df, min_freq, "Test")
 
@@ -49,7 +51,9 @@ def test_check_frequencies_edge_case():
 
 def test_ensure_qualitative_dtypes_with_conversion():
     """Test ensure_qualitative_dtypes with basic input"""
-    features = Features([CategoricalFeature("feature1"), OrdinalFeature("feature2", ["A", "B", "C"])])
+    features = Features(
+        [CategoricalFeature("feature1"), OrdinalFeature("feature2", ["A", "B", "C"])]
+    )
     df = DataFrame({"feature1": [1, 2, 3], "feature2": ["A", "B", "C"]})
     result = ensure_qualitative_dtypes(features, df)
     assert result["feature1"].dtype == object
@@ -60,7 +64,9 @@ def test_ensure_qualitative_dtypes_with_conversion():
 
 def test_ensure_qualitative_dtypes_without_conversion():
     """Test ensure_qualitative_dtypes with basic input"""
-    features = Features([CategoricalFeature("feature1"), OrdinalFeature("feature2", ["A", "B", "C"])])
+    features = Features(
+        [CategoricalFeature("feature1"), OrdinalFeature("feature2", ["A", "B", "C"])]
+    )
     df = DataFrame({"feature1": ["1", "2", "3"], "feature2": ["A", "B", "C"]})
     result = ensure_qualitative_dtypes(features, df)
     assert result["feature1"].dtype == object
@@ -71,7 +77,9 @@ def test_ensure_qualitative_dtypes_without_conversion():
 
 def test_ensure_qualitative_dtypes_with_nans():
     """Test ensure_qualitative_dtypes with NaN values"""
-    features = Features([CategoricalFeature("feature1"), OrdinalFeature("feature2", ["A", "B", "C"])])
+    features = Features(
+        [CategoricalFeature("feature1"), OrdinalFeature("feature2", ["A", "B", "C"])]
+    )
     df = DataFrame({"feature1": [1, nan, 3], "feature2": ["A", "B", nan]})
     result = ensure_qualitative_dtypes(features, df)
 
@@ -89,7 +97,9 @@ def test_ensure_qualitative_dtypes_with_nans():
 
 def test_ensure_qualitative_dtypes_mixed_types():
     """Test ensure_qualitative_dtypes with mixed data types"""
-    features = Features([CategoricalFeature("feature1"), OrdinalFeature("feature2", ["A", "2", "B"])])
+    features = Features(
+        [CategoricalFeature("feature1"), OrdinalFeature("feature2", ["A", "2", "B"])]
+    )
     df = DataFrame({"feature1": [1, 3.0, 3.5], "feature2": ["A", 2.0, "B"]})
     result = ensure_qualitative_dtypes(features, df)
     assert result["feature1"].dtype == object
@@ -114,8 +124,12 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
     min_freq = 0.15
 
     # building raising datasets
-    x_train_wrong_1["Qualitative_Ordinal"] = x_train["Qualitative_Ordinal"].replace("Medium", "unknown")
-    x_train_wrong_2["Qualitative_Ordinal_lownan"] = x_train["Qualitative_Ordinal_lownan"].replace("Medium", "unknown")
+    x_train_wrong_1["Qualitative_Ordinal"] = x_train["Qualitative_Ordinal"].replace(
+        "Medium", "unknown"
+    )
+    x_train_wrong_2["Qualitative_Ordinal_lownan"] = x_train["Qualitative_Ordinal_lownan"].replace(
+        "Medium", "unknown"
+    )
 
     chained_features = [
         "Qualitative_Ordinal",
@@ -174,7 +188,9 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
         "Worst": ["Low+", "Low", "Low-", "Lows", "Worst"],
     }
     feature = "Qualitative_Ordinal"
-    assert discretizer.features(feature).content == expected, "Values less frequent than min_freq should be grouped"
+    assert (
+        discretizer.features(feature).content == expected
+    ), "Values less frequent than min_freq should be grouped"
 
     assert discretizer.features(feature).values == [
         "Medium",
@@ -231,7 +247,9 @@ def test_chained_discretizer(x_train: DataFrame) -> None:
         "Worst": ["Low+", "Low", "Low-", "Lows", "Worst"],
     }
     feature = "Qualitative_Ordinal"
-    assert discretizer.features(feature).content == expected, "Values less frequent than min_freq should be grouped"
+    assert (
+        discretizer.features(feature).content == expected
+    ), "Values less frequent than min_freq should be grouped"
 
     assert discretizer.features(feature).values == [
         "Medium",

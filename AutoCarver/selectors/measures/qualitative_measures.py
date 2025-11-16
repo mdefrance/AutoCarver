@@ -1,4 +1,5 @@
-"""Measures of association between a Qualitative feature and binary target."""
+""" Measures of association between a Qualitative feature and binary target.
+"""
 
 from math import sqrt
 

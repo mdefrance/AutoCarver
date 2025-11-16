@@ -31,7 +31,9 @@ def test_check_quantitative_dtypes_non_numeric():
 
 def test_check_quantitative_dtypes_mixed_types():
     """Test check_quantitative_dtypes with mixed types"""
-    df = DataFrame({"feature1": [1, 2, 3], "feature2": [4.0, 5.0, 6.0], "feature3": [1.0, "b", "c"]})
+    df = DataFrame(
+        {"feature1": [1, 2, 3], "feature2": [4.0, 5.0, 6.0], "feature3": [1.0, "b", "c"]}
+    )
     feature_versions = ["feature1", "feature2", "feature3"]
     with raises(ValueError):
         check_quantitative_dtypes(df, feature_versions, "test")
@@ -359,11 +361,13 @@ def test_quantitative_discretizer(x_train: DataFrame, target: str):
     discretizer = QuantitativeDiscretizer(quantitatives=features, min_freq=min_freq)
     x_discretized = discretizer.fit_transform(x_train, x_train[target])
 
-    assert not features("Discrete_Quantitative_lownan").values.contains(features("Discrete_Quantitative_lownan").nan), (
-        "Missing order should not be grouped with ordinal_discretizer"
-    )
+    assert not features("Discrete_Quantitative_lownan").values.contains(
+        features("Discrete_Quantitative_lownan").nan
+    ), "Missing order should not be grouped with ordinal_discretizer"
 
-    assert all(x_discretized["Quantitative"].value_counts(normalize=True) >= min_freq), "Non-nan value was not grouped"
+    assert all(
+        x_discretized["Quantitative"].value_counts(normalize=True) >= min_freq
+    ), "Non-nan value was not grouped"
 
     print(x_train.Discrete_Quantitative_rarevalue.value_counts(dropna=False, normalize=True))
 
@@ -374,4 +378,7 @@ def test_quantitative_discretizer(x_train: DataFrame, target: str):
         3.0,
         4.0,
         inf,
-    ], "Rare values should be grouped to the closest one and inf should be kept whatsoever (OrdinalDiscretizer)"
+    ], (
+        "Rare values should be grouped to the closest one and inf should be kept whatsoever "
+        "(OrdinalDiscretizer)"
+    )

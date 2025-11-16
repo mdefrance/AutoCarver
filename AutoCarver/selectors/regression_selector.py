@@ -41,7 +41,9 @@ class RegressionSelector(BaseSelector):
 
         # checking for measures for qualitative target
         if not all(
-            measure.is_y_quantitative or (measure.reverse_xy() and measure.is_y_quantitative) or measure.is_default
+            measure.is_y_quantitative
+            or (measure.reverse_xy() and measure.is_y_quantitative)
+            or measure.is_default
             for measure in measures
         ):
             raise ValueError(f"[{self}] Provide measures for quantitative target!")
