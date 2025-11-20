@@ -1,10 +1,11 @@
 """Base measures that defines Quantitative and Qualitative features."""
 
 from abc import ABC, abstractmethod
+from typing import Any
 
 from pandas import Series, isnull, notna
 
-from ...features import BaseFeature
+from AutoCarver.features import BaseFeature
 
 
 class BaseMeasure(ABC):
@@ -54,8 +55,8 @@ class BaseMeasure(ABC):
             Minimum threshold to reach, by default ``0.0``
         """
         self.threshold = threshold
-        self.value = None
-        self._info = {}
+        self.value: float | None = None
+        self._info: dict[str, Any] = {}
 
     def __repr__(self) -> str:
         return self.__name__
