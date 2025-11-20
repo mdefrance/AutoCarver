@@ -2,7 +2,8 @@
 for a binary classification model.
 """
 
-from numpy import arange, argmin, array, nan_to_num, vstack
+from numpy import arange, argmin, nan_to_num, vstack
+from numpy.typing import NDArray
 from pandas import DataFrame, Series, notna
 
 from ...features import GroupedList, OrdinalFeature
@@ -68,7 +69,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
         return sample
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
+    def fit(self, X: DataFrame, y: Series) -> "OrdinalDiscretizer":  # pylint: disable=W0222
         # checking values orders
         sample = self._prepare_data(Sample(X, y))
 
@@ -127,7 +128,7 @@ def find_common_modalities(df_feature: Series, y: Series, min_freq: float, label
     return labels
 
 
-def update_stats(stats: array, discarded_idx: int, kept_idx: int) -> array:
+def update_stats(stats: NDArray, discarded_idx: int, kept_idx: int) -> NDArray:
     """Updates frequencies and target rates after grouping two modalities"""
 
     # adding up grouped frequencies and target counts
@@ -137,7 +138,7 @@ def update_stats(stats: array, discarded_idx: int, kept_idx: int) -> array:
     return stats[:, arange(stats.shape[1]) != discarded_idx]
 
 
-def compute_stats(df_feature: Series, y: Series, labels: GroupedList) -> tuple[array, int]:
+def compute_stats(df_feature: Series, y: Series, labels: GroupedList) -> tuple[NDArray, int]:
     """Computes frequencies and target rates of each modality"""
 
     # filtering nans
@@ -159,7 +160,7 @@ def compute_stats(df_feature: Series, y: Series, labels: GroupedList) -> tuple[a
     return stats, len_df
 
 
-def find_closest_modality(idx: int, frequencies: array, target_rates: array, min_freq: float) -> int:
+def find_closest_modality(idx: int, frequencies: NDArray, target_rates: NDArray, min_freq: float) -> int:
     """Finds the closest modality in terms of frequency and target rate"""
 
     # case 0: only one modality
@@ -182,7 +183,7 @@ def find_closest_modality(idx: int, frequencies: array, target_rates: array, min
     return idx - 1
 
 
-def is_next_modality_closer(idx: int, frequencies: array, target_rates: array, min_freq: float) -> bool:
+def is_next_modality_closer(idx: int, frequencies: NDArray, target_rates: NDArray, min_freq: float) -> bool:
     """Determines if the next modality is closer than the previous to the current one"""
 
     # Extract relevant frequencies and target rates
@@ -208,7 +209,7 @@ def is_next_modality_closer(idx: int, frequencies: array, target_rates: array, m
     return False
 
 
-def is_next_modality_closer_by_target_rate(idx: int, target_rates: array) -> bool:
+def is_next_modality_closer_by_target_rate(idx: int, target_rates: NDArray) -> bool:
     """Determines if the next modality is closer in terms of target rate than the previous to the
     current one"""
 

@@ -5,6 +5,7 @@ for a binary classification model.
 import json
 from abc import ABC
 from dataclasses import dataclass
+from typing import Any
 
 from numpy import nan, select
 from pandas import DataFrame, Series, concat
@@ -447,7 +448,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         if self.verbose:
             print(f"{prefix} [{self.__name__}] Fit {str(self.features)}")
 
-    def to_json(self, light_mode: bool = False) -> str:
+    def to_json(self, light_mode: bool = False) -> dict[str, Any]:
         """Converts to JSON format.
 
         To be used with ``json.dump``.
