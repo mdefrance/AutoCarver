@@ -132,7 +132,7 @@ class CombinationEvaluator(ABC):
 
     is_y_binary = False
     is_y_continuous = False
-    sort_by = None
+    sort_by: str | None = None
 
     def __init__(
         self,

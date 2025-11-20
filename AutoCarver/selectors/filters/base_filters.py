@@ -4,7 +4,8 @@ from abc import ABC, abstractmethod
 
 from pandas import DataFrame
 
-from ...features import BaseFeature
+from AutoCarver.features import BaseFeature
+from AutoCarver.selectors.measures.base_measures import BaseMeasure
 
 
 class BaseFilter(ABC):
@@ -36,7 +37,7 @@ class BaseFilter(ABC):
             Maximum threshold to reach, by default ``1.0``
         """
 
-        self.measure = None
+        self.measure: str | BaseMeasure | None = None
         self.threshold = threshold
 
     def __repr__(self) -> str:
