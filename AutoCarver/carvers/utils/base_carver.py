@@ -130,7 +130,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         )
 
         # setting combinations evaluator
-        self.combinations = combinations
+        self.combinations: CombinationEvaluator = combinations
         self.combinations.min_freq = self.min_freq
         self.combinations.verbose = self.verbose
         self.combinations.dropna = self.dropna

@@ -67,7 +67,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
         return sample
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
+    def fit(self, X: DataFrame, y: Series) -> "CategoricalDiscretizer":  # pylint: disable=W0222
         # copying dataframe and checking data before bucketization
         sample = self._prepare_data(Sample(X, y))
 
