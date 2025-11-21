@@ -12,7 +12,7 @@ from ...features import BaseFeature, GroupedList
 
 def combinations_at_index(
     start_index: int, elements: list[Any], remaining_groups: int
-) -> Generator[list[Any], int, int]:
+) -> Generator[tuple[list[Any], int, int]]:
     """Gets all possible combinations of sizes up to the last element of a list"""
 
     # iterating over each possible length of groups
