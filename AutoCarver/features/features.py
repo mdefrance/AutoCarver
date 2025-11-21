@@ -1,5 +1,7 @@
 """Defines a set of features"""
 
+from typing import TypeVar
+
 from numpy import nan
 from pandas import DataFrame, Series
 
@@ -474,22 +476,25 @@ class Features:
         return cls(unpacked_features, is_fitted=is_fitted)
 
 
-def remove_version(removed_version: str, features: list[BaseFeature]) -> list[BaseFeature]:
+Feature = TypeVar("Feature", bound=BaseFeature, covariant=True)
+
+
+def remove_version(removed_version: str, features: list[Feature]) -> list[Feature]:
     """removes a feature according its version"""
     return [feature for feature in features if feature.version != removed_version]
 
 
-def keep_versions(kept_versions: list[str], features: list[BaseFeature]) -> list[BaseFeature]:
+def keep_versions(kept_versions: list[str], features: list[Feature]) -> list[Feature]:
     """keeps requested feature versions according its version"""
     return [feature for feature in features if feature.version in kept_versions]
 
 
-def make_versions(features: list[BaseFeature], y_classes: list[str]) -> BaseFeature:
+def make_versions(features: list[Feature], y_classes: list[str]) -> Feature:
     """Makes a copy of a list of features with specified version"""
     return [make_version(feature, y_class) for y_class in y_classes for feature in features]
 
 
-def make_version(feature: BaseFeature, y_class: str) -> BaseFeature:
+def make_version(feature: Feature, y_class: str) -> Feature:
     """Makes a copy of a feature with specified version"""
 
     # converting feature to json
@@ -560,12 +565,12 @@ def cast_features(
     ]
 
 
-def get_names(features: list[BaseFeature]) -> list[str]:
+def get_names(features: list[Feature]) -> list[str]:
     """Gives names from Features"""
     return [feature.name for feature in features]
 
 
-def get_versions(features: list[BaseFeature]) -> list[str]:
+def get_versions(features: list[Feature]) -> list[str]:
     """Gives version names from Features"""
     return [feature.version for feature in features]
 

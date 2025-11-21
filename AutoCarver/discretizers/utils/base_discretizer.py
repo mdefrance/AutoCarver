@@ -17,6 +17,7 @@ from ...utils import extend_docstring, get_attribute, get_bool_attribute
 from .multiprocessing import apply_async_function
 from .qualitatives import (
     CategoricalFeature,
+    OrdinalFeature,
     QualitativeFeature,
 )
 from .quantitatives import QuantitativeFeature
@@ -170,7 +171,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         return self.features.qualitatives
 
     @property
-    def ordinals(self) -> list[str]:
+    def ordinals(self) -> list[OrdinalFeature]:
         """Returns the list of ordinal features"""
         return self.features.ordinals
 
