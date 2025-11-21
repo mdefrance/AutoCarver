@@ -57,7 +57,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
         return sample
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
+    def fit(self, X: DataFrame, y: Series) -> "QualitativeDiscretizer":
         # verbose if requested
         self._log_if_verbose("------\n---")
 

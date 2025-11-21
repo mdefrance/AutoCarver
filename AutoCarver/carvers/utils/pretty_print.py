@@ -51,7 +51,7 @@ def prettier_xagg(
             nicer_xagg.hide(axis="index")
 
         # converting to html
-        nicer_xagg = nicer_xagg._repr_html_()  # pylint: disable=W0212
+        nicer_xagg = nicer_xagg._repr_html_()
 
     return nicer_xagg
 

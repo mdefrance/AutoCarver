@@ -40,7 +40,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
         # Initiating BaseDiscretizer
         super().__init__(ordinals, **dict(kwargs, min_freq=min_freq))
 
-    def _prepare_data(self, sample: Sample) -> Sample:  # pylint: disable=W0222
+    def _prepare_data(self, sample: Sample) -> Sample:
         """Validates format and content of X and y.
 
         Parameters
@@ -69,7 +69,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
         return sample
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: DataFrame, y: Series) -> "OrdinalDiscretizer":  # pylint: disable=W0222
+    def fit(self, X: DataFrame, y: Series) -> "OrdinalDiscretizer":
         # checking values orders
         sample = self._prepare_data(Sample(X, y))
 

@@ -68,17 +68,10 @@ quote-style = "double"
 [tool.mypy]
 python_version = "3.10"
 ignore_missing_imports = true
-
-[tool.flake8]
-max-line-length = 120
-extend-ignore = ["E203", "E704"]
-
-
-[tool.pylint.basic]
-good-names = ["X", "y"]
-
-[tool.pylint.messages_control]
-disable = ["C0301", "C0103", "E0110", "W0621", "import-error"]
+files = ["autocarver", "tests"]
+disable_error_code = [
+    "prop-decorator",
+]
 
 
 [dependency-groups]

@@ -531,7 +531,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         # initiating BaseDiscretizer
         return cls(features=features, **discretizer_json)
 
-    @extend_docstring(Features.summary)
+    @extend_docstring(Features.summary)  #
     @property
     def summary(self) -> DataFrame:
         return self.features.summary

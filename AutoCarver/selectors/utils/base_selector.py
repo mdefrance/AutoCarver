@@ -358,7 +358,7 @@ class BaseSelector(ABC):
         nicer_association = prettier_measures(formatted_measures)
 
         # displaying html of colored DataFrame
-        display_html(nicer_association, raw=True)  # pylint: disable=E0606
+        display_html(nicer_association, raw=True)
 
 
 def get_typed_features(features: Features) -> dict[str, list[BaseFeature]]:

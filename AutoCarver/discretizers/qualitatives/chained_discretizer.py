@@ -147,7 +147,7 @@ class ChainedDiscretizer(BaseDiscretizer):
         return sample
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: DataFrame, y: Series | None = None) -> None:  # pylint: disable=W0222
+    def fit(self, X: DataFrame, y: Series | None = None) -> None:
         # preprocessing data
         sample = self._prepare_data(Sample(X, y))
         self._log_if_verbose()  # verbose if requested
