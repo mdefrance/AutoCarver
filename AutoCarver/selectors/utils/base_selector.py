@@ -440,6 +440,10 @@ def get_default_metrics(metrics: list[BaseMeasure]) -> list[BaseMeasure]: ...
 def get_default_metrics(metrics: list[BaseFilter]) -> list[BaseFilter]: ...
 
 
+@overload
+def get_default_metrics(metrics: list[BaseMeasure] | list[BaseFilter]) -> list[BaseMeasure] | list[BaseFilter]: ...
+
+
 def get_default_metrics(metrics: list[BaseMeasure] | list[BaseFilter]) -> list[BaseMeasure] | list[BaseFilter]:
     """returns filtered list of measures/filters that are default"""
     return [metric for metric in metrics if metric.is_default]
@@ -451,6 +455,10 @@ def remove_default_metrics(metrics: list[BaseMeasure]) -> list[BaseMeasure]: ...
 
 @overload
 def remove_default_metrics(metrics: list[BaseFilter]) -> list[BaseFilter]: ...
+
+
+@overload
+def remove_default_metrics(metrics: list[BaseMeasure] | list[BaseFilter]) -> list[BaseMeasure] | list[BaseFilter]: ...
 
 
 def remove_default_metrics(metrics: list[BaseMeasure] | list[BaseFilter]) -> list[BaseMeasure] | list[BaseFilter]:

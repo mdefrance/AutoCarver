@@ -39,7 +39,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         """
 
         # Initiating BaseDiscretizer
-        super().__init__(quantitatives, **dict(kwargs, min_freq=min_freq))
+        super().__init__(Features(quantitatives=quantitatives), **dict(kwargs, min_freq=min_freq))
 
     @property
     def half_min_freq(self) -> float:

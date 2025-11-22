@@ -124,8 +124,6 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         """
         # features and values
         self.features = features
-        if isinstance(features, list):
-            self.features = Features(features)
 
         # saving kwargs
         self.kwargs = kwargs
@@ -302,7 +300,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
     __prepare_data = _prepare_data  # private copy
 
-    def fit(self, X: DataFrame | None = None, y: Series | None = None) -> None:
+    def fit(self, X: DataFrame | None = None, y: Series | None = None) -> "BaseDiscretizer":
         """Learns simple discretization of values of X according to values of y.
 
         Parameters

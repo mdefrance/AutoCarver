@@ -39,7 +39,7 @@ class ChainedDiscretizer(BaseDiscretizer):
         """
         # not dropping nans whatsoever
         kwargs = dict(kwargs, dropna=False)
-        super().__init__(features, **kwargs)  # Initiating BaseDiscretizer
+        super().__init__(Features(features), **kwargs)  # Initiating BaseDiscretizer
 
         # class specific attributes
         self.min_freq = min_freq
@@ -147,7 +147,7 @@ class ChainedDiscretizer(BaseDiscretizer):
         return sample
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: DataFrame, y: Series | None = None) -> None:
+    def fit(self, X: DataFrame, y: Series | None = None) -> "ChainedDiscretizer":
         # preprocessing data
         sample = self._prepare_data(Sample(X, y))
         self._log_if_verbose()  # verbose if requested
