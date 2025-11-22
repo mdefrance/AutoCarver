@@ -98,11 +98,7 @@ class TimedeltaDiscretizer(BaseDiscretizer):
         features : list[str]
             List of column names of qualitative features to be converted as string
         """
-        # initiating features
-        features = Features(features, **kwargs)
-
-        # Initiating BaseDiscretizer
-        super().__init__(features=features, **kwargs)
+        super().__init__(Features.from_list(features, **kwargs), **kwargs)  # Initiating BaseDiscretizer
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series | None = None) -> "TimedeltaDiscretizer":

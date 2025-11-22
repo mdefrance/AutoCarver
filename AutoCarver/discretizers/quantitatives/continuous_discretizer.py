@@ -8,7 +8,7 @@ from pandas import DataFrame, Series
 
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer
 from AutoCarver.discretizers.utils.multiprocessing import imap_unordered_function
-from AutoCarver.features import GroupedList, QuantitativeFeature, get_versions
+from AutoCarver.features import Features, GroupedList, QuantitativeFeature, get_versions
 from AutoCarver.utils import extend_docstring
 
 
@@ -46,7 +46,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
         """
 
         # Initiating BaseDiscretizer
-        super().__init__(features=quantitatives, **dict(kwargs, min_freq=min_freq))
+        super().__init__(Features.from_list(quantitatives), **dict(kwargs, min_freq=min_freq))
 
     @property
     def q(self) -> int:

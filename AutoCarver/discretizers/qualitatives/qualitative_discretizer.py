@@ -42,7 +42,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
 
         """
         # Initiating BaseDiscretizer
-        super().__init__(Features(categoricals=qualitatives), **dict(kwargs, min_freq=min_freq))
+        super().__init__(Features.from_list(qualitatives), **dict(kwargs, min_freq=min_freq))
 
     def _prepare_data(self, sample: Sample) -> Sample:
         """Validates format and content of X and y. Converts non-string columns into strings."""

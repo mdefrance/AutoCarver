@@ -261,7 +261,7 @@ class BaseSelector(ABC):
 
         # converting to Features
         if len(best_features) > 0:
-            return Features(best_features)
+            return Features.from_list(best_features)
         return best_features
 
     def _select_features(
@@ -455,10 +455,6 @@ def remove_default_metrics(metrics: list[BaseMeasure]) -> list[BaseMeasure]: ...
 
 @overload
 def remove_default_metrics(metrics: list[BaseFilter]) -> list[BaseFilter]: ...
-
-
-@overload
-def remove_default_metrics(metrics: list[BaseMeasure] | list[BaseFilter]) -> list[BaseMeasure] | list[BaseFilter]: ...
 
 
 def remove_default_metrics(metrics: list[BaseMeasure] | list[BaseFilter]) -> list[BaseMeasure] | list[BaseFilter]:

@@ -1,13 +1,15 @@
 """TODO: initiate features from dataset"""
 
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, TypeVar
 
 from pandas import DataFrame, Series, option_context
 
 from ...config import Constants
 from .grouped_list import GroupedList
 from .serialization import json_deserialize_content, json_serialize_feature
+
+Self = TypeVar("Self", bound="BaseFeature")
 
 
 class BaseFeature(ABC):
@@ -547,7 +549,7 @@ class BaseFeature(ABC):
         return json_serialize_feature(feature)
 
     @classmethod
-    def load(cls, feature_json: dict) -> "BaseFeature":
+    def load(cls: type[Self], feature_json: dict) -> Self:
         """Loads a feature"""
 
         # deserializing content into grouped list of values

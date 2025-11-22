@@ -5,7 +5,7 @@ for a binary classification model.
 from numpy import nan, select
 from pandas import DataFrame, Series, unique
 
-from ...features import BaseFeature, Features, GroupedList
+from ...features import CategoricalFeature, Features, GroupedList
 from ...utils import extend_docstring
 from ..utils.base_discretizer import BaseDiscretizer, Sample
 from ..utils.type_discretizers import StringDiscretizer
@@ -25,7 +25,7 @@ class ChainedDiscretizer(BaseDiscretizer):
     def __init__(
         self,
         min_freq: float,
-        features: list[BaseFeature],
+        features: list[CategoricalFeature],
         chained_orders: list[GroupedList],
         **kwargs,
     ) -> None:
@@ -39,7 +39,7 @@ class ChainedDiscretizer(BaseDiscretizer):
         """
         # not dropping nans whatsoever
         kwargs = dict(kwargs, dropna=False)
-        super().__init__(Features(features), **kwargs)  # Initiating BaseDiscretizer
+        super().__init__(Features.from_list(features), **kwargs)  # Initiating BaseDiscretizer
 
         # class specific attributes
         self.min_freq = min_freq

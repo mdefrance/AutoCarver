@@ -1,6 +1,7 @@
 """Defines a set of features"""
 
-from typing import TypeVar
+from collections.abc import Sequence
+from typing import TypeVar, overload
 
 from numpy import nan
 from pandas import DataFrame, Series
@@ -52,21 +53,26 @@ from AutoCarver.features.utils.grouped_list import GroupedList
 #                 )
 
 
-def check_ordinal_features(ordinals: list[OrdinalFeature] | dict[str, list[str]]) -> list[OrdinalFeature]:
+@overload
+def check_ordinal_features(ordinals: list[OrdinalFeature]) -> list[OrdinalFeature]: ...
+
+
+@overload
+def check_ordinal_features(ordinals: dict[str, list[str]]) -> list[str]: ...
+
+
+def check_ordinal_features(ordinals: list[OrdinalFeature] | dict[str, list[str]]) -> list[OrdinalFeature] | list[str]:
     """Checks that ordinals are correctly formatted"""
 
     # checking for ordinal types
-    if isinstance(ordinals, (Features, list)):
+    if isinstance(ordinals, Features | list):
         for feature in ordinals:
             if not isinstance(feature, OrdinalFeature):
                 raise TypeError("Ordinals should be a list of OrdinalFeature or a dict of ordinal values.")
-        ordinal_features = ordinals
+        return ordinals
     elif isinstance(ordinals, dict):
-        ordinal_features = list(ordinals.keys())
-    else:
-        raise TypeError("Ordinals should be a list of OrdinalFeature or a dict of ordinal values.")
-
-    return ordinal_features
+        return list(ordinals.keys())
+    raise TypeError("Ordinals should be a list of OrdinalFeature or a dict of ordinal values.")
 
 
 class Features:
@@ -76,9 +82,9 @@ class Features:
 
     def __init__(
         self,
-        categoricals: list[CategoricalFeature | str] | None = None,
-        quantitatives: list[QuantitativeFeature | str] | None = None,
-        ordinals: list[OrdinalFeature] | dict[str, list[str]] | None = None,
+        categoricals: list[CategoricalFeature] | None = None,
+        quantitatives: list[QuantitativeFeature] | None = None,
+        ordinals: list[OrdinalFeature] | None = None,
         **kwargs,
     ) -> None:
         """
@@ -112,6 +118,34 @@ class Features:
         default : str, optional
             Label for default values, by default ``"__OTHER__"``
         """
+        # ensuring features are grouped accordingly (already initiated features)
+        self._categoricals = categoricals if categoricals is not None else []
+        self._ordinals = ordinals if ordinals is not None else []
+        self._quantitatives = quantitatives if quantitatives is not None else []
+
+        # checking that features were passed as input
+        if len(self.categoricals) == 0 and len(self.quantitatives) == 0 and len(self.ordinals) == 0:
+            raise ValueError(
+                f"[{self}] No feature passed as input. Please set quantitatives, categoricals or ordinals."
+            )
+
+        # checking that qualitatitve and quantitative features are distinct
+        check_duplicate_features(self.ordinals, self.categoricals, self.quantitatives)
+
+        self._dropna = False
+        self._ordinal_encoding = False
+        self.is_fitted = get_bool_attribute(kwargs, "is_fitted", False)
+
+    @classmethod
+    def from_str(
+        cls,
+        categoricals: list[str] | None = None,
+        quantitatives: list[str] | None = None,
+        ordinals: dict[str, list[str]] | None = None,
+        **kwargs,
+    ) -> "Features":
+        """Initiates Features from string feature names only"""
+
         # initiating ordinal values if not provided
         if ordinals is None:
             ordinals = {}
@@ -120,28 +154,34 @@ class Features:
         ordinal_features = check_ordinal_features(ordinals)
 
         # casting features accordingly
-        all_features = cast_features(categoricals, CategoricalFeature, **kwargs)
+        all_features: list[
+            BaseFeature | QuantitativeFeature | QualitativeFeature | CategoricalFeature | OrdinalFeature
+        ] = []
+        all_features += cast_features(categoricals, CategoricalFeature, **kwargs)
         all_features += cast_features(quantitatives, QuantitativeFeature, **kwargs)
         all_features += cast_features(ordinal_features, OrdinalFeature, ordinal_values=ordinals, **kwargs)
 
+        return cls.from_list(all_features)
+
+    @classmethod
+    def from_list(
+        cls,
+        features: list[BaseFeature | QuantitativeFeature | QualitativeFeature | CategoricalFeature | OrdinalFeature],
+        **kwargs,
+    ) -> "Features":
+        """Initiates Features from a list of features only"""
+
         # ensuring features are grouped accordingly (already initiated features)
-        self._categoricals = get_categorical_features(all_features)
-        self._ordinals = get_ordinal_features(all_features)
-        self._quantitatives = get_quantitative_features(all_features)
+        categoricals = get_categorical_features(features)
+        ordinals = get_ordinal_features(features)
+        quantitatives = get_quantitative_features(features)
 
-        # checking that features were passed as input
-        if len(self.categoricals) == 0 and len(self.quantitatives) == 0 and len(self.ordinals) == 0:
-            raise ValueError(
-                f"[{self}] No feature passed as input. Please provide column names"
-                " by setting categoricals, quantitatives or ordinals."
-            )
-
-        # checking that qualitatitve and quantitative features are distinct
-        check_duplicate_features(self.categoricals, self.quantitatives, self.ordinals)
-
-        self._dropna = False
-        self._ordinal_encoding = False
-        self.is_fitted = get_bool_attribute(kwargs, "is_fitted", False)
+        return cls(
+            categoricals=categoricals,
+            ordinals=ordinals,
+            quantitatives=quantitatives,
+            **kwargs,
+        )
 
     def __repr__(self) -> str:
         """Returns names of all features"""
@@ -153,7 +193,13 @@ class Features:
             return feature.version in self.versions
         return feature in self.versions
 
-    def __call__(self, feature_name: str) -> BaseFeature:
+    @overload
+    def __call__(self, feature_name: str) -> BaseFeature: ...
+
+    @overload
+    def __call__(self, feature_name: DataFrame) -> list[str]: ...
+
+    def __call__(self, feature_name: str | DataFrame) -> BaseFeature | list[str]:
         """Returns specified feature by name"""
 
         # case for dataframes
@@ -163,7 +209,7 @@ class Features:
         # looking for feature names
         self_dict = self.to_dict()
         if feature_name in self_dict:
-            return self_dict.get(feature_name)
+            return self_dict[feature_name]
 
         # looking for version names
         if feature_name in self:
@@ -180,12 +226,19 @@ class Features:
         """Returns an iterator of all features"""
         return iter(self.to_list())
 
-    def __getitem__(self, index: int | str | list[int] | list[str] | slice) -> BaseFeature | list[BaseFeature]:
+    @overload
+    def __getitem__(self, index: int | str) -> BaseFeature | None: ...
+    @overload
+    def __getitem__(self, index: list[int] | list[str] | slice | DataFrame) -> Sequence[BaseFeature] | None: ...
+
+    def __getitem__(
+        self, index: int | str | list[int] | list[str] | slice | DataFrame
+    ) -> BaseFeature | Sequence[BaseFeature] | None:
         """Get item by index in list of features, by feature name or with a list of
         indices/feature names
         """
         # list index/slice request
-        if isinstance(index, (int, slice)):
+        if isinstance(index, int | slice):
             return self.to_list()[index]
 
         # feature name request
@@ -199,13 +252,13 @@ class Features:
         # list request and element to search for
         if isinstance(index, list) and len(index) > 0:
             # list index request
-            if isinstance(index[0], int):
+            if all(isinstance(idx, int) for idx in index):
                 self_list = self.to_list()
-                return [self_list[idx] for idx in index]
+                return [self_list[idx] for idx in index if isinstance(idx, int)]
 
             # feature name request
-            if isinstance(index[0], str):
-                return [self(name) for name in index]
+            if all(isinstance(idx, str) for idx in index):
+                return [self(name) for name in index if isinstance(name, str)]
 
         return None
 
@@ -220,7 +273,7 @@ class Features:
         return get_versions(self.to_list())
 
     @property
-    def qualitatives(self) -> list[QualitativeFeature]:
+    def qualitatives(self) -> Sequence[QualitativeFeature]:
         """Returns all qualitative features"""
         return self.categoricals + self.ordinals
 
@@ -431,7 +484,7 @@ class Features:
         features_json.update({"is_fitted": self.is_fitted})
         return features_json
 
-    def to_list(self) -> list[BaseFeature]:
+    def to_list(self) -> Sequence[BaseFeature]:
         """Returns a list of all features"""
         return self.categoricals + self.ordinals + self.quantitatives
 
@@ -473,28 +526,41 @@ class Features:
                 unpacked_features += [QuantitativeFeature.load(feature)]
 
         # initiating features
-        return cls(unpacked_features, is_fitted=is_fitted)
+        return cls.from_list(unpacked_features, is_fitted=is_fitted)
 
 
-Feature = TypeVar("Feature", bound=BaseFeature, covariant=True)
+FeatureIn = TypeVar("FeatureIn", bound=BaseFeature)
+FeatureOut = TypeVar("FeatureOut", bound=BaseFeature, covariant=True)
 
 
-def remove_version(removed_version: str, features: list[Feature]) -> list[Feature]:
+def remove_version(removed_version: str, features: list[FeatureIn]) -> list[FeatureIn]:
     """removes a feature according its version"""
     return [feature for feature in features if feature.version != removed_version]
 
 
-def keep_versions(kept_versions: list[str], features: list[Feature]) -> list[Feature]:
+def keep_versions(kept_versions: list[str], features: list[FeatureIn]) -> list[FeatureIn]:
     """keeps requested feature versions according its version"""
     return [feature for feature in features if feature.version in kept_versions]
 
 
-def make_versions(features: list[Feature], y_classes: list[str]) -> Feature:
+def make_versions(features: list[FeatureIn], y_classes: list[str]) -> list[FeatureIn]:
     """Makes a copy of a list of features with specified version"""
     return [make_version(feature, y_class) for y_class in y_classes for feature in features]
 
 
-def make_version(feature: Feature, y_class: str) -> Feature:
+@overload
+def make_version(feature: CategoricalFeature, y_class: str) -> CategoricalFeature: ...
+@overload
+def make_version(feature: OrdinalFeature, y_class: str) -> OrdinalFeature: ...
+@overload
+def make_version(feature: QuantitativeFeature, y_class: str) -> QuantitativeFeature: ...
+@overload
+def make_version(feature: FeatureIn, y_class: str) -> FeatureIn: ...
+
+
+def make_version(
+    feature: CategoricalFeature | OrdinalFeature | QuantitativeFeature | FeatureIn, y_class: str
+) -> CategoricalFeature | OrdinalFeature | QuantitativeFeature | FeatureIn:
     """Makes a copy of a feature with specified version"""
 
     # converting feature to json
@@ -502,22 +568,26 @@ def make_version(feature: Feature, y_class: str) -> Feature:
 
     # categorical feature
     if feature_json.get("is_categorical"):
-        new_feature = CategoricalFeature.load(feature_json)
+        cat_feature = CategoricalFeature.load(feature_json)
+        cat_feature.version_tag = y_class  # modifying version and tag
+        cat_feature.version = make_version_name(cat_feature.name, y_class)
+        return cat_feature
+
     # ordinal feature
     elif feature_json.get("is_ordinal"):
-        new_feature = OrdinalFeature.load(feature_json)
+        ord_feature = OrdinalFeature.load(feature_json)
+        ord_feature.version_tag = y_class  # modifying version and tag
+        ord_feature.version = make_version_name(ord_feature.name, y_class)
+        return ord_feature
+
     # ordinal feature
     elif feature_json.get("is_quantitative"):
-        new_feature = QuantitativeFeature.load(feature_json)
+        quant_feature = QuantitativeFeature.load(feature_json)
+        quant_feature.version_tag = y_class  # modifying version and tag
+        quant_feature.version = make_version_name(quant_feature.name, y_class)
+        return quant_feature
     # base feature
-    else:
-        new_feature = BaseFeature.load(feature_json)
-
-    # modifying version and tag
-    new_feature.version_tag = y_class
-    new_feature.version = make_version_name(new_feature.name, y_class)
-
-    return new_feature
+    raise TypeError(f"feature {feature} is not a known feature type.")
 
 
 def make_version_name(feature_name: str, y_class: str) -> str:
@@ -527,23 +597,23 @@ def make_version_name(feature_name: str, y_class: str) -> str:
 
 
 def cast_features(
-    features: list[str],
-    target_class: type = BaseFeature,
+    features: list[str] | None,
+    target_class: type[FeatureIn],
     ordinal_values: dict[str, list[str]] | None = None,
     **kwargs,
-) -> list[BaseFeature]:
+) -> list[FeatureIn]:
     """converts a list of string feature names to there corresponding Feature class"""
 
     # inititating features if not provided
     if features is None:
-        features: list[str] = []
+        features = []
 
     # inititating ordered values for ordinal features if not provided
     if ordinal_values is None:
-        ordinal_values: dict[str, list[str]] = {}
+        ordinal_values = {}
 
     # initiating list of converted features
-    converted_features: list[target_class] = []
+    converted_features: list[FeatureIn] = []
 
     # iterating over each feature
     for feature in features:
@@ -565,12 +635,12 @@ def cast_features(
     ]
 
 
-def get_names(features: list[Feature]) -> list[str]:
+def get_names(features: Sequence[BaseFeature]) -> list[str]:
     """Gives names from Features"""
     return [feature.name for feature in features]
 
 
-def get_versions(features: list[Feature]) -> list[str]:
+def get_versions(features: Sequence[BaseFeature]) -> list[str]:
     """Gives version names from Features"""
     return [feature.version for feature in features]
 
