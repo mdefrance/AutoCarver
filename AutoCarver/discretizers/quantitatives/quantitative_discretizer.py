@@ -72,7 +72,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         return sample
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: DataFrame, y: Series) -> None:
+    def fit(self, X: DataFrame, y: Series) -> "QuantitativeDiscretizer":
         # verbose if requested
         self._log_if_verbose("------\n---")
 
