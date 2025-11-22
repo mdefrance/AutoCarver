@@ -5,17 +5,17 @@ from typing import TypeVar
 from numpy import nan
 from pandas import DataFrame, Series
 
-from ..utils.attributes import get_bool_attribute
-from .qualitatives import (
+from AutoCarver.features.qualitatives import (
     CategoricalFeature,
     OrdinalFeature,
     QualitativeFeature,
     get_categorical_features,
     get_ordinal_features,
 )
-from .quantitatives import QuantitativeFeature, get_quantitative_features
-from .utils.base_feature import BaseFeature
-from .utils.grouped_list import GroupedList
+from AutoCarver.features.quantitatives import QuantitativeFeature, get_quantitative_features
+from AutoCarver.features.utils.attributes import get_bool_attribute
+from AutoCarver.features.utils.base_feature import BaseFeature
+from AutoCarver.features.utils.grouped_list import GroupedList
 
 # class AutoFeatures(Features):
 #     """TODO"""
