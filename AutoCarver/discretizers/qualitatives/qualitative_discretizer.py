@@ -4,12 +4,12 @@ for a binary classification model.
 
 from pandas import DataFrame, Series
 
-from ...features import QualitativeFeature
-from ...utils import extend_docstring
-from ..utils.base_discretizer import BaseDiscretizer, Sample
-from .categorical_discretizer import CategoricalDiscretizer
-from .chained_discretizer import check_frequencies, ensure_qualitative_dtypes
-from .ordinal_discretizer import OrdinalDiscretizer
+from AutoCarver.discretizers.qualitatives.categorical_discretizer import CategoricalDiscretizer
+from AutoCarver.discretizers.qualitatives.chained_discretizer import check_frequencies, ensure_qualitative_dtypes
+from AutoCarver.discretizers.qualitatives.ordinal_discretizer import OrdinalDiscretizer
+from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
+from AutoCarver.features import Features, QualitativeFeature
+from AutoCarver.utils import extend_docstring
 
 
 class QualitativeDiscretizer(BaseDiscretizer):
@@ -42,7 +42,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
 
         """
         # Initiating BaseDiscretizer
-        super().__init__(qualitatives, **dict(kwargs, min_freq=min_freq))
+        super().__init__(Features(categoricals=qualitatives), **dict(kwargs, min_freq=min_freq))
 
     def _prepare_data(self, sample: Sample) -> Sample:
         """Validates format and content of X and y. Converts non-string columns into strings."""
@@ -90,7 +90,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
         # Base discretization (useful if already discretized)
         if len(discretized_features) > 0:
             base_discretizer = BaseDiscretizer(
-                features=discretized_features, **dict(self.kwargs, copy=True, dropna=False)
+                features=Features(discretized_features), **dict(self.kwargs, copy=True, dropna=False)
             )
             X = base_discretizer.fit_transform(X, y)
 

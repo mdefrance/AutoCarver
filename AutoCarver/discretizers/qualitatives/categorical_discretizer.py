@@ -4,9 +4,9 @@ for a binary classification model.
 
 from pandas import DataFrame, Series, notna
 
-from ...features import CategoricalFeature
-from ...utils import extend_docstring
-from ..utils.base_discretizer import BaseDiscretizer, Sample
+from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
+from AutoCarver.features import CategoricalFeature, Features
+from AutoCarver.utils import extend_docstring
 
 
 class CategoricalDiscretizer(BaseDiscretizer):
@@ -36,7 +36,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
             Categorical features to process
         """
         # Initiating BaseDiscretizer
-        super().__init__(categoricals, **dict(kwargs, min_freq=min_freq))
+        super().__init__(Features(categoricals), **dict(kwargs, min_freq=min_freq))
 
     def _prepare_data(self, sample: Sample) -> Sample:
         """Validates format and content of X and y.
