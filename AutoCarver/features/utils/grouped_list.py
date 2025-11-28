@@ -8,19 +8,120 @@ from numpy import ndarray, sort
 from pandas import isna
 
 
+def check_content_unity(content: dict[Any, list[Any]]) -> None:
+    """Checks that all values in the content dict are only present once
+    Parameters
+    ----------
+    content : dict[Any, list[Any]]
+        Content dict to check
+    Raises
+    ------
+    ValueError
+        If a value is present in several keys (groups)
+    """
+
+    all_values = [value for values in content.values() for value in values]
+    multi_match = set(value for value in all_values if all_values.count(value) > 1)
+    if len(multi_match) > 0:
+        raise ValueError(f"[GroupedList] Values are present in several groups: {multi_match}")
+
+
+def is_grouped_key(content: dict[Any, list[Any]], group: Any) -> bool:
+    """Checks if a key is a grouped key in the content dict
+
+    Parameters
+    ----------
+    content : dict[Any, list[Any]]
+        Content dict to check
+    group : Any
+        Key to search for
+
+    Returns
+    -------
+    bool
+        Whether the key is a grouped key
+
+    Raises
+    ------
+    ValueError
+        group not in content
+    """
+
+    # checking that the key is in the content dict
+    if group not in content:
+        raise ValueError(f"[GroupedList] Key {group} not found in content dict")
+
+    # checking that the value is comprised in an other key
+    return any(value == group for key, values in content.items() for value in values if group != key)
+
+
+def check_empty_group(content: dict[Any, list[Any]], group: Any) -> None:
+    """Checks if group is empty
+
+    Parameters
+    ----------
+    content : dict[Any, list[Any]]
+        Content dict to check
+    group : Any
+        Key to check for
+
+    Raises
+    ------
+    ValueError
+        group not empty
+    """
+    if any(value != group for value in content[group]):
+        raise ValueError("[GroupedList] Trying to remove non-empty group")
+
+
 class GroupedList(list):
     """An ordered list that's extended with a per-value content dict."""
 
     def __repr__(self) -> str:
         return f"GroupedList({super().__repr__()})"
 
-    def __init__(self, iterable: Union[ndarray, dict, list, tuple] = ()) -> None:
+    @classmethod
+    def from_array(cls, array: ndarray) -> "GroupedList":
+        """Creates a GroupedList from a numpy array
+
+        Parameters
+        ----------
+        array : ndarray
+            Numpy array to convert to GroupedList
+
+        Returns
+        -------
+        GroupedList
+            Created GroupedList
+        """
+        return cls(list(array))
+
+    @classmethod
+    def from_dict(cls, content_dict: dict[Any, list[Any]]) -> "GroupedList":
+        """Creates a GroupedList from a content dict
+
+        Parameters
+        ----------
+        content_dict : dict[Any, list[Any]]
+            Content dict to convert to GroupedList
+
+        Returns
+        -------
+        GroupedList
+            Created GroupedList
+        """
+        return cls(content_dict)
+
+    def __init__(self, iterable: ndarray | dict | list | tuple | None = ()) -> None:
         """
         Parameters
         ----------
         iterable : Union[ndarray, dict, list, tuple], optional
             List-like or :class:`GroupedList`, by default ``()``
         """
+        if iterable is None:
+            iterable = []
+
         # case -1: iterable is an array
         if isinstance(iterable, ndarray):
             iterable = list(iterable)
@@ -28,38 +129,34 @@ class GroupedList(list):
         # case 0: iterable is the content dict
         if isinstance(iterable, dict):
             # storing ordered keys of the dict
-            keys = list(iterable)
+            values = list(iterable)
 
             # storing the values content per key
             self.content = dict(iterable.items())
 
             # checking that all values are only present once
-            all_values = [value for values in iterable.values() for value in values]
-            if not len(list(set(all_values))) == len(all_values):
-                raise ValueError(f"[{self}] A value is present in several keys (groups)")
+            check_content_unity(iterable)
 
             # adding key to itself if it's not present in an other key
-            keys_copy = keys[:]  # copying initial keys
-            for key in keys_copy:
+            groups = values[:]  # copying initial keys
+            for group in groups:
                 # checking that the value is not comprised in an other key
-                all_values = [
-                    val
-                    for iter_key, values in iterable.items()
-                    for val in values
-                    if key != iter_key
-                ]
-                if key not in all_values:
+                if not is_grouped_key(self.content, group):
                     # checking that key is missing from its values
-                    if key not in iterable[key]:
-                        self.content.update({key: self.content[key] + [key]})
-                # the key already is in another key (and its values are empty)
-                # the key as already been grouped
+                    if group not in self.content[group]:
+                        self.content[group] += [group]
+
+                # the key is in another key: it has been grouped
                 else:
-                    self.content.pop(key)
-                    keys.remove(key)
+                    # ensuring that no value is left in the group
+                    check_empty_group(self.content, group)
+
+                    # removing group from content and values
+                    self.content.pop(group)
+                    values.remove(group)
 
             # initiating the list with those keys
-            super().__init__(keys)
+            super().__init__(values)
 
         # case 1: copying a GroupedList
         elif hasattr(iterable, "content"):
@@ -261,7 +358,7 @@ class GroupedList(list):
         # sanity check after modification
         self.sanity_check()
 
-    def sort(self) -> "GroupedList":
+    def sort(self) -> "GroupedList":  # type: ignore[override]
         """Sorts the values of the list and dict (if any, NaNs are last).
 
         Returns
@@ -329,7 +426,7 @@ class GroupedList(list):
         # sanity check after modification
         self.sanity_check()
 
-    def pop(self, idx: int) -> None:
+    def pop(self, idx: int) -> None:  # type: ignore[override]
         """Pop a value from the GroupedList by index
 
         Parameters

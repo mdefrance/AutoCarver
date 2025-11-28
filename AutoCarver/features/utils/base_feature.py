@@ -179,7 +179,7 @@ class BaseFeature(ABC):
             rev_value_per_label = {v: k for k, v in self.value_per_label.items()}
 
             # adding nan to the dictionary
-            rev_value_per_label[self.nan] = self.label_per_value.get(self.nan)
+            rev_value_per_label[self.nan] = self.label_per_value[self.nan]
             stats_copy.index = list(map(rev_value_per_label.get, stats_copy.index))
             return stats_copy
         return stats
@@ -216,7 +216,7 @@ class BaseFeature(ABC):
         """Feature's combination history"""
         # initiating history
         if self._history is None:
-            self._history: list[dict] = []
+            self._history = []
         self._history += value
 
     @property

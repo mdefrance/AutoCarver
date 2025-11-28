@@ -177,7 +177,7 @@ def json_serialize_combination(combination: dict[Any, Any]) -> dict[Any, Any]:
     return json_serialized_combination
 
 
-def json_deserialize_content(json_serialized_feature: dict[Any, Any]) -> dict[Any, Any]:
+def json_deserialize_content(json_serialized_feature: dict[Any, Any]) -> GroupedList | None:
     """JSON deserializes a content
 
     Parameters
@@ -192,8 +192,8 @@ def json_deserialize_content(json_serialized_feature: dict[Any, Any]) -> dict[An
     """
 
     # reading values and content from json
-    values = json_serialized_feature.get("values")
-    content = json_serialized_feature.get("content")
+    values = json_serialized_feature["values"]
+    content = json_serialized_feature["content"]
 
     # converting to numpy types
     values = convert_values_to_numpy_types(values)
@@ -214,3 +214,4 @@ def json_deserialize_content(json_serialized_feature: dict[Any, Any]) -> dict[An
 
         # converting to grouped list
         return GroupedList(content)
+    return None
