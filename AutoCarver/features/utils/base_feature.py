@@ -133,14 +133,14 @@ class BaseFeature(ABC):
         self.max_n_chars = kwargs.get("max_n_chars", 50)
 
         # initiating feature's trained statistics
-        self._statistics: dict[str, Any] = kwargs.get("statistics", None)
+        self._statistics: dict[str, Any] | None = kwargs.get("statistics", None)
 
         # measures and filters used by selectors
         self.measures = kwargs.get("measures", {})
         self.filters = kwargs.get("filters", {})
 
         # initiating feature's combination history
-        self._history: list[dict] = kwargs.get("history", None)
+        self._history: list[dict] | None = kwargs.get("history", None)
 
         # initiating base ordering (quantitative features)
         self.raw_order: list[str] = kwargs.get("raw_order", [])

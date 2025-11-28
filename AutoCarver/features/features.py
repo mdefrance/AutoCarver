@@ -543,21 +543,20 @@ class Features:
         return cls.from_list(unpacked_features, is_fitted=is_fitted)
 
 
-FeatureIn = TypeVar("FeatureIn", bound=BaseFeature)
-FeatureOut = TypeVar("FeatureOut", bound=BaseFeature, covariant=True)
+Feature = TypeVar("Feature", bound=BaseFeature)
 
 
-def remove_version(removed_version: str, features: list[FeatureIn]) -> list[FeatureIn]:
+def remove_version(removed_version: str, features: list[Feature]) -> list[Feature]:
     """removes a feature according its version"""
     return [feature for feature in features if feature.version != removed_version]
 
 
-def keep_versions(kept_versions: list[str], features: list[FeatureIn]) -> list[FeatureIn]:
+def keep_versions(kept_versions: list[str], features: list[Feature]) -> list[Feature]:
     """keeps requested feature versions according its version"""
     return [feature for feature in features if feature.version in kept_versions]
 
 
-def make_versions(features: list[FeatureIn], y_classes: list[str]) -> list[FeatureIn]:
+def make_versions(features: list[Feature], y_classes: list[str]) -> list[Feature]:
     """Makes a copy of a list of features with specified version"""
     return [make_version(feature, y_class) for y_class in y_classes for feature in features]
 
@@ -569,12 +568,12 @@ def make_version(feature: OrdinalFeature, y_class: str) -> OrdinalFeature: ...
 @overload
 def make_version(feature: QuantitativeFeature, y_class: str) -> QuantitativeFeature: ...
 @overload
-def make_version(feature: FeatureIn, y_class: str) -> FeatureIn: ...
+def make_version(feature: Feature, y_class: str) -> Feature: ...
 
 
 def make_version(
-    feature: CategoricalFeature | OrdinalFeature | QuantitativeFeature | FeatureIn, y_class: str
-) -> CategoricalFeature | OrdinalFeature | QuantitativeFeature | FeatureIn:
+    feature: CategoricalFeature | OrdinalFeature | QuantitativeFeature | Feature, y_class: str
+) -> CategoricalFeature | OrdinalFeature | QuantitativeFeature | Feature:
     """Makes a copy of a feature with specified version"""
 
     # converting feature to json
@@ -612,10 +611,10 @@ def make_version_name(feature_name: str, y_class: str) -> str:
 
 def cast_features(
     features: list[str] | None,
-    target_class: type[FeatureIn],
+    target_class: type[Feature],
     ordinal_values: dict[str, list[str]] | None = None,
     **kwargs,
-) -> list[FeatureIn]:
+) -> list[Feature]:
     """converts a list of string feature names to there corresponding Feature class"""
 
     # inititating features if not provided
@@ -627,7 +626,7 @@ def cast_features(
         ordinal_values = {}
 
     # initiating list of converted features
-    converted_features: list[FeatureIn] = []
+    converted_features: list[Feature] = []
 
     # iterating over each feature
     for feature in features:
