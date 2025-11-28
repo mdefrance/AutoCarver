@@ -80,38 +80,6 @@ class GroupedList(list):
     def __repr__(self) -> str:
         return f"GroupedList({super().__repr__()})"
 
-    @classmethod
-    def from_array(cls, array: ndarray) -> "GroupedList":
-        """Creates a GroupedList from a numpy array
-
-        Parameters
-        ----------
-        array : ndarray
-            Numpy array to convert to GroupedList
-
-        Returns
-        -------
-        GroupedList
-            Created GroupedList
-        """
-        return cls(list(array))
-
-    @classmethod
-    def from_dict(cls, content_dict: dict[Any, list[Any]]) -> "GroupedList":
-        """Creates a GroupedList from a content dict
-
-        Parameters
-        ----------
-        content_dict : dict[Any, list[Any]]
-            Content dict to convert to GroupedList
-
-        Returns
-        -------
-        GroupedList
-            Created GroupedList
-        """
-        return cls(content_dict)
-
     def __init__(self, iterable: ndarray | dict | list | tuple | None = ()) -> None:
         """
         Parameters
@@ -135,7 +103,7 @@ class GroupedList(list):
             self.content = dict(iterable.items())
 
             # checking that all values are only present once
-            check_content_unity(iterable)
+            check_content_unity(self.content)
 
             # adding key to itself if it's not present in an other key
             groups = values[:]  # copying initial keys
