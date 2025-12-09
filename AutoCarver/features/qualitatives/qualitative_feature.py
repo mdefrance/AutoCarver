@@ -38,7 +38,7 @@ class QualitativeFeature(BaseFeature):
             self.update(GroupedList(sorted_unique_values))
 
         # checking that raw order has not been set (also useful when loading from json)
-        if len(self.raw_order) == 0:
+        if len(self.raw_order) == 0 and isinstance(self.values, GroupedList):
             # saving up number ordering for labeling
             self.raw_order = [self.values.get_group(value) for value in sorted_unique_values]
 
