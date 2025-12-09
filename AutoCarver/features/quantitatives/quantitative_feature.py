@@ -13,10 +13,10 @@ class QuantitativeFeature(BaseFeature):
     __name__ = "Quantitative"
     is_quantitative = True
 
-    @BaseFeature.has_default.setter
+    @BaseFeature.has_default.setter  # type: ignore[attr-defined]
     def has_default(self, value: bool) -> None:
         """does nothing for quantitative features: no default value possible"""
-        _ = value
+        pass
 
     def _specific_update(self, values: GroupedList, convert_labels: bool = False) -> None:
         """update content of values specifically per feature type"""
@@ -29,7 +29,7 @@ class QuantitativeFeature(BaseFeature):
             self.values = values
 
         # values are not labels
-        elif not convert_labels:
+        elif not convert_labels and isinstance(self.values, GroupedList):
             # updating: iterating over each grouped values
             for kept_value, grouped_values in values.content.items():
                 self.values.group(grouped_values, kept_value)
@@ -63,12 +63,10 @@ class QuantitativeFeature(BaseFeature):
                     kept_value = max(which_to_keep)
 
                 # updating values if any to group
-                if len(grouped_values) > 0:
+                if len(grouped_values) > 0 and isinstance(self.values, GroupedList):
                     # if ordinal_encoding, converting values to unique values
                     if self.ordinal_encoding:
-                        r_value_per_label = {
-                            v: self.values[k] for k, v in self.value_per_label.items()
-                        }
+                        r_value_per_label = {v: self.values[k] for k, v in self.value_per_label.items()}  # type: ignore[call-overload]
                         grouped_values = [r_value_per_label[value] for value in grouped_values]
                         kept_value = r_value_per_label[kept_value]
                     self.values.group(grouped_values, kept_value)
@@ -91,6 +89,10 @@ class QuantitativeFeature(BaseFeature):
         list[str]
             list of labels per quantile
         """
+        # checking types
+        if self.values is None:
+            raise RuntimeError("Values must be set before making labels.")
+
         # filtering out nan and inf for formatting
         quantiles = [val for val in self.values if val != self.nan and isfinite(val)]
 
@@ -163,8 +165,8 @@ def format_quantiles(a_list: list[float]) -> list[str]:
         # low and high bounds per quantiles
         upper_bounds = formatted_list + [nan]
         lower_bounds = [nan] + formatted_list
-        order: list[str] = []
-        for lower, upper in zip(lower_bounds, upper_bounds):
+        order = []
+        for lower, upper in zip(lower_bounds, upper_bounds, strict=True):
             if isna(lower):
                 order += [f"x <= {upper}"]
             elif isna(upper):
@@ -198,4 +200,4 @@ def min_decimals_to_differentiate(sorted_numbers: list[float], min_decimals: int
 
 def get_quantitative_features(features: list[BaseFeature]) -> list[QuantitativeFeature]:
     """returns quantitative features amongst provided features"""
-    return [feature for feature in features if feature.is_quantitative]
+    return [feature for feature in features if feature.is_quantitative]  # type: ignore[misc]

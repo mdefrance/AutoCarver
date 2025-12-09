@@ -118,8 +118,8 @@ class BaseFeature(ABC):
         self._ordinal_encoding = kwargs.get("ordinal_encoding", False)
 
         # feature values, type and labels
-        self.values = None  # current values
-        self._labels = None  # current labels
+        self.values: GroupedList | None = None  # current values
+        self._labels: GroupedList | None = None  # current labels
         self.label_per_value: dict[str, str] = {}  # current label for all existing values
         self.value_per_label: dict[str, str] = {}  # label for all existing values
 
@@ -317,14 +317,14 @@ class BaseFeature(ABC):
         self._dropna = value
 
     @property
-    def content(self) -> dict:
+    def content(self) -> dict[Any, Any] | None:
         """returns feature values' content"""
         if isinstance(self.values, GroupedList):
             return self.values.content
         return self.values
 
     @property
-    def labels(self) -> GroupedList:
+    def labels(self) -> GroupedList | None:
         """gives labels associated to feature's values"""
         # default labels are values
         return self._labels
@@ -339,7 +339,7 @@ class BaseFeature(ABC):
             labels = [n for n, _ in enumerate(labels)]
 
         # updating list of labels
-        self._labels = list(labels)
+        self._labels = GroupedList(labels)
 
         # updating label_per_value accordingly
         self._update_value_per_label(raw_labels=raw_labels)
@@ -347,9 +347,13 @@ class BaseFeature(ABC):
     def _update_value_per_label(self, raw_labels: list[str]) -> None:
         """updates value per label and label per value"""
 
+        # checking types
+        if self.values is None or self._labels is None:
+            raise RuntimeError("Values and labels must be set before updating value/label mappings.")
+
         # iterating over values and labels
         self.value_per_label = {}
-        for value, label, raw_label in zip(self.values, self._labels, raw_labels):
+        for value, label, raw_label in zip(self.values, self._labels, raw_labels, strict=True):
             # updating label_per_value
             for grouped_value in self.values.get(value):
                 self.label_per_value.update({grouped_value: label})
@@ -366,6 +370,8 @@ class BaseFeature(ABC):
     def make_labels(self) -> GroupedList:
         """builds labels according to feature's values"""
         # default labels are values
+        if self.values is None:
+            raise RuntimeError("Values must be set before making labels.")
         return self.values
 
     @abstractmethod
@@ -454,7 +460,7 @@ class BaseFeature(ABC):
         """updates content of values of the feature"""
 
         # values are the same but sorted
-        if sorted_values:
+        if sorted_values and isinstance(self.values, GroupedList):
             self.values = self.values.sort_by(values)
 
         # checking for GroupedList
