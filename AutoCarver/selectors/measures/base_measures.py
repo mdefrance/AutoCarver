@@ -62,7 +62,7 @@ class BaseMeasure(ABC):
         return self.__name__
 
     @abstractmethod
-    def compute_association(self, x: Series, y: Series) -> float:
+    def compute_association(self, x: Series, y: Series) -> float | None:
         """Computes association measure between ``x`` and ``y``
 
         Parameters
@@ -105,7 +105,7 @@ class BaseMeasure(ABC):
             Whether the test is passed or not
         """
 
-        if not isnull(self.value) and notna(self.value):
+        if self.value is not None and not isnull(self.value) and notna(self.value):
             return self.value >= self.threshold
         return False
 
@@ -150,7 +150,7 @@ class AbsoluteMeasure(BaseMeasure):
         bool
             Whether the test is passed or not
         """
-        if not isnull(self.value) and notna(self.value):
+        if self.value is not None and not isnull(self.value) and notna(self.value):
             return abs(self.value) >= self.threshold
         return False
 
@@ -201,7 +201,7 @@ class OutlierMeasure(BaseMeasure):
         bool
             Whether the test is passed or not
         """
-        if not isnull(self.value) and notna(self.value):
+        if self.value is not None and not isnull(self.value) and notna(self.value):
             return self.value < self.threshold
         return True
 

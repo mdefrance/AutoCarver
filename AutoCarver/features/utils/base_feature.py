@@ -320,7 +320,7 @@ class BaseFeature(ABC):
         return self.values.content
 
     @property
-    def labels(self) -> GroupedList | None:
+    def labels(self) -> GroupedList:
         """gives labels associated to feature's values"""
         # default labels are values
         return self._labels

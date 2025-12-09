@@ -173,9 +173,7 @@ class QualitativeFeature(BaseFeature):
                 if len(grouped_values) > 0:
                     # if ordinal_encoding, converting values to unique values
                     if self.ordinal_encoding:
-                        r_value_per_label = {
-                            v: self.values[k] for k, v in self.value_per_label.items()
-                        }
+                        r_value_per_label = {v: self.values[k] for k, v in self.value_per_label.items()}  # type: ignore[call-overload]
                         grouped_values = [r_value_per_label[value] for value in grouped_values]
 
                     # grouping values
@@ -188,7 +186,7 @@ class QualitativeFeature(BaseFeature):
     def _specific_formatting(self, ordered_content: list[str]) -> str:
         """specific label formatting"""
 
-    def _format_modalities(self, group: str, content: list[str]) -> list[str]:
+    def _format_modalities(self, group: str, content: list[str]) -> str:
         """Formats a list of float quantiles into a list of boundaries.
 
         Rounds quantiles to the closest power of 1000.

@@ -164,6 +164,6 @@ def combination_formatter(combination: list[list[str]]) -> dict[str, str]:
     return {modal: group[0] for group in combination for modal in group}
 
 
-def format_combinations(combinations: list[list[str]]) -> list[dict[str, str]]:
+def format_combinations(combinations: list[list[list[str]]]) -> list[dict[str, str]]:
     """Formats a list of combinations"""
     return [combination_formatter(combination) for combination in combinations]
