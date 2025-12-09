@@ -33,12 +33,12 @@ class QualitativeFeature(BaseFeature):
         sorted_unique_values = nan_unique(X[self.version], sort=True)
 
         # checking that feature is not ordinal (already set values)
-        if self.values is None:
+        if len(self.values) == 0:
             # initiating feature with its unique non-nan values
             self.update(GroupedList(sorted_unique_values))
 
         # checking that raw order has not been set (also useful when loading from json)
-        if len(self.raw_order) == 0 and isinstance(self.values, GroupedList):
+        if len(self.raw_order) == 0:
             # saving up number ordering for labeling
             self.raw_order = [self.values.get_group(value) for value in sorted_unique_values]
 
@@ -84,6 +84,10 @@ class QualitativeFeature(BaseFeature):
     def make_labels(self) -> GroupedList:
         """gives labels per values"""
 
+        # checking types
+        if self.content is None:
+            raise RuntimeError("Values must be set before making labels.")
+
         # iterating over each value and there content
         labels = []
         for group, content in self.content.items():
@@ -117,7 +121,7 @@ class QualitativeFeature(BaseFeature):
         """update content of values specifically per feature type"""
 
         # no values have been set
-        if not convert_labels and self.values is None:
+        if not convert_labels and len(self.values) == 0:
             self.values = values
 
         # values are not labels

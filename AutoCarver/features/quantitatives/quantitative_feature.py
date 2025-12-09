@@ -22,14 +22,14 @@ class QuantitativeFeature(BaseFeature):
         """update content of values specifically per feature type"""
 
         # no values have been set
-        if not convert_labels and self.values is None:
+        if not convert_labels and len(self.values) == 0:
             # checking that inf is amongst values
             if values[-1] != inf:
                 raise ValueError(f"[{self}] Must provide values with values[-1] == numpy.inf")
             self.values = values
 
         # values are not labels
-        elif not convert_labels and isinstance(self.values, GroupedList):
+        elif not convert_labels:
             # updating: iterating over each grouped values
             for kept_value, grouped_values in values.content.items():
                 self.values.group(grouped_values, kept_value)
@@ -63,7 +63,7 @@ class QuantitativeFeature(BaseFeature):
                     kept_value = max(which_to_keep)
 
                 # updating values if any to group
-                if len(grouped_values) > 0 and isinstance(self.values, GroupedList):
+                if len(grouped_values) > 0:
                     # if ordinal_encoding, converting values to unique values
                     if self.ordinal_encoding:
                         r_value_per_label = {v: self.values[k] for k, v in self.value_per_label.items()}  # type: ignore[call-overload]
@@ -89,10 +89,6 @@ class QuantitativeFeature(BaseFeature):
         list[str]
             list of labels per quantile
         """
-        # checking types
-        if self.values is None:
-            raise RuntimeError("Values must be set before making labels.")
-
         # filtering out nan and inf for formatting
         quantiles = [val for val in self.values if val != self.nan and isfinite(val)]
 

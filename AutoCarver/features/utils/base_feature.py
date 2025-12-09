@@ -118,8 +118,8 @@ class BaseFeature(ABC):
         self._ordinal_encoding = kwargs.get("ordinal_encoding", False)
 
         # feature values, type and labels
-        self.values: GroupedList | None = None  # current values
-        self._labels: GroupedList | None = None  # current labels
+        self.values = GroupedList()  # current values
+        self._labels = GroupedList()  # current labels
         self.label_per_value: dict[str, str] = {}  # current label for all existing values
         self.value_per_label: dict[str, str] = {}  # label for all existing values
 
@@ -267,7 +267,7 @@ class BaseFeature(ABC):
         self._ordinal_encoding = value
 
         # updating labels
-        if self.values is not None:
+        if len(self.values) > 0:
             self.update_labels()
 
     @property
@@ -284,7 +284,7 @@ class BaseFeature(ABC):
             raise ValueError(f"Trying to set dropna with type {type(value)}")
 
         # check input value
-        if self.values is None:
+        if len(self.values) == 0:
             raise ValueError("Trying to set dropna before there were values observed")
 
         # activating dropna mode
@@ -300,10 +300,8 @@ class BaseFeature(ABC):
         # deactivating dropna mode
         elif not value and self.dropna:
             # checking for values merged with nans
-            if self.values is not None and len(self.values.get(self.nan)) > 1:
-                raise RuntimeError(
-                    "Can not set feature dropna=False has values were grouped with nans."
-                )
+            if len(self.values.get(self.nan)) > 1:
+                raise RuntimeError("Can not set feature dropna=False has values were grouped with nans.")
 
             # dropping nans from values
             values = GroupedList(self.values)
@@ -317,11 +315,9 @@ class BaseFeature(ABC):
         self._dropna = value
 
     @property
-    def content(self) -> dict[Any, Any] | None:
+    def content(self) -> dict[Any, Any]:
         """returns feature values' content"""
-        if isinstance(self.values, GroupedList):
-            return self.values.content
-        return self.values
+        return self.values.content
 
     @property
     def labels(self) -> GroupedList | None:
@@ -347,10 +343,6 @@ class BaseFeature(ABC):
     def _update_value_per_label(self, raw_labels: list[str]) -> None:
         """updates value per label and label per value"""
 
-        # checking types
-        if self.values is None or self._labels is None:
-            raise RuntimeError("Values and labels must be set before updating value/label mappings.")
-
         # iterating over values and labels
         self.value_per_label = {}
         for value, label, raw_label in zip(self.values, self._labels, raw_labels, strict=True):
@@ -370,8 +362,6 @@ class BaseFeature(ABC):
     def make_labels(self) -> GroupedList:
         """builds labels according to feature's values"""
         # default labels are values
-        if self.values is None:
-            raise RuntimeError("Values must be set before making labels.")
         return self.values
 
     @abstractmethod
@@ -460,7 +450,7 @@ class BaseFeature(ABC):
         """updates content of values of the feature"""
 
         # values are the same but sorted
-        if sorted_values and isinstance(self.values, GroupedList):
+        if sorted_values:
             self.values = self.values.sort_by(values)
 
         # checking for GroupedList
