@@ -70,6 +70,7 @@ class QuantitativeFilter(BaseFilter):
 
     is_x_quantitative = True
     is_absolute = True
+    measure: str
 
     @extend_docstring(BaseFilter.filter)
     def filter(self, X: DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:
@@ -118,7 +119,7 @@ class QuantitativeFilter(BaseFilter):
         """Computes correlation with better features (filtering out X_corr)"""
 
         # correlation with more associated features
-        corr_with_better_features = X_corr.loc[: feature.version, feature.version].fillna(0)
+        corr_with_better_features = X_corr.loc[slice(None, feature.version), feature.version].fillna(0)
 
         # worst/maximum absolute correlation with better features
         return corr_with_better_features.agg(
