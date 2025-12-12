@@ -166,7 +166,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
     @property
     def qualitatives(self) -> list[QualitativeFeature]:
         """Returns the list of qualitative features"""
-        return self.features.qualitatives
+        return self.features.qualitatives  # type: ignore[return-value]
 
     @property
     def ordinals(self) -> list[OrdinalFeature]:
@@ -462,7 +462,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         Parameters
         ----------
         light_mode: bool, optional
-            Whether or not to save features' history and statistics, by default False
+            Whether or not to save features' statistics, by default False
 
         Returns
         -------
@@ -495,7 +495,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         file_name : str
             String of .json file name.
         light_mode: bool, optional
-            Whether or not to save features' history and statistics, by default False
+            Whether or not to save features' statistics, by default False
 
         Returns
         -------
@@ -542,10 +542,10 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
     def summary(self) -> DataFrame:
         return self.features.summary
 
-    @property
-    def history(self) -> DataFrame:
-        """History of discretization process for all features"""
-        return self.features.history
+    # @property
+    # def history(self) -> DataFrame:
+    #     """History of discretization process for all features"""
+    #     return self.features.history
 
     # def update(
     #     self,
