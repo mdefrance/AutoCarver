@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from math import ceil
 from random import seed, shuffle
-from typing import Any, overload
+from typing import Any, TypeVar
 
 from numpy import isnan
 from pandas import DataFrame, Series
@@ -221,9 +221,7 @@ class BaseSelector(ABC):
 
         return best_qualitatives
 
-    def _initiate_features_measures(
-        self, features: list[BaseFeature], remove_default: bool = True
-    ) -> None:
+    def _initiate_features_measures(self, features: Features | list[BaseFeature], remove_default: bool = True) -> None:
         """initiates the list of measures with default values"""
         # iterating over each feature
         for feature in features:
@@ -264,15 +262,13 @@ class BaseSelector(ABC):
         features = get_typed_features(self.features)
 
         # selecting quantitative features
-        best_features = self._select_quantitatives(features.get("quantitatives"), X, y)
+        best_features = self._select_quantitatives(features["quantitatives"], X, y)
 
         # selecting qualitative features
-        best_features += self._select_qualitatives(features.get("qualitatives"), X, y)
+        best_features += self._select_qualitatives(features["qualitatives"], X, y)
 
         # converting to Features
-        if len(best_features) > 0:
-            return Features.from_list(best_features)
-        return best_features
+        return Features.from_list(best_features)
 
     def _select_features(
         self,
@@ -307,6 +303,8 @@ class BaseSelector(ABC):
     ) -> list[BaseFeature]:
         """gets best features per chunk of maximum size as set by max_num_features_per_chunk"""
 
+        selected_features: list[BaseFeature] = features[:]
+
         # too many features: chunking and selecting best amongst chunks
         if len(features) > self.max_num_features_per_chunk:
             # making random chunks of features
@@ -315,10 +313,10 @@ class BaseSelector(ABC):
             )
 
             # iterating over each feature samples
-            features: list[BaseFeature] = []
+            selected_features = []
             for n_chunk, chunk in enumerate(chunks):
                 # fitting association on features
-                features += get_best_features(
+                selected_features += get_best_features(
                     chunk, X, y, measures, filters, max(int(self.n_best_per_type // len(chunks)), 1)
                 )
 
@@ -326,13 +324,13 @@ class BaseSelector(ABC):
                 self._print_measures(chunk, f"from chunk {n_chunk}/{len(chunks)}")
 
         # initiating features measures and filters for final prediction
-        self._initiate_features_measures(features, remove_default=False)
+        self._initiate_features_measures(selected_features, remove_default=False)
 
         # selecting from remaining features
-        best_features = get_best_features(features, X, y, measures, filters, self.n_best_per_type)
+        best_features = get_best_features(selected_features, X, y, measures, filters, self.n_best_per_type)
 
         # printing association
-        self._print_measures(features)
+        self._print_measures(selected_features)
 
         return best_features
 
@@ -418,58 +416,25 @@ def make_random_chunks(elements: list[Any], max_chunk_sizes: int, random_state: 
     return chunks
 
 
-@overload
-def get_qualitative_metrics(metrics: list[BaseMeasure]) -> list[BaseMeasure]: ...
+Metric = TypeVar("Metric", bound=BaseMeasure | BaseFilter)
 
 
-@overload
-def get_qualitative_metrics(metrics: list[BaseFilter]) -> list[BaseFilter]: ...
-
-
-def get_qualitative_metrics(metrics: list[BaseMeasure] | list[BaseFilter]) -> list[BaseMeasure] | list[BaseFilter]:
+def get_qualitative_metrics(metrics: list[Metric]) -> list[Metric]:
     """returns filtered list of measures/filters that apply on qualitative features"""
     return [metric for metric in metrics if metric.is_x_qualitative]
 
 
-@overload
-def get_quantitative_metrics(metrics: list[BaseMeasure]) -> list[BaseMeasure]: ...
-
-
-@overload
-def get_quantitative_metrics(metrics: list[BaseFilter]) -> list[BaseFilter]: ...
-
-
-def get_quantitative_metrics(metrics: list[BaseMeasure] | list[BaseFilter]) -> list[BaseMeasure] | list[BaseFilter]:
+def get_quantitative_metrics(metrics: list[Metric]) -> list[Metric]:
     """returns filtered list of measures/filters that apply on quantitative features"""
     return [metric for metric in metrics if metric.is_x_quantitative]
 
 
-@overload
-def get_default_metrics(metrics: list[BaseMeasure]) -> list[BaseMeasure]: ...
-
-
-@overload
-def get_default_metrics(metrics: list[BaseFilter]) -> list[BaseFilter]: ...
-
-
-@overload
-def get_default_metrics(metrics: list[BaseMeasure] | list[BaseFilter]) -> list[BaseMeasure] | list[BaseFilter]: ...
-
-
-def get_default_metrics(metrics: list[BaseMeasure] | list[BaseFilter]) -> list[BaseMeasure] | list[BaseFilter]:
+def get_default_metrics(metrics: list[Metric]) -> list[Metric]:
     """returns filtered list of measures/filters that are default"""
     return [metric for metric in metrics if metric.is_default]
 
 
-@overload
-def remove_default_metrics(metrics: list[BaseMeasure]) -> list[BaseMeasure]: ...
-
-
-@overload
-def remove_default_metrics(metrics: list[BaseFilter]) -> list[BaseFilter]: ...
-
-
-def remove_default_metrics(metrics: list[BaseMeasure] | list[BaseFilter]) -> list[BaseMeasure] | list[BaseFilter]:
+def remove_default_metrics(metrics: list[Metric]) -> list[Metric]:
     """returns filtered list of measures/filters that are non-default"""
     return [metric for metric in metrics if not metric.is_default]
 

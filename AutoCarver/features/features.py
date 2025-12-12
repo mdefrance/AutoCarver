@@ -125,12 +125,6 @@ class Features:
         self._ordinals = ordinals if ordinals is not None else []
         self._quantitatives = quantitatives if quantitatives is not None else []
 
-        # checking that features were passed as input
-        if len(self.categoricals) == 0 and len(self.quantitatives) == 0 and len(self.ordinals) == 0:
-            raise ValueError(
-                f"[{self}] No feature passed as input. Please set quantitatives, categoricals or ordinals."
-            )
-
         # checking that qualitatitve and quantitative features are distinct
         check_duplicate_features(self.ordinals, self.categoricals, self.quantitatives)
 
