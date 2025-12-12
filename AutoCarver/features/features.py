@@ -3,7 +3,7 @@
 from typing import Union
 
 from collections.abc import Sequence
-from typing import TypeVar, overload
+from typing import Any, TypeVar, overload
 
 from numpy import nan
 from pandas import DataFrame, Series
@@ -164,7 +164,7 @@ class Features:
     @classmethod
     def from_list(
         cls,
-        features: list[BaseFeature | QuantitativeFeature | QualitativeFeature | CategoricalFeature | OrdinalFeature],
+        features: list[Any],
         **kwargs,
     ) -> "Features":
         """Initiates Features from a list of features only"""
@@ -492,7 +492,7 @@ class Features:
         features_json.update({"is_fitted": self.is_fitted})
         return features_json
 
-    def to_list(self) -> Sequence[BaseFeature]:
+    def to_list(self) -> list[Any]:
         """Returns a list of all features"""
         return self.categoricals + self.ordinals + self.quantitatives
 

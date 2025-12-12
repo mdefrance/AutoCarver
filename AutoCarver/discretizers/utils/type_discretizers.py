@@ -23,7 +23,7 @@ class StringDiscretizer(BaseDiscretizer):
     @extend_docstring(BaseDiscretizer.__init__, exclude=["min_freq"])
     def __init__(self, features: Features, **kwargs) -> None:
         # initiating features
-        features = Features(features, **kwargs)
+        features = Features.from_list(features.to_list(), **kwargs)
 
         # Initiating BaseDiscretizer
         super().__init__(features=features, **kwargs)
@@ -36,7 +36,7 @@ class StringDiscretizer(BaseDiscretizer):
         sample = self._prepare_data(Sample(X, y))
 
         # transforming all features
-        all_orders = apply_async_function(fit_feature, self.features, self.n_jobs, sample.X)
+        all_orders = apply_async_function(fit_feature, self.features.to_list(), self.n_jobs, sample.X)
 
         # updating features accordingly
         self.features.update(dict(all_orders), replace=True)
@@ -109,7 +109,7 @@ class TimedeltaDiscretizer(BaseDiscretizer):
         sample = self._prepare_data(Sample(X, y))
 
         # transforming all features
-        all_orders = apply_async_function(fit_feature, self.features, self.n_jobs, sample.X)
+        all_orders = apply_async_function(fit_feature, self.features.to_list(), self.n_jobs, sample.X)
 
         # updating features accordingly
         self.features.update(dict(all_orders), replace=True)
