@@ -10,7 +10,7 @@ from ..utils.combination_evaluator import AggregatedSample, CombinationEvaluator
 from .binary_target_rates import BinaryTargetRate, TargetMean
 
 
-class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
+class BinaryCombinationEvaluator(CombinationEvaluator[BinaryTargetRate], ABC):
     """Binary combination evaluator class."""
 
     is_y_binary = True

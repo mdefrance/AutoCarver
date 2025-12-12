@@ -4,22 +4,22 @@ the best combination of modalities for a feature."""
 import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Union
+from typing import Generic, TypeVar
 
 from pandas import DataFrame, Series
 from tqdm import tqdm
 
-from ...features import BaseFeature, GroupedList
-from ...utils import get_attribute, get_bool_attribute
-from .combinations import (
+from AutoCarver.combinations.utils.combinations import (
     consecutive_combinations,
     format_combinations,
     nan_combinations,
     order_apply_combination,
     xagg_apply_combination,
 )
-from .target_rate import TargetRate
-from .testing import TestKeys, is_viable, test_viability
+from AutoCarver.combinations.utils.target_rate import TargetRate
+from AutoCarver.combinations.utils.testing import TestKeys, is_viable, test_viability
+from AutoCarver.features import BaseFeature, GroupedList
+from AutoCarver.utils import get_attribute, get_bool_attribute
 
 
 @dataclass
@@ -125,7 +125,10 @@ class AggregatedSamples:
         self.dev.raw = xagg_apply_combination(self.dev.raw, feature)
 
 
-class CombinationEvaluator(ABC):
+Rate = TypeVar("Rate", bound=TargetRate)
+
+
+class CombinationEvaluator(Generic[Rate], ABC):
     """CombinationEvaluator class to evaluate
     the best combination of modalities for a feature."""
 
@@ -180,15 +183,15 @@ class CombinationEvaluator(ABC):
         self.min_freq = get_attribute(kwargs, "min_freq")
 
         # attributes to be set by get_best_combination
-        self.feature: BaseFeature = None
+        self.feature: BaseFeature
         self.samples: AggregatedSamples = AggregatedSamples()
         self._statistics_cache = None
         self._init_target_rate(get_attribute(kwargs, "target_rate"))
 
     @abstractmethod
-    def _init_target_rate(self, target_rate: TargetRate) -> None:
+    def _init_target_rate(self, target_rate: Rate) -> None:
         """Initializes target rate."""
-        self.target_rate = target_rate
+        self.target_rate: Rate = target_rate
 
     def __repr__(self) -> str:
         return f"{self.__name__}(max_n_mod={self.max_n_mod})"
@@ -233,7 +236,7 @@ class CombinationEvaluator(ABC):
             .to_dict(orient="records")
         )
 
-    def _get_best_association(self, combinations: list[list[str]]) -> dict:
+    def _get_best_association(self, combinations: list[list[str]]) -> dict | None:
         """Computes associations of the tab for each combination
 
         Returns
@@ -255,7 +258,7 @@ class CombinationEvaluator(ABC):
 
         return best_combination
 
-    def _apply_best_combination(self, best_association: dict) -> None:
+    def _apply_best_combination(self, best_association: dict | None) -> None:
         """Applies best combination to feature labels and xtab"""
 
         # checking that a combination was found
@@ -275,7 +278,7 @@ class CombinationEvaluator(ABC):
             # udpating statistics
             self.feature.statistics = self.target_rate.compute(self.samples.train.raw)
 
-    def _get_best_combination_non_nan(self) -> dict:
+    def _get_best_combination_non_nan(self) -> dict | None:
         """Computes associations of the tab for each combination of non-nans
 
         - dropna has to be set to True
@@ -306,7 +309,7 @@ class CombinationEvaluator(ABC):
 
         return None
 
-    def _get_best_combination_with_nan(self, best_combination: dict) -> dict:
+    def _get_best_combination_with_nan(self, best_combination: dict | None) -> dict | None:
         """Computes associations of the tab for each combination with nans"""
 
         # grouping NaNs if requested to drop them (dropna=True)
@@ -323,7 +326,9 @@ class CombinationEvaluator(ABC):
 
         return best_combination
 
-    def get_best_combination(self, feature: BaseFeature, xagg: DataFrame, xagg_dev: DataFrame | None = None) -> dict:
+    def get_best_combination(
+        self, feature: BaseFeature, xagg: DataFrame, xagg_dev: DataFrame | None = None
+    ) -> dict | None:
         """Computes best combination of modalities for the feature"""
 
         # checking for min_freq
@@ -382,7 +387,7 @@ class CombinationEvaluator(ABC):
 
         return test_results
 
-    def _get_viable_combination(self, associations: list[dict]) -> dict:
+    def _get_viable_combination(self, associations: list[dict]) -> dict | None:
         """Tests the viability of all possible combinations onto xagg_dev"""
 
         # testing viability of all combinations

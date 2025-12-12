@@ -9,7 +9,7 @@ from ..utils.combination_evaluator import AggregatedSample, CombinationEvaluator
 from .continuous_target_rates import ContinuousTargetRate, TargetMean
 
 
-class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
+class ContinuousCombinationEvaluator(CombinationEvaluator[ContinuousTargetRate], ABC):
     """Continuous combination evaluator class."""
 
     is_y_continuous = True

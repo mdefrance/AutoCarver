@@ -168,13 +168,17 @@ class BaseSelector(ABC):
         return self.verbose and _has_idisplay
 
     @abstractmethod
-    def _initiate_measures(self, requested_measures: list[BaseMeasure] | None = None) -> list[BaseMeasure] | None:
+    def _initiate_measures(self, requested_measures: list[BaseMeasure] | None = None) -> list[BaseMeasure]:
         """initiates the list of measures with default values"""
+        if requested_measures is None:
+            requested_measures = []
         return requested_measures
 
     @abstractmethod
-    def _initiate_filters(self, requested_filters: list[BaseFilter] | None = None) -> list[BaseFilter] | None:
+    def _initiate_filters(self, requested_filters: list[BaseFilter] | None = None) -> list[BaseFilter]:
         """initiates the list of measures with default values"""
+        if requested_filters is None:
+            requested_filters = []
         return requested_filters
 
     def _select_quantitatives(
