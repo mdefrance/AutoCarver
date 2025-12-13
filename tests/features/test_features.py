@@ -235,7 +235,7 @@ def mock_quantitatives():
 @fixture
 def features(mock_categoricals, mock_ordinals, mock_quantitatives):
     """fixture for Features"""
-    return Features(
+    return Features.from_str(
         categoricals=[f.name for f in mock_categoricals],
         quantitatives=[f.name for f in mock_quantitatives],
         ordinals=mock_ordinals,

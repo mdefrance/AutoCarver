@@ -23,8 +23,8 @@ def test_base_feature_initialization() -> None:
     assert feature.default == Constants.DEFAULT
     assert not feature.dropna
     assert not feature.is_fitted
-    assert feature.values is None
-    assert feature.labels is None
+    assert feature.values == GroupedList()
+    assert feature.labels == GroupedList()
     assert isinstance(feature.label_per_value, dict) and len(feature.label_per_value) == 0
     assert isinstance(feature.value_per_label, dict) and len(feature.value_per_label) == 0
     assert not feature.is_ordinal
@@ -105,8 +105,6 @@ def test_base_feature_update_labels_ordinal_encoding() -> None:
     feature.values = GroupedList({"a": ["a", "b"], "c": ["c", "d"]})
     feature.update_labels()
     assert feature.labels == ["a", "c"]
-    with raises(AttributeError):
-        _ = feature.labels.content
     assert feature.label_per_value == {"a": "a", "b": "a", "c": "c", "d": "c"}
     assert feature.value_per_label == {"a": "a", "c": "c"}
 
