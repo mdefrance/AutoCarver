@@ -7,7 +7,7 @@ from typing import Any
 from pandas import DataFrame
 
 
-def imap_unordered_function(fun: Callable, features: list[str], n_jobs: int, **kwargs):
+def imap_unordered_function(fun: Callable, features: list[Any], n_jobs: int, **kwargs):
     """converts a function to a multiprocessing imap_unordered format or list comprehension"""
 
     # initiating list of function results

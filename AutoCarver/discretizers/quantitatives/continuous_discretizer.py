@@ -2,7 +2,7 @@
 for a binary classification model.
 """
 
-from numpy import digitize, in1d, inf, isnan, linspace, quantile, sort, unique
+from numpy import digitize, inf, isin, isnan, linspace, quantile, sort, unique
 from numpy.typing import NDArray
 from pandas import DataFrame, Series
 
@@ -46,7 +46,8 @@ class ContinuousDiscretizer(BaseDiscretizer):
         """
 
         # Initiating BaseDiscretizer
-        super().__init__(Features.from_list(quantitatives), **dict(kwargs, min_freq=min_freq))
+        super().__init__(Features.from_list(quantitatives), **kwargs)
+        self.min_freq: float = min_freq
 
     @property
     def q(self) -> int:
@@ -114,8 +115,8 @@ def find_quantiles(
     return list(
         sort(
             np_find_quantiles(
-                df_feature[~isnan(df_feature)],  # getting rid of missing values
-                q,
+                df_feature=df_feature[~isnan(df_feature)],  # getting rid of missing values
+                q=q,
                 initial_len_df=len(df_feature),  # getting raw dataset size
                 quantiles=[],  # initiating list of quantiles
             )
@@ -126,8 +127,8 @@ def find_quantiles(
 def np_find_quantiles(
     df_feature: NDArray,
     q: int,
-    initial_len_df: int | None = None,
-    quantiles: list[float] | None = None,
+    initial_len_df: int,
+    quantiles: list[float],
 ) -> list[float]:
     """Finds quantiles of a Series recursively.
 
@@ -169,10 +170,10 @@ def np_find_quantiles(
         sub_indices = digitize(df_feature, frequent_values, right=False)
         for i in range(0, len(frequent_values) + 1):
             quantiles += np_find_quantiles(
-                df_feature[(sub_indices == i) & (~in1d(df_feature, frequent_values))],
-                q,
-                initial_len_df,
-                [],
+                df_feature=df_feature[(sub_indices == i) & (~isin(df_feature, frequent_values))],
+                q=q,
+                initial_len_df=initial_len_df,
+                quantiles=[],
             )
 
         # adding over-represented modality to the list of quantiles
@@ -206,7 +207,7 @@ def compute_quantiles(df_feature: NDArray, q: int, initial_len_df: int) -> list[
     return [max(df_feature)]
 
 
-def get_remaining_quantiles(remaining_len_df: NDArray, initial_len_df: int, q: int) -> NDArray:
+def get_remaining_quantiles(remaining_len_df: int, initial_len_df: int, q: int) -> NDArray:
     """Computes list of indices of quantiles needed."""
 
     # updating number of quantiles taking into account identified over-represented modalities

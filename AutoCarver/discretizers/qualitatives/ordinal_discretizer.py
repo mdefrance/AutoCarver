@@ -6,9 +6,9 @@ from numpy import arange, argmin, nan_to_num, vstack
 from numpy.typing import NDArray
 from pandas import DataFrame, Series, notna
 
-from ...features import GroupedList, OrdinalFeature
-from ...utils import extend_docstring
-from ..utils.base_discretizer import BaseDiscretizer, Sample
+from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
+from AutoCarver.features import Features, GroupedList, OrdinalFeature
+from AutoCarver.utils import extend_docstring
 
 
 class OrdinalDiscretizer(BaseDiscretizer):
@@ -38,7 +38,8 @@ class OrdinalDiscretizer(BaseDiscretizer):
             Ordinal features to process
         """
         # Initiating BaseDiscretizer
-        super().__init__(ordinals, **dict(kwargs, min_freq=min_freq))
+        super().__init__(Features(ordinals=ordinals), **kwargs)
+        self.min_freq: float = min_freq
 
     def _prepare_data(self, sample: Sample) -> Sample:
         """Validates format and content of X and y.
@@ -110,7 +111,7 @@ def find_common_modalities(
     # case 1: there are underrepresented modalities/values
     while any(stats[0, :] / len_df < min_freq) & (stats.shape[1] > 1):
         # identifying the first underrepresented value
-        discarded_idx = argmin(stats[0, :])
+        discarded_idx = int(argmin(stats[0, :]))
 
         # choosing amongst previous and next modality (by volume and target rate)
         kept_idx = find_closest_modality(

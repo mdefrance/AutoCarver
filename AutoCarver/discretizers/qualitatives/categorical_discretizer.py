@@ -5,7 +5,7 @@ for a binary classification model.
 from pandas import DataFrame, Series, notna
 
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
-from AutoCarver.features import CategoricalFeature, Features
+from AutoCarver.features import CategoricalFeature, Features, GroupedList
 from AutoCarver.utils import extend_docstring
 
 
@@ -134,7 +134,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
 
         # sorting features' values based on target rates
         self.features.update(
-            {feature: list(sorted_values) for feature, sorted_values in target_rates.items()},
+            {feature: GroupedList(sorted_values) for feature, sorted_values in target_rates.items()},
             sorted_values=True,
         )
 

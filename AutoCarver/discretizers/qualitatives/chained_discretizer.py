@@ -42,7 +42,7 @@ class ChainedDiscretizer(BaseDiscretizer):
         super().__init__(Features.from_list(features), **kwargs)  # Initiating BaseDiscretizer
 
         # class specific attributes
-        self.min_freq = min_freq
+        self.min_freq: float = min_freq
         self.chained_orders = [GroupedList(values) for values in chained_orders]
 
         # known_values: all ordered values describe in each level of the chained_orders
