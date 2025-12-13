@@ -15,8 +15,9 @@ class BinaryCombinationEvaluator(CombinationEvaluator[BinaryTargetRate], ABC):
 
     is_y_binary = True
 
-    def _init_target_rate(self, target_rate: BinaryTargetRate) -> None:
+    def _init_target_rate(self, target_rate: BinaryTargetRate | None) -> None:
         """Initializes target rate."""
+        self.target_rate: BinaryTargetRate
         if target_rate is None:
             self.target_rate = TargetMean()
         elif not isinstance(target_rate, BinaryTargetRate):
