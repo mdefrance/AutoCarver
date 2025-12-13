@@ -16,9 +16,9 @@ from AutoCarver.features.qualitatives import (
     get_ordinal_features,
 )
 from AutoCarver.features.quantitatives import QuantitativeFeature, get_quantitative_features
-from AutoCarver.features.utils.attributes import get_bool_attribute
 from AutoCarver.features.utils.base_feature import BaseFeature
 from AutoCarver.features.utils.grouped_list import GroupedList
+from AutoCarver.utils.attributes import get_bool_attribute
 
 # class AutoFeatures(Features):
 #     """TODO"""
