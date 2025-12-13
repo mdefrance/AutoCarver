@@ -7,7 +7,8 @@ from pandas import DataFrame, Series
 from AutoCarver.discretizers.qualitatives.categorical_discretizer import CategoricalDiscretizer
 from AutoCarver.discretizers.qualitatives.chained_discretizer import check_frequencies, ensure_qualitative_dtypes
 from AutoCarver.discretizers.qualitatives.ordinal_discretizer import OrdinalDiscretizer
-from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
+from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer
+from AutoCarver.discretizers.utils.samples import Sample
 from AutoCarver.features import Features, QualitativeFeature
 from AutoCarver.utils import extend_docstring
 
@@ -45,7 +46,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
         super().__init__(Features.from_list(qualitatives), **kwargs)
         self.min_freq: float = min_freq
 
-    def _prepare_data(self, sample: Sample) -> Sample:
+    def _prepare_sample(self, sample):
         """Validates format and content of X and y. Converts non-string columns into strings."""
         sample.X = super()._prepare_X(sample.X)
 
@@ -63,7 +64,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
         self._log_if_verbose("------\n---")
 
         # checking data before bucketization
-        sample = self._prepare_data(Sample(X, y))
+        sample = self._prepare_sample(Sample(X, y))
 
         # Base discretization (useful if already discretized)
         sample.X = self._base_transform(**sample)

@@ -4,74 +4,23 @@ for a binary classification model.
 
 import json
 from abc import ABC
-from dataclasses import dataclass
 from typing import Any
 
 from numpy import nan, select
 from pandas import DataFrame, Series, concat
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from ...combinations import CombinationEvaluator
-from ...features import BaseFeature, Features
-from ...utils import extend_docstring, get_attribute, get_bool_attribute
-from .multiprocessing import apply_async_function
-from .qualitatives import (
+from AutoCarver.combinations import CombinationEvaluator
+from AutoCarver.discretizers.utils.multiprocessing import apply_async_function
+from AutoCarver.discretizers.utils.samples import Sample
+from AutoCarver.features import BaseFeature, Features
+from AutoCarver.features.qualitatives import (
     CategoricalFeature,
     OrdinalFeature,
     QualitativeFeature,
 )
-from .quantitatives import QuantitativeFeature
-
-
-@dataclass
-class Sample:
-    """sample class to store X and y"""
-
-    X: DataFrame
-    y: Series = None
-
-    def __getitem__(self, key):
-        """Returns the DataFrame or the Series"""
-        if key == "X":
-            return self.X
-        if key == "y":
-            return self.y
-
-        raise KeyError(key)
-
-    def __iter__(self):
-        """Returns an iterator over the DataFrame"""
-        return iter(["X", "y"])
-
-    def keys(self):
-        """Returns the keys of the DataFrame"""
-        return ["X", "y"]
-
-    @property
-    def shape(self):
-        """Returns the shape of the DataFrame"""
-        return self.X.shape
-
-    @property
-    def index(self):
-        """Returns the index of the DataFrame"""
-        return self.X.index
-
-    @property
-    def columns(self):
-        """Returns the columns of the DataFrame"""
-        return self.X.columns
-
-    def __len__(self):
-        return len(self.X)
-
-    def fillna(self, features: Features) -> None:
-        """fills up nans for features that have some"""
-        self.X = features.fillna(self.X)
-
-    def unfillna(self, features: Features) -> DataFrame:
-        """reinstating nans when not supposed to group them"""
-        return features.unfillna(self.X)
+from AutoCarver.features.quantitatives import QuantitativeFeature
+from AutoCarver.utils import extend_docstring, get_attribute, get_bool_attribute
 
 
 class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
@@ -266,7 +215,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         return x_copy
 
-    def _prepare_data(self, sample: Sample) -> Sample:
+    def _prepare_sample(self, sample: Sample) -> Sample:
         """Validates format and content of X and y.
 
         Parameters
@@ -300,7 +249,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         return sample
 
-    __prepare_data = _prepare_data  # private copy
+    __prepare_sample = _prepare_sample  # private copy
 
     def fit(self, X: DataFrame | None = None, y: Series | None = None) -> "BaseDiscretizer":
         """Learns simple discretization of values of X according to values of y.
@@ -364,7 +313,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             raise RuntimeError(f"[{self.__name__}] Call fit method first.")
 
         # copying dataframes and casting for multiclass
-        sample = self.__prepare_data(Sample(X, y))
+        sample = self.__prepare_sample(Sample(X, y))
 
         # filling up nans for features that have some
         sample.fillna(self.features)

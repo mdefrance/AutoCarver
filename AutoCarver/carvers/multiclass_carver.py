@@ -49,7 +49,7 @@ class MulticlassCarver(BinaryCarver):
                 "WARNING: can't set copy=True for MulticlassCarver (no inplace DataFrame.assign)."
             )
 
-    def _prepare_data(self, samples: Samples) -> Samples:
+    def _prepare_samples(self, samples: Samples) -> Samples:
         """Validates format and content of X and y.
 
         Parameters
@@ -114,7 +114,7 @@ class MulticlassCarver(BinaryCarver):
         samples = Samples(train=Sample(X, y), dev=Sample(X_dev, y_dev))
 
         # preparing datasets and checking for wrong values
-        samples = self._prepare_data(samples)
+        samples = self._prepare_samples(samples)
 
         # getting distinct y classes
         y_classes = sorted(list(samples.train.y.unique()))[1:]  # removing one of the classes
@@ -135,7 +135,7 @@ class MulticlassCarver(BinaryCarver):
             dev_y_class = get_one_vs_rest(samples.dev.y, y_class)
 
             # features for specific group
-            class_features = Features(self.features.get_version_group(y_class))
+            class_features = Features.from_list(self.features.get_version_group(y_class))
 
             # initiating BinaryCarver for y_class
             binary_carver = BinaryCarver(

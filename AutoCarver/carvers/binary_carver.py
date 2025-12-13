@@ -70,7 +70,7 @@ class BinaryCarver(BaseCarver):
             **kwargs,
         )
 
-    def _prepare_data(self, samples: Samples) -> Samples:
+    def _prepare_samples(self, samples: Samples) -> Samples:
         """Validates format and content of X and y.
 
         Parameters
@@ -103,7 +103,7 @@ class BinaryCarver(BaseCarver):
             )
 
         # Checking for binary target and discretizing X
-        return super()._prepare_data(samples)
+        return super()._prepare_samples(samples)
 
     def _aggregator(self, X: DataFrame, y: Series) -> dict[str, DataFrame]:
         """Computes crosstabs for specified features and ensures that the crosstab is ordered

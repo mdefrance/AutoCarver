@@ -64,7 +64,7 @@ class ContinuousCarver(BaseCarver):
             **kwargs,
         )
 
-    def _prepare_data(self, samples: Samples) -> Samples:
+    def _prepare_samples(self, samples: Samples) -> Samples:
         """Validates format and content of X and y.
 
         Parameters
@@ -102,7 +102,7 @@ class ContinuousCarver(BaseCarver):
                 f"[{self.__name__}] provided y is binary, consider using BinaryCarver instead."
             )
         # Checking for binary target and copying X
-        return super()._prepare_data(samples)
+        return super()._prepare_samples(samples)
 
     def _aggregator(self, X: DataFrame, y: Series) -> dict[str, DataFrame]:
         """Computes y values for modalities of specified features and ensures the ordering

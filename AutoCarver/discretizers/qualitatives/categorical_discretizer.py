@@ -38,7 +38,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
         # Initiating BaseDiscretizer
         super().__init__(Features(categoricals), **dict(kwargs, min_freq=min_freq))
 
-    def _prepare_data(self, sample: Sample) -> Sample:
+    def _prepare_data(self, sample):
         """Validates format and content of X and y.
 
         Parameters

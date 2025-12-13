@@ -4,67 +4,25 @@ for any task.
 
 import json
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from typing import Union
 
 from pandas import DataFrame, Series
 
-from ...combinations import (
+from AutoCarver.carvers.utils.pretty_print import index_mapper, prettier_xagg
+from AutoCarver.combinations import (
     CombinationEvaluator,
     CramervCombinations,
     KruskalCombinations,
     TschuprowtCombinations,
 )
-from ...discretizers import BaseDiscretizer, Discretizer, Sample
-from ...features import BaseFeature, Features
-from ...utils import extend_docstring, get_attribute, get_bool_attribute, has_idisplay
-from .pretty_print import index_mapper, prettier_xagg
+from AutoCarver.discretizers import BaseDiscretizer, Discretizer
+from AutoCarver.discretizers.utils.samples import Sample, Samples
+from AutoCarver.features import BaseFeature, Features
+from AutoCarver.utils import extend_docstring, get_attribute, get_bool_attribute, has_idisplay
 
 # trying to import extra dependencies
 _has_idisplay = has_idisplay()
 if _has_idisplay:
     from IPython.display import display_html
-
-
-@dataclass
-class Samples:
-    """
-    A container for storing training and development samples.
-
-    Attributes:
-        train (Sample): The training sample, containing features (X) and target (y).
-        dev (Sample): The development sample, containing features (X) and target (y).
-
-    Example:
-        >>> import pandas as pd
-        >>> from base_carver import Sample, Samples
-        >>> X_train = pd.DataFrame({"feature1": [1, 2, 3], "feature2": [4, 5, 6]})
-        >>> y_train = pd.Series([0, 1, 0])
-        >>> X_dev = pd.DataFrame({"feature1": [7, 8, 9], "feature2": [10, 11, 12]})
-        >>> y_dev = pd.Series([1, 0, 1])
-        >>> train_sample = Sample(X=X_train, y=y_train)
-        >>> dev_sample = Sample(X=X_dev, y=y_dev)
-        >>> samples = Samples(train=train_sample, dev=dev_sample)
-        >>> print(samples.train.X)
-           feature1  feature2
-        0         1         4
-        1         2         5
-        2         3         6
-        >>> print(samples.dev.y)
-        0    1
-        1    0
-        2    1
-        dtype: int64
-    """
-
-    train: Sample = field(default_factory=lambda: Sample(X=None))
-    dev: Sample = field(default_factory=lambda: Sample(X=None))
-
-    def fillna(self, features: Features) -> None:
-        """fills up nans in X and X_dev"""
-        self.train.X = features.fillna(self.train.X)
-        if self.dev.X is not None:
-            self.dev.X = features.fillna(self.dev.X)
 
 
 class BaseCarver(BaseDiscretizer, ABC):
@@ -150,7 +108,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         """Sets the max_n_mod attribute"""
         self.combinations.max_n_mod = value
 
-    def _prepare_data(self, samples: Samples) -> Samples:
+    def _prepare_samples(self, samples: Samples) -> Samples:
         """Validates format and content of X and y.
 
         Parameters
@@ -180,8 +138,8 @@ class BaseCarver(BaseDiscretizer, ABC):
             raise ValueError(f"[{self.__name__}] y must be provided, got {samples.train.y}")
 
         # Checking for binary target and copying X
-        samples.train = super()._prepare_data(samples.train)
-        samples.dev = super()._prepare_data(samples.dev)
+        samples.train = super()._prepare_sample(samples.train)
+        samples.dev = super()._prepare_sample(samples.dev)
 
         # discretizing features according to min_freq
         samples = discretize(self.features, samples, **self.kwargs)
@@ -196,8 +154,8 @@ class BaseCarver(BaseDiscretizer, ABC):
 
     def fit(
         self,
-        X: DataFrame,
-        y: Series,
+        X: DataFrame | None = None,
+        y: Series | None = None,
         *,
         X_dev: DataFrame | None = None,
         y_dev: Series | None = None,
@@ -234,7 +192,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         samples = Samples(Sample(X, y), Sample(X_dev, y_dev))
 
         # preparing datasets and checking for wrong values
-        samples = self._prepare_data(samples)
+        samples = self._prepare_samples(samples)
 
         # logging if requested
         super()._log_if_verbose("---------\n------")
