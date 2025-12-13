@@ -1,6 +1,6 @@
 """ Defines a datetime feature"""
 
-from .quantitative_feature import QuantitativeFeature
+from AutoCarver.features.quantitatives.quantitative_feature import QuantitativeFeature
 
 
 class DatetimeFeature(QuantitativeFeature):

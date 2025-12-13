@@ -1,14 +1,14 @@
 """Tools to select the best Quantitative and Qualitative features for a Classification task."""
 
-from .filters import (
+from AutoCarver.selectors.filters import (
     BaseFilter,
     NonDefaultValidFilter,
     SpearmanFilter,
     TschuprowtFilter,
     ValidFilter,
 )
-from .measures import BaseMeasure, KruskalMeasure, ModeMeasure, NanMeasure, TschuprowtMeasure
-from .utils.base_selector import BaseSelector
+from AutoCarver.selectors.measures import BaseMeasure, KruskalMeasure, ModeMeasure, NanMeasure, TschuprowtMeasure
+from AutoCarver.selectors.utils.base_selector import BaseSelector
 
 
 class ClassificationSelector(BaseSelector):

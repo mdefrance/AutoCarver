@@ -8,9 +8,8 @@ from scipy.spatial.distance import correlation
 from scipy.stats import kruskal, pearsonr, spearmanr
 from statsmodels.formula.api import ols
 
+from AutoCarver.selectors.measures.base_measures import AbsoluteMeasure, BaseMeasure, OutlierMeasure
 from AutoCarver.utils import extend_docstring
-
-from .base_measures import AbsoluteMeasure, BaseMeasure, OutlierMeasure
 
 
 class ReversibleMeasure(BaseMeasure):

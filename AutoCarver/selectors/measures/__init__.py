@@ -1,8 +1,14 @@
 """ Loads association measures."""
 
-from .base_measures import AbsoluteMeasure, BaseMeasure, ModeMeasure, NanMeasure, OutlierMeasure
-from .qualitative_measures import Chi2Measure, CramervMeasure, TschuprowtMeasure
-from .quantitative_measures import (
+from AutoCarver.selectors.measures.base_measures import (
+    AbsoluteMeasure,
+    BaseMeasure,
+    ModeMeasure,
+    NanMeasure,
+    OutlierMeasure,
+)
+from AutoCarver.selectors.measures.qualitative_measures import Chi2Measure, CramervMeasure, TschuprowtMeasure
+from AutoCarver.selectors.measures.quantitative_measures import (
     DistanceMeasure,
     IqrOutlierMeasure,
     KruskalMeasure,

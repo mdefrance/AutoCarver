@@ -1,14 +1,14 @@
 """Tools to select the best Quantitative and Qualitative features for a Regression task."""
 
-from .filters import (
+from AutoCarver.selectors.filters import (
     BaseFilter,
     NonDefaultValidFilter,
     SpearmanFilter,
     TschuprowtFilter,
     ValidFilter,
 )
-from .measures import BaseMeasure, KruskalMeasure, ModeMeasure, NanMeasure, SpearmanMeasure
-from .utils.base_selector import BaseSelector
+from AutoCarver.selectors.measures import BaseMeasure, KruskalMeasure, ModeMeasure, NanMeasure, SpearmanMeasure
+from AutoCarver.selectors.utils.base_selector import BaseSelector
 
 
 class RegressionSelector(BaseSelector):

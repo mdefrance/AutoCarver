@@ -6,8 +6,7 @@ from typing import Any, overload
 from numpy import floating, inf, integer, isfinite
 
 from AutoCarver.config import Constants
-
-from .grouped_list import GroupedList
+from AutoCarver.features.utils.grouped_list import GroupedList
 
 
 def convert_value_to_base_type(value: Any) -> Any:

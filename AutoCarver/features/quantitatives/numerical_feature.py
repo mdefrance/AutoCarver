@@ -1,6 +1,6 @@
 """ Defines a continuous/discrete feature"""
 
-from .quantitative_feature import QuantitativeFeature
+from AutoCarver.features.quantitatives.quantitative_feature import QuantitativeFeature
 
 
 class NumericalFeature(QuantitativeFeature):

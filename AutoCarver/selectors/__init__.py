@@ -1,8 +1,8 @@
 """ Loads feature selection tools."""
 
-# from .base_selector import BaseSelector
-from .classification_selector import ClassificationSelector
-from .filters import (
+# from AutoCarver.selectors.base_selector import BaseSelector
+from AutoCarver.selectors.classification_selector import ClassificationSelector
+from AutoCarver.selectors.filters import (
     BaseFilter,
     CramervFilter,
     PearsonFilter,
@@ -11,7 +11,7 @@ from .filters import (
     SpearmanFilter,
     TschuprowtFilter,
 )
-from .measures import (
+from AutoCarver.selectors.measures import (
     AbsoluteMeasure,
     BaseMeasure,
     Chi2Measure,
@@ -28,7 +28,7 @@ from .measures import (
     TschuprowtMeasure,
     ZscoreOutlierMeasure,
 )
-from .regression_selector import RegressionSelector
+from AutoCarver.selectors.regression_selector import RegressionSelector
 
 __all__ = [
     # selectors
