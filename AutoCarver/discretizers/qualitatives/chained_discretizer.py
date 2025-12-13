@@ -5,10 +5,10 @@ for a binary classification model.
 from numpy import nan, select
 from pandas import DataFrame, Series, unique
 
-from ...features import CategoricalFeature, Features, GroupedList
-from ...utils import extend_docstring
-from ..utils.base_discretizer import BaseDiscretizer, Sample
-from ..utils.type_discretizers import StringDiscretizer
+from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
+from AutoCarver.discretizers.utils.type_discretizers import StringDiscretizer
+from AutoCarver.features import CategoricalFeature, Features, GroupedList
+from AutoCarver.utils import extend_docstring
 
 
 class ChainedDiscretizer(BaseDiscretizer):

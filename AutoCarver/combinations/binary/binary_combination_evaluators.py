@@ -6,8 +6,8 @@ from numpy import add, array, searchsorted, sqrt, unique, zeros
 from pandas import DataFrame, notna
 from scipy.stats import chi2_contingency
 
-from ..utils.combination_evaluator import AggregatedSample, CombinationEvaluator
-from .binary_target_rates import BinaryTargetRate, TargetMean
+from AutoCarver.combinations.binary.binary_target_rates import BinaryTargetRate, TargetMean
+from AutoCarver.utils.combination_evaluator import AggregatedSample, CombinationEvaluator
 
 
 class BinaryCombinationEvaluator(CombinationEvaluator[BinaryTargetRate], ABC):

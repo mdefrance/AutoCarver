@@ -6,7 +6,8 @@ from typing import Any, TypeVar
 
 from pandas import DataFrame, Series, option_context
 
-from ...config import Constants
+from AutoCarver.config import Constants
+
 from .grouped_list import GroupedList
 from .serialization import json_deserialize_content, json_serialize_feature
 

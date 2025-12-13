@@ -1,14 +1,14 @@
 """ Loads Discretization tools."""
 
-from .discretizer import Discretizer
-from .qualitatives import (
+from AutoCarver.discretizers.discretizer import Discretizer
+from AutoCarver.discretizers.qualitatives import (
     CategoricalDiscretizer,
     ChainedDiscretizer,
     OrdinalDiscretizer,
     QualitativeDiscretizer,
 )
-from .quantitatives import ContinuousDiscretizer, QuantitativeDiscretizer
-from .utils import BaseDiscretizer, Sample, StringDiscretizer
+from AutoCarver.discretizers.quantitatives import ContinuousDiscretizer, QuantitativeDiscretizer
+from AutoCarver.discretizers.utils import BaseDiscretizer, Sample, StringDiscretizer
 
 __all__ = [
     "BaseDiscretizer",

@@ -5,10 +5,10 @@ for continuous regression tasks.
 from numpy import unique
 from pandas import DataFrame, Series
 
-from ..combinations import KruskalCombinations
-from ..features import BaseFeature, Features
-from ..utils import extend_docstring
-from .utils.base_carver import BaseCarver, Samples
+from AutoCarver.carvers.utils.base_carver import BaseCarver, Samples
+from AutoCarver.combinations import KruskalCombinations
+from AutoCarver.features import BaseFeature, Features
+from AutoCarver.utils import extend_docstring
 
 
 class ContinuousCarver(BaseCarver):

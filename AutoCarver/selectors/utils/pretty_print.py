@@ -2,7 +2,7 @@
 
 from pandas import DataFrame
 
-from ...features import BaseFeature
+from AutoCarver.features import BaseFeature
 
 
 def format_measure(feature: BaseFeature, measure: dict) -> dict:

@@ -6,7 +6,7 @@ from typing import Any, Generator
 
 from pandas import DataFrame
 
-from ...features import BaseFeature, GroupedList
+from AutoCarver.features import BaseFeature, GroupedList
 
 
 def combinations_at_index(

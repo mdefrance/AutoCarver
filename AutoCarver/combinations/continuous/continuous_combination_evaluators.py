@@ -5,8 +5,8 @@ from abc import ABC
 from pandas import Series
 from scipy.stats import kruskal
 
-from ..utils.combination_evaluator import AggregatedSample, CombinationEvaluator
-from .continuous_target_rates import ContinuousTargetRate, TargetMean
+from AutoCarver.combinations.continuous.continuous_target_rates import ContinuousTargetRate, TargetMean
+from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample, CombinationEvaluator
 
 
 class ContinuousCombinationEvaluator(CombinationEvaluator[ContinuousTargetRate], ABC):

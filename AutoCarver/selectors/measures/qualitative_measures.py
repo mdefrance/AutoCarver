@@ -6,7 +6,8 @@ from math import sqrt
 from pandas import Series, crosstab, notna
 from scipy.stats import chi2_contingency
 
-from ...utils import extend_docstring
+from AutoCarver.utils import extend_docstring
+
 from .base_measures import BaseMeasure
 
 # X continue y continue distance correlation

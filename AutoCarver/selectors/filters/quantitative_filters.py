@@ -4,8 +4,9 @@
 from numpy import ones, triu
 from pandas import DataFrame
 
-from ...features import BaseFeature, get_versions
-from ...utils.extend_docstring import extend_docstring
+from AutoCarver.features import BaseFeature, get_versions
+from AutoCarver.utils.extend_docstring import extend_docstring
+
 from .base_filters import BaseFilter
 
 # from statsmodels.stats.outliers_influence import variance_inflation_factor

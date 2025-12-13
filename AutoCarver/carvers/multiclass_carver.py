@@ -6,11 +6,11 @@ from typing import Any
 
 from pandas import DataFrame, Series, unique
 
-from ..discretizers.utils.base_discretizer import BaseDiscretizer, Sample
-from ..features import Features
-from ..utils import extend_docstring
-from .binary_carver import BinaryCarver
-from .utils.base_carver import Samples
+from AutoCarver.carvers.binary_carver import BinaryCarver
+from AutoCarver.carvers.utils.base_carver import Samples
+from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
+from AutoCarver.features import Features
+from AutoCarver.utils import extend_docstring
 
 
 class MulticlassCarver(BinaryCarver):

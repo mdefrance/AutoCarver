@@ -5,7 +5,7 @@ from abc import ABC
 from numpy import log
 from pandas import DataFrame, Series
 
-from ..utils import TargetRate
+from AutoCarver.combinations.utils import TargetRate
 
 
 class BinaryTargetRate(TargetRate, ABC):

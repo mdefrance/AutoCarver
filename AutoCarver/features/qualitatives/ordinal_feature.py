@@ -1,8 +1,9 @@
 """ Defines an ordinal feature"""
 
-from ...utils import extend_docstring
-from ..utils.base_feature import BaseFeature
-from ..utils.grouped_list import GroupedList
+from AutoCarver.features.utils.base_feature import BaseFeature
+from AutoCarver.features.utils.grouped_list import GroupedList
+from AutoCarver.utils import extend_docstring
+
 from .qualitative_feature import QualitativeFeature
 
 

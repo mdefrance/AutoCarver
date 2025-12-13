@@ -1,6 +1,6 @@
 """Binary combination evaluators package."""
 
-from .binary_combination_evaluators import (
+from AutoCarver.combinations.binary.binary_combination_evaluators import (
     BinaryCombinationEvaluator,
     CramervCombinations,
     TschuprowtCombinations,

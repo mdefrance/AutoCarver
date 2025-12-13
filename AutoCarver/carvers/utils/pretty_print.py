@@ -2,7 +2,7 @@
 
 from pandas import DataFrame
 
-from ...features import BaseFeature
+from AutoCarver.features import BaseFeature
 
 
 def prettier_xagg(

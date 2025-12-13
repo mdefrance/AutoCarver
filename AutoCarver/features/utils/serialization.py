@@ -5,7 +5,8 @@ from typing import Any, overload
 
 from numpy import floating, inf, integer, isfinite
 
-from ...config import Constants
+from AutoCarver.config import Constants
+
 from .grouped_list import GroupedList
 
 

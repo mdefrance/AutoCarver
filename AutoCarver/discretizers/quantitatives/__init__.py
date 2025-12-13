@@ -1,7 +1,7 @@
 """ Loads Quantitative Discretization tools."""
 
-from .continuous_discretizer import ContinuousDiscretizer
-from .quantitative_discretizer import QuantitativeDiscretizer
+from AutoCarver.discretizers.quantitatives.continuous_discretizer import ContinuousDiscretizer
+from AutoCarver.discretizers.quantitatives.quantitative_discretizer import QuantitativeDiscretizer
 
 __all__ = [
     "QuantitativeDiscretizer",
