@@ -73,7 +73,7 @@ def evaluator(request: FixtureRequest) -> CombinationEvaluator:
 
 def test_continuous_carver_initialization():
     """Test ContinuousCarver initialization."""
-    features = Features(
+    features = Features.from_str(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
@@ -112,7 +112,7 @@ def test_continuous_carver_initialization():
 
 def test_continuous_carver_prepare_data(evaluator: CombinationEvaluator):
     """Test ContinuousCarver _prepare_data method."""
-    features = Features(
+    features = Features.from_str(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
@@ -146,7 +146,7 @@ def test_continuous_carver_prepare_data(evaluator: CombinationEvaluator):
 
 def test_continuous_carver_aggregator(evaluator: CombinationEvaluator):
     """Test ContinuousCarver _aggregator method."""
-    features = Features(
+    features = Features.from_str(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
@@ -176,7 +176,7 @@ def test_continuous_carver_aggregator(evaluator: CombinationEvaluator):
 def test_carve_feature_with_best_combination(evaluator):
     """Test ContinuousCarver _carve_feature method."""
 
-    features = Features(
+    features = Features.from_str(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
@@ -235,7 +235,7 @@ def test_carve_feature_with_best_combination(evaluator):
 def test_carve_feature_without_best_combination(evaluator: CombinationEvaluator):
     """Test _carve_feature method without best combination."""
 
-    features = Features(
+    features = Features.from_str(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
@@ -275,7 +275,7 @@ def test_carve_feature_without_best_combination(evaluator: CombinationEvaluator)
 def test_fit_with_best_combination(evaluator):
     """Test ContinuousCarver fit method with best combination."""
 
-    features = Features(
+    features = Features.from_str(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
@@ -327,7 +327,7 @@ def test_fit_with_best_combination(evaluator):
 def test_fit_without_best_combination(evaluator: CombinationEvaluator):
     """Test ContinuousCarver fit method without best combination."""
 
-    features = Features(
+    features = Features.from_str(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
@@ -361,7 +361,7 @@ def test_continuous_carver_fit_transform_with_small_data_not_ordinal(
     evaluator: CombinationEvaluator,
 ):
     """Test ContinuousCarver fit_transform method."""
-    features = Features(
+    features = Features.from_str(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
@@ -417,7 +417,7 @@ def test_continuous_carver_fit_transform_with_small_data_not_ordinal(
 
 def test_continuous_carver_fit_transform_with_small_data_ordinal(evaluator: CombinationEvaluator):
     """Test ContinuousCarver fit_transform method."""
-    features = Features(
+    features = Features.from_str(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
@@ -468,7 +468,7 @@ def test_continuous_carver_fit_transform_with_small_data_ordinal(evaluator: Comb
 
 def test_continuous_carver_fit_transform_with_large_data(evaluator: CombinationEvaluator):
     """Test ContinuousCarver fit_transform method."""
-    features = Features(
+    features = Features.from_str(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
@@ -633,7 +633,7 @@ def test_continuous_carver_fit_transform_with_large_data(evaluator: CombinationE
 
 def test_continuous_carver_fit_transform_with_wrong_dev(evaluator: CombinationEvaluator):
     """Test ContinuousCarver fit_transform method."""
-    features = Features(
+    features = Features.from_str(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
@@ -680,7 +680,7 @@ def test_continuous_carver_fit_transform_with_wrong_dev(evaluator: CombinationEv
 
 def test_continuous_carver_save_load(tmp_path, evaluator: CombinationEvaluator):
     """Test ContinuousCarver save and load methods."""
-    features = Features(
+    features = Features.from_str(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
@@ -777,7 +777,7 @@ def test_continuous_carver(
     min_freq = 0.15
 
     # defining features
-    features = Features(
+    features = Features.from_str(
         categoricals=qualitative_features,
         ordinals=values_orders,
         quantitatives=quantitative_features,
@@ -845,26 +845,26 @@ def test_continuous_carver(
         ), "Some Nans are not dropped (grouped)"
 
     # testing for differences between train and dev
-    assert all(
-        x_discretized[feature_names].nunique() == x_dev_discretized[feature_names].nunique()
-    ), "More buckets in train or test samples"
-    for feature in feature_names:
-        train_target_rate = x_discretized.groupby(feature)[target].mean().sort_values()
-        dev_target_rate = x_dev_discretized.groupby(feature)[target].mean().sort_values()
-        assert all(
-            train_target_rate.index == dev_target_rate.index
-        ), f"Not robust feature {feature} was not dropped, or robustness test not working"
+    assert all(x_discretized[feature_names].nunique() == x_dev_discretized[feature_names].nunique()), (
+        "More buckets in train or test samples"
+    )
+    for feature_name in feature_names:
+        train_target_rate = x_discretized.groupby(feature_name)[target].mean().sort_values()
+        dev_target_rate = x_dev_discretized.groupby(feature_name)[target].mean().sort_values()
+        assert all(train_target_rate.index == dev_target_rate.index), (
+            f"Not robust feature {feature_name} was not dropped, or robustness test not working"
+        )
 
         # checking for final modalities less frequent than discretizer_min_freq
-        train_frequency = x_discretized[feature].value_counts(normalize=True, dropna=True)
-        assert not any(
-            train_frequency.values < auto_carver.discretizer_min_freq
-        ), f"Some modalities of {feature} are less frequent than discretizer_min_freq in train"
+        train_frequency = x_discretized[feature_name].value_counts(normalize=True, dropna=True)
+        assert not any(train_frequency.values < auto_carver.discretizer_min_freq), (
+            f"Some modalities of {feature_name} are less frequent than discretizer_min_freq in train"
+        )
 
-        dev_frequency = x_dev_discretized[feature].value_counts(normalize=True, dropna=True)
-        assert not any(
-            dev_frequency.values < auto_carver.discretizer_min_freq
-        ), f"Some modalities {feature} are less frequent than discretizer_min_freq in dev"
+        dev_frequency = x_dev_discretized[feature_name].value_counts(normalize=True, dropna=True)
+        assert not any(dev_frequency.values < auto_carver.discretizer_min_freq), (
+            f"Some modalities {feature_name} are less frequent than discretizer_min_freq in dev"
+        )
 
     # test that all values still are in the values_orders
     for feature in features.qualitatives:
@@ -945,7 +945,7 @@ def test_continuous_carver(
 
     # defining features
     print(ordinal_features, values_orders)
-    features = Features(
+    features = Features.from_str(
         ordinals=values_orders,
     )
 

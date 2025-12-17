@@ -271,9 +271,9 @@ class Features:
         return get_versions(self.to_list())
 
     @property
-    def qualitatives(self) -> Sequence[QualitativeFeature]:
+    def qualitatives(self) -> list[QualitativeFeature]:
         """Returns all qualitative features"""
-        return self.categoricals + self.ordinals
+        return self.categoricals + self.ordinals  # type: ignore
 
     @property
     def categoricals(self) -> list[CategoricalFeature]:

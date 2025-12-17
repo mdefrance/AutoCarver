@@ -72,7 +72,7 @@ def test_get_one_vs_rest_none():
 
 def test_multiclass_carver_initialization():
     """Test MulticlassCarver initialization."""
-    features = Features(
+    features = Features.from_str(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
@@ -105,7 +105,7 @@ def test_multiclass_carver_initialization():
 
 def test_multiclass_carver_prepare_data(evaluator: CombinationEvaluator):
     """Test MulticlassCarver _prepare_data method."""
-    features = Features(
+    features = Features.from_str(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
@@ -142,7 +142,7 @@ def test_multiclass_carver_fit_transform_with_small_data_not_ordinal(
     evaluator: CombinationEvaluator,
 ):
     """Test MulticlassCarver fit_transform method."""
-    features = Features(
+    features = Features.from_str(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
@@ -206,7 +206,7 @@ def test_multiclass_carver_fit_transform_with_small_data_not_ordinal(
 
 def test_multiclass_carver_fit_transform_with_small_data_ordinal(evaluator: CombinationEvaluator):
     """Test MulticlassCarver fit_transform method."""
-    features = Features(
+    features = Features.from_str(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
@@ -260,7 +260,7 @@ def test_multiclass_carver_fit_transform_with_small_data_ordinal(evaluator: Comb
 
 def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationEvaluator):
     """Test MulticlassCarver fit_transform method."""
-    features = Features(
+    features = Features.from_str(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
@@ -565,7 +565,7 @@ def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationE
 
 def test_multiclass_carver_fit_transform_with_target_only_nan(evaluator: CombinationEvaluator):
     """Test MulticlassCarver fit_transform method."""
-    features = Features(
+    features = Features.from_str(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
@@ -621,7 +621,7 @@ def test_multiclass_carver_fit_transform_with_target_only_nan(evaluator: Combina
 
 def test_multiclass_carver_fit_transform_with_wrong_dev(evaluator: CombinationEvaluator):
     """Test MulticlassCarver fit_transform method."""
-    features = Features(
+    features = Features.from_str(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
@@ -677,7 +677,7 @@ def test_multiclass_carver_fit_transform_with_wrong_dev(evaluator: CombinationEv
 
 def test_multiclass_carver_save_load(tmp_path: Path, evaluator: CombinationEvaluator):
     """Test MulticlassCarver save and load methods."""
-    features = Features(
+    features = Features.from_str(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
@@ -774,7 +774,7 @@ def test_multiclass_carver(
     min_freq = 0.15
 
     # defining features
-    features = Features(
+    features = Features.from_str(
         categoricals=qualitative_features,
         ordinals=values_orders,
         quantitatives=quantitative_features,
@@ -959,7 +959,7 @@ def test_multiclass_carver(
     min_freq = 0.15
 
     # defining features
-    features = Features(ordinals=values_orders)
+    features = Features.from_str(ordinals=values_orders)
 
     # removing wrong features
     features.remove("nan")
