@@ -129,7 +129,7 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
         ],
         "Discrete_Qualitative_highnan": ["1", "2", "3", "4", "5", "6", "7"],
     }
-    features = Features(
+    features = Features.from_str(
         categoricals=categoricals,
         quantitatives=quantitatives,
         ordinals=ordinal_values,

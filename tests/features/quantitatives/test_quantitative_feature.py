@@ -14,7 +14,7 @@ from AutoCarver.features.quantitatives.quantitative_feature import (
 from AutoCarver.features.utils.base_feature import BaseFeature
 from AutoCarver.features.utils.grouped_list import GroupedList
 
-BaseFeature.__abstractmethods__ = set()
+BaseFeature.__abstractmethods__ = set()  # type: ignore[assignment]
 
 
 def test_min_decimals_to_differentiate() -> None:
@@ -75,14 +75,14 @@ def test_get_quantitative_features() -> None:
     assert result == []
 
     # no quantitative
-    feature1 = BaseFeature("feature1")
-    feature2 = BaseFeature("feature2")
+    feature1 = BaseFeature("feature1")  # type: ignore[abstract]
+    feature2 = BaseFeature("feature2")  # type: ignore[abstract]
     result = get_quantitative_features([feature1, feature2])
     assert result == []
 
     # mixed quantitative
     feature1 = QuantitativeFeature("feature1")
-    feature2 = BaseFeature("feature2")
+    feature2 = BaseFeature("feature2")  # type: ignore[abstract]
     result = get_quantitative_features([feature1, feature2])
     assert result == [feature1]
 

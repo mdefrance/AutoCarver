@@ -144,15 +144,15 @@ def test_grouped_list_update() -> None:
     assert gl.content == {1: [1], 2: [2], 3: [4, 5, 3]}
 
     with raises(ValueError):  # not dict input
-        gl.update([1, 2, 3])
+        gl.update([1, 2, 3])  # type: ignore
 
     with raises(ValueError):  # not dict of list input
-        gl.update({3: 4, 1: 6})
+        gl.update({3: 4, 1: 6})  # type: ignore
 
     # value in several groups
     gl = GroupedList({1: [1], 2: [6, 2], 3: [4, 5, 3]})
     with raises(ValueError):
-        gl.update({3: [6]})
+        gl.update({3: [6]})  # type: ignore
 
 
 def test_grouped_list_sort() -> None:
@@ -212,7 +212,7 @@ def test_grouped_list_pop() -> None:
     with raises(IndexError):
         gl.pop(4)
     with raises(TypeError):
-        gl.pop("d")
+        gl.pop("d")  # type: ignore
 
 
 def test_grouped_list_get_group() -> None:

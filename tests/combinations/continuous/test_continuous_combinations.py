@@ -690,6 +690,7 @@ def test_get_viable_combination_without_dev(evaluator: ContinuousCombinationEval
         "combination": [["a"], ["b", "c"]],
         "kruskal": 0.5833333333333333,
     }
+    assert result is not None
     assert result["xagg"].equals(expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["kruskal"] == expected["kruskal"]
@@ -740,6 +741,7 @@ def test_get_viable_combination_with_viable_train(evaluator: ContinuousCombinati
         "combination": [["a"], ["b", "c"]],
         "kruskal": 0.5833333333333333,
     }
+    assert result is not None
     assert result["xagg"].equals(expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["kruskal"] == expected["kruskal"]
@@ -837,6 +839,7 @@ def test_best_association_with_combinations_viable(evaluator: ContinuousCombinat
         "combination": [["a"], ["b", "c"]],
         "kruskal": 0.5833333333333333,
     }
+    assert result is not None
     assert result["xagg"].equals(expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["kruskal"] == expected["kruskal"]
@@ -897,6 +900,7 @@ def test_best_association_with_nan_combinations_viable(evaluator: ContinuousComb
         "combination": [["a", "__NAN__"], ["b"]],
         "kruskal": 0.6999999999999975,
     }
+    assert result is not None
     assert result["xagg"].equals(expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["kruskal"] == expected["kruskal"]
@@ -930,6 +934,7 @@ def test_get_best_combination_non_nan_viable(evaluator: ContinuousCombinationEva
         "combination": [["a"], ["b", "c"]],
         "kruskal": 0.5833333333333333,
     }
+    assert result is not None
     assert result["xagg"].equals(expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["kruskal"] == expected["kruskal"]
@@ -979,6 +984,7 @@ def test_get_best_combination_non_nan_viable_with_nan(evaluator: ContinuousCombi
         "combination": [["a"], ["b", "c"]],
         "kruskal": 0.5833333333333333,
     }
+    assert result is not None
     assert result["xagg"].equals(expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["kruskal"] == expected["kruskal"]
@@ -1013,6 +1019,7 @@ def test_get_best_combination_with_nan_viable(evaluator: ContinuousCombinationEv
         "combination": [["a"], ["b", "c"]],
         "kruskal": 0.5833333333333333,
     }
+    assert result is not None
     assert result["xagg"].equals(expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["kruskal"] == expected["kruskal"]
@@ -1137,6 +1144,7 @@ def test_get_best_combination_with_nan_viable_with_nan(evaluator: ContinuousComb
         "combination": [["a"], ["b to c", "__NAN__"]],
         "kruskal": 0.2857142857142847,
     }
+    assert result is not None
     assert result["xagg"].equals(expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["kruskal"] == expected["kruskal"]
@@ -1168,6 +1176,7 @@ def test_get_best_combination_viable(evaluator: ContinuousCombinationEvaluator):
         "combination": [["a"], ["b", "c"]],
         "kruskal": 0.5833333333333333,
     }
+    assert result is not None
     assert result["xagg"].equals(expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["kruskal"] == expected["kruskal"]
@@ -1199,6 +1208,7 @@ def test_get_best_combination_viable_without_dev(evaluator: ContinuousCombinatio
         "combination": [["a"], ["b", "c"]],
         "kruskal": 0.5833333333333333,
     }
+    assert result is not None
     assert result["xagg"].equals(expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["kruskal"] == expected["kruskal"]
@@ -1243,6 +1253,7 @@ def test_get_best_combination_viable_with_nan_without_feature_nan(
         "combination": [["a"], ["b", "c", "d"]],
         "kruskal": 0.2857142857142847,
     }
+    assert result is not None
     assert result["xagg"].equals(expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["kruskal"] == expected["kruskal"]
@@ -1269,6 +1280,7 @@ def test_get_best_combination_viable_with_nan_without_dropna(
         "combination": [["a"], ["b", "c"]],
         "kruskal": 0.5833333333333333,
     }
+    assert result is not None
     assert result["xagg"].equals(expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["kruskal"] == expected["kruskal"]

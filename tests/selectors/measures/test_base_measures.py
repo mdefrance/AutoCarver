@@ -16,22 +16,22 @@ from AutoCarver.selectors.measures import ReversibleMeasure
 
 # setting BaseMeasure, OutlierMeasure, AbsoluteMeasure, ReversibleMeasure as non abstract classes
 # for the duration of the test
-OutlierMeasure.__abstractmethods__ = set()
-AbsoluteMeasure.__abstractmethods__ = set()
-BaseMeasure.__abstractmethods__ = set()
-ReversibleMeasure.__abstractmethods__ = set()
+OutlierMeasure.__abstractmethods__ = set()  # type: ignore[assignment]
+AbsoluteMeasure.__abstractmethods__ = set()  # type: ignore[assignment]
+BaseMeasure.__abstractmethods__ = set()  # type: ignore[assignment]
+ReversibleMeasure.__abstractmethods__ = set()  # type: ignore[assignment]
 
 THRESHOLD = 1
 
 
 @fixture
 def base_measure() -> BaseMeasure:
-    return BaseMeasure(threshold=THRESHOLD)
+    return BaseMeasure(threshold=THRESHOLD)  # type: ignore[abstract]
 
 
 @fixture
 def reversible_measure() -> ReversibleMeasure:
-    return ReversibleMeasure()
+    return ReversibleMeasure()  # type: ignore[abstract]
 
 
 @fixture
@@ -46,12 +46,12 @@ def mode_measure() -> ModeMeasure:
 
 @fixture
 def outlier_measure() -> OutlierMeasure:
-    return OutlierMeasure(threshold=THRESHOLD)
+    return OutlierMeasure(threshold=THRESHOLD)  # type: ignore[abstract]
 
 
 @fixture
 def absolute_measure() -> AbsoluteMeasure:
-    return AbsoluteMeasure(threshold=THRESHOLD)
+    return AbsoluteMeasure(threshold=THRESHOLD)  # type: ignore[abstract]
 
 
 def test_to_dict(base_measure: BaseMeasure) -> None:

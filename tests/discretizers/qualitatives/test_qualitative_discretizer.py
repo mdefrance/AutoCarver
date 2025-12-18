@@ -205,7 +205,7 @@ def test_qualitative_discretizer(x_train: DataFrame, target: str):
 
     # defining features
     str_default = "__default_test__"
-    features = Features(
+    features = Features.from_str(
         categoricals=categoricals,
         ordinals=ordinal_values,
         default=str_default,

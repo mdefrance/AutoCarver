@@ -140,8 +140,8 @@ def test_remove_default_metrics(
 
 def test_remove_duplicates() -> None:
     """function test of remove_duplicates"""
-    feature1 = BaseFeature("feature1")
-    feature2 = BaseFeature("feature2")
+    feature1 = BaseFeature("feature1")  # type: ignore[abstract]
+    feature2 = BaseFeature("feature2")  # type: ignore[abstract]
     feature3 = feature1
     features = [feature1, feature2, feature3]
     unique_features = remove_duplicates(features)
@@ -152,11 +152,11 @@ def test_remove_duplicates() -> None:
 
 def test_sort_features_per_measure(measure: BaseMeasure) -> None:
     """function test of sort_features_per_measure"""
-    feature1 = BaseFeature("feature1")
+    feature1 = BaseFeature("feature1")  # type: ignore[abstract]
     feature1.measures = {measure.__name__: {"value": 0.5}}
-    feature2 = BaseFeature("feature2")
+    feature2 = BaseFeature("feature2")  # type: ignore[abstract]
     feature2.measures = {measure.__name__: {"value": 0.2}}
-    feature3 = BaseFeature("feature3")
+    feature3 = BaseFeature("feature3")  # type: ignore[abstract]
     feature3.measures = {measure.__name__: {"value": 0.8}}
     features = [feature1, feature2, feature3]
     sorted_features = sort_features_per_measure(features, measure)
@@ -446,7 +446,7 @@ def test_base_selector_get_best_features_across_chunks_no_chunking(
         for feature in features_object:
             new_name = feature.name + f"_{i}"
             new_X.update({new_name: X[feature.name]})
-            new_feature = BaseFeature(new_name)
+            new_feature = BaseFeature(new_name)  # type: ignore[abstract]
             new_feature.is_quantitative = feature.is_quantitative
             new_feature.is_categorical = feature.is_categorical
             new_feature.is_ordinal = feature.is_ordinal
@@ -500,7 +500,7 @@ def test_base_selector_get_best_features_across_chunks_with_chunking(
         for feature in features_object:
             new_name = feature.name + f"_{i}"
             new_X.update({new_name: X[feature.name]})
-            new_feature = BaseFeature(new_name)
+            new_feature = BaseFeature(new_name)  # type: ignore[abstract]
             new_feature.is_quantitative = feature.is_quantitative
             new_feature.is_categorical = feature.is_categorical
             new_feature.is_ordinal = feature.is_ordinal

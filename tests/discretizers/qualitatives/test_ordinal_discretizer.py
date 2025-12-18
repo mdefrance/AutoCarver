@@ -602,25 +602,20 @@ def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:
     """
     # defining values_orders
     order = ["Low-", "Low", "Low+", "Medium-", "Medium", "Medium+", "High-", "High", "High+"]
-    # ordering for base qualitative ordinal feature
-    groupedlist = GroupedList(order)
-
-    # ordering for qualitative ordinal feature that contains NaNs
-    groupedlist_lownan = GroupedList(order)
 
     # storing per feature orders
     ordinal_values = {
-        "Qualitative_Ordinal": groupedlist,
-        "Qualitative_Ordinal_lownan": groupedlist_lownan,
+        "Qualitative_Ordinal": order[:],
+        "Qualitative_Ordinal_lownan": order[:],
     }
-    features = Features(ordinals=ordinal_values)
+    features = Features.from_str(ordinals=ordinal_values)
 
     # minimum frequency per modality + apply(find_common_modalities) outputs a Series
     min_freq = 0.01
 
     # discretizing features
     discretizer = OrdinalDiscretizer(ordinals=features, min_freq=min_freq, copy=True)
-    x_disc = discretizer.fit_transform(x_train, x_train[target])
+    discretizer.fit_transform(x_train, x_train[target])
 
     feature = "Qualitative_Ordinal"
     expected_ordinal_01 = {
@@ -632,14 +627,7 @@ def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:
         "High": ["High"],
         "High+": ["High+"],
     }
-    print(
-        discretizer.features(feature).content,
-        features(feature).content,
-        x_disc[feature].value_counts(dropna=False, normalize=True).round(2),
-    )
-    assert (
-        features(feature).content == expected_ordinal_01
-    ), "Missing value in order not correctly grouped"
+    assert features(feature).content == expected_ordinal_01, "Missing value in order not correctly grouped"
 
     expected_ordinal_lownan_01 = {
         "Low+": ["Low", "Low-", "Low+"],
@@ -657,7 +645,7 @@ def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:
     min_freq = 0.08
 
     # discretizing features
-    features = Features(ordinals=ordinal_values)
+    features = Features.from_str(ordinals=ordinal_values)
     discretizer = OrdinalDiscretizer(ordinals=features, min_freq=min_freq, copy=True)
     discretizer.fit_transform(x_train, x_train[target])
 

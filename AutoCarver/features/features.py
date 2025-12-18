@@ -225,13 +225,13 @@ class Features:
         return iter(self.to_list())
 
     @overload
-    def __getitem__(self, index: int | str) -> BaseFeature | None: ...
+    def __getitem__(self, index: int | str) -> BaseFeature: ...
     @overload
-    def __getitem__(self, index: list[int] | list[str] | slice | DataFrame) -> Sequence[BaseFeature] | None: ...
+    def __getitem__(self, index: list[int] | list[str] | slice | DataFrame) -> Sequence[BaseFeature]: ...
 
     def __getitem__(
         self, index: int | str | list[int] | list[str] | slice | DataFrame
-    ) -> BaseFeature | Sequence[BaseFeature] | None:
+    ) -> BaseFeature | Sequence[BaseFeature]:
         """Get item by index in list of features, by feature name or with a list of
         indices/feature names
         """
@@ -258,7 +258,8 @@ class Features:
             if all(isinstance(idx, str) for idx in index):
                 return [self(name) for name in index if isinstance(name, str)]
 
-        return None
+        # raising error for unsupported index type
+        raise TypeError(f"[{self.__name__}] Unsupported index type {type(index)}.")
 
     @property
     def names(self) -> list[str]:

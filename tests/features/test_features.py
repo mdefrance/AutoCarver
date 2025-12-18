@@ -30,7 +30,7 @@ from AutoCarver.features.utils import GroupedList
 
 
 @fixture
-def mock_features():
+def mock_features() -> list[BaseFeature]:
     # Replace these with actual mock or real features as needed
     return [
         CategoricalFeature("feature1"),
@@ -206,7 +206,7 @@ def test_keep_versions(mock_features):
 
 
 @fixture
-def mock_categoricals():
+def mock_categoricals() -> list[CategoricalFeature]:
     """fixture for mock categorical features"""
     return [
         CategoricalFeature(name="cat1"),
@@ -215,7 +215,7 @@ def mock_categoricals():
 
 
 @fixture
-def mock_ordinals():
+def mock_ordinals() -> list[OrdinalFeature]:
     """fixture for mock ordinal features"""
     return [
         OrdinalFeature(name="ord1", values=["low", "medium", "high"]),
@@ -224,7 +224,7 @@ def mock_ordinals():
 
 
 @fixture
-def mock_quantitatives():
+def mock_quantitatives() -> list[QuantitativeFeature]:
     """fixture for mock quantitative features"""
     return [
         QuantitativeFeature(name="quant1"),
@@ -233,9 +233,13 @@ def mock_quantitatives():
 
 
 @fixture
-def features(mock_categoricals, mock_ordinals, mock_quantitatives):
+def features(
+    mock_categoricals: list[CategoricalFeature],
+    mock_ordinals: list[OrdinalFeature],
+    mock_quantitatives: list[QuantitativeFeature],
+) -> Features:
     """fixture for Features"""
-    return Features.from_str(
+    return Features(
         categoricals=[f.name for f in mock_categoricals],
         quantitatives=[f.name for f in mock_quantitatives],
         ordinals=mock_ordinals,

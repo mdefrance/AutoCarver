@@ -136,7 +136,7 @@ class CombinationEvaluator(Generic[Rate], ABC):
 
     is_y_binary = False
     is_y_continuous = False
-    sort_by: str | None = None
+    sort_by: str
 
     def __init__(
         self,

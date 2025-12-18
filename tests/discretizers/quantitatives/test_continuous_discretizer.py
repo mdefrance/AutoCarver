@@ -767,7 +767,7 @@ def test_continuous_discretizer(x_train: DataFrame):
         "Discrete_Quantitative_lownan",
         "Discrete_Quantitative_rarevalue",
     ]
-    features = Features(quantitatives=quantitatives)
+    features = Features.from_str(quantitatives=quantitatives)
     min_freq = 0.1
 
     discretizer = ContinuousDiscretizer(

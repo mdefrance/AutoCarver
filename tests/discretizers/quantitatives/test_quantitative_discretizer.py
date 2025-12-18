@@ -356,7 +356,7 @@ def test_quantitative_discretizer(x_train: DataFrame, target: str):
         "Discrete_Quantitative_rarevalue",
     ]
     min_freq = 0.1
-    features = Features(quantitatives=quantitatives)
+    features = Features.from_str(quantitatives=quantitatives)
 
     discretizer = QuantitativeDiscretizer(quantitatives=features, min_freq=min_freq)
     x_discretized = discretizer.fit_transform(x_train, x_train[target])

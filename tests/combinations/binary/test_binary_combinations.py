@@ -1,6 +1,7 @@
 """Tests for the binary_combinations module."""
 
 import json
+from typing import Any
 
 from numpy import allclose, nan, sqrt
 from pandas import DataFrame, Series, isna
@@ -320,7 +321,7 @@ def test_grouper_with_duplicates(evaluator: BinaryCombinationEvaluator):
 def test_grouper_no_groupby(evaluator: BinaryCombinationEvaluator):
     """Test _grouper with no groupby."""
     xagg = DataFrame({"A": [1, 2, 3], "B": [4, 5, 6]}, index=["a", "b", "c"])
-    groupby = {}
+    groupby: dict[Any, Any] = {}
     result = evaluator._grouper(xagg, groupby)
     expected = xagg.copy()
     assert allclose(result, expected)
@@ -652,7 +653,7 @@ def test_viability_dev(evaluator: BinaryCombinationEvaluator):
     for combination in associations:
         test_results = evaluator._test_viability_train(combination)
         test_results = evaluator._test_viability_dev(test_results, combination)
-        assert test_results.get("dev").get(TestKeys.VIABLE.value) is None
+        assert test_results["dev"].get(TestKeys.VIABLE.value) is None
 
     # test with xagg_dev but not viable on train
     evaluator.samples.dev = AggregatedSample(
@@ -662,7 +663,7 @@ def test_viability_dev(evaluator: BinaryCombinationEvaluator):
         test_results = evaluator._test_viability_dev(
             {"train": {TestKeys.VIABLE.value: False}, TestKeys.VIABLE.value: False}, combination
         )
-        assert test_results.get("dev").get(TestKeys.VIABLE.value) is None
+        assert test_results["dev"].get(TestKeys.VIABLE.value) is None
 
     # test with xagg_dev same as train
     result = []
@@ -720,6 +721,7 @@ def test_get_viable_combination_without_dev(evaluator: BinaryCombinationEvaluato
         "cramerv": 0.25,
         "tschuprowt": 0.25,
     }
+    assert result is not None
     assert allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["cramerv"] == expected["cramerv"]
@@ -770,6 +772,7 @@ def test_get_viable_combination_with_viable_train(evaluator: BinaryCombinationEv
         "cramerv": 0.25,
         "tschuprowt": 0.25,
     }
+    assert result is not None
     assert allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["cramerv"] == expected["cramerv"]
@@ -866,6 +869,7 @@ def test_best_association_with_combinations_viable(evaluator: BinaryCombinationE
         "cramerv": 0.25,
         "tschuprowt": 0.25,
     }
+    assert result is not None
     assert allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["cramerv"] == expected["cramerv"]
@@ -926,6 +930,7 @@ def test_best_association_with_nan_combinations_viable(evaluator: BinaryCombinat
         "cramerv": 0.5833333333,
         "tschuprowt": 0.5833333333,
     }
+    assert result is not None
     assert allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["cramerv"] == expected["cramerv"]
@@ -961,6 +966,7 @@ def test_get_best_combination_non_nan_viable(evaluator: BinaryCombinationEvaluat
         "cramerv": 0.25,
         "tschuprowt": 0.25,
     }
+    assert result is not None
     assert allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["cramerv"] == expected["cramerv"]
@@ -1013,6 +1019,7 @@ def test_get_best_combination_non_nan_viable_with_nan(evaluator: BinaryCombinati
         "cramerv": 0.25,
         "tschuprowt": 0.25,
     }
+    assert result is not None
     assert allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["cramerv"] == expected["cramerv"]
@@ -1049,6 +1056,7 @@ def test_get_best_combination_with_nan_viable(evaluator: BinaryCombinationEvalua
         "cramerv": 0.25,
         "tschuprowt": 0.25,
     }
+    assert result is not None
     assert allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["cramerv"] == expected["cramerv"]
@@ -1181,6 +1189,7 @@ def test_get_best_combination_with_nan_viable_with_nan(evaluator: BinaryCombinat
         "tschuprowt": 0.4472135955,
     }
 
+    assert result is not None
     assert allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["cramerv"] == expected["cramerv"]
@@ -1212,6 +1221,7 @@ def test_get_best_combination_viable(evaluator: BinaryCombinationEvaluator):
         "cramerv": 0.25,
         "tschuprowt": 0.25,
     }
+    assert result is not None
     assert allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["cramerv"] == expected["cramerv"]
@@ -1243,6 +1253,7 @@ def test_get_best_combination_viable_without_dev(evaluator: BinaryCombinationEva
         "cramerv": 0.25,
         "tschuprowt": 0.25,
     }
+    assert result is not None
     assert allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["cramerv"] == expected["cramerv"]
@@ -1287,6 +1298,7 @@ def test_get_best_combination_viable_with_nan_without_feature_nan(
         "tschuprowt": 0.2886751346,
     }
 
+    assert result is not None
     assert allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["cramerv"] == expected["cramerv"]
@@ -1314,7 +1326,7 @@ def test_get_best_combination_viable_with_nan_without_dropna(
         "cramerv": 0.25,
         "tschuprowt": 0.25,
     }
-
+    assert result is not None
     assert allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
     assert result["cramerv"] == expected["cramerv"]
