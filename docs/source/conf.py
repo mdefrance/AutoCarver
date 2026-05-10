@@ -72,10 +72,10 @@ pyproject = toml.load("../../pyproject.toml")
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = pyproject["tool"]["poetry"]["name"]
+project = pyproject["project"]["name"]
 copyright = "2023, Mario Defrance"
-author = pyproject["tool"]["poetry"]["authors"][0]
-version = pyproject["tool"]["poetry"]["version"]
+author = pyproject["project"]["authors"][0]
+version = pyproject["project"]["version"]
 release = "Beta release"
 
 # Theme options are theme-specific and customize the look and feel of a theme
