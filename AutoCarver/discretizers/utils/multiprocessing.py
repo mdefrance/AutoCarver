@@ -2,7 +2,7 @@
 
 from functools import partial
 from multiprocessing import Pool
-from typing import Callable
+from collections.abc import Callable
 
 from pandas import DataFrame
 
