@@ -4,8 +4,8 @@ for a binary classification model.
 
 from pandas import DataFrame, Series
 
-from ..features import Features
-from ..utils import extend_docstring
+from AutoCarver.features import Features
+from AutoCarver.utils import extend_docstring
 from .qualitatives import QualitativeDiscretizer
 from .quantitatives import QuantitativeDiscretizer
 from .utils.base_discretizer import BaseDiscretizer, Sample

@@ -1,6 +1,6 @@
-""" Defines a categorical feature"""
+"""Defines a categorical feature"""
 
-from ..utils.base_feature import BaseFeature
+from AutoCarver.features.utils.base_feature import BaseFeature
 from .qualitative_feature import QualitativeFeature
 
 

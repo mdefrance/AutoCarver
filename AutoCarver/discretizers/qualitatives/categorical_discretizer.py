@@ -6,7 +6,7 @@ from pandas import DataFrame, Series, notna
 
 from AutoCarver.features import CategoricalFeature
 from AutoCarver.utils import extend_docstring
-from ..utils.base_discretizer import BaseDiscretizer, Sample
+from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
 
 
 class CategoricalDiscretizer(BaseDiscretizer):

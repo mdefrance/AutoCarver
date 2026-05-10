@@ -5,7 +5,7 @@ from typing import Any, Union
 
 from numpy import floating, inf, integer, isfinite
 
-from ...config import Constants
+from AutoCarver.config import Constants
 from .grouped_list import GroupedList
 
 
@@ -55,7 +55,7 @@ def convert_value_to_numpy_type(value: Union[str, float, int]) -> Any:
 
 
 def convert_values_to_base_types(
-    iterable: Union[list[Any], dict[str, list[Any]]]
+    iterable: Union[list[Any], dict[str, list[Any]]],
 ) -> Union[list[Union[str, int, float]], dict[str, list[Union[str, int, float]]]]:
     """Converts a list or a dict of lists values to python's base types (str, int, float)
     for JSON serialization.
@@ -85,7 +85,7 @@ def convert_values_to_base_types(
 
 
 def convert_values_to_numpy_types(
-    iterable: Union[list[Union[str, int, float]], dict[str, list[Union[str, int, float]]]]
+    iterable: Union[list[Union[str, int, float]], dict[str, list[Union[str, int, float]]]],
 ) -> Union[list[Any], dict[str, list[Any]]]:
     """Converts a list or a dict of lists values to numpy types for JSON deserialization.
 

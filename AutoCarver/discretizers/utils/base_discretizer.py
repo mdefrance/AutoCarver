@@ -10,7 +10,7 @@ from numpy import nan, select
 from pandas import DataFrame, Series, concat
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from ...combinations import CombinationEvaluator
+from AutoCarver.combinations import CombinationEvaluator
 from AutoCarver.features import BaseFeature, Features
 from AutoCarver.utils import extend_docstring, get_attribute, get_bool_attribute
 from .multiprocessing import apply_async_function

@@ -1,12 +1,11 @@
-""" TODO: initiate features from dataset
-"""
+"""TODO: initiate features from dataset"""
 
 from abc import ABC, abstractmethod
 from typing import Any, Union
 
 from pandas import DataFrame, Series, option_context
 
-from ...config import Constants
+from AutoCarver.config import Constants
 from .grouped_list import GroupedList
 from .serialization import json_deserialize_content, json_serialize_feature
 

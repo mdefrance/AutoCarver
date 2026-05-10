@@ -1,9 +1,9 @@
-""" Defines a set of features"""
+"""Defines a set of features"""
 
 from numpy import nan
 from pandas import DataFrame, Series
 
-from ..utils.attributes import get_bool_attribute
+from AutoCarver.utils.attributes import get_bool_attribute
 from .qualitatives import (
     CategoricalFeature,
     OrdinalFeature,
@@ -51,7 +51,7 @@ from .utils.grouped_list import GroupedList
 
 
 def check_ordinal_features(
-    ordinals: list[OrdinalFeature] | dict[str, list[str]]
+    ordinals: list[OrdinalFeature] | dict[str, list[str]],
 ) -> list[OrdinalFeature]:
     """Checks that ordinals are correctly formatted"""
 
