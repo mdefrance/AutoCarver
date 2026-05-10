@@ -11,13 +11,11 @@ on:
 jobs:
   pytest_push:
     runs-on: ubuntu-latest
-
-    # runs only on push
     if: ${{ github.event_name == 'push' }}
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
         id: setup-python
@@ -25,47 +23,25 @@ jobs:
         with:
           python-version: '3.9'
       
-      #----------------------------------------------
-      #  -----  install & configure poetry  -----
-      #----------------------------------------------
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
-          version: 1.7.1
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-          installer-parallel: true
-      #----------------------------------------------
-      #       load cached venv if cache exists
-      #----------------------------------------------
-      - name: Load cached venv
-        id: cached-poetry-dependencies
-        uses: actions/cache@v3
-        with:
-          path: .venv
-          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
-      #----------------------------------------------
-      # install dependencies if cache does not exist
-      #----------------------------------------------
+          enable-cache: true
+          cache-dependency-glob: "**/uv.lock"
+
       - name: Install dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --no-root --all-extras
-      - name: Install AutoCarver
-        run: poetry install --no-interaction --only-root --all-extras
+        run: uv sync --all-extras
 
       - name: Run tests
-        run: |
-          source .venv/bin/activate
-          python -m pytest -v --cov ${{ github.workspace }}/tests/
+        run: uv run python -m pytest -v --cov ${{ github.workspace }}/tests/
       
       - name: Pylint
         run: |
           cd ${{ github.workspace }}
-          source .venv/bin/activate
-          black --check .
-          isort . --check-only
-          pylint AutoCarver --fail-under=9
-          flake8 AutoCarver
+          uv run black --check .
+          uv run isort . --check-only
+          uv run pylint AutoCarver --fail-under=9
+          uv run flake8 AutoCarver
 
   pytest_pull:
     strategy:
@@ -78,13 +54,11 @@ jobs:
         shell: bash
 
     runs-on: ${{ matrix.os }}
-
-    # runs only on pull_request
     if: ${{ github.event_name == 'pull_request' }}
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
         id: setup-python
@@ -92,26 +66,14 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
-          version: 1.7.1
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-      - name: Load cached venv
-        id: cached-pip-wheels
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache
-          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+          enable-cache: true
+          cache-dependency-glob: "**/uv.lock"
+  
       - name: Install dependencies
-        run: poetry install --no-interaction --no-root --all-extras
-      - name: Install AutoCarver
-        run: poetry install --no-interaction --only-root --all-extras
+        run: uv sync --all-extras
 
       - name: Run tests
-        run: |
-          source $VENV
-          python -m pytest -v --cov ${{ github.workspace }}/tests/
-          
-  
+        run: uv run python -m pytest -v --cov ${{ github.workspace }}/tests/
