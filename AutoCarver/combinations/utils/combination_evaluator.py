@@ -8,8 +8,8 @@ from dataclasses import dataclass, field
 from pandas import DataFrame, Series
 from tqdm import tqdm
 
-from ...features import BaseFeature, GroupedList
-from ...utils import get_attribute, get_bool_attribute
+from AutoCarver.features import BaseFeature, GroupedList
+from AutoCarver.utils import get_attribute, get_bool_attribute
 from .combinations import (
     consecutive_combinations,
     format_combinations,

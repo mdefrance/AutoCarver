@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 
 from pandas import Series, isnull, notna
 
-from ...features import BaseFeature
+from AutoCarver.features import BaseFeature
 
 
 class BaseMeasure(ABC):

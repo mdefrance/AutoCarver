@@ -5,8 +5,8 @@ for a binary classification model.
 from numpy import array, digitize, in1d, inf, isnan, linspace, quantile, sort, unique
 from pandas import DataFrame, Series
 
-from ...features import GroupedList, QuantitativeFeature, get_versions
-from ...utils import extend_docstring
+from AutoCarver.features import GroupedList, QuantitativeFeature, get_versions
+from AutoCarver.utils import extend_docstring
 from ..utils.base_discretizer import BaseDiscretizer
 from ..utils.multiprocessing import imap_unordered_function
 

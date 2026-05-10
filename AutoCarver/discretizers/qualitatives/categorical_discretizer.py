@@ -4,8 +4,8 @@ for a binary classification model.
 
 from pandas import DataFrame, Series, notna
 
-from ...features import CategoricalFeature
-from ...utils import extend_docstring
+from AutoCarver.features import CategoricalFeature
+from AutoCarver.utils import extend_docstring
 from ..utils.base_discretizer import BaseDiscretizer, Sample
 
 

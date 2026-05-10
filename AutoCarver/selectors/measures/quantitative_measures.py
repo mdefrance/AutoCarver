@@ -8,7 +8,7 @@ from scipy.spatial.distance import correlation
 from scipy.stats import kruskal, pearsonr, spearmanr
 from statsmodels.formula.api import ols
 
-from ...utils import extend_docstring
+from AutoCarver.utils import extend_docstring
 from .base_measures import AbsoluteMeasure, BaseMeasure, OutlierMeasure
 
 

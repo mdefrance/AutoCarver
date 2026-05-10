@@ -5,8 +5,8 @@ for a binary classification model.
 from numpy import nan, select
 from pandas import DataFrame, Series, unique
 
-from ...features import BaseFeature, Features, GroupedList
-from ...utils import extend_docstring
+from AutoCarver.features import BaseFeature, Features, GroupedList
+from AutoCarver.utils import extend_docstring
 from ..utils.base_discretizer import BaseDiscretizer, Sample
 from ..utils.type_discretizers import StringDiscretizer
 

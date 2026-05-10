@@ -1,6 +1,6 @@
-""" Defines an ordinal feature"""
+"""Defines an ordinal feature"""
 
-from ...utils import extend_docstring
+from AutoCarver.utils import extend_docstring
 from ..utils.base_feature import BaseFeature
 from ..utils.grouped_list import GroupedList
 from .qualitative_feature import QualitativeFeature

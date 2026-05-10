@@ -7,8 +7,8 @@ from random import seed, shuffle
 from numpy import isnan
 from pandas import DataFrame, Series
 
-from ...features import BaseFeature, Features
-from ...utils import get_bool_attribute, has_idisplay
+from AutoCarver.features import BaseFeature, Features
+from AutoCarver.utils import get_bool_attribute, has_idisplay
 from ..filters import BaseFilter
 from ..measures import BaseMeasure
 from .pretty_print import format_ranked_features, prettier_measures
@@ -167,12 +167,16 @@ class BaseSelector(ABC):
         return self.verbose and _has_idisplay
 
     @abstractmethod
-    def _initiate_measures(self, requested_measures: list[BaseMeasure] | None = None) -> list[BaseMeasure]:
+    def _initiate_measures(
+        self, requested_measures: list[BaseMeasure] | None = None
+    ) -> list[BaseMeasure]:
         """initiates the list of measures with default values"""
         return requested_measures
 
     @abstractmethod
-    def _initiate_filters(self, requested_filters: list[BaseFilter] | None = None) -> list[BaseFilter]:
+    def _initiate_filters(
+        self, requested_filters: list[BaseFilter] | None = None
+    ) -> list[BaseFilter]:
         """initiates the list of measures with default values"""
         return requested_filters
 
@@ -386,7 +390,9 @@ def is_qualitative(feature: BaseFeature) -> bool:
     return feature.is_qualitative or feature.is_fitted
 
 
-def make_random_chunks(elements: list, max_chunk_sizes: int, random_state: int | None = None) -> list:
+def make_random_chunks(
+    elements: list, max_chunk_sizes: int, random_state: int | None = None
+) -> list:
     """makes a specific number of random chunks of of a list"""
 
     # copying in order to not moidy initial list

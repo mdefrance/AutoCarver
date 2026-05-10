@@ -1,11 +1,10 @@
-"""Base tools to convert values into specific types.
-"""
+"""Base tools to convert values into specific types."""
 
 from pandas import DataFrame, Series
 
-from ...features import BaseFeature, Features, GroupedList
-from ...features.qualitatives import nan_unique
-from ...utils import extend_docstring
+from AutoCarver.features import BaseFeature, Features, GroupedList
+from AutoCarver.features.qualitatives import nan_unique
+from AutoCarver.utils import extend_docstring
 from .base_discretizer import BaseDiscretizer, Sample
 from .multiprocessing import apply_async_function
 
