@@ -7,12 +7,13 @@ on:
     branches:
       - main
 
-env:
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+permissions:
+  contents: write
 
 jobs:
   create-release:
     runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
 
     steps:
       - name: Checkout Repository
@@ -21,14 +22,18 @@ jobs:
       - name: Extract Tag Name
         id: extract_tag_name
         run: |
-          PR_TITLE="${{ github.event.pull_request.title }}"
-          TAG_NAME=$(echo "$PR_TITLE" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+          TAG_NAME=$(grep -m1 '^version' pyproject.toml | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+          if [ -z "$TAG_NAME" ]; then
+            echo "No version found in pyproject.toml, skipping."
+            exit 1
+          fi
           echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
 
       - name: Create Release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.extract_tag_name.outputs.tag_name }}
-          release_name: Release ${{ steps.extract_tag_name.outputs.tag_name }}
+          name: Release ${{ steps.extract_tag_name.outputs.tag_name }}
+          generate_release_notes: true
           draft: false
           prerelease: false
