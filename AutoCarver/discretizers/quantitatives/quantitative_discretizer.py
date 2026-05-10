@@ -4,11 +4,11 @@ for a binary classification model.
 
 from pandas import DataFrame, Series, unique
 
+from AutoCarver.discretizers.qualitatives import OrdinalDiscretizer
+from AutoCarver.discretizers.quantitatives.continuous_discretizer import ContinuousDiscretizer
+from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
 from AutoCarver.features import Features, QuantitativeFeature
 from AutoCarver.utils import extend_docstring
-from AutoCarver.discretizers.qualitatives import OrdinalDiscretizer
-from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
-from AutoCarver.discretizers.quantitatives.continuous_discretizer import ContinuousDiscretizer
 
 
 class QuantitativeDiscretizer(BaseDiscretizer):

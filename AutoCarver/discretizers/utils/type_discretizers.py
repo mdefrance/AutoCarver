@@ -2,11 +2,11 @@
 
 from pandas import DataFrame, Series
 
+from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
+from AutoCarver.discretizers.utils.multiprocessing import apply_async_function
 from AutoCarver.features import BaseFeature, Features, GroupedList
 from AutoCarver.features.qualitatives import nan_unique
 from AutoCarver.utils import extend_docstring
-from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
-from AutoCarver.discretizers.utils.multiprocessing import apply_async_function
 
 
 class StringDiscretizer(BaseDiscretizer):

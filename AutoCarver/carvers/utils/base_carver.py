@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 
 from pandas import DataFrame, Series
 
+from AutoCarver.carvers.utils.pretty_print import index_mapper, prettier_xagg
 from AutoCarver.combinations import (
     CombinationEvaluator,
     CramervCombinations,
@@ -17,7 +18,6 @@ from AutoCarver.combinations import (
 from AutoCarver.discretizers import BaseDiscretizer, Discretizer, Sample
 from AutoCarver.features import BaseFeature, Features, GroupedList
 from AutoCarver.utils import extend_docstring, get_attribute, get_bool_attribute, has_idisplay
-from AutoCarver.carvers.utils.pretty_print import index_mapper, prettier_xagg
 
 # trying to import extra dependencies
 _has_idisplay = has_idisplay()

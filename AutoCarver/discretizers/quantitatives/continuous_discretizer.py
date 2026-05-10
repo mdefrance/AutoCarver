@@ -5,10 +5,10 @@ for a binary classification model.
 from numpy import array, digitize, in1d, inf, isnan, linspace, quantile, sort, unique
 from pandas import DataFrame, Series
 
-from AutoCarver.features import GroupedList, QuantitativeFeature, get_versions
-from AutoCarver.utils import extend_docstring
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer
 from AutoCarver.discretizers.utils.multiprocessing import imap_unordered_function
+from AutoCarver.features import GroupedList, QuantitativeFeature, get_versions
+from AutoCarver.utils import extend_docstring
 
 
 class ContinuousDiscretizer(BaseDiscretizer):

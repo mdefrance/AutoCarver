@@ -8,8 +8,6 @@ from dataclasses import dataclass, field
 from pandas import DataFrame, Series
 from tqdm import tqdm
 
-from AutoCarver.features import BaseFeature, GroupedList
-from AutoCarver.utils import get_attribute, get_bool_attribute
 from AutoCarver.combinations.utils.combinations import (
     consecutive_combinations,
     format_combinations,
@@ -19,6 +17,8 @@ from AutoCarver.combinations.utils.combinations import (
 )
 from AutoCarver.combinations.utils.target_rate import TargetRate
 from AutoCarver.combinations.utils.testing import TestKeys, is_viable, test_viability
+from AutoCarver.features import BaseFeature, GroupedList
+from AutoCarver.utils import get_attribute, get_bool_attribute
 
 
 @dataclass

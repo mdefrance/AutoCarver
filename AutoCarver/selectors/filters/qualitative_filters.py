@@ -3,9 +3,9 @@
 from pandas import DataFrame
 
 from AutoCarver.features import BaseFeature, get_versions
-from AutoCarver.utils.extend_docstring import extend_docstring
-from AutoCarver.selectors.measures import CramervMeasure, TschuprowtMeasure
 from AutoCarver.selectors.filters.base_filters import BaseFilter
+from AutoCarver.selectors.measures import CramervMeasure, TschuprowtMeasure
+from AutoCarver.utils.extend_docstring import extend_docstring
 
 
 class QualitativeFilter(BaseFilter):

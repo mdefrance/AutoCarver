@@ -5,9 +5,9 @@ for a binary classification model.
 from numpy import arange, argmin, array, nan_to_num, vstack
 from pandas import DataFrame, Series, notna
 
+from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
 from AutoCarver.features import GroupedList, OrdinalFeature
 from AutoCarver.utils import extend_docstring
-from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
 
 
 class OrdinalDiscretizer(BaseDiscretizer):

@@ -1,8 +1,8 @@
 """Set of tools used for multiprocessing"""
 
+from collections.abc import Callable
 from functools import partial
 from multiprocessing import Pool
-from collections.abc import Callable
 
 from pandas import DataFrame
 
