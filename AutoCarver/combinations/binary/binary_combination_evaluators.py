@@ -1,4 +1,4 @@
-""" Module for binary combination evaluators. """
+"""Module for binary combination evaluators."""
 
 from abc import ABC
 
@@ -6,8 +6,11 @@ from numpy import add, array, searchsorted, sqrt, unique, zeros
 from pandas import DataFrame, notna
 from scipy.stats import chi2_contingency
 
-from ..utils.combination_evaluator import AggregatedSample, CombinationEvaluator
-from .binary_target_rates import BinaryTargetRate, TargetMean
+from AutoCarver.combinations.binary.binary_target_rates import BinaryTargetRate, TargetMean
+from AutoCarver.combinations.utils.combination_evaluator import (
+    AggregatedSample,
+    CombinationEvaluator,
+)
 
 
 class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
@@ -25,7 +28,7 @@ class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
             self.target_rate = target_rate
 
     def _association_measure(
-        self, xagg: AggregatedSample, n_obs: int = None, tol: float = 1e-10
+        self, xagg: AggregatedSample, n_obs: int | None = None, tol: float = 1e-10
     ) -> dict[str, float]:
         """Computes measures of association between feature and target by crosstab.
 

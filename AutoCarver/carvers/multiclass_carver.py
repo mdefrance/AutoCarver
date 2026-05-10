@@ -6,11 +6,11 @@ from typing import Any
 
 from pandas import DataFrame, Series, unique
 
-from ..discretizers.utils.base_discretizer import BaseDiscretizer, Sample
-from ..features import Features
-from ..utils import extend_docstring
-from .binary_carver import BinaryCarver
-from .utils.base_carver import Samples
+from AutoCarver.carvers.binary_carver import BinaryCarver
+from AutoCarver.carvers.utils.base_carver import Samples
+from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
+from AutoCarver.features import Features
+from AutoCarver.utils import extend_docstring
 
 
 class MulticlassCarver(BinaryCarver):
@@ -107,8 +107,8 @@ class MulticlassCarver(BinaryCarver):
         X: DataFrame,
         y: Series,
         *,
-        X_dev: DataFrame = None,
-        y_dev: Series = None,
+        X_dev: DataFrame | None = None,
+        y_dev: Series | None = None,
     ) -> None:
         # initiating samples
         samples = Samples(train=Sample(X, y), dev=Sample(X_dev, y_dev))

@@ -10,10 +10,10 @@ from numpy import nan, select
 from pandas import DataFrame, Series, concat
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from ...combinations import CombinationEvaluator
-from ...features import BaseFeature, Features
-from ...utils import extend_docstring, get_attribute, get_bool_attribute
-from .multiprocessing import apply_async_function
+from AutoCarver.combinations import CombinationEvaluator
+from AutoCarver.discretizers.utils.multiprocessing import apply_async_function
+from AutoCarver.features import BaseFeature, Features
+from AutoCarver.utils import extend_docstring, get_attribute, get_bool_attribute
 
 
 @dataclass
@@ -21,7 +21,7 @@ class Sample:
     """sample class to store X and y"""
 
     X: DataFrame
-    y: Series = None
+    y: Series | None = None
 
     def __getitem__(self, key):
         """Returns the DataFrame or the Series"""
@@ -297,7 +297,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
     __prepare_data = _prepare_data  # private copy
 
-    def fit(self, X: DataFrame = None, y: Series = None) -> None:
+    def fit(self, X: DataFrame | None = None, y: Series | None = None) -> None:
         """Learns simple discretization of values of X according to values of y.
 
         Parameters
@@ -331,7 +331,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         return self
 
-    def transform(self, X: DataFrame, y: Series = None) -> DataFrame:
+    def transform(self, X: DataFrame, y: Series | None = None) -> DataFrame:
         """Applies discretization to a DataFrame's columns.
 
         Parameters

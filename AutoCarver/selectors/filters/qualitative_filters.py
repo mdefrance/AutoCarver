@@ -1,12 +1,11 @@
-""" Filters based on association measures between Qualitative features.
-"""
+"""Filters based on association measures between Qualitative features."""
 
 from pandas import DataFrame
 
-from ...features import BaseFeature, get_versions
-from ...utils.extend_docstring import extend_docstring
-from ..measures import CramervMeasure, TschuprowtMeasure
-from .base_filters import BaseFilter
+from AutoCarver.features import BaseFeature, get_versions
+from AutoCarver.selectors.filters.base_filters import BaseFilter
+from AutoCarver.selectors.measures import CramervMeasure, TschuprowtMeasure
+from AutoCarver.utils.extend_docstring import extend_docstring
 
 
 class QualitativeFilter(BaseFilter):

@@ -1,10 +1,10 @@
-""" Loads Carving tools."""
+"""Loads Carving tools."""
 
-from .carvers.binary_carver import BinaryCarver
-from .carvers.continuous_carver import ContinuousCarver
-from .carvers.multiclass_carver import MulticlassCarver
-from .features import Features
-from .selectors import ClassificationSelector, RegressionSelector
+from AutoCarver.carvers.binary_carver import BinaryCarver
+from AutoCarver.carvers.continuous_carver import ContinuousCarver
+from AutoCarver.carvers.multiclass_carver import MulticlassCarver
+from AutoCarver.features import Features
+from AutoCarver.selectors import ClassificationSelector, RegressionSelector
 
 __all__ = [
     "BinaryCarver",

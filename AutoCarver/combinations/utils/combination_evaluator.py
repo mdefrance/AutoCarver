@@ -4,22 +4,21 @@ the best combination of modalities for a feature."""
 import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Union
 
 from pandas import DataFrame, Series
 from tqdm import tqdm
 
-from ...features import BaseFeature, GroupedList
-from ...utils import get_attribute, get_bool_attribute
-from .combinations import (
+from AutoCarver.combinations.utils.combinations import (
     consecutive_combinations,
     format_combinations,
     nan_combinations,
     order_apply_combination,
     xagg_apply_combination,
 )
-from .target_rate import TargetRate
-from .testing import TestKeys, is_viable, test_viability
+from AutoCarver.combinations.utils.target_rate import TargetRate
+from AutoCarver.combinations.utils.testing import TestKeys, is_viable, test_viability
+from AutoCarver.features import BaseFeature, GroupedList
+from AutoCarver.utils import get_attribute, get_bool_attribute
 
 
 @dataclass
@@ -34,8 +33,8 @@ class AggregatedSample:
         Raw aggregated sample
     """
 
-    xagg: Union[DataFrame, Series]
-    _raw: Union[DataFrame, Series] = None
+    xagg: Series | DataFrame
+    _raw: Series | DataFrame | None = None
 
     def __post_init__(self):
         """Post initialization"""
@@ -49,7 +48,7 @@ class AggregatedSample:
         return self._raw
 
     @raw.setter
-    def raw(self, value: Union[DataFrame, Series]) -> None:
+    def raw(self, value: Series | DataFrame) -> None:
         """Sets the raw value of the xagg"""
 
         # setting raw value
@@ -91,7 +90,7 @@ class AggregatedSamples:
     train: AggregatedSample = field(default_factory=lambda: AggregatedSample(None))
     dev: AggregatedSample = field(default_factory=lambda: AggregatedSample(None))
 
-    def set(self, train: DataFrame, dev: DataFrame = None) -> None:
+    def set(self, train: DataFrame, dev: DataFrame | None = None) -> None:
         """Sets the train and dev samples"""
 
         # setting train and dev samples
@@ -324,7 +323,7 @@ class CombinationEvaluator(ABC):
         return best_combination
 
     def get_best_combination(
-        self, feature: BaseFeature, xagg: DataFrame, xagg_dev: DataFrame = None
+        self, feature: BaseFeature, xagg: DataFrame, xagg_dev: DataFrame | None = None
     ) -> dict:
         """Computes best combination of modalities for the feature"""
 
@@ -418,12 +417,12 @@ class CombinationEvaluator(ABC):
         return viable_combination
 
     @abstractmethod
-    def _grouper(self, xagg: AggregatedSample, groupby: dict[str, str]) -> Union[Series, DataFrame]:
+    def _grouper(self, xagg: AggregatedSample, groupby: dict[str, str]) -> Series | DataFrame:
         """Helper to group XAGG's values by groupby (carver specific)"""
 
     @abstractmethod
     def _association_measure(
-        self, xagg: AggregatedSample, n_obs: int = None, tol: float = 1e-10
+        self, xagg: AggregatedSample, n_obs: int | None = None, tol: float = 1e-10
     ) -> dict[str, float]:
         """Helper to measure association between X and y (carver specific)"""
 
@@ -537,7 +536,7 @@ class CombinationEvaluator(ABC):
             raise ValueError(f"[{self.__name__}] Provide a file_name that ends with .json.")
 
     @classmethod
-    def load(cls, file: Union[str, dict]) -> "CombinationEvaluator":
+    def load(cls, file: str | dict) -> "CombinationEvaluator":
         """Allows one to load a :class:`CombinationEvaluator` saved as a .json file.
 
         Parameters
@@ -570,7 +569,7 @@ class CombinationEvaluator(ABC):
         return cls(**combinations_json)
 
 
-def filter_nan(xagg: Union[Series, DataFrame], str_nan: str) -> DataFrame:
+def filter_nan(xagg: Series | DataFrame, str_nan: str) -> DataFrame:
     """Filters out nans from crosstab or y values"""
 
     # cehcking for values in crosstab

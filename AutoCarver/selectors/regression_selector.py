@@ -1,14 +1,20 @@
 """Tools to select the best Quantitative and Qualitative features for a Regression task."""
 
-from .filters import (
+from AutoCarver.selectors.filters import (
     BaseFilter,
     NonDefaultValidFilter,
     SpearmanFilter,
     TschuprowtFilter,
     ValidFilter,
 )
-from .measures import BaseMeasure, KruskalMeasure, ModeMeasure, NanMeasure, SpearmanMeasure
-from .utils.base_selector import BaseSelector
+from AutoCarver.selectors.measures import (
+    BaseMeasure,
+    KruskalMeasure,
+    ModeMeasure,
+    NanMeasure,
+    SpearmanMeasure,
+)
+from AutoCarver.selectors.utils.base_selector import BaseSelector
 
 
 class RegressionSelector(BaseSelector):
@@ -19,7 +25,9 @@ class RegressionSelector(BaseSelector):
 
     __name__ = "RegressionSelector"
 
-    def _initiate_measures(self, requested_measures: list[BaseMeasure] = None) -> list[BaseMeasure]:
+    def _initiate_measures(
+        self, requested_measures: list[BaseMeasure] | None = None
+    ) -> list[BaseMeasure]:
         """initiates the list of measures with default values"""
 
         # initating to requested ones
@@ -49,7 +57,9 @@ class RegressionSelector(BaseSelector):
             raise ValueError(f"[{self}] Provide measures for quantitative target!")
         return measures
 
-    def _initiate_filters(self, requested_filters: list[BaseFilter] = None) -> list[BaseFilter]:
+    def _initiate_filters(
+        self, requested_filters: list[BaseFilter] | None = None
+    ) -> list[BaseFilter]:
         """initiates the list of measures with default values"""
 
         # initating to requested ones

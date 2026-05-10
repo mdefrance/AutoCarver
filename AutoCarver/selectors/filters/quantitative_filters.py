@@ -1,12 +1,11 @@
-""" Filters based on association measures between Quantitative features.
-"""
+"""Filters based on association measures between Quantitative features."""
 
 from numpy import ones, triu
 from pandas import DataFrame
 
-from ...features import BaseFeature, get_versions
-from ...utils.extend_docstring import extend_docstring
-from .base_filters import BaseFilter
+from AutoCarver.features import BaseFeature, get_versions
+from AutoCarver.selectors.filters.base_filters import BaseFilter
+from AutoCarver.utils.extend_docstring import extend_docstring
 
 # from statsmodels.stats.outliers_influence import variance_inflation_factor
 

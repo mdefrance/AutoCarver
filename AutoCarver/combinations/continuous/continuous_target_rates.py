@@ -1,11 +1,11 @@
-""" set of target rates for binary classification """
+"""set of target rates for binary classification"""
 
 from abc import ABC
 
 from numpy import mean, median
 from pandas import DataFrame, Series
 
-from ..utils import TargetRate
+from AutoCarver.combinations.utils import TargetRate
 
 
 class ContinuousTargetRate(TargetRate, ABC):

@@ -1,11 +1,10 @@
-""" Filters based on association measure between features and a binary target.
-"""
+"""Filters based on association measure between features and a binary target."""
 
 from abc import ABC, abstractmethod
 
 from pandas import DataFrame
 
-from ...features import BaseFeature
+from AutoCarver.features import BaseFeature
 
 
 class BaseFilter(ABC):

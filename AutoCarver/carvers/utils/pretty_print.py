@@ -2,12 +2,12 @@
 
 from pandas import DataFrame
 
-from ...features import BaseFeature
+from AutoCarver.features import BaseFeature
 
 
 def prettier_xagg(
-    nice_xagg: DataFrame = None,
-    caption: str = None,
+    nice_xagg: DataFrame | None = None,
+    caption: str | None = None,
     hide_index: bool = False,
 ) -> str:
     """Pretty display of frequency and target rate per modality on the same line
@@ -56,7 +56,7 @@ def prettier_xagg(
     return nicer_xagg
 
 
-def index_mapper(feature: BaseFeature, xtab: DataFrame = None) -> DataFrame:
+def index_mapper(feature: BaseFeature, xtab: DataFrame | None = None) -> DataFrame:
     """Prints a binary xtab's statistics
 
     Parameters

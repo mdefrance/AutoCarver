@@ -5,10 +5,10 @@ for a binary classification model.
 from numpy import array, digitize, in1d, inf, isnan, linspace, quantile, sort, unique
 from pandas import DataFrame, Series
 
-from ...features import GroupedList, QuantitativeFeature, get_versions
-from ...utils import extend_docstring
-from ..utils.base_discretizer import BaseDiscretizer
-from ..utils.multiprocessing import imap_unordered_function
+from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer
+from AutoCarver.discretizers.utils.multiprocessing import imap_unordered_function
+from AutoCarver.features import GroupedList, QuantitativeFeature, get_versions
+from AutoCarver.utils import extend_docstring
 
 
 class ContinuousDiscretizer(BaseDiscretizer):
@@ -53,7 +53,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
         return round(1 / self.min_freq)
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: DataFrame, y: Series = None) -> None:  # pylint: disable=W0222
+    def fit(self, X: DataFrame, y: Series | None = None) -> None:  # pylint: disable=W0222
         self._log_if_verbose()  # verbose if requested
 
         # fitting each feature
@@ -125,8 +125,8 @@ def find_quantiles(
 def np_find_quantiles(
     df_feature: array,
     q: int,
-    initial_len_df: int = None,
-    quantiles: list[float] = None,
+    initial_len_df: int | None = None,
+    quantiles: list[float] | None = None,
 ) -> list[float]:
     """Finds quantiles of a Series recursively.
 

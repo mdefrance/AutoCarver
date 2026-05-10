@@ -1,12 +1,18 @@
-""" Module for continuous combination evaluators. """
+"""Module for continuous combination evaluators."""
 
 from abc import ABC
 
 from pandas import Series
 from scipy.stats import kruskal
 
-from ..utils.combination_evaluator import AggregatedSample, CombinationEvaluator
-from .continuous_target_rates import ContinuousTargetRate, TargetMean
+from AutoCarver.combinations.continuous.continuous_target_rates import (
+    ContinuousTargetRate,
+    TargetMean,
+)
+from AutoCarver.combinations.utils.combination_evaluator import (
+    AggregatedSample,
+    CombinationEvaluator,
+)
 
 
 class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
@@ -24,7 +30,7 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
             self.target_rate = target_rate
 
     def _association_measure(
-        self, xagg: AggregatedSample, n_obs: int = None, tol: float = 1e-10
+        self, xagg: AggregatedSample, n_obs: int | None = None, tol: float = 1e-10
     ) -> dict[str, float]:
         """Computes measures of association between feature and quantitative target.
 

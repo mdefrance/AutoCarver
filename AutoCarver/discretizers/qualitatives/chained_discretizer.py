@@ -5,10 +5,10 @@ for a binary classification model.
 from numpy import nan, select
 from pandas import DataFrame, Series, unique
 
-from ...features import BaseFeature, Features, GroupedList
-from ...utils import extend_docstring
-from ..utils.base_discretizer import BaseDiscretizer, Sample
-from ..utils.type_discretizers import StringDiscretizer
+from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
+from AutoCarver.discretizers.utils.type_discretizers import StringDiscretizer
+from AutoCarver.features import BaseFeature, Features, GroupedList
+from AutoCarver.utils import extend_docstring
 
 
 class ChainedDiscretizer(BaseDiscretizer):
@@ -157,7 +157,7 @@ class ChainedDiscretizer(BaseDiscretizer):
         return sample
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: DataFrame, y: Series = None) -> None:  # pylint: disable=W0222
+    def fit(self, X: DataFrame, y: Series | None = None) -> None:  # pylint: disable=W0222
         # preprocessing data
         sample = self._prepare_data(Sample(X, y))
         self._log_if_verbose()  # verbose if requested

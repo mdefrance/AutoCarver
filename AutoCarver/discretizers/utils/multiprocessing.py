@@ -1,12 +1,12 @@
-""" Set of tools used for multiprocessing"""
+"""Set of tools used for multiprocessing"""
 
+from collections.abc import Callable
 from functools import partial
 from multiprocessing import Pool
-from typing import Callable
 
 from pandas import DataFrame
 
-from ...features import BaseFeature
+from AutoCarver.features import BaseFeature
 
 
 def imap_unordered_function(fun: Callable, features: list[str], n_jobs: int, **kwargs):

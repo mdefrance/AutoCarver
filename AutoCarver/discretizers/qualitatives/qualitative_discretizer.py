@@ -4,12 +4,15 @@ for a binary classification model.
 
 from pandas import DataFrame, Series
 
-from ...features import QualitativeFeature
-from ...utils import extend_docstring
-from ..utils.base_discretizer import BaseDiscretizer, Sample
-from .categorical_discretizer import CategoricalDiscretizer
-from .chained_discretizer import check_frequencies, ensure_qualitative_dtypes
-from .ordinal_discretizer import OrdinalDiscretizer
+from AutoCarver.discretizers.qualitatives.categorical_discretizer import CategoricalDiscretizer
+from AutoCarver.discretizers.qualitatives.chained_discretizer import (
+    check_frequencies,
+    ensure_qualitative_dtypes,
+)
+from AutoCarver.discretizers.qualitatives.ordinal_discretizer import OrdinalDiscretizer
+from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
+from AutoCarver.features import QualitativeFeature
+from AutoCarver.utils import extend_docstring
 
 
 class QualitativeDiscretizer(BaseDiscretizer):

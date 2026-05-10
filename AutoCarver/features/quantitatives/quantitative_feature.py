@@ -1,10 +1,10 @@
-""" Defines a continuous feature"""
+"""Defines a continuous feature"""
 
 from numpy import diff, floor, inf, isfinite, log10, nan  # pylint: disable=E0611
 from pandas import isna
 
-from ..utils.base_feature import BaseFeature
-from ..utils.grouped_list import GroupedList
+from AutoCarver.features.utils.base_feature import BaseFeature
+from AutoCarver.features.utils.grouped_list import GroupedList
 
 
 class QuantitativeFeature(BaseFeature):

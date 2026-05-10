@@ -1,12 +1,12 @@
-""" Defines a categorical feature"""
+"""Defines a categorical feature"""
 
 from abc import abstractmethod
 
 from numpy import floating, integer
 from pandas import DataFrame, Series, notna, unique
 
-from ..utils.base_feature import BaseFeature
-from ..utils.grouped_list import GroupedList
+from AutoCarver.features.utils.base_feature import BaseFeature
+from AutoCarver.features.utils.grouped_list import GroupedList
 
 
 class QualitativeFeature(BaseFeature):
@@ -26,7 +26,7 @@ class QualitativeFeature(BaseFeature):
     #         # updating value_per_label
     #         self.value_per_label.update({label: raw_label})
 
-    def fit(self, X: DataFrame, y: Series = None) -> None:
+    def fit(self, X: DataFrame, y: Series | None = None) -> None:
         """TODO fit stats"""
 
         # checking for feature's unique non-nan values

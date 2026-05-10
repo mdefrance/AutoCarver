@@ -1,14 +1,13 @@
 [project]
 name = "AutoCarver"
-version = "7.0.14"
+version = "7.1.0"
 description = "Automatic Discretization of Features with Optimal Target Association"
 authors = [{ name = "Mario DEFRANCE", email = "defrancemario@gmail.com" }]
-requires-python = ">=3.9, <3.13"
+requires-python = ">=3.10, <3.13"
 readme = "README.md"
 license = "MIT"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -57,7 +56,6 @@ dev = [
 docs = "https://autocarver.readthedocs.io/en/latest/index.html"
 repository = "https://github.com/mdefrance/AutoCarver"
 
-[tool.uv]
 
 [tool.uv.build-backend]
 module-name = ["AutoCarver"]

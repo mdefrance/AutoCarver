@@ -1,14 +1,13 @@
-""" TODO: initiate features from dataset
-"""
+"""TODO: initiate features from dataset"""
 
 from abc import ABC, abstractmethod
 from typing import Any, Union
 
 from pandas import DataFrame, Series, option_context
 
-from ...config import Constants
-from .grouped_list import GroupedList
-from .serialization import json_deserialize_content, json_serialize_feature
+from AutoCarver.config import Constants
+from AutoCarver.features.utils.grouped_list import GroupedList
+from AutoCarver.features.utils.serialization import json_deserialize_content, json_serialize_feature
 
 
 class BaseFeature(ABC):
@@ -470,7 +469,7 @@ class BaseFeature(ABC):
         # updating labels accordingly
         self.update_labels()
 
-    def fit(self, X: DataFrame, y: Series = None) -> None:
+    def fit(self, X: DataFrame, y: Series | None = None) -> None:
         """Fits the feature to a DataFrame"""
         _, _ = X, y  # unused attributes
 
