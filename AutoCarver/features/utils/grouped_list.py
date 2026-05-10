@@ -84,7 +84,7 @@ class GroupedList(list):
         """
         Parameters
         ----------
-        iterable : Union[ndarray, dict, list, tuple], optional
+        iterable : ndarray | dict | list | tuple, optional
             List-like or :class:`GroupedList`, by default ``()``
         """
         if iterable is None:
@@ -255,7 +255,7 @@ class GroupedList(list):
             # removing discarded from the list
             self.remove(discarded)
 
-    def group(self, to_discard: Union[list[str], str], to_keep: str) -> None:
+    def group(self, to_discard: list[str] | str, to_keep: str) -> None:
         """Groups the discarded value with the kept value
 
         Parameters

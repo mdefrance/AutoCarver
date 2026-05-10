@@ -93,13 +93,13 @@ class Features:
         Parameters
         ----------
 
-        categoricals : list[Union[CategoricalFeature, str]], optional
+        categoricals : list[CategoricalFeature], optional
             List of categorical features or column names, by default ``None``
 
-        quantitatives : list[Union[QuantitativeFeature, str]], optional
+        quantitatives : list[QuantitativeFeature], optional
             List of quantitative features or column names, by default ``None``
 
-        ordinals : Union[list[OrdinalFeature], dict[str, list[str]]], optional
+        ordinals : list[OrdinalFeature], optional
             List of ordinal features or dict column names with associated value ordering,
             by default ``None``
 
@@ -185,7 +185,7 @@ class Features:
         """Returns names of all features"""
         return f"{self.__name__}({str(self.versions)})"
 
-    def __contains__(self, feature: Union[BaseFeature, str]) -> bool:
+    def __contains__(self, feature: BaseFeature | str) -> bool:
         """checks if a feature is in the features"""
         if isinstance(feature, BaseFeature):
             return feature.version in self.versions

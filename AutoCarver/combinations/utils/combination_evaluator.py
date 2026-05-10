@@ -49,7 +49,7 @@ class AggregatedSample:
         return self._raw
 
     @raw.setter
-    def raw(self, value: Union[DataFrame, Series]) -> None:
+    def raw(self, value: DataFrame | Series) -> None:
         """Sets the raw value of the xagg"""
 
         # setting raw value
@@ -421,7 +421,7 @@ class CombinationEvaluator(Generic[Rate], ABC):
         return viable_combination
 
     @abstractmethod
-    def _grouper(self, xagg: AggregatedSample, groupby: dict[str, str]) -> Union[Series, DataFrame]:
+    def _grouper(self, xagg: AggregatedSample, groupby: dict[str, str]) -> DataFrame | Series:
         """Helper to group XAGG's values by groupby (carver specific)"""
 
     @abstractmethod
@@ -540,7 +540,7 @@ class CombinationEvaluator(Generic[Rate], ABC):
             raise ValueError(f"[{self.__name__}] Provide a file_name that ends with .json.")
 
     @classmethod
-    def load(cls, file: Union[str, dict]) -> "CombinationEvaluator":
+    def load(cls, file: str | dict) -> "CombinationEvaluator":
         """Allows one to load a :class:`CombinationEvaluator` saved as a .json file.
 
         Parameters
@@ -573,7 +573,7 @@ class CombinationEvaluator(Generic[Rate], ABC):
         return cls(**combinations_json)
 
 
-def filter_nan(xagg: Union[Series, DataFrame], str_nan: str) -> DataFrame:
+def filter_nan(xagg: DataFrame | Series, str_nan: str) -> DataFrame:
     """Filters out nans from crosstab or y values"""
 
     # cehcking for values in crosstab

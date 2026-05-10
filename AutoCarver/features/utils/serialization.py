@@ -19,7 +19,7 @@ def convert_value_to_base_type(value: Any) -> Any:
 
     Returns
     -------
-    Union[str, float, int]
+    str | float | int
         Serialized value
     """
 
@@ -34,12 +34,12 @@ def convert_value_to_base_type(value: Any) -> Any:
     return output
 
 
-def convert_value_to_numpy_type(value: Union[str, float, int]) -> Any:
+def convert_value_to_numpy_type(value: str | float | int) -> Any:
     """Converts a list or a dict of lists values to numpy types for JSON deserialization.
 
     Parameters
     ----------
-    value : Union[str, float, int]
+    value : str | float | int
         A value to deserialize
 
     Returns
@@ -74,12 +74,12 @@ def convert_values_to_base_types(
 
     Parameters
     ----------
-    iterable : Union[list[Any], dict[str, list[Any]]]
+    iterable : list[Any] | dict[str, list[Any]]
         List or dict of lists of values to serialize
 
     Returns
     -------
-    Union[list[Union[str, int, float]], dict[str, list[Union[str, int, float]]]]
+    list[str | int | float] | dict[str, list[str | int | float]]
         List or dict of lists of values serialized
     """
     # list input
@@ -113,12 +113,12 @@ def convert_values_to_numpy_types(
 
     Parameters
     ----------
-    iterable : Union[list[Union[str, int, float]], dict[str, list[Union[str, int, float]]]]
+    iterable : list[str | int | float] | dict[str, list[str | int | float]] | None
         List or dict of lists of values to deserialize
 
     Returns
     -------
-    Union[list[Any], dict[str, list[Any]]]
+    list[Any] | dict[str, list[Any]] | None
         List or dict of lists of values deserialized
     """
     # list input

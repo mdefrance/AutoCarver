@@ -168,14 +168,18 @@ class BaseSelector(ABC):
         return self.verbose and _has_idisplay
 
     @abstractmethod
-    def _initiate_measures(self, requested_measures: list[BaseMeasure] | None = None) -> list[BaseMeasure]:
+    def _initiate_measures(
+        self, requested_measures: list[BaseMeasure] | None = None
+    ) -> list[BaseMeasure]:
         """initiates the list of measures with default values"""
         if requested_measures is None:
             requested_measures = []
         return requested_measures
 
     @abstractmethod
-    def _initiate_filters(self, requested_filters: list[BaseFilter] | None = None) -> list[BaseFilter]:
+    def _initiate_filters(
+        self, requested_filters: list[BaseFilter] | None = None
+    ) -> list[BaseFilter]:
         """initiates the list of measures with default values"""
         if requested_filters is None:
             requested_filters = []
@@ -221,7 +225,9 @@ class BaseSelector(ABC):
 
         return best_qualitatives
 
-    def _initiate_features_measures(self, features: Features | list[BaseFeature], remove_default: bool = True) -> None:
+    def _initiate_features_measures(
+        self, features: Features | list[BaseFeature], remove_default: bool = True
+    ) -> None:
         """initiates the list of measures with default values"""
         # iterating over each feature
         for feature in features:
@@ -327,7 +333,9 @@ class BaseSelector(ABC):
         self._initiate_features_measures(selected_features, remove_default=False)
 
         # selecting from remaining features
-        best_features = get_best_features(selected_features, X, y, measures, filters, self.n_best_per_type)
+        best_features = get_best_features(
+            selected_features, X, y, measures, filters, self.n_best_per_type
+        )
 
         # printing association
         self._print_measures(selected_features)
@@ -339,9 +347,9 @@ class BaseSelector(ABC):
 
         Parameters
         ----------
-        xagg : Union[DataFrame, Series]
+        xagg : DataFrame | Series
             Train crosstab
-        xagg_dev : Union[DataFrame, Series]
+        xagg_dev : DataFrame | Series
             Dev crosstab, by default None
         pretty_print : bool, optional
             Whether to output html or not, by default False
@@ -389,7 +397,9 @@ def is_qualitative(feature: BaseFeature) -> bool:
     return feature.is_qualitative or feature.is_fitted
 
 
-def make_random_chunks(elements: list[Any], max_chunk_sizes: int, random_state: int | None = None) -> list[Any]:
+def make_random_chunks(
+    elements: list[Any], max_chunk_sizes: int, random_state: int | None = None
+) -> list[Any]:
     """makes a specific number of random chunks of of a list"""
 
     # copying in order to not moidy initial list
@@ -562,7 +572,7 @@ def apply_filters(
     return filtered
 
 
-def check_measure_mismatch(feature: BaseFeature, measure: Union[BaseMeasure, BaseFilter]) -> None:
+def check_measure_mismatch(feature: BaseFeature, measure: BaseMeasure | BaseFilter) -> None:
     """checks for mismatched data types between feature and measure"""
     if not (
         (is_quantitative(feature) and measure.is_x_quantitative)

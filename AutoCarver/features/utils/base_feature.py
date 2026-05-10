@@ -428,7 +428,7 @@ class BaseFeature(ABC):
         self.labels = raw_labels
 
     def _update_statistics_value(
-        self, kept_label: Union[str, float], kept_value: Union[str, float]
+        self, kept_label: str | float, kept_value: str | float
     ) -> None:
         """updates feature's statistics index with values"""
 

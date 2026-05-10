@@ -215,14 +215,14 @@ class BaseCarver(BaseDiscretizer, ABC):
         return self
 
     @abstractmethod
-    def _aggregator(self, X: DataFrame, y: Series) -> Union[Series, DataFrame]:
+    def _aggregator(self, X: DataFrame, y: Series) -> Series | DataFrame:
         """Helper that aggregates X by y into crosstab or means (carver specific)"""
 
     def _carve_feature(
         self,
         feature: BaseFeature,
-        xaggs: dict[str, Union[Series, DataFrame]],
-        xaggs_dev: dict[str, Union[Series, DataFrame]],
+        xaggs: dict[str, Series | DataFrame],
+        xaggs_dev: dict[str, Series | DataFrame],
         num_iter: str,
     ) -> None:
         """Carves a feature into buckets that maximize association with the target"""
@@ -261,18 +261,18 @@ class BaseCarver(BaseDiscretizer, ABC):
     def _print_xagg(
         self,
         feature: BaseFeature,
-        xagg: Union[DataFrame, Series],
+        xagg: Series | DataFrame,
         message: str,
         *,
-        xagg_dev: DataFrame | Series | None = None,
+        xagg_dev: Series | DataFrame | None = None,
     ) -> None:
         """Prints crosstabs' target rates and frequencies per modality, in raw or html format
 
         Parameters
         ----------
-        xagg : Union[DataFrame, Series]
+        xagg : Series | DataFrame
             Train crosstab
-        xagg_dev : Union[DataFrame, Series]
+        xagg_dev : Series | DataFrame | None
             Dev crosstab, by default None
         pretty_print : bool, optional
             Whether to output html or not, by default False

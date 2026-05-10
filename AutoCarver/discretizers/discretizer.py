@@ -38,7 +38,7 @@ class Discretizer(BaseDiscretizer):
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: DataFrame, y: Series) -> "Discretizer":
         # Checking for binary target and copying X
-        sample = self._prepare_data(Sample(X, y))
+        sample = self._prepare_sample(Sample(X, y))
 
         # fitting quantitative features if any
         self._fit_quantitatives(**sample)
