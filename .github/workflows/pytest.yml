@@ -11,7 +11,7 @@ on:
 jobs:
   pytest_push:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'push' }}
+    if: github.event_name == 'push' && github.base_ref == ''
 
     steps:
       - name: Checkout Repository
