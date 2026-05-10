@@ -13,7 +13,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from AutoCarver.combinations import CombinationEvaluator
 from AutoCarver.features import BaseFeature, Features
 from AutoCarver.utils import extend_docstring, get_attribute, get_bool_attribute
-from .multiprocessing import apply_async_function
+from AutoCarver.discretizers.utils.multiprocessing import apply_async_function
 
 
 @dataclass

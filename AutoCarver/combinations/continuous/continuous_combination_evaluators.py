@@ -9,7 +9,10 @@ from AutoCarver.combinations.utils.combination_evaluator import (
     AggregatedSample,
     CombinationEvaluator,
 )
-from .continuous_target_rates import ContinuousTargetRate, TargetMean
+from AutoCarver.combinations.continuous.continuous_target_rates import (
+    ContinuousTargetRate,
+    TargetMean,
+)
 
 
 class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):

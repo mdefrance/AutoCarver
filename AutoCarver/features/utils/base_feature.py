@@ -6,8 +6,8 @@ from typing import Any, Union
 from pandas import DataFrame, Series, option_context
 
 from AutoCarver.config import Constants
-from .grouped_list import GroupedList
-from .serialization import json_deserialize_content, json_serialize_feature
+from AutoCarver.features.utils.grouped_list import GroupedList
+from AutoCarver.features.utils.serialization import json_deserialize_content, json_serialize_feature
 
 
 class BaseFeature(ABC):

@@ -11,7 +11,7 @@ from AutoCarver.features import BaseFeature, Features
 from AutoCarver.utils import get_bool_attribute, has_idisplay
 from AutoCarver.selectors.filters import BaseFilter
 from AutoCarver.selectors.measures import BaseMeasure
-from .pretty_print import format_ranked_features, prettier_measures
+from AutoCarver.selectors.utils.pretty_print import format_ranked_features, prettier_measures
 
 # trying to import extra dependencies
 _has_idisplay = has_idisplay()

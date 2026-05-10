@@ -10,7 +10,7 @@ from AutoCarver.combinations.utils.combination_evaluator import (
     AggregatedSample,
     CombinationEvaluator,
 )
-from .binary_target_rates import BinaryTargetRate, TargetMean
+from AutoCarver.combinations.binary.binary_target_rates import BinaryTargetRate, TargetMean
 
 
 class BinaryCombinationEvaluator(CombinationEvaluator, ABC):

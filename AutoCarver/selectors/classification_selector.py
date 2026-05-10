@@ -1,14 +1,20 @@
 """Tools to select the best Quantitative and Qualitative features for a Classification task."""
 
-from .filters import (
+from AutoCarver.selectors.filters import (
     BaseFilter,
     NonDefaultValidFilter,
     SpearmanFilter,
     TschuprowtFilter,
     ValidFilter,
 )
-from .measures import BaseMeasure, KruskalMeasure, ModeMeasure, NanMeasure, TschuprowtMeasure
-from .utils.base_selector import BaseSelector
+from AutoCarver.selectors.measures import (
+    BaseMeasure,
+    KruskalMeasure,
+    ModeMeasure,
+    NanMeasure,
+    TschuprowtMeasure,
+)
+from AutoCarver.selectors.utils.base_selector import BaseSelector
 
 
 class ClassificationSelector(BaseSelector):
@@ -19,7 +25,9 @@ class ClassificationSelector(BaseSelector):
 
     __name__ = "ClassificationSelector"
 
-    def _initiate_measures(self, requested_measures: list[BaseMeasure] | None = None) -> list[BaseMeasure]:
+    def _initiate_measures(
+        self, requested_measures: list[BaseMeasure] | None = None
+    ) -> list[BaseMeasure]:
         """initiates the list of measures with default values"""
 
         # initating to requested ones
@@ -49,7 +57,9 @@ class ClassificationSelector(BaseSelector):
             raise ValueError(f"[{self}] Provide measures for qualitative target!")
         return measures
 
-    def _initiate_filters(self, requested_filters: list[BaseFilter] | None = None) -> list[BaseFilter]:
+    def _initiate_filters(
+        self, requested_filters: list[BaseFilter] | None = None
+    ) -> list[BaseFilter]:
         """initiates the list of measures with default values"""
 
         # initating to requested ones
