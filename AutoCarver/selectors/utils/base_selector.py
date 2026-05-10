@@ -3,7 +3,6 @@
 from abc import ABC, abstractmethod
 from math import ceil
 from random import seed, shuffle
-from typing import Union
 
 from numpy import isnan
 from pandas import DataFrame, Series
@@ -168,12 +167,12 @@ class BaseSelector(ABC):
         return self.verbose and _has_idisplay
 
     @abstractmethod
-    def _initiate_measures(self, requested_measures: list[BaseMeasure] = None) -> list[BaseMeasure]:
+    def _initiate_measures(self, requested_measures: list[BaseMeasure] | None = None) -> list[BaseMeasure]:
         """initiates the list of measures with default values"""
         return requested_measures
 
     @abstractmethod
-    def _initiate_filters(self, requested_filters: list[BaseFilter] = None) -> list[BaseFilter]:
+    def _initiate_filters(self, requested_filters: list[BaseFilter] | None = None) -> list[BaseFilter]:
         """initiates the list of measures with default values"""
         return requested_filters
 
@@ -337,9 +336,9 @@ class BaseSelector(ABC):
 
         Parameters
         ----------
-        xagg : Union[DataFrame, Series]
+        xagg : Series | DataFrame
             Train crosstab
-        xagg_dev : Union[DataFrame, Series]
+        xagg_dev : Series | DataFrame
             Dev crosstab, by default None
         pretty_print : bool, optional
             Whether to output html or not, by default False
@@ -387,7 +386,7 @@ def is_qualitative(feature: BaseFeature) -> bool:
     return feature.is_qualitative or feature.is_fitted
 
 
-def make_random_chunks(elements: list, max_chunk_sizes: int, random_state: int = None) -> list:
+def make_random_chunks(elements: list, max_chunk_sizes: int, random_state: int | None = None) -> list:
     """makes a specific number of random chunks of of a list"""
 
     # copying in order to not moidy initial list
@@ -415,29 +414,29 @@ def make_random_chunks(elements: list, max_chunk_sizes: int, random_state: int =
 
 
 def get_qualitative_metrics(
-    metrics: list[Union[BaseMeasure, BaseFilter]],
-) -> list[Union[BaseMeasure, BaseFilter]]:
+    metrics: list[BaseMeasure | BaseFilter],
+) -> list[BaseMeasure | BaseFilter]:
     """returns filtered list of measures/filters that apply on qualitative features"""
     return [metric for metric in metrics if metric.is_x_qualitative]
 
 
 def get_quantitative_metrics(
-    metrics: list[Union[BaseMeasure, BaseFilter]],
-) -> list[Union[BaseMeasure, BaseFilter]]:
+    metrics: list[BaseMeasure | BaseFilter],
+) -> list[BaseMeasure | BaseFilter]:
     """returns filtered list of measures/filters that apply on quantitative features"""
     return [metric for metric in metrics if metric.is_x_quantitative]
 
 
 def get_default_metrics(
-    metrics: list[Union[BaseMeasure, BaseFilter]],
-) -> list[Union[BaseMeasure, BaseFilter]]:
+    metrics: list[BaseMeasure | BaseFilter],
+) -> list[BaseMeasure | BaseFilter]:
     """returns filtered list of measures/filters that are default"""
     return [metric for metric in metrics if metric.is_default]
 
 
 def remove_default_metrics(
-    metrics: list[Union[BaseMeasure, BaseFilter]],
-) -> list[Union[BaseMeasure, BaseFilter]]:
+    metrics: list[BaseMeasure | BaseFilter],
+) -> list[BaseMeasure | BaseFilter]:
     """returns filtered list of measures/filters that are non-default"""
     return [metric for metric in metrics if not metric.is_default]
 
@@ -565,7 +564,7 @@ def apply_filters(
     return filtered
 
 
-def check_measure_mismatch(feature: BaseFeature, measure: Union[BaseMeasure, BaseFilter]) -> None:
+def check_measure_mismatch(feature: BaseFeature, measure: BaseMeasure | BaseFilter) -> None:
     """checks for mismatched data types between feature and measure"""
     if not (
         (is_quantitative(feature) and measure.is_x_quantitative)

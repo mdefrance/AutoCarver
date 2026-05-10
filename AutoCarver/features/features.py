@@ -1,7 +1,5 @@
 """ Defines a set of features"""
 
-from typing import Union
-
 from numpy import nan
 from pandas import DataFrame, Series
 
@@ -53,7 +51,7 @@ from .utils.grouped_list import GroupedList
 
 
 def check_ordinal_features(
-    ordinals: Union[list[OrdinalFeature], dict[str, list[str]]]
+    ordinals: list[OrdinalFeature] | dict[str, list[str]]
 ) -> list[OrdinalFeature]:
     """Checks that ordinals are correctly formatted"""
 
@@ -80,22 +78,22 @@ class Features:
 
     def __init__(
         self,
-        categoricals: list[Union[CategoricalFeature, str]] = None,
-        quantitatives: list[Union[QuantitativeFeature, str]] = None,
-        ordinals: Union[list[OrdinalFeature], dict[str, list[str]]] = None,
+        categoricals: list[CategoricalFeature | str] | None = None,
+        quantitatives: list[QuantitativeFeature | str] | None = None,
+        ordinals: list[OrdinalFeature] | dict[str, list[str]] | None = None,
         **kwargs,
     ) -> None:
         """
         Parameters
         ----------
 
-        categoricals : list[Union[CategoricalFeature, str]], optional
+        categoricals : list[CategoricalFeature | str], optional
             List of categorical features or column names, by default ``None``
 
-        quantitatives : list[Union[QuantitativeFeature, str]], optional
+        quantitatives : list[QuantitativeFeature | str], optional
             List of quantitative features or column names, by default ``None``
 
-        ordinals : Union[list[OrdinalFeature], dict[str, list[str]]], optional
+        ordinals : list[OrdinalFeature] | dict[str, list[str]], optional
             List of ordinal features or dict column names with associated value ordering,
             by default ``None``
 
@@ -153,7 +151,7 @@ class Features:
         """Returns names of all features"""
         return f"{self.__name__}({str(self.versions)})"
 
-    def __contains__(self, feature: Union[BaseFeature, str]) -> bool:
+    def __contains__(self, feature: str | BaseFeature) -> bool:
         """checks if a feature is in the features"""
         if isinstance(feature, BaseFeature):
             return feature.version in self.versions
@@ -187,8 +185,8 @@ class Features:
         return iter(self.to_list())
 
     def __getitem__(
-        self, index: Union[int, str, list[int], list[str], slice]
-    ) -> Union[BaseFeature, list[BaseFeature]]:
+        self, index: int | str | list[int] | list[str] | slice
+    ) -> BaseFeature | list[BaseFeature] | None:
         """Get item by index in list of features, by feature name or with a list of
         indices/feature names
         """
@@ -346,7 +344,7 @@ class Features:
             # checking for unexpected values
             feature.check_values(X)
 
-    def fit(self, X: DataFrame, y: Series = None) -> None:
+    def fit(self, X: DataFrame, y: Series | None = None) -> None:
         """fits all features to there respective column in DataFrame X"""
         # iterating over all features
         for feature in self:
@@ -544,7 +542,7 @@ def make_version_name(feature_name: str, y_class: str) -> str:
 def cast_features(
     features: list[str],
     target_class: type = BaseFeature,
-    ordinal_values: dict[str, list[str]] = None,
+    ordinal_values: dict[str, list[str]] | None = None,
     **kwargs,
 ) -> list[BaseFeature]:
     """converts a list of string feature names to there corresponding Feature class"""

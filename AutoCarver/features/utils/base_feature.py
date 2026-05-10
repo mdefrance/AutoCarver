@@ -470,7 +470,7 @@ class BaseFeature(ABC):
         # updating labels accordingly
         self.update_labels()
 
-    def fit(self, X: DataFrame, y: Series = None) -> None:
+    def fit(self, X: DataFrame, y: Series | None = None) -> None:
         """Fits the feature to a DataFrame"""
         _, _ = X, y  # unused attributes
 

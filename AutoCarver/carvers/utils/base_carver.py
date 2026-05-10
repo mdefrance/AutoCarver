@@ -5,7 +5,6 @@ for any task.
 import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Union
 
 from pandas import DataFrame, Series
 
@@ -199,8 +198,8 @@ class BaseCarver(BaseDiscretizer, ABC):
         X: DataFrame,
         y: Series,
         *,
-        X_dev: DataFrame = None,
-        y_dev: Series = None,
+        X_dev: DataFrame | None = None,
+        y_dev: Series | None = None,
     ) -> None:
         """Finds the combination of modalities of X that provides the best association with y.
         If provided, X_dev set should be large enough to have the same distribution as X.
@@ -257,14 +256,14 @@ class BaseCarver(BaseDiscretizer, ABC):
         return self
 
     @abstractmethod
-    def _aggregator(self, X: DataFrame, y: Series) -> Union[Series, DataFrame]:
+    def _aggregator(self, X: DataFrame, y: Series) -> Series | DataFrame:
         """Helper that aggregates X by y into crosstab or means (carver specific)"""
 
     def _carve_feature(
         self,
         feature: BaseFeature,
-        xaggs: dict[str, Union[Series, DataFrame]],
-        xaggs_dev: dict[str, Union[Series, DataFrame]],
+        xaggs: dict[str, Series | DataFrame],
+        xaggs_dev: dict[str, Series | DataFrame],
         num_iter: str,
     ) -> dict[str, GroupedList]:
         """Carves a feature into buckets that maximize association with the target"""
@@ -303,18 +302,18 @@ class BaseCarver(BaseDiscretizer, ABC):
     def _print_xagg(
         self,
         feature: BaseFeature,
-        xagg: Union[DataFrame, Series],
+        xagg: Series | DataFrame,
         message: str,
         *,
-        xagg_dev: Union[DataFrame, Series] = None,
+        xagg_dev: Series | DataFrame | None = None,
     ) -> None:
         """Prints crosstabs' target rates and frequencies per modality, in raw or html format
 
         Parameters
         ----------
-        xagg : Union[DataFrame, Series]
+        xagg : Series | DataFrame
             Train crosstab
-        xagg_dev : Union[DataFrame, Series]
+        xagg_dev : Series | DataFrame
             Dev crosstab, by default None
         pretty_print : bool, optional
             Whether to output html or not, by default False
@@ -332,7 +331,7 @@ class BaseCarver(BaseDiscretizer, ABC):
                 self._print_html(nice_xagg, nice_xagg_dev)
 
     def _format_xagg(
-        self, feature: BaseFeature, xagg: DataFrame, xagg_dev: DataFrame = None
+        self, feature: BaseFeature, xagg: DataFrame, xagg_dev: DataFrame | None = None
     ) -> tuple[DataFrame, DataFrame]:
         """Formats the XAGG DataFrame."""
         formatted_xagg = index_mapper(feature, xagg)
@@ -347,7 +346,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         nice_xagg_dev = self.combinations.target_rate.compute(formatted_xagg_dev)
         return nice_xagg, nice_xagg_dev
 
-    def _print_raw(self, nice_xagg: str, nice_xagg_dev: str, xagg_dev: DataFrame = None) -> None:
+    def _print_raw(self, nice_xagg: str, nice_xagg_dev: str, xagg_dev: DataFrame | None = None) -> None:
         """Prints raw XAGG DataFrames."""
         print(nice_xagg, "\n")
         if xagg_dev is not None:

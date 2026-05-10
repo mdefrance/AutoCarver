@@ -25,7 +25,7 @@ class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
             self.target_rate = target_rate
 
     def _association_measure(
-        self, xagg: AggregatedSample, n_obs: int = None, tol: float = 1e-10
+        self, xagg: AggregatedSample, n_obs: int | None = None, tol: float = 1e-10
     ) -> dict[str, float]:
         """Computes measures of association between feature and target by crosstab.
 

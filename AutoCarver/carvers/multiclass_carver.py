@@ -107,8 +107,8 @@ class MulticlassCarver(BinaryCarver):
         X: DataFrame,
         y: Series,
         *,
-        X_dev: DataFrame = None,
-        y_dev: Series = None,
+        X_dev: DataFrame | None = None,
+        y_dev: Series | None = None,
     ) -> None:
         # initiating samples
         samples = Samples(train=Sample(X, y), dev=Sample(X_dev, y_dev))

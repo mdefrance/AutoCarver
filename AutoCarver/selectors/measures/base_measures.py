@@ -176,7 +176,7 @@ class OutlierMeasure(BaseMeasure):
         super().__init__(threshold)
 
     @abstractmethod
-    def compute_association(self, x: Series, y: Series = None) -> float:
+    def compute_association(self, x: Series, y: Series | None = None) -> float:
         """Computes outlier measure on ``x``
 
         Parameters
@@ -212,7 +212,7 @@ class NanMeasure(OutlierMeasure):
     is_x_quantitative = True
     is_x_qualitative = True
 
-    def compute_association(self, x: Series, y: Series = None) -> float:
+    def compute_association(self, x: Series, y: Series | None = None) -> float:
         """Computes frequency of ``nan`` in ``x``
 
         Parameters
@@ -239,7 +239,7 @@ class ModeMeasure(OutlierMeasure):
     is_x_quantitative = True
     is_x_qualitative = True
 
-    def compute_association(self, x: Series, y: Series = None) -> float:
+    def compute_association(self, x: Series, y: Series | None = None) -> float:
         """Computes frequency of ``x``'s mode
 
         Parameters
