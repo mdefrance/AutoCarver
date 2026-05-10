@@ -74,7 +74,7 @@ pyproject = toml.load("../../pyproject.toml")
 
 project = pyproject["project"]["name"]
 copyright = "2023, Mario Defrance"
-author = pyproject["project"]["authors"][0]
+author = ", ".join([author["name"] for author in pyproject["project"]["authors"]])
 version = pyproject["project"]["version"]
 release = "Beta release"
 
