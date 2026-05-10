@@ -1,8 +1,16 @@
-""" Loads association filters."""
+"""Loads association filters."""
 
-from .base_filters import BaseFilter, NonDefaultValidFilter, ValidFilter
-from .qualitative_filters import CramervFilter, QualitativeFilter, TschuprowtFilter
-from .quantitative_filters import PearsonFilter, QuantitativeFilter, SpearmanFilter
+from AutoCarver.selectors.filters.base_filters import BaseFilter, NonDefaultValidFilter, ValidFilter
+from AutoCarver.selectors.filters.qualitative_filters import (
+    CramervFilter,
+    QualitativeFilter,
+    TschuprowtFilter,
+)
+from AutoCarver.selectors.filters.quantitative_filters import (
+    PearsonFilter,
+    QuantitativeFilter,
+    SpearmanFilter,
+)
 
 __all__ = [
     "BaseFilter",

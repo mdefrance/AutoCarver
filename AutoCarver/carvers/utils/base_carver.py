@@ -8,16 +8,16 @@ from dataclasses import dataclass, field
 
 from pandas import DataFrame, Series
 
-from ...combinations import (
+from AutoCarver.combinations import (
     CombinationEvaluator,
     CramervCombinations,
     KruskalCombinations,
     TschuprowtCombinations,
 )
-from ...discretizers import BaseDiscretizer, Discretizer, Sample
-from ...features import BaseFeature, Features, GroupedList
-from ...utils import extend_docstring, get_attribute, get_bool_attribute, has_idisplay
-from .pretty_print import index_mapper, prettier_xagg
+from AutoCarver.discretizers import BaseDiscretizer, Discretizer, Sample
+from AutoCarver.features import BaseFeature, Features, GroupedList
+from AutoCarver.utils import extend_docstring, get_attribute, get_bool_attribute, has_idisplay
+from AutoCarver.carvers.utils.pretty_print import index_mapper, prettier_xagg
 
 # trying to import extra dependencies
 _has_idisplay = has_idisplay()
@@ -346,7 +346,9 @@ class BaseCarver(BaseDiscretizer, ABC):
         nice_xagg_dev = self.combinations.target_rate.compute(formatted_xagg_dev)
         return nice_xagg, nice_xagg_dev
 
-    def _print_raw(self, nice_xagg: str, nice_xagg_dev: str, xagg_dev: DataFrame | None = None) -> None:
+    def _print_raw(
+        self, nice_xagg: str, nice_xagg_dev: str, xagg_dev: DataFrame | None = None
+    ) -> None:
         """Prints raw XAGG DataFrames."""
         print(nice_xagg, "\n")
         if xagg_dev is not None:
