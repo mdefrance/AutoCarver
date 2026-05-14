@@ -152,11 +152,11 @@ def test_ordinal_feature_update_ordinal_encoding(
     sample_ordinal_feature.dropna = True
     print(sample_ordinal_feature.content)
     sample_ordinal_feature.update(GroupedList({3: [3, 1]}), convert_labels=True)
-    assert sample_ordinal_feature.values == ["a", "c", Constants.np.nan]
+    assert sample_ordinal_feature.values == ["a", "c", Constants.nan]
     assert sample_ordinal_feature.content == {
         "a": ["1", "2", "3", "4", "5", "a"],
         "c": ["e", "f", "d", "c"],
-        Constants.np.nan: ["b", Constants.np.nan],
+        Constants.nan: ["b", Constants.nan],
     }
     assert sample_ordinal_feature.labels == [0, 1, 2]
     assert sample_ordinal_feature.value_per_label == {
@@ -176,7 +176,7 @@ def test_ordinal_feature_update_ordinal_encoding(
         "e": 1,
         "f": 1,
         "d": 1,
-        Constants.np.nan: 2,
+        Constants.nan: 2,
         "b": 2,
     }
 
@@ -225,19 +225,19 @@ def test_ordinal_feature_update_no_ordinal_encoding(
     # adding nans
     sample_ordinal_feature.dropna = True
     print(sample_ordinal_feature.content)
-    sample_ordinal_feature.update(GroupedList({Constants.np.nan: [Constants.np.nan, "b"]}), convert_labels=True)
-    assert sample_ordinal_feature.values == ["a", "d", Constants.np.nan]
+    sample_ordinal_feature.update(GroupedList({Constants.nan: [Constants.nan, "b"]}), convert_labels=True)
+    assert sample_ordinal_feature.values == ["a", "d", Constants.nan]
     print(sample_ordinal_feature.content)
     assert sample_ordinal_feature.content == {
         "a": ["1", "2", "3", "4", "5", "a"],
         "d": ["c", "e", "f", "d"],
-        Constants.np.nan: ["b", Constants.np.nan],
+        Constants.nan: ["b", Constants.nan],
     }
-    assert sample_ordinal_feature.labels == ["1 to a", "c to f", f"b, {Constants.np.nan}"]
+    assert sample_ordinal_feature.labels == ["1 to a", "c to f", f"b, {Constants.nan}"]
     assert sample_ordinal_feature.value_per_label == {
         "1 to a": "a",
         "c to f": "d",
-        f"b, {Constants.np.nan}": Constants.np.nan,
+        f"b, {Constants.nan}": Constants.nan,
     }
     print(sample_ordinal_feature.label_per_value)
     assert sample_ordinal_feature.label_per_value == {
@@ -251,8 +251,8 @@ def test_ordinal_feature_update_no_ordinal_encoding(
         "e": "c to f",
         "f": "c to f",
         "d": "c to f",
-        Constants.np.nan: f"b, {Constants.np.nan}",
-        "b": f"b, {Constants.np.nan}",
+        Constants.nan: f"b, {Constants.nan}",
+        "b": f"b, {Constants.nan}",
     }
 
 
@@ -304,7 +304,7 @@ def test_ordinal_feature_get_summary(sample_ordinal_feature: OrdinalFeature) -> 
         {"feature": "Ordinal('test_feature')", "label": 1, "content": "b"},
         {"feature": "Ordinal('test_feature')", "label": 2, "content": "c"},
         {"feature": "Ordinal('test_feature')", "label": 3, "content": ["e", "f", "d"]},
-        {"feature": "Ordinal('test_feature')", "label": 4, "content": Constants.np.nan},
+        {"feature": "Ordinal('test_feature')", "label": 4, "content": Constants.nan},
     ]
     print(summary)
     assert summary == expected_summary
@@ -323,7 +323,7 @@ def test_ordinal_feature_get_summary(sample_ordinal_feature: OrdinalFeature) -> 
         {"feature": "Ordinal('test_feature')", "label": 1, "content": "b"},
         {"feature": "Ordinal('test_feature')", "label": 2, "content": "c"},
         {"feature": "Ordinal('test_feature')", "label": 3, "content": ["e", "f", "d"]},
-        {"feature": "Ordinal('test_feature')", "label": 4, "content": Constants.np.nan},
+        {"feature": "Ordinal('test_feature')", "label": 4, "content": Constants.nan},
         {"feature": "Ordinal('test_feature')", "label": 5, "content": Constants.DEFAULT},
     ]
     assert summary == expected_summary
