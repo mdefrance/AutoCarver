@@ -109,7 +109,7 @@ def test_regression_selector_initiate_filters(features_object: Features, filters
         assert any(measure.__name__ == valid_filter.__name__ for measure in selector.filters)
         assert (
             len(selector.filters)
-            == len([filter_ for filter_ in default_filters if filter_.__name__ not in [ValidFilter.__name__]]) + 1
+            == len([filter_ for filter_ in default_filters if filter_.__name__ != ValidFilter.__name__]) + 1
         )
 
     # adding filters

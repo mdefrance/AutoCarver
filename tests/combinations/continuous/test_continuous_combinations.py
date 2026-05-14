@@ -35,7 +35,7 @@ def evaluator(request: FixtureRequest) -> ContinuousCombinationEvaluator:
 def test_init(evaluator: ContinuousCombinationEvaluator):
     assert evaluator.is_y_binary is False
     assert evaluator.is_y_continuous is True
-    assert evaluator.sort_by in ["kruskal"]
+    assert evaluator.sort_by  == "kruskal"
 
 
 def test_to_json(evaluator: ContinuousCombinationEvaluator):
