@@ -259,4 +259,7 @@ def ensure_qualitative_dtypes(features: Features, X: pd.DataFrame, **kwargs) -> 
         string_discretizer = StringDiscretizer(features=to_convert, **kwargs)
         X = string_discretizer.fit_transform(X)
 
+    # pandas 3.0 infers StringDtype for string columns; enforce object dtype for consistency
+    X[features.versions] = X[features.versions].astype(object)
+
     return X

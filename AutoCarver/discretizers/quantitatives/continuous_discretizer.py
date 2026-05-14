@@ -168,7 +168,7 @@ def np_find_quantiles(
         sub_indices = np.digitize(df_feature, frequent_values, right=False)
         for i in range(0, len(frequent_values) + 1):
             quantiles += np_find_quantiles(
-                df_feature[(sub_indices == i) & (~np.in1d(df_feature, frequent_values))],
+                df_feature[(sub_indices == i) & (~np.isin(df_feature, frequent_values))],
                 q,
                 initial_len_df,
                 [],
