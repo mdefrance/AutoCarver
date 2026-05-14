@@ -7,6 +7,7 @@ from abc import ABC
 from dataclasses import dataclass
 
 import numpy as np
+import pandas as pd
 from pandas import DataFrame, Series, concat
 from sklearn.base import BaseEstimator, TransformerMixin
 
@@ -20,8 +21,8 @@ from AutoCarver.utils import extend_docstring, get_attribute, get_bool_attribute
 class Sample:
     """sample class to store X and y"""
 
-    X: DataFrame
-    y: Series | None = None
+    X: pd.DataFrame
+    y: pd.Series | None = None
 
     def __getitem__(self, key):
         """Returns the DataFrame or the Series"""
@@ -62,7 +63,7 @@ class Sample:
         """fills up nans for features that have some"""
         self.X = features.fillna(self.X)
 
-    def unfillna(self, features: Features) -> DataFrame:
+    def unfillna(self, features: Features) -> pd.DataFrame:
         """reinstating nans when not supposed to group them"""
         return features.unfillna(self.X)
 
@@ -189,12 +190,12 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         if feature in self.features:
             self.features.remove(feature)
 
-    def _cast_features(self, X: DataFrame) -> DataFrame:
+    def _cast_features(self, X: pd.DataFrame) -> pd.DataFrame:
         """Casts the features of a DataFrame using feature versions to duplicate columns
 
         Parameters
         ----------
-        X : DataFrame
+        X : pd.DataFrame
             Dataset used to discretize. Needs to have columns has specified in
             ``BaseDiscretizer.features``, by default None.
 
@@ -219,7 +220,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         return X
 
-    def _prepare_y(self, y: Series) -> None:
+    def _prepare_y(self, y: pd.Series) -> None:
         """Validates input y"""
 
         if not isinstance(y, Series):  # checking for y's type
@@ -228,7 +229,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         if any(y.isna()):  # checking for nans in the target
             raise ValueError(f"[{self.__name__}] y should not contain numpy.nan")
 
-    def _prepare_X(self, X: DataFrame) -> DataFrame:
+    def _prepare_X(self, X: pd.DataFrame) -> pd.DataFrame:
         """Validates input X"""
 
         # checking for X's type
@@ -266,11 +267,11 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        X : DataFrame
+        X : pd.DataFrame
             Dataset used to discretize. Needs to have columns has specified in
             ``BaseDiscretizer.features``, by default None.
 
-        y : Series
+        y : pd.Series
             Binary target feature, by default None.
 
         Returns
@@ -295,16 +296,16 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
     __prepare_data = _prepare_data  # private copy
 
-    def fit(self, X: DataFrame | None = None, y: Series | None = None) -> None:
+    def fit(self, X: pd.DataFrame | None = None, y: pd.Series | None = None) -> None:
         """Learns simple discretization of values of X according to values of y.
 
         Parameters
         ----------
-        X : DataFrame
+        X : pd.DataFrame
             Training dataset, to determine features' optimal carving
             Needs to have columns has specified in ``features`` attribute.
 
-        y : Series
+        y : pd.Series
             Target with wich the association is maximized.
         """
         _, _ = X, y  # unused arguments
@@ -328,15 +329,15 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         return self
 
-    def transform(self, X: DataFrame, y: Series | None = None) -> DataFrame:
+    def transform(self, X: pd.DataFrame, y: pd.Series | None = None) -> pd.DataFrame:
         """Applies discretization to a DataFrame's columns.
 
         Parameters
         ----------
-        X : DataFrame
+        X : pd.DataFrame
             Dataset to be carved.
             Needs to have columns from provided :class:`Features`.
-        y : Series, optional
+        y : pd.Series, optional
             Target, by default ``None``
 
         Returns
@@ -385,9 +386,9 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        X : DataFrame
+        X : pd.DataFrame
             Contains columns named after ``BaseDiscretizer.features`` attribute, by default None
-        y : Series, optional
+        y : pd.Series, optional
             Model target, by default None
 
         Returns
@@ -419,9 +420,9 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        X : DataFrame
+        X : pd.DataFrame
             Contains columns named after ``BaseDiscretizer.features`` attribute, by default None
-        y : Series, optional
+        y : pd.Series, optional
             Model target, by default None
 
         Returns
@@ -527,11 +528,11 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
     @extend_docstring(Features.summary)
     @property
-    def summary(self) -> DataFrame:
+    def summary(self) -> pd.DataFrame:
         return self.features.summary
 
     @property
-    def history(self) -> DataFrame:
+    def history(self) -> pd.DataFrame:
         """History of discretization process for all features"""
         return self.features.history
 
@@ -614,7 +615,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
     #         self.labels_per_values = self._get_labels_per_values(self.ordinal_encoding)
 
 
-def transform_quantitative_feature(feature: BaseFeature, df_feature: Series, x_len: int) -> tuple[str, list]:
+def transform_quantitative_feature(feature: BaseFeature, df_feature: pd.Series, x_len: int) -> tuple[str, list]:
     """Transforms a quantitative feature"""
 
     # keeping track of original index

@@ -2,7 +2,8 @@
 
 from math import sqrt
 
-from pandas import Series, crosstab, notna
+import pandas as pd
+from pandas import crosstab, notna
 from scipy.stats import chi2_contingency
 
 from AutoCarver.selectors.measures.base_measures import BaseMeasure
@@ -34,7 +35,7 @@ class Chi2Measure(BaseMeasure):
     is_y_qualitative = True
 
     @extend_docstring(BaseMeasure.compute_association)
-    def compute_association(self, x: Series, y: Series) -> float:
+    def compute_association(self, x: pd.Series, y: pd.Series) -> float:
         # computing crosstab between x and y
         xtab = crosstab(x, y)
 
@@ -49,7 +50,7 @@ class CramervMeasure(Chi2Measure):
     __name__ = "CramervMeasure"
 
     @extend_docstring(Chi2Measure.compute_association)
-    def compute_association(self, x: Series, y: Series) -> float:
+    def compute_association(self, x: pd.Series, y: pd.Series) -> float:
         # computing Chi2 if not provided
         chi2_value = super().compute_association(x, y)
 
@@ -73,7 +74,7 @@ class TschuprowtMeasure(Chi2Measure):
     __name__ = "TschuprowtMeasure"
 
     @extend_docstring(Chi2Measure.compute_association)
-    def compute_association(self, x: Series, y: Series) -> float:
+    def compute_association(self, x: pd.Series, y: pd.Series) -> float:
         # computing Chi2 if not provided
         chi2_value = super().compute_association(x, y)
 

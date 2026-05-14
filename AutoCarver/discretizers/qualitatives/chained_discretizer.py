@@ -3,7 +3,8 @@ for a binary classification model.
 """
 
 import numpy as np
-from pandas import DataFrame, Series, unique
+import pandas as pd
+from pandas import unique
 
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
 from AutoCarver.discretizers.utils.type_discretizers import StringDiscretizer
@@ -111,11 +112,11 @@ class ChainedDiscretizer(BaseDiscretizer):
 
         Parameters
         ----------
-        X : DataFrame
+        X : pd.DataFrame
             Dataset used to discretize. Needs to have columns has specified in
             ``ChainedDiscretizer.features``.
 
-        y : Series
+        y : pd.Series
             Binary target feature, not used, by default None.
 
         Returns
@@ -147,7 +148,7 @@ class ChainedDiscretizer(BaseDiscretizer):
         return sample
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: DataFrame, y: Series | None = None) -> None:  # pylint: disable=W0222
+    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> None:  # pylint: disable=W0222
         # preprocessing data
         sample = self._prepare_data(Sample(X, y))
         self._log_if_verbose()  # verbose if requested
@@ -193,7 +194,7 @@ class ChainedDiscretizer(BaseDiscretizer):
         return self
 
 
-def check_frequencies(features: Features, X: DataFrame, min_freq: float, name: str) -> None:
+def check_frequencies(features: Features, X: pd.DataFrame, min_freq: float, name: str) -> None:
     """Checks features' frequencies compared to min_freq"""
 
     # computing features' max modality frequency (mode frequency)
@@ -239,7 +240,7 @@ def check_frequencies(features: Features, X: DataFrame, min_freq: float, name: s
         raise ValueError(error_msg)
 
 
-def ensure_qualitative_dtypes(features: Features, X: DataFrame, **kwargs) -> DataFrame:
+def ensure_qualitative_dtypes(features: Features, X: pd.DataFrame, **kwargs) -> pd.DataFrame:
     """Checks features' data types and converts int/float to str"""
 
     # getting per feature data types

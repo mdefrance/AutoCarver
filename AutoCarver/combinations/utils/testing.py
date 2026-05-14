@@ -3,7 +3,7 @@
 from enum import Enum
 
 import numpy as np
-from pandas import DataFrame, Series
+import pandas as pd
 
 
 class TestKeys(str, Enum):
@@ -25,20 +25,20 @@ class TestMessages(str, Enum):
     PASSED_TESTS = ""
 
 
-def _test_distinct_target_rates_between_modalities(target_rates: Series) -> bool:
+def _test_distinct_target_rates_between_modalities(target_rates: pd.Series) -> bool:
     """tests for distinct target rates between consecutive modalities"""
 
     # - target rates are distinct for consecutive modalities
     return not any(np.isclose(target_rates[1:], target_rates.shift(1)[1:]))
 
 
-def _test_minimum_frequency_per_modality(frequencies: Series, min_freq: float) -> bool:
+def _test_minimum_frequency_per_modality(frequencies: pd.Series, min_freq: float) -> bool:
     """tests that minimum frequency has been reached for each modality"""
     # - minimum frequency is reached for all modalities
     return all(frequencies >= min_freq)
 
 
-def _test_modality_ordering(train_target_rate: Series, dev_target_rate: Series) -> bool:
+def _test_modality_ordering(train_target_rate: pd.Series, dev_target_rate: pd.Series) -> bool:
     """tests whether train and dev targets rates are similarly ranked between datasets"""
     # - grouped values have the same ranks in train/test
     return all(train_target_rate.sort_index().sort_values().index == dev_target_rate.sort_index().sort_values().index)
@@ -53,7 +53,7 @@ def is_viable(test_results: dict):
 
 
 def test_viability(
-    rates: DataFrame, min_freq: float, target_rate: str, train_target_rate: Series | None = None
+    rates: pd.DataFrame, min_freq: float, target_rate: str, train_target_rate: pd.Series | None = None
 ) -> dict:
     """tests viability of the rates"""
 

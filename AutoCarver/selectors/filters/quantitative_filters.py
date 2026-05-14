@@ -1,7 +1,7 @@
 """Filters based on association measures between Quantitative features."""
 
 import numpy as np
-from pandas import DataFrame
+import pandas as pd
 
 from AutoCarver.features import BaseFeature, get_versions
 from AutoCarver.selectors.filters.base_filters import BaseFilter
@@ -11,7 +11,7 @@ from AutoCarver.utils.extend_docstring import extend_docstring
 
 
 # TODO
-# def vif_filter(X: DataFrame, ranks: DataFrame, **params) -> dict[str, Any]:
+# def vif_filter(X: pd.DataFrame, ranks: pd.DataFrame, **params) -> dict[str, Any]:
 #     """Computes Variance Inflation Factor (multicolinearity)
 
 #     Parameters
@@ -71,14 +71,14 @@ class QuantitativeFilter(BaseFilter):
     is_absolute = True
 
     @extend_docstring(BaseFilter.filter)
-    def filter(self, X: DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:
+    def filter(self, X: pd.DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:
         # computing correlation between features
         X_corr = self._compute_correlation(X, ranks)
 
         # filtering too correlated features
         return self._filter_correlated_features(X_corr, ranks)
 
-    def _compute_correlation(self, X: DataFrame, rank: list[BaseFeature]) -> DataFrame:
+    def _compute_correlation(self, X: pd.DataFrame, rank: list[BaseFeature]) -> pd.DataFrame:
         """Computing correlation between features"""
         # absolute correlation between features
         X_corr = X[get_versions(rank)].corr(self.measure)
@@ -86,7 +86,7 @@ class QuantitativeFilter(BaseFilter):
         # getting upper right part of the correlation matrix and removing autocorrelation
         return X_corr.where(np.triu(np.ones(X_corr.shape), k=1).astype(bool))
 
-    def _filter_correlated_features(self, X_corr: DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:
+    def _filter_correlated_features(self, X_corr: pd.DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:
         """filtering out features too correlated with a better ranked feature"""
 
         # iterating over each feature by target association order
@@ -109,7 +109,7 @@ class QuantitativeFilter(BaseFilter):
 
         return filtered
 
-    def _compute_worst_correlation(self, X_corr: DataFrame, feature: BaseFeature) -> tuple[str, float]:
+    def _compute_worst_correlation(self, X_corr: pd.DataFrame, feature: BaseFeature) -> tuple[str, float]:
         """Computes correlation with better features (filtering out X_corr)"""
 
         # correlation with more associated features

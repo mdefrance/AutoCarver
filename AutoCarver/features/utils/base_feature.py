@@ -3,6 +3,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
+import pandas as pd
 from pandas import DataFrame, Series, option_context
 
 from AutoCarver.config import Constants
@@ -163,7 +164,7 @@ class BaseFeature(ABC):
         self._has_nan = value
 
     @property
-    def statistics(self) -> DataFrame:
+    def statistics(self) -> pd.DataFrame:
         """Feature's trained statistics"""
         # conversion to dataframe
         stats = self._statistics
@@ -182,7 +183,7 @@ class BaseFeature(ABC):
         return stats
 
     @statistics.setter
-    def statistics(self, value: DataFrame) -> None:
+    def statistics(self, value: pd.DataFrame) -> None:
         """Feature's trained statistics"""
 
         # case for binary targets
@@ -202,7 +203,7 @@ class BaseFeature(ABC):
             raise ValueError(f"Trying to set statistics with type {type(value)}")
 
     @property
-    def history(self) -> DataFrame:
+    def history(self) -> pd.DataFrame:
         """Feature's combination history"""
         if self._history is not None:
             return DataFrame(self._history)
@@ -465,7 +466,7 @@ class BaseFeature(ABC):
         # updating labels accordingly
         self.update_labels()
 
-    def fit(self, X: DataFrame, y: Series | None = None) -> None:
+    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> None:
         """Fits the feature to a DataFrame"""
         _, _ = X, y  # unused attributes
 
@@ -479,7 +480,7 @@ class BaseFeature(ABC):
 
         self.is_fitted = True  # feature is fitted
 
-    def check_values(self, X: DataFrame) -> None:
+    def check_values(self, X: pd.DataFrame) -> None:
         """checks for unexpected values from unique values in DataFrame"""
 
         # checking for nans whereas at training none were witnessed

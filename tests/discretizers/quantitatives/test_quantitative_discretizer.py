@@ -1,5 +1,6 @@
 """Set of tests for discretizers module."""
 
+import pandas as pd
 from numpy import inf, nan
 from pandas import DataFrame, Series
 from pytest import raises
@@ -335,12 +336,12 @@ def test_continuous_discretizer_fit():
     assert transformed_df.equals(expected)
 
 
-def test_quantitative_discretizer(x_train: DataFrame, target: str):
+def test_quantitative_discretizer(x_train: pd.DataFrame, target: str):
     """Tests QuantitativeDiscretizer
 
     Parameters
     ----------
-    x_train : DataFrame
+    x_train : pd.DataFrame
         Simulated Train DataFrame
     target: str
         Target feature

@@ -1,3 +1,4 @@
+import pandas as pd
 from pandas import DataFrame, isna
 from pytest import FixtureRequest, fixture
 
@@ -8,7 +9,7 @@ THRESHOLD = 1.0
 
 
 @fixture
-def sample_data() -> DataFrame:
+def sample_data() -> pd.DataFrame:
     data = {
         "feature1": [1, 2, 3, 4, 5],
         "feature2": [2, 3, 4, 5, 6],
@@ -34,7 +35,7 @@ def filter(request: FixtureRequest) -> QuantitativeFilter:
 
 
 def test_quantitative_filter(
-    filter: QuantitativeFilter, sample_data: DataFrame, sample_ranks: list[BaseFeature]
+    filter: QuantitativeFilter, sample_data: pd.DataFrame, sample_ranks: list[BaseFeature]
 ) -> None:
     # testing type
     assert filter.is_x_quantitative, "x should be quantitative"
@@ -62,7 +63,7 @@ def test_quantitative_filter(
     assert len(filtered_features) == 1, "sould keep the best feature"
 
 
-def test_filter(filter: QuantitativeFilter, sample_data: DataFrame, sample_ranks: list[BaseFeature]) -> None:
+def test_filter(filter: QuantitativeFilter, sample_data: pd.DataFrame, sample_ranks: list[BaseFeature]) -> None:
     assert isinstance(filter.measure, str), "measure should be a name for DataFrame.corr"
 
     # testing _compute_correlation

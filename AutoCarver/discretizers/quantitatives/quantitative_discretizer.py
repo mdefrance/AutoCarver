@@ -2,7 +2,8 @@
 for a binary classification model.
 """
 
-from pandas import DataFrame, Series, unique
+import pandas as pd
+from pandas import unique
 
 from AutoCarver.discretizers.qualitatives import OrdinalDiscretizer
 from AutoCarver.discretizers.quantitatives.continuous_discretizer import ContinuousDiscretizer
@@ -51,11 +52,11 @@ class QuantitativeDiscretizer(BaseDiscretizer):
 
         Parameters
         ----------
-        X : DataFrame
+        X : pd.DataFrame
             Dataset used to discretize. Needs to have columns has specified in
             ``QuantitativeDiscretizer.features``.
 
-        y : Series
+        y : pd.Series
             Binary target feature with wich the association is maximized.
 
         Returns
@@ -72,7 +73,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         return sample
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> None:  # pylint: disable=W0222
         # verbose if requested
         self._log_if_verbose("------\n---")
 
@@ -93,7 +94,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
 
         return self
 
-    def _fit_continuous(self, X: DataFrame, y: Series) -> DataFrame:
+    def _fit_continuous(self, X: pd.DataFrame, y: pd.Series) -> pd.DataFrame:
         """Fit the ContinuousDiscretizer on the continuous features."""
 
         # [Quantitative features] Grouping values into quantiles
@@ -105,7 +106,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
 
         return continuous_discretizer.fit_transform(X, y)
 
-    def _fit_continuous_with_rare_modalities(self, X: DataFrame, y: Series) -> None:
+    def _fit_continuous_with_rare_modalities(self, X: pd.DataFrame, y: pd.Series) -> None:
         """Fit the OrdinalDiscretizer on the continuous features with rare modalities."""
 
         # [Quantitative features] Grouping rare quantiles into closest common one
@@ -121,7 +122,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
             ordinal_discretizer.fit(X, y)
 
 
-def check_frequencies(x: DataFrame, features: Features, half_min_freq: float) -> list[QuantitativeFeature]:
+def check_frequencies(x: pd.DataFrame, features: Features, half_min_freq: float) -> list[QuantitativeFeature]:
     """Checks for rare modalities in the provided features."""
 
     # searching for features with rare quantiles: computing min frequency per feature
@@ -135,7 +136,7 @@ def check_frequencies(x: DataFrame, features: Features, half_min_freq: float) ->
 
 
 def min_value_counts(
-    x: Series,
+    x: pd.Series,
     features: Features,
     dropna: bool = False,
     normalize: bool = True,
@@ -155,7 +156,7 @@ def min_value_counts(
     return values.values.min()
 
 
-def check_quantitative_dtypes(x: DataFrame, feature_versions: list[str], name: str) -> None:
+def check_quantitative_dtypes(x: pd.DataFrame, feature_versions: list[str], name: str) -> None:
     """Checks if the provided features are numeric."""
 
     # checking for numeric columns

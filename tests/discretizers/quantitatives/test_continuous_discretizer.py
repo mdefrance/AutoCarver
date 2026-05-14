@@ -1,5 +1,6 @@
 """Set of tests for quantitative_discretizers module."""
 
+import pandas as pd
 from numpy import allclose, array, inf, nan
 from pandas import DataFrame
 from pytest import raises
@@ -751,12 +752,12 @@ def test_continuous_discretizer_fit():
     assert transformed_df.equals(expected)
 
 
-def test_continuous_discretizer(x_train: DataFrame):
+def test_continuous_discretizer(x_train: pd.DataFrame):
     """Tests ContinuousDiscretizer
 
     Parameters
     ----------
-    x_train : DataFrame
+    x_train : pd.DataFrame
         Simulated Train DataFrame
     """
 

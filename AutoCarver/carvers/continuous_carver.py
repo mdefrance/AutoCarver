@@ -3,7 +3,8 @@ for continuous regression tasks.
 """
 
 import numpy as np
-from pandas import DataFrame, Series
+import pandas as pd
+from pandas import DataFrame
 
 from AutoCarver.carvers.utils.base_carver import BaseCarver, Samples
 from AutoCarver.combinations import KruskalCombinations
@@ -69,18 +70,18 @@ class ContinuousCarver(BaseCarver):
 
         Parameters
         ----------
-        X : DataFrame
+        X : pd.DataFrame
             Dataset used to discretize. Needs to have columns has specified in
             ``AutoCarver.features``.
 
-        y : Series
+        y : pd.Series
             Binary target feature with wich the association is maximized.
 
-        X_dev : DataFrame, optional
+        X_dev : pd.DataFrame, optional
             Dataset to evalute the robustness of discretization, by default ``None``
             It should have the same distribution as X.
 
-        y_dev : Series, optional
+        y_dev : pd.Series, optional
             Binary target feature with wich the robustness of discretization is evaluated,
             by default ``None``
 
@@ -100,7 +101,7 @@ class ContinuousCarver(BaseCarver):
         # Checking for binary target and copying X
         return super()._prepare_data(samples)
 
-    def _aggregator(self, X: DataFrame, y: Series) -> dict[str, DataFrame]:
+    def _aggregator(self, X: pd.DataFrame, y: pd.Series) -> dict[str, DataFrame]:
         """Computes y values for modalities of specified features and ensures the ordering
         according to the known labels
 
@@ -108,9 +109,9 @@ class ContinuousCarver(BaseCarver):
         ----------
         features : list[str]
             _description_
-        X : DataFrame
+        X : pd.DataFrame
             _description_
-        y : Series
+        y : pd.Series
             _description_
         labels_orders : dict[str, GroupedList]
             _description_
@@ -130,7 +131,7 @@ class ContinuousCarver(BaseCarver):
         return yvals
 
 
-def get_target_values_by_modality(X: DataFrame, y: Series, feature: BaseFeature) -> dict:
+def get_target_values_by_modality(X: pd.DataFrame, y: pd.Series, feature: BaseFeature) -> dict:
     """Computes y values for modalities of specified features and ensures the ordering
     according to the known labels"""
 

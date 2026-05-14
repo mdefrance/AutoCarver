@@ -2,6 +2,7 @@
 
 import json
 
+import pandas as pd
 from numpy import allclose, nan, sqrt
 from pandas import DataFrame, Series, isna
 from pytest import FixtureRequest, fixture, raises
@@ -350,12 +351,12 @@ def test_group_xagg_by_combinations(evaluator: BinaryCombinationEvaluator):
 
     expected = [
         {
-            "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
+            "xagg": pd.DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
             "combination": [["a"], ["b", "c"]],
             "index_to_groupby": {"a": "a", "b": "b", "c": "b"},
         },
         {
-            "xagg": DataFrame({0: [2, 0], 1: [2, 1]}, index=["a", "c"]),
+            "xagg": pd.DataFrame({0: [2, 0], 1: [2, 1]}, index=["a", "c"]),
             "combination": [["a", "b"], ["c"]],
             "index_to_groupby": {"a": "a", "b": "a", "c": "c"},
         },
@@ -380,17 +381,17 @@ def test_group_xagg_by_combinations_with_nan(evaluator: BinaryCombinationEvaluat
 
     expected = [
         {
-            "xagg": DataFrame({0: [0, 2, 0], 1: [2, 0, 0]}, index=["A", "B", "C"]),
+            "xagg": pd.DataFrame({0: [0, 2, 0], 1: [2, 0, 0]}, index=["A", "B", "C"]),
             "combination": [["A"], ["B"], ["C"]],
             "index_to_groupby": {"A": "A", "B": "B", "C": "C"},
         },
         {
-            "xagg": DataFrame({0: [0, 2], 1: [2, 0]}, index=["A", "B"]),
+            "xagg": pd.DataFrame({0: [0, 2], 1: [2, 0]}, index=["A", "B"]),
             "combination": [["A"], ["B", "C"]],
             "index_to_groupby": {"A": "A", "B": "B", "C": "B"},
         },
         {
-            "xagg": DataFrame({0: [2, 0], 1: [2, 0]}, index=["A", "C"]),
+            "xagg": pd.DataFrame({0: [2, 0], 1: [2, 0]}, index=["A", "C"]),
             "combination": [["A", "B"], ["C"]],
             "index_to_groupby": {"A": "A", "B": "A", "C": "C"},
         },
@@ -416,14 +417,14 @@ def test_compute_associations(evaluator: BinaryCombinationEvaluator):
 
     expected = [
         {
-            "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
+            "xagg": pd.DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
             "combination": [["a"], ["b", "c"]],
             "index_to_groupby": {"a": "a", "b": "b", "c": "b"},
             "cramerv": 0.25,
             "tschuprowt": 0.25,
         },
         {
-            "xagg": DataFrame({0: [2, 0], 1: [2, 1]}, index=["a", "c"]),
+            "xagg": pd.DataFrame({0: [2, 0], 1: [2, 1]}, index=["a", "c"]),
             "combination": [["a", "b"], ["c"]],
             "index_to_groupby": {"a": "a", "b": "a", "c": "c"},
             "cramerv": 0.0,
@@ -458,21 +459,21 @@ def test_compute_associations_with_three_rows(evaluator: BinaryCombinationEvalua
 
     expected = [
         {
-            "xagg": DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["A", "B", "C"]),
+            "xagg": pd.DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["A", "B", "C"]),
             "combination": [["A"], ["B"], ["C"]],
             "index_to_groupby": {"A": "A", "B": "B", "C": "C"},
             "cramerv": 0.9999999999,
             "tschuprowt": 0.8408964152,
         },
         {
-            "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["A", "B"]),
+            "xagg": pd.DataFrame({0: [0, 2], 1: [2, 1]}, index=["A", "B"]),
             "combination": [["A"], ["B", "C"]],
             "index_to_groupby": {"A": "A", "B": "B", "C": "B"},
             "cramerv": 0.25,
             "tschuprowt": 0.25,
         },
         {
-            "xagg": DataFrame({0: [2, 0], 1: [2, 1]}, index=["A", "C"]),
+            "xagg": pd.DataFrame({0: [2, 0], 1: [2, 1]}, index=["A", "C"]),
             "combination": [["A", "B"], ["C"]],
             "index_to_groupby": {"A": "A", "B": "A", "C": "C"},
             "cramerv": 0.0,
@@ -508,7 +509,7 @@ def test_compute_associations_with_twenty_rows(evaluator: BinaryCombinationEvalu
 
     expected = {
         "tschuprowt": {
-            "xagg": DataFrame(
+            "xagg": pd.DataFrame(
                 {
                     0: [2, 37, 4, 30, 0, 11],
                     1: [12, 17, 9, 2, 8, 2],
@@ -549,7 +550,7 @@ def test_compute_associations_with_twenty_rows(evaluator: BinaryCombinationEvalu
             "tschuprowt": 0.40760749,
         },
         "cramerv": {
-            "xagg": DataFrame(
+            "xagg": pd.DataFrame(
                 {
                     0: [2, 37, 4, 30, 0, 10, 1],
                     1: [12, 17, 9, 2, 8, 0, 2],
@@ -620,11 +621,11 @@ def test_viability_train(evaluator: BinaryCombinationEvaluator):
     expected = [
         {
             "train": {TestKeys.VIABLE.value: True},
-            "train_rates": DataFrame({"target_mean": [1.0, 0.333333], "frequency": [0.4, 0.6]}, index=["a", "c"]),
+            "train_rates": pd.DataFrame({"target_mean": [1.0, 0.333333], "frequency": [0.4, 0.6]}, index=["a", "c"]),
         },
         {
             "train": {TestKeys.VIABLE.value: True},
-            "train_rates": DataFrame({"target_mean": [0.5, 1.0], "frequency": [0.8, 0.2]}, index=["a", "c"]),
+            "train_rates": pd.DataFrame({"target_mean": [0.5, 1.0], "frequency": [0.8, 0.2]}, index=["a", "c"]),
         },
     ]
     for res, exp in zip(result, expected):
@@ -707,7 +708,7 @@ def test_get_viable_combination_without_dev(evaluator: BinaryCombinationEvaluato
     result = evaluator._get_viable_combination(associations)
     print(result)
     expected = {
-        "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
+        "xagg": pd.DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
         "combination": [["a"], ["b", "c"]],
         "cramerv": 0.25,
         "tschuprowt": 0.25,
@@ -757,7 +758,7 @@ def test_get_viable_combination_with_viable_train(evaluator: BinaryCombinationEv
     print(result)
 
     expected = {
-        "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
+        "xagg": pd.DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
         "combination": [["a"], ["b", "c"]],
         "cramerv": 0.25,
         "tschuprowt": 0.25,
@@ -851,7 +852,7 @@ def test_best_association_with_combinations_viable(evaluator: BinaryCombinationE
     print(result)
 
     expected = {
-        "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
+        "xagg": pd.DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
         "combination": [["a"], ["b", "c"]],
         "cramerv": 0.25,
         "tschuprowt": 0.25,
@@ -911,7 +912,7 @@ def test_best_association_with_nan_combinations_viable(evaluator: BinaryCombinat
     print(result)
 
     expected = {
-        "xagg": DataFrame({0: [0, 2], 1: [3, 0]}, index=["a", "b"]),
+        "xagg": pd.DataFrame({0: [0, 2], 1: [3, 0]}, index=["a", "b"]),
         "combination": [["a", "__NAN__"], ["b"]],
         "cramerv": 0.5833333333,
         "tschuprowt": 0.5833333333,
@@ -946,7 +947,7 @@ def test_get_best_combination_non_nan_viable(evaluator: BinaryCombinationEvaluat
     print(result)
 
     expected = {
-        "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
+        "xagg": pd.DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
         "combination": [["a"], ["b", "c"]],
         "cramerv": 0.25,
         "tschuprowt": 0.25,
@@ -998,7 +999,7 @@ def test_get_best_combination_non_nan_viable_with_nan(evaluator: BinaryCombinati
     print(result)
 
     expected = {
-        "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
+        "xagg": pd.DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
         "combination": [["a"], ["b", "c"]],
         "cramerv": 0.25,
         "tschuprowt": 0.25,
@@ -1034,7 +1035,7 @@ def test_get_best_combination_with_nan_viable(evaluator: BinaryCombinationEvalua
     print(result)
 
     expected = {
-        "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
+        "xagg": pd.DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
         "combination": [["a"], ["b", "c"]],
         "cramerv": 0.25,
         "tschuprowt": 0.25,
@@ -1165,7 +1166,7 @@ def test_get_best_combination_with_nan_viable_with_nan(evaluator: BinaryCombinat
     assert feature.dropna is True
 
     expected = {
-        "xagg": DataFrame({0: [0, 2], 1: [5, 1]}, index=["a", "b to c"]),
+        "xagg": pd.DataFrame({0: [0, 2], 1: [5, 1]}, index=["a", "b to c"]),
         "combination": [["a", "__NAN__"], ["b to c"]],
         "cramerv": 0.4472135955,
         "tschuprowt": 0.4472135955,
@@ -1197,7 +1198,7 @@ def test_get_best_combination_viable(evaluator: BinaryCombinationEvaluator):
     assert feature.dropna is evaluator.dropna
 
     expected = {
-        "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
+        "xagg": pd.DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
         "combination": [["a"], ["b", "c"]],
         "cramerv": 0.25,
         "tschuprowt": 0.25,
@@ -1228,7 +1229,7 @@ def test_get_best_combination_viable_without_dev(evaluator: BinaryCombinationEva
     assert feature.dropna is evaluator.dropna
 
     expected = {
-        "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
+        "xagg": pd.DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
         "combination": [["a"], ["b", "c"]],
         "cramerv": 0.25,
         "tschuprowt": 0.25,
@@ -1271,7 +1272,7 @@ def test_get_best_combination_viable_with_nan_without_feature_nan(
     assert evaluator.feature == feature
     assert feature.dropna is evaluator.dropna
     expected = {
-        "xagg": DataFrame({0: [2, 0], 1: [2, 4]}, index=["a", "c"]),
+        "xagg": pd.DataFrame({0: [2, 0], 1: [2, 4]}, index=["a", "c"]),
         "combination": [["a", "b"], ["c", "d"]],
         "cramerv": 0.2886751346,
         "tschuprowt": 0.2886751346,
@@ -1299,7 +1300,7 @@ def test_get_best_combination_viable_with_nan_without_dropna(
     assert evaluator.feature == feature
     assert feature.dropna is evaluator.dropna
     expected = {
-        "xagg": DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
+        "xagg": pd.DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
         "combination": [["a"], ["b", "c"]],
         "cramerv": 0.25,
         "tschuprowt": 0.25,
@@ -1335,7 +1336,7 @@ def test_get_best_combination_viable_with_nan(evaluator: BinaryCombinationEvalua
     assert feature.dropna is evaluator.dropna
 
     expected = {
-        "xagg": DataFrame({0: [0, 2], 1: [5, 1]}, index=["a", "b to c"]),
+        "xagg": pd.DataFrame({0: [0, 2], 1: [5, 1]}, index=["a", "b to c"]),
         "combination": [["a", "__NAN__"], ["b to c"]],
         "cramerv": 0.4472135955,
         "tschuprowt": 0.4472135955,

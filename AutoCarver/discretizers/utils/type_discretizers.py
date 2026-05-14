@@ -1,6 +1,6 @@
 """Base tools to convert values into specific types."""
 
-from pandas import DataFrame, Series
+import pandas as pd
 
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
 from AutoCarver.discretizers.utils.multiprocessing import apply_async_function
@@ -28,7 +28,7 @@ class StringDiscretizer(BaseDiscretizer):
         super().__init__(features=features, **kwargs)
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: DataFrame, y: Series | None = None) -> None:  # pylint: disable=W0222
+    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> None:  # pylint: disable=W0222
         self._log_if_verbose()  # verbose if requested
 
         # checking for binary target and copying X
@@ -47,7 +47,7 @@ class StringDiscretizer(BaseDiscretizer):
         return self
 
 
-def fit_feature(feature: BaseFeature, df_feature: Series):
+def fit_feature(feature: BaseFeature, df_feature: pd.Series):
     """fits one feature"""
 
     # unique feature values
@@ -105,7 +105,7 @@ class TimedeltaDiscretizer(BaseDiscretizer):
         super().__init__(features=features, **kwargs)
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: DataFrame, y: Series | None = None) -> None:  # pylint: disable=W0222
+    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> None:  # pylint: disable=W0222
         self._log_if_verbose()  # verbose if requested
 
         # checking for binary target and copying X

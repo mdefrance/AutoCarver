@@ -6,7 +6,8 @@ from random import seed, shuffle
 from typing import overload
 
 import numpy as np
-from pandas import DataFrame, Series
+import pandas as pd
+from pandas import Series
 
 from AutoCarver.features import BaseFeature, Features
 from AutoCarver.selectors.filters import BaseFilter
@@ -177,7 +178,9 @@ class BaseSelector(ABC):
         """initiates the list of measures with default values"""
         return requested_filters
 
-    def _select_quantitatives(self, quantitatives: list[BaseFeature], X: DataFrame, y: Series) -> list[BaseFeature]:
+    def _select_quantitatives(
+        self, quantitatives: list[BaseFeature], X: pd.DataFrame, y: pd.Series
+    ) -> list[BaseFeature]:
         """Selects the best quantitative features"""
 
         # checking for quantitative features before selection
@@ -195,7 +198,7 @@ class BaseSelector(ABC):
 
         return best_quantitatives
 
-    def _select_qualitatives(self, qualitatives: list[BaseFeature], X: DataFrame, y: Series) -> list[BaseFeature]:
+    def _select_qualitatives(self, qualitatives: list[BaseFeature], X: pd.DataFrame, y: pd.Series) -> list[BaseFeature]:
         """Selects the best qualitative features"""
 
         # checking for qualitative features before selection
@@ -226,15 +229,15 @@ class BaseSelector(ABC):
             else:
                 remove_non_default_metrics_from_features(feature)
 
-    def select(self, X: DataFrame, y: Series) -> Features:
+    def select(self, X: pd.DataFrame, y: pd.Series) -> Features:
         """Selects the :attr:`n_best_per_type` :class:`Features` of ``X``
 
         Parameters
         ----------
-        X : DataFrame
+        X : pd.DataFrame
             Dataset to determine optimal features.
 
-        y : Series
+        y : pd.Series
             Target with wich the association is evaluated.
 
         Returns
@@ -267,8 +270,8 @@ class BaseSelector(ABC):
     def _select_features(
         self,
         features: list[BaseFeature],
-        X: DataFrame,
-        y: Series,
+        X: pd.DataFrame,
+        y: pd.Series,
         measures: list[BaseMeasure],
         filters: list[BaseFilter],
     ) -> list[BaseFeature]:
@@ -290,8 +293,8 @@ class BaseSelector(ABC):
     def _get_best_features_across_chunks(
         self,
         features: list[BaseFeature],
-        X: DataFrame,
-        y: Series,
+        X: pd.DataFrame,
+        y: pd.Series,
         measures: list[BaseMeasure],
         filters: list[BaseFilter],
     ) -> list[BaseFeature]:
@@ -329,9 +332,9 @@ class BaseSelector(ABC):
 
         Parameters
         ----------
-        xagg : Series | DataFrame
+        xagg : pd.Series | DataFrame
             Train crosstab
-        xagg_dev : Series | DataFrame
+        xagg_dev : pd.Series | DataFrame
             Dev crosstab, by default None
         pretty_print : bool, optional
             Whether to output html or not, by default False
@@ -348,11 +351,11 @@ class BaseSelector(ABC):
             else:  # pretty html printing
                 self._print_html(formatted_measures)
 
-    def _print_raw(self, formatted_measures: DataFrame) -> None:
+    def _print_raw(self, formatted_measures: pd.DataFrame) -> None:
         """Prints raw XAGG DataFrames."""
         print(formatted_measures, "\n")
 
-    def _print_html(self, formatted_measures: DataFrame) -> None:
+    def _print_html(self, formatted_measures: pd.DataFrame) -> None:
         """Prints XAGG DataFrames in HTML format."""
         # getting prettier xtabs
         nicer_association = prettier_measures(formatted_measures)
@@ -516,7 +519,11 @@ def get_measure_value(feature: BaseFeature, measure: BaseMeasure) -> float:
 
 
 def apply_measures(
-    features: list[BaseFeature], X: DataFrame, y: Series, measures: list[BaseMeasure], default_measures: bool = False
+    features: list[BaseFeature],
+    X: pd.DataFrame,
+    y: pd.Series,
+    measures: list[BaseMeasure],
+    default_measures: bool = False,
 ) -> None:
     """Measures association between columns of X and y, returns remaining_measures (not used)"""
 
@@ -541,7 +548,7 @@ def apply_measures(
 
 def apply_filters(
     features: list[BaseFeature],
-    X: DataFrame,
+    X: pd.DataFrame,
     filters: list[BaseFilter],
     default_filters: bool = False,
 ) -> list[BaseFeature]:
@@ -581,8 +588,8 @@ def check_measure_mismatch(feature: BaseFeature, measure: BaseMeasure | BaseFilt
 
 def get_best_features(
     features: list[BaseFeature],
-    X: DataFrame,
-    y: Series,
+    X: pd.DataFrame,
+    y: pd.Series,
     measures: list[BaseMeasure],
     filters: list[BaseFilter],
     n_best: int,
@@ -607,7 +614,7 @@ def get_best_features(
 
 
 def select_with_measure(
-    X: DataFrame,
+    X: pd.DataFrame,
     features: list[BaseFeature],
     measure: BaseMeasure,
     filters: list[BaseFilter],

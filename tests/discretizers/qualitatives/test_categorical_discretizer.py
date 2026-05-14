@@ -1,5 +1,6 @@
 """Set of tests for qualitative_discretizers module."""
 
+import pandas as pd
 from numpy import nan
 from pandas import DataFrame, Series
 from pytest import raises
@@ -302,12 +303,12 @@ def test_categoricaldiscretizer_fit():
     ]
 
 
-def test_categorical_discretizer(x_train: DataFrame, target: str) -> None:
+def test_categorical_discretizer(x_train: pd.DataFrame, target: str) -> None:
     """Tests CategoricalDiscretizer
 
     Parameters
     ----------
-    x_train : DataFrame
+    x_train : pd.DataFrame
         Simulated Train DataFrame
     target: str
         Target feature

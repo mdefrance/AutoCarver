@@ -3,7 +3,8 @@ for a binary classification model.
 """
 
 import numpy as np
-from pandas import DataFrame, Series, notna
+import pandas as pd
+from pandas import notna
 
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
 from AutoCarver.features import GroupedList, OrdinalFeature
@@ -44,11 +45,11 @@ class OrdinalDiscretizer(BaseDiscretizer):
 
         Parameters
         ----------
-        X : DataFrame
+        X : pd.DataFrame
             Dataset used to discretize. Needs to have columns has specified in
             ``OrdinalDiscretizer.features``.
 
-        y : Series
+        y : pd.Series
             Binary target feature.
 
         Returns
@@ -68,7 +69,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
         return sample
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> None:  # pylint: disable=W0222
         # checking values orders
         sample = self._prepare_data(Sample(X, y))
 
@@ -95,7 +96,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
         return self
 
 
-def find_common_modalities(df_feature: Series, y: Series, min_freq: float, labels: list[str]) -> GroupedList:
+def find_common_modalities(df_feature: pd.Series, y: pd.Series, min_freq: float, labels: list[str]) -> GroupedList:
     """finds common modalities of a ordinal feature"""
 
     # converting to grouped list
@@ -137,7 +138,7 @@ def update_stats(stats: np.ndarray, discarded_idx: int, kept_idx: int) -> np.nda
     return stats[:, np.arange(stats.shape[1]) != discarded_idx]
 
 
-def compute_stats(df_feature: Series, y: Series, labels: GroupedList) -> tuple[np.ndarray, int]:
+def compute_stats(df_feature: pd.Series, y: pd.Series, labels: GroupedList) -> tuple[np.ndarray, int]:
     """Computes frequencies and target rates of each modality"""
 
     # filtering nans

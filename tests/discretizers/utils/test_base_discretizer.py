@@ -2,6 +2,7 @@
 
 import json
 
+import pandas as pd
 from numpy import array, inf, nan
 from pandas import DataFrame, Series
 from pytest import FixtureRequest, fixture, raises
@@ -770,12 +771,12 @@ def test_load_discretizer(tmp_path, features: Features, true_false: bool, combin
 #     assert False
 
 
-def test_base_discretizer(x_train: DataFrame, dropna: bool) -> None:
+def test_base_discretizer(x_train: pd.DataFrame, dropna: bool) -> None:
     """Tests BaseDiscretizer
 
     Parameters
     ----------
-    x_train : DataFrame
+    x_train : pd.DataFrame
         Simulated Train DataFrame
     """
 

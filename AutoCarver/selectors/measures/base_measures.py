@@ -2,7 +2,8 @@
 
 from abc import ABC, abstractmethod
 
-from pandas import Series, isnull, notna
+import pandas as pd
+from pandas import isnull, notna
 
 from AutoCarver.features import BaseFeature
 
@@ -61,14 +62,14 @@ class BaseMeasure(ABC):
         return self.__name__
 
     @abstractmethod
-    def compute_association(self, x: Series, y: Series) -> float:
+    def compute_association(self, x: pd.Series, y: pd.Series) -> float:
         """Computes association measure between ``x`` and ``y``
 
         Parameters
         ----------
-        x : Series
+        x : pd.Series
             Feature
-        y : Series
+        y : pd.Series
             Target feature
 
         Returns
@@ -176,14 +177,14 @@ class OutlierMeasure(BaseMeasure):
         super().__init__(threshold)
 
     @abstractmethod
-    def compute_association(self, x: Series, y: Series | None = None) -> float:
+    def compute_association(self, x: pd.Series, y: pd.Series | None = None) -> float:
         """Computes outlier measure on ``x``
 
         Parameters
         ----------
-        x : Series
+        x : pd.Series
             Feature
-        y : Series, optional
+        y : pd.Series, optional
             Target feature, by default ``None``
 
         Returns
@@ -212,14 +213,14 @@ class NanMeasure(OutlierMeasure):
     is_x_quantitative = True
     is_x_qualitative = True
 
-    def compute_association(self, x: Series, y: Series | None = None) -> float:
+    def compute_association(self, x: pd.Series, y: pd.Series | None = None) -> float:
         """Computes frequency of ``nan`` in ``x``
 
         Parameters
         ----------
-        x : Series
+        x : pd.Series
             Feature
-        y : Series, optional
+        y : pd.Series, optional
             Target feature, by default ``None``
 
         Returns
@@ -239,14 +240,14 @@ class ModeMeasure(OutlierMeasure):
     is_x_quantitative = True
     is_x_qualitative = True
 
-    def compute_association(self, x: Series, y: Series | None = None) -> float:
+    def compute_association(self, x: pd.Series, y: pd.Series | None = None) -> float:
         """Computes frequency of ``x``'s mode
 
         Parameters
         ----------
-        x : Series
+        x : pd.Series
             Feature
-        y : Series, optional
+        y : pd.Series, optional
             Target feature, by default ``None``
 
         Returns

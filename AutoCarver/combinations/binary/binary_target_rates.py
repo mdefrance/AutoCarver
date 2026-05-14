@@ -3,7 +3,8 @@
 from abc import ABC
 
 import numpy as np
-from pandas import DataFrame, Series
+import pandas as pd
+from pandas import DataFrame
 
 from AutoCarver.combinations.utils import TargetRate
 
@@ -13,12 +14,12 @@ class BinaryTargetRate(TargetRate, ABC):
 
     __name__ = "binary_target_rate"
 
-    def compute(self, xagg: DataFrame) -> DataFrame:
+    def compute(self, xagg: pd.DataFrame) -> pd.DataFrame:
         """Computes the target rate.
 
         Parameters
         ----------
-        xagg : DataFrame
+        xagg : pd.DataFrame
             A crosstab.
 
         Returns
@@ -41,12 +42,12 @@ class TargetMean(BinaryTargetRate):
 
     __name__ = "target_mean"
 
-    def _compute(self, xagg: DataFrame) -> Series:
+    def _compute(self, xagg: pd.DataFrame) -> pd.Series:
         """Computes the mean target rate.
 
         Parameters
         ----------
-        xagg : DataFrame
+        xagg : pd.DataFrame
             A crosstab.
 
         Returns
@@ -62,12 +63,12 @@ class OddsRatio(TargetMean):
 
     __name__ = "odds_ratio"
 
-    def _compute(self, xagg: DataFrame) -> Series:
+    def _compute(self, xagg: pd.DataFrame) -> pd.Series:
         """Computes the mean target rate.
 
         Parameters
         ----------
-        xagg : DataFrame
+        xagg : pd.DataFrame
             A crosstab.
 
         Returns
@@ -84,12 +85,12 @@ class OddsRatio(TargetMean):
 
 #     __name__ = "log_odds_ratio"
 
-#     def _compute(self, xagg: DataFrame) -> Series:
+#     def _compute(self, xagg: pd.DataFrame) -> pd.Series:
 #         """Computes the mean target rate.
 
 #         Parameters
 #         ----------
-#         xagg : DataFrame
+#         xagg : pd.DataFrame
 #             A crosstab.
 
 #         Returns
@@ -105,12 +106,12 @@ class OddsRatio(TargetMean):
 
 #     __name__ = "gini_coefficient"
 
-#     def _compute(self, xagg: DataFrame) -> Series:
+#     def _compute(self, xagg: pd.DataFrame) -> pd.Series:
 #         """Computes the Gini coefficient.
 
 #         Parameters
 #         ----------
-#         xagg : DataFrame
+#         xagg : pd.DataFrame
 #             A crosstab.
 
 #         Returns
@@ -129,7 +130,7 @@ class Woe(BinaryTargetRate):
 
     __name__ = "woe"
 
-    def _compute(self, xagg: DataFrame) -> Series:
+    def _compute(self, xagg: pd.DataFrame) -> pd.Series:
         """Computes the Weight of evidence."""
         sum_f = xagg.sum(axis=1)
         means = xagg.divide(sum_f, axis=0)
@@ -142,7 +143,7 @@ class Woe(BinaryTargetRate):
 
 #     __name__ = "iv"
 
-#     def _compute(self, xagg: DataFrame) -> Series:
+#     def _compute(self, xagg: pd.DataFrame) -> pd.Series:
 #         """Computes the Information Value ."""
 #         sum_f = xagg.sum(axis=1)
 #         means = xagg.divide(sum_f, axis=0)

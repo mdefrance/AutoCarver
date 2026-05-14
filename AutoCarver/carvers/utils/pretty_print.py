@@ -1,12 +1,12 @@
 """Set of tools used for pretty printing"""
 
-from pandas import DataFrame
+import pandas as pd
 
 from AutoCarver.features import BaseFeature
 
 
 def prettier_xagg(
-    nice_xagg: DataFrame | None = None,
+    nice_xagg: pd.DataFrame | None = None,
     caption: str | None = None,
     hide_index: bool = False,
 ) -> str:
@@ -14,7 +14,7 @@ def prettier_xagg(
 
     Parameters
     ----------
-    nice_xagg : DataFrame, optional
+    nice_xagg : pd.DataFrame, optional
         Target rate and frequency per modality, by default None
     caption : str, optional
         Title of the HTML table, by default None
@@ -56,7 +56,7 @@ def prettier_xagg(
     return nicer_xagg
 
 
-def index_mapper(feature: BaseFeature, xtab: DataFrame | None = None) -> DataFrame:
+def index_mapper(feature: BaseFeature, xtab: pd.DataFrame | None = None) -> pd.DataFrame:
     """Prints a binary xtab's statistics
 
     Parameters

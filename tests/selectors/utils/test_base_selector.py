@@ -1,6 +1,7 @@
 """set of tests for base selector"""
 
-from pandas import DataFrame, Series
+import pandas as pd
+from pandas import DataFrame
 from pytest import raises
 
 from AutoCarver.features import (
@@ -165,7 +166,9 @@ def test_sort_features_per_measure(measure: BaseMeasure) -> None:
     assert sorted_features[2] == feature3
 
 
-def test_apply_measures(features: list[BaseFeature], X: DataFrame, y: Series, measures: list[BaseMeasure]) -> None:
+def test_apply_measures(
+    features: list[BaseFeature], X: pd.DataFrame, y: pd.Series, measures: list[BaseMeasure]
+) -> None:
     """testing function apply_measures"""
 
     # sorting out measures
@@ -201,7 +204,7 @@ def test_apply_measures(features: list[BaseFeature], X: DataFrame, y: Series, me
         apply_measures(qualitative_features, X, y, quantitative_measures, default_measures=False)
 
 
-def test_apply_filters(features: list[BaseFeature], X: DataFrame, filters: list[BaseFilter]) -> None:
+def test_apply_filters(features: list[BaseFeature], X: pd.DataFrame, filters: list[BaseFilter]) -> None:
     """testing function apply_filters"""
 
     # sorting out filters
@@ -237,8 +240,8 @@ def test_apply_filters(features: list[BaseFeature], X: DataFrame, filters: list[
 
 def test_get_best_features(
     features: list[BaseFeature],
-    X: DataFrame,
-    y: Series,
+    X: pd.DataFrame,
+    y: pd.Series,
     measures: list[BaseMeasure],
     filters: list[BaseFilter],
 ) -> None:
@@ -352,8 +355,8 @@ def test_base_selector_init_valid_parameters(features_object: Features) -> None:
 
 def test_base_selector_select(
     features_object: Features,
-    X: DataFrame,
-    y: Series,
+    X: pd.DataFrame,
+    y: pd.Series,
     measures: list[BaseMeasure],
     filters: list[BaseFilter],
 ) -> None:
@@ -409,8 +412,8 @@ def test_base_selector_select(
 
 def test_base_selector_get_best_features_across_chunks_no_chunking(
     features_object: Features,
-    X: DataFrame,
-    y: Series,
+    X: pd.DataFrame,
+    y: pd.Series,
     measures: list[BaseMeasure],
     filters: list[BaseFilter],
 ) -> None:
@@ -463,8 +466,8 @@ def test_base_selector_get_best_features_across_chunks_no_chunking(
 
 def test_base_selector_get_best_features_across_chunks_with_chunking(
     features_object: Features,
-    X: DataFrame,
-    y: Series,
+    X: pd.DataFrame,
+    y: pd.Series,
     measures: list[BaseMeasure],
     filters: list[BaseFilter],
 ) -> None:

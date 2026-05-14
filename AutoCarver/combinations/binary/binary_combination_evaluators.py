@@ -3,6 +3,7 @@
 from abc import ABC
 
 import numpy as np
+import pandas as pd
 from pandas import DataFrame, notna
 from scipy.stats import chi2_contingency
 
@@ -34,7 +35,7 @@ class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
 
         Parameters
         ----------
-        xtab : DataFrame
+        xtab : pd.DataFrame
             Crosstab between feature and target.
 
         n_obs : int
@@ -63,12 +64,12 @@ class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
 
         return {"cramerv": cramerv, "tschuprowt": tschuprowt}
 
-    def _grouper(self, xagg: AggregatedSample, groupby: dict) -> DataFrame:
+    def _grouper(self, xagg: AggregatedSample, groupby: dict) -> pd.DataFrame:
         """Groups a crosstab by groupby and sums column values by groups (vectorized)
 
         Parameters
         ----------
-        xagg : DataFrame
+        xagg : pd.DataFrame
             crosstab between X and y
         groupby : list[str]
             indices to group by

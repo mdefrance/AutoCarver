@@ -1,11 +1,12 @@
 """Defines fixtures for all pytests"""
 
+import pandas as pd
 from numpy import arange, nan, random
 from pandas import DataFrame
 from pytest import FixtureRequest, fixture
 
 
-def init_df(seed: int, size: int = 10000) -> DataFrame:
+def init_df(seed: int, size: int = 10000) -> pd.DataFrame:
     """Initializes a DataFrame used in tests
 
     Parameters
@@ -112,7 +113,7 @@ def init_df(seed: int, size: int = 10000) -> DataFrame:
 
 
 @fixture
-def x_train() -> DataFrame:
+def x_train() -> pd.DataFrame:
     """Simulates a Train sample
 
     Returns
@@ -125,12 +126,12 @@ def x_train() -> DataFrame:
 
 
 @fixture
-def x_train_wrong_1(x_train: DataFrame) -> DataFrame:
+def x_train_wrong_1(x_train: pd.DataFrame) -> pd.DataFrame:
     """Simulates a Train sample with unknown values (without nans)
 
     Parameters
     ----------
-    x_train : DataFrame
+    x_train : pd.DataFrame
         Simulated Train sample
 
     Returns
@@ -148,12 +149,12 @@ def x_train_wrong_1(x_train: DataFrame) -> DataFrame:
 
 
 @fixture
-def x_train_wrong_2(x_train: DataFrame) -> DataFrame:
+def x_train_wrong_2(x_train: pd.DataFrame) -> pd.DataFrame:
     """Simulates a Train sample with unknown values (with nans)
 
     Parameters
     ----------
-    x_train : DataFrame
+    x_train : pd.DataFrame
         Simulated Train sample
 
     Returns
@@ -171,7 +172,7 @@ def x_train_wrong_2(x_train: DataFrame) -> DataFrame:
 
 
 @fixture
-def x_dev_1() -> DataFrame:
+def x_dev_1() -> pd.DataFrame:
     """Simulates a Dev sample
 
     Returns
@@ -184,7 +185,7 @@ def x_dev_1() -> DataFrame:
 
 
 @fixture
-def x_dev_2() -> DataFrame:
+def x_dev_2() -> pd.DataFrame:
     """Simulates a Dev sample
 
     Returns
@@ -197,12 +198,12 @@ def x_dev_2() -> DataFrame:
 
 
 @fixture
-def x_dev_wrong_1(x_dev_1: DataFrame) -> DataFrame:
+def x_dev_wrong_1(x_dev_1: pd.DataFrame) -> pd.DataFrame:
     """Simulates a wrong Dev sample (unexpected modality through DefaultDiscretizer)
 
     Parameters
     ----------
-    x_dev_1 : DataFrame
+    x_dev_1 : pd.DataFrame
         Simulated Dev sample
 
     Returns
@@ -220,12 +221,12 @@ def x_dev_wrong_1(x_dev_1: DataFrame) -> DataFrame:
 
 
 @fixture
-def x_dev_wrong_2(x_dev_1: DataFrame) -> DataFrame:
+def x_dev_wrong_2(x_dev_1: pd.DataFrame) -> pd.DataFrame:
     """Simulates a wrong Dev sample (introduced nans)
 
     Parameters
     ----------
-    x_dev_1 : DataFrame
+    x_dev_1 : pd.DataFrame
         Simulated Dev sample
 
     Returns
@@ -243,12 +244,12 @@ def x_dev_wrong_2(x_dev_1: DataFrame) -> DataFrame:
 
 
 @fixture
-def x_dev_wrong_3(x_dev_1: DataFrame) -> DataFrame:
+def x_dev_wrong_3(x_dev_1: pd.DataFrame) -> pd.DataFrame:
     """Simulates a wrong Dev sample (unexpected modality not through DefaultDiscretizer)
 
     Parameters
     ----------
-    x_dev_1 : DataFrame
+    x_dev_1 : pd.DataFrame
         Simulated Dev sample
 
     Returns

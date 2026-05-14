@@ -1,5 +1,6 @@
 """Set of tests for discretizers module."""
 
+import pandas as pd
 from numpy import nan
 from pandas import DataFrame, Series
 
@@ -158,12 +159,12 @@ def test_qualitative_discretizer_fit_ordinal_features():
     assert transformed.equals(df_expected), "Transformed data does not match expected data"
 
 
-def test_qualitative_discretizer(x_train: DataFrame, target: str):
+def test_qualitative_discretizer(x_train: pd.DataFrame, target: str):
     """Tests QualitativeDiscretizer
 
     Parameters
     ----------
-    x_train : DataFrame
+    x_train : pd.DataFrame
         Simulated Train DataFrame
     target: str
         Target feature

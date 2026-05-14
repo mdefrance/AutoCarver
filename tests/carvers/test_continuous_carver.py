@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+import pandas as pd
 from pandas import DataFrame, Series
 from pytest import FixtureRequest, fixture, raises
 
@@ -147,9 +148,9 @@ def test_continuous_carver_aggregator(evaluator: CombinationEvaluator):
     print(xtabs)
 
     expected = {
-        "feature1": Series({"A": [0.1, 0.5], "B": [1.2]}),
-        "feature2": Series({"low": [0.1], "medium": [1.2], "high": [0.5]}),
-        "feature3": Series({1: [0.1], 2: [1.2], 3: [0.5]}),
+        "feature1": pd.Series({"A": [0.1, 0.5], "B": [1.2]}),
+        "feature2": pd.Series({"low": [0.1], "medium": [1.2], "high": [0.5]}),
+        "feature3": pd.Series({1: [0.1], 2: [1.2], 3: [0.5]}),
     }
     assert isinstance(xtabs, dict)
     assert "feature1" in xtabs
@@ -688,12 +689,12 @@ def test_continuous_carver_save_load(tmp_path, evaluator: CombinationEvaluator):
 
 def test_continuous_carver(
     tmp_path: Path,
-    x_train: DataFrame,
-    x_train_wrong_2: DataFrame,
-    x_dev_1: DataFrame,
-    x_dev_wrong_1: DataFrame,
-    x_dev_wrong_2: DataFrame,
-    x_dev_wrong_3: DataFrame,
+    x_train: pd.DataFrame,
+    x_train_wrong_2: pd.DataFrame,
+    x_dev_1: pd.DataFrame,
+    x_dev_wrong_1: pd.DataFrame,
+    x_dev_wrong_2: pd.DataFrame,
+    x_dev_wrong_3: pd.DataFrame,
     quantitative_features: list[str],
     qualitative_features: list[str],
     ordinal_features: list[str],
@@ -711,19 +712,19 @@ def test_continuous_carver(
 
     Parameters
     ----------
-    x_train : DataFrame
+    x_train : pd.DataFrame
         Simulated Train DataFrame
-    x_train_wrong_1 : DataFrame
+    x_train_wrong_1 : pd.DataFrame
         Simulated Train DataFrame with unknown values (without nans)
-    x_train_wrong_2 : DataFrame
+    x_train_wrong_2 : pd.DataFrame
         Simulated Train DataFrame with unknown values (with nans)
-    x_dev_1 : DataFrame
+    x_dev_1 : pd.DataFrame
         Simulated Dev DataFrame
-    x_dev_wrong_1 : DataFrame
+    x_dev_wrong_1 : pd.DataFrame
         Simulated wrong Dev DataFrame with unexpected modality
-    x_dev_wrong_2 : DataFrame
+    x_dev_wrong_2 : pd.DataFrame
         Simulated wrong Dev DataFrame with unexpected nans
-    x_dev_wrong_3 : DataFrame
+    x_dev_wrong_3 : pd.DataFrame
         Simulated wrong Dev DataFrame
     quantitative_features : list[str]
         List of quantitative raw features to be carved

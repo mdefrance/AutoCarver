@@ -1,5 +1,6 @@
 """Set of tests for qualitative_discretizers module."""
 
+import pandas as pd
 from numpy import array, isnan, nan, vstack
 from pandas import DataFrame, Series
 from pytest import raises
@@ -580,12 +581,12 @@ def test_ordinal_discretizer_with_all_underrepresented():
     assert transformed.equals(df_expected), "Transformed data does not match expected data"
 
 
-def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:
+def test_ordinal_discretizer(x_train: pd.DataFrame, target: str) -> None:
     """Tests OrdinalDiscretizer
 
     Parameters
     ----------
-    x_train : DataFrame
+    x_train : pd.DataFrame
         Simulated Train DataFrame
     target: str
         Target feature

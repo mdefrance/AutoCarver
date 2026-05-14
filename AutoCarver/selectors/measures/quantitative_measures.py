@@ -3,7 +3,8 @@
 from math import sqrt
 
 import numpy as np
-from pandas import DataFrame, Series
+import pandas as pd
+from pandas import DataFrame
 from scipy.spatial.distance import correlation
 from scipy.stats import kruskal, pearsonr, spearmanr
 from statsmodels.formula.api import ols
@@ -39,7 +40,7 @@ class KruskalMeasure(ReversibleMeasure):
     is_y_qualitative = True
 
     @extend_docstring(BaseMeasure.compute_association)
-    def compute_association(self, x: Series, y: Series) -> float:
+    def compute_association(self, x: pd.Series, y: pd.Series) -> float:
         # reversing if requested
         if self.reversed:
             x, y = y, x
@@ -73,7 +74,7 @@ class RMeasure(BaseMeasure):
     is_y_binary = True
 
     @extend_docstring(BaseMeasure.compute_association)
-    def compute_association(self, x: Series, y: Series) -> float:
+    def compute_association(self, x: pd.Series, y: pd.Series) -> float:
         # # reversing if requested
         # if self.reversed:
         #     x, y = y, x
@@ -97,7 +98,7 @@ class RMeasure(BaseMeasure):
         return self.value
 
 
-def has_values(x: Series, y: Series, nans: Series) -> bool:
+def has_values(x: pd.Series, y: pd.Series, nans: pd.Series) -> bool:
     """Checks if x and y have values"""
     # only nan values
     if all(nans):
@@ -117,7 +118,7 @@ class PearsonMeasure(AbsoluteMeasure):
     is_y_quantitative = True
 
     @extend_docstring(BaseMeasure.compute_association)
-    def compute_association(self, x: Series, y: Series) -> float:
+    def compute_association(self, x: pd.Series, y: pd.Series) -> float:
         # ckecking for nans
         nans = x.isnull() | x.isna()
 
@@ -138,7 +139,7 @@ class SpearmanMeasure(AbsoluteMeasure):
     is_y_quantitative = True
 
     @extend_docstring(BaseMeasure.compute_association)
-    def compute_association(self, x: Series, y: Series) -> float:
+    def compute_association(self, x: pd.Series, y: pd.Series) -> float:
         # ckecking for nans
         nans = x.isnull() | x.isna()
         # computing spearman's rho
@@ -158,7 +159,7 @@ class DistanceMeasure(AbsoluteMeasure):
     is_y_quantitative = True
 
     @extend_docstring(BaseMeasure.compute_association)
-    def compute_association(self, x: Series, y: Series) -> float:
+    def compute_association(self, x: pd.Series, y: pd.Series) -> float:
         # ckecking for nans
         nans = x.isnull()
 
@@ -175,7 +176,7 @@ class ZscoreOutlierMeasure(OutlierMeasure):
     __name__ = "ZScore"
 
     @extend_docstring(OutlierMeasure.compute_association)
-    def compute_association(self, x: Series, y: Series | None = None) -> float:
+    def compute_association(self, x: pd.Series, y: pd.Series | None = None) -> float:
         mean = x.mean()  # mean of the feature
         std = x.std()  # standard deviation of the feature
         zscore = (x - mean) / std  # zscore per observation
@@ -196,7 +197,7 @@ class IqrOutlierMeasure(OutlierMeasure):
     __name__ = "IQR"
 
     @extend_docstring(OutlierMeasure.compute_association)
-    def compute_association(self, x: Series, y: Series | None = None) -> float:
+    def compute_association(self, x: pd.Series, y: pd.Series | None = None) -> float:
         q3 = x.quantile(0.75)  # 3rd quartile
         q1 = x.quantile(0.25)  # 1st quartile
         iqr = q3 - q1  # inter quartile range

@@ -1,5 +1,6 @@
 """Set of tests for qualitative_discretizers module."""
 
+import pandas as pd
 from numpy import isnan, nan
 from pandas import DataFrame
 from pytest import raises
@@ -98,12 +99,12 @@ def test_ensure_qualitative_dtypes_mixed_types():
     assert result["feature2"].tolist() == ["A", "2", "B"]
 
 
-def test_chained_discretizer(x_train: DataFrame) -> None:
+def test_chained_discretizer(x_train: pd.DataFrame) -> None:
     """Tests ChainedDiscretizer
 
     Parameters
     ----------
-    x_train : DataFrame
+    x_train : pd.DataFrame
         Simulated Train DataFrame
     """
     # Simulating some datasets with unknown values

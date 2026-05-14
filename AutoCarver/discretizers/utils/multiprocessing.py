@@ -4,7 +4,7 @@ from collections.abc import Callable
 from functools import partial
 from multiprocessing import Pool
 
-from pandas import DataFrame
+import pandas as pd
 
 from AutoCarver.features import BaseFeature
 
@@ -27,7 +27,7 @@ def imap_unordered_function(fun: Callable, features: list[str], n_jobs: int, **k
     return results
 
 
-def apply_async_function(fun: Callable, features: list[BaseFeature], n_jobs: int, X: DataFrame, *args: list):
+def apply_async_function(fun: Callable, features: list[BaseFeature], n_jobs: int, X: pd.DataFrame, *args: list):
     """converts a function to a multiprocessing apply_async format or list comprehension"""
 
     # no multiprocessing

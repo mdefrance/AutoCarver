@@ -3,7 +3,8 @@
 from abc import abstractmethod
 
 import numpy as np
-from pandas import DataFrame, Series, notna, unique
+import pandas as pd
+from pandas import notna, unique
 
 from AutoCarver.features.utils.base_feature import BaseFeature
 from AutoCarver.features.utils.grouped_list import GroupedList
@@ -26,7 +27,7 @@ class QualitativeFeature(BaseFeature):
     #         # updating value_per_label
     #         self.value_per_label.update({label: raw_label})
 
-    def fit(self, X: DataFrame, y: Series | None = None) -> None:
+    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> None:
         """TODO fit stats"""
 
         # checking for feature's unique non-nan values
@@ -48,7 +49,7 @@ class QualitativeFeature(BaseFeature):
         # class-specific checking for unexpected values
         self.check_values(X)
 
-    def check_values(self, X: DataFrame) -> None:
+    def check_values(self, X: pd.DataFrame) -> None:
         """checks for unexpected values from unique values in DataFrame"""
 
         # computing unique labels in dataframe
@@ -222,12 +223,12 @@ class QualitativeFeature(BaseFeature):
         return label
 
 
-def nan_unique(x: Series, sort: bool = False) -> list[str]:
+def nan_unique(x: pd.Series, sort: bool = False) -> list[str]:
     """Unique non-NaN values.
 
     Parameters
     ----------
-    x : Series
+    x : pd.Series
         Values to be deduplicated.
     sorted : boolean, optionnal
         Whether or not to sort unique by appearance.

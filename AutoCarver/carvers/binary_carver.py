@@ -3,7 +3,8 @@ for binary classification tasks.
 """
 
 import numpy as np
-from pandas import DataFrame, Series, crosstab
+import pandas as pd
+from pandas import crosstab
 
 from AutoCarver.carvers.utils.base_carver import BaseCarver, Samples
 from AutoCarver.combinations import TschuprowtCombinations
@@ -75,18 +76,18 @@ class BinaryCarver(BaseCarver):
 
         Parameters
         ----------
-        X : DataFrame
+        X : pd.DataFrame
             Dataset used to discretize. Needs to have columns has specified in
             ``AutoCarver.features``.
 
-        y : Series
+        y : pd.Series
             Binary target feature with wich the association is maximized.
 
-        X_dev : DataFrame, optional
+        X_dev : pd.DataFrame, optional
             Dataset to evalute the robustness of discretization, by default ``None``
             It should have the same distribution as X.
 
-        y_dev : Series, optional
+        y_dev : pd.Series, optional
             Binary target feature with wich the robustness of discretization is evaluated,
             by default ``None``
 
@@ -103,20 +104,20 @@ class BinaryCarver(BaseCarver):
         # Checking for binary target and discretizing X
         return super()._prepare_data(samples)
 
-    def _aggregator(self, X: DataFrame, y: Series) -> dict[str, DataFrame]:
+    def _aggregator(self, X: pd.DataFrame, y: pd.Series) -> dict[str, pd.DataFrame]:
         """Computes crosstabs for specified features and ensures that the crosstab is ordered
         according to the known labels
 
         Parameters
         ----------
-        X : DataFrame
+        X : pd.DataFrame
             _description_
-        y : Series
+        y : pd.Series
             _description_
 
         Returns
         -------
-        dict[str, DataFrame]
+        dict[str, pd.DataFrame]
             dict of crosstab(X, y) by feature name
         """
         # checking for empty datasets (dev)
@@ -129,7 +130,7 @@ class BinaryCarver(BaseCarver):
         return xtabs
 
 
-def get_crosstab(X: DataFrame, y: Series, feature: BaseFeature) -> dict:
+def get_crosstab(X: pd.DataFrame, y: pd.Series, feature: BaseFeature) -> dict:
     """Computes crosstabs for specified features and ensures that the crosstab is ordered
     according to the known labels"""
 

@@ -2,7 +2,8 @@
 
 from abc import ABC, abstractmethod
 
-from pandas import DataFrame, Series
+import pandas as pd
+from pandas import DataFrame
 
 
 class TargetRate(ABC):
@@ -11,12 +12,12 @@ class TargetRate(ABC):
     __name__ = "target_rate"
 
     @abstractmethod
-    def _compute(self, xagg: Series | DataFrame) -> Series:
+    def _compute(self, xagg: pd.Series | DataFrame) -> pd.Series:
         """Computes the target rate.
 
         Parameters
         ----------
-        xagg : DataFrame
+        xagg : pd.DataFrame
             A crosstab.
 
         Returns
@@ -26,12 +27,12 @@ class TargetRate(ABC):
         """
 
     @abstractmethod
-    def compute(self, xagg: Series | DataFrame) -> Series:
+    def compute(self, xagg: pd.Series | DataFrame) -> pd.Series:
         """Computes the target rate.
 
         Parameters
         ----------
-        xagg : DataFrame
+        xagg : pd.DataFrame
             A crosstab.
 
         Returns

@@ -1,5 +1,6 @@
 """Set of tests for discretizers module."""
 
+import pandas as pd
 from numpy import inf, nan
 from pandas import DataFrame, Series, notna
 
@@ -71,14 +72,14 @@ def test_discretizer_fit():
     assert transformed_df.equals(expected)
 
 
-def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
+def test_discretizer(x_train: pd.DataFrame, x_dev_1: pd.DataFrame, target: str):
     """Tests Discretizer
 
     Parameters
     ----------
-    x_train : DataFrame
+    x_train : pd.DataFrame
         Simulated Train DataFrame
-    x_dev_1 : DataFrame
+    x_dev_1 : pd.DataFrame
         Simulated Test DataFrame
     target: str
         Target feature

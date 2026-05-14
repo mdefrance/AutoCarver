@@ -2,7 +2,8 @@
 for a binary classification model.
 """
 
-from pandas import DataFrame, Series, notna
+import pandas as pd
+from pandas import notna
 
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
 from AutoCarver.features import CategoricalFeature
@@ -43,11 +44,11 @@ class CategoricalDiscretizer(BaseDiscretizer):
 
         Parameters
         ----------
-        X : DataFrame
+        X : pd.DataFrame
             Dataset used to discretize. Needs to have columns has specified in
             ``CategoricalDiscretizer.features``.
 
-        y : Series
+        y : pd.Series
             Binary target feature with wich the association is maximized.
 
         Returns
@@ -67,7 +68,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
         return sample
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> None:  # pylint: disable=W0222
         # copying dataframe and checking data before bucketization
         sample = self._prepare_data(Sample(X, y))
 
@@ -85,8 +86,8 @@ class CategoricalDiscretizer(BaseDiscretizer):
         return self
 
     def _group_feature_rare_modalities(
-        self, feature: CategoricalFeature, X: DataFrame, frequencies: DataFrame
-    ) -> DataFrame:
+        self, feature: CategoricalFeature, X: pd.DataFrame, frequencies: pd.DataFrame
+    ) -> pd.DataFrame:
         """Groups modalities less frequent than min_freq into feature.default"""
 
         # checking for rare values
@@ -112,7 +113,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
 
         return X
 
-    def _group_rare_modalities(self, X: DataFrame) -> DataFrame:
+    def _group_rare_modalities(self, X: pd.DataFrame) -> pd.DataFrame:
         """Groups modalities less frequent than min_freq into feature.default"""
 
         # computing frequencies of each modality
@@ -124,7 +125,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
 
         return X
 
-    def _target_sort(self, X: DataFrame, y: Series) -> None:
+    def _target_sort(self, X: pd.DataFrame, y: pd.Series) -> None:
         """Sorts features' values by target rate"""
 
         # computing target rate per modality for ordering
@@ -137,7 +138,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
         )
 
 
-def series_target_rate(x: Series, y: Series, dropna: bool = True, ascending=True) -> dict:
+def series_target_rate(x: pd.Series, y: pd.Series, dropna: bool = True, ascending=True) -> dict:
     """Target y rate per modality of x into a dictionnary"""
 
     rates = y.groupby(x, dropna=dropna).mean().sort_index().sort_values(ascending=ascending)
@@ -145,7 +146,7 @@ def series_target_rate(x: Series, y: Series, dropna: bool = True, ascending=True
     return rates.to_dict()
 
 
-def series_value_counts(x: Series, dropna: bool = False, normalize: bool = True) -> dict:
+def series_value_counts(x: pd.Series, dropna: bool = False, normalize: bool = True) -> dict:
     """Counts the values of each modality of a series into a dictionnary"""
 
     values = x.value_counts(dropna=dropna, normalize=normalize)

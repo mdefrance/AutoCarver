@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from pandas import DataFrame
+import pandas as pd
 
 from AutoCarver.features import BaseFeature
 
@@ -43,12 +43,12 @@ class BaseFilter(ABC):
         return self.__name__
 
     @abstractmethod
-    def filter(self, X: DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:
+    def filter(self, X: pd.DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:
         """Filters out ranked features that reach the association threshold
 
         Parameters
         ----------
-        X : DataFrame
+        X : pd.DataFrame
             DataFrame containing features
         ranks : list[BaseFeature]
             List of ranked features to filter, from most to least associated
@@ -91,7 +91,7 @@ class ValidFilter(BaseFilter):
     is_x_quantitative = True
     is_x_qualitative = True
 
-    def filter(self, X: DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:
+    def filter(self, X: pd.DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:
         """filters out all non-valid features fril ranks"""
         _ = X  # not used
 
