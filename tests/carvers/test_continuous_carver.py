@@ -147,9 +147,9 @@ def test_continuous_carver_aggregator(evaluator: CombinationEvaluator):
     print(xtabs)
 
     expected = {
-        "feature1": pd.pd.Series({"A": [0.1, 0.5], "B": [1.2]}),
-        "feature2": pd.pd.Series({"low": [0.1], "medium": [1.2], "high": [0.5]}),
-        "feature3": pd.pd.Series({1: [0.1], 2: [1.2], 3: [0.5]}),
+        "feature1": pd.Series({"A": [0.1, 0.5], "B": [1.2]}),
+        "feature2": pd.Series({"low": [0.1], "medium": [1.2], "high": [0.5]}),
+        "feature3": pd.Series({1: [0.1], 2: [1.2], 3: [0.5]}),
     }
     assert isinstance(xtabs, dict)
     assert "feature1" in xtabs

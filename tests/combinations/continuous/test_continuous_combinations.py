@@ -282,12 +282,12 @@ def test_group_xagg_by_combinations(evaluator: ContinuousCombinationEvaluator):
 
     expected = [
         {
-            "xagg": pd.pd.Series({"a": [0, 2, 0], "b": [2, 1, 2, 0]}),
+            "xagg": pd.Series({"a": [0, 2, 0], "b": [2, 1, 2, 0]}),
             "combination": [["a"], ["b", "c"]],
             "index_to_groupby": {"a": "a", "b": "b", "c": "b"},
         },
         {
-            "xagg": pd.pd.Series({"a": [0, 2, 0, 2, 1], "c": [2, 0]}),
+            "xagg": pd.Series({"a": [0, 2, 0, 2, 1], "c": [2, 0]}),
             "combination": [["a", "b"], ["c"]],
             "index_to_groupby": {"a": "a", "b": "a", "c": "c"},
         },
@@ -313,17 +313,17 @@ def test_group_xagg_by_combinations_with_nan(evaluator: ContinuousCombinationEva
 
     expected = [
         {
-            "xagg": pd.pd.Series({"A": [0, 2, 0], "B": [2, 1], "C": [2, 0]}),
+            "xagg": pd.Series({"A": [0, 2, 0], "B": [2, 1], "C": [2, 0]}),
             "combination": [["A"], ["B"], ["C"]],
             "index_to_groupby": {"A": "A", "B": "B", "C": "C"},
         },
         {
-            "xagg": pd.pd.Series({"A": [0, 2, 0], "B": [2, 1, 2, 0]}),
+            "xagg": pd.Series({"A": [0, 2, 0], "B": [2, 1, 2, 0]}),
             "combination": [["A"], ["B", "C"]],
             "index_to_groupby": {"A": "A", "B": "B", "C": "B"},
         },
         {
-            "xagg": pd.pd.Series({"A": [0, 2, 0, 2, 1], "C": [2, 0]}),
+            "xagg": pd.Series({"A": [0, 2, 0, 2, 1], "C": [2, 0]}),
             "combination": [["A", "B"], ["C"]],
             "index_to_groupby": {"A": "A", "B": "A", "C": "C"},
         },
@@ -350,13 +350,13 @@ def test_compute_associations(evaluator: ContinuousCombinationEvaluator):
 
     expected = [
         {
-            "xagg": pd.pd.Series({"a": [0, 2, 0], "b": [2, 1, 2, 0]}),
+            "xagg": pd.Series({"a": [0, 2, 0], "b": [2, 1, 2, 0]}),
             "combination": [["a"], ["b", "c"]],
             "index_to_groupby": {"a": "a", "b": "b", "c": "b"},
             "kruskal": 0.5833333333333333,
         },
         {
-            "xagg": pd.pd.Series({"a": [0, 2, 0, 2, 1], "c": [2, 0]}),
+            "xagg": pd.Series({"a": [0, 2, 0, 2, 1], "c": [2, 0]}),
             "combination": [["a", "b"], ["c"]],
             "index_to_groupby": {"a": "a", "b": "a", "c": "c"},
             "kruskal": 0.0,
@@ -386,19 +386,19 @@ def test_compute_associations_with_unobserved(evaluator: ContinuousCombinationEv
 
     expected = [
         {
-            "xagg": pd.pd.Series({"A": [0, 2, 0], "B": [2, 1]}),
+            "xagg": pd.Series({"A": [0, 2, 0], "B": [2, 1]}),
             "combination": [["A"], ["B", "C"]],
             "index_to_groupby": {"A": "A", "B": "B", "C": "B"},
             "kruskal": 0.8333333333333333,
         },
         {
-            "xagg": pd.pd.Series({"A": [0, 2, 0], "B": [2, 1], "C": []}),
+            "xagg": pd.Series({"A": [0, 2, 0], "B": [2, 1], "C": []}),
             "combination": [["A"], ["B"], ["C"]],
             "index_to_groupby": {"A": "A", "B": "B", "C": "C"},
             "kruskal": np.nan,
         },
         {
-            "xagg": pd.pd.Series({"A": [0, 2, 0, 2, 1], "C": []}),
+            "xagg": pd.Series({"A": [0, 2, 0, 2, 1], "C": []}),
             "combination": [["A", "B"], ["C"]],
             "index_to_groupby": {"A": "A", "B": "A", "C": "C"},
             "kruskal": np.nan,
@@ -427,19 +427,19 @@ def test_compute_associations_with_three_rows(evaluator: ContinuousCombinationEv
 
     expected = [
         {
-            "xagg": pd.pd.Series({"A": [0, 2, 0], "B": [2, 1], "C": [2, 0]}),
+            "xagg": pd.Series({"A": [0, 2, 0], "B": [2, 1], "C": [2, 0]}),
             "combination": [["A"], ["B"], ["C"]],
             "index_to_groupby": {"A": "A", "B": "B", "C": "C"},
             "kruskal": 0.8333333333333345,
         },
         {
-            "xagg": pd.pd.Series({"A": [0, 2, 0], "B": [2, 1, 2, 0]}),
+            "xagg": pd.Series({"A": [0, 2, 0], "B": [2, 1, 2, 0]}),
             "combination": [["A"], ["B", "C"]],
             "index_to_groupby": {"A": "A", "B": "B", "C": "B"},
             "kruskal": 0.5833333333333333,
         },
         {
-            "xagg": pd.pd.Series({"A": [0, 2, 0, 2, 1], "C": [2, 0]}),
+            "xagg": pd.Series({"A": [0, 2, 0, 2, 1], "C": [2, 0]}),
             "combination": [["A", "B"], ["C"]],
             "index_to_groupby": {"A": "A", "B": "A", "C": "C"},
             "kruskal": 0.0,
@@ -489,7 +489,7 @@ def test_compute_associations_with_twenty_rows(evaluator: ContinuousCombinationE
     print(result[0])
 
     expected = {
-        "xagg": pd.pd.Series(
+        "xagg": pd.Series(
             {
                 "A": [0, 2, 0],
                 "B": [2, 1, 2, 0, 5, 6, 1, 3, 4, 0, 1, 2, 3, 4, 5],
@@ -561,14 +561,14 @@ def test_viability_train(evaluator: ContinuousCombinationEvaluator):
     expected = [
         {
             "train": {TestKeys.VIABLE.value: True},
-            "train_rates": pd.pd.DataFrame(
+            "train_rates": pd.DataFrame(
                 {"target_mean": [0.666667, 1.250000], "frequency": [0.428571, 0.571429]},
                 index=["a", "b"],
             ),
         },
         {
             "train": {TestKeys.VIABLE.value: False},
-            "train_rates": pd.pd.DataFrame(
+            "train_rates": pd.DataFrame(
                 {"target_mean": [1.0, 1.0], "frequency": [0.714286, 0.285714]}, index=["a", "c"]
             ),
         },
@@ -680,7 +680,7 @@ def test_get_viable_combination_without_dev(evaluator: ContinuousCombinationEval
     result = evaluator._get_viable_combination(associations)
     print(result)
     expected = {
-        "xagg": pd.pd.Series({"a": [0, 2, 0], "b": [2, 1, 2, 0]}),
+        "xagg": pd.Series({"a": [0, 2, 0], "b": [2, 1, 2, 0]}),
         "combination": [["a"], ["b", "c"]],
         "kruskal": 0.5833333333333333,
     }
@@ -730,7 +730,7 @@ def test_get_viable_combination_with_viable_train(evaluator: ContinuousCombinati
     print(result)
 
     expected = {
-        "xagg": pd.pd.Series({"a": [0, 2, 0], "b": [2, 1, 2, 0]}),
+        "xagg": pd.Series({"a": [0, 2, 0], "b": [2, 1, 2, 0]}),
         "combination": [["a"], ["b", "c"]],
         "kruskal": 0.5833333333333333,
     }
@@ -827,7 +827,7 @@ def test_best_association_with_combinations_viable(evaluator: ContinuousCombinat
     print(result)
 
     expected = {
-        "xagg": pd.pd.Series({"a": [0, 2, 0], "b": [2, 1, 2, 0]}),
+        "xagg": pd.Series({"a": [0, 2, 0], "b": [2, 1, 2, 0]}),
         "combination": [["a"], ["b", "c"]],
         "kruskal": 0.5833333333333333,
     }
@@ -887,7 +887,7 @@ def test_best_association_with_nan_combinations_viable(evaluator: ContinuousComb
     print(result)
 
     expected = {
-        "xagg": pd.pd.Series({"a": [0, 2, 0, 2, 0], "b": [2, 1]}),
+        "xagg": pd.Series({"a": [0, 2, 0, 2, 0], "b": [2, 1]}),
         "combination": [["a", "__NAN__"], ["b"]],
         "kruskal": 0.6999999999999975,
     }
@@ -920,7 +920,7 @@ def test_get_best_combination_non_nan_viable(evaluator: ContinuousCombinationEva
     print(result)
 
     expected = {
-        "xagg": pd.pd.Series({"a": [0, 2, 0], "b": [2, 1, 2, 0]}),
+        "xagg": pd.Series({"a": [0, 2, 0], "b": [2, 1, 2, 0]}),
         "combination": [["a"], ["b", "c"]],
         "kruskal": 0.5833333333333333,
     }
@@ -969,7 +969,7 @@ def test_get_best_combination_non_nan_viable_with_nan(evaluator: ContinuousCombi
     print(result)
 
     expected = {
-        "xagg": pd.pd.Series({"a": [0, 2, 0], "b": [2, 1, 2, 0]}),
+        "xagg": pd.Series({"a": [0, 2, 0], "b": [2, 1, 2, 0]}),
         "combination": [["a"], ["b", "c"]],
         "kruskal": 0.5833333333333333,
     }
@@ -1003,7 +1003,7 @@ def test_get_best_combination_with_nan_viable(evaluator: ContinuousCombinationEv
     print(result)
 
     expected = {
-        "xagg": pd.pd.Series({"a": [0, 2, 0], "b": [2, 1, 2, 0]}),
+        "xagg": pd.Series({"a": [0, 2, 0], "b": [2, 1, 2, 0]}),
         "combination": [["a"], ["b", "c"]],
         "kruskal": 0.5833333333333333,
     }
@@ -1127,7 +1127,7 @@ def test_get_best_combination_with_nan_viable_with_nan(evaluator: ContinuousComb
     assert feature.dropna is True
 
     expected = {
-        "xagg": pd.pd.Series({"a": [0, 2, 0], "b to c": [2, 1, 2, 0, -1, 5]}),
+        "xagg": pd.Series({"a": [0, 2, 0], "b to c": [2, 1, 2, 0, -1, 5]}),
         "combination": [["a"], ["b to c", "__NAN__"]],
         "kruskal": 0.2857142857142847,
     }
@@ -1158,7 +1158,7 @@ def test_get_best_combination_viable(evaluator: ContinuousCombinationEvaluator):
     assert feature.dropna is evaluator.dropna
 
     expected = {
-        "xagg": pd.pd.Series({"a": [0, 2, 0], "b": [2, 1, 2, 0]}),
+        "xagg": pd.Series({"a": [0, 2, 0], "b": [2, 1, 2, 0]}),
         "combination": [["a"], ["b", "c"]],
         "kruskal": 0.5833333333333333,
     }
@@ -1189,7 +1189,7 @@ def test_get_best_combination_viable_without_dev(evaluator: ContinuousCombinatio
     assert feature.dropna is evaluator.dropna
 
     expected = {
-        "xagg": pd.pd.Series({"a": [0, 2, 0], "b": [2, 1, 2, 0]}),
+        "xagg": pd.Series({"a": [0, 2, 0], "b": [2, 1, 2, 0]}),
         "combination": [["a"], ["b", "c"]],
         "kruskal": 0.5833333333333333,
     }
@@ -1233,7 +1233,7 @@ def test_get_best_combination_viable_with_nan_without_feature_nan(
     assert evaluator.feature == feature
     assert feature.dropna is evaluator.dropna
     expected = {
-        "xagg": pd.pd.Series({"a": [0, 2, 0], "b": [2, 1, 2, 0, -1, 5]}),
+        "xagg": pd.Series({"a": [0, 2, 0], "b": [2, 1, 2, 0, -1, 5]}),
         "combination": [["a"], ["b", "c", "d"]],
         "kruskal": 0.2857142857142847,
     }
@@ -1259,7 +1259,7 @@ def test_get_best_combination_viable_with_nan_without_dropna(
     assert evaluator.feature == feature
     assert feature.dropna is evaluator.dropna
     expected = {
-        "xagg": pd.pd.Series({"a": [0, 2, 0], "b": [2, 1, 2, 0]}),
+        "xagg": pd.Series({"a": [0, 2, 0], "b": [2, 1, 2, 0]}),
         "combination": [["a"], ["b", "c"]],
         "kruskal": 0.5833333333333333,
     }
@@ -1294,7 +1294,7 @@ def test_get_best_combination_viable_with_nan(evaluator: ContinuousCombinationEv
     assert feature.dropna is evaluator.dropna
 
     expected = {
-        "xagg": pd.pd.Series({"a": [0, 2, 0], "b to c": [2, 1, 2, 0, -1, 5]}),
+        "xagg": pd.Series({"a": [0, 2, 0], "b to c": [2, 1, 2, 0, -1, 5]}),
         "combination": [["a"], ["b to c", "__NAN__"]],
         "kruskal": 0.2857142857142847,
     }

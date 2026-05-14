@@ -147,9 +147,9 @@ def test_binary_carver_aggregator(evaluator: CombinationEvaluator):
     print(xtabs)
 
     expected = {
-        "feature1": pd.pd.DataFrame({0: [2, 0], 1: [0, 1]}, index=["A", "B"]),
-        "feature2": pd.pd.DataFrame({0: [1, 0, 1], 1: [0, 1, 0]}, index=["low", "medium", "high"]),
-        "feature3": pd.pd.DataFrame({0: [1, 0, 1], 1: [0, 1, 0]}, index=[1, 2, 3]),
+        "feature1": pd.DataFrame({0: [2, 0], 1: [0, 1]}, index=["A", "B"]),
+        "feature2": pd.DataFrame({0: [1, 0, 1], 1: [0, 1, 0]}, index=["low", "medium", "high"]),
+        "feature3": pd.DataFrame({0: [1, 0, 1], 1: [0, 1, 0]}, index=[1, 2, 3]),
     }
     assert isinstance(xtabs, dict)
     assert "feature1" in xtabs
