@@ -4,7 +4,6 @@ for a binary classification model.
 
 import numpy as np
 import pandas as pd
-from pandas import unique
 
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
 from AutoCarver.discretizers.utils.type_discretizers import StringDiscretizer
@@ -247,7 +246,7 @@ def ensure_qualitative_dtypes(features: Features, X: pd.DataFrame, **kwargs) -> 
     dtypes = (
         X.fillna({feature.version: feature.nan for feature in features})[features.versions]
         .map(type)
-        .apply(unique, result_type="reduce")
+        .apply(pd.unique, result_type="reduce")
     )
 
     # identifying features that are not str

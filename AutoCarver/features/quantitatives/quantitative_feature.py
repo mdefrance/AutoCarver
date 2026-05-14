@@ -1,7 +1,7 @@
 """Defines a continuous feature"""
 
 import numpy as np
-from pandas import isna
+import pandas as pd
 
 from AutoCarver.features.utils.base_feature import BaseFeature
 from AutoCarver.features.utils.grouped_list import GroupedList
@@ -159,9 +159,9 @@ def format_quantiles(a_list: list[float]) -> list[str]:
         lower_bounds = [np.nan] + formatted_list
         order: list[str] = []
         for lower, upper in zip(lower_bounds, upper_bounds):
-            if isna(lower):
+            if pd.isna(lower):
                 order += [f"x <= {upper}"]
-            elif isna(upper):
+            elif pd.isna(upper):
                 order += [f"{lower} < x"]
             else:
                 order += [f"{lower} < x <= {upper}"]

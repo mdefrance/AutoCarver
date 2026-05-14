@@ -5,7 +5,7 @@ for a binary classification model.
 from typing import Any
 
 import numpy as np
-from pandas import isna
+import pandas as pd
 
 
 class GroupedList(list):
@@ -395,7 +395,7 @@ def is_equal(a: Any, b: Any) -> bool:
     equal = a == b
 
     # Case where a and b are NaNs
-    if isna(a) and isna(b):
+    if pd.isna(a) and pd.isna(b):
         equal = True
 
     return equal

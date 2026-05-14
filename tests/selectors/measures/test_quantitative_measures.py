@@ -2,7 +2,6 @@
 
 import pandas as pd
 from numpy import nan
-from pandas import isna
 from pytest import FixtureRequest, fixture
 
 from AutoCarver.selectors import (
@@ -196,9 +195,9 @@ def test_quanti_quali_compute_association(
         quanti_quali_measure.threshold,
     )
     assert association is not None, "not correctly computed association"
-    assert quanti_quali_measure.value == association or (isna(quanti_quali_measure.value) and isna(association)), (
-        "not stored measurement"
-    )
+    assert quanti_quali_measure.value == association or (
+        pd.isna(quanti_quali_measure.value) and pd.isna(association)
+    ), "not stored measurement"
 
 
 def test_quanti_quanli_reverse_xy(

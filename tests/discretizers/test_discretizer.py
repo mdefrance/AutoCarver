@@ -2,7 +2,6 @@
 
 import pandas as pd
 from numpy import inf, nan
-from pandas import notna
 
 from AutoCarver.config import Constants
 from AutoCarver.discretizers import Discretizer
@@ -232,8 +231,8 @@ def test_discretizer(x_train: pd.DataFrame, x_dev_1: pd.DataFrame, target: str):
     for feature in features:
         # removing nans because they don't match
         test_unique = x_dev_discretized[feature.name].unique()
-        test_unique = [val for val in test_unique if notna(val)]
+        test_unique = [val for val in test_unique if pd.notna(val)]
         train_unique = x_discretized[feature.name].unique()
-        train_unique = [val for val in train_unique if notna(val)]
+        train_unique = [val for val in train_unique if pd.notna(val)]
         assert all(value in test_unique for value in train_unique), "Missing value from test (at transform step)"
         assert all(value in train_unique for value in test_unique), "Missing value from train (at transform step)"

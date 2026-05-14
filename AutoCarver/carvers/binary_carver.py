@@ -4,7 +4,6 @@ for binary classification tasks.
 
 import numpy as np
 import pandas as pd
-from pandas import crosstab
 
 from AutoCarver.carvers.utils.base_carver import BaseCarver, Samples
 from AutoCarver.combinations import TschuprowtCombinations
@@ -135,7 +134,7 @@ def get_crosstab(X: pd.DataFrame, y: pd.Series, feature: BaseFeature) -> dict:
     according to the known labels"""
 
     # computing crosstab between binary y and categorical X
-    xtab = crosstab(X[feature.version], y)
+    xtab = pd.crosstab(X[feature.version], y)
 
     # reindexing to ensure the right order
     return xtab.reindex(feature.labels, fill_value=0)

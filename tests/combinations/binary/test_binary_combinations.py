@@ -4,7 +4,6 @@ import json
 
 import pandas as pd
 from numpy import allclose, nan, sqrt
-from pandas import isna
 from pytest import FixtureRequest, fixture, raises
 from scipy.stats import chi2_contingency
 
@@ -274,8 +273,8 @@ def test_association_measure_with_nan(evaluator: BinaryCombinationEvaluator):
     n_obs = 105
     result = evaluator._association_measure(xagg, n_obs)
 
-    assert isna(result.get("cramerv"))
-    assert isna(result.get("tschuprowt"))
+    assert pd.isna(result.get("cramerv"))
+    assert pd.isna(result.get("tschuprowt"))
 
 
 def test_association_measure_single_row(evaluator: BinaryCombinationEvaluator):
@@ -283,7 +282,7 @@ def test_association_measure_single_row(evaluator: BinaryCombinationEvaluator):
     xagg = pd.DataFrame({"A": [10], "B": [5]})
     n_obs = 15
     result = evaluator._association_measure(xagg, n_obs)
-    assert isna(result.get("tschuprowt"))
+    assert pd.isna(result.get("tschuprowt"))
     assert result.get("cramerv") == 0
 
 

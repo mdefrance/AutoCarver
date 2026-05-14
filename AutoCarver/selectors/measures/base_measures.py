@@ -3,7 +3,6 @@
 from abc import ABC, abstractmethod
 
 import pandas as pd
-from pandas import isnull, notna
 
 from AutoCarver.features import BaseFeature
 
@@ -105,7 +104,7 @@ class BaseMeasure(ABC):
             Whether the test is passed or not
         """
 
-        if not isnull(self.value) and notna(self.value):
+        if not pd.isnull(self.value) and pd.notna(self.value):
             return self.value >= self.threshold  # type: ignore
         return False
 
@@ -150,7 +149,7 @@ class AbsoluteMeasure(BaseMeasure):
         bool
             Whether the test is passed or not
         """
-        if not isnull(self.value) and notna(self.value):
+        if not pd.isnull(self.value) and pd.notna(self.value):
             return abs(self.value) >= self.threshold  # type: ignore
         return False
 
@@ -201,7 +200,7 @@ class OutlierMeasure(BaseMeasure):
         bool
             Whether the test is passed or not
         """
-        if not isnull(self.value) and notna(self.value):
+        if not pd.isnull(self.value) and pd.notna(self.value):
             return self.value < self.threshold  # type: ignore
         return True
 

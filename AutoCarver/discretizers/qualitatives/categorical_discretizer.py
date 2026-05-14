@@ -3,7 +3,6 @@ for a binary classification model.
 """
 
 import pandas as pd
-from pandas import notna
 
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
 from AutoCarver.features import CategoricalFeature
@@ -94,7 +93,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
         values_to_group = [
             value
             for value, freq in frequencies[feature.version].items()
-            if freq < self.min_freq and value != feature.nan and notna(value)
+            if freq < self.min_freq and value != feature.nan and pd.notna(value)
         ]
 
         # checking for completly missing values (no frequency observed in X)

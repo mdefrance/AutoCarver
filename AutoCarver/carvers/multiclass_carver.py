@@ -5,7 +5,6 @@ for multiclass classification tasks.
 from typing import Any
 
 import pandas as pd
-from pandas import unique
 
 from AutoCarver.carvers.binary_carver import BinaryCarver
 from AutoCarver.carvers.utils.base_carver import Samples
@@ -75,7 +74,7 @@ class MulticlassCarver(BinaryCarver):
         samples.train.y = samples.train.y.astype(str)
 
         # multiclass target, checking values
-        if len(unique(samples.train.y)) <= 2:
+        if len(pd.unique(samples.train.y)) <= 2:
             raise ValueError(f"[{self.__name__}] provided y is binary, consider using BinaryCarver instead.")
 
         # checking for dev target's values

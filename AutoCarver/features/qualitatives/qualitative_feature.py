@@ -4,7 +4,6 @@ from abc import abstractmethod
 
 import numpy as np
 import pandas as pd
-from pandas import notna, unique
 
 from AutoCarver.features.utils.base_feature import BaseFeature
 from AutoCarver.features.utils.grouped_list import GroupedList
@@ -53,7 +52,7 @@ class QualitativeFeature(BaseFeature):
         """checks for unexpected values from unique values in DataFrame"""
 
         # computing unique labels in dataframe
-        unique_labels = unique(X[self.version])
+        unique_labels = pd.unique(X[self.version])
 
         # converting to labels
         unique_values = unique_labels[:]
@@ -62,7 +61,9 @@ class QualitativeFeature(BaseFeature):
 
         # unexpected values for this feature
         unexpected = [
-            value for value in unique_values if not self.values.contains(value) and notna(value) and value != self.nan
+            value
+            for value in unique_values
+            if not self.values.contains(value) and pd.notna(value) and value != self.nan
         ]
         if len(unexpected) > 0:
             # feature does not have a default value
@@ -241,14 +242,14 @@ def nan_unique(x: pd.Series, sort: bool = False) -> list[str]:
 
     # unique values not sorted
     if sort:
-        uniques = unique(x)
+        uniques = pd.unique(x)
 
     # sorting unique values
     else:
         uniques = list(x.value_counts(sort=True, ascending=False).index)
 
     # filtering out nans
-    uniques = [value for value in uniques if notna(value)]
+    uniques = [value for value in uniques if pd.notna(value)]
 
     return uniques
 

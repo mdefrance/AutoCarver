@@ -4,7 +4,6 @@ for a binary classification model.
 
 import numpy as np
 import pandas as pd
-from pandas import notna
 
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
 from AutoCarver.features import GroupedList, OrdinalFeature
@@ -142,7 +141,7 @@ def compute_stats(df_feature: pd.Series, y: pd.Series, labels: GroupedList) -> t
     """Computes frequencies and target rates of each modality"""
 
     # filtering nans
-    not_nans = notna(df_feature)
+    not_nans = pd.notna(df_feature)
 
     # total size
     len_df = len(df_feature)

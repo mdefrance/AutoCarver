@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 import pandas as pd
-from pandas import option_context
 
 from AutoCarver.config import Constants
 from AutoCarver.features.utils.grouped_list import GroupedList
@@ -389,7 +388,7 @@ class BaseFeature(ABC):
             selected = {}
 
             # checking for viable combination without dropna
-            with option_context("future.no_silent_downcasting", True):
+            with pd.option_context("future.no_silent_downcasting", True):
                 viable = history["viable"].fillna(False).astype(bool)
             if viable.any():
                 # checking for requested dropna

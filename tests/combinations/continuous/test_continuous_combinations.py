@@ -4,7 +4,6 @@ import json
 
 import pandas as pd
 from numpy import allclose, nan
-from pandas import isna
 from pytest import FixtureRequest, fixture, raises
 from scipy.stats import kruskal
 
@@ -124,7 +123,7 @@ def test_association_measure_with_nan(evaluator: ContinuousCombinationEvaluator)
     xagg = get_target_values_by_modality(X, y, feature)
 
     result = evaluator._association_measure(xagg)
-    assert isna(result.get("kruskal"))
+    assert pd.isna(result.get("kruskal"))
 
 
 def test_association_measure_single_value(evaluator: ContinuousCombinationEvaluator):
@@ -410,7 +409,7 @@ def test_compute_associations_with_unobserved(evaluator: ContinuousCombinationEv
         assert list(res["xagg"]) == list(exp["xagg"])
         assert res["combination"] == exp["combination"]
         assert res["index_to_groupby"] == exp["index_to_groupby"]
-        assert res["kruskal"] == exp["kruskal"] or (isna(res["kruskal"]) and isna(exp["kruskal"]))
+        assert res["kruskal"] == exp["kruskal"] or (pd.isna(res["kruskal"]) and pd.isna(exp["kruskal"]))
 
 
 def test_compute_associations_with_three_rows(evaluator: ContinuousCombinationEvaluator):

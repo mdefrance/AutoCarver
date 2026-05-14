@@ -3,7 +3,6 @@ for a binary classification model.
 """
 
 import pandas as pd
-from pandas import unique
 
 from AutoCarver.discretizers.qualitatives import OrdinalDiscretizer
 from AutoCarver.discretizers.quantitatives.continuous_discretizer import ContinuousDiscretizer
@@ -160,7 +159,7 @@ def check_quantitative_dtypes(x: pd.DataFrame, feature_versions: list[str], name
     """Checks if the provided features are numeric."""
 
     # checking for numeric columns
-    dtypes = x[feature_versions].map(type).apply(unique, result_type="reduce")
+    dtypes = x[feature_versions].map(type).apply(pd.unique, result_type="reduce")
 
     # getting non-numeric columns
     not_numeric = dtypes.apply(lambda u: str in u)

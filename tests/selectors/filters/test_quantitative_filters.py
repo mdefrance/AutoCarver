@@ -1,5 +1,4 @@
 import pandas as pd
-from pandas import isna
 from pytest import FixtureRequest, fixture
 
 from AutoCarver.features import BaseFeature
@@ -73,7 +72,7 @@ def test_filter(filter: QuantitativeFilter, sample_data: pd.DataFrame, sample_ra
         len(sample_ranks),
         len(sample_ranks),
     ), "Compute correlation for each feature"
-    assert isna(correlation.iloc[0, 0]) and isna(correlation.iloc[-1, -1]), "no autocorrelation"
+    assert pd.isna(correlation.iloc[0, 0]) and pd.isna(correlation.iloc[-1, -1]), "no autocorrelation"
     assert all(correlation >= 0), "should be positive"
 
     # testing _filter_correlated_features

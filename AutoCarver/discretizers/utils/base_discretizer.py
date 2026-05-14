@@ -8,7 +8,6 @@ from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
-from pandas import concat
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from AutoCarver.combinations import CombinationEvaluator
@@ -216,7 +215,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         if len(casted_columns) > 0:  # checking for casted feature to not break inplace
             # converting to DataFrame to avoid PerformanceWarning
             casted_columns = pd.DataFrame(casted_columns)
-            X = concat([X, casted_columns], axis=1)
+            X = pd.concat([X, casted_columns], axis=1)
 
         return X
 

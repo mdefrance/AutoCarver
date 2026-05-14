@@ -4,7 +4,6 @@ from abc import ABC
 
 import numpy as np
 import pandas as pd
-from pandas import notna
 from scipy.stats import chi2_contingency
 
 from AutoCarver.combinations.binary.binary_target_rates import BinaryTargetRate, TargetMean
@@ -54,12 +53,12 @@ class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
 
         # Cramér's V
         cramerv = np.sqrt(chi2 / n_obs)
-        if notna(cramerv):
+        if pd.notna(cramerv):
             cramerv = round(cramerv / tol) * tol
 
         # Tschuprow's T
         tschuprowt = cramerv / np.sqrt(np.sqrt(n_mod_x - 1))
-        if notna(tschuprowt):
+        if pd.notna(tschuprowt):
             tschuprowt = round(tschuprowt / tol) * tol
 
         return {"cramerv": cramerv, "tschuprowt": tschuprowt}
