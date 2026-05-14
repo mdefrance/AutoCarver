@@ -25,9 +25,7 @@ class ClassificationSelector(BaseSelector):
 
     __name__ = "ClassificationSelector"
 
-    def _initiate_measures(
-        self, requested_measures: list[BaseMeasure] | None = None
-    ) -> list[BaseMeasure]:
+    def _initiate_measures(self, requested_measures: list[BaseMeasure] | None = None) -> list[BaseMeasure]:
         """initiates the list of measures with default values"""
 
         # initating to requested ones
@@ -49,17 +47,13 @@ class ClassificationSelector(BaseSelector):
 
         # checking for measures for quantitative target
         if not all(
-            measure.is_y_qualitative
-            or (measure.reverse_xy() and measure.is_y_qualitative)
-            or measure.is_default
+            measure.is_y_qualitative or (measure.reverse_xy() and measure.is_y_qualitative) or measure.is_default
             for measure in measures
         ):
             raise ValueError(f"[{self}] Provide measures for qualitative target!")
         return measures
 
-    def _initiate_filters(
-        self, requested_filters: list[BaseFilter] | None = None
-    ) -> list[BaseFilter]:
+    def _initiate_filters(self, requested_filters: list[BaseFilter] | None = None) -> list[BaseFilter]:
         """initiates the list of measures with default values"""
 
         # initating to requested ones

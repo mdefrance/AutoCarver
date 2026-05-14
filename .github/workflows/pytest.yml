@@ -15,33 +15,33 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Python
-        id: setup-python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
           python-version: '3.10'
       
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
           cache-dependency-glob: "**/uv.lock"
 
       - name: Install dependencies
-        run: uv sync --all-extras
-
-      - name: Run tests
-        run: uv run python -m pytest -v --cov ${{ github.workspace }}/tests/
-      
-      - name: Pylint
         run: |
-          cd ${{ github.workspace }}
-          uv run black --check .
-          uv run isort . --check-only
+          uv lock --check
+          uv sync --all-extras
+
+      - name: Lint
+        run: |
+          uv run ruff check --output-format=github .
+          uv run ruff format --check .
           uv run pylint AutoCarver --fail-under=9
-          uv run flake8 AutoCarver
+          
+      - name: Run tests
+        run: uv run python -m pytest -v --cov tests/
+      
 
   pytest_pull:
     strategy:
@@ -58,22 +58,30 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Python
         id: setup-python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
           cache-dependency-glob: "**/uv.lock"
   
       - name: Install dependencies
-        run: uv sync --all-extras
+        run: |
+          uv lock --check
+          uv sync --all-extras
+
+      - name: Lint
+        run: |
+          uv run ruff check --output-format=github .
+          uv run ruff format --check .
+          uv run pylint AutoCarver --fail-under=9
 
       - name: Run tests
-        run: uv run python -m pytest -v --cov ${{ github.workspace }}/tests/
+        run: uv run python -m pytest -v --cov tests/

@@ -167,22 +167,16 @@ class BaseSelector(ABC):
         return self.verbose and _has_idisplay
 
     @abstractmethod
-    def _initiate_measures(
-        self, requested_measures: list[BaseMeasure] | None = None
-    ) -> list[BaseMeasure]:
+    def _initiate_measures(self, requested_measures: list[BaseMeasure] | None = None) -> list[BaseMeasure]:
         """initiates the list of measures with default values"""
         return requested_measures
 
     @abstractmethod
-    def _initiate_filters(
-        self, requested_filters: list[BaseFilter] | None = None
-    ) -> list[BaseFilter]:
+    def _initiate_filters(self, requested_filters: list[BaseFilter] | None = None) -> list[BaseFilter]:
         """initiates the list of measures with default values"""
         return requested_filters
 
-    def _select_quantitatives(
-        self, quantitatives: list[BaseFeature], X: DataFrame, y: Series
-    ) -> list[BaseFeature]:
+    def _select_quantitatives(self, quantitatives: list[BaseFeature], X: DataFrame, y: Series) -> list[BaseFeature]:
         """Selects the best quantitative features"""
 
         # checking for quantitative features before selection
@@ -200,9 +194,7 @@ class BaseSelector(ABC):
 
         return best_quantitatives
 
-    def _select_qualitatives(
-        self, qualitatives: list[BaseFeature], X: DataFrame, y: Series
-    ) -> list[BaseFeature]:
+    def _select_qualitatives(self, qualitatives: list[BaseFeature], X: DataFrame, y: Series) -> list[BaseFeature]:
         """Selects the best qualitative features"""
 
         # checking for qualitative features before selection
@@ -220,9 +212,7 @@ class BaseSelector(ABC):
 
         return best_qualitatives
 
-    def _initiate_features_measures(
-        self, features: list[BaseFeature], remove_default: bool = True
-    ) -> None:
+    def _initiate_features_measures(self, features: list[BaseFeature], remove_default: bool = True) -> None:
         """initiates the list of measures with default values"""
         # iterating over each feature
         for feature in features:
@@ -309,9 +299,7 @@ class BaseSelector(ABC):
         # too many features: chunking and selecting best amongst chunks
         if len(features) > self.max_num_features_per_chunk:
             # making random chunks of features
-            chunks = make_random_chunks(
-                features, self.max_num_features_per_chunk, self.random_state
-            )
+            chunks = make_random_chunks(features, self.max_num_features_per_chunk, self.random_state)
 
             # iterating over each feature samples
             features: list[BaseFeature] = []
@@ -390,9 +378,7 @@ def is_qualitative(feature: BaseFeature) -> bool:
     return feature.is_qualitative or feature.is_fitted
 
 
-def make_random_chunks(
-    elements: list, max_chunk_sizes: int, random_state: int | None = None
-) -> list:
+def make_random_chunks(elements: list, max_chunk_sizes: int, random_state: int | None = None) -> list:
     """makes a specific number of random chunks of of a list"""
 
     # copying in order to not moidy initial list
@@ -471,9 +457,7 @@ def remove_duplicates(features: list[BaseFeature]) -> list[BaseFeature]:
     return [features[i] for i in range(len(features)) if features[i] not in features[:i]]
 
 
-def sort_features_per_measure(
-    features: list[BaseFeature], measure: BaseMeasure
-) -> list[BaseFeature]:
+def sort_features_per_measure(features: list[BaseFeature], measure: BaseMeasure) -> list[BaseFeature]:
     """sorts features according to specified measure"""
     # checking if features are already ranked
     ranked = False
@@ -637,11 +621,7 @@ def select_with_measure(
 
 def select_from_rank(features: list[BaseFeature], measure: BaseMeasure) -> list[BaseFeature]:
     """Selects the ``n_best`` features of the DataFrame, by association with the target"""
-    return [
-        feature
-        for feature in features
-        if feature.measures.get(make_rank_name(measure)).get("valid")
-    ]
+    return [feature for feature in features if feature.measures.get(make_rank_name(measure)).get("valid")]
 
 
 def make_rank_name(measure: BaseMeasure) -> str:

@@ -1,5 +1,4 @@
-"""Set of tests for multiclass_carver module.
-"""
+"""Set of tests for multiclass_carver module."""
 
 from pathlib import Path
 
@@ -91,16 +90,12 @@ def test_multiclass_carver_initialization():
     assert isinstance(carver.combinations, TschuprowtCombinations)
     assert carver.combinations.max_n_mod == max_n_mod
 
-    carver = MulticlassCarver(
-        min_freq=0.1, features=features, combinations=CramervCombinations(max_n_mod)
-    )
+    carver = MulticlassCarver(min_freq=0.1, features=features, combinations=CramervCombinations(max_n_mod))
     assert isinstance(carver.combinations, CramervCombinations)
     assert carver.combinations.max_n_mod == max_n_mod
 
     with raises(ValueError):
-        MulticlassCarver(
-            min_freq=0.1, features=features, combinations=KruskalCombinations(max_n_mod)
-        )
+        MulticlassCarver(min_freq=0.1, features=features, combinations=KruskalCombinations(max_n_mod))
 
 
 def test_multiclass_carver_prepare_data(evaluator: CombinationEvaluator):
@@ -111,9 +106,7 @@ def test_multiclass_carver_prepare_data(evaluator: CombinationEvaluator):
         quantitatives=["feature3"],
     )
     carver = MulticlassCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator)
-    X = DataFrame(
-        {"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]}
-    )
+    X = DataFrame({"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]})
 
     # with wrong target
     y = Series([0, 1, 0])
@@ -211,9 +204,7 @@ def test_multiclass_carver_fit_transform_with_small_data_ordinal(evaluator: Comb
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
-    carver = MulticlassCarver(
-        min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False
-    )
+    carver = MulticlassCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False)
     idx = ["a", "b", "c", "d"]
     X = DataFrame(
         {
@@ -822,62 +813,53 @@ def test_multiclass_carver(
     feature_versions = features.versions
 
     # checking that there were some versions built
-    assert all(
-        feature.version != feature.name for feature in features
-    ), "No version built for some features"
-    assert all(
-        version in x_discretized for version in feature_versions
-    ), "Version missing from Train dataframe after transform"
-    assert all(
-        version in x_dev_discretized for version in feature_versions
-    ), "Version missing from Dev dataframe after transform"
+    assert all(feature.version != feature.name for feature in features), "No version built for some features"
+    assert all(version in x_discretized for version in feature_versions), (
+        "Version missing from Train dataframe after transform"
+    )
+    assert all(version in x_dev_discretized for version in feature_versions), (
+        "Version missing from Dev dataframe after transform"
+    )
 
     # testing that attributes where correctly used
-    assert all(
-        x_discretized[feature_versions].nunique() <= evaluator.max_n_mod
-    ), "Too many buckets after carving of train sample"
-    assert all(
-        x_dev_discretized[feature_versions].nunique() <= evaluator.max_n_mod
-    ), "Too many buckets after carving of test sample"
+    assert all(x_discretized[feature_versions].nunique() <= evaluator.max_n_mod), (
+        "Too many buckets after carving of train sample"
+    )
+    assert all(x_dev_discretized[feature_versions].nunique() <= evaluator.max_n_mod), (
+        "Too many buckets after carving of test sample"
+    )
 
     # checking that nans were not dropped if not requested
     if not dropna:
         # iterating over each feature
         for feature in features:
-            assert (
-                raw_x_train[feature.name].isna().mean()
-                == x_discretized[feature.version].isna().mean()
-            ), f"Some Nans are being dropped (grouped) or more nans than expected {feature}"
+            assert raw_x_train[feature.name].isna().mean() == x_discretized[feature.version].isna().mean(), (
+                f"Some Nans are being dropped (grouped) or more nans than expected {feature}"
+            )
 
     # checking that nans were dropped if requested
     else:
-        assert all(
-            x_discretized[feature_versions].isna().mean() == 0
-        ), "Some Nans are not dropped (grouped)"
+        assert all(x_discretized[feature_versions].isna().mean() == 0), "Some Nans are not dropped (grouped)"
 
     # testing for differences between train and dev
-    assert all(
-        x_discretized[feature_versions].nunique() == x_dev_discretized[feature_versions].nunique()
-    ), "More buckets in train or test samples"
+    assert all(x_discretized[feature_versions].nunique() == x_dev_discretized[feature_versions].nunique()), (
+        "More buckets in train or test samples"
+    )
     for feature in features:
         # getting target rate for version tag
         train_target_rate = (
-            (x_discretized[target].astype(str) == feature.version_tag).groupby(
-                x_discretized[feature.version]
-            )
+            (x_discretized[target].astype(str) == feature.version_tag).groupby(x_discretized[feature.version])
         ).mean()
         dev_target_rate = (
-            (x_dev_discretized[target].astype(str) == feature.version_tag).groupby(
-                x_dev_discretized[feature.version]
-            )
+            (x_dev_discretized[target].astype(str) == feature.version_tag).groupby(x_dev_discretized[feature.version])
         ).mean()
         # sorting by target for non-ordinal features
         if not feature.is_ordinal:
             train_target_rate = train_target_rate.sort_values()
             dev_target_rate = dev_target_rate.sort_values()
-        assert all(
-            train_target_rate.index == dev_target_rate.index
-        ), f"Not robust feature {feature} was not dropped, or robustness test not working"
+        assert all(train_target_rate.index == dev_target_rate.index), (
+            f"Not robust feature {feature} was not dropped, or robustness test not working"
+        )
 
     # test that all values still are in the values_orders
     for feature in features.qualitatives:
@@ -887,8 +869,7 @@ def test_multiclass_carver(
         if not dropna:  # removing nan from list of initial values
             init_values = [value for value in init_values if value != feature.nan]
         assert all(value in fitted_values for value in init_values), (
-            "Missing value in output! Some values have been dropped for qualitative feature"
-            f": {feature.name}"
+            f"Missing value in output! Some values have been dropped for qualitative feature: {feature.name}"
         )
 
     # trying out copy
@@ -898,9 +879,9 @@ def test_multiclass_carver(
             discretized = list(x_discretized[feature.version].fillna(Constants.NAN).unique())
             train = list(x_train[feature.name].fillna(Constants.NAN).unique())
 
-            assert any(val not in train for val in discretized) or any(
-                val not in discretized for val in train
-            ), f"Not copied correctly ({feature})"
+            assert any(val not in train for val in discretized) or any(val not in discretized for val in train), (
+                f"Not copied correctly ({feature})"
+            )
 
     # testing json serialization
     carver_file = tmp_path / "test.json"
@@ -909,13 +890,10 @@ def test_multiclass_carver(
     loaded_carver = MulticlassCarver.load(str(carver_file))
 
     # checking that reloading worked exactly the same
-    assert all(
-        loaded_carver.summary == auto_carver.summary
-    ), "Non-identical summaries when loading from JSON"
-    assert all(
-        x_discretized[feature_versions]
-        == loaded_carver.transform(x_dev_1)[loaded_carver.features.versions]
-    ), "Non-identical discretized values when loading from JSON"
+    assert all(loaded_carver.summary == auto_carver.summary), "Non-identical summaries when loading from JSON"
+    assert all(x_discretized[feature_versions] == loaded_carver.transform(x_dev_1)[loaded_carver.features.versions]), (
+        "Non-identical discretized values when loading from JSON"
+    )
 
     # transform dev with unexpected modal for a feature that has_default
     auto_carver.transform(x_dev_wrong_1)

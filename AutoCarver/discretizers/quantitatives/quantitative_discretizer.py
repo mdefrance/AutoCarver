@@ -121,9 +121,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
             ordinal_discretizer.fit(X, y)
 
 
-def check_frequencies(
-    x: DataFrame, features: Features, half_min_freq: float
-) -> list[QuantitativeFeature]:
+def check_frequencies(x: DataFrame, features: Features, half_min_freq: float) -> list[QuantitativeFeature]:
     """Checks for rare modalities in the provided features."""
 
     # searching for features with rare quantiles: computing min frequency per feature

@@ -226,9 +226,7 @@ def test_compute_stats_all_nans():
     y = Series([1, 0, 1])
     labels = GroupedList(["A", "B", "C"])
     stats, len_df = compute_stats(df_feature, y, labels)
-    expected_stats = vstack(
-        (array([0, 0, 0]), array([nan, nan, nan]))
-    )  # frequencies  # target rates
+    expected_stats = vstack((array([0, 0, 0]), array([nan, nan, nan])))  # frequencies  # target rates
     expected_len_df = 3  # len_df includes NaN values
 
     # Check frequencies
@@ -449,9 +447,7 @@ def test_find_common_modalities_unexpected_value():
 
 def test_ordinal_discretizer_with_increasing_freq():
     """Test OrdinalDiscretizer with basic input"""
-    df = DataFrame(
-        {"feature1": ["A", "B", "A", "C", "B", "A"], "feature2": ["X", "Y", "X", "Z", "Y", "X"]}
-    )
+    df = DataFrame({"feature1": ["A", "B", "A", "C", "B", "A"], "feature2": ["X", "Y", "X", "Z", "Y", "X"]})
     y = Series([1, 0, 1, 0, 1, 0])
     feature1 = OrdinalFeature("feature1", ["A", "B", "C"])
     feature2 = OrdinalFeature("feature2", ["X", "Y", "Z"])
@@ -486,9 +482,7 @@ def test_ordinal_discretizer_with_increasing_freq():
 
 def test_ordinal_discretizer_with_nans():
     """Test OrdinalDiscretizer with basic input"""
-    df = DataFrame(
-        {"feature1": ["A", "B", nan, "C", "B", "A"], "feature2": ["X", "Y", nan, "Z", "Y", "X"]}
-    )
+    df = DataFrame({"feature1": ["A", "B", nan, "C", "B", "A"], "feature2": ["X", "Y", nan, "Z", "Y", "X"]})
     y = Series([1, 0, 1, 0, 1, 0])
     feature1 = OrdinalFeature("feature1", ["A", "B", "C"])
     feature2 = OrdinalFeature("feature2", ["X", "Y", "Z"])
@@ -520,9 +514,7 @@ def test_ordinal_discretizer_with_nans():
 
 def test_ordinal_discretizer_with_missing_value():
     """Test OrdinalDiscretizer with basic input"""
-    df = DataFrame(
-        {"feature1": ["A", "B", "A", nan, "B", "A"], "feature2": ["X", "Y", "X", nan, "Y", "X"]}
-    )
+    df = DataFrame({"feature1": ["A", "B", "A", nan, "B", "A"], "feature2": ["X", "Y", "X", nan, "Y", "X"]})
     y = Series([1, 0, 1, 0, 1, 0])
     feature1 = OrdinalFeature("feature1", ["A", "B", "C"])
     feature2 = OrdinalFeature("feature2", ["X", "Y", "Z"])
@@ -555,9 +547,7 @@ def test_ordinal_discretizer_with_missing_value():
 
 def test_ordinal_discretizer_with_all_underrepresented():
     """Test OrdinalDiscretizer with basic input"""
-    df = DataFrame(
-        {"feature1": ["A", "B", "A", "C", "B", "A"], "feature2": ["X", "Y", "X", "Z", "Y", "X"]}
-    )
+    df = DataFrame({"feature1": ["A", "B", "A", "C", "B", "A"], "feature2": ["X", "Y", "X", "Z", "Y", "X"]})
     y = Series([1, 0, 1, 0, 1, 0])
     feature1 = OrdinalFeature("feature1", ["A", "B", "C"])
     feature2 = OrdinalFeature("feature2", ["X", "Y", "Z"])
@@ -637,9 +627,7 @@ def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:
         features(feature).content,
         x_disc[feature].value_counts(dropna=False, normalize=True).round(2),
     )
-    assert (
-        features(feature).content == expected_ordinal_01
-    ), "Missing value in order not correctly grouped"
+    assert features(feature).content == expected_ordinal_01, "Missing value in order not correctly grouped"
 
     expected_ordinal_lownan_01 = {
         "Low+": ["Low", "Low-", "Low+"],
@@ -649,9 +637,9 @@ def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:
         "High": ["High"],
         "High+": ["High+"],
     }
-    assert (
-        features("Qualitative_Ordinal_lownan").content == expected_ordinal_lownan_01
-    ), "Missing value in order not correctly grouped or introduced nans."
+    assert features("Qualitative_Ordinal_lownan").content == expected_ordinal_lownan_01, (
+        "Missing value in order not correctly grouped or introduced nans."
+    )
 
     # minimum frequency per modality + apply(find_common_modalities) outputs a DataFrame
     min_freq = 0.08
@@ -668,9 +656,7 @@ def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:
         "High": ["Medium+", "High-", "High"],
         "High+": ["High+"],
     }
-    assert (
-        features("Qualitative_Ordinal").content == expected_ordinal_08
-    ), "Values not correctly grouped"
+    assert features("Qualitative_Ordinal").content == expected_ordinal_08, "Values not correctly grouped"
 
     expected_ordinal_lownan_08 = {
         "Low+": ["Low", "Low-", "Low+"],
@@ -679,6 +665,6 @@ def test_ordinal_discretizer(x_train: DataFrame, target: str) -> None:
         "High": ["Medium+", "High-", "High"],
         "High+": ["High+"],
     }
-    assert (
-        features("Qualitative_Ordinal_lownan").content == expected_ordinal_lownan_08
-    ), "NaNs should stay by themselves."
+    assert features("Qualitative_Ordinal_lownan").content == expected_ordinal_lownan_08, (
+        "NaNs should stay by themselves."
+    )

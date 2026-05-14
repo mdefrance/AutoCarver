@@ -62,9 +62,7 @@ def test_quantitative_filter(
     assert len(filtered_features) == 1, "sould keep the best feature"
 
 
-def test_filter(
-    filter: QuantitativeFilter, sample_data: DataFrame, sample_ranks: list[BaseFeature]
-) -> None:
+def test_filter(filter: QuantitativeFilter, sample_data: DataFrame, sample_ranks: list[BaseFeature]) -> None:
     assert isinstance(filter.measure, str), "measure should be a name for DataFrame.corr"
 
     # testing _compute_correlation
@@ -80,9 +78,7 @@ def test_filter(
     # testing _filter_correlated_features
     filtered_features = filter._filter_correlated_features(correlation, sample_ranks)
     assert isinstance(filtered_features, list), "should be a list"
-    assert all(
-        isinstance(feature, BaseFeature) for feature in filtered_features
-    ), "should be BaseFeature"
+    assert all(isinstance(feature, BaseFeature) for feature in filtered_features), "should be BaseFeature"
 
     # testing _compute_worst_correlation
     feature = sample_ranks[1]

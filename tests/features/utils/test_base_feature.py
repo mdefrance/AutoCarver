@@ -1,4 +1,4 @@
-""" set of tests for BaseFeature"""
+"""set of tests for BaseFeature"""
 
 import json
 
@@ -205,9 +205,7 @@ def test_base_feature_set_dropna() -> None:
 
     # deactivate feature already merged nans
     feature = BaseFeature(name="test_feature")
-    feature.update(
-        GroupedList({"a": ["a"], "b": ["b"], "nan_value": ["nan_value", "c"]}), replace=True
-    )
+    feature.update(GroupedList({"a": ["a"], "b": ["b"], "nan_value": ["nan_value", "c"]}), replace=True)
     feature.nan = "nan_value"
     feature.has_nan = True
     feature.dropna = True  # Activate dropna

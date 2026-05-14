@@ -1,4 +1,4 @@
-""" set of tests for viability testing within carvers"""
+"""set of tests for viability testing within carvers"""
 
 from pandas import DataFrame, Series
 from pytest import raises

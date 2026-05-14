@@ -1,5 +1,4 @@
-"""Set of tests for binary_carver module.
-"""
+"""Set of tests for binary_carver module."""
 
 from pathlib import Path
 
@@ -97,15 +96,11 @@ def test_binary_carver_initialization():
     assert carver.combinations.max_n_mod == 5
 
     max_n_mod = 8
-    carver = BinaryCarver(
-        min_freq=0.1, features=features, dropna=True, combinations=TschuprowtCombinations(max_n_mod)
-    )
+    carver = BinaryCarver(min_freq=0.1, features=features, dropna=True, combinations=TschuprowtCombinations(max_n_mod))
     assert isinstance(carver.combinations, TschuprowtCombinations)
     assert carver.combinations.max_n_mod == max_n_mod
 
-    carver = BinaryCarver(
-        min_freq=0.1, features=features, combinations=CramervCombinations(max_n_mod)
-    )
+    carver = BinaryCarver(min_freq=0.1, features=features, combinations=CramervCombinations(max_n_mod))
     assert isinstance(carver.combinations, CramervCombinations)
     assert carver.combinations.max_n_mod == max_n_mod
 
@@ -121,9 +116,7 @@ def test_binary_carver_prepare_data(evaluator: CombinationEvaluator):
         quantitatives=["feature3"],
     )
     carver = BinaryCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator)
-    X = DataFrame(
-        {"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]}
-    )
+    X = DataFrame({"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]})
 
     # with wrong target
     y = Series([0, 1, 2])
@@ -148,9 +141,7 @@ def test_binary_carver_aggregator(evaluator: CombinationEvaluator):
         quantitatives=["feature3"],
     )
     carver = BinaryCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator)
-    X = DataFrame(
-        {"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]}
-    )
+    X = DataFrame({"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]})
     y = Series([0, 1, 0])
     xtabs = carver._aggregator(X, y)
     print(xtabs)
@@ -414,9 +405,7 @@ def test_binary_carver_fit_transform_with_small_data_ordinal(evaluator: Combinat
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
-    carver = BinaryCarver(
-        min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False
-    )
+    carver = BinaryCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False)
     idx = ["a", "b", "c", "d"]
     X = DataFrame(
         {
@@ -682,9 +671,7 @@ def test_binary_carver_fit_transform_with_wrong_dev(evaluator: CombinationEvalua
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
-    carver = BinaryCarver(
-        min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False
-    )
+    carver = BinaryCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False)
     idx = ["a", "b", "c", "d"]
     X = DataFrame(
         {
@@ -897,48 +884,46 @@ def test_binary_carver(
     feature_names = features.names
 
     # testing that attributes where correctly used
-    assert all(
-        x_discretized[feature_names].nunique() <= evaluator.max_n_mod
-    ), "Too many buckets after carving of train sample"
-    assert all(
-        x_dev_discretized[feature_names].nunique() <= evaluator.max_n_mod
-    ), "Too many buckets after carving of test sample"
+    assert all(x_discretized[feature_names].nunique() <= evaluator.max_n_mod), (
+        "Too many buckets after carving of train sample"
+    )
+    assert all(x_dev_discretized[feature_names].nunique() <= evaluator.max_n_mod), (
+        "Too many buckets after carving of test sample"
+    )
 
     # checking that nans were not dropped if not requested
     if not dropna:
         # testing output of nans
-        assert all(
-            raw_x_train[feature_names].isna().mean() == x_discretized[feature_names].isna().mean()
-        ), "Some Nans are being dropped (grouped) or more nans than expected"
+        assert all(raw_x_train[feature_names].isna().mean() == x_discretized[feature_names].isna().mean()), (
+            "Some Nans are being dropped (grouped) or more nans than expected"
+        )
 
     # checking that nans were dropped if requested
     else:
-        assert all(
-            x_discretized[feature_names].isna().mean() == 0
-        ), "Some Nans are not dropped (grouped)"
+        assert all(x_discretized[feature_names].isna().mean() == 0), "Some Nans are not dropped (grouped)"
 
     # testing for differences between train and dev
-    assert all(
-        x_discretized[feature_names].nunique() == x_dev_discretized[feature_names].nunique()
-    ), "More buckets in train or test samples"
+    assert all(x_discretized[feature_names].nunique() == x_dev_discretized[feature_names].nunique()), (
+        "More buckets in train or test samples"
+    )
     for feature in feature_names:
         # getting target rate per feature
         train_target_rate = x_discretized.groupby(feature)[target].mean().sort_values()
         dev_target_rate = x_dev_discretized.groupby(feature)[target].mean().sort_values()
-        assert all(
-            train_target_rate.index == dev_target_rate.index
-        ), f"Not robust feature {feature} was not dropped, or robustness test not working"
+        assert all(train_target_rate.index == dev_target_rate.index), (
+            f"Not robust feature {feature} was not dropped, or robustness test not working"
+        )
 
         # checking for final modalities less frequent than discretizer_min_freq
         train_frequency = x_discretized[feature].value_counts(normalize=True, dropna=True)
-        assert not any(
-            train_frequency.values < auto_carver.discretizer_min_freq
-        ), f"Some modalities of {feature} are less frequent than discretizer_min_freq in train"
+        assert not any(train_frequency.values < auto_carver.discretizer_min_freq), (
+            f"Some modalities of {feature} are less frequent than discretizer_min_freq in train"
+        )
 
         dev_frequency = x_dev_discretized[feature].value_counts(normalize=True, dropna=True)
-        assert not any(
-            dev_frequency.values < auto_carver.discretizer_min_freq
-        ), f"Some modalities {feature} are less frequent than discretizer_min_freq in dev"
+        assert not any(dev_frequency.values < auto_carver.discretizer_min_freq), (
+            f"Some modalities {feature} are less frequent than discretizer_min_freq in dev"
+        )
 
     # test that all values still are in the values_orders
     for feature in features.qualitatives:
@@ -949,20 +934,17 @@ def test_binary_carver(
             init_values = [value for value in init_values if value != feature.nan]
 
         assert all(value in fitted_values for value in init_values), (
-            "Missing value in output! Some values have been dropped for qualitative "
-            f"feature: {feature.name}"
+            f"Missing value in output! Some values have been dropped for qualitative feature: {feature.name}"
         )
 
     # testing copy functionnality
     if copy:
         assert any(
-            x_discretized[feature_names].fillna(Constants.NAN)
-            != x_train[feature_names].fillna(Constants.NAN)
+            x_discretized[feature_names].fillna(Constants.NAN) != x_train[feature_names].fillna(Constants.NAN)
         ), "Not applied discretization inplace correctly"
     else:
         assert all(
-            x_discretized[feature_names].fillna(Constants.NAN)
-            == x_train[feature_names].fillna(Constants.NAN)
+            x_discretized[feature_names].fillna(Constants.NAN) == x_train[feature_names].fillna(Constants.NAN)
         ), "Not copied correctly"
 
     # testing json serialization
@@ -973,13 +955,11 @@ def test_binary_carver(
     # checking that reloading worked exactly the same
     print("\n\ninput carver", auto_carver.summary)
     print("\n\nLoaded carver", loaded_carver.summary)
-    assert all(
-        loaded_carver.summary == auto_carver.summary
-    ), "Non-identical summaries when loading from JSON"
+    assert all(loaded_carver.summary == auto_carver.summary), "Non-identical summaries when loading from JSON"
     loaded_x_train = loaded_carver.transform(raw_x_train)
-    assert all(
-        x_dev_discretized[feature_names] == loaded_x_train[loaded_carver.features.names]
-    ), "Non-identical discretized values when loading from JSON"
+    assert all(x_dev_discretized[feature_names] == loaded_x_train[loaded_carver.features.names]), (
+        "Non-identical discretized values when loading from JSON"
+    )
 
     # transform dev with unexpected modal for a feature that has_default
     auto_carver.transform(x_dev_wrong_1)

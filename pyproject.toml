@@ -1,6 +1,6 @@
 [project]
 name = "AutoCarver"
-version = "7.1.0"
+version = "7.1.1"
 description = "Automatic Discretization of Features with Optimal Target Association"
 authors = [{ name = "Mario DEFRANCE", email = "defrancemario@gmail.com" }]
 requires-python = ">=3.10, <3.13"
@@ -37,11 +37,7 @@ dev = [
     "ipykernel>=6.27.1,<7",
     "xgboost>=2.1.3,<3",
     "ipywidgets>=8.1.5,<9",
-    "black>=23.12.0,<24",
-    "flake8>=6.1.0,<7",
-    "Flake8-pyproject>=1.2.3,<2",
     "pylint>=3.0.3,<4",
-    "isort>=5.13.2,<6",
     "pytest-cov>=4.1.0,<5",
     "pytest>=7.4.3,<8",
     "icecream>=2.1.3,<3",
@@ -50,12 +46,12 @@ dev = [
     "pypandoc>=1.12,<2",
     "nbsphinx==0.9.6",
     "toml>=0.10.2,<0.11",
+    "ruff>=0.15.12",
 ]
 
 [project.urls]
 docs = "https://autocarver.readthedocs.io/en/latest/index.html"
 repository = "https://github.com/mdefrance/AutoCarver"
-
 
 [tool.uv.build-backend]
 module-name = ["AutoCarver"]
@@ -65,17 +61,14 @@ module-root = ""
 requires = ["uv_build>=0.11.7,<0.12.0"]
 build-backend = "uv_build"
 
-[tool.black]
-line-length = 100
+[tool.ruff]
+line-length = 120
+target-version = 'py310'
+exclude = ["*.ipynb"]
 
-[tool.isort]
-profile = "black"
-line_length = 100
-
-[tool.flake8]
-max-line-length = 100
-extend-ignore = ["E203", "E704"]
-
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "C4", "PTH", "UP", "C90", "FURB", "ERA"]
+ignore = ["PTH123", "B905", "ERA001"]
 
 [tool.pylint.basic]
 good-names = ["X", "y"]

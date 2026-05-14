@@ -1,9 +1,9 @@
-""" Config for sphinx documentation
-"""
+"""Config for sphinx documentation"""
 
 import os
 import sys
 from inspect import getsourcefile
+from pathlib import Path
 
 import toml
 
@@ -35,7 +35,7 @@ setup_path_and_check_autocarver()
 
 
 # Get path to directory containing this file, conf.py.
-DOCS_DIRECTORY = os.path.dirname(os.path.abspath(getsourcefile(lambda: 0)))
+DOCS_DIRECTORY = Path(getsourcefile(lambda: 0)).resolve().parent
 
 
 def ensure_pandoc_installed(_):
@@ -44,7 +44,7 @@ def ensure_pandoc_installed(_):
     # Download pandoc if necessary. If pandoc is already installed and on
     # the PATH, the installed version will be used. Otherwise, we will
     # download a copy of pandoc into docs/bin/ and add that to our PATH.
-    pandoc_dir = os.path.join(DOCS_DIRECTORY, "bin")
+    pandoc_dir = DOCS_DIRECTORY / "bin"
     # Add dir containing pandoc binary to the PATH environment variable
     if pandoc_dir not in os.environ["PATH"].split(os.pathsep):
         os.environ["PATH"] += os.pathsep + pandoc_dir

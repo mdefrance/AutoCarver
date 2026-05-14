@@ -67,7 +67,7 @@ def prettier_measures(association: DataFrame) -> str:
     subset += association.select_dtypes(include=["number"]).columns.tolist()
 
     # lower precision for specific columns
-    nicer_association = nicer_association.format({measure: "{:.4f}" for measure in subset})
+    nicer_association = nicer_association.format(dict.fromkeys(subset, "{:.4f}"))
 
     # conversion to html
     return nicer_association._repr_html_()

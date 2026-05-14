@@ -59,9 +59,7 @@ def check_ordinal_features(
     if isinstance(ordinals, (Features, list)):
         for feature in ordinals:
             if not isinstance(feature, OrdinalFeature):
-                raise TypeError(
-                    "Ordinals should be a list of OrdinalFeature or a dict of ordinal values."
-                )
+                raise TypeError("Ordinals should be a list of OrdinalFeature or a dict of ordinal values.")
         ordinal_features = ordinals
     elif isinstance(ordinals, dict):
         ordinal_features = list(ordinals.keys())
@@ -124,9 +122,7 @@ class Features:
         # casting features accordingly
         all_features = cast_features(categoricals, CategoricalFeature, **kwargs)
         all_features += cast_features(quantitatives, QuantitativeFeature, **kwargs)
-        all_features += cast_features(
-            ordinal_features, OrdinalFeature, ordinal_values=ordinals, **kwargs
-        )
+        all_features += cast_features(ordinal_features, OrdinalFeature, ordinal_values=ordinals, **kwargs)
 
         # ensuring features are grouped accordingly (already initiated features)
         self._categoricals = get_categorical_features(all_features)
@@ -184,9 +180,7 @@ class Features:
         """Returns an iterator of all features"""
         return iter(self.to_list())
 
-    def __getitem__(
-        self, index: int | str | list[int] | list[str] | slice
-    ) -> BaseFeature | list[BaseFeature] | None:
+    def __getitem__(self, index: int | str | list[int] | list[str] | slice) -> BaseFeature | list[BaseFeature] | None:
         """Get item by index in list of features, by feature name or with a list of
         indices/feature names
         """
@@ -240,9 +234,7 @@ class Features:
         """sets ordinal features"""
 
         if not all(isinstance(feature, CategoricalFeature) for feature in values):
-            raise AttributeError(
-                f"[{self}] Trying to set categorical feature with wrongly typed feature"
-            )
+            raise AttributeError(f"[{self}] Trying to set categorical feature with wrongly typed feature")
         self._categoricals = values
 
     @property
@@ -255,9 +247,7 @@ class Features:
         """sets ordinal features"""
 
         if not all(isinstance(feature, OrdinalFeature) for feature in values):
-            raise AttributeError(
-                f"[{self}] Trying to set ordinal feature with wrongly typed feature"
-            )
+            raise AttributeError(f"[{self}] Trying to set ordinal feature with wrongly typed feature")
         self._ordinals = values
 
     @property
@@ -270,9 +260,7 @@ class Features:
         """sets quantitative features"""
 
         if not all(isinstance(feature, QuantitativeFeature) for feature in values):
-            raise AttributeError(
-                f"[{self}] Trying to set quantitative feature with wrongly typed feature"
-            )
+            raise AttributeError(f"[{self}] Trying to set quantitative feature with wrongly typed feature")
         self._quantitatives = values
 
     @property
@@ -361,11 +349,7 @@ class Features:
 
         # fills features with nans when dropna is True
         X.fillna(
-            {
-                feature.version: feature.nan
-                for feature in self
-                if feature.has_nan and (feature.dropna or ignore_dropna)
-            },
+            {feature.version: feature.nan for feature in self if feature.has_nan and (feature.dropna or ignore_dropna)},
             inplace=True,
         )
 
@@ -562,17 +546,13 @@ def cast_features(
     for feature in features:
         # string case, initiating feature
         if isinstance(feature, str):
-            converted_features += [
-                target_class(feature, values=ordinal_values.get(feature), **kwargs)
-            ]
+            converted_features += [target_class(feature, values=ordinal_values.get(feature), **kwargs)]
         # already a BaseFeature
         elif isinstance(feature, BaseFeature):
             converted_features += [feature]
 
         else:
-            raise TypeError(
-                f"[Features] feature {feature} is neither a str, nor a {target_class.__name__}."
-            )
+            raise TypeError(f"[Features] feature {feature} is neither a str, nor a {target_class.__name__}.")
 
     # deduplicating features by version name
     return [
@@ -607,19 +587,10 @@ def check_duplicate_features(
     # checking for duplicates
     duplicate = [feature in ordinal_names + quantitative_names for feature in categorcial_names]
     if any(duplicate):
-        raise ValueError(
-            f"Provided categoricals found in ordinals/quantitatives: {duplicate}. "
-            "Please, check inputs!"
-        )
+        raise ValueError(f"Provided categoricals found in ordinals/quantitatives: {duplicate}. Please, check inputs!")
     duplicate = [feature in ordinal_names + categorcial_names for feature in quantitative_names]
     if any(duplicate):
-        raise ValueError(
-            f"Provided quantitatives found in ordinals/categoricals: {duplicate}. "
-            "Please, check inputs!"
-        )
+        raise ValueError(f"Provided quantitatives found in ordinals/categoricals: {duplicate}. Please, check inputs!")
     duplicate = [feature in quantitative_names + categorcial_names for feature in ordinal_names]
     if any(duplicate):
-        raise ValueError(
-            f"Provided ordinals found in categoricals/quantitatives: {duplicate}. "
-            "Please, check inputs!"
-        )
+        raise ValueError(f"Provided ordinals found in categoricals/quantitatives: {duplicate}. Please, check inputs!")
