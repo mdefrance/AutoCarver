@@ -876,7 +876,7 @@ def test_best_association_with_nan_combinations_viable(evaluator: ContinuousComb
     feature.dropna = True
     evaluator.feature = feature
 
-    xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], feature.np.nan: [2, 0]})
+    xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], feature.nan: [2, 0]})
     evaluator.samples.train = AggregatedSample(xagg)
 
     evaluator.samples.dev = AggregatedSample(xagg)
@@ -896,7 +896,7 @@ def test_best_association_with_nan_combinations_viable(evaluator: ContinuousComb
     assert result["kruskal"] == expected["kruskal"]
     print(evaluator.samples.train.xagg)
 
-    expected = pd.Series({f"a, {feature.np.nan}": [0, 2, 0, 2, 0], "b": [2, 1]})
+    expected = pd.Series({f"a, {feature.nan}": [0, 2, 0, 2, 0], "b": [2, 1]})
     assert feature.labels == list(expected.index)
     assert evaluator.samples.train.xagg.equals(expected)
     assert evaluator.samples.dev.xagg.equals(expected)
@@ -960,7 +960,7 @@ def test_get_best_combination_non_nan_viable_with_nan(evaluator: ContinuousCombi
     feature.dropna = True
     evaluator.feature = feature
 
-    xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0], feature.np.nan: [-1, 5]})
+    xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0], feature.nan: [-1, 5]})
     evaluator.samples.train = AggregatedSample(xagg)
     evaluator.samples.dev = AggregatedSample(xagg)
     evaluator.max_n_mod = 2
@@ -977,7 +977,7 @@ def test_get_best_combination_non_nan_viable_with_nan(evaluator: ContinuousCombi
     assert result["combination"] == expected["combination"]
     assert result["kruskal"] == expected["kruskal"]
 
-    expected = pd.Series({"a": [0, 2, 0], "b to c": [2, 1, 2, 0], feature.np.nan: [-1, 5]})
+    expected = pd.Series({"a": [0, 2, 0], "b to c": [2, 1, 2, 0], feature.nan: [-1, 5]})
     print(evaluator.samples.train.xagg)
     assert feature.labels == list(expected.index)
     assert evaluator.samples.train.xagg.equals(expected)
@@ -1046,7 +1046,7 @@ def test_get_best_combination_with_nan_viable_with_nan_without_combi(
     feature.dropna = True
     evaluator.feature = feature
 
-    xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0], feature.np.nan: [-1, 5]})
+    xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0], feature.nan: [-1, 5]})
     evaluator.samples.train = AggregatedSample(xagg)
     evaluator.samples.dev = AggregatedSample(xagg)
     evaluator.max_n_mod = 2
@@ -1099,7 +1099,7 @@ def test_get_best_combination_with_nan_viable_with_nan_without_dropna(
     feature.has_nan = False
     evaluator.feature = feature
 
-    xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0], feature.np.nan: [-1, 5]})
+    xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0], feature.nan: [-1, 5]})
     evaluator.samples.train = AggregatedSample(xagg)
     evaluator.samples.dev = AggregatedSample(xagg)
     evaluator.max_n_mod = 2
@@ -1116,7 +1116,7 @@ def test_get_best_combination_with_nan_viable_with_nan(evaluator: ContinuousComb
     evaluator.feature = feature
     evaluator.dropna = True
 
-    xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0], feature.np.nan: [-1, 5]})
+    xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0], feature.nan: [-1, 5]})
     evaluator.samples.train = AggregatedSample(xagg)
     evaluator.samples.dev = AggregatedSample(xagg)
     evaluator.max_n_mod = 2
@@ -1250,7 +1250,7 @@ def test_get_best_combination_viable_with_nan_without_dropna(
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     feature.has_nan = True
 
-    xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0], feature.np.nan: [-1, 5]})
+    xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0], feature.nan: [-1, 5]})
     evaluator.max_n_mod = 2
     evaluator.dropna = False
 
@@ -1267,7 +1267,7 @@ def test_get_best_combination_viable_with_nan_without_dropna(
     assert result["combination"] == expected["combination"]
     assert result["kruskal"] == expected["kruskal"]
 
-    expected = pd.Series({"a": [0, 2, 0], "b to c": [2, 1, 2, 0], feature.np.nan: [-1, 5]})
+    expected = pd.Series({"a": [0, 2, 0], "b to c": [2, 1, 2, 0], feature.nan: [-1, 5]})
     print(evaluator.samples.train.xagg)
     assert feature.labels == list(expected.index)
     assert evaluator.samples.train.xagg.equals(expected)
@@ -1283,7 +1283,7 @@ def test_get_best_combination_viable_with_nan(evaluator: ContinuousCombinationEv
     feature.has_nan = True
     assert feature.dropna is False
 
-    xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0], feature.np.nan: [-1, 5]})
+    xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0], feature.nan: [-1, 5]})
     evaluator.max_n_mod = 2
     evaluator.dropna = True
 

@@ -81,7 +81,7 @@ def test_transform_quantitative_feature(features: Features) -> None:
         "2.00e+00 < x <= 4.50e+00",
         "2.00e+00 < x <= 4.50e+00",
         "2.00e+00 < x <= 4.50e+00",
-        feature.np.nan,
+        feature.nan,
         "4.50e+00 < x",
     ] == list_feature
 
@@ -106,7 +106,7 @@ def test_transform_quantitative_feature(features: Features) -> None:
         "4.50e+00 < x",
     ] == list_feature
 
-    # with values to group, with feature.np.nan in df_feature (grouped nans)
+    # with values to group, with feature.nan in df_feature (grouped nans)
     feature = features[-1]
     feature.has_nan = True
     feature.dropna = True

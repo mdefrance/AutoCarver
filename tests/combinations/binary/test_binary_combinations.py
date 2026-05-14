@@ -900,7 +900,7 @@ def test_best_association_with_nan_combinations_viable(evaluator: BinaryCombinat
     feature.dropna = True
     evaluator.feature = feature
 
-    xagg = pd.DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", feature.np.nan])
+    xagg = pd.DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", feature.nan])
     evaluator.samples.train = AggregatedSample(xagg)
 
     evaluator.samples.dev = AggregatedSample(xagg)
@@ -922,7 +922,7 @@ def test_best_association_with_nan_combinations_viable(evaluator: BinaryCombinat
     assert result["tschuprowt"] == expected["tschuprowt"]
     print(evaluator.samples.train.xagg)
 
-    expected = pd.DataFrame({0: [0, 2], 1: [3, 0]}, index=[f"a, {feature.np.nan}", "b"])
+    expected = pd.DataFrame({0: [0, 2], 1: [3, 0]}, index=[f"a, {feature.nan}", "b"])
     assert feature.labels == list(expected.index)
     assert np.allclose(evaluator.samples.train.xagg, expected)
     assert np.allclose(evaluator.samples.dev.xagg, expected)
@@ -987,7 +987,7 @@ def test_get_best_combination_non_nan_viable_with_nan(evaluator: BinaryCombinati
     feature.dropna = True
     evaluator.feature = feature
 
-    xagg = pd.DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 3]}, index=["a", "b", "c", feature.np.nan])
+    xagg = pd.DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 3]}, index=["a", "b", "c", feature.nan])
     evaluator.samples.train = AggregatedSample(xagg)
 
     evaluator.samples.dev = AggregatedSample(xagg)
@@ -1008,7 +1008,7 @@ def test_get_best_combination_non_nan_viable_with_nan(evaluator: BinaryCombinati
     assert result["cramerv"] == expected["cramerv"]
     assert result["tschuprowt"] == expected["tschuprowt"]
     print("trainxagg", evaluator.samples.train.xagg, "\n")
-    expected = pd.DataFrame({0: [0, 2, 0], 1: [2, 1, 3]}, index=["a", "b to c", feature.np.nan])
+    expected = pd.DataFrame({0: [0, 2, 0], 1: [2, 1, 3]}, index=["a", "b to c", feature.nan])
     assert feature.labels == list(expected.index)
     assert np.allclose(evaluator.samples.train.xagg, expected)
     assert np.allclose(evaluator.samples.dev.xagg, expected)
@@ -1078,7 +1078,7 @@ def test_get_best_combination_with_nan_viable_with_nan_without_combi(
     feature.dropna = True
     evaluator.feature = feature
 
-    xagg = pd.DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 3]}, index=["a", "b", "c", feature.np.nan])
+    xagg = pd.DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 3]}, index=["a", "b", "c", feature.nan])
     evaluator.samples.train = AggregatedSample(xagg)
 
     evaluator.samples.dev = AggregatedSample(xagg)
@@ -1133,7 +1133,7 @@ def test_get_best_combination_with_nan_viable_with_nan_without_dropna(
     feature.has_nan = False
     evaluator.feature = feature
 
-    xagg = pd.DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 3]}, index=["a", "b", "c", feature.np.nan])
+    xagg = pd.DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 3]}, index=["a", "b", "c", feature.nan])
     evaluator.samples.train = AggregatedSample(xagg)
     evaluator.samples.dev = AggregatedSample(xagg)
     evaluator.max_n_mod = 2
@@ -1151,7 +1151,7 @@ def test_get_best_combination_with_nan_viable_with_nan(evaluator: BinaryCombinat
     evaluator.feature = feature
     evaluator.dropna = True
 
-    xagg = pd.DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 3]}, index=["a", "b", "c", feature.np.nan])
+    xagg = pd.DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 3]}, index=["a", "b", "c", feature.nan])
     evaluator.samples.train = AggregatedSample(xagg)
 
     evaluator.samples.dev = AggregatedSample(xagg)
@@ -1290,7 +1290,7 @@ def test_get_best_combination_viable_with_nan_without_dropna(
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     feature.has_nan = True
 
-    xagg = pd.DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 3]}, index=["a", "b", "c", feature.np.nan])
+    xagg = pd.DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 3]}, index=["a", "b", "c", feature.nan])
     evaluator.max_n_mod = 2
     evaluator.dropna = False
 
@@ -1310,7 +1310,7 @@ def test_get_best_combination_viable_with_nan_without_dropna(
     assert result["cramerv"] == expected["cramerv"]
     assert result["tschuprowt"] == expected["tschuprowt"]
 
-    expected = pd.DataFrame({0: [0, 2, 0], 1: [2, 1, 3]}, index=["a", "b to c", feature.np.nan])
+    expected = pd.DataFrame({0: [0, 2, 0], 1: [2, 1, 3]}, index=["a", "b to c", feature.nan])
     assert list(evaluator.samples.train.index) == list(expected.index)
     assert np.allclose(evaluator.samples.train.xagg, expected)
     assert np.allclose(evaluator.samples.dev.xagg, expected)
@@ -1324,7 +1324,7 @@ def test_get_best_combination_viable_with_nan(evaluator: BinaryCombinationEvalua
     feature.has_nan = True
     assert feature.dropna is False
 
-    xagg = pd.DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 3]}, index=["a", "b", "c", feature.np.nan])
+    xagg = pd.DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 3]}, index=["a", "b", "c", feature.nan])
     evaluator.max_n_mod = 2
     evaluator.dropna = True
 
