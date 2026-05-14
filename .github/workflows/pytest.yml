@@ -9,21 +9,27 @@ on:
       - main
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
+      - run: uv sync --all-extras
+      - run: |
+          uv run ruff check --output-format=github .
+          uv run ruff format --check .
+          uv run pylint AutoCarver --fail-under=9
+
   pytest_push:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.base_ref == ''
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v6
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.10'
-      
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
+      - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
           cache-dependency-glob: "**/uv.lock"
@@ -32,15 +38,9 @@ jobs:
         run: |
           uv lock --check
           uv sync --all-extras
-
-      - name: Lint
-        run: |
-          uv run ruff check --output-format=github .
-          uv run ruff format --check .
-          uv run pylint AutoCarver --fail-under=9
           
       - name: Run tests
-        run: uv run python -m pytest -v --cov tests/
+        run: uv run pytest -n auto --cov -q tests/
       
 
   pytest_pull:
@@ -57,17 +57,11 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v6
-
-      - name: Set up Python
-        id: setup-python
-        uses: actions/setup-python@v6
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
+      - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
           cache-dependency-glob: "**/uv.lock"
@@ -77,11 +71,5 @@ jobs:
           uv lock --check
           uv sync --all-extras
 
-      - name: Lint
-        run: |
-          uv run ruff check --output-format=github .
-          uv run ruff format --check .
-          uv run pylint AutoCarver --fail-under=9
-
       - name: Run tests
-        run: uv run python -m pytest -v --cov tests/
+        run: uv run pytest -n auto --cov -q tests/
