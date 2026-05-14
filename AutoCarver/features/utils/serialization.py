@@ -112,7 +112,7 @@ def convert_values_to_numpy_types(
     return output
 
 
-def json_serialize_feature(feature: dict) -> str:
+def json_serialize_feature(feature: dict[Any, Any]) -> dict[Any, Any]:
     """JSON serializes a feature's dict"""
 
     # serializing values
@@ -126,17 +126,17 @@ def json_serialize_feature(feature: dict) -> str:
     return feature
 
 
-def json_serialize_combination(combination: dict) -> str:
+def json_serialize_combination(combination: dict[Any, Any]) -> dict[Any, Any]:
     """JSON serializes a combination
 
     Parameters
     ----------
-    combination : dict
+    combination : dict[Any, Any]
         combination to serialize
 
     Returns
     -------
-    dict
+    dict[Any, Any]
         JSON serialized combination
     """
 
@@ -156,7 +156,7 @@ def json_serialize_combination(combination: dict) -> str:
     return json_serialized_combination
 
 
-def json_deserialize_content(json_serialized_feature: dict) -> dict:
+def json_deserialize_content(json_serialized_feature: dict) -> GroupedList:
     """JSON deserializes a content
 
     Parameters
@@ -176,7 +176,7 @@ def json_deserialize_content(json_serialized_feature: dict) -> dict:
 
     # converting to numpy types
     values = convert_values_to_numpy_types(values)
-    content = convert_values_to_numpy_types(loads(content))
+    content = convert_values_to_numpy_types(loads(content))  # type: ignore
 
     # cehcking for values
     if values is not None:
@@ -189,7 +189,7 @@ def json_deserialize_content(json_serialized_feature: dict) -> dict:
                 content_key = str(value)
 
             # updating
-            content.update({value: content.pop(content_key)})
+            content.update({value: content.pop(content_key)})  # type: ignore
 
         # converting to grouped list
         return GroupedList(content)

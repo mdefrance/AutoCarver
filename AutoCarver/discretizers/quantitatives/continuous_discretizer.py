@@ -2,7 +2,7 @@
 for a binary classification model.
 """
 
-from numpy import array, digitize, in1d, inf, isnan, linspace, quantile, sort, unique
+from numpy import digitize, in1d, inf, isnan, linspace, ndarray, quantile, sort, unique
 from pandas import DataFrame, Series
 
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer
@@ -88,7 +88,7 @@ def fit_feature(feature: QuantitativeFeature, X: DataFrame, q: float) -> tuple[s
 
 
 def find_quantiles(
-    df_feature: array,
+    df_feature: ndarray,
     q: int,
 ) -> list[float]:
     """Finds quantiles of a Series recursively.
@@ -123,7 +123,7 @@ def find_quantiles(
 
 
 def np_find_quantiles(
-    df_feature: array,
+    df_feature: ndarray,
     q: int,
     initial_len_df: int | None = None,
     quantiles: list[float] | None = None,
@@ -183,7 +183,7 @@ def np_find_quantiles(
     return quantiles
 
 
-def compute_quantiles(df_feature: array, q: int, initial_len_df: int) -> list[float]:
+def compute_quantiles(df_feature: ndarray, q: int, initial_len_df: int) -> list[float]:
     """Computes quantiles of a Series.
 
     - q should not be larger than len(df_feature)
@@ -205,7 +205,7 @@ def compute_quantiles(df_feature: array, q: int, initial_len_df: int) -> list[fl
     return [max(df_feature)]
 
 
-def get_remaining_quantiles(remaining_len_df: array, initial_len_df: int, q: int) -> list[float]:
+def get_remaining_quantiles(remaining_len_df: ndarray, initial_len_df: int, q: int) -> list[float]:
     """Computes list of indices of quantiles needed."""
 
     # updating number of quantiles taking into account identified over-represented modalities

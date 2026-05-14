@@ -2,7 +2,7 @@
 for a binary classification model.
 """
 
-from numpy import arange, argmin, array, nan_to_num, vstack
+from numpy import arange, argmin, array, nan_to_num, ndarray, vstack
 from pandas import DataFrame, Series, notna
 
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
@@ -127,7 +127,7 @@ def find_common_modalities(df_feature: Series, y: Series, min_freq: float, label
     return labels
 
 
-def update_stats(stats: array, discarded_idx: int, kept_idx: int) -> array:
+def update_stats(stats: ndarray, discarded_idx: int, kept_idx: int) -> ndarray:
     """Updates frequencies and target rates after grouping two modalities"""
 
     # adding up grouped frequencies and target counts
@@ -159,7 +159,7 @@ def compute_stats(df_feature: Series, y: Series, labels: GroupedList) -> tuple[a
     return stats, len_df
 
 
-def find_closest_modality(idx: int, frequencies: array, target_rates: array, min_freq: float) -> int:
+def find_closest_modality(idx: int, frequencies: ndarray, target_rates: ndarray, min_freq: float) -> int:
     """Finds the closest modality in terms of frequency and target rate"""
 
     # case 0: only one modality
@@ -182,7 +182,7 @@ def find_closest_modality(idx: int, frequencies: array, target_rates: array, min
     return idx - 1
 
 
-def is_next_modality_closer(idx: int, frequencies: array, target_rates: array, min_freq: float) -> bool:
+def is_next_modality_closer(idx: int, frequencies: ndarray, target_rates: ndarray, min_freq: float) -> bool:
     """Determines if the next modality is closer than the previous to the current one"""
 
     # Extract relevant frequencies and target rates
@@ -208,7 +208,7 @@ def is_next_modality_closer(idx: int, frequencies: array, target_rates: array, m
     return False
 
 
-def is_next_modality_closer_by_target_rate(idx: int, target_rates: array) -> bool:
+def is_next_modality_closer_by_target_rate(idx: int, target_rates: ndarray) -> bool:
     """Determines if the next modality is closer in terms of target rate than the previous to the
     current one"""
 

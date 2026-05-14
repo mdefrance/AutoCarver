@@ -64,7 +64,7 @@ class CramervMeasure(Chi2Measure):
         if min_n_mod > 1:
             self.value = sqrt(chi2_value / n_obs / (min_n_mod - 1))
 
-        return self.value
+        return self.value  # type: ignore
 
 
 class TschuprowtMeasure(Chi2Measure):

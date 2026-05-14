@@ -62,7 +62,7 @@ class QualitativeFilter(BaseFilter):
         # iterating over each better feature
         for better_feature in better_features:
             # computing association with the better feature
-            correlation = self.measure.compute_association(X[feature.version], X[better_feature.version])
+            correlation = self.measure.compute_association(X[feature.version], X[better_feature.version])  # type: ignore
 
             # updating association if it's greater than previous better features
             if correlation > worst_correlation:
