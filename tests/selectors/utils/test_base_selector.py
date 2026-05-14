@@ -1,7 +1,6 @@
 """set of tests for base selector"""
 
 import pandas as pd
-from pandas import DataFrame
 from pytest import raises
 
 from AutoCarver.features import (
@@ -432,7 +431,7 @@ def test_base_selector_get_best_features_across_chunks_no_chunking(
             new_feature.is_qualitative = feature.is_qualitative
             new_features += [new_feature]
 
-    X = DataFrame(new_X)
+    X = pd.DataFrame(new_X)
     features_object = Features(new_features)
 
     n_best, max_num_features_per_chunk = 1, 100
@@ -486,7 +485,7 @@ def test_base_selector_get_best_features_across_chunks_with_chunking(
             new_feature.is_qualitative = feature.is_qualitative
             new_features += [new_feature]
 
-    X = DataFrame(new_X)
+    X = pd.DataFrame(new_X)
     features_object = Features(new_features)
 
     n_best, max_num_features_per_chunk = 1, 10

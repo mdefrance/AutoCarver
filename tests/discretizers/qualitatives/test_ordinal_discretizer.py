@@ -2,7 +2,6 @@
 
 import pandas as pd
 from numpy import array, isnan, nan, vstack
-from pandas import DataFrame, Series
 from pytest import raises
 
 from AutoCarver.discretizers.qualitatives.ordinal_discretizer import (
@@ -182,8 +181,8 @@ def test_is_next_modality_closer_both_overrepresented():
 
 def test_compute_stats_basic():
     """Test compute_stats with basic input"""
-    df_feature = Series(["A", "B", "A", "C", "B", "A"])
-    y = Series([1, 0, 1, 0, 1, 0])
+    df_feature = pd.Series(["A", "B", "A", "C", "B", "A"])
+    y = pd.Series([1, 0, 1, 0, 1, 0])
     labels = GroupedList(["A", "B", "C"])
     stats, len_df = compute_stats(df_feature, y, labels)
     expected_stats = vstack((array([3, 2, 1]), array([2, 1, 0])))  # frequencies  # target rates
@@ -194,8 +193,8 @@ def test_compute_stats_basic():
 
 def test_compute_stats_with_nans():
     """Test compute_stats with NaN values in df_feature"""
-    df_feature = Series(["A", "B", nan, "C", "B", "A"])
-    y = Series([1, 0, 1, 0, 1, 0])
+    df_feature = pd.Series(["A", "B", nan, "C", "B", "A"])
+    y = pd.Series([1, 0, 1, 0, 1, 0])
     labels = GroupedList(["A", "B", "C"])
     stats, len_df = compute_stats(df_feature, y, labels)
     expected_stats = vstack((array([2, 2, 1]), array([1, 1, 0])))  # frequencies  # target rates
@@ -206,8 +205,8 @@ def test_compute_stats_with_nans():
 
 def test_compute_stats_with_missing_value():
     """Test compute_stats with missing value in df_feature"""
-    df_feature = Series(["A", "B", "A", nan, "B", "A"])
-    y = Series([1, 0, 1, 0, 1, 0])
+    df_feature = pd.Series(["A", "B", "A", nan, "B", "A"])
+    y = pd.Series([1, 0, 1, 0, 1, 0])
     labels = GroupedList(["A", "B", "C"])
     stats, len_df = compute_stats(df_feature, y, labels)
     expected_stats = vstack((array([3, 2, 0]), array([2, 1, nan])))  # frequencies  # target rates
@@ -223,8 +222,8 @@ def test_compute_stats_with_missing_value():
 
 def test_compute_stats_all_nans():
     """Test compute_stats with all NaN values in df_feature"""
-    df_feature = Series([None, None, None])
-    y = Series([1, 0, 1])
+    df_feature = pd.Series([None, None, None])
+    y = pd.Series([1, 0, 1])
     labels = GroupedList(["A", "B", "C"])
     stats, len_df = compute_stats(df_feature, y, labels)
     expected_stats = vstack((array([0, 0, 0]), array([nan, nan, nan])))  # frequencies  # target rates
@@ -239,8 +238,8 @@ def test_compute_stats_all_nans():
 
 def test_compute_stats_empty_input():
     """Test compute_stats with empty input"""
-    df_feature = Series([])
-    y = Series([])
+    df_feature = pd.Series([])
+    y = pd.Series([])
     labels = GroupedList([])
     stats, len_df = compute_stats(df_feature, y, labels)
     expected_stats = vstack((array([]), array([])))  # frequencies  # target rates
@@ -251,8 +250,8 @@ def test_compute_stats_empty_input():
 
 def test_compute_stats_single_modality():
     """Test compute_stats with a single modality"""
-    df_feature = Series(["A", "A", "A"])
-    y = Series([1, 0, 1])
+    df_feature = pd.Series(["A", "A", "A"])
+    y = pd.Series([1, 0, 1])
     labels = GroupedList(["A"])
     stats, len_df = compute_stats(df_feature, y, labels)
     expected_stats = vstack((array([3]), array([2])))  # frequencies  # target rates
@@ -263,8 +262,8 @@ def test_compute_stats_single_modality():
 
 def test_update_stats_basic():
     """Test update_stats with basic input"""
-    df_feature = Series(["A", "B", "A", "C", "B", "A"])
-    y = Series([1, 0, 1, 0, 1, 0])
+    df_feature = pd.Series(["A", "B", "A", "C", "B", "A"])
+    y = pd.Series([1, 0, 1, 0, 1, 0])
     labels = GroupedList(["A", "B", "C"])
     stats, _ = compute_stats(df_feature, y, labels)
     updated_stats = update_stats(stats, discarded_idx=2, kept_idx=0)
@@ -276,8 +275,8 @@ def test_update_stats_basic():
 
 def test_update_stats_with_nans():
     """Test update_stats with NaN values in df_feature"""
-    df_feature = Series(["A", "B", None, "C", "B", "A"])
-    y = Series([1, 0, 1, 0, 1, 0])
+    df_feature = pd.Series(["A", "B", None, "C", "B", "A"])
+    y = pd.Series([1, 0, 1, 0, 1, 0])
     labels = GroupedList(["A", "B", "C"])
     stats, _ = compute_stats(df_feature, y, labels)
     updated_stats = update_stats(stats, discarded_idx=2, kept_idx=0)
@@ -289,8 +288,8 @@ def test_update_stats_with_nans():
 
 def test_update_stats_with_missing_value():
     """Test update_stats with missing value in df_feature"""
-    df_feature = Series(["A", "B", "A", nan, "B", "A"])
-    y = Series([1, 0, 1, 0, 1, 0])
+    df_feature = pd.Series(["A", "B", "A", nan, "B", "A"])
+    y = pd.Series([1, 0, 1, 0, 1, 0])
     labels = GroupedList(["A", "B", "C"])
     stats, _ = compute_stats(df_feature, y, labels)
     updated_stats = update_stats(stats, discarded_idx=2, kept_idx=0)
@@ -302,8 +301,8 @@ def test_update_stats_with_missing_value():
 
 def test_update_stats_all_nans():
     """Test update_stats with all NaN values in df_feature"""
-    df_feature = Series([None, None, None])
-    y = Series([1, 0, 1])
+    df_feature = pd.Series([None, None, None])
+    y = pd.Series([1, 0, 1])
     labels = GroupedList(["A", "B", "C"])
     stats, _ = compute_stats(df_feature, y, labels)
     updated_stats = update_stats(stats, discarded_idx=2, kept_idx=0)
@@ -316,8 +315,8 @@ def test_update_stats_all_nans():
 
 def test_update_stats_empty_input():
     """Test update_stats with empty input"""
-    df_feature = Series([])
-    y = Series([])
+    df_feature = pd.Series([])
+    y = pd.Series([])
     labels = GroupedList([])
     stats, _ = compute_stats(df_feature, y, labels)
     with raises(IndexError):
@@ -326,8 +325,8 @@ def test_update_stats_empty_input():
 
 def test_update_stats_single_modality():
     """Test update_stats with a single modality"""
-    df_feature = Series(["A", "A", "A"])
-    y = Series([1, 0, 1])
+    df_feature = pd.Series(["A", "A", "A"])
+    y = pd.Series([1, 0, 1])
     labels = GroupedList(["A"])
     stats, _ = compute_stats(df_feature, y, labels)
     with raises(IndexError):
@@ -336,8 +335,8 @@ def test_update_stats_single_modality():
 
 def test_find_common_modalities_all_overrepresented():
     """Test find_common_modalities with all values overrepresented"""
-    df_feature = Series(["A", "B", "A", "C", "B", "A"])
-    y = Series([1, 0, 1, 0, 1, 0])
+    df_feature = pd.Series(["A", "B", "A", "C", "B", "A"])
+    y = pd.Series([1, 0, 1, 0, 1, 0])
     min_freq = 0 / 6
     labels = ["A", "B", "C"]
     result = find_common_modalities(df_feature, y, min_freq, labels)
@@ -348,8 +347,8 @@ def test_find_common_modalities_all_overrepresented():
 
 def test_find_common_modalities_all_underrepresented():
     """Test find_common_modalities with all values underrepresented"""
-    df_feature = Series(["A", "B", "A", "C", "B", "A"])
-    y = Series([1, 0, 1, 0, 1, 0])
+    df_feature = pd.Series(["A", "B", "A", "C", "B", "A"])
+    y = pd.Series([1, 0, 1, 0, 1, 0])
     min_freq = 4 / 6
     labels = ["A", "B", "C"]
     result = find_common_modalities(df_feature, y, min_freq, labels)
@@ -362,8 +361,8 @@ def test_find_common_modalities_all_underrepresented():
 
 def test_find_common_modalities_with_nans():
     """Test find_common_modalities with NaN values in df_feature"""
-    df_feature = Series(["A", "B", nan, "C", "B", "A"])
-    y = Series([1, 0, 1, 0, 1, 0])
+    df_feature = pd.Series(["A", "B", nan, "C", "B", "A"])
+    y = pd.Series([1, 0, 1, 0, 1, 0])
     min_freq = 2 / 6
     labels = ["A", "B", "C"]
     result = find_common_modalities(df_feature, y, min_freq, labels)
@@ -375,8 +374,8 @@ def test_find_common_modalities_with_nans():
 
 def test_find_common_modalities_with_equal_min_freq():
     """Test find_common_modalities with equal min_freq"""
-    df_feature = Series(["A", "B", "A", "C", "B", "A"])
-    y = Series([1, 0, 1, 0, 1, 0])
+    df_feature = pd.Series(["A", "B", "A", "C", "B", "A"])
+    y = pd.Series([1, 0, 1, 0, 1, 0])
     min_freq = 1 / 6
     labels = ["A", "B", "C"]
     result = find_common_modalities(df_feature, y, min_freq, labels)
@@ -387,8 +386,8 @@ def test_find_common_modalities_with_equal_min_freq():
 
 def test_find_common_modalities_with_increased_freq():
     """Test find_common_modalities with increased min_freq"""
-    df_feature = Series(["A", "B", "A", "C", "B", "A"])
-    y = Series([1, 0, 1, 0, 1, 0])
+    df_feature = pd.Series(["A", "B", "A", "C", "B", "A"])
+    y = pd.Series([1, 0, 1, 0, 1, 0])
     min_freq = 2 / 6
     labels = ["A", "B", "C"]
     result = find_common_modalities(df_feature, y, min_freq, labels)
@@ -400,8 +399,8 @@ def test_find_common_modalities_with_increased_freq():
 
 def test_find_common_modalities_with_missing_value():
     """Test find_common_modalities with missing value in df_feature"""
-    df_feature = Series(["A", "B", "A", nan, "B", "A"])
-    y = Series([1, 0, 1, 0, 1, 0])
+    df_feature = pd.Series(["A", "B", "A", nan, "B", "A"])
+    y = pd.Series([1, 0, 1, 0, 1, 0])
     min_freq = 2 / 6
     labels = ["A", "B", "C"]
     result = find_common_modalities(df_feature, y, min_freq, labels)
@@ -413,8 +412,8 @@ def test_find_common_modalities_with_missing_value():
 
 def test_find_common_modalities_empty_input():
     """Test find_common_modalities with empty input"""
-    df_feature = Series([])
-    y = Series([])
+    df_feature = pd.Series([])
+    y = pd.Series([])
     min_freq = 0.2
     labels = []
     result = find_common_modalities(df_feature, y, min_freq, labels)
@@ -425,8 +424,8 @@ def test_find_common_modalities_empty_input():
 
 def test_find_common_modalities_single_modality():
     """Test find_common_modalities with a single modality"""
-    df_feature = Series(["A", "A", "A"])
-    y = Series([1, 0, 1])
+    df_feature = pd.Series(["A", "A", "A"])
+    y = pd.Series([1, 0, 1])
     min_freq = 0.2
     labels = ["A"]
     result = find_common_modalities(df_feature, y, min_freq, labels)
@@ -437,8 +436,8 @@ def test_find_common_modalities_single_modality():
 
 def test_find_common_modalities_unexpected_value():
     """Test find_common_modalities with an unexpected value in df_feature"""
-    df_feature = Series(["A", "B", "A", "C", "B", "A"])
-    y = Series([1, 0, 1, 0, 1, 0])
+    df_feature = pd.Series(["A", "B", "A", "C", "B", "A"])
+    y = pd.Series([1, 0, 1, 0, 1, 0])
     min_freq = 2 / 6
     labels = ["A", "B"]
     result = find_common_modalities(df_feature, y, min_freq, labels)
@@ -448,8 +447,8 @@ def test_find_common_modalities_unexpected_value():
 
 def test_ordinal_discretizer_with_increasing_freq():
     """Test OrdinalDiscretizer with basic input"""
-    df = DataFrame({"feature1": ["A", "B", "A", "C", "B", "A"], "feature2": ["X", "Y", "X", "Z", "Y", "X"]})
-    y = Series([1, 0, 1, 0, 1, 0])
+    df = pd.DataFrame({"feature1": ["A", "B", "A", "C", "B", "A"], "feature2": ["X", "Y", "X", "Z", "Y", "X"]})
+    y = pd.Series([1, 0, 1, 0, 1, 0])
     feature1 = OrdinalFeature("feature1", ["A", "B", "C"])
     feature2 = OrdinalFeature("feature2", ["X", "Y", "Z"])
     ordinals = [feature1, feature2]
@@ -471,7 +470,7 @@ def test_ordinal_discretizer_with_increasing_freq():
     # Check transformed data
     transformed = discretizer.transform(df)
     assert not transformed.isnull().values.any(), "Transformed data should not contain NaNs"
-    df_expected = DataFrame(
+    df_expected = pd.DataFrame(
         {
             "feature1": ["A", "B to C", "A", "B to C", "B to C", "A"],
             "feature2": ["X", "Y to Z", "X", "Y to Z", "Y to Z", "X"],
@@ -483,8 +482,8 @@ def test_ordinal_discretizer_with_increasing_freq():
 
 def test_ordinal_discretizer_with_nans():
     """Test OrdinalDiscretizer with basic input"""
-    df = DataFrame({"feature1": ["A", "B", nan, "C", "B", "A"], "feature2": ["X", "Y", nan, "Z", "Y", "X"]})
-    y = Series([1, 0, 1, 0, 1, 0])
+    df = pd.DataFrame({"feature1": ["A", "B", nan, "C", "B", "A"], "feature2": ["X", "Y", nan, "Z", "Y", "X"]})
+    y = pd.Series([1, 0, 1, 0, 1, 0])
     feature1 = OrdinalFeature("feature1", ["A", "B", "C"])
     feature2 = OrdinalFeature("feature2", ["X", "Y", "Z"])
     ordinals = [feature1, feature2]
@@ -503,7 +502,7 @@ def test_ordinal_discretizer_with_nans():
 
     # Check transformed data
     transformed = discretizer.transform(df)
-    df_expected = DataFrame(
+    df_expected = pd.DataFrame(
         {
             "feature1": ["A", "B", nan, "C", "B", "A"],
             "feature2": ["X", "Y", nan, "Z", "Y", "X"],
@@ -515,8 +514,8 @@ def test_ordinal_discretizer_with_nans():
 
 def test_ordinal_discretizer_with_missing_value():
     """Test OrdinalDiscretizer with basic input"""
-    df = DataFrame({"feature1": ["A", "B", "A", nan, "B", "A"], "feature2": ["X", "Y", "X", nan, "Y", "X"]})
-    y = Series([1, 0, 1, 0, 1, 0])
+    df = pd.DataFrame({"feature1": ["A", "B", "A", nan, "B", "A"], "feature2": ["X", "Y", "X", nan, "Y", "X"]})
+    y = pd.Series([1, 0, 1, 0, 1, 0])
     feature1 = OrdinalFeature("feature1", ["A", "B", "C"])
     feature2 = OrdinalFeature("feature2", ["X", "Y", "Z"])
     ordinals = [feature1, feature2]
@@ -537,7 +536,7 @@ def test_ordinal_discretizer_with_missing_value():
 
     # Check transformed data
     transformed = discretizer.transform(df)
-    df_expected = DataFrame(
+    df_expected = pd.DataFrame(
         {
             "feature1": ["A", "B to C", "A", nan, "B to C", "A"],
             "feature2": ["X", "Y to Z", "X", nan, "Y to Z", "X"],
@@ -548,8 +547,8 @@ def test_ordinal_discretizer_with_missing_value():
 
 def test_ordinal_discretizer_with_all_underrepresented():
     """Test OrdinalDiscretizer with basic input"""
-    df = DataFrame({"feature1": ["A", "B", "A", "C", "B", "A"], "feature2": ["X", "Y", "X", "Z", "Y", "X"]})
-    y = Series([1, 0, 1, 0, 1, 0])
+    df = pd.DataFrame({"feature1": ["A", "B", "A", "C", "B", "A"], "feature2": ["X", "Y", "X", "Z", "Y", "X"]})
+    y = pd.Series([1, 0, 1, 0, 1, 0])
     feature1 = OrdinalFeature("feature1", ["A", "B", "C"])
     feature2 = OrdinalFeature("feature2", ["X", "Y", "Z"])
     ordinals = [feature1, feature2]
@@ -572,7 +571,7 @@ def test_ordinal_discretizer_with_all_underrepresented():
 
     # Check transformed data
     transformed = discretizer.transform(df)
-    df_expected = DataFrame(
+    df_expected = pd.DataFrame(
         {
             "feature1": ["A to C", "A to C", "A to C", "A to C", "A to C", "A to C"],
             "feature2": ["X to Z", "X to Z", "X to Z", "X to Z", "X to Z", "X to Z"],

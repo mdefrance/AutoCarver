@@ -2,7 +2,6 @@
 
 import pandas as pd
 from numpy import nan
-from pandas import Series
 from pytest import FixtureRequest, fixture
 
 from AutoCarver.selectors import BaseMeasure, Chi2Measure, CramervMeasure, TschuprowtMeasure
@@ -15,13 +14,13 @@ def measure(request: FixtureRequest) -> BaseMeasure:
 
 @fixture
 def series_data() -> pd.Series:
-    x = Series([1, 2, 3, 4, 5])
+    x = pd.Series([1, 2, 3, 4, 5])
     return x
 
 
 @fixture
 def nan_series_data() -> pd.Series:
-    x = Series([nan, nan, 3, 4, 5])
+    x = pd.Series([nan, nan, 3, 4, 5])
     return x
 
 

@@ -4,7 +4,7 @@ from abc import ABC
 
 import numpy as np
 import pandas as pd
-from pandas import DataFrame, notna
+from pandas import notna
 from scipy.stats import chi2_contingency
 
 from AutoCarver.combinations.binary.binary_target_rates import BinaryTargetRate, TargetMean
@@ -93,7 +93,7 @@ class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
         np.add.at(summed_values, np.searchsorted(unique_indices, index_values), xagg.values)
 
         # converting back to dataframe
-        return DataFrame(summed_values, index=unique_indices, columns=xagg.columns)
+        return pd.DataFrame(summed_values, index=unique_indices, columns=xagg.columns)
 
 
 class TschuprowtCombinations(BinaryCombinationEvaluator):

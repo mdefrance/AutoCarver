@@ -1,6 +1,6 @@
 """set of tests for quantitative features"""
 
-from pandas import Series
+import pandas as pd
 from pytest import fixture
 
 from AutoCarver.features import (
@@ -67,30 +67,30 @@ def test_get_qualitative_features() -> None:
 
 def test_nan_unique():
     # no sorting with nans
-    sample_series = Series([1, 2, 2, 3, 4, 4, 4, float("nan"), float("nan"), 5])
+    sample_series = pd.Series([1, 2, 2, 3, 4, 4, 4, float("nan"), float("nan"), 5])
     result = nan_unique(sample_series)
-    assert result == nan_unique(Series([1, 2, 2, 3, 4, 4, 4, 5]))
+    assert result == nan_unique(pd.Series([1, 2, 2, 3, 4, 4, 4, 5]))
     assert all(r in [1, 2, 3, 4, 5] for r in result)
 
     # sorting with nan
-    sample_series = Series([1, 2, 2, 3, 4, 4, 4, float("nan"), float("nan"), 5])
+    sample_series = pd.Series([1, 2, 2, 3, 4, 4, 4, float("nan"), float("nan"), 5])
     result = nan_unique(sample_series, sort=True)
     assert result == [1, 2, 3, 4, 5]
 
     # empty
-    empty_series = Series([], dtype=float)
+    empty_series = pd.Series([], dtype=float)
     result = nan_unique(empty_series)
     expected = []
     assert result == expected
 
     # only nan
-    nan_series = Series([float("nan"), float("nan")])
+    nan_series = pd.Series([float("nan"), float("nan")])
     result = nan_unique(nan_series)
     expected = []
     assert result == expected
 
     # no nan no sort
-    no_nan_series = Series([1, 2, 2, 3, 4])
+    no_nan_series = pd.Series([1, 2, 2, 3, 4])
     result = nan_unique(no_nan_series)
     assert all(r in [1, 2, 3, 4] for r in result)
 

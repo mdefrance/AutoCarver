@@ -215,7 +215,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         # duplicating features with versions disctinct from names (= multiclass target)
         if len(casted_columns) > 0:  # checking for casted feature to not break inplace
             # converting to DataFrame to avoid PerformanceWarning
-            casted_columns = DataFrame(casted_columns)
+            casted_columns = pd.DataFrame(casted_columns)
             X = concat([X, casted_columns], axis=1)
 
         return X
@@ -406,7 +406,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         )
 
         # unpacking transformed series
-        sample.X[[feature for feature, _ in transformed]] = DataFrame(dict(transformed), index=sample.index)
+        sample.X[[feature for feature, _ in transformed]] = pd.DataFrame(dict(transformed), index=sample.index)
 
         return sample
 
@@ -644,7 +644,7 @@ def transform_quantitative_feature(feature: BaseFeature, df_feature: pd.Series, 
 
     # checking for values to group
     # if len(values_to_group) > 0:  # TODO check if this is needed
-    df_feature = Series(np.select(values_to_group, group_labels, default=df_feature), index=raw_index)
+    df_feature = pd.Series(np.select(values_to_group, group_labels, default=df_feature), index=raw_index)
 
     # reinstating nans otherwise nan is converted to 'nan' by numpy
     if any(feature_nans):

@@ -1,7 +1,7 @@
 """Set of tests for quantitative_discretizers module."""
 
+import pandas as pd
 from numpy import nan
-from pandas import DataFrame, Series
 
 from AutoCarver.discretizers.utils.type_discretizers import StringDiscretizer, fit_feature
 from AutoCarver.features import CategoricalFeature, Features, OrdinalFeature
@@ -12,7 +12,7 @@ def test_fit_feature() -> None:
 
     # without existing values
     feature = CategoricalFeature("feature1")
-    df_feature = Series(["1", "2", 3.0, 3.1, 4, "6", nan, "6", 1, 2])
+    df_feature = pd.Series(["1", "2", 3.0, 3.1, 4, "6", nan, "6", 1, 2])
 
     version, order = fit_feature(feature, df_feature)
 
@@ -27,7 +27,7 @@ def test_fit_feature() -> None:
 
     # with existing values
     feature = OrdinalFeature("feature2", values=["1", "2", "3"])
-    df_feature = Series(["1", "2", 3, 2.0, 1, nan])
+    df_feature = pd.Series(["1", "2", 3, 2.0, 1, nan])
 
     version, order = fit_feature(feature, df_feature)
 
@@ -53,7 +53,7 @@ def test_stringdiscretizer_fit() -> None:
     feature2 = OrdinalFeature("feature2", values=["1", "2", "3"])
     string_discretizer = StringDiscretizer([feature1, feature2])
 
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["1", "2", 3.0, 3.1, 4, "6", nan, "6", 1, 2],
             "feature2": ["1", "2", 3, 2.0, 1, nan, nan, "1", "2", "3"],

@@ -4,7 +4,6 @@ from math import sqrt
 
 import numpy as np
 import pandas as pd
-from pandas import DataFrame
 from scipy.spatial.distance import correlation
 from scipy.stats import kruskal, pearsonr, spearmanr
 from statsmodels.formula.api import ols
@@ -87,7 +86,7 @@ class RMeasure(BaseMeasure):
             raise ValueError(f"[{self}] Provided y is not binary")
 
         # grouping feature and target
-        ols_df = DataFrame({"feature": x[~nans], "target": y[~nans]})
+        ols_df = pd.DataFrame({"feature": x[~nans], "target": y[~nans]})
 
         # fitting regression of feature by target
         regression = ols("feature~C(target)", ols_df).fit()

@@ -2,7 +2,6 @@
 
 import pandas as pd
 from numpy import allclose, array, inf, nan
-from pandas import DataFrame
 from pytest import raises
 
 from AutoCarver.discretizers.quantitatives.continuous_discretizer import (
@@ -420,7 +419,7 @@ def test_find_quantiles_with_multiple_overrepresented_values():
 def test_fit_feature_no_overrepresented_value():
     """Test fit_feature with no over-represented value"""
     feature = QuantitativeFeature("feature1")
-    df_feature = DataFrame({"feature1": array([1, 2, 3, 4, 5])})
+    df_feature = pd.DataFrame({"feature1": array([1, 2, 3, 4, 5])})
     q = 2
     result = fit_feature(feature, df_feature, q)
     expected = [3]
@@ -433,7 +432,7 @@ def test_fit_feature_with_missing_values():
 
     # with missing values
     feature = QuantitativeFeature("feature1")
-    df_feature = DataFrame({"feature1": array([1, 2, 3, 4, nan])})
+    df_feature = pd.DataFrame({"feature1": array([1, 2, 3, 4, nan])})
     q = 2
     result = fit_feature(feature, df_feature, q)
     expected = [2]
@@ -442,7 +441,7 @@ def test_fit_feature_with_missing_values():
 
     # with missing values and over-represented value
     feature = QuantitativeFeature("feature1")
-    df_feature = DataFrame({"feature1": array([1, 1, 1, 1, 1, 1, 2, 3, 4, 5, nan])})
+    df_feature = pd.DataFrame({"feature1": array([1, 1, 1, 1, 1, 1, 2, 3, 4, 5, nan])})
     q = 4
     result = fit_feature(feature, df_feature, q)
     expected = [1, 5]
@@ -451,7 +450,7 @@ def test_fit_feature_with_missing_values():
 
     # with missing values and over-represented value at end
     feature = QuantitativeFeature("feature1")
-    df_feature = DataFrame({"feature1": array([2, 3, 4, 5, 2, 3, 4, 5, 1, 1, 1, 1, 1, 1, nan])})
+    df_feature = pd.DataFrame({"feature1": array([2, 3, 4, 5, 2, 3, 4, 5, 1, 1, 1, 1, 1, 1, nan])})
     q = 4
     result = fit_feature(feature, df_feature, q)
     expected = [1, 3]
@@ -460,7 +459,7 @@ def test_fit_feature_with_missing_values():
 
     # with missing values and over-represented value at middle
     feature = QuantitativeFeature("feature1")
-    df_feature = DataFrame(
+    df_feature = pd.DataFrame(
         {
             "feature1": array(
                 [
@@ -498,7 +497,7 @@ def test_fit_feature_with_overrepresented_value():
     """Test fit_feature with an over-represented value"""
     # with over-represented value at begining
     feature = QuantitativeFeature("feature1")
-    df_feature = DataFrame({"feature1": array([1, 1, 1, 1, 1, 1, 2, 3, 4, 5])})
+    df_feature = pd.DataFrame({"feature1": array([1, 1, 1, 1, 1, 1, 2, 3, 4, 5])})
     q = 4
     result = fit_feature(feature, df_feature, q)
     expected = [1, 3]
@@ -507,7 +506,7 @@ def test_fit_feature_with_overrepresented_value():
 
     # with over-represented value at begining and not enough alue for a quantiles
     feature = QuantitativeFeature("feature1")
-    df_feature = DataFrame({"feature1": array([1, 1, 1, 1, 1, 1, 4, 5])})
+    df_feature = pd.DataFrame({"feature1": array([1, 1, 1, 1, 1, 1, 4, 5])})
     q = 4
     result = fit_feature(feature, df_feature, q)
     expected = [1, 5]
@@ -516,7 +515,7 @@ def test_fit_feature_with_overrepresented_value():
 
     # with over-represented value at end
     feature = QuantitativeFeature("feature1")
-    df_feature = DataFrame({"feature1": array([2, 3, 4, 5, 1, 1, 1, 1, 1, 1])})
+    df_feature = pd.DataFrame({"feature1": array([2, 3, 4, 5, 1, 1, 1, 1, 1, 1])})
     q = 4
     result = fit_feature(feature, df_feature, q)
     expected = [1, 3]
@@ -526,7 +525,7 @@ def test_fit_feature_with_overrepresented_value():
 
     # with over-represented value at middle
     feature = QuantitativeFeature("feature1")
-    df_feature = DataFrame(
+    df_feature = pd.DataFrame(
         {
             "feature1": array(
                 [
@@ -563,7 +562,7 @@ def test_fit_feature_with_multiple_overrepresented_values():
     """Test fit_feature with multiple over-represented values"""
     # with sevveral over-represented value at begining
     feature = QuantitativeFeature("feature1")
-    df_feature = DataFrame(
+    df_feature = pd.DataFrame(
         {
             "feature1": array(
                 [
@@ -681,7 +680,7 @@ def test_continuous_discretizer_fit():
         ],
     }
 
-    df = DataFrame(data)
+    df = pd.DataFrame(data)
 
     # Fit the discretizer
     discretizer.fit(df)
@@ -695,7 +694,7 @@ def test_continuous_discretizer_fit():
     # Check if the discretizer has been fitted
     transformed_df = discretizer.transform(df)
     print(transformed_df)
-    expected = DataFrame(
+    expected = pd.DataFrame(
         {
             "feature1": [
                 "1.00e+00 < x <= 2.00e+00",

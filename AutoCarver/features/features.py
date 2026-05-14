@@ -407,7 +407,7 @@ class Features:
             summaries += feature.summary
 
         # converting to DataFrame
-        summaries = DataFrame(summaries)
+        summaries = pd.DataFrame(summaries)
 
         # defining indices to set
         indices = []

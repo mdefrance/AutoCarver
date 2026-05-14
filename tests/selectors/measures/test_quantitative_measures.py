@@ -2,7 +2,7 @@
 
 import pandas as pd
 from numpy import nan
-from pandas import Series, isna
+from pandas import isna
 from pytest import FixtureRequest, fixture
 
 from AutoCarver.selectors import (
@@ -41,7 +41,7 @@ def quanti_binary_measure(request: FixtureRequest) -> BaseMeasure:
 
 @fixture
 def series_data() -> pd.Series:
-    x = Series([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    x = pd.Series([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     return x
 
 
@@ -83,21 +83,21 @@ def test_quanti_binary_measure_type(quanti_binary_measure: BaseMeasure) -> None:
 @fixture
 def binary_series_data() -> pd.Series:
     """creates a series with binary data"""
-    x = Series([1, 1, 0, 1, 0, 0, 0, 0, 0, 0])
+    x = pd.Series([1, 1, 0, 1, 0, 0, 0, 0, 0, 0])
     return x
 
 
 @fixture
 def quali_series_data() -> pd.Series:
     """creates a series with qualitative data"""
-    x = Series([2, 2, 0, 1, 1, 1, 1, 0, 0, 0])
+    x = pd.Series([2, 2, 0, 1, 1, 1, 1, 0, 0, 0])
     return x
 
 
 @fixture
 def outlier_series_data() -> pd.Series:
     """creates a series with outliers"""
-    x = Series(
+    x = pd.Series(
         [
             1,
             2,

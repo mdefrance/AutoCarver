@@ -2,7 +2,6 @@
 
 import pandas as pd
 from numpy import nan
-from pandas import DataFrame, Series
 
 from AutoCarver.discretizers.qualitatives.qualitative_discretizer import QualitativeDiscretizer
 from AutoCarver.discretizers.utils.base_discretizer import Sample
@@ -24,7 +23,7 @@ def test_qualitative_discretizer_init():
 def test_qualitative_discretizer_prepare_data():
     """Test _prepare_X method of QualitativeDiscretizer"""
     features = [CategoricalFeature("feature1"), OrdinalFeature("feature2", ["A", "B", "C"])]
-    df = DataFrame({"feature1": [1, 2, 3], "feature2": ["A", "B", "C"], "feature3": [1.0, 2.1, 3.2]})
+    df = pd.DataFrame({"feature1": [1, 2, 3], "feature2": ["A", "B", "C"], "feature3": [1.0, 2.1, 3.2]})
     discretizer = QualitativeDiscretizer(qualitatives=features, min_freq=0.05)
     sample = discretizer._prepare_data(Sample(df))
     prepared_df = sample.X
@@ -44,14 +43,14 @@ def test_qualitative_discretizer_fit_categorical_features():
     feature3 = CategoricalFeature("feature3")
     discretizer = QualitativeDiscretizer([feature1, feature2, feature3], min_freq=0.2)
 
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["x", "b", "a", "b", "c", "c", "c", "c", nan],
             "feature2": ["a", "y", "x", "y", "z", "z", "z", "z", nan],
             "feature3": [0, 2, 1, 2, 3, 3.0, "3", 3, nan],
         }
     )
-    y = Series([0, 0, 1, 0, 1, 1, 1, 1, 1])
+    y = pd.Series([0, 0, 1, 0, 1, 1, 1, 1, 1])
 
     discretizer.fit(X, y)
 
@@ -107,14 +106,14 @@ def test_qualitative_discretizer_fit_ordinal_features():
     feature3 = OrdinalFeature("feature3", ["0", "1", "2", "3"])
     discretizer = QualitativeDiscretizer([feature1, feature2, feature3], min_freq=0.2)
 
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["x", "b", "a", "b", "c", "c", "c", "c", nan],
             "feature2": ["a", "y", "x", "y", "z", "z", "z", "z", nan],
             "feature3": [0, 2, 1, 2, 3, 3.0, "3", 3, nan],
         }
     )
-    y = Series([0, 0, 1, 0, 1, 1, 1, 1, 1])
+    y = pd.Series([0, 0, 1, 0, 1, 1, 1, 1, 1])
 
     discretizer.fit(X, y)
 
@@ -139,7 +138,7 @@ def test_qualitative_discretizer_fit_ordinal_features():
 
     # Check transformed data
     transformed = discretizer.transform(X)
-    df_expected = DataFrame(
+    df_expected = pd.DataFrame(
         {
             "feature1": [
                 "c to x",

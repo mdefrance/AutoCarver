@@ -1,5 +1,4 @@
 import pandas as pd
-from pandas import DataFrame
 from pytest import FixtureRequest, fixture
 
 from AutoCarver.features import BaseFeature
@@ -16,7 +15,7 @@ def sample_data() -> pd.DataFrame:
         "feature3": [-3, 0, -3, 0, -3, -3, -3],
         "feature4": [0, 1, 2, 0, 1, 2, 0],
     }
-    return DataFrame(data)
+    return pd.DataFrame(data)
 
 
 @fixture

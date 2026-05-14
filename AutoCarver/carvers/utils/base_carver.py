@@ -38,10 +38,10 @@ class Samples:
     Example:
         >>> import pandas as pd
         >>> from base_carver import Sample, Samples
-        >>> X_train = pd.DataFrame({"feature1": [1, 2, 3], "feature2": [4, 5, 6]})
-        >>> y_train = pd.Series([0, 1, 0])
-        >>> X_dev = pd.DataFrame({"feature1": [7, 8, 9], "feature2": [10, 11, 12]})
-        >>> y_dev = pd.Series([1, 0, 1])
+        >>> X_train = pd.pd.DataFrame({"feature1": [1, 2, 3], "feature2": [4, 5, 6]})
+        >>> y_train = pd.pd.Series([0, 1, 0])
+        >>> X_dev = pd.pd.DataFrame({"feature1": [7, 8, 9], "feature2": [10, 11, 12]})
+        >>> y_dev = pd.pd.Series([1, 0, 1])
         >>> train_sample = Sample(X=X_train, y=y_train)
         >>> dev_sample = Sample(X=X_dev, y=y_dev)
         >>> samples = Samples(train=train_sample, dev=dev_sample)

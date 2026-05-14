@@ -225,7 +225,7 @@ class CombinationEvaluator(ABC):
         ]
 
         # sorting associations according to specified metric
-        return DataFrame(associations).sort_values(self.sort_by, ascending=False).to_dict(orient="records")
+        return pd.DataFrame(associations).sort_values(self.sort_by, ascending=False).to_dict(orient="records")
 
     def _get_best_association(self, combinations: list[list[str]]) -> dict:
         """Computes associations of the tab for each combination

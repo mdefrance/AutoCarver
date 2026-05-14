@@ -2,7 +2,6 @@
 
 import pandas as pd
 from numpy import inf, nan
-from pandas import DataFrame, Series
 from pytest import raises
 
 from AutoCarver.discretizers.quantitatives.quantitative_discretizer import (
@@ -17,14 +16,14 @@ from AutoCarver.features import Features, GroupedList, QuantitativeFeature
 
 def test_check_quantitative_dtypes_all_numeric():
     """Test check_quantitative_dtypes with all numeric columns"""
-    df = DataFrame({"feature1": [1, 2, 3], "feature2": [4.0, 5.0, 6.0]})
+    df = pd.DataFrame({"feature1": [1, 2, 3], "feature2": [4.0, 5.0, 6.0]})
     feature_versions = ["feature1", "feature2"]
     check_quantitative_dtypes(df, feature_versions, "test")
 
 
 def test_check_quantitative_dtypes_non_numeric():
     """Test check_quantitative_dtypes with non-numeric columns"""
-    df = DataFrame({"feature1": [1, 2, 3], "feature2": ["a", "b", "c"]})
+    df = pd.DataFrame({"feature1": [1, 2, 3], "feature2": ["a", "b", "c"]})
     feature_versions = ["feature1", "feature2"]
     with raises(ValueError):
         check_quantitative_dtypes(df, feature_versions, "test")
@@ -32,7 +31,7 @@ def test_check_quantitative_dtypes_non_numeric():
 
 def test_check_quantitative_dtypes_mixed_types():
     """Test check_quantitative_dtypes with mixed types"""
-    df = DataFrame({"feature1": [1, 2, 3], "feature2": [4.0, 5.0, 6.0], "feature3": [1.0, "b", "c"]})
+    df = pd.DataFrame({"feature1": [1, 2, 3], "feature2": [4.0, 5.0, 6.0], "feature3": [1.0, "b", "c"]})
     feature_versions = ["feature1", "feature2", "feature3"]
     with raises(ValueError):
         check_quantitative_dtypes(df, feature_versions, "test")
@@ -42,7 +41,7 @@ def test_check_quantitative_dtypes_mixed_types():
 
 def test_min_value_counts_basic():
     """Test min_value_counts with basic input"""
-    x = Series([1, 2, 2, 3, 3, 3], name="feature")
+    x = pd.Series([1, 2, 2, 3, 3, 3], name="feature")
     features = Features([QuantitativeFeature(name="feature")])
     result = min_value_counts(x, features)
     assert result == 1 / 6  # Minimum frequency is 1/6
@@ -51,13 +50,13 @@ def test_min_value_counts_basic():
 def test_min_value_counts_with_nans():
     """Test min_value_counts with NaN values"""
     # without dropna
-    x = Series([1, 2, 2, 3, 3, 3, nan, nan], name="feature")
+    x = pd.Series([1, 2, 2, 3, 3, 3, nan, nan], name="feature")
     features = Features([QuantitativeFeature(name="feature")])
     result = min_value_counts(x, features, dropna=False)
     assert result == 1 / 8  # Minimum frequency is 1/6
 
     # with dropna
-    x = Series([1, 2, 2, 3, 3, 3, nan, nan], name="feature")
+    x = pd.Series([1, 2, 2, 3, 3, 3, nan, nan], name="feature")
     features = Features([QuantitativeFeature(name="feature")])
     result = min_value_counts(x, features, dropna=True)
     assert result == 1 / 6  # Minimum frequency is 1/6
@@ -66,7 +65,7 @@ def test_min_value_counts_with_nans():
 def test_min_value_counts_with_labels():
     """Test min_value_counts with predefined labels"""
     # with missing label
-    x = Series(
+    x = pd.Series(
         [
             "x <= 1.00e+00",
             "1.00e+00 < x <= 2.00e+00",
@@ -84,7 +83,7 @@ def test_min_value_counts_with_labels():
     assert result == 0  # Label 4 has a frequency of 0
 
     # without missing label
-    x = Series(
+    x = pd.Series(
         [
             "x <= 1.00e+00",
             "1.00e+00 < x <= 2.00e+00",
@@ -104,7 +103,7 @@ def test_min_value_counts_with_labels():
 
 def test_min_value_counts_normalize_false():
     """Test min_value_counts with normalize set to False"""
-    x = Series([1, 2, 2, 3, 3, 3], name="feature")
+    x = pd.Series([1, 2, 2, 3, 3, 3], name="feature")
     features = Features([QuantitativeFeature(name="feature")])
     result = min_value_counts(x, features, normalize=False)
     assert result == 1  # Minimum count is 1
@@ -112,7 +111,7 @@ def test_min_value_counts_normalize_false():
 
 def test_check_frequencies_no_rare_modalities():
     """Test check_frequencies with no rare modalities"""
-    df = DataFrame({"feature1": [1, 2, 2, 3, 3, 3], "feature2": [4, 4, 4, 5, 5, 5]})
+    df = pd.DataFrame({"feature1": [1, 2, 2, 3, 3, 3], "feature2": [4, 4, 4, 5, 5, 5]})
     features = Features(
         [
             QuantitativeFeature(name="Feature 1", version="feature1"),
@@ -126,7 +125,7 @@ def test_check_frequencies_no_rare_modalities():
 
 def test_check_frequencies_with_rare_modalities():
     """Test check_frequencies with rare modalities"""
-    df = DataFrame({"feature1": [1, 1, 1, 1, 1, 2], "feature2": [4, 4, 4, 5, 5, 5]})
+    df = pd.DataFrame({"feature1": [1, 1, 1, 1, 1, 2], "feature2": [4, 4, 4, 5, 5, 5]})
     features = Features(
         [
             QuantitativeFeature(name="Feature 1", version="feature1"),
@@ -141,7 +140,7 @@ def test_check_frequencies_with_rare_modalities():
 
 def test_check_frequencies_with_nans():
     """Test check_frequencies with NaN values"""
-    df = DataFrame({"feature1": [1, 2, 2, 3, 3, nan], "feature2": [4, 4, 4, 5, 5, 5]})
+    df = pd.DataFrame({"feature1": [1, 2, 2, 3, 3, nan], "feature2": [4, 4, 4, 5, 5, 5]})
     features = Features(
         [
             QuantitativeFeature(name="Feature 1", version="feature1"),
@@ -155,7 +154,7 @@ def test_check_frequencies_with_nans():
 
 def test_check_frequencies_all_rare_modalities():
     """Test check_frequencies with all rare modalities"""
-    df = DataFrame({"feature1": [1, 2, 3, 4, 5, 1], "feature2": [1, 2, 3, 4, 5, 2]})
+    df = pd.DataFrame({"feature1": [1, 2, 3, 4, 5, 1], "feature2": [1, 2, 3, 4, 5, 2]})
     features = Features(
         [
             QuantitativeFeature(name="Feature 1", version="feature1"),
@@ -189,8 +188,8 @@ def test_quantitative_discretizer_prepare_data():
     discretizer = QuantitativeDiscretizer(quantitatives=quantitatives, min_freq=min_freq)
 
     data = {"feature1": [1, 2, 3, 4, 5], "feature2": [5.0, 4.0, 3.0, 2.0, 1.0]}
-    df = DataFrame(data)
-    y = Series([0, 1, 0, 1, 0])
+    df = pd.DataFrame(data)
+    y = pd.Series([0, 1, 0, 1, 0])
 
     sample = discretizer._prepare_data(Sample(df, y))
     prepared_df = sample.X
@@ -207,7 +206,7 @@ def test_continuous_discretizer_fit():
     quantitatives = [feature1, feature2]
     min_freq = 0.2
     discretizer = QuantitativeDiscretizer(quantitatives=quantitatives, min_freq=min_freq)
-    y = Series([0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1])
+    y = pd.Series([0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1])
 
     # Create a sample DataFrame
     data = {
@@ -263,7 +262,7 @@ def test_continuous_discretizer_fit():
         ],
     }
 
-    df = DataFrame(data)
+    df = pd.DataFrame(data)
 
     # Fit the discretizer
     discretizer.fit(df, y)
@@ -279,7 +278,7 @@ def test_continuous_discretizer_fit():
     # Check if the discretizer has been fitted
     transformed_df = discretizer.transform(df)
     print(transformed_df)
-    expected = DataFrame(
+    expected = pd.DataFrame(
         {
             "feature1": [
                 "1.00e+00 < x <= 2.00e+00",

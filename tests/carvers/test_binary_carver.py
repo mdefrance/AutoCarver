@@ -3,7 +3,7 @@
 from pathlib import Path
 
 import pandas as pd
-from pandas import DataFrame, Series
+from pandas import DataFrame
 from pytest import FixtureRequest, fixture, raises
 
 from AutoCarver import BinaryCarver
@@ -34,51 +34,51 @@ def sort_by(request) -> str:
 
 def test_get_crosstab_basic():
     """Test get_crosstab with basic data."""
-    X = DataFrame({"feature": ["A", "B", "A", "B", "C"]})
-    y = Series([1, 0, 1, 0, 1])
+    X = pd.DataFrame({"feature": ["A", "B", "A", "B", "C"]})
+    y = pd.Series([1, 0, 1, 0, 1])
     feature = OrdinalFeature("feature", ["A", "B", "C"])
     result = get_crosstab(X, y, feature)
-    expected = DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["A", "B", "C"])
+    expected = pd.DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["A", "B", "C"])
     assert result.equals(expected)
 
 
 def test_get_crosstab_with_nan():
     """Test get_crosstab with missing values."""
-    X = DataFrame({"feature": ["A", "B", "A", "B", None]})
-    y = Series([1, 0, 1, 0, 1])
+    X = pd.DataFrame({"feature": ["A", "B", "A", "B", None]})
+    y = pd.Series([1, 0, 1, 0, 1])
     feature = OrdinalFeature("feature", ["A", "B", "C"])
     result = get_crosstab(X, y, feature)
-    expected = DataFrame({0: [0, 2, 0], 1: [2, 0, 0]}, index=["A", "B", "C"])
+    expected = pd.DataFrame({0: [0, 2, 0], 1: [2, 0, 0]}, index=["A", "B", "C"])
     assert result.equals(expected)
 
 
 def test_get_crosstab_unordered_labels():
     """Test get_crosstab with unordered labels."""
-    X = DataFrame({"feature": ["A", "B", "A", "B", "C"]})
-    y = Series([1, 0, 1, 0, 1])
+    X = pd.DataFrame({"feature": ["A", "B", "A", "B", "C"]})
+    y = pd.Series([1, 0, 1, 0, 1])
     feature = OrdinalFeature("feature", ["C", "A", "B"])
     result = get_crosstab(X, y, feature)
-    expected = DataFrame({0: [0, 0, 2], 1: [1, 2, 0]}, index=["C", "A", "B"])
+    expected = pd.DataFrame({0: [0, 0, 2], 1: [1, 2, 0]}, index=["C", "A", "B"])
     assert result.equals(expected)
 
 
 def test_get_crosstab_missing_labels():
     """Test get_crosstab with missing labels."""
-    X = DataFrame({"feature": ["A", "B", "A", "B", "C"]})
-    y = Series([1, 0, 1, 0, 1])
+    X = pd.DataFrame({"feature": ["A", "B", "A", "B", "C"]})
+    y = pd.Series([1, 0, 1, 0, 1])
     feature = OrdinalFeature("feature", ["A", "B"])
     result = get_crosstab(X, y, feature)
-    expected = DataFrame({0: [0, 2], 1: [2, 0]}, index=["A", "B"])
+    expected = pd.DataFrame({0: [0, 2], 1: [2, 0]}, index=["A", "B"])
     assert result.equals(expected)
 
 
 def test_get_crosstab_extra_labels():
     """Test get_crosstab with extra labels."""
-    X = DataFrame({"feature": ["A", "B", "A", "B", "C"]})
-    y = Series([1, 0, 1, 0, 1])
+    X = pd.DataFrame({"feature": ["A", "B", "A", "B", "C"]})
+    y = pd.Series([1, 0, 1, 0, 1])
     feature = OrdinalFeature("feature", ["A", "B", "C", "D"])
     result = get_crosstab(X, y, feature)
-    expected = DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 0]}, index=["A", "B", "C", "D"])
+    expected = pd.DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 0]}, index=["A", "B", "C", "D"])
     assert result.equals(expected)
 
 
@@ -117,17 +117,17 @@ def test_binary_carver_prepare_data(evaluator: CombinationEvaluator):
         quantitatives=["feature3"],
     )
     carver = BinaryCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator)
-    X = DataFrame({"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]})
+    X = pd.DataFrame({"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]})
 
     # with wrong target
-    y = Series([0, 1, 2])
+    y = pd.Series([0, 1, 2])
     samples = Samples(train=Sample(X, y))
 
     with raises(ValueError):
         carver._prepare_data(samples)
 
     # with right target
-    y = Series([0, 1, 0])
+    y = pd.Series([0, 1, 0])
     samples = Samples(train=Sample(X, y))
 
     prepared_samples = carver._prepare_data(samples)
@@ -142,15 +142,15 @@ def test_binary_carver_aggregator(evaluator: CombinationEvaluator):
         quantitatives=["feature3"],
     )
     carver = BinaryCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator)
-    X = DataFrame({"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]})
-    y = Series([0, 1, 0])
+    X = pd.DataFrame({"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]})
+    y = pd.Series([0, 1, 0])
     xtabs = carver._aggregator(X, y)
     print(xtabs)
 
     expected = {
-        "feature1": pd.DataFrame({0: [2, 0], 1: [0, 1]}, index=["A", "B"]),
-        "feature2": pd.DataFrame({0: [1, 0, 1], 1: [0, 1, 0]}, index=["low", "medium", "high"]),
-        "feature3": pd.DataFrame({0: [1, 0, 1], 1: [0, 1, 0]}, index=[1, 2, 3]),
+        "feature1": pd.pd.DataFrame({0: [2, 0], 1: [0, 1]}, index=["A", "B"]),
+        "feature2": pd.pd.DataFrame({0: [1, 0, 1], 1: [0, 1, 0]}, index=["low", "medium", "high"]),
+        "feature3": pd.pd.DataFrame({0: [1, 0, 1], 1: [0, 1, 0]}, index=[1, 2, 3]),
     }
     assert isinstance(xtabs, dict)
     assert "feature1" in xtabs
@@ -169,14 +169,14 @@ def test_carve_feature_with_best_combination(evaluator):
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
             "feature2": ["low", "medium", "high", "high"],
             "feature3": [1, 2, 3, float("nan")],
         }
     )
-    y = Series([0, 1, 0, 1])
+    y = pd.Series([0, 1, 0, 1])
     samples = Samples(train=Sample(X, y))
 
     # initializing carver
@@ -227,14 +227,14 @@ def test_carve_feature_without_best_combination(evaluator: CombinationEvaluator)
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
             "feature2": ["low", "medium", "high", "high"],
             "feature3": [1, 2, 3, float("nan")],
         }
     )
-    y = Series([0, 1, 0, 1])
+    y = pd.Series([0, 1, 0, 1])
     samples = Samples(train=Sample(X, y))
 
     # initializing carver
@@ -267,14 +267,14 @@ def test_fit_with_best_combination(evaluator):
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
             "feature2": ["low", "medium", "high", "high"],
             "feature3": [1, 2, 3, float("nan")],
         }
     )
-    y = Series([0, 1, 0, 1])
+    y = pd.Series([0, 1, 0, 1])
 
     # initializing carver
     carver = BinaryCarver(
@@ -318,14 +318,14 @@ def test_fit_without_best_combination(evaluator: CombinationEvaluator):
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
             "feature2": ["low", "medium", "high", "high"],
             "feature3": [1, 2, 3, float("nan")],
         }
     )
-    y = Series([0, 1, 0, 1])
+    y = pd.Series([0, 1, 0, 1])
 
     # initializing carver
     carver = BinaryCarver(
@@ -359,7 +359,7 @@ def test_binary_carver_fit_transform_with_small_data_not_ordinal(evaluator: Comb
         copy=False,
     )
     idx = ["a", "b", "c", "d"]
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
             "feature2": ["low", "medium", "high", "high"],
@@ -367,12 +367,12 @@ def test_binary_carver_fit_transform_with_small_data_not_ordinal(evaluator: Comb
         },
         index=idx,
     )
-    y = Series([0, 1, 0, 1], index=idx)
+    y = pd.Series([0, 1, 0, 1], index=idx)
     X_transformed = carver.fit_transform(X, y)
 
     print(carver.features("feature1").content)
     print(X_transformed)
-    expected = DataFrame(
+    expected = pd.DataFrame(
         {
             "feature1": ["A", "B, C", "A", "B, C"],
             "feature2": ["low", "medium", "high", "high"],
@@ -408,7 +408,7 @@ def test_binary_carver_fit_transform_with_small_data_ordinal(evaluator: Combinat
     )
     carver = BinaryCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False)
     idx = ["a", "b", "c", "d"]
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
             "feature2": ["low", "medium", "high", "high"],
@@ -416,12 +416,12 @@ def test_binary_carver_fit_transform_with_small_data_ordinal(evaluator: Combinat
         },
         index=idx,
     )
-    y = Series([0, 1, 0, 1], index=idx)
+    y = pd.Series([0, 1, 0, 1], index=idx)
     X_transformed = carver.fit_transform(X, y)
 
     print(carver.features("feature1").content)
     print(X_transformed)
-    expected = DataFrame(
+    expected = pd.DataFrame(
         {
             "feature1": [0, 1, 0, 1],
             "feature2": [0, 1, 2, 2],
@@ -482,7 +482,7 @@ def test_binary_carver_fit_transform_with_large_data(evaluator: CombinationEvalu
         "p",
         "q",
     ]  # , "r", "s", "t", "u", "v"]
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": [
                 "A",
@@ -526,12 +526,12 @@ def test_binary_carver_fit_transform_with_large_data(evaluator: CombinationEvalu
         },
         index=idx,
     )
-    y = Series([0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1], index=idx)
+    y = pd.Series([0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1], index=idx)
     X_transformed = carver.fit_transform(X, y)
 
     print(carver.features("feature1").content)
     print(X_transformed)
-    expected = DataFrame(
+    expected = pd.DataFrame(
         {
             "feature1": [
                 "A",
@@ -626,7 +626,7 @@ def test_binary_carver_fit_transform_with_target_only_nan(evaluator: Combination
         ordinal_encoding=False,
     )
     idx = ["a", "b", "c", "d"]
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
             "feature2": ["low", "medium", "high", "high"],
@@ -634,12 +634,12 @@ def test_binary_carver_fit_transform_with_target_only_nan(evaluator: Combination
         },
         index=idx,
     )
-    y = Series([0, 0, 0, 1], index=idx)
+    y = pd.Series([0, 0, 0, 1], index=idx)
     X_transformed = carver.fit_transform(X, y)
 
     print(carver.features("feature1").content)
     print(X_transformed)
-    expected = DataFrame(
+    expected = pd.DataFrame(
         {
             "feature1": ["A, B", "A, B", "A, B", "C"],
             "feature2": ["low", "medium to high", "medium to high", "medium to high"],
@@ -674,7 +674,7 @@ def test_binary_carver_fit_transform_with_wrong_dev(evaluator: CombinationEvalua
     )
     carver = BinaryCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False)
     idx = ["a", "b", "c", "d"]
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
             "feature2": ["low", "medium", "high", "high"],
@@ -682,8 +682,8 @@ def test_binary_carver_fit_transform_with_wrong_dev(evaluator: CombinationEvalua
         },
         index=idx,
     )
-    y = Series([0, 1, 0, 1], index=idx)
-    X_dev = DataFrame(
+    y = pd.Series([0, 1, 0, 1], index=idx)
+    X_dev = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
             "feature2": ["low", "medium", "high", "high"],
@@ -691,7 +691,7 @@ def test_binary_carver_fit_transform_with_wrong_dev(evaluator: CombinationEvalua
         },
         index=idx,
     )
-    y_dev = Series([1, 0, 1, 0], index=idx)
+    y_dev = pd.Series([1, 0, 1, 0], index=idx)
     X_transformed = carver.fit_transform(X, y, X_dev=X_dev, y_dev=y_dev)
 
     print(X_transformed)

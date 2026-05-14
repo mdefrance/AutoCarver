@@ -1,7 +1,7 @@
 """set of tests for quantitative features"""
 
+import pandas as pd
 from numpy import inf, nan
-from pandas import DataFrame
 from pytest import fixture, raises
 
 from AutoCarver.config import Constants
@@ -115,7 +115,7 @@ def test_quantitative_feature_make_labels(sample_quantitative_feature: Quantitat
     """testing make_labels"""
 
     # fitting some nans
-    sample_quantitative_feature.fit(DataFrame({sample_quantitative_feature.version: [1, 2, 3, 4, nan]}))
+    sample_quantitative_feature.fit(pd.DataFrame({sample_quantitative_feature.version: [1, 2, 3, 4, nan]}))
     # labels without setting dropna to true
     assert sample_quantitative_feature.values == [0.1, 0.5, 0.9, inf]
     labels = sample_quantitative_feature.make_labels()
@@ -175,7 +175,7 @@ def test_quantitative_feature_update_no_ordinal_encoding(
     """testing update"""
 
     # fitting some nans
-    sample_quantitative_feature.fit(DataFrame({sample_quantitative_feature.version: [1, 2, 3, 4, nan]}))
+    sample_quantitative_feature.fit(pd.DataFrame({sample_quantitative_feature.version: [1, 2, 3, 4, nan]}))
     sample_quantitative_feature.update(
         GroupedList({"x <= 1.00e-01": ["x <= 1.00e-01", "1.00e-01 < x <= 5.00e-01"]}),
         convert_labels=True,
@@ -241,7 +241,7 @@ def test_quantitative_feature_update_ordinal_encoding(
         )
 
     # fitting some nans
-    sample_quantitative_feature.fit(DataFrame({sample_quantitative_feature.version: [1, 2, 3, 4, nan]}))
+    sample_quantitative_feature.fit(pd.DataFrame({sample_quantitative_feature.version: [1, 2, 3, 4, nan]}))
     sample_quantitative_feature.ordinal_encoding = True
     print("values", sample_quantitative_feature.values)
     print("labels", sample_quantitative_feature.labels)
@@ -335,7 +335,7 @@ def test_get_summary(sample_quantitative_feature: QuantitativeFeature) -> None:
     assert summary == expected_summary
 
     # fitting some nans
-    sample_quantitative_feature.fit(DataFrame({sample_quantitative_feature.version: [0.1, 0.2, 0.3, 0.4, nan]}))
+    sample_quantitative_feature.fit(pd.DataFrame({sample_quantitative_feature.version: [0.1, 0.2, 0.3, 0.4, nan]}))
     sample_quantitative_feature.ordinal_encoding = True
     sample_quantitative_feature.dropna = True
     summary = sample_quantitative_feature.summary

@@ -2,7 +2,7 @@
 
 import pandas as pd
 from numpy import nan
-from pandas import DataFrame, Series
+from pandas import DataFrame
 from pytest import raises
 
 from AutoCarver.discretizers.qualitatives.categorical_discretizer import (
@@ -17,25 +17,25 @@ from AutoCarver.features import CategoricalFeature, Features, GroupedList
 def test_series_value_counts():
     """Tests series_value_counts function"""
     # Test series_value_counts with normalize=True
-    x = Series(["a", "b", "a", "b", "c", "c", "c"])
+    x = pd.Series(["a", "b", "a", "b", "c", "c", "c"])
     result = series_value_counts(x, dropna=False, normalize=True)
     expected = {"c": 3 / 7, "a": 2 / 7, "b": 2 / 7}
     assert result == expected
 
     # Test series_value_counts with normalize=False
-    x = Series(["a", "b", "a", "b", "c", "c", "c"])
+    x = pd.Series(["a", "b", "a", "b", "c", "c", "c"])
     result = series_value_counts(x, dropna=False, normalize=False)
     expected = {"c": 3, "a": 2, "b": 2}
     assert result == expected
 
     # Test series_value_counts with dropna=True
-    x = Series(["a", "b", "a", "b", "c", "c", "c", None])
+    x = pd.Series(["a", "b", "a", "b", "c", "c", "c", None])
     result = series_value_counts(x, dropna=True, normalize=True)
     expected = {"c": 3 / 7, "a": 2 / 7, "b": 2 / 7}
     assert result == expected
 
     # Test series_value_counts with dropna=False
-    x = Series(["a", "b", "a", "b", "c", "c", "c", None])
+    x = pd.Series(["a", "b", "a", "b", "c", "c", "c", None])
     result = series_value_counts(x, dropna=False, normalize=True)
     expected = {"c": 3 / 8, "a": 2 / 8, "b": 2 / 8, None: 1 / 8}
     assert result == expected
@@ -44,29 +44,29 @@ def test_series_value_counts():
 def test_series_target_rate():
     """Tests series_target_rate function"""
     # Test series_target_rate with basic input
-    x = Series(["a", "b", "a", "b", "c", "c", "c"])
-    y = Series([1, 0, 1, 0, 1, 0, 1])
+    x = pd.Series(["a", "b", "a", "b", "c", "c", "c"])
+    y = pd.Series([1, 0, 1, 0, 1, 0, 1])
     result = series_target_rate(x, y)
     expected = {"a": 1.0, "b": 0.0, "c": 2 / 3}
     assert result == expected
 
     # Test series_target_rate with NaN values in x
-    x = Series(["a", "b", "a", "b", "c", "c", "c", None])
-    y = Series([1, 0, 1, 0, 1, 0, 1, 1])
+    x = pd.Series(["a", "b", "a", "b", "c", "c", "c", None])
+    y = pd.Series([1, 0, 1, 0, 1, 0, 1, 1])
     result = series_target_rate(x, y)
     expected = {"a": 1.0, "b": 0.0, "c": 2 / 3}
     assert result == expected
 
     # Test series_target_rate when all targets are the same
-    x = Series(["a", "b", "a", "b", "c", "c", "c"])
-    y = Series([1, 1, 1, 1, 1, 1, 1])
+    x = pd.Series(["a", "b", "a", "b", "c", "c", "c"])
+    y = pd.Series([1, 1, 1, 1, 1, 1, 1])
     result = series_target_rate(x, y)
     expected = {"a": 1.0, "b": 1.0, "c": 1.0}
     assert result == expected
 
     # Test series_target_rate with empty series
-    x = Series([])
-    y = Series([])
+    x = pd.Series([])
+    y = pd.Series([])
     result = series_target_rate(x, y)
     expected = {}
     assert result == expected
@@ -88,7 +88,7 @@ def test_prepare_data():
     features = [feature1, feature2]
     categorical_discretizer = CategoricalDiscretizer(features, min_freq=0.02)
 
-    X = DataFrame({"feature1": ["a", "b", "a", "b", nan], "feature2": ["x", "y", "x", "y", nan]})
+    X = pd.DataFrame({"feature1": ["a", "b", "a", "b", nan], "feature2": ["x", "y", "x", "y", nan]})
 
     sample = categorical_discretizer._prepare_data(Sample(X, None))
     X_prepared = sample.X
@@ -105,7 +105,7 @@ def test_group_feature_rare_modalities():
     feature2 = CategoricalFeature("feature2")
     categorical_discretizer = CategoricalDiscretizer([feature1, feature2], min_freq=0.2)
 
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["x", "b", "a", "b", "c", "c", "c"],
             "feature2": ["a", "y", "x", "y", "z", "z", "z"],
@@ -133,7 +133,7 @@ def test_group_feature_rare_modalities():
     feature2 = CategoricalFeature("feature2")
     categorical_discretizer = CategoricalDiscretizer([feature1, feature2], min_freq=0.001)
 
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["x", "b", "a", "b", "c", "c", "c"],
             "feature2": ["a", "y", "x", "y", "z", "z", "z"],
@@ -153,7 +153,7 @@ def test_group_feature_rare_modalities():
     feature2 = CategoricalFeature("feature2")
     categorical_discretizer = CategoricalDiscretizer([feature1, feature2], min_freq=1.0)
 
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["x", "b", "a", "b", "c", "c", "c"],
             "feature2": ["a", "y", "x", "y", "z", "z", "z"],
@@ -184,7 +184,7 @@ def test_group_rare_modalities():
     feature2 = CategoricalFeature("feature2")
     categorical_discretizer = CategoricalDiscretizer([feature1, feature2], min_freq=0.2)
 
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["x", "b", "a", "b", "c", "c", "c"],
             "feature2": ["a", "y", "x", "y", "z", "z", "z"],
@@ -203,8 +203,8 @@ def test_target_sort():
     feature2 = CategoricalFeature("feature2")
     categorical_discretizer = CategoricalDiscretizer([feature1, feature2], min_freq=0.2)
 
-    X = DataFrame({"feature1": ["a", "b", "a", "b"], "feature2": ["x", "y", "x", "y"]})
-    y = Series([1, 0, 1, 0])
+    X = pd.DataFrame({"feature1": ["a", "b", "a", "b"], "feature2": ["x", "y", "x", "y"]})
+    y = pd.Series([1, 0, 1, 0])
 
     categorical_discretizer.features.fit(X)
     categorical_discretizer._target_sort(X, y)
@@ -221,13 +221,13 @@ def test_categoricaldiscretizer_fit():
     feature2 = CategoricalFeature("feature2")
     categorical_discretizer = CategoricalDiscretizer([feature1, feature2], min_freq=0.2)
 
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["x", "b", "a", "b", "c", "c", "c", nan],
             "feature2": ["a", "y", "x", "y", "z", "z", "z", nan],
         }
     )
-    y = Series([1, 0, 1, 0, 1, 1, 1, 1])
+    y = pd.Series([1, 0, 1, 0, 1, 1, 1, 1])
 
     categorical_discretizer.fit(X, y)
 
@@ -264,13 +264,13 @@ def test_categoricaldiscretizer_fit():
     feature2 = CategoricalFeature("feature2")
     categorical_discretizer = CategoricalDiscretizer([feature1, feature2], min_freq=0.2)
 
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["x", "b", "a", "b", "c", "c", "c", nan],
             "feature2": ["a", "y", "x", "y", "z", "z", "z", nan],
         }
     )
-    y = Series([1.2, 0.1, 0.9, -0.2, 1, 1.5, 1.35, 1])
+    y = pd.Series([1.2, 0.1, 0.9, -0.2, 1, 1.5, 1.35, 1])
 
     categorical_discretizer.fit(X, y)
 

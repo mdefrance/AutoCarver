@@ -2,7 +2,7 @@
 
 import pandas as pd
 from numpy import inf, nan
-from pandas import DataFrame, Series, notna
+from pandas import notna
 
 from AutoCarver.config import Constants
 from AutoCarver.discretizers import Discretizer
@@ -42,8 +42,8 @@ def test_discretizer_fit():
         "feature4": ["a", "b", "a", "b", nan],
         "feature3": [1, 4, 3, 4, nan],
     }
-    df = DataFrame(data)
-    y = Series([0, 1, 0, 1, 0])
+    df = pd.DataFrame(data)
+    y = pd.Series([0, 1, 0, 1, 0])
 
     # fitting discretizer
     transformed_df = discretizer.fit_transform(df, y)
@@ -68,7 +68,7 @@ def test_discretizer_fit():
         "feature4": ["a", "b", "a", "b", nan],
         "feature3": ["1, 3", "4", "1, 3", "4", nan],
     }
-    expected = DataFrame(data)
+    expected = pd.DataFrame(data)
     assert transformed_df.equals(expected)
 
 

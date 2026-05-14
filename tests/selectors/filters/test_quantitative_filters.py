@@ -16,7 +16,7 @@ def sample_data() -> pd.DataFrame:
         "feature3": [-2, -3, -4, -5, -6],
         "feature4": [-2, 10, -1, 30, 0],
     }
-    return DataFrame(data)
+    return pd.DataFrame(data)
 
 
 @fixture

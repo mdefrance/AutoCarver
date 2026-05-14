@@ -51,7 +51,7 @@ from AutoCarver.utils.extend_docstring import extend_docstring
 #             associations += [{"feature": feature, "vif_filter": vif}]
 
 #     # formatting ouput to DataFrame
-#     associations = DataFrame(associations).set_index("feature")
+#     associations = pd.DataFrame(associations).set_index("feature")
 
 #     # applying filter on association
 #     associations = ranks.join(associations, how="right")

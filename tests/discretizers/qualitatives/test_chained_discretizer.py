@@ -2,7 +2,6 @@
 
 import pandas as pd
 from numpy import isnan, nan
-from pandas import DataFrame
 from pytest import raises
 
 from AutoCarver.discretizers.qualitatives.chained_discretizer import (
@@ -16,7 +15,7 @@ from AutoCarver.features import CategoricalFeature, Features, OrdinalFeature
 def test_check_frequencies_basic():
     """Test check_frequencies with basic input"""
     features = Features(["feature1", "feature2"])
-    df = DataFrame({"feature1": ["A", "B", "A", "C", "B", "A"], "feature2": ["X", "Y", "X", "Z", "Y", "X"]})
+    df = pd.DataFrame({"feature1": ["A", "B", "A", "C", "B", "A"], "feature2": ["X", "Y", "X", "Z", "Y", "X"]})
     min_freq = 1 / 6
     check_frequencies(features, df, min_freq, "Test")
 
@@ -24,7 +23,7 @@ def test_check_frequencies_basic():
 def test_check_frequencies_no_common_modality():
     """Test check_frequencies with no common modality"""
     features = Features(["feature1"])
-    df = DataFrame({"feature1": ["A", "B", "C", "D", "E", "F"]})
+    df = pd.DataFrame({"feature1": ["A", "B", "C", "D", "E", "F"]})
     min_freq = 0.2
     with raises(ValueError):
         check_frequencies(features, df, min_freq, "Test")
@@ -33,7 +32,7 @@ def test_check_frequencies_no_common_modality():
 def test_check_frequencies_too_common_modality():
     """Test check_frequencies with too common modality"""
     features = Features(["feature1"])
-    df = DataFrame({"feature1": ["A", "A", "A", "A", "A", "B"]})
+    df = pd.DataFrame({"feature1": ["A", "A", "A", "A", "A", "B"]})
     min_freq = 0.2
     with raises(ValueError):
         check_frequencies(features, df, min_freq, "Test")
@@ -42,7 +41,7 @@ def test_check_frequencies_too_common_modality():
 def test_check_frequencies_edge_case():
     """Test check_frequencies with edge case"""
     features = Features(["feature1"])
-    df = DataFrame({"feature1": ["A", "A", "A", "A", "A", "A"]})
+    df = pd.DataFrame({"feature1": ["A", "A", "A", "A", "A", "A"]})
     min_freq = 0.2
     with raises(ValueError):
         check_frequencies(features, df, min_freq, "Test")
@@ -51,7 +50,7 @@ def test_check_frequencies_edge_case():
 def test_ensure_qualitative_dtypes_with_conversion():
     """Test ensure_qualitative_dtypes with basic input"""
     features = Features([CategoricalFeature("feature1"), OrdinalFeature("feature2", ["A", "B", "C"])])
-    df = DataFrame({"feature1": [1, 2, 3], "feature2": ["A", "B", "C"]})
+    df = pd.DataFrame({"feature1": [1, 2, 3], "feature2": ["A", "B", "C"]})
     result = ensure_qualitative_dtypes(features, df)
     assert result["feature1"].dtype == object
     assert result["feature1"].tolist() == ["1", "2", "3"]
@@ -62,7 +61,7 @@ def test_ensure_qualitative_dtypes_with_conversion():
 def test_ensure_qualitative_dtypes_without_conversion():
     """Test ensure_qualitative_dtypes with basic input"""
     features = Features([CategoricalFeature("feature1"), OrdinalFeature("feature2", ["A", "B", "C"])])
-    df = DataFrame({"feature1": ["1", "2", "3"], "feature2": ["A", "B", "C"]})
+    df = pd.DataFrame({"feature1": ["1", "2", "3"], "feature2": ["A", "B", "C"]})
     result = ensure_qualitative_dtypes(features, df)
     assert result["feature1"].dtype == object
     assert result["feature1"].tolist() == ["1", "2", "3"]
@@ -73,7 +72,7 @@ def test_ensure_qualitative_dtypes_without_conversion():
 def test_ensure_qualitative_dtypes_with_nans():
     """Test ensure_qualitative_dtypes with NaN values"""
     features = Features([CategoricalFeature("feature1"), OrdinalFeature("feature2", ["A", "B", "C"])])
-    df = DataFrame({"feature1": [1, nan, 3], "feature2": ["A", "B", nan]})
+    df = pd.DataFrame({"feature1": [1, nan, 3], "feature2": ["A", "B", nan]})
     result = ensure_qualitative_dtypes(features, df)
 
     feature1_list = result["feature1"].tolist()
@@ -91,7 +90,7 @@ def test_ensure_qualitative_dtypes_with_nans():
 def test_ensure_qualitative_dtypes_mixed_types():
     """Test ensure_qualitative_dtypes with mixed data types"""
     features = Features([CategoricalFeature("feature1"), OrdinalFeature("feature2", ["A", "2", "B"])])
-    df = DataFrame({"feature1": [1, 3.0, 3.5], "feature2": ["A", 2.0, "B"]})
+    df = pd.DataFrame({"feature1": [1, 3.0, 3.5], "feature2": ["A", 2.0, "B"]})
     result = ensure_qualitative_dtypes(features, df)
     assert result["feature1"].dtype == object
     assert result["feature1"].tolist() == ["1", "3", "3.5"]

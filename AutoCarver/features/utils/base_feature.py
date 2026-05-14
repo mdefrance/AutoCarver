@@ -169,7 +169,7 @@ class BaseFeature(ABC):
         # conversion to dataframe
         stats = self._statistics
         if stats is not None:
-            stats = DataFrame(stats)
+            stats = pd.DataFrame(stats)
 
         # convertion to ordinal encoding if requested
         if self.ordinal_encoding and stats is not None:
@@ -206,7 +206,7 @@ class BaseFeature(ABC):
     def history(self) -> pd.DataFrame:
         """Feature's combination history"""
         if self._history is not None:
-            return DataFrame(self._history)
+            return pd.DataFrame(self._history)
         return []
 
     @history.setter

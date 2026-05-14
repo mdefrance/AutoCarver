@@ -4,7 +4,6 @@ from abc import ABC
 
 import numpy as np
 import pandas as pd
-from pandas import DataFrame
 
 from AutoCarver.combinations.utils import TargetRate
 
@@ -33,7 +32,7 @@ class BinaryTargetRate(TargetRate, ABC):
             frequency = xagg.sum(axis=1) / xagg.sum().sum()
 
             # computing target rate
-            return DataFrame({self.__name__: self._compute(xagg), "frequency": frequency})
+            return pd.DataFrame({self.__name__: self._compute(xagg), "frequency": frequency})
         return None
 
 

@@ -2,7 +2,6 @@
 
 import pandas as pd
 from numpy import arange, nan, random
-from pandas import DataFrame
 from pytest import FixtureRequest, fixture
 
 
@@ -69,7 +68,7 @@ def init_df(seed: int, size: int = 10000) -> pd.DataFrame:
         "Binary": binary,
         "Discrete_Quantitative": discrete_quantitative_data,
     }
-    df = DataFrame(data)
+    df = pd.DataFrame(data)
 
     # binary target
     df["binary_target"] = df["Binary"].apply(lambda u: random.choice([0, 1], p=[1 - (u * 1 / 3), (u * 1 / 3)]))

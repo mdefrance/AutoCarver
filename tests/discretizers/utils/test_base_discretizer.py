@@ -55,7 +55,7 @@ def test_transform_quantitative_feature(features: Features) -> None:
     feature = features[-1]
     feature.update(GroupedList([2, 4.5, inf]))
 
-    df_feature = Series([1, 2, 3, 4, 4.5, 5], name=feature.version)
+    df_feature = pd.Series([1, 2, 3, 4, 4.5, 5], name=feature.version)
     feature_version, list_feature = transform_quantitative_feature(feature, df_feature, len(df_feature))
     assert feature_version == feature.version
     assert [
@@ -73,7 +73,7 @@ def test_transform_quantitative_feature(features: Features) -> None:
     feature.has_nan = True
     feature.dropna = True
 
-    df_feature = Series([1, 2, 3, 4, 4.5, nan, 5], name=feature.version)
+    df_feature = pd.Series([1, 2, 3, 4, 4.5, nan, 5], name=feature.version)
     feature_version, list_feature = transform_quantitative_feature(feature, df_feature, len(df_feature))
     assert feature_version == feature.version
     assert [
@@ -94,7 +94,7 @@ def test_transform_quantitative_feature(features: Features) -> None:
     feature.update(GroupedList({2: [2], 4.5: [4.5], inf: [inf, "__NAN__"]}))
     print(feature.values.content)
 
-    df_feature = Series([1, 2, 3, 4, 4.5, nan, 5], name=feature.version)
+    df_feature = pd.Series([1, 2, 3, 4, 4.5, nan, 5], name=feature.version)
     feature_version, list_feature = transform_quantitative_feature(feature, df_feature, len(df_feature))
     assert feature_version == feature.version
     assert [
@@ -114,7 +114,7 @@ def test_transform_quantitative_feature(features: Features) -> None:
     feature.update(GroupedList({2: [2], 4.5: [4.5], inf: [inf, "__NAN__"]}), replace=True)
     print(feature.values.content)
 
-    df_feature = Series([1, 2, 3, 4, 4.5, "__NAN__", 5], name=feature.version)
+    df_feature = pd.Series([1, 2, 3, 4, 4.5, "__NAN__", 5], name=feature.version)
     feature_version, list_feature = transform_quantitative_feature(feature, df_feature, len(df_feature))
     assert feature_version == feature.version
     assert [
@@ -197,7 +197,7 @@ def test_cast_features(features: Features) -> None:
     """test cast_features method"""
 
     disc = BaseDiscretizer(features)
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": [1, 2, 3, 4],
             "feature2": ["1", "2", "3", "4"],
@@ -223,7 +223,7 @@ def test_prepare_X(features: Features) -> None:
     """test prepare_X method"""
 
     # x with all features needed
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": [1, 2, 3, 4],
             "feature2": ["1", "2", "3", "4"],
@@ -267,16 +267,16 @@ def test_prepare_X(features: Features) -> None:
 def test_prepare_y(features: Features) -> None:
     """test prepare_y method"""
 
-    y = Series([1, 2, 3, 4])
+    y = pd.Series([1, 2, 3, 4])
 
     disc = BaseDiscretizer(features)
     disc._prepare_y(y)
     with raises(ValueError):
-        disc._prepare_y(DataFrame(y))
-    y = Series([nan, 2, 3, 4])
+        disc._prepare_y(pd.DataFrame(y))
+    y = pd.Series([nan, 2, 3, 4])
     with raises(ValueError):
         disc._prepare_y(y)
-    y = Series([None, 2, 3, 4])
+    y = pd.Series([None, 2, 3, 4])
     with raises(ValueError):
         disc._prepare_y(y)
 
@@ -285,7 +285,7 @@ def test_prepare_data(features: Features) -> None:
     """test prepare_data method"""
 
     disc = BaseDiscretizer(features)
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": [1, 2, 3, 4],
             "feature2": ["1", "2", "3", "4"],
@@ -293,13 +293,13 @@ def test_prepare_data(features: Features) -> None:
             "feature4": [1, 2, 3, 4],
         }
     )
-    y = Series([0, 0, 0, 1])
+    y = pd.Series([0, 0, 0, 1])
     assert disc._prepare_data(Sample(None)).X is None
     disc._prepare_data(Sample(X))
     disc._prepare_data(Sample(X, y))
 
     # mismatched X and y
-    y = Series([0, 0, 0, 1, 1])
+    y = pd.Series([0, 0, 0, 1, 1])
     with raises(ValueError):
         disc._prepare_data(Sample(X, y))
 
@@ -347,7 +347,7 @@ def test_transform_qualitative() -> None:
 
     # Create sample data
     index = [1, 2, 3, 4, 5, 6, 7]
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["1", "2", "3", "2", "3", "4", "4"],
             "feature2": ["A", "A", "B", "C", "D", "E", "X"],
@@ -360,7 +360,7 @@ def test_transform_qualitative() -> None:
     assert all(array(result.index) == array(index))
 
     # Assert the result
-    expected = DataFrame(
+    expected = pd.DataFrame(
         {
             "feature1": ["1", "2", "3", "2", "3", "4", "4"],
             "feature2": ["A", "A", "B", "X", "X", "E", "X"],
@@ -383,7 +383,7 @@ def test_transform_quantitative() -> None:
 
     # Create sample data
     index = [1, 2, 3, 4, 5, 6]
-    X = DataFrame({"feature1": [1, 2, 3, 4, 4.5, 5], "feature2": [10, 20, 30, 40, 45, 50]}, index=index)
+    X = pd.DataFrame({"feature1": [1, 2, 3, 4, 4.5, 5], "feature2": [10, 20, 30, 40, 45, 50]}, index=index)
 
     # Call the method
     result = disc._transform_quantitative(Sample(X=X, y=None)).X
@@ -391,7 +391,7 @@ def test_transform_quantitative() -> None:
 
     # Assert the result
     print(result)
-    expected = DataFrame(
+    expected = pd.DataFrame(
         {
             "feature1": [
                 "x <= 2.00e+00",
@@ -433,7 +433,7 @@ def test_transform(true_false: bool) -> None:
 
     # creating sample
     index = [1, 2, 3, 4, 5, 6, 7]
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["1", "2", "3", "2", "3", "4", "4"],
             "feature2": ["A", "A", "B", "C", "D", "E", "X"],
@@ -460,7 +460,7 @@ def test_transform(true_false: bool) -> None:
 
     # Assert the result
     print(result)
-    expected = DataFrame(
+    expected = pd.DataFrame(
         {
             "feature1": ["1", "2", "3", "2", "3", "4", "4"],
             "feature2": ["A", "A", "B", "X", "X", feature2.default, "X"],
@@ -503,7 +503,7 @@ def test_transform(true_false: bool) -> None:
 
     # creating sample
     index = [1, 2, 3, 4, 5, 6, 7]
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["1", "2", "3", "2", nan, "4", "4"],
             "feature2": ["A", "A", "B", "C", nan, "E", "X"],
@@ -530,7 +530,7 @@ def test_transform(true_false: bool) -> None:
 
     # Assert the result
     print(result)
-    expected = DataFrame(
+    expected = pd.DataFrame(
         {
             "feature1": ["1", "2", "3", "2", feature1.nan, "4", "4"],
             "feature2": ["A", "A", "B", "X", feature2.nan, feature2.default, "X"],
@@ -570,7 +570,7 @@ def test_transform(true_false: bool) -> None:
 
     # creating sample
     index = [1, 2, 3, 4, 5, 6, 7]
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["1", "2", "3", "2", nan, "4", "4"],
             "feature2": ["A", "A", "B", "C", nan, "E", "X"],
@@ -597,7 +597,7 @@ def test_transform(true_false: bool) -> None:
 
     # Assert the result
     print(result)
-    expected = DataFrame(
+    expected = pd.DataFrame(
         {
             "feature1": ["1", "2", "3", "2", nan, "4", "4"],
             "feature2": ["A", "A", "B", "X", nan, feature2.default, "X"],
@@ -862,8 +862,8 @@ def test_base_discretizer(x_train: pd.DataFrame, dropna: bool) -> None:
 
 @fixture
 def sample_data():
-    X = DataFrame({"feature1": [1, 2, 3], "feature2": [4, 5, 6]})
-    y = Series([0, 1, 0])
+    X = pd.DataFrame({"feature1": [1, 2, 3], "feature2": [4, 5, 6]})
+    y = pd.Series([0, 1, 0])
     return Sample(X=X, y=y)
 
 
