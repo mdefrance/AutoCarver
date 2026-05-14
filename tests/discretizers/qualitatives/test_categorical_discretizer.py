@@ -1,7 +1,7 @@
 """Set of tests for qualitative_discretizers module."""
 
+import numpy as np
 import pandas as pd
-from numpy import nan
 from pytest import raises
 
 from AutoCarver.discretizers.qualitatives.categorical_discretizer import (
@@ -49,7 +49,7 @@ def test_series_target_rate():
     expected = {"a": 1.0, "b": 0.0, "c": 2 / 3}
     assert result == expected
 
-    # Test series_target_rate with NaN values in x
+    # Test series_target_rate with np.nan values in x
     x = pd.Series(["a", "b", "a", "b", "c", "c", "c", None])
     y = pd.Series([1, 0, 1, 0, 1, 0, 1, 1])
     result = series_target_rate(x, y)
@@ -87,13 +87,13 @@ def test_prepare_data():
     features = [feature1, feature2]
     categorical_discretizer = CategoricalDiscretizer(features, min_freq=0.02)
 
-    X = pd.DataFrame({"feature1": ["a", "b", "a", "b", nan], "feature2": ["x", "y", "x", "y", nan]})
+    X = pd.DataFrame({"feature1": ["a", "b", "a", "b", np.nan], "feature2": ["x", "y", "x", "y", np.nan]})
 
     sample = categorical_discretizer._prepare_data(Sample(X, None))
     X_prepared = sample.X
 
-    assert X_prepared["feature1"].tolist() == ["a", "b", "a", "b", nan]
-    assert X_prepared["feature2"].tolist() == ["x", "y", "x", "y", nan]
+    assert X_prepared["feature1"].tolist() == ["a", "b", "a", "b", np.nan]
+    assert X_prepared["feature2"].tolist() == ["x", "y", "x", "y", np.nan]
 
 
 def test_group_feature_rare_modalities():
@@ -222,8 +222,8 @@ def test_categoricaldiscretizer_fit():
 
     X = pd.DataFrame(
         {
-            "feature1": ["x", "b", "a", "b", "c", "c", "c", nan],
-            "feature2": ["a", "y", "x", "y", "z", "z", "z", nan],
+            "feature1": ["x", "b", "a", "b", "c", "c", "c", np.nan],
+            "feature2": ["a", "y", "x", "y", "z", "z", "z", np.nan],
         }
     )
     y = pd.Series([1, 0, 1, 0, 1, 1, 1, 1])
@@ -245,7 +245,7 @@ def test_categoricaldiscretizer_fit():
         "c",
         "c",
         "c",
-        nan,
+        np.nan,
     ]
     assert transformed_x["feature2"].tolist() == [
         feature2.label_per_value[feature2.default],
@@ -255,7 +255,7 @@ def test_categoricaldiscretizer_fit():
         "z",
         "z",
         "z",
-        nan,
+        np.nan,
     ]
 
     # test with continuous target
@@ -265,8 +265,8 @@ def test_categoricaldiscretizer_fit():
 
     X = pd.DataFrame(
         {
-            "feature1": ["x", "b", "a", "b", "c", "c", "c", nan],
-            "feature2": ["a", "y", "x", "y", "z", "z", "z", nan],
+            "feature1": ["x", "b", "a", "b", "c", "c", "c", np.nan],
+            "feature2": ["a", "y", "x", "y", "z", "z", "z", np.nan],
         }
     )
     y = pd.Series([1.2, 0.1, 0.9, -0.2, 1, 1.5, 1.35, 1])
@@ -288,7 +288,7 @@ def test_categoricaldiscretizer_fit():
         "c",
         "c",
         "c",
-        nan,
+        np.nan,
     ]
     assert transformed_x["feature2"].tolist() == [
         feature2.label_per_value[feature2.default],
@@ -298,7 +298,7 @@ def test_categoricaldiscretizer_fit():
         "z",
         "z",
         "z",
-        nan,
+        np.nan,
     ]
 
 
@@ -407,7 +407,7 @@ def test_categorical_discretizer(x_train: pd.DataFrame, target: str) -> None:
         "Category D": ["Category D"],
     }
     assert features("Qualitative_lownan").content == quali_lownan_expected, (
-        "If any, NaN values should be put into str_nan and kept by themselves"
+        "If any, np.nan values should be put into str_nan and kept by themselves"
     )
 
     quali_highnan_expected_order = {
@@ -435,5 +435,5 @@ def test_categorical_discretizer(x_train: pd.DataFrame, target: str) -> None:
         "Category D": ["Category D"],
     }
     assert features("Qualitative_highnan").content == quali_highnan_expected, (
-        "If any, NaN values should be put into str_nan and kept by themselves"
+        "If any, np.nan values should be put into str_nan and kept by themselves"
     )

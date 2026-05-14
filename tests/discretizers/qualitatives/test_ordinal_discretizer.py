@@ -1,7 +1,7 @@
 """Set of tests for qualitative_discretizers module."""
 
+import numpy as np
 import pandas as pd
-from numpy import array, isnan, nan, vstack
 from pytest import raises
 
 from AutoCarver.discretizers.qualitatives.ordinal_discretizer import (
@@ -19,8 +19,8 @@ from AutoCarver.features import Features, GroupedList, OrdinalFeature
 def test_find_closest_modality_single_element():
     """Test find_closest_modality when there is only one element"""
     idx = 0
-    frequencies = array([0.1])
-    target_rates = array([0.1])
+    frequencies = np.array([0.1])
+    target_rates = np.array([0.1])
     min_freq = 0.15
     result = find_closest_modality(idx, frequencies, target_rates, min_freq)
     expected = 0
@@ -30,8 +30,8 @@ def test_find_closest_modality_single_element():
 def test_find_closest_modality_lowest_ranked():
     """Test find_closest_modality when idx is the lowest ranked modality"""
     idx = 0
-    frequencies = array([0.1, 0.2, 0.3, 0.4])
-    target_rates = array([0.1, 0.2, 0.3, 0.4])
+    frequencies = np.array([0.1, 0.2, 0.3, 0.4])
+    target_rates = np.array([0.1, 0.2, 0.3, 0.4])
     min_freq = 0.15
     result = find_closest_modality(idx, frequencies, target_rates, min_freq)
     expected = 1
@@ -41,8 +41,8 @@ def test_find_closest_modality_lowest_ranked():
 def test_find_closest_modality_highest_ranked():
     """Test find_closest_modality when idx is the highest ranked modality"""
     idx = 3
-    frequencies = array([0.1, 0.2, 0.3, 0.4])
-    target_rates = array([0.1, 0.2, 0.3, 0.4])
+    frequencies = np.array([0.1, 0.2, 0.3, 0.4])
+    target_rates = np.array([0.1, 0.2, 0.3, 0.4])
     min_freq = 0.15
     result = find_closest_modality(idx, frequencies, target_rates, min_freq)
     expected = 2
@@ -52,8 +52,8 @@ def test_find_closest_modality_highest_ranked():
 def test_find_closest_modality_middle_closer_previous():
     """Test find_closest_modality when idx is in the middle and next modality is closer"""
     idx = 1
-    frequencies = array([0.1, 0.2, 0.1])
-    target_rates = array([0.1, 0.2, 0.4])
+    frequencies = np.array([0.1, 0.2, 0.1])
+    target_rates = np.array([0.1, 0.2, 0.4])
     min_freq = 0.15
     result = find_closest_modality(idx, frequencies, target_rates, min_freq)
     expected = 0
@@ -63,8 +63,8 @@ def test_find_closest_modality_middle_closer_previous():
 def test_find_closest_modality_middle_closer_next():
     """Test find_closest_modality when idx is in the middle and previous modality is closer"""
     idx = 1
-    frequencies = array([0.1, 0.2, 0.1])
-    target_rates = array([0.4, 0.2, 0.1])
+    frequencies = np.array([0.1, 0.2, 0.1])
+    target_rates = np.array([0.4, 0.2, 0.1])
     min_freq = 0.15
     result = find_closest_modality(idx, frequencies, target_rates, min_freq)
     expected = 2
@@ -74,7 +74,7 @@ def test_find_closest_modality_middle_closer_next():
 def test_is_next_modality_closer_by_target_rate_closer():
     """Test when the next modality is closer by target rate"""
     idx = 1
-    target_rates = array([0.1, 0.3, 0.4])
+    target_rates = np.array([0.1, 0.3, 0.4])
     result = is_next_modality_closer_by_target_rate(idx, target_rates)
     assert result is True
 
@@ -82,7 +82,7 @@ def test_is_next_modality_closer_by_target_rate_closer():
 def test_is_next_modality_closer_by_target_rate_not_closer():
     """Test when the next modality is not closer by target rate"""
     idx = 1
-    target_rates = array([0.4, 0.3, 0.1])
+    target_rates = np.array([0.4, 0.3, 0.1])
     result = is_next_modality_closer_by_target_rate(idx, target_rates)
     assert result is False
 
@@ -90,7 +90,7 @@ def test_is_next_modality_closer_by_target_rate_not_closer():
 def test_is_next_modality_closer_by_target_rate_equal_distance():
     """Test when the next and previous modalities are equally distant by target rate"""
     idx = 1
-    target_rates = array([0.2, 0.3, 0.4])
+    target_rates = np.array([0.2, 0.3, 0.4])
     result = is_next_modality_closer_by_target_rate(idx, target_rates)
     assert result is False
 
@@ -98,7 +98,7 @@ def test_is_next_modality_closer_by_target_rate_equal_distance():
 def test_is_next_modality_closer_by_target_rate_negative_values():
     """Test when the target rates include negative values"""
     idx = 1
-    target_rates = array([-0.1, -0.3, -0.4])
+    target_rates = np.array([-0.1, -0.3, -0.4])
     result = is_next_modality_closer_by_target_rate(idx, target_rates)
     assert result is True
 
@@ -106,7 +106,7 @@ def test_is_next_modality_closer_by_target_rate_negative_values():
 def test_is_next_modality_closer_by_target_rate_zero_values():
     """Test when the target rates include zero values"""
     idx = 1
-    target_rates = array([0.1, 0.0, -0.1])
+    target_rates = np.array([0.1, 0.0, -0.1])
     result = is_next_modality_closer_by_target_rate(idx, target_rates)
     assert result is False
 
@@ -116,14 +116,14 @@ def test_is_next_modality_closer_no_frequency():
 
     # bigger frequency for the previous modality
     idx = 1
-    frequencies = array([0.2, 0.0, 0.3])
-    target_rates = array([0.1, 0.2, 0.3])
+    frequencies = np.array([0.2, 0.0, 0.3])
+    target_rates = np.array([0.1, 0.2, 0.3])
     min_freq = 0.15
     result = is_next_modality_closer(idx, frequencies, target_rates, min_freq)
     assert not result
 
     # bigger frequency for the next modality
-    frequencies = array([0.3, 0.0, 0.2])
+    frequencies = np.array([0.3, 0.0, 0.2])
     result = is_next_modality_closer(idx, frequencies, target_rates, min_freq)
     assert result
 
@@ -133,14 +133,14 @@ def test_is_next_modality_closer_underrepresented():
 
     # next modality is underrepresented
     idx = 1
-    frequencies = array([0.3, 0.2, 0.1])
-    target_rates = array([0.1, 0.2, 0.3])
+    frequencies = np.array([0.3, 0.2, 0.1])
+    target_rates = np.array([0.1, 0.2, 0.3])
     min_freq = 0.15
     result = is_next_modality_closer(idx, frequencies, target_rates, min_freq)
     assert result is True
 
     # previous modality is underrepresented
-    frequencies = array([0.1, 0.2, 0.3])
+    frequencies = np.array([0.1, 0.2, 0.3])
     result = is_next_modality_closer(idx, frequencies, target_rates, min_freq)
     assert result is False
 
@@ -150,14 +150,14 @@ def test_is_next_modality_closer_both_underrepresented():
 
     # next modality is closer by target rate
     idx = 1
-    frequencies = array([0.1, 0.2, 0.1])
-    target_rates = array([0.05, 0.2, 0.3])
+    frequencies = np.array([0.1, 0.2, 0.1])
+    target_rates = np.array([0.05, 0.2, 0.3])
     min_freq = 0.15
     result = is_next_modality_closer(idx, frequencies, target_rates, min_freq)
     assert result is True
 
     # previous modality is closer by target rate
-    target_rates = array([0.1, 0.2, 0.35])
+    target_rates = np.array([0.1, 0.2, 0.35])
     result = is_next_modality_closer(idx, frequencies, target_rates, min_freq)
     assert result is False
 
@@ -167,14 +167,14 @@ def test_is_next_modality_closer_both_overrepresented():
 
     # next modality is closer by target rate
     idx = 1
-    frequencies = array([0.4, 0.2, 0.5])
-    target_rates = array([0.05, 0.2, 0.3])
+    frequencies = np.array([0.4, 0.2, 0.5])
+    target_rates = np.array([0.05, 0.2, 0.3])
     min_freq = 0.15
     result = is_next_modality_closer(idx, frequencies, target_rates, min_freq)
     assert result is True
 
     # previous modality is closer by target rate
-    target_rates = array([0.1, 0.2, 0.35])
+    target_rates = np.array([0.1, 0.2, 0.35])
     result = is_next_modality_closer(idx, frequencies, target_rates, min_freq)
     assert result is False
 
@@ -185,54 +185,54 @@ def test_compute_stats_basic():
     y = pd.Series([1, 0, 1, 0, 1, 0])
     labels = GroupedList(["A", "B", "C"])
     stats, len_df = compute_stats(df_feature, y, labels)
-    expected_stats = vstack((array([3, 2, 1]), array([2, 1, 0])))  # frequencies  # target rates
+    expected_stats = np.vstack((np.array([3, 2, 1]), np.array([2, 1, 0])))  # frequencies  # target rates
     expected_len_df = 6
     assert (stats == expected_stats).all()
     assert len_df == expected_len_df
 
 
 def test_compute_stats_with_nans():
-    """Test compute_stats with NaN values in df_feature"""
-    df_feature = pd.Series(["A", "B", nan, "C", "B", "A"])
+    """Test compute_stats with np.nan values in df_feature"""
+    df_feature = pd.Series(["A", "B", np.nan, "C", "B", "A"])
     y = pd.Series([1, 0, 1, 0, 1, 0])
     labels = GroupedList(["A", "B", "C"])
     stats, len_df = compute_stats(df_feature, y, labels)
-    expected_stats = vstack((array([2, 2, 1]), array([1, 1, 0])))  # frequencies  # target rates
-    expected_len_df = 6  # len_df includes NaN values
+    expected_stats = np.vstack((np.array([2, 2, 1]), np.array([1, 1, 0])))  # frequencies  # target rates
+    expected_len_df = 6  # len_df includes np.nan values
     assert (stats == expected_stats).all()
     assert len_df == expected_len_df
 
 
 def test_compute_stats_with_missing_value():
     """Test compute_stats with missing value in df_feature"""
-    df_feature = pd.Series(["A", "B", "A", nan, "B", "A"])
+    df_feature = pd.Series(["A", "B", "A", np.nan, "B", "A"])
     y = pd.Series([1, 0, 1, 0, 1, 0])
     labels = GroupedList(["A", "B", "C"])
     stats, len_df = compute_stats(df_feature, y, labels)
-    expected_stats = vstack((array([3, 2, 0]), array([2, 1, nan])))  # frequencies  # target rates
-    expected_len_df = 6  # len_df includes NaN values
+    expected_stats = np.vstack((np.array([3, 2, 0]), np.array([2, 1, np.nan])))  # frequencies  # target rates
+    expected_len_df = 6  # len_df includes np.nan values
 
     # Check frequencies
     assert (stats[0] == expected_stats[0]).all()
-    # Check target rates with isnan
-    assert (isnan(stats[1]) == isnan(expected_stats[1])).all()
-    assert (stats[1][~isnan(stats[1])] == expected_stats[1][~isnan(expected_stats[1])]).all()
+    # Check target rates with np.isnan
+    assert (np.isnan(stats[1]) == np.isnan(expected_stats[1])).all()
+    assert (stats[1][~np.isnan(stats[1])] == expected_stats[1][~np.isnan(expected_stats[1])]).all()
     assert len_df == expected_len_df
 
 
 def test_compute_stats_all_nans():
-    """Test compute_stats with all NaN values in df_feature"""
+    """Test compute_stats with all np.nan values in df_feature"""
     df_feature = pd.Series([None, None, None])
     y = pd.Series([1, 0, 1])
     labels = GroupedList(["A", "B", "C"])
     stats, len_df = compute_stats(df_feature, y, labels)
-    expected_stats = vstack((array([0, 0, 0]), array([nan, nan, nan])))  # frequencies  # target rates
-    expected_len_df = 3  # len_df includes NaN values
+    expected_stats = np.vstack((np.array([0, 0, 0]), np.array([np.nan, np.nan, np.nan])))  # frequencies  # target rates
+    expected_len_df = 3  # len_df includes np.nan values
 
     # Check frequencies
     assert (stats[0] == expected_stats[0]).all()
-    # Check target rates with isnan
-    assert isnan(stats[1]).all() and isnan(expected_stats[1]).all()
+    # Check target rates with np.isnan
+    assert np.isnan(stats[1]).all() and np.isnan(expected_stats[1]).all()
     assert len_df == expected_len_df
 
 
@@ -242,7 +242,7 @@ def test_compute_stats_empty_input():
     y = pd.Series([])
     labels = GroupedList([])
     stats, len_df = compute_stats(df_feature, y, labels)
-    expected_stats = vstack((array([]), array([])))  # frequencies  # target rates
+    expected_stats = np.vstack((np.array([]), np.array([])))  # frequencies  # target rates
     expected_len_df = 0  # empty input
     assert (stats == expected_stats).all()
     assert len_df == expected_len_df
@@ -254,7 +254,7 @@ def test_compute_stats_single_modality():
     y = pd.Series([1, 0, 1])
     labels = GroupedList(["A"])
     stats, len_df = compute_stats(df_feature, y, labels)
-    expected_stats = vstack((array([3]), array([2])))  # frequencies  # target rates
+    expected_stats = np.vstack((np.array([3]), np.array([2])))  # frequencies  # target rates
     expected_len_df = 3
     assert (stats == expected_stats).all()
     assert len_df == expected_len_df
@@ -267,50 +267,50 @@ def test_update_stats_basic():
     labels = GroupedList(["A", "B", "C"])
     stats, _ = compute_stats(df_feature, y, labels)
     updated_stats = update_stats(stats, discarded_idx=2, kept_idx=0)
-    expected_stats = vstack(
-        (array([4, 2]), array([2, 1]))  # updated frequencies  # updated target rates
+    expected_stats = np.vstack(
+        (np.array([4, 2]), np.array([2, 1]))  # updated frequencies  # updated target rates
     )
     assert (updated_stats == expected_stats).all()
 
 
 def test_update_stats_with_nans():
-    """Test update_stats with NaN values in df_feature"""
+    """Test update_stats with np.nan values in df_feature"""
     df_feature = pd.Series(["A", "B", None, "C", "B", "A"])
     y = pd.Series([1, 0, 1, 0, 1, 0])
     labels = GroupedList(["A", "B", "C"])
     stats, _ = compute_stats(df_feature, y, labels)
     updated_stats = update_stats(stats, discarded_idx=2, kept_idx=0)
-    expected_stats = vstack(
-        (array([3, 2]), array([1, 1]))  # updated frequencies  # updated target rates
+    expected_stats = np.vstack(
+        (np.array([3, 2]), np.array([1, 1]))  # updated frequencies  # updated target rates
     )
     assert (updated_stats == expected_stats).all()
 
 
 def test_update_stats_with_missing_value():
     """Test update_stats with missing value in df_feature"""
-    df_feature = pd.Series(["A", "B", "A", nan, "B", "A"])
+    df_feature = pd.Series(["A", "B", "A", np.nan, "B", "A"])
     y = pd.Series([1, 0, 1, 0, 1, 0])
     labels = GroupedList(["A", "B", "C"])
     stats, _ = compute_stats(df_feature, y, labels)
     updated_stats = update_stats(stats, discarded_idx=2, kept_idx=0)
-    expected_stats = vstack(
-        (array([3, 2]), array([2, 1]))  # updated frequencies  # updated target rates
+    expected_stats = np.vstack(
+        (np.array([3, 2]), np.array([2, 1]))  # updated frequencies  # updated target rates
     )
     assert (updated_stats == expected_stats).all()
 
 
 def test_update_stats_all_nans():
-    """Test update_stats with all NaN values in df_feature"""
+    """Test update_stats with all np.nan values in df_feature"""
     df_feature = pd.Series([None, None, None])
     y = pd.Series([1, 0, 1])
     labels = GroupedList(["A", "B", "C"])
     stats, _ = compute_stats(df_feature, y, labels)
     updated_stats = update_stats(stats, discarded_idx=2, kept_idx=0)
-    expected_stats = vstack(
-        (array([0, 0]), array([nan, nan]))  # updated frequencies  # updated target rates
+    expected_stats = np.vstack(
+        (np.array([0, 0]), np.array([np.nan, np.nan]))  # updated frequencies  # updated target rates
     )
     assert (updated_stats[0] == expected_stats[0]).all()
-    assert (isnan(updated_stats[1]) == isnan(expected_stats[1])).all()
+    assert (np.isnan(updated_stats[1]) == np.isnan(expected_stats[1])).all()
 
 
 def test_update_stats_empty_input():
@@ -360,8 +360,8 @@ def test_find_common_modalities_all_underrepresented():
 
 
 def test_find_common_modalities_with_nans():
-    """Test find_common_modalities with NaN values in df_feature"""
-    df_feature = pd.Series(["A", "B", nan, "C", "B", "A"])
+    """Test find_common_modalities with np.nan values in df_feature"""
+    df_feature = pd.Series(["A", "B", np.nan, "C", "B", "A"])
     y = pd.Series([1, 0, 1, 0, 1, 0])
     min_freq = 2 / 6
     labels = ["A", "B", "C"]
@@ -399,7 +399,7 @@ def test_find_common_modalities_with_increased_freq():
 
 def test_find_common_modalities_with_missing_value():
     """Test find_common_modalities with missing value in df_feature"""
-    df_feature = pd.Series(["A", "B", "A", nan, "B", "A"])
+    df_feature = pd.Series(["A", "B", "A", np.nan, "B", "A"])
     y = pd.Series([1, 0, 1, 0, 1, 0])
     min_freq = 2 / 6
     labels = ["A", "B", "C"]
@@ -482,7 +482,7 @@ def test_ordinal_discretizer_with_increasing_freq():
 
 def test_ordinal_discretizer_with_nans():
     """Test OrdinalDiscretizer with basic input"""
-    df = pd.DataFrame({"feature1": ["A", "B", nan, "C", "B", "A"], "feature2": ["X", "Y", nan, "Z", "Y", "X"]})
+    df = pd.DataFrame({"feature1": ["A", "B", np.nan, "C", "B", "A"], "feature2": ["X", "Y", np.nan, "Z", "Y", "X"]})
     y = pd.Series([1, 0, 1, 0, 1, 0])
     feature1 = OrdinalFeature("feature1", ["A", "B", "C"])
     feature2 = OrdinalFeature("feature2", ["X", "Y", "Z"])
@@ -504,8 +504,8 @@ def test_ordinal_discretizer_with_nans():
     transformed = discretizer.transform(df)
     df_expected = pd.DataFrame(
         {
-            "feature1": ["A", "B", nan, "C", "B", "A"],
-            "feature2": ["X", "Y", nan, "Z", "Y", "X"],
+            "feature1": ["A", "B", np.nan, "C", "B", "A"],
+            "feature2": ["X", "Y", np.nan, "Z", "Y", "X"],
         }
     )
     print(transformed)
@@ -514,7 +514,7 @@ def test_ordinal_discretizer_with_nans():
 
 def test_ordinal_discretizer_with_missing_value():
     """Test OrdinalDiscretizer with basic input"""
-    df = pd.DataFrame({"feature1": ["A", "B", "A", nan, "B", "A"], "feature2": ["X", "Y", "X", nan, "Y", "X"]})
+    df = pd.DataFrame({"feature1": ["A", "B", "A", np.nan, "B", "A"], "feature2": ["X", "Y", "X", np.nan, "Y", "X"]})
     y = pd.Series([1, 0, 1, 0, 1, 0])
     feature1 = OrdinalFeature("feature1", ["A", "B", "C"])
     feature2 = OrdinalFeature("feature2", ["X", "Y", "Z"])
@@ -538,8 +538,8 @@ def test_ordinal_discretizer_with_missing_value():
     transformed = discretizer.transform(df)
     df_expected = pd.DataFrame(
         {
-            "feature1": ["A", "B to C", "A", nan, "B to C", "A"],
-            "feature2": ["X", "Y to Z", "X", nan, "Y to Z", "X"],
+            "feature1": ["A", "B to C", "A", np.nan, "B to C", "A"],
+            "feature2": ["X", "Y to Z", "X", np.nan, "Y to Z", "X"],
         }
     )
     assert transformed.equals(df_expected), "Transformed data does not match expected data"

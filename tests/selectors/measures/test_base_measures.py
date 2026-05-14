@@ -1,7 +1,7 @@
 """Set of tests for base correlation measures module."""
 
+import numpy as np
 import pandas as pd
-from numpy import nan
 from pytest import fixture, raises
 
 from AutoCarver.features import BaseFeature
@@ -183,11 +183,11 @@ def test_absolute_validate(absolute_measure: AbsoluteMeasure) -> None:
 
 
 def test_nan_measure(nan_measure: NanMeasure) -> None:
-    """tests nan measure"""
+    """tests np.nan measure"""
     series = pd.Series([1, 2, None, 4])
     assert nan_measure.compute_association(series, None) == 0.25, "should measure None as missing"
-    series = pd.Series([1, 2, nan, 4])
-    assert nan_measure.compute_association(series, None) == 0.25, "should measure nan as missing"
+    series = pd.Series([1, 2, np.nan, 4])
+    assert nan_measure.compute_association(series, None) == 0.25, "should measure np.nan as missing"
     assert nan_measure.is_default, "should be default"
 
     nan_measure.threshold = 1.0

@@ -1,7 +1,7 @@
 """set of tests for quantitative features"""
 
+import numpy as np
 import pandas as pd
-from numpy import nan
 from pytest import fixture, raises
 
 from AutoCarver.config import Constants
@@ -62,13 +62,13 @@ def test_ordinal_feature_format_modalities(sample_ordinal_feature: OrdinalFeatur
     # adding nans
     # with smaller max_n_chars
     sample_ordinal_feature.max_n_chars = 4
-    result = sample_ordinal_feature._format_modalities(group, content + [sample_ordinal_feature.nan])
-    assert result == f"1 to a, {sample_ordinal_feature.nan}"
+    result = sample_ordinal_feature._format_modalities(group, content + [sample_ordinal_feature.np.nan])
+    assert result == f"1 to a, {sample_ordinal_feature.np.nan}"
 
     # with smaller max_n_chars
     sample_ordinal_feature.max_n_chars = 30
-    result = sample_ordinal_feature._format_modalities(group, content + [sample_ordinal_feature.nan])
-    assert result == f"1 to a, {sample_ordinal_feature.nan}"
+    result = sample_ordinal_feature._format_modalities(group, content + [sample_ordinal_feature.np.nan])
+    assert result == f"1 to a, {sample_ordinal_feature.np.nan}"
 
     # empty content
     result = sample_ordinal_feature._format_modalities(group, [])
@@ -117,7 +117,7 @@ def test_ordinal_feature_update_ordinal_encoding(
         sample_ordinal_feature.update(GroupedList({0: [0], 1: [1], "test": ["tests", "test2"]}), convert_labels=True)
 
     # fitting some nans
-    sample_ordinal_feature.fit(pd.DataFrame({sample_ordinal_feature.version: ["a", "c", "f", "1", nan]}))
+    sample_ordinal_feature.fit(pd.DataFrame({sample_ordinal_feature.version: ["a", "c", "f", "1", np.nan]}))
     sample_ordinal_feature.ordinal_encoding = True
     sample_ordinal_feature.update(GroupedList({2: [2, 3]}), convert_labels=True)
     print(sample_ordinal_feature.content)
@@ -152,11 +152,11 @@ def test_ordinal_feature_update_ordinal_encoding(
     sample_ordinal_feature.dropna = True
     print(sample_ordinal_feature.content)
     sample_ordinal_feature.update(GroupedList({3: [3, 1]}), convert_labels=True)
-    assert sample_ordinal_feature.values == ["a", "c", Constants.NAN]
+    assert sample_ordinal_feature.values == ["a", "c", Constants.np.nan]
     assert sample_ordinal_feature.content == {
         "a": ["1", "2", "3", "4", "5", "a"],
         "c": ["e", "f", "d", "c"],
-        Constants.NAN: ["b", Constants.NAN],
+        Constants.np.nan: ["b", Constants.np.nan],
     }
     assert sample_ordinal_feature.labels == [0, 1, 2]
     assert sample_ordinal_feature.value_per_label == {
@@ -176,7 +176,7 @@ def test_ordinal_feature_update_ordinal_encoding(
         "e": 1,
         "f": 1,
         "d": 1,
-        Constants.NAN: 2,
+        Constants.np.nan: 2,
         "b": 2,
     }
 
@@ -190,7 +190,7 @@ def test_ordinal_feature_update_no_ordinal_encoding(
         sample_ordinal_feature.update(GroupedList({0: [0], 1: [1], "test": ["tests", "test2"]}), convert_labels=True)
 
     # fitting some nans
-    sample_ordinal_feature.fit(pd.DataFrame({sample_ordinal_feature.version: ["a", "c", "f", "1", nan]}))
+    sample_ordinal_feature.fit(pd.DataFrame({sample_ordinal_feature.version: ["a", "c", "f", "1", np.nan]}))
     sample_ordinal_feature.ordinal_encoding = False
     sample_ordinal_feature.update(GroupedList({"d to f": ["c", "d to f"]}), convert_labels=True)
     print(sample_ordinal_feature.content)
@@ -225,19 +225,19 @@ def test_ordinal_feature_update_no_ordinal_encoding(
     # adding nans
     sample_ordinal_feature.dropna = True
     print(sample_ordinal_feature.content)
-    sample_ordinal_feature.update(GroupedList({Constants.NAN: [Constants.NAN, "b"]}), convert_labels=True)
-    assert sample_ordinal_feature.values == ["a", "d", Constants.NAN]
+    sample_ordinal_feature.update(GroupedList({Constants.np.nan: [Constants.np.nan, "b"]}), convert_labels=True)
+    assert sample_ordinal_feature.values == ["a", "d", Constants.np.nan]
     print(sample_ordinal_feature.content)
     assert sample_ordinal_feature.content == {
         "a": ["1", "2", "3", "4", "5", "a"],
         "d": ["c", "e", "f", "d"],
-        Constants.NAN: ["b", Constants.NAN],
+        Constants.np.nan: ["b", Constants.np.nan],
     }
-    assert sample_ordinal_feature.labels == ["1 to a", "c to f", f"b, {Constants.NAN}"]
+    assert sample_ordinal_feature.labels == ["1 to a", "c to f", f"b, {Constants.np.nan}"]
     assert sample_ordinal_feature.value_per_label == {
         "1 to a": "a",
         "c to f": "d",
-        f"b, {Constants.NAN}": Constants.NAN,
+        f"b, {Constants.np.nan}": Constants.np.nan,
     }
     print(sample_ordinal_feature.label_per_value)
     assert sample_ordinal_feature.label_per_value == {
@@ -251,8 +251,8 @@ def test_ordinal_feature_update_no_ordinal_encoding(
         "e": "c to f",
         "f": "c to f",
         "d": "c to f",
-        Constants.NAN: f"b, {Constants.NAN}",
-        "b": f"b, {Constants.NAN}",
+        Constants.np.nan: f"b, {Constants.np.nan}",
+        "b": f"b, {Constants.np.nan}",
     }
 
 
@@ -290,7 +290,7 @@ def test_ordinal_feature_get_summary(sample_ordinal_feature: OrdinalFeature) -> 
     assert summary == expected_summary
 
     # fitting some nans
-    sample_ordinal_feature.fit(pd.DataFrame({sample_ordinal_feature.version: ["a", "b", nan]}))
+    sample_ordinal_feature.fit(pd.DataFrame({sample_ordinal_feature.version: ["a", "b", np.nan]}))
     sample_ordinal_feature.dropna = True
     sample_ordinal_feature.ordinal_encoding = True
     summary = sample_ordinal_feature.summary
@@ -304,7 +304,7 @@ def test_ordinal_feature_get_summary(sample_ordinal_feature: OrdinalFeature) -> 
         {"feature": "Ordinal('test_feature')", "label": 1, "content": "b"},
         {"feature": "Ordinal('test_feature')", "label": 2, "content": "c"},
         {"feature": "Ordinal('test_feature')", "label": 3, "content": ["e", "f", "d"]},
-        {"feature": "Ordinal('test_feature')", "label": 4, "content": Constants.NAN},
+        {"feature": "Ordinal('test_feature')", "label": 4, "content": Constants.np.nan},
     ]
     print(summary)
     assert summary == expected_summary
@@ -323,7 +323,7 @@ def test_ordinal_feature_get_summary(sample_ordinal_feature: OrdinalFeature) -> 
         {"feature": "Ordinal('test_feature')", "label": 1, "content": "b"},
         {"feature": "Ordinal('test_feature')", "label": 2, "content": "c"},
         {"feature": "Ordinal('test_feature')", "label": 3, "content": ["e", "f", "d"]},
-        {"feature": "Ordinal('test_feature')", "label": 4, "content": Constants.NAN},
+        {"feature": "Ordinal('test_feature')", "label": 4, "content": Constants.np.nan},
         {"feature": "Ordinal('test_feature')", "label": 5, "content": Constants.DEFAULT},
     ]
     assert summary == expected_summary
@@ -357,7 +357,7 @@ def test_ordinal_feature_fit_initial_values(sample_ordinal_feature: OrdinalFeatu
 def test_ordinal_feature_fit_with_nan(sample_ordinal_feature: OrdinalFeature) -> None:
     """test fit method"""
 
-    data = pd.DataFrame({"test_feature": ["a", "c", "f", "1", nan]})
+    data = pd.DataFrame({"test_feature": ["a", "c", "f", "1", np.nan]})
 
     sample_ordinal_feature.fit(data)
 

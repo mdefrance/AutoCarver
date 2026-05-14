@@ -1,7 +1,7 @@
 """Set of tests for qualitative_discretizers module."""
 
+import numpy as np
 import pandas as pd
-from numpy import isnan, nan
 from pytest import raises
 
 from AutoCarver.discretizers.qualitatives.chained_discretizer import (
@@ -70,21 +70,21 @@ def test_ensure_qualitative_dtypes_without_conversion():
 
 
 def test_ensure_qualitative_dtypes_with_nans():
-    """Test ensure_qualitative_dtypes with NaN values"""
+    """Test ensure_qualitative_dtypes with np.nan values"""
     features = Features([CategoricalFeature("feature1"), OrdinalFeature("feature2", ["A", "B", "C"])])
-    df = pd.DataFrame({"feature1": [1, nan, 3], "feature2": ["A", "B", nan]})
+    df = pd.DataFrame({"feature1": [1, np.nan, 3], "feature2": ["A", "B", np.nan]})
     result = ensure_qualitative_dtypes(features, df)
 
     feature1_list = result["feature1"].tolist()
     feature2_list = result["feature2"].tolist()
 
     assert feature1_list[0] == "1"
-    assert isnan(feature1_list[1])
+    assert np.isnan(feature1_list[1])
     assert feature1_list[2] == "3"
 
     assert feature2_list[0] == "A"
     assert feature2_list[1] == "B"
-    assert isnan(feature2_list[2])
+    assert np.isnan(feature2_list[2])
 
 
 def test_ensure_qualitative_dtypes_mixed_types():

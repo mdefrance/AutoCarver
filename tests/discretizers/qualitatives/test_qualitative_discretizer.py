@@ -1,7 +1,7 @@
 """Set of tests for discretizers module."""
 
+import numpy as np
 import pandas as pd
-from numpy import nan
 
 from AutoCarver.discretizers.qualitatives.qualitative_discretizer import QualitativeDiscretizer
 from AutoCarver.discretizers.utils.base_discretizer import Sample
@@ -45,9 +45,9 @@ def test_qualitative_discretizer_fit_categorical_features():
 
     X = pd.DataFrame(
         {
-            "feature1": ["x", "b", "a", "b", "c", "c", "c", "c", nan],
-            "feature2": ["a", "y", "x", "y", "z", "z", "z", "z", nan],
-            "feature3": [0, 2, 1, 2, 3, 3.0, "3", 3, nan],
+            "feature1": ["x", "b", "a", "b", "c", "c", "c", "c", np.nan],
+            "feature2": ["a", "y", "x", "y", "z", "z", "z", "z", np.nan],
+            "feature3": [0, 2, 1, 2, 3, 3.0, "3", 3, np.nan],
         }
     )
     y = pd.Series([0, 0, 1, 0, 1, 1, 1, 1, 1])
@@ -72,7 +72,7 @@ def test_qualitative_discretizer_fit_categorical_features():
         "c",
         "c",
         "c",
-        nan,
+        np.nan,
     ]
     assert transformed_x["feature2"].tolist() == [
         feature2.label_per_value[feature2.default],
@@ -83,7 +83,7 @@ def test_qualitative_discretizer_fit_categorical_features():
         "z",
         "z",
         "z",
-        nan,
+        np.nan,
     ]
     assert transformed_x["feature3"].tolist() == [
         feature3.label_per_value[feature3.default],
@@ -94,7 +94,7 @@ def test_qualitative_discretizer_fit_categorical_features():
         "3",
         "3",
         "3",
-        nan,
+        np.nan,
     ]
 
 
@@ -108,9 +108,9 @@ def test_qualitative_discretizer_fit_ordinal_features():
 
     X = pd.DataFrame(
         {
-            "feature1": ["x", "b", "a", "b", "c", "c", "c", "c", nan],
-            "feature2": ["a", "y", "x", "y", "z", "z", "z", "z", nan],
-            "feature3": [0, 2, 1, 2, 3, 3.0, "3", 3, nan],
+            "feature1": ["x", "b", "a", "b", "c", "c", "c", "c", np.nan],
+            "feature2": ["a", "y", "x", "y", "z", "z", "z", "z", np.nan],
+            "feature3": [0, 2, 1, 2, 3, 3.0, "3", 3, np.nan],
         }
     )
     y = pd.Series([0, 0, 1, 0, 1, 1, 1, 1, 1])
@@ -149,10 +149,10 @@ def test_qualitative_discretizer_fit_ordinal_features():
                 "c to x",
                 "c to x",
                 "c to x",
-                nan,
+                np.nan,
             ],
-            "feature2": ["a to x", "y", "a to x", "y", "z", "z", "z", "z", nan],
-            "feature3": ["0 to 1", "2", "0 to 1", "2", "3", "3", "3", "3", nan],
+            "feature2": ["a to x", "y", "a to x", "y", "z", "z", "z", "z", np.nan],
+            "feature3": ["0 to 1", "2", "0 to 1", "2", "3", "3", "3", "3", np.nan],
         }
     )
     assert transformed.equals(df_expected), "Transformed data does not match expected data"
@@ -229,7 +229,7 @@ def test_qualitative_discretizer(x_train: pd.DataFrame, target: str):
         "Category E": ["Category E"],
     }
     assert features("Qualitative_lownan").content == quali_lownan_expected, (
-        "If any, NaN values should be put into str_nan and kept by themselves"
+        "If any, np.nan values should be put into str_nan and kept by themselves"
     )
 
     expected_ordinal = {

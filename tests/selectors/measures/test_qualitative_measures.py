@@ -1,7 +1,7 @@
 """Set of tests for Qualitative correlation measures module."""
 
+import numpy as np
 import pandas as pd
-from numpy import nan
 from pytest import FixtureRequest, fixture
 
 from AutoCarver.selectors import BaseMeasure, Chi2Measure, CramervMeasure, TschuprowtMeasure
@@ -20,7 +20,7 @@ def series_data() -> pd.Series:
 
 @fixture
 def nan_series_data() -> pd.Series:
-    x = pd.Series([nan, nan, 3, 4, 5])
+    x = pd.Series([np.nan, np.nan, 3, 4, 5])
     return x
 
 

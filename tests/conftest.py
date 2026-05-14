@@ -1,7 +1,7 @@
 """Defines fixtures for all pytests"""
 
+import numpy as np
 import pandas as pd
-from numpy import arange, nan, random
 from pytest import FixtureRequest, fixture
 
 
@@ -11,7 +11,7 @@ def init_df(seed: int, size: int = 10000) -> pd.DataFrame:
     Parameters
     ----------
     seed : int
-        Seed for the random samples
+        Seed for the np.random samples
     size : int
         Generated sample size
 
@@ -21,10 +21,10 @@ def init_df(seed: int, size: int = 10000) -> pd.DataFrame:
         A DataFrame to perform Discretizers tests
     """
 
-    # Set random seed for reproducibility
-    random.seed(seed)
+    # Set np.random seed for reproducibility
+    np.random.seed(seed)
 
-    # Generate random qualitative ordinal features
+    # Generate np.random qualitative ordinal features
     qual_ord_features = (
         ["Low-"] * int(1 * 100)
         + ["Low"] * int(0 * 100)
@@ -38,12 +38,12 @@ def init_df(seed: int, size: int = 10000) -> pd.DataFrame:
     )
     # qual_ord_features = ['Low-', 'Low', 'Low+', 'Medium-', 'Medium', 'Medium+', 'High-', 'High',
     # 'High+']
-    ordinal_data = random.choice(qual_ord_features, size=size)
+    ordinal_data = np.random.choice(qual_ord_features, size=size)
 
     # adding binary target associated to qualitative ordinal feature
     binary = [1 - (qual_ord_features.index(val) / (len(qual_ord_features) - 1)) for val in ordinal_data]
 
-    # Generate random qualitative features
+    # Generate np.random qualitative features
     qual_features = (
         ["Category A"] * int(1 * 100)
         + ["Category B"] * int(0 * 100)
@@ -52,13 +52,15 @@ def init_df(seed: int, size: int = 10000) -> pd.DataFrame:
         + ["Category E"] * int(65 * 100)
         + ["Category F"] * int(6 * 100)  # 74%
     )
-    qualitative_data = random.choice(qual_features, size=size)
+    qualitative_data = np.random.choice(qual_features, size=size)
 
-    # Generate random quantitative features
-    quantitative_data = random.rand(size) * 1000
+    # Generate np.random quantitative features
+    quantitative_data = np.random.rand(size) * 1000
 
-    # Generate random discrete quantitative feature
-    discrete_quantitative_data = random.choice(arange(1, 8), size=size, p=[0.3, 0.25, 0.2, 0.15, 0.05, 0.03, 0.02])
+    # Generate np.random discrete quantitative feature
+    discrete_quantitative_data = np.random.choice(
+        np.arange(1, 8), size=size, p=[0.3, 0.25, 0.2, 0.15, 0.05, 0.03, 0.02]
+    )
 
     # Create DataFrame
     data = {
@@ -71,26 +73,26 @@ def init_df(seed: int, size: int = 10000) -> pd.DataFrame:
     df = pd.DataFrame(data)
 
     # binary target
-    df["binary_target"] = df["Binary"].apply(lambda u: random.choice([0, 1], p=[1 - (u * 1 / 3), (u * 1 / 3)]))
+    df["binary_target"] = df["Binary"].apply(lambda u: np.random.choice([0, 1], p=[1 - (u * 1 / 3), (u * 1 / 3)]))
 
     # continuous target
-    df["continuous_target"] = random.rand(size) * 10000
+    df["continuous_target"] = np.random.rand(size) * 10000
 
     # multiclass target
-    df["multiclass_target"] = random.choice([0, 1, 2], df.shape[0], p=[0.3, 0.2, 0.5])
+    df["multiclass_target"] = np.random.choice([0, 1, 2], df.shape[0], p=[0.3, 0.2, 0.5])
 
     # building specific cases for base_discretizer
-    df["Qualitative_Ordinal_lownan"] = df["Qualitative_Ordinal"].replace("Low-", nan)
-    df["Qualitative_Ordinal_highnan"] = df["Qualitative_Ordinal"].replace("High+", nan)
+    df["Qualitative_Ordinal_lownan"] = df["Qualitative_Ordinal"].replace("Low-", np.nan)
+    df["Qualitative_Ordinal_highnan"] = df["Qualitative_Ordinal"].replace("High+", np.nan)
 
     # building specific cases for qualitative_discretizer
     df["Qualitative_grouped"] = df["Qualitative"].replace("Category A", "Category D")
-    df["Qualitative_highnan"] = df["Qualitative"].replace("Category F", nan)
-    df["Qualitative_lownan"] = df["Qualitative"].replace("Category A", nan)
+    df["Qualitative_highnan"] = df["Qualitative"].replace("Category F", np.nan)
+    df["Qualitative_lownan"] = df["Qualitative"].replace("Category A", np.nan)
 
     # building specific cases for quantitative_discretizer
-    df["Discrete_Quantitative_highnan"] = df["Discrete_Quantitative"].replace(1, nan)
-    df["Discrete_Quantitative_lownan"] = df["Discrete_Quantitative"].replace(7, nan)
+    df["Discrete_Quantitative_highnan"] = df["Discrete_Quantitative"].replace(1, np.nan)
+    df["Discrete_Quantitative_lownan"] = df["Discrete_Quantitative"].replace(7, np.nan)
     df["Discrete_Quantitative_rarevalue"] = df["Discrete_Quantitative_lownan"].fillna(0.5)
 
     # building specific cases for qualitative_discretizer
@@ -100,12 +102,12 @@ def init_df(seed: int, size: int = 10000) -> pd.DataFrame:
     df["Discrete_Qualitative_rarevalue_noorder"] = df["Discrete_Quantitative_rarevalue"]
 
     # wrong data
-    df["nan"] = nan
+    df["np.nan"] = np.nan
     df["ones"] = "1"
     df["one"] = 1
-    df["one_nan"] = df["nan"]
+    df["one_nan"] = df["np.nan"]
     df.loc[0, "one_nan"] = 1
-    df["ones_nan"] = df["nan"]
+    df["ones_nan"] = df["np.nan"]
     df.loc[size - 1, "ones_nan"] = "1"
 
     return df
@@ -237,7 +239,7 @@ def x_dev_wrong_2(x_dev_1: pd.DataFrame) -> pd.DataFrame:
     x_dev = x_dev_1.copy()
 
     # replacing a value for a unknown value
-    x_dev["Qualitative"] = x_dev["Qualitative"].replace("Category C", nan)
+    x_dev["Qualitative"] = x_dev["Qualitative"].replace("Category C", np.nan)
 
     return x_dev
 

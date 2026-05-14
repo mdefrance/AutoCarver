@@ -1,7 +1,7 @@
 """Set of tests for discretizers module."""
 
+import numpy as np
 import pandas as pd
-from numpy import inf, nan
 from pytest import raises
 
 from AutoCarver.discretizers.quantitatives.quantitative_discretizer import (
@@ -48,15 +48,15 @@ def test_min_value_counts_basic():
 
 
 def test_min_value_counts_with_nans():
-    """Test min_value_counts with NaN values"""
+    """Test min_value_counts with np.nan values"""
     # without dropna
-    x = pd.Series([1, 2, 2, 3, 3, 3, nan, nan], name="feature")
+    x = pd.Series([1, 2, 2, 3, 3, 3, np.nan, np.nan], name="feature")
     features = Features([QuantitativeFeature(name="feature")])
     result = min_value_counts(x, features, dropna=False)
     assert result == 1 / 8  # Minimum frequency is 1/6
 
     # with dropna
-    x = pd.Series([1, 2, 2, 3, 3, 3, nan, nan], name="feature")
+    x = pd.Series([1, 2, 2, 3, 3, 3, np.nan, np.nan], name="feature")
     features = Features([QuantitativeFeature(name="feature")])
     result = min_value_counts(x, features, dropna=True)
     assert result == 1 / 6  # Minimum frequency is 1/6
@@ -77,7 +77,7 @@ def test_min_value_counts_with_labels():
         name="feature",
     )
     feature = QuantitativeFeature(name="feature")
-    feature.update(GroupedList([1, 2, 3, 4, inf]))
+    feature.update(GroupedList([1, 2, 3, 4, np.inf]))
     features = Features([feature])
     result = min_value_counts(x, features)
     assert result == 0  # Label 4 has a frequency of 0
@@ -95,7 +95,7 @@ def test_min_value_counts_with_labels():
         name="feature",
     )
     feature = QuantitativeFeature(name="feature")
-    feature.update(GroupedList([1, 2, 3, inf]))
+    feature.update(GroupedList([1, 2, 3, np.inf]))
     features = Features([feature])
     result = min_value_counts(x, features)
     assert result == 1 / 6
@@ -139,8 +139,8 @@ def test_check_frequencies_with_rare_modalities():
 
 
 def test_check_frequencies_with_nans():
-    """Test check_frequencies with NaN values"""
-    df = pd.DataFrame({"feature1": [1, 2, 2, 3, 3, nan], "feature2": [4, 4, 4, 5, 5, 5]})
+    """Test check_frequencies with np.nan values"""
+    df = pd.DataFrame({"feature1": [1, 2, 2, 3, 3, np.nan], "feature2": [4, 4, 4, 5, 5, 5]})
     features = Features(
         [
             QuantitativeFeature(name="Feature 1", version="feature1"),
@@ -236,26 +236,26 @@ def test_continuous_discretizer_fit():
             5,
         ],
         "feature2": [
-            nan,
+            np.nan,
             3,
             4,
-            nan,
+            np.nan,
             1,
             1,
             1,
             1,
             1,
-            nan,
-            nan,
+            np.nan,
+            np.nan,
             2,
             2,
             2,
             2,
             2,
-            nan,
-            nan,
+            np.nan,
+            np.nan,
             5,
-            nan,
+            np.nan,
             3,
             4,
             5,
@@ -272,8 +272,8 @@ def test_continuous_discretizer_fit():
     assert feature2.has_nan is True
     print(feature1.content)
     print(feature2.content)
-    assert feature1.content == {1: [1], 2: [2], 4: [4], inf: [inf]}
-    assert feature2.content == {1.0: [1.0], 2.0: [2.0], inf: [5.0, inf]}
+    assert feature1.content == {1: [1], 2: [2], 4: [4], np.inf: [np.inf]}
+    assert feature2.content == {1.0: [1.0], 2.0: [2.0], np.inf: [5.0, np.inf]}
 
     # Check if the discretizer has been fitted
     transformed_df = discretizer.transform(df)
@@ -306,26 +306,26 @@ def test_continuous_discretizer_fit():
                 "4.00e+00 < x",
             ],
             "feature2": [
-                nan,
+                np.nan,
                 "2.00e+00 < x",
                 "2.00e+00 < x",
-                nan,
+                np.nan,
                 "x <= 1.00e+00",
                 "x <= 1.00e+00",
                 "x <= 1.00e+00",
                 "x <= 1.00e+00",
                 "x <= 1.00e+00",
-                nan,
-                nan,
+                np.nan,
+                np.nan,
                 "1.00e+00 < x <= 2.00e+00",
                 "1.00e+00 < x <= 2.00e+00",
                 "1.00e+00 < x <= 2.00e+00",
                 "1.00e+00 < x <= 2.00e+00",
                 "1.00e+00 < x <= 2.00e+00",
-                nan,
-                nan,
+                np.nan,
+                np.nan,
                 "2.00e+00 < x",
-                nan,
+                np.nan,
                 "2.00e+00 < x",
                 "2.00e+00 < x",
                 "2.00e+00 < x",
@@ -359,11 +359,13 @@ def test_quantitative_discretizer(x_train: pd.DataFrame, target: str):
     discretizer = QuantitativeDiscretizer(quantitatives=features, min_freq=min_freq)
     x_discretized = discretizer.fit_transform(x_train, x_train[target])
 
-    assert not features("Discrete_Quantitative_lownan").values.contains(features("Discrete_Quantitative_lownan").nan), (
-        "Missing order should not be grouped with ordinal_discretizer"
-    )
+    assert not features("Discrete_Quantitative_lownan").values.contains(
+        features("Discrete_Quantitative_lownan").np.nan
+    ), "Missing order should not be grouped with ordinal_discretizer"
 
-    assert all(x_discretized["Quantitative"].value_counts(normalize=True) >= min_freq), "Non-nan value was not grouped"
+    assert all(x_discretized["Quantitative"].value_counts(normalize=True) >= min_freq), (
+        "Non-np.nan value was not grouped"
+    )
 
     print(x_train.Discrete_Quantitative_rarevalue.value_counts(dropna=False, normalize=True))
 
@@ -373,5 +375,5 @@ def test_quantitative_discretizer(x_train: pd.DataFrame, target: str):
         2.0,
         3.0,
         4.0,
-        inf,
-    ], "Rare values should be grouped to the closest one and inf should be kept whatsoever (OrdinalDiscretizer)"
+        np.inf,
+    ], "Rare values should be grouped to the closest one and np.inf should be kept whatsoever (OrdinalDiscretizer)"

@@ -1,7 +1,7 @@
 """Set of tests for Qualitative correlation measures module."""
 
+import numpy as np
 import pandas as pd
-from numpy import nan
 from pytest import FixtureRequest, fixture
 
 from AutoCarver.selectors import (
@@ -154,7 +154,7 @@ def test_outlier_compute_association(outlier_measure: BaseMeasure, series_data: 
     assert outlier_measure.value == association, "not stored measurement"
 
     # with nans
-    association = outlier_measure.compute_association(series_data.replace(1, nan))
+    association = outlier_measure.compute_association(series_data.replace(1, np.nan))
     assert association is not None, "not correctly computed association"
     assert outlier_measure.value == association, "not stored measurement"
 
@@ -170,7 +170,7 @@ def test_quanti_binary_compute_association(
     assert quanti_binary_measure.value == association, "not stored measurement"
 
     # with nans
-    association = quanti_binary_measure.compute_association(series_data.replace(1, nan), binary_series_data)
+    association = quanti_binary_measure.compute_association(series_data.replace(1, np.nan), binary_series_data)
     assert association is not None, "not correctly computed association"
     assert quanti_binary_measure.value == association, "not stored measurement"
 
@@ -186,7 +186,7 @@ def test_quanti_quali_compute_association(
     assert quanti_quali_measure.value == association, "not stored measurement"
 
     # with nans
-    association = quanti_quali_measure.compute_association(series_data.replace(1, nan), quali_series_data)
+    association = quanti_quali_measure.compute_association(series_data.replace(1, np.nan), quali_series_data)
     print(
         quanti_quali_measure.__name__,
         quanti_quali_measure.value,
@@ -220,7 +220,7 @@ def test_quanti_quanti_compute_association(quanti_quanti_measure: BaseMeasure, s
     assert quanti_quanti_measure.value == association, "not stored measurement"
 
     # with nans
-    association = quanti_quanti_measure.compute_association(series_data.replace(1, nan), series_data)
+    association = quanti_quanti_measure.compute_association(series_data.replace(1, np.nan), series_data)
     assert association is not None, "not correctly computed association"
     assert quanti_quanti_measure.value == association, "not stored measurement"
 
@@ -242,7 +242,7 @@ def test_outlier_validate_with_computed_association_below_threshold(
     assert outlier_measure.validate(), "kept feature with lower than threshold correlation"
 
     # with nans
-    outlier_measure.compute_association(series_data.replace(1, nan))
+    outlier_measure.compute_association(series_data.replace(1, np.nan))
     print(
         outlier_measure.__name__,
         outlier_measure.value,
@@ -268,7 +268,7 @@ def test_quanti_quali_validate_with_computed_association_below_threshold(
     assert not quanti_quali_measure.validate(), "kept feature with lower than threshold correlation"
 
     # with nans
-    quanti_quali_measure.compute_association(series_data.replace(1, nan), quali_series_data)
+    quanti_quali_measure.compute_association(series_data.replace(1, np.nan), quali_series_data)
     print(
         quanti_quali_measure.__name__,
         quanti_quali_measure.value,
@@ -294,7 +294,7 @@ def test_quanti_quali_validate_with_computed_association_above_threshold(
     assert quanti_quali_measure.validate(), "removed feature with lower than threshold correlation"
 
     # with nans
-    quanti_quali_measure.compute_association(series_data.replace(1, nan), quali_series_data)
+    quanti_quali_measure.compute_association(series_data.replace(1, np.nan), quali_series_data)
     print(
         quanti_quali_measure.__name__,
         quanti_quali_measure.value,
@@ -321,7 +321,7 @@ def test_quanti_quanti_validate_with_computed_association_below_threshold(
     assert not quanti_quanti_measure.validate(), "kept feature with lower than threshold correlation"
 
     # with nans
-    quanti_quanti_measure.compute_association(series_data.replace(1, nan), (series_data <= 2).astype(int))
+    quanti_quanti_measure.compute_association(series_data.replace(1, np.nan), (series_data <= 2).astype(int))
     print(
         quanti_quanti_measure.__name__,
         quanti_quanti_measure.value,
@@ -352,7 +352,7 @@ def test_quanti_quanti_validate_with_computed_association_above_threshold(
     assert quanti_quanti_measure.validate(), "removed feature with lower than threshold correlation"
 
     # with nans
-    quanti_quanti_measure.compute_association(series_data.replace(1, nan), series_data**20)
+    quanti_quanti_measure.compute_association(series_data.replace(1, np.nan), series_data**20)
     print(
         quanti_quanti_measure.__name__,
         quanti_quanti_measure.value,
@@ -383,7 +383,7 @@ def test_quanti_binary_validate_with_computed_association_below_threshold(
     assert not quanti_binary_measure.validate(), "kept feature with lower than threshold correlation"
 
     # with nans
-    quanti_binary_measure.compute_association(series_data.replace(1, nan), binary_series_data)
+    quanti_binary_measure.compute_association(series_data.replace(1, np.nan), binary_series_data)
     print(
         quanti_binary_measure.__name__,
         quanti_binary_measure.value,
@@ -409,7 +409,7 @@ def test_quanti_binary_validate_with_computed_association_above_threshold(
     assert quanti_binary_measure.validate(), "removed feature with lower than threshold correlation"
 
     # with nans
-    quanti_binary_measure.compute_association(series_data.replace(1, nan), binary_series_data)
+    quanti_binary_measure.compute_association(series_data.replace(1, np.nan), binary_series_data)
     print(
         quanti_binary_measure.__name__,
         quanti_binary_measure.value,
@@ -437,7 +437,7 @@ def test_outlier_validate_with_computed_association_above_threshold(
 
     # with nans
     print(outlier_series_data.dtype, outlier_series_data.apply(type).unique())
-    outlier_measure.compute_association(outlier_series_data.replace(50, nan).replace(51, 5e50))
+    outlier_measure.compute_association(outlier_series_data.replace(50, np.nan).replace(51, 5e50))
     print(
         outlier_measure.__name__,
         outlier_measure.value,
