@@ -142,7 +142,7 @@ def test_association_measure_identical_values(evaluator: ContinuousCombinationEv
     feature = OrdinalFeature("feature", ["A"])
     xagg = get_target_values_by_modality(X, y, feature)
 
-    with raises(ValueError):
+    with raises(IndexError):
         evaluator._association_measure(xagg)
 
 

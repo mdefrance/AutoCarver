@@ -150,4 +150,5 @@ def series_value_counts(x: pd.Series, dropna: bool = False, normalize: bool = Tr
 
     values = x.value_counts(dropna=dropna, normalize=normalize)
 
-    return values.to_dict()
+    # pandas 3.0 returns float nan as key; normalize to None for consistency
+    return {(None if pd.isna(k) else k): v for k, v in values.to_dict().items()}

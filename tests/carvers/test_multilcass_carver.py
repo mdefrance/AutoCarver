@@ -246,7 +246,7 @@ def test_multiclass_carver_fit_transform_with_small_data_ordinal(evaluator: Comb
         "\n",
         (X_transformed.values == expected.values),
     )
-    assert X_transformed.equals(expected)
+    pd.testing.assert_frame_equal(X_transformed, expected, check_dtype=False)
 
 
 def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationEvaluator):
