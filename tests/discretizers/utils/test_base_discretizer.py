@@ -780,7 +780,7 @@ def test_base_discretizer(x_train: pd.DataFrame, dropna: bool) -> None:
     """
 
     # values to input nans
-    str_nan = "np.nan"
+    str_nan = "nan"
     # dropna = True
 
     # defining values_orders
