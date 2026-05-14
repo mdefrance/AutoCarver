@@ -111,7 +111,7 @@ class MulticlassCarver(BinaryCarver):
         samples = self._prepare_data(samples)
 
         # getting distinct y classes
-        y_classes = sorted(list(samples.train.y.unique()))[1:]  # removing one of the classes
+        y_classes = sorted(samples.train.y.unique().tolist())[1:]  # removing one of the classes
 
         # adding versionned features
         self.features.add_feature_versions(y_classes)

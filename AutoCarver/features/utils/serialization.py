@@ -1,5 +1,6 @@
 """Sets of helper functions for BaseDiscretizer JSON serialization"""
 
+import copy
 from json import dumps, loads
 from typing import Any
 
@@ -140,7 +141,7 @@ def json_serialize_combination(combination: dict) -> str:
     """
 
     # converting combination to a json
-    json_serialized_combination = {key: value for key, value in combination.items()}
+    json_serialized_combination = copy.deepcopy(combination)
 
     # converting combination values to a json
     json_serialized_combination.update(

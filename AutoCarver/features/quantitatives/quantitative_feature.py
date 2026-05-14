@@ -18,7 +18,7 @@ class QuantitativeFeature(BaseFeature):
         """does nothing for quantitative features: no default value possible"""
         _ = value
 
-    def _specific_update(self, values: GroupedList, convert_labels: bool = False) -> None:
+    def _specific_update(self, values: GroupedList, convert_labels: bool = False) -> None:  # noqa: C901
         """update content of values specifically per feature type"""
 
         # no values have been set

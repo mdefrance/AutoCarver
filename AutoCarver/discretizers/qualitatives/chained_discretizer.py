@@ -22,7 +22,7 @@ class ChainedDiscretizer(BaseDiscretizer):
     __name__ = "ChainedDiscretizer"
 
     @extend_docstring(BaseDiscretizer.__init__)
-    def __init__(
+    def __init__(  # noqa: C901
         self,
         min_freq: float,
         features: list[BaseFeature],
