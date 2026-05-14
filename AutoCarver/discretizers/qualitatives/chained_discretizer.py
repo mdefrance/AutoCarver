@@ -2,7 +2,7 @@
 for a binary classification model.
 """
 
-from numpy import nan, select
+import numpy as np
 from pandas import DataFrame, Series, unique
 
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
@@ -158,7 +158,7 @@ class ChainedDiscretizer(BaseDiscretizer):
             for level_order in self.chained_orders:
                 # computing frequencies of each modality
                 frequencies = (
-                    sample.X[feature.version].value_counts(normalize=True, dropna=False).drop(nan, errors="ignore")
+                    sample.X[feature.version].value_counts(normalize=True, dropna=False).drop(np.nan, errors="ignore")
                 )
                 values, frequencies = frequencies.index, frequencies.values
 
@@ -175,7 +175,7 @@ class ChainedDiscretizer(BaseDiscretizer):
                 df_to_input = [sample.X[feature.version] == discarded for discarded in values_to_group]
 
                 # inputing non frequent values
-                sample.X[feature.version] = select(df_to_input, groups_value, default=sample.X[feature.version])
+                sample.X[feature.version] = np.select(df_to_input, groups_value, default=sample.X[feature.version])
 
                 # historizing in the feature's order
                 order = GroupedList(feature.values)

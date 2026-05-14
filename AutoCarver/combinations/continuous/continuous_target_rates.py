@@ -2,7 +2,7 @@
 
 from abc import ABC
 
-from numpy import mean, median
+import numpy as np
 from pandas import DataFrame, Series
 
 from AutoCarver.combinations.utils import TargetRate
@@ -43,7 +43,7 @@ class TargetMean(ContinuousTargetRate):
 
     def _compute(self, xagg: DataFrame) -> Series:
         """Computes the mean target rate."""
-        return xagg.apply(mean)
+        return xagg.apply(np.mean)
 
 
 class TargetMedian(ContinuousTargetRate):
@@ -53,7 +53,7 @@ class TargetMedian(ContinuousTargetRate):
 
     def _compute(self, xagg: DataFrame) -> Series:
         """Computes the mean target rate."""
-        return xagg.apply(median)
+        return xagg.apply(np.median)
 
 
 # class TargetVariance(ContinuousTargetRate):

@@ -6,7 +6,7 @@ import json
 from abc import ABC
 from dataclasses import dataclass
 
-from numpy import nan, select
+import numpy as np
 from pandas import DataFrame, Series, concat
 from sklearn.base import BaseEstimator, TransformerMixin
 
@@ -630,7 +630,7 @@ def transform_quantitative_feature(feature: BaseFeature, df_feature: Series, x_l
 
         # checking that nans have been grouped to a quantile
         if nan_group == feature.nan:
-            nan_group = nan
+            nan_group = np.nan
 
         # converting to quantile value if grouped else keeping np.nan
         df_feature.mask(feature_nans, nan_group, inplace=True)
@@ -643,10 +643,10 @@ def transform_quantitative_feature(feature: BaseFeature, df_feature: Series, x_l
 
     # checking for values to group
     # if len(values_to_group) > 0:  # TODO check if this is needed
-    df_feature = Series(select(values_to_group, group_labels, default=df_feature), index=raw_index)
+    df_feature = Series(np.select(values_to_group, group_labels, default=df_feature), index=raw_index)
 
     # reinstating nans otherwise nan is converted to 'nan' by numpy
     if any(feature_nans):
-        df_feature[feature_nans] = feature.label_per_value.get(feature.nan, nan)
+        df_feature[feature_nans] = feature.label_per_value.get(feature.nan, np.nan)
 
     return feature.version, list(df_feature)

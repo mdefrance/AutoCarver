@@ -1,6 +1,6 @@
 """Filters based on association measures between Quantitative features."""
 
-from numpy import ones, triu
+import numpy as np
 from pandas import DataFrame
 
 from AutoCarver.features import BaseFeature, get_versions
@@ -84,7 +84,7 @@ class QuantitativeFilter(BaseFilter):
         X_corr = X[get_versions(rank)].corr(self.measure)
 
         # getting upper right part of the correlation matrix and removing autocorrelation
-        return X_corr.where(triu(ones(X_corr.shape), k=1).astype(bool))
+        return X_corr.where(np.triu(np.ones(X_corr.shape), k=1).astype(bool))
 
     def _filter_correlated_features(self, X_corr: DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:
         """filtering out features too correlated with a better ranked feature"""

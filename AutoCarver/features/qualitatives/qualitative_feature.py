@@ -2,7 +2,7 @@
 
 from abc import abstractmethod
 
-from numpy import floating, integer
+import numpy as np
 from pandas import DataFrame, Series, notna, unique
 
 from AutoCarver.features.utils.base_feature import BaseFeature
@@ -198,10 +198,10 @@ class QualitativeFeature(BaseFeature):
             # removing nan
             and value != self.nan
             # removing floats
-            and not isinstance(value, floating)
+            and not isinstance(value, np.floating)
             and not isinstance(value, float)
             # removing ints
-            and not isinstance(value, integer)
+            and not isinstance(value, np.integer)
             and not isinstance(value, int)
         ]
         # removing duplicates

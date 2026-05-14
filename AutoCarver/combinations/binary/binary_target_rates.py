@@ -2,7 +2,7 @@
 
 from abc import ABC
 
-from numpy import log
+import numpy as np
 from pandas import DataFrame, Series
 
 from AutoCarver.combinations.utils import TargetRate
@@ -133,7 +133,7 @@ class Woe(BinaryTargetRate):
         """Computes the Weight of evidence."""
         sum_f = xagg.sum(axis=1)
         means = xagg.divide(sum_f, axis=0)
-        woe = log(means[1] / means[0])
+        woe = np.log(means[1] / means[0])
         return woe
 
 

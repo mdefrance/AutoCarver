@@ -5,7 +5,7 @@ from math import ceil
 from random import seed, shuffle
 from typing import overload
 
-from numpy import isnan
+import numpy as np
 from pandas import DataFrame, Series
 
 from AutoCarver.features import BaseFeature, Features
@@ -510,7 +510,7 @@ def get_measure_value(feature: BaseFeature, measure: BaseMeasure) -> float:
     if measure.is_absolute:
         value = abs(value)
     # replacing nan with -inf
-    if isnan(value):
+    if np.isnan(value):
         value = float("-inf")
     return value
 

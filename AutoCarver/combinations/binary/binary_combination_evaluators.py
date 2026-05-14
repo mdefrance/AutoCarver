@@ -2,7 +2,7 @@
 
 from abc import ABC
 
-from numpy import add, array, searchsorted, sqrt, unique, zeros
+import numpy as np
 from pandas import DataFrame, notna
 from scipy.stats import chi2_contingency
 
@@ -52,12 +52,12 @@ class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
         chi2 = chi2_contingency(xagg.values + tol)[0]
 
         # Cramér's V
-        cramerv = sqrt(chi2 / n_obs)
+        cramerv = np.sqrt(chi2 / n_obs)
         if notna(cramerv):
             cramerv = round(cramerv / tol) * tol
 
         # Tschuprow's T
-        tschuprowt = cramerv / sqrt(sqrt(n_mod_x - 1))
+        tschuprowt = cramerv / np.sqrt(np.sqrt(n_mod_x - 1))
         if notna(tschuprowt):
             tschuprowt = round(tschuprowt / tol) * tol
 
@@ -79,17 +79,17 @@ class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
             Crosstab grouped by indices
         """
         # all indices that may be duplicated
-        index_values = array([groupby.get(index_value, index_value) for index_value in xagg.index])
+        index_values = np.array([groupby.get(index_value, index_value) for index_value in xagg.index])
 
         # all unique indices deduplicated
-        unique_indices = unique(index_values)
+        unique_indices = np.unique(index_values)
 
         # initiating summed up array with zeros
-        summed_values = zeros((len(unique_indices), len(xagg.columns)))
+        summed_values = np.zeros((len(unique_indices), len(xagg.columns)))
 
         # for each unique_index found in index_values sums xtab.Values at corresponding position
         # in summed_values
-        add.at(summed_values, searchsorted(unique_indices, index_values), xagg.values)
+        np.add.at(summed_values, np.searchsorted(unique_indices, index_values), xagg.values)
 
         # converting back to dataframe
         return DataFrame(summed_values, index=unique_indices, columns=xagg.columns)

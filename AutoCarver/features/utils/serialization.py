@@ -4,7 +4,7 @@ import copy
 from json import dumps, loads
 from typing import Any
 
-from numpy import floating, inf, integer, isfinite
+import numpy as np
 
 from AutoCarver.config import Constants
 from AutoCarver.features.utils.grouped_list import GroupedList
@@ -25,11 +25,11 @@ def convert_value_to_base_type(value: Any) -> str | float | int:
     """
 
     output = value  # str/float/int value
-    if not isinstance(value, str) and not isfinite(value):  # numpy.inf value
+    if not isinstance(value, str) and not np.isfinite(value):  # numpy.inf value
         output = Constants.INF
-    elif isinstance(value, integer):  # np.int value
+    elif isinstance(value, np.integer):  # np.int value
         output = int(value)
-    elif isinstance(value, floating):  # np.float value
+    elif isinstance(value, np.floating):  # np.float value
         output = float(value)
 
     return output
@@ -50,7 +50,7 @@ def convert_value_to_numpy_type(value: str | float | int) -> Any:
     """
     output = value  # str/float/int value
     if value == Constants.INF:  # numpy.inf value
-        output = inf
+        output = np.inf
 
     return output
 
@@ -185,7 +185,7 @@ def json_deserialize_content(json_serialized_feature: dict) -> GroupedList:
             content_key = value
 
             # float and int dict keys (converted in string by json.dumps)
-            if not isinstance(value, str) and isfinite(value):
+            if not isinstance(value, str) and np.isfinite(value):
                 content_key = str(value)
 
             # updating

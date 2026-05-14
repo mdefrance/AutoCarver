@@ -1,6 +1,6 @@
 """Defines a continuous feature"""
 
-from numpy import diff, floor, inf, isfinite, log10, nan  # pylint: disable=E0611
+import numpy as np
 from pandas import isna
 
 from AutoCarver.features.utils.base_feature import BaseFeature
@@ -24,7 +24,7 @@ class QuantitativeFeature(BaseFeature):
         # no values have been set
         if not convert_labels and self.values is None:
             # checking that inf is amongst values
-            if values[-1] != inf:
+            if values[-1] != np.inf:
                 raise ValueError(f"[{self}] Must provide values with values[-1] == numpy.inf")
             self.values = values
 
@@ -86,7 +86,7 @@ class QuantitativeFeature(BaseFeature):
             list of labels per quantile
         """
         # filtering out nan and inf for formatting
-        quantiles = [val for val in self.values if val != self.nan and isfinite(val)]
+        quantiles = [val for val in self.values if val != self.nan and np.isfinite(val)]
 
         # converting quantiles in string
         labels = format_quantiles(quantiles)
@@ -155,8 +155,8 @@ def format_quantiles(a_list: list[float]) -> list[str]:
         formatted_list = [string.strip() for string in formatted_list]
 
         # low and high bounds per quantiles
-        upper_bounds = formatted_list + [nan]
-        lower_bounds = [nan] + formatted_list
+        upper_bounds = formatted_list + [np.nan]
+        lower_bounds = [np.nan] + formatted_list
         order: list[str] = []
         for lower, upper in zip(lower_bounds, upper_bounds):
             if isna(lower):
@@ -177,14 +177,14 @@ def min_decimals_to_differentiate(sorted_numbers: list[float], min_decimals: int
         return min_decimals
 
     # Find the smallest difference between consecutive numbers
-    smallest_diff = min(diff(sorted_numbers))
+    smallest_diff = min(np.diff(sorted_numbers))
 
     # All numbers are identical
     if smallest_diff == 0:
         return min_decimals
 
     # Number of decimal places needed
-    decimal_places = -int(floor(log10(smallest_diff)))
+    decimal_places = -int(np.floor(np.log10(smallest_diff)))
 
     # minimum of 0
     return max(decimal_places, min_decimals) + 1

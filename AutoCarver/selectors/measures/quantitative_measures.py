@@ -2,7 +2,7 @@
 
 from math import sqrt
 
-from numpy import nan
+import numpy as np
 from pandas import DataFrame, Series
 from scipy.spatial.distance import correlation
 from scipy.stats import kruskal, pearsonr, spearmanr
@@ -51,7 +51,7 @@ class KruskalMeasure(ReversibleMeasure):
         y_values = y.unique()
 
         # computing Kruskal-Wallis statistic
-        self.value = nan
+        self.value = np.nan
         if has_values(x, y, nans):
             try:
                 kw = kruskal(*tuple(x[(~nans) & (y == y_value)] for y_value in y_values))
@@ -92,7 +92,7 @@ class RMeasure(BaseMeasure):
         regression = ols("feature~C(target)", ols_df).fit()
 
         # computing R statistic
-        self.value = sqrt(regression.rsquared) if regression.rsquared and regression.rsquared >= 0 else nan
+        self.value = sqrt(regression.rsquared) if regression.rsquared and regression.rsquared >= 0 else np.nan
 
         return self.value
 
@@ -122,7 +122,7 @@ class PearsonMeasure(AbsoluteMeasure):
         nans = x.isnull() | x.isna()
 
         # computing pearson's r
-        self.value = nan
+        self.value = np.nan
         if has_values(x, y, nans):
             r = pearsonr(x[~nans], y[~nans])
             if r:
@@ -142,7 +142,7 @@ class SpearmanMeasure(AbsoluteMeasure):
         # ckecking for nans
         nans = x.isnull() | x.isna()
         # computing spearman's rho
-        self.value = nan
+        self.value = np.nan
         if has_values(x, y, nans):
             rho = spearmanr(x[~nans], y[~nans])
             if rho:
@@ -163,7 +163,7 @@ class DistanceMeasure(AbsoluteMeasure):
         nans = x.isnull()
 
         # computing distance correlation
-        self.value = nan
+        self.value = np.nan
         if has_values(x, y, nans):
             self.value = correlation(x[~nans], y[~nans]) - 1
         return self.value  # type: ignore

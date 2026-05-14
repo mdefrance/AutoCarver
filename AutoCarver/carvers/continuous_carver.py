@@ -2,7 +2,7 @@
 for continuous regression tasks.
 """
 
-from numpy import unique
+import numpy as np
 from pandas import DataFrame, Series
 
 from AutoCarver.carvers.utils.base_carver import BaseCarver, Samples
@@ -94,7 +94,7 @@ class ContinuousCarver(BaseCarver):
         if str in samples.train.y.apply(type).unique():
             raise ValueError(f"[{self.__name__}] y must be a continuous Series (int or float, not object)")
 
-        y_values = unique(samples.train.y)
+        y_values = np.unique(samples.train.y)
         if len(y_values) <= 2:
             raise ValueError(f"[{self.__name__}] provided y is binary, consider using BinaryCarver instead.")
         # Checking for binary target and copying X

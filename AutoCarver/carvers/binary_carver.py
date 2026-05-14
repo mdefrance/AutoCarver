@@ -2,7 +2,7 @@
 for binary classification tasks.
 """
 
-from numpy import unique
+import numpy as np
 from pandas import DataFrame, Series, crosstab
 
 from AutoCarver.carvers.utils.base_carver import BaseCarver, Samples
@@ -96,7 +96,7 @@ class BinaryCarver(BaseCarver):
             Copies of (X, X_dev) and helpers to be used according to target type
         """
         # binary target, checking values
-        y_values = unique(samples.train.y)
+        y_values = np.unique(samples.train.y)
         if not ((0 in y_values) and (1 in y_values)) or len(y_values) != 2:
             raise ValueError(f"[{self.__name__}] y must be a binary Series of 0 and 1 (int or float, not object)")
 

@@ -1,6 +1,6 @@
 """Defines a set of features"""
 
-from numpy import nan
+import numpy as np
 from pandas import DataFrame, Series
 
 from AutoCarver.features.qualitatives import (
@@ -361,7 +361,7 @@ class Features:
         # reinstating nans of features for which nans should not have been dropped
         X.replace(
             {
-                feature.version: {feature.label_per_value.get(feature.nan, feature.nan): nan}
+                feature.version: {feature.label_per_value.get(feature.nan, feature.nan): np.nan}
                 for feature in self
                 if feature.has_nan and not feature.dropna
             },

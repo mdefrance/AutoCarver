@@ -2,7 +2,7 @@
 
 from enum import Enum
 
-from numpy import isclose
+import numpy as np
 from pandas import DataFrame, Series
 
 
@@ -29,7 +29,7 @@ def _test_distinct_target_rates_between_modalities(target_rates: Series) -> bool
     """tests for distinct target rates between consecutive modalities"""
 
     # - target rates are distinct for consecutive modalities
-    return not any(isclose(target_rates[1:], target_rates.shift(1)[1:]))
+    return not any(np.isclose(target_rates[1:], target_rates.shift(1)[1:]))
 
 
 def _test_minimum_frequency_per_modality(frequencies: Series, min_freq: float) -> bool:
