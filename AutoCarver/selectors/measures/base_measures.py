@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from pandas import Series, isnull, notna
+import pandas as pd
 
 from AutoCarver.features import BaseFeature
 
@@ -61,14 +61,14 @@ class BaseMeasure(ABC):
         return self.__name__
 
     @abstractmethod
-    def compute_association(self, x: Series, y: Series) -> float:
+    def compute_association(self, x: pd.Series, y: pd.Series) -> float:
         """Computes association measure between ``x`` and ``y``
 
         Parameters
         ----------
-        x : Series
+        x : pd.Series
             Feature
-        y : Series
+        y : pd.Series
             Target feature
 
         Returns
@@ -104,7 +104,7 @@ class BaseMeasure(ABC):
             Whether the test is passed or not
         """
 
-        if not isnull(self.value) and notna(self.value):
+        if not pd.isnull(self.value) and pd.notna(self.value):
             return self.value >= self.threshold  # type: ignore
         return False
 
@@ -149,7 +149,7 @@ class AbsoluteMeasure(BaseMeasure):
         bool
             Whether the test is passed or not
         """
-        if not isnull(self.value) and notna(self.value):
+        if not pd.isnull(self.value) and pd.notna(self.value):
             return abs(self.value) >= self.threshold  # type: ignore
         return False
 
@@ -176,14 +176,14 @@ class OutlierMeasure(BaseMeasure):
         super().__init__(threshold)
 
     @abstractmethod
-    def compute_association(self, x: Series, y: Series | None = None) -> float:
+    def compute_association(self, x: pd.Series, y: pd.Series | None = None) -> float:
         """Computes outlier measure on ``x``
 
         Parameters
         ----------
-        x : Series
+        x : pd.Series
             Feature
-        y : Series, optional
+        y : pd.Series, optional
             Target feature, by default ``None``
 
         Returns
@@ -200,7 +200,7 @@ class OutlierMeasure(BaseMeasure):
         bool
             Whether the test is passed or not
         """
-        if not isnull(self.value) and notna(self.value):
+        if not pd.isnull(self.value) and pd.notna(self.value):
             return self.value < self.threshold  # type: ignore
         return True
 
@@ -212,14 +212,14 @@ class NanMeasure(OutlierMeasure):
     is_x_quantitative = True
     is_x_qualitative = True
 
-    def compute_association(self, x: Series, y: Series | None = None) -> float:
+    def compute_association(self, x: pd.Series, y: pd.Series | None = None) -> float:
         """Computes frequency of ``nan`` in ``x``
 
         Parameters
         ----------
-        x : Series
+        x : pd.Series
             Feature
-        y : Series, optional
+        y : pd.Series, optional
             Target feature, by default ``None``
 
         Returns
@@ -239,14 +239,14 @@ class ModeMeasure(OutlierMeasure):
     is_x_quantitative = True
     is_x_qualitative = True
 
-    def compute_association(self, x: Series, y: Series | None = None) -> float:
+    def compute_association(self, x: pd.Series, y: pd.Series | None = None) -> float:
         """Computes frequency of ``x``'s mode
 
         Parameters
         ----------
-        x : Series
+        x : pd.Series
             Feature
-        y : Series, optional
+        y : pd.Series, optional
             Target feature, by default ``None``
 
         Returns

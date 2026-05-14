@@ -2,8 +2,8 @@
 for a binary classification model.
 """
 
-from numpy import nan, select
-from pandas import DataFrame, Series, unique
+import numpy as np
+import pandas as pd
 
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
 from AutoCarver.discretizers.utils.type_discretizers import StringDiscretizer
@@ -111,11 +111,11 @@ class ChainedDiscretizer(BaseDiscretizer):
 
         Parameters
         ----------
-        X : DataFrame
+        X : pd.DataFrame
             Dataset used to discretize. Needs to have columns has specified in
             ``ChainedDiscretizer.features``.
 
-        y : Series
+        y : pd.Series
             Binary target feature, not used, by default None.
 
         Returns
@@ -147,7 +147,7 @@ class ChainedDiscretizer(BaseDiscretizer):
         return sample
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: DataFrame, y: Series | None = None) -> None:  # pylint: disable=W0222
+    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> None:  # pylint: disable=W0222
         # preprocessing data
         sample = self._prepare_data(Sample(X, y))
         self._log_if_verbose()  # verbose if requested
@@ -158,7 +158,7 @@ class ChainedDiscretizer(BaseDiscretizer):
             for level_order in self.chained_orders:
                 # computing frequencies of each modality
                 frequencies = (
-                    sample.X[feature.version].value_counts(normalize=True, dropna=False).drop(nan, errors="ignore")
+                    sample.X[feature.version].value_counts(normalize=True, dropna=False).drop(np.nan, errors="ignore")
                 )
                 values, frequencies = frequencies.index, frequencies.values
 
@@ -175,7 +175,7 @@ class ChainedDiscretizer(BaseDiscretizer):
                 df_to_input = [sample.X[feature.version] == discarded for discarded in values_to_group]
 
                 # inputing non frequent values
-                sample.X[feature.version] = select(df_to_input, groups_value, default=sample.X[feature.version])
+                sample.X[feature.version] = np.select(df_to_input, groups_value, default=sample.X[feature.version])
 
                 # historizing in the feature's order
                 order = GroupedList(feature.values)
@@ -193,7 +193,7 @@ class ChainedDiscretizer(BaseDiscretizer):
         return self
 
 
-def check_frequencies(features: Features, X: DataFrame, min_freq: float, name: str) -> None:
+def check_frequencies(features: Features, X: pd.DataFrame, min_freq: float, name: str) -> None:
     """Checks features' frequencies compared to min_freq"""
 
     # computing features' max modality frequency (mode frequency)
@@ -239,14 +239,14 @@ def check_frequencies(features: Features, X: DataFrame, min_freq: float, name: s
         raise ValueError(error_msg)
 
 
-def ensure_qualitative_dtypes(features: Features, X: DataFrame, **kwargs) -> DataFrame:
+def ensure_qualitative_dtypes(features: Features, X: pd.DataFrame, **kwargs) -> pd.DataFrame:
     """Checks features' data types and converts int/float to str"""
 
     # getting per feature data types
     dtypes = (
         X.fillna({feature.version: feature.nan for feature in features})[features.versions]
         .map(type)
-        .apply(unique, result_type="reduce")
+        .apply(pd.unique, result_type="reduce")
     )
 
     # identifying features that are not str

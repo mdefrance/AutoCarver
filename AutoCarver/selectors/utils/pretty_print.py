@@ -1,6 +1,6 @@
 """Pretty print functions for selectors"""
 
-from pandas import DataFrame
+import pandas as pd
 
 from AutoCarver.features import BaseFeature
 
@@ -22,7 +22,7 @@ def format_measure(feature: BaseFeature, measure: dict) -> dict:
     return formatted
 
 
-def format_ranked_features(features: list[BaseFeature]) -> DataFrame:
+def format_ranked_features(features: list[BaseFeature]) -> pd.DataFrame:
     """formats ranked features for display"""
 
     # adding measures and filters
@@ -35,11 +35,11 @@ def format_ranked_features(features: list[BaseFeature]) -> DataFrame:
         ranks = [col for measure in measures for col in measure.keys() if col.endswith("Rank")]
         if len(ranks) > 0:
             sort_by = ranks[0]
-            return DataFrame(measures).sort_values(by=sort_by, ascending=True)
-    return DataFrame(measures)
+            return pd.DataFrame(measures).sort_values(by=sort_by, ascending=True)
+    return pd.DataFrame(measures)
 
 
-def prettier_measures(association: DataFrame) -> str:
+def prettier_measures(association: pd.DataFrame) -> str:
     """Pretty display of measures and filters per feature on the same line"""
 
     # finding columns with indicators to colorize

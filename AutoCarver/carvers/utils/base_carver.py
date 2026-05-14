@@ -6,7 +6,7 @@ import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 
-from pandas import DataFrame, Series
+import pandas as pd
 
 from AutoCarver.carvers.utils.pretty_print import index_mapper, prettier_xagg
 from AutoCarver.combinations import (
@@ -154,24 +154,24 @@ class BaseCarver(BaseDiscretizer, ABC):
 
         Parameters
         ----------
-        X : DataFrame
+        X : pd.DataFrame
             Dataset used to discretize. Needs to have columns has specified in
             ``BaseCarver.features``.
 
-        y : Series
+        y : pd.Series
             Binary target feature with wich the association is maximized.
 
-        X_dev : DataFrame, optional
+        X_dev : pd.DataFrame, optional
             Dataset to evalute the robustness of discretization, by default ``None``
             It should have the same distribution as X.
 
-        y_dev : Series, optional
+        y_dev : pd.Series, optional
             Binary target feature with wich the robustness of discretization is evaluated,
             by default ``None``
 
         Returns
         -------
-        tuple[DataFrame, DataFrame]
+        tuple[pd.DataFrame, pd.DataFrame]
             Copies of (X, X_dev)
         """
         # checking for not provided y
@@ -195,27 +195,27 @@ class BaseCarver(BaseDiscretizer, ABC):
 
     def fit(  # pylint: disable=W0222
         self,
-        X: DataFrame,
-        y: Series,
+        X: pd.DataFrame,
+        y: pd.Series,
         *,
-        X_dev: DataFrame | None = None,
-        y_dev: Series | None = None,
+        X_dev: pd.DataFrame | None = None,
+        y_dev: pd.Series | None = None,
     ) -> None:
         """Finds the combination of modalities of X that provides the best association with y.
         If provided, X_dev set should be large enough to have the same distribution as X.
 
         Parameters
         ----------
-        X : DataFrame
+        X : pd.DataFrame
             Dataset to determine :class:`Features`' optimal carving.
 
-        y : Series
+        y : pd.Series
             Target with wich the association is maximized.
 
-        X_dev : DataFrame, optional
+        X_dev : pd.DataFrame, optional
             Dataset to evaluate robustness of :class:`Features`, by default ``None``
 
-        y_dev : Series, optional
+        y_dev : pd.Series, optional
             Target associated to ``X_dev``, by default ``None``
         """
 
@@ -255,14 +255,14 @@ class BaseCarver(BaseDiscretizer, ABC):
         return self
 
     @abstractmethod
-    def _aggregator(self, X: DataFrame, y: Series) -> Series | DataFrame:
+    def _aggregator(self, X: pd.DataFrame, y: pd.Series) -> pd.Series | pd.DataFrame:
         """Helper that aggregates X by y into crosstab or means (carver specific)"""
 
     def _carve_feature(
         self,
         feature: BaseFeature,
-        xaggs: dict[str, Series | DataFrame],
-        xaggs_dev: dict[str, Series | DataFrame],
+        xaggs: dict[str, pd.Series | pd.DataFrame],
+        xaggs_dev: dict[str, pd.Series | pd.DataFrame],
         num_iter: str,
     ) -> dict[str, GroupedList]:
         """Carves a feature into buckets that maximize association with the target"""
@@ -301,18 +301,18 @@ class BaseCarver(BaseDiscretizer, ABC):
     def _print_xagg(
         self,
         feature: BaseFeature,
-        xagg: Series | DataFrame,
+        xagg: pd.Series | pd.DataFrame,
         message: str,
         *,
-        xagg_dev: Series | DataFrame | None = None,
+        xagg_dev: pd.Series | pd.DataFrame | None = None,
     ) -> None:
         """Prints crosstabs' target rates and frequencies per modality, in raw or html format
 
         Parameters
         ----------
-        xagg : Series | DataFrame
+        xagg : pd.Series | pd.DataFrame
             Train crosstab
-        xagg_dev : Series | DataFrame
+        xagg_dev : pd.Series | pd.DataFrame
             Dev crosstab, by default None
         pretty_print : bool, optional
             Whether to output html or not, by default False
@@ -330,20 +330,20 @@ class BaseCarver(BaseDiscretizer, ABC):
                 self._print_html(nice_xagg, nice_xagg_dev)
 
     def _format_xagg(
-        self, feature: BaseFeature, xagg: DataFrame, xagg_dev: DataFrame | None = None
-    ) -> tuple[DataFrame, DataFrame]:
+        self, feature: BaseFeature, xagg: pd.DataFrame, xagg_dev: pd.DataFrame | None = None
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
         """Formats the XAGG DataFrame."""
         formatted_xagg = index_mapper(feature, xagg)
         formatted_xagg_dev = index_mapper(feature, xagg_dev)
         return formatted_xagg, formatted_xagg_dev
 
-    def _pretty_print(self, formatted_xagg: DataFrame, formatted_xagg_dev: DataFrame) -> tuple[str, str]:
+    def _pretty_print(self, formatted_xagg: pd.DataFrame, formatted_xagg_dev: pd.DataFrame) -> tuple[str, str]:
         """Returns pretty-printed XAGG DataFrames."""
         nice_xagg = self.combinations.target_rate.compute(formatted_xagg)
         nice_xagg_dev = self.combinations.target_rate.compute(formatted_xagg_dev)
         return nice_xagg, nice_xagg_dev
 
-    def _print_raw(self, nice_xagg: str, nice_xagg_dev: str, xagg_dev: DataFrame | None = None) -> None:
+    def _print_raw(self, nice_xagg: str, nice_xagg_dev: str, xagg_dev: pd.DataFrame | None = None) -> None:
         """Prints raw XAGG DataFrames."""
         print(nice_xagg, "\n")
         if xagg_dev is not None:

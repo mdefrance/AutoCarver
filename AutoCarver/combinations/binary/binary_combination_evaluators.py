@@ -2,8 +2,8 @@
 
 from abc import ABC
 
-from numpy import add, array, searchsorted, sqrt, unique, zeros
-from pandas import DataFrame, notna
+import numpy as np
+import pandas as pd
 from scipy.stats import chi2_contingency
 
 from AutoCarver.combinations.binary.binary_target_rates import BinaryTargetRate, TargetMean
@@ -34,7 +34,7 @@ class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
 
         Parameters
         ----------
-        xtab : DataFrame
+        xtab : pd.DataFrame
             Crosstab between feature and target.
 
         n_obs : int
@@ -52,23 +52,23 @@ class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
         chi2 = chi2_contingency(xagg.values + tol)[0]
 
         # Cramér's V
-        cramerv = sqrt(chi2 / n_obs)
-        if notna(cramerv):
+        cramerv = np.sqrt(chi2 / n_obs)
+        if pd.notna(cramerv):
             cramerv = round(cramerv / tol) * tol
 
         # Tschuprow's T
-        tschuprowt = cramerv / sqrt(sqrt(n_mod_x - 1))
-        if notna(tschuprowt):
+        tschuprowt = cramerv / np.sqrt(np.sqrt(n_mod_x - 1))
+        if pd.notna(tschuprowt):
             tschuprowt = round(tschuprowt / tol) * tol
 
         return {"cramerv": cramerv, "tschuprowt": tschuprowt}
 
-    def _grouper(self, xagg: AggregatedSample, groupby: dict) -> DataFrame:
+    def _grouper(self, xagg: AggregatedSample, groupby: dict) -> pd.DataFrame:
         """Groups a crosstab by groupby and sums column values by groups (vectorized)
 
         Parameters
         ----------
-        xagg : DataFrame
+        xagg : pd.DataFrame
             crosstab between X and y
         groupby : list[str]
             indices to group by
@@ -79,20 +79,20 @@ class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
             Crosstab grouped by indices
         """
         # all indices that may be duplicated
-        index_values = array([groupby.get(index_value, index_value) for index_value in xagg.index])
+        index_values = np.array([groupby.get(index_value, index_value) for index_value in xagg.index])
 
         # all unique indices deduplicated
-        unique_indices = unique(index_values)
+        unique_indices = np.unique(index_values)
 
         # initiating summed up array with zeros
-        summed_values = zeros((len(unique_indices), len(xagg.columns)))
+        summed_values = np.zeros((len(unique_indices), len(xagg.columns)))
 
         # for each unique_index found in index_values sums xtab.Values at corresponding position
         # in summed_values
-        add.at(summed_values, searchsorted(unique_indices, index_values), xagg.values)
+        np.add.at(summed_values, np.searchsorted(unique_indices, index_values), xagg.values)
 
         # converting back to dataframe
-        return DataFrame(summed_values, index=unique_indices, columns=xagg.columns)
+        return pd.DataFrame(summed_values, index=unique_indices, columns=xagg.columns)
 
 
 class TschuprowtCombinations(BinaryCombinationEvaluator):

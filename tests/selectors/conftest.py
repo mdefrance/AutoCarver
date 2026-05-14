@@ -1,8 +1,8 @@
 """Defines fixtures for carvers pytests"""
 
+import pandas as pd
+
 # from pytest import FixtureRequest, fixture
-
-
 # @fixture
 # def quantitative_features() -> list[str]:
 #     """List of quantitative raw features to be carved"""
@@ -13,8 +13,6 @@
 #         "Discrete_Quantitative",
 #         "Discrete_Quantitative_rarevalue",
 #     ]
-
-
 # @fixture
 # def qualitative_features() -> list[str]:
 #     """List of qualitative raw features to be carved"""
@@ -27,8 +25,6 @@
 #         "Discrete_Qualitative_lownan_noorder",
 #         "Discrete_Qualitative_rarevalue_noorder",
 #     ]
-
-
 # @fixture
 # def ordinal_features() -> list[str]:
 #     """List of ordinal raw features to be carved"""
@@ -37,14 +33,10 @@
 #         "Qualitative_Ordinal_lownan",
 #         "Discrete_Qualitative_highnan",
 #     ]
-
-
 # @fixture(params=[3, 5])
 # def n_best(request: FixtureRequest) -> int:
 #     """Number of features to be selected"""
 #     return request.param
-
-from pandas import DataFrame, Series
 from pytest import FixtureRequest, fixture
 
 from AutoCarver.features import BaseFeature, Features
@@ -143,7 +135,7 @@ def features() -> list[BaseFeature]:
 
 @fixture
 def X():
-    return DataFrame(
+    return pd.DataFrame(
         {
             "feature1": [0, 1, 0, 1, 0, 1],
             "feature2": [2, 0, 2, 0, 0, 0],
@@ -155,7 +147,7 @@ def X():
 
 @fixture
 def y():
-    return Series([7, 8, 9, 10, 11, 12])
+    return pd.Series([7, 8, 9, 10, 11, 12])
 
 
 @fixture

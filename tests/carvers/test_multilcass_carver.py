@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from pandas import DataFrame, Series
+import pandas as pd
 from pytest import FixtureRequest, fixture, raises
 
 from AutoCarver.carvers.multiclass_carver import MulticlassCarver, get_one_vs_rest
@@ -31,34 +31,34 @@ def sort_by(request) -> str:
 
 
 def test_get_one_vs_rest_with_string_series():
-    y = Series(["A", "B", "A", "C", "B", "A"])
+    y = pd.Series(["A", "B", "A", "C", "B", "A"])
     y_class = "A"
     result = get_one_vs_rest(y, y_class)
-    expected = Series([1, 0, 1, 0, 0, 1])
+    expected = pd.Series([1, 0, 1, 0, 0, 1])
     result.equals(expected)
 
 
 def test_get_one_vs_rest_conversion():
-    y = Series([1, 2, 1, 3, 2, 1])
+    y = pd.Series([1, 2, 1, 3, 2, 1])
     y_class = 1
     result = get_one_vs_rest(y, y_class)
-    expected = Series([1, 0, 1, 0, 0, 1])
+    expected = pd.Series([1, 0, 1, 0, 0, 1])
     result.equals(expected)
 
 
 def test_get_one_vs_rest_different_class():
-    y = Series([1, 2, 1, 3, 2, 1])
+    y = pd.Series([1, 2, 1, 3, 2, 1])
     y_class = 2
     result = get_one_vs_rest(y, y_class)
-    expected = Series([0, 1, 0, 0, 1, 0])
+    expected = pd.Series([0, 1, 0, 0, 1, 0])
     result.equals(expected)
 
 
 def test_get_one_vs_rest_no_match():
-    y = Series([1, 2, 1, 3, 2, 1])
+    y = pd.Series([1, 2, 1, 3, 2, 1])
     y_class = 4
     result = get_one_vs_rest(y, y_class)
-    expected = Series([0, 0, 0, 0, 0, 0])
+    expected = pd.Series([0, 0, 0, 0, 0, 0])
     result.equals(expected)
 
 
@@ -106,25 +106,25 @@ def test_multiclass_carver_prepare_data(evaluator: CombinationEvaluator):
         quantitatives=["feature3"],
     )
     carver = MulticlassCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator)
-    X = DataFrame({"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]})
+    X = pd.DataFrame({"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]})
 
     # with wrong target
-    y = Series([0, 1, 0])
+    y = pd.Series([0, 1, 0])
     samples = Samples(train=Sample(X, y))
 
     with raises(ValueError):
         carver._prepare_data(samples)
 
     # with right target
-    y = Series([0, 1, 2])
+    y = pd.Series([0, 1, 2])
     samples = Samples(train=Sample(X, y))
 
     prepared_samples = carver._prepare_data(samples)
     assert isinstance(prepared_samples, Samples)
 
     # with wrong dev target
-    y_dev = Series([0, 1, 0])
-    y = Series([0, 1, 2])
+    y_dev = pd.Series([0, 1, 0])
+    y = pd.Series([0, 1, 2])
     samples = Samples(train=Sample(X, y), dev=Sample(X, y_dev))
 
     with raises(ValueError):
@@ -149,7 +149,7 @@ def test_multiclass_carver_fit_transform_with_small_data_not_ordinal(
         ordinal_encoding=False,
     )
     idx = ["a", "b", "c", "d"]
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
             "feature2": ["low", "medium", "high", "high"],
@@ -157,11 +157,11 @@ def test_multiclass_carver_fit_transform_with_small_data_not_ordinal(
         },
         index=idx,
     )
-    y = Series([0, 1, 2, 1], index=idx)
+    y = pd.Series([0, 1, 2, 1], index=idx)
     X_transformed = carver.fit_transform(X, y)
 
     print(X_transformed)
-    expected = DataFrame(
+    expected = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
             "feature2": ["low", "medium", "high", "high"],
@@ -181,7 +181,7 @@ def test_multiclass_carver_fit_transform_with_small_data_not_ordinal(
         index=idx,
     )
     print(X_transformed.columns)
-    assert isinstance(X_transformed, DataFrame)
+    assert isinstance(X_transformed, pd.DataFrame)
     assert all(X_transformed.index == expected.index)
     assert all(X_transformed.index == X.index)
     assert all(X_transformed.columns == expected.columns)
@@ -206,7 +206,7 @@ def test_multiclass_carver_fit_transform_with_small_data_ordinal(evaluator: Comb
     )
     carver = MulticlassCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False)
     idx = ["a", "b", "c", "d"]
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
             "feature2": ["low", "medium", "high", "high"],
@@ -214,11 +214,11 @@ def test_multiclass_carver_fit_transform_with_small_data_ordinal(evaluator: Comb
         },
         index=idx,
     )
-    y = Series([0, 1, 2, 1], index=idx)
+    y = pd.Series([0, 1, 2, 1], index=idx)
     X_transformed = carver.fit_transform(X, y)
 
     print(X_transformed)
-    expected = DataFrame(
+    expected = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
             "feature2": ["low", "medium", "high", "high"],
@@ -233,7 +233,7 @@ def test_multiclass_carver_fit_transform_with_small_data_ordinal(evaluator: Comb
         index=idx,
     )
     print(X_transformed.columns)
-    assert isinstance(X_transformed, DataFrame)
+    assert isinstance(X_transformed, pd.DataFrame)
     assert all(X_transformed.index == expected.index)
     assert all(X_transformed.index == X.index)
     assert all(X_transformed.columns == expected.columns)
@@ -283,7 +283,7 @@ def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationE
         "p",
         "q",
     ]  # , "r", "s", "t", "u", "v"]
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": [
                 "A",
@@ -327,11 +327,11 @@ def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationE
         },
         index=idx,
     )
-    y = Series([3, 1, 0, 1, 0, 2, 2, 2, 3, 1, 1, 0, 1, 1, 1, 3, 3], index=idx)
+    y = pd.Series([3, 1, 0, 1, 0, 2, 2, 2, 3, 1, 1, 0, 1, 1, 1, 3, 3], index=idx)
     X_transformed = carver.fit_transform(X, y)
 
     print(X_transformed)
-    expected = DataFrame(
+    expected = pd.DataFrame(
         {
             "feature1": [
                 "A",
@@ -547,7 +547,7 @@ def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationE
     )
     print(X_transformed.to_dict(orient="list"))
     print(X_transformed.columns)
-    assert isinstance(X_transformed, DataFrame)
+    assert isinstance(X_transformed, pd.DataFrame)
     assert all(X_transformed.index == expected.index)
     assert all(X_transformed.index == X.index)
     assert all(X_transformed.columns == expected.columns)
@@ -570,7 +570,7 @@ def test_multiclass_carver_fit_transform_with_target_only_nan(evaluator: Combina
         ordinal_encoding=False,
     )
     idx = ["a", "b", "c", "d"]
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
             "feature2": ["low", "medium", "high", "high"],
@@ -578,11 +578,11 @@ def test_multiclass_carver_fit_transform_with_target_only_nan(evaluator: Combina
         },
         index=idx,
     )
-    y = Series([2, 0, 0, 1], index=idx)
+    y = pd.Series([2, 0, 0, 1], index=idx)
     X_transformed = carver.fit_transform(X, y)
 
     print(X_transformed.to_dict(orient="list"))
-    expected = DataFrame(
+    expected = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
             "feature2": ["low", "medium", "high", "high"],
@@ -595,7 +595,7 @@ def test_multiclass_carver_fit_transform_with_target_only_nan(evaluator: Combina
         },
         index=idx,
     )
-    assert isinstance(X_transformed, DataFrame)
+    assert isinstance(X_transformed, pd.DataFrame)
     assert all(X_transformed.index == expected.index)
     assert all(X_transformed.index == X.index)
     assert all(X_transformed.columns == expected.columns)
@@ -626,7 +626,7 @@ def test_multiclass_carver_fit_transform_with_wrong_dev(evaluator: CombinationEv
         ordinal_encoding=False,
     )
     idx = ["a", "b", "c", "d"]
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
             "feature2": ["low", "medium", "high", "high"],
@@ -634,8 +634,8 @@ def test_multiclass_carver_fit_transform_with_wrong_dev(evaluator: CombinationEv
         },
         index=idx,
     )
-    y = Series([0, 1, 0, 2], index=idx)
-    X_dev = DataFrame(
+    y = pd.Series([0, 1, 0, 2], index=idx)
+    X_dev = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
             "feature2": ["low", "medium", "high", "high"],
@@ -643,11 +643,11 @@ def test_multiclass_carver_fit_transform_with_wrong_dev(evaluator: CombinationEv
         },
         index=idx,
     )
-    y_dev = Series([2, 0, 1, 0], index=idx)
+    y_dev = pd.Series([2, 0, 1, 0], index=idx)
     X_transformed = carver.fit_transform(X, y, X_dev=X_dev, y_dev=y_dev)
 
     print(X_transformed.to_dict(orient="list"))
-    expected = DataFrame(
+    expected = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
             "feature2": ["low", "medium", "high", "high"],
@@ -657,7 +657,7 @@ def test_multiclass_carver_fit_transform_with_wrong_dev(evaluator: CombinationEv
         },
         index=idx,
     )
-    assert isinstance(X_transformed, DataFrame)
+    assert isinstance(X_transformed, pd.DataFrame)
     assert all(X_transformed.index == expected.index)
     assert all(X_transformed.index == X.index)
     assert all(X_transformed.columns == expected.columns)
@@ -693,12 +693,12 @@ def test_multiclass_carver_save_load(tmp_path: Path, evaluator: CombinationEvalu
 
 def test_multiclass_carver(
     tmp_path: Path,
-    x_train: DataFrame,
-    x_train_wrong_2: DataFrame,
-    x_dev_1: DataFrame,
-    x_dev_wrong_1: DataFrame,
-    x_dev_wrong_2: DataFrame,
-    x_dev_wrong_3: DataFrame,
+    x_train: pd.DataFrame,
+    x_train_wrong_2: pd.DataFrame,
+    x_dev_1: pd.DataFrame,
+    x_dev_wrong_1: pd.DataFrame,
+    x_dev_wrong_2: pd.DataFrame,
+    x_dev_wrong_3: pd.DataFrame,
     quantitative_features: list[str],
     qualitative_features: list[str],
     ordinal_features: list[str],
@@ -716,19 +716,19 @@ def test_multiclass_carver(
 
     Parameters
     ----------
-    x_train : DataFrame
+    x_train : pd.DataFrame
         Simulated Train DataFrame
-    x_train_wrong_1 : DataFrame
+    x_train_wrong_1 : pd.DataFrame
         Simulated Train DataFrame with unknown values (without nans)
-    x_train_wrong_2 : DataFrame
+    x_train_wrong_2 : pd.DataFrame
         Simulated Train DataFrame with unknown values (with nans)
-    x_dev_1 : DataFrame
+    x_dev_1 : pd.DataFrame
         Simulated Dev DataFrame
-    x_dev_wrong_1 : DataFrame
+    x_dev_wrong_1 : pd.DataFrame
         Simulated wrong Dev DataFrame with unexpected modality
-    x_dev_wrong_2 : DataFrame
+    x_dev_wrong_2 : pd.DataFrame
         Simulated wrong Dev DataFrame with unexpected nans
-    x_dev_wrong_3 : DataFrame
+    x_dev_wrong_3 : pd.DataFrame
         Simulated wrong Dev DataFrame
     quantitative_features : list[str]
         List of quantitative raw features to be carved

@@ -2,8 +2,8 @@
 
 from math import sqrt
 
-from numpy import nan
-from pandas import DataFrame, Series
+import numpy as np
+import pandas as pd
 from scipy.spatial.distance import correlation
 from scipy.stats import kruskal, pearsonr, spearmanr
 from statsmodels.formula.api import ols
@@ -39,7 +39,7 @@ class KruskalMeasure(ReversibleMeasure):
     is_y_qualitative = True
 
     @extend_docstring(BaseMeasure.compute_association)
-    def compute_association(self, x: Series, y: Series) -> float:
+    def compute_association(self, x: pd.Series, y: pd.Series) -> float:
         # reversing if requested
         if self.reversed:
             x, y = y, x
@@ -51,7 +51,7 @@ class KruskalMeasure(ReversibleMeasure):
         y_values = y.unique()
 
         # computing Kruskal-Wallis statistic
-        self.value = nan
+        self.value = np.nan
         if has_values(x, y, nans):
             try:
                 kw = kruskal(*tuple(x[(~nans) & (y == y_value)] for y_value in y_values))
@@ -73,7 +73,7 @@ class RMeasure(BaseMeasure):
     is_y_binary = True
 
     @extend_docstring(BaseMeasure.compute_association)
-    def compute_association(self, x: Series, y: Series) -> float:
+    def compute_association(self, x: pd.Series, y: pd.Series) -> float:
         # # reversing if requested
         # if self.reversed:
         #     x, y = y, x
@@ -86,18 +86,18 @@ class RMeasure(BaseMeasure):
             raise ValueError(f"[{self}] Provided y is not binary")
 
         # grouping feature and target
-        ols_df = DataFrame({"feature": x[~nans], "target": y[~nans]})
+        ols_df = pd.DataFrame({"feature": x[~nans], "target": y[~nans]})
 
         # fitting regression of feature by target
         regression = ols("feature~C(target)", ols_df).fit()
 
         # computing R statistic
-        self.value = sqrt(regression.rsquared) if regression.rsquared and regression.rsquared >= 0 else nan
+        self.value = sqrt(regression.rsquared) if regression.rsquared and regression.rsquared >= 0 else np.nan
 
         return self.value
 
 
-def has_values(x: Series, y: Series, nans: Series) -> bool:
+def has_values(x: pd.Series, y: pd.Series, nans: pd.Series) -> bool:
     """Checks if x and y have values"""
     # only nan values
     if all(nans):
@@ -117,12 +117,12 @@ class PearsonMeasure(AbsoluteMeasure):
     is_y_quantitative = True
 
     @extend_docstring(BaseMeasure.compute_association)
-    def compute_association(self, x: Series, y: Series) -> float:
+    def compute_association(self, x: pd.Series, y: pd.Series) -> float:
         # ckecking for nans
         nans = x.isnull() | x.isna()
 
         # computing pearson's r
-        self.value = nan
+        self.value = np.nan
         if has_values(x, y, nans):
             r = pearsonr(x[~nans], y[~nans])
             if r:
@@ -138,11 +138,11 @@ class SpearmanMeasure(AbsoluteMeasure):
     is_y_quantitative = True
 
     @extend_docstring(BaseMeasure.compute_association)
-    def compute_association(self, x: Series, y: Series) -> float:
+    def compute_association(self, x: pd.Series, y: pd.Series) -> float:
         # ckecking for nans
         nans = x.isnull() | x.isna()
         # computing spearman's rho
-        self.value = nan
+        self.value = np.nan
         if has_values(x, y, nans):
             rho = spearmanr(x[~nans], y[~nans])
             if rho:
@@ -158,12 +158,12 @@ class DistanceMeasure(AbsoluteMeasure):
     is_y_quantitative = True
 
     @extend_docstring(BaseMeasure.compute_association)
-    def compute_association(self, x: Series, y: Series) -> float:
+    def compute_association(self, x: pd.Series, y: pd.Series) -> float:
         # ckecking for nans
         nans = x.isnull()
 
         # computing distance correlation
-        self.value = nan
+        self.value = np.nan
         if has_values(x, y, nans):
             self.value = correlation(x[~nans], y[~nans]) - 1
         return self.value  # type: ignore
@@ -175,7 +175,7 @@ class ZscoreOutlierMeasure(OutlierMeasure):
     __name__ = "ZScore"
 
     @extend_docstring(OutlierMeasure.compute_association)
-    def compute_association(self, x: Series, y: Series | None = None) -> float:
+    def compute_association(self, x: pd.Series, y: pd.Series | None = None) -> float:
         mean = x.mean()  # mean of the feature
         std = x.std()  # standard deviation of the feature
         zscore = (x - mean) / std  # zscore per observation
@@ -196,7 +196,7 @@ class IqrOutlierMeasure(OutlierMeasure):
     __name__ = "IQR"
 
     @extend_docstring(OutlierMeasure.compute_association)
-    def compute_association(self, x: Series, y: Series | None = None) -> float:
+    def compute_association(self, x: pd.Series, y: pd.Series | None = None) -> float:
         q3 = x.quantile(0.75)  # 3rd quartile
         q1 = x.quantile(0.25)  # 1st quartile
         iqr = q3 - q1  # inter quartile range

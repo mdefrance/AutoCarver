@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from pandas import DataFrame, Series
+import pandas as pd
 from pytest import FixtureRequest, fixture, raises
 
 from AutoCarver import ContinuousCarver
@@ -20,47 +20,47 @@ from AutoCarver.features import Features, OrdinalFeature
 
 
 def test_get_target_values_by_modality_basic():
-    X = DataFrame({"feature": ["A", "B", "A", "B", "C"]})
-    y = Series([1, 2, 3, 4, 5])
+    X = pd.DataFrame({"feature": ["A", "B", "A", "B", "C"]})
+    y = pd.Series([1, 2, 3, 4, 5])
     feature = OrdinalFeature("feature", ["A", "B", "C"])
     result = get_target_values_by_modality(X, y, feature)
-    expected = Series({"A": [1, 3], "B": [2, 4], "C": [5]})
+    expected = pd.Series({"A": [1, 3], "B": [2, 4], "C": [5]})
     assert result.equals(expected)
 
 
 def test_get_target_values_by_modality_with_nan():
-    X = DataFrame({"feature": ["A", "B", "A", "B", None]})
-    y = Series([1, 2, 3, 4, 5])
+    X = pd.DataFrame({"feature": ["A", "B", "A", "B", None]})
+    y = pd.Series([1, 2, 3, 4, 5])
     feature = OrdinalFeature("feature", ["A", "B", "C"])
     result = get_target_values_by_modality(X, y, feature)
-    expected = Series({"A": [1, 3], "B": [2, 4], "C": []})
+    expected = pd.Series({"A": [1, 3], "B": [2, 4], "C": []})
     assert result.equals(expected)
 
 
 def test_get_target_values_by_modality_unordered_labels():
-    X = DataFrame({"feature": ["A", "B", "A", "B", "C"]})
-    y = Series([1, 2, 3, 4, 5])
+    X = pd.DataFrame({"feature": ["A", "B", "A", "B", "C"]})
+    y = pd.Series([1, 2, 3, 4, 5])
     feature = OrdinalFeature("feature", ["C", "A", "B"])
     result = get_target_values_by_modality(X, y, feature)
-    expected = Series({"C": [5], "A": [1, 3], "B": [2, 4]})
+    expected = pd.Series({"C": [5], "A": [1, 3], "B": [2, 4]})
     assert result.equals(expected)
 
 
 def test_get_target_values_by_modality_missing_labels():
-    X = DataFrame({"feature": ["A", "B", "A", "B", "C"]})
-    y = Series([1, 2, 3, 4, 5])
+    X = pd.DataFrame({"feature": ["A", "B", "A", "B", "C"]})
+    y = pd.Series([1, 2, 3, 4, 5])
     feature = OrdinalFeature("feature", ["A", "B"])
     result = get_target_values_by_modality(X, y, feature)
-    expected = Series({"A": [1, 3], "B": [2, 4]})
+    expected = pd.Series({"A": [1, 3], "B": [2, 4]})
     assert result.equals(expected)
 
 
 def test_get_target_values_by_modality_extra_labels():
-    X = DataFrame({"feature": ["A", "B", "A", "B", "C"]})
-    y = Series([1, 2, 3, 4, 5])
+    X = pd.DataFrame({"feature": ["A", "B", "A", "B", "C"]})
+    y = pd.Series([1, 2, 3, 4, 5])
     feature = OrdinalFeature("feature", ["A", "B", "C", "D"])
     result = get_target_values_by_modality(X, y, feature)
-    expected = Series({"A": [1, 3], "B": [2, 4], "C": [5], "D": []})
+    expected = pd.Series({"A": [1, 3], "B": [2, 4], "C": [5], "D": []})
     assert result.equals(expected)
 
 
@@ -109,24 +109,24 @@ def test_continuous_carver_prepare_data(evaluator: CombinationEvaluator):
         quantitatives=["feature3"],
     )
     carver = ContinuousCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator)
-    X = DataFrame({"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]})
+    X = pd.DataFrame({"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]})
 
     # with wrong target
-    y = Series([0, 1, 1])
+    y = pd.Series([0, 1, 1])
     samples = Samples(train=Sample(X, y))
 
     with raises(ValueError):
         carver._prepare_data(samples)
 
     # with wrong target
-    y = Series([0.2, 1.5, "1"])
+    y = pd.Series([0.2, 1.5, "1"])
     samples = Samples(train=Sample(X, y))
 
     with raises(ValueError):
         carver._prepare_data(samples)
 
     # with right target
-    y = Series([0.1, 1.2, 0.5])
+    y = pd.Series([0.1, 1.2, 0.5])
     samples = Samples(train=Sample(X, y))
 
     prepared_samples = carver._prepare_data(samples)
@@ -141,15 +141,15 @@ def test_continuous_carver_aggregator(evaluator: CombinationEvaluator):
         quantitatives=["feature3"],
     )
     carver = ContinuousCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator)
-    X = DataFrame({"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]})
-    y = Series([0.1, 1.2, 0.5])
+    X = pd.DataFrame({"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]})
+    y = pd.Series([0.1, 1.2, 0.5])
     xtabs = carver._aggregator(X, y)
     print(xtabs)
 
     expected = {
-        "feature1": Series({"A": [0.1, 0.5], "B": [1.2]}),
-        "feature2": Series({"low": [0.1], "medium": [1.2], "high": [0.5]}),
-        "feature3": Series({1: [0.1], 2: [1.2], 3: [0.5]}),
+        "feature1": pd.Series({"A": [0.1, 0.5], "B": [1.2]}),
+        "feature2": pd.Series({"low": [0.1], "medium": [1.2], "high": [0.5]}),
+        "feature3": pd.Series({1: [0.1], 2: [1.2], 3: [0.5]}),
     }
     assert isinstance(xtabs, dict)
     assert "feature1" in xtabs
@@ -168,14 +168,14 @@ def test_carve_feature_with_best_combination(evaluator):
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
             "feature2": ["low", "medium", "high", "high"],
             "feature3": [1, 2, 3, float("nan")],
         }
     )
-    y = Series([0.1, 1.2, 0.5, 0.7])
+    y = pd.Series([0.1, 1.2, 0.5, 0.7])
     samples = Samples(train=Sample(X, y))
 
     # initializing carver
@@ -227,14 +227,14 @@ def test_carve_feature_without_best_combination(evaluator: CombinationEvaluator)
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
             "feature2": ["low", "medium", "high", "high"],
             "feature3": [1, 2, 3, float("nan")],
         }
     )
-    y = Series([0.1, 1.2, 0.5, 0.7])
+    y = pd.Series([0.1, 1.2, 0.5, 0.7])
     samples = Samples(train=Sample(X, y))
 
     # initializing carver
@@ -267,14 +267,14 @@ def test_fit_with_best_combination(evaluator):
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
             "feature2": ["low", "medium", "high", "high"],
             "feature3": [1, 2, 3, float("nan")],
         }
     )
-    y = Series([0.1, 1.2, 0.5, 0.7])
+    y = pd.Series([0.1, 1.2, 0.5, 0.7])
 
     # initializing carver
     carver = ContinuousCarver(
@@ -319,14 +319,14 @@ def test_fit_without_best_combination(evaluator: CombinationEvaluator):
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
             "feature2": ["low", "medium", "high", "high"],
             "feature3": [1, 2, 3, float("nan")],
         }
     )
-    y = Series([0.1, 1.2, 0.5, 0.7])
+    y = pd.Series([0.1, 1.2, 0.5, 0.7])
 
     # initializing carver
     carver = ContinuousCarver(
@@ -362,7 +362,7 @@ def test_continuous_carver_fit_transform_with_small_data_not_ordinal(
         ordinal_encoding=False,
     )
     idx = ["a", "b", "c", "d"]
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
             "feature2": ["low", "medium", "high", "high"],
@@ -370,12 +370,12 @@ def test_continuous_carver_fit_transform_with_small_data_not_ordinal(
         },
         index=idx,
     )
-    y = Series([0.1, 1.2, 0.5, 0.7], index=idx)
+    y = pd.Series([0.1, 1.2, 0.5, 0.7], index=idx)
     X_transformed = carver.fit_transform(X, y)
 
     print(carver.features("feature1").content)
     print(X_transformed)
-    expected = DataFrame(
+    expected = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
             "feature2": ["low", "medium", "high", "high"],
@@ -383,7 +383,7 @@ def test_continuous_carver_fit_transform_with_small_data_not_ordinal(
         },
         index=idx,
     )
-    assert isinstance(X_transformed, DataFrame)
+    assert isinstance(X_transformed, pd.DataFrame)
     assert all(X_transformed.index == expected.index)
     assert all(X_transformed.index == X.index)
     assert all(X_transformed.columns == expected.columns)
@@ -411,7 +411,7 @@ def test_continuous_carver_fit_transform_with_small_data_ordinal(evaluator: Comb
     )
     carver = ContinuousCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False)
     idx = ["a", "b", "c", "d"]
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
             "feature2": ["low", "medium", "high", "high"],
@@ -419,12 +419,12 @@ def test_continuous_carver_fit_transform_with_small_data_ordinal(evaluator: Comb
         },
         index=idx,
     )
-    y = Series([0.1, 1.2, 0.5, 0.7], index=idx)
+    y = pd.Series([0.1, 1.2, 0.5, 0.7], index=idx)
     X_transformed = carver.fit_transform(X, y)
 
     print(carver.features("feature1").content)
     print(X_transformed)
-    expected = DataFrame(
+    expected = pd.DataFrame(
         {
             "feature1": [0, 2, 0, 1],
             "feature2": [0, 1, 2, 2],
@@ -432,7 +432,7 @@ def test_continuous_carver_fit_transform_with_small_data_ordinal(evaluator: Comb
         },
         index=idx,
     )
-    assert isinstance(X_transformed, DataFrame)
+    assert isinstance(X_transformed, pd.DataFrame)
     assert all(X_transformed.index == expected.index)
     assert all(X_transformed.index == X.index)
     assert all(X_transformed.columns == expected.columns)
@@ -485,7 +485,7 @@ def test_continuous_carver_fit_transform_with_large_data(evaluator: CombinationE
         "p",
         "q",
     ]  # , "r", "s", "t", "u", "v"]
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": [
                 "A",
@@ -529,7 +529,7 @@ def test_continuous_carver_fit_transform_with_large_data(evaluator: CombinationE
         },
         index=idx,
     )
-    y = Series(
+    y = pd.Series(
         [0.1, 1.2, 0.5, 0.7, 1.1, 1.1, 1.2, 1.3, 1.4, 1.45, 1.6, 1.7, 1.8, 2.4, 2.5, 2.9, 3.9],
         index=idx,
     )
@@ -537,7 +537,7 @@ def test_continuous_carver_fit_transform_with_large_data(evaluator: CombinationE
 
     print(carver.features("feature1").content)
     print(X_transformed)
-    expected = DataFrame(
+    expected = pd.DataFrame(
         {
             "feature1": [
                 "A",
@@ -599,7 +599,7 @@ def test_continuous_carver_fit_transform_with_large_data(evaluator: CombinationE
         },
         index=idx,
     )
-    assert isinstance(X_transformed, DataFrame)
+    assert isinstance(X_transformed, pd.DataFrame)
     assert all(X_transformed.index == expected.index)
     assert all(X_transformed.index == X.index)
     assert all(X_transformed.columns == expected.columns)
@@ -625,7 +625,7 @@ def test_continuous_carver_fit_transform_with_wrong_dev(evaluator: CombinationEv
     )
     carver = ContinuousCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False)
     idx = ["a", "b", "c", "d"]
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
             "feature2": ["low", "medium", "high", "high"],
@@ -633,8 +633,8 @@ def test_continuous_carver_fit_transform_with_wrong_dev(evaluator: CombinationEv
         },
         index=idx,
     )
-    y = Series([0.1, 1.2, 0.5, 0.7], index=idx)
-    X_dev = DataFrame(
+    y = pd.Series([0.1, 1.2, 0.5, 0.7], index=idx)
+    X_dev = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
             "feature2": ["low", "medium", "high", "high"],
@@ -642,12 +642,12 @@ def test_continuous_carver_fit_transform_with_wrong_dev(evaluator: CombinationEv
         },
         index=idx,
     )
-    y_dev = Series([5.2, 0.1, 8.7, 0.5], index=idx)
+    y_dev = pd.Series([5.2, 0.1, 8.7, 0.5], index=idx)
     X_transformed = carver.fit_transform(X, y, X_dev=X_dev, y_dev=y_dev)
 
     print(X_transformed)
     expected = X
-    assert isinstance(X_transformed, DataFrame)
+    assert isinstance(X_transformed, pd.DataFrame)
     assert all(X_transformed.index == expected.index)
     assert all(X_transformed.index == X.index)
     assert all(X_transformed.columns == expected.columns)
@@ -688,12 +688,12 @@ def test_continuous_carver_save_load(tmp_path, evaluator: CombinationEvaluator):
 
 def test_continuous_carver(
     tmp_path: Path,
-    x_train: DataFrame,
-    x_train_wrong_2: DataFrame,
-    x_dev_1: DataFrame,
-    x_dev_wrong_1: DataFrame,
-    x_dev_wrong_2: DataFrame,
-    x_dev_wrong_3: DataFrame,
+    x_train: pd.DataFrame,
+    x_train_wrong_2: pd.DataFrame,
+    x_dev_1: pd.DataFrame,
+    x_dev_wrong_1: pd.DataFrame,
+    x_dev_wrong_2: pd.DataFrame,
+    x_dev_wrong_3: pd.DataFrame,
     quantitative_features: list[str],
     qualitative_features: list[str],
     ordinal_features: list[str],
@@ -711,19 +711,19 @@ def test_continuous_carver(
 
     Parameters
     ----------
-    x_train : DataFrame
+    x_train : pd.DataFrame
         Simulated Train DataFrame
-    x_train_wrong_1 : DataFrame
+    x_train_wrong_1 : pd.DataFrame
         Simulated Train DataFrame with unknown values (without nans)
-    x_train_wrong_2 : DataFrame
+    x_train_wrong_2 : pd.DataFrame
         Simulated Train DataFrame with unknown values (with nans)
-    x_dev_1 : DataFrame
+    x_dev_1 : pd.DataFrame
         Simulated Dev DataFrame
-    x_dev_wrong_1 : DataFrame
+    x_dev_wrong_1 : pd.DataFrame
         Simulated wrong Dev DataFrame with unexpected modality
-    x_dev_wrong_2 : DataFrame
+    x_dev_wrong_2 : pd.DataFrame
         Simulated wrong Dev DataFrame with unexpected nans
-    x_dev_wrong_3 : DataFrame
+    x_dev_wrong_3 : pd.DataFrame
         Simulated wrong Dev DataFrame
     quantitative_features : list[str]
         List of quantitative raw features to be carved

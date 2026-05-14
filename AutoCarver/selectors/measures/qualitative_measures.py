@@ -2,7 +2,7 @@
 
 from math import sqrt
 
-from pandas import Series, crosstab, notna
+import pandas as pd
 from scipy.stats import chi2_contingency
 
 from AutoCarver.selectors.measures.base_measures import BaseMeasure
@@ -34,9 +34,9 @@ class Chi2Measure(BaseMeasure):
     is_y_qualitative = True
 
     @extend_docstring(BaseMeasure.compute_association)
-    def compute_association(self, x: Series, y: Series) -> float:
+    def compute_association(self, x: pd.Series, y: pd.Series) -> float:
         # computing crosstab between x and y
-        xtab = crosstab(x, y)
+        xtab = pd.crosstab(x, y)
 
         # computing Chi2 statistic
         self.value = chi2_contingency(xtab)[0]
@@ -49,12 +49,12 @@ class CramervMeasure(Chi2Measure):
     __name__ = "CramervMeasure"
 
     @extend_docstring(Chi2Measure.compute_association)
-    def compute_association(self, x: Series, y: Series) -> float:
+    def compute_association(self, x: pd.Series, y: pd.Series) -> float:
         # computing Chi2 if not provided
         chi2_value = super().compute_association(x, y)
 
         # number of non-missing observations
-        n_obs = (notna(x) & notna(y)).sum()
+        n_obs = (pd.notna(x) & pd.notna(y)).sum()
 
         # number of values taken by the features
         n_mod_x, n_mod_y = x.nunique(), y.nunique()
@@ -73,12 +73,12 @@ class TschuprowtMeasure(Chi2Measure):
     __name__ = "TschuprowtMeasure"
 
     @extend_docstring(Chi2Measure.compute_association)
-    def compute_association(self, x: Series, y: Series) -> float:
+    def compute_association(self, x: pd.Series, y: pd.Series) -> float:
         # computing Chi2 if not provided
         chi2_value = super().compute_association(x, y)
 
         # number of non-missing observations
-        n_obs = (notna(x) & notna(y)).sum()
+        n_obs = (pd.notna(x) & pd.notna(y)).sum()
 
         # number of values taken by the features
         n_mod_x, n_mod_y = x.nunique(), y.nunique()

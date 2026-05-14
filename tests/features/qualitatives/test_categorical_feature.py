@@ -1,7 +1,7 @@
 """set of tests for quantitative features"""
 
-from numpy import nan
-from pandas import DataFrame
+import numpy as np
+import pandas as pd
 from pytest import fixture, raises
 
 from AutoCarver.config import Constants
@@ -122,13 +122,13 @@ def test_check_values_no_unexpected(sample_categorical_feature: CategoricalFeatu
     # no unexpected value in data
     sample_categorical_feature.value_per_label = {"label1": "value1", "label2": "value2"}
     sample_categorical_feature.values = GroupedList({"value1": ["value1"], "value2": ["value2"]})
-    data = DataFrame({"test_feature": ["label1", "label2"]})
+    data = pd.DataFrame({"test_feature": ["label1", "label2"]})
     sample_categorical_feature.check_values(data)
 
     # unexpected value in data with has_default = false
     sample_categorical_feature.value_per_label = {"label1": "value1"}
     sample_categorical_feature.values = GroupedList({"value1": ["value1"]})
-    data = DataFrame({"test_feature": ["label1", "label3"]})
+    data = pd.DataFrame({"test_feature": ["label1", "label3"]})
     with raises(ValueError):
         sample_categorical_feature.check_values(data)
 
@@ -138,7 +138,7 @@ def test_check_values_no_unexpected(sample_categorical_feature: CategoricalFeatu
     sample_categorical_feature.nan = "N/A"
     sample_categorical_feature.has_nan = True
     sample_categorical_feature.dropna = True
-    data = DataFrame({"test_feature": ["value1", "N/A"]})
+    data = pd.DataFrame({"test_feature": ["value1", "N/A"]})
     sample_categorical_feature.check_values(data)
     sample_categorical_feature.dropna = False
 
@@ -147,7 +147,7 @@ def test_check_values_no_unexpected(sample_categorical_feature: CategoricalFeatu
     sample_categorical_feature.values = GroupedList({"value1": ["value1"]})
     sample_categorical_feature.default = "default_value"
     sample_categorical_feature.has_default = True
-    data = DataFrame({"test_feature": ["label1", "label3"]})
+    data = pd.DataFrame({"test_feature": ["label1", "label3"]})
     sample_categorical_feature.check_values(data)
 
     # Ensure the unexpected value was added
@@ -169,7 +169,7 @@ def test_categorical_feature_update_ordinal_encoding(
         )
 
     # fitting some nans
-    sample_categorical_feature.fit(DataFrame({sample_categorical_feature.version: ["a", "c", "f", "1", nan]}))
+    sample_categorical_feature.fit(pd.DataFrame({sample_categorical_feature.version: ["a", "c", "f", "1", np.nan]}))
     sample_categorical_feature.ordinal_encoding = True
     sample_categorical_feature.update(
         GroupedList({2: [2, 3]}),
@@ -250,7 +250,7 @@ def test_categorical_feature_update_no_ordinal_encoding(
         )
 
     # fitting some nans
-    sample_categorical_feature.fit(DataFrame({sample_categorical_feature.version: ["a", "c", "f", "1", nan]}))
+    sample_categorical_feature.fit(pd.DataFrame({sample_categorical_feature.version: ["a", "c", "f", "1", np.nan]}))
     sample_categorical_feature.ordinal_encoding = False
     sample_categorical_feature.update(GroupedList({"d, e, f": ["c", "d, e, f"]}), convert_labels=True)
     print(sample_categorical_feature.content)
@@ -353,7 +353,7 @@ def test_categorical_feature_get_summary(sample_categorical_feature: Categorical
     assert summary == expected_summary
 
     # fitting some nans
-    sample_categorical_feature.fit(DataFrame({sample_categorical_feature.version: ["a", "b", nan]}))
+    sample_categorical_feature.fit(pd.DataFrame({sample_categorical_feature.version: ["a", "b", np.nan]}))
     sample_categorical_feature.dropna = True
     sample_categorical_feature.ordinal_encoding = True
     summary = sample_categorical_feature.summary
@@ -399,7 +399,7 @@ def test_categorical_feature_fit_initial_values(
     sample_categorical_feature.values = None
     sample_categorical_feature.raw_order = []
 
-    data = DataFrame({"test_feature": ["value1", "value2", "value3", "value1"]})
+    data = pd.DataFrame({"test_feature": ["value1", "value2", "value3", "value1"]})
 
     sample_categorical_feature.fit(data)
 
@@ -419,7 +419,7 @@ def test_categorical_feature_fit_with_nan(sample_categorical_feature: Categorica
     sample_categorical_feature.values = None
     sample_categorical_feature.raw_order = []
 
-    data = DataFrame({"test_feature": ["value1", "value2", "value3", "value1", nan]})
+    data = pd.DataFrame({"test_feature": ["value1", "value2", "value3", "value1", np.nan]})
 
     sample_categorical_feature.fit(data)
 
@@ -440,7 +440,7 @@ def test_fit_existing_values(sample_categorical_feature: CategoricalFeature) -> 
     # unexpected data for feature "already fitted" -> values already set
     sample_categorical_feature.values = GroupedList({"value1": ["value1"], "value2": ["value2"]})
     sample_categorical_feature.raw_order = []
-    data = DataFrame({"test_feature": ["value1", "value2", "value3", "value1"]})
+    data = pd.DataFrame({"test_feature": ["value1", "value2", "value3", "value1"]})
     with raises(ValueError):
         sample_categorical_feature.fit(data)
 
@@ -450,7 +450,7 @@ def test_fit_with_existing_raw_order(sample_categorical_feature: CategoricalFeat
 
     sample_categorical_feature.values = None
     sample_categorical_feature.raw_order = ["value1", "value2"]
-    data = DataFrame({"test_feature": ["value1", "value2", "value3", "value1"]})
+    data = pd.DataFrame({"test_feature": ["value1", "value2", "value3", "value1"]})
     sample_categorical_feature.fit(data)
 
     # Check that raw_order remains unchanged
@@ -472,7 +472,7 @@ def test_fit_check_values_called(sample_categorical_feature: CategoricalFeature,
 
     monkeypatch.setattr(sample_categorical_feature, "check_values", mock_check_values)
 
-    data = DataFrame({"test_feature": ["value1", "value2", "value3", "value1"]})
+    data = pd.DataFrame({"test_feature": ["value1", "value2", "value3", "value1"]})
 
     sample_categorical_feature.fit(data)
 

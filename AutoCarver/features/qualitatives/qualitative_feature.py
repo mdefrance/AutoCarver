@@ -2,8 +2,8 @@
 
 from abc import abstractmethod
 
-from numpy import floating, integer
-from pandas import DataFrame, Series, notna, unique
+import numpy as np
+import pandas as pd
 
 from AutoCarver.features.utils.base_feature import BaseFeature
 from AutoCarver.features.utils.grouped_list import GroupedList
@@ -26,7 +26,7 @@ class QualitativeFeature(BaseFeature):
     #         # updating value_per_label
     #         self.value_per_label.update({label: raw_label})
 
-    def fit(self, X: DataFrame, y: Series | None = None) -> None:
+    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> None:
         """TODO fit stats"""
 
         # checking for feature's unique non-nan values
@@ -48,11 +48,11 @@ class QualitativeFeature(BaseFeature):
         # class-specific checking for unexpected values
         self.check_values(X)
 
-    def check_values(self, X: DataFrame) -> None:
+    def check_values(self, X: pd.DataFrame) -> None:
         """checks for unexpected values from unique values in DataFrame"""
 
         # computing unique labels in dataframe
-        unique_labels = unique(X[self.version])
+        unique_labels = pd.unique(X[self.version])
 
         # converting to labels
         unique_values = unique_labels[:]
@@ -61,7 +61,9 @@ class QualitativeFeature(BaseFeature):
 
         # unexpected values for this feature
         unexpected = [
-            value for value in unique_values if not self.values.contains(value) and notna(value) and value != self.nan
+            value
+            for value in unique_values
+            if not self.values.contains(value) and pd.notna(value) and value != self.nan
         ]
         if len(unexpected) > 0:
             # feature does not have a default value
@@ -198,10 +200,10 @@ class QualitativeFeature(BaseFeature):
             # removing nan
             and value != self.nan
             # removing floats
-            and not isinstance(value, floating)
+            and not isinstance(value, np.floating)
             and not isinstance(value, float)
             # removing ints
-            and not isinstance(value, integer)
+            and not isinstance(value, np.integer)
             and not isinstance(value, int)
         ]
         # removing duplicates
@@ -222,12 +224,12 @@ class QualitativeFeature(BaseFeature):
         return label
 
 
-def nan_unique(x: Series, sort: bool = False) -> list[str]:
+def nan_unique(x: pd.Series, sort: bool = False) -> list[str]:
     """Unique non-NaN values.
 
     Parameters
     ----------
-    x : Series
+    x : pd.Series
         Values to be deduplicated.
     sorted : boolean, optionnal
         Whether or not to sort unique by appearance.
@@ -240,14 +242,14 @@ def nan_unique(x: Series, sort: bool = False) -> list[str]:
 
     # unique values not sorted
     if sort:
-        uniques = unique(x)
+        uniques = pd.unique(x)
 
     # sorting unique values
     else:
         uniques = list(x.value_counts(sort=True, ascending=False).index)
 
     # filtering out nans
-    uniques = [value for value in uniques if notna(value)]
+    uniques = [value for value in uniques if pd.notna(value)]
 
     return uniques
 

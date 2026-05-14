@@ -2,8 +2,8 @@
 
 from abc import ABC
 
-from numpy import mean, median
-from pandas import DataFrame, Series
+import numpy as np
+import pandas as pd
 
 from AutoCarver.combinations.utils import TargetRate
 
@@ -13,12 +13,12 @@ class ContinuousTargetRate(TargetRate, ABC):
 
     __name__ = "continuous_target_rate"
 
-    def compute(self, xagg: Series) -> DataFrame:
+    def compute(self, xagg: pd.Series) -> pd.DataFrame:
         """Computes the target rate.
 
         Parameters
         ----------
-        xagg : DataFrame
+        xagg : pd.DataFrame
             A crosstab.
 
         Returns
@@ -32,7 +32,7 @@ class ContinuousTargetRate(TargetRate, ABC):
             frequency = xagg.apply(len) / xagg.apply(len).sum()
 
             # computing target rate
-            return DataFrame({self.__name__: self._compute(xagg), "frequency": frequency})
+            return pd.DataFrame({self.__name__: self._compute(xagg), "frequency": frequency})
         return None
 
 
@@ -41,9 +41,9 @@ class TargetMean(ContinuousTargetRate):
 
     __name__ = "target_mean"
 
-    def _compute(self, xagg: DataFrame) -> Series:
+    def _compute(self, xagg: pd.DataFrame) -> pd.Series:
         """Computes the mean target rate."""
-        return xagg.apply(mean)
+        return xagg.apply(np.mean)
 
 
 class TargetMedian(ContinuousTargetRate):
@@ -51,9 +51,9 @@ class TargetMedian(ContinuousTargetRate):
 
     __name__ = "target_median"
 
-    def _compute(self, xagg: DataFrame) -> Series:
+    def _compute(self, xagg: pd.DataFrame) -> pd.Series:
         """Computes the mean target rate."""
-        return xagg.apply(median)
+        return xagg.apply(np.median)
 
 
 # class TargetVariance(ContinuousTargetRate):
@@ -61,7 +61,7 @@ class TargetMedian(ContinuousTargetRate):
 
 #     __name__ = "target_variance"
 
-#     def _compute(self, xagg: DataFrame) -> Series:
+#     def _compute(self, xagg: pd.DataFrame) -> pd.Series:
 #         """Computes the mean target rate."""
 #         return xagg.apply(var)
 
@@ -71,7 +71,7 @@ class TargetMedian(ContinuousTargetRate):
 
 #     __name__ = "target_std"
 
-#     def _compute(self, xagg: DataFrame) -> Series:
+#     def _compute(self, xagg: pd.DataFrame) -> pd.Series:
 #         """Computes the mean target rate."""
 #         return xagg.apply(std)
 
@@ -81,7 +81,7 @@ class TargetMedian(ContinuousTargetRate):
 
 #     __name__ = "target_iqr"
 
-#     def _compute(self, xagg: DataFrame) -> Series:
+#     def _compute(self, xagg: pd.DataFrame) -> pd.Series:
 #         """Computes the mean target rate."""
 #         return xagg.apply(iqr)
 
@@ -91,6 +91,6 @@ class TargetMedian(ContinuousTargetRate):
 
 #     __name__ = "target_range"
 
-#     def _compute(self, xagg: DataFrame) -> Series:
+#     def _compute(self, xagg: pd.DataFrame) -> pd.Series:
 #         """Computes the mean target rate."""
 #         return xagg.apply(lambda x: x.max() - x.min())

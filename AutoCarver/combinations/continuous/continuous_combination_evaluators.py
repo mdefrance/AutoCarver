@@ -2,7 +2,7 @@
 
 from abc import ABC
 
-from pandas import Series
+import pandas as pd
 from scipy.stats import kruskal
 
 from AutoCarver.combinations.continuous.continuous_target_rates import (
@@ -36,7 +36,7 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
 
         Parameters
         ----------
-        xagg : DataFrame
+        xagg : pd.DataFrame
             Values taken by y for each of x's modalities.
 
         Returns
@@ -49,12 +49,12 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
         # Kruskal-Wallis' H
         return {"kruskal": kruskal(*tuple(xagg.values))[0]}
 
-    def _grouper(self, xagg: AggregatedSample, groupby: dict[str:str]) -> Series:
+    def _grouper(self, xagg: AggregatedSample, groupby: dict[str, str]) -> pd.Series:
         """Groups values of y
 
         Parameters
         ----------
-        yval : Series
+        yval : pd.Series
             _description_
         groupby : _type_
             _description_

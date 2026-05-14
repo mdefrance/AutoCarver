@@ -2,7 +2,7 @@
 for a binary classification model.
 """
 
-from pandas import DataFrame, Series
+import pandas as pd
 
 from AutoCarver.discretizers.qualitatives import QualitativeDiscretizer
 from AutoCarver.discretizers.quantitatives import QuantitativeDiscretizer
@@ -36,7 +36,7 @@ class Discretizer(BaseDiscretizer):
         super().__init__(features, **dict(kwargs, min_freq=min_freq))
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> None:  # pylint: disable=W0222
         # Checking for binary target and copying X
         sample = self._prepare_data(Sample(X, y))
 
@@ -51,7 +51,7 @@ class Discretizer(BaseDiscretizer):
 
         return self
 
-    def _fit_qualitatives(self, X: DataFrame, y: Series) -> None:
+    def _fit_qualitatives(self, X: pd.DataFrame, y: pd.Series) -> None:
         """Fit the QualitativeDiscretizer on the qualitative features."""
 
         # [Qualitative features] Grouping qualitative features
@@ -62,7 +62,7 @@ class Discretizer(BaseDiscretizer):
             )
             qualitative_discretizer.fit(X, y)
 
-    def _fit_quantitatives(self, X: DataFrame, y: Series) -> None:
+    def _fit_quantitatives(self, X: pd.DataFrame, y: pd.Series) -> None:
         """Fit the QuantitativeDiscretizer on the quantitative features."""
 
         # [Quantitative features] Grouping quantitative features

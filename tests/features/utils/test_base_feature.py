@@ -2,7 +2,7 @@
 
 import json
 
-from pandas import DataFrame
+import pandas as pd
 from pytest import raises
 
 from AutoCarver.config import Constants
@@ -49,7 +49,7 @@ def test_base_feature_content() -> None:
 def test_base_feature_fit() -> None:
     """test method fit"""
     # test fitting
-    data = DataFrame({"test_feature": [1, 2, 3]})
+    data = pd.DataFrame({"test_feature": [1, 2, 3]})
     feature = BaseFeature(name="test_feature")
     feature.fit(data)
     assert feature.is_fitted
@@ -60,7 +60,7 @@ def test_base_feature_fit() -> None:
         feature.fit(data)
 
     # test nan
-    data = DataFrame({"test_feature": [1, 2, 3, None]})
+    data = pd.DataFrame({"test_feature": [1, 2, 3, None]})
     feature = BaseFeature(name="test_feature")
     feature.fit(data)
     assert feature.is_fitted
@@ -70,18 +70,18 @@ def test_base_feature_fit() -> None:
 def test_base_feature_check_values() -> None:
     """test method check_values"""
 
-    data = DataFrame({"test_feature": [1, 2, 3, None]})
+    data = pd.DataFrame({"test_feature": [1, 2, 3, None]})
     feature = BaseFeature(name="test_feature")
     feature.fit(data)
     feature.check_values(data)  # Should not raise any error
 
-    data = DataFrame({"test_feature": [1, 2, 3]})
+    data = pd.DataFrame({"test_feature": [1, 2, 3]})
     feature = BaseFeature(name="test_feature")
     feature.fit(data)
     feature.check_values(data)  # Should not raise any error
 
     # test nan
-    data = DataFrame({"test_feature": [1, 2, 3, None]})
+    data = pd.DataFrame({"test_feature": [1, 2, 3, None]})
     with raises(ValueError):
         feature.check_values(data)
 
@@ -320,7 +320,7 @@ def test_base_feature_load() -> None:
     feature.nan = "nan_value"
     feature.has_nan = True
     feature.update_labels()
-    feature.statistics = DataFrame([{"test": "value"}])
+    feature.statistics = pd.DataFrame([{"test": "value"}])
     feature.history = [
         {"combination": [["value1"], ["value2"]]},
         {"combination": [["value1"], ["value3"]]},
@@ -356,7 +356,7 @@ def test_base_feature_load() -> None:
     feature.nan = "nan_value"
     feature.has_nan = True
     feature.ordinal_encoding = True
-    feature.statistics = DataFrame(
+    feature.statistics = pd.DataFrame(
         [{"col1": "value1", "col2": "value1"}, {"col1": "value2", "col2": "value2"}],
         index=["a", "c"],
     )
@@ -384,7 +384,7 @@ def test_base_feature_load() -> None:
     assert loaded_feature.value_per_label == feature.value_per_label
     assert loaded_feature.raw_order == feature.raw_order
     print(loaded_feature.statistics)
-    assert isinstance(loaded_feature.statistics, DataFrame)
+    assert isinstance(loaded_feature.statistics, pd.DataFrame)
     assert loaded_feature.statistics.shape[0] == 2
     assert loaded_feature.statistics.shape[1] == 2
     assert all(loaded_feature.statistics.index == [0, 1])

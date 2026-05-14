@@ -1,6 +1,6 @@
 """Set of tests for base_discretizers module."""
 
-from numpy import array, nan
+import numpy as np
 from pytest import raises
 
 from AutoCarver.features.utils.grouped_list import GroupedList, is_equal
@@ -10,17 +10,17 @@ def test_is_equal() -> None:
     """tests function is_equal"""
 
     assert not is_equal("a", "b")
-    assert not is_equal("a", nan)
+    assert not is_equal("a", np.nan)
     assert not is_equal(1, 2)
-    assert not is_equal(1, nan)
+    assert not is_equal(1, np.nan)
 
     assert is_equal("a", "a")
     assert is_equal(1, 1)
-    assert is_equal(nan, nan)
+    assert is_equal(np.nan, np.nan)
 
 
 def test_grouped_list_init_with_ndarray() -> None:
-    arr = array([1, 2, 3])
+    arr = np.array([1, 2, 3])
     gl = GroupedList(arr)
     assert gl == [1, 2, 3]
     assert gl.content == {1: [1], 2: [2], 3: [3]}

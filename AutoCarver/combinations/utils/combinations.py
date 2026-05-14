@@ -5,7 +5,7 @@ for any task.
 from collections.abc import Generator
 from typing import Any
 
-from pandas import DataFrame
+import pandas as pd
 
 from AutoCarver.features import BaseFeature, GroupedList
 
@@ -128,12 +128,12 @@ def order_apply_combination(order: GroupedList, combination: list[list[Any]]) ->
     return order_copy
 
 
-def xagg_apply_combination(xagg: DataFrame, feature: BaseFeature) -> DataFrame:
+def xagg_apply_combination(xagg: pd.DataFrame, feature: BaseFeature) -> pd.DataFrame:
     """Applies an order (combination) to a crosstab
 
     Parameters
     ----------
-    xagg : DataFrame
+    xagg : pd.DataFrame
         Crosstab
     order : GroupedList
         Combination of index to apply to the crosstab

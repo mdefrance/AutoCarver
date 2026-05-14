@@ -2,8 +2,8 @@
 for continuous regression tasks.
 """
 
-from numpy import unique
-from pandas import DataFrame, Series
+import numpy as np
+import pandas as pd
 
 from AutoCarver.carvers.utils.base_carver import BaseCarver, Samples
 from AutoCarver.combinations import KruskalCombinations
@@ -69,24 +69,24 @@ class ContinuousCarver(BaseCarver):
 
         Parameters
         ----------
-        X : DataFrame
+        X : pd.DataFrame
             Dataset used to discretize. Needs to have columns has specified in
             ``AutoCarver.features``.
 
-        y : Series
+        y : pd.Series
             Binary target feature with wich the association is maximized.
 
-        X_dev : DataFrame, optional
+        X_dev : pd.DataFrame, optional
             Dataset to evalute the robustness of discretization, by default ``None``
             It should have the same distribution as X.
 
-        y_dev : Series, optional
+        y_dev : pd.Series, optional
             Binary target feature with wich the robustness of discretization is evaluated,
             by default ``None``
 
         Returns
         -------
-        tuple[DataFrame, DataFrame]
+        tuple[pd.DataFrame, pd.DataFrame]
             Copies of (X, X_dev) to be used according to target type
         """
 
@@ -94,13 +94,13 @@ class ContinuousCarver(BaseCarver):
         if str in samples.train.y.apply(type).unique():
             raise ValueError(f"[{self.__name__}] y must be a continuous Series (int or float, not object)")
 
-        y_values = unique(samples.train.y)
+        y_values = np.unique(samples.train.y)
         if len(y_values) <= 2:
             raise ValueError(f"[{self.__name__}] provided y is binary, consider using BinaryCarver instead.")
         # Checking for binary target and copying X
         return super()._prepare_data(samples)
 
-    def _aggregator(self, X: DataFrame, y: Series) -> dict[str, DataFrame]:
+    def _aggregator(self, X: pd.DataFrame, y: pd.Series) -> dict[str, pd.DataFrame]:
         """Computes y values for modalities of specified features and ensures the ordering
         according to the known labels
 
@@ -108,16 +108,16 @@ class ContinuousCarver(BaseCarver):
         ----------
         features : list[str]
             _description_
-        X : DataFrame
+        X : pd.DataFrame
             _description_
-        y : Series
+        y : pd.Series
             _description_
         labels_orders : dict[str, GroupedList]
             _description_
 
         Returns
         -------
-        dict[str, DataFrame]
+        dict[str, pdDataFrame]
             _description_
         """
         # checking for empty datasets
@@ -130,7 +130,7 @@ class ContinuousCarver(BaseCarver):
         return yvals
 
 
-def get_target_values_by_modality(X: DataFrame, y: Series, feature: BaseFeature) -> dict:
+def get_target_values_by_modality(X: pd.DataFrame, y: pd.Series, feature: BaseFeature) -> dict:
     """Computes y values for modalities of specified features and ensures the ordering
     according to the known labels"""
 

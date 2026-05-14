@@ -4,7 +4,7 @@ for multiclass classification tasks.
 
 from typing import Any
 
-from pandas import DataFrame, Series, unique
+import pandas as pd
 
 from AutoCarver.carvers.binary_carver import BinaryCarver
 from AutoCarver.carvers.utils.base_carver import Samples
@@ -50,31 +50,31 @@ class MulticlassCarver(BinaryCarver):
 
         Parameters
         ----------
-        X : DataFrame
+        X : pd.DataFrame
             Dataset used to discretize. Needs to have columns has specified in
             ``AutoCarver.features``.
 
-        y : Series
+        y : pd.Series
             Binary target feature with wich the association is maximized.
 
-        X_dev : DataFrame, optional
+        X_dev : pd.DataFrame, optional
             Dataset to evalute the robustness of discretization, by default ``None``
             It should have the same distribution as X.
 
-        y_dev : Series, optional
+        y_dev : pd.Series, optional
             Binary target feature with wich the robustness of discretization is evaluated,
             by default ``None``
 
         Returns
         -------
-        tuple[DataFrame, DataFrame, dict[str, Callable]]
+        tuple[DataFrame, pd.DataFrame, dict[str, Callable]]
             Copies of (X, X_dev) and helpers to be used according to target type
         """
         # converting target to str
         samples.train.y = samples.train.y.astype(str)
 
         # multiclass target, checking values
-        if len(unique(samples.train.y)) <= 2:
+        if len(pd.unique(samples.train.y)) <= 2:
             raise ValueError(f"[{self.__name__}] provided y is binary, consider using BinaryCarver instead.")
 
         # checking for dev target's values
@@ -98,11 +98,11 @@ class MulticlassCarver(BinaryCarver):
     @extend_docstring(BinaryCarver.fit)
     def fit(
         self,
-        X: DataFrame,
-        y: Series,
+        X: pd.DataFrame,
+        y: pd.Series,
         *,
-        X_dev: DataFrame | None = None,
-        y_dev: Series | None = None,
+        X_dev: pd.DataFrame | None = None,
+        y_dev: pd.Series | None = None,
     ) -> None:
         # initiating samples
         samples = Samples(train=Sample(X, y), dev=Sample(X_dev, y_dev))
@@ -168,7 +168,7 @@ class MulticlassCarver(BinaryCarver):
         return self
 
 
-def get_one_vs_rest(y: Series, y_class: Any) -> Series:
+def get_one_vs_rest(y: pd.Series, y_class: Any) -> pd.Series:
     """converts a multiclass target into binary of specific y_class"""
     if y is not None:
         return (y == y_class).astype(int)

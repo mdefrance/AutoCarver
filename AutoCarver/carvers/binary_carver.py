@@ -2,8 +2,8 @@
 for binary classification tasks.
 """
 
-from numpy import unique
-from pandas import DataFrame, Series, crosstab
+import numpy as np
+import pandas as pd
 
 from AutoCarver.carvers.utils.base_carver import BaseCarver, Samples
 from AutoCarver.combinations import TschuprowtCombinations
@@ -75,48 +75,48 @@ class BinaryCarver(BaseCarver):
 
         Parameters
         ----------
-        X : DataFrame
+        X : pd.DataFrame
             Dataset used to discretize. Needs to have columns has specified in
             ``AutoCarver.features``.
 
-        y : Series
+        y : pd.Series
             Binary target feature with wich the association is maximized.
 
-        X_dev : DataFrame, optional
+        X_dev : pd.DataFrame, optional
             Dataset to evalute the robustness of discretization, by default ``None``
             It should have the same distribution as X.
 
-        y_dev : Series, optional
+        y_dev : pd.Series, optional
             Binary target feature with wich the robustness of discretization is evaluated,
             by default ``None``
 
         Returns
         -------
-        tuple[DataFrame, DataFrame, dict[str, Callable]]
+        tuple[DataFrame, pd.DataFrame, dict[str, Callable]]
             Copies of (X, X_dev) and helpers to be used according to target type
         """
         # binary target, checking values
-        y_values = unique(samples.train.y)
+        y_values = np.unique(samples.train.y)
         if not ((0 in y_values) and (1 in y_values)) or len(y_values) != 2:
             raise ValueError(f"[{self.__name__}] y must be a binary Series of 0 and 1 (int or float, not object)")
 
         # Checking for binary target and discretizing X
         return super()._prepare_data(samples)
 
-    def _aggregator(self, X: DataFrame, y: Series) -> dict[str, DataFrame]:
+    def _aggregator(self, X: pd.DataFrame, y: pd.Series) -> dict[str, pd.DataFrame]:
         """Computes crosstabs for specified features and ensures that the crosstab is ordered
         according to the known labels
 
         Parameters
         ----------
-        X : DataFrame
+        X : pd.DataFrame
             _description_
-        y : Series
+        y : pd.Series
             _description_
 
         Returns
         -------
-        dict[str, DataFrame]
+        dict[str, pd.DataFrame]
             dict of crosstab(X, y) by feature name
         """
         # checking for empty datasets (dev)
@@ -129,12 +129,12 @@ class BinaryCarver(BaseCarver):
         return xtabs
 
 
-def get_crosstab(X: DataFrame, y: Series, feature: BaseFeature) -> dict:
+def get_crosstab(X: pd.DataFrame, y: pd.Series, feature: BaseFeature) -> dict:
     """Computes crosstabs for specified features and ensures that the crosstab is ordered
     according to the known labels"""
 
     # computing crosstab between binary y and categorical X
-    xtab = crosstab(X[feature.version], y)
+    xtab = pd.crosstab(X[feature.version], y)
 
     # reindexing to ensure the right order
     return xtab.reindex(feature.labels, fill_value=0)

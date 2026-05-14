@@ -1,6 +1,6 @@
 """Filters based on association measures between Qualitative features."""
 
-from pandas import DataFrame
+import pandas as pd
 
 from AutoCarver.features import BaseFeature, get_versions
 from AutoCarver.selectors.filters.base_filters import BaseFilter
@@ -19,7 +19,7 @@ class QualitativeFilter(BaseFilter):
     is_x_qualitative = True
 
     @extend_docstring(BaseFilter.filter)
-    def filter(self, X: DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:
+    def filter(self, X: pd.DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:
         # filtering ranks to avoid correlation with already removed features
         filtered_ranks = ranks[:]
 
@@ -46,7 +46,7 @@ class QualitativeFilter(BaseFilter):
         return filtered
 
     def _compute_worst_correlation(
-        self, X: DataFrame, feature: BaseFeature, rank: list[BaseFeature]
+        self, X: pd.DataFrame, feature: BaseFeature, rank: list[BaseFeature]
     ) -> tuple[str, float]:
         """Computes maximum association between a feature and features
         more associated to the target (according to ranks)

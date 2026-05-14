@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-from pandas import DataFrame, Series, option_context
+import pandas as pd
 
 from AutoCarver.config import Constants
 from AutoCarver.features.utils.grouped_list import GroupedList
@@ -130,7 +130,7 @@ class BaseFeature(ABC):
         self.max_n_chars = kwargs.get("max_n_chars", 50)
 
         # initiating feature's trained statistics
-        self._statistics: dict[str:Any] = kwargs.get("statistics", None)
+        self._statistics: dict[str, Any] = kwargs.get("statistics", None)
 
         # measures and filters used by selectors
         self.measures = kwargs.get("measures", {})
@@ -163,12 +163,12 @@ class BaseFeature(ABC):
         self._has_nan = value
 
     @property
-    def statistics(self) -> DataFrame:
+    def statistics(self) -> pd.DataFrame:
         """Feature's trained statistics"""
         # conversion to dataframe
         stats = self._statistics
         if stats is not None:
-            stats = DataFrame(stats)
+            stats = pd.DataFrame(stats)
 
         # convertion to ordinal encoding if requested
         if self.ordinal_encoding and stats is not None:
@@ -182,15 +182,15 @@ class BaseFeature(ABC):
         return stats
 
     @statistics.setter
-    def statistics(self, value: DataFrame) -> None:
+    def statistics(self, value: pd.DataFrame) -> None:
         """Feature's trained statistics"""
 
         # case for binary targets
-        if isinstance(value, DataFrame):
+        if isinstance(value, pd.DataFrame):
             self._statistics = value.to_dict()
 
         # case for continuous targets
-        elif isinstance(value, Series):
+        elif isinstance(value, pd.Series):
             self._statistics = value.to_frame().to_dict()
 
         # case for selectors
@@ -202,10 +202,10 @@ class BaseFeature(ABC):
             raise ValueError(f"Trying to set statistics with type {type(value)}")
 
     @property
-    def history(self) -> DataFrame:
+    def history(self) -> pd.DataFrame:
         """Feature's combination history"""
         if self._history is not None:
-            return DataFrame(self._history)
+            return pd.DataFrame(self._history)
         return []
 
     @history.setter
@@ -388,7 +388,7 @@ class BaseFeature(ABC):
             selected = {}
 
             # checking for viable combination without dropna
-            with option_context("future.no_silent_downcasting", True):
+            with pd.option_context("future.no_silent_downcasting", True):
                 viable = history["viable"].fillna(False).astype(bool)
             if viable.any():
                 # checking for requested dropna
@@ -430,7 +430,7 @@ class BaseFeature(ABC):
         """updates feature's statistics index with values"""
 
         # updating feature's statistics
-        if self.statistics is not None and isinstance(self.statistics, DataFrame):
+        if self.statistics is not None and isinstance(self.statistics, pd.DataFrame):
             self.statistics.rename(index={kept_label: kept_value}, inplace=True)
 
     @abstractmethod
@@ -465,7 +465,7 @@ class BaseFeature(ABC):
         # updating labels accordingly
         self.update_labels()
 
-    def fit(self, X: DataFrame, y: Series | None = None) -> None:
+    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> None:
         """Fits the feature to a DataFrame"""
         _, _ = X, y  # unused attributes
 
@@ -479,7 +479,7 @@ class BaseFeature(ABC):
 
         self.is_fitted = True  # feature is fitted
 
-    def check_values(self, X: DataFrame) -> None:
+    def check_values(self, X: pd.DataFrame) -> None:
         """checks for unexpected values from unique values in DataFrame"""
 
         # checking for nans whereas at training none were witnessed
@@ -500,7 +500,7 @@ class BaseFeature(ABC):
         """historizes a combination"""
         self.history.append(combination)
 
-    def to_json(self, light_mode: bool = False) -> str:
+    def to_json(self, light_mode: bool = False) -> dict[str, Any]:
         """Converts to JSON format.
 
         To be used with ``json.dump``.
@@ -512,7 +512,7 @@ class BaseFeature(ABC):
 
         Returns
         -------
-        str
+        dict[str, Any]
             JSON serialized object
         """
 

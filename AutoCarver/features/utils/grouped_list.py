@@ -4,8 +4,8 @@ for a binary classification model.
 
 from typing import Any
 
-from numpy import ndarray, sort
-from pandas import isna
+import numpy as np
+import pandas as pd
 
 
 class GroupedList(list):
@@ -14,7 +14,7 @@ class GroupedList(list):
     def __repr__(self) -> str:
         return f"GroupedList({super().__repr__()})"
 
-    def __init__(self, iterable: ndarray | dict | list | tuple = ()) -> None:
+    def __init__(self, iterable: np.ndarray | dict | list | tuple = ()) -> None:
         """
         Parameters
         ----------
@@ -22,7 +22,7 @@ class GroupedList(list):
             List-like or :class:`GroupedList`, by default ``()``
         """
         # case -1: iterable is an array
-        if isinstance(iterable, ndarray):
+        if isinstance(iterable, np.ndarray):
             iterable = list(iterable)
 
         # case 0: iterable is the content dict
@@ -264,7 +264,7 @@ class GroupedList(list):
         keys_float = [key for key in self if not isinstance(key, str)]
 
         # sorting and merging keys
-        keys = list(sort(keys_str)) + list(sort(keys_float))
+        keys = list(np.sort(keys_str)) + list(np.sort(keys_float))
 
         # recreating an ordered GroupedList
         sorted_list = GroupedList({k: self.get(k) for k in keys})
@@ -395,7 +395,7 @@ def is_equal(a: Any, b: Any) -> bool:
     equal = a == b
 
     # Case where a and b are NaNs
-    if isna(a) and isna(b):
+    if pd.isna(a) and pd.isna(b):
         equal = True
 
     return equal

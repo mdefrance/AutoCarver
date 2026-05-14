@@ -1,4 +1,4 @@
-from pandas import DataFrame
+import pandas as pd
 from pytest import FixtureRequest, fixture
 
 from AutoCarver.features import BaseFeature
@@ -8,14 +8,14 @@ THRESHOLD = 1.0
 
 
 @fixture
-def sample_data() -> DataFrame:
+def sample_data() -> pd.DataFrame:
     data = {
         "feature1": [0, 1, 0, 1, 0, 1, 0],
         "feature2": [2, 0, 2, 0, 2, 0, 2],
         "feature3": [-3, 0, -3, 0, -3, -3, -3],
         "feature4": [0, 1, 2, 0, 1, 2, 0],
     }
-    return DataFrame(data)
+    return pd.DataFrame(data)
 
 
 @fixture
@@ -33,7 +33,9 @@ def filter(request: FixtureRequest) -> QualitativeFilter:
     return request.param(THRESHOLD)
 
 
-def test_qualitative_filter(filter: QualitativeFilter, sample_data: DataFrame, sample_ranks: list[BaseFeature]) -> None:
+def test_qualitative_filter(
+    filter: QualitativeFilter, sample_data: pd.DataFrame, sample_ranks: list[BaseFeature]
+) -> None:
     # test with negatively and 100% correlated features
     filter.threshold = 0.3
     filtered_features = filter.filter(sample_data, sample_ranks)
@@ -55,7 +57,7 @@ def test_qualitative_filter(filter: QualitativeFilter, sample_data: DataFrame, s
     assert len(filtered_features) == 1, "sould keep the best feature"
 
 
-def test_filter(filter: QualitativeFilter, sample_data: DataFrame, sample_ranks: list[BaseFeature]) -> None:
+def test_filter(filter: QualitativeFilter, sample_data: pd.DataFrame, sample_ranks: list[BaseFeature]) -> None:
     # testing type
     assert filter.is_x_qualitative, "x should be qulitative"
     assert not filter.is_x_quantitative, "x should be qualitative"

@@ -2,17 +2,11 @@
 
 import json
 
-from pandas import DataFrame
+import pandas as pd
 from pytest import fixture, raises
 
-from AutoCarver.features import (
-    BaseFeature,
-    CategoricalFeature,
-    OrdinalFeature,
-    QualitativeFeature,
-    QuantitativeFeature,
-)
-from AutoCarver.features.features import (  # Replace 'your_module' with the actual module name
+from AutoCarver.features import BaseFeature, CategoricalFeature, OrdinalFeature, QualitativeFeature, QuantitativeFeature
+from AutoCarver.features.features import (
     Features,
     cast_features,
     get_names,
@@ -400,7 +394,7 @@ def test_features_keep(features):
 
 
 # def test_features_check_values(features):
-#     X = DataFrame({"cat1": ["a", "b"], "ord1": ["low", "medium"], "quant1": [1, 2]})
+#     X = pd.DataFrame({"cat1": ["a", "b"], "ord1": ["low", "medium"], "quant1": [1, 2]})
 
 #     with raises(RuntimeError):
 #         features.check_values(X)
@@ -412,7 +406,7 @@ def test_features_keep(features):
 
 
 # def test_features_fit(features):
-#     X = DataFrame({"cat1": ["a", "b"], "ord1": ["low", "medium"], "quant1": [1, 2]})
+#     X = pd.DataFrame({"cat1": ["a", "b"], "ord1": ["low", "medium"], "quant1": [1, 2]})
 
 #     for feature in features:
 #         feature.is_fitted = False
@@ -424,7 +418,7 @@ def test_features_keep(features):
 
 
 # def test_features_fillna(features):
-#     X = DataFrame({"cat1": ["a", None], "ord1": ["low", None], "quant1": [1, None]})
+#     X = pd.DataFrame({"cat1": ["a", None], "ord1": ["low", None], "quant1": [1, None]})
 
 #     for feature in features:
 #         feature.has_nan = True
@@ -438,7 +432,7 @@ def test_features_keep(features):
 
 
 # def test_features_unfillna(features):
-#     X = DataFrame({"cat1": ["a", -1], "ord1": ["low", -1], "quant1": [1, -1]})
+#     X = pd.DataFrame({"cat1": ["a", -1], "ord1": ["low", -1], "quant1": [1, -1]})
 
 #     for feature in features:
 #         feature.has_nan = True
@@ -598,7 +592,7 @@ def test_features_get_summaries(features):
         if feature.values is None:
             feature.values = GroupedList([1, 2, 3])
     summaries = features.summary
-    assert isinstance(summaries, DataFrame)
+    assert isinstance(summaries, pd.DataFrame)
     summary_features = list(summaries.reset_index(drop=False)["feature"])
     for feature in features:
         assert feature.__repr__() in summary_features

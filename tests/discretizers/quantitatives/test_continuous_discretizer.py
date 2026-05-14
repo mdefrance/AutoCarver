@@ -1,7 +1,7 @@
 """Set of tests for quantitative_discretizers module."""
 
-from numpy import allclose, array, inf, nan
-from pandas import DataFrame
+import numpy as np
+import pandas as pd
 from pytest import raises
 
 from AutoCarver.discretizers.quantitatives.continuous_discretizer import (
@@ -24,7 +24,7 @@ def test_get_remaining_quantiles_no_remaining():
     expected = []
     print(expected, result)
     assert len(result) == 0
-    assert allclose(result, expected)
+    assert np.allclose(result, expected)
 
 
 def test_get_remaining_quantiles_full_remaining():
@@ -36,7 +36,7 @@ def test_get_remaining_quantiles_full_remaining():
     result = get_remaining_quantiles(remaining_len_df, initial_len_df, q)
     expected = [0.25, 0.5, 0.75]
     assert len(result) == q - 1
-    assert allclose(result, expected)
+    assert np.allclose(result, expected)
 
     # large q
     remaining_len_df = 1000
@@ -66,7 +66,7 @@ def test_get_remaining_quantiles_full_remaining():
     ]
     print(expected, result)
     assert len(result) == q - 1
-    assert allclose(result, expected)
+    assert np.allclose(result, expected)
 
 
 def test_get_remaining_quantiles_edge_case():
@@ -79,7 +79,7 @@ def test_get_remaining_quantiles_edge_case():
     expected = [0.5]
     print(expected, result)
     assert len(result) == 1
-    assert allclose(result, expected)
+    assert np.allclose(result, expected)
 
     # below threshold
     remaining_len_df = 374
@@ -89,12 +89,12 @@ def test_get_remaining_quantiles_edge_case():
     expected = []
     print(expected, result)
     assert len(result) == 0
-    assert allclose(result, expected)
+    assert np.allclose(result, expected)
 
 
 def test_compute_quantiles_empty_array():
-    """Test compute_quantiles with an empty array"""
-    df_feature = array([])
+    """Test compute_quantiles with an empty np.array"""
+    df_feature = np.array([])
     q = 4
     len_df = 10
     with raises(ValueError):
@@ -104,55 +104,55 @@ def test_compute_quantiles_empty_array():
 def test_compute_quantiles_one_remaining():
     """Test compute_quantiles with a large q value"""
     # with q = len_df
-    df_feature = array([1, 2, 3, 4, 5])
+    df_feature = np.array([1, 2, 3, 4, 5])
     q = 5
     initial_len_df = 20
     result = compute_quantiles(df_feature, q, initial_len_df)
     expected = [max(df_feature)]
-    assert allclose(result, expected)
+    assert np.allclose(result, expected)
 
 
 def test_compute_quantiles_some_remaining():
     """Test compute_quantiles with a large q value"""
-    df_feature = array([1, 2, 3, 4, 5, 6])
+    df_feature = np.array([1, 2, 3, 4, 5, 6])
     q = 10
     initial_len_df = 20
     result = compute_quantiles(df_feature, q, initial_len_df)
     expected = [2, 4]
-    assert allclose(result, expected)
+    assert np.allclose(result, expected)
 
-    df_feature = array([1, 2, 3, 4, 5])
+    df_feature = np.array([1, 2, 3, 4, 5])
     result = compute_quantiles(df_feature, q, initial_len_df)
     expected = [3]
-    assert allclose(result, expected)
+    assert np.allclose(result, expected)
 
 
 def test_compute_quantiles_full_remaining():
     """Test compute_quantiles with a large q value"""
     # with q = len_df
-    df_feature = array([1, 2, 3, 4, 5])
+    df_feature = np.array([1, 2, 3, 4, 5])
     q = 5
     initial_len_df = len(df_feature)
     result = compute_quantiles(df_feature, q, initial_len_df)
     expected = [1, 2, 3, 4]
-    assert allclose(result, expected)
+    assert np.allclose(result, expected)
 
     # with q < len_df
-    df_feature = array([1, 2, 3, 4, 5])
+    df_feature = np.array([1, 2, 3, 4, 5])
     q = 2
     initial_len_df = len(df_feature)
     result = compute_quantiles(df_feature, q, initial_len_df)
     expected = [3]
-    assert allclose(result, expected)
+    assert np.allclose(result, expected)
     q = 3
     result = compute_quantiles(df_feature, q, initial_len_df)
     expected = [2, 3]
-    assert allclose(result, expected)
+    assert np.allclose(result, expected)
 
 
 def test_np_find_quantiles_empty_array():
-    """Test np_find_quantiles with an empty array"""
-    df_feature = array([])
+    """Test np_find_quantiles with an empty np.array"""
+    df_feature = np.array([])
     q = 4
     initial_len_df = 10
     quantiles = ["test"]
@@ -162,7 +162,7 @@ def test_np_find_quantiles_empty_array():
 
 def test_np_find_quantiles_no_overrepresented_value():
     """Test np_find_quantiles with no over-represented value"""
-    df_feature = array([1, 2, 3, 4, 5])
+    df_feature = np.array([1, 2, 3, 4, 5])
     q = 2
     initial_len_df = 5
     quantiles = ["test"]
@@ -174,7 +174,7 @@ def test_np_find_quantiles_no_overrepresented_value():
 def test_np_find_quantiles_with_overrepresented_value():
     """Test np_find_quantiles with an over-represented value"""
     # with over-represented value at begining
-    df_feature = array([1, 1, 1, 1, 1, 1, 2, 3, 4, 5])
+    df_feature = np.array([1, 1, 1, 1, 1, 1, 2, 3, 4, 5])
     q = 4
     initial_len_df = len(df_feature)
     quantiles = ["test"]
@@ -183,7 +183,7 @@ def test_np_find_quantiles_with_overrepresented_value():
     assert result == expected
 
     # with over-represented value at end
-    df_feature = array([2, 3, 4, 5, 1, 1, 1, 1, 1, 1])
+    df_feature = np.array([2, 3, 4, 5, 1, 1, 1, 1, 1, 1])
     q = 4
     initial_len_df = len(df_feature)
     quantiles = ["test"]
@@ -193,7 +193,7 @@ def test_np_find_quantiles_with_overrepresented_value():
     assert result == expected
 
     # with over-represented value at middle
-    df_feature = array(
+    df_feature = np.array(
         [
             2,
             3,
@@ -227,7 +227,7 @@ def test_np_find_quantiles_with_overrepresented_value():
 def test_np_find_quantiles_with_multiple_overrepresented_values():
     """Test np_find_quantiles with multiple over-represented values"""
     # with sevveral over-represented value at begining
-    df_feature = array(
+    df_feature = np.array(
         [
             2,
             3,
@@ -265,7 +265,7 @@ def test_np_find_quantiles_with_multiple_overrepresented_values():
 
 def test_find_quantiles_no_overrepresented_value():
     """Test find_quantiles with no over-represented value"""
-    df_feature = array([1, 2, 3, 4, 5])
+    df_feature = np.array([1, 2, 3, 4, 5])
     q = 2
     result = find_quantiles(df_feature, q)
     expected = [3]
@@ -276,28 +276,28 @@ def test_find_quantiles_with_missing_values():
     """Test find_quantiles with missing values"""
 
     # with missing values
-    df_feature = array([1, 2, 3, 4, nan])
+    df_feature = np.array([1, 2, 3, 4, np.nan])
     q = 2
     result = find_quantiles(df_feature, q)
     expected = [2]
     assert result == expected
 
     # with missing values and over-represented value
-    df_feature = array([1, 1, 1, 1, 1, 1, 2, 3, 4, 5, nan])
+    df_feature = np.array([1, 1, 1, 1, 1, 1, 2, 3, 4, 5, np.nan])
     q = 4
     result = find_quantiles(df_feature, q)
     expected = [1, 5]
     assert result == expected
 
     # with missing values and over-represented value at end
-    df_feature = array([2, 3, 4, 5, 2, 3, 4, 5, 1, 1, 1, 1, 1, 1, nan])
+    df_feature = np.array([2, 3, 4, 5, 2, 3, 4, 5, 1, 1, 1, 1, 1, 1, np.nan])
     q = 4
     result = find_quantiles(df_feature, q)
     expected = [1, 3]
     assert result == expected
 
     # with missing values and over-represented value at middle
-    df_feature = array(
+    df_feature = np.array(
         [
             2,
             3,
@@ -317,7 +317,7 @@ def test_find_quantiles_with_missing_values():
             3,
             4,
             5,
-            nan,
+            np.nan,
         ]
     )
     q = 4
@@ -329,21 +329,21 @@ def test_find_quantiles_with_missing_values():
 def test_find_quantiles_with_overrepresented_value():
     """Test find_quantiles with an over-represented value"""
     # with over-represented value at begining
-    df_feature = array([1, 1, 1, 1, 1, 1, 2, 3, 4, 5])
+    df_feature = np.array([1, 1, 1, 1, 1, 1, 2, 3, 4, 5])
     q = 4
     result = find_quantiles(df_feature, q)
     expected = [1, 3]
     assert result == expected
 
     # with over-represented value at begining and not enough alue for a quantiles
-    df_feature = array([1, 1, 1, 1, 1, 1, 4, 5])
+    df_feature = np.array([1, 1, 1, 1, 1, 1, 4, 5])
     q = 4
     result = find_quantiles(df_feature, q)
     expected = [1, 5]
     assert result == expected
 
     # with over-represented value at end
-    df_feature = array([2, 3, 4, 5, 1, 1, 1, 1, 1, 1])
+    df_feature = np.array([2, 3, 4, 5, 1, 1, 1, 1, 1, 1])
     q = 4
     result = find_quantiles(df_feature, q)
     expected = [1, 3]
@@ -351,7 +351,7 @@ def test_find_quantiles_with_overrepresented_value():
     assert result == expected
 
     # with over-represented value at middle
-    df_feature = array(
+    df_feature = np.array(
         [
             2,
             3,
@@ -382,7 +382,7 @@ def test_find_quantiles_with_overrepresented_value():
 def test_find_quantiles_with_multiple_overrepresented_values():
     """Test find_quantiles with multiple over-represented values"""
     # with sevveral over-represented value at begining
-    df_feature = array(
+    df_feature = np.array(
         [
             2,
             3,
@@ -419,12 +419,12 @@ def test_find_quantiles_with_multiple_overrepresented_values():
 def test_fit_feature_no_overrepresented_value():
     """Test fit_feature with no over-represented value"""
     feature = QuantitativeFeature("feature1")
-    df_feature = DataFrame({"feature1": array([1, 2, 3, 4, 5])})
+    df_feature = pd.DataFrame({"feature1": np.array([1, 2, 3, 4, 5])})
     q = 2
     result = fit_feature(feature, df_feature, q)
     expected = [3]
     assert result[0] == feature.version
-    assert result[1] == GroupedList(expected + [inf])
+    assert result[1] == GroupedList(expected + [np.inf])
 
 
 def test_fit_feature_with_missing_values():
@@ -432,36 +432,36 @@ def test_fit_feature_with_missing_values():
 
     # with missing values
     feature = QuantitativeFeature("feature1")
-    df_feature = DataFrame({"feature1": array([1, 2, 3, 4, nan])})
+    df_feature = pd.DataFrame({"feature1": np.array([1, 2, 3, 4, np.nan])})
     q = 2
     result = fit_feature(feature, df_feature, q)
     expected = [2]
     assert result[0] == feature.version
-    assert result[1] == GroupedList(expected + [inf])
+    assert result[1] == GroupedList(expected + [np.inf])
 
     # with missing values and over-represented value
     feature = QuantitativeFeature("feature1")
-    df_feature = DataFrame({"feature1": array([1, 1, 1, 1, 1, 1, 2, 3, 4, 5, nan])})
+    df_feature = pd.DataFrame({"feature1": np.array([1, 1, 1, 1, 1, 1, 2, 3, 4, 5, np.nan])})
     q = 4
     result = fit_feature(feature, df_feature, q)
     expected = [1, 5]
     assert result[0] == feature.version
-    assert result[1] == GroupedList(expected + [inf])
+    assert result[1] == GroupedList(expected + [np.inf])
 
     # with missing values and over-represented value at end
     feature = QuantitativeFeature("feature1")
-    df_feature = DataFrame({"feature1": array([2, 3, 4, 5, 2, 3, 4, 5, 1, 1, 1, 1, 1, 1, nan])})
+    df_feature = pd.DataFrame({"feature1": np.array([2, 3, 4, 5, 2, 3, 4, 5, 1, 1, 1, 1, 1, 1, np.nan])})
     q = 4
     result = fit_feature(feature, df_feature, q)
     expected = [1, 3]
     assert result[0] == feature.version
-    assert result[1] == GroupedList(expected + [inf])
+    assert result[1] == GroupedList(expected + [np.inf])
 
     # with missing values and over-represented value at middle
     feature = QuantitativeFeature("feature1")
-    df_feature = DataFrame(
+    df_feature = pd.DataFrame(
         {
-            "feature1": array(
+            "feature1": np.array(
                 [
                     2,
                     3,
@@ -481,7 +481,7 @@ def test_fit_feature_with_missing_values():
                     3,
                     4,
                     5,
-                    nan,
+                    np.nan,
                 ]
             )
         }
@@ -490,44 +490,44 @@ def test_fit_feature_with_missing_values():
     result = fit_feature(feature, df_feature, q)
     expected = [1, 3, 4]
     assert result[0] == feature.version
-    assert result[1] == GroupedList(expected + [inf])
+    assert result[1] == GroupedList(expected + [np.inf])
 
 
 def test_fit_feature_with_overrepresented_value():
     """Test fit_feature with an over-represented value"""
     # with over-represented value at begining
     feature = QuantitativeFeature("feature1")
-    df_feature = DataFrame({"feature1": array([1, 1, 1, 1, 1, 1, 2, 3, 4, 5])})
+    df_feature = pd.DataFrame({"feature1": np.array([1, 1, 1, 1, 1, 1, 2, 3, 4, 5])})
     q = 4
     result = fit_feature(feature, df_feature, q)
     expected = [1, 3]
     assert result[0] == feature.version
-    assert result[1] == GroupedList(expected + [inf])
+    assert result[1] == GroupedList(expected + [np.inf])
 
     # with over-represented value at begining and not enough alue for a quantiles
     feature = QuantitativeFeature("feature1")
-    df_feature = DataFrame({"feature1": array([1, 1, 1, 1, 1, 1, 4, 5])})
+    df_feature = pd.DataFrame({"feature1": np.array([1, 1, 1, 1, 1, 1, 4, 5])})
     q = 4
     result = fit_feature(feature, df_feature, q)
     expected = [1, 5]
     assert result[0] == feature.version
-    assert result[1] == GroupedList(expected + [inf])
+    assert result[1] == GroupedList(expected + [np.inf])
 
     # with over-represented value at end
     feature = QuantitativeFeature("feature1")
-    df_feature = DataFrame({"feature1": array([2, 3, 4, 5, 1, 1, 1, 1, 1, 1])})
+    df_feature = pd.DataFrame({"feature1": np.array([2, 3, 4, 5, 1, 1, 1, 1, 1, 1])})
     q = 4
     result = fit_feature(feature, df_feature, q)
     expected = [1, 3]
     print(expected, result)
     assert result[0] == feature.version
-    assert result[1] == GroupedList(expected + [inf])
+    assert result[1] == GroupedList(expected + [np.inf])
 
     # with over-represented value at middle
     feature = QuantitativeFeature("feature1")
-    df_feature = DataFrame(
+    df_feature = pd.DataFrame(
         {
-            "feature1": array(
+            "feature1": np.array(
                 [
                     2,
                     3,
@@ -555,16 +555,16 @@ def test_fit_feature_with_overrepresented_value():
     result = fit_feature(feature, df_feature, q)
     expected = [1, 3, 4]
     assert result[0] == feature.version
-    assert result[1] == GroupedList(expected + [inf])
+    assert result[1] == GroupedList(expected + [np.inf])
 
 
 def test_fit_feature_with_multiple_overrepresented_values():
     """Test fit_feature with multiple over-represented values"""
     # with sevveral over-represented value at begining
     feature = QuantitativeFeature("feature1")
-    df_feature = DataFrame(
+    df_feature = pd.DataFrame(
         {
-            "feature1": array(
+            "feature1": np.array(
                 [
                     2,
                     3,
@@ -598,7 +598,7 @@ def test_fit_feature_with_multiple_overrepresented_values():
     expected = [1, 2, 4]
     print(expected, result)
     assert result[0] == feature.version
-    assert result[1] == GroupedList(expected + [inf])
+    assert result[1] == GroupedList(expected + [np.inf])
 
 
 def test_continuous_discretizer_initialization():
@@ -654,33 +654,33 @@ def test_continuous_discretizer_fit():
             5,
         ],
         "feature2": [
-            nan,
+            np.nan,
             3,
             4,
-            nan,
+            np.nan,
             1,
             1,
             1,
             1,
             1,
-            nan,
-            nan,
+            np.nan,
+            np.nan,
             2,
             2,
             2,
             2,
             2,
-            nan,
-            nan,
+            np.nan,
+            np.nan,
             5,
-            nan,
+            np.nan,
             3,
             4,
             5,
         ],
     }
 
-    df = DataFrame(data)
+    df = pd.DataFrame(data)
 
     # Fit the discretizer
     discretizer.fit(df)
@@ -688,13 +688,13 @@ def test_continuous_discretizer_fit():
     # Check if the features have been fitted
     assert feature1.has_nan is False
     assert feature2.has_nan is True
-    assert feature1.content == {1: [1], 2: [2], 4: [4], inf: [inf]}
-    assert feature2.content == {1.0: [1.0], 2.0: [2.0], 5.0: [5.0], inf: [inf]}
+    assert feature1.content == {1: [1], 2: [2], 4: [4], np.inf: [np.inf]}
+    assert feature2.content == {1.0: [1.0], 2.0: [2.0], 5.0: [5.0], np.inf: [np.inf]}
 
     # Check if the discretizer has been fitted
     transformed_df = discretizer.transform(df)
     print(transformed_df)
-    expected = DataFrame(
+    expected = pd.DataFrame(
         {
             "feature1": [
                 "1.00e+00 < x <= 2.00e+00",
@@ -722,26 +722,26 @@ def test_continuous_discretizer_fit():
                 "4.00e+00 < x",
             ],
             "feature2": [
-                nan,
+                np.nan,
                 "2.00e+00 < x <= 5.00e+00",
                 "2.00e+00 < x <= 5.00e+00",
-                nan,
+                np.nan,
                 "x <= 1.00e+00",
                 "x <= 1.00e+00",
                 "x <= 1.00e+00",
                 "x <= 1.00e+00",
                 "x <= 1.00e+00",
-                nan,
-                nan,
+                np.nan,
+                np.nan,
                 "1.00e+00 < x <= 2.00e+00",
                 "1.00e+00 < x <= 2.00e+00",
                 "1.00e+00 < x <= 2.00e+00",
                 "1.00e+00 < x <= 2.00e+00",
                 "1.00e+00 < x <= 2.00e+00",
-                nan,
-                nan,
+                np.nan,
+                np.nan,
                 "2.00e+00 < x <= 5.00e+00",
-                nan,
+                np.nan,
                 "2.00e+00 < x <= 5.00e+00",
                 "2.00e+00 < x <= 5.00e+00",
                 "2.00e+00 < x <= 5.00e+00",
@@ -751,12 +751,12 @@ def test_continuous_discretizer_fit():
     assert transformed_df.equals(expected)
 
 
-def test_continuous_discretizer(x_train: DataFrame):
+def test_continuous_discretizer(x_train: pd.DataFrame):
     """Tests ContinuousDiscretizer
 
     Parameters
     ----------
-    x_train : DataFrame
+    x_train : pd.DataFrame
         Simulated Train DataFrame
     """
 
@@ -787,10 +787,10 @@ def test_continuous_discretizer(x_train: DataFrame):
         3.0,
         4.0,
         7.0,
-        inf,
+        np.inf,
     ], "NaNs should not be added to the order"
 
-    assert features("Discrete_Quantitative_highnan").has_nan, "Should have nan"
+    assert features("Discrete_Quantitative_highnan").has_nan, "Should have np.nan"
 
     assert features("Discrete_Quantitative_lownan").values == [
         1.0,
@@ -798,7 +798,7 @@ def test_continuous_discretizer(x_train: DataFrame):
         3.0,
         4.0,
         6.0,
-        inf,
+        np.inf,
     ], "NaNs should not be grouped whatsoever"
 
     assert features("Discrete_Quantitative_rarevalue").values == [
@@ -808,5 +808,5 @@ def test_continuous_discretizer(x_train: DataFrame):
         3.0,
         4.0,
         6.0,
-        inf,
+        np.inf,
     ], "Wrongly associated rare values"

@@ -2,13 +2,10 @@
 for a binary classification model.
 """
 
-from pandas import DataFrame, Series
+import pandas as pd
 
 from AutoCarver.discretizers.qualitatives.categorical_discretizer import CategoricalDiscretizer
-from AutoCarver.discretizers.qualitatives.chained_discretizer import (
-    check_frequencies,
-    ensure_qualitative_dtypes,
-)
+from AutoCarver.discretizers.qualitatives.chained_discretizer import check_frequencies, ensure_qualitative_dtypes
 from AutoCarver.discretizers.qualitatives.ordinal_discretizer import OrdinalDiscretizer
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
 from AutoCarver.features import QualitativeFeature
@@ -60,7 +57,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
         return sample
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: DataFrame, y: Series) -> None:  # pylint: disable=W0222
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> None:  # pylint: disable=W0222
         # verbose if requested
         self._log_if_verbose("------\n---")
 
@@ -84,7 +81,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
 
         return self
 
-    def _base_transform(self, X: DataFrame, y: Series) -> DataFrame:
+    def _base_transform(self, X: pd.DataFrame, y: pd.Series) -> pd.DataFrame:
         """Transform the data based on the previously fitted discretizers."""
 
         # looking for already discretized features
@@ -99,7 +96,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
 
         return X
 
-    def _fit_ordinals(self, X: DataFrame, y: Series) -> None:
+    def _fit_ordinals(self, X: pd.DataFrame, y: pd.Series) -> None:
         """Fit the OrdinalDiscretizer on the ordinal features."""
 
         # [Qualitative ordinal features] Grouping rare values into closest common one
@@ -110,7 +107,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
             )
             ordinal_discretizer.fit(X, y)
 
-    def _fit_categoricals(self, X: DataFrame, y: Series) -> None:
+    def _fit_categoricals(self, X: pd.DataFrame, y: pd.Series) -> None:
         """Fit the CategoricalDiscretizer on the categorical features."""
 
         # [Qualitative non-ordinal features] Grouping rare values into default '__OTHER__'

@@ -1,4 +1,4 @@
-from pandas import DataFrame, isna
+import pandas as pd
 from pytest import FixtureRequest, fixture
 
 from AutoCarver.features import BaseFeature
@@ -8,14 +8,14 @@ THRESHOLD = 1.0
 
 
 @fixture
-def sample_data() -> DataFrame:
+def sample_data() -> pd.DataFrame:
     data = {
         "feature1": [1, 2, 3, 4, 5],
         "feature2": [2, 3, 4, 5, 6],
         "feature3": [-2, -3, -4, -5, -6],
         "feature4": [-2, 10, -1, 30, 0],
     }
-    return DataFrame(data)
+    return pd.DataFrame(data)
 
 
 @fixture
@@ -34,7 +34,7 @@ def filter(request: FixtureRequest) -> QuantitativeFilter:
 
 
 def test_quantitative_filter(
-    filter: QuantitativeFilter, sample_data: DataFrame, sample_ranks: list[BaseFeature]
+    filter: QuantitativeFilter, sample_data: pd.DataFrame, sample_ranks: list[BaseFeature]
 ) -> None:
     # testing type
     assert filter.is_x_quantitative, "x should be quantitative"
@@ -62,17 +62,17 @@ def test_quantitative_filter(
     assert len(filtered_features) == 1, "sould keep the best feature"
 
 
-def test_filter(filter: QuantitativeFilter, sample_data: DataFrame, sample_ranks: list[BaseFeature]) -> None:
+def test_filter(filter: QuantitativeFilter, sample_data: pd.DataFrame, sample_ranks: list[BaseFeature]) -> None:
     assert isinstance(filter.measure, str), "measure should be a name for DataFrame.corr"
 
     # testing _compute_correlation
     correlation = filter._compute_correlation(sample_data, sample_ranks)
-    assert isinstance(correlation, DataFrame), "Correlation should be a dataframe"
+    assert isinstance(correlation, pd.DataFrame), "Correlation should be a dataframe"
     assert correlation.shape == (
         len(sample_ranks),
         len(sample_ranks),
     ), "Compute correlation for each feature"
-    assert isna(correlation.iloc[0, 0]) and isna(correlation.iloc[-1, -1]), "no autocorrelation"
+    assert pd.isna(correlation.iloc[0, 0]) and pd.isna(correlation.iloc[-1, -1]), "no autocorrelation"
     assert all(correlation >= 0), "should be positive"
 
     # testing _filter_correlated_features

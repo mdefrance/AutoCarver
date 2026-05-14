@@ -2,8 +2,8 @@
 
 import json
 
-from numpy import array, inf, nan
-from pandas import DataFrame, Series
+import numpy as np
+import pandas as pd
 from pytest import FixtureRequest, fixture, raises
 
 from AutoCarver.combinations import (
@@ -50,11 +50,11 @@ def true_false(request: FixtureRequest) -> bool:
 def test_transform_quantitative_feature(features: Features) -> None:
     """test function transform_quantitative_feature"""
 
-    # with values to group, without nan
+    # with values to group, without np.nan
     feature = features[-1]
-    feature.update(GroupedList([2, 4.5, inf]))
+    feature.update(GroupedList([2, 4.5, np.inf]))
 
-    df_feature = Series([1, 2, 3, 4, 4.5, 5], name=feature.version)
+    df_feature = pd.Series([1, 2, 3, 4, 4.5, 5], name=feature.version)
     feature_version, list_feature = transform_quantitative_feature(feature, df_feature, len(df_feature))
     assert feature_version == feature.version
     assert [
@@ -66,13 +66,13 @@ def test_transform_quantitative_feature(features: Features) -> None:
         "4.50e+00 < x",
     ] == list_feature
 
-    # with values to group, with nan in df_feature (nan not grouped)
+    # with values to group, with np.nan in df_feature (np.nan not grouped)
     feature = features[-1]
-    feature.update(GroupedList([2, 4.5, inf]))
+    feature.update(GroupedList([2, 4.5, np.inf]))
     feature.has_nan = True
     feature.dropna = True
 
-    df_feature = Series([1, 2, 3, 4, 4.5, nan, 5], name=feature.version)
+    df_feature = pd.Series([1, 2, 3, 4, 4.5, np.nan, 5], name=feature.version)
     feature_version, list_feature = transform_quantitative_feature(feature, df_feature, len(df_feature))
     assert feature_version == feature.version
     assert [
@@ -85,15 +85,15 @@ def test_transform_quantitative_feature(features: Features) -> None:
         "4.50e+00 < x",
     ] == list_feature
 
-    # with values to group, with nan in df_feature (grouped nans)
+    # with values to group, with np.nan in df_feature (grouped nans)
     feature = features[-1]
-    feature.update(GroupedList([2, 4.5, inf]))
+    feature.update(GroupedList([2, 4.5, np.inf]))
     feature.has_nan = True
     feature.dropna = True
-    feature.update(GroupedList({2: [2], 4.5: [4.5], inf: [inf, "__NAN__"]}))
+    feature.update(GroupedList({2: [2], 4.5: [4.5], np.inf: [np.inf, "__NAN__"]}))
     print(feature.values.content)
 
-    df_feature = Series([1, 2, 3, 4, 4.5, nan, 5], name=feature.version)
+    df_feature = pd.Series([1, 2, 3, 4, 4.5, np.nan, 5], name=feature.version)
     feature_version, list_feature = transform_quantitative_feature(feature, df_feature, len(df_feature))
     assert feature_version == feature.version
     assert [
@@ -110,10 +110,10 @@ def test_transform_quantitative_feature(features: Features) -> None:
     feature = features[-1]
     feature.has_nan = True
     feature.dropna = True
-    feature.update(GroupedList({2: [2], 4.5: [4.5], inf: [inf, "__NAN__"]}), replace=True)
+    feature.update(GroupedList({2: [2], 4.5: [4.5], np.inf: [np.inf, "__NAN__"]}), replace=True)
     print(feature.values.content)
 
-    df_feature = Series([1, 2, 3, 4, 4.5, "__NAN__", 5], name=feature.version)
+    df_feature = pd.Series([1, 2, 3, 4, 4.5, "__NAN__", 5], name=feature.version)
     feature_version, list_feature = transform_quantitative_feature(feature, df_feature, len(df_feature))
     assert feature_version == feature.version
     assert [
@@ -196,7 +196,7 @@ def test_cast_features(features: Features) -> None:
     """test cast_features method"""
 
     disc = BaseDiscretizer(features)
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": [1, 2, 3, 4],
             "feature2": ["1", "2", "3", "4"],
@@ -222,7 +222,7 @@ def test_prepare_X(features: Features) -> None:
     """test prepare_X method"""
 
     # x with all features needed
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": [1, 2, 3, 4],
             "feature2": ["1", "2", "3", "4"],
@@ -266,16 +266,16 @@ def test_prepare_X(features: Features) -> None:
 def test_prepare_y(features: Features) -> None:
     """test prepare_y method"""
 
-    y = Series([1, 2, 3, 4])
+    y = pd.Series([1, 2, 3, 4])
 
     disc = BaseDiscretizer(features)
     disc._prepare_y(y)
     with raises(ValueError):
-        disc._prepare_y(DataFrame(y))
-    y = Series([nan, 2, 3, 4])
+        disc._prepare_y(pd.DataFrame(y))
+    y = pd.Series([np.nan, 2, 3, 4])
     with raises(ValueError):
         disc._prepare_y(y)
-    y = Series([None, 2, 3, 4])
+    y = pd.Series([None, 2, 3, 4])
     with raises(ValueError):
         disc._prepare_y(y)
 
@@ -284,7 +284,7 @@ def test_prepare_data(features: Features) -> None:
     """test prepare_data method"""
 
     disc = BaseDiscretizer(features)
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": [1, 2, 3, 4],
             "feature2": ["1", "2", "3", "4"],
@@ -292,13 +292,13 @@ def test_prepare_data(features: Features) -> None:
             "feature4": [1, 2, 3, 4],
         }
     )
-    y = Series([0, 0, 0, 1])
+    y = pd.Series([0, 0, 0, 1])
     assert disc._prepare_data(Sample(None)).X is None
     disc._prepare_data(Sample(X))
     disc._prepare_data(Sample(X, y))
 
     # mismatched X and y
-    y = Series([0, 0, 0, 1, 1])
+    y = pd.Series([0, 0, 0, 1, 1])
     with raises(ValueError):
         disc._prepare_data(Sample(X, y))
 
@@ -346,7 +346,7 @@ def test_transform_qualitative() -> None:
 
     # Create sample data
     index = [1, 2, 3, 4, 5, 6, 7]
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["1", "2", "3", "2", "3", "4", "4"],
             "feature2": ["A", "A", "B", "C", "D", "E", "X"],
@@ -356,10 +356,10 @@ def test_transform_qualitative() -> None:
 
     # Call the method
     result = disc._transform_qualitative(Sample(X=X, y=None)).X
-    assert all(array(result.index) == array(index))
+    assert all(np.array(result.index) == np.array(index))
 
     # Assert the result
-    expected = DataFrame(
+    expected = pd.DataFrame(
         {
             "feature1": ["1", "2", "3", "2", "3", "4", "4"],
             "feature2": ["A", "A", "B", "X", "X", "E", "X"],
@@ -375,22 +375,22 @@ def test_transform_quantitative() -> None:
 
     # test features
     feature1 = QuantitativeFeature("feature1")
-    feature1.update(GroupedList([2, 4.5, inf]))
+    feature1.update(GroupedList([2, 4.5, np.inf]))
     feature2 = QuantitativeFeature("feature2")
-    feature2.update(GroupedList([20, 45, inf]))
+    feature2.update(GroupedList([20, 45, np.inf]))
     disc = BaseDiscretizer([feature1, feature2])
 
     # Create sample data
     index = [1, 2, 3, 4, 5, 6]
-    X = DataFrame({"feature1": [1, 2, 3, 4, 4.5, 5], "feature2": [10, 20, 30, 40, 45, 50]}, index=index)
+    X = pd.DataFrame({"feature1": [1, 2, 3, 4, 4.5, 5], "feature2": [10, 20, 30, 40, 45, 50]}, index=index)
 
     # Call the method
     result = disc._transform_quantitative(Sample(X=X, y=None)).X
-    assert all(array(result.index) == array(index))
+    assert all(np.array(result.index) == np.array(index))
 
     # Assert the result
     print(result)
-    expected = DataFrame(
+    expected = pd.DataFrame(
         {
             "feature1": [
                 "x <= 2.00e+00",
@@ -425,14 +425,14 @@ def test_transform(true_false: bool) -> None:
     feature2.update(GroupedList({"A": ["A"], "B": ["B"], "X": ["X", "C", "D"]}))
     feature2.is_fitted = True
     feature3 = QuantitativeFeature("feature3")
-    feature3.update(GroupedList([2, 4.5, inf]))
+    feature3.update(GroupedList([2, 4.5, np.inf]))
     feature3.is_fitted = True
-    # GroupedList({2: [2], 4.5: [4.5], inf: [inf, "__NAN__"]})
+    # GroupedList({2: [2], 4.5: [4.5], np.inf: [np.inf, "__NAN__"]})
     disc = BaseDiscretizer([feature1, feature2, feature3], copy=true_false)
 
     # creating sample
     index = [1, 2, 3, 4, 5, 6, 7]
-    X = DataFrame(
+    X = pd.DataFrame(
         {
             "feature1": ["1", "2", "3", "2", "3", "4", "4"],
             "feature2": ["A", "A", "B", "C", "D", "E", "X"],
@@ -455,11 +455,11 @@ def test_transform(true_false: bool) -> None:
     # adding default to categorical feature
     feature2.has_default = True
     result = disc.transform(X, None)
-    assert all(array(result.index) == array(index))
+    assert all(np.array(result.index) == np.array(index))
 
     # Assert the result
     print(result)
-    expected = DataFrame(
+    expected = pd.DataFrame(
         {
             "feature1": ["1", "2", "3", "2", "3", "4", "4"],
             "feature2": ["A", "A", "B", "X", "X", feature2.default, "X"],
@@ -493,20 +493,20 @@ def test_transform(true_false: bool) -> None:
     feature2.has_nan = True
     feature2.dropna = True
     feature3 = QuantitativeFeature("feature3")
-    feature3.update(GroupedList([2, 4.5, inf]))
+    feature3.update(GroupedList([2, 4.5, np.inf]))
     feature3.is_fitted = True
     feature3.has_nan = True
     feature3.dropna = True
-    # feature3.update(GroupedList({2: [2], 4.5: [4.5], inf: [inf, "__NAN__"]}))
+    # feature3.update(GroupedList({2: [2], 4.5: [4.5], np.inf: [np.inf, "__NAN__"]}))
     disc = BaseDiscretizer([feature1, feature2, feature3], copy=true_false)
 
     # creating sample
     index = [1, 2, 3, 4, 5, 6, 7]
-    X = DataFrame(
+    X = pd.DataFrame(
         {
-            "feature1": ["1", "2", "3", "2", nan, "4", "4"],
-            "feature2": ["A", "A", "B", "C", nan, "E", "X"],
-            "feature3": [nan, 2, 3, 4, 4.5, 5, 6],
+            "feature1": ["1", "2", "3", "2", np.nan, "4", "4"],
+            "feature2": ["A", "A", "B", "C", np.nan, "E", "X"],
+            "feature3": [np.nan, 2, 3, 4, 4.5, 5, 6],
         },
         index=index,
     )
@@ -525,11 +525,11 @@ def test_transform(true_false: bool) -> None:
     # adding default to categorical feature
     feature2.has_default = True
     result = disc.transform(X, None)
-    assert all(array(result.index) == array(index))
+    assert all(np.array(result.index) == np.array(index))
 
     # Assert the result
     print(result)
-    expected = DataFrame(
+    expected = pd.DataFrame(
         {
             "feature1": ["1", "2", "3", "2", feature1.nan, "4", "4"],
             "feature2": ["A", "A", "B", "X", feature2.nan, feature2.default, "X"],
@@ -561,19 +561,19 @@ def test_transform(true_false: bool) -> None:
     feature2.is_fitted = True
     feature2.has_nan = True
     feature3 = QuantitativeFeature("feature3")
-    feature3.update(GroupedList([2, 4.5, inf]))
+    feature3.update(GroupedList([2, 4.5, np.inf]))
     feature3.is_fitted = True
     feature3.has_nan = True
-    # feature3.update(GroupedList({2: [2], 4.5: [4.5], inf: [inf, "__NAN__"]}))
+    # feature3.update(GroupedList({2: [2], 4.5: [4.5], np.inf: [np.inf, "__NAN__"]}))
     disc = BaseDiscretizer([feature1, feature2, feature3], copy=true_false)
 
     # creating sample
     index = [1, 2, 3, 4, 5, 6, 7]
-    X = DataFrame(
+    X = pd.DataFrame(
         {
-            "feature1": ["1", "2", "3", "2", nan, "4", "4"],
-            "feature2": ["A", "A", "B", "C", nan, "E", "X"],
-            "feature3": [nan, 2, 3, 4, 4.5, 5, 6],
+            "feature1": ["1", "2", "3", "2", np.nan, "4", "4"],
+            "feature2": ["A", "A", "B", "C", np.nan, "E", "X"],
+            "feature3": [np.nan, 2, 3, 4, 4.5, 5, 6],
         },
         index=index,
     )
@@ -592,16 +592,16 @@ def test_transform(true_false: bool) -> None:
     # adding default to categorical feature
     feature2.has_default = True
     result = disc.transform(X, None)
-    assert all(array(result.index) == array(index))
+    assert all(np.array(result.index) == np.array(index))
 
     # Assert the result
     print(result)
-    expected = DataFrame(
+    expected = pd.DataFrame(
         {
-            "feature1": ["1", "2", "3", "2", nan, "4", "4"],
-            "feature2": ["A", "A", "B", "X", nan, feature2.default, "X"],
+            "feature1": ["1", "2", "3", "2", np.nan, "4", "4"],
+            "feature2": ["A", "A", "B", "X", np.nan, feature2.default, "X"],
             "feature3": [
-                nan,
+                np.nan,
                 "x <= 2.00e+00",
                 "2.00e+00 < x <= 4.50e+00",
                 "2.00e+00 < x <= 4.50e+00",
@@ -770,17 +770,17 @@ def test_load_discretizer(tmp_path, features: Features, true_false: bool, combin
 #     assert False
 
 
-def test_base_discretizer(x_train: DataFrame, dropna: bool) -> None:
+def test_base_discretizer(x_train: pd.DataFrame, dropna: bool) -> None:
     """Tests BaseDiscretizer
 
     Parameters
     ----------
-    x_train : DataFrame
+    x_train : pd.DataFrame
         Simulated Train DataFrame
     """
 
     # values to input nans
-    str_nan = "NAN"
+    str_nan = "np.nan"
     # dropna = True
 
     # defining values_orders
@@ -843,7 +843,7 @@ def test_base_discretizer(x_train: DataFrame, dropna: bool) -> None:
     )
     # replacing nans if requested
     if dropna:
-        x_expected[feature] = x_expected[feature].replace(nan, str_nan)
+        x_expected[feature] = x_expected[feature].replace(np.nan, str_nan)
 
     assert all(x_expected[feature].isna() == x_discretized[feature].isna()), "unexpected NaNs"
 
@@ -861,14 +861,14 @@ def test_base_discretizer(x_train: DataFrame, dropna: bool) -> None:
 
 @fixture
 def sample_data():
-    X = DataFrame({"feature1": [1, 2, 3], "feature2": [4, 5, 6]})
-    y = Series([0, 1, 0])
+    X = pd.DataFrame({"feature1": [1, 2, 3], "feature2": [4, 5, 6]})
+    y = pd.Series([0, 1, 0])
     return Sample(X=X, y=y)
 
 
 def test_initialization(sample_data):
-    assert isinstance(sample_data.X, DataFrame)
-    assert isinstance(sample_data.y, Series)
+    assert isinstance(sample_data.X, pd.DataFrame)
+    assert isinstance(sample_data.y, pd.Series)
 
 
 def test_getitem(sample_data):

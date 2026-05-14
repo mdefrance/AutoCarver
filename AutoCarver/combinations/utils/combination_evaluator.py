@@ -5,7 +5,7 @@ import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 
-from pandas import DataFrame, Series
+import pandas as pd
 from tqdm import tqdm
 
 from AutoCarver.combinations.utils.combinations import (
@@ -27,14 +27,14 @@ class AggregatedSample:
 
     Attributes
     ----------
-    xagg : DataFrame
+    xagg : pd.DataFrame
         Aggregated sample
-    raw : DataFrame
+    raw : pd.DataFrame
         Raw aggregated sample
     """
 
-    xagg: Series | DataFrame
-    _raw: Series | DataFrame | None = None
+    xagg: pd.Series | pd.DataFrame
+    _raw: pd.Series | pd.DataFrame | None = None
 
     def __post_init__(self):
         """Post initialization"""
@@ -43,12 +43,12 @@ class AggregatedSample:
             self._raw = self.xagg.copy()
 
     @property
-    def raw(self) -> DataFrame:
+    def raw(self) -> pd.DataFrame:
         """Returns the raw value of the xagg"""
         return self._raw
 
     @raw.setter
-    def raw(self, value: Series | DataFrame) -> None:
+    def raw(self, value: pd.Series | pd.DataFrame) -> None:
         """Sets the raw value of the xagg"""
 
         # setting raw value
@@ -74,11 +74,11 @@ class AggregatedSample:
         return self.xagg.columns
 
     @property
-    def values(self) -> DataFrame:
+    def values(self) -> pd.DataFrame:
         """Returns the values of the xagg"""
         return self.xagg.values
 
-    def groupby(self, *args, **kwargs) -> DataFrame:
+    def groupby(self, *args, **kwargs) -> pd.DataFrame:
         """Groups the xagg by the specified indices"""
         return self.xagg.groupby(*args, **kwargs)
 
@@ -90,7 +90,7 @@ class AggregatedSamples:
     train: AggregatedSample = field(default_factory=lambda: AggregatedSample(None))
     dev: AggregatedSample = field(default_factory=lambda: AggregatedSample(None))
 
-    def set(self, train: DataFrame, dev: DataFrame | None = None) -> None:
+    def set(self, train: pd.DataFrame, dev: pd.DataFrame | None = None) -> None:
         """Sets the train and dev samples"""
 
         # setting train and dev samples
@@ -224,7 +224,7 @@ class CombinationEvaluator(ABC):
         ]
 
         # sorting associations according to specified metric
-        return DataFrame(associations).sort_values(self.sort_by, ascending=False).to_dict(orient="records")
+        return pd.DataFrame(associations).sort_values(self.sort_by, ascending=False).to_dict(orient="records")
 
     def _get_best_association(self, combinations: list[list[str]]) -> dict:
         """Computes associations of the tab for each combination
@@ -316,7 +316,9 @@ class CombinationEvaluator(ABC):
 
         return best_combination
 
-    def get_best_combination(self, feature: BaseFeature, xagg: DataFrame, xagg_dev: DataFrame | None = None) -> dict:
+    def get_best_combination(
+        self, feature: BaseFeature, xagg: pd.DataFrame, xagg_dev: pd.DataFrame | None = None
+    ) -> dict:
         """Computes best combination of modalities for the feature"""
 
         # checking for min_freq
@@ -407,7 +409,7 @@ class CombinationEvaluator(ABC):
         return viable_combination
 
     @abstractmethod
-    def _grouper(self, xagg: AggregatedSample, groupby: dict[str, str]) -> Series | DataFrame:
+    def _grouper(self, xagg: AggregatedSample, groupby: dict[str, str]) -> pd.Series | pd.DataFrame:
         """Helper to group XAGG's values by groupby (carver specific)"""
 
     @abstractmethod
@@ -555,7 +557,7 @@ class CombinationEvaluator(ABC):
         return cls(**combinations_json)
 
 
-def filter_nan(xagg: Series | DataFrame, str_nan: str) -> DataFrame:
+def filter_nan(xagg: pd.Series | pd.DataFrame, str_nan: str) -> pd.DataFrame:
     """Filters out nans from crosstab or y values"""
 
     # cehcking for values in crosstab

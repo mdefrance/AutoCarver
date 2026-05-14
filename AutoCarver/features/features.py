@@ -1,7 +1,7 @@
 """Defines a set of features"""
 
-from numpy import nan
-from pandas import DataFrame, Series
+import numpy as np
+import pandas as pd
 
 from AutoCarver.features.qualitatives import (
     CategoricalFeature,
@@ -25,7 +25,7 @@ from AutoCarver.utils.attributes import get_bool_attribute
 #             f"[{self.__name__}] Should be instantiated with AutoFeatures.from_dataframe()"
 #         )
 
-#     def from_dataframe(self, X: DataFrame) -> None:
+#     def from_dataframe(self, X: pd.DataFrame) -> None:
 #         """Automatically generates Features from an input DataFrame based on there data types"""
 #         # initiating features
 #         categoricals, ordinals, quantitatives, datetimes = ([],) * 4
@@ -157,7 +157,7 @@ class Features:
         """Returns specified feature by name"""
 
         # case for dataframes
-        if isinstance(feature_name, DataFrame):
+        if isinstance(feature_name, pd.DataFrame):
             return [feature.version for feature in self if feature.version in feature_name.columns]
 
         # looking for feature names
@@ -193,7 +193,7 @@ class Features:
             return self(index)
 
         # dataframe request
-        if isinstance(index, DataFrame):
+        if isinstance(index, pd.DataFrame):
             index = list(index.columns)
 
         # list request and element to search for
@@ -321,7 +321,7 @@ class Features:
         self.ordinals = keep_versions(kept, self.ordinals)
         self.quantitatives = keep_versions(kept, self.quantitatives)
 
-    def check_values(self, X: DataFrame) -> None:
+    def check_values(self, X: pd.DataFrame) -> None:
         """Cheks for unexpected values for each feature in columns of DataFrame X"""
         # iterating over all features
         for feature in self:
@@ -332,7 +332,7 @@ class Features:
             # checking for unexpected values
             feature.check_values(X)
 
-    def fit(self, X: DataFrame, y: Series | None = None) -> None:
+    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> None:
         """fits all features to there respective column in DataFrame X"""
         # iterating over all features
         for feature in self:
@@ -344,7 +344,7 @@ class Features:
             else:
                 feature.fit(X, y)
 
-    def fillna(self, X: DataFrame, ignore_dropna: bool = False) -> DataFrame:
+    def fillna(self, X: pd.DataFrame, ignore_dropna: bool = False) -> pd.DataFrame:
         """fills nans of a DataFrame"""
 
         # fills features with nans when dropna is True
@@ -355,13 +355,13 @@ class Features:
 
         return X
 
-    def unfillna(self, X: DataFrame) -> DataFrame:
+    def unfillna(self, X: pd.DataFrame) -> pd.DataFrame:
         """unfills nans when not supposed to have filled them"""
 
         # reinstating nans of features for which nans should not have been dropped
         X.replace(
             {
-                feature.version: {feature.label_per_value.get(feature.nan, feature.nan): nan}
+                feature.version: {feature.label_per_value.get(feature.nan, feature.nan): np.nan}
                 for feature in self
                 if feature.has_nan and not feature.dropna
             },
@@ -398,7 +398,7 @@ class Features:
         return [feature for feature in self if feature.version_tag == y_class]
 
     @property
-    def summary(self) -> DataFrame:
+    def summary(self) -> pd.DataFrame:
         """Summary of discretization process for all features"""
         # iterating over each feature
         summaries = []
@@ -406,7 +406,7 @@ class Features:
             summaries += feature.summary
 
         # converting to DataFrame
-        summaries = DataFrame(summaries)
+        summaries = pd.DataFrame(summaries)
 
         # defining indices to set
         indices = []

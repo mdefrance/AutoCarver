@@ -1,7 +1,7 @@
 """Set of tests for discretizers module."""
 
-from numpy import inf, nan
-from pandas import DataFrame, Series, notna
+import numpy as np
+import pandas as pd
 
 from AutoCarver.config import Constants
 from AutoCarver.discretizers import Discretizer
@@ -37,12 +37,12 @@ def test_discretizer_fit():
 
     data = {
         "feature1": [1, 2, 3, 4, 5],
-        "feature2": [5, 4, 3, nan, 1],
-        "feature4": ["a", "b", "a", "b", nan],
-        "feature3": [1, 4, 3, 4, nan],
+        "feature2": [5, 4, 3, np.nan, 1],
+        "feature4": ["a", "b", "a", "b", np.nan],
+        "feature3": [1, 4, 3, 4, np.nan],
     }
-    df = DataFrame(data)
-    y = Series([0, 1, 0, 1, 0])
+    df = pd.DataFrame(data)
+    y = pd.Series([0, 1, 0, 1, 0])
 
     # fitting discretizer
     transformed_df = discretizer.fit_transform(df, y)
@@ -61,24 +61,24 @@ def test_discretizer_fit():
             "3.0e+00 < x",
             "3.0e+00 < x",
             "x <= 3.0e+00",
-            nan,
+            np.nan,
             "x <= 3.0e+00",
         ],
-        "feature4": ["a", "b", "a", "b", nan],
-        "feature3": ["1, 3", "4", "1, 3", "4", nan],
+        "feature4": ["a", "b", "a", "b", np.nan],
+        "feature3": ["1, 3", "4", "1, 3", "4", np.nan],
     }
-    expected = DataFrame(data)
+    expected = pd.DataFrame(data)
     assert transformed_df.equals(expected)
 
 
-def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
+def test_discretizer(x_train: pd.DataFrame, x_dev_1: pd.DataFrame, target: str):
     """Tests Discretizer
 
     Parameters
     ----------
-    x_train : DataFrame
+    x_train : pd.DataFrame
         Simulated Train DataFrame
-    x_dev_1 : DataFrame
+    x_dev_1 : pd.DataFrame
         Simulated Test DataFrame
     target: str
         Target feature
@@ -139,14 +139,16 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
     x_discretized = discretizer.fit_transform(x_train, x_train[target])
     x_dev_discretized = discretizer.transform(x_dev_1)
 
-    assert all(x_discretized["Quantitative"].value_counts(normalize=True) >= min_freq), "Non-nan value were not grouped"
+    assert all(x_discretized["Quantitative"].value_counts(normalize=True) >= min_freq), (
+        "Non-np.nan value were not grouped"
+    )
 
     assert features("Discrete_Quantitative_lownan").values == [
         1.0,
         2.0,
         3.0,
         4.0,
-        inf,
+        np.inf,
     ], "NaNs should not be grouped whatsoever"
 
     assert features("Discrete_Quantitative_rarevalue").values == [
@@ -154,7 +156,7 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
         2.0,
         3.0,
         4.0,
-        inf,
+        np.inf,
     ], "Rare values should be grouped to the closest one (OrdinalDiscretizer)"
 
     quali_expected = {
@@ -172,7 +174,7 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
         "Category E": ["Category E"],
     }
     assert features("Qualitative_lownan").content == quali_lownan_expected, (
-        "If any, NaN values should be put into str_nan and kept by themselves"
+        "If any, np.nan values should be put into str_nan and kept by themselves"
     )
 
     expected_ordinal = {
@@ -223,7 +225,7 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
         "5": [6.0, "6", 7.0, "7", 5.0, "5"],
     }
     assert features("Discrete_Qualitative_highnan").content == expected, (
-        "Ordinal qualitative features with int or float values that contain nan should be converted"
+        "Ordinal qualitative features with int or float values that contain np.nan should be converted"
         " to string and there values stored in the values_orders"
     )
 
@@ -231,8 +233,8 @@ def test_discretizer(x_train: DataFrame, x_dev_1: DataFrame, target: str):
     for feature in features:
         # removing nans because they don't match
         test_unique = x_dev_discretized[feature.name].unique()
-        test_unique = [val for val in test_unique if notna(val)]
+        test_unique = [val for val in test_unique if pd.notna(val)]
         train_unique = x_discretized[feature.name].unique()
-        train_unique = [val for val in train_unique if notna(val)]
+        train_unique = [val for val in train_unique if pd.notna(val)]
         assert all(value in test_unique for value in train_unique), "Missing value from test (at transform step)"
         assert all(value in train_unique for value in test_unique), "Missing value from train (at transform step)"

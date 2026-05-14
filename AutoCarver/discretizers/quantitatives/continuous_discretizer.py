@@ -137,7 +137,7 @@ def np_find_quantiles(
 
     Parameters
     ----------
-    df_feature : Series
+    df_feature : pd.Series
         _description_
     q : int
         _description_
