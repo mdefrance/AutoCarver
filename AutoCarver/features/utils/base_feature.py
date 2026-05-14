@@ -130,7 +130,7 @@ class BaseFeature(ABC):
         self.max_n_chars = kwargs.get("max_n_chars", 50)
 
         # initiating feature's trained statistics
-        self._statistics: dict[str:Any] = kwargs.get("statistics", None)
+        self._statistics: dict[str, Any] = kwargs.get("statistics", None)
 
         # measures and filters used by selectors
         self.measures = kwargs.get("measures", {})
@@ -500,7 +500,7 @@ class BaseFeature(ABC):
         """historizes a combination"""
         self.history.append(combination)
 
-    def to_json(self, light_mode: bool = False) -> str:
+    def to_json(self, light_mode: bool = False) -> dict[str, Any]:
         """Converts to JSON format.
 
         To be used with ``json.dump``.
@@ -512,7 +512,7 @@ class BaseFeature(ABC):
 
         Returns
         -------
-        str
+        dict[str, Any]
             JSON serialized object
         """
 

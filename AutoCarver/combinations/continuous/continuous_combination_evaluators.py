@@ -49,7 +49,7 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
         # Kruskal-Wallis' H
         return {"kruskal": kruskal(*tuple(xagg.values))[0]}
 
-    def _grouper(self, xagg: AggregatedSample, groupby: dict[str:str]) -> Series:
+    def _grouper(self, xagg: AggregatedSample, groupby: dict[str, str]) -> Series:
         """Groups values of y
 
         Parameters
