@@ -97,9 +97,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
         ]
 
         # checking for completly missing values (no frequency observed in X)
-        missing_values = [
-            value for value in feature.values if value not in frequencies[feature.version]
-        ]
+        missing_values = [value for value in feature.values if value not in frequencies[feature.version]]
         if len(missing_values) > 0:
             raise ValueError(f"[{self.__name__}] Unexpected values {missing_values} for {feature}.")
 

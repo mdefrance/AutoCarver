@@ -27,9 +27,7 @@ def imap_unordered_function(fun: Callable, features: list[str], n_jobs: int, **k
     return results
 
 
-def apply_async_function(
-    fun: Callable, features: list[BaseFeature], n_jobs: int, X: DataFrame, *args: list
-):
+def apply_async_function(fun: Callable, features: list[BaseFeature], n_jobs: int, X: DataFrame, *args: list):
     """converts a function to a multiprocessing apply_async format or list comprehension"""
 
     # no multiprocessing

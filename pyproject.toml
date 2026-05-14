@@ -56,7 +56,6 @@ dev = [
 docs = "https://autocarver.readthedocs.io/en/latest/index.html"
 repository = "https://github.com/mdefrance/AutoCarver"
 
-
 [tool.uv.build-backend]
 module-name = ["AutoCarver"]
 module-root = ""
@@ -65,15 +64,20 @@ module-root = ""
 requires = ["uv_build>=0.11.7,<0.12.0"]
 build-backend = "uv_build"
 
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+exclude = ["*.ipynb"]
+
 [tool.black]
-line-length = 100
+line-length = 120
 
 [tool.isort]
 profile = "black"
-line_length = 100
+line_length = 120
 
 [tool.flake8]
-max-line-length = 100
+max-line-length = 120
 extend-ignore = ["E203", "E704"]
 
 

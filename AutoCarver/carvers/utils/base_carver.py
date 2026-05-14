@@ -222,8 +222,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         # checking for fitted features
         if self.features.is_fitted:
             raise ValueError(
-                f"[{self.__name__}] features are already fitted or previous fit failed. "
-                "Please reset your features."
+                f"[{self.__name__}] features are already fitted or previous fit failed. Please reset your features."
             )
 
         # setting is_fitted
@@ -247,7 +246,7 @@ class BaseCarver(BaseDiscretizer, ABC):
 
         # carving each feature
         for n, feature in enumerate(all_features):
-            num_iter = f"{n+1}/{len(all_features)}"  # logging iteration number
+            num_iter = f"{n + 1}/{len(all_features)}"  # logging iteration number
             self._carve_feature(self.features(feature), xaggs, xaggs_dev, num_iter)
 
         # discretizing features based on each feature's values_order
@@ -338,17 +337,13 @@ class BaseCarver(BaseDiscretizer, ABC):
         formatted_xagg_dev = index_mapper(feature, xagg_dev)
         return formatted_xagg, formatted_xagg_dev
 
-    def _pretty_print(
-        self, formatted_xagg: DataFrame, formatted_xagg_dev: DataFrame
-    ) -> tuple[str, str]:
+    def _pretty_print(self, formatted_xagg: DataFrame, formatted_xagg_dev: DataFrame) -> tuple[str, str]:
         """Returns pretty-printed XAGG DataFrames."""
         nice_xagg = self.combinations.target_rate.compute(formatted_xagg)
         nice_xagg_dev = self.combinations.target_rate.compute(formatted_xagg_dev)
         return nice_xagg, nice_xagg_dev
 
-    def _print_raw(
-        self, nice_xagg: str, nice_xagg_dev: str, xagg_dev: DataFrame | None = None
-    ) -> None:
+    def _print_raw(self, nice_xagg: str, nice_xagg_dev: str, xagg_dev: DataFrame | None = None) -> None:
         """Prints raw XAGG DataFrames."""
         print(nice_xagg, "\n")
         if xagg_dev is not None:

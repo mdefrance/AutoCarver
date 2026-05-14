@@ -92,9 +92,7 @@ class RMeasure(BaseMeasure):
         regression = ols("feature~C(target)", ols_df).fit()
 
         # computing R statistic
-        self.value = (
-            sqrt(regression.rsquared) if regression.rsquared and regression.rsquared >= 0 else nan
-        )
+        self.value = sqrt(regression.rsquared) if regression.rsquared and regression.rsquared >= 0 else nan
 
         return self.value
 

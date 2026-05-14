@@ -77,8 +77,7 @@ def convert_values_to_base_types(
     # dict input
     elif isinstance(iterable, dict):
         output = {
-            convert_value_to_base_type(key): convert_values_to_base_types(values)
-            for key, values in iterable.items()
+            convert_value_to_base_type(key): convert_values_to_base_types(values) for key, values in iterable.items()
         }
 
     return output
@@ -106,8 +105,7 @@ def convert_values_to_numpy_types(
     # dict input
     elif isinstance(iterable, dict):
         output = {
-            convert_value_to_numpy_type(key): convert_values_to_numpy_types(values)
-            for key, values in iterable.items()
+            convert_value_to_numpy_type(key): convert_values_to_numpy_types(values) for key, values in iterable.items()
         }
 
     return output

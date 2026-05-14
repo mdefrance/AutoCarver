@@ -40,18 +40,14 @@ def test_compute_association(measure: BaseMeasure, series_data: Series) -> None:
     assert measure.value == association, "not stored measurement"
 
 
-def test_validate_with_computed_association_below_threshold(
-    measure: BaseMeasure, series_data: Series
-) -> None:
+def test_validate_with_computed_association_below_threshold(measure: BaseMeasure, series_data: Series) -> None:
     """checks that correlated features are not removed"""
     measure.compute_association(series_data, series_data * 0)
     print(measure.value, measure.threshold, measure.validate())
     assert not measure.validate(), "kept feature with lower than threshold correlation"
 
 
-def test_validate_with_computed_association_above_threshold(
-    measure: BaseMeasure, series_data: Series
-) -> None:
+def test_validate_with_computed_association_above_threshold(measure: BaseMeasure, series_data: Series) -> None:
     """checks that non-correlated features are removed"""
     measure.compute_association(series_data, series_data)
     print(measure.__name__, measure.value, measure.threshold, measure.validate())

@@ -1,4 +1,4 @@
-""" set of tests for attribute.py """
+"""set of tests for attribute.py"""
 
 from pytest import raises
 
