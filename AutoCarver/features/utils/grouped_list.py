@@ -2,7 +2,7 @@
 for a binary classification model.
 """
 
-from typing import Any, Union
+from typing import Any
 
 from numpy import ndarray, sort
 from pandas import isna
@@ -14,7 +14,7 @@ class GroupedList(list):
     def __repr__(self) -> str:
         return f"GroupedList({super().__repr__()})"
 
-    def __init__(self, iterable: Union[ndarray, dict, list, tuple] = ()) -> None:
+    def __init__(self, iterable: ndarray | dict | list | tuple = ()) -> None:
         """
         Parameters
         ----------
@@ -180,7 +180,7 @@ class GroupedList(list):
             # removing discarded from the list
             self.remove(discarded)
 
-    def group(self, to_discard: Union[list[str], str], to_keep: str) -> None:
+    def group(self, to_discard: list[str] | str, to_keep: str) -> None:
         """Groups the discarded value with the kept value
 
         Parameters

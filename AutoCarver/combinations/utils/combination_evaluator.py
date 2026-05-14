@@ -537,7 +537,7 @@ class CombinationEvaluator(ABC):
         """
         # reading file
         if isinstance(file, str):
-            with open(file, "r", encoding="utf-8") as json_file:
+            with open(file, encoding="utf-8") as json_file:
                 combinations_json = json.load(json_file)
         elif isinstance(file, dict):
             combinations_json = file

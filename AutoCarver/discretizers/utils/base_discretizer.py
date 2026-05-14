@@ -516,7 +516,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             A fitted Discretizer.
         """
         # reading file
-        with open(file_name, "r", encoding="utf-8") as json_file:
+        with open(file_name, encoding="utf-8") as json_file:
             discretizer_json = json.load(json_file)
 
         # deserializing features

@@ -1,7 +1,7 @@
 """TODO: initiate features from dataset"""
 
 from abc import ABC, abstractmethod
-from typing import Any, Union
+from typing import Any
 
 from pandas import DataFrame, Series, option_context
 
@@ -426,7 +426,7 @@ class BaseFeature(ABC):
         # saving updated labels
         self.labels = raw_labels
 
-    def _update_statistics_value(self, kept_label: Union[str, float], kept_value: Union[str, float]) -> None:
+    def _update_statistics_value(self, kept_label: str | float, kept_value: str | float) -> None:
         """updates feature's statistics index with values"""
 
         # updating feature's statistics

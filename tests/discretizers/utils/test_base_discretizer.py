@@ -694,7 +694,7 @@ def test_save(tmp_path, features: Features, true_false: bool, combinations: Comb
     discretizer.save(str(file_path), light_mode=true_false)
 
     assert file_path.exists()
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(file_path, encoding="utf-8") as f:
         saved_data = json.load(f)
     assert saved_data == discretizer.to_json(light_mode=true_false)
 

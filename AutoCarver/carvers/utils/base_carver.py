@@ -379,7 +379,7 @@ class BaseCarver(BaseDiscretizer, ABC):
             A fitted Carver.
         """
         # reading file
-        with open(file_name, "r", encoding="utf-8") as json_file:
+        with open(file_name, encoding="utf-8") as json_file:
             carver_json = json.load(json_file)
 
         # deserializing features

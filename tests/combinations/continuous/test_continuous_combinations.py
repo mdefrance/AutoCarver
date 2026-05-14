@@ -55,7 +55,7 @@ def test_save(evaluator: ContinuousCombinationEvaluator, tmp_path):
     file_name = tmp_path / "test.json"
     evaluator.save(str(file_name))
 
-    with open(file_name, "r", encoding="utf-8") as json_file:
+    with open(file_name, encoding="utf-8") as json_file:
         data = json.load(json_file)
 
     expected_json = {
