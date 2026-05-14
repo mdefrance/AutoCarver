@@ -192,4 +192,4 @@ def min_decimals_to_differentiate(sorted_numbers: list[float], min_decimals: int
 
 def get_quantitative_features(features: list[BaseFeature]) -> list[QuantitativeFeature]:
     """returns quantitative features amongst provided features"""
-    return [feature for feature in features if feature.is_quantitative]
+    return [feature for feature in features if feature.is_quantitative]  # type: ignore

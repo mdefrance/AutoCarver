@@ -51,7 +51,7 @@ class ClassificationSelector(BaseSelector):
             for measure in measures
         ):
             raise ValueError(f"[{self}] Provide measures for qualitative target!")
-        return measures
+        return measures  # type: ignore
 
     def _initiate_filters(self, requested_filters: list[BaseFilter] | None = None) -> list[BaseFilter]:
         """initiates the list of measures with default values"""
@@ -73,4 +73,4 @@ class ClassificationSelector(BaseSelector):
         if all(filter.__name__ != valid_filter.__name__ for filter in filters):
             filters = [valid_filter] + filters
 
-        return filters
+        return filters  # type: ignore

@@ -70,4 +70,4 @@ def prettier_measures(association: DataFrame) -> str:
     nicer_association = nicer_association.format(dict.fromkeys(subset, "{:.4f}"))
 
     # conversion to html
-    return nicer_association._repr_html_()
+    return nicer_association._repr_html_()  # type: ignore

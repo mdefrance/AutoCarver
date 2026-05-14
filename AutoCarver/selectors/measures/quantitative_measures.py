@@ -166,7 +166,7 @@ class DistanceMeasure(AbsoluteMeasure):
         self.value = nan
         if has_values(x, y, nans):
             self.value = correlation(x[~nans], y[~nans]) - 1
-        return self.value
+        return self.value  # type: ignore
 
 
 class ZscoreOutlierMeasure(OutlierMeasure):

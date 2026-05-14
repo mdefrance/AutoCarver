@@ -105,7 +105,7 @@ class BaseMeasure(ABC):
         """
 
         if not isnull(self.value) and notna(self.value):
-            return self.value >= self.threshold
+            return self.value >= self.threshold  # type: ignore
         return False
 
     def to_dict(self) -> dict:
@@ -150,7 +150,7 @@ class AbsoluteMeasure(BaseMeasure):
             Whether the test is passed or not
         """
         if not isnull(self.value) and notna(self.value):
-            return abs(self.value) >= self.threshold
+            return abs(self.value) >= self.threshold  # type: ignore
         return False
 
 
@@ -201,7 +201,7 @@ class OutlierMeasure(BaseMeasure):
             Whether the test is passed or not
         """
         if not isnull(self.value) and notna(self.value):
-            return self.value < self.threshold
+            return self.value < self.threshold  # type: ignore
         return True
 
 

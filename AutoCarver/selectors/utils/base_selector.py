@@ -3,6 +3,7 @@
 from abc import ABC, abstractmethod
 from math import ceil
 from random import seed, shuffle
+from typing import overload
 
 from numpy import isnan
 from pandas import DataFrame, Series
@@ -128,7 +129,7 @@ class BaseSelector(ABC):
         # features and values
         self.features = features
         if isinstance(features, list):
-            self.features = Features(features)
+            self.features = Features(features)  # type: ignore
 
         # number of features selected
         self.n_best_per_type = n_best_per_type
@@ -167,12 +168,12 @@ class BaseSelector(ABC):
         return self.verbose and _has_idisplay
 
     @abstractmethod
-    def _initiate_measures(self, requested_measures: list[BaseMeasure] | None = None) -> list[BaseMeasure]:
+    def _initiate_measures(self, requested_measures: list[BaseMeasure] | None = None) -> list[BaseMeasure] | None:
         """initiates the list of measures with default values"""
         return requested_measures
 
     @abstractmethod
-    def _initiate_filters(self, requested_filters: list[BaseFilter] | None = None) -> list[BaseFilter]:
+    def _initiate_filters(self, requested_filters: list[BaseFilter] | None = None) -> list[BaseFilter] | None:
         """initiates the list of measures with default values"""
         return requested_filters
 
@@ -183,8 +184,8 @@ class BaseSelector(ABC):
         best_quantitatives: list[BaseFeature] = []
         if len(quantitatives) > 0:
             # getting qualitative measures and filters
-            measures = get_quantitative_metrics(self.measures)
-            filters = get_quantitative_metrics(self.filters)
+            measures = get_quantitative_metrics(self.measures)  # type: ignore
+            filters = get_quantitative_metrics(self.filters)  # type: ignore
 
             # setting message for pretty print
             self._message = "Quantitative "
@@ -201,8 +202,8 @@ class BaseSelector(ABC):
         best_qualitatives: list[BaseFeature] = []
         if len(qualitatives) > 0:
             # getting qualitative measures and filters
-            measures = get_qualitative_metrics(self.measures)
-            filters = get_qualitative_metrics(self.filters)
+            measures = get_qualitative_metrics(self.measures)  # type: ignore
+            filters = get_qualitative_metrics(self.filters)  # type: ignore
 
             # setting message for pretty print
             self._message = "Qualitative "
@@ -247,21 +248,21 @@ class BaseSelector(ABC):
             self.target_name = y.name
 
         # initiating features measures and filters
-        self._initiate_features_measures(self.features, remove_default=True)
+        self._initiate_features_measures(self.features, remove_default=True)  # type: ignore
 
         # checking for quantitative and qualitative features
         features = get_typed_features(self.features)
 
         # selecting quantitative features
-        best_features = self._select_quantitatives(features.get("quantitatives"), X, y)
+        best_features = self._select_quantitatives(features.get("quantitatives"), X, y)  # type: ignore
 
         # selecting qualitative features
-        best_features += self._select_qualitatives(features.get("qualitatives"), X, y)
+        best_features += self._select_qualitatives(features.get("qualitatives"), X, y)  # type: ignore
 
         # converting to Features
         if len(best_features) > 0:
-            return Features(best_features)
-        return best_features
+            return Features(best_features)  # type: ignore
+        return best_features  # type: ignore
 
     def _select_features(
         self,
@@ -405,30 +406,46 @@ def make_random_chunks(elements: list, max_chunk_sizes: int, random_state: int |
     return chunks
 
 
-def get_qualitative_metrics(
-    metrics: list[BaseMeasure | BaseFilter],
-) -> list[BaseMeasure | BaseFilter]:
+@overload
+def get_qualitative_metrics(metrics: list[BaseMeasure]) -> list[BaseMeasure]: ...
+@overload
+def get_qualitative_metrics(metrics: list[BaseFilter]) -> list[BaseFilter]: ...
+
+
+def get_qualitative_metrics(metrics: list[BaseMeasure] | list[BaseFilter]) -> list[BaseMeasure | BaseFilter]:
     """returns filtered list of measures/filters that apply on qualitative features"""
     return [metric for metric in metrics if metric.is_x_qualitative]
 
 
-def get_quantitative_metrics(
-    metrics: list[BaseMeasure | BaseFilter],
-) -> list[BaseMeasure | BaseFilter]:
+@overload
+def get_quantitative_metrics(metrics: list[BaseMeasure]) -> list[BaseMeasure]: ...
+@overload
+def get_quantitative_metrics(metrics: list[BaseFilter]) -> list[BaseFilter]: ...
+
+
+def get_quantitative_metrics(metrics: list[BaseMeasure] | list[BaseFilter]) -> list[BaseMeasure | BaseFilter]:
     """returns filtered list of measures/filters that apply on quantitative features"""
     return [metric for metric in metrics if metric.is_x_quantitative]
 
 
-def get_default_metrics(
-    metrics: list[BaseMeasure | BaseFilter],
-) -> list[BaseMeasure | BaseFilter]:
+@overload
+def get_default_metrics(metrics: list[BaseMeasure]) -> list[BaseMeasure]: ...
+@overload
+def get_default_metrics(metrics: list[BaseFilter]) -> list[BaseFilter]: ...
+
+
+def get_default_metrics(metrics: list[BaseMeasure] | list[BaseFilter]) -> list[BaseMeasure | BaseFilter]:
     """returns filtered list of measures/filters that are default"""
     return [metric for metric in metrics if metric.is_default]
 
 
-def remove_default_metrics(
-    metrics: list[BaseMeasure | BaseFilter],
-) -> list[BaseMeasure | BaseFilter]:
+@overload
+def remove_default_metrics(metrics: list[BaseMeasure]) -> list[BaseMeasure]: ...
+@overload
+def remove_default_metrics(metrics: list[BaseFilter]) -> list[BaseFilter]: ...
+
+
+def remove_default_metrics(metrics: list[BaseMeasure] | list[BaseFilter]) -> list[BaseMeasure | BaseFilter]:
     """returns filtered list of measures/filters that are non-default"""
     return [metric for metric in metrics if not metric.is_default]
 
@@ -499,12 +516,8 @@ def get_measure_value(feature: BaseFeature, measure: BaseMeasure) -> float:
 
 
 def apply_measures(
-    features: list[BaseFeature],
-    X: DataFrame,
-    y: Series,
-    measures: list[BaseMeasure],
-    default_measures: bool = False,
-) -> list[BaseMeasure]:
+    features: list[BaseFeature], X: DataFrame, y: Series, measures: list[BaseMeasure], default_measures: bool = False
+) -> None:
     """Measures association between columns of X and y, returns remaining_measures (not used)"""
 
     # keeping only default measures or non default measures

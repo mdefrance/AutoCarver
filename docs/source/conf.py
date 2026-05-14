@@ -47,7 +47,7 @@ def ensure_pandoc_installed(_):
     pandoc_dir = DOCS_DIRECTORY / "bin"
     # Add dir containing pandoc binary to the PATH environment variable
     if pandoc_dir not in os.environ["PATH"].split(os.pathsep):
-        os.environ["PATH"] += os.pathsep + pandoc_dir
+        os.environ["PATH"] += os.pathsep + pandoc_dir.as_posix()
     pypandoc.ensure_pandoc_installed(
         # quiet=True,
         targetfolder=pandoc_dir,

@@ -500,7 +500,7 @@ class BaseFeature(ABC):
         """historizes a combination"""
         self.history.append(combination)
 
-    def to_json(self, light_mode: bool = False) -> dict:
+    def to_json(self, light_mode: bool = False) -> str:
         """Converts to JSON format.
 
         To be used with ``json.dump``.
