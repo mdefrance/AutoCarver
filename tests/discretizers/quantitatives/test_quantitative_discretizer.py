@@ -359,9 +359,9 @@ def test_quantitative_discretizer(x_train: pd.DataFrame, target: str):
     discretizer = QuantitativeDiscretizer(quantitatives=features, min_freq=min_freq)
     x_discretized = discretizer.fit_transform(x_train, x_train[target])
 
-    assert not features("Discrete_Quantitative_lownan").values.contains(
-        features("Discrete_Quantitative_lownan").np.nan
-    ), "Missing order should not be grouped with ordinal_discretizer"
+    assert not features("Discrete_Quantitative_lownan").values.contains(features("Discrete_Quantitative_lownan").nan), (
+        "Missing order should not be grouped with ordinal_discretizer"
+    )
 
     assert all(x_discretized["Quantitative"].value_counts(normalize=True) >= min_freq), (
         "Non-np.nan value was not grouped"

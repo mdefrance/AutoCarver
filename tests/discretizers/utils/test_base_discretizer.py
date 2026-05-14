@@ -531,10 +531,10 @@ def test_transform(true_false: bool) -> None:
     print(result)
     expected = pd.DataFrame(
         {
-            "feature1": ["1", "2", "3", "2", feature1.np.nan, "4", "4"],
-            "feature2": ["A", "A", "B", "X", feature2.np.nan, feature2.default, "X"],
+            "feature1": ["1", "2", "3", "2", feature1.nan, "4", "4"],
+            "feature2": ["A", "A", "B", "X", feature2.nan, feature2.default, "X"],
             "feature3": [
-                feature3.np.nan,
+                feature3.nan,
                 "x <= 2.00e+00",
                 "2.00e+00 < x <= 4.50e+00",
                 "2.00e+00 < x <= 4.50e+00",
