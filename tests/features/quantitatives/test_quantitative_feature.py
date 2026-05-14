@@ -42,7 +42,7 @@ def test_format_quantiles_empty_list() -> None:
     """test function min_decimals_to_differentiate"""
     # no value
     result = format_quantiles([])
-    assert result == ["-np.inf < x < np.inf"]
+    assert result == ["-inf < x < inf"]
 
     # signle value
     result = format_quantiles([0.5])
