@@ -2,7 +2,6 @@
 
 import numpy as np
 import pandas as pd
-from pandas import DataFrame
 
 from AutoCarver.features.qualitatives import (
     CategoricalFeature,
@@ -158,7 +157,7 @@ class Features:
         """Returns specified feature by name"""
 
         # case for dataframes
-        if isinstance(feature_name, DataFrame):
+        if isinstance(feature_name, pd.DataFrame):
             return [feature.version for feature in self if feature.version in feature_name.columns]
 
         # looking for feature names
@@ -194,7 +193,7 @@ class Features:
             return self(index)
 
         # dataframe request
-        if isinstance(index, DataFrame):
+        if isinstance(index, pd.DataFrame):
             index = list(index.columns)
 
         # list request and element to search for

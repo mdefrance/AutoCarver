@@ -6,7 +6,6 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 
 import pandas as pd
-from pandas import DataFrame
 from tqdm import tqdm
 
 from AutoCarver.combinations.utils.combinations import (
@@ -34,8 +33,8 @@ class AggregatedSample:
         Raw aggregated sample
     """
 
-    xagg: pd.Series | DataFrame
-    _raw: pd.Series | DataFrame | None = None
+    xagg: pd.Series | pd.DataFrame
+    _raw: pd.Series | pd.DataFrame | None = None
 
     def __post_init__(self):
         """Post initialization"""
@@ -49,7 +48,7 @@ class AggregatedSample:
         return self._raw
 
     @raw.setter
-    def raw(self, value: pd.Series | DataFrame) -> None:
+    def raw(self, value: pd.Series | pd.DataFrame) -> None:
         """Sets the raw value of the xagg"""
 
         # setting raw value
@@ -410,7 +409,7 @@ class CombinationEvaluator(ABC):
         return viable_combination
 
     @abstractmethod
-    def _grouper(self, xagg: AggregatedSample, groupby: dict[str, str]) -> pd.Series | DataFrame:
+    def _grouper(self, xagg: AggregatedSample, groupby: dict[str, str]) -> pd.Series | pd.DataFrame:
         """Helper to group XAGG's values by groupby (carver specific)"""
 
     @abstractmethod
@@ -558,7 +557,7 @@ class CombinationEvaluator(ABC):
         return cls(**combinations_json)
 
 
-def filter_nan(xagg: pd.Series | DataFrame, str_nan: str) -> pd.DataFrame:
+def filter_nan(xagg: pd.Series | pd.DataFrame, str_nan: str) -> pd.DataFrame:
     """Filters out nans from crosstab or y values"""
 
     # cehcking for values in crosstab

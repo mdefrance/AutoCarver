@@ -3,7 +3,6 @@
 from pathlib import Path
 
 import pandas as pd
-from pandas import DataFrame
 from pytest import FixtureRequest, fixture, raises
 
 from AutoCarver import ContinuousCarver
@@ -384,7 +383,7 @@ def test_continuous_carver_fit_transform_with_small_data_not_ordinal(
         },
         index=idx,
     )
-    assert isinstance(X_transformed, DataFrame)
+    assert isinstance(X_transformed, pd.DataFrame)
     assert all(X_transformed.index == expected.index)
     assert all(X_transformed.index == X.index)
     assert all(X_transformed.columns == expected.columns)
@@ -433,7 +432,7 @@ def test_continuous_carver_fit_transform_with_small_data_ordinal(evaluator: Comb
         },
         index=idx,
     )
-    assert isinstance(X_transformed, DataFrame)
+    assert isinstance(X_transformed, pd.DataFrame)
     assert all(X_transformed.index == expected.index)
     assert all(X_transformed.index == X.index)
     assert all(X_transformed.columns == expected.columns)
@@ -600,7 +599,7 @@ def test_continuous_carver_fit_transform_with_large_data(evaluator: CombinationE
         },
         index=idx,
     )
-    assert isinstance(X_transformed, DataFrame)
+    assert isinstance(X_transformed, pd.DataFrame)
     assert all(X_transformed.index == expected.index)
     assert all(X_transformed.index == X.index)
     assert all(X_transformed.columns == expected.columns)
@@ -648,7 +647,7 @@ def test_continuous_carver_fit_transform_with_wrong_dev(evaluator: CombinationEv
 
     print(X_transformed)
     expected = X
-    assert isinstance(X_transformed, DataFrame)
+    assert isinstance(X_transformed, pd.DataFrame)
     assert all(X_transformed.index == expected.index)
     assert all(X_transformed.index == X.index)
     assert all(X_transformed.columns == expected.columns)

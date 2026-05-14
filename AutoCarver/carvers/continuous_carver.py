@@ -4,7 +4,6 @@ for continuous regression tasks.
 
 import numpy as np
 import pandas as pd
-from pandas import DataFrame
 
 from AutoCarver.carvers.utils.base_carver import BaseCarver, Samples
 from AutoCarver.combinations import KruskalCombinations
@@ -87,7 +86,7 @@ class ContinuousCarver(BaseCarver):
 
         Returns
         -------
-        tuple[DataFrame, DataFrame]
+        tuple[pd.DataFrame, pd.DataFrame]
             Copies of (X, X_dev) to be used according to target type
         """
 
@@ -101,7 +100,7 @@ class ContinuousCarver(BaseCarver):
         # Checking for binary target and copying X
         return super()._prepare_data(samples)
 
-    def _aggregator(self, X: pd.DataFrame, y: pd.Series) -> dict[str, DataFrame]:
+    def _aggregator(self, X: pd.DataFrame, y: pd.Series) -> dict[str, pd.DataFrame]:
         """Computes y values for modalities of specified features and ensures the ordering
         according to the known labels
 
@@ -118,7 +117,7 @@ class ContinuousCarver(BaseCarver):
 
         Returns
         -------
-        dict[str, DataFrame]
+        dict[str, pdDataFrame]
             _description_
         """
         # checking for empty datasets

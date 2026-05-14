@@ -2,7 +2,6 @@
 
 import pandas as pd
 from numpy import nan
-from pandas import DataFrame
 from pytest import raises
 
 from AutoCarver.discretizers.qualitatives.categorical_discretizer import (
@@ -163,7 +162,7 @@ def test_group_feature_rare_modalities():
     frequencies = X[categorical_discretizer.features.versions].apply(series_value_counts, axis=0)
     grouped_x = categorical_discretizer._group_feature_rare_modalities(feature1, X, frequencies)
 
-    assert isinstance(grouped_x, DataFrame)
+    assert isinstance(grouped_x, pd.DataFrame)
     assert feature1.default in grouped_x["feature1"].values
     assert feature1.has_default
     assert grouped_x["feature1"].tolist() == [
@@ -192,7 +191,7 @@ def test_group_rare_modalities():
     )
     categorical_discretizer.features.fit(X)
     grouped_x = categorical_discretizer._group_rare_modalities(X)
-    assert isinstance(grouped_x, DataFrame)
+    assert isinstance(grouped_x, pd.DataFrame)
     assert feature1.has_default
     assert feature2.has_default
 

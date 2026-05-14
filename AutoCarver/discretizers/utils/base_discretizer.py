@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
-from pandas import DataFrame, Series, concat
+from pandas import concat
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from AutoCarver.combinations import CombinationEvaluator
@@ -201,7 +201,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        DataFrame
+        pd.DataFrame
             A formatted X
         """
 
@@ -223,7 +223,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
     def _prepare_y(self, y: pd.Series) -> None:
         """Validates input y"""
 
-        if not isinstance(y, Series):  # checking for y's type
+        if not isinstance(y, pd.Series):  # checking for y's type
             raise ValueError(f"[{self.__name__}] y must be a pandas.Series, passed {type(y)}")
 
         if any(y.isna()):  # checking for nans in the target
@@ -233,7 +233,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         """Validates input X"""
 
         # checking for X's type
-        if not isinstance(X, DataFrame):
+        if not isinstance(X, pd.DataFrame):
             raise ValueError(f"[{self.__name__}] X must be a pandas.DataFrame, passed {type(X)}")
 
         # copying X

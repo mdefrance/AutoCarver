@@ -1,5 +1,5 @@
 import pandas as pd
-from pandas import DataFrame, isna
+from pandas import isna
 from pytest import FixtureRequest, fixture
 
 from AutoCarver.features import BaseFeature
@@ -68,7 +68,7 @@ def test_filter(filter: QuantitativeFilter, sample_data: pd.DataFrame, sample_ra
 
     # testing _compute_correlation
     correlation = filter._compute_correlation(sample_data, sample_ranks)
-    assert isinstance(correlation, DataFrame), "Correlation should be a dataframe"
+    assert isinstance(correlation, pd.DataFrame), "Correlation should be a dataframe"
     assert correlation.shape == (
         len(sample_ranks),
         len(sample_ranks),

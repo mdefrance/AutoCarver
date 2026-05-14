@@ -4,7 +4,6 @@ import json
 
 import pandas as pd
 from numpy import array, inf, nan
-from pandas import DataFrame, Series
 from pytest import FixtureRequest, fixture, raises
 
 from AutoCarver.combinations import (
@@ -868,8 +867,8 @@ def sample_data():
 
 
 def test_initialization(sample_data):
-    assert isinstance(sample_data.X, DataFrame)
-    assert isinstance(sample_data.y, Series)
+    assert isinstance(sample_data.X, pd.DataFrame)
+    assert isinstance(sample_data.y, pd.Series)
 
 
 def test_getitem(sample_data):

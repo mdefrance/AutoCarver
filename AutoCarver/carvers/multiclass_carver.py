@@ -68,7 +68,7 @@ class MulticlassCarver(BinaryCarver):
 
         Returns
         -------
-        tuple[DataFrame, DataFrame, dict[str, Callable]]
+        tuple[DataFrame, pd.DataFrame, dict[str, Callable]]
             Copies of (X, X_dev) and helpers to be used according to target type
         """
         # converting target to str

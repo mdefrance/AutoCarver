@@ -7,7 +7,6 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 
 import pandas as pd
-from pandas import DataFrame, Series
 
 from AutoCarver.carvers.utils.pretty_print import index_mapper, prettier_xagg
 from AutoCarver.combinations import (
@@ -172,7 +171,7 @@ class BaseCarver(BaseDiscretizer, ABC):
 
         Returns
         -------
-        tuple[DataFrame, DataFrame]
+        tuple[pd.DataFrame, pd.DataFrame]
             Copies of (X, X_dev)
         """
         # checking for not provided y
@@ -256,14 +255,14 @@ class BaseCarver(BaseDiscretizer, ABC):
         return self
 
     @abstractmethod
-    def _aggregator(self, X: pd.DataFrame, y: pd.Series) -> pd.Series | DataFrame:
+    def _aggregator(self, X: pd.DataFrame, y: pd.Series) -> pd.Series | pd.DataFrame:
         """Helper that aggregates X by y into crosstab or means (carver specific)"""
 
     def _carve_feature(
         self,
         feature: BaseFeature,
-        xaggs: dict[str, Series | DataFrame],
-        xaggs_dev: dict[str, Series | DataFrame],
+        xaggs: dict[str, pd.Series | pd.DataFrame],
+        xaggs_dev: dict[str, pd.Series | pd.DataFrame],
         num_iter: str,
     ) -> dict[str, GroupedList]:
         """Carves a feature into buckets that maximize association with the target"""
@@ -302,18 +301,18 @@ class BaseCarver(BaseDiscretizer, ABC):
     def _print_xagg(
         self,
         feature: BaseFeature,
-        xagg: pd.Series | DataFrame,
+        xagg: pd.Series | pd.DataFrame,
         message: str,
         *,
-        xagg_dev: pd.Series | DataFrame | None = None,
+        xagg_dev: pd.Series | pd.DataFrame | None = None,
     ) -> None:
         """Prints crosstabs' target rates and frequencies per modality, in raw or html format
 
         Parameters
         ----------
-        xagg : pd.Series | DataFrame
+        xagg : pd.Series | pd.DataFrame
             Train crosstab
-        xagg_dev : pd.Series | DataFrame
+        xagg_dev : pd.Series | pd.DataFrame
             Dev crosstab, by default None
         pretty_print : bool, optional
             Whether to output html or not, by default False
@@ -332,7 +331,7 @@ class BaseCarver(BaseDiscretizer, ABC):
 
     def _format_xagg(
         self, feature: BaseFeature, xagg: pd.DataFrame, xagg_dev: pd.DataFrame | None = None
-    ) -> tuple[DataFrame, DataFrame]:
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
         """Formats the XAGG DataFrame."""
         formatted_xagg = index_mapper(feature, xagg)
         formatted_xagg_dev = index_mapper(feature, xagg_dev)

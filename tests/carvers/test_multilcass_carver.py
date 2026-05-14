@@ -3,7 +3,6 @@
 from pathlib import Path
 
 import pandas as pd
-from pandas import DataFrame
 from pytest import FixtureRequest, fixture, raises
 
 from AutoCarver.carvers.multiclass_carver import MulticlassCarver, get_one_vs_rest
@@ -182,7 +181,7 @@ def test_multiclass_carver_fit_transform_with_small_data_not_ordinal(
         index=idx,
     )
     print(X_transformed.columns)
-    assert isinstance(X_transformed, DataFrame)
+    assert isinstance(X_transformed, pd.DataFrame)
     assert all(X_transformed.index == expected.index)
     assert all(X_transformed.index == X.index)
     assert all(X_transformed.columns == expected.columns)
@@ -234,7 +233,7 @@ def test_multiclass_carver_fit_transform_with_small_data_ordinal(evaluator: Comb
         index=idx,
     )
     print(X_transformed.columns)
-    assert isinstance(X_transformed, DataFrame)
+    assert isinstance(X_transformed, pd.DataFrame)
     assert all(X_transformed.index == expected.index)
     assert all(X_transformed.index == X.index)
     assert all(X_transformed.columns == expected.columns)
@@ -548,7 +547,7 @@ def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationE
     )
     print(X_transformed.to_dict(orient="list"))
     print(X_transformed.columns)
-    assert isinstance(X_transformed, DataFrame)
+    assert isinstance(X_transformed, pd.DataFrame)
     assert all(X_transformed.index == expected.index)
     assert all(X_transformed.index == X.index)
     assert all(X_transformed.columns == expected.columns)
@@ -596,7 +595,7 @@ def test_multiclass_carver_fit_transform_with_target_only_nan(evaluator: Combina
         },
         index=idx,
     )
-    assert isinstance(X_transformed, DataFrame)
+    assert isinstance(X_transformed, pd.DataFrame)
     assert all(X_transformed.index == expected.index)
     assert all(X_transformed.index == X.index)
     assert all(X_transformed.columns == expected.columns)
@@ -658,7 +657,7 @@ def test_multiclass_carver_fit_transform_with_wrong_dev(evaluator: CombinationEv
         },
         index=idx,
     )
-    assert isinstance(X_transformed, DataFrame)
+    assert isinstance(X_transformed, pd.DataFrame)
     assert all(X_transformed.index == expected.index)
     assert all(X_transformed.index == X.index)
     assert all(X_transformed.columns == expected.columns)

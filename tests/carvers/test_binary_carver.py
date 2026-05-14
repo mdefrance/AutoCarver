@@ -3,7 +3,6 @@
 from pathlib import Path
 
 import pandas as pd
-from pandas import DataFrame
 from pytest import FixtureRequest, fixture, raises
 
 from AutoCarver import BinaryCarver
@@ -380,7 +379,7 @@ def test_binary_carver_fit_transform_with_small_data_not_ordinal(evaluator: Comb
         },
         index=idx,
     )
-    assert isinstance(X_transformed, DataFrame)
+    assert isinstance(X_transformed, pd.DataFrame)
     assert all(X_transformed.index == expected.index)
     assert all(X_transformed.index == X.index)
     assert all(X_transformed.columns == expected.columns)
@@ -429,7 +428,7 @@ def test_binary_carver_fit_transform_with_small_data_ordinal(evaluator: Combinat
         },
         index=idx,
     )
-    assert isinstance(X_transformed, DataFrame)
+    assert isinstance(X_transformed, pd.DataFrame)
     assert all(X_transformed.index == expected.index)
     assert all(X_transformed.index == X.index)
     assert all(X_transformed.columns == expected.columns)
@@ -593,7 +592,7 @@ def test_binary_carver_fit_transform_with_large_data(evaluator: CombinationEvalu
         },
         index=idx,
     )
-    assert isinstance(X_transformed, DataFrame)
+    assert isinstance(X_transformed, pd.DataFrame)
     assert all(X_transformed.index == expected.index)
     assert all(X_transformed.index == X.index)
     assert all(X_transformed.columns == expected.columns)
@@ -647,7 +646,7 @@ def test_binary_carver_fit_transform_with_target_only_nan(evaluator: Combination
         },
         index=idx,
     )
-    assert isinstance(X_transformed, DataFrame)
+    assert isinstance(X_transformed, pd.DataFrame)
     assert all(X_transformed.index == expected.index)
     assert all(X_transformed.index == X.index)
     assert all(X_transformed.columns == expected.columns)
@@ -696,7 +695,7 @@ def test_binary_carver_fit_transform_with_wrong_dev(evaluator: CombinationEvalua
 
     print(X_transformed)
     expected = X
-    assert isinstance(X_transformed, DataFrame)
+    assert isinstance(X_transformed, pd.DataFrame)
     assert all(X_transformed.index == expected.index)
     assert all(X_transformed.index == X.index)
     assert all(X_transformed.columns == expected.columns)

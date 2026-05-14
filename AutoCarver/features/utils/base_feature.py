@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 import pandas as pd
-from pandas import DataFrame, Series, option_context
+from pandas import option_context
 
 from AutoCarver.config import Constants
 from AutoCarver.features.utils.grouped_list import GroupedList
@@ -187,11 +187,11 @@ class BaseFeature(ABC):
         """Feature's trained statistics"""
 
         # case for binary targets
-        if isinstance(value, DataFrame):
+        if isinstance(value, pd.DataFrame):
             self._statistics = value.to_dict()
 
         # case for continuous targets
-        elif isinstance(value, Series):
+        elif isinstance(value, pd.Series):
             self._statistics = value.to_frame().to_dict()
 
         # case for selectors
@@ -431,7 +431,7 @@ class BaseFeature(ABC):
         """updates feature's statistics index with values"""
 
         # updating feature's statistics
-        if self.statistics is not None and isinstance(self.statistics, DataFrame):
+        if self.statistics is not None and isinstance(self.statistics, pd.DataFrame):
             self.statistics.rename(index={kept_label: kept_value}, inplace=True)
 
     @abstractmethod

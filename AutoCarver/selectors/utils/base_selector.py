@@ -7,7 +7,6 @@ from typing import overload
 
 import numpy as np
 import pandas as pd
-from pandas import Series
 
 from AutoCarver.features import BaseFeature, Features
 from AutoCarver.selectors.filters import BaseFilter
@@ -247,7 +246,7 @@ class BaseSelector(ABC):
         """
 
         # getting target name
-        if isinstance(y, Series):
+        if isinstance(y, pd.Series):
             self.target_name = y.name
 
         # initiating features measures and filters
@@ -332,9 +331,9 @@ class BaseSelector(ABC):
 
         Parameters
         ----------
-        xagg : pd.Series | DataFrame
+        xagg : pd.Series | pd.DataFrame
             Train crosstab
-        xagg_dev : pd.Series | DataFrame
+        xagg_dev : pd.Series | pd.DataFrame
             Dev crosstab, by default None
         pretty_print : bool, optional
             Whether to output html or not, by default False

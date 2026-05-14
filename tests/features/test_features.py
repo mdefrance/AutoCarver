@@ -2,17 +2,11 @@
 
 import json
 
-from pandas import DataFrame
+import pandas as pd
 from pytest import fixture, raises
 
-from AutoCarver.features import (
-    BaseFeature,
-    CategoricalFeature,
-    OrdinalFeature,
-    QualitativeFeature,
-    QuantitativeFeature,
-)
-from AutoCarver.features.features import (  # Replace 'your_module' with the actual module name
+from AutoCarver.features import BaseFeature, CategoricalFeature, OrdinalFeature, QualitativeFeature, QuantitativeFeature
+from AutoCarver.features.features import (
     Features,
     cast_features,
     get_names,
@@ -598,7 +592,7 @@ def test_features_get_summaries(features):
         if feature.values is None:
             feature.values = GroupedList([1, 2, 3])
     summaries = features.summary
-    assert isinstance(summaries, DataFrame)
+    assert isinstance(summaries, pd.DataFrame)
     summary_features = list(summaries.reset_index(drop=False)["feature"])
     for feature in features:
         assert feature.__repr__() in summary_features

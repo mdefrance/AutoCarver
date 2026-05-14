@@ -3,7 +3,6 @@
 import json
 
 import pandas as pd
-from pandas import DataFrame
 from pytest import raises
 
 from AutoCarver.config import Constants
@@ -385,7 +384,7 @@ def test_base_feature_load() -> None:
     assert loaded_feature.value_per_label == feature.value_per_label
     assert loaded_feature.raw_order == feature.raw_order
     print(loaded_feature.statistics)
-    assert isinstance(loaded_feature.statistics, DataFrame)
+    assert isinstance(loaded_feature.statistics, pd.DataFrame)
     assert loaded_feature.statistics.shape[0] == 2
     assert loaded_feature.statistics.shape[1] == 2
     assert all(loaded_feature.statistics.index == [0, 1])
