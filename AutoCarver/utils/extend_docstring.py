@@ -35,22 +35,20 @@ class extend_docstring:
                 section_params = []
 
             # it is a parameter
+            # checking for parameter name
+            elif " : " in param:
+                # storing current param if any
+                if current_param:
+                    section_params.append(current_param)
+
+                # resetting current param
+                current_param = param
+
+            # adding to current param
+            elif current_param:
+                current_param = "\n\n".join([current_param, param])
             else:
-                # checking for parameter name
-                if " : " in param:
-                    # storing current param if any
-                    if current_param:
-                        section_params.append(current_param)
-
-                    # resetting current param
-                    current_param = param
-
-                # adding to current param
-                else:
-                    if current_param:
-                        current_param = "\n\n".join([current_param, param])
-                    else:
-                        current_param = param
+                current_param = param
         # storing last section
         if current_param:
             section_params.append(current_param)
