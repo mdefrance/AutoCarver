@@ -21,3 +21,4 @@ docs/source/examples/Carvers/MulticlassClassification/multiclass_xgboost.json
 _test_package.ipynb
 docs/build/*
 .vscode/settings.json
+**/__pycache__/*
