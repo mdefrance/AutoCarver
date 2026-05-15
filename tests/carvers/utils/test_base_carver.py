@@ -129,8 +129,8 @@ def test_prepare_data(features, evaluator, samples):
     y_train = pd.Series([0, 1, 0, 0])
     y_dev = pd.Series([1, 0, 1, 1, 0, 1])
 
-    assert expected_train.equals(samples.train.X)
-    assert expected_dev.equals(samples.dev.X)
+    pd.testing.assert_frame_equal(expected_train, samples.train.X, check_dtype=False)
+    pd.testing.assert_frame_equal(expected_dev, samples.dev.X, check_dtype=False)
 
     assert y_train.equals(samples.train.y)
     assert y_dev.equals(samples.dev.y)

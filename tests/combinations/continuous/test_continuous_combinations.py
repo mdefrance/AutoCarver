@@ -132,8 +132,8 @@ def test_association_measure_single_value(evaluator: ContinuousCombinationEvalua
     feature = OrdinalFeature("feature", ["A"])
     xagg = get_target_values_by_modality(X, y, feature)
 
-    with raises(ValueError):
-        evaluator._association_measure(xagg)
+    result = evaluator._association_measure(xagg)
+    assert result.get("kruskal") is None
 
 
 def test_association_measure_identical_values(evaluator: ContinuousCombinationEvaluator):
@@ -142,8 +142,8 @@ def test_association_measure_identical_values(evaluator: ContinuousCombinationEv
     feature = OrdinalFeature("feature", ["A"])
     xagg = get_target_values_by_modality(X, y, feature)
 
-    with raises(ValueError):
-        evaluator._association_measure(xagg)
+    result = evaluator._association_measure(xagg)
+    assert result.get("kruskal") is None
 
 
 def test_grouper_basic(evaluator: ContinuousCombinationEvaluator):

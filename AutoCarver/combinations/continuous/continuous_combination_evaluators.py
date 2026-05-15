@@ -47,7 +47,10 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
         _, _ = n_obs, tol  # unused attribute
 
         # Kruskal-Wallis' H
-        return {"kruskal": kruskal(*tuple(xagg.values))[0]}
+        try:
+            return {"kruskal": kruskal(*tuple(xagg.values))[0]}
+        except (ValueError, IndexError):
+            return {"kruskal": None}
 
     def _grouper(self, xagg: AggregatedSample, groupby: dict[str, str]) -> pd.Series:
         """Groups values of y

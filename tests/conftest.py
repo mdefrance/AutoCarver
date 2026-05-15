@@ -102,12 +102,12 @@ def init_df(seed: int, size: int = 10000) -> pd.DataFrame:
     df["Discrete_Qualitative_rarevalue_noorder"] = df["Discrete_Quantitative_rarevalue"]
 
     # wrong data
-    df["np.nan"] = np.nan
+    df["nan"] = np.nan
     df["ones"] = "1"
     df["one"] = 1
-    df["one_nan"] = df["np.nan"]
+    df["one_nan"] = df["nan"]
     df.loc[0, "one_nan"] = 1
-    df["ones_nan"] = df["np.nan"]
+    df["ones_nan"] = df["nan"].astype(object)
     df.loc[size - 1, "ones_nan"] = "1"
 
     return df

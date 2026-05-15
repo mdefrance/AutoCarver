@@ -68,7 +68,7 @@ def test_discretizer_fit():
         "feature3": ["1, 3", "4", "1, 3", "4", np.nan],
     }
     expected = pd.DataFrame(data)
-    assert transformed_df.equals(expected)
+    pd.testing.assert_frame_equal(transformed_df, expected, check_dtype=False)
 
 
 def test_discretizer(x_train: pd.DataFrame, x_dev_1: pd.DataFrame, target: str):

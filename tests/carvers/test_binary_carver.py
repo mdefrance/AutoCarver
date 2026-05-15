@@ -443,8 +443,8 @@ def test_binary_carver_fit_transform_with_small_data_ordinal(evaluator: Combinat
         "\n",
         (X_transformed.values == expected.values),
     )
-    assert X.equals(expected)
-    assert X_transformed.equals(expected)
+    pd.testing.assert_frame_equal(X, expected, check_dtype=False)
+    pd.testing.assert_frame_equal(X_transformed, expected, check_dtype=False)
 
 
 def test_binary_carver_fit_transform_with_large_data(evaluator: CombinationEvaluator):

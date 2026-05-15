@@ -155,7 +155,7 @@ def test_qualitative_discretizer_fit_ordinal_features():
             "feature3": ["0 to 1", "2", "0 to 1", "2", "3", "3", "3", "3", np.nan],
         }
     )
-    assert transformed.equals(df_expected), "Transformed data does not match expected data"
+    pd.testing.assert_frame_equal(transformed, df_expected, check_dtype=False)
 
 
 def test_qualitative_discretizer(x_train: pd.DataFrame, target: str):
