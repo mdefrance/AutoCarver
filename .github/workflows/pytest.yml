@@ -73,3 +73,26 @@ jobs:
 
       - name: Run tests
         run: uv run pytest -n auto --cov -q tests/
+
+  pytest_lowest:
+    name: Tests (lowest-direct)
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' }}
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.10'
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: "**/uv.lock"
+
+      - name: Install dependencies (lowest-direct)
+        run: |
+          uv lock --resolution=lowest-direct
+          uv sync --all-extras
+
+      - name: Run tests
+        run: uv run pytest -n auto --cov -q tests/
