@@ -55,7 +55,7 @@ dev = [
 Homepage = "https://github.com/mdefrance/AutoCarver"
 Documentation = "https://autocarver.readthedocs.io/en/latest/"
 Repository = "https://github.com/mdefrance/AutoCarver"
-Issues = "https://github.com/pypa/sampleproject/issues"
+Issues = "https://github.com/mdefrance/AutoCarver/issues"
 
 [tool.uv.build-backend]
 module-name = ["AutoCarver"]
