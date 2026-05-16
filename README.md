@@ -5,12 +5,13 @@
 </p>
 
 
-</p>
-<p align="left">
-    <img alt="PyPI" src="https://img.shields.io/pypi/v/autocarver">
-    <img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/autocarver">
-    <img alt="License" src="https://img.shields.io/github/license/mdefrance/autocarver">
-</p>
+[![PyPI](https://img.shields.io/pypi/v/autocarver)](https://pypi.org/project/AutoCarver)
+[![Python](https://img.shields.io/pypi/pyversions/autocarver)](https://pypi.org/project/AutoCarver/)
+[![License](https://img.shields.io/github/license/mdefrance/autocarver)](LICENSE)
+[![SPEC 0](https://img.shields.io/badge/SPEC-0-green?labelColor=%23004811&color=%235CA038)](https://scientific-python.org/specs/spec-0000/)
+[![Docs](https://readthedocs.org/projects/autocarver/badge/?version=latest)](https://autocarver.readthedocs.io/en/latest/)
+[![Tests](https://github.com/mdefrance/AutoCarver/actions/workflows/pytest.yml/badge.svg)](https://github.com/mdefrance/AutoCarver/actions/workflows/pytest.yml)
+
 
 
 # ReadTheDocs
