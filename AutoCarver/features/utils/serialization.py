@@ -57,7 +57,7 @@ def convert_value_to_numpy_type(value: str | float | int) -> Any:
 
 def convert_values_to_base_types(
     iterable: list[Any] | dict[str, list[Any]],
-) -> list[str | int | float] | dict[str, list[str | int | float]]:
+) -> list[str | int | float] | dict[str | int | float, Any] | None:
     """Converts a list or a dict of lists values to python's base types (str, int, float)
     for JSON serialization.
 
@@ -86,7 +86,7 @@ def convert_values_to_base_types(
 
 def convert_values_to_numpy_types(
     iterable: list[str | int | float] | dict[str, list[str | int | float]],
-) -> list[Any] | dict[str, list[Any]]:
+) -> list[Any] | dict[Any, Any] | None:
     """Converts a list or a dict of lists values to numpy types for JSON deserialization.
 
     Parameters
@@ -156,7 +156,7 @@ def json_serialize_combination(combination: dict[Any, Any]) -> dict[Any, Any]:
     return json_serialized_combination
 
 
-def json_deserialize_content(json_serialized_feature: dict) -> GroupedList:
+def json_deserialize_content(json_serialized_feature: dict) -> GroupedList | None:
     """JSON deserializes a content
 
     Parameters

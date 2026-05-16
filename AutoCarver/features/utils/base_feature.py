@@ -312,14 +312,14 @@ class BaseFeature(ABC):
         self._dropna = value
 
     @property
-    def content(self) -> dict:
+    def content(self) -> dict | GroupedList | None:
         """returns feature values' content"""
         if isinstance(self.values, GroupedList):
             return self.values.content
         return self.values
 
     @property
-    def labels(self) -> GroupedList:
+    def labels(self) -> list | None:
         """gives labels associated to feature's values"""
         # default labels are values
         return self._labels
@@ -359,7 +359,7 @@ class BaseFeature(ABC):
             self.value_per_label.update({label: value_to_keep})
 
     @abstractmethod
-    def make_labels(self) -> GroupedList:
+    def make_labels(self) -> GroupedList | None:
         """builds labels according to feature's values"""
         # default labels are values
         return self.values

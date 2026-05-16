@@ -1,5 +1,7 @@
 """Base tools to convert values into specific types."""
 
+from typing import Self
+
 import pandas as pd
 
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
@@ -28,7 +30,7 @@ class StringDiscretizer(BaseDiscretizer):
         super().__init__(features=features, **kwargs)
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> None:  # pylint: disable=W0222
+    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> Self:  # pylint: disable=W0222
         self._log_if_verbose()  # verbose if requested
 
         # checking for binary target and copying X
@@ -105,7 +107,7 @@ class TimedeltaDiscretizer(BaseDiscretizer):
         super().__init__(features=features, **kwargs)
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> None:  # pylint: disable=W0222
+    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> Self:  # pylint: disable=W0222
         self._log_if_verbose()  # verbose if requested
 
         # checking for binary target and copying X

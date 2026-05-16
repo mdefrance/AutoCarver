@@ -6,7 +6,6 @@ import pandas as pd
 from AutoCarver.features.qualitatives import (
     CategoricalFeature,
     OrdinalFeature,
-    QualitativeFeature,
     get_categorical_features,
     get_ordinal_features,
 )
@@ -52,7 +51,7 @@ from AutoCarver.utils.attributes import get_bool_attribute
 
 def check_ordinal_features(
     ordinals: list[OrdinalFeature] | dict[str, list[str]],
-) -> list[OrdinalFeature]:
+) -> list[OrdinalFeature] | list[str] | "Features":
     """Checks that ordinals are correctly formatted"""
 
     # checking for ordinal types
@@ -220,7 +219,7 @@ class Features:
         return get_versions(self.to_list())
 
     @property
-    def qualitatives(self) -> list[QualitativeFeature]:
+    def qualitatives(self) -> list[OrdinalFeature | CategoricalFeature]:
         """Returns all qualitative features"""
         return self.categoricals + self.ordinals
 
@@ -486,7 +485,7 @@ def keep_versions(kept_versions: list[str], features: list[BaseFeature]) -> list
     return [feature for feature in features if feature.version in kept_versions]
 
 
-def make_versions(features: list[BaseFeature], y_classes: list[str]) -> BaseFeature:
+def make_versions(features: list[BaseFeature], y_classes: list[str]) -> list[BaseFeature]:
     """Makes a copy of a list of features with specified version"""
     return [make_version(feature, y_class) for y_class in y_classes for feature in features]
 

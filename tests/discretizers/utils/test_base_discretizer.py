@@ -617,7 +617,7 @@ def test_transform(true_false: bool) -> None:
 
 
 @fixture(params=[KruskalCombinations, CramervCombinations, TschuprowtCombinations, None])
-def combinations(request: FixtureRequest) -> str:
+def combinations(request: FixtureRequest):
     """sort_by parameter"""
     if request.param is None:
         return None

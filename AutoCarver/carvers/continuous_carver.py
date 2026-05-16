@@ -100,7 +100,7 @@ class ContinuousCarver(BaseCarver):
         # Checking for binary target and copying X
         return super()._prepare_data(samples)
 
-    def _aggregator(self, X: pd.DataFrame, y: pd.Series) -> dict[str, pd.DataFrame]:
+    def _aggregator(self, X: pd.DataFrame, y: pd.Series) -> dict[str, pd.DataFrame | None]:
         """Computes y values for modalities of specified features and ensures the ordering
         according to the known labels
 
@@ -130,7 +130,7 @@ class ContinuousCarver(BaseCarver):
         return yvals
 
 
-def get_target_values_by_modality(X: pd.DataFrame, y: pd.Series, feature: BaseFeature) -> dict:
+def get_target_values_by_modality(X: pd.DataFrame, y: pd.Series, feature: BaseFeature) -> pd.Series:
     """Computes y values for modalities of specified features and ensures the ordering
     according to the known labels"""
 

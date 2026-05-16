@@ -176,7 +176,7 @@ class QualitativeFeature(BaseFeature):
     def _specific_formatting(self, ordered_content: list[str]) -> str:
         """specific label formatting"""
 
-    def _format_modalities(self, group: str, content: list[str]) -> list[str]:
+    def _format_modalities(self, group: str, content: list[str]) -> str:
         """Formats a list of float quantiles into a list of boundaries.
 
         Rounds quantiles to the closest power of 1000.

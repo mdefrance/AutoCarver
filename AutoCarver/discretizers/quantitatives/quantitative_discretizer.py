@@ -2,6 +2,8 @@
 for a binary classification model.
 """
 
+from typing import Self
+
 import pandas as pd
 
 from AutoCarver.discretizers.qualitatives import OrdinalDiscretizer
@@ -72,7 +74,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         return sample
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: pd.DataFrame, y: pd.Series) -> None:  # pylint: disable=W0222
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> Self:  # pylint: disable=W0222
         # verbose if requested
         self._log_if_verbose("------\n---")
 

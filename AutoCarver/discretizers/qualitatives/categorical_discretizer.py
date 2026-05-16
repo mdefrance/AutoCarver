@@ -2,6 +2,8 @@
 for a binary classification model.
 """
 
+from typing import Self
+
 import pandas as pd
 
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
@@ -67,7 +69,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
         return sample
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: pd.DataFrame, y: pd.Series) -> None:  # pylint: disable=W0222
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> Self:  # pylint: disable=W0222
         # copying dataframe and checking data before bucketization
         sample = self._prepare_data(Sample(X, y))
 
