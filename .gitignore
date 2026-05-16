@@ -1,26 +1,12 @@
 *.gz
 *.pyc
-AutoCarver.egg-info/PKG-INFO
-AutoCarver.egg-info/dependency_links.txt
-AutoCarver.egg-info/top_level.txt
-AutoCarver.egg-info/SOURCES.txt
 *.coverage
-# *.json
-# *.ipynb
 *.ipynb_checkpoints
-test_package.ipynb
-*.exe
-weighted_test.ipynb
-continuous_regression_example.ipynb
-docs/source/examples/Carvers/BinaryClassification/binary_carver.json
-docs/source/examples/Carvers/BinaryClassification/binary_xgboost.json
-docs/source/examples/Carvers/ContinuousRegression/continuous_carver.json
-docs/source/examples/Carvers/ContinuousRegression/regression_xgboost.json
-docs/source/examples/Carvers/MulticlassClassification/multiclass_carver.json
-docs/source/examples/Carvers/MulticlassClassification/multiclass_xgboost.json
-_test_package.ipynb
+docs/source/examples/**/**/**.json
 docs/build/*
-.vscode/settings.json
+docs/source/bin/*
+.vscode/
 **/__pycache__/*
 **.venv/*
 .python-version
+work/*
