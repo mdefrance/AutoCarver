@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - 'dev*'
+      - main
   pull_request:
     branches:
       - main
@@ -42,7 +43,13 @@ jobs:
           uv sync --all-extras
           
       - name: Run tests
-        run: uv run pytest -n auto -q tests/
+        run: uv run pytest -n auto --cov --cov-branch --cov-report=xml -q tests/
+
+      - name: Upload coverage to Codecov
+        if: github.ref == 'refs/heads/main'
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
 
 
   pytest_pull:
@@ -75,13 +82,8 @@ jobs:
           uv sync --all-extras
 
       - name: Run tests
-        run: uv run pytest -n auto --cov --cov-branch --cov-report=xml -q tests/
+        run: uv run pytest -n auto -q tests/
 
-      - name: Upload coverage to Codecov
-        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
 
   pytest_lowest:
     name: Tests (lowest-direct)
@@ -104,4 +106,4 @@ jobs:
           uv sync --all-extras
 
       - name: Run tests
-        run: uv run pytest -n auto --cov -q tests/
+        run: uv run pytest -n auto -q tests/
