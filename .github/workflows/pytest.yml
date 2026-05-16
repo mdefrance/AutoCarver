@@ -10,6 +10,7 @@ on:
 
 jobs:
   lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -21,6 +22,7 @@ jobs:
           uv run pylint AutoCarver --fail-under=9
 
   pytest_push:
+    name: Tests (push)
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.base_ref == ''
 
@@ -28,7 +30,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
@@ -40,10 +42,11 @@ jobs:
           uv sync --all-extras
           
       - name: Run tests
-        run: uv run pytest -n auto --cov -q tests/
-      
+        run: uv run pytest -n auto -q tests/
+
 
   pytest_pull:
+    name: Tests (matrix)
     strategy:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
@@ -72,7 +75,13 @@ jobs:
           uv sync --all-extras
 
       - name: Run tests
-        run: uv run pytest -n auto --cov -q tests/
+        run: uv run pytest -n auto --cov --cov-branch --cov-report=xml -q tests/
+
+      - name: Upload coverage to Codecov
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   pytest_lowest:
     name: Tests (lowest-direct)
@@ -83,7 +92,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true

@@ -1,20 +1,45 @@
 [project]
 name = "AutoCarver"
-version = "7.1.5"
+version = "7.1.6"
 description = "Automatic Discretization of Features with Optimal Target Association"
 authors = [{ name = "Mario DEFRANCE", email = "defrancemario@gmail.com" }]
 requires-python = ">=3.11, <3.15"
 readme = "README.md"
 license = "MIT"
+keywords = [
+    "binning",
+    "discretization",
+    "feature-engineering",
+    "credit-scoring",
+    "woe",
+    "scorecards",
+    "tschuprow",
+    "tschuprow-t",
+    "cramer-v",
+    "information-value",
+    "iv",
+    "monotonic-binning",
+    "supervised-discretization",
+    "bucketization",
+    "risk-modeling",
+    "credit-risk",
+    "fraud-detection",
+    "categorical-encoding",
+]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Science/Research",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
-    "Operating System :: Unix",
-    "Operating System :: MacOS :: MacOS X",
-    "Operating System :: Microsoft :: Windows",
-    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering",
 ]
 dependencies = [
     "numpy>=2.1,<2.5",
@@ -28,7 +53,7 @@ dependencies = [
 [project.optional-dependencies]
 jupyter = [
     "ipython>=8.28,<9.11",
-    "matplotlib>=3.10,<3.11",
+    "matplotlib>=3.9,<3.11",
     "jinja2>=3.1.5,<4",
     "ipykernel>=6.27.1,<7",
 ]
@@ -49,9 +74,12 @@ dev = [
     "ruff>=0.15.12",
     "pytest-xdist>=3.8.0",
 ]
+
 [project.urls]
-docs = "https://autocarver.readthedocs.io/en/latest/index.html"
-repository = "https://github.com/mdefrance/AutoCarver"
+Homepage = "https://github.com/mdefrance/AutoCarver"
+Documentation = "https://autocarver.readthedocs.io/en/latest/"
+Repository = "https://github.com/mdefrance/AutoCarver"
+Issues = "https://github.com/mdefrance/AutoCarver/issues"
 
 [tool.uv.build-backend]
 module-name = ["AutoCarver"]
@@ -63,7 +91,7 @@ build-backend = "uv_build"
 
 [tool.ruff]
 line-length = 120
-target-version = 'py310'
+target-version = 'py311'
 exclude = ["*.ipynb"]
 
 [tool.ruff.lint]
