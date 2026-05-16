@@ -1,5 +1,4 @@
 
-</p>
 <p align="center">
     <img alt="AutoCarver Logo" src="https://raw.githubusercontent.com/mdefrance/AutoCarver/main/docs/source/artwork/auto_carver_symbol_small.png" width="25%">
 </p>
@@ -14,7 +13,7 @@
 
 
 
-# ReadTheDocs
+# Documentation
 
 Check out the package documentation on [ReadTheDocs](https://autocarver.readthedocs.io/en/latest/index.html)!
 
@@ -22,9 +21,10 @@ Check out the package documentation on [ReadTheDocs](https://autocarver.readthed
 
 **AutoCarver** can be installed from [PyPI](https://pypi.org/project/AutoCarver):
 
-<pre>
+```bash
 pip install autocarver
-</pre>
+```
+
 
 
 

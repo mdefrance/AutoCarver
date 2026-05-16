@@ -1,6 +1,6 @@
 [project]
 name = "AutoCarver"
-version = "7.1.5"
+version = "7.1.6"
 description = "Automatic Discretization of Features with Optimal Target Association"
 authors = [{ name = "Mario DEFRANCE", email = "defrancemario@gmail.com" }]
 requires-python = ">=3.11, <3.15"
@@ -29,7 +29,7 @@ dependencies = [
 [project.optional-dependencies]
 jupyter = [
     "ipython>=8.28,<9.11",
-    "matplotlib>=3.10,<3.11",
+    "matplotlib>=3.9,<3.11",
     "jinja2>=3.1.5,<4",
     "ipykernel>=6.27.1,<7",
 ]
@@ -50,9 +50,12 @@ dev = [
     "ruff>=0.15.12",
     "pytest-xdist>=3.8.0",
 ]
+
 [project.urls]
-docs = "https://autocarver.readthedocs.io/en/latest/index.html"
-repository = "https://github.com/mdefrance/AutoCarver"
+Homepage = "https://github.com/mdefrance/AutoCarver"
+Documentation = "https://autocarver.readthedocs.io/en/latest/"
+Repository = "https://github.com/mdefrance/AutoCarver"
+Issues = "https://github.com/pypa/sampleproject/issues"
 
 [tool.uv.build-backend]
 module-name = ["AutoCarver"]
@@ -64,7 +67,7 @@ build-backend = "uv_build"
 
 [tool.ruff]
 line-length = 120
-target-version = 'py310'
+target-version = 'py311'
 exclude = ["*.ipynb"]
 
 [tool.ruff.lint]

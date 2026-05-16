@@ -1,12 +1,12 @@
 """set of tests for combinations within carvers"""
 
-from enum import Enum
+from enum import StrEnum
 
 import numpy as np
 import pandas as pd
 
 
-class TestKeys(str, Enum):
+class TestKeys(StrEnum):
     """keys for test results"""
 
     RANKS_TRAIN_DEV = "ranks_train_dev"
@@ -16,7 +16,7 @@ class TestKeys(str, Enum):
     INFO = "info"
 
 
-class TestMessages(str, Enum):
+class TestMessages(StrEnum):
     """messages for test results"""
 
     INVERSION_RATES = "Inversion of target rates per modality"
