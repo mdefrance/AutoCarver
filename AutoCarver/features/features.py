@@ -51,7 +51,7 @@ from AutoCarver.utils.attributes import get_bool_attribute
 
 def check_ordinal_features(
     ordinals: list[OrdinalFeature] | dict[str, list[str]],
-) -> list[OrdinalFeature] | list[str] | "Features":
+) -> "list[OrdinalFeature] | list[str] | Features":
     """Checks that ordinals are correctly formatted"""
 
     # checking for ordinal types
