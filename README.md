@@ -1,4 +1,5 @@
 
+</p>
 <p align="center">
     <img alt="AutoCarver Logo" src="https://raw.githubusercontent.com/mdefrance/AutoCarver/main/docs/source/artwork/auto_carver_symbol_small.png" width="25%">
 </p>
@@ -38,9 +39,7 @@ data = pd.read_csv(url)
 target = "Survived"
 
 # 2. Train / dev split, stratified on the target
-train, dev = train_test_split(
-    data, test_size=0.33, random_state=42, stratify=data[target]
-)
+train, dev = train_test_split(data, test_size=0.33, random_state=42, stratify=data[target])
 
 # 3. Declare features by type
 features = Features(
