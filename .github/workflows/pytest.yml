@@ -10,6 +10,7 @@ on:
 
 jobs:
   lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -21,6 +22,7 @@ jobs:
           uv run pylint AutoCarver --fail-under=9
 
   pytest_push:
+    name: Tests (push)
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.base_ref == ''
 
@@ -44,6 +46,7 @@ jobs:
 
 
   pytest_pull:
+    name: Tests (matrix)
     strategy:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
