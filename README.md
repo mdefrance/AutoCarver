@@ -10,6 +10,7 @@
 [![SPEC 0](https://img.shields.io/badge/SPEC-0-green?labelColor=%23004811&color=%235CA038)](https://scientific-python.org/specs/spec-0000/)
 [![Docs](https://readthedocs.org/projects/autocarver/badge/?version=latest)](https://autocarver.readthedocs.io/en/latest/)
 [![Tests](https://github.com/mdefrance/AutoCarver/actions/workflows/pytest.yml/badge.svg)](https://github.com/mdefrance/AutoCarver/actions/workflows/pytest.yml)
+[![Coverage](https://codecov.io/gh/mdefrance/AutoCarver/branch/main/graph/badge.svg)](https://codecov.io/gh/mdefrance/AutoCarver)
 
 
 
