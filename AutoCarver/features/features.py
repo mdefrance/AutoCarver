@@ -188,7 +188,7 @@ class Features:
                 " by setting categoricals, quantitatives or ordinals."
             )
 
-        check_duplicate_features(self.categoricals, self.quantitatives, self.ordinals)
+        check_duplicate_features(self.ordinals, self.categoricals, self.quantitatives)
 
         self._dropna = False
         self._ordinal_encoding = False
@@ -214,7 +214,7 @@ class Features:
         # looking for feature names
         self_dict = self.to_dict()
         if feature_name in self_dict:
-            return self_dict.get(feature_name)
+            return self_dict[feature_name]
 
         # looking for version names
         if feature_name in self:
