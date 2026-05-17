@@ -2,6 +2,8 @@
 for a binary classification model.
 """
 
+from typing import Self
+
 import numpy as np
 import pandas as pd
 
@@ -53,7 +55,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
         return round(1 / self.min_freq)
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> None:  # pylint: disable=W0222
+    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> Self:  # pylint: disable=W0222
         self._log_if_verbose()  # verbose if requested
 
         # fitting each feature
@@ -127,7 +129,7 @@ def np_find_quantiles(
     q: int,
     initial_len_df: int | None = None,
     quantiles: list[float] | None = None,
-) -> list[float]:
+) -> list[float] | None:
     """Finds quantiles of a Series recursively.
 
     * Values more frequent than ``min_freq`` are set as there own modalities.
@@ -205,7 +207,7 @@ def compute_quantiles(df_feature: np.ndarray, q: int, initial_len_df: int) -> li
     return [max(df_feature)]
 
 
-def get_remaining_quantiles(remaining_len_df: np.ndarray, initial_len_df: int, q: int) -> list[float]:
+def get_remaining_quantiles(remaining_len_df: np.ndarray, initial_len_df: int, q: int) -> np.ndarray:
     """Computes list of indices of quantiles needed."""
 
     # updating number of quantiles taking into account identified over-represented modalities

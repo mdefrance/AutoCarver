@@ -43,7 +43,7 @@ class AggregatedSample:
             self._raw = self.xagg.copy()
 
     @property
-    def raw(self) -> pd.DataFrame:
+    def raw(self) -> pd.Series | pd.DataFrame | None:
         """Returns the raw value of the xagg"""
         return self._raw
 
@@ -59,26 +59,26 @@ class AggregatedSample:
             self.xagg = value.copy()
 
     @property
-    def shape(self) -> tuple[int, int]:
+    def shape(self) -> tuple[int, ...]:
         """Returns the shape of the xagg"""
         return self.xagg.shape
 
     @property
-    def index(self) -> list[str]:
+    def index(self) -> pd.Index:
         """Returns the index of the xagg"""
         return self.xagg.index
 
     @property
-    def columns(self) -> list[str]:
+    def columns(self) -> pd.Index:
         """Returns the columns of the xagg"""
         return self.xagg.columns
 
     @property
-    def values(self) -> pd.DataFrame:
+    def values(self):
         """Returns the values of the xagg"""
         return self.xagg.values
 
-    def groupby(self, *args, **kwargs) -> pd.DataFrame:
+    def groupby(self, *args, **kwargs):
         """Groups the xagg by the specified indices"""
         return self.xagg.groupby(*args, **kwargs)
 
@@ -226,7 +226,7 @@ class CombinationEvaluator(ABC):
         # sorting associations according to specified metric
         return pd.DataFrame(associations).sort_values(self.sort_by, ascending=False).to_dict(orient="records")
 
-    def _get_best_association(self, combinations: list[list[str]]) -> dict:
+    def _get_best_association(self, combinations: list[list[str]]) -> dict | None:
         """Computes associations of the tab for each combination
 
         Returns
@@ -268,7 +268,7 @@ class CombinationEvaluator(ABC):
             # udpating statistics
             self.feature.statistics = self.target_rate.compute(self.samples.train.raw)
 
-    def _get_best_combination_non_nan(self) -> dict:
+    def _get_best_combination_non_nan(self) -> dict | None:
         """Computes associations of the tab for each combination of non-nans
 
         - dropna has to be set to True
@@ -375,7 +375,7 @@ class CombinationEvaluator(ABC):
 
         return test_results
 
-    def _get_viable_combination(self, associations: list[dict]) -> dict:
+    def _get_viable_combination(self, associations: list[dict]) -> dict | None:
         """Tests the viability of all possible combinations onto xagg_dev"""
 
         # testing viability of all combinations
@@ -557,7 +557,7 @@ class CombinationEvaluator(ABC):
         return cls(**combinations_json)
 
 
-def filter_nan(xagg: pd.Series | pd.DataFrame, str_nan: str) -> pd.DataFrame:
+def filter_nan(xagg: pd.Series | pd.DataFrame, str_nan: str) -> pd.Series | pd.DataFrame | None:
     """Filters out nans from crosstab or y values"""
 
     # cehcking for values in crosstab

@@ -31,7 +31,7 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
 
     def _association_measure(
         self, xagg: AggregatedSample, n_obs: int | None = None, tol: float = 1e-10
-    ) -> dict[str, float]:
+    ) -> dict[str, float | None]:
         """Computes measures of association between feature and quantitative target.
 
         Parameters

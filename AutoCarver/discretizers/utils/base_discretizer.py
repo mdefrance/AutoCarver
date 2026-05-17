@@ -5,6 +5,7 @@ for a binary classification model.
 import json
 from abc import ABC
 from dataclasses import dataclass
+from typing import Self
 
 import numpy as np
 import pandas as pd
@@ -12,7 +13,13 @@ from sklearn.base import BaseEstimator, TransformerMixin
 
 from AutoCarver.combinations import CombinationEvaluator
 from AutoCarver.discretizers.utils.multiprocessing import apply_async_function
-from AutoCarver.features import BaseFeature, Features
+from AutoCarver.features import (
+    BaseFeature,
+    CategoricalFeature,
+    Features,
+    OrdinalFeature,
+    QuantitativeFeature,
+)
 from AutoCarver.utils import extend_docstring, get_attribute, get_bool_attribute
 
 
@@ -149,22 +156,22 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         return f"{self.__name__}({str_features})"
 
     @property
-    def categoricals(self) -> list[str]:
+    def categoricals(self) -> list[CategoricalFeature]:
         """Returns the list of categorical features"""
         return self.features.categoricals
 
     @property
-    def quantitatives(self) -> list[str]:
+    def quantitatives(self) -> list[QuantitativeFeature]:
         """Returns the list of quantitative features"""
         return self.features.quantitatives
 
     @property
-    def qualitatives(self) -> list[str]:
+    def qualitatives(self) -> list[OrdinalFeature | CategoricalFeature]:
         """Returns the list of qualitative features"""
         return self.features.qualitatives
 
     @property
-    def ordinals(self) -> list[str]:
+    def ordinals(self) -> list[OrdinalFeature]:
         """Returns the list of ordinal features"""
         return self.features.ordinals
 
@@ -295,7 +302,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
     __prepare_data = _prepare_data  # private copy
 
-    def fit(self, X: pd.DataFrame | None = None, y: pd.Series | None = None) -> None:
+    def fit(self, X: pd.DataFrame | None = None, y: pd.Series | None = None) -> Self:
         """Learns simple discretization of values of X according to values of y.
 
         Parameters
@@ -442,7 +449,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         if self.verbose:
             print(f"{prefix} [{self.__name__}] Fit {str(self.features)}")
 
-    def to_json(self, light_mode: bool = False) -> str:
+    def to_json(self, light_mode: bool = False) -> dict:
         """Converts to JSON format.
 
         To be used with ``json.dump``.

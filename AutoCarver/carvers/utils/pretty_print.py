@@ -56,7 +56,7 @@ def prettier_xagg(
     return nicer_xagg
 
 
-def index_mapper(feature: BaseFeature, xtab: pd.DataFrame | None = None) -> pd.DataFrame:
+def index_mapper(feature: BaseFeature, xtab: pd.DataFrame | None = None) -> pd.DataFrame | None:
     """Prints a binary xtab's statistics
 
     Parameters

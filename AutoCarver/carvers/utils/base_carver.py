@@ -5,6 +5,7 @@ for any task.
 import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from typing import Self
 
 import pandas as pd
 
@@ -16,7 +17,7 @@ from AutoCarver.combinations import (
     TschuprowtCombinations,
 )
 from AutoCarver.discretizers import BaseDiscretizer, Discretizer, Sample
-from AutoCarver.features import BaseFeature, Features, GroupedList
+from AutoCarver.features import BaseFeature, Features
 from AutoCarver.utils import extend_docstring, get_attribute, get_bool_attribute, has_idisplay
 
 # trying to import extra dependencies
@@ -200,7 +201,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         *,
         X_dev: pd.DataFrame | None = None,
         y_dev: pd.Series | None = None,
-    ) -> None:
+    ) -> Self:
         """Finds the combination of modalities of X that provides the best association with y.
         If provided, X_dev set should be large enough to have the same distribution as X.
 
@@ -264,7 +265,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         xaggs: dict[str, pd.Series | pd.DataFrame],
         xaggs_dev: dict[str, pd.Series | pd.DataFrame],
         num_iter: str,
-    ) -> dict[str, GroupedList]:
+    ) -> None:
         """Carves a feature into buckets that maximize association with the target"""
 
         # verbose if requested
@@ -331,13 +332,15 @@ class BaseCarver(BaseDiscretizer, ABC):
 
     def _format_xagg(
         self, feature: BaseFeature, xagg: pd.DataFrame, xagg_dev: pd.DataFrame | None = None
-    ) -> tuple[pd.DataFrame, pd.DataFrame]:
+    ) -> tuple[pd.DataFrame | None, pd.DataFrame | None]:
         """Formats the XAGG DataFrame."""
         formatted_xagg = index_mapper(feature, xagg)
         formatted_xagg_dev = index_mapper(feature, xagg_dev)
         return formatted_xagg, formatted_xagg_dev
 
-    def _pretty_print(self, formatted_xagg: pd.DataFrame, formatted_xagg_dev: pd.DataFrame) -> tuple[str, str]:
+    def _pretty_print(
+        self, formatted_xagg: pd.DataFrame, formatted_xagg_dev: pd.DataFrame
+    ) -> tuple[pd.Series | pd.DataFrame, pd.Series | pd.DataFrame]:
         """Returns pretty-printed XAGG DataFrames."""
         nice_xagg = self.combinations.target_rate.compute(formatted_xagg)
         nice_xagg_dev = self.combinations.target_rate.compute(formatted_xagg_dev)

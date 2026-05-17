@@ -2,6 +2,8 @@
 for a binary classification model.
 """
 
+from typing import Self
+
 import pandas as pd
 
 from AutoCarver.discretizers.qualitatives import QualitativeDiscretizer
@@ -36,7 +38,7 @@ class Discretizer(BaseDiscretizer):
         super().__init__(features, **dict(kwargs, min_freq=min_freq))
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: pd.DataFrame, y: pd.Series) -> None:  # pylint: disable=W0222
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> Self:  # pylint: disable=W0222
         # Checking for binary target and copying X
         sample = self._prepare_data(Sample(X, y))
 

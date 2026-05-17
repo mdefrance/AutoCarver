@@ -2,7 +2,7 @@
 for multiclass classification tasks.
 """
 
-from typing import Any
+from typing import Any, Self
 
 import pandas as pd
 
@@ -103,7 +103,7 @@ class MulticlassCarver(BinaryCarver):
         *,
         X_dev: pd.DataFrame | None = None,
         y_dev: pd.Series | None = None,
-    ) -> None:
+    ) -> Self:
         # initiating samples
         samples = Samples(train=Sample(X, y), dev=Sample(X_dev, y_dev))
 

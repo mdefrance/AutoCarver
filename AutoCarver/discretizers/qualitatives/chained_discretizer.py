@@ -2,6 +2,8 @@
 for a binary classification model.
 """
 
+from typing import Self
+
 import numpy as np
 import pandas as pd
 
@@ -147,7 +149,7 @@ class ChainedDiscretizer(BaseDiscretizer):
         return sample
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> None:  # pylint: disable=W0222
+    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> Self:  # pylint: disable=W0222
         # preprocessing data
         sample = self._prepare_data(Sample(X, y))
         self._log_if_verbose()  # verbose if requested

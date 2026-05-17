@@ -103,7 +103,7 @@ class BinaryCarver(BaseCarver):
         # Checking for binary target and discretizing X
         return super()._prepare_data(samples)
 
-    def _aggregator(self, X: pd.DataFrame, y: pd.Series) -> dict[str, pd.DataFrame]:
+    def _aggregator(self, X: pd.DataFrame, y: pd.Series) -> dict[str, pd.DataFrame | None]:
         """Computes crosstabs for specified features and ensures that the crosstab is ordered
         according to the known labels
 
@@ -129,7 +129,7 @@ class BinaryCarver(BaseCarver):
         return xtabs
 
 
-def get_crosstab(X: pd.DataFrame, y: pd.Series, feature: BaseFeature) -> dict:
+def get_crosstab(X: pd.DataFrame, y: pd.Series, feature: BaseFeature) -> pd.DataFrame:
     """Computes crosstabs for specified features and ensures that the crosstab is ordered
     according to the known labels"""
 
