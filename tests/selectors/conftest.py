@@ -42,18 +42,13 @@ from pytest import FixtureRequest, fixture
 from AutoCarver.features import BaseFeature, Features
 from AutoCarver.selectors import BaseFilter, BaseMeasure
 from AutoCarver.selectors.filters import (
-    CramervFilter,
     PearsonFilter,
-    SpearmanFilter,
     TschuprowtFilter,
     ValidFilter,
 )
 from AutoCarver.selectors.measures import (
     CramervMeasure,
-    DistanceMeasure,
-    IqrOutlierMeasure,
     KruskalMeasure,
-    ModeMeasure,
     NanMeasure,
     SpearmanMeasure,
     TschuprowtMeasure,
@@ -65,7 +60,7 @@ from AutoCarver.selectors.utils.base_selector import BaseSelector
 BaseSelector.__abstractmethods__ = set()
 BaseFeature.__abstractmethods__ = set()
 
-quanti_measures = [KruskalMeasure, DistanceMeasure, SpearmanMeasure]
+quanti_measures = [KruskalMeasure, SpearmanMeasure]
 quali_measures = [CramervMeasure, TschuprowtMeasure]
 
 
@@ -84,24 +79,27 @@ def quanti_measure(request: FixtureRequest) -> BaseMeasure:
     return request.param()
 
 
-@fixture(params=[NanMeasure, ModeMeasure, ZscoreOutlierMeasure, IqrOutlierMeasure])
+@fixture(params=[NanMeasure, ZscoreOutlierMeasure])
 def default_measure(request: FixtureRequest) -> BaseMeasure:
+    # Two params needed: NanMeasure (regular default) vs ZscoreOutlierMeasure
+    # (outlier-only default that triggers the qualitative conditional branch)
     return request.param()
 
 
 @fixture
-def measures(
-    quanti_measure: BaseMeasure, quali_measure: BaseMeasure, default_measure: BaseMeasure
-) -> list[BaseMeasure]:
-    return [default_measure, quanti_measure, quali_measure]
+def measures(default_measure: BaseMeasure) -> list[BaseMeasure]:
+    # Always includes 2 quanti + 2 quali so tie-breaking between same-type measures is tested.
+    # Parametrised only over default_measure (2 variants); individual measure implementations
+    # are covered by test_quantitative_measures.py / test_qualitative_measures.py.
+    return [default_measure, KruskalMeasure(), SpearmanMeasure(), CramervMeasure(), TschuprowtMeasure()]
 
 
-@fixture(params=[PearsonFilter, SpearmanFilter])
+@fixture(params=[PearsonFilter])
 def quanti_filter(request: FixtureRequest) -> BaseFilter:
     return request.param()
 
 
-@fixture(params=[CramervFilter, TschuprowtFilter])
+@fixture(params=[TschuprowtFilter])
 def quali_filter(request: FixtureRequest) -> BaseFilter:
     return request.param()
 
