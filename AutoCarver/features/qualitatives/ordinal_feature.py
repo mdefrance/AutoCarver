@@ -43,4 +43,4 @@ class OrdinalFeature(QualitativeFeature):
 
 def get_ordinal_features(features: list[BaseFeature]) -> list[OrdinalFeature]:
     """returns ordinal features amongst provided features"""
-    return [feature for feature in features if feature.is_ordinal]
+    return [feature for feature in features if isinstance(feature, OrdinalFeature)]

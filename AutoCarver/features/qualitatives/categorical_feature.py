@@ -40,4 +40,4 @@ class CategoricalFeature(QualitativeFeature):
 
 def get_categorical_features(features: list[BaseFeature]) -> list[CategoricalFeature]:
     """returns categorical features amongst provided features"""
-    return [feature for feature in features if feature.is_categorical]
+    return [feature for feature in features if isinstance(feature, CategoricalFeature)]
