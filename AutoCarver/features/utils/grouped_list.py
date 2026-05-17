@@ -75,7 +75,7 @@ class GroupedList:
         # final invariant check on the constructed object
         self.sanity_check()
 
-    def _init_from_dict(self, iterable: dict[Any, list[Any]]) -> None:
+    def _init_from_dict(self, iterable: dict) -> None:
         """Initializes ``content`` from a ``{leader: [values...]}`` dict.
 
         Handles two edge cases:
