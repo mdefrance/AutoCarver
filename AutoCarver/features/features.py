@@ -2,6 +2,7 @@
 
 from collections.abc import Iterable
 from dataclasses import dataclass
+from typing import TypeVar
 
 import numpy as np
 import pandas as pd
@@ -15,6 +16,10 @@ from AutoCarver.features.qualitatives import (
 from AutoCarver.features.quantitatives import QuantitativeFeature, get_quantitative_features
 from AutoCarver.features.utils.base_feature import BaseFeature
 from AutoCarver.features.utils.grouped_list import GroupedList
+
+# Generic over BaseFeature subclasses — lets helpers below preserve the
+# concrete type of feature lists (e.g. list[CategoricalFeature] in → out).
+TFeature = TypeVar("TFeature", bound=BaseFeature)
 
 
 @dataclass
@@ -524,41 +529,28 @@ class Features:
         return cls.from_list(unpacked_features, config=FeaturesConfig(is_fitted=bool(is_fitted)))
 
 
-def remove_version(removed_version: str, features: list[BaseFeature]) -> list[BaseFeature]:
+def remove_version(removed_version: str, features: list[TFeature]) -> list[TFeature]:
     """removes a feature according its version"""
     return [feature for feature in features if feature.version != removed_version]
 
 
-def keep_versions(kept_versions: list[str], features: list[BaseFeature]) -> list[BaseFeature]:
+def keep_versions(kept_versions: list[str], features: list[TFeature]) -> list[TFeature]:
     """keeps requested feature versions according its version"""
     return [feature for feature in features if feature.version in kept_versions]
 
 
-def make_versions(features: list[BaseFeature], y_classes: list[str]) -> list[BaseFeature]:
+def make_versions(features: list[TFeature], y_classes: list[str]) -> list[TFeature]:
     """Makes a copy of a list of features with specified version"""
     return [make_version(feature, y_class) for y_class in y_classes for feature in features]
 
 
-def make_version(feature: BaseFeature, y_class: str) -> BaseFeature:
-    """Makes a copy of a feature with specified version"""
+def make_version(feature: TFeature, y_class: str) -> TFeature:
+    """Makes a copy of a feature with specified version."""
 
-    # converting feature to json
-    feature_json = feature.to_json(light_mode=False)
+    # round-trip through JSON to deep-copy; dispatch on the runtime class so the
+    # returned feature has the same concrete type as the input.
+    new_feature = type(feature).load(feature.to_json(light_mode=False))
 
-    # categorical feature
-    if feature_json.get("is_categorical"):
-        new_feature = CategoricalFeature.load(feature_json)
-    # ordinal feature
-    elif feature_json.get("is_ordinal"):
-        new_feature = OrdinalFeature.load(feature_json)
-    # ordinal feature
-    elif feature_json.get("is_quantitative"):
-        new_feature = QuantitativeFeature.load(feature_json)
-    # base feature
-    else:
-        new_feature = BaseFeature.load(feature_json)
-
-    # modifying version and tag
     new_feature.version_tag = y_class
     new_feature.version = make_version_name(new_feature.name, y_class)
 
@@ -611,7 +603,7 @@ def get_names(features: list[BaseFeature]) -> list[str]:
     return [feature.name for feature in features]
 
 
-def get_versions(features: list[BaseFeature]) -> list[str]:
+def get_versions(features: list[TFeature]) -> list[str]:
     """Gives version names from Features"""
     return [feature.version for feature in features]
 

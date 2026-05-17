@@ -1,7 +1,7 @@
 """Base class for all features."""
 
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Self
 
 import pandas as pd
 
@@ -392,7 +392,7 @@ class BaseFeature(ABC):
         return json_serialize_feature(feature)
 
     @classmethod
-    def load(cls, feature_json: dict) -> "BaseFeature":
+    def load(cls, feature_json: dict) -> Self:
         """Loads a feature from a JSON dict (bypasses subclass init validations)."""
 
         instance = cls.__new__(cls)
