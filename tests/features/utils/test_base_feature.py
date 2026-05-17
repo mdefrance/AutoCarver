@@ -282,7 +282,8 @@ def test_base_feature_to_json() -> None:
     assert "history" in json_output
 
     # ordinal encoding true
-    feature = BaseFeature(name="test_feature", ordinal_encoding=True)
+    feature = BaseFeature(name="test_feature")
+    feature._ordinal_encoding = True
     feature.values = GroupedList(["a", "b", "c"])
     json.dumps(json_output)
 
@@ -304,7 +305,8 @@ def test_base_feature_load() -> None:
     """test classmethod load"""
 
     # ordinal encoding false
-    feature = BaseFeature(name="test_feature", nan="nan_value")
+    feature = BaseFeature(name="test_feature")
+    feature.nan = "nan_value"
     feature.values = GroupedList({"a": ["a", "b"], "c": ["c", "d"]})
     feature.has_nan = True
     feature.update_labels()
@@ -331,7 +333,9 @@ def test_base_feature_load() -> None:
     assert not loaded_feature.ordinal_encoding
 
     # ordinal encoding true
-    feature = BaseFeature(name="test_feature", nan="nan_value", ordinal_encoding=True)
+    feature = BaseFeature(name="test_feature")
+    feature.nan = "nan_value"
+    feature._ordinal_encoding = True
     feature.values = GroupedList({"a": ["a", "b"], "c": ["c", "d"]})
     feature.has_nan = True
     feature.update_labels()

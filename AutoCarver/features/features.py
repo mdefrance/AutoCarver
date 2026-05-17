@@ -117,16 +117,15 @@ class Features:
         # getting list of ordinal features by name of BaseFeature
         ordinal_features = check_ordinal_features(ordinals)
 
-        # collecting feature constructor kwargs (silently drops kwargs not in this allowlist)
-        feature_kwargs: dict = {}
-        for key in ("nan", "default", "ordinal_encoding", "is_fitted", "has_nan", "has_default", "dropna"):
-            if key in kwargs:
-                feature_kwargs[key] = kwargs[key]
-
         # casting features accordingly
-        all_features = cast_features(categoricals, CategoricalFeature, **feature_kwargs)
-        all_features += cast_features(quantitatives, QuantitativeFeature, **feature_kwargs)
-        all_features += cast_features(ordinal_features, OrdinalFeature, ordinal_values=ordinals, **feature_kwargs)
+        all_features = cast_features(categoricals, CategoricalFeature)
+        all_features += cast_features(quantitatives, QuantitativeFeature)
+        all_features += cast_features(ordinal_features, OrdinalFeature, ordinal_values=ordinals)
+
+        # apply collection-level state to each feature (nan/default/ordinal_encoding/dropna)
+        # — these are not constructor kwargs of BaseFeature on purpose, so we set them
+        # via attribute access after construction
+        apply_collection_state(all_features, kwargs)
 
         # ensuring features are grouped accordingly (already initiated features)
         self._categoricals = get_categorical_features(all_features)
@@ -459,25 +458,22 @@ class Features:
         """
 
         # checking for fitted features
-        is_fitted = features_json.pop("is_fitted", None)
+        is_fitted = features_json.pop("is_fitted", False)
 
         # casting each feature to there corresponding type
         unpacked_features: list[BaseFeature] = []
         for _, feature in features_json.items():
-            # categorical feature
             if feature.get("is_categorical"):
                 unpacked_features += [CategoricalFeature.load(feature)]
 
-            # ordinal feature
             elif feature.get("is_ordinal"):
                 unpacked_features += [OrdinalFeature.load(feature)]
 
-            # ordinal feature
             elif feature.get("is_quantitative"):
                 unpacked_features += [QuantitativeFeature.load(feature)]
 
         # initiating features
-        return cls(unpacked_features, is_fitted=is_fitted)
+        return cls(unpacked_features, is_fitted=bool(is_fitted))
 
 
 def remove_version(removed_version: str, features: list[BaseFeature]) -> list[BaseFeature]:
@@ -531,7 +527,6 @@ def cast_features(
     features: list[str],
     target_class: type = BaseFeature,
     ordinal_values: dict[str, list[str]] | None = None,
-    **kwargs,
 ) -> list[BaseFeature]:
     """converts a list of string feature names to there corresponding Feature class"""
 
@@ -552,9 +547,9 @@ def cast_features(
         if isinstance(feature, str):
             # only OrdinalFeature accepts `values` as a required arg
             if target_class is OrdinalFeature:
-                converted_features += [target_class(feature, values=ordinal_values.get(feature), **kwargs)]
+                converted_features += [target_class(feature, values=ordinal_values.get(feature))]
             else:
-                converted_features += [target_class(feature, **kwargs)]
+                converted_features += [target_class(feature)]
         # already a BaseFeature
         elif isinstance(feature, BaseFeature):
             converted_features += [feature]
@@ -568,6 +563,41 @@ def cast_features(
         for n, feature in enumerate(converted_features)
         if feature.version not in get_versions(converted_features[n + 1 :])
     ]
+
+
+def apply_collection_state(features: list[BaseFeature], kwargs: dict) -> None:
+    """Apply collection-level Features kwargs to each constituent feature.
+
+    Internal state (nan/default/ordinal_encoding/dropna/has_nan/has_default/is_fitted)
+    is not part of the public BaseFeature constructor — Features sets it here.
+    """
+    # nan/default are string config — propagate the value when present.
+    # The booleans use *truthy-only* propagation: a collection-level False shouldn't
+    # override per-feature state (matters on Features.load, where per-feature is_fitted
+    # is restored True from JSON while Features.is_fitted is False).
+    # The bool sets bypass property setters because features have no values yet at
+    # construction time (the dropna/ordinal_encoding setters would otherwise raise).
+    for feature in features:
+        if "nan" in kwargs:
+            feature.nan = kwargs["nan"]
+
+        if "default" in kwargs:
+            feature.default = kwargs["default"]
+
+        if kwargs.get("ordinal_encoding"):
+            feature._ordinal_encoding = True
+
+        if kwargs.get("dropna"):
+            feature._dropna = True
+
+        if kwargs.get("has_nan"):
+            feature._has_nan = True
+
+        if kwargs.get("has_default"):
+            feature._has_default = True
+
+        if kwargs.get("is_fitted"):
+            feature.is_fitted = True
 
 
 def get_names(features: list[BaseFeature]) -> list[str]:

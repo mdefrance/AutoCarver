@@ -115,7 +115,8 @@ def test_consecutive_combinations_with_non_default_start_index():
 def test_nan_combinations_basic():
     """Test nan_combinations with a basic feature and max_n_mod."""
     str_nan = "NaN_"
-    feature = OrdinalFeature("test", values=["A", "B", "C", "D"], nan=str_nan)
+    feature = OrdinalFeature("test", values=["A", "B", "C", "D"])
+    feature.nan = str_nan
     feature.has_nan = True
     feature.dropna = True
     max_n_mod = 2
@@ -137,7 +138,8 @@ def test_nan_combinations_basic():
 def test_nan_combinations_with_single_label():
     """Test nan_combinations with a single label in the feature."""
     str_nan = "NaN_"
-    feature = OrdinalFeature("test", values=["A"], nan=str_nan)
+    feature = OrdinalFeature("test", values=["A"])
+    feature.nan = str_nan
     feature.has_nan = True
     feature.dropna = True
     max_n_mod = 1
@@ -150,7 +152,8 @@ def test_nan_combinations_with_single_label():
 def test_nan_combinations_with_max_n_mod_greater_than_labels():
     """Test nan_combinations with max_n_mod greater than the number of labels."""
     str_nan = "NaN_"
-    feature = OrdinalFeature("test", values=["A", "B"], nan=str_nan)
+    feature = OrdinalFeature("test", values=["A", "B"])
+    feature.nan = str_nan
     feature.has_nan = True
     feature.dropna = True
     max_n_mod = 3
@@ -169,7 +172,8 @@ def test_nan_combinations_with_max_n_mod_greater_than_labels():
 def test_nan_combinations_with_large_combination():
     """Test nan_combinations with a large combination of labels."""
     str_nan = "NaN_"
-    feature = OrdinalFeature("test", values=["A", "B", "C", "D"], nan=str_nan)
+    feature = OrdinalFeature("test", values=["A", "B", "C", "D"])
+    feature.nan = str_nan
     feature.has_nan = True
     feature.dropna = True
     max_n_mod = 4
@@ -210,7 +214,8 @@ def test_nan_combinations_with_large_combination():
 def test_nan_combinations_with_low_max_n_mod():
     """Test nan_combinations with a low max_n_mod."""
     str_nan = "NaN_"
-    feature = OrdinalFeature("test", values=["A", "B", "C", "D"], nan=str_nan)
+    feature = OrdinalFeature("test", values=["A", "B", "C", "D"])
+    feature.nan = str_nan
     feature.has_nan = True
     feature.dropna = True
     max_n_mod = 2

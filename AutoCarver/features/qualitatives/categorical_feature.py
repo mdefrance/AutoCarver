@@ -2,7 +2,6 @@
 
 from typing import Any
 
-from AutoCarver.config import Constants
 from AutoCarver.features.qualitatives.qualitative_feature import QualitativeFeature
 from AutoCarver.features.utils.base_feature import BaseFeature
 
@@ -13,33 +12,8 @@ class CategoricalFeature(QualitativeFeature):
     __name__ = "Categorical"
     is_categorical = True
 
-    def __init__(
-        self,
-        name: str,
-        *,
-        nan: str = Constants.NAN,
-        default: str = Constants.DEFAULT,
-        ordinal_encoding: bool = False,
-        is_fitted: bool = False,
-        version: str | None = None,
-        version_tag: str | None = None,
-        has_nan: bool = False,
-        has_default: bool = False,
-        dropna: bool = False,
-        max_n_chars: int = 50,
-    ) -> None:
-        super().__init__(
-            name,
-            nan=nan,
-            default=default,
-            ordinal_encoding=ordinal_encoding,
-            is_fitted=is_fitted,
-            version=version,
-            version_tag=version_tag,
-            has_nan=has_nan,
-            has_default=has_default,
-            dropna=dropna,
-        )
+    def __init__(self, name: str, *, max_n_chars: int = 50) -> None:
+        super().__init__(name)
         # max number of characters per label
         self.max_n_chars: int = max_n_chars
 

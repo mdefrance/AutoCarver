@@ -17,14 +17,6 @@ class BaseFeature(ABC):
     ----------
     name : str
         Name of the feature.
-    nan : str, optional
-        Label used for missing values, by default ``Constants.NAN``.
-    default : str, optional
-        Label used for default/unexpected values, by default ``Constants.DEFAULT``.
-    ordinal_encoding : bool, optional
-        Whether to ordinally encode labels, by default ``False``.
-    is_fitted : bool, optional
-        Whether the feature has already been fitted, by default ``False``.
     """
 
     __name__ = "Feature"
@@ -35,34 +27,23 @@ class BaseFeature(ABC):
     is_categorical: bool = False
     is_ordinal: bool = False
 
-    def __init__(
-        self,
-        name: str,
-        *,
-        nan: str = Constants.NAN,
-        default: str = Constants.DEFAULT,
-        ordinal_encoding: bool = False,
-        is_fitted: bool = False,
-        version: str | None = None,
-        version_tag: str | None = None,
-        has_nan: bool = False,
-        has_default: bool = False,
-        dropna: bool = False,
-    ) -> None:
+    def __init__(self, name: str) -> None:
         self.name = name
-        self.version: str = version if version is not None else name
-        self.version_tag: str = version_tag if version_tag is not None else name
 
-        # configurable labels
-        self.nan = nan
-        self.default = default
+        # version metadata — set by Features / make_version, not by user input
+        self.version: str = name
+        self.version_tag: str = name
 
-        # state flags (set directly — setters require values to be present)
-        self._has_nan: bool = has_nan
-        self._has_default: bool = has_default
-        self._dropna: bool = dropna
-        self._ordinal_encoding: bool = ordinal_encoding
-        self.is_fitted: bool = is_fitted
+        # configurable labels — set by Features when nan/default kwargs are passed
+        self.nan: str = Constants.NAN
+        self.default: str = Constants.DEFAULT
+
+        # state flags — set by fit(), Features, or load()
+        self._has_nan: bool = False
+        self._has_default: bool = False
+        self._dropna: bool = False
+        self._ordinal_encoding: bool = False
+        self.is_fitted: bool = False
 
         # values and labels (populated by fit/update)
         self.values: GroupedList | None = None
@@ -421,14 +402,7 @@ class BaseFeature(ABC):
         """Loads a feature from a JSON dict (bypasses subclass init validations)."""
 
         instance = cls.__new__(cls)
-        BaseFeature.__init__(
-            instance,
-            name=feature_json["name"],
-            nan=feature_json.get("nan", Constants.NAN),
-            default=feature_json.get("default", Constants.DEFAULT),
-            ordinal_encoding=feature_json.get("ordinal_encoding", False),
-            is_fitted=feature_json.get("is_fitted", False),
-        )
+        BaseFeature.__init__(instance, name=feature_json["name"])
         instance._restore_from_json(feature_json)
         return instance
 
@@ -437,6 +411,10 @@ class BaseFeature(ABC):
 
         self.version = feature_json.get("version", self.name)
         self.version_tag = feature_json.get("version_tag", self.name)
+        self.nan = feature_json.get("nan", Constants.NAN)
+        self.default = feature_json.get("default", Constants.DEFAULT)
+        self._ordinal_encoding = feature_json.get("ordinal_encoding", False)
+        self.is_fitted = feature_json.get("is_fitted", False)
         self._has_nan = feature_json.get("has_nan", False)
         self._has_default = feature_json.get("has_default", False)
         self._dropna = feature_json.get("dropna", False)
