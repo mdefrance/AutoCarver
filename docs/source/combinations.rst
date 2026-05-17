@@ -37,7 +37,7 @@ Regression tasks
 .. _KruskalCombinations:
 
 Kruskal's H Combinations
-^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 See :ref:`Kruskal` for more details on the metric.
 

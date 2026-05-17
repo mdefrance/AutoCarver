@@ -18,8 +18,8 @@ from AutoCarver.features.utils.grouped_list import GroupedList
 
 
 @dataclass
-class FeaturesOptions:
-    """Collection-level options applied to each feature in a :class:`Features`.
+class FeaturesConfig:
+    """Collection-level config applied to each feature in a :class:`Features`.
 
     Internal feature state (``nan``/``default``/``ordinal_encoding``/…) is not part of
     the public ``BaseFeature`` constructor — pass them via this dataclass to ``Features``
@@ -109,7 +109,7 @@ class Features:
         categoricals: list[str] | None = None,
         quantitatives: list[str] | None = None,
         ordinals: dict[str, list[str]] | None = None,
-        options: FeaturesOptions | None = None,
+        config: FeaturesConfig | None = None,
     ) -> None:
         """Build a :class:`Features` collection from column names.
 
@@ -125,8 +125,8 @@ class Features:
         ordinals : dict[str, list[str]], optional
             Ordinal column names mapped to their ordered value list, by default ``None``.
 
-        options : FeaturesOptions, optional
-            Collection-level options propagated to each feature, by default ``None``.
+        config : FeaturesConfig, optional
+            Collection-level config propagated to each feature, by default ``None``.
 
 
         .. warning::
@@ -145,13 +145,13 @@ class Features:
         all_features += [QuantitativeFeature(name) for name in (quantitatives or [])]
         all_features += [OrdinalFeature(name, values=values) for name, values in (ordinals or {}).items()]
 
-        self._build(all_features, options)
+        self._build(all_features, config)
 
     @classmethod
     def from_list(
         cls,
         features: "Iterable[BaseFeature] | Features",
-        options: FeaturesOptions | None = None,
+        config: FeaturesConfig | None = None,
     ) -> "Features":
         """Build a :class:`Features` from already-instantiated feature objects.
 
@@ -160,8 +160,8 @@ class Features:
         features : Iterable[BaseFeature] | Features
             Feature instances to wrap. Iterating an existing :class:`Features` is supported.
 
-        options : FeaturesOptions, optional
-            Collection-level options propagated to each feature, by default ``None``.
+        config : FeaturesConfig, optional
+            Collection-level config propagated to each feature, by default ``None``.
         """
         feature_list = list(features)
         for feature in feature_list:
@@ -169,14 +169,14 @@ class Features:
                 raise TypeError(f"[Features.from_list] expected BaseFeature instances, got {type(feature).__name__}")
 
         instance = cls.__new__(cls)
-        instance._build(_dedupe_by_version(feature_list), options)
+        instance._build(_dedupe_by_version(feature_list), config)
         return instance
 
-    def _build(self, features: list[BaseFeature], options: FeaturesOptions | None) -> None:
-        """Shared construction body: apply options and group by type."""
+    def _build(self, features: list[BaseFeature], config: FeaturesConfig | None) -> None:
+        """Shared construction body: apply config and group by type."""
 
-        if options is not None:
-            apply_collection_state(features, options)
+        if config is not None:
+            apply_collection_state(features, config)
 
         self._categoricals = get_categorical_features(features)
         self._ordinals = get_ordinal_features(features)
@@ -192,7 +192,7 @@ class Features:
 
         self._dropna = False
         self._ordinal_encoding = False
-        self.is_fitted = options.is_fitted if options is not None else False
+        self.is_fitted = config.is_fitted if config is not None else False
 
     def __repr__(self) -> str:
         """Returns names of all features"""
@@ -521,7 +521,7 @@ class Features:
                 unpacked_features += [QuantitativeFeature.load(feature)]
 
         # initiating features
-        return cls.from_list(unpacked_features, options=FeaturesOptions(is_fitted=bool(is_fitted)))
+        return cls.from_list(unpacked_features, config=FeaturesConfig(is_fitted=bool(is_fitted)))
 
 
 def remove_version(removed_version: str, features: list[BaseFeature]) -> list[BaseFeature]:
@@ -571,8 +571,8 @@ def make_version_name(feature_name: str, y_class: str) -> str:
     return f"{feature_name}__y={y_class}"
 
 
-def apply_collection_state(features: list[BaseFeature], options: FeaturesOptions) -> None:
-    """Apply collection-level :class:`FeaturesOptions` to each constituent feature.
+def apply_collection_state(features: list[BaseFeature], config: FeaturesConfig) -> None:
+    """Apply collection-level :class:`FeaturesConfig` to each constituent feature.
 
     Internal state (nan/default/ordinal_encoding/dropna/has_nan/has_default/is_fitted)
     is not part of the public BaseFeature constructor — Features sets it here.
@@ -580,29 +580,29 @@ def apply_collection_state(features: list[BaseFeature], options: FeaturesOptions
     # nan/default are string config — propagate when explicitly provided (non-None).
     # The booleans use *truthy-only* propagation: a collection-level False shouldn't
     # override per-feature state (matters on Features.load, where per-feature is_fitted
-    # is restored True from JSON while FeaturesOptions.is_fitted is False).
+    # is restored True from JSON while FeaturesConfig.is_fitted is False).
     # The bool sets bypass property setters because features have no values yet at
     # construction time (the dropna/ordinal_encoding setters would otherwise raise).
     for feature in features:
-        if options.nan is not None:
-            feature.nan = options.nan
+        if config.nan is not None:
+            feature.nan = config.nan
 
-        if options.default is not None:
-            feature.default = options.default
+        if config.default is not None:
+            feature.default = config.default
 
-        if options.ordinal_encoding:
+        if config.ordinal_encoding:
             feature._ordinal_encoding = True
 
-        if options.dropna:
+        if config.dropna:
             feature._dropna = True
 
-        if options.has_nan:
+        if config.has_nan:
             feature.has_nan = True
 
-        if options.has_default:
+        if config.has_default:
             feature._has_default = True
 
-        if options.is_fitted:
+        if config.is_fitted:
             feature.is_fitted = True
 
 

@@ -5,7 +5,7 @@ import pandas as pd
 
 from AutoCarver.discretizers.qualitatives.qualitative_discretizer import QualitativeDiscretizer
 from AutoCarver.discretizers.utils.base_discretizer import Sample
-from AutoCarver.features import CategoricalFeature, Features, FeaturesOptions, GroupedList, OrdinalFeature
+from AutoCarver.features import CategoricalFeature, Features, FeaturesConfig, GroupedList, OrdinalFeature
 
 
 def test_qualitative_discretizer_init():
@@ -203,11 +203,7 @@ def test_qualitative_discretizer(x_train: pd.DataFrame, target: str):
 
     # defining features
     str_default = "__default_test__"
-    features = Features(
-        categoricals=categoricals,
-        ordinals=ordinal_values,
-        options=FeaturesOptions(default=str_default),
-    )
+    features = Features(categoricals=categoricals, ordinals=ordinal_values, config=FeaturesConfig(default=str_default))
 
     min_freq = 0.1
 

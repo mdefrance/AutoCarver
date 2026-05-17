@@ -20,7 +20,7 @@ from AutoCarver.discretizers.utils.base_discretizer import (
 from AutoCarver.features import (
     CategoricalFeature,
     Features,
-    FeaturesOptions,
+    FeaturesConfig,
     GroupedList,
     OrdinalFeature,
     QuantitativeFeature,
@@ -802,7 +802,7 @@ def test_base_discretizer(x_train: pd.DataFrame, dropna: bool) -> None:
         "Qualitative_Ordinal": groupedlist,
         "Qualitative_Ordinal_lownan": groupedlist_lownan,
     }
-    features = Features(ordinals=ordinal_values, options=FeaturesOptions(nan=str_nan, dropna=dropna))
+    features = Features(ordinals=ordinal_values, config=FeaturesConfig(nan=str_nan, dropna=dropna))
     features.fit(x_train)
     feature = features("Qualitative_Ordinal_lownan")
     print(feature.has_nan, feature.dropna, feature.content)
