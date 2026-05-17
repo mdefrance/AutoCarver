@@ -1,5 +1,8 @@
 """Defines a set of features"""
 
+from collections.abc import Iterable
+from dataclasses import dataclass
+
 import numpy as np
 import pandas as pd
 
@@ -12,6 +15,25 @@ from AutoCarver.features.qualitatives import (
 from AutoCarver.features.quantitatives import QuantitativeFeature, get_quantitative_features
 from AutoCarver.features.utils.base_feature import BaseFeature
 from AutoCarver.features.utils.grouped_list import GroupedList
+
+
+@dataclass
+class FeaturesOptions:
+    """Collection-level options applied to each feature in a :class:`Features`.
+
+    Internal feature state (``nan``/``default``/``ordinal_encoding``/…) is not part of
+    the public ``BaseFeature`` constructor — pass them via this dataclass to ``Features``
+    or ``Features.from_list`` and they are propagated to each constituent feature.
+    """
+
+    nan: str | None = None
+    default: str | None = None
+    ordinal_encoding: bool = False
+    is_fitted: bool = False
+    has_nan: bool = False
+    has_default: bool = False
+    dropna: bool = False
+
 
 # class AutoFeatures(Features):
 #     """TODO"""
@@ -48,23 +70,33 @@ from AutoCarver.features.utils.grouped_list import GroupedList
 #                 )
 
 
-def check_ordinal_features(
-    ordinals: list[OrdinalFeature] | dict[str, list[str]],
-) -> "list[OrdinalFeature] | list[str] | Features":
-    """Checks that ordinals are correctly formatted"""
+def _check_names_only(names: list[str] | None, kind: str) -> None:
+    """Ensures a list of column names contains only strings (no feature instances)."""
+    if names is None:
+        return
+    for name in names:
+        if not isinstance(name, str):
+            raise TypeError(
+                f"[Features] {kind} must be a list of column names (str); got {type(name).__name__}."
+                f" To wrap feature instances, use Features.from_list."
+            )
 
-    # checking for ordinal types
-    if isinstance(ordinals, (Features, list)):
-        for feature in ordinals:
-            if not isinstance(feature, OrdinalFeature):
-                raise TypeError("Ordinals should be a list of OrdinalFeature or a dict of ordinal values.")
-        ordinal_features = ordinals
-    elif isinstance(ordinals, dict):
-        ordinal_features = list(ordinals.keys())
-    else:
-        raise TypeError("Ordinals should be a list of OrdinalFeature or a dict of ordinal values.")
 
-    return ordinal_features
+def _check_ordinal_mapping(ordinals: dict[str, list[str]] | None) -> None:
+    """Ensures ``ordinals`` is a ``{name: [values...]}`` mapping."""
+    if ordinals is None:
+        return
+    if not isinstance(ordinals, dict):
+        raise TypeError(
+            f"[Features] ordinals must be a dict of {{name: [ordered values]}};"
+            f" got {type(ordinals).__name__}. To wrap OrdinalFeature instances, use Features.from_list."
+        )
+
+
+def _dedupe_by_version(features: list[BaseFeature]) -> list[BaseFeature]:
+    """Deduplicates features by version, keeping the last occurrence (matches legacy behavior)."""
+    later_versions = [f.version for f in features]
+    return [f for i, f in enumerate(features) if f.version not in later_versions[i + 1 :]]
 
 
 class Features:
@@ -74,77 +106,93 @@ class Features:
 
     def __init__(
         self,
-        categoricals: list[CategoricalFeature | str] | None = None,
-        quantitatives: list[QuantitativeFeature | str] | None = None,
-        ordinals: list[OrdinalFeature] | dict[str, list[str]] | None = None,
-        **kwargs,
+        categoricals: list[str] | None = None,
+        quantitatives: list[str] | None = None,
+        ordinals: dict[str, list[str]] | None = None,
+        options: FeaturesOptions | None = None,
     ) -> None:
-        """
+        """Build a :class:`Features` collection from column names.
+
         Parameters
         ----------
 
-        categoricals : list[CategoricalFeature | str], optional
-            List of categorical features or column names, by default ``None``
+        categoricals : list[str], optional
+            Categorical column names, by default ``None``.
 
-        quantitatives : list[QuantitativeFeature | str], optional
-            List of quantitative features or column names, by default ``None``
+        quantitatives : list[str], optional
+            Quantitative column names, by default ``None``.
 
-        ordinals : list[OrdinalFeature] | dict[str, list[str]], optional
-            List of ordinal features or dict column names with associated value ordering,
-            by default ``None``
+        ordinals : dict[str, list[str]], optional
+            Ordinal column names mapped to their ordered value list, by default ``None``.
+
+        options : FeaturesOptions, optional
+            Collection-level options propagated to each feature, by default ``None``.
 
 
         .. warning::
-            At least one of categoricals, ordinals or quantitatives should be provided.
-
-
-        Keyword Arguments
-        -----------------
-
-        ordinal_encoding : bool, optional
-            Whether or not to ordinal encode labels, by default ``False``
-
-        nan : str, optional
-            Label for missing values, by default ``"__NAN__"``
-
-        default : str, optional
-            Label for default values, by default ``"__OTHER__"``
+            At least one of ``categoricals``, ``quantitatives`` or ``ordinals`` must be provided.
+            To build a :class:`Features` from already-instantiated feature objects, use
+            :meth:`Features.from_list` instead.
         """
-        # initiating ordinal values if not provided
-        if ordinals is None:
-            ordinals = {}
+        # validate input types (strings only — instances belong on from_list)
+        _check_names_only(categoricals, "categoricals")
+        _check_names_only(quantitatives, "quantitatives")
+        _check_ordinal_mapping(ordinals)
 
-        # getting list of ordinal features by name of BaseFeature
-        ordinal_features = check_ordinal_features(ordinals)
+        # build feature instances from names
+        all_features: list[BaseFeature] = []
+        all_features += [CategoricalFeature(name) for name in (categoricals or [])]
+        all_features += [QuantitativeFeature(name) for name in (quantitatives or [])]
+        all_features += [OrdinalFeature(name, values=values) for name, values in (ordinals or {}).items()]
 
-        # casting features accordingly
-        all_features = cast_features(categoricals, CategoricalFeature)
-        all_features += cast_features(quantitatives, QuantitativeFeature)
-        all_features += cast_features(ordinal_features, OrdinalFeature, ordinal_values=ordinals)
+        self._build(all_features, options)
 
-        # apply collection-level state to each feature (nan/default/ordinal_encoding/dropna)
-        # — these are not constructor kwargs of BaseFeature on purpose, so we set them
-        # via attribute access after construction
-        apply_collection_state(all_features, kwargs)
+    @classmethod
+    def from_list(
+        cls,
+        features: "Iterable[BaseFeature] | Features",
+        options: FeaturesOptions | None = None,
+    ) -> "Features":
+        """Build a :class:`Features` from already-instantiated feature objects.
 
-        # ensuring features are grouped accordingly (already initiated features)
-        self._categoricals = get_categorical_features(all_features)
-        self._ordinals = get_ordinal_features(all_features)
-        self._quantitatives = get_quantitative_features(all_features)
+        Parameters
+        ----------
+        features : Iterable[BaseFeature] | Features
+            Feature instances to wrap. Iterating an existing :class:`Features` is supported.
 
-        # checking that features were passed as input
-        if len(self.categoricals) == 0 and len(self.quantitatives) == 0 and len(self.ordinals) == 0:
+        options : FeaturesOptions, optional
+            Collection-level options propagated to each feature, by default ``None``.
+        """
+        feature_list = list(features)
+        for feature in feature_list:
+            if not isinstance(feature, BaseFeature):
+                raise TypeError(f"[Features.from_list] expected BaseFeature instances, got {type(feature).__name__}")
+
+        instance = cls.__new__(cls)
+        instance._build(_dedupe_by_version(feature_list), options)
+        return instance
+
+    def _build(self, features: list[BaseFeature], options: FeaturesOptions | None) -> None:
+        """Shared construction body: apply options and group by type."""
+
+        if options is not None:
+            apply_collection_state(features, options)
+
+        self._categoricals = get_categorical_features(features)
+        self._ordinals = get_ordinal_features(features)
+        self._quantitatives = get_quantitative_features(features)
+
+        if not (self.categoricals or self.quantitatives or self.ordinals):
             raise ValueError(
                 f"[{self}] No feature passed as input. Please provide column names"
                 " by setting categoricals, quantitatives or ordinals."
             )
 
-        # checking that qualitatitve and quantitative features are distinct
         check_duplicate_features(self.categoricals, self.quantitatives, self.ordinals)
 
         self._dropna = False
         self._ordinal_encoding = False
-        self.is_fitted = kwargs.get("is_fitted", False)
+        self.is_fitted = options.is_fitted if options is not None else False
 
     def __repr__(self) -> str:
         """Returns names of all features"""
@@ -473,7 +521,7 @@ class Features:
                 unpacked_features += [QuantitativeFeature.load(feature)]
 
         # initiating features
-        return cls(unpacked_features, is_fitted=bool(is_fitted))
+        return cls.from_list(unpacked_features, options=FeaturesOptions(is_fitted=bool(is_fitted)))
 
 
 def remove_version(removed_version: str, features: list[BaseFeature]) -> list[BaseFeature]:
@@ -523,80 +571,38 @@ def make_version_name(feature_name: str, y_class: str) -> str:
     return f"{feature_name}__y={y_class}"
 
 
-def cast_features(
-    features: list[str],
-    target_class: type = BaseFeature,
-    ordinal_values: dict[str, list[str]] | None = None,
-) -> list[BaseFeature]:
-    """converts a list of string feature names to there corresponding Feature class"""
-
-    # inititating features if not provided
-    if features is None:
-        features: list[str] = []
-
-    # inititating ordered values for ordinal features if not provided
-    if ordinal_values is None:
-        ordinal_values: dict[str, list[str]] = {}
-
-    # initiating list of converted features
-    converted_features: list[target_class] = []
-
-    # iterating over each feature
-    for feature in features:
-        # string case, initiating feature
-        if isinstance(feature, str):
-            # only OrdinalFeature accepts `values` as a required arg
-            if target_class is OrdinalFeature:
-                converted_features += [target_class(feature, values=ordinal_values.get(feature))]
-            else:
-                converted_features += [target_class(feature)]
-        # already a BaseFeature
-        elif isinstance(feature, BaseFeature):
-            converted_features += [feature]
-
-        else:
-            raise TypeError(f"[Features] feature {feature} is neither a str, nor a {target_class.__name__}.")
-
-    # deduplicating features by version name
-    return [
-        feature
-        for n, feature in enumerate(converted_features)
-        if feature.version not in get_versions(converted_features[n + 1 :])
-    ]
-
-
-def apply_collection_state(features: list[BaseFeature], kwargs: dict) -> None:
-    """Apply collection-level Features kwargs to each constituent feature.
+def apply_collection_state(features: list[BaseFeature], options: FeaturesOptions) -> None:
+    """Apply collection-level :class:`FeaturesOptions` to each constituent feature.
 
     Internal state (nan/default/ordinal_encoding/dropna/has_nan/has_default/is_fitted)
     is not part of the public BaseFeature constructor — Features sets it here.
     """
-    # nan/default are string config — propagate the value when present.
+    # nan/default are string config — propagate when explicitly provided (non-None).
     # The booleans use *truthy-only* propagation: a collection-level False shouldn't
     # override per-feature state (matters on Features.load, where per-feature is_fitted
-    # is restored True from JSON while Features.is_fitted is False).
+    # is restored True from JSON while FeaturesOptions.is_fitted is False).
     # The bool sets bypass property setters because features have no values yet at
     # construction time (the dropna/ordinal_encoding setters would otherwise raise).
     for feature in features:
-        if "nan" in kwargs:
-            feature.nan = kwargs["nan"]
+        if options.nan is not None:
+            feature.nan = options.nan
 
-        if "default" in kwargs:
-            feature.default = kwargs["default"]
+        if options.default is not None:
+            feature.default = options.default
 
-        if kwargs.get("ordinal_encoding"):
+        if options.ordinal_encoding:
             feature._ordinal_encoding = True
 
-        if kwargs.get("dropna"):
+        if options.dropna:
             feature._dropna = True
 
-        if kwargs.get("has_nan"):
+        if options.has_nan:
             feature.has_nan = True
 
-        if kwargs.get("has_default"):
+        if options.has_default:
             feature._has_default = True
 
-        if kwargs.get("is_fitted"):
+        if options.is_fitted:
             feature.is_fitted = True
 
 

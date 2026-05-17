@@ -432,7 +432,7 @@ def test_base_selector_get_best_features_across_chunks_no_chunking(
             new_features += [new_feature]
 
     X = pd.DataFrame(new_X)
-    features_object = Features(new_features)
+    features_object = Features.from_list(new_features)
 
     n_best, max_num_features_per_chunk = 1, 100
     selector = BaseSelector(
@@ -486,7 +486,7 @@ def test_base_selector_get_best_features_across_chunks_with_chunking(
             new_features += [new_feature]
 
     X = pd.DataFrame(new_X)
-    features_object = Features(new_features)
+    features_object = Features.from_list(new_features)
 
     n_best, max_num_features_per_chunk = 1, 10
     selector = BaseSelector(

@@ -129,7 +129,7 @@ class BaseSelector(ABC):
         # features and values
         self.features = features
         if isinstance(features, list):
-            self.features = Features(features)  # type: ignore
+            self.features = Features.from_list(features)  # type: ignore
 
         # number of features selected
         self.n_best_per_type = n_best_per_type
@@ -263,7 +263,7 @@ class BaseSelector(ABC):
 
         # converting to Features
         if len(best_features) > 0:
-            return Features(best_features)  # type: ignore
+            return Features.from_list(best_features)  # type: ignore
         return best_features  # type: ignore
 
     def _select_features(

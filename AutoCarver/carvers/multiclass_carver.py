@@ -126,7 +126,7 @@ class MulticlassCarver(BinaryCarver):
             dev_y_class = get_one_vs_rest(samples.dev.y, y_class)
 
             # features for specific group
-            class_features = Features(self.features.get_version_group(y_class))
+            class_features = Features.from_list(self.features.get_version_group(y_class))
 
             # initiating BinaryCarver for y_class
             binary_carver = BinaryCarver(

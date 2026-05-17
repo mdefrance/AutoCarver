@@ -42,7 +42,7 @@ def test_check_quantitative_dtypes_mixed_types():
 def test_min_value_counts_basic():
     """Test min_value_counts with basic input"""
     x = pd.Series([1, 2, 2, 3, 3, 3], name="feature")
-    features = Features([QuantitativeFeature(name="feature")])
+    features = Features.from_list([QuantitativeFeature(name="feature")])
     result = min_value_counts(x, features)
     assert result == 1 / 6  # Minimum frequency is 1/6
 
@@ -51,13 +51,13 @@ def test_min_value_counts_with_nans():
     """Test min_value_counts with np.nan values"""
     # without dropna
     x = pd.Series([1, 2, 2, 3, 3, 3, np.nan, np.nan], name="feature")
-    features = Features([QuantitativeFeature(name="feature")])
+    features = Features.from_list([QuantitativeFeature(name="feature")])
     result = min_value_counts(x, features, dropna=False)
     assert result == 1 / 8  # Minimum frequency is 1/6
 
     # with dropna
     x = pd.Series([1, 2, 2, 3, 3, 3, np.nan, np.nan], name="feature")
-    features = Features([QuantitativeFeature(name="feature")])
+    features = Features.from_list([QuantitativeFeature(name="feature")])
     result = min_value_counts(x, features, dropna=True)
     assert result == 1 / 6  # Minimum frequency is 1/6
 
@@ -78,7 +78,7 @@ def test_min_value_counts_with_labels():
     )
     feature = QuantitativeFeature(name="feature")
     feature.update(GroupedList([1, 2, 3, 4, np.inf]))
-    features = Features([feature])
+    features = Features.from_list([feature])
     result = min_value_counts(x, features)
     assert result == 0  # Label 4 has a frequency of 0
 
@@ -96,7 +96,7 @@ def test_min_value_counts_with_labels():
     )
     feature = QuantitativeFeature(name="feature")
     feature.update(GroupedList([1, 2, 3, np.inf]))
-    features = Features([feature])
+    features = Features.from_list([feature])
     result = min_value_counts(x, features)
     assert result == 1 / 6
 
@@ -104,7 +104,7 @@ def test_min_value_counts_with_labels():
 def test_min_value_counts_normalize_false():
     """Test min_value_counts with normalize set to False"""
     x = pd.Series([1, 2, 2, 3, 3, 3], name="feature")
-    features = Features([QuantitativeFeature(name="feature")])
+    features = Features.from_list([QuantitativeFeature(name="feature")])
     result = min_value_counts(x, features, normalize=False)
     assert result == 1  # Minimum count is 1
 
@@ -112,7 +112,7 @@ def test_min_value_counts_normalize_false():
 def test_check_frequencies_no_rare_modalities():
     """Test check_frequencies with no rare modalities"""
     df = pd.DataFrame({"feature1": [1, 2, 2, 3, 3, 3], "feature2": [4, 4, 4, 5, 5, 5]})
-    features = Features(
+    features = Features.from_list(
         [
             QuantitativeFeature(name="feature1"),
             QuantitativeFeature(name="feature2"),
@@ -126,7 +126,7 @@ def test_check_frequencies_no_rare_modalities():
 def test_check_frequencies_with_rare_modalities():
     """Test check_frequencies with rare modalities"""
     df = pd.DataFrame({"feature1": [1, 1, 1, 1, 1, 2], "feature2": [4, 4, 4, 5, 5, 5]})
-    features = Features(
+    features = Features.from_list(
         [
             QuantitativeFeature(name="feature1"),
             QuantitativeFeature(name="feature2"),
@@ -141,7 +141,7 @@ def test_check_frequencies_with_rare_modalities():
 def test_check_frequencies_with_nans():
     """Test check_frequencies with np.nan values"""
     df = pd.DataFrame({"feature1": [1, 2, 2, 3, 3, np.nan], "feature2": [4, 4, 4, 5, 5, 5]})
-    features = Features(
+    features = Features.from_list(
         [
             QuantitativeFeature(name="feature1"),
             QuantitativeFeature(name="feature2"),
@@ -155,7 +155,7 @@ def test_check_frequencies_with_nans():
 def test_check_frequencies_all_rare_modalities():
     """Test check_frequencies with all rare modalities"""
     df = pd.DataFrame({"feature1": [1, 2, 3, 4, 5, 1], "feature2": [1, 2, 3, 4, 5, 2]})
-    features = Features(
+    features = Features.from_list(
         [
             QuantitativeFeature(name="feature1"),
             QuantitativeFeature(name="feature2"),

@@ -49,7 +49,7 @@ def test_check_frequencies_edge_case():
 
 def test_ensure_qualitative_dtypes_with_conversion():
     """Test ensure_qualitative_dtypes with basic input"""
-    features = Features([CategoricalFeature("feature1"), OrdinalFeature("feature2", ["A", "B", "C"])])
+    features = Features.from_list([CategoricalFeature("feature1"), OrdinalFeature("feature2", ["A", "B", "C"])])
     df = pd.DataFrame({"feature1": [1, 2, 3], "feature2": ["A", "B", "C"]})
     result = ensure_qualitative_dtypes(features, df)
     assert result["feature1"].dtype == object
@@ -60,7 +60,7 @@ def test_ensure_qualitative_dtypes_with_conversion():
 
 def test_ensure_qualitative_dtypes_without_conversion():
     """Test ensure_qualitative_dtypes with basic input"""
-    features = Features([CategoricalFeature("feature1"), OrdinalFeature("feature2", ["A", "B", "C"])])
+    features = Features.from_list([CategoricalFeature("feature1"), OrdinalFeature("feature2", ["A", "B", "C"])])
     df = pd.DataFrame({"feature1": ["1", "2", "3"], "feature2": ["A", "B", "C"]})
     result = ensure_qualitative_dtypes(features, df)
     assert result["feature1"].dtype == object
@@ -71,7 +71,7 @@ def test_ensure_qualitative_dtypes_without_conversion():
 
 def test_ensure_qualitative_dtypes_with_nans():
     """Test ensure_qualitative_dtypes with np.nan values"""
-    features = Features([CategoricalFeature("feature1"), OrdinalFeature("feature2", ["A", "B", "C"])])
+    features = Features.from_list([CategoricalFeature("feature1"), OrdinalFeature("feature2", ["A", "B", "C"])])
     df = pd.DataFrame({"feature1": [1, np.nan, 3], "feature2": ["A", "B", np.nan]})
     result = ensure_qualitative_dtypes(features, df)
 
@@ -89,7 +89,7 @@ def test_ensure_qualitative_dtypes_with_nans():
 
 def test_ensure_qualitative_dtypes_mixed_types():
     """Test ensure_qualitative_dtypes with mixed data types"""
-    features = Features([CategoricalFeature("feature1"), OrdinalFeature("feature2", ["A", "2", "B"])])
+    features = Features.from_list([CategoricalFeature("feature1"), OrdinalFeature("feature2", ["A", "2", "B"])])
     df = pd.DataFrame({"feature1": [1, 3.0, 3.5], "feature2": ["A", 2.0, "B"]})
     result = ensure_qualitative_dtypes(features, df)
     assert result["feature1"].dtype == object

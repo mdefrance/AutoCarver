@@ -149,4 +149,4 @@ def y():
 @fixture
 def features_object(features: list[BaseFeature]) -> Features:
     """mock Features"""
-    return Features(features)
+    return Features.from_list(features)

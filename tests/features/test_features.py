@@ -8,7 +8,6 @@ from pytest import fixture, raises
 from AutoCarver.features import BaseFeature, CategoricalFeature, OrdinalFeature, QualitativeFeature, QuantitativeFeature
 from AutoCarver.features.features import (
     Features,
-    cast_features,
     get_names,
     get_versions,
     keep_versions,
@@ -97,58 +96,25 @@ def test_get_versions(mock_features):
     assert versions == ["feature1__y=A", "feature2__y=A", "feature3__y=A"]
 
 
-def test_cast_features(mock_features):
-    """test funtion cast_features"""
-
-    # ordinal with strings
-    feature_names = ["feature1", "feature2"]
-    ordinal_values = {"feature1": ["low", "medium", "high"], "feature2": ["low", "medium", "high"]}
-    casted_features = cast_features(feature_names, target_class=OrdinalFeature, ordinal_values=ordinal_values)
-    assert len(casted_features) == 2
-    assert isinstance(casted_features[0], OrdinalFeature)
-    assert isinstance(casted_features[1], OrdinalFeature)
-    assert casted_features[0].values == ["low", "medium", "high"]
-    assert casted_features[1].values == ["low", "medium", "high"]
-
-    # categorical with strings
-    feature_names = ["feature1", "feature2"]
-    casted_features = cast_features(feature_names, target_class=CategoricalFeature)
-    assert len(casted_features) == 2
-    assert isinstance(casted_features[0], CategoricalFeature)
-    assert isinstance(casted_features[1], CategoricalFeature)
-
-    # categorical with strings
-    feature_names = ["feature1", "feature2"]
-    casted_features = cast_features(feature_names, target_class=QuantitativeFeature)
-    assert len(casted_features) == 2
-    assert isinstance(casted_features[0], QuantitativeFeature)
-    assert isinstance(casted_features[1], QuantitativeFeature)
-
-    # with existing features
-    casted_features = cast_features(mock_features)
-
-    assert len(casted_features) == len(mock_features)
-
-    assert all(isinstance(f, BaseFeature) for f in casted_features)
-    assert casted_features[0].name == mock_features[0].name
-    assert isinstance(casted_features[0], CategoricalFeature)
-    assert isinstance(casted_features[1], OrdinalFeature)
-    assert isinstance(casted_features[2], QuantitativeFeature)
-
-    # with invalid type
-    with raises(TypeError):
-        cast_features([123], target_class=BaseFeature)
-
-    # deduplication
+def test_from_list_dedupe(mock_features):
+    """Features.from_list deduplicates by version, keeping the last occurrence."""
     feature1 = QuantitativeFeature(name="feature1")
     feature2 = QuantitativeFeature(name="feature1")
     feature3 = QuantitativeFeature(name="feature1")
     feature1.version = "feature1_v0"
 
-    casted_features = cast_features([feature1, feature2, feature3], target_class=QuantitativeFeature)
+    features = Features.from_list([feature1, feature2, feature3])
+    versions = [f.version for f in features]
+    assert len(versions) == 2
+    assert feature1.version in versions
 
-    assert len(casted_features) == 2
-    assert feature1.version in get_versions(casted_features)
+
+def test_features_rejects_instance_in_names():
+    """__init__ requires column names (str); feature instances must go via from_list."""
+    with raises(TypeError):
+        Features(categoricals=[CategoricalFeature("a")])  # type: ignore
+    with raises(TypeError):
+        Features(ordinals=[OrdinalFeature("a", values=["x"])])  # type: ignore
 
 
 def test_remove_version(mock_features):
@@ -216,11 +182,7 @@ def mock_quantitatives():
 @fixture
 def features(mock_categoricals, mock_ordinals, mock_quantitatives):
     """fixture for Features"""
-    return Features(
-        categoricals=[f.name for f in mock_categoricals],
-        quantitatives=[f.name for f in mock_quantitatives],
-        ordinals=mock_ordinals,
-    )
+    return Features.from_list(mock_categoricals + mock_ordinals + mock_quantitatives)
 
 
 def test_features_initialization(features, mock_categoricals, mock_ordinals, mock_quantitatives):
@@ -335,7 +297,7 @@ def test_features_remove_by_version(features):
 def test_features_keep(features):
     """test Features keep"""
     # keeping a categorical feature by name
-    features_copy = Features(features)
+    features_copy = Features.from_list(features)
     features_copy.keep(["cat1"])
     assert len(features_copy.categoricals) == 1
     assert features_copy.categoricals[0].name == "cat1"
@@ -343,7 +305,7 @@ def test_features_keep(features):
     assert len(features_copy.quantitatives) == 0
 
     # keeping a ordinal feature by name
-    features_copy = Features(features)
+    features_copy = Features.from_list(features)
     features_copy.keep(["ord1"])
     assert len(features_copy.ordinals) == 1
     assert features_copy.ordinals[0].name == "ord1"
@@ -351,7 +313,7 @@ def test_features_keep(features):
     assert len(features_copy.quantitatives) == 0
 
     # keeping a quantitative feature by name
-    features_copy = Features(features)
+    features_copy = Features.from_list(features)
     features_copy.keep(["quant1"])
     assert len(features_copy.quantitatives) == 1
     assert features_copy.quantitatives[0].name == "quant1"
@@ -359,7 +321,7 @@ def test_features_keep(features):
     assert len(features_copy.ordinals) == 0
 
     # keeping a categorical feature by version
-    features_copy = Features(features)
+    features_copy = Features.from_list(features)
     features_copy.categoricals[0].version = "cat1_v2"
     features_copy.keep(["cat1_v2"])
     assert len(features_copy.categoricals) == 1
@@ -368,7 +330,7 @@ def test_features_keep(features):
     assert len(features_copy.quantitatives) == 0
 
     # keeping a ordinal feature by version
-    features_copy = Features(features)
+    features_copy = Features.from_list(features)
     features_copy.ordinals[0].version = "ord1_v2"
     features_copy.keep(["ord1_v2"])
     assert len(features_copy.ordinals) == 1
@@ -377,7 +339,7 @@ def test_features_keep(features):
     assert len(features_copy.quantitatives) == 0
 
     # keeping a quantitative feature by version
-    features_copy = Features(features)
+    features_copy = Features.from_list(features)
     features_copy.quantitatives[0].version = "quant1_v2"
     features_copy.keep(["quant1_v2"])
     assert len(features_copy.quantitatives) == 1
@@ -386,7 +348,7 @@ def test_features_keep(features):
     assert len(features_copy.ordinals) == 0
 
     # Edge case, keep unexpected version
-    features_copy = Features(features)
+    features_copy = Features.from_list(features)
     features_copy.keep(["unexpected"])
     assert len(features_copy.ordinals) == 0
     assert len(features_copy.categoricals) == 0
@@ -627,7 +589,7 @@ def test_features_init() -> None:
     feature2 = QuantitativeFeature("feature2")
     feature3 = CategoricalFeature("feature3")
     feature4 = OrdinalFeature("feature4", values=["a", "b", "c"])
-    features = Features(quantitatives=[feature1, feature2], categoricals=[feature3], ordinals=[feature4])
+    features = Features.from_list([feature1, feature2, feature3, feature4])
     assert feature1 in features
     assert feature2 in features
     assert feature3 in features

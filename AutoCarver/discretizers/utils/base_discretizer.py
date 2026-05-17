@@ -125,7 +125,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         # features and values
         self.features = features
         if isinstance(features, list):
-            self.features = Features(features)
+            self.features = Features.from_list(features)
 
         # saving kwargs
         self.kwargs = kwargs
