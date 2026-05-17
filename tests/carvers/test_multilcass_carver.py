@@ -691,107 +691,47 @@ def test_multiclass_carver_save_load(tmp_path: Path, evaluator: CombinationEvalu
     assert carver.combinations.verbose == loaded_carver.combinations.verbose
 
 
-def test_multiclass_carver(
-    tmp_path: Path,
+def _fit_multiclass_carver(
     x_train: pd.DataFrame,
-    x_train_wrong_2: pd.DataFrame,
     x_dev_1: pd.DataFrame,
-    x_dev_wrong_1: pd.DataFrame,
-    x_dev_wrong_2: pd.DataFrame,
-    x_dev_wrong_3: pd.DataFrame,
-    quantitative_features: list[str],
     qualitative_features: list[str],
-    ordinal_features: list[str],
+    quantitative_features: list[str],
     values_orders: dict[str, list[str]],
     chained_features: list[str],
     level0_to_level1: dict[str, list[str]],
     level1_to_level2: dict[str, list[str]],
-    discretizer_min_freq: float,
-    ordinal_encoding: bool,
-    dropna: bool,
     evaluator: CombinationEvaluator,
-    copy: bool,
-) -> None:
-    """Tests MulticlassCarver
+    *,
+    discretizer_min_freq: float | None = None,
+    ordinal_encoding: bool = False,
+    dropna: bool = True,
+    copy: bool = True,
+) -> tuple[MulticlassCarver, pd.DataFrame, pd.DataFrame, Features]:
+    """Build features, fit ChainedDiscretizer + MulticlassCarver, transform train and dev.
 
-    Parameters
-    ----------
-    x_train : pd.DataFrame
-        Simulated Train DataFrame
-    x_train_wrong_1 : pd.DataFrame
-        Simulated Train DataFrame with unknown values (without nans)
-    x_train_wrong_2 : pd.DataFrame
-        Simulated Train DataFrame with unknown values (with nans)
-    x_dev_1 : pd.DataFrame
-        Simulated Dev DataFrame
-    x_dev_wrong_1 : pd.DataFrame
-        Simulated wrong Dev DataFrame with unexpected modality
-    x_dev_wrong_2 : pd.DataFrame
-        Simulated wrong Dev DataFrame with unexpected nans
-    x_dev_wrong_3 : pd.DataFrame
-        Simulated wrong Dev DataFrame
-    quantitative_features : list[str]
-        List of quantitative raw features to be carved
-    qualitative_features : list[str]
-        List of qualitative raw features to be carved
-    ordinal_features : list[str]
-        List of ordinal raw features to be carved
-    values_orders : dict[str, list[str]]
-        values_orders of raw features to be carved
-    chained_features : list[str]
-        List of chained raw features to be chained
-    level0_to_level1 : dict[str, list[str]]
-        Chained orders level0 to level1 of features to be chained
-    level1_to_level2 : dict[str, list[str]]
-        Chained orders level1 to level2 of features to be chained
-    discretizer_min_freq : float
-        Minimum frequency per carved modalities
-    ordinal_encoding : str
-        Output type 'str' or 'float'
-    dropna : bool
-        Whether or note to drop nans
-    sort_by : str
-        Sorting measure 'tschuprowt' or 'cramerv'
-    copy : bool
-        Whether or not to copy the input dataset
+    Common setup factored out of the original mega-test; each focused test below
+    calls it with only the parameter combinations it actually exercises.
     """
-    # copying x_train for comparison purposes
-    raw_x_train = x_train.copy()
-
-    # multiclass_target for multiclass carver
-    target = "multiclass_target"
-
-    # minimum frequency per value
-    min_freq = 0.15
-
-    # defining features
     features = Features(
         categoricals=qualitative_features,
         ordinals=values_orders,
         quantitatives=quantitative_features,
     )
+    for feature_name in ["nan", "ones", "ones_nan"]:
+        features.remove(feature_name)
 
-    # removing wrong features
-    features.remove("nan")
-    features.remove("ones")
-    features.remove("ones_nan")
-
-    # fitting chained discretizer
+    # chained discretizer uses min_freq=0.15, carver uses 0.1 — matches original behavior
     chained_discretizer = ChainedDiscretizer(
-        min_freq=min_freq,
+        min_freq=0.15,
         features=features[chained_features],
         chained_orders=[level0_to_level1, level1_to_level2],
         copy=copy,
     )
     chained_discretizer.fit(x_train)
 
-    # minimum frequency and maximum number of modality
-    min_freq = 0.1
     evaluator.max_n_mod = 4
-
-    # fitting with provided measure
     auto_carver = MulticlassCarver(
-        min_freq=min_freq,
+        min_freq=0.1,
         features=features,
         combinations=evaluator,
         discretizer_min_freq=discretizer_min_freq,
@@ -800,19 +740,46 @@ def test_multiclass_carver(
         copy=copy,
         verbose=False,
     )
-    print("combiiiiiiiiiiiiiiiiiiiiiiii", auto_carver.combinations, "\n")
     x_discretized = auto_carver.fit_transform(
         x_train,
-        x_train[target],
+        x_train["multiclass_target"],
         X_dev=x_dev_1,
-        y_dev=x_dev_1[target],
+        y_dev=x_dev_1["multiclass_target"],
     )
     x_dev_discretized = auto_carver.transform(x_dev_1)
+    return auto_carver, x_discretized, x_dev_discretized, features
 
-    # getting kept features
+
+def test_multiclass_carver_end_to_end_invariants(
+    x_train: pd.DataFrame,
+    x_dev_1: pd.DataFrame,
+    quantitative_features: list[str],
+    qualitative_features: list[str],
+    values_orders: dict[str, list[str]],
+    chained_features: list[str],
+    level0_to_level1: dict[str, list[str]],
+    level1_to_level2: dict[str, list[str]],
+    evaluator: CombinationEvaluator,
+    dropna: bool,
+) -> None:
+    """Versions present, modality counts, NaN handling, train/dev robustness, value preservation."""
+    raw_x_train = x_train.copy()
+    target = "multiclass_target"
+    auto_carver, x_discretized, x_dev_discretized, features = _fit_multiclass_carver(
+        x_train,
+        x_dev_1,
+        qualitative_features,
+        quantitative_features,
+        values_orders,
+        chained_features,
+        level0_to_level1,
+        level1_to_level2,
+        evaluator,
+        dropna=dropna,
+    )
     feature_versions = features.versions
 
-    # checking that there were some versions built
+    # multiclass-specific: version columns are built and present in both outputs
     assert all(feature.version != feature.name for feature in features), "No version built for some features"
     assert all(version in x_discretized for version in feature_versions), (
         "Version missing from Train dataframe after transform"
@@ -821,39 +788,36 @@ def test_multiclass_carver(
         "Version missing from Dev dataframe after transform"
     )
 
-    # testing that attributes where correctly used
-    assert all(x_discretized[feature_versions].nunique() <= evaluator.max_n_mod), (
+    # max_n_mod respected on train + dev
+    assert all(x_discretized[feature_versions].nunique() <= auto_carver.combinations.max_n_mod), (
         "Too many buckets after carving of train sample"
     )
-    assert all(x_dev_discretized[feature_versions].nunique() <= evaluator.max_n_mod), (
+    assert all(x_dev_discretized[feature_versions].nunique() <= auto_carver.combinations.max_n_mod), (
         "Too many buckets after carving of test sample"
     )
 
-    # checking that nans were not dropped if not requested
+    # NaN handling matches dropna
     if not dropna:
-        # iterating over each feature
         for feature in features:
             assert raw_x_train[feature.name].isna().mean() == x_discretized[feature.version].isna().mean(), (
                 f"Some Nans are being dropped (grouped) or more nans than expected {feature}"
             )
-
-    # checking that nans were dropped if requested
     else:
         assert all(x_discretized[feature_versions].isna().mean() == 0), "Some Nans are not dropped (grouped)"
 
-    # testing for differences between train and dev
+    # train/dev modality counts match
     assert all(x_discretized[feature_versions].nunique() == x_dev_discretized[feature_versions].nunique()), (
         "More buckets in train or test samples"
     )
+
+    # robustness: same modalities in train and dev per feature version
     for feature in features:
-        # getting target rate for version tag
         train_target_rate = (
             (x_discretized[target].astype(str) == feature.version_tag).groupby(x_discretized[feature.version])
         ).mean()
         dev_target_rate = (
             (x_dev_discretized[target].astype(str) == feature.version_tag).groupby(x_dev_discretized[feature.version])
         ).mean()
-        # sorting by target for non-ordinal features
         if not feature.is_ordinal:
             train_target_rate = train_target_rate.sort_values()
             dev_target_rate = dev_target_rate.sort_values()
@@ -861,52 +825,130 @@ def test_multiclass_carver(
             f"Not robust feature {feature} was not dropped, or robustness test not working"
         )
 
-    # test that all values still are in the values_orders
+    # all initial qualitative values still present in carved values
     for feature in features.qualitatives:
         fitted_values = feature.values.values
-        # adding nan to list of initial values
         init_values = raw_x_train[feature.name].fillna(feature.nan).unique()
-        if not dropna:  # removing nan from list of initial values
+        if not dropna:
             init_values = [value for value in init_values if value != feature.nan]
         assert all(value in fitted_values for value in init_values), (
             f"Missing value in output! Some values have been dropped for qualitative feature: {feature.name}"
         )
 
-    # trying out copy
+
+def test_multiclass_carver_copy_semantics(
+    x_train: pd.DataFrame,
+    x_dev_1: pd.DataFrame,
+    quantitative_features: list[str],
+    qualitative_features: list[str],
+    values_orders: dict[str, list[str]],
+    chained_features: list[str],
+    level0_to_level1: dict[str, list[str]],
+    level1_to_level2: dict[str, list[str]],
+    copy: bool,
+) -> None:
+    """copy=True: version column values differ from raw feature values (new column was created)."""
+    _, x_discretized, _, features = _fit_multiclass_carver(
+        x_train,
+        x_dev_1,
+        qualitative_features,
+        quantitative_features,
+        values_orders,
+        chained_features,
+        level0_to_level1,
+        level1_to_level2,
+        CramervCombinations(),
+        copy=copy,
+    )
+    # original mega-test only asserts on copy=True; copy=False makes no assertion
     if copy:
         for feature in features:
-            # unique values per feature
             discretized = list(x_discretized[feature.version].fillna(Constants.NAN).unique())
             train = list(x_train[feature.name].fillna(Constants.NAN).unique())
-
             assert any(val not in train for val in discretized) or any(val not in discretized for val in train), (
                 f"Not copied correctly ({feature})"
             )
 
-    # testing json serialization
+
+def test_multiclass_carver_serialization_roundtrip(
+    tmp_path: Path,
+    x_train: pd.DataFrame,
+    x_dev_1: pd.DataFrame,
+    quantitative_features: list[str],
+    qualitative_features: list[str],
+    values_orders: dict[str, list[str]],
+    chained_features: list[str],
+    level0_to_level1: dict[str, list[str]],
+    level1_to_level2: dict[str, list[str]],
+    evaluator: CombinationEvaluator,
+) -> None:
+    """Save/load on a fitted carver preserves summary and transform output."""
+    auto_carver, x_discretized, _, features = _fit_multiclass_carver(
+        x_train,
+        x_dev_1,
+        qualitative_features,
+        quantitative_features,
+        values_orders,
+        chained_features,
+        level0_to_level1,
+        level1_to_level2,
+        evaluator,
+    )
+    feature_versions = features.versions
+
     carver_file = tmp_path / "test.json"
-    print(auto_carver.to_json())
     auto_carver.save(str(carver_file))
     loaded_carver = MulticlassCarver.load(str(carver_file))
 
-    # checking that reloading worked exactly the same
     assert all(loaded_carver.summary == auto_carver.summary), "Non-identical summaries when loading from JSON"
     assert all(x_discretized[feature_versions] == loaded_carver.transform(x_dev_1)[loaded_carver.features.versions]), (
         "Non-identical discretized values when loading from JSON"
     )
 
-    # transform dev with unexpected modal for a feature that has_default
+
+def test_multiclass_carver_wrong_dev_transform(
+    x_train: pd.DataFrame,
+    x_dev_1: pd.DataFrame,
+    x_dev_wrong_1: pd.DataFrame,
+    x_dev_wrong_2: pd.DataFrame,
+    x_dev_wrong_3: pd.DataFrame,
+    quantitative_features: list[str],
+    qualitative_features: list[str],
+    values_orders: dict[str, list[str]],
+    chained_features: list[str],
+    level0_to_level1: dict[str, list[str]],
+    level1_to_level2: dict[str, list[str]],
+) -> None:
+    """transform on wrong-dev variants raises (or not) per has_default semantics."""
+    auto_carver, _, _, _ = _fit_multiclass_carver(
+        x_train,
+        x_dev_1,
+        qualitative_features,
+        quantitative_features,
+        values_orders,
+        chained_features,
+        level0_to_level1,
+        level1_to_level2,
+        CramervCombinations(),
+    )
+
+    # unexpected modal on a feature that has_default — does not raise
     auto_carver.transform(x_dev_wrong_1)
 
-    # transform dev with unexpected nans for a feature that has_default
+    # unexpected nans (even though it has_default) — raises
     with raises(ValueError):
         auto_carver.transform(x_dev_wrong_2)
 
-    # transform dev with unexpected modal for a feature that does not have default
+    # unexpected modal on a feature that does not have default — raises
     with raises(ValueError):
         auto_carver.transform(x_dev_wrong_3)
 
-    # testing with unknown values
+
+def test_multiclass_carver_unknown_ordinal_values_raises(
+    x_train_wrong_2: pd.DataFrame,
+    values_orders: dict[str, list[str]],
+) -> None:
+    """fit_transform with an ordinal feature containing unknown values raises ValueError."""
     values_orders.update(
         {
             "Qualitative_Ordinal_lownan": [
@@ -933,28 +975,15 @@ def test_multiclass_carver(
         }
     )
 
-    # minimum frequency per value
-    min_freq = 0.15
-
-    # defining features
     features = Features(ordinals=values_orders)
+    for feature_name in ["nan", "ones", "ones_nan"]:
+        features.remove(feature_name)
 
-    # removing wrong features
-    features.remove("nan")
-    features.remove("ones")
-    features.remove("ones_nan")
-
-    # fitting carver
     auto_carver = MulticlassCarver(
-        min_freq=min_freq,
+        min_freq=0.15,
         features=features,
-        combinations=evaluator,
-        ordinal_encoding=ordinal_encoding,
-        discretizer_min_freq=discretizer_min_freq,
-        dropna=dropna,
-        copy=copy,
+        combinations=CramervCombinations(),
         verbose=False,
     )
-    # trying to carve an ordinal feature with unexpected values
     with raises(ValueError):
-        x_discretized = auto_carver.fit_transform(x_train_wrong_2, x_train_wrong_2[target])
+        auto_carver.fit_transform(x_train_wrong_2, x_train_wrong_2["multiclass_target"])
