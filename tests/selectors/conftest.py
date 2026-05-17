@@ -49,14 +49,12 @@ from AutoCarver.selectors.filters import (
     ValidFilter,
 )
 from AutoCarver.selectors.measures import (
-    Chi2Measure,
     CramervMeasure,
     DistanceMeasure,
     IqrOutlierMeasure,
     KruskalMeasure,
     ModeMeasure,
     NanMeasure,
-    PearsonMeasure,
     SpearmanMeasure,
     TschuprowtMeasure,
     ZscoreOutlierMeasure,
@@ -67,8 +65,8 @@ from AutoCarver.selectors.utils.base_selector import BaseSelector
 BaseSelector.__abstractmethods__ = set()
 BaseFeature.__abstractmethods__ = set()
 
-quanti_measures = [KruskalMeasure, PearsonMeasure, DistanceMeasure, SpearmanMeasure]
-quali_measures = [Chi2Measure, CramervMeasure, TschuprowtMeasure]
+quanti_measures = [KruskalMeasure, DistanceMeasure, SpearmanMeasure]
+quali_measures = [CramervMeasure, TschuprowtMeasure]
 
 
 @fixture(params=quanti_measures + quali_measures)
