@@ -169,9 +169,22 @@ class BaseFeature(ABC):
     # ------------------------------------------------------------------
 
     @property
-    def statistics(self) -> dict[str, Any] | None:
-        """Raw trained statistics as a column-major dict (or ``None``)."""
-        return self._statistics
+    def statistics(self) -> pd.DataFrame | None:
+        """Trained statistics as a DataFrame (``None`` when not yet computed).
+
+        Stored internally as a dict in ``_statistics`` for JSON serialization; the
+        DataFrame is rebuilt on access and reindexed when ``ordinal_encoding`` is active.
+        """
+        if self._statistics is None:
+            return None
+
+        stats = pd.DataFrame(self._statistics)
+        if self.ordinal_encoding:
+            rev_value_per_label = {v: k for k, v in self.value_per_label.items()}
+            rev_value_per_label[self.nan] = self.label_per_value.get(self.nan)
+            stats = stats.copy()
+            stats.index = list(map(rev_value_per_label.get, stats.index))
+        return stats
 
     @statistics.setter
     def statistics(self, value: pd.DataFrame | pd.Series | dict) -> None:
@@ -189,32 +202,17 @@ class BaseFeature(ABC):
         else:
             raise ValueError(f"Trying to set statistics with type {type(value)}")
 
-    @property
-    def statistics_dataframe(self) -> pd.DataFrame | None:
-        """DataFrame view of statistics. Reindexed when ordinal_encoding is active."""
-        if self._statistics is None:
-            return None
-
-        stats = pd.DataFrame(self._statistics)
-        if self.ordinal_encoding:
-            rev_value_per_label = {v: k for k, v in self.value_per_label.items()}
-            rev_value_per_label[self.nan] = self.label_per_value.get(self.nan)
-            stats = stats.copy()
-            stats.index = list(map(rev_value_per_label.get, stats.index))
-        return stats
-
     # ------------------------------------------------------------------
     # history
     # ------------------------------------------------------------------
 
     @property
-    def history(self) -> list[dict[str, Any]]:
-        """Raw combination history as a list of dicts."""
-        return self._history
+    def history(self) -> pd.DataFrame:
+        """Combination history as a DataFrame (empty when no history yet).
 
-    @property
-    def history_dataframe(self) -> pd.DataFrame:
-        """DataFrame view of history (empty DataFrame when no history)."""
+        Stored internally as a list of dicts in ``_history`` for JSON serialization;
+        the DataFrame is rebuilt on access. Append entries with :meth:`historize`.
+        """
         return pd.DataFrame(self._history)
 
     def historize(self, combination: dict[str, Any]) -> None:
@@ -251,26 +249,26 @@ class BaseFeature(ABC):
     def _add_statistics_to_summary(self, summary: list[dict]) -> list[dict]:
         """Adds statistics and selected history combination to summary entries."""
 
-        stats_df = self.statistics_dataframe
-        if stats_df is not None:
+        stats = self.statistics
+        if stats is not None:
             for label_content in summary:
                 label = label_content["label"]
-                label_content.update(stats_df.loc[label].to_dict())
+                label_content.update(stats.loc[label].to_dict())
 
-        history_df = self.history_dataframe
-        if len(history_df) > 0:
+        history = self.history
+        if len(history) > 0:
             selected: dict = {}
 
             with pd.option_context("future.no_silent_downcasting", True):
-                viable = history_df["viable"].fillna(False).astype(bool)
+                viable = history["viable"].fillna(False).astype(bool)
 
             if viable.any():
-                dropna = history_df["dropna"].fillna(False)
+                dropna = history["dropna"].fillna(False)
                 if dropna.any():
-                    if history_df[dropna].viable.any():
-                        selected = history_df[viable & dropna].iloc[0].to_dict()
+                    if history[dropna].viable.any():
+                        selected = history[viable & dropna].iloc[0].to_dict()
                 else:
-                    selected = history_df[viable].iloc[0].to_dict()
+                    selected = history[viable].iloc[0].to_dict()
 
             # removing unwanted keys
             for key in ("viable", "dropna", "combination", "info", "train", "dev"):

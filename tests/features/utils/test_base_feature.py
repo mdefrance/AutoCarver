@@ -32,8 +32,7 @@ def test_base_feature_initialization() -> None:
     assert not feature.is_qualitative
     assert not feature.is_quantitative
     assert feature.statistics is None
-    assert feature.statistics_dataframe is None
-    assert isinstance(feature.history, list) and len(feature.history) == 0
+    assert isinstance(feature.history, pd.DataFrame) and len(feature.history) == 0
     assert feature.version == "test_feature"
     assert feature.version_tag == "test_feature"
 
@@ -328,8 +327,8 @@ def test_base_feature_load() -> None:
     assert loaded_feature.labels == feature.labels
     assert loaded_feature.label_per_value == feature.label_per_value
     assert loaded_feature.value_per_label == feature.value_per_label
-    assert loaded_feature.statistics_dataframe.equals(feature.statistics_dataframe)
-    assert loaded_feature.history == feature.history
+    assert loaded_feature.statistics.equals(feature.statistics)
+    assert loaded_feature.history.equals(feature.history)
     assert not loaded_feature.ordinal_encoding
 
     # ordinal encoding true
@@ -360,9 +359,9 @@ def test_base_feature_load() -> None:
     assert loaded_feature.labels == feature.labels
     assert loaded_feature.label_per_value == feature.label_per_value
     assert loaded_feature.value_per_label == feature.value_per_label
-    assert isinstance(loaded_feature.statistics_dataframe, pd.DataFrame)
-    assert loaded_feature.statistics_dataframe.shape[0] == 2
-    assert loaded_feature.statistics_dataframe.shape[1] == 2
-    assert all(loaded_feature.statistics_dataframe.index == [0, 1])
+    assert isinstance(loaded_feature.statistics, pd.DataFrame)
+    assert loaded_feature.statistics.shape[0] == 2
+    assert loaded_feature.statistics.shape[1] == 2
+    assert all(loaded_feature.statistics.index == [0, 1])
     assert len(loaded_feature.history) == 0
     assert loaded_feature.ordinal_encoding
