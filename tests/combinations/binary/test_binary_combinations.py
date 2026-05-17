@@ -16,7 +16,7 @@ from AutoCarver.combinations.binary.binary_combination_evaluators import (
 from AutoCarver.combinations.continuous.continuous_combination_evaluators import KruskalCombinations
 from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample
 from AutoCarver.combinations.utils.combinations import consecutive_combinations, nan_combinations
-from AutoCarver.combinations.utils.testing import TestKeys, TestMessages
+from AutoCarver.combinations.utils.testing import Keys, Messages
 from AutoCarver.features import OrdinalFeature
 
 MAX_N_MOD = 5
@@ -580,17 +580,17 @@ def test_viability_train(evaluator: BinaryCombinationEvaluator):
 
     expected = [
         {
-            "train": {TestKeys.VIABLE.value: True},
+            "train": {Keys.VIABLE.value: True},
             "train_rates": pd.DataFrame({"target_mean": [1.0, 0.333333], "frequency": [0.4, 0.6]}, index=["a", "c"]),
         },
         {
-            "train": {TestKeys.VIABLE.value: True},
+            "train": {Keys.VIABLE.value: True},
             "train_rates": pd.DataFrame({"target_mean": [0.5, 1.0], "frequency": [0.8, 0.2]}, index=["a", "c"]),
         },
     ]
     for res, exp in zip(result, expected):
         assert np.allclose(res["train_rates"], exp["train_rates"])
-        assert res["train"][TestKeys.VIABLE.value] == exp["train"][TestKeys.VIABLE.value]
+        assert res["train"][Keys.VIABLE.value] == exp["train"][Keys.VIABLE.value]
 
 
 def test_viability_dev(evaluator: BinaryCombinationEvaluator):
@@ -609,15 +609,15 @@ def test_viability_dev(evaluator: BinaryCombinationEvaluator):
     for combination in associations:
         test_results = evaluator._test_viability_train(combination)
         test_results = evaluator._test_viability_dev(test_results, combination)
-        assert test_results.get("dev").get(TestKeys.VIABLE.value) is None
+        assert test_results.get("dev").get(Keys.VIABLE.value) is None
 
     # test with xagg_dev but not viable on train
     evaluator.samples.dev = AggregatedSample(pd.DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"]))
     for combination in associations:
         test_results = evaluator._test_viability_dev(
-            {"train": {TestKeys.VIABLE.value: False}, TestKeys.VIABLE.value: False}, combination
+            {"train": {Keys.VIABLE.value: False}, Keys.VIABLE.value: False}, combination
         )
-        assert test_results.get("dev").get(TestKeys.VIABLE.value) is None
+        assert test_results.get("dev").get(Keys.VIABLE.value) is None
 
     # test with xagg_dev same as train
     result = []
@@ -625,8 +625,8 @@ def test_viability_dev(evaluator: BinaryCombinationEvaluator):
         test_results = evaluator._test_viability_train(combination)
         result += [evaluator._test_viability_dev(test_results, combination)]
     for res in result:
-        assert res["train"][TestKeys.VIABLE.value] is True
-        assert res["dev"][TestKeys.VIABLE.value] is True
+        assert res["train"][Keys.VIABLE.value] is True
+        assert res["dev"][Keys.VIABLE.value] is True
 
     # test with xagg_dev wrong
     evaluator.samples.dev = AggregatedSample(pd.DataFrame({0: [5, 0, 10], 1: [2, 5, 1]}, index=["a", "b", "c"]))
@@ -638,12 +638,12 @@ def test_viability_dev(evaluator: BinaryCombinationEvaluator):
 
     expected = [
         {
-            "train": {TestKeys.VIABLE.value: True, TestKeys.INFO: TestMessages.PASSED_TESTS},
-            "dev": {TestKeys.VIABLE.value: False, TestKeys.INFO: TestMessages.INVERSION_RATES},
+            "train": {Keys.VIABLE.value: True, Keys.INFO: Messages.PASSED_TESTS},
+            "dev": {Keys.VIABLE.value: False, Keys.INFO: Messages.INVERSION_RATES},
         },
         {
-            "train": {TestKeys.VIABLE.value: True, TestKeys.INFO: TestMessages.PASSED_TESTS},
-            "dev": {TestKeys.VIABLE.value: False, TestKeys.INFO: TestMessages.INVERSION_RATES},
+            "train": {Keys.VIABLE.value: True, Keys.INFO: Messages.PASSED_TESTS},
+            "dev": {Keys.VIABLE.value: False, Keys.INFO: Messages.INVERSION_RATES},
         },
     ]
     for res, exp in zip(result, expected):

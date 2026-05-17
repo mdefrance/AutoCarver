@@ -18,7 +18,7 @@ from AutoCarver.combinations.continuous.continuous_combination_evaluators import
 )
 from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample
 from AutoCarver.combinations.utils.combinations import consecutive_combinations, nan_combinations
-from AutoCarver.combinations.utils.testing import TestKeys, TestMessages
+from AutoCarver.combinations.utils.testing import Keys, Messages
 from AutoCarver.features import OrdinalFeature
 
 MAX_N_MOD = 5
@@ -526,14 +526,14 @@ def test_viability_train(evaluator: ContinuousCombinationEvaluator):
 
     expected = [
         {
-            "train": {TestKeys.VIABLE.value: True},
+            "train": {Keys.VIABLE.value: True},
             "train_rates": pd.DataFrame(
                 {"target_mean": [0.666667, 1.250000], "frequency": [0.428571, 0.571429]},
                 index=["a", "b"],
             ),
         },
         {
-            "train": {TestKeys.VIABLE.value: False},
+            "train": {Keys.VIABLE.value: False},
             "train_rates": pd.DataFrame(
                 {"target_mean": [1.0, 1.0], "frequency": [0.714286, 0.285714]}, index=["a", "c"]
             ),
@@ -542,7 +542,7 @@ def test_viability_train(evaluator: ContinuousCombinationEvaluator):
     for res, exp in zip(result, expected):
         assert all(res["train_rates"].index == exp["train_rates"].index)
         assert np.allclose(res["train_rates"], exp["train_rates"])
-        assert res["train"][TestKeys.VIABLE.value] == exp["train"][TestKeys.VIABLE.value]
+        assert res["train"][Keys.VIABLE.value] == exp["train"][Keys.VIABLE.value]
 
 
 def test_viability_dev(evaluator: ContinuousCombinationEvaluator):
@@ -562,16 +562,16 @@ def test_viability_dev(evaluator: ContinuousCombinationEvaluator):
     for combination in associations:
         test_results = evaluator._test_viability_train(combination)
         test_results = evaluator._test_viability_dev(test_results, combination)
-        assert test_results.get("dev").get(TestKeys.VIABLE.value) is None
+        assert test_results.get("dev").get(Keys.VIABLE.value) is None
 
     # test with xagg_dev but not viable on train
     evaluator.samples.dev = AggregatedSample(pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0]}))
     for combination in associations:
         test_results = evaluator._test_viability_dev(
-            {"train": {TestKeys.VIABLE.value: False}, TestKeys.VIABLE.value: False},
+            {"train": {Keys.VIABLE.value: False}, Keys.VIABLE.value: False},
             combination,
         )
-        assert test_results.get("dev").get(TestKeys.VIABLE.value) is None
+        assert test_results.get("dev").get(Keys.VIABLE.value) is None
 
     # test with xagg_dev same as train
     result = []
@@ -581,15 +581,15 @@ def test_viability_dev(evaluator: ContinuousCombinationEvaluator):
 
     expected = [
         {
-            "train": {TestKeys.VIABLE.value: True, TestKeys.INFO: TestMessages.PASSED_TESTS},
+            "train": {Keys.VIABLE.value: True, Keys.INFO: Messages.PASSED_TESTS},
             "dev": {
-                TestKeys.VIABLE.value: True,
-                TestKeys.INFO: TestMessages.PASSED_TESTS,
+                Keys.VIABLE.value: True,
+                Keys.INFO: Messages.PASSED_TESTS,
             },
         },
         {
-            "train": {TestKeys.VIABLE.value: False, TestKeys.INFO: TestMessages.NON_DISTINCT_RATES},
-            "dev": {TestKeys.VIABLE.value: None},
+            "train": {Keys.VIABLE.value: False, Keys.INFO: Messages.NON_DISTINCT_RATES},
+            "dev": {Keys.VIABLE.value: None},
         },
     ]
     for res, exp in zip(result, expected):
@@ -607,20 +607,20 @@ def test_viability_dev(evaluator: ContinuousCombinationEvaluator):
     expected = [
         {
             "train": {
-                TestKeys.VIABLE.value: True,
-                TestKeys.INFO.value: TestMessages.PASSED_TESTS.value,
+                Keys.VIABLE.value: True,
+                Keys.INFO.value: Messages.PASSED_TESTS.value,
             },
             "dev": {
-                TestKeys.VIABLE.value: False,
-                TestKeys.INFO.value: TestMessages.INVERSION_RATES.value,
+                Keys.VIABLE.value: False,
+                Keys.INFO.value: Messages.INVERSION_RATES.value,
             },
         },
         {
             "train": {
-                TestKeys.VIABLE.value: False,
-                TestKeys.INFO.value: TestMessages.NON_DISTINCT_RATES.value,
+                Keys.VIABLE.value: False,
+                Keys.INFO.value: Messages.NON_DISTINCT_RATES.value,
             },
-            "dev": {TestKeys.VIABLE.value: None},
+            "dev": {Keys.VIABLE.value: None},
         },
     ]
     for res, exp in zip(result, expected):

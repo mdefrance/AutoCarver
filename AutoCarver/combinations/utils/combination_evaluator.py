@@ -16,7 +16,7 @@ from AutoCarver.combinations.utils.combinations import (
     xagg_apply_combination,
 )
 from AutoCarver.combinations.utils.target_rate import TargetRate
-from AutoCarver.combinations.utils.testing import TestKeys, is_viable, test_viability
+from AutoCarver.combinations.utils.testing import Keys, is_viable, test_viability
 from AutoCarver.features import BaseFeature, GroupedList
 from AutoCarver.utils import get_attribute, get_bool_attribute
 
@@ -353,8 +353,8 @@ class CombinationEvaluator(ABC):
         """testing the viability of the combination on xagg_dev"""
 
         # case 0: not viable on train or no test sample -> not testing for robustness
-        if not test_results[TestKeys.VIABLE.value] or self.samples.dev.xagg is None:
-            return {**test_results, "dev": {TestKeys.VIABLE.value: None}}
+        if not test_results[Keys.VIABLE.value] or self.samples.dev.xagg is None:
+            return {**test_results, "dev": {Keys.VIABLE.value: None}}
 
         # case 1: test sample provided and viable on train -> testing robustness
         # getting train target rates
@@ -371,7 +371,7 @@ class CombinationEvaluator(ABC):
         test_results = {**test_results, **dev_results}
 
         # checking for viability on both samples
-        test_results[TestKeys.VIABLE.value] = is_viable(test_results)
+        test_results[Keys.VIABLE.value] = is_viable(test_results)
 
         return test_results
 
@@ -396,7 +396,7 @@ class CombinationEvaluator(ABC):
             self._historize_combination(combination, test_results)
 
             # best combination found: breaking the loop on combinations
-            if test_results[TestKeys.VIABLE.value]:
+            if test_results[Keys.VIABLE.value]:
                 viable_combination = combination
 
                 # historizing remaining combinations/not tested
@@ -433,7 +433,7 @@ class CombinationEvaluator(ABC):
         test_results.update(clean_combination(combination, self.feature))
 
         # checking for viability
-        if test_results[TestKeys.VIABLE.value]:
+        if test_results[Keys.VIABLE.value]:
             # setting feature's statistics (selected combination)
             # self.feature.statistics = test_results.pop("train_rates")
             self.feature.statistics = test_results.pop("train_rates")
