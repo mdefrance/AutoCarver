@@ -591,7 +591,7 @@ def apply_collection_state(features: list[BaseFeature], kwargs: dict) -> None:
             feature._dropna = True
 
         if kwargs.get("has_nan"):
-            feature._has_nan = True
+            feature.has_nan = True
 
         if kwargs.get("has_default"):
             feature._has_default = True

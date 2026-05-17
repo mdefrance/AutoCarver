@@ -39,7 +39,7 @@ class BaseFeature(ABC):
         self.default: str = Constants.DEFAULT
 
         # state flags — set by fit(), Features, or load()
-        self._has_nan: bool = False
+        self.has_nan: bool = False
         self._has_default: bool = False
         self._dropna: bool = False
         self._ordinal_encoding: bool = False
@@ -67,15 +67,6 @@ class BaseFeature(ABC):
     # ------------------------------------------------------------------
     # state flag properties
     # ------------------------------------------------------------------
-
-    @property
-    def has_nan(self) -> bool:
-        """Whether the feature has NaNs."""
-        return self._has_nan
-
-    @has_nan.setter
-    def has_nan(self, value: bool) -> None:
-        self._has_nan = value
 
     @property
     def has_default(self) -> bool:
@@ -415,7 +406,7 @@ class BaseFeature(ABC):
         self.default = feature_json.get("default", Constants.DEFAULT)
         self._ordinal_encoding = feature_json.get("ordinal_encoding", False)
         self.is_fitted = feature_json.get("is_fitted", False)
-        self._has_nan = feature_json.get("has_nan", False)
+        self.has_nan = feature_json.get("has_nan", False)
         self._has_default = feature_json.get("has_default", False)
         self._dropna = feature_json.get("dropna", False)
         self._statistics = feature_json.get("statistics")
