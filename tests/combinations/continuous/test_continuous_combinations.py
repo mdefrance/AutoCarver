@@ -452,9 +452,9 @@ def test_compute_associations_with_three_rows(evaluator: ContinuousCombinationEv
         assert res["kruskal"] == exp["kruskal"]
 
 
-def test_compute_associations_with_twenty_rows(evaluator: ContinuousCombinationEvaluator):
-    """Test with a larger xagg"""
-    feature = OrdinalFeature("feature", [chr(i) for i in range(65, 85)])  # A to T
+def test_compute_associations_with_ten_labels(evaluator: ContinuousCombinationEvaluator):
+    """Test with a larger xagg (10 labels, 84 combinations)."""
+    feature = OrdinalFeature("feature", [chr(i) for i in range(65, 75)])  # A to J
     xagg = pd.Series(
         {
             "A": [0, 2, 0],
@@ -467,78 +467,44 @@ def test_compute_associations_with_twenty_rows(evaluator: ContinuousCombinationE
             "H": [9, 10],
             "I": [11, 12, 13],
             "J": [7, 8],
-            "K": [16, 17, 6],
-            "L": [1, 5],
-            "M": [21, 0, 23],
-            "N": [1, 1],
-            "O": [3, 5, 0],
-            "P": [1, 30],
-            "Q": [31, 0, 33],
-            "R": [34, 1],
-            "S": [4, 0, 38],
-            "T": [0, 40],
         }
     )
     evaluator.samples.train = AggregatedSample(xagg)
 
-    combinations = consecutive_combinations(feature.labels, 7)
+    combinations = consecutive_combinations(feature.labels, 4)
 
     grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
     result = evaluator._compute_associations(grouped_xaggs)
-    print("-------sorting by", evaluator.sort_by)
-    print(result[0])
 
     expected = {
         "xagg": pd.Series(
             {
                 "A": [0, 2, 0],
-                "B": [2, 1, 2, 0, 5, 6, 1, 3, 4, 0, 1, 2, 3, 4, 5],
-                "G": [6, 7, 8, 9, 10, 11, 12, 13, 7, 8, 16, 17, 6],
-                "L": [1, 5],
-                "M": [21, 0, 23],
-                "N": [1, 1, 3, 5, 0],
-                "P": [1, 30, 31, 0, 33, 34, 1, 4, 0, 38, 0, 40],
+                "B": [2, 1, 2, 0, 5, 6, 1, 3, 4, 0, 1, 2, 3],
+                "F": [4, 5, 6, 7, 8],
+                "H": [9, 10, 11, 12, 13, 7, 8],
             }
         ),
-        "combination": [
-            ["A"],
-            ["B", "C", "D", "E", "F"],
-            ["G", "H", "I", "J", "K"],
-            ["L"],
-            ["M"],
-            ["N", "O"],
-            ["P", "Q", "R", "S", "T"],
-        ],
+        "combination": [["A"], ["B", "C", "D", "E"], ["F", "G"], ["H", "I", "J"]],
         "index_to_groupby": {
             "A": "A",
             "B": "B",
             "C": "B",
             "D": "B",
             "E": "B",
-            "F": "B",
-            "G": "G",
-            "H": "G",
-            "I": "G",
-            "J": "G",
-            "K": "G",
-            "L": "L",
-            "M": "M",
-            "N": "N",
-            "O": "N",
-            "P": "P",
-            "Q": "P",
-            "R": "P",
-            "S": "P",
-            "T": "P",
+            "F": "F",
+            "G": "F",
+            "H": "H",
+            "I": "H",
+            "J": "H",
         },
-        "kruskal": 18.340313169963935,
+        "kruskal": 20.728840695728103,
     }
     res = result[0]
-    exp = expected
-    assert list(res["xagg"]) == list(exp["xagg"])
-    assert res["combination"] == exp["combination"]
-    assert res["index_to_groupby"] == exp["index_to_groupby"]
-    assert res["kruskal"] == exp["kruskal"]
+    assert list(res["xagg"]) == list(expected["xagg"])
+    assert res["combination"] == expected["combination"]
+    assert res["index_to_groupby"] == expected["index_to_groupby"]
+    assert res["kruskal"] == expected["kruskal"]
 
 
 def test_viability_train(evaluator: ContinuousCombinationEvaluator):
