@@ -150,7 +150,7 @@ def min_value_counts(
     values = x.value_counts(dropna=dropna, normalize=normalize)
 
     # setting indices with known values
-    if feature.values is not None:
+    if not feature.values.is_empty():
         values = values.reindex(feature.labels).fillna(0)
 
     # minimal frequency

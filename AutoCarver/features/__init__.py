@@ -1,6 +1,6 @@
 """Loads Features tools."""
 
-from AutoCarver.features.features import Features, get_names, get_versions
+from AutoCarver.features.features import Features, FeaturesConfig, get_names, get_versions
 from AutoCarver.features.qualitatives import (
     CategoricalFeature,
     OrdinalFeature,
@@ -15,6 +15,7 @@ from AutoCarver.features.utils.grouped_list import GroupedList
 
 __all__ = [
     "Features",
+    "FeaturesConfig",
     "get_names",
     "get_versions",
     "get_quantitative_features",

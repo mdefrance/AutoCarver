@@ -24,7 +24,7 @@ class StringDiscretizer(BaseDiscretizer):
     @extend_docstring(BaseDiscretizer.__init__, exclude=["min_freq"])
     def __init__(self, features: Features, **kwargs) -> None:
         # initiating features
-        features = Features(features, **kwargs)
+        features = Features.from_list(features)
 
         # Initiating BaseDiscretizer
         super().__init__(features=features, **kwargs)
@@ -57,7 +57,7 @@ def fit_feature(feature: BaseFeature, df_feature: pd.Series):
 
     # initiating feature values
     order = GroupedList(unique_values)
-    if feature.values is not None:
+    if not feature.values.is_empty():
         order = GroupedList(feature.values)
 
     # formatting values
@@ -101,7 +101,7 @@ class TimedeltaDiscretizer(BaseDiscretizer):
             List of column names of qualitative features to be converted as string
         """
         # initiating features
-        features = Features(features, **kwargs)
+        features = Features.from_list(features)
 
         # Initiating BaseDiscretizer
         super().__init__(features=features, **kwargs)

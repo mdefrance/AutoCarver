@@ -10,7 +10,7 @@ from AutoCarver.discretizers.qualitatives.categorical_discretizer import (
     series_value_counts,
 )
 from AutoCarver.discretizers.utils.base_discretizer import Sample
-from AutoCarver.features import CategoricalFeature, Features, GroupedList
+from AutoCarver.features import CategoricalFeature, Features, FeaturesConfig, GroupedList
 
 
 def test_series_value_counts():
@@ -345,7 +345,7 @@ def test_categorical_discretizer(x_train: pd.DataFrame, target: str) -> None:
         "Qualitative_highnan",
         "Qualitative_Ordinal",
     ]
-    features = Features(categoricals=categoricals, default=str_default)
+    features = Features(categoricals=categoricals, config=FeaturesConfig(default=str_default))
     features.update(values_orders, replace=True)
 
     min_freq = 0.02
@@ -355,7 +355,7 @@ def test_categorical_discretizer(x_train: pd.DataFrame, target: str) -> None:
         _ = discretizer.fit_transform(x_train, x_train[target])
 
     # correct feature ordering
-    features = Features(categoricals=categoricals + ["Qualitative"], default=str_default)
+    features = Features(categoricals=categoricals + ["Qualitative"], config=FeaturesConfig(default=str_default))
 
     discretizer = CategoricalDiscretizer(categoricals=features, min_freq=min_freq, copy=True)
     _ = discretizer.fit_transform(x_train, x_train[target])

@@ -40,6 +40,8 @@ import pandas as pd
 from pytest import FixtureRequest, fixture
 
 from AutoCarver.features import BaseFeature, Features
+from AutoCarver.features.qualitatives import CategoricalFeature, OrdinalFeature
+from AutoCarver.features.quantitatives import QuantitativeFeature
 from AutoCarver.selectors import BaseFilter, BaseMeasure
 from AutoCarver.selectors.filters import (
     PearsonFilter,
@@ -116,16 +118,10 @@ def filters(quanti_filter: BaseFilter, quali_filter: BaseFilter, default_filter:
 
 @fixture
 def features() -> list[BaseFeature]:
-    feature1 = BaseFeature("feature1")
-    feature1.is_qualitative = True
-    feature1.is_categorical = True
-    feature2 = BaseFeature("feature2")
-    feature2.is_qualitative = True
-    feature2.is_ordinal = True
-    feature3 = BaseFeature("feature3")
-    feature3.is_quantitative = True
-    feature4 = BaseFeature("feature4")
-    feature4.is_quantitative = True
+    feature1 = CategoricalFeature("feature1")
+    feature2 = OrdinalFeature("feature2", values=["a", "b", "c"])
+    feature3 = QuantitativeFeature("feature3")
+    feature4 = QuantitativeFeature("feature4")
     return [feature1, feature2, feature3, feature4]
 
 
@@ -149,4 +145,4 @@ def y():
 @fixture
 def features_object(features: list[BaseFeature]) -> Features:
     """mock Features"""
-    return Features(features)
+    return Features.from_list(features)

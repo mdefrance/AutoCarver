@@ -14,7 +14,7 @@ def test_discretizer_initialization():
     feature2 = QuantitativeFeature("feature2")
     feature3 = CategoricalFeature("feature3")
     feature4 = OrdinalFeature("feature4", values=["a", "b", "c"])
-    features = Features(quantitatives=[feature1, feature2], categoricals=[feature3], ordinals=[feature4])
+    features = Features.from_list([feature1, feature2, feature3, feature4])
     min_freq = 0.05
     discretizer = Discretizer(features=features, min_freq=min_freq)
     assert discretizer.min_freq == min_freq
@@ -31,7 +31,7 @@ def test_discretizer_fit():
     feature2 = QuantitativeFeature("feature2")
     feature3 = CategoricalFeature("feature3")
     feature4 = OrdinalFeature("feature4", values=["a", "b"])
-    features = Features(quantitatives=[feature1, feature2], categoricals=[feature3], ordinals=[feature4])
+    features = Features.from_list([feature1, feature2, feature3, feature4])
     min_freq = 0.3
     discretizer = Discretizer(features=features, min_freq=min_freq)
 

@@ -396,7 +396,7 @@ def test_categorical_feature_fit_initial_values(
 ) -> None:
     """test fit method"""
 
-    sample_categorical_feature.values = None
+    sample_categorical_feature.values = GroupedList()
     sample_categorical_feature.raw_order = []
 
     data = pd.DataFrame({"test_feature": ["value1", "value2", "value3", "value1"]})
@@ -404,7 +404,7 @@ def test_categorical_feature_fit_initial_values(
     sample_categorical_feature.fit(data)
 
     # Check that values have been set
-    assert sample_categorical_feature.values is not None
+    assert not sample_categorical_feature.values.is_empty()
     assert "value1" in sample_categorical_feature.values.content
     assert "value2" in sample_categorical_feature.values.content
     assert "value3" in sample_categorical_feature.values.content
@@ -416,7 +416,7 @@ def test_categorical_feature_fit_initial_values(
 def test_categorical_feature_fit_with_nan(sample_categorical_feature: CategoricalFeature) -> None:
     """test fit method"""
 
-    sample_categorical_feature.values = None
+    sample_categorical_feature.values = GroupedList()
     sample_categorical_feature.raw_order = []
 
     data = pd.DataFrame({"test_feature": ["value1", "value2", "value3", "value1", np.nan]})
@@ -424,7 +424,7 @@ def test_categorical_feature_fit_with_nan(sample_categorical_feature: Categorica
     sample_categorical_feature.fit(data)
 
     # Check that values have been set
-    assert sample_categorical_feature.values is not None
+    assert not sample_categorical_feature.values.is_empty()
     assert "value1" in sample_categorical_feature.values.content
     assert "value2" in sample_categorical_feature.values.content
     assert "value3" in sample_categorical_feature.values.content
@@ -448,7 +448,7 @@ def test_fit_existing_values(sample_categorical_feature: CategoricalFeature) -> 
 def test_fit_with_existing_raw_order(sample_categorical_feature: CategoricalFeature) -> None:
     """test fit funtion"""
 
-    sample_categorical_feature.values = None
+    sample_categorical_feature.values = GroupedList()
     sample_categorical_feature.raw_order = ["value1", "value2"]
     data = pd.DataFrame({"test_feature": ["value1", "value2", "value3", "value1"]})
     sample_categorical_feature.fit(data)
@@ -460,7 +460,7 @@ def test_fit_with_existing_raw_order(sample_categorical_feature: CategoricalFeat
 def test_fit_check_values_called(sample_categorical_feature: CategoricalFeature, monkeypatch) -> None:
     """test fit funtion"""
 
-    sample_categorical_feature.values = None
+    sample_categorical_feature.values = GroupedList()
     sample_categorical_feature.raw_order = []
 
     # Patch the check_values method

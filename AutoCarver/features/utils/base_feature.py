@@ -1,7 +1,7 @@
 """Base class for all features."""
 
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Self
 
 import pandas as pd
 
@@ -46,7 +46,9 @@ class BaseFeature(ABC):
         self.is_fitted: bool = False
 
         # values and labels (populated by fit/update)
-        self.values: GroupedList | None = None
+        # values starts empty; use ``self.values.is_empty()`` to check the
+        # "no values observed yet" state (was previously ``self.values is None``).
+        self.values: GroupedList = GroupedList()
         # _labels stays None until update_labels() runs; callers like xtab.reindex
         # rely on the None-vs-list distinction ("no labels yet" vs "empty labels").
         self._labels: list | None = None
@@ -93,7 +95,7 @@ class BaseFeature(ABC):
     @ordinal_encoding.setter
     def ordinal_encoding(self, value: bool) -> None:
         self._ordinal_encoding = value
-        if self.values is not None:
+        if not self.values.is_empty():
             self.update_labels()
 
     @property
@@ -103,7 +105,7 @@ class BaseFeature(ABC):
 
     @dropna.setter
     def dropna(self, value: bool) -> None:
-        if self.values is None:
+        if self.values.is_empty():
             raise ValueError("Trying to set dropna before there were values observed")
 
         # activating dropna mode
@@ -115,7 +117,7 @@ class BaseFeature(ABC):
 
         # deactivating dropna mode
         elif not value and self._dropna:
-            if self.values is not None and len(self.values.get(self.nan)) > 1:
+            if len(self.values.get(self.nan)) > 1:
                 raise RuntimeError("Can not set feature dropna=False has values were grouped with nans.")
 
             values = GroupedList(self.values)
@@ -150,12 +152,15 @@ class BaseFeature(ABC):
         self._labels = list(labels)
         self._update_value_per_label(raw_labels=raw_labels)
 
-    def _update_value_per_label(self, raw_labels: list) -> None:
+    def _update_value_per_label(self, raw_labels: GroupedList) -> None:
         """Updates value_per_label and label_per_value dicts."""
+
+        # narrow for type checker: setter always assigns _labels before calling us
+        labels = self._labels or []
 
         self.value_per_label = {}
         self.label_per_value = {}
-        for value, label, raw_label in zip(self.values, self._labels, raw_labels):
+        for value, label, raw_label in zip(self.values, labels, raw_labels):
             for grouped_value in self.values.get(value):
                 self.label_per_value[grouped_value] = label
 
@@ -224,7 +229,7 @@ class BaseFeature(ABC):
     # ------------------------------------------------------------------
 
     @abstractmethod
-    def make_labels(self) -> GroupedList | None:
+    def make_labels(self) -> GroupedList:
         """Builds labels according to feature's values."""
         # default: labels are the leader values themselves
         return self.values
@@ -387,7 +392,7 @@ class BaseFeature(ABC):
         return json_serialize_feature(feature)
 
     @classmethod
-    def load(cls, feature_json: dict) -> "BaseFeature":
+    def load(cls, feature_json: dict) -> Self:
         """Loads a feature from a JSON dict (bypasses subclass init validations)."""
 
         instance = cls.__new__(cls)
