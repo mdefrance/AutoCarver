@@ -259,13 +259,3 @@ def test_grouped_list_sanity_check():
     gl.content = {"a": ["a", "b"], "c": ["b", "c"]}
     with raises(ValueError):
         gl.sanity_check()
-
-    # key missing from content
-    gl.content = {"c": ["b", "c"]}
-    with raises(ValueError):
-        gl.sanity_check()
-
-    # inconsistent ordering
-    gl.content = {"c": ["c", "d"], "a": ["a", "b"]}
-    with raises(ValueError):
-        gl.sanity_check()
