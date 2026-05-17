@@ -71,9 +71,9 @@ def convert_values_to_base_types(
     Union[list[Union[str, int, float]], dict[str, list[Union[str, int, float]]]]
         List or dict of lists of values serialized
     """
-    # list input
+    # list input (GroupedList is iterable as a leader list — treat it like one)
     output = None
-    if isinstance(iterable, list):
+    if isinstance(iterable, list) or isinstance(iterable, GroupedList):
         output = [convert_value_to_base_type(value) for value in iterable]
     # dict input
     elif isinstance(iterable, dict):
@@ -99,9 +99,9 @@ def convert_values_to_numpy_types(
     Union[list[Any], dict[str, list[Any]]]
         List or dict of lists of values deserialized
     """
-    # list input
+    # list input (GroupedList is iterable as a leader list — treat it like one)
     output = None
-    if isinstance(iterable, list):
+    if isinstance(iterable, list) or isinstance(iterable, GroupedList):
         output = [convert_value_to_numpy_type(value) for value in iterable]
     # dict input
     elif isinstance(iterable, dict):

@@ -2,193 +2,301 @@
 for a binary classification model.
 """
 
+from collections.abc import Iterator
+from dataclasses import dataclass, field
 from typing import Any
 
 import numpy as np
 import pandas as pd
 
 
-class GroupedList(list):
-    """An ordered list that's extended with a per-value content dict."""
+@dataclass
+class GroupedList:
+    """Ordered groups of values backed by a single dict.
 
-    def __repr__(self) -> str:
-        return f"GroupedList({super().__repr__()})"
+    - Keys of ``content`` are the *group leaders* and define the ordering.
+    - ``content[leader]`` is the list of values that belong to that group
+      (the leader itself is always included in its values).
 
-    def __init__(self, iterable: np.ndarray | dict | list | tuple = ()) -> None:
-        """
+    Invariants enforced by :meth:`sanity_check`:
+      1. Self-membership: each leader appears in its own values list.
+      2. Disjointness: no value appears in more than one group.
+
+    NaN handling: equality between values uses :func:`is_equal` so that
+    ``NaN == NaN`` is treated as ``True`` (pandas/numpy NaNs included).
+    """
+
+    # Single source of truth: keys are the ordered group leaders,
+    # values are the list of raw values currently grouped under that leader.
+    content: dict[Any, list[Any]] = field(default_factory=dict)
+
+    # ------------------------------------------------------------------
+    # Construction
+    # ------------------------------------------------------------------
+
+    def __init__(self, iterable: "np.ndarray | dict | list | tuple | GroupedList" = ()) -> None:
+        """Builds a :class:`GroupedList` from one of the supported inputs.
+
         Parameters
         ----------
-        iterable : Union[ndarray, dict, list, tuple], optional
-            List-like or :class:`GroupedList`, by default ``()``
+        iterable : Union[ndarray, dict, list, tuple, GroupedList], optional
+            Initializer, by default ``()`` (yields an empty GroupedList).
+
+            * ``dict`` → main constructor (``{leader: [values...]}``)
+            * ``GroupedList`` → deep-copy constructor (independent content)
+            * ``list`` / ``tuple`` / ``np.ndarray`` → each element becomes its
+              own singleton group, in the iteration order of the input
+            * ``()`` (default) → empty GroupedList
         """
-        # case -1: iterable is an array
+        # Start with an empty content dict regardless of input.
+        # (dataclass would normally do this, but our custom __init__ overrides it)
+        self.content = {}
+
+        # case -1: ndarray → list (handled identically to list below)
         if isinstance(iterable, np.ndarray):
             iterable = list(iterable)
 
-        # case 0: iterable is the content dict
+        # case 0: dict input — the canonical constructor
         if isinstance(iterable, dict):
-            # storing ordered keys of the dict
-            keys = list(iterable)
+            self._init_from_dict(iterable)
 
-            # storing the values content per key
-            self.content = dict(iterable.items())
+        # case 1: copy constructor
+        elif isinstance(iterable, GroupedList):
+            # Deep-copy each group's values list so the new instance is independent.
+            self.content = {k: list(v) for k, v in iterable.content.items()}
 
-            # checking that all values are only present once
-            all_values = [value for values in iterable.values() for value in values]
-            if not len(list(set(all_values))) == len(all_values):
-                raise ValueError(f"[{self}] A value is present in several keys (groups)")
-
-            # adding key to itself if it's not present in an other key
-            keys_copy = keys[:]  # copying initial keys
-            for key in keys_copy:
-                # checking that the value is not comprised in an other key
-                all_values = [val for iter_key, values in iterable.items() for val in values if key != iter_key]
-                if key not in all_values:
-                    # checking that key is missing from its values
-                    if key not in iterable[key]:
-                        self.content.update({key: self.content[key] + [key]})
-                # the key already is in another key (and its values are empty)
-                # the key as already been grouped
-                else:
-                    self.content.pop(key)
-                    keys.remove(key)
-
-            # initiating the list with those keys
-            super().__init__(keys)
-
-        # case 1: copying a GroupedList
-        elif hasattr(iterable, "content"):
-            # initiating the list with the provided list of keys
-            super().__init__(iterable)
-
-            # copying values associated to keys
-            self.content = dict(iterable.content.items())
-
-        # case 2: initiating GroupedList from a list
-        elif isinstance(iterable, list):
-            # initiating the list with the provided list of keys
-            super().__init__(iterable)
-
-            # initiating the values with the provided list of keys
+        # case 2: list / tuple — each element is a singleton group, in order
+        elif isinstance(iterable, (list, tuple)):
             self.content = {v: [v] for v in iterable}
 
-    # def __getitem__(self, key):
-    #     """Returns the value content in the key
+        else:
+            raise TypeError(f"Unsupported initializer for GroupedList: {type(iterable)!r}")
 
-    #     Parameters
-    #     ----------
-    #     key : Any
-    #         Key to search for
+        # final invariant check on the constructed object
+        self.sanity_check()
 
-    #     Returns
-    #     -------
-    #     list[Any]
-    #         Values content in key
+    def _init_from_dict(self, iterable: dict) -> None:
+        """Initializes ``content`` from a ``{leader: [values...]}`` dict.
 
-    #     Raises
-    #     ------
-    #     KeyError
-    #         If key is not found in Group
-    #     """
+        Handles two edge cases:
 
-    #     if key in self.content:
-    #         return self.content[key]
+        * A leader that is *missing from its own values list* is auto-appended
+          (so users can write ``{"a": ["b", "c"]}`` and get ``["b", "c", "a"]``).
+        * A leader whose key is already a *grouped value* under another leader
+          (e.g. ``{"a": ["b", "c"], "b": []}``) is dropped: it has already been
+          subsumed by the other group.
+        """
+        # Copy each group's values list to avoid mutating the caller's dict.
+        content = {k: list(v) for k, v in iterable.items()}
 
-    #     raise KeyError(f"Key {key} not found in GroupedList")
+        # Disjointness check: no value may appear in more than one group's values.
+        all_values = [value for values in content.values() for value in values]
+        if len(set(all_values)) != len(all_values):
+            raise ValueError(f"[{self}] A value is present in several keys (groups)")
+
+        # Iterate over a snapshot of keys because we may pop entries below.
+        for key in list(content):
+            # Values present in groups other than `key` itself.
+            other_values = [val for other_key, values in content.items() if other_key != key for val in values]
+            if key not in other_values:
+                # `key` is a real (un-grouped) leader: ensure self-membership.
+                if key not in content[key]:
+                    content[key].append(key)
+            else:
+                # `key` already belongs to another group → drop its (empty) leader.
+                content.pop(key)
+
+        self.content = content
+
+    # ------------------------------------------------------------------
+    # List-like read behavior
+    # ------------------------------------------------------------------
+
+    def __repr__(self) -> str:
+        return f"GroupedList({list(self)!r})"
+
+    def __iter__(self) -> Iterator[Any]:
+        # Iterate over leaders, in insertion order.
+        return iter(self.content)
+
+    def __len__(self) -> int:
+        return len(self.content)
+
+    def __contains__(self, key: Any) -> bool:
+        # Membership refers to group leaders only (not values inside groups).
+        # Use :meth:`contains` for "is this value tracked anywhere?".
+        return key in self.content
+
+    def __getitem__(self, key):
+        """Returns the leader(s) at the given position.
+
+        * ``gl[i]`` → the i-th leader (supports negative indices)
+        * ``gl[i:j]`` → ``list`` of leaders in the slice
+        * ``gl[:]`` → full ``list`` copy of leaders
+
+        Note: returns plain ``list`` for slices (matches the legacy
+        ``list`` subclass behavior, where slicing already returned a list).
+        """
+        # Materializing once handles ints (including negative), slices, and
+        # raises TypeError for unsupported key types — same as ``list.__getitem__``.
+        return list(self.content)[key]
+
+    def __eq__(self, other: object) -> bool:
+        # Backward-compat with the legacy ``list`` subclass: equality is
+        # leader-order based (i.e. ``list(gl) == ...``), NOT content-dict
+        # equality. Callers that need a full content match should compare
+        # ``gl.content`` directly. This is what downstream tests and several
+        # production paths relied on.
+        if isinstance(other, GroupedList):
+            return list(self.content) == list(other.content)
+        if isinstance(other, list):
+            return list(self.content) == other
+        return NotImplemented
+
+    def __hash__(self) -> int:  # noqa: D401
+        # GroupedList is mutable → unhashable, matching ``list`` semantics.
+        raise TypeError("unhashable type: 'GroupedList'")
+
+    # ------------------------------------------------------------------
+    # Properties
+    # ------------------------------------------------------------------
 
     @property
-    def values(self) -> list[str]:
-        """All values content in all groups
+    def values(self) -> list[Any]:
+        """Flattened list of *all* values across every group.
 
-        Returns
-        -------
-        list[str]
-            List of all values in the GroupedList
+        Order is: group-by-group, in each group's own value-list order.
         """
         return [value for values in self.content.values() for value in values]
 
+    # ------------------------------------------------------------------
+    # Core API
+    # ------------------------------------------------------------------
+
     def get(self, key: Any, default: Any | None = None) -> list[Any]:
-        """List of values content in key
+        """Returns the values of group ``key``.
+
+        Mirrors ``dict.get`` but with a twist on the ``default`` argument:
+
+        * If ``default`` is ``None`` (the unset case) → returns ``[]``.
+        * If ``default`` is a ``list`` → returns it as-is when ``key`` is missing.
+        * Otherwise → returns ``[default]`` (the default is wrapped in a list
+          so callers always get a list back).
 
         Parameters
         ----------
         key : Any
-            Group.
+            Group leader to look up.
         default : Any, optional
-            Value to return if key was not found, by default None
+            Fallback to return if ``key`` is not a leader, by default ``None``.
 
         Returns
         -------
         list[Any]
-            Values content in key
+            Values content in key, or the (possibly wrapped) default.
         """
-        # default to fing an element
-        default_value = []
+        # Computing the effective default once keeps the return-type stable (always list).
+        default_value: list[Any] = []
         if default is not None:
             if isinstance(default, list):
                 default_value = default
             else:
                 default_value = [default]
-        found = self.content.get(key, default_value)
+        return self.content.get(key, default_value)
 
-        return found
+    def contains(self, value: Any) -> bool:
+        """Checks whether ``value`` is tracked in any group (NaN-aware).
 
-    def sanity_check(self) -> None:
-        """raises ValueError if there is an issue with the any element of the GroupedList"""
-        # each element of the list should be in its elements
+        Unlike ``value in gl`` (which only checks leaders), this walks every
+        group's values and uses NaN-safe equality.
+        """
+        return any(is_equal(value, known) for known in self.values)
+
+    def get_group(self, value: Any) -> Any:
+        """Returns the leader of the group that contains ``value``.
+
+        NaN-aware via :func:`is_equal`. If ``value`` is not found anywhere,
+        falls back to returning ``value`` itself (legacy behavior — callers
+        rely on this to treat unknown values as their own group).
+        """
         for key, values in self.content.items():
-            if key not in values:
-                raise ValueError(f"[{self}] Missing group leader {key} in its values: {values}")
+            if any(is_equal(value, elt) for elt in values):
+                return key
+        return value
 
-        # an element can not be in several groups
-        all_values = self.values
-        if len(set(all_values)) != len(all_values):
-            raise ValueError(f"[{self}] Some values are in several groups")
+    # ------------------------------------------------------------------
+    # Mutations
+    # ------------------------------------------------------------------
 
-        # checking that element of the list are keys of the content dict
-        if not len(self) == len(self.content):
-            raise ValueError(f"[{self}] Keys missing from content dict or element missing from list")
-        if any(list_element != dict_key for list_element, dict_key in zip(self, list(self.content.keys()))):
-            raise ValueError(f"[{self}] Not the same ordering between list and content dict")
+    def append(self, new_value: Any) -> None:
+        """Appends ``new_value`` as a new singleton group at the end.
+
+        Raises ``ValueError`` if ``new_value`` is already tracked anywhere
+        (as a leader or as a member of an existing group).
+        """
+        # Disallow duplicates across the whole structure (not just leaders).
+        if new_value in self.values:
+            raise ValueError(f"- [{self}] Value {new_value} already in list!")
+
+        # New singleton group at the end (dict insertion order = list order).
+        self.content[new_value] = [new_value]
+
+        # sanity check after modification
+        self.sanity_check()
+
+    def update(self, new_value: dict[Any, list[Any]]) -> None:
+        """Merges/overrides groups from a ``{leader: [values...]}`` dict.
+
+        * Each entry whose leader is missing from its own values list gets
+          the leader appended (same convention as :meth:`__init__`).
+        * Existing leaders are *replaced* (not merged) — their previous
+          values list is overwritten.
+        * New leaders are appended at the end, preserving overall order.
+
+        Raises ``ValueError`` if ``new_value`` is not a ``dict[Any, list]`` or
+        if the resulting structure would have duplicate values.
+        """
+        # Input shape validation: must be dict and every value must be a list.
+        if not isinstance(new_value, dict) or not all(isinstance(value, list) for value in new_value.values()):
+            raise ValueError(f"[{self}] Provide a dictionnary of lists (values)")
+
+        # Ensure self-membership before splicing into self.content.
+        for key, value in new_value.items():
+            if key not in value:
+                new_value[key] = value + [key]
+
+        # Splice in (existing leaders are overwritten; new leaders are appended).
+        self.content.update(new_value)
+
+        # sanity check after modification (also catches disjointness violations)
+        self.sanity_check()
 
     def _group_single_value(self, discarded: Any, kept: Any) -> None:
-        """Groups the discarded value with the kept value
+        """Groups the discarded leader into the kept leader.
 
-        Parameters
-        ----------
-        discarded : Any
-            Value to be grouped into the key ``kept``.
-        kept : Any
-            Key value in which to group ``discarded``.
+        ``discarded``'s values are *prepended* to ``kept``'s values, then the
+        ``discarded`` leader is removed. No-op when ``discarded == kept``
+        (NaN-aware via :func:`is_equal`).
         """
+        # No self-merge (NaN-safe).
+        if is_equal(discarded, kept):
+            return
 
-        # checking that those values are distinct
-        if not is_equal(discarded, kept):
-            # checking that those values exist in the list
-            if discarded not in self:
-                raise ValueError(f"[{self}] {discarded} not in list")
-            if kept not in self:
-                raise ValueError(f"[{self}] {kept} not in list")
+        # Both must be existing leaders.
+        if discarded not in self.content:
+            raise ValueError(f"[{self}] {discarded} not in list")
+        if kept not in self.content:
+            raise ValueError(f"[{self}] {kept} not in list")
 
-            # accessing values content in each value
-            content_discarded = self.content.get(discarded)
-            content_kept = self.content.get(kept)
+        # Merge values (discarded's values first, keeping their original order) and
+        # drop the discarded leader from the dict (which also removes its ordering).
+        self.content[kept] = self.content[discarded] + self.content[kept]
+        self.content.pop(discarded)
 
-            # updating content dict
-            self.content.update({kept: content_discarded + content_kept, discarded: []})
+    def group(self, to_discard: list[Any] | Any, to_keep: Any) -> None:
+        """Groups one or several discarded leaders under ``to_keep``.
 
-            # removing discarded from the list
-            self.remove(discarded)
-
-    def group(self, to_discard: list[str] | str, to_keep: str) -> None:
-        """Groups the discarded value with the kept value
-
-        Parameters
-        ----------
-        to_discard : list[Any] | Any
-            Values to be grouped into the key ``to_keep``.
-        to_keep : Any
-            Key value in which to group ``to_discard`` values.
+        Accepts either a single value or a list of values for ``to_discard``.
         """
         # case of single value to discard
         if not isinstance(to_discard, list):
@@ -202,60 +310,58 @@ class GroupedList(list):
         # sanity check after modification
         self.sanity_check()
 
-    def append(self, new_value: Any) -> None:
-        """Appends a new_value to the GroupedList
+    def remove(self, value: Any) -> None:
+        """Removes leader ``value`` (and its entire group) from the structure.
 
-        Parameters
-        ----------
-        new_value : Any
-            New key to be added.
+        Raises ``ValueError`` if ``value`` is not a leader. To check whether
+        a value is grouped under some leader, use :meth:`contains`.
         """
-
-        # checking for already existing values
-        if new_value in self.values:
-            raise ValueError(f"- [{self}] Value {new_value} already in list!")
-
-        # adding value to list and dict
-        self += [new_value]
-        self.content.update({new_value: [new_value]})
+        if value not in self.content:
+            raise ValueError(f"[{self}] {value} not in list")
+        self.content.pop(value)
 
         # sanity check after modification
         self.sanity_check()
 
-    def update(self, new_value: dict[Any, list[Any]]) -> None:
-        """Updates the GroupedList via a dict
+    def pop(self, idx: int) -> None:
+        """Removes the leader at position ``idx`` (and its group).
 
-        Parameters
-        ----------
-        new_value : dict[Any, list[Any]]
-            Dict of key, values to updated ``content`` dict
+        Raises ``IndexError`` if ``idx`` is out of range and ``TypeError``
+        if ``idx`` is not an integer — matching ``list.pop`` semantics.
         """
+        value = self[idx]
+        self.remove(value)
 
-        # should provide a dict of lists
-        if not isinstance(new_value, dict) or not all(isinstance(value, list) for value in new_value.values()):
-            raise ValueError(f"[{self}] Provide a dictionnary of lists (values)")
+    def replace_group_leader(self, group_leader: Any, group_member: Any) -> None:
+        """Promotes a member of ``group_leader``'s group to be the new leader.
 
-        # adding missing keys to there list of values
-        for key, value in new_value.items():
-            if key not in value:
-                new_value.update({key: value + [key]})
+        The new leader keeps the same ordinal position and the same group
+        contents; only the dict key changes.
+        """
+        # The promoted member must actually be in the group.
+        if group_member not in self.content[group_leader]:
+            raise ValueError(f"[{self}] {group_member} is not in {group_leader}")
 
-        # adding keys to the order if they are new values
-        self += [key for key, _ in new_value.items() if key not in self]
+        # Rebuild the dict to preserve insertion order while renaming the key:
+        # dict.update() on an existing key keeps its position, but we're swapping
+        # keys, not values — so we re-create the dict with the substitution applied.
+        new_content: dict[Any, list[Any]] = {}
+        for key, values in self.content.items():
+            if key == group_leader:
+                new_content[group_member] = list(values)
+            else:
+                new_content[key] = values
+        self.content = new_content
 
-        # updating content according to new_value
-        self.content.update(new_value)
-
-        # sanity check after modification
-        self.sanity_check()
+    # ------------------------------------------------------------------
+    # Ordering
+    # ------------------------------------------------------------------
 
     def sort(self) -> "GroupedList":
-        """Sorts the values of the list and dict (if any, NaNs are last).
+        """Returns a new :class:`GroupedList` with leaders sorted.
 
-        Returns
-        -------
-        GroupedList
-            Sorted GroupedList
+        Strings come first (sorted alphabetically), then non-strings sorted
+        numerically — NaNs end up last via numpy's sort rules.
         """
         # str values
         keys_str = [key for key in self if isinstance(key, str)]
@@ -267,25 +373,15 @@ class GroupedList(list):
         keys = list(np.sort(keys_str)) + list(np.sort(keys_float))
 
         # recreating an ordered GroupedList
-        sorted_list = GroupedList({k: self.get(k) for k in keys})
-
-        return sorted_list
+        return GroupedList({k: self.get(k) for k in keys})
 
     def sort_by(self, ordering: list[Any]) -> "GroupedList":
-        """Sorts the values of the list and dict according to ``ordering``, if any,
-        NaNs are the last.
+        """Returns a new :class:`GroupedList` with leaders ordered by ``ordering``.
 
-        Parameters
-        ----------
-        ordering : list[Any]
-            Order used for ordering of the list of keys.
-
-        Returns
-        -------
-        GroupedList
-            Sorted GroupedList
+        Raises ``ValueError`` if ``ordering`` contains unknown leaders or
+        if any current leader is missing from ``ordering`` (ordering must
+        be a permutation of the current leaders).
         """
-
         # checking that all values are given an order
         if not all(o in self for o in ordering):
             raise ValueError(f"[{self}] Unknown values in ordering: {str([v for v in ordering if v not in self])}")
@@ -293,108 +389,40 @@ class GroupedList(list):
             raise ValueError(f"[{self}] Missing value from ordering: {str([v for v in self if v not in ordering])}")
 
         # ordering the content
-        sorted_list = GroupedList({k: self.get(k) for k in ordering})
+        return GroupedList({k: self.get(k) for k in ordering})
 
-        return sorted_list
+    # ------------------------------------------------------------------
+    # Invariants
+    # ------------------------------------------------------------------
 
-    def remove(self, value: Any) -> None:
-        """Removes a value from the GroupedList
+    def sanity_check(self) -> None:
+        """Raises ``ValueError`` if any structural invariant is violated.
 
-        Parameters
-        ----------
-        value : Any
-            value to be removed
+        Checks:
+        1. Self-membership: every leader is present in its own value list.
+        2. Disjointness: no value appears in more than one group.
         """
-        super().remove(value)
-        self.content.pop(value)
+        # 1. Self-membership.
+        for key, values in self.content.items():
+            if key not in values:
+                raise ValueError(f"[{self}] Missing group leader {key} in its values: {values}")
 
-        # sanity check after modification
-        self.sanity_check()
-
-    def pop(self, idx: int) -> None:
-        """Pop a value from the GroupedList by index
-
-        Parameters
-        ----------
-        idx : int
-            Index of the value to be popped out
-        """
-        value = self[idx]
-        self.remove(value)
-
-    def get_group(self, value: Any) -> Any:
-        """Returns the key (group) containing the specified value
-
-        Parameters
-        ----------
-        value : Any
-            Value for which to find the group.
-
-        Returns
-        -------
-        Any
-            Corresponding key (group)
-        """
-
-        found = [key for key, values in self.content.items() if any(is_equal(value, elt) for elt in values)]
-
-        if any(found):
-            return found[0]
-
-        # TODO expected behavior?
-        # if not found, should return itself by default
-        return value
-
-    def contains(self, value: Any) -> bool:
-        """Checks if a value is content in any group, also matches NaNs.
-
-        Parameters
-        ----------
-        value : Any
-            Value to search for
-
-        Returns
-        -------
-        bool
-            Whether the value is in the GroupedList
-        """
-        return any(is_equal(value, known) for known in self.values)
-
-    def replace_group_leader(self, group_leader: Any, group_member: Any) -> None:
-        """Replaces a group_leader by one of its group_members
-
-        Parameters
-        ----------
-        group_leader : Any
-            One of the list's values (``GroupedList.content.keys()``)
-        group_member : Any
-            One of the dict's values for specified group_leader
-            (``GroupedList.content[group_leader]``)
-        """
-        # checking that group_member is in group_leader
-        if group_member not in self.content[group_leader]:
-            raise ValueError(f"[{self}] {group_member} is not in {group_leader}")
-
-        # replacing in the list
-        group_idx = self.index(group_leader)
-        self[group_idx] = group_member
-
-        # replacing in the dict
-        self.content.update({group_member: self.content[group_leader][:]})
-        self.content.pop(group_leader)
-
-        # TODO check if this has a purpose
-        # sorting things up
-        # self.sort_by(self)
+        # 2. Disjointness of values across groups.
+        all_values = self.values
+        if len(set(all_values)) != len(all_values):
+            raise ValueError(f"[{self}] Some values are in several groups")
 
 
 def is_equal(a: Any, b: Any) -> bool:
-    """Checks if a and b are equal (NaN insensitive)"""
+    """Checks whether ``a`` and ``b`` are equal (NaN-insensitive).
 
+    ``pd.isna`` is used to also catch ``np.nan``, ``pd.NA``, ``None`` and
+    NaT — anything pandas considers a missing value.
+    """
     # default equality
     equal = a == b
 
-    # Case where a and b are NaNs
+    # Case where a and b are NaNs (treat NaN == NaN as True).
     if pd.isna(a) and pd.isna(b):
         equal = True
 
