@@ -32,8 +32,8 @@ def test_base_feature_initialization() -> None:
     assert not feature.is_qualitative
     assert not feature.is_quantitative
     assert feature.statistics is None
+    assert feature.statistics_dataframe is None
     assert isinstance(feature.history, list) and len(feature.history) == 0
-    assert isinstance(feature.raw_order, list) and len(feature.raw_order) == 0
     assert feature.version == "test_feature"
     assert feature.version_tag == "test_feature"
 
@@ -266,15 +266,11 @@ def test_base_feature_to_json() -> None:
     # ordinal encoding false
     feature = BaseFeature(name="test_feature")
     feature.values = GroupedList(["a", "b", "c"])
-    feature.is_ordinal = True
-    feature.is_categorical = True
     feature.update_labels()
 
     json_output = feature.to_json(light_mode=True)
 
     assert json_output["name"] == "test_feature"
-    assert json_output["is_ordinal"]
-    assert json_output["is_categorical"]
     assert json_output["values"] == feature.values
     assert not json_output["ordinal_encoding"]
     assert "statistics" in json_output
@@ -286,18 +282,13 @@ def test_base_feature_to_json() -> None:
     assert "history" in json_output
 
     # ordinal encoding true
-    feature = BaseFeature(name="test_feature")
+    feature = BaseFeature(name="test_feature", ordinal_encoding=True)
     feature.values = GroupedList(["a", "b", "c"])
-    feature.is_ordinal = True
-    feature.is_categorical = True
-    feature.ordinal_encoding = True
     json.dumps(json_output)
 
     json_output = feature.to_json(light_mode=True)
 
     assert json_output["name"] == "test_feature"
-    assert json_output["is_ordinal"]
-    assert json_output["is_categorical"]
     assert json_output["values"] == feature.values
     assert json_output["ordinal_encoding"]
     assert "statistics" in json_output
@@ -313,19 +304,13 @@ def test_base_feature_load() -> None:
     """test classmethod load"""
 
     # ordinal encoding false
-    feature = BaseFeature(name="test_feature")
+    feature = BaseFeature(name="test_feature", nan="nan_value")
     feature.values = GroupedList({"a": ["a", "b"], "c": ["c", "d"]})
-    feature.is_ordinal = True
-    feature.is_categorical = True
-    feature.nan = "nan_value"
     feature.has_nan = True
     feature.update_labels()
     feature.statistics = pd.DataFrame([{"test": "value"}])
-    feature.history = [
-        {"combination": [["value1"], ["value2"]]},
-        {"combination": [["value1"], ["value3"]]},
-    ]
-    feature.raw_order = [1, 2, 3]
+    feature.historize({"combination": [["value1"], ["value2"]]})
+    feature.historize({"combination": [["value1"], ["value3"]]})
 
     feature_data = feature.to_json(light_mode=False)
 
@@ -334,8 +319,6 @@ def test_base_feature_load() -> None:
     assert loaded_feature.name == feature.name
     assert loaded_feature.version == feature.version
     assert loaded_feature.version_tag == feature.version_tag
-    assert loaded_feature.is_ordinal == feature.is_ordinal
-    assert loaded_feature.is_categorical == feature.is_categorical
     assert loaded_feature.has_nan == feature.has_nan
     assert loaded_feature.nan == feature.nan
     assert loaded_feature.values == feature.values[:]
@@ -343,28 +326,21 @@ def test_base_feature_load() -> None:
     assert loaded_feature.labels == feature.labels
     assert loaded_feature.label_per_value == feature.label_per_value
     assert loaded_feature.value_per_label == feature.value_per_label
-    assert loaded_feature.raw_order == feature.raw_order
-    assert loaded_feature.statistics.equals(feature.statistics)
-    assert loaded_feature.history.equals(feature.history)
+    assert loaded_feature.statistics_dataframe.equals(feature.statistics_dataframe)
+    assert loaded_feature.history == feature.history
     assert not loaded_feature.ordinal_encoding
 
     # ordinal encoding true
-    feature = BaseFeature(name="test_feature")
+    feature = BaseFeature(name="test_feature", nan="nan_value", ordinal_encoding=True)
     feature.values = GroupedList({"a": ["a", "b"], "c": ["c", "d"]})
-    feature.is_ordinal = True
-    feature.is_categorical = True
-    feature.nan = "nan_value"
     feature.has_nan = True
-    feature.ordinal_encoding = True
+    feature.update_labels()
     feature.statistics = pd.DataFrame(
         [{"col1": "value1", "col2": "value1"}, {"col1": "value2", "col2": "value2"}],
         index=["a", "c"],
     )
-    feature.history = [
-        {"combination": [["value1"], ["value2"]]},
-        {"combination": [["value1"], ["value3"]]},
-    ]
-    feature.raw_order = [1, 2, 3]
+    feature.historize({"combination": [["value1"], ["value2"]]})
+    feature.historize({"combination": [["value1"], ["value3"]]})
 
     feature_data = feature.to_json(light_mode=True)
 
@@ -373,8 +349,6 @@ def test_base_feature_load() -> None:
     assert loaded_feature.name == feature.name
     assert loaded_feature.version == feature.version
     assert loaded_feature.version_tag == feature.version_tag
-    assert loaded_feature.is_ordinal == feature.is_ordinal
-    assert loaded_feature.is_categorical == feature.is_categorical
     assert loaded_feature.has_nan == feature.has_nan
     assert loaded_feature.nan == feature.nan
     assert loaded_feature.values == feature.values[:]
@@ -382,11 +356,9 @@ def test_base_feature_load() -> None:
     assert loaded_feature.labels == feature.labels
     assert loaded_feature.label_per_value == feature.label_per_value
     assert loaded_feature.value_per_label == feature.value_per_label
-    assert loaded_feature.raw_order == feature.raw_order
-    print(loaded_feature.statistics)
-    assert isinstance(loaded_feature.statistics, pd.DataFrame)
-    assert loaded_feature.statistics.shape[0] == 2
-    assert loaded_feature.statistics.shape[1] == 2
-    assert all(loaded_feature.statistics.index == [0, 1])
+    assert isinstance(loaded_feature.statistics_dataframe, pd.DataFrame)
+    assert loaded_feature.statistics_dataframe.shape[0] == 2
+    assert loaded_feature.statistics_dataframe.shape[1] == 2
+    assert all(loaded_feature.statistics_dataframe.index == [0, 1])
     assert len(loaded_feature.history) == 0
     assert loaded_feature.ordinal_encoding

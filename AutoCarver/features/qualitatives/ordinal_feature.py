@@ -1,5 +1,6 @@
 """Defines an ordinal feature"""
 
+from AutoCarver.config import Constants
 from AutoCarver.features.qualitatives.qualitative_feature import QualitativeFeature
 from AutoCarver.features.utils.base_feature import BaseFeature
 from AutoCarver.features.utils.grouped_list import GroupedList
@@ -14,37 +15,55 @@ class OrdinalFeature(QualitativeFeature):
     is_ordinal = True
 
     @extend_docstring(BaseFeature.__init__, append=False)
-    def __init__(self, name: str, values: list[str], **kwargs) -> None:
+    def __init__(
+        self,
+        name: str,
+        values: list[str],
+        *,
+        nan: str = Constants.NAN,
+        default: str = Constants.DEFAULT,
+        ordinal_encoding: bool = False,
+        is_fitted: bool = False,
+        version: str | None = None,
+        version_tag: str | None = None,
+        has_nan: bool = False,
+        has_default: bool = False,
+        dropna: bool = False,
+    ) -> None:
         """
         Parameters
         ----------
         values : list[str]
             Ordered list of all unique values for the feature
         """
-        super().__init__(name, **kwargs)
+        super().__init__(
+            name,
+            nan=nan,
+            default=default,
+            ordinal_encoding=ordinal_encoding,
+            is_fitted=is_fitted,
+            version=version,
+            version_tag=version_tag,
+            has_nan=has_nan,
+            has_default=has_default,
+            dropna=dropna,
+        )
 
-        # checking for values
         if values is None or len(values) == 0:
             raise ValueError(f"[{self}] Please make sure to provide values.")
 
-        # checking for nan ordering
-        if self.nan in values and not kwargs.get("load_mode", False):
+        if self.nan in values:
             raise ValueError(f"[{self}] Ordering for '{self.nan}' can't be set by user, only fitted on data.")
 
-        # checking for str values
         if not all(isinstance(value, str) for value in values):
             raise ValueError(f"[{self}] Please make sure to provide str values.")
 
-        # saving up raw ordering for labeling
-        self.raw_order = kwargs.get("raw_order", values[:])
-
-        # setting values and labels
+        self.raw_order = values[:]
         super().update(GroupedList(values))
 
     def _specific_formatting(self, ordered_content: list[str]) -> str:
         """ordinal features' specific label formatting"""
 
-        # ordered label for ordinal features
         return f"{ordered_content[0]} to {ordered_content[-1]}"
 
 

@@ -12,7 +12,6 @@ from AutoCarver.features.qualitatives import (
 from AutoCarver.features.quantitatives import QuantitativeFeature, get_quantitative_features
 from AutoCarver.features.utils.base_feature import BaseFeature
 from AutoCarver.features.utils.grouped_list import GroupedList
-from AutoCarver.utils.attributes import get_bool_attribute
 
 # class AutoFeatures(Features):
 #     """TODO"""
@@ -118,10 +117,16 @@ class Features:
         # getting list of ordinal features by name of BaseFeature
         ordinal_features = check_ordinal_features(ordinals)
 
+        # collecting feature constructor kwargs (silently drops kwargs not in this allowlist)
+        feature_kwargs: dict = {}
+        for key in ("nan", "default", "ordinal_encoding", "is_fitted", "has_nan", "has_default", "dropna"):
+            if key in kwargs:
+                feature_kwargs[key] = kwargs[key]
+
         # casting features accordingly
-        all_features = cast_features(categoricals, CategoricalFeature, **kwargs)
-        all_features += cast_features(quantitatives, QuantitativeFeature, **kwargs)
-        all_features += cast_features(ordinal_features, OrdinalFeature, ordinal_values=ordinals, **kwargs)
+        all_features = cast_features(categoricals, CategoricalFeature, **feature_kwargs)
+        all_features += cast_features(quantitatives, QuantitativeFeature, **feature_kwargs)
+        all_features += cast_features(ordinal_features, OrdinalFeature, ordinal_values=ordinals, **feature_kwargs)
 
         # ensuring features are grouped accordingly (already initiated features)
         self._categoricals = get_categorical_features(all_features)
@@ -140,7 +145,7 @@ class Features:
 
         self._dropna = False
         self._ordinal_encoding = False
-        self.is_fitted = get_bool_attribute(kwargs, "is_fitted", False)
+        self.is_fitted = kwargs.get("is_fitted", False)
 
     def __repr__(self) -> str:
         """Returns names of all features"""
@@ -545,7 +550,11 @@ def cast_features(
     for feature in features:
         # string case, initiating feature
         if isinstance(feature, str):
-            converted_features += [target_class(feature, values=ordinal_values.get(feature), **kwargs)]
+            # only OrdinalFeature accepts `values` as a required arg
+            if target_class is OrdinalFeature:
+                converted_features += [target_class(feature, values=ordinal_values.get(feature), **kwargs)]
+            else:
+                converted_features += [target_class(feature, **kwargs)]
         # already a BaseFeature
         elif isinstance(feature, BaseFeature):
             converted_features += [feature]
