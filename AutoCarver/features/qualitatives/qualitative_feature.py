@@ -1,6 +1,7 @@
 """Defines a categorical feature"""
 
 from abc import abstractmethod
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -15,16 +16,21 @@ class QualitativeFeature(BaseFeature):
     __name__ = "Qualitative"
     is_qualitative = True
 
-    # def _update_value_per_label(self, raw_labels: list[str]) -> None:
-    #     """updates value per label and label per value"""
-    #     self.value_per_label = {}
-    #     for value, label, raw_label in zip(self.values, self._labels, raw_labels):
-    #         # updating label_per_value
-    #         for grouped_value in self.values.get(value):
-    #             self.label_per_value.update({grouped_value: label})
+    def __init__(self, name: str) -> None:
+        super().__init__(name)
+        # base ordering used to format labels
+        self.raw_order: list = []
 
-    #         # updating value_per_label
-    #         self.value_per_label.update({label: raw_label})
+    def to_json(self, light_mode: bool = False) -> dict[str, Any]:
+        feature = super().to_json(light_mode=light_mode)
+        feature["raw_order"] = self.raw_order
+        return feature
+
+    def _restore_from_json(self, feature_json: dict) -> None:
+        # raw_order must be restored before super() since super() triggers
+        # update_labels(), which reads self.raw_order via _format_modalities
+        self.raw_order = list(feature_json.get("raw_order") or [])
+        super()._restore_from_json(feature_json)
 
     def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> None:
         """TODO fit stats"""

@@ -114,8 +114,8 @@ def test_check_frequencies_no_rare_modalities():
     df = pd.DataFrame({"feature1": [1, 2, 2, 3, 3, 3], "feature2": [4, 4, 4, 5, 5, 5]})
     features = Features(
         [
-            QuantitativeFeature(name="Feature 1", version="feature1"),
-            QuantitativeFeature(name="Feature 2", version="feature2"),
+            QuantitativeFeature(name="feature1"),
+            QuantitativeFeature(name="feature2"),
         ]
     )
     half_min_freq = 0.1
@@ -128,8 +128,8 @@ def test_check_frequencies_with_rare_modalities():
     df = pd.DataFrame({"feature1": [1, 1, 1, 1, 1, 2], "feature2": [4, 4, 4, 5, 5, 5]})
     features = Features(
         [
-            QuantitativeFeature(name="Feature 1", version="feature1"),
-            QuantitativeFeature(name="Feature 2", version="feature2"),
+            QuantitativeFeature(name="feature1"),
+            QuantitativeFeature(name="feature2"),
         ]
     )
     half_min_freq = 0.2
@@ -143,8 +143,8 @@ def test_check_frequencies_with_nans():
     df = pd.DataFrame({"feature1": [1, 2, 2, 3, 3, np.nan], "feature2": [4, 4, 4, 5, 5, 5]})
     features = Features(
         [
-            QuantitativeFeature(name="Feature 1", version="feature1"),
-            QuantitativeFeature(name="Feature 2", version="feature2"),
+            QuantitativeFeature(name="feature1"),
+            QuantitativeFeature(name="feature2"),
         ]
     )
     half_min_freq = 0.1
@@ -157,8 +157,8 @@ def test_check_frequencies_all_rare_modalities():
     df = pd.DataFrame({"feature1": [1, 2, 3, 4, 5, 1], "feature2": [1, 2, 3, 4, 5, 2]})
     features = Features(
         [
-            QuantitativeFeature(name="Feature 1", version="feature1"),
-            QuantitativeFeature(name="Feature 2", version="feature2"),
+            QuantitativeFeature(name="feature1"),
+            QuantitativeFeature(name="feature2"),
         ]
     )
     half_min_freq = 0.5

@@ -15,7 +15,7 @@ class QuantitativeFeature(BaseFeature):
 
     @BaseFeature.has_default.setter
     def has_default(self, value: bool) -> None:
-        """does nothing for quantitative features: no default value possible"""
+        """No-op: quantitative features cannot have a default value."""
         _ = value
 
     def _specific_update(self, values: GroupedList, convert_labels: bool = False) -> None:  # noqa: C901
