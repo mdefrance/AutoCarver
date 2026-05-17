@@ -23,7 +23,7 @@ def test_base_feature_initialization() -> None:
     assert feature.default == Constants.DEFAULT
     assert not feature.dropna
     assert not feature.is_fitted
-    assert feature.values is None
+    assert feature.values.is_empty()
     assert feature.labels is None
     assert isinstance(feature.label_per_value, dict) and len(feature.label_per_value) == 0
     assert isinstance(feature.value_per_label, dict) and len(feature.value_per_label) == 0

@@ -122,6 +122,10 @@ class GroupedList:
     def __len__(self) -> int:
         return len(self.content)
 
+    def is_empty(self) -> bool:
+        """Whether this GroupedList contains no groups."""
+        return len(self.content) == 0
+
     def __contains__(self, key: Any) -> bool:
         # Membership refers to group leaders only (not values inside groups).
         # Use :meth:`contains` for "is this value tracked anywhere?".

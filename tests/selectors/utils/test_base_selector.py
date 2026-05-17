@@ -9,6 +9,7 @@ from AutoCarver.features import (
     get_qualitative_features,
     get_quantitative_features,
 )
+from AutoCarver.features.qualitatives import OrdinalFeature
 from AutoCarver.selectors import BaseFilter, BaseMeasure
 from AutoCarver.selectors.utils.base_selector import (
     BaseSelector,
@@ -424,11 +425,10 @@ def test_base_selector_get_best_features_across_chunks_no_chunking(
         for feature in features_object:
             new_name = feature.name + f"_{i}"
             new_X.update({new_name: X[feature.name]})
-            new_feature = BaseFeature(new_name)
-            new_feature.is_quantitative = feature.is_quantitative
-            new_feature.is_categorical = feature.is_categorical
-            new_feature.is_ordinal = feature.is_ordinal
-            new_feature.is_qualitative = feature.is_qualitative
+            if isinstance(feature, OrdinalFeature):
+                new_feature = OrdinalFeature(new_name, values=feature.raw_order)
+            else:
+                new_feature = type(feature)(new_name)
             new_features += [new_feature]
 
     X = pd.DataFrame(new_X)
@@ -478,11 +478,10 @@ def test_base_selector_get_best_features_across_chunks_with_chunking(
         for feature in features_object:
             new_name = feature.name + f"_{i}"
             new_X.update({new_name: X[feature.name]})
-            new_feature = BaseFeature(new_name)
-            new_feature.is_quantitative = feature.is_quantitative
-            new_feature.is_categorical = feature.is_categorical
-            new_feature.is_ordinal = feature.is_ordinal
-            new_feature.is_qualitative = feature.is_qualitative
+            if isinstance(feature, OrdinalFeature):
+                new_feature = OrdinalFeature(new_name, values=feature.raw_order)
+            else:
+                new_feature = type(feature)(new_name)
             new_features += [new_feature]
 
     X = pd.DataFrame(new_X)

@@ -57,7 +57,7 @@ def fit_feature(feature: BaseFeature, df_feature: pd.Series):
 
     # initiating feature values
     order = GroupedList(unique_values)
-    if feature.values is not None:
+    if not feature.values.is_empty():
         order = GroupedList(feature.values)
 
     # formatting values

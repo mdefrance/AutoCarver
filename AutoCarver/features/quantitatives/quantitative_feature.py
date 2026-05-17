@@ -22,7 +22,7 @@ class QuantitativeFeature(BaseFeature):
         """update content of values specifically per feature type"""
 
         # no values have been set
-        if not convert_labels and self.values is None:
+        if not convert_labels and self.values.is_empty():
             # checking that inf is amongst values
             if values[-1] != np.inf:
                 raise ValueError(f"[{self}] Must provide values with values[-1] == numpy.inf")
@@ -192,4 +192,4 @@ def min_decimals_to_differentiate(sorted_numbers: list[float], min_decimals: int
 
 def get_quantitative_features(features: list[BaseFeature]) -> list[QuantitativeFeature]:
     """returns quantitative features amongst provided features"""
-    return [feature for feature in features if feature.is_quantitative]  # type: ignore
+    return [feature for feature in features if isinstance(feature, QuantitativeFeature)]

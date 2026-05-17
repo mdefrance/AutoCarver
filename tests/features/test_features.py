@@ -551,7 +551,7 @@ def test_features_load(features):
 def test_features_get_summaries(features):
     """test get_summaries functionnality"""
     for feature in features:
-        if feature.values is None:
+        if feature.values.is_empty():
             feature.values = GroupedList([1, 2, 3])
     summaries = features.summary
     assert isinstance(summaries, pd.DataFrame)

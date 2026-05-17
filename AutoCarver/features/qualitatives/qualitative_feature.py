@@ -39,7 +39,7 @@ class QualitativeFeature(BaseFeature):
         sorted_unique_values = nan_unique(X[self.version], sort=True)
 
         # checking that feature is not ordinal (already set values)
-        if self.values is None:
+        if self.values.is_empty():
             # initiating feature with its unique non-nan values
             self.update(GroupedList(sorted_unique_values))
 
@@ -123,7 +123,7 @@ class QualitativeFeature(BaseFeature):
         """update content of values specifically per feature type"""
 
         # no values have been set
-        if not convert_labels and self.values is None:
+        if not convert_labels and self.values.is_empty():
             self.values = values
 
         # values are not labels
@@ -262,4 +262,4 @@ def nan_unique(x: pd.Series, sort: bool = False) -> list[str]:
 
 def get_qualitative_features(features: list[BaseFeature]) -> list[QualitativeFeature]:
     """returns qualitative features amongst provided features"""
-    return [feature for feature in features if feature.is_qualitative]  # type: ignore
+    return [feature for feature in features if isinstance(feature, QualitativeFeature)]
