@@ -113,8 +113,26 @@ def init_df(seed: int, size: int = 10000) -> pd.DataFrame:
     return df
 
 
+@fixture(scope="session")
+def _x_train_base() -> pd.DataFrame:
+    """Session-scoped Train sample (built once per worker)."""
+    return init_df(123)
+
+
+@fixture(scope="session")
+def _x_dev_1_base() -> pd.DataFrame:
+    """Session-scoped Dev sample (built once per worker)."""
+    return init_df(1234)
+
+
+@fixture(scope="session")
+def _x_dev_2_base() -> pd.DataFrame:
+    """Session-scoped Dev sample (built once per worker)."""
+    return init_df(12345)
+
+
 @fixture
-def x_train() -> pd.DataFrame:
+def x_train(_x_train_base: pd.DataFrame) -> pd.DataFrame:
     """Simulates a Train sample
 
     Returns
@@ -122,18 +140,12 @@ def x_train() -> pd.DataFrame:
     DataFrame
         Train sample
     """
-    # initiating dev sample
-    return init_df(123)
+    return _x_train_base.copy()
 
 
 @fixture
-def x_train_wrong_1(x_train: pd.DataFrame) -> pd.DataFrame:
+def x_train_wrong_1(_x_train_base: pd.DataFrame) -> pd.DataFrame:
     """Simulates a Train sample with unknown values (without nans)
-
-    Parameters
-    ----------
-    x_train : pd.DataFrame
-        Simulated Train sample
 
     Returns
     -------
@@ -141,7 +153,7 @@ def x_train_wrong_1(x_train: pd.DataFrame) -> pd.DataFrame:
         Train sample with unknown values (without nans)
     """
     # initiating dev sample
-    x_wrong_1 = x_train.copy()
+    x_wrong_1 = _x_train_base.copy()
 
     # adding some unknown values
     x_wrong_1["Qualitative_Ordinal"] = x_wrong_1["Qualitative_Ordinal"].replace("Medium", "unknown")
@@ -150,13 +162,8 @@ def x_train_wrong_1(x_train: pd.DataFrame) -> pd.DataFrame:
 
 
 @fixture
-def x_train_wrong_2(x_train: pd.DataFrame) -> pd.DataFrame:
+def x_train_wrong_2(_x_train_base: pd.DataFrame) -> pd.DataFrame:
     """Simulates a Train sample with unknown values (with nans)
-
-    Parameters
-    ----------
-    x_train : pd.DataFrame
-        Simulated Train sample
 
     Returns
     -------
@@ -164,7 +171,7 @@ def x_train_wrong_2(x_train: pd.DataFrame) -> pd.DataFrame:
         Train sample with unknown values (with nans)
     """
     # initiating dev sample
-    x_wrong_2 = x_train.copy()
+    x_wrong_2 = _x_train_base.copy()
 
     # adding some unknown values
     x_wrong_2["Qualitative_Ordinal_lownan"] = x_wrong_2["Qualitative_Ordinal_lownan"].replace("Medium", "unknown")
@@ -173,7 +180,7 @@ def x_train_wrong_2(x_train: pd.DataFrame) -> pd.DataFrame:
 
 
 @fixture
-def x_dev_1() -> pd.DataFrame:
+def x_dev_1(_x_dev_1_base: pd.DataFrame) -> pd.DataFrame:
     """Simulates a Dev sample
 
     Returns
@@ -181,12 +188,11 @@ def x_dev_1() -> pd.DataFrame:
     DataFrame
         Dev sample
     """
-    # initiating dev sample
-    return init_df(1234)
+    return _x_dev_1_base.copy()
 
 
 @fixture
-def x_dev_2() -> pd.DataFrame:
+def x_dev_2(_x_dev_2_base: pd.DataFrame) -> pd.DataFrame:
     """Simulates a Dev sample
 
     Returns
@@ -194,18 +200,12 @@ def x_dev_2() -> pd.DataFrame:
     DataFrame
         Dev sample
     """
-    # initiating dev sample
-    return init_df(12345)
+    return _x_dev_2_base.copy()
 
 
 @fixture
-def x_dev_wrong_1(x_dev_1: pd.DataFrame) -> pd.DataFrame:
+def x_dev_wrong_1(_x_dev_1_base: pd.DataFrame) -> pd.DataFrame:
     """Simulates a wrong Dev sample (unexpected modality through DefaultDiscretizer)
-
-    Parameters
-    ----------
-    x_dev_1 : pd.DataFrame
-        Simulated Dev sample
 
     Returns
     -------
@@ -213,7 +213,7 @@ def x_dev_wrong_1(x_dev_1: pd.DataFrame) -> pd.DataFrame:
         Wrong Dev sample with unexpected modality
     """
     # initiating dev sample
-    x_dev = x_dev_1.copy()
+    x_dev = _x_dev_1_base.copy()
 
     # replacing a value for a unknown value
     x_dev["Qualitative"] = x_dev["Qualitative"].replace("Category C", "Category Y")
@@ -222,13 +222,8 @@ def x_dev_wrong_1(x_dev_1: pd.DataFrame) -> pd.DataFrame:
 
 
 @fixture
-def x_dev_wrong_2(x_dev_1: pd.DataFrame) -> pd.DataFrame:
+def x_dev_wrong_2(_x_dev_1_base: pd.DataFrame) -> pd.DataFrame:
     """Simulates a wrong Dev sample (introduced nans)
-
-    Parameters
-    ----------
-    x_dev_1 : pd.DataFrame
-        Simulated Dev sample
 
     Returns
     -------
@@ -236,7 +231,7 @@ def x_dev_wrong_2(x_dev_1: pd.DataFrame) -> pd.DataFrame:
         Wrong Dev sample with nans
     """
     # initiating dev sample
-    x_dev = x_dev_1.copy()
+    x_dev = _x_dev_1_base.copy()
 
     # replacing a value for a unknown value
     x_dev["Qualitative"] = x_dev["Qualitative"].replace("Category C", np.nan)
@@ -245,13 +240,8 @@ def x_dev_wrong_2(x_dev_1: pd.DataFrame) -> pd.DataFrame:
 
 
 @fixture
-def x_dev_wrong_3(x_dev_1: pd.DataFrame) -> pd.DataFrame:
+def x_dev_wrong_3(_x_dev_1_base: pd.DataFrame) -> pd.DataFrame:
     """Simulates a wrong Dev sample (unexpected modality not through DefaultDiscretizer)
-
-    Parameters
-    ----------
-    x_dev_1 : pd.DataFrame
-        Simulated Dev sample
 
     Returns
     -------
@@ -259,7 +249,7 @@ def x_dev_wrong_3(x_dev_1: pd.DataFrame) -> pd.DataFrame:
         Wrong Dev sample with nans
     """
     # initiating dev sample
-    x_dev = x_dev_1.copy()
+    x_dev = _x_dev_1_base.copy()
 
     # replacing a value for a unknown value
     x_dev["Qualitative_Ordinal"] = x_dev["Qualitative_Ordinal"].replace("Low-", "--Low")

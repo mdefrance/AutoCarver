@@ -4,8 +4,8 @@ import pandas as pd
 from pytest import raises
 
 from AutoCarver.combinations.utils.testing import (
-    TestKeys,
-    TestMessages,
+    Keys,
+    Messages,
     _test_distinct_target_rates_between_modalities,
     _test_minimum_frequency_per_modality,
     _test_modality_ordering,
@@ -130,16 +130,16 @@ def test_modality_ordering_empty_series():
 def test_add_info_all_passed():
     """Test add_info when all tests are passed."""
     test_results = {
-        TestKeys.RANKS_TRAIN_DEV.value: True,
-        TestKeys.MIN_FREQ.value: True,
-        TestKeys.DISTINCT_RATES.value: True,
-        TestKeys.VIABLE.value: True,
+        Keys.RANKS_TRAIN_DEV.value: True,
+        Keys.MIN_FREQ.value: True,
+        Keys.DISTINCT_RATES.value: True,
+        Keys.VIABLE.value: True,
     }
     min_freq = 0.05
     result = add_info(test_results, min_freq)
     expected = {
-        TestKeys.VIABLE.value: True,
-        TestKeys.INFO.value: TestMessages.PASSED_TESTS.value,
+        Keys.VIABLE.value: True,
+        Keys.INFO.value: Messages.PASSED_TESTS.value,
     }
     assert result == expected
 
@@ -147,16 +147,16 @@ def test_add_info_all_passed():
 def test_add_info_inversion_rates():
     """Test add_info when inversion rates test fails."""
     test_results = {
-        TestKeys.RANKS_TRAIN_DEV.value: False,
-        TestKeys.MIN_FREQ.value: True,
-        TestKeys.DISTINCT_RATES.value: True,
-        TestKeys.VIABLE.value: True,
+        Keys.RANKS_TRAIN_DEV.value: False,
+        Keys.MIN_FREQ.value: True,
+        Keys.DISTINCT_RATES.value: True,
+        Keys.VIABLE.value: True,
     }
     min_freq = 0.05
     result = add_info(test_results, min_freq)
     expected = {
-        TestKeys.VIABLE.value: True,
-        TestKeys.INFO.value: TestMessages.INVERSION_RATES.value,
+        Keys.VIABLE.value: True,
+        Keys.INFO.value: Messages.INVERSION_RATES.value,
     }
     assert result == expected
 
@@ -164,16 +164,16 @@ def test_add_info_inversion_rates():
 def test_add_info_non_representative():
     """Test add_info when non-representative test fails."""
     test_results = {
-        TestKeys.RANKS_TRAIN_DEV.value: True,
-        TestKeys.MIN_FREQ.value: False,
-        TestKeys.DISTINCT_RATES.value: True,
-        TestKeys.VIABLE.value: True,
+        Keys.RANKS_TRAIN_DEV.value: True,
+        Keys.MIN_FREQ.value: False,
+        Keys.DISTINCT_RATES.value: True,
+        Keys.VIABLE.value: True,
     }
     min_freq = 0.05
     result = add_info(test_results, min_freq)
     expected = {
-        TestKeys.VIABLE.value: True,
-        TestKeys.INFO.value: TestMessages.NON_REPRESENTATIVE.value.format(min_freq=min_freq),
+        Keys.VIABLE.value: True,
+        Keys.INFO.value: Messages.NON_REPRESENTATIVE.value.format(min_freq=min_freq),
     }
     assert result == expected
 
@@ -181,16 +181,16 @@ def test_add_info_non_representative():
 def test_add_info_non_distinct_rates():
     """Test add_info when non-distinct rates test fails."""
     test_results = {
-        TestKeys.RANKS_TRAIN_DEV.value: True,
-        TestKeys.MIN_FREQ.value: True,
-        TestKeys.DISTINCT_RATES.value: False,
-        TestKeys.VIABLE.value: True,
+        Keys.RANKS_TRAIN_DEV.value: True,
+        Keys.MIN_FREQ.value: True,
+        Keys.DISTINCT_RATES.value: False,
+        Keys.VIABLE.value: True,
     }
     min_freq = 0.05
     result = add_info(test_results, min_freq)
     expected = {
-        TestKeys.VIABLE.value: True,
-        TestKeys.INFO.value: TestMessages.NON_DISTINCT_RATES.value,
+        Keys.VIABLE.value: True,
+        Keys.INFO.value: Messages.NON_DISTINCT_RATES.value,
     }
     assert result == expected
 
@@ -198,20 +198,20 @@ def test_add_info_non_distinct_rates():
 def test_add_info_multiple_failures():
     """Test add_info when multiple tests fail."""
     test_results = {
-        TestKeys.RANKS_TRAIN_DEV.value: False,
-        TestKeys.MIN_FREQ.value: False,
-        TestKeys.DISTINCT_RATES.value: False,
-        TestKeys.VIABLE.value: True,
+        Keys.RANKS_TRAIN_DEV.value: False,
+        Keys.MIN_FREQ.value: False,
+        Keys.DISTINCT_RATES.value: False,
+        Keys.VIABLE.value: True,
     }
     min_freq = 0.05
     result = add_info(test_results, min_freq)
     expected = {
-        TestKeys.VIABLE.value: True,
-        TestKeys.INFO.value: "; ".join(
+        Keys.VIABLE.value: True,
+        Keys.INFO.value: "; ".join(
             [
-                TestMessages.INVERSION_RATES.value,
-                TestMessages.NON_REPRESENTATIVE.value.format(min_freq=min_freq),
-                TestMessages.NON_DISTINCT_RATES.value,
+                Messages.INVERSION_RATES.value,
+                Messages.NON_REPRESENTATIVE.value.format(min_freq=min_freq),
+                Messages.NON_DISTINCT_RATES.value,
             ]
         ),
     }
@@ -223,7 +223,7 @@ def test_viability_min_freq_and_distinct_rates():
     rates = pd.DataFrame({"frequency": [0.2, 0.3, 0.4], "target_mean": [0.1, 0.2, 0.3]})
     min_freq = 0.1
     result = _test_viability(rates, min_freq, "target_mean")
-    assert result["train"][TestKeys.VIABLE.value] is True
+    assert result["train"][Keys.VIABLE.value] is True
     assert result["train_rates"].equals(rates)
 
 
@@ -232,7 +232,7 @@ def test_viability_min_freq_not_met():
     rates = pd.DataFrame({"frequency": [0.05, 0.3, 0.4], "target_mean": [0.1, 0.2, 0.3]})
     min_freq = 0.1
     result = _test_viability(rates, min_freq, "target_mean")
-    assert result["train"][TestKeys.VIABLE.value] is False
+    assert result["train"][Keys.VIABLE.value] is False
     assert result["train_rates"].equals(rates)
 
 
@@ -241,7 +241,7 @@ def test_viability_distinct_rates_not_met():
     rates = pd.DataFrame({"frequency": [0.2, 0.3, 0.4], "target_mean": [0.1, 0.1, 0.3]})
     min_freq = 0.1
     result = _test_viability(rates, min_freq, "target_mean")
-    assert result["train"][TestKeys.VIABLE.value] is False
+    assert result["train"][Keys.VIABLE.value] is False
     assert result["train_rates"].equals(rates)
 
 
@@ -251,7 +251,7 @@ def test_viability_with_train_target_rate():
     train_target_rate = pd.Series([0.1, 0.2, 0.3])
     min_freq = 0.1
     result = _test_viability(rates, min_freq, "target_mean", train_target_rate)
-    assert result["dev"][TestKeys.VIABLE.value] is True
+    assert result["dev"][Keys.VIABLE.value] is True
 
 
 def test_viability_with_train_target_rate_ordering_not_met():
@@ -260,7 +260,7 @@ def test_viability_with_train_target_rate_ordering_not_met():
     train_target_rate = pd.Series([0.3, 0.2, 0.1])
     min_freq = 0.1
     result = _test_viability(rates, min_freq, "target_mean", train_target_rate)
-    assert result["dev"][TestKeys.VIABLE.value] is False
+    assert result["dev"][Keys.VIABLE.value] is False
 
 
 def test_viability_empty_rates():
@@ -269,7 +269,7 @@ def test_viability_empty_rates():
     min_freq = 0.1
     result = _test_viability(rates, min_freq, "target_mean")
     expected = {
-        "train": {"viable": True, TestKeys.INFO.value: TestMessages.PASSED_TESTS.value},
+        "train": {"viable": True, Keys.INFO.value: Messages.PASSED_TESTS.value},
         "train_rates": rates,
     }
     assert result["train"] == expected["train"]

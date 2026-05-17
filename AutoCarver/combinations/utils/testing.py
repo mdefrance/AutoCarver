@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 
-class TestKeys(StrEnum):
+class Keys(StrEnum):
     """keys for test results"""
 
     RANKS_TRAIN_DEV = "ranks_train_dev"
@@ -16,7 +16,7 @@ class TestKeys(StrEnum):
     INFO = "info"
 
 
-class TestMessages(StrEnum):
+class Messages(StrEnum):
     """messages for test results"""
 
     INVERSION_RATES = "Inversion of target rates per modality"
@@ -47,8 +47,8 @@ def _test_modality_ordering(train_target_rate: pd.Series, dev_target_rate: pd.Se
 def is_viable(test_results: dict):
     """checks if combination is viable on train and dev (if provided)"""
 
-    return test_results["train"][TestKeys.VIABLE.value] and (
-        test_results["dev"][TestKeys.VIABLE.value] or test_results["dev"][TestKeys.VIABLE.value] is None
+    return test_results["train"][Keys.VIABLE.value] and (
+        test_results["dev"][Keys.VIABLE.value] or test_results["dev"][Keys.VIABLE.value] is None
     )
 
 
@@ -65,9 +65,9 @@ def test_viability(
 
     # gathering results
     test_results = {
-        TestKeys.VIABLE.value: min_freq_test and distinct_rates,
-        TestKeys.MIN_FREQ.value: min_freq_test,
-        TestKeys.DISTINCT_RATES.value: distinct_rates,
+        Keys.VIABLE.value: min_freq_test and distinct_rates,
+        Keys.MIN_FREQ.value: min_freq_test,
+        Keys.DISTINCT_RATES.value: distinct_rates,
     }
 
     # adding ranking test if train_rates where provided
@@ -75,8 +75,8 @@ def test_viability(
         ordering = _test_modality_ordering(train_target_rate, rates[target_rate])
         test_results.update(
             {
-                TestKeys.RANKS_TRAIN_DEV.value: ordering,
-                TestKeys.VIABLE.value: test_results[TestKeys.VIABLE.value] and ordering,
+                Keys.RANKS_TRAIN_DEV.value: ordering,
+                Keys.VIABLE.value: test_results[Keys.VIABLE.value] and ordering,
             }
         )
 
@@ -87,7 +87,7 @@ def test_viability(
     return {
         "train": add_info(test_results, min_freq),
         "train_rates": rates,
-        TestKeys.VIABLE.value: test_results[TestKeys.VIABLE.value],
+        Keys.VIABLE.value: test_results[Keys.VIABLE.value],
     }
 
 
@@ -95,17 +95,17 @@ def add_info(test_results: dict[str, bool], min_freq: float) -> dict[str, str | 
     """Adds information to test results."""
 
     messages: list[str] = []
-    if not test_results.get(TestKeys.RANKS_TRAIN_DEV.value, True):
-        messages.append(TestMessages.INVERSION_RATES.value)
-    if not test_results.get(TestKeys.MIN_FREQ.value, True):
-        messages.append(TestMessages.NON_REPRESENTATIVE.value.format(min_freq=min_freq))
-    if not test_results.get(TestKeys.DISTINCT_RATES.value, True):
-        messages.append(TestMessages.NON_DISTINCT_RATES.value)
+    if not test_results.get(Keys.RANKS_TRAIN_DEV.value, True):
+        messages.append(Messages.INVERSION_RATES.value)
+    if not test_results.get(Keys.MIN_FREQ.value, True):
+        messages.append(Messages.NON_REPRESENTATIVE.value.format(min_freq=min_freq))
+    if not test_results.get(Keys.DISTINCT_RATES.value, True):
+        messages.append(Messages.NON_DISTINCT_RATES.value)
 
     if not messages:
-        messages.append(TestMessages.PASSED_TESTS.value)
+        messages.append(Messages.PASSED_TESTS.value)
 
     return {
-        TestKeys.VIABLE.value: test_results[TestKeys.VIABLE.value],
-        TestKeys.INFO.value: "; ".join(messages),
+        Keys.VIABLE.value: test_results[Keys.VIABLE.value],
+        Keys.INFO.value: "; ".join(messages),
     }

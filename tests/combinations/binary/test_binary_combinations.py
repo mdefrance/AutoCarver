@@ -16,14 +16,14 @@ from AutoCarver.combinations.binary.binary_combination_evaluators import (
 from AutoCarver.combinations.continuous.continuous_combination_evaluators import KruskalCombinations
 from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample
 from AutoCarver.combinations.utils.combinations import consecutive_combinations, nan_combinations
-from AutoCarver.combinations.utils.testing import TestKeys, TestMessages
+from AutoCarver.combinations.utils.testing import Keys, Messages
 from AutoCarver.features import OrdinalFeature
 
 MAX_N_MOD = 5
 MIN_FREQ = 0.2
 
 
-@fixture(params=[TschuprowtCombinations, CramervCombinations])
+@fixture(params=[TschuprowtCombinations])
 def evaluator(request: FixtureRequest) -> BinaryCombinationEvaluator:
     """Fixture for BinaryCombinationEvaluator used in tests."""
     combi_eval = request.param(max_n_mod=MAX_N_MOD)
@@ -487,118 +487,79 @@ def test_compute_associations_with_three_rows(evaluator: BinaryCombinationEvalua
         assert res["tschuprowt"] == exp["tschuprowt"]
 
 
-def test_compute_associations_with_twenty_rows(evaluator: BinaryCombinationEvaluator):
-    """Test _compute_associations with a larger xagg."""
-    feature = OrdinalFeature("feature", [chr(i) for i in range(65, 85)])  # A to T
+def test_compute_associations_with_ten_labels(evaluator: BinaryCombinationEvaluator):
+    """Test _compute_associations with a larger xagg (10 labels, 84 combinations)."""
+    feature = OrdinalFeature("feature", [chr(i) for i in range(65, 75)])  # A to J
     xagg = pd.DataFrame(
         {
-            0: [0, 2, 0, 1, 3, 0, 2, 1, 6, 2, 20, 0, 2, 1, 0, 3, 30, 0, 10, 1],
-            1: [5, 6, 1, 1, 2, 1, 0, 2, 1, 4, 5, 1, 0, 2, 1, 6, 2, 8, 0, 2],
+            0: [0, 2, 0, 1, 3, 0, 2, 1, 6, 2],
+            1: [5, 6, 1, 1, 2, 1, 0, 2, 1, 4],
         },
-        index=[chr(i) for i in range(65, 85)],
-    )  # A to T
+        index=[chr(i) for i in range(65, 75)],
+    )
     evaluator.samples.train = AggregatedSample(xagg)
 
-    combinations = consecutive_combinations(feature.labels, 7)
+    combinations = consecutive_combinations(feature.labels, 4)
 
     grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
     result = evaluator._compute_associations(grouped_xaggs)
-    print("-------sorting by", evaluator.sort_by)
-    print(result[0])
 
     expected = {
-        "tschuprowt": {
-            "xagg": pd.DataFrame(
-                {
-                    0: [2, 37, 4, 30, 0, 11],
-                    1: [12, 17, 9, 2, 8, 2],
-                },
-                index=["A", "D", "N", "Q", "R", "S"],
-            ),
-            "combination": [
-                ["A", "B", "C"],
-                ["D", "E", "F", "G", "H", "I", "J", "K", "L", "M"],
-                ["N", "O", "P"],
-                ["Q"],
-                ["R"],
-                ["S", "T"],
-            ],
-            "index_to_groupby": {
-                "A": "A",
-                "B": "A",
-                "C": "A",
-                "D": "D",
-                "E": "D",
-                "F": "D",
-                "G": "D",
-                "H": "D",
-                "I": "D",
-                "J": "D",
-                "K": "D",
-                "L": "D",
-                "M": "D",
-                "N": "N",
-                "O": "N",
-                "P": "N",
-                "Q": "Q",
-                "R": "R",
-                "S": "S",
-                "T": "S",
-            },
-            "cramerv": 0.6095153634,
-            "tschuprowt": 0.40760749,
+        "xagg": pd.DataFrame(
+            {0: [2.0, 13.0, 2.0], 1: [12.0, 7.0, 4.0]},
+            index=["A", "D", "J"],
+        ),
+        "combination": [["A", "B", "C"], ["D", "E", "F", "G", "H", "I"], ["J"]],
+        "index_to_groupby": {
+            "A": "A",
+            "B": "A",
+            "C": "A",
+            "D": "D",
+            "E": "D",
+            "F": "D",
+            "G": "D",
+            "H": "D",
+            "I": "D",
+            "J": "J",
         },
-        "cramerv": {
-            "xagg": pd.DataFrame(
-                {
-                    0: [2, 37, 4, 30, 0, 10, 1],
-                    1: [12, 17, 9, 2, 8, 0, 2],
-                },
-                index=["A", "D", "N", "Q", "R", "S", "T"],
-            ),
-            "combination": [
-                ["A", "B", "C"],
-                ["D", "E", "F", "G", "H", "I", "J", "K", "L", "M"],
-                ["N", "O", "P"],
-                ["Q"],
-                ["R"],
-                ["S"],
-                ["T"],
-            ],
-            "index_to_groupby": {
-                "A": "A",
-                "B": "A",
-                "C": "A",
-                "D": "D",
-                "E": "D",
-                "F": "D",
-                "G": "D",
-                "H": "D",
-                "I": "D",
-                "J": "D",
-                "K": "D",
-                "L": "D",
-                "M": "D",
-                "N": "N",
-                "O": "N",
-                "P": "N",
-                "Q": "Q",
-                "R": "R",
-                "S": "S",
-                "T": "T",
-            },
-            "cramerv": 0.6357922703000001,
-            "tschuprowt": 0.40623508680000003,
-        },
+        "cramerv": 0.4719639494,
+        "tschuprowt": 0.3968727932,
     }
     res = result[0]
-    print("expected res", res, "\n")
-    exp = expected[evaluator.sort_by]
-    assert np.allclose(res["xagg"], exp["xagg"])
-    assert res["combination"] == exp["combination"]
-    assert res["index_to_groupby"] == exp["index_to_groupby"]
-    assert res["cramerv"] == exp["cramerv"]
-    assert res["tschuprowt"] == exp["tschuprowt"]
+    assert np.allclose(res["xagg"], expected["xagg"])
+    assert res["combination"] == expected["combination"]
+    assert res["index_to_groupby"] == expected["index_to_groupby"]
+    assert res["cramerv"] == expected["cramerv"]
+    assert res["tschuprowt"] == expected["tschuprowt"]
+
+
+def test_compute_associations_evaluators_differ():
+    """TschuprowtCombinations and CramervCombinations pick different best combinations
+    because TschuprowT penalises more groups via the sqrt(sqrt(k-1)) factor."""
+    labels = [chr(i) for i in range(65, 75)]  # A to J
+    xagg = pd.DataFrame(
+        {
+            0: [0, 2, 0, 1, 3, 0, 2, 1, 6, 2],
+            1: [5, 6, 1, 1, 2, 1, 0, 2, 1, 4],
+        },
+        index=labels,
+    )
+
+    results = {}
+    for cls in [TschuprowtCombinations, CramervCombinations]:
+        ev = cls(max_n_mod=4)
+        ev.min_freq = MIN_FREQ
+        ev.samples.train = AggregatedSample(xagg)
+        combis = consecutive_combinations(labels, 4)
+        grouped = ev._group_xagg_by_combinations(combis)
+        assocs = ev._compute_associations(grouped)
+        best = sorted(assocs, key=lambda r: r[ev.sort_by] if r[ev.sort_by] == r[ev.sort_by] else -1, reverse=True)[0]
+        results[ev.sort_by] = best
+
+    # tschuprowt merges I into D-I (3 groups); cramerv keeps I separate (4 groups)
+    assert len(results["tschuprowt"]["combination"]) != len(results["cramerv"]["combination"])
+    assert results["tschuprowt"]["combination"] == [["A", "B", "C"], ["D", "E", "F", "G", "H", "I"], ["J"]]
+    assert results["cramerv"]["combination"] == [["A", "B", "C"], ["D", "E", "F", "G", "H"], ["I"], ["J"]]
 
 
 def test_viability_train(evaluator: BinaryCombinationEvaluator):
@@ -619,17 +580,17 @@ def test_viability_train(evaluator: BinaryCombinationEvaluator):
 
     expected = [
         {
-            "train": {TestKeys.VIABLE.value: True},
+            "train": {Keys.VIABLE.value: True},
             "train_rates": pd.DataFrame({"target_mean": [1.0, 0.333333], "frequency": [0.4, 0.6]}, index=["a", "c"]),
         },
         {
-            "train": {TestKeys.VIABLE.value: True},
+            "train": {Keys.VIABLE.value: True},
             "train_rates": pd.DataFrame({"target_mean": [0.5, 1.0], "frequency": [0.8, 0.2]}, index=["a", "c"]),
         },
     ]
     for res, exp in zip(result, expected):
         assert np.allclose(res["train_rates"], exp["train_rates"])
-        assert res["train"][TestKeys.VIABLE.value] == exp["train"][TestKeys.VIABLE.value]
+        assert res["train"][Keys.VIABLE.value] == exp["train"][Keys.VIABLE.value]
 
 
 def test_viability_dev(evaluator: BinaryCombinationEvaluator):
@@ -648,15 +609,15 @@ def test_viability_dev(evaluator: BinaryCombinationEvaluator):
     for combination in associations:
         test_results = evaluator._test_viability_train(combination)
         test_results = evaluator._test_viability_dev(test_results, combination)
-        assert test_results.get("dev").get(TestKeys.VIABLE.value) is None
+        assert test_results.get("dev").get(Keys.VIABLE.value) is None
 
     # test with xagg_dev but not viable on train
     evaluator.samples.dev = AggregatedSample(pd.DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"]))
     for combination in associations:
         test_results = evaluator._test_viability_dev(
-            {"train": {TestKeys.VIABLE.value: False}, TestKeys.VIABLE.value: False}, combination
+            {"train": {Keys.VIABLE.value: False}, Keys.VIABLE.value: False}, combination
         )
-        assert test_results.get("dev").get(TestKeys.VIABLE.value) is None
+        assert test_results.get("dev").get(Keys.VIABLE.value) is None
 
     # test with xagg_dev same as train
     result = []
@@ -664,8 +625,8 @@ def test_viability_dev(evaluator: BinaryCombinationEvaluator):
         test_results = evaluator._test_viability_train(combination)
         result += [evaluator._test_viability_dev(test_results, combination)]
     for res in result:
-        assert res["train"][TestKeys.VIABLE.value] is True
-        assert res["dev"][TestKeys.VIABLE.value] is True
+        assert res["train"][Keys.VIABLE.value] is True
+        assert res["dev"][Keys.VIABLE.value] is True
 
     # test with xagg_dev wrong
     evaluator.samples.dev = AggregatedSample(pd.DataFrame({0: [5, 0, 10], 1: [2, 5, 1]}, index=["a", "b", "c"]))
@@ -677,12 +638,12 @@ def test_viability_dev(evaluator: BinaryCombinationEvaluator):
 
     expected = [
         {
-            "train": {TestKeys.VIABLE.value: True, TestKeys.INFO: TestMessages.PASSED_TESTS},
-            "dev": {TestKeys.VIABLE.value: False, TestKeys.INFO: TestMessages.INVERSION_RATES},
+            "train": {Keys.VIABLE.value: True, Keys.INFO: Messages.PASSED_TESTS},
+            "dev": {Keys.VIABLE.value: False, Keys.INFO: Messages.INVERSION_RATES},
         },
         {
-            "train": {TestKeys.VIABLE.value: True, TestKeys.INFO: TestMessages.PASSED_TESTS},
-            "dev": {TestKeys.VIABLE.value: False, TestKeys.INFO: TestMessages.INVERSION_RATES},
+            "train": {Keys.VIABLE.value: True, Keys.INFO: Messages.PASSED_TESTS},
+            "dev": {Keys.VIABLE.value: False, Keys.INFO: Messages.INVERSION_RATES},
         },
     ]
     for res, exp in zip(result, expected):

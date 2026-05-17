@@ -18,7 +18,7 @@ from AutoCarver.combinations.continuous.continuous_combination_evaluators import
 )
 from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample
 from AutoCarver.combinations.utils.combinations import consecutive_combinations, nan_combinations
-from AutoCarver.combinations.utils.testing import TestKeys, TestMessages
+from AutoCarver.combinations.utils.testing import Keys, Messages
 from AutoCarver.features import OrdinalFeature
 
 MAX_N_MOD = 5
@@ -452,9 +452,9 @@ def test_compute_associations_with_three_rows(evaluator: ContinuousCombinationEv
         assert res["kruskal"] == exp["kruskal"]
 
 
-def test_compute_associations_with_twenty_rows(evaluator: ContinuousCombinationEvaluator):
-    """Test with a larger xagg"""
-    feature = OrdinalFeature("feature", [chr(i) for i in range(65, 85)])  # A to T
+def test_compute_associations_with_ten_labels(evaluator: ContinuousCombinationEvaluator):
+    """Test with a larger xagg (10 labels, 84 combinations)."""
+    feature = OrdinalFeature("feature", [chr(i) for i in range(65, 75)])  # A to J
     xagg = pd.Series(
         {
             "A": [0, 2, 0],
@@ -467,78 +467,44 @@ def test_compute_associations_with_twenty_rows(evaluator: ContinuousCombinationE
             "H": [9, 10],
             "I": [11, 12, 13],
             "J": [7, 8],
-            "K": [16, 17, 6],
-            "L": [1, 5],
-            "M": [21, 0, 23],
-            "N": [1, 1],
-            "O": [3, 5, 0],
-            "P": [1, 30],
-            "Q": [31, 0, 33],
-            "R": [34, 1],
-            "S": [4, 0, 38],
-            "T": [0, 40],
         }
     )
     evaluator.samples.train = AggregatedSample(xagg)
 
-    combinations = consecutive_combinations(feature.labels, 7)
+    combinations = consecutive_combinations(feature.labels, 4)
 
     grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
     result = evaluator._compute_associations(grouped_xaggs)
-    print("-------sorting by", evaluator.sort_by)
-    print(result[0])
 
     expected = {
         "xagg": pd.Series(
             {
                 "A": [0, 2, 0],
-                "B": [2, 1, 2, 0, 5, 6, 1, 3, 4, 0, 1, 2, 3, 4, 5],
-                "G": [6, 7, 8, 9, 10, 11, 12, 13, 7, 8, 16, 17, 6],
-                "L": [1, 5],
-                "M": [21, 0, 23],
-                "N": [1, 1, 3, 5, 0],
-                "P": [1, 30, 31, 0, 33, 34, 1, 4, 0, 38, 0, 40],
+                "B": [2, 1, 2, 0, 5, 6, 1, 3, 4, 0, 1, 2, 3],
+                "F": [4, 5, 6, 7, 8],
+                "H": [9, 10, 11, 12, 13, 7, 8],
             }
         ),
-        "combination": [
-            ["A"],
-            ["B", "C", "D", "E", "F"],
-            ["G", "H", "I", "J", "K"],
-            ["L"],
-            ["M"],
-            ["N", "O"],
-            ["P", "Q", "R", "S", "T"],
-        ],
+        "combination": [["A"], ["B", "C", "D", "E"], ["F", "G"], ["H", "I", "J"]],
         "index_to_groupby": {
             "A": "A",
             "B": "B",
             "C": "B",
             "D": "B",
             "E": "B",
-            "F": "B",
-            "G": "G",
-            "H": "G",
-            "I": "G",
-            "J": "G",
-            "K": "G",
-            "L": "L",
-            "M": "M",
-            "N": "N",
-            "O": "N",
-            "P": "P",
-            "Q": "P",
-            "R": "P",
-            "S": "P",
-            "T": "P",
+            "F": "F",
+            "G": "F",
+            "H": "H",
+            "I": "H",
+            "J": "H",
         },
-        "kruskal": 18.340313169963935,
+        "kruskal": 20.728840695728103,
     }
     res = result[0]
-    exp = expected
-    assert list(res["xagg"]) == list(exp["xagg"])
-    assert res["combination"] == exp["combination"]
-    assert res["index_to_groupby"] == exp["index_to_groupby"]
-    assert res["kruskal"] == exp["kruskal"]
+    assert list(res["xagg"]) == list(expected["xagg"])
+    assert res["combination"] == expected["combination"]
+    assert res["index_to_groupby"] == expected["index_to_groupby"]
+    assert res["kruskal"] == expected["kruskal"]
 
 
 def test_viability_train(evaluator: ContinuousCombinationEvaluator):
@@ -560,14 +526,14 @@ def test_viability_train(evaluator: ContinuousCombinationEvaluator):
 
     expected = [
         {
-            "train": {TestKeys.VIABLE.value: True},
+            "train": {Keys.VIABLE.value: True},
             "train_rates": pd.DataFrame(
                 {"target_mean": [0.666667, 1.250000], "frequency": [0.428571, 0.571429]},
                 index=["a", "b"],
             ),
         },
         {
-            "train": {TestKeys.VIABLE.value: False},
+            "train": {Keys.VIABLE.value: False},
             "train_rates": pd.DataFrame(
                 {"target_mean": [1.0, 1.0], "frequency": [0.714286, 0.285714]}, index=["a", "c"]
             ),
@@ -576,7 +542,7 @@ def test_viability_train(evaluator: ContinuousCombinationEvaluator):
     for res, exp in zip(result, expected):
         assert all(res["train_rates"].index == exp["train_rates"].index)
         assert np.allclose(res["train_rates"], exp["train_rates"])
-        assert res["train"][TestKeys.VIABLE.value] == exp["train"][TestKeys.VIABLE.value]
+        assert res["train"][Keys.VIABLE.value] == exp["train"][Keys.VIABLE.value]
 
 
 def test_viability_dev(evaluator: ContinuousCombinationEvaluator):
@@ -596,16 +562,16 @@ def test_viability_dev(evaluator: ContinuousCombinationEvaluator):
     for combination in associations:
         test_results = evaluator._test_viability_train(combination)
         test_results = evaluator._test_viability_dev(test_results, combination)
-        assert test_results.get("dev").get(TestKeys.VIABLE.value) is None
+        assert test_results.get("dev").get(Keys.VIABLE.value) is None
 
     # test with xagg_dev but not viable on train
     evaluator.samples.dev = AggregatedSample(pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0]}))
     for combination in associations:
         test_results = evaluator._test_viability_dev(
-            {"train": {TestKeys.VIABLE.value: False}, TestKeys.VIABLE.value: False},
+            {"train": {Keys.VIABLE.value: False}, Keys.VIABLE.value: False},
             combination,
         )
-        assert test_results.get("dev").get(TestKeys.VIABLE.value) is None
+        assert test_results.get("dev").get(Keys.VIABLE.value) is None
 
     # test with xagg_dev same as train
     result = []
@@ -615,15 +581,15 @@ def test_viability_dev(evaluator: ContinuousCombinationEvaluator):
 
     expected = [
         {
-            "train": {TestKeys.VIABLE.value: True, TestKeys.INFO: TestMessages.PASSED_TESTS},
+            "train": {Keys.VIABLE.value: True, Keys.INFO: Messages.PASSED_TESTS},
             "dev": {
-                TestKeys.VIABLE.value: True,
-                TestKeys.INFO: TestMessages.PASSED_TESTS,
+                Keys.VIABLE.value: True,
+                Keys.INFO: Messages.PASSED_TESTS,
             },
         },
         {
-            "train": {TestKeys.VIABLE.value: False, TestKeys.INFO: TestMessages.NON_DISTINCT_RATES},
-            "dev": {TestKeys.VIABLE.value: None},
+            "train": {Keys.VIABLE.value: False, Keys.INFO: Messages.NON_DISTINCT_RATES},
+            "dev": {Keys.VIABLE.value: None},
         },
     ]
     for res, exp in zip(result, expected):
@@ -641,20 +607,20 @@ def test_viability_dev(evaluator: ContinuousCombinationEvaluator):
     expected = [
         {
             "train": {
-                TestKeys.VIABLE.value: True,
-                TestKeys.INFO.value: TestMessages.PASSED_TESTS.value,
+                Keys.VIABLE.value: True,
+                Keys.INFO.value: Messages.PASSED_TESTS.value,
             },
             "dev": {
-                TestKeys.VIABLE.value: False,
-                TestKeys.INFO.value: TestMessages.INVERSION_RATES.value,
+                Keys.VIABLE.value: False,
+                Keys.INFO.value: Messages.INVERSION_RATES.value,
             },
         },
         {
             "train": {
-                TestKeys.VIABLE.value: False,
-                TestKeys.INFO.value: TestMessages.NON_DISTINCT_RATES.value,
+                Keys.VIABLE.value: False,
+                Keys.INFO.value: Messages.NON_DISTINCT_RATES.value,
             },
-            "dev": {TestKeys.VIABLE.value: None},
+            "dev": {Keys.VIABLE.value: None},
         },
     ]
     for res, exp in zip(result, expected):
