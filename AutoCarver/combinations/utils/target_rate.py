@@ -26,7 +26,7 @@ class TargetRate(ABC):
         """
 
     @abstractmethod
-    def compute(self, xagg: pd.Series | pd.DataFrame) -> pd.Series:
+    def compute(self, xagg: pd.Series | pd.DataFrame | None) -> pd.Series:
         """Computes the target rate.
 
         Parameters

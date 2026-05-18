@@ -52,6 +52,8 @@ class ContinuousDiscretizer(BaseDiscretizer):
     @property
     def q(self) -> int:
         """Number of quantiles to discretize the continuous features."""
+        if self.min_freq is None:
+            raise ValueError(f"[{self.__name__}] min_freq must be set to compute q")
         return round(1 / self.min_freq)
 
     @extend_docstring(BaseDiscretizer.fit)
@@ -77,7 +79,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
         return self
 
 
-def fit_feature(feature: QuantitativeFeature, X: pd.DataFrame, q: float) -> tuple[str, GroupedList]:
+def fit_feature(feature: QuantitativeFeature, X: pd.DataFrame, q: int) -> tuple[str, GroupedList]:
     """Fits one feature"""
 
     # getting quantiles for specified feature
@@ -127,9 +129,9 @@ def find_quantiles(
 def np_find_quantiles(
     df_feature: np.ndarray,
     q: int,
-    initial_len_df: int | None = None,
-    quantiles: list[float] | None = None,
-) -> list[float] | None:
+    initial_len_df: int,
+    quantiles: list[float],
+) -> list[float]:
     """Finds quantiles of a Series recursively.
 
     * Values more frequent than ``min_freq`` are set as there own modalities.
@@ -207,7 +209,7 @@ def compute_quantiles(df_feature: np.ndarray, q: int, initial_len_df: int) -> li
     return [max(df_feature)]
 
 
-def get_remaining_quantiles(remaining_len_df: np.ndarray, initial_len_df: int, q: int) -> np.ndarray:
+def get_remaining_quantiles(remaining_len_df: int, initial_len_df: int, q: int) -> np.ndarray:
     """Computes list of indices of quantiles needed."""
 
     # updating number of quantiles taking into account identified over-represented modalities

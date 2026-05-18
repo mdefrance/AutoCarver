@@ -48,7 +48,7 @@ class AggregatedSample:
         return self._raw
 
     @raw.setter
-    def raw(self, value: pd.Series | pd.DataFrame) -> None:
+    def raw(self, value: pd.Series | pd.DataFrame | None) -> None:
         """Sets the raw value of the xagg"""
 
         # setting raw value
@@ -90,7 +90,7 @@ class AggregatedSamples:
     train: AggregatedSample = field(default_factory=lambda: AggregatedSample(None))
     dev: AggregatedSample = field(default_factory=lambda: AggregatedSample(None))
 
-    def set(self, train: pd.DataFrame, dev: pd.DataFrame | None = None) -> None:
+    def set(self, train: pd.Series | pd.DataFrame | None, dev: pd.Series | pd.DataFrame | None = None) -> None:
         """Sets the train and dev samples"""
 
         # setting train and dev samples
@@ -100,9 +100,14 @@ class AggregatedSamples:
     def dropna(self, feature_nan: str) -> None:
         """Removes nans from the samples"""
 
-        # removing nans from crosstabs
-        self.dev.xagg = filter_nan(self.dev.raw, feature_nan)
-        self.train.xagg = filter_nan(self.train.raw, feature_nan)
+        # removing nans from crosstabs (filter_nan returns None when raw is None;
+        # only assign when filtering actually produced a frame)
+        dev_filtered = filter_nan(self.dev.raw, feature_nan)
+        if dev_filtered is not None:
+            self.dev.xagg = dev_filtered
+        train_filtered = filter_nan(self.train.raw, feature_nan)
+        if train_filtered is not None:
+            self.train.xagg = train_filtered
 
     def set_indices_to_values(self, feature: BaseFeature) -> None:
         """Resets the index of the samples"""
@@ -179,7 +184,7 @@ class CombinationEvaluator(ABC):
         self.min_freq = get_attribute(kwargs, "min_freq")
 
         # attributes to be set by get_best_combination
-        self.feature: BaseFeature = None
+        self._feature: BaseFeature | None = None
         self.samples: AggregatedSamples = AggregatedSamples()
         self._statistics_cache = None
         self._init_target_rate(get_attribute(kwargs, "target_rate"))
@@ -188,6 +193,17 @@ class CombinationEvaluator(ABC):
     def _init_target_rate(self, target_rate: TargetRate) -> None:
         """Initializes target rate."""
         self.target_rate = target_rate
+
+    @property
+    def feature(self) -> BaseFeature:
+        """Current feature under evaluation (set by ``get_best_combination``)."""
+        if self._feature is None:
+            raise RuntimeError(f"[{self.__name__}] feature is not set; call get_best_combination first")
+        return self._feature
+
+    @feature.setter
+    def feature(self, value: BaseFeature) -> None:
+        self._feature = value
 
     def __repr__(self) -> str:
         return f"{self.__name__}(max_n_mod={self.max_n_mod})"
@@ -248,7 +264,7 @@ class CombinationEvaluator(ABC):
 
         return best_combination
 
-    def _apply_best_combination(self, best_association: dict) -> None:
+    def _apply_best_combination(self, best_association: dict | None) -> None:
         """Applies best combination to feature labels and xtab"""
 
         # checking that a combination was found
@@ -274,8 +290,11 @@ class CombinationEvaluator(ABC):
         - dropna has to be set to True
         """
 
-        # raw ordering without nans
-        raw_labels = GroupedList(self.feature.labels[:])
+        # raw ordering without nans (labels are populated before this method runs)
+        feature_labels = self.feature.labels
+        if feature_labels is None:
+            raise RuntimeError(f"[{self.__name__}] feature labels are not populated")
+        raw_labels = GroupedList(feature_labels[:])
 
         # removing nans if any
         if self.feature.has_nan:
@@ -299,7 +318,7 @@ class CombinationEvaluator(ABC):
 
         return None
 
-    def _get_best_combination_with_nan(self, best_combination: dict) -> dict:
+    def _get_best_combination_with_nan(self, best_combination: dict | None) -> dict | None:
         """Computes associations of the tab for each combination with nans"""
 
         # grouping NaNs if requested to drop them (dropna=True)
@@ -317,8 +336,11 @@ class CombinationEvaluator(ABC):
         return best_combination
 
     def get_best_combination(
-        self, feature: BaseFeature, xagg: pd.DataFrame, xagg_dev: pd.DataFrame | None = None
-    ) -> dict:
+        self,
+        feature: BaseFeature,
+        xagg: pd.Series | pd.DataFrame | None,
+        xagg_dev: pd.Series | pd.DataFrame | None = None,
+    ) -> dict | None:
         """Computes best combination of modalities for the feature"""
 
         # checking for min_freq
@@ -461,16 +483,19 @@ class CombinationEvaluator(ABC):
     def _historize_raw_combination(self):
         """historizes the raw combination"""
 
+        # narrow Optional: this method is only called after samples.set() has populated raw
+        raw = self.samples.train.raw
+        if raw is None:
+            raise RuntimeError(f"[{self.__name__}] samples.train.raw is not populated")
+
         # setting feature's statistics
-        self.feature.statistics = self.target_rate.compute(self.samples.train.raw)
+        self.feature.statistics = self.target_rate.compute(raw)
 
         # computing association of sample
-        raw_association = self._association_measure(
-            self.samples.train.raw, n_obs=sum(self.samples.train.raw.apply(sum))
-        )
+        raw_association = self._association_measure(raw, n_obs=sum(raw.apply(sum)))
 
         # computing number of modalities
-        n_mod = self.samples.train.raw.shape[0]
+        n_mod = raw.shape[0]
 
         # creating info message
         info = "Raw distribution"
@@ -483,7 +508,7 @@ class CombinationEvaluator(ABC):
         combination = {
             "info": info,
             **raw_association,
-            "combination": {modality: modality for modality in self.samples.train.raw.index},
+            "combination": {modality: modality for modality in raw.index},
         }
 
         # historizing within feature
@@ -557,7 +582,7 @@ class CombinationEvaluator(ABC):
         return cls(**combinations_json)
 
 
-def filter_nan(xagg: pd.Series | pd.DataFrame, str_nan: str) -> pd.Series | pd.DataFrame | None:
+def filter_nan(xagg: pd.Series | pd.DataFrame | None, str_nan: str) -> pd.Series | pd.DataFrame | None:
     """Filters out nans from crosstab or y values"""
 
     # cehcking for values in crosstab

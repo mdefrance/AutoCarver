@@ -4,6 +4,7 @@ for a binary classification model.
 
 import json
 from abc import ABC
+from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Self
 
@@ -86,7 +87,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
     def __init__(
         self,
-        features: Features,
+        features: "Features | Iterable[BaseFeature]",
         **kwargs,
     ) -> None:
         """
@@ -122,9 +123,12 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         n_jobs : int, optional
             Processes for multiprocessing, by default ``1``
         """
-        # features and values
-        self.features = features
-        if isinstance(features, list):
+        # features and values: accept either a Features collection or an
+        # iterable of BaseFeature (subclass lists are common — list invariance
+        # is why the parameter type is widened above).
+        if isinstance(features, Features):
+            self.features: Features = features
+        else:
             self.features = Features.from_list(features)
 
         # saving kwargs
@@ -532,7 +536,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         # initiating BaseDiscretizer
         return cls(features=features, **discretizer_json)
 
-    @extend_docstring(Features.summary)
+    @extend_docstring(Features.summary.fget)
     @property
     def summary(self) -> pd.DataFrame:
         return self.features.summary

@@ -70,7 +70,9 @@ class MulticlassCarver(BinaryCarver):
         tuple[DataFrame, pd.DataFrame, dict[str, Callable]]
             Copies of (X, X_dev) and helpers to be used according to target type
         """
-        # converting target to str
+        # converting target to str (y is required by Carver.fit)
+        if samples.train.y is None:
+            raise ValueError(f"[{self.__name__}] y must be provided")
         samples.train.y = samples.train.y.astype(str)
 
         # multiclass target, checking values
@@ -110,7 +112,8 @@ class MulticlassCarver(BinaryCarver):
         # preparing datasets and checking for wrong values
         samples = self._prepare_data(samples)
 
-        # getting distinct y classes
+        # getting distinct y classes (_prepare_data raises if y is missing)
+        assert samples.train.y is not None
         y_classes = sorted(samples.train.y.unique().tolist())[1:]  # removing one of the classes
 
         # adding versionned features
@@ -168,7 +171,7 @@ class MulticlassCarver(BinaryCarver):
         return self
 
 
-def get_one_vs_rest(y: pd.Series, y_class: Any) -> pd.Series:
+def get_one_vs_rest(y: pd.Series | None, y_class: Any) -> pd.Series | None:
     """converts a multiclass target into binary of specific y_class"""
     if y is not None:
         return (y == y_class).astype(int)

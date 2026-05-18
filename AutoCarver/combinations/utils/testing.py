@@ -32,7 +32,7 @@ def _test_distinct_target_rates_between_modalities(target_rates: pd.Series) -> b
     return not any(np.isclose(target_rates[1:], target_rates.shift(1)[1:]))
 
 
-def _test_minimum_frequency_per_modality(frequencies: pd.Series, min_freq: float) -> bool:
+def _test_minimum_frequency_per_modality(frequencies: pd.Series, min_freq: int | float | None) -> bool:
     """tests that minimum frequency has been reached for each modality"""
     # - minimum frequency is reached for all modalities
     return all(frequencies >= min_freq)
@@ -53,7 +53,10 @@ def is_viable(test_results: dict):
 
 
 def test_viability(
-    rates: pd.DataFrame, min_freq: float, target_rate: str, train_target_rate: pd.Series | None = None
+    rates: pd.Series | pd.DataFrame,
+    min_freq: int | float | None,
+    target_rate: str,
+    train_target_rate: pd.Series | None = None,
 ) -> dict:
     """tests viability of the rates"""
 
@@ -91,7 +94,7 @@ def test_viability(
     }
 
 
-def add_info(test_results: dict[str, bool], min_freq: float) -> dict[str, str | bool]:
+def add_info(test_results: dict[str, bool], min_freq: int | float | None) -> dict[str, str | bool]:
     """Adds information to test results."""
 
     messages: list[str] = []

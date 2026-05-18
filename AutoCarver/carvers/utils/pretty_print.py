@@ -6,7 +6,7 @@ from AutoCarver.features import BaseFeature
 
 
 def prettier_xagg(
-    nice_xagg: pd.DataFrame | None = None,
+    nice_xagg: pd.Series | pd.DataFrame | None = None,
     caption: str | None = None,
     hide_index: bool = False,
 ) -> str:
@@ -56,7 +56,7 @@ def prettier_xagg(
     return nicer_xagg
 
 
-def index_mapper(feature: BaseFeature, xtab: pd.DataFrame | None = None) -> pd.DataFrame | None:
+def index_mapper(feature: BaseFeature, xtab: pd.Series | pd.DataFrame | None = None) -> pd.Series | pd.DataFrame | None:
     """Prints a binary xtab's statistics
 
     Parameters
@@ -73,7 +73,7 @@ def index_mapper(feature: BaseFeature, xtab: pd.DataFrame | None = None) -> pd.D
     """
     # checking for an xtab
     mapped_xtab = None
-    if xtab is not None:
+    if xtab is not None and feature.labels is not None:
         # copying initial xtab
         mapped_xtab = xtab.copy()
 

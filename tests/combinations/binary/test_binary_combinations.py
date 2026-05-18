@@ -41,7 +41,8 @@ def test_init(evaluator: BinaryCombinationEvaluator):
     assert evaluator.min_freq == MIN_FREQ
     assert evaluator.dropna is False
     assert evaluator.verbose is False
-    assert evaluator.feature is None
+    # feature is a property that raises when unset; check the backing attribute
+    assert evaluator._feature is None
     assert evaluator.samples.train.xagg is None
     assert evaluator.samples.dev.xagg is None
     assert evaluator.samples.train.raw is None

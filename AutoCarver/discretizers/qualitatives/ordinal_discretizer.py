@@ -77,6 +77,11 @@ class OrdinalDiscretizer(BaseDiscretizer):
         # verbose if requested
         self._log_if_verbose()
 
+        # narrow types: fit's signature requires non-None y and min_freq is set
+        # by the constructor for ordinal discretization.
+        if self.min_freq is None:
+            raise ValueError(f"[{self.__name__}] min_freq must be set before fitting")
+
         # grouping rare modalities for each feature
         common_modalities = {
             feature.version: find_common_modalities(
@@ -101,15 +106,15 @@ def find_common_modalities(df_feature: pd.Series, y: pd.Series, min_freq: float,
     """finds common modalities of a ordinal feature"""
 
     # converting to grouped list
-    labels = GroupedList(labels)
+    grouped_labels = GroupedList(labels)
 
     # computing frequencies and target rate of each modality
-    stats, len_df = compute_stats(df_feature, y, labels)
+    stats, len_df = compute_stats(df_feature, y, grouped_labels)
 
     # case 1: there are underrepresented modalities/values
     while any(stats[0, :] / len_df < min_freq) & (stats.shape[1] > 1):
         # identifying the first underrepresented value
-        discarded_idx = np.argmin(stats[0, :])
+        discarded_idx = int(np.argmin(stats[0, :]))
 
         # choosing amongst previous and next modality (by volume and target rate)
         kept_idx = find_closest_modality(
@@ -120,13 +125,13 @@ def find_common_modalities(df_feature: pd.Series, y: pd.Series, min_freq: float,
         )
 
         # grouping discarded idx with kept idx
-        labels.group(labels[discarded_idx], labels[kept_idx])
+        grouped_labels.group(grouped_labels[discarded_idx], grouped_labels[kept_idx])
 
         # updating stats accordingly
         stats = update_stats(stats, discarded_idx, kept_idx)
 
     # case 2 : no underrepresented value
-    return labels
+    return grouped_labels
 
 
 def update_stats(stats: np.ndarray, discarded_idx: int, kept_idx: int) -> np.ndarray:

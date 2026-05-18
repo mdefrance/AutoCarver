@@ -38,13 +38,13 @@ class QuantitativeFeature(BaseFeature):
         else:
             # iterating over each grouped values
             for kept_label, grouped_labels in values.content.items():
-                # converting labels to values
-                kept_value = self.value_per_label.get(kept_label)
-                grouped_values = [self.value_per_label.get(label) for label in grouped_labels]
-
                 # checking that kept values exists
                 if kept_label not in self.value_per_label:
                     raise AttributeError(f"{self} no {kept_label}, in value_per_label: {self.value_per_label}")
+
+                # converting labels to values
+                kept_value = self.value_per_label[kept_label]
+                grouped_values = [self.value_per_label.get(label) for label in grouped_labels]
 
                 # checking that grouped values exists
                 for grouped_value, grouped_label in zip(grouped_values, grouped_labels):

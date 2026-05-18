@@ -379,7 +379,7 @@ class GroupedList:
         # recreating an ordered GroupedList
         return GroupedList({k: self.get(k) for k in keys})
 
-    def sort_by(self, ordering: list[Any]) -> "GroupedList":
+    def sort_by(self, ordering: "list[Any] | GroupedList") -> "GroupedList":
         """Returns a new :class:`GroupedList` with leaders ordered by ``ordering``.
 
         Raises ``ValueError`` if ``ordering`` contains unknown leaders or
