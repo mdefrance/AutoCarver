@@ -130,7 +130,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         )
 
         # setting combinations evaluator
-        self.combinations = combinations
+        self.combinations: CombinationEvaluator = combinations
         self.combinations.min_freq = self.min_freq
         self.combinations.verbose = self.verbose
         self.combinations.dropna = self.dropna
@@ -256,14 +256,16 @@ class BaseCarver(BaseDiscretizer, ABC):
         return self
 
     @abstractmethod
-    def _aggregator(self, X: pd.DataFrame, y: pd.Series) -> pd.Series | pd.DataFrame:
-        """Helper that aggregates X by y into crosstab or means (carver specific)"""
+    def _aggregator(self, X: pd.DataFrame, y: pd.Series) -> dict[str, pd.Series | pd.DataFrame | None]:
+        """Helper that aggregates X by y into per-feature crosstabs or means
+        (carver specific). Returns ``{feature.version: xagg}`` for each feature.
+        """
 
     def _carve_feature(
         self,
         feature: BaseFeature,
-        xaggs: dict[str, pd.Series | pd.DataFrame],
-        xaggs_dev: dict[str, pd.Series | pd.DataFrame],
+        xaggs: dict[str, pd.Series | pd.DataFrame | None],
+        xaggs_dev: dict[str, pd.Series | pd.DataFrame | None],
         num_iter: str,
     ) -> None:
         """Carves a feature into buckets that maximize association with the target"""
@@ -302,7 +304,7 @@ class BaseCarver(BaseDiscretizer, ABC):
     def _print_xagg(
         self,
         feature: BaseFeature,
-        xagg: pd.Series | pd.DataFrame,
+        xagg: pd.Series | pd.DataFrame | None,
         message: str,
         *,
         xagg_dev: pd.Series | pd.DataFrame | None = None,
@@ -331,28 +333,44 @@ class BaseCarver(BaseDiscretizer, ABC):
                 self._print_html(nice_xagg, nice_xagg_dev)
 
     def _format_xagg(
-        self, feature: BaseFeature, xagg: pd.DataFrame, xagg_dev: pd.DataFrame | None = None
-    ) -> tuple[pd.DataFrame | None, pd.DataFrame | None]:
+        self,
+        feature: BaseFeature,
+        xagg: pd.Series | pd.DataFrame | None,
+        xagg_dev: pd.Series | pd.DataFrame | None = None,
+    ) -> tuple[pd.Series | pd.DataFrame | None, pd.Series | pd.DataFrame | None]:
         """Formats the XAGG DataFrame."""
         formatted_xagg = index_mapper(feature, xagg)
         formatted_xagg_dev = index_mapper(feature, xagg_dev)
         return formatted_xagg, formatted_xagg_dev
 
     def _pretty_print(
-        self, formatted_xagg: pd.DataFrame, formatted_xagg_dev: pd.DataFrame
-    ) -> tuple[pd.Series | pd.DataFrame, pd.Series | pd.DataFrame]:
+        self,
+        formatted_xagg: pd.Series | pd.DataFrame | None,
+        formatted_xagg_dev: pd.Series | pd.DataFrame | None,
+    ) -> tuple[pd.Series | pd.DataFrame | None, pd.Series | pd.DataFrame | None]:
         """Returns pretty-printed XAGG DataFrames."""
-        nice_xagg = self.combinations.target_rate.compute(formatted_xagg)
-        nice_xagg_dev = self.combinations.target_rate.compute(formatted_xagg_dev)
+        nice_xagg = self.combinations.target_rate.compute(formatted_xagg) if formatted_xagg is not None else None
+        nice_xagg_dev = (
+            self.combinations.target_rate.compute(formatted_xagg_dev) if formatted_xagg_dev is not None else None
+        )
         return nice_xagg, nice_xagg_dev
 
-    def _print_raw(self, nice_xagg: str, nice_xagg_dev: str, xagg_dev: pd.DataFrame | None = None) -> None:
+    def _print_raw(
+        self,
+        nice_xagg: pd.Series | pd.DataFrame | None,
+        nice_xagg_dev: pd.Series | pd.DataFrame | None,
+        xagg_dev: pd.Series | pd.DataFrame | None = None,
+    ) -> None:
         """Prints raw XAGG DataFrames."""
         print(nice_xagg, "\n")
         if xagg_dev is not None:
             print("X_dev distribution\n", nice_xagg_dev, "\n")
 
-    def _print_html(self, nice_xagg: str, nice_xagg_dev: str) -> None:
+    def _print_html(
+        self,
+        nice_xagg: pd.Series | pd.DataFrame | None,
+        nice_xagg_dev: pd.Series | pd.DataFrame | None,
+    ) -> None:
         """Prints XAGG DataFrames in HTML format."""
         # getting prettier xtabs
         nicer_xagg = prettier_xagg(nice_xagg, caption="X distribution")

@@ -56,7 +56,7 @@ def convert_value_to_numpy_type(value: str | float | int) -> Any:
 
 
 def convert_values_to_base_types(
-    iterable: list[Any] | dict[str, list[Any]],
+    iterable: list[Any] | dict[str, list[Any]] | GroupedList | None,
 ) -> list[str | int | float] | dict[str | int | float, Any] | None:
     """Converts a list or a dict of lists values to python's base types (str, int, float)
     for JSON serialization.
@@ -85,7 +85,7 @@ def convert_values_to_base_types(
 
 
 def convert_values_to_numpy_types(
-    iterable: list[str | int | float] | dict[str, list[str | int | float]],
+    iterable: list[str | int | float] | dict[str, list[str | int | float]] | GroupedList | None,
 ) -> list[Any] | dict[Any, Any] | None:
     """Converts a list or a dict of lists values to numpy types for JSON deserialization.
 
@@ -179,7 +179,7 @@ def json_deserialize_content(json_serialized_feature: dict) -> GroupedList | Non
     content = convert_values_to_numpy_types(loads(content))  # type: ignore
 
     # cehcking for values
-    if values is not None:
+    if values is not None and isinstance(content, dict):
         # fixing json dumping with string keys
         for value in values:
             content_key = value
@@ -189,7 +189,7 @@ def json_deserialize_content(json_serialized_feature: dict) -> GroupedList | Non
                 content_key = str(value)
 
             # updating
-            content.update({value: content.pop(content_key)})  # type: ignore
+            content.update({value: content.pop(content_key)})
 
         # converting to grouped list
         return GroupedList(content)

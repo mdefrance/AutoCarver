@@ -457,13 +457,13 @@ def remove_non_default_metrics_from_features(feature: BaseFeature) -> None:
     # removing non default measures
     measures = dict(feature.measures)
     for measure_name, measure in feature.measures.items():
-        if not measure.get("info").get("is_default"):
+        if not measure.get("info", {}).get("is_default"):
             measures.pop(measure_name)
 
     # removing non default filters
     filters = dict(feature.filters)
     for filter_name, measure in feature.filters.items():
-        if not measure.get("info").get("is_default"):
+        if not measure.get("info", {}).get("is_default"):
             filters.pop(filter_name)
 
     # updating feature
@@ -502,12 +502,12 @@ def get_feature_rank(feature: BaseFeature, measure: BaseMeasure) -> float:
 
 def get_measure_rank(feature: BaseFeature, measure: BaseMeasure) -> int:
     """gives rank of feature according to measure"""
-    return feature.measures.get(make_rank_name(measure)).get("value")
+    return feature.measures[make_rank_name(measure)]["value"]
 
 
 def get_measure_value(feature: BaseFeature, measure: BaseMeasure) -> float:
     """gives value of measure for specified feature"""
-    value = feature.measures.get(measure.__name__).get("value")
+    value = feature.measures[measure.__name__]["value"]
     # getting absolute value
     if measure.is_absolute:
         value = abs(value)
@@ -640,7 +640,7 @@ def select_with_measure(
 
 def select_from_rank(features: list[BaseFeature], measure: BaseMeasure) -> list[BaseFeature]:
     """Selects the ``n_best`` features of the DataFrame, by association with the target"""
-    return [feature for feature in features if feature.measures.get(make_rank_name(measure)).get("valid")]
+    return [feature for feature in features if feature.measures.get(make_rank_name(measure), {}).get("valid")]
 
 
 def make_rank_name(measure: BaseMeasure) -> str:

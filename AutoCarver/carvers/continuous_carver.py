@@ -90,7 +90,9 @@ class ContinuousCarver(BaseCarver):
             Copies of (X, X_dev) to be used according to target type
         """
 
-        # continuous target, checking values
+        # continuous target, checking values (y is required by Carver.fit)
+        if samples.train.y is None:
+            raise ValueError(f"[{self.__name__}] y must be provided")
         if str in samples.train.y.apply(type).unique():
             raise ValueError(f"[{self.__name__}] y must be a continuous Series (int or float, not object)")
 
@@ -137,5 +139,6 @@ def get_target_values_by_modality(X: pd.DataFrame, y: pd.Series, feature: BaseFe
     # list of y values for each modality of X
     yval = y.groupby(X[feature.version]).apply(lambda u: list(u))
 
-    # reindexing to ensure the right order
-    return yval.reindex(feature.labels, fill_value=[])
+    # reindexing to ensure the right order (labels may be None pre-fit; pandas
+    # treats None as "no reindex" so the original ordering is kept)
+    return yval.reindex(feature.labels, fill_value=[])  # type: ignore[arg-type]

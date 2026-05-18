@@ -1,15 +1,16 @@
 """Set of tools used for multiprocessing"""
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from functools import partial
 from multiprocessing import Pool
+from typing import Any
 
 import pandas as pd
 
 from AutoCarver.features import BaseFeature
 
 
-def imap_unordered_function(fun: Callable, features: list[str], n_jobs: int, **kwargs):
+def imap_unordered_function(fun: Callable, features: "Iterable[Any]", n_jobs: int, **kwargs):
     """converts a function to a multiprocessing imap_unordered format or list comprehension"""
 
     # initiating list of function results
@@ -27,7 +28,7 @@ def imap_unordered_function(fun: Callable, features: list[str], n_jobs: int, **k
     return results
 
 
-def apply_async_function(fun: Callable, features: list[BaseFeature], n_jobs: int, X: pd.DataFrame, *args: list):
+def apply_async_function(fun: Callable, features: "Iterable[BaseFeature]", n_jobs: int, X: pd.DataFrame, *args: list):
     """converts a function to a multiprocessing apply_async format or list comprehension"""
 
     # no multiprocessing

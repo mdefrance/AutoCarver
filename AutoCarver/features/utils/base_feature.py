@@ -305,7 +305,7 @@ class BaseFeature(ABC):
 
     def update(
         self,
-        values: GroupedList,
+        values: "GroupedList | list",
         convert_labels: bool = False,
         sorted_values: bool = False,
         replace: bool = False,
@@ -365,7 +365,7 @@ class BaseFeature(ABC):
             Skip ``history`` when True, by default ``False``.
         """
 
-        feature = {
+        feature: dict[str, Any] = {
             "name": self.name,
             "version": self.version,
             "version_tag": self.version_tag,

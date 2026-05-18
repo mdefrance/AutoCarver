@@ -28,7 +28,7 @@ def combinations_at_index(
 
 
 def consecutive_combinations(
-    raw_order: list[Any],
+    raw_order: "list[Any] | GroupedList",
     max_group_size: int,
     remaining_groups: int | None = None,
     current_combination: list[Any] | None = None,
@@ -85,6 +85,8 @@ def nan_combinations(
     - len(feature.labels) <= max_n_mod
     """
     # raw ordering without nans
+    if feature.labels is None:
+        raise RuntimeError(f"[nan_combinations] feature {feature} has no labels populated")
     raw_labels = GroupedList(feature.labels[:])
     raw_labels.remove(feature.nan)  # nans are added within nan_combinations
 
@@ -119,8 +121,10 @@ def nan_combinations(
     return nan_combis
 
 
-def order_apply_combination(order: GroupedList, combination: list[list[Any]]) -> GroupedList:
+def order_apply_combination(order: "GroupedList | list[Any] | None", combination: list[list[Any]]) -> GroupedList:
     """Converts a list of combination to a GroupedList"""
+    if order is None:
+        raise ValueError("[order_apply_combination] order must not be None")
     order_copy = GroupedList(order)
     for combi in combination:
         order_copy.group(combi, combi[0])
@@ -128,7 +132,9 @@ def order_apply_combination(order: GroupedList, combination: list[list[Any]]) ->
     return order_copy
 
 
-def xagg_apply_combination(xagg: pd.DataFrame, feature: BaseFeature) -> pd.DataFrame:
+def xagg_apply_combination(
+    xagg: pd.Series | pd.DataFrame | None, feature: BaseFeature
+) -> pd.Series | pd.DataFrame | None:
     """Applies an order (combination) to a crosstab
 
     Parameters
@@ -150,7 +156,11 @@ def xagg_apply_combination(xagg: pd.DataFrame, feature: BaseFeature) -> pd.DataF
         groups = list(map(feature.label_per_value.get, xagg.index))
         combi_xagg = xagg.groupby(groups, dropna=False, sort=False).sum()
 
-        # reindexing to ensure the right labels
+        # reindexing to ensure the right labels — NOTE: this intentionally mutates
+        # feature.labels (in-place +=) when the nan needs to be appended; downstream
+        # consumers rely on that mutation.
+        if feature.labels is None:
+            raise RuntimeError(f"[xagg_apply_combination] feature {feature} has no labels populated")
         revised_index = feature.labels
         if feature.has_nan and feature.nan not in revised_index and not feature.dropna:
             revised_index += [feature.nan]
@@ -165,6 +175,6 @@ def combination_formatter(combination: list[list[str]]) -> dict[str, str]:
     return {modal: group[0] for group in combination for modal in group}
 
 
-def format_combinations(combinations: list[list[str]]) -> list[dict[str, str]]:
-    """Formats a list of combinations"""
+def format_combinations(combinations: list[list[list[str]]]) -> list[dict[str, str]]:
+    """Formats a list of combinations (each combination is a list of groups, each group a list of modalities)."""
     return [combination_formatter(combination) for combination in combinations]

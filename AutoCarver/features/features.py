@@ -255,13 +255,15 @@ class Features:
         # list request and element to search for
         if isinstance(index, list) and len(index) > 0:
             # list index request
-            if isinstance(index[0], int):
+            if all(isinstance(idx, int) for idx in index):
                 self_list = self.to_list()
-                return [self_list[idx] for idx in index]
+                return [self_list[idx] for idx in index if isinstance(idx, int)]
 
             # feature name request
-            if isinstance(index[0], str):
-                return [self(name) for name in index]
+            elif all(isinstance(idx, str) for idx in index):
+                return [self(name) for name in index if isinstance(name, str)]
+            else:
+                raise TypeError(f"[{self.__name__}] List indices must be all int or all str; got {index}")
 
         return None
 
@@ -428,12 +430,17 @@ class Features:
 
     def update(
         self,
-        feature_values: dict[str, GroupedList],
+        feature_values: "dict[str, GroupedList | list]",
         convert_labels: bool = False,
         sorted_values: bool = False,
         replace: bool = False,
     ) -> None:
-        """Updates all features using provided feature_values"""
+        """Updates all features using provided feature_values.
+
+        Values may be a plain ``list`` when ``sorted_values=True`` (the list is
+        forwarded to ``GroupedList.sort_by``); otherwise a ``GroupedList`` is
+        required by ``BaseFeature.update``.
+        """
         for feature, values in feature_values.items():  # updating each features
             self(feature).update(values, convert_labels, sorted_values, replace)
 
@@ -452,6 +459,19 @@ class Features:
         """Returns all features with specified version_tag"""
 
         return [feature for feature in self if feature.version_tag == y_class]
+
+    @property
+    def history(self) -> pd.DataFrame:
+        """Combined history of all features (concatenated, with a ``feature`` column)."""
+        frames = []
+        for feature in self:
+            df = feature.history
+            if len(df) > 0:
+                df = df.assign(feature=str(feature))
+                frames.append(df)
+        if not frames:
+            return pd.DataFrame()
+        return pd.concat(frames, ignore_index=True)
 
     @property
     def summary(self) -> pd.DataFrame:
@@ -489,7 +509,11 @@ class Features:
 
     def to_list(self) -> list[BaseFeature]:
         """Returns a list of all features"""
-        return self.categoricals + self.ordinals + self.quantitatives
+        features: list[BaseFeature] = []
+        features.extend(self.categoricals)
+        features.extend(self.ordinals)
+        features.extend(self.quantitatives)
+        return features
 
     def to_dict(self) -> dict[str, BaseFeature]:
         """Returns a dict of all versionned features"""
