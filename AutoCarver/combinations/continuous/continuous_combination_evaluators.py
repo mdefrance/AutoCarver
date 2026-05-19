@@ -5,20 +5,15 @@ from abc import ABC
 import pandas as pd
 from scipy.stats import kruskal
 
-from AutoCarver.combinations.continuous.continuous_target_rates import (
-    ContinuousTargetRate,
-    TargetMean,
-)
-from AutoCarver.combinations.utils.combination_evaluator import (
-    AggregatedSample,
-    CombinationEvaluator,
-)
+from AutoCarver.combinations.continuous.continuous_target_rates import ContinuousTargetRate, TargetMean, TargetMedian
+from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample, CombinationEvaluator
 
 
 class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
     """Continuous combination evaluator class."""
 
     is_y_continuous = True
+    _target_rate_classes: list[type[ContinuousTargetRate]] = [TargetMean, TargetMedian]
 
     def _init_target_rate(self, target_rate: ContinuousTargetRate) -> None:
         """Initializes target rate."""

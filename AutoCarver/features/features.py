@@ -2,7 +2,7 @@
 
 from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import TypeVar
+from typing import TypeVar, overload
 
 import numpy as np
 import pandas as pd
@@ -209,7 +209,11 @@ class Features:
             return feature.version in self.versions
         return feature in self.versions
 
-    def __call__(self, feature_name: str) -> BaseFeature:
+    @overload
+    def __call__(self, feature_name: str) -> BaseFeature: ...
+    @overload
+    def __call__(self, feature_name: pd.DataFrame) -> list[str]: ...
+    def __call__(self, feature_name: str | pd.DataFrame) -> BaseFeature | list[str]:
         """Returns specified feature by name"""
 
         # case for dataframes

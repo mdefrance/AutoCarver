@@ -26,47 +26,42 @@ class BinaryCarver(BaseCarver):
     __name__ = "BinaryCarver"
     is_y_binary = True
 
-    @extend_docstring(BaseCarver.__init__, exclude=["ordinal_encoding"])
+    @extend_docstring(BaseCarver.__init__)
     def __init__(
         self,
         features: Features,
         min_freq: float,
+        max_n_mod: int,
         *,
-        dropna: bool = True,
-        ordinal_encoding: bool = True,
-        max_n_mod: int = 5,
-        combinations: CombinationEvaluator | None = None,
-        discretizer_min_freq: float | None = None,
+        combination_evaluator: CombinationEvaluator | None = None,
         config: DiscretizerConfig | None = None,
     ) -> None:
         """
         Keyword Arguments
         -----------------
 
-        combinations : BinaryCombinationEvaluator, optional
-            Metric to perform association measure between :class:`Features` and target.
+        combination_evaluator : CombinationEvaluator, optional
+            Pre-built evaluator instance measuring association between
+            :class:`Features` and a binary target. Defaults to
+            :class:`TschuprowtCombinations`.
 
             .. tip::
                 * Use :ref:`TschuprowtCombinations` for less, more robust, modalities
                 * Use :ref:`CramervCombinations` for more, less robust, modalities
         """
-
-        if combinations is None:
-            combinations = TschuprowtCombinations(max_n_mod=max_n_mod)
-
-        if not combinations.is_y_binary:
+        if combination_evaluator is None:
+            combination_evaluator = TschuprowtCombinations()
+        if not combination_evaluator.is_y_binary:
             raise ValueError(
-                f"[{self.__name__}] {combinations} is not suited for binary targets. "
+                f"[{self.__name__}] {type(combination_evaluator).__name__} is not suited for binary targets. "
                 f"Choose from: TschuprowtCombinations, CramervCombinations."
             )
 
         super().__init__(
             features=features,
             min_freq=min_freq,
-            combinations=combinations,
-            dropna=dropna,
-            ordinal_encoding=ordinal_encoding,
-            discretizer_min_freq=discretizer_min_freq,
+            max_n_mod=max_n_mod,
+            combination_evaluator=combination_evaluator,
             config=config,
         )
 

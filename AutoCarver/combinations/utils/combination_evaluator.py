@@ -18,7 +18,6 @@ from AutoCarver.combinations.utils.combinations import (
 from AutoCarver.combinations.utils.target_rate import TargetRate
 from AutoCarver.combinations.utils.testing import Keys, is_viable, test_viability
 from AutoCarver.features import BaseFeature, GroupedList
-from AutoCarver.utils import get_attribute, get_bool_attribute
 
 
 @dataclass
@@ -141,53 +140,27 @@ class CombinationEvaluator(ABC):
 
     def __init__(
         self,
-        max_n_mod: int = 5,
-        **kwargs,
+        *,
+        verbose: bool = False,
+        target_rate: TargetRate | None = None,
     ) -> None:
         """
         Parameters
         ----------
-        max_n_mod : int, optional
-            Maximum number of modalities per feature, by default ``5``
-
-            * The combination with the best association will be selected.
-            * All combinations of sizes from 1 to :attr:`max_n_mod` are tested out.
-
-            .. tip::
-                Set between ``3`` (faster, more robust) and ``7`` (slower, less robust)
-
-        Keyword Arguments
-        -----------------
-        min_freq : float, optional
-            Minimum frequency per modality per feature, by default ``None``
-
-            * Features need at least one modality more frequent than :attr:`min_freq`
-            * Defines number of quantiles of continuous features
-            * Minimum frequency of modality of quantitative features
-
-            .. tip::
-                Set between ``0.01`` (slower, less robust) and ``0.2`` (faster, more robust)
-
-        dropna : bool, optional
-            * ``True``, try to group ``nan`` with other modalities.
-            * ``False``, ``nan`` are ignored (not grouped), by default ``False``
-
         verbose : bool, optional
-            * ``True``, without ``IPython``: prints raw statitics
-            * ``True``, with ``IPython``: prints HTML statistics, by default ``False``
-        """
+            Whether to print progress / statistics, by default ``False``.
 
-        # setting attributes
-        self.verbose = get_bool_attribute(kwargs, "verbose", False)
-        self.dropna = get_bool_attribute(kwargs, "verbose", False)
-        self.max_n_mod = max_n_mod
-        self.min_freq = get_attribute(kwargs, "min_freq")
+        target_rate : TargetRate, optional
+            Target rate strategy. If ``None``, each evaluator subclass picks its own
+            default in :meth:`_init_target_rate`.
+        """
+        self.verbose: bool = verbose
 
         # attributes to be set by get_best_combination
         self._feature: BaseFeature | None = None
         self.samples: AggregatedSamples = AggregatedSamples()
         self._statistics_cache = None
-        self._init_target_rate(get_attribute(kwargs, "target_rate"))
+        self._init_target_rate(target_rate)
 
     @abstractmethod
     def _init_target_rate(self, target_rate: TargetRate) -> None:
@@ -206,7 +179,7 @@ class CombinationEvaluator(ABC):
         self._feature = value
 
     def __repr__(self) -> str:
-        return f"{self.__name__}(max_n_mod={self.max_n_mod})"
+        return f"{self.__name__}(target_rate={self.target_rate.__name__})"
 
     def _group_xagg_by_combinations(self, combinations: list[list]) -> list[dict]:
         """groups xagg by combinations of indices"""
@@ -340,12 +313,16 @@ class CombinationEvaluator(ABC):
         feature: BaseFeature,
         xagg: pd.Series | pd.DataFrame | None,
         xagg_dev: pd.Series | pd.DataFrame | None = None,
+        *,
+        max_n_mod: int,
+        min_freq: float,
+        dropna: bool,
     ) -> dict | None:
         """Computes best combination of modalities for the feature"""
 
-        # checking for min_freq
-        if self.min_freq is None:
-            raise ValueError("min_freq has to be set before calling get_best_combination")
+        self.max_n_mod = max_n_mod
+        self.min_freq = min_freq
+        self.dropna = dropna
 
         # setting dropna to user-requested value
         self.feature = feature
@@ -526,9 +503,7 @@ class CombinationEvaluator(ABC):
         """
         return {
             "sort_by": self.sort_by,
-            "max_n_mod": self.max_n_mod,
-            "dropna": self.dropna,
-            "min_freq": self.min_freq,
+            "target_rate": self.target_rate.__name__,
             "verbose": self.verbose,
         }
 
@@ -578,8 +553,16 @@ class CombinationEvaluator(ABC):
         elif combinations_json.get("sort_by") != cls.sort_by:
             raise ValueError(f"[{cls.__name__}] sort_by has to be {cls.sort_by}")
 
-        # initiating BaseDiscretizer
-        return cls(**combinations_json)
+        # resolve target_rate name → instance using the subclass registry
+        target_rate_name = combinations_json.pop("target_rate", None)
+        target_rate = None
+        registry = {tr().__name__: tr for tr in getattr(cls, "_target_rate_classes", [])}
+        if target_rate_name in registry:
+            target_rate = registry[target_rate_name]()
+
+        # strip non-constructor fields before passing remaining kwargs
+        combinations_json.pop("sort_by", None)
+        return cls(target_rate=target_rate, **combinations_json)
 
 
 def filter_nan(xagg: pd.Series | pd.DataFrame | None, str_nan: str) -> pd.Series | pd.DataFrame | None:

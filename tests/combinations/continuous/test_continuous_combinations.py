@@ -27,9 +27,7 @@ MIN_FREQ = 0.2
 
 @fixture(params=[KruskalCombinations])
 def evaluator(request: FixtureRequest) -> ContinuousCombinationEvaluator:
-    eval = request.param(max_n_mod=MAX_N_MOD)
-    eval.min_freq = MIN_FREQ
-    return eval
+    return request.param()
 
 
 def test_init(evaluator: ContinuousCombinationEvaluator):
@@ -42,9 +40,7 @@ def test_to_json(evaluator: ContinuousCombinationEvaluator):
     """Test the to_json method"""
     expected_json = {
         "sort_by": evaluator.sort_by,
-        "max_n_mod": MAX_N_MOD,
-        "dropna": evaluator.dropna,
-        "min_freq": MIN_FREQ,
+        "target_rate": evaluator.target_rate.__name__,
         "verbose": evaluator.verbose,
     }
     assert evaluator.to_json() == expected_json
@@ -60,9 +56,7 @@ def test_save(evaluator: ContinuousCombinationEvaluator, tmp_path):
 
     expected_json = {
         "sort_by": evaluator.sort_by,
-        "max_n_mod": MAX_N_MOD,
-        "dropna": evaluator.dropna,
-        "min_freq": MIN_FREQ,
+        "target_rate": evaluator.target_rate.__name__,
         "verbose": evaluator.verbose,
     }
     assert data == expected_json
@@ -79,9 +73,7 @@ def test_load(tmp_path):
     file_name = tmp_path / "test.json"
     data = {
         "sort_by": "kruskal",
-        "max_n_mod": MAX_N_MOD,
-        "dropna": True,
-        "min_freq": MIN_FREQ,
+        "target_rate": "target_median",
         "verbose": True,
     }
 
@@ -90,11 +82,9 @@ def test_load(tmp_path):
 
     loaded_evaluator = KruskalCombinations.load(str(file_name))
 
-    assert loaded_evaluator.max_n_mod == MAX_N_MOD
-    assert loaded_evaluator.dropna is True
-    assert loaded_evaluator.min_freq == MIN_FREQ
     assert loaded_evaluator.verbose is True
     assert loaded_evaluator.sort_by == "kruskal"
+    assert loaded_evaluator.target_rate.__name__ == "target_median"
     assert loaded_evaluator.is_y_binary is False
     assert loaded_evaluator.is_y_continuous is True
 
@@ -516,6 +506,7 @@ def test_viability_train(evaluator: ContinuousCombinationEvaluator):
     combinations = consecutive_combinations(feature.labels, 2)
 
     evaluator.samples.train = AggregatedSample(xagg)
+    evaluator.min_freq = MIN_FREQ
 
     grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
     associations = evaluator._compute_associations(grouped_xaggs)
@@ -554,6 +545,7 @@ def test_viability_dev(evaluator: ContinuousCombinationEvaluator):
     combinations = consecutive_combinations(feature.labels, 2)
 
     evaluator.samples.train = AggregatedSample(xagg)
+    evaluator.min_freq = MIN_FREQ
 
     grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
     associations = evaluator._compute_associations(grouped_xaggs)
@@ -636,6 +628,8 @@ def test_get_viable_combination_without_dev(evaluator: ContinuousCombinationEval
 
     combinations = consecutive_combinations(feature.labels, 2)
     evaluator.feature = feature
+    evaluator.min_freq = MIN_FREQ
+    evaluator.max_n_mod = MAX_N_MOD
 
     evaluator.samples.train = AggregatedSample(xagg)
 
@@ -684,6 +678,8 @@ def test_get_viable_combination_with_viable_train(evaluator: ContinuousCombinati
     xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0]})
     evaluator.samples.train = AggregatedSample(xagg)
     evaluator.feature = feature
+    evaluator.min_freq = MIN_FREQ
+    evaluator.max_n_mod = MAX_N_MOD
 
     combinations = consecutive_combinations(feature.labels, 2)
 
@@ -712,6 +708,7 @@ def test_get_viable_combination_with_not_viable_dev(evaluator: ContinuousCombina
     xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0]})
     evaluator.samples.train = AggregatedSample(xagg)
     evaluator.feature = feature
+    evaluator.min_freq = MIN_FREQ
 
     combinations = consecutive_combinations(feature.labels, 2)
 
@@ -730,6 +727,8 @@ def test_apply_best_combination_with_viable(evaluator: ContinuousCombinationEval
 
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     evaluator.feature = feature
+    evaluator.min_freq = MIN_FREQ
+    evaluator.max_n_mod = MAX_N_MOD
     xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0]})
     evaluator.samples.train = AggregatedSample(xagg)
 
@@ -782,6 +781,8 @@ def test_best_association_with_combinations_viable(evaluator: ContinuousCombinat
 
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     evaluator.feature = feature
+    evaluator.min_freq = MIN_FREQ
+    evaluator.max_n_mod = MAX_N_MOD
 
     xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0]})
     evaluator.samples.train = AggregatedSample(xagg)
@@ -814,6 +815,7 @@ def test_best_association_with_combinations_non_viable(evaluator: ContinuousComb
 
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     evaluator.feature = feature
+    evaluator.min_freq = MIN_FREQ
 
     xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0]})
     evaluator.samples.train = AggregatedSample(xagg)
@@ -841,6 +843,8 @@ def test_best_association_with_nan_combinations_viable(evaluator: ContinuousComb
     feature.has_nan = True
     feature.dropna = True
     evaluator.feature = feature
+    evaluator.min_freq = MIN_FREQ
+    evaluator.max_n_mod = MAX_N_MOD
 
     xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], feature.nan: [2, 0]})
     evaluator.samples.train = AggregatedSample(xagg)
@@ -880,6 +884,7 @@ def test_get_best_combination_non_nan_viable(evaluator: ContinuousCombinationEva
     evaluator.samples.train = AggregatedSample(xagg)
     evaluator.samples.dev = AggregatedSample(xagg)
 
+    evaluator.min_freq = MIN_FREQ
     evaluator.max_n_mod = 2
 
     result = evaluator._get_best_combination_non_nan()
@@ -929,6 +934,7 @@ def test_get_best_combination_non_nan_viable_with_nan(evaluator: ContinuousCombi
     xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0], feature.nan: [-1, 5]})
     evaluator.samples.train = AggregatedSample(xagg)
     evaluator.samples.dev = AggregatedSample(xagg)
+    evaluator.min_freq = MIN_FREQ
     evaluator.max_n_mod = 2
 
     result = evaluator._get_best_combination_non_nan()
@@ -961,6 +967,8 @@ def test_get_best_combination_with_nan_viable(evaluator: ContinuousCombinationEv
     xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0]})
     evaluator.samples.train = AggregatedSample(xagg)
     evaluator.samples.dev = AggregatedSample(xagg)
+    evaluator.min_freq = MIN_FREQ
+    evaluator.dropna = False
     evaluator.max_n_mod = 2
 
     best_combination = evaluator._get_best_combination_non_nan()
@@ -995,6 +1003,7 @@ def test_get_best_combination_with_nan_not_viable(evaluator: ContinuousCombinati
     xagg = pd.Series({"a": [0, 2, 0]})
     evaluator.samples.train = AggregatedSample(xagg)
     evaluator.samples.dev = AggregatedSample(xagg)
+    evaluator.dropna = False
     evaluator.max_n_mod = 2
 
     best_combination = evaluator._get_best_combination_non_nan()
@@ -1015,6 +1024,7 @@ def test_get_best_combination_with_nan_viable_with_nan_without_combi(
     xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0], feature.nan: [-1, 5]})
     evaluator.samples.train = AggregatedSample(xagg)
     evaluator.samples.dev = AggregatedSample(xagg)
+    evaluator.dropna = False
     evaluator.max_n_mod = 2
 
     # test without best_combination
@@ -1048,6 +1058,8 @@ def test_get_best_combination_with_nan_viable_with_nan_without_feature_nan(
     xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0], "d": [-1, 5]})
     evaluator.samples.train = AggregatedSample(xagg)
     evaluator.samples.dev = AggregatedSample(xagg)
+    evaluator.min_freq = MIN_FREQ
+    evaluator.dropna = False
     evaluator.max_n_mod = 2
 
     best_combination = evaluator._get_best_combination_non_nan()
@@ -1068,6 +1080,8 @@ def test_get_best_combination_with_nan_viable_with_nan_without_dropna(
     xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0], feature.nan: [-1, 5]})
     evaluator.samples.train = AggregatedSample(xagg)
     evaluator.samples.dev = AggregatedSample(xagg)
+    evaluator.min_freq = MIN_FREQ
+    evaluator.dropna = False
     evaluator.max_n_mod = 2
 
     with raises(ValueError):
@@ -1085,6 +1099,7 @@ def test_get_best_combination_with_nan_viable_with_nan(evaluator: ContinuousComb
     xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0], feature.nan: [-1, 5]})
     evaluator.samples.train = AggregatedSample(xagg)
     evaluator.samples.dev = AggregatedSample(xagg)
+    evaluator.min_freq = MIN_FREQ
     evaluator.max_n_mod = 2
 
     best_combination = evaluator._get_best_combination_non_nan()
@@ -1116,9 +1131,8 @@ def test_get_best_combination_viable(evaluator: ContinuousCombinationEvaluator):
     feature = OrdinalFeature("feature", ["a", "b", "c"])
 
     xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0]})
-    evaluator.max_n_mod = 2
 
-    result = evaluator.get_best_combination(feature, xagg, xagg)
+    result = evaluator.get_best_combination(feature, xagg, xagg, max_n_mod=2, min_freq=MIN_FREQ, dropna=False)
     print(result)
     assert evaluator.feature == feature
     assert feature.dropna is evaluator.dropna
@@ -1147,9 +1161,8 @@ def test_get_best_combination_viable_without_dev(evaluator: ContinuousCombinatio
     feature = OrdinalFeature("feature", ["a", "b", "c"])
 
     xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0]})
-    evaluator.max_n_mod = 2
 
-    result = evaluator.get_best_combination(feature, xagg)
+    result = evaluator.get_best_combination(feature, xagg, max_n_mod=2, min_freq=MIN_FREQ, dropna=False)
     print(result)
     assert evaluator.feature == feature
     assert feature.dropna is evaluator.dropna
@@ -1178,8 +1191,7 @@ def test_get_best_combination_not_viable(evaluator: ContinuousCombinationEvaluat
     feature = OrdinalFeature("feature", ["a", "b", "c"])
 
     xagg = pd.Series({"a": [0, 2, 0]})
-    evaluator.max_n_mod = 2
-    result = evaluator.get_best_combination(feature, xagg, xagg)
+    result = evaluator.get_best_combination(feature, xagg, xagg, max_n_mod=2, min_freq=MIN_FREQ, dropna=False)
     assert result is None
 
 
@@ -1192,9 +1204,8 @@ def test_get_best_combination_viable_with_nan_without_feature_nan(
     feature.has_nan = False
 
     xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0], "d": [-1, 5]})
-    evaluator.max_n_mod = 2
 
-    result = evaluator.get_best_combination(feature, xagg)
+    result = evaluator.get_best_combination(feature, xagg, max_n_mod=2, min_freq=MIN_FREQ, dropna=False)
     print(result)
     assert evaluator.feature == feature
     assert feature.dropna is evaluator.dropna
@@ -1217,10 +1228,8 @@ def test_get_best_combination_viable_with_nan_without_dropna(
     feature.has_nan = True
 
     xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0], feature.nan: [-1, 5]})
-    evaluator.max_n_mod = 2
-    evaluator.dropna = False
 
-    result = evaluator.get_best_combination(feature, xagg, xagg)
+    result = evaluator.get_best_combination(feature, xagg, xagg, max_n_mod=2, min_freq=MIN_FREQ, dropna=False)
     print(result)
     assert evaluator.feature == feature
     assert feature.dropna is evaluator.dropna
@@ -1250,10 +1259,8 @@ def test_get_best_combination_viable_with_nan(evaluator: ContinuousCombinationEv
     assert feature.dropna is False
 
     xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0], feature.nan: [-1, 5]})
-    evaluator.max_n_mod = 2
-    evaluator.dropna = True
 
-    result = evaluator.get_best_combination(feature, xagg, xagg)
+    result = evaluator.get_best_combination(feature, xagg, xagg, max_n_mod=2, min_freq=MIN_FREQ, dropna=True)
     print(result)
     assert evaluator.feature == feature
     assert feature.dropna is True

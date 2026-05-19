@@ -6,12 +6,6 @@ import numpy as np
 import pandas as pd
 from pytest import FixtureRequest, fixture, raises
 
-from AutoCarver.combinations import (
-    CombinationEvaluator,
-    CramervCombinations,
-    KruskalCombinations,
-    TschuprowtCombinations,
-)
 from AutoCarver.discretizers.utils.base_discretizer import (
     BaseDiscretizer,
     DiscretizerConfig,
@@ -146,7 +140,6 @@ def test_init(features: Features, true_false: bool) -> None:
     assert not disc.config.ordinal_encoding
     assert disc.config.n_jobs == 1
     assert disc.min_freq is None
-    assert disc.combinations is None
 
     # test setting copy
     disc = BaseDiscretizer(features, config=DiscretizerConfig(copy=true_false))
@@ -176,11 +169,6 @@ def test_init(features: Features, true_false: bool) -> None:
     # test setting min_freq
     disc = BaseDiscretizer(features, min_freq=0.2)
     assert disc.min_freq == 0.2
-
-    # test setting combinations (post-construction; carvers attach their own)
-    disc = BaseDiscretizer(features)
-    disc.combinations = "test"
-    assert disc.combinations == "test"
 
 
 def test_cast_features(features: Features) -> None:
@@ -608,15 +596,7 @@ def test_transform(true_false: bool) -> None:
         assert ((result[feature] == expected[feature]) | (result[feature].isna() & expected[feature].isna())).all()
 
 
-@fixture(params=[KruskalCombinations, CramervCombinations, TschuprowtCombinations, None])
-def combinations(request: FixtureRequest):
-    """sort_by parameter"""
-    if request.param is None:
-        return None
-    return request.param()
-
-
-def _make_discretizer(features, *, min_freq, combinations, true_false, n_jobs):
+def _make_discretizer(features, *, min_freq, true_false, n_jobs):
     """Helper: build a BaseDiscretizer with the new config-based API."""
     config = DiscretizerConfig(
         dropna=true_false,
@@ -625,58 +605,35 @@ def _make_discretizer(features, *, min_freq, combinations, true_false, n_jobs):
         n_jobs=n_jobs,
     )
     discretizer = BaseDiscretizer(features, min_freq=min_freq, config=config)
-    discretizer.combinations = combinations
     discretizer.is_fitted = true_false
     return discretizer
 
 
-def test_to_json(features: Features, true_false: bool, combinations: CombinationEvaluator) -> None:
+def test_to_json(features: Features, true_false: bool) -> None:
     """tests base discretizer to_json method"""
 
     min_freq = 0.1
-    if combinations is not None:
-        combinations.min_freq = min_freq
-        combinations.dropna = true_false
-        combinations.verbose = true_false
     n_jobs = 2
-    discretizer = _make_discretizer(
-        features, min_freq=min_freq, combinations=combinations, true_false=true_false, n_jobs=n_jobs
-    )
+    discretizer = _make_discretizer(features, min_freq=min_freq, true_false=true_false, n_jobs=n_jobs)
 
     result = discretizer.to_json(light_mode=True)
     assert isinstance(result, dict)
     assert "features" in result
+    assert "combination_evaluator" not in result
     assert result["config"]["dropna"] == true_false
     assert result["min_freq"] == min_freq
-
-    if combinations is None:
-        assert result["combinations"] is None
-    else:
-        assert result["combinations"] == {
-            "sort_by": combinations.sort_by,
-            "max_n_mod": 5,
-            "dropna": true_false,
-            "min_freq": min_freq,
-            "verbose": true_false,
-        }
     assert result["is_fitted"] == true_false
     assert result["config"]["n_jobs"] == n_jobs
     assert result["config"]["verbose"] == true_false
     assert result["config"]["ordinal_encoding"] == true_false
 
 
-def test_save(tmp_path, features: Features, true_false: bool, combinations: CombinationEvaluator) -> None:
+def test_save(tmp_path, features: Features, true_false: bool) -> None:
     """tests base discretizer save method"""
 
     min_freq = 0.1
-    if combinations is not None:
-        combinations.min_freq = min_freq
-        combinations.dropna = true_false
-        combinations.verbose = true_false
     n_jobs = 2
-    discretizer = _make_discretizer(
-        features, min_freq=min_freq, combinations=combinations, true_false=true_false, n_jobs=n_jobs
-    )
+    discretizer = _make_discretizer(features, min_freq=min_freq, true_false=true_false, n_jobs=n_jobs)
 
     file_path = tmp_path / "test_discretizer.json"
     discretizer.save(str(file_path), light_mode=true_false)
@@ -691,18 +648,12 @@ def test_save(tmp_path, features: Features, true_false: bool, combinations: Comb
         discretizer.save("wrong_path", light_mode=true_false)
 
 
-def test_load_discretizer(tmp_path, features: Features, true_false: bool, combinations: CombinationEvaluator) -> None:
+def test_load_discretizer(tmp_path, features: Features, true_false: bool) -> None:
     """tests base discretizer load_discretizer method"""
 
     min_freq = 0.1
     n_jobs = 2
-    if combinations is not None:
-        combinations.min_freq = min_freq
-        combinations.dropna = true_false
-        combinations.verbose = true_false
-    discretizer = _make_discretizer(
-        features, min_freq=min_freq, combinations=combinations, true_false=true_false, n_jobs=n_jobs
-    )
+    discretizer = _make_discretizer(features, min_freq=min_freq, true_false=true_false, n_jobs=n_jobs)
 
     file_path = tmp_path / "test_discretizer.json"
     discretizer.save(str(file_path), light_mode=true_false)
@@ -713,17 +664,6 @@ def test_load_discretizer(tmp_path, features: Features, true_false: bool, combin
         assert feature.name in discretizer.features
     assert loaded.config.dropna == discretizer.config.dropna
     assert loaded.min_freq == discretizer.min_freq
-    if combinations is None:
-        assert loaded.combinations is None
-    else:
-        assert loaded.combinations == {
-            "sort_by": combinations.sort_by,
-            "max_n_mod": 5,
-            "dropna": true_false,
-            "min_freq": min_freq,
-            "verbose": true_false,
-        }
-
     assert loaded.is_fitted == discretizer.is_fitted
     assert loaded.config.n_jobs == discretizer.config.n_jobs
     assert loaded.config.verbose == discretizer.config.verbose

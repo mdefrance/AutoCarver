@@ -66,7 +66,7 @@ def test_get_target_values_by_modality_extra_labels():
 
 @fixture(params=[KruskalCombinations])
 def evaluator(request: FixtureRequest) -> CombinationEvaluator:
-    """CombinationEvaluator fixture."""
+    """Evaluator instance fixture, passed as combination_evaluator to the carver."""
     return request.param()
 
 
@@ -78,27 +78,47 @@ def test_continuous_carver_initialization():
         quantitatives=["feature3"],
     )
     min_freq = 0.1
-    carver = ContinuousCarver(min_freq=min_freq, features=features, dropna=True)
+    carver = ContinuousCarver(min_freq=min_freq, max_n_mod=5, features=features)
     assert carver.min_freq == min_freq
     assert carver.features == features
     assert carver.config.dropna is True
-    assert isinstance(carver.combinations, KruskalCombinations)
-    assert carver.combinations.max_n_mod == 5
+    assert isinstance(carver.combination_evaluator, KruskalCombinations)
+    assert carver.max_n_mod == 5
 
     max_n_mod = 8
-    carver = ContinuousCarver(min_freq=0.1, features=features, dropna=True, combinations=KruskalCombinations(max_n_mod))
-    assert isinstance(carver.combinations, KruskalCombinations)
-    assert carver.combinations.max_n_mod == max_n_mod
+    carver = ContinuousCarver(
+        min_freq=0.1,
+        features=features,
+        max_n_mod=max_n_mod,
+        combination_evaluator=KruskalCombinations(),
+    )
+    assert isinstance(carver.combination_evaluator, KruskalCombinations)
+    assert carver.max_n_mod == max_n_mod
 
-    carver = ContinuousCarver(min_freq=0.1, features=features, combinations=KruskalCombinations(max_n_mod))
-    assert isinstance(carver.combinations, KruskalCombinations)
-    assert carver.combinations.max_n_mod == max_n_mod
+    carver = ContinuousCarver(
+        min_freq=0.1,
+        features=features,
+        max_n_mod=max_n_mod,
+        combination_evaluator=KruskalCombinations(),
+    )
+    assert isinstance(carver.combination_evaluator, KruskalCombinations)
+    assert carver.max_n_mod == max_n_mod
 
     with raises(ValueError):
-        ContinuousCarver(min_freq=0.1, features=features, combinations=CramervCombinations(max_n_mod))
+        ContinuousCarver(
+            min_freq=0.1,
+            features=features,
+            max_n_mod=max_n_mod,
+            combination_evaluator=CramervCombinations(),
+        )
 
     with raises(ValueError):
-        ContinuousCarver(min_freq=0.1, features=features, combinations=TschuprowtCombinations(max_n_mod))
+        ContinuousCarver(
+            min_freq=0.1,
+            features=features,
+            max_n_mod=max_n_mod,
+            combination_evaluator=TschuprowtCombinations(),
+        )
 
 
 def test_continuous_carver_prepare_data(evaluator: CombinationEvaluator):
@@ -108,7 +128,7 @@ def test_continuous_carver_prepare_data(evaluator: CombinationEvaluator):
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
-    carver = ContinuousCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator)
+    carver = ContinuousCarver(min_freq=0.1, max_n_mod=5, features=features, combination_evaluator=evaluator)
     X = pd.DataFrame({"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]})
 
     # with wrong target
@@ -140,7 +160,7 @@ def test_continuous_carver_aggregator(evaluator: CombinationEvaluator):
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
-    carver = ContinuousCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator)
+    carver = ContinuousCarver(min_freq=0.1, max_n_mod=5, features=features, combination_evaluator=evaluator)
     X = pd.DataFrame({"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]})
     y = pd.Series([0.1, 1.2, 0.5])
     xtabs = carver._aggregator(X, y)
@@ -182,9 +202,9 @@ def test_carve_feature_with_best_combination(evaluator):
     carver = ContinuousCarver(
         features=features,
         min_freq=0.1,
-        combinations=evaluator,
-        dropna=True,
-        config=DiscretizerConfig(verbose=False),
+        max_n_mod=5,
+        combination_evaluator=evaluator,
+        config=DiscretizerConfig(dropna=True, verbose=False),
     )
     carver._prepare_data(samples)
 
@@ -241,9 +261,9 @@ def test_carve_feature_without_best_combination(evaluator: CombinationEvaluator)
     carver = ContinuousCarver(
         features=features,
         min_freq=0.9,
-        combinations=evaluator,
-        dropna=True,
-        config=DiscretizerConfig(verbose=False),
+        max_n_mod=5,
+        combination_evaluator=evaluator,
+        config=DiscretizerConfig(dropna=True, verbose=False),
     )
     carver._prepare_data(samples)
 
@@ -280,9 +300,9 @@ def test_fit_with_best_combination(evaluator):
     carver = ContinuousCarver(
         features=features,
         min_freq=0.1,
-        combinations=evaluator,
-        dropna=True,
-        config=DiscretizerConfig(verbose=False),
+        max_n_mod=5,
+        combination_evaluator=evaluator,
+        config=DiscretizerConfig(dropna=True, verbose=False),
     )
 
     # fitting carver
@@ -332,9 +352,9 @@ def test_fit_without_best_combination(evaluator: CombinationEvaluator):
     carver = ContinuousCarver(
         features=features,
         min_freq=0.9,
-        combinations=evaluator,
-        dropna=True,
-        config=DiscretizerConfig(verbose=False),
+        max_n_mod=5,
+        combination_evaluator=evaluator,
+        config=DiscretizerConfig(dropna=True, verbose=False),
     )
 
     # fitting carver
@@ -355,11 +375,10 @@ def test_continuous_carver_fit_transform_with_small_data_not_ordinal(
     )
     carver = ContinuousCarver(
         min_freq=0.1,
+        max_n_mod=5,
         features=features,
-        dropna=True,
-        combinations=evaluator,
-        ordinal_encoding=False,
-        config=DiscretizerConfig(copy=False),
+        combination_evaluator=evaluator,
+        config=DiscretizerConfig(dropna=True, ordinal_encoding=False, copy=False),
     )
     idx = ["a", "b", "c", "d"]
     X = pd.DataFrame(
@@ -410,7 +429,11 @@ def test_continuous_carver_fit_transform_with_small_data_ordinal(evaluator: Comb
         quantitatives=["feature3"],
     )
     carver = ContinuousCarver(
-        min_freq=0.1, features=features, dropna=True, combinations=evaluator, config=DiscretizerConfig(copy=False)
+        min_freq=0.1,
+        max_n_mod=5,
+        features=features,
+        combination_evaluator=evaluator,
+        config=DiscretizerConfig(dropna=True, ordinal_encoding=True, copy=False),
     )
     idx = ["a", "b", "c", "d"]
     X = pd.DataFrame(
@@ -462,11 +485,10 @@ def test_continuous_carver_fit_transform_with_large_data(evaluator: CombinationE
     )
     carver = ContinuousCarver(
         min_freq=0.1,
+        max_n_mod=5,
         features=features,
-        dropna=True,
-        combinations=evaluator,
-        ordinal_encoding=False,
-        config=DiscretizerConfig(copy=False),
+        combination_evaluator=evaluator,
+        config=DiscretizerConfig(dropna=True, ordinal_encoding=False, copy=False),
     )
     idx = [
         "a",
@@ -626,7 +648,11 @@ def test_continuous_carver_fit_transform_with_wrong_dev(evaluator: CombinationEv
         quantitatives=["feature3"],
     )
     carver = ContinuousCarver(
-        min_freq=0.1, features=features, dropna=True, combinations=evaluator, config=DiscretizerConfig(copy=False)
+        min_freq=0.1,
+        max_n_mod=5,
+        features=features,
+        combination_evaluator=evaluator,
+        config=DiscretizerConfig(dropna=True, ordinal_encoding=True, copy=False),
     )
     idx = ["a", "b", "c", "d"]
     X = pd.DataFrame(
@@ -672,7 +698,7 @@ def test_continuous_carver_save_load(tmp_path, evaluator: CombinationEvaluator):
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
-    carver = ContinuousCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator)
+    carver = ContinuousCarver(min_freq=0.1, max_n_mod=5, features=features, combination_evaluator=evaluator)
     carver_file = tmp_path / "binary_carver.json"
     carver.save(str(carver_file))
     loaded_carver = ContinuousCarver.load(str(carver_file))
@@ -683,11 +709,10 @@ def test_continuous_carver_save_load(tmp_path, evaluator: CombinationEvaluator):
     assert carver.config.dropna == loaded_carver.config.dropna
     assert carver.config.verbose == loaded_carver.config.verbose
     assert carver.config.copy == loaded_carver.config.copy
-    assert carver.combinations.__class__ == loaded_carver.combinations.__class__
-    assert carver.combinations.max_n_mod == loaded_carver.combinations.max_n_mod
-    assert carver.combinations.sort_by == loaded_carver.combinations.sort_by
-    assert carver.combinations.dropna == loaded_carver.combinations.dropna
-    assert carver.combinations.verbose == loaded_carver.combinations.verbose
+    assert carver.combination_evaluator.__class__ == loaded_carver.combination_evaluator.__class__
+    assert carver.max_n_mod == loaded_carver.max_n_mod
+    assert carver.combination_evaluator.sort_by == loaded_carver.combination_evaluator.sort_by
+    assert carver.combination_evaluator.verbose == loaded_carver.combination_evaluator.verbose
 
 
 def _fit_continuous_carver(
@@ -701,7 +726,6 @@ def _fit_continuous_carver(
     level1_to_level2: dict[str, list[str]],
     evaluator: CombinationEvaluator,
     *,
-    discretizer_min_freq: float | None = None,
     ordinal_encoding: bool = False,
     dropna: bool = True,
     copy: bool = True,
@@ -728,15 +752,12 @@ def _fit_continuous_carver(
     )
     chained_discretizer.fit(x_train)
 
-    evaluator.max_n_mod = 4
     auto_carver = ContinuousCarver(
         min_freq=0.1,
+        max_n_mod=4,
         features=features,
-        combinations=evaluator,
-        discretizer_min_freq=discretizer_min_freq,
-        dropna=dropna,
-        ordinal_encoding=ordinal_encoding,
-        config=DiscretizerConfig(copy=copy, verbose=False),
+        combination_evaluator=evaluator,
+        config=DiscretizerConfig(dropna=dropna, ordinal_encoding=ordinal_encoding, copy=copy, verbose=False),
     )
     x_discretized = auto_carver.fit_transform(
         x_train,
@@ -777,10 +798,10 @@ def test_continuous_carver_end_to_end_invariants(
     feature_names = features.names
 
     # max_n_mod respected on train + dev
-    assert all(x_discretized[feature_names].nunique() <= auto_carver.combinations.max_n_mod), (
+    assert all(x_discretized[feature_names].nunique() <= auto_carver.max_n_mod), (
         "Too many buckets after carving of train sample"
     )
-    assert all(x_dev_discretized[feature_names].nunique() <= auto_carver.combinations.max_n_mod), (
+    assert all(x_dev_discretized[feature_names].nunique() <= auto_carver.max_n_mod), (
         "Too many buckets after carving of test sample"
     )
 
@@ -923,41 +944,6 @@ def test_continuous_carver_wrong_dev_transform(
         auto_carver.transform(x_dev_wrong_3)
 
 
-def test_continuous_carver_discretizer_min_freq_respected(
-    x_train: pd.DataFrame,
-    x_dev_1: pd.DataFrame,
-    quantitative_features: list[str],
-    qualitative_features: list[str],
-    values_orders: dict[str, list[str]],
-    chained_features: list[str],
-    level0_to_level1: dict[str, list[str]],
-    level1_to_level2: dict[str, list[str]],
-    discretizer_min_freq: float,
-) -> None:
-    """Final modality frequencies are >= auto_carver.discretizer_min_freq in train and dev."""
-    auto_carver, x_discretized, x_dev_discretized, features = _fit_continuous_carver(
-        x_train,
-        x_dev_1,
-        qualitative_features,
-        quantitative_features,
-        values_orders,
-        chained_features,
-        level0_to_level1,
-        level1_to_level2,
-        KruskalCombinations(),
-        discretizer_min_freq=discretizer_min_freq,
-    )
-    for feature in features.names:
-        train_frequency = x_discretized[feature].value_counts(normalize=True, dropna=True)
-        assert not any(train_frequency.values < auto_carver.discretizer_min_freq), (
-            f"Some modalities of {feature} are less frequent than discretizer_min_freq in train"
-        )
-        dev_frequency = x_dev_discretized[feature].value_counts(normalize=True, dropna=True)
-        assert not any(dev_frequency.values < auto_carver.discretizer_min_freq), (
-            f"Some modalities {feature} are less frequent than discretizer_min_freq in dev"
-        )
-
-
 def test_continuous_carver_unknown_ordinal_values_raises(
     x_train_wrong_2: pd.DataFrame,
     values_orders: dict[str, list[str]],
@@ -995,8 +981,9 @@ def test_continuous_carver_unknown_ordinal_values_raises(
 
     auto_carver = ContinuousCarver(
         min_freq=0.15,
+        max_n_mod=5,
         features=features,
-        combinations=KruskalCombinations(),
+        combination_evaluator=KruskalCombinations(),
         config=DiscretizerConfig(verbose=False),
     )
     with raises(ValueError):

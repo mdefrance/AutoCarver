@@ -32,38 +32,34 @@ class ContinuousCarver(BaseCarver):
         self,
         features: Features,
         min_freq: float,
+        max_n_mod: int,
         *,
-        dropna: bool = True,
-        ordinal_encoding: bool = True,
-        max_n_mod: int = 5,
-        combinations: CombinationEvaluator | None = None,
-        discretizer_min_freq: float | None = None,
+        combination_evaluator: CombinationEvaluator | None = None,
         config: DiscretizerConfig | None = None,
     ) -> None:
         """
         Keyword Arguments
         -----------------
-        combinations : ContinuousCombinationEvaluator, optional
-            Metric to perform association measure between :class:`Features` and target.
+        combination_evaluator : CombinationEvaluator, optional
+            Pre-built evaluator instance measuring association between
+            :class:`Features` and a continuous target. Defaults to
+            :class:`KruskalCombinations`.
 
             Currently, only :ref:`KruskalCombinations` are implemented.
         """
-        if combinations is None:
-            combinations = KruskalCombinations(max_n_mod=max_n_mod)
-
-        if not combinations.is_y_continuous:
+        if combination_evaluator is None:
+            combination_evaluator = KruskalCombinations()
+        if not combination_evaluator.is_y_continuous:
             raise ValueError(
-                f"[{self.__name__}] {combinations} is not suited for continuous targets. "
+                f"[{self.__name__}] {type(combination_evaluator).__name__} is not suited for continuous targets. "
                 f"Choose from: KruskalCombinations."
             )
 
         super().__init__(
             features=features,
             min_freq=min_freq,
-            combinations=combinations,
-            dropna=dropna,
-            ordinal_encoding=ordinal_encoding,
-            discretizer_min_freq=discretizer_min_freq,
+            max_n_mod=max_n_mod,
+            combination_evaluator=combination_evaluator,
             config=config,
         )
 

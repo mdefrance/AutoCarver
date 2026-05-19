@@ -35,23 +35,17 @@ class MulticlassCarver(BinaryCarver):
         self,
         features: Features,
         min_freq: float,
+        max_n_mod: int,
         *,
-        dropna: bool = True,
-        ordinal_encoding: bool = True,
-        max_n_mod: int = 5,
-        combinations: CombinationEvaluator | None = None,
-        discretizer_min_freq: float | None = None,
+        combination_evaluator: CombinationEvaluator | None = None,
         config: DiscretizerConfig | None = None,
     ) -> None:
         """ """
         super().__init__(
             features=features,
             min_freq=min_freq,
-            dropna=dropna,
-            ordinal_encoding=ordinal_encoding,
             max_n_mod=max_n_mod,
-            combinations=combinations,
-            discretizer_min_freq=discretizer_min_freq,
+            combination_evaluator=combination_evaluator,
             config=config,
         )
 
@@ -118,15 +112,16 @@ class MulticlassCarver(BinaryCarver):
 
             class_features = Features.from_list(self.features.get_version_group(y_class))
 
-            # spawn a BinaryCarver per class; copy X so each carver sees clean raw columns
+            # spawn a BinaryCarver per class; copy X so each carver sees clean raw columns.
+            # Each child rebuilds its own evaluator from the same class + max_n_mod, so
+            # runtime state stays isolated per class fit.
+            # fresh evaluator instance per class fit so runtime state (samples,
+            # _feature) doesn't leak across iterations.
             binary_carver = BinaryCarver(
                 features=class_features,
                 min_freq=self.min_freq,
-                dropna=self.config.dropna,
-                ordinal_encoding=self.config.ordinal_encoding,
                 max_n_mod=self.max_n_mod,
-                combinations=self.combinations,
-                discretizer_min_freq=self.discretizer_min_freq,
+                combination_evaluator=type(self.combination_evaluator)(),
                 config=replace(self.config, copy=True),
             )
 
@@ -141,10 +136,12 @@ class MulticlassCarver(BinaryCarver):
                 print("---------\n")
 
         # re-init BaseDiscretizer state to reflect the final multiclass features,
-        # then mark fitted. Preserve combinations (BaseDiscretizer.__init__ resets it to None).
-        combinations = self.combinations
+        # then mark fitted. Preserve combination_evaluator (BaseDiscretizer.__init__
+        # resets self.combinations to None).
+        combination_evaluator = self.combination_evaluator
         BaseDiscretizer.__init__(self, features=self.features, min_freq=self.min_freq, config=self.config)
-        self.combinations = combinations
+        self.combination_evaluator = combination_evaluator
+        self.combinations = combination_evaluator
 
         BaseDiscretizer.fit(self, samples.train.X, samples.train.y)
 
