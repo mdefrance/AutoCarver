@@ -7,7 +7,7 @@ from typing import Self
 import numpy as np
 import pandas as pd
 
-from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
+from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, DiscretizerConfig, Sample
 from AutoCarver.features import GroupedList, OrdinalFeature
 from AutoCarver.utils import extend_docstring
 
@@ -30,16 +30,16 @@ class OrdinalDiscretizer(BaseDiscretizer):
         self,
         ordinals: list[OrdinalFeature],
         min_freq: float,
-        **kwargs,
-    ):
+        *,
+        config: DiscretizerConfig | None = None,
+    ) -> None:
         """
         Parameters
         ----------
         ordinals : list[OrdinalFeature]
             Ordinal features to process
         """
-        # Initiating BaseDiscretizer
-        super().__init__(ordinals, **dict(kwargs, min_freq=min_freq))
+        super().__init__(ordinals, min_freq=min_freq, config=config)
 
     def _prepare_data(self, sample: Sample) -> Sample:  # pylint: disable=W0222
         """Validates format and content of X and y.

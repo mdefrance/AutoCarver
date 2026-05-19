@@ -6,7 +6,8 @@ import numpy as np
 import pandas as pd
 
 from AutoCarver.carvers.utils.base_carver import BaseCarver, Samples
-from AutoCarver.combinations import TschuprowtCombinations
+from AutoCarver.combinations import CombinationEvaluator, TschuprowtCombinations
+from AutoCarver.discretizers.utils.base_discretizer import DiscretizerConfig
 from AutoCarver.features import BaseFeature, Features
 from AutoCarver.utils import extend_docstring
 
@@ -30,16 +31,17 @@ class BinaryCarver(BaseCarver):
         self,
         features: Features,
         min_freq: float,
+        *,
         dropna: bool = True,
+        ordinal_encoding: bool = True,
         max_n_mod: int = 5,
-        **kwargs,
+        combinations: CombinationEvaluator | None = None,
+        discretizer_min_freq: float | None = None,
+        config: DiscretizerConfig | None = None,
     ) -> None:
         """
         Keyword Arguments
         -----------------
-
-        ordinal_encoding : bool, optional
-            Whether or not to ordinal encode :class:`Features`, by default ``True``
 
         combinations : BinaryCombinationEvaluator, optional
             Metric to perform association measure between :class:`Features` and target.
@@ -49,78 +51,38 @@ class BinaryCarver(BaseCarver):
                 * Use :ref:`CramervCombinations` for more, less robust, modalities
         """
 
-        # default binary combinations
-        combinations = kwargs.pop("combinations", None)
         if combinations is None:
             combinations = TschuprowtCombinations(max_n_mod=max_n_mod)
 
-        # association measure used to find the best groups for binary targets
         if not combinations.is_y_binary:
             raise ValueError(
                 f"[{self.__name__}] {combinations} is not suited for binary targets. "
                 f"Choose from: TschuprowtCombinations, CramervCombinations."
             )
 
-        # Initiating BaseCarver
         super().__init__(
             features=features,
             min_freq=min_freq,
             combinations=combinations,
             dropna=dropna,
-            **kwargs,
+            ordinal_encoding=ordinal_encoding,
+            discretizer_min_freq=discretizer_min_freq,
+            config=config,
         )
 
     def _prepare_data(self, samples: Samples) -> Samples:
-        """Validates format and content of X and y.
-
-        Parameters
-        ----------
-        X : pd.DataFrame
-            Dataset used to discretize. Needs to have columns has specified in
-            ``AutoCarver.features``.
-
-        y : pd.Series
-            Binary target feature with wich the association is maximized.
-
-        X_dev : pd.DataFrame, optional
-            Dataset to evalute the robustness of discretization, by default ``None``
-            It should have the same distribution as X.
-
-        y_dev : pd.Series, optional
-            Binary target feature with wich the robustness of discretization is evaluated,
-            by default ``None``
-
-        Returns
-        -------
-        tuple[DataFrame, pd.DataFrame, dict[str, Callable]]
-            Copies of (X, X_dev) and helpers to be used according to target type
-        """
-        # binary target, checking values (y is required by Carver.fit)
+        """Validates format and content of X and y."""
         if samples.train.y is None:
             raise ValueError(f"[{self.__name__}] y must be provided")
         y_values = np.unique(samples.train.y)
         if not ((0 in y_values) and (1 in y_values)) or len(y_values) != 2:
             raise ValueError(f"[{self.__name__}] y must be a binary Series of 0 and 1 (int or float, not object)")
 
-        # Checking for binary target and discretizing X
         return super()._prepare_data(samples)
 
     def _aggregator(self, X: pd.DataFrame, y: pd.Series) -> dict[str, pd.DataFrame | None]:
         """Computes crosstabs for specified features and ensures that the crosstab is ordered
-        according to the known labels
-
-        Parameters
-        ----------
-        X : pd.DataFrame
-            _description_
-        y : pd.Series
-            _description_
-
-        Returns
-        -------
-        dict[str, pd.DataFrame]
-            dict of crosstab(X, y) by feature name
-        """
+        according to the known labels"""
         # checking for empty datasets (dev)
         xtabs = {feature.version: None for feature in self.features}
         if X is not None:

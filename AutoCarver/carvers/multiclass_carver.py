@@ -2,13 +2,15 @@
 for multiclass classification tasks.
 """
 
+from dataclasses import replace
 from typing import Any, Self
 
 import pandas as pd
 
 from AutoCarver.carvers.binary_carver import BinaryCarver
 from AutoCarver.carvers.utils.base_carver import Samples
-from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
+from AutoCarver.combinations import CombinationEvaluator
+from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, DiscretizerConfig, Sample
 from AutoCarver.features import Features
 from AutoCarver.utils import extend_docstring
 
@@ -33,43 +35,32 @@ class MulticlassCarver(BinaryCarver):
         self,
         features: Features,
         min_freq: float,
+        *,
         dropna: bool = True,
+        ordinal_encoding: bool = True,
         max_n_mod: int = 5,
-        **kwargs,
+        combinations: CombinationEvaluator | None = None,
+        discretizer_min_freq: float | None = None,
+        config: DiscretizerConfig | None = None,
     ) -> None:
         """ """
-        # Initiating BinaryCarver
-        super().__init__(features=features, min_freq=min_freq, dropna=dropna, max_n_mod=max_n_mod, **kwargs)
+        super().__init__(
+            features=features,
+            min_freq=min_freq,
+            dropna=dropna,
+            ordinal_encoding=ordinal_encoding,
+            max_n_mod=max_n_mod,
+            combinations=combinations,
+            discretizer_min_freq=discretizer_min_freq,
+            config=config,
+        )
 
-        # warning user for
-        if "copy" in kwargs and kwargs["copy"] is True:
+        # multiclass cannot copy inplace
+        if self.config.copy:
             print("WARNING: can't set copy=True for MulticlassCarver (no inplace DataFrame.assign).")
 
     def _prepare_data(self, samples: Samples) -> Samples:
-        """Validates format and content of X and y.
-
-        Parameters
-        ----------
-        X : pd.DataFrame
-            Dataset used to discretize. Needs to have columns has specified in
-            ``AutoCarver.features``.
-
-        y : pd.Series
-            Binary target feature with wich the association is maximized.
-
-        X_dev : pd.DataFrame, optional
-            Dataset to evalute the robustness of discretization, by default ``None``
-            It should have the same distribution as X.
-
-        y_dev : pd.Series, optional
-            Binary target feature with wich the robustness of discretization is evaluated,
-            by default ``None``
-
-        Returns
-        -------
-        tuple[DataFrame, pd.DataFrame, dict[str, Callable]]
-            Copies of (X, X_dev) and helpers to be used according to target type
-        """
+        """Validates format and content of X and y."""
         # converting target to str (y is required by Carver.fit)
         if samples.train.y is None:
             raise ValueError(f"[{self.__name__}] y must be provided")
@@ -81,10 +72,8 @@ class MulticlassCarver(BinaryCarver):
 
         # checking for dev target's values
         if samples.dev.y is not None:
-            # converting target to str
             samples.dev.y = samples.dev.y.astype(str)
 
-            # check that classes of y are classes of y_dev
             unique_y_dev = samples.dev.y.unique()
             unique_y = samples.train.y.unique()
             missing_y = [mod_y for mod_y in unique_y if mod_y not in unique_y_dev]
@@ -121,28 +110,26 @@ class MulticlassCarver(BinaryCarver):
 
         # iterating over each class minus one
         for n, y_class in enumerate(y_classes):
-            if self.verbose:  # verbose if requested
+            if self.config.verbose:
                 print(f"\n---------\n[{self.__name__}] Fit y={y_class} ({n + 1}/{len(y_classes)})\n------")
 
-            # identifying this y_class
             train_y_class = get_one_vs_rest(samples.train.y, y_class)
             dev_y_class = get_one_vs_rest(samples.dev.y, y_class)
 
-            # features for specific group
             class_features = Features.from_list(self.features.get_version_group(y_class))
 
-            # initiating BinaryCarver for y_class
+            # spawn a BinaryCarver per class; copy X so each carver sees clean raw columns
             binary_carver = BinaryCarver(
                 features=class_features,
+                min_freq=self.min_freq,
+                dropna=self.config.dropna,
+                ordinal_encoding=self.config.ordinal_encoding,
+                max_n_mod=self.max_n_mod,
                 combinations=self.combinations,
-                **dict(
-                    self.kwargs,
-                    copy=True,
-                    min_freq=self.min_freq,
-                ),  # copying x to keep raw columns as is
+                discretizer_min_freq=self.discretizer_min_freq,
+                config=replace(self.config, copy=True),
             )
 
-            # fitting BinaryCarver for y_class
             binary_carver.fit_transform(samples.train.X, train_y_class, X_dev=samples.dev.X, y_dev=dev_y_class)
 
             # filtering out dropped features whilst keeping other version tags
@@ -150,22 +137,15 @@ class MulticlassCarver(BinaryCarver):
             kept_features += [feature.version for feature in self.features if feature.version_tag != y_class]
             self.features.keep(kept_features)
 
-            if self.verbose:  # verbose if requested
+            if self.config.verbose:
                 print("---------\n")
 
-        # initiating BaseDiscretizer with features for each y_class
-        BaseDiscretizer.__init__(
-            self,
-            features=self.features,
-            **dict(
-                self.kwargs,
-                min_freq=self.min_freq,
-                dropna=self.dropna,
-                combinations=self.combinations,
-            ),
-        )
+        # re-init BaseDiscretizer state to reflect the final multiclass features,
+        # then mark fitted. Preserve combinations (BaseDiscretizer.__init__ resets it to None).
+        combinations = self.combinations
+        BaseDiscretizer.__init__(self, features=self.features, min_freq=self.min_freq, config=self.config)
+        self.combinations = combinations
 
-        # fitting BaseDiscretizer
         BaseDiscretizer.fit(self, samples.train.X, samples.train.y)
 
         return self

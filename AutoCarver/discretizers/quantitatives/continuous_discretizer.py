@@ -7,7 +7,7 @@ from typing import Self
 import numpy as np
 import pandas as pd
 
-from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer
+from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, DiscretizerConfig
 from AutoCarver.discretizers.utils.multiprocessing import imap_unordered_function
 from AutoCarver.features import GroupedList, QuantitativeFeature, get_versions
 from AutoCarver.utils import extend_docstring
@@ -36,7 +36,8 @@ class ContinuousDiscretizer(BaseDiscretizer):
         self,
         quantitatives: list[QuantitativeFeature],
         min_freq: float,
-        **kwargs,
+        *,
+        config: DiscretizerConfig | None = None,
     ) -> None:
         """
         Parameters
@@ -45,9 +46,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
         quantitatives : list[QuantitativeFeature]
             Quantitative features to process
         """
-
-        # Initiating BaseDiscretizer
-        super().__init__(features=quantitatives, **dict(kwargs, min_freq=min_freq))
+        super().__init__(features=quantitatives, min_freq=min_freq, config=config)
 
     @property
     def q(self) -> int:
@@ -64,7 +63,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
         all_orders = imap_unordered_function(
             fit_feature,
             self.features.quantitatives,
-            self.n_jobs,
+            self.config.n_jobs,
             X=X[get_versions(self.features.quantitatives)],
             q=self.q,
         )

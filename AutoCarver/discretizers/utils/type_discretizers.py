@@ -4,7 +4,7 @@ from typing import Self
 
 import pandas as pd
 
-from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
+from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, DiscretizerConfig, Sample
 from AutoCarver.discretizers.utils.multiprocessing import apply_async_function
 from AutoCarver.features import BaseFeature, Features, GroupedList
 from AutoCarver.features.qualitatives import nan_unique
@@ -22,12 +22,14 @@ class StringDiscretizer(BaseDiscretizer):
     __name__ = "StringDiscretizer"
 
     @extend_docstring(BaseDiscretizer.__init__, exclude=["min_freq"])
-    def __init__(self, features: Features, **kwargs) -> None:
-        # initiating features
+    def __init__(
+        self,
+        features: Features,
+        *,
+        config: DiscretizerConfig | None = None,
+    ) -> None:
         features_obj = Features.from_list(features)
-
-        # Initiating BaseDiscretizer
-        super().__init__(features=features_obj, **kwargs)
+        super().__init__(features=features_obj, config=config)
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> Self:  # pylint: disable=W0222
@@ -37,7 +39,7 @@ class StringDiscretizer(BaseDiscretizer):
         sample = self._prepare_data(Sample(X, y))
 
         # transforming all features
-        all_orders = apply_async_function(fit_feature, self.features, self.n_jobs, sample.X)
+        all_orders = apply_async_function(fit_feature, self.features, self.config.n_jobs, sample.X)
 
         # updating features accordingly
         self.features.update(dict(all_orders), replace=True)
@@ -93,18 +95,20 @@ class TimedeltaDiscretizer(BaseDiscretizer):
     __name__ = "TimedeltaDiscretizer"
 
     @extend_docstring(BaseDiscretizer.__init__)
-    def __init__(self, features: list[BaseFeature], **kwargs) -> None:
+    def __init__(
+        self,
+        features: list[BaseFeature],
+        *,
+        config: DiscretizerConfig | None = None,
+    ) -> None:
         """
         Parameters
         ----------
         features : list[str]
             List of column names of qualitative features to be converted as string
         """
-        # initiating features
         features_obj = Features.from_list(features)
-
-        # Initiating BaseDiscretizer
-        super().__init__(features=features_obj, **kwargs)
+        super().__init__(features=features_obj, config=config)
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> Self:  # pylint: disable=W0222
@@ -114,7 +118,7 @@ class TimedeltaDiscretizer(BaseDiscretizer):
         sample = self._prepare_data(Sample(X, y))
 
         # transforming all features
-        all_orders = apply_async_function(fit_feature, self.features, self.n_jobs, sample.X)
+        all_orders = apply_async_function(fit_feature, self.features, self.config.n_jobs, sample.X)
 
         # updating features accordingly
         self.features.update(dict(all_orders), replace=True)

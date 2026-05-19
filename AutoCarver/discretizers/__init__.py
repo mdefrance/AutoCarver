@@ -8,10 +8,11 @@ from AutoCarver.discretizers.qualitatives import (
     QualitativeDiscretizer,
 )
 from AutoCarver.discretizers.quantitatives import ContinuousDiscretizer, QuantitativeDiscretizer
-from AutoCarver.discretizers.utils import BaseDiscretizer, Sample, StringDiscretizer
+from AutoCarver.discretizers.utils import BaseDiscretizer, DiscretizerConfig, Sample, StringDiscretizer
 
 __all__ = [
     "BaseDiscretizer",
+    "DiscretizerConfig",
     "Sample",
     "Discretizer",
     "QualitativeDiscretizer",

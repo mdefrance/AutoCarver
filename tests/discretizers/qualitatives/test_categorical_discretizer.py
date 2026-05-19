@@ -9,7 +9,7 @@ from AutoCarver.discretizers.qualitatives.categorical_discretizer import (
     series_target_rate,
     series_value_counts,
 )
-from AutoCarver.discretizers.utils.base_discretizer import Sample
+from AutoCarver.discretizers.utils.base_discretizer import DiscretizerConfig, Sample
 from AutoCarver.features import CategoricalFeature, Features, FeaturesConfig, GroupedList
 
 
@@ -351,13 +351,15 @@ def test_categorical_discretizer(x_train: pd.DataFrame, target: str) -> None:
     min_freq = 0.02
     # unwanted value in values_orders
     with raises(ValueError):
-        discretizer = CategoricalDiscretizer(categoricals=features, min_freq=min_freq, copy=True)
+        discretizer = CategoricalDiscretizer(
+            categoricals=features, min_freq=min_freq, config=DiscretizerConfig(copy=True)
+        )
         _ = discretizer.fit_transform(x_train, x_train[target])
 
     # correct feature ordering
     features = Features(categoricals=categoricals + ["Qualitative"], config=FeaturesConfig(default=str_default))
 
-    discretizer = CategoricalDiscretizer(categoricals=features, min_freq=min_freq, copy=True)
+    discretizer = CategoricalDiscretizer(categoricals=features, min_freq=min_freq, config=DiscretizerConfig(copy=True))
     _ = discretizer.fit_transform(x_train, x_train[target])
 
     assert features("Qualitative_Ordinal").values.get(str_default) == [

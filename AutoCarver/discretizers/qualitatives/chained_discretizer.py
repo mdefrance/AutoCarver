@@ -2,12 +2,13 @@
 for a binary classification model.
 """
 
+from dataclasses import replace
 from typing import Self
 
 import numpy as np
 import pandas as pd
 
-from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
+from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, DiscretizerConfig, Sample
 from AutoCarver.discretizers.utils.type_discretizers import StringDiscretizer
 from AutoCarver.features import BaseFeature, Features, GroupedList
 from AutoCarver.utils import extend_docstring
@@ -29,7 +30,8 @@ class ChainedDiscretizer(BaseDiscretizer):
         min_freq: float,
         features: list[BaseFeature],
         chained_orders: list[GroupedList],
-        **kwargs,
+        *,
+        config: DiscretizerConfig | None = None,
     ) -> None:
         """
         Parameters
@@ -39,12 +41,14 @@ class ChainedDiscretizer(BaseDiscretizer):
             A list of interlocked higher level groups for each modalities of each ordinal feature.
             Values of ``chained_orders[0]`` have to be grouped in ``chained_order[1]`` etc.
         """
-        # not dropping nans whatsoever
-        kwargs = dict(kwargs, dropna=False)
-        super().__init__(features, **kwargs)  # Initiating BaseDiscretizer
+        # chained discretization never drops nans
+        if config is None:
+            config = DiscretizerConfig()
+        config = replace(config, dropna=False)
+
+        super().__init__(features, min_freq=min_freq, config=config)
 
         # class specific attributes
-        self.min_freq = min_freq
         self.chained_orders = [GroupedList(values) for values in chained_orders]
 
         # known_values: all ordered values describe in each level of the chained_orders
@@ -139,7 +143,7 @@ class ChainedDiscretizer(BaseDiscretizer):
         check_frequencies(self.features, sample.X, self.min_freq, self.__name__)
 
         # converting non-str columns
-        sample.X = ensure_qualitative_dtypes(self.features, sample.X, **self.kwargs)
+        sample.X = ensure_qualitative_dtypes(self.features, sample.X, config=self.config)
 
         # fitting features
         self.features.fit(**sample)
@@ -193,7 +197,7 @@ class ChainedDiscretizer(BaseDiscretizer):
 
         super().fit(X, y)
 
-        if self.verbose:  # verbose if requested
+        if self.config.verbose:  # verbose if requested
             print("\n")
 
         return self
@@ -245,7 +249,12 @@ def check_frequencies(features: Features, X: pd.DataFrame, min_freq: float, name
         raise ValueError(error_msg)
 
 
-def ensure_qualitative_dtypes(features: Features, X: pd.DataFrame, **kwargs) -> pd.DataFrame:
+def ensure_qualitative_dtypes(
+    features: Features,
+    X: pd.DataFrame,
+    *,
+    config: DiscretizerConfig | None = None,
+) -> pd.DataFrame:
     """Checks features' data types and converts int/float to str"""
 
     # getting per feature data types
@@ -262,7 +271,7 @@ def ensure_qualitative_dtypes(features: Features, X: pd.DataFrame, **kwargs) -> 
     if any(not_object):
         # converting non-str features into qualitative features
         to_convert = [feature for feature in features if feature.version in not_object.index[not_object]]
-        string_discretizer = StringDiscretizer(features=to_convert, **kwargs)
+        string_discretizer = StringDiscretizer(features=to_convert, config=config)
         X = string_discretizer.fit_transform(X)
 
     # pandas 3.0 infers StringDtype for string columns; enforce object dtype for consistency
