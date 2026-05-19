@@ -71,14 +71,12 @@ Fitting AutoCarver
 .. code-block:: python
 
     from AutoCarver import BinaryCarver
-    from AutoCarver.discretizers import DiscretizerConfig
 
     # intiating AutoCarver
     binary_carver = BinaryCarver(
         features=features,
         min_freq=0.02,  # minimum frequency per modality
         max_n_mod=5,  # maximum number of modality per Carved feature (mandatory)
-        config=DiscretizerConfig(verbose=True),  # showing statistics
     )
 
     # fitting on training sample, a dev sample can be specified to evaluate carving robustness
