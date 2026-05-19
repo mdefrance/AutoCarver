@@ -116,10 +116,6 @@ class BaseCarver(BaseDiscretizer, ABC):
         combination_evaluator.verbose = self.config.verbose
         self.combination_evaluator: CombinationEvaluator = combination_evaluator
 
-        # BaseDiscretizer serializes self.combinations; mirror the evaluator there
-        # so to_json round-trips without a second attribute being out of sync.
-        self.combinations = self.combination_evaluator
-
     @property
     def pretty_print(self) -> bool:
         """Returns the pretty_print attribute"""
@@ -348,7 +344,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         features = Features.load(data.pop("features"))
 
         # deserializing Combinations: identify the evaluator class from sort_by
-        combinations_json = data.pop("combinations")
+        combinations_json = data.pop("combination_evaluator")
         sort_by = combinations_json.pop("sort_by", None)
         if sort_by == "tschuprowt":
             evaluator_cls: type[CombinationEvaluator] = TschuprowtCombinations

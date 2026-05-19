@@ -137,8 +137,6 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         self.min_freq = min_freq
 
         # set by subclasses; serialized for round-trip but not used by BaseDiscretizer itself
-        self.combinations: CombinationEvaluator | dict | None = None
-
         # lifecycle flag — set by fit(), or by load() after restoring state
         self.is_fitted: bool = False
 
@@ -380,7 +378,6 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             "features": self.features.to_json(light_mode),
             "min_freq": self.min_freq,
             "is_fitted": self.is_fitted,
-            "combinations": self.combinations,
             "config": {
                 "dropna": self.config.dropna,
                 "n_jobs": self.config.n_jobs,
@@ -390,9 +387,9 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             },
         }
 
-        # adding combinations if it exists
-        if isinstance(self.combinations, CombinationEvaluator):
-            content["combinations"] = self.combinations.to_json()
+        combination_evaluator = getattr(self, "combination_evaluator", None)
+        if isinstance(combination_evaluator, CombinationEvaluator):
+            content["combination_evaluator"] = combination_evaluator.to_json()
 
         return content
 
@@ -449,7 +446,6 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         features = Features.load(data.pop("features"))
         is_fitted = data.pop("is_fitted", False)
-        combinations = data.pop("combinations", None)
         min_freq = data.pop("min_freq", None)
         config_data = data.pop("config", {})
         config = DiscretizerConfig(
@@ -462,7 +458,6 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         instance = cls(features=features, min_freq=min_freq, config=config)
         instance.is_fitted = is_fitted
-        instance.combinations = combinations
         return instance
 
     @extend_docstring(Features.summary.fget)  # type: ignore

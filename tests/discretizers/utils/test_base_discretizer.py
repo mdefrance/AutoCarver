@@ -146,7 +146,6 @@ def test_init(features: Features, true_false: bool) -> None:
     assert not disc.config.ordinal_encoding
     assert disc.config.n_jobs == 1
     assert disc.min_freq is None
-    assert disc.combinations is None
 
     # test setting copy
     disc = BaseDiscretizer(features, config=DiscretizerConfig(copy=true_false))
@@ -176,11 +175,6 @@ def test_init(features: Features, true_false: bool) -> None:
     # test setting min_freq
     disc = BaseDiscretizer(features, min_freq=0.2)
     assert disc.min_freq == 0.2
-
-    # test setting combinations (post-construction; carvers attach their own)
-    disc = BaseDiscretizer(features)
-    disc.combinations = "test"
-    assert disc.combinations == "test"
 
 
 def test_cast_features(features: Features) -> None:
@@ -623,7 +617,7 @@ def _make_discretizer(features, *, min_freq, combinations, true_false, n_jobs):
         n_jobs=n_jobs,
     )
     discretizer = BaseDiscretizer(features, min_freq=min_freq, config=config)
-    discretizer.combinations = combinations
+    discretizer.combination_evaluator = combinations
     discretizer.is_fitted = true_false
     return discretizer
 
@@ -647,9 +641,9 @@ def test_to_json(features: Features, true_false: bool, combinations: type[Combin
     assert result["min_freq"] == min_freq
 
     if evaluator is None:
-        assert result["combinations"] is None
+        assert "combination_evaluator" not in result
     else:
-        assert result["combinations"] == {
+        assert result["combination_evaluator"] == {
             "sort_by": evaluator.sort_by,
             "max_n_mod": 5,
             "dropna": true_false,
@@ -710,17 +704,6 @@ def test_load_discretizer(
         assert feature.name in discretizer.features
     assert loaded.config.dropna == discretizer.config.dropna
     assert loaded.min_freq == discretizer.min_freq
-    if evaluator is None:
-        assert loaded.combinations is None
-    else:
-        assert loaded.combinations == {
-            "sort_by": evaluator.sort_by,
-            "max_n_mod": 5,
-            "dropna": true_false,
-            "min_freq": min_freq,
-            "verbose": true_false,
-        }
-
     assert loaded.is_fitted == discretizer.is_fitted
     assert loaded.config.n_jobs == discretizer.config.n_jobs
     assert loaded.config.verbose == discretizer.config.verbose
