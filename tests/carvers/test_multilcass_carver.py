@@ -1,5 +1,6 @@
 """Set of tests for multiclass_carver module."""
 
+from dataclasses import replace
 from pathlib import Path
 
 import pandas as pd
@@ -8,7 +9,7 @@ from pytest import FixtureRequest, fixture, raises
 from AutoCarver.carvers.multiclass_carver import MulticlassCarver, get_one_vs_rest
 from AutoCarver.carvers.utils.base_carver import Sample, Samples
 from AutoCarver.combinations import (
-    CombinationEvaluator,
+    CombinationConfig,
     CramervCombinations,
     KruskalCombinations,
     TschuprowtCombinations,
@@ -19,9 +20,9 @@ from AutoCarver.features import Features
 
 
 @fixture(params=[CramervCombinations, TschuprowtCombinations])
-def evaluator(request: FixtureRequest) -> CombinationEvaluator:
-    """CombinationEvaluator fixture."""
-    return request.param()
+def evaluator(request: FixtureRequest) -> CombinationConfig:
+    """CombinationConfig fixture (carver builds the evaluator from it)."""
+    return CombinationConfig(evaluator=request.param)
 
 
 @fixture(scope="module", params=["tschuprowt", "cramerv"])
@@ -81,24 +82,35 @@ def test_multiclass_carver_initialization():
     assert carver.features == features
     assert carver.config.dropna is True
     assert isinstance(carver.combinations, TschuprowtCombinations)
-    assert carver.combinations.max_n_mod == 5
+    assert carver.combinations.config.max_n_mod == 5
 
     max_n_mod = 8
     carver = MulticlassCarver(
-        min_freq=0.1, features=features, dropna=True, combinations=TschuprowtCombinations(max_n_mod)
+        min_freq=0.1,
+        features=features,
+        dropna=True,
+        combinations=CombinationConfig(evaluator=TschuprowtCombinations, max_n_mod=max_n_mod),
     )
     assert isinstance(carver.combinations, TschuprowtCombinations)
-    assert carver.combinations.max_n_mod == max_n_mod
+    assert carver.combinations.config.max_n_mod == max_n_mod
 
-    carver = MulticlassCarver(min_freq=0.1, features=features, combinations=CramervCombinations(max_n_mod))
+    carver = MulticlassCarver(
+        min_freq=0.1,
+        features=features,
+        combinations=CombinationConfig(evaluator=CramervCombinations, max_n_mod=max_n_mod),
+    )
     assert isinstance(carver.combinations, CramervCombinations)
-    assert carver.combinations.max_n_mod == max_n_mod
+    assert carver.combinations.config.max_n_mod == max_n_mod
 
     with raises(ValueError):
-        MulticlassCarver(min_freq=0.1, features=features, combinations=KruskalCombinations(max_n_mod))
+        MulticlassCarver(
+            min_freq=0.1,
+            features=features,
+            combinations=CombinationConfig(evaluator=KruskalCombinations, max_n_mod=max_n_mod),
+        )
 
 
-def test_multiclass_carver_prepare_data(evaluator: CombinationEvaluator):
+def test_multiclass_carver_prepare_data(evaluator: CombinationConfig):
     """Test MulticlassCarver _prepare_data method."""
     features = Features(
         categoricals=["feature1"],
@@ -132,7 +144,7 @@ def test_multiclass_carver_prepare_data(evaluator: CombinationEvaluator):
 
 
 def test_multiclass_carver_fit_transform_with_small_data_not_ordinal(
-    evaluator: CombinationEvaluator,
+    evaluator: CombinationConfig,
 ):
     """Test MulticlassCarver fit_transform method."""
     features = Features(
@@ -197,7 +209,7 @@ def test_multiclass_carver_fit_transform_with_small_data_not_ordinal(
     assert X_transformed.equals(expected)
 
 
-def test_multiclass_carver_fit_transform_with_small_data_ordinal(evaluator: CombinationEvaluator):
+def test_multiclass_carver_fit_transform_with_small_data_ordinal(evaluator: CombinationConfig):
     """Test MulticlassCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
@@ -251,7 +263,7 @@ def test_multiclass_carver_fit_transform_with_small_data_ordinal(evaluator: Comb
     pd.testing.assert_frame_equal(X_transformed, expected, check_dtype=False)
 
 
-def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationEvaluator):
+def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationConfig):
     """Test MulticlassCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
@@ -556,7 +568,7 @@ def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationE
     assert X_transformed.equals(expected)
 
 
-def test_multiclass_carver_fit_transform_with_target_only_nan(evaluator: CombinationEvaluator):
+def test_multiclass_carver_fit_transform_with_target_only_nan(evaluator: CombinationConfig):
     """Test MulticlassCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
@@ -612,7 +624,7 @@ def test_multiclass_carver_fit_transform_with_target_only_nan(evaluator: Combina
     assert X_transformed.equals(expected)
 
 
-def test_multiclass_carver_fit_transform_with_wrong_dev(evaluator: CombinationEvaluator):
+def test_multiclass_carver_fit_transform_with_wrong_dev(evaluator: CombinationConfig):
     """Test MulticlassCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
@@ -668,7 +680,7 @@ def test_multiclass_carver_fit_transform_with_wrong_dev(evaluator: CombinationEv
     assert len(carver.features) == 2
 
 
-def test_multiclass_carver_save_load(tmp_path: Path, evaluator: CombinationEvaluator):
+def test_multiclass_carver_save_load(tmp_path: Path, evaluator: CombinationConfig):
     """Test MulticlassCarver save and load methods."""
     features = Features(
         categoricals=["feature1"],
@@ -687,10 +699,10 @@ def test_multiclass_carver_save_load(tmp_path: Path, evaluator: CombinationEvalu
     assert carver.config.verbose == loaded_carver.config.verbose
     assert carver.config.copy == loaded_carver.config.copy
     assert carver.combinations.__class__ == loaded_carver.combinations.__class__
-    assert carver.combinations.max_n_mod == loaded_carver.combinations.max_n_mod
+    assert carver.combinations.config.max_n_mod == loaded_carver.combinations.config.max_n_mod
     assert carver.combinations.sort_by == loaded_carver.combinations.sort_by
-    assert carver.combinations.dropna == loaded_carver.combinations.dropna
-    assert carver.combinations.verbose == loaded_carver.combinations.verbose
+    assert carver.combinations.config.dropna == loaded_carver.combinations.config.dropna
+    assert carver.combinations.config.verbose == loaded_carver.combinations.config.verbose
 
 
 def _fit_multiclass_carver(
@@ -702,7 +714,7 @@ def _fit_multiclass_carver(
     chained_features: list[str],
     level0_to_level1: dict[str, list[str]],
     level1_to_level2: dict[str, list[str]],
-    evaluator: CombinationEvaluator,
+    evaluator: CombinationConfig,
     *,
     discretizer_min_freq: float | None = None,
     ordinal_encoding: bool = False,
@@ -731,7 +743,7 @@ def _fit_multiclass_carver(
     )
     chained_discretizer.fit(x_train)
 
-    evaluator.max_n_mod = 4
+    evaluator = replace(evaluator, max_n_mod=4)
     auto_carver = MulticlassCarver(
         min_freq=0.1,
         features=features,
@@ -760,7 +772,7 @@ def test_multiclass_carver_end_to_end_invariants(
     chained_features: list[str],
     level0_to_level1: dict[str, list[str]],
     level1_to_level2: dict[str, list[str]],
-    evaluator: CombinationEvaluator,
+    evaluator: CombinationConfig,
     dropna: bool,
 ) -> None:
     """Versions present, modality counts, NaN handling, train/dev robustness, value preservation."""
@@ -790,10 +802,10 @@ def test_multiclass_carver_end_to_end_invariants(
     )
 
     # max_n_mod respected on train + dev
-    assert all(x_discretized[feature_versions].nunique() <= auto_carver.combinations.max_n_mod), (
+    assert all(x_discretized[feature_versions].nunique() <= auto_carver.combinations.config.max_n_mod), (
         "Too many buckets after carving of train sample"
     )
-    assert all(x_dev_discretized[feature_versions].nunique() <= auto_carver.combinations.max_n_mod), (
+    assert all(x_dev_discretized[feature_versions].nunique() <= auto_carver.combinations.config.max_n_mod), (
         "Too many buckets after carving of test sample"
     )
 
@@ -858,7 +870,7 @@ def test_multiclass_carver_copy_semantics(
         chained_features,
         level0_to_level1,
         level1_to_level2,
-        CramervCombinations(),
+        CombinationConfig(evaluator=CramervCombinations),
         copy=copy,
     )
     # original mega-test only asserts on copy=True; copy=False makes no assertion
@@ -881,7 +893,7 @@ def test_multiclass_carver_serialization_roundtrip(
     chained_features: list[str],
     level0_to_level1: dict[str, list[str]],
     level1_to_level2: dict[str, list[str]],
-    evaluator: CombinationEvaluator,
+    evaluator: CombinationConfig,
 ) -> None:
     """Save/load on a fitted carver preserves summary and transform output."""
     auto_carver, x_discretized, _, features = _fit_multiclass_carver(
@@ -930,7 +942,7 @@ def test_multiclass_carver_wrong_dev_transform(
         chained_features,
         level0_to_level1,
         level1_to_level2,
-        CramervCombinations(),
+        CombinationConfig(evaluator=CramervCombinations),
     )
 
     # unexpected modal on a feature that has_default — does not raise
@@ -983,7 +995,7 @@ def test_multiclass_carver_unknown_ordinal_values_raises(
     auto_carver = MulticlassCarver(
         min_freq=0.15,
         features=features,
-        combinations=CramervCombinations(),
+        combinations=CombinationConfig(evaluator=CramervCombinations),
         config=DiscretizerConfig(verbose=False),
     )
     with raises(ValueError):

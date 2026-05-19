@@ -9,7 +9,7 @@ import pandas as pd
 
 from AutoCarver.carvers.binary_carver import BinaryCarver
 from AutoCarver.carvers.utils.base_carver import Samples
-from AutoCarver.combinations import CombinationEvaluator
+from AutoCarver.combinations import CombinationConfig
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, DiscretizerConfig, Sample
 from AutoCarver.features import Features
 from AutoCarver.utils import extend_docstring
@@ -38,8 +38,8 @@ class MulticlassCarver(BinaryCarver):
         *,
         dropna: bool = True,
         ordinal_encoding: bool = True,
-        max_n_mod: int = 5,
-        combinations: CombinationEvaluator | None = None,
+        max_n_mod: int | None = None,
+        combinations: CombinationConfig | None = None,
         discretizer_min_freq: float | None = None,
         config: DiscretizerConfig | None = None,
     ) -> None:
@@ -118,14 +118,16 @@ class MulticlassCarver(BinaryCarver):
 
             class_features = Features.from_list(self.features.get_version_group(y_class))
 
-            # spawn a BinaryCarver per class; copy X so each carver sees clean raw columns
+            # spawn a BinaryCarver per class; copy X so each carver sees clean raw columns.
+            # Each child rebuilds its own evaluator from the same config (the class is stored
+            # in config.evaluator), so runtime state stays isolated per class fit.
             binary_carver = BinaryCarver(
                 features=class_features,
                 min_freq=self.min_freq,
                 dropna=self.config.dropna,
                 ordinal_encoding=self.config.ordinal_encoding,
                 max_n_mod=self.max_n_mod,
-                combinations=self.combinations,
+                combinations=self.combinations.config,
                 discretizer_min_freq=self.discretizer_min_freq,
                 config=replace(self.config, copy=True),
             )

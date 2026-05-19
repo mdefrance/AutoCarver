@@ -1,5 +1,6 @@
 """Set of tests for binary_carver module."""
 
+from dataclasses import replace
 from pathlib import Path
 
 import pandas as pd
@@ -9,7 +10,7 @@ from AutoCarver import BinaryCarver
 from AutoCarver.carvers.binary_carver import get_crosstab
 from AutoCarver.carvers.utils.base_carver import Sample, Samples
 from AutoCarver.combinations import (
-    CombinationEvaluator,
+    CombinationConfig,
     CramervCombinations,
     KruskalCombinations,
     TschuprowtCombinations,
@@ -20,9 +21,9 @@ from AutoCarver.features import Features, OrdinalFeature
 
 
 @fixture(params=[CramervCombinations, TschuprowtCombinations])
-def evaluator(request: FixtureRequest) -> CombinationEvaluator:
-    """CombinationEvaluator fixture."""
-    return request.param()
+def evaluator(request: FixtureRequest) -> CombinationConfig:
+    """CombinationConfig fixture (carver builds the evaluator from it)."""
+    return CombinationConfig(evaluator=request.param)
 
 
 @fixture(scope="module", params=["tschuprowt", "cramerv"])
@@ -93,22 +94,35 @@ def test_binary_carver_initialization():
     assert carver.features == features
     assert carver.config.dropna is True
     assert isinstance(carver.combinations, TschuprowtCombinations)
-    assert carver.combinations.max_n_mod == 5
+    assert carver.combinations.config.max_n_mod == 5
 
     max_n_mod = 8
-    carver = BinaryCarver(min_freq=0.1, features=features, dropna=True, combinations=TschuprowtCombinations(max_n_mod))
+    carver = BinaryCarver(
+        min_freq=0.1,
+        features=features,
+        dropna=True,
+        combinations=CombinationConfig(evaluator=TschuprowtCombinations, max_n_mod=max_n_mod),
+    )
     assert isinstance(carver.combinations, TschuprowtCombinations)
-    assert carver.combinations.max_n_mod == max_n_mod
+    assert carver.combinations.config.max_n_mod == max_n_mod
 
-    carver = BinaryCarver(min_freq=0.1, features=features, combinations=CramervCombinations(max_n_mod))
+    carver = BinaryCarver(
+        min_freq=0.1,
+        features=features,
+        combinations=CombinationConfig(evaluator=CramervCombinations, max_n_mod=max_n_mod),
+    )
     assert isinstance(carver.combinations, CramervCombinations)
-    assert carver.combinations.max_n_mod == max_n_mod
+    assert carver.combinations.config.max_n_mod == max_n_mod
 
     with raises(ValueError):
-        BinaryCarver(min_freq=0.1, features=features, combinations=KruskalCombinations(max_n_mod))
+        BinaryCarver(
+            min_freq=0.1,
+            features=features,
+            combinations=CombinationConfig(evaluator=KruskalCombinations, max_n_mod=max_n_mod),
+        )
 
 
-def test_binary_carver_prepare_data(evaluator: CombinationEvaluator):
+def test_binary_carver_prepare_data(evaluator: CombinationConfig):
     """Test BinaryCarver _prepare_data method."""
     features = Features(
         categoricals=["feature1"],
@@ -133,7 +147,7 @@ def test_binary_carver_prepare_data(evaluator: CombinationEvaluator):
     assert isinstance(prepared_samples, Samples)
 
 
-def test_binary_carver_aggregator(evaluator: CombinationEvaluator):
+def test_binary_carver_aggregator(evaluator: CombinationConfig):
     """Test BinaryCarver _aggregator method."""
     features = Features(
         categoricals=["feature1"],
@@ -218,7 +232,7 @@ def test_carve_feature_with_best_combination(evaluator):
     }
 
 
-def test_carve_feature_without_best_combination(evaluator: CombinationEvaluator):
+def test_carve_feature_without_best_combination(evaluator: CombinationConfig):
     """Test _carve_feature method without best combination."""
 
     features = Features(
@@ -309,7 +323,7 @@ def test_fit_with_best_combination(evaluator):
     }
 
 
-def test_fit_without_best_combination(evaluator: CombinationEvaluator):
+def test_fit_without_best_combination(evaluator: CombinationConfig):
     """Test BinaryCarver fit method without best combination."""
 
     features = Features(
@@ -342,7 +356,7 @@ def test_fit_without_best_combination(evaluator: CombinationEvaluator):
     assert len(features) == 0
 
 
-def test_binary_carver_fit_transform_with_small_data_not_ordinal(evaluator: CombinationEvaluator):
+def test_binary_carver_fit_transform_with_small_data_not_ordinal(evaluator: CombinationConfig):
     """Test BinaryCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
@@ -398,7 +412,7 @@ def test_binary_carver_fit_transform_with_small_data_not_ordinal(evaluator: Comb
     assert X_transformed.equals(expected)
 
 
-def test_binary_carver_fit_transform_with_small_data_ordinal(evaluator: CombinationEvaluator):
+def test_binary_carver_fit_transform_with_small_data_ordinal(evaluator: CombinationConfig):
     """Test BinaryCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
@@ -449,7 +463,7 @@ def test_binary_carver_fit_transform_with_small_data_ordinal(evaluator: Combinat
     pd.testing.assert_frame_equal(X_transformed, expected, check_dtype=False)
 
 
-def test_binary_carver_fit_transform_with_large_data(evaluator: CombinationEvaluator):
+def test_binary_carver_fit_transform_with_large_data(evaluator: CombinationConfig):
     """Test BinaryCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
@@ -611,7 +625,7 @@ def test_binary_carver_fit_transform_with_large_data(evaluator: CombinationEvalu
     assert X_transformed.equals(expected)
 
 
-def test_binary_carver_fit_transform_with_target_only_nan(evaluator: CombinationEvaluator):
+def test_binary_carver_fit_transform_with_target_only_nan(evaluator: CombinationConfig):
     """Test BinaryCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
@@ -666,7 +680,7 @@ def test_binary_carver_fit_transform_with_target_only_nan(evaluator: Combination
     assert X_transformed.equals(expected)
 
 
-def test_binary_carver_fit_transform_with_wrong_dev(evaluator: CombinationEvaluator):
+def test_binary_carver_fit_transform_with_wrong_dev(evaluator: CombinationConfig):
     """Test BinaryCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
@@ -713,7 +727,7 @@ def test_binary_carver_fit_transform_with_wrong_dev(evaluator: CombinationEvalua
     assert len(carver.features) == 0
 
 
-def test_binary_carver_save_load(tmp_path: Path, evaluator: CombinationEvaluator):
+def test_binary_carver_save_load(tmp_path: Path, evaluator: CombinationConfig):
     """Test BinaryCarver save and load methods."""
     features = Features(
         categoricals=["feature1"],
@@ -732,10 +746,10 @@ def test_binary_carver_save_load(tmp_path: Path, evaluator: CombinationEvaluator
     assert carver.config.verbose == loaded_carver.config.verbose
     assert carver.config.copy == loaded_carver.config.copy
     assert carver.combinations.__class__ == loaded_carver.combinations.__class__
-    assert carver.combinations.max_n_mod == loaded_carver.combinations.max_n_mod
+    assert carver.combinations.config.max_n_mod == loaded_carver.combinations.config.max_n_mod
     assert carver.combinations.sort_by == loaded_carver.combinations.sort_by
-    assert carver.combinations.dropna == loaded_carver.combinations.dropna
-    assert carver.combinations.verbose == loaded_carver.combinations.verbose
+    assert carver.combinations.config.dropna == loaded_carver.combinations.config.dropna
+    assert carver.combinations.config.verbose == loaded_carver.combinations.config.verbose
 
 
 def _fit_binary_carver(
@@ -747,7 +761,7 @@ def _fit_binary_carver(
     chained_features: list[str],
     level0_to_level1: dict[str, list[str]],
     level1_to_level2: dict[str, list[str]],
-    evaluator: CombinationEvaluator,
+    evaluator: CombinationConfig,
     *,
     discretizer_min_freq: float | None = None,
     ordinal_encoding: bool = False,
@@ -776,7 +790,7 @@ def _fit_binary_carver(
     )
     chained_discretizer.fit(x_train)
 
-    evaluator.max_n_mod = 4
+    evaluator = replace(evaluator, max_n_mod=4)
     auto_carver = BinaryCarver(
         min_freq=min_freq,
         combinations=evaluator,
@@ -802,7 +816,7 @@ def test_binary_carver_uneligible_features_raises(
     quantitative_features: list[str],
     qualitative_features: list[str],
     values_orders: dict[str, list[str]],
-    evaluator: CombinationEvaluator,
+    evaluator: CombinationConfig,
 ) -> None:
     """ValueError when features contain uneligible columns ("nan"/"ones"/"ones_nan")."""
     features = Features(
@@ -810,7 +824,7 @@ def test_binary_carver_uneligible_features_raises(
         ordinals=values_orders,
         quantitatives=quantitative_features,
     )
-    evaluator.max_n_mod = 4
+    evaluator = replace(evaluator, max_n_mod=4)
     with raises(ValueError):
         auto_carver = BinaryCarver(
             min_freq=0.1,
@@ -836,7 +850,7 @@ def test_binary_carver_end_to_end_invariants(
     chained_features: list[str],
     level0_to_level1: dict[str, list[str]],
     level1_to_level2: dict[str, list[str]],
-    evaluator: CombinationEvaluator,
+    evaluator: CombinationConfig,
     dropna: bool,
 ) -> None:
     """Modality counts, NaN handling, train/dev robustness, value preservation."""
@@ -917,7 +931,7 @@ def test_binary_carver_copy_semantics(
         chained_features,
         level0_to_level1,
         level1_to_level2,
-        CramervCombinations(),
+        CombinationConfig(evaluator=CramervCombinations),
         copy=copy,
     )
     feature_names = features.names
@@ -941,7 +955,7 @@ def test_binary_carver_serialization_roundtrip(
     chained_features: list[str],
     level0_to_level1: dict[str, list[str]],
     level1_to_level2: dict[str, list[str]],
-    evaluator: CombinationEvaluator,
+    evaluator: CombinationConfig,
 ) -> None:
     """Save/load on a fitted carver preserves summary and transform output."""
     raw_x_train = x_train.copy()
@@ -992,7 +1006,7 @@ def test_binary_carver_wrong_dev_transform(
         chained_features,
         level0_to_level1,
         level1_to_level2,
-        CramervCombinations(),
+        CombinationConfig(evaluator=CramervCombinations),
     )
 
     # unexpected modal on a feature that has_default — does not raise
@@ -1028,7 +1042,7 @@ def test_binary_carver_discretizer_min_freq_respected(
         chained_features,
         level0_to_level1,
         level1_to_level2,
-        CramervCombinations(),
+        CombinationConfig(evaluator=CramervCombinations),
         discretizer_min_freq=discretizer_min_freq,
     )
     for feature in features.names:
@@ -1079,7 +1093,7 @@ def test_binary_carver_unknown_ordinal_values_raises(
 
     auto_carver = BinaryCarver(
         min_freq=0.15,
-        combinations=CramervCombinations(),
+        combinations=CombinationConfig(evaluator=CramervCombinations),
         features=features,
         config=DiscretizerConfig(verbose=False),
     )

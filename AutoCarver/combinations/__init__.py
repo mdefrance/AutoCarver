@@ -9,9 +9,10 @@ from AutoCarver.combinations.continuous.continuous_combination_evaluators import
     ContinuousCombinationEvaluator,
     KruskalCombinations,
 )
-from AutoCarver.combinations.utils.combination_evaluator import CombinationEvaluator
+from AutoCarver.combinations.utils.combination_evaluator import CombinationConfig, CombinationEvaluator
 
 __all__ = [
+    "CombinationConfig",
     "CombinationEvaluator",
     "BinaryCombinationEvaluator",
     "TschuprowtCombinations",

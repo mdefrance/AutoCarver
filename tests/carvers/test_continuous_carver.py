@@ -1,5 +1,6 @@
 """Set of tests for continuous_carver module."""
 
+from dataclasses import replace
 from pathlib import Path
 
 import pandas as pd
@@ -9,7 +10,7 @@ from AutoCarver import ContinuousCarver
 from AutoCarver.carvers.continuous_carver import get_target_values_by_modality
 from AutoCarver.carvers.utils.base_carver import Sample, Samples
 from AutoCarver.combinations import (
-    CombinationEvaluator,
+    CombinationConfig,
     CramervCombinations,
     KruskalCombinations,
     TschuprowtCombinations,
@@ -65,9 +66,9 @@ def test_get_target_values_by_modality_extra_labels():
 
 
 @fixture(params=[KruskalCombinations])
-def evaluator(request: FixtureRequest) -> CombinationEvaluator:
-    """CombinationEvaluator fixture."""
-    return request.param()
+def evaluator(request: FixtureRequest) -> CombinationConfig:
+    """CombinationConfig fixture (carver builds the evaluator from it)."""
+    return CombinationConfig(evaluator=request.param)
 
 
 def test_continuous_carver_initialization():
@@ -83,25 +84,42 @@ def test_continuous_carver_initialization():
     assert carver.features == features
     assert carver.config.dropna is True
     assert isinstance(carver.combinations, KruskalCombinations)
-    assert carver.combinations.max_n_mod == 5
+    assert carver.combinations.config.max_n_mod == 5
 
     max_n_mod = 8
-    carver = ContinuousCarver(min_freq=0.1, features=features, dropna=True, combinations=KruskalCombinations(max_n_mod))
+    carver = ContinuousCarver(
+        min_freq=0.1,
+        features=features,
+        dropna=True,
+        combinations=CombinationConfig(evaluator=KruskalCombinations, max_n_mod=max_n_mod),
+    )
     assert isinstance(carver.combinations, KruskalCombinations)
-    assert carver.combinations.max_n_mod == max_n_mod
+    assert carver.combinations.config.max_n_mod == max_n_mod
 
-    carver = ContinuousCarver(min_freq=0.1, features=features, combinations=KruskalCombinations(max_n_mod))
+    carver = ContinuousCarver(
+        min_freq=0.1,
+        features=features,
+        combinations=CombinationConfig(evaluator=KruskalCombinations, max_n_mod=max_n_mod),
+    )
     assert isinstance(carver.combinations, KruskalCombinations)
-    assert carver.combinations.max_n_mod == max_n_mod
+    assert carver.combinations.config.max_n_mod == max_n_mod
 
     with raises(ValueError):
-        ContinuousCarver(min_freq=0.1, features=features, combinations=CramervCombinations(max_n_mod))
+        ContinuousCarver(
+            min_freq=0.1,
+            features=features,
+            combinations=CombinationConfig(evaluator=CramervCombinations, max_n_mod=max_n_mod),
+        )
 
     with raises(ValueError):
-        ContinuousCarver(min_freq=0.1, features=features, combinations=TschuprowtCombinations(max_n_mod))
+        ContinuousCarver(
+            min_freq=0.1,
+            features=features,
+            combinations=CombinationConfig(evaluator=TschuprowtCombinations, max_n_mod=max_n_mod),
+        )
 
 
-def test_continuous_carver_prepare_data(evaluator: CombinationEvaluator):
+def test_continuous_carver_prepare_data(evaluator: CombinationConfig):
     """Test ContinuousCarver _prepare_data method."""
     features = Features(
         categoricals=["feature1"],
@@ -133,7 +151,7 @@ def test_continuous_carver_prepare_data(evaluator: CombinationEvaluator):
     assert isinstance(prepared_samples, Samples)
 
 
-def test_continuous_carver_aggregator(evaluator: CombinationEvaluator):
+def test_continuous_carver_aggregator(evaluator: CombinationConfig):
     """Test ContinuousCarver _aggregator method."""
     features = Features(
         categoricals=["feature1"],
@@ -219,7 +237,7 @@ def test_carve_feature_with_best_combination(evaluator):
     }
 
 
-def test_carve_feature_without_best_combination(evaluator: CombinationEvaluator):
+def test_carve_feature_without_best_combination(evaluator: CombinationConfig):
     """Test _carve_feature method without best combination."""
 
     features = Features(
@@ -311,7 +329,7 @@ def test_fit_with_best_combination(evaluator):
     }
 
 
-def test_fit_without_best_combination(evaluator: CombinationEvaluator):
+def test_fit_without_best_combination(evaluator: CombinationConfig):
     """Test ContinuousCarver fit method without best combination."""
 
     features = Features(
@@ -345,7 +363,7 @@ def test_fit_without_best_combination(evaluator: CombinationEvaluator):
 
 
 def test_continuous_carver_fit_transform_with_small_data_not_ordinal(
-    evaluator: CombinationEvaluator,
+    evaluator: CombinationConfig,
 ):
     """Test ContinuousCarver fit_transform method."""
     features = Features(
@@ -402,7 +420,7 @@ def test_continuous_carver_fit_transform_with_small_data_not_ordinal(
     assert X_transformed.equals(expected)
 
 
-def test_continuous_carver_fit_transform_with_small_data_ordinal(evaluator: CombinationEvaluator):
+def test_continuous_carver_fit_transform_with_small_data_ordinal(evaluator: CombinationConfig):
     """Test ContinuousCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
@@ -453,7 +471,7 @@ def test_continuous_carver_fit_transform_with_small_data_ordinal(evaluator: Comb
     pd.testing.assert_frame_equal(X_transformed, expected, check_dtype=False)
 
 
-def test_continuous_carver_fit_transform_with_large_data(evaluator: CombinationEvaluator):
+def test_continuous_carver_fit_transform_with_large_data(evaluator: CombinationConfig):
     """Test ContinuousCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
@@ -618,7 +636,7 @@ def test_continuous_carver_fit_transform_with_large_data(evaluator: CombinationE
     assert X_transformed.equals(expected)
 
 
-def test_continuous_carver_fit_transform_with_wrong_dev(evaluator: CombinationEvaluator):
+def test_continuous_carver_fit_transform_with_wrong_dev(evaluator: CombinationConfig):
     """Test ContinuousCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
@@ -665,7 +683,7 @@ def test_continuous_carver_fit_transform_with_wrong_dev(evaluator: CombinationEv
     assert len(carver.features) == 0
 
 
-def test_continuous_carver_save_load(tmp_path, evaluator: CombinationEvaluator):
+def test_continuous_carver_save_load(tmp_path, evaluator: CombinationConfig):
     """Test ContinuousCarver save and load methods."""
     features = Features(
         categoricals=["feature1"],
@@ -684,10 +702,10 @@ def test_continuous_carver_save_load(tmp_path, evaluator: CombinationEvaluator):
     assert carver.config.verbose == loaded_carver.config.verbose
     assert carver.config.copy == loaded_carver.config.copy
     assert carver.combinations.__class__ == loaded_carver.combinations.__class__
-    assert carver.combinations.max_n_mod == loaded_carver.combinations.max_n_mod
+    assert carver.combinations.config.max_n_mod == loaded_carver.combinations.config.max_n_mod
     assert carver.combinations.sort_by == loaded_carver.combinations.sort_by
-    assert carver.combinations.dropna == loaded_carver.combinations.dropna
-    assert carver.combinations.verbose == loaded_carver.combinations.verbose
+    assert carver.combinations.config.dropna == loaded_carver.combinations.config.dropna
+    assert carver.combinations.config.verbose == loaded_carver.combinations.config.verbose
 
 
 def _fit_continuous_carver(
@@ -699,7 +717,7 @@ def _fit_continuous_carver(
     chained_features: list[str],
     level0_to_level1: dict[str, list[str]],
     level1_to_level2: dict[str, list[str]],
-    evaluator: CombinationEvaluator,
+    evaluator: CombinationConfig,
     *,
     discretizer_min_freq: float | None = None,
     ordinal_encoding: bool = False,
@@ -728,7 +746,7 @@ def _fit_continuous_carver(
     )
     chained_discretizer.fit(x_train)
 
-    evaluator.max_n_mod = 4
+    evaluator = replace(evaluator, max_n_mod=4)
     auto_carver = ContinuousCarver(
         min_freq=0.1,
         features=features,
@@ -771,16 +789,16 @@ def test_continuous_carver_end_to_end_invariants(
         chained_features,
         level0_to_level1,
         level1_to_level2,
-        KruskalCombinations(),
+        CombinationConfig(evaluator=KruskalCombinations),
         dropna=dropna,
     )
     feature_names = features.names
 
     # max_n_mod respected on train + dev
-    assert all(x_discretized[feature_names].nunique() <= auto_carver.combinations.max_n_mod), (
+    assert all(x_discretized[feature_names].nunique() <= auto_carver.combinations.config.max_n_mod), (
         "Too many buckets after carving of train sample"
     )
-    assert all(x_dev_discretized[feature_names].nunique() <= auto_carver.combinations.max_n_mod), (
+    assert all(x_dev_discretized[feature_names].nunique() <= auto_carver.combinations.config.max_n_mod), (
         "Too many buckets after carving of test sample"
     )
 
@@ -837,7 +855,7 @@ def test_continuous_carver_copy_semantics(
         chained_features,
         level0_to_level1,
         level1_to_level2,
-        KruskalCombinations(),
+        CombinationConfig(evaluator=KruskalCombinations),
         copy=copy,
     )
     feature_names = features.names
@@ -870,7 +888,7 @@ def test_continuous_carver_serialization_roundtrip(
         chained_features,
         level0_to_level1,
         level1_to_level2,
-        KruskalCombinations(),
+        CombinationConfig(evaluator=KruskalCombinations),
     )
     feature_names = features.names
 
@@ -908,7 +926,7 @@ def test_continuous_carver_wrong_dev_transform(
         chained_features,
         level0_to_level1,
         level1_to_level2,
-        KruskalCombinations(),
+        CombinationConfig(evaluator=KruskalCombinations),
     )
 
     # unexpected modal on a feature that has_default — does not raise
@@ -944,7 +962,7 @@ def test_continuous_carver_discretizer_min_freq_respected(
         chained_features,
         level0_to_level1,
         level1_to_level2,
-        KruskalCombinations(),
+        CombinationConfig(evaluator=KruskalCombinations),
         discretizer_min_freq=discretizer_min_freq,
     )
     for feature in features.names:
@@ -996,7 +1014,7 @@ def test_continuous_carver_unknown_ordinal_values_raises(
     auto_carver = ContinuousCarver(
         min_freq=0.15,
         features=features,
-        combinations=KruskalCombinations(),
+        combinations=CombinationConfig(evaluator=KruskalCombinations),
         config=DiscretizerConfig(verbose=False),
     )
     with raises(ValueError):

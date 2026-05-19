@@ -11,6 +11,7 @@ import pandas as pd
 
 from AutoCarver.carvers.utils.pretty_print import index_mapper, prettier_xagg
 from AutoCarver.combinations import (
+    CombinationConfig,
     CombinationEvaluator,
     CramervCombinations,
     KruskalCombinations,
@@ -65,7 +66,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         self,
         features: Features,
         min_freq: float,
-        combinations: CombinationEvaluator,
+        combinations: CombinationConfig,
         *,
         dropna: bool = True,
         ordinal_encoding: bool = True,
@@ -76,8 +77,10 @@ class BaseCarver(BaseDiscretizer, ABC):
         Parameters
         ----------
 
-        combinations : CombinationEvaluator
-            Metric to perform association measure between :class:`Features` and target.
+        combinations : CombinationConfig
+            Configuration for the :class:`CombinationEvaluator` used to measure
+            association between :class:`Features` and the target. ``evaluator``
+            must be set on the config (subclasses default it).
 
         dropna : bool, optional
             * ``True``, try to group ``nan`` with other modalities.
@@ -110,11 +113,14 @@ class BaseCarver(BaseDiscretizer, ABC):
 
         self.discretizer_min_freq = discretizer_min_freq if discretizer_min_freq is not None else min_freq / 2
 
-        # attach combinations and sync the toggles it cares about
-        self.combinations: CombinationEvaluator = combinations
-        self.combinations.min_freq = self.min_freq
-        self.combinations.verbose = self.config.verbose
-        self.combinations.dropna = self.config.dropna
+        # sync the toggles the evaluator cares about onto the combination config, then build
+        combinations = replace(
+            combinations,
+            min_freq=self.min_freq,
+            verbose=self.config.verbose,
+            dropna=self.config.dropna,
+        )
+        self.combinations: CombinationEvaluator = combinations.build()
 
     @property
     def pretty_print(self) -> bool:
@@ -124,12 +130,12 @@ class BaseCarver(BaseDiscretizer, ABC):
     @property
     def max_n_mod(self) -> int:
         """Returns the max_n_mod attribute"""
-        return self.combinations.max_n_mod
+        return self.combinations.config.max_n_mod
 
     @max_n_mod.setter
     def max_n_mod(self, value: int) -> None:
         """Sets the max_n_mod attribute"""
-        self.combinations.max_n_mod = value
+        self.combinations.config = replace(self.combinations.config, max_n_mod=value)
 
     def _prepare_data(self, samples: Samples) -> Samples:
         """Validates format and content of X and y."""
@@ -344,16 +350,18 @@ class BaseCarver(BaseDiscretizer, ABC):
         # deserializing features
         features = Features.load(data.pop("features"))
 
-        # deserializing Combinations
+        # deserializing Combinations into a CombinationConfig
         combinations_json = data.pop("combinations")
-        if combinations_json["sort_by"] == "tschuprowt":
-            combinations = TschuprowtCombinations.load(combinations_json)
-        elif combinations_json["sort_by"] == "cramerv":
-            combinations = CramervCombinations.load(combinations_json)
-        elif combinations_json["sort_by"] == "kruskal":
-            combinations = KruskalCombinations.load(combinations_json)
+        sort_by = combinations_json.pop("sort_by", None)
+        if sort_by == "tschuprowt":
+            evaluator_cls: type[CombinationEvaluator] = TschuprowtCombinations
+        elif sort_by == "cramerv":
+            evaluator_cls = CramervCombinations
+        elif sort_by == "kruskal":
+            evaluator_cls = KruskalCombinations
         else:
-            combinations = CombinationEvaluator.load(combinations_json)
+            raise ValueError(f"[{cls.__name__}] Unknown combinations sort_by={sort_by!r}")
+        combinations = CombinationConfig(evaluator=evaluator_cls, **combinations_json)
 
         is_fitted = data.pop("is_fitted", False)
         min_freq = data.pop("min_freq", None)

@@ -1,6 +1,7 @@
 """Tests for the binary_combinations module."""
 
 import json
+from dataclasses import replace
 
 import numpy as np
 import pandas as pd
@@ -14,7 +15,7 @@ from AutoCarver.combinations.binary.binary_combination_evaluators import (
     TschuprowtCombinations,
 )
 from AutoCarver.combinations.continuous.continuous_combination_evaluators import KruskalCombinations
-from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample
+from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample, CombinationConfig
 from AutoCarver.combinations.utils.combinations import consecutive_combinations, nan_combinations
 from AutoCarver.combinations.utils.testing import Keys, Messages
 from AutoCarver.features import OrdinalFeature
@@ -26,9 +27,7 @@ MIN_FREQ = 0.2
 @fixture(params=[TschuprowtCombinations])
 def evaluator(request: FixtureRequest) -> BinaryCombinationEvaluator:
     """Fixture for BinaryCombinationEvaluator used in tests."""
-    combi_eval = request.param(max_n_mod=MAX_N_MOD)
-    combi_eval.min_freq = MIN_FREQ
-    return combi_eval
+    return request.param(config=CombinationConfig(max_n_mod=MAX_N_MOD, min_freq=MIN_FREQ))
 
 
 def test_init(evaluator: BinaryCombinationEvaluator):
@@ -37,10 +36,10 @@ def test_init(evaluator: BinaryCombinationEvaluator):
     assert evaluator.is_y_continuous is False
     assert evaluator.sort_by in ["cramerv", "tschuprowt"]
 
-    assert evaluator.max_n_mod == MAX_N_MOD
-    assert evaluator.min_freq == MIN_FREQ
-    assert evaluator.dropna is False
-    assert evaluator.verbose is False
+    assert evaluator.config.max_n_mod == MAX_N_MOD
+    assert evaluator.config.min_freq == MIN_FREQ
+    assert evaluator.config.dropna is False
+    assert evaluator.config.verbose is False
     # feature is a property that raises when unset; check the backing attribute
     assert evaluator._feature is None
     assert evaluator.samples.train.xagg is None
@@ -54,9 +53,9 @@ def test_to_json(evaluator: BinaryCombinationEvaluator):
     expected_json = {
         "sort_by": evaluator.sort_by,
         "max_n_mod": MAX_N_MOD,
-        "dropna": evaluator.dropna,
+        "dropna": evaluator.config.dropna,
         "min_freq": MIN_FREQ,
-        "verbose": evaluator.verbose,
+        "verbose": evaluator.config.verbose,
     }
     assert evaluator.to_json() == expected_json
 
@@ -72,9 +71,9 @@ def test_save(evaluator: BinaryCombinationEvaluator, tmp_path):
     expected_json = {
         "sort_by": evaluator.sort_by,
         "max_n_mod": MAX_N_MOD,
-        "dropna": evaluator.dropna,
+        "dropna": evaluator.config.dropna,
         "min_freq": MIN_FREQ,
-        "verbose": evaluator.verbose,
+        "verbose": evaluator.config.verbose,
     }
     assert data == expected_json
 
@@ -101,10 +100,10 @@ def test_load_tschuprowt(tmp_path):
 
     loaded_evaluator = TschuprowtCombinations.load(str(file_name))
 
-    assert loaded_evaluator.max_n_mod == MAX_N_MOD
-    assert loaded_evaluator.dropna is True
-    assert loaded_evaluator.min_freq == MIN_FREQ
-    assert loaded_evaluator.verbose is True
+    assert loaded_evaluator.config.max_n_mod == MAX_N_MOD
+    assert loaded_evaluator.config.dropna is True
+    assert loaded_evaluator.config.min_freq == MIN_FREQ
+    assert loaded_evaluator.config.verbose is True
     assert loaded_evaluator.sort_by == "tschuprowt"
     assert loaded_evaluator.is_y_binary is True
     assert loaded_evaluator.is_y_continuous is False
@@ -132,10 +131,10 @@ def test_load_cramerv(tmp_path):
 
     loaded_evaluator = CramervCombinations.load(str(file_name))
 
-    assert loaded_evaluator.max_n_mod == MAX_N_MOD
-    assert loaded_evaluator.dropna is True
-    assert loaded_evaluator.min_freq == MIN_FREQ
-    assert loaded_evaluator.verbose is True
+    assert loaded_evaluator.config.max_n_mod == MAX_N_MOD
+    assert loaded_evaluator.config.dropna is True
+    assert loaded_evaluator.config.min_freq == MIN_FREQ
+    assert loaded_evaluator.config.verbose is True
     assert loaded_evaluator.sort_by == "cramerv"
     assert loaded_evaluator.is_y_binary is True
     assert loaded_evaluator.is_y_continuous is False
@@ -548,8 +547,7 @@ def test_compute_associations_evaluators_differ():
 
     results = {}
     for cls in [TschuprowtCombinations, CramervCombinations]:
-        ev = cls(max_n_mod=4)
-        ev.min_freq = MIN_FREQ
+        ev = cls(config=CombinationConfig(max_n_mod=4, min_freq=MIN_FREQ))
         ev.samples.train = AggregatedSample(xagg)
         combis = consecutive_combinations(labels, 4)
         grouped = ev._group_xagg_by_combinations(combis)
@@ -693,7 +691,7 @@ def test_get_viable_combination_with_non_viable_train(evaluator: BinaryCombinati
     associations = evaluator._compute_associations(grouped_xaggs)
 
     # test with xagg_dev but not viable on train
-    evaluator.min_freq = 0.6
+    evaluator.config = replace(evaluator.config, min_freq=0.6)
     evaluator.samples.dev = AggregatedSample(xagg)
     result = evaluator._get_viable_combination(associations)
     print(result)
@@ -902,7 +900,7 @@ def test_get_best_combination_non_nan_viable(evaluator: BinaryCombinationEvaluat
 
     evaluator.samples.dev = AggregatedSample(xagg)
 
-    evaluator.max_n_mod = 2
+    evaluator.config = replace(evaluator.config, max_n_mod=2)
 
     result = evaluator._get_best_combination_non_nan()
     print(result)
@@ -936,7 +934,7 @@ def test_get_best_combination_non_nan_not_viable(evaluator: BinaryCombinationEva
 
     evaluator.samples.dev = AggregatedSample(xagg)
 
-    evaluator.max_n_mod = 2
+    evaluator.config = replace(evaluator.config, max_n_mod=2)
 
     result = evaluator._get_best_combination_non_nan()
     assert result is None
@@ -954,7 +952,7 @@ def test_get_best_combination_non_nan_viable_with_nan(evaluator: BinaryCombinati
 
     evaluator.samples.dev = AggregatedSample(xagg)
 
-    evaluator.max_n_mod = 2
+    evaluator.config = replace(evaluator.config, max_n_mod=2)
 
     result = evaluator._get_best_combination_non_nan()
     print(result)
@@ -988,7 +986,7 @@ def test_get_best_combination_with_nan_viable(evaluator: BinaryCombinationEvalua
 
     evaluator.samples.dev = AggregatedSample(xagg)
 
-    evaluator.max_n_mod = 2
+    evaluator.config = replace(evaluator.config, max_n_mod=2)
 
     best_combination = evaluator._get_best_combination_non_nan()
 
@@ -1024,7 +1022,7 @@ def test_get_best_combination_with_nan_not_viable(evaluator: BinaryCombinationEv
 
     evaluator.samples.dev = AggregatedSample(xagg)
 
-    evaluator.max_n_mod = 2
+    evaluator.config = replace(evaluator.config, max_n_mod=2)
 
     best_combination = evaluator._get_best_combination_non_nan()
     result = evaluator._get_best_combination_with_nan(best_combination)
@@ -1045,12 +1043,12 @@ def test_get_best_combination_with_nan_viable_with_nan_without_combi(
 
     evaluator.samples.dev = AggregatedSample(xagg)
 
-    evaluator.max_n_mod = 2
+    evaluator.config = replace(evaluator.config, max_n_mod=2)
 
     # test without best_combination
     result = evaluator._get_best_combination_with_nan(None)
     assert result is None
-    evaluator.dropna = True
+    evaluator.config = replace(evaluator.config, dropna=True)
     result = evaluator._get_best_combination_with_nan(None)
     assert result is None
     feature.has_nan = False
@@ -1061,7 +1059,7 @@ def test_get_best_combination_with_nan_viable_with_nan_without_combi(
     feature.has_nan = True
     feature.dropna = False
     evaluator.feature = feature
-    evaluator.dropna = True
+    evaluator.config = replace(evaluator.config, dropna=True)
     result = evaluator._get_best_combination_with_nan(None)
     assert result is None
 
@@ -1079,7 +1077,7 @@ def test_get_best_combination_with_nan_viable_with_nan_without_feature_nan(
 
     evaluator.samples.dev = AggregatedSample(xagg)
 
-    evaluator.max_n_mod = 2
+    evaluator.config = replace(evaluator.config, max_n_mod=2)
 
     best_combination = evaluator._get_best_combination_non_nan()
 
@@ -1098,7 +1096,7 @@ def test_get_best_combination_with_nan_viable_with_nan_without_dropna(
     xagg = pd.DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 3]}, index=["a", "b", "c", feature.nan])
     evaluator.samples.train = AggregatedSample(xagg)
     evaluator.samples.dev = AggregatedSample(xagg)
-    evaluator.max_n_mod = 2
+    evaluator.config = replace(evaluator.config, max_n_mod=2)
 
     best_combination = evaluator._get_best_combination_non_nan()
     result = evaluator._get_best_combination_with_nan(best_combination)
@@ -1111,14 +1109,14 @@ def test_get_best_combination_with_nan_viable_with_nan(evaluator: BinaryCombinat
     feature.has_nan = True
     feature.dropna = True  # has to be set to True
     evaluator.feature = feature
-    evaluator.dropna = True
+    evaluator.config = replace(evaluator.config, dropna=True)
 
     xagg = pd.DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 3]}, index=["a", "b", "c", feature.nan])
     evaluator.samples.train = AggregatedSample(xagg)
 
     evaluator.samples.dev = AggregatedSample(xagg)
 
-    evaluator.max_n_mod = 2
+    evaluator.config = replace(evaluator.config, max_n_mod=2)
 
     best_combination = evaluator._get_best_combination_non_nan()
 
@@ -1151,12 +1149,12 @@ def test_get_best_combination_viable(evaluator: BinaryCombinationEvaluator):
     feature = OrdinalFeature("feature", ["a", "b", "c"])
 
     xagg = pd.DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
-    evaluator.max_n_mod = 2
+    evaluator.config = replace(evaluator.config, max_n_mod=2)
 
     result = evaluator.get_best_combination(feature, xagg, xagg)
     print(result)
     assert evaluator.feature == feature
-    assert feature.dropna is evaluator.dropna
+    assert feature.dropna is evaluator.config.dropna
 
     expected = {
         "xagg": pd.DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
@@ -1182,12 +1180,12 @@ def test_get_best_combination_viable_without_dev(evaluator: BinaryCombinationEva
     feature = OrdinalFeature("feature", ["a", "b", "c"])
 
     xagg = pd.DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
-    evaluator.max_n_mod = 2
+    evaluator.config = replace(evaluator.config, max_n_mod=2)
 
     result = evaluator.get_best_combination(feature, xagg)
     print(result)
     assert evaluator.feature == feature
-    assert feature.dropna is evaluator.dropna
+    assert feature.dropna is evaluator.config.dropna
 
     expected = {
         "xagg": pd.DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
@@ -1212,7 +1210,7 @@ def test_get_best_combination_not_viable(evaluator: BinaryCombinationEvaluator):
     feature = OrdinalFeature("feature", ["a", "b", "c"])
 
     xagg = pd.DataFrame({0: [0], 1: [2]}, index=["a"])
-    evaluator.max_n_mod = 2
+    evaluator.config = replace(evaluator.config, max_n_mod=2)
 
     result = evaluator.get_best_combination(feature, xagg, xagg)
     assert result is None
@@ -1226,12 +1224,12 @@ def test_get_best_combination_viable_with_nan_without_feature_nan(
     feature.has_nan = False
 
     xagg = pd.DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 3]}, index=["a", "b", "c", "d"])
-    evaluator.max_n_mod = 2
+    evaluator.config = replace(evaluator.config, max_n_mod=2)
 
     result = evaluator.get_best_combination(feature, xagg)
     print(result)
     assert evaluator.feature == feature
-    assert feature.dropna is evaluator.dropna
+    assert feature.dropna is evaluator.config.dropna
     expected = {
         "xagg": pd.DataFrame({0: [2, 0], 1: [2, 4]}, index=["a", "c"]),
         "combination": [["a", "b"], ["c", "d"]],
@@ -1253,13 +1251,13 @@ def test_get_best_combination_viable_with_nan_without_dropna(
     feature.has_nan = True
 
     xagg = pd.DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 3]}, index=["a", "b", "c", feature.nan])
-    evaluator.max_n_mod = 2
-    evaluator.dropna = False
+    evaluator.config = replace(evaluator.config, max_n_mod=2)
+    evaluator.config = replace(evaluator.config, dropna=False)
 
     result = evaluator.get_best_combination(feature, xagg, xagg)
     print(result)
     assert evaluator.feature == feature
-    assert feature.dropna is evaluator.dropna
+    assert feature.dropna is evaluator.config.dropna
     expected = {
         "xagg": pd.DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
         "combination": [["a"], ["b", "c"]],
@@ -1287,14 +1285,14 @@ def test_get_best_combination_viable_with_nan(evaluator: BinaryCombinationEvalua
     assert feature.dropna is False
 
     xagg = pd.DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 3]}, index=["a", "b", "c", feature.nan])
-    evaluator.max_n_mod = 2
-    evaluator.dropna = True
+    evaluator.config = replace(evaluator.config, max_n_mod=2)
+    evaluator.config = replace(evaluator.config, dropna=True)
 
     result = evaluator.get_best_combination(feature, xagg, xagg)
     print(result)
     assert evaluator.feature == feature
     assert feature.dropna is True
-    assert feature.dropna is evaluator.dropna
+    assert feature.dropna is evaluator.config.dropna
 
     expected = {
         "xagg": pd.DataFrame({0: [0, 2], 1: [5, 1]}, index=["a", "b to c"]),

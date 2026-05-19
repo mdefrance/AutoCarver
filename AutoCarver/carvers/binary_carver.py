@@ -2,11 +2,13 @@
 for binary classification tasks.
 """
 
+from dataclasses import replace
+
 import numpy as np
 import pandas as pd
 
 from AutoCarver.carvers.utils.base_carver import BaseCarver, Samples
-from AutoCarver.combinations import CombinationEvaluator, TschuprowtCombinations
+from AutoCarver.combinations import CombinationConfig, TschuprowtCombinations
 from AutoCarver.discretizers.utils.base_discretizer import DiscretizerConfig
 from AutoCarver.features import BaseFeature, Features
 from AutoCarver.utils import extend_docstring
@@ -34,8 +36,8 @@ class BinaryCarver(BaseCarver):
         *,
         dropna: bool = True,
         ordinal_encoding: bool = True,
-        max_n_mod: int = 5,
-        combinations: CombinationEvaluator | None = None,
+        max_n_mod: int | None = None,
+        combinations: CombinationConfig | None = None,
         discretizer_min_freq: float | None = None,
         config: DiscretizerConfig | None = None,
     ) -> None:
@@ -43,20 +45,28 @@ class BinaryCarver(BaseCarver):
         Keyword Arguments
         -----------------
 
-        combinations : BinaryCombinationEvaluator, optional
-            Metric to perform association measure between :class:`Features` and target.
+        combinations : CombinationConfig, optional
+            Configuration for the evaluator that measures association between
+            :class:`Features` and target. ``evaluator`` defaults to
+            :class:`TschuprowtCombinations` if unset.
 
             .. tip::
                 * Use :ref:`TschuprowtCombinations` for less, more robust, modalities
                 * Use :ref:`CramervCombinations` for more, less robust, modalities
+
+        max_n_mod : int, optional
+            Overrides :attr:`CombinationConfig.max_n_mod` when explicitly provided.
         """
-
         if combinations is None:
-            combinations = TschuprowtCombinations(max_n_mod=max_n_mod)
+            combinations = CombinationConfig()
+        if combinations.evaluator is None:
+            combinations = replace(combinations, evaluator=TschuprowtCombinations)
+        if max_n_mod is not None:
+            combinations = replace(combinations, max_n_mod=max_n_mod)
 
-        if not combinations.is_y_binary:
+        if not combinations.evaluator.is_y_binary:
             raise ValueError(
-                f"[{self.__name__}] {combinations} is not suited for binary targets. "
+                f"[{self.__name__}] {combinations.evaluator.__name__} is not suited for binary targets. "
                 f"Choose from: TschuprowtCombinations, CramervCombinations."
             )
 

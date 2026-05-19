@@ -2,11 +2,13 @@
 for continuous regression tasks.
 """
 
+from dataclasses import replace
+
 import numpy as np
 import pandas as pd
 
 from AutoCarver.carvers.utils.base_carver import BaseCarver, Samples
-from AutoCarver.combinations import CombinationEvaluator, KruskalCombinations
+from AutoCarver.combinations import CombinationConfig, KruskalCombinations
 from AutoCarver.discretizers.utils.base_discretizer import DiscretizerConfig
 from AutoCarver.features import BaseFeature, Features
 from AutoCarver.utils import extend_docstring
@@ -35,25 +37,34 @@ class ContinuousCarver(BaseCarver):
         *,
         dropna: bool = True,
         ordinal_encoding: bool = True,
-        max_n_mod: int = 5,
-        combinations: CombinationEvaluator | None = None,
+        max_n_mod: int | None = None,
+        combinations: CombinationConfig | None = None,
         discretizer_min_freq: float | None = None,
         config: DiscretizerConfig | None = None,
     ) -> None:
         """
         Keyword Arguments
         -----------------
-        combinations : ContinuousCombinationEvaluator, optional
-            Metric to perform association measure between :class:`Features` and target.
+        combinations : CombinationConfig, optional
+            Configuration for the evaluator that measures association between
+            :class:`Features` and target. ``evaluator`` defaults to
+            :class:`KruskalCombinations` if unset.
 
             Currently, only :ref:`KruskalCombinations` are implemented.
+
+        max_n_mod : int, optional
+            Overrides :attr:`CombinationConfig.max_n_mod` when explicitly provided.
         """
         if combinations is None:
-            combinations = KruskalCombinations(max_n_mod=max_n_mod)
+            combinations = CombinationConfig()
+        if combinations.evaluator is None:
+            combinations = replace(combinations, evaluator=KruskalCombinations)
+        if max_n_mod is not None:
+            combinations = replace(combinations, max_n_mod=max_n_mod)
 
-        if not combinations.is_y_continuous:
+        if not combinations.evaluator.is_y_continuous:
             raise ValueError(
-                f"[{self.__name__}] {combinations} is not suited for continuous targets. "
+                f"[{self.__name__}] {combinations.evaluator.__name__} is not suited for continuous targets. "
                 f"Choose from: KruskalCombinations."
             )
 

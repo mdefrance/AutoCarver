@@ -4,7 +4,12 @@ import pandas as pd
 from pytest import FixtureRequest, fixture, raises
 
 from AutoCarver.carvers.utils.base_carver import BaseCarver, Samples, discretize
-from AutoCarver.combinations import CramervCombinations, KruskalCombinations, TschuprowtCombinations
+from AutoCarver.combinations import (
+    CombinationConfig,
+    CramervCombinations,
+    KruskalCombinations,
+    TschuprowtCombinations,
+)
 from AutoCarver.discretizers.utils.base_discretizer import DiscretizerConfig, Sample
 from AutoCarver.features import Features
 from AutoCarver.utils.dependencies import has_idisplay
@@ -66,9 +71,9 @@ def samples(sample_data):
 
 
 @fixture(params=[KruskalCombinations, CramervCombinations, TschuprowtCombinations])
-def evaluator(request: FixtureRequest):
-    """Fixture for evaluator used in tests."""
-    return request.param()
+def evaluator(request: FixtureRequest) -> CombinationConfig:
+    """Fixture for a CombinationConfig used to build the evaluator inside BaseCarver."""
+    return CombinationConfig(evaluator=request.param)
 
 
 @fixture
@@ -90,10 +95,10 @@ def test_initialization(features, evaluator):
     assert carver.config.dropna is True
     assert carver.config.verbose is True
     assert carver.config.n_jobs == 2
-    assert carver.combinations == evaluator
-    assert carver.combinations.min_freq == 0.1
-    assert carver.combinations.verbose is True
-    assert carver.combinations.dropna is True
+    assert isinstance(carver.combinations, evaluator.evaluator)
+    assert carver.combinations.config.min_freq == 0.1
+    assert carver.combinations.config.verbose is True
+    assert carver.combinations.config.dropna is True
 
 
 def test_pretty_print(features, evaluator):

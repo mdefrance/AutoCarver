@@ -83,7 +83,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
             raise ValueError(f"[{self.__name__}] min_freq must be set before fitting")
 
         # grouping rare modalities for each feature
-        common_modalities = {
+        common_modalities: dict[str, GroupedList] = {
             feature.version: find_common_modalities(
                 sample.X[feature.version],
                 sample.y,
