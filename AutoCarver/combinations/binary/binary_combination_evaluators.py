@@ -19,14 +19,13 @@ class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
     is_y_binary = True
     _target_rate_classes: list[type[BinaryTargetRate]] = [TargetMean, OddsRatio, Woe]
 
-    def _init_target_rate(self, target_rate: BinaryTargetRate) -> None:
+    def _init_target_rate(self, target_rate: BinaryTargetRate | None) -> BinaryTargetRate:
         """Initializes target rate."""
         if target_rate is None:
-            self.target_rate = TargetMean()
+            return TargetMean()
         elif not isinstance(target_rate, BinaryTargetRate):
             raise ValueError("target_rate must be a BinaryTargetRate")
-        else:
-            self.target_rate = target_rate
+        return target_rate
 
     def _association_measure(
         self, xagg: AggregatedSample, n_obs: int | None = None, tol: float = 1e-10

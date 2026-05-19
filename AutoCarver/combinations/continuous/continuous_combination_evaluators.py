@@ -15,14 +15,13 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
     is_y_continuous = True
     _target_rate_classes: list[type[ContinuousTargetRate]] = [TargetMean, TargetMedian]
 
-    def _init_target_rate(self, target_rate: ContinuousTargetRate) -> None:
+    def _init_target_rate(self, target_rate: ContinuousTargetRate | None) -> ContinuousTargetRate:
         """Initializes target rate."""
         if target_rate is None:
-            self.target_rate = TargetMean()
+            return TargetMean()
         elif not isinstance(target_rate, ContinuousTargetRate):
             raise ValueError("target_rate must be a ContinuousTargetRate")
-        else:
-            self.target_rate = target_rate
+        return target_rate
 
     def _association_measure(
         self, xagg: AggregatedSample, n_obs: int | None = None, tol: float = 1e-10

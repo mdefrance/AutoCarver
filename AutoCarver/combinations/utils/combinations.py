@@ -11,7 +11,7 @@ from AutoCarver.features import BaseFeature, GroupedList
 
 
 def combinations_at_index(
-    start_index: int, elements: list[Any], remaining_groups: int
+    start_index: int, elements: list[Any] | GroupedList, remaining_groups: int
 ) -> Generator[tuple[list[Any], int, int], None, None]:
     """Gets all possible combinations of sizes up to the last element of a list"""
 

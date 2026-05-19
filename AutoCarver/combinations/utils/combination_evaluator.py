@@ -160,12 +160,14 @@ class CombinationEvaluator(ABC):
         self._feature: BaseFeature | None = None
         self.samples: AggregatedSamples = AggregatedSamples()
         self._statistics_cache = None
-        self._init_target_rate(target_rate)
+        self.target_rate: TargetRate = self._init_target_rate(target_rate)
 
     @abstractmethod
-    def _init_target_rate(self, target_rate: TargetRate) -> None:
+    def _init_target_rate(self, target_rate: TargetRate | None) -> TargetRate:
         """Initializes target rate."""
-        self.target_rate = target_rate
+        if target_rate is None:
+            raise NotImplementedError("Subclasses must implement _init_target_rate to provide a default target rate")
+        return target_rate
 
     @property
     def feature(self) -> BaseFeature:
