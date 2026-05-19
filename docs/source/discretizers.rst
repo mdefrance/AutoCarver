@@ -33,6 +33,26 @@ Discretizers
    * Helps improve modality relevancy and reduces the set of possible combinations to test from
    * Included in all carving pipelines: :class:`BinaryCarver`, :class:`MulticlassCarver`, :class:`ContinuousCarver`
 
+.. _DiscretizerConfig:
+
+DiscretizerConfig
+-----------------
+
+Behavioral toggles shared by every discretizer and carver. All flags are optional
+and propagate unchanged to sub-discretizers; domain parameters such as ``min_freq``
+remain explicit constructor arguments.
+
+.. autoclass:: AutoCarver.discretizers.DiscretizerConfig
+
+* ``copy`` (``bool``, default ``True``) — copy input ``X`` rather than mutating it.
+* ``ordinal_encoding`` (``bool``, default ``False``) — emit ordinal codes instead of
+  string labels (carvers default this to ``True``).
+* ``dropna`` (``bool``, default ``False``) — group ``nan`` into another modality
+  (carvers default this to ``True``).
+* ``verbose`` (``bool``, default ``False``) — print progress and statistics.
+* ``n_jobs`` (``int``, default ``1``) — number of workers for parallel fits.
+
+
 .. _Discretizer:
 
 Discretizer, a complete discretization pipeline

@@ -16,7 +16,7 @@ class ContinuousCarver(BaseCarver):
     """Automatic carving of continuous, discrete, categorical and ordinal
     features that maximizes association with a continuous target.
 
-    For continuous targets, :ref:`Kruskal` is used as association measure to sort combinations.
+    For continuous targets, :ref:`kruskal` is used as association measure to sort combinations.
 
     Examples
     --------

@@ -3,15 +3,27 @@
 Carvers
 =======
 
-The core of **AutoCarver** resides in its **Carvers**, they provide the following Data Optimization steps: 
+The core of **AutoCarver** resides in its **Carvers**, they provide the following Data Optimization steps:
 
    1. Identifying the most associated combination from all ordered combinations of modalities
    2. Testing all combinations of ``nan``s grouped to one of those modalities
 
 Target-specific tools allow for association optimization per desired task:
- * :ref:`BinaryCarver` 
+ * :ref:`BinaryCarver`
  * :ref:`MulticlassCarver`
  * :ref:`ContinuousCarver`
+
+All carvers share the same constructor signature:
+
+* ``features`` (:class:`Features`) — features to carve.
+* ``min_freq`` (``float``) — minimum frequency per modality.
+* ``max_n_mod`` (``int``, **mandatory**) — maximum number of modalities per carved
+  feature; forwarded to the configured :class:`CombinationEvaluator`.
+* ``combination_evaluator`` (:class:`CombinationEvaluator`, keyword-only, optional) —
+  association metric. Defaults to a task-appropriate evaluator (see each subclass).
+* ``config`` (:class:`DiscretizerConfig`, keyword-only, optional) — behavioral toggles
+  (``copy`` / ``ordinal_encoding`` / ``dropna`` / ``verbose`` / ``n_jobs``).
+  Defaults to ``DiscretizerConfig(dropna=True, ordinal_encoding=True)``.
 
 
 

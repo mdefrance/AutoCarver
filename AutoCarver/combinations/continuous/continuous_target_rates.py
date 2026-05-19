@@ -43,8 +43,6 @@ class TargetMean(ContinuousTargetRate):
 
     def _compute(self, xagg: pd.Series | pd.DataFrame) -> pd.Series:
         """Computes the mean target rate."""
-        if isinstance(xagg, pd.Series):
-            return xagg.mean()
         return xagg.apply(np.mean)
 
 
@@ -55,8 +53,6 @@ class TargetMedian(ContinuousTargetRate):
 
     def _compute(self, xagg: pd.Series | pd.DataFrame) -> pd.Series:
         """Computes the mean target rate."""
-        if isinstance(xagg, pd.Series):
-            return xagg.median()
         return xagg.apply(np.median)
 
 
