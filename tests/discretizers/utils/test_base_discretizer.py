@@ -6,12 +6,6 @@ import numpy as np
 import pandas as pd
 from pytest import FixtureRequest, fixture, raises
 
-from AutoCarver.combinations import (
-    CombinationEvaluator,
-    CramervCombinations,
-    KruskalCombinations,
-    TschuprowtCombinations,
-)
 from AutoCarver.discretizers.utils.base_discretizer import (
     BaseDiscretizer,
     DiscretizerConfig,
@@ -602,13 +596,7 @@ def test_transform(true_false: bool) -> None:
         assert ((result[feature] == expected[feature]) | (result[feature].isna() & expected[feature].isna())).all()
 
 
-@fixture(params=[KruskalCombinations, CramervCombinations, TschuprowtCombinations, None])
-def combinations(request: FixtureRequest):
-    """Evaluator class to attach to a BaseDiscretizer (or None)."""
-    return request.param
-
-
-def _make_discretizer(features, *, min_freq, combinations, true_false, n_jobs):
+def _make_discretizer(features, *, min_freq, true_false, n_jobs):
     """Helper: build a BaseDiscretizer with the new config-based API."""
     config = DiscretizerConfig(
         dropna=true_false,
@@ -617,56 +605,35 @@ def _make_discretizer(features, *, min_freq, combinations, true_false, n_jobs):
         n_jobs=n_jobs,
     )
     discretizer = BaseDiscretizer(features, min_freq=min_freq, config=config)
-    discretizer.combination_evaluator = combinations
     discretizer.is_fitted = true_false
     return discretizer
 
 
-def test_to_json(features: Features, true_false: bool, combinations: type[CombinationEvaluator] | None) -> None:
+def test_to_json(features: Features, true_false: bool) -> None:
     """tests base discretizer to_json method"""
 
     min_freq = 0.1
-    evaluator = (
-        combinations(min_freq=min_freq, dropna=true_false, verbose=true_false) if combinations is not None else None
-    )
     n_jobs = 2
-    discretizer = _make_discretizer(
-        features, min_freq=min_freq, combinations=evaluator, true_false=true_false, n_jobs=n_jobs
-    )
+    discretizer = _make_discretizer(features, min_freq=min_freq, true_false=true_false, n_jobs=n_jobs)
 
     result = discretizer.to_json(light_mode=True)
     assert isinstance(result, dict)
     assert "features" in result
+    assert "combination_evaluator" not in result
     assert result["config"]["dropna"] == true_false
     assert result["min_freq"] == min_freq
-
-    if evaluator is None:
-        assert "combination_evaluator" not in result
-    else:
-        assert result["combination_evaluator"] == {
-            "sort_by": evaluator.sort_by,
-            "max_n_mod": 5,
-            "dropna": true_false,
-            "min_freq": min_freq,
-            "verbose": true_false,
-        }
     assert result["is_fitted"] == true_false
     assert result["config"]["n_jobs"] == n_jobs
     assert result["config"]["verbose"] == true_false
     assert result["config"]["ordinal_encoding"] == true_false
 
 
-def test_save(tmp_path, features: Features, true_false: bool, combinations: type[CombinationEvaluator] | None) -> None:
+def test_save(tmp_path, features: Features, true_false: bool) -> None:
     """tests base discretizer save method"""
 
     min_freq = 0.1
-    evaluator = (
-        combinations(min_freq=min_freq, dropna=true_false, verbose=true_false) if combinations is not None else None
-    )
     n_jobs = 2
-    discretizer = _make_discretizer(
-        features, min_freq=min_freq, combinations=evaluator, true_false=true_false, n_jobs=n_jobs
-    )
+    discretizer = _make_discretizer(features, min_freq=min_freq, true_false=true_false, n_jobs=n_jobs)
 
     file_path = tmp_path / "test_discretizer.json"
     discretizer.save(str(file_path), light_mode=true_false)
@@ -681,19 +648,12 @@ def test_save(tmp_path, features: Features, true_false: bool, combinations: type
         discretizer.save("wrong_path", light_mode=true_false)
 
 
-def test_load_discretizer(
-    tmp_path, features: Features, true_false: bool, combinations: type[CombinationEvaluator] | None
-) -> None:
+def test_load_discretizer(tmp_path, features: Features, true_false: bool) -> None:
     """tests base discretizer load_discretizer method"""
 
     min_freq = 0.1
     n_jobs = 2
-    evaluator = (
-        combinations(min_freq=min_freq, dropna=true_false, verbose=true_false) if combinations is not None else None
-    )
-    discretizer = _make_discretizer(
-        features, min_freq=min_freq, combinations=evaluator, true_false=true_false, n_jobs=n_jobs
-    )
+    discretizer = _make_discretizer(features, min_freq=min_freq, true_false=true_false, n_jobs=n_jobs)
 
     file_path = tmp_path / "test_discretizer.json"
     discretizer.save(str(file_path), light_mode=true_false)

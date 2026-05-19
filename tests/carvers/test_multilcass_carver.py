@@ -81,7 +81,7 @@ def test_multiclass_carver_initialization():
     assert carver.features == features
     assert carver.config.dropna is True
     assert isinstance(carver.combination_evaluator, TschuprowtCombinations)
-    assert carver.combination_evaluator.max_n_mod == 5
+    assert carver.max_n_mod == 5
 
     max_n_mod = 8
     carver = MulticlassCarver(
@@ -91,7 +91,7 @@ def test_multiclass_carver_initialization():
         combination_evaluator=TschuprowtCombinations(),
     )
     assert isinstance(carver.combination_evaluator, TschuprowtCombinations)
-    assert carver.combination_evaluator.max_n_mod == max_n_mod
+    assert carver.max_n_mod == max_n_mod
 
     carver = MulticlassCarver(
         min_freq=0.1,
@@ -100,7 +100,7 @@ def test_multiclass_carver_initialization():
         combination_evaluator=CramervCombinations(),
     )
     assert isinstance(carver.combination_evaluator, CramervCombinations)
-    assert carver.combination_evaluator.max_n_mod == max_n_mod
+    assert carver.max_n_mod == max_n_mod
 
     with raises(ValueError):
         MulticlassCarver(
@@ -700,9 +700,8 @@ def test_multiclass_carver_save_load(tmp_path: Path, evaluator: CombinationEvalu
     assert carver.config.verbose == loaded_carver.config.verbose
     assert carver.config.copy == loaded_carver.config.copy
     assert carver.combination_evaluator.__class__ == loaded_carver.combination_evaluator.__class__
-    assert carver.combination_evaluator.max_n_mod == loaded_carver.combination_evaluator.max_n_mod
+    assert carver.max_n_mod == loaded_carver.max_n_mod
     assert carver.combination_evaluator.sort_by == loaded_carver.combination_evaluator.sort_by
-    assert carver.combination_evaluator.dropna == loaded_carver.combination_evaluator.dropna
     assert carver.combination_evaluator.verbose == loaded_carver.combination_evaluator.verbose
 
 

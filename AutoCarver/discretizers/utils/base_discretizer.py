@@ -12,7 +12,6 @@ import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from AutoCarver.combinations import CombinationEvaluator
 from AutoCarver.discretizers.utils.multiprocessing import apply_async_function
 from AutoCarver.features import BaseFeature, Features
 from AutoCarver.utils import extend_docstring
@@ -386,10 +385,6 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
                 "copy": self.config.copy,
             },
         }
-
-        combination_evaluator = getattr(self, "combination_evaluator", None)
-        if isinstance(combination_evaluator, CombinationEvaluator):
-            content["combination_evaluator"] = combination_evaluator.to_json()
 
         return content
 

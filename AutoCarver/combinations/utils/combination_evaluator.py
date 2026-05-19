@@ -140,25 +140,13 @@ class CombinationEvaluator(ABC):
 
     def __init__(
         self,
-        max_n_mod: int = 5,
         *,
-        min_freq: float | None = None,
-        dropna: bool = False,
         verbose: bool = False,
         target_rate: TargetRate | None = None,
     ) -> None:
         """
         Parameters
         ----------
-        max_n_mod : int, optional
-            Maximum number of modalities per feature, by default ``5``.
-
-        min_freq : float, optional
-            Minimum frequency per modality per feature, by default ``None``.
-
-        dropna : bool, optional
-            Whether to try grouping ``nan`` with other modalities, by default ``False``.
-
         verbose : bool, optional
             Whether to print progress / statistics, by default ``False``.
 
@@ -166,9 +154,6 @@ class CombinationEvaluator(ABC):
             Target rate strategy. If ``None``, each evaluator subclass picks its own
             default in :meth:`_init_target_rate`.
         """
-        self.max_n_mod: int = max_n_mod
-        self.min_freq: float | None = min_freq
-        self.dropna: bool = dropna
         self.verbose: bool = verbose
 
         # attributes to be set by get_best_combination
@@ -194,7 +179,7 @@ class CombinationEvaluator(ABC):
         self._feature = value
 
     def __repr__(self) -> str:
-        return f"{self.__name__}(max_n_mod={self.max_n_mod})"
+        return f"{self.__name__}(target_rate={self.target_rate.__name__})"
 
     def _group_xagg_by_combinations(self, combinations: list[list]) -> list[dict]:
         """groups xagg by combinations of indices"""
@@ -328,12 +313,16 @@ class CombinationEvaluator(ABC):
         feature: BaseFeature,
         xagg: pd.Series | pd.DataFrame | None,
         xagg_dev: pd.Series | pd.DataFrame | None = None,
+        *,
+        max_n_mod: int,
+        min_freq: float,
+        dropna: bool,
     ) -> dict | None:
         """Computes best combination of modalities for the feature"""
 
-        # checking for min_freq
-        if self.min_freq is None:
-            raise ValueError("min_freq has to be set before calling get_best_combination")
+        self.max_n_mod = max_n_mod
+        self.min_freq = min_freq
+        self.dropna = dropna
 
         # setting dropna to user-requested value
         self.feature = feature
@@ -514,9 +503,7 @@ class CombinationEvaluator(ABC):
         """
         return {
             "sort_by": self.sort_by,
-            "max_n_mod": self.max_n_mod,
-            "dropna": self.dropna,
-            "min_freq": self.min_freq,
+            "target_rate": self.target_rate.__name__,
             "verbose": self.verbose,
         }
 
@@ -566,9 +553,16 @@ class CombinationEvaluator(ABC):
         elif combinations_json.get("sort_by") != cls.sort_by:
             raise ValueError(f"[{cls.__name__}] sort_by has to be {cls.sort_by}")
 
-        # building config from json (sort_by is identity, not a config field)
-        combinations_json = {k: v for k, v in combinations_json.items() if k != "sort_by"}
-        return cls(**combinations_json)
+        # resolve target_rate name → instance using the subclass registry
+        target_rate_name = combinations_json.pop("target_rate", None)
+        target_rate = None
+        registry = {tr().__name__: tr for tr in getattr(cls, "_target_rate_classes", [])}
+        if target_rate_name in registry:
+            target_rate = registry[target_rate_name]()
+
+        # strip non-constructor fields before passing remaining kwargs
+        combinations_json.pop("sort_by", None)
+        return cls(target_rate=target_rate, **combinations_json)
 
 
 def filter_nan(xagg: pd.Series | pd.DataFrame | None, str_nan: str) -> pd.Series | pd.DataFrame | None:

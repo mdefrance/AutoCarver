@@ -88,8 +88,9 @@ class BaseCarver(BaseDiscretizer, ABC):
             Pre-built :class:`CombinationEvaluator` instance used to measure
             association. Subclasses default this to a task-appropriate instance
             (e.g. :class:`TschuprowtCombinations` for binary). The carver
-            overwrites ``max_n_mod`` / ``min_freq`` / ``dropna`` / ``verbose``
-            on the instance so they stay in sync with the carver's settings.
+            forwards ``verbose`` onto the instance and passes ``max_n_mod`` /
+            ``min_freq`` / ``dropna`` directly to each
+            :meth:`~CombinationEvaluator.get_best_combination` call.
 
         config : DiscretizerConfig, optional
             Behavioral toggles inherited from :class:`BaseDiscretizer`. Defaults
@@ -108,11 +109,7 @@ class BaseCarver(BaseDiscretizer, ABC):
             config = DiscretizerConfig(dropna=True, ordinal_encoding=True)
         super().__init__(features, min_freq=min_freq, config=config)
 
-        # forward carver-controlled attrs onto the evaluator instance; from here
-        # on, the evaluator is the single source of truth for max_n_mod / etc.
-        combination_evaluator.max_n_mod = max_n_mod
-        combination_evaluator.min_freq = self.min_freq
-        combination_evaluator.dropna = self.config.dropna
+        self.max_n_mod = max_n_mod
         combination_evaluator.verbose = self.config.verbose
         self.combination_evaluator: CombinationEvaluator = combination_evaluator
 
@@ -121,15 +118,11 @@ class BaseCarver(BaseDiscretizer, ABC):
         """Returns the pretty_print attribute"""
         return self.config.verbose and _has_idisplay
 
-    @property
-    def max_n_mod(self) -> int:
-        """Returns the max_n_mod attribute (forwards to the evaluator)."""
-        return self.combination_evaluator.max_n_mod
-
-    @max_n_mod.setter
-    def max_n_mod(self, value: int) -> None:
-        """Sets the max_n_mod attribute (forwards to the evaluator)."""
-        self.combination_evaluator.max_n_mod = value
+    def to_json(self, light_mode: bool = False) -> dict:
+        content = super().to_json(light_mode)
+        content["max_n_mod"] = self.max_n_mod
+        content["combination_evaluator"] = self.combination_evaluator.to_json()
+        return content
 
     def _prepare_data(self, samples: Samples) -> Samples:
         """Validates format and content of X and y."""
@@ -240,7 +233,9 @@ class BaseCarver(BaseDiscretizer, ABC):
         self._print_xagg(feature, xagg=xagg, xagg_dev=xagg_dev, message="Raw distribution")
 
         # getting best combination
-        best_combination = self.combination_evaluator.get_best_combination(feature, xagg, xagg_dev=xagg_dev)
+        best_combination = self.combination_evaluator.get_best_combination(
+            feature, xagg, xagg_dev, max_n_mod=self.max_n_mod, min_freq=self.min_freq, dropna=self.config.dropna
+        )
 
         # printing carved distribution, for found, suitable combination
         if best_combination is not None:
@@ -357,6 +352,7 @@ class BaseCarver(BaseDiscretizer, ABC):
 
         is_fitted = data.pop("is_fitted", False)
         min_freq = data.pop("min_freq", None)
+        max_n_mod = data.pop("max_n_mod")
         config_data = data.pop("config", {})
         config = DiscretizerConfig(
             dropna=config_data.get("dropna", True),
@@ -369,7 +365,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         instance = cls(
             features=features,
             min_freq=min_freq,
-            max_n_mod=combinations_json.pop("max_n_mod"),
+            max_n_mod=max_n_mod,
             combination_evaluator=evaluator_cls(),
             config=config,
         )

@@ -96,9 +96,9 @@ def test_initialization(features, evaluator):
     assert carver.config.verbose is True
     assert carver.config.n_jobs == 2
     assert isinstance(carver.combination_evaluator, type(evaluator))
-    assert carver.combination_evaluator.min_freq == 0.1
+    assert carver.min_freq == 0.1
     assert carver.combination_evaluator.verbose is True
-    assert carver.combination_evaluator.dropna is True
+    assert carver.config.dropna is True
 
 
 def test_pretty_print(features, evaluator):

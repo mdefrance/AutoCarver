@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import chi2_contingency
 
-from AutoCarver.combinations.binary.binary_target_rates import BinaryTargetRate, TargetMean
+from AutoCarver.combinations.binary.binary_target_rates import BinaryTargetRate, OddsRatio, TargetMean, Woe
 from AutoCarver.combinations.utils.combination_evaluator import (
     AggregatedSample,
     CombinationEvaluator,
@@ -17,6 +17,7 @@ class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
     """Binary combination evaluator class."""
 
     is_y_binary = True
+    _target_rate_classes: list[type[BinaryTargetRate]] = [TargetMean, OddsRatio, Woe]
 
     def _init_target_rate(self, target_rate: BinaryTargetRate) -> None:
         """Initializes target rate."""
