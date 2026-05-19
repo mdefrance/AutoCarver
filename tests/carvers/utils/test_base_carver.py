@@ -5,7 +5,7 @@ from pytest import FixtureRequest, fixture, raises
 
 from AutoCarver.carvers.utils.base_carver import BaseCarver, Samples, discretize
 from AutoCarver.combinations import (
-    CombinationConfig,
+    CombinationEvaluator,
     CramervCombinations,
     KruskalCombinations,
     TschuprowtCombinations,
@@ -71,9 +71,9 @@ def samples(sample_data):
 
 
 @fixture(params=[KruskalCombinations, CramervCombinations, TschuprowtCombinations])
-def evaluator(request: FixtureRequest) -> CombinationConfig:
-    """Fixture for a CombinationConfig used to build the evaluator inside BaseCarver."""
-    return CombinationConfig(evaluator=request.param)
+def evaluator(request: FixtureRequest) -> CombinationEvaluator:
+    """Fixture for an evaluator instance passed directly to the carver."""
+    return request.param()
 
 
 @fixture
@@ -87,30 +87,42 @@ def test_initialization(features, evaluator):
     carver = BaseCarver(
         features=features,
         min_freq=0.1,
-        combinations=evaluator,
-        dropna=True,
-        config=DiscretizerConfig(verbose=True, n_jobs=2),
+        max_n_mod=5,
+        combination_evaluator=evaluator,
+        config=DiscretizerConfig(dropna=True, verbose=True, n_jobs=2),
     )
     assert carver.min_freq == 0.1
     assert carver.config.dropna is True
     assert carver.config.verbose is True
     assert carver.config.n_jobs == 2
-    assert isinstance(carver.combinations, evaluator.evaluator)
-    assert carver.combinations.config.min_freq == 0.1
-    assert carver.combinations.config.verbose is True
-    assert carver.combinations.config.dropna is True
+    assert isinstance(carver.combination_evaluator, type(evaluator))
+    assert carver.combination_evaluator.min_freq == 0.1
+    assert carver.combination_evaluator.verbose is True
+    assert carver.combination_evaluator.dropna is True
 
 
 def test_pretty_print(features, evaluator):
     """Test pretty_print property of BaseCarver."""
-    carver = BaseCarver(features=features, min_freq=0.1, combinations=evaluator, config=DiscretizerConfig(verbose=True))
+    carver = BaseCarver(
+        features=features,
+        min_freq=0.1,
+        max_n_mod=5,
+        combination_evaluator=evaluator,
+        config=DiscretizerConfig(verbose=True),
+    )
 
     assert carver.pretty_print == (carver.config.verbose and _has_idisplay)
 
 
 def test_prepare_data_raises_value_error(features, evaluator, samples):
     """Test _prepare_data method raises ValueError when y is None."""
-    carver = BaseCarver(features=features, min_freq=0.1, combinations=evaluator, config=DiscretizerConfig(verbose=True))
+    carver = BaseCarver(
+        features=features,
+        min_freq=0.1,
+        max_n_mod=5,
+        combination_evaluator=evaluator,
+        config=DiscretizerConfig(verbose=True),
+    )
     samples.train.y = None
     with raises(ValueError):
         carver._prepare_data(samples)
@@ -118,7 +130,13 @@ def test_prepare_data_raises_value_error(features, evaluator, samples):
 
 def test_prepare_data(features, evaluator, samples):
     """Test _prepare_data method of BaseCarver."""
-    carver = BaseCarver(features=features, min_freq=0.1, combinations=evaluator, config=DiscretizerConfig(verbose=True))
+    carver = BaseCarver(
+        features=features,
+        min_freq=0.1,
+        max_n_mod=5,
+        combination_evaluator=evaluator,
+        config=DiscretizerConfig(verbose=True),
+    )
     prepared_samples = carver._prepare_data(samples)
     print(prepared_samples.train.X)
     print(samples.train.X)

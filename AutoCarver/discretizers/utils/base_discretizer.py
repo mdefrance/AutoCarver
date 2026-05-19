@@ -465,7 +465,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         instance.combinations = combinations
         return instance
 
-    @extend_docstring(Features.summary.fget)
+    @extend_docstring(Features.summary.fget)  # type: ignore
     @property
     def summary(self) -> pd.DataFrame:
         return self.features.summary

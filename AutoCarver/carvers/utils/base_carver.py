@@ -11,7 +11,6 @@ import pandas as pd
 
 from AutoCarver.carvers.utils.pretty_print import index_mapper, prettier_xagg
 from AutoCarver.combinations import (
-    CombinationConfig,
     CombinationEvaluator,
     CramervCombinations,
     KruskalCombinations,
@@ -66,32 +65,18 @@ class BaseCarver(BaseDiscretizer, ABC):
         self,
         features: Features,
         min_freq: float,
-        combinations: CombinationConfig,
+        max_n_mod: int,
         *,
-        dropna: bool = True,
-        ordinal_encoding: bool = True,
-        discretizer_min_freq: float | None = None,
+        combination_evaluator: CombinationEvaluator | None = None,
         config: DiscretizerConfig | None = None,
     ) -> None:
         """
         Parameters
         ----------
 
-        combinations : CombinationConfig
-            Configuration for the :class:`CombinationEvaluator` used to measure
-            association between :class:`Features` and the target. ``evaluator``
-            must be set on the config (subclasses default it).
-
-        dropna : bool, optional
-            * ``True``, try to group ``nan`` with other modalities.
-            * ``False``, ``nan`` are ignored (not grouped), by default ``True``
-
-        ordinal_encoding : bool, optional
-            Whether or not to ordinal encode :class:`Features`, by default ``True``
-            (carver-specific override of :attr:`DiscretizerConfig.ordinal_encoding`).
-
-        max_n_mod : int, optional
-            Maximum number of modalities per feature, by default ``5``
+        max_n_mod : int
+            Maximum number of modalities per feature. Forwarded to the configured
+            :class:`CombinationEvaluator`.
 
             * The combination with the best association will be selected.
             * All combinations of sizes from 1 to :attr:`max_n_mod` are tested out.
@@ -99,28 +84,41 @@ class BaseCarver(BaseDiscretizer, ABC):
             .. tip::
                 Set between ``3`` (faster, more robust) and ``7`` (slower, less robust)
 
-        discretizer_min_freq : float, optional
-            Specific :attr:`min_freq` used by the underlying :class:`Discretizer`, by default
-            ``min_freq / 2``.
-        """
-        # carver-level toggles flow through dedicated kwargs (not config) because their
-        # historical defaults differ from BaseDiscretizer's
-        if config is None:
-            config = DiscretizerConfig()
-        config = replace(config, dropna=dropna, ordinal_encoding=ordinal_encoding)
+        combination_evaluator : CombinationEvaluator, optional
+            Pre-built :class:`CombinationEvaluator` instance used to measure
+            association. Subclasses default this to a task-appropriate instance
+            (e.g. :class:`TschuprowtCombinations` for binary). The carver
+            overwrites ``max_n_mod`` / ``min_freq`` / ``dropna`` / ``verbose``
+            on the instance so they stay in sync with the carver's settings.
 
+        config : DiscretizerConfig, optional
+            Behavioral toggles inherited from :class:`BaseDiscretizer`. Defaults
+            to ``DiscretizerConfig(dropna=True, ordinal_encoding=True)`` which are
+            the carver-friendly defaults (group ``nan``, ordinal-encode features
+            for downstream sklearn estimators).
+        """
+        if combination_evaluator is None:
+            raise ValueError(
+                f"[{self.__name__}] combination_evaluator must be provided (subclasses set a task-appropriate default)."
+            )
+
+        # carver-friendly defaults differ from BaseDiscretizer's (which default
+        # both to False): carvers group nans and ordinal-encode by default.
+        if config is None:
+            config = DiscretizerConfig(dropna=True, ordinal_encoding=True)
         super().__init__(features, min_freq=min_freq, config=config)
 
-        self.discretizer_min_freq = discretizer_min_freq if discretizer_min_freq is not None else min_freq / 2
+        # forward carver-controlled attrs onto the evaluator instance; from here
+        # on, the evaluator is the single source of truth for max_n_mod / etc.
+        combination_evaluator.max_n_mod = max_n_mod
+        combination_evaluator.min_freq = self.min_freq
+        combination_evaluator.dropna = self.config.dropna
+        combination_evaluator.verbose = self.config.verbose
+        self.combination_evaluator: CombinationEvaluator = combination_evaluator
 
-        # sync the toggles the evaluator cares about onto the combination config, then build
-        combinations = replace(
-            combinations,
-            min_freq=self.min_freq,
-            verbose=self.config.verbose,
-            dropna=self.config.dropna,
-        )
-        self.combinations: CombinationEvaluator = combinations.build()
+        # BaseDiscretizer serializes self.combinations; mirror the evaluator there
+        # so to_json round-trips without a second attribute being out of sync.
+        self.combinations = self.combination_evaluator
 
     @property
     def pretty_print(self) -> bool:
@@ -129,13 +127,13 @@ class BaseCarver(BaseDiscretizer, ABC):
 
     @property
     def max_n_mod(self) -> int:
-        """Returns the max_n_mod attribute"""
-        return self.combinations.config.max_n_mod
+        """Returns the max_n_mod attribute (forwards to the evaluator)."""
+        return self.combination_evaluator.max_n_mod
 
     @max_n_mod.setter
     def max_n_mod(self, value: int) -> None:
-        """Sets the max_n_mod attribute"""
-        self.combinations.config = replace(self.combinations.config, max_n_mod=value)
+        """Sets the max_n_mod attribute (forwards to the evaluator)."""
+        self.combination_evaluator.max_n_mod = value
 
     def _prepare_data(self, samples: Samples) -> Samples:
         """Validates format and content of X and y."""
@@ -146,8 +144,9 @@ class BaseCarver(BaseDiscretizer, ABC):
         samples.train = super()._prepare_data(samples.train)
         samples.dev = super()._prepare_data(samples.dev)
 
-        # discretizing features according to min_freq
-        samples = discretize(self.features, samples, self.discretizer_min_freq, self.config)
+        # discretizing features at half min_freq so the carver has a finer
+        # granularity to combine when forming optimal groups
+        samples = discretize(self.features, samples, self.min_freq / 2, self.config)
 
         # setting dropna to True for filling up nans
         self.features.dropna = True
@@ -245,14 +244,14 @@ class BaseCarver(BaseDiscretizer, ABC):
         self._print_xagg(feature, xagg=xagg, xagg_dev=xagg_dev, message="Raw distribution")
 
         # getting best combination
-        best_combination = self.combinations.get_best_combination(feature, xagg, xagg_dev=xagg_dev)
+        best_combination = self.combination_evaluator.get_best_combination(feature, xagg, xagg_dev=xagg_dev)
 
         # printing carved distribution, for found, suitable combination
         if best_combination is not None:
             self._print_xagg(
                 feature,
-                xagg=self.combinations.samples.train.xagg,
-                xagg_dev=self.combinations.samples.dev.xagg,
+                xagg=self.combination_evaluator.samples.train.xagg,
+                xagg_dev=self.combination_evaluator.samples.dev.xagg,
                 message="Carved distribution",
             )
 
@@ -302,9 +301,13 @@ class BaseCarver(BaseDiscretizer, ABC):
         formatted_xagg_dev: pd.Series | pd.DataFrame | None,
     ) -> tuple[pd.Series | pd.DataFrame | None, pd.Series | pd.DataFrame | None]:
         """Returns pretty-printed XAGG DataFrames."""
-        nice_xagg = self.combinations.target_rate.compute(formatted_xagg) if formatted_xagg is not None else None
+        nice_xagg = (
+            self.combination_evaluator.target_rate.compute(formatted_xagg) if formatted_xagg is not None else None
+        )
         nice_xagg_dev = (
-            self.combinations.target_rate.compute(formatted_xagg_dev) if formatted_xagg_dev is not None else None
+            self.combination_evaluator.target_rate.compute(formatted_xagg_dev)
+            if formatted_xagg_dev is not None
+            else None
         )
         return nice_xagg, nice_xagg_dev
 
@@ -335,12 +338,6 @@ class BaseCarver(BaseDiscretizer, ABC):
         # displaying html of colored DataFrame
         display_html(nicer_xaggs, raw=True)
 
-    def to_json(self, light_mode: bool = False) -> dict:
-        """Converts to JSON format. Adds carver-specific fields on top of the base content."""
-        content = super().to_json(light_mode)
-        content["discretizer_min_freq"] = self.discretizer_min_freq
-        return content
-
     @classmethod
     def load(cls, file_name: str) -> "BaseCarver":
         """Allows one to load a Carver saved as a .json file."""
@@ -350,7 +347,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         # deserializing features
         features = Features.load(data.pop("features"))
 
-        # deserializing Combinations into a CombinationConfig
+        # deserializing Combinations: identify the evaluator class from sort_by
         combinations_json = data.pop("combinations")
         sort_by = combinations_json.pop("sort_by", None)
         if sort_by == "tschuprowt":
@@ -361,25 +358,23 @@ class BaseCarver(BaseDiscretizer, ABC):
             evaluator_cls = KruskalCombinations
         else:
             raise ValueError(f"[{cls.__name__}] Unknown combinations sort_by={sort_by!r}")
-        combinations = CombinationConfig(evaluator=evaluator_cls, **combinations_json)
 
         is_fitted = data.pop("is_fitted", False)
         min_freq = data.pop("min_freq", None)
-        discretizer_min_freq = data.pop("discretizer_min_freq", None)
-        dropna = data.pop("dropna", True)
-        ordinal_encoding = data.pop("ordinal_encoding", True)
+        config_data = data.pop("config", {})
         config = DiscretizerConfig(
-            verbose=data.pop("verbose", False),
-            n_jobs=data.pop("n_jobs", 1),
+            dropna=config_data.get("dropna", True),
+            ordinal_encoding=config_data.get("ordinal_encoding", True),
+            verbose=config_data.get("verbose", False),
+            n_jobs=config_data.get("n_jobs", 1),
+            copy=config_data.get("copy", True),
         )
 
         instance = cls(
             features=features,
             min_freq=min_freq,
-            combinations=combinations,
-            dropna=dropna,
-            ordinal_encoding=ordinal_encoding,
-            discretizer_min_freq=discretizer_min_freq,
+            max_n_mod=combinations_json.pop("max_n_mod"),
+            combination_evaluator=evaluator_cls(),
             config=config,
         )
         instance.is_fitted = is_fitted

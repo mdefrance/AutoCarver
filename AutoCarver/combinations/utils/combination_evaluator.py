@@ -128,56 +128,6 @@ class AggregatedSamples:
         self.dev.raw = xagg_apply_combination(self.dev.raw, feature)
 
 
-@dataclass
-class CombinationConfig:
-    """Configuration for :class:`CombinationEvaluator`.
-
-    Attributes
-    ----------
-    evaluator : type[CombinationEvaluator], optional
-        Concrete evaluator class to instantiate (e.g. ``TschuprowtCombinations``,
-        ``CramervCombinations``, ``KruskalCombinations``). If ``None``, callers
-        (typically a Carver) provide a default before calling :meth:`build`.
-
-    max_n_mod : int, optional
-        Maximum number of modalities per feature, by default ``5``.
-
-        .. tip::
-            Set between ``3`` (faster, more robust) and ``7`` (slower, less robust)
-
-    min_freq : float, optional
-        Minimum frequency per modality per feature, by default ``None``.
-
-        .. tip::
-            Set between ``0.01`` (slower, less robust) and ``0.2`` (faster, more robust)
-
-    dropna : bool, optional
-        * ``True``, try to group ``nan`` with other modalities.
-        * ``False``, ``nan`` are ignored (not grouped), by default ``False``.
-
-    verbose : bool, optional
-        * ``True``, without ``IPython``: prints raw statitics
-        * ``True``, with ``IPython``: prints HTML statistics, by default ``False``.
-
-    target_rate : TargetRate, optional
-        Target rate strategy, by default ``None`` (each evaluator subclass picks
-        its own default in :meth:`CombinationEvaluator._init_target_rate`).
-    """
-
-    evaluator: "type[CombinationEvaluator] | None" = None
-    max_n_mod: int = 5
-    min_freq: float | None = None
-    dropna: bool = False
-    verbose: bool = False
-    target_rate: TargetRate | None = None
-
-    def build(self) -> "CombinationEvaluator":
-        """Instantiates the configured evaluator class with this config."""
-        if self.evaluator is None:
-            raise ValueError("CombinationConfig.evaluator is not set; cannot build an evaluator.")
-        return self.evaluator(config=self)
-
-
 class CombinationEvaluator(ABC):
     """CombinationEvaluator class to evaluate
     the best combination of modalities for a feature."""
@@ -188,21 +138,44 @@ class CombinationEvaluator(ABC):
     is_y_continuous = False
     sort_by = None
 
-    def __init__(self, config: CombinationConfig | None = None) -> None:
+    def __init__(
+        self,
+        max_n_mod: int = 5,
+        *,
+        min_freq: float | None = None,
+        dropna: bool = False,
+        verbose: bool = False,
+        target_rate: TargetRate | None = None,
+    ) -> None:
         """
         Parameters
         ----------
-        config : CombinationConfig, optional
-            Configuration object; see :class:`CombinationConfig` for fields.
-            By default a default-initialized :class:`CombinationConfig`.
+        max_n_mod : int, optional
+            Maximum number of modalities per feature, by default ``5``.
+
+        min_freq : float, optional
+            Minimum frequency per modality per feature, by default ``None``.
+
+        dropna : bool, optional
+            Whether to try grouping ``nan`` with other modalities, by default ``False``.
+
+        verbose : bool, optional
+            Whether to print progress / statistics, by default ``False``.
+
+        target_rate : TargetRate, optional
+            Target rate strategy. If ``None``, each evaluator subclass picks its own
+            default in :meth:`_init_target_rate`.
         """
-        self.config: CombinationConfig = config if config is not None else CombinationConfig()
+        self.max_n_mod: int = max_n_mod
+        self.min_freq: float | None = min_freq
+        self.dropna: bool = dropna
+        self.verbose: bool = verbose
 
         # attributes to be set by get_best_combination
         self._feature: BaseFeature | None = None
         self.samples: AggregatedSamples = AggregatedSamples()
         self._statistics_cache = None
-        self._init_target_rate(self.config.target_rate)
+        self._init_target_rate(target_rate)
 
     @abstractmethod
     def _init_target_rate(self, target_rate: TargetRate) -> None:
@@ -221,7 +194,7 @@ class CombinationEvaluator(ABC):
         self._feature = value
 
     def __repr__(self) -> str:
-        return f"{self.__name__}(max_n_mod={self.config.max_n_mod})"
+        return f"{self.__name__}(max_n_mod={self.max_n_mod})"
 
     def _group_xagg_by_combinations(self, combinations: list[list]) -> list[dict]:
         """groups xagg by combinations of indices"""
@@ -238,7 +211,7 @@ class CombinationEvaluator(ABC):
             }
             for combination, index_to_groupby in zip(
                 combinations,
-                tqdm(indices_to_groupby, desc="Grouping modalities   ", disable=not self.config.verbose),
+                tqdm(indices_to_groupby, desc="Grouping modalities   ", disable=not self.verbose),
             )
         ]
 
@@ -251,7 +224,7 @@ class CombinationEvaluator(ABC):
         # computing associations for each crosstab
         associations = [
             {**grouped_xagg, **self._association_measure(grouped_xagg["xagg"], n_obs=n_obs)}
-            for grouped_xagg in tqdm(grouped_xaggs, desc="Computing associations", disable=not self.config.verbose)
+            for grouped_xagg in tqdm(grouped_xaggs, desc="Computing associations", disable=not self.verbose)
         ]
 
         # sorting associations according to specified metric
@@ -326,7 +299,7 @@ class CombinationEvaluator(ABC):
             self._historize_raw_combination()
 
             # all possible consecutive combinations
-            combinations = consecutive_combinations(raw_labels, self.config.max_n_mod)
+            combinations = consecutive_combinations(raw_labels, self.max_n_mod)
 
             # getting most associated combination
             return self._get_best_association(combinations)
@@ -337,13 +310,13 @@ class CombinationEvaluator(ABC):
         """Computes associations of the tab for each combination with nans"""
 
         # grouping NaNs if requested to drop them (dropna=True)
-        if self.config.dropna and self.feature.has_nan and best_combination is not None:
+        if self.dropna and self.feature.has_nan and best_combination is not None:
             # verbose if requested
-            if self.config.verbose:
+            if self.verbose:
                 print(f"[{self.__name__}] Grouping NaNs")
 
             # adding combinations with NaNs
-            combinations = nan_combinations(self.feature, self.config.max_n_mod)
+            combinations = nan_combinations(self.feature, self.max_n_mod)
 
             # getting most associated combination
             best_combination = self._get_best_association(combinations)
@@ -359,12 +332,12 @@ class CombinationEvaluator(ABC):
         """Computes best combination of modalities for the feature"""
 
         # checking for min_freq
-        if self.config.min_freq is None:
+        if self.min_freq is None:
             raise ValueError("min_freq has to be set before calling get_best_combination")
 
         # setting dropna to user-requested value
         self.feature = feature
-        self.feature.dropna = self.config.dropna
+        self.feature.dropna = self.dropna
 
         # setting samples
         self.samples.set(train=xagg, dev=xagg_dev)
@@ -382,7 +355,7 @@ class CombinationEvaluator(ABC):
         train_rates = self.target_rate.compute(combination["xagg"])
 
         # viability on train sample:
-        result = test_viability(train_rates, self.config.min_freq, self.target_rate.__name__)
+        result = test_viability(train_rates, self.min_freq, self.target_rate.__name__)
 
         return result
 
@@ -404,7 +377,7 @@ class CombinationEvaluator(ABC):
         dev_rates = self.target_rate.compute(grouped_xagg_dev)
 
         # viability on dev sample:
-        dev_results = test_viability(dev_rates, self.config.min_freq, self.target_rate.__name__, train_target_rate)
+        dev_results = test_viability(dev_rates, self.min_freq, self.target_rate.__name__, train_target_rate)
         test_results = {**test_results, **dev_results}
 
         # checking for viability on both samples
@@ -421,7 +394,7 @@ class CombinationEvaluator(ABC):
             enumerate(associations),
             total=len(associations),
             desc="Testing robustness    ",
-            disable=not self.config.verbose,
+            disable=not self.verbose,
         ):
             # testing combination viability on train sample
             test_results = self._test_viability_train(combination)
@@ -440,7 +413,7 @@ class CombinationEvaluator(ABC):
                 self._historize_remaining_combinations(associations, n_combination)
                 break
 
-        if self.config.verbose:  # verbose if requested
+        if self.verbose:  # verbose if requested
             print("\n")
 
         return viable_combination
@@ -476,7 +449,7 @@ class CombinationEvaluator(ABC):
             self.feature.statistics = test_results.pop("train_rates")
 
             # adding info
-            info = f"Best for {self.sort_by} and max_n_mod={self.config.max_n_mod}"
+            info = f"Best for {self.sort_by} and max_n_mod={self.max_n_mod}"
 
             # adding dropna info if its the case
             if test_results.get("dropna"):
@@ -516,8 +489,8 @@ class CombinationEvaluator(ABC):
         info = "Raw distribution"
 
         # adding info if n_mod > max_n_mod
-        if n_mod > self.config.max_n_mod:
-            info += f" (n_mod={n_mod}>max_n_mod={self.config.max_n_mod})"
+        if n_mod > self.max_n_mod:
+            info += f" (n_mod={n_mod}>max_n_mod={self.max_n_mod})"
 
         # historizing raw combination
         combination = {
@@ -541,10 +514,10 @@ class CombinationEvaluator(ABC):
         """
         return {
             "sort_by": self.sort_by,
-            "max_n_mod": self.config.max_n_mod,
-            "dropna": self.config.dropna,
-            "min_freq": self.config.min_freq,
-            "verbose": self.config.verbose,
+            "max_n_mod": self.max_n_mod,
+            "dropna": self.dropna,
+            "min_freq": self.min_freq,
+            "verbose": self.verbose,
         }
 
     def save(self, file_name: str) -> None:
@@ -595,7 +568,7 @@ class CombinationEvaluator(ABC):
 
         # building config from json (sort_by is identity, not a config field)
         combinations_json = {k: v for k, v in combinations_json.items() if k != "sort_by"}
-        return cls(config=CombinationConfig(evaluator=cls, **combinations_json))
+        return cls(**combinations_json)
 
 
 def filter_nan(xagg: pd.Series | pd.DataFrame | None, str_nan: str) -> pd.Series | pd.DataFrame | None:

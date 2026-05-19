@@ -7,7 +7,6 @@ import pandas as pd
 from pytest import FixtureRequest, fixture, raises
 
 from AutoCarver.combinations import (
-    CombinationConfig,
     CombinationEvaluator,
     CramervCombinations,
     KruskalCombinations,
@@ -634,9 +633,7 @@ def test_to_json(features: Features, true_false: bool, combinations: type[Combin
 
     min_freq = 0.1
     evaluator = (
-        combinations(config=CombinationConfig(min_freq=min_freq, dropna=true_false, verbose=true_false))
-        if combinations is not None
-        else None
+        combinations(min_freq=min_freq, dropna=true_false, verbose=true_false) if combinations is not None else None
     )
     n_jobs = 2
     discretizer = _make_discretizer(
@@ -670,9 +667,7 @@ def test_save(tmp_path, features: Features, true_false: bool, combinations: type
 
     min_freq = 0.1
     evaluator = (
-        combinations(config=CombinationConfig(min_freq=min_freq, dropna=true_false, verbose=true_false))
-        if combinations is not None
-        else None
+        combinations(min_freq=min_freq, dropna=true_false, verbose=true_false) if combinations is not None else None
     )
     n_jobs = 2
     discretizer = _make_discretizer(
@@ -700,9 +695,7 @@ def test_load_discretizer(
     min_freq = 0.1
     n_jobs = 2
     evaluator = (
-        combinations(config=CombinationConfig(min_freq=min_freq, dropna=true_false, verbose=true_false))
-        if combinations is not None
-        else None
+        combinations(min_freq=min_freq, dropna=true_false, verbose=true_false) if combinations is not None else None
     )
     discretizer = _make_discretizer(
         features, min_freq=min_freq, combinations=evaluator, true_false=true_false, n_jobs=n_jobs

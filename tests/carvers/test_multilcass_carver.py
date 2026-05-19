@@ -1,6 +1,5 @@
 """Set of tests for multiclass_carver module."""
 
-from dataclasses import replace
 from pathlib import Path
 
 import pandas as pd
@@ -9,7 +8,7 @@ from pytest import FixtureRequest, fixture, raises
 from AutoCarver.carvers.multiclass_carver import MulticlassCarver, get_one_vs_rest
 from AutoCarver.carvers.utils.base_carver import Sample, Samples
 from AutoCarver.combinations import (
-    CombinationConfig,
+    CombinationEvaluator,
     CramervCombinations,
     KruskalCombinations,
     TschuprowtCombinations,
@@ -20,9 +19,9 @@ from AutoCarver.features import Features
 
 
 @fixture(params=[CramervCombinations, TschuprowtCombinations])
-def evaluator(request: FixtureRequest) -> CombinationConfig:
-    """CombinationConfig fixture (carver builds the evaluator from it)."""
-    return CombinationConfig(evaluator=request.param)
+def evaluator(request: FixtureRequest) -> CombinationEvaluator:
+    """Evaluator instance fixture, passed as combination_evaluator= to the carver."""
+    return request.param()
 
 
 @fixture(scope="module", params=["tschuprowt", "cramerv"])
@@ -77,47 +76,49 @@ def test_multiclass_carver_initialization():
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
-    carver = MulticlassCarver(min_freq=0.1, features=features, dropna=True)
+    carver = MulticlassCarver(min_freq=0.1, features=features)
     assert carver.min_freq == 0.1
     assert carver.features == features
     assert carver.config.dropna is True
-    assert isinstance(carver.combinations, TschuprowtCombinations)
-    assert carver.combinations.config.max_n_mod == 5
+    assert isinstance(carver.combination_evaluator, TschuprowtCombinations)
+    assert carver.combination_evaluator.max_n_mod == 5
 
     max_n_mod = 8
     carver = MulticlassCarver(
         min_freq=0.1,
         features=features,
-        dropna=True,
-        combinations=CombinationConfig(evaluator=TschuprowtCombinations, max_n_mod=max_n_mod),
+        max_n_mod=max_n_mod,
+        combination_evaluator=TschuprowtCombinations(),
     )
-    assert isinstance(carver.combinations, TschuprowtCombinations)
-    assert carver.combinations.config.max_n_mod == max_n_mod
+    assert isinstance(carver.combination_evaluator, TschuprowtCombinations)
+    assert carver.combination_evaluator.max_n_mod == max_n_mod
 
     carver = MulticlassCarver(
         min_freq=0.1,
         features=features,
-        combinations=CombinationConfig(evaluator=CramervCombinations, max_n_mod=max_n_mod),
+        max_n_mod=max_n_mod,
+        combination_evaluator=CramervCombinations(),
     )
-    assert isinstance(carver.combinations, CramervCombinations)
-    assert carver.combinations.config.max_n_mod == max_n_mod
+    assert isinstance(carver.combination_evaluator, CramervCombinations)
+    assert carver.combination_evaluator.max_n_mod == max_n_mod
 
     with raises(ValueError):
         MulticlassCarver(
             min_freq=0.1,
             features=features,
-            combinations=CombinationConfig(evaluator=KruskalCombinations, max_n_mod=max_n_mod),
+            max_n_mod=max_n_mod,
+            combination_evaluator=KruskalCombinations(),
         )
 
 
-def test_multiclass_carver_prepare_data(evaluator: CombinationConfig):
+def test_multiclass_carver_prepare_data(evaluator: CombinationEvaluator):
     """Test MulticlassCarver _prepare_data method."""
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
-    carver = MulticlassCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator)
+    carver = MulticlassCarver(min_freq=0.1, features=features, combination_evaluator=evaluator)
     X = pd.DataFrame({"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]})
 
     # with wrong target
@@ -144,7 +145,7 @@ def test_multiclass_carver_prepare_data(evaluator: CombinationConfig):
 
 
 def test_multiclass_carver_fit_transform_with_small_data_not_ordinal(
-    evaluator: CombinationConfig,
+    evaluator: CombinationEvaluator,
 ):
     """Test MulticlassCarver fit_transform method."""
     features = Features(
@@ -155,10 +156,8 @@ def test_multiclass_carver_fit_transform_with_small_data_not_ordinal(
     carver = MulticlassCarver(
         min_freq=0.1,
         features=features,
-        dropna=True,
-        combinations=evaluator,
-        ordinal_encoding=False,
-        config=DiscretizerConfig(copy=False),
+        combination_evaluator=evaluator,
+        config=DiscretizerConfig(dropna=True, ordinal_encoding=False, copy=False),
     )
     idx = ["a", "b", "c", "d"]
     X = pd.DataFrame(
@@ -209,7 +208,7 @@ def test_multiclass_carver_fit_transform_with_small_data_not_ordinal(
     assert X_transformed.equals(expected)
 
 
-def test_multiclass_carver_fit_transform_with_small_data_ordinal(evaluator: CombinationConfig):
+def test_multiclass_carver_fit_transform_with_small_data_ordinal(evaluator: CombinationEvaluator):
     """Test MulticlassCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
@@ -217,7 +216,10 @@ def test_multiclass_carver_fit_transform_with_small_data_ordinal(evaluator: Comb
         quantitatives=["feature3"],
     )
     carver = MulticlassCarver(
-        min_freq=0.1, features=features, dropna=True, combinations=evaluator, config=DiscretizerConfig(copy=False)
+        min_freq=0.1,
+        features=features,
+        combination_evaluator=evaluator,
+        config=DiscretizerConfig(dropna=True, ordinal_encoding=True, copy=False),
     )
     idx = ["a", "b", "c", "d"]
     X = pd.DataFrame(
@@ -263,7 +265,7 @@ def test_multiclass_carver_fit_transform_with_small_data_ordinal(evaluator: Comb
     pd.testing.assert_frame_equal(X_transformed, expected, check_dtype=False)
 
 
-def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationConfig):
+def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationEvaluator):
     """Test MulticlassCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
@@ -273,10 +275,8 @@ def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationC
     carver = MulticlassCarver(
         min_freq=0.1,
         features=features,
-        dropna=True,
-        combinations=evaluator,
-        ordinal_encoding=False,
-        config=DiscretizerConfig(copy=False),
+        combination_evaluator=evaluator,
+        config=DiscretizerConfig(dropna=True, ordinal_encoding=False, copy=False),
     )
     idx = [
         "a",
@@ -568,7 +568,7 @@ def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationC
     assert X_transformed.equals(expected)
 
 
-def test_multiclass_carver_fit_transform_with_target_only_nan(evaluator: CombinationConfig):
+def test_multiclass_carver_fit_transform_with_target_only_nan(evaluator: CombinationEvaluator):
     """Test MulticlassCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
@@ -578,10 +578,8 @@ def test_multiclass_carver_fit_transform_with_target_only_nan(evaluator: Combina
     carver = MulticlassCarver(
         min_freq=0.1,
         features=features,
-        dropna=True,
-        combinations=evaluator,
-        ordinal_encoding=False,
-        config=DiscretizerConfig(copy=False),
+        combination_evaluator=evaluator,
+        config=DiscretizerConfig(dropna=True, ordinal_encoding=False, copy=False),
     )
     idx = ["a", "b", "c", "d"]
     X = pd.DataFrame(
@@ -624,7 +622,7 @@ def test_multiclass_carver_fit_transform_with_target_only_nan(evaluator: Combina
     assert X_transformed.equals(expected)
 
 
-def test_multiclass_carver_fit_transform_with_wrong_dev(evaluator: CombinationConfig):
+def test_multiclass_carver_fit_transform_with_wrong_dev(evaluator: CombinationEvaluator):
     """Test MulticlassCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
@@ -634,10 +632,8 @@ def test_multiclass_carver_fit_transform_with_wrong_dev(evaluator: CombinationCo
     carver = MulticlassCarver(
         min_freq=0.1,
         features=features,
-        dropna=True,
-        combinations=evaluator,
-        ordinal_encoding=False,
-        config=DiscretizerConfig(copy=False),
+        combination_evaluator=evaluator,
+        config=DiscretizerConfig(dropna=True, ordinal_encoding=False, copy=False),
     )
     idx = ["a", "b", "c", "d"]
     X = pd.DataFrame(
@@ -680,14 +676,14 @@ def test_multiclass_carver_fit_transform_with_wrong_dev(evaluator: CombinationCo
     assert len(carver.features) == 2
 
 
-def test_multiclass_carver_save_load(tmp_path: Path, evaluator: CombinationConfig):
+def test_multiclass_carver_save_load(tmp_path: Path, evaluator: CombinationEvaluator):
     """Test MulticlassCarver save and load methods."""
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
-    carver = MulticlassCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator)
+    carver = MulticlassCarver(min_freq=0.1, features=features, combination_evaluator=evaluator)
     carver_file = tmp_path / "multilclass_carver.json"
     carver.save(str(carver_file))
     loaded_carver = MulticlassCarver.load(str(carver_file))
@@ -698,11 +694,11 @@ def test_multiclass_carver_save_load(tmp_path: Path, evaluator: CombinationConfi
     assert carver.config.dropna == loaded_carver.config.dropna
     assert carver.config.verbose == loaded_carver.config.verbose
     assert carver.config.copy == loaded_carver.config.copy
-    assert carver.combinations.__class__ == loaded_carver.combinations.__class__
-    assert carver.combinations.config.max_n_mod == loaded_carver.combinations.config.max_n_mod
-    assert carver.combinations.sort_by == loaded_carver.combinations.sort_by
-    assert carver.combinations.config.dropna == loaded_carver.combinations.config.dropna
-    assert carver.combinations.config.verbose == loaded_carver.combinations.config.verbose
+    assert carver.combination_evaluator.__class__ == loaded_carver.combination_evaluator.__class__
+    assert carver.combination_evaluator.max_n_mod == loaded_carver.combination_evaluator.max_n_mod
+    assert carver.combination_evaluator.sort_by == loaded_carver.combination_evaluator.sort_by
+    assert carver.combination_evaluator.dropna == loaded_carver.combination_evaluator.dropna
+    assert carver.combination_evaluator.verbose == loaded_carver.combination_evaluator.verbose
 
 
 def _fit_multiclass_carver(
@@ -714,9 +710,8 @@ def _fit_multiclass_carver(
     chained_features: list[str],
     level0_to_level1: dict[str, list[str]],
     level1_to_level2: dict[str, list[str]],
-    evaluator: CombinationConfig,
+    evaluator: CombinationEvaluator,
     *,
-    discretizer_min_freq: float | None = None,
     ordinal_encoding: bool = False,
     dropna: bool = True,
     copy: bool = True,
@@ -743,15 +738,12 @@ def _fit_multiclass_carver(
     )
     chained_discretizer.fit(x_train)
 
-    evaluator = replace(evaluator, max_n_mod=4)
     auto_carver = MulticlassCarver(
         min_freq=0.1,
+        max_n_mod=4,
         features=features,
-        combinations=evaluator,
-        discretizer_min_freq=discretizer_min_freq,
-        dropna=dropna,
-        ordinal_encoding=ordinal_encoding,
-        config=DiscretizerConfig(copy=copy, verbose=False),
+        combination_evaluator=evaluator,
+        config=DiscretizerConfig(dropna=dropna, ordinal_encoding=ordinal_encoding, copy=copy, verbose=False),
     )
     x_discretized = auto_carver.fit_transform(
         x_train,
@@ -772,7 +764,7 @@ def test_multiclass_carver_end_to_end_invariants(
     chained_features: list[str],
     level0_to_level1: dict[str, list[str]],
     level1_to_level2: dict[str, list[str]],
-    evaluator: CombinationConfig,
+    evaluator: CombinationEvaluator,
     dropna: bool,
 ) -> None:
     """Versions present, modality counts, NaN handling, train/dev robustness, value preservation."""
@@ -802,10 +794,10 @@ def test_multiclass_carver_end_to_end_invariants(
     )
 
     # max_n_mod respected on train + dev
-    assert all(x_discretized[feature_versions].nunique() <= auto_carver.combinations.config.max_n_mod), (
+    assert all(x_discretized[feature_versions].nunique() <= auto_carver.max_n_mod), (
         "Too many buckets after carving of train sample"
     )
-    assert all(x_dev_discretized[feature_versions].nunique() <= auto_carver.combinations.config.max_n_mod), (
+    assert all(x_dev_discretized[feature_versions].nunique() <= auto_carver.max_n_mod), (
         "Too many buckets after carving of test sample"
     )
 
@@ -870,7 +862,7 @@ def test_multiclass_carver_copy_semantics(
         chained_features,
         level0_to_level1,
         level1_to_level2,
-        CombinationConfig(evaluator=CramervCombinations),
+        CramervCombinations(),
         copy=copy,
     )
     # original mega-test only asserts on copy=True; copy=False makes no assertion
@@ -893,7 +885,7 @@ def test_multiclass_carver_serialization_roundtrip(
     chained_features: list[str],
     level0_to_level1: dict[str, list[str]],
     level1_to_level2: dict[str, list[str]],
-    evaluator: CombinationConfig,
+    evaluator: CombinationEvaluator,
 ) -> None:
     """Save/load on a fitted carver preserves summary and transform output."""
     auto_carver, x_discretized, _, features = _fit_multiclass_carver(
@@ -942,7 +934,7 @@ def test_multiclass_carver_wrong_dev_transform(
         chained_features,
         level0_to_level1,
         level1_to_level2,
-        CombinationConfig(evaluator=CramervCombinations),
+        CramervCombinations(),
     )
 
     # unexpected modal on a feature that has_default — does not raise
@@ -995,7 +987,7 @@ def test_multiclass_carver_unknown_ordinal_values_raises(
     auto_carver = MulticlassCarver(
         min_freq=0.15,
         features=features,
-        combinations=CombinationConfig(evaluator=CramervCombinations),
+        combination_evaluator=CramervCombinations(),
         config=DiscretizerConfig(verbose=False),
     )
     with raises(ValueError):
