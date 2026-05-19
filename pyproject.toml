@@ -107,3 +107,6 @@ disable = ["C0301", "C0103", "E0110", "W0621", "import-error"]
 [tool.pytest.ini_options]
 addopts = "-n auto --tb=short -q"
 testpaths = ["tests"]
+markers = [
+    "network: marks tests that hit the network (deselect with '-m \"not network\"')",
+]
