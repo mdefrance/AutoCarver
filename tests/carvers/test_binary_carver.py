@@ -88,7 +88,7 @@ def test_binary_carver_initialization():
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
-    carver = BinaryCarver(min_freq=0.1, features=features)
+    carver = BinaryCarver(min_freq=0.1, max_n_mod=5, features=features)
     assert carver.min_freq == 0.1
     assert carver.features == features
     assert carver.config.dropna is True
@@ -130,7 +130,7 @@ def test_binary_carver_prepare_data(evaluator: CombinationEvaluator):
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
-    carver = BinaryCarver(min_freq=0.1, features=features, combination_evaluator=evaluator)
+    carver = BinaryCarver(min_freq=0.1, max_n_mod=5, features=features, combination_evaluator=evaluator)
     X = pd.DataFrame({"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]})
 
     # with wrong target
@@ -155,7 +155,7 @@ def test_binary_carver_aggregator(evaluator: CombinationEvaluator):
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
-    carver = BinaryCarver(min_freq=0.1, features=features, combination_evaluator=evaluator)
+    carver = BinaryCarver(min_freq=0.1, max_n_mod=5, features=features, combination_evaluator=evaluator)
     X = pd.DataFrame({"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]})
     y = pd.Series([0, 1, 0])
     xtabs = carver._aggregator(X, y)
@@ -197,6 +197,7 @@ def test_carve_feature_with_best_combination(evaluator):
     carver = BinaryCarver(
         features=features,
         min_freq=0.1,
+        max_n_mod=5,
         combination_evaluator=evaluator,
         config=DiscretizerConfig(dropna=True, verbose=False),
     )
@@ -254,6 +255,7 @@ def test_carve_feature_without_best_combination(evaluator: CombinationEvaluator)
     carver = BinaryCarver(
         features=features,
         min_freq=0.9,
+        max_n_mod=5,
         combination_evaluator=evaluator,
         config=DiscretizerConfig(dropna=True, verbose=False),
     )
@@ -292,6 +294,7 @@ def test_fit_with_best_combination(evaluator):
     carver = BinaryCarver(
         features=features,
         min_freq=0.1,
+        max_n_mod=5,
         combination_evaluator=evaluator,
         config=DiscretizerConfig(dropna=True, verbose=False),
     )
@@ -342,6 +345,7 @@ def test_fit_without_best_combination(evaluator: CombinationEvaluator):
     carver = BinaryCarver(
         features=features,
         min_freq=0.9,
+        max_n_mod=5,
         combination_evaluator=evaluator,
         config=DiscretizerConfig(dropna=True, verbose=False),
     )
@@ -362,6 +366,7 @@ def test_binary_carver_fit_transform_with_small_data_not_ordinal(evaluator: Comb
     )
     carver = BinaryCarver(
         min_freq=0.1,
+        max_n_mod=5,
         features=features,
         combination_evaluator=evaluator,
         config=DiscretizerConfig(dropna=True, ordinal_encoding=False, copy=False),
@@ -416,6 +421,7 @@ def test_binary_carver_fit_transform_with_small_data_ordinal(evaluator: Combinat
     )
     carver = BinaryCarver(
         min_freq=0.1,
+        max_n_mod=5,
         features=features,
         combination_evaluator=evaluator,
         config=DiscretizerConfig(dropna=True, ordinal_encoding=True, copy=False),
@@ -470,6 +476,7 @@ def test_binary_carver_fit_transform_with_large_data(evaluator: CombinationEvalu
     )
     carver = BinaryCarver(
         min_freq=0.1,
+        max_n_mod=5,
         features=features,
         combination_evaluator=evaluator,
         config=DiscretizerConfig(dropna=True, ordinal_encoding=False, copy=False),
@@ -630,6 +637,7 @@ def test_binary_carver_fit_transform_with_target_only_nan(evaluator: Combination
     )
     carver = BinaryCarver(
         min_freq=0.1,
+        max_n_mod=5,
         features=features,
         combination_evaluator=evaluator,
         config=DiscretizerConfig(dropna=True, ordinal_encoding=False, copy=False),
@@ -683,6 +691,7 @@ def test_binary_carver_fit_transform_with_wrong_dev(evaluator: CombinationEvalua
     )
     carver = BinaryCarver(
         min_freq=0.1,
+        max_n_mod=5,
         features=features,
         combination_evaluator=evaluator,
         config=DiscretizerConfig(dropna=True, ordinal_encoding=True, copy=False),
@@ -731,7 +740,7 @@ def test_binary_carver_save_load(tmp_path: Path, evaluator: CombinationEvaluator
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
-    carver = BinaryCarver(min_freq=0.1, features=features, combination_evaluator=evaluator)
+    carver = BinaryCarver(min_freq=0.1, max_n_mod=5, features=features, combination_evaluator=evaluator)
     carver_file = tmp_path / "binary_carver.json"
     carver.save(str(carver_file))
     loaded_carver = BinaryCarver.load(str(carver_file))
@@ -1051,6 +1060,7 @@ def test_binary_carver_unknown_ordinal_values_raises(
 
     auto_carver = BinaryCarver(
         min_freq=0.15,
+        max_n_mod=5,
         combination_evaluator=CramervCombinations(),
         features=features,
         config=DiscretizerConfig(verbose=False),

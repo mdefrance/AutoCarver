@@ -76,7 +76,7 @@ def test_multiclass_carver_initialization():
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
-    carver = MulticlassCarver(min_freq=0.1, features=features)
+    carver = MulticlassCarver(min_freq=0.1, max_n_mod=5, features=features)
     assert carver.min_freq == 0.1
     assert carver.features == features
     assert carver.config.dropna is True
@@ -118,7 +118,7 @@ def test_multiclass_carver_prepare_data(evaluator: CombinationEvaluator):
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
-    carver = MulticlassCarver(min_freq=0.1, features=features, combination_evaluator=evaluator)
+    carver = MulticlassCarver(min_freq=0.1, max_n_mod=5, features=features, combination_evaluator=evaluator)
     X = pd.DataFrame({"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]})
 
     # with wrong target
@@ -155,6 +155,7 @@ def test_multiclass_carver_fit_transform_with_small_data_not_ordinal(
     )
     carver = MulticlassCarver(
         min_freq=0.1,
+        max_n_mod=5,
         features=features,
         combination_evaluator=evaluator,
         config=DiscretizerConfig(dropna=True, ordinal_encoding=False, copy=False),
@@ -217,6 +218,7 @@ def test_multiclass_carver_fit_transform_with_small_data_ordinal(evaluator: Comb
     )
     carver = MulticlassCarver(
         min_freq=0.1,
+        max_n_mod=5,
         features=features,
         combination_evaluator=evaluator,
         config=DiscretizerConfig(dropna=True, ordinal_encoding=True, copy=False),
@@ -274,6 +276,7 @@ def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationE
     )
     carver = MulticlassCarver(
         min_freq=0.1,
+        max_n_mod=5,
         features=features,
         combination_evaluator=evaluator,
         config=DiscretizerConfig(dropna=True, ordinal_encoding=False, copy=False),
@@ -577,6 +580,7 @@ def test_multiclass_carver_fit_transform_with_target_only_nan(evaluator: Combina
     )
     carver = MulticlassCarver(
         min_freq=0.1,
+        max_n_mod=5,
         features=features,
         combination_evaluator=evaluator,
         config=DiscretizerConfig(dropna=True, ordinal_encoding=False, copy=False),
@@ -631,6 +635,7 @@ def test_multiclass_carver_fit_transform_with_wrong_dev(evaluator: CombinationEv
     )
     carver = MulticlassCarver(
         min_freq=0.1,
+        max_n_mod=5,
         features=features,
         combination_evaluator=evaluator,
         config=DiscretizerConfig(dropna=True, ordinal_encoding=False, copy=False),
@@ -683,7 +688,7 @@ def test_multiclass_carver_save_load(tmp_path: Path, evaluator: CombinationEvalu
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
-    carver = MulticlassCarver(min_freq=0.1, features=features, combination_evaluator=evaluator)
+    carver = MulticlassCarver(min_freq=0.1, max_n_mod=5, features=features, combination_evaluator=evaluator)
     carver_file = tmp_path / "multilclass_carver.json"
     carver.save(str(carver_file))
     loaded_carver = MulticlassCarver.load(str(carver_file))
@@ -986,6 +991,7 @@ def test_multiclass_carver_unknown_ordinal_values_raises(
 
     auto_carver = MulticlassCarver(
         min_freq=0.15,
+        max_n_mod=5,
         features=features,
         combination_evaluator=CramervCombinations(),
         config=DiscretizerConfig(verbose=False),
