@@ -14,7 +14,7 @@ from AutoCarver.combinations import (
     TschuprowtCombinations,
 )
 from AutoCarver.config import Constants
-from AutoCarver.discretizers import ChainedDiscretizer
+from AutoCarver.discretizers import ChainedDiscretizer, DiscretizerConfig
 from AutoCarver.features import Features
 
 
@@ -79,7 +79,7 @@ def test_multiclass_carver_initialization():
     carver = MulticlassCarver(min_freq=0.1, features=features, dropna=True)
     assert carver.min_freq == 0.1
     assert carver.features == features
-    assert carver.dropna is True
+    assert carver.config.dropna is True
     assert isinstance(carver.combinations, TschuprowtCombinations)
     assert carver.combinations.max_n_mod == 5
 
@@ -145,8 +145,8 @@ def test_multiclass_carver_fit_transform_with_small_data_not_ordinal(
         features=features,
         dropna=True,
         combinations=evaluator,
-        copy=False,
         ordinal_encoding=False,
+        config=DiscretizerConfig(copy=False),
     )
     idx = ["a", "b", "c", "d"]
     X = pd.DataFrame(
@@ -204,7 +204,9 @@ def test_multiclass_carver_fit_transform_with_small_data_ordinal(evaluator: Comb
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
-    carver = MulticlassCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False)
+    carver = MulticlassCarver(
+        min_freq=0.1, features=features, dropna=True, combinations=evaluator, config=DiscretizerConfig(copy=False)
+    )
     idx = ["a", "b", "c", "d"]
     X = pd.DataFrame(
         {
@@ -261,8 +263,8 @@ def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationE
         features=features,
         dropna=True,
         combinations=evaluator,
-        copy=False,
         ordinal_encoding=False,
+        config=DiscretizerConfig(copy=False),
     )
     idx = [
         "a",
@@ -566,8 +568,8 @@ def test_multiclass_carver_fit_transform_with_target_only_nan(evaluator: Combina
         features=features,
         dropna=True,
         combinations=evaluator,
-        copy=False,
         ordinal_encoding=False,
+        config=DiscretizerConfig(copy=False),
     )
     idx = ["a", "b", "c", "d"]
     X = pd.DataFrame(
@@ -622,8 +624,8 @@ def test_multiclass_carver_fit_transform_with_wrong_dev(evaluator: CombinationEv
         features=features,
         dropna=True,
         combinations=evaluator,
-        copy=False,
         ordinal_encoding=False,
+        config=DiscretizerConfig(copy=False),
     )
     idx = ["a", "b", "c", "d"]
     X = pd.DataFrame(
@@ -681,9 +683,9 @@ def test_multiclass_carver_save_load(tmp_path: Path, evaluator: CombinationEvalu
     for feature in carver.features:
         assert feature in loaded_carver.features
         assert feature.content == loaded_carver.features[feature.name].content
-    assert carver.dropna == loaded_carver.dropna
-    assert carver.verbose == loaded_carver.verbose
-    assert carver.copy == loaded_carver.copy
+    assert carver.config.dropna == loaded_carver.config.dropna
+    assert carver.config.verbose == loaded_carver.config.verbose
+    assert carver.config.copy == loaded_carver.config.copy
     assert carver.combinations.__class__ == loaded_carver.combinations.__class__
     assert carver.combinations.max_n_mod == loaded_carver.combinations.max_n_mod
     assert carver.combinations.sort_by == loaded_carver.combinations.sort_by
@@ -725,7 +727,7 @@ def _fit_multiclass_carver(
         min_freq=0.15,
         features=features[chained_features],
         chained_orders=[level0_to_level1, level1_to_level2],
-        copy=copy,
+        config=DiscretizerConfig(copy=copy),
     )
     chained_discretizer.fit(x_train)
 
@@ -735,10 +737,9 @@ def _fit_multiclass_carver(
         features=features,
         combinations=evaluator,
         discretizer_min_freq=discretizer_min_freq,
-        ordinal_encoding=ordinal_encoding,
         dropna=dropna,
-        copy=copy,
-        verbose=False,
+        ordinal_encoding=ordinal_encoding,
+        config=DiscretizerConfig(copy=copy, verbose=False),
     )
     x_discretized = auto_carver.fit_transform(
         x_train,
@@ -983,7 +984,7 @@ def test_multiclass_carver_unknown_ordinal_values_raises(
         min_freq=0.15,
         features=features,
         combinations=CramervCombinations(),
-        verbose=False,
+        config=DiscretizerConfig(verbose=False),
     )
     with raises(ValueError):
         auto_carver.fit_transform(x_train_wrong_2, x_train_wrong_2["multiclass_target"])

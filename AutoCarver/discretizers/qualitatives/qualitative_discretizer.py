@@ -2,6 +2,7 @@
 for a binary classification model.
 """
 
+from dataclasses import replace
 from typing import Self
 
 import pandas as pd
@@ -9,7 +10,7 @@ import pandas as pd
 from AutoCarver.discretizers.qualitatives.categorical_discretizer import CategoricalDiscretizer
 from AutoCarver.discretizers.qualitatives.chained_discretizer import check_frequencies, ensure_qualitative_dtypes
 from AutoCarver.discretizers.qualitatives.ordinal_discretizer import OrdinalDiscretizer
-from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
+from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, DiscretizerConfig, Sample
 from AutoCarver.features import QualitativeFeature
 from AutoCarver.utils import extend_docstring
 
@@ -33,7 +34,8 @@ class QualitativeDiscretizer(BaseDiscretizer):
         self,
         qualitatives: list[QualitativeFeature],
         min_freq: float,
-        **kwargs,
+        *,
+        config: DiscretizerConfig | None = None,
     ) -> None:
         """
         Parameters
@@ -41,10 +43,8 @@ class QualitativeDiscretizer(BaseDiscretizer):
 
         qualitatives : list[QualitativeFeature]
             Qualitative features to process
-
         """
-        # Initiating BaseDiscretizer
-        super().__init__(qualitatives, **dict(kwargs, min_freq=min_freq))
+        super().__init__(qualitatives, min_freq=min_freq, config=config)
 
     def _prepare_data(self, sample: Sample) -> Sample:
         """Validates format and content of X and y. Converts non-string columns into strings."""
@@ -58,7 +58,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
         check_frequencies(self.features, sample.X, self.min_freq, self.__name__)
 
         # converting non-str columns
-        sample.X = ensure_qualitative_dtypes(self.features, sample.X, **self.kwargs)
+        sample.X = ensure_qualitative_dtypes(self.features, sample.X, config=self.config)
 
         return sample
 
@@ -82,7 +82,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
         # discretizing features based on each feature's values_order
         super().fit(**sample)
 
-        if self.verbose:  # verbose if requested
+        if self.config.verbose:  # verbose if requested
             print("------\n")
 
         return self
@@ -93,10 +93,10 @@ class QualitativeDiscretizer(BaseDiscretizer):
         # looking for already discretized features
         discretized_features = [feature for feature in self.features if feature.is_fitted]
 
-        # Base discretization (useful if already discretized)
         if len(discretized_features) > 0:
             base_discretizer = BaseDiscretizer(
-                features=discretized_features, **dict(self.kwargs, copy=True, dropna=False)
+                features=discretized_features,
+                config=replace(self.config, copy=True, dropna=False),
             )
             X = base_discretizer.fit_transform(X, y)
 
@@ -105,21 +105,21 @@ class QualitativeDiscretizer(BaseDiscretizer):
     def _fit_ordinals(self, X: pd.DataFrame, y: pd.Series) -> None:
         """Fit the OrdinalDiscretizer on the ordinal features."""
 
-        # [Qualitative ordinal features] Grouping rare values into closest common one
         if len(self.features.ordinals) > 0:
             ordinal_discretizer = OrdinalDiscretizer(
                 ordinals=self.features.ordinals,
-                **dict(self.kwargs, min_freq=self.min_freq, copy=False),
+                min_freq=self.min_freq,
+                config=replace(self.config, copy=False),
             )
             ordinal_discretizer.fit(X, y)
 
     def _fit_categoricals(self, X: pd.DataFrame, y: pd.Series) -> None:
         """Fit the CategoricalDiscretizer on the categorical features."""
 
-        # [Qualitative non-ordinal features] Grouping rare values into default '__OTHER__'
         if len(self.features.categoricals) > 0:
             categorical_discretizer = CategoricalDiscretizer(
                 categoricals=self.features.categoricals,
-                **dict(self.kwargs, min_freq=self.min_freq, copy=False),
+                min_freq=self.min_freq,
+                config=replace(self.config, copy=False),
             )
             categorical_discretizer.fit(X, y)

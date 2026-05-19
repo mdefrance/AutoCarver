@@ -14,14 +14,28 @@ from sklearn.base import BaseEstimator, TransformerMixin
 
 from AutoCarver.combinations import CombinationEvaluator
 from AutoCarver.discretizers.utils.multiprocessing import apply_async_function
-from AutoCarver.features import (
-    BaseFeature,
-    CategoricalFeature,
-    Features,
-    OrdinalFeature,
-    QuantitativeFeature,
-)
-from AutoCarver.utils import extend_docstring, get_attribute, get_bool_attribute
+from AutoCarver.features import BaseFeature, Features
+from AutoCarver.utils import extend_docstring
+
+
+@dataclass
+class DiscretizerConfig:
+    """Behavioral configuration applied to a :class:`BaseDiscretizer`.
+
+    Carries only cross-cutting toggles that propagate unchanged to sub-discretizers.
+    Domain parameters (``min_freq``, ``combinations`` …) are explicit constructor
+    arguments, not config.
+
+    ``copy=True`` is the default so that BaseDiscretizer doesn't mutate caller
+    DataFrames in place — set to ``False`` when nested inside a pipeline that
+    already owns the dataframe.
+    """
+
+    copy: bool = True
+    ordinal_encoding: bool = False
+    dropna: bool = False
+    verbose: bool = False
+    n_jobs: int = 1
 
 
 @dataclass
@@ -88,7 +102,9 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
     def __init__(
         self,
         features: "Features | Iterable[BaseFeature]",
-        **kwargs,
+        *,
+        min_freq: float | None = None,
+        config: DiscretizerConfig | None = None,
     ) -> None:
         """
         Parameters
@@ -97,8 +113,8 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         features : Features
             A set of :class:`Features` to be processed
 
-        min_freq : float
-            Minimum frequency per modality per feature
+        min_freq : float, optional
+            Minimum frequency per modality per feature, by default ``None``
 
             * Features need at least one modality more frequent than :attr:`min_freq`
             * Defines number of quantiles of continuous features
@@ -107,98 +123,31 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             .. tip::
                 Set between ``0.01`` (slower, less robust) and ``0.2`` (faster, more robust)
 
-        Keyword Arguments
-        -----------------
-
-        ordinal_encoding : bool, optional
-            Whether or not to ordinal encode :class:`Features`, by default ``False``
-
-        copy : bool, optional
-            Copying input data, by default ``False``
-
-        verbose : bool, optional
-            * ``True``, without ``IPython``: prints raw statitics
-            * ``True``, with ``IPython``: prints HTML statistics, by default ``False``
-
-        n_jobs : int, optional
-            Processes for multiprocessing, by default ``1``
+        config : DiscretizerConfig, optional
+            Behavioral toggles (``copy``/``ordinal_encoding``/``dropna``/``verbose``/``n_jobs``),
+            by default a default-initialized :class:`DiscretizerConfig`.
         """
-        # features and values: accept either a Features collection or an
-        # iterable of BaseFeature (subclass lists are common — list invariance
-        # is why the parameter type is widened above).
+        # accept either a Features collection or an iterable of BaseFeature
         if isinstance(features, Features):
             self.features: Features = features
         else:
             self.features = Features.from_list(features)
 
-        # saving kwargs
-        self.kwargs = kwargs
+        self.config: DiscretizerConfig = config if config is not None else DiscretizerConfig()
+        self.min_freq = min_freq
 
-        # checking types of bool attributes
-        self.copy = get_bool_attribute(kwargs, "copy", True)
-        self.ordinal_encoding = get_bool_attribute(kwargs, "ordinal_encoding", False)
-        self.dropna = get_bool_attribute(kwargs, "dropna", False)
-        self._verbose = get_bool_attribute(kwargs, "verbose", True)
+        # set by subclasses; serialized for round-trip but not used by BaseDiscretizer itself
+        self.combinations: CombinationEvaluator | dict | None = None
 
-        # setting number of jobs
-        self.n_jobs = get_attribute(kwargs, "n_jobs", 1)
-
-        # check if the discretizer has already been fitted
-        self.is_fitted = get_bool_attribute(kwargs, "is_fitted", False)
-
-        # carver attributes
-        self.min_freq = kwargs.get("min_freq")  # default to None
-        self.combinations = kwargs.get("combinations")  # default to None
+        # lifecycle flag — set by fit(), or by load() after restoring state
+        self.is_fitted: bool = False
 
     def __repr__(self, N_CHAR_MAX: int = 700) -> str:
         """Returns the string representation of the Discretizer"""
-        _ = N_CHAR_MAX  # unused attribute
-        # truncating features if too long
         str_features = str(self.features)
         if len(str_features) > N_CHAR_MAX:
             str_features = str_features[:N_CHAR_MAX] + "..."
         return f"{self.__name__}({str_features})"
-
-    @property
-    def categoricals(self) -> list[CategoricalFeature]:
-        """Returns the list of categorical features"""
-        return self.features.categoricals
-
-    @property
-    def quantitatives(self) -> list[QuantitativeFeature]:
-        """Returns the list of quantitative features"""
-        return self.features.quantitatives
-
-    @property
-    def qualitatives(self) -> list[OrdinalFeature | CategoricalFeature]:
-        """Returns the list of qualitative features"""
-        return self.features.qualitatives
-
-    @property
-    def ordinals(self) -> list[OrdinalFeature]:
-        """Returns the list of ordinal features"""
-        return self.features.ordinals
-
-    @property
-    def verbose(self) -> bool:
-        """Returns the verbose attribute"""
-        return self._verbose
-
-    @verbose.setter
-    def verbose(self, value: bool) -> None:
-        """Sets the verbose attribute"""
-        self._verbose = value
-
-    def _remove_feature(self, feature: str) -> None:
-        """Removes a feature from all ``BaseDiscretizer.feature`` attributes
-
-        Parameters
-        ----------
-        feature : str
-            Column name of the feature to remove
-        """
-        if feature in self.features:
-            self.features.remove(feature)
 
     def _cast_features(self, X: pd.DataFrame) -> pd.DataFrame:
         """Casts the features of a DataFrame using feature versions to duplicate columns
@@ -248,7 +197,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         # copying X
         x_copy = X
-        if self.copy:
+        if self.config.copy:
             x_copy = X.copy()
 
         # checking for input columns by feature name
@@ -304,7 +253,9 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         return sample
 
-    __prepare_data = _prepare_data  # private copy
+    # name-mangled alias used by transform() so subclass overrides of _prepare_data
+    # (which add fit-time-only checks) don't break the transform path
+    __prepare_data = _prepare_data
 
     def fit(self, X: pd.DataFrame | None = None, y: pd.Series | None = None) -> Self:
         """Learns simple discretization of values of X according to values of y.
@@ -332,7 +283,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             raise RuntimeError(f"[{self.__name__}] Features not fitted: {str(missing_features)}.")
 
         # setting features in ordinal encoding mode
-        self.features.ordinal_encoding = self.ordinal_encoding
+        self.features.ordinal_encoding = self.config.ordinal_encoding
 
         # setting fitted as True to raise alerts
         self.is_fitted = True
@@ -355,13 +306,6 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         DataFrame
             Discretized X.
         """
-        # * For each feature's value, the associated group label is attributed (as definid by
-        # ``values_orders``).
-        # * If ``ordinal_encoding="float"``, converts labels into floats.
-        # * Data types are matched as ``input_dtypes=="str"`` for qualitative features and
-        # ``input_dtypes=="float"`` for quantitative ones.
-        # * If ``copy=True``, the input DataFrame will be copied.
-
         # checking that it was fitted
         if not self.is_fitted:
             raise RuntimeError(f"[{self.__name__}] Call fit method first.")
@@ -387,30 +331,12 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         return sample.unfillna(self.features)
 
     def _transform_quantitative(self, sample: Sample) -> Sample:
-        """Applies discretization to a DataFrame's Quantitative columns.
-
-        * Data types are defined by:
-            * ``input_dtypes=="str"`` for qualitative features
-            * ``input_dtypes=="float"`` for quantitative features
-        * If ``copye=True``, the input DataFrame will be copied.
-
-        Parameters
-        ----------
-        X : pd.DataFrame
-            Contains columns named after ``BaseDiscretizer.features`` attribute, by default None
-        y : pd.Series, optional
-            Model target, by default None
-
-        Returns
-        -------
-        DataFrame
-            Discretized X.
-        """
+        """Applies discretization to a DataFrame's Quantitative columns."""
         # transforming all features
         transformed = apply_async_function(
             transform_quantitative_feature,
             self.features.quantitatives,
-            self.n_jobs,
+            self.config.n_jobs,
             sample.X,
             sample.shape[0],
         )
@@ -421,25 +347,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         return sample
 
     def _transform_qualitative(self, sample: Sample) -> Sample:
-        """Applies discretization to a DataFrame's Qualitative columns.
-
-        * Data types are defined by:
-            * ``input_dtypes=="str"`` for qualitative features
-            * ``input_dtypes=="float"`` for quantitative features
-        * If ``copye=True``, the input DataFrame will be copied.
-
-        Parameters
-        ----------
-        X : pd.DataFrame
-            Contains columns named after ``BaseDiscretizer.features`` attribute, by default None
-        y : pd.Series, optional
-            Model target, by default None
-
-        Returns
-        -------
-        DataFrame
-            Discretized X.
-        """
+        """Applies discretization to a DataFrame's Qualitative columns."""
         # list of qualitative features
         qualitatives = self.features.qualitatives
 
@@ -450,7 +358,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
     def _log_if_verbose(self, prefix: str = " -") -> None:
         """prints logs if requested"""
-        if self.verbose:
+        if self.config.verbose:
             print(f"{prefix} [{self.__name__}] Fit {str(self.features)}")
 
     def to_json(self, light_mode: bool = False) -> dict:
@@ -468,16 +376,18 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         str
             JSON serialized object
         """
-        # adding all parameters
         content = {
             "features": self.features.to_json(light_mode),
-            "dropna": self.dropna,
             "min_freq": self.min_freq,
-            "combinations": self.combinations,
             "is_fitted": self.is_fitted,
-            "n_jobs": self.n_jobs,
-            "verbose": self.verbose,
-            "ordinal_encoding": self.ordinal_encoding,
+            "combinations": self.combinations,
+            "config": {
+                "dropna": self.config.dropna,
+                "n_jobs": self.config.n_jobs,
+                "verbose": self.config.verbose,
+                "ordinal_encoding": self.config.ordinal_encoding,
+                "copy": self.config.copy,
+            },
         }
 
         # adding combinations if it exists
@@ -528,13 +438,32 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         """
         # reading file
         with open(file_name, encoding="utf-8") as json_file:
-            discretizer_json = json.load(json_file)
+            data = json.load(json_file)
 
-        # deserializing features
-        features = Features.load(discretizer_json.pop("features"))
+        return cls._from_json(data)
 
-        # initiating BaseDiscretizer
-        return cls(features=features, **discretizer_json)
+    @classmethod
+    def _from_json(cls, data: dict) -> "BaseDiscretizer":
+        """Builds an instance from the parsed JSON dict (combinations stays a dict
+        unless a Carver subclass deserializes it before calling this)."""
+
+        features = Features.load(data.pop("features"))
+        is_fitted = data.pop("is_fitted", False)
+        combinations = data.pop("combinations", None)
+        min_freq = data.pop("min_freq", None)
+        config_data = data.pop("config", {})
+        config = DiscretizerConfig(
+            ordinal_encoding=config_data.get("ordinal_encoding", False),
+            dropna=config_data.get("dropna", False),
+            verbose=config_data.get("verbose", False),
+            n_jobs=config_data.get("n_jobs", 1),
+            copy=config_data.get("copy", True),
+        )
+
+        instance = cls(features=features, min_freq=min_freq, config=config)
+        instance.is_fitted = is_fitted
+        instance.combinations = combinations
+        return instance
 
     @extend_docstring(Features.summary.fget)
     @property
@@ -545,84 +474,6 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
     def history(self) -> pd.DataFrame:
         """History of discretization process for all features"""
         return self.features.history
-
-    # def update(
-    #     self,
-    #     feature: str,
-    #     mode: str,
-    #     discarded_value: Union[str, float],
-    #     kept_value: Union[str, float],
-    # ) -> None:
-    #     """Allows one to update the discretization groups
-
-    #     Use with caution: no viability checks are performed.
-
-    #     Parameters
-    #     ----------
-    #     feature : str
-    #         Specify for which feature to update the discritezer
-    #     mode : str
-    #         * For ``mode="replace"``, ``discarded_value`` will be replaced by ``kept_value``
-    #         * For ``mode="group"``, ``discarded_value`` will be grouped with ``kept_value``
-    #     discarded_value : Union[str, float]
-    #         A group value that won't exist after completion
-    #     new_value : Union[str, float]
-    #         A group value that will persist after completion
-    #     """
-    #     # checking for mode
-    #     assert mode in ["group", "replace"], " - [Discretizer] Choose mode in
-    # ['group', 'replace']"
-
-    #     # checking for nans
-    #     if isnan(discarded_value):
-    #         discarded_value = self.nan
-    #         self.features_dropna[feature] = True
-    #     assert not isnan(
-    #         kept_value
-    #     ), " - [Discretizer] missing values can only be grouped with an existing modality"
-
-    #     # copying values_orders
-    #     values_orders = {k: v for k, v in self.values_orders.items()}
-    #     order = values_orders[feature]
-
-    #     # checking that discarded_value is not already in new_value
-    #     if order.get_group(discarded_value) == kept_value:
-    #         warn(
-    #             f"[Discretizer] {discarded_value} is already grouped within {kept_value}",
-    #             UserWarning,
-    #         )
-
-    #     # otherwise, proceeding
-    #     else:
-    #         # adding kept_value if it does not exists yet
-    #         if not order.contains(kept_value):
-    #             order.append(kept_value)
-
-    #         # grouping discarded value in kept_value
-    #         if mode == "group":
-    #             # adding discarded_value if it does not exists yet
-    #             if not order.contains(discarded_value):
-    #                 order.append(discarded_value)
-    #             # grouping discarded_value with kept_value
-    #             order.group(discarded_value, kept_value)
-
-    #         # replacing group leader if requested
-    #         elif mode == "replace":
-    #             # grouping kept_value with discarded_value
-    #             order.group(kept_value, discarded_value)
-
-    #             # checking that kept_value is in discarded_value
-    #             assert order.get_group(kept_value) == discarded_value, (
-    #                 f"[Discretizer] Can not proceed! {kept_value} already is a "
-    #                 f"member of another group ({order.get_group(kept_value)})"
-    #             )
-
-    #             # replacing group leader
-    #             order.replace_group_leader(discarded_value, kept_value)
-
-    #         # updating Carver values_orders and labels_per_values
-    #         self.values_orders.update({feature: order})
-    #         self.labels_per_values = self._get_labels_per_values(self.ordinal_encoding)
 
 
 def transform_quantitative_feature(feature: BaseFeature, df_feature: pd.Series, x_len: int) -> tuple[str, list]:
@@ -652,8 +503,6 @@ def transform_quantitative_feature(feature: BaseFeature, df_feature: pd.Series, 
     # corressponding group for each value
     group_labels = [[feature.label_per_value[value]] * x_len for value in feature.values if value != feature.nan]
 
-    # checking for values to group
-    # if len(values_to_group) > 0:  # TODO check if this is needed
     df_feature = pd.Series(np.select(values_to_group, group_labels, default=df_feature), index=raw_index)
 
     # reinstating nans otherwise nan is converted to 'nan' by numpy

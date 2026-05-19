@@ -5,7 +5,7 @@ from pytest import FixtureRequest, fixture, raises
 
 from AutoCarver.carvers.utils.base_carver import BaseCarver, Samples, discretize
 from AutoCarver.combinations import CramervCombinations, KruskalCombinations, TschuprowtCombinations
-from AutoCarver.discretizers.utils.base_discretizer import Sample
+from AutoCarver.discretizers.utils.base_discretizer import DiscretizerConfig, Sample
 from AutoCarver.features import Features
 from AutoCarver.utils.dependencies import has_idisplay
 
@@ -84,13 +84,12 @@ def test_initialization(features, evaluator):
         min_freq=0.1,
         combinations=evaluator,
         dropna=True,
-        verbose=True,
-        n_jobs=2,
+        config=DiscretizerConfig(verbose=True, n_jobs=2),
     )
     assert carver.min_freq == 0.1
-    assert carver.dropna is True
-    assert carver.verbose is True
-    assert carver.n_jobs == 2
+    assert carver.config.dropna is True
+    assert carver.config.verbose is True
+    assert carver.config.n_jobs == 2
     assert carver.combinations == evaluator
     assert carver.combinations.min_freq == 0.1
     assert carver.combinations.verbose is True
@@ -99,14 +98,14 @@ def test_initialization(features, evaluator):
 
 def test_pretty_print(features, evaluator):
     """Test pretty_print property of BaseCarver."""
-    carver = BaseCarver(features=features, min_freq=0.1, combinations=evaluator, verbose=True)
+    carver = BaseCarver(features=features, min_freq=0.1, combinations=evaluator, config=DiscretizerConfig(verbose=True))
 
-    assert carver.pretty_print == (carver.verbose and _has_idisplay)
+    assert carver.pretty_print == (carver.config.verbose and _has_idisplay)
 
 
 def test_prepare_data_raises_value_error(features, evaluator, samples):
     """Test _prepare_data method raises ValueError when y is None."""
-    carver = BaseCarver(features=features, min_freq=0.1, combinations=evaluator, verbose=True)
+    carver = BaseCarver(features=features, min_freq=0.1, combinations=evaluator, config=DiscretizerConfig(verbose=True))
     samples.train.y = None
     with raises(ValueError):
         carver._prepare_data(samples)
@@ -114,7 +113,7 @@ def test_prepare_data_raises_value_error(features, evaluator, samples):
 
 def test_prepare_data(features, evaluator, samples):
     """Test _prepare_data method of BaseCarver."""
-    carver = BaseCarver(features=features, min_freq=0.1, combinations=evaluator, verbose=True)
+    carver = BaseCarver(features=features, min_freq=0.1, combinations=evaluator, config=DiscretizerConfig(verbose=True))
     prepared_samples = carver._prepare_data(samples)
     print(prepared_samples.train.X)
     print(samples.train.X)
@@ -144,7 +143,7 @@ def test_discretize_train(features, samples):
     """Test discretize function for train samples."""
     discretizer_min_freq = 0.1
     samples.dev = Sample(X=None)
-    samples = discretize(features, samples, discretizer_min_freq)
+    samples = discretize(features, samples, discretizer_min_freq, DiscretizerConfig())
     assert samples.train.X is not None
     assert samples.dev.X is None
 
@@ -152,6 +151,6 @@ def test_discretize_train(features, samples):
 def test_discretize_dev(features, samples):
     """Test discretize function for dev samples."""
     discretizer_min_freq = 0.1
-    samples = discretize(features, samples, discretizer_min_freq)
+    samples = discretize(features, samples, discretizer_min_freq, DiscretizerConfig())
     assert samples.train.X is not None
     assert samples.dev.X is not None

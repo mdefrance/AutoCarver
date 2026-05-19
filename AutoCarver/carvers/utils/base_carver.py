@@ -4,7 +4,7 @@ for any task.
 
 import json
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Self
 
 import pandas as pd
@@ -17,8 +17,9 @@ from AutoCarver.combinations import (
     TschuprowtCombinations,
 )
 from AutoCarver.discretizers import BaseDiscretizer, Discretizer, Sample
+from AutoCarver.discretizers.utils.base_discretizer import DiscretizerConfig
 from AutoCarver.features import BaseFeature, Features
-from AutoCarver.utils import extend_docstring, get_attribute, get_bool_attribute, has_idisplay
+from AutoCarver.utils import extend_docstring, has_idisplay
 
 # trying to import extra dependencies
 _has_idisplay = has_idisplay()
@@ -34,27 +35,6 @@ class Samples:
     Attributes:
         train (Sample): The training sample, containing features (X) and target (y).
         dev (Sample): The development sample, containing features (X) and target (y).
-
-    Example:
-        >>> import pandas as pd
-        >>> from base_carver import Sample, Samples
-        >>> X_train = pd.DataFrame({"feature1": [1, 2, 3], "feature2": [4, 5, 6]})
-        >>> y_train = pd.Series([0, 1, 0])
-        >>> X_dev = pd.DataFrame({"feature1": [7, 8, 9], "feature2": [10, 11, 12]})
-        >>> y_dev = pd.Series([1, 0, 1])
-        >>> train_sample = Sample(X=X_train, y=y_train)
-        >>> dev_sample = Sample(X=X_dev, y=y_dev)
-        >>> samples = Samples(train=train_sample, dev=dev_sample)
-        >>> print(samples.train.X)
-           feature1  feature2
-        0         1         4
-        1         2         5
-        2         3         6
-        >>> print(samples.dev.y)
-        0    1
-        1    0
-        2    1
-        dtype: int64
     """
 
     train: Sample = field(default_factory=lambda: Sample(X=None))
@@ -86,16 +66,26 @@ class BaseCarver(BaseDiscretizer, ABC):
         features: Features,
         min_freq: float,
         combinations: CombinationEvaluator,
+        *,
         dropna: bool = True,
-        **kwargs,
+        ordinal_encoding: bool = True,
+        discretizer_min_freq: float | None = None,
+        config: DiscretizerConfig | None = None,
     ) -> None:
         """
         Parameters
         ----------
 
+        combinations : CombinationEvaluator
+            Metric to perform association measure between :class:`Features` and target.
+
         dropna : bool, optional
             * ``True``, try to group ``nan`` with other modalities.
             * ``False``, ``nan`` are ignored (not grouped), by default ``True``
+
+        ordinal_encoding : bool, optional
+            Whether or not to ordinal encode :class:`Features`, by default ``True``
+            (carver-specific override of :attr:`DiscretizerConfig.ordinal_encoding`).
 
         max_n_mod : int, optional
             Maximum number of modalities per feature, by default ``5``
@@ -106,39 +96,30 @@ class BaseCarver(BaseDiscretizer, ABC):
             .. tip::
                 Set between ``3`` (faster, more robust) and ``7`` (slower, less robust)
 
-        Keyword Arguments
-        -----------------
-
         discretizer_min_freq : float, optional
-            Specific :attr:`min_freq` used by discretizers, by default ``None`` for ``min_freq/2``
+            Specific :attr:`min_freq` used by the underlying :class:`Discretizer`, by default
+            ``min_freq / 2``.
         """
+        # carver-level toggles flow through dedicated kwargs (not config) because their
+        # historical defaults differ from BaseDiscretizer's
+        if config is None:
+            config = DiscretizerConfig()
+        config = replace(config, dropna=dropna, ordinal_encoding=ordinal_encoding)
 
-        # minimum frequency for discretizer
-        self.discretizer_min_freq = get_attribute(kwargs, "discretizer_min_freq", min_freq / 2)
+        super().__init__(features, min_freq=min_freq, config=config)
 
-        # Initiating BaseDiscretizer
-        super().__init__(
-            features,
-            **dict(
-                kwargs,
-                verbose=get_bool_attribute(kwargs, "verbose", False),
-                ordinal_encoding=get_bool_attribute(kwargs, "ordinal_encoding", True),
-                min_freq=min_freq,
-                dropna=dropna,
-                discretizer_min_freq=self.discretizer_min_freq,
-            ),
-        )
+        self.discretizer_min_freq = discretizer_min_freq if discretizer_min_freq is not None else min_freq / 2
 
-        # setting combinations evaluator
+        # attach combinations and sync the toggles it cares about
         self.combinations: CombinationEvaluator = combinations
         self.combinations.min_freq = self.min_freq
-        self.combinations.verbose = self.verbose
-        self.combinations.dropna = self.dropna
+        self.combinations.verbose = self.config.verbose
+        self.combinations.dropna = self.config.dropna
 
     @property
     def pretty_print(self) -> bool:
         """Returns the pretty_print attribute"""
-        return self.verbose and _has_idisplay
+        return self.config.verbose and _has_idisplay
 
     @property
     def max_n_mod(self) -> int:
@@ -151,31 +132,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         self.combinations.max_n_mod = value
 
     def _prepare_data(self, samples: Samples) -> Samples:
-        """Validates format and content of X and y.
-
-        Parameters
-        ----------
-        X : pd.DataFrame
-            Dataset used to discretize. Needs to have columns has specified in
-            ``BaseCarver.features``.
-
-        y : pd.Series
-            Binary target feature with wich the association is maximized.
-
-        X_dev : pd.DataFrame, optional
-            Dataset to evalute the robustness of discretization, by default ``None``
-            It should have the same distribution as X.
-
-        y_dev : pd.Series, optional
-            Binary target feature with wich the robustness of discretization is evaluated,
-            by default ``None``
-
-        Returns
-        -------
-        tuple[pd.DataFrame, pd.DataFrame]
-            Copies of (X, X_dev)
-        """
-        # checking for not provided y
+        """Validates format and content of X and y."""
         if samples.train.y is None:
             raise ValueError(f"[{self.__name__}] y must be provided, got {samples.train.y}")
 
@@ -184,7 +141,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         samples.dev = super()._prepare_data(samples.dev)
 
         # discretizing features according to min_freq
-        samples = discretize(self.features, samples, **self.kwargs)
+        samples = discretize(self.features, samples, self.discretizer_min_freq, self.config)
 
         # setting dropna to True for filling up nans
         self.features.dropna = True
@@ -271,7 +228,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         """Carves a feature into buckets that maximize association with the target"""
 
         # verbose if requested
-        if self.verbose:
+        if self.config.verbose:
             print(f"--- [{self.__name__}] Fit {feature} ({num_iter})")
 
         # getting xtabs on train/test
@@ -309,18 +266,8 @@ class BaseCarver(BaseDiscretizer, ABC):
         *,
         xagg_dev: pd.Series | pd.DataFrame | None = None,
     ) -> None:
-        """Prints crosstabs' target rates and frequencies per modality, in raw or html format
-
-        Parameters
-        ----------
-        xagg : pd.Series | pd.DataFrame
-            Train crosstab
-        xagg_dev : pd.Series | pd.DataFrame
-            Dev crosstab, by default None
-        pretty_print : bool, optional
-            Whether to output html or not, by default False
-        """
-        if self.verbose:
+        """Prints crosstabs' target rates and frequencies per modality, in raw or html format"""
+        if self.config.verbose:
             print(f" [{self.__name__}] {message}")
 
             formatted_xagg, formatted_xagg_dev = self._format_xagg(feature, xagg, xagg_dev)
@@ -382,63 +329,68 @@ class BaseCarver(BaseDiscretizer, ABC):
         # displaying html of colored DataFrame
         display_html(nicer_xaggs, raw=True)
 
+    def to_json(self, light_mode: bool = False) -> dict:
+        """Converts to JSON format. Adds carver-specific fields on top of the base content."""
+        content = super().to_json(light_mode)
+        content["discretizer_min_freq"] = self.discretizer_min_freq
+        return content
+
     @classmethod
     def load(cls, file_name: str) -> "BaseCarver":
-        """Allows one to load a Carver saved as a .json file.
-
-        The Carver has to be saved with ``Carver.save()``, otherwise there
-        can be no guarantee for it to be restored.
-
-        Parameters
-        ----------
-        file_name : str
-            String of saved Carver's .json file name.
-
-        Returns
-        -------
-        BaseDiscretizer
-            A fitted Carver.
-        """
-        # reading file
+        """Allows one to load a Carver saved as a .json file."""
         with open(file_name, encoding="utf-8") as json_file:
-            carver_json = json.load(json_file)
+            data = json.load(json_file)
 
         # deserializing features
-        features = Features.load(carver_json.pop("features"))
+        features = Features.load(data.pop("features"))
 
         # deserializing Combinations
-        combinations = carver_json.pop("combinations")
-        if combinations["sort_by"] == "tschuprowt":
-            combinations = TschuprowtCombinations.load(combinations)
-        elif combinations["sort_by"] == "cramerv":
-            combinations = CramervCombinations.load(combinations)
-        elif combinations["sort_by"] == "kruskal":
-            combinations = KruskalCombinations.load(combinations)
+        combinations_json = data.pop("combinations")
+        if combinations_json["sort_by"] == "tschuprowt":
+            combinations = TschuprowtCombinations.load(combinations_json)
+        elif combinations_json["sort_by"] == "cramerv":
+            combinations = CramervCombinations.load(combinations_json)
+        elif combinations_json["sort_by"] == "kruskal":
+            combinations = KruskalCombinations.load(combinations_json)
         else:
-            combinations = CombinationEvaluator.load(combinations)
+            combinations = CombinationEvaluator.load(combinations_json)
 
-        # initiating BaseDiscretizer
-        return cls(features=features, combinations=combinations, **carver_json)
+        is_fitted = data.pop("is_fitted", False)
+        min_freq = data.pop("min_freq", None)
+        discretizer_min_freq = data.pop("discretizer_min_freq", None)
+        dropna = data.pop("dropna", True)
+        ordinal_encoding = data.pop("ordinal_encoding", True)
+        config = DiscretizerConfig(
+            verbose=data.pop("verbose", False),
+            n_jobs=data.pop("n_jobs", 1),
+        )
+
+        instance = cls(
+            features=features,
+            min_freq=min_freq,
+            combinations=combinations,
+            dropna=dropna,
+            ordinal_encoding=ordinal_encoding,
+            discretizer_min_freq=discretizer_min_freq,
+            config=config,
+        )
+        instance.is_fitted = is_fitted
+        return instance
 
 
 def discretize(
     features: Features,
     samples: Samples,
     discretizer_min_freq: float,
-    **kwargs,
+    config: DiscretizerConfig,
 ) -> Samples:
     """Discretizes X and X_dev according to the frequency of each feature's modalities."""
 
     # discretizing all features, always copying, to keep discretization from start to finish
     discretizer = Discretizer(
         features=features,
-        **dict(
-            kwargs,
-            dropna=False,
-            copy=True,
-            ordinal_encoding=False,
-            min_freq=discretizer_min_freq,
-        ),
+        min_freq=discretizer_min_freq,
+        config=replace(config, dropna=False, copy=True, ordinal_encoding=False),
     )
 
     # fitting discretizer on X

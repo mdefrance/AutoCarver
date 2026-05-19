@@ -15,7 +15,7 @@ from AutoCarver.combinations import (
     TschuprowtCombinations,
 )
 from AutoCarver.config import Constants
-from AutoCarver.discretizers import ChainedDiscretizer
+from AutoCarver.discretizers import ChainedDiscretizer, DiscretizerConfig
 from AutoCarver.features import Features, OrdinalFeature
 
 
@@ -91,7 +91,7 @@ def test_binary_carver_initialization():
     carver = BinaryCarver(min_freq=0.1, features=features, dropna=True)
     assert carver.min_freq == 0.1
     assert carver.features == features
-    assert carver.dropna is True
+    assert carver.config.dropna is True
     assert isinstance(carver.combinations, TschuprowtCombinations)
     assert carver.combinations.max_n_mod == 5
 
@@ -184,7 +184,7 @@ def test_carve_feature_with_best_combination(evaluator):
         min_freq=0.1,
         combinations=evaluator,
         dropna=True,
-        verbose=False,
+        config=DiscretizerConfig(verbose=False),
     )
     carver._prepare_data(samples)
 
@@ -242,7 +242,7 @@ def test_carve_feature_without_best_combination(evaluator: CombinationEvaluator)
         min_freq=0.9,
         combinations=evaluator,
         dropna=True,
-        verbose=False,
+        config=DiscretizerConfig(verbose=False),
     )
     carver._prepare_data(samples)
 
@@ -281,7 +281,7 @@ def test_fit_with_best_combination(evaluator):
         min_freq=0.1,
         combinations=evaluator,
         dropna=True,
-        verbose=False,
+        config=DiscretizerConfig(verbose=False),
     )
 
     # fitting carver
@@ -332,7 +332,7 @@ def test_fit_without_best_combination(evaluator: CombinationEvaluator):
         min_freq=0.9,
         combinations=evaluator,
         dropna=True,
-        verbose=False,
+        config=DiscretizerConfig(verbose=False),
     )
 
     # fitting carver
@@ -353,9 +353,9 @@ def test_binary_carver_fit_transform_with_small_data_not_ordinal(evaluator: Comb
         min_freq=0.1,
         features=features,
         dropna=True,
-        ordinal_encoding=False,
         combinations=evaluator,
-        copy=False,
+        ordinal_encoding=False,
+        config=DiscretizerConfig(copy=False),
     )
     idx = ["a", "b", "c", "d"]
     X = pd.DataFrame(
@@ -405,7 +405,9 @@ def test_binary_carver_fit_transform_with_small_data_ordinal(evaluator: Combinat
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
-    carver = BinaryCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False)
+    carver = BinaryCarver(
+        min_freq=0.1, features=features, dropna=True, combinations=evaluator, config=DiscretizerConfig(copy=False)
+    )
     idx = ["a", "b", "c", "d"]
     X = pd.DataFrame(
         {
@@ -459,8 +461,8 @@ def test_binary_carver_fit_transform_with_large_data(evaluator: CombinationEvalu
         features=features,
         dropna=True,
         combinations=evaluator,
-        copy=False,
         ordinal_encoding=False,
+        config=DiscretizerConfig(copy=False),
     )
     idx = [
         "a",
@@ -621,8 +623,8 @@ def test_binary_carver_fit_transform_with_target_only_nan(evaluator: Combination
         features=features,
         dropna=True,
         combinations=evaluator,
-        copy=False,
         ordinal_encoding=False,
+        config=DiscretizerConfig(copy=False),
     )
     idx = ["a", "b", "c", "d"]
     X = pd.DataFrame(
@@ -671,7 +673,9 @@ def test_binary_carver_fit_transform_with_wrong_dev(evaluator: CombinationEvalua
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
-    carver = BinaryCarver(min_freq=0.1, features=features, dropna=True, combinations=evaluator, copy=False)
+    carver = BinaryCarver(
+        min_freq=0.1, features=features, dropna=True, combinations=evaluator, config=DiscretizerConfig(copy=False)
+    )
     idx = ["a", "b", "c", "d"]
     X = pd.DataFrame(
         {
@@ -724,9 +728,9 @@ def test_binary_carver_save_load(tmp_path: Path, evaluator: CombinationEvaluator
     for feature in carver.features:
         assert feature in loaded_carver.features
         assert feature.content == loaded_carver.features[feature.name].content
-    assert carver.dropna == loaded_carver.dropna
-    assert carver.verbose == loaded_carver.verbose
-    assert carver.copy == loaded_carver.copy
+    assert carver.config.dropna == loaded_carver.config.dropna
+    assert carver.config.verbose == loaded_carver.config.verbose
+    assert carver.config.copy == loaded_carver.config.copy
     assert carver.combinations.__class__ == loaded_carver.combinations.__class__
     assert carver.combinations.max_n_mod == loaded_carver.combinations.max_n_mod
     assert carver.combinations.sort_by == loaded_carver.combinations.sort_by
@@ -768,7 +772,7 @@ def _fit_binary_carver(
         min_freq=min_freq,
         features=features[chained_features],
         chained_orders=[level0_to_level1, level1_to_level2],
-        copy=copy,
+        config=DiscretizerConfig(copy=copy),
     )
     chained_discretizer.fit(x_train)
 
@@ -777,11 +781,10 @@ def _fit_binary_carver(
         min_freq=min_freq,
         combinations=evaluator,
         features=features,
-        ordinal_encoding=ordinal_encoding,
         discretizer_min_freq=discretizer_min_freq,
         dropna=dropna,
-        copy=copy,
-        verbose=False,
+        ordinal_encoding=ordinal_encoding,
+        config=DiscretizerConfig(copy=copy, verbose=False),
     )
     x_discretized = auto_carver.fit_transform(
         x_train,
@@ -813,7 +816,7 @@ def test_binary_carver_uneligible_features_raises(
             min_freq=0.1,
             combinations=evaluator,
             features=features,
-            verbose=False,
+            config=DiscretizerConfig(verbose=False),
         )
         auto_carver.fit_transform(
             x_train,
@@ -1078,7 +1081,7 @@ def test_binary_carver_unknown_ordinal_values_raises(
         min_freq=0.15,
         combinations=CramervCombinations(),
         features=features,
-        verbose=False,
+        config=DiscretizerConfig(verbose=False),
     )
     with raises(ValueError):
         auto_carver.fit_transform(x_train_wrong_2, x_train_wrong_2["binary_target"])

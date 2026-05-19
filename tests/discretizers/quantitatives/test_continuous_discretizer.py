@@ -12,6 +12,7 @@ from AutoCarver.discretizers.quantitatives.continuous_discretizer import (
     get_remaining_quantiles,
     np_find_quantiles,
 )
+from AutoCarver.discretizers.utils.base_discretizer import DiscretizerConfig
 from AutoCarver.features import Features, GroupedList, QuantitativeFeature
 
 
@@ -773,7 +774,7 @@ def test_continuous_discretizer(x_train: pd.DataFrame):
     discretizer = ContinuousDiscretizer(
         features,
         min_freq,
-        copy=True,
+        config=DiscretizerConfig(copy=True),
     )
     x_discretized = discretizer.fit(x_train)
     features.dropna = True

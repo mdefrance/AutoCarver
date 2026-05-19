@@ -6,7 +6,7 @@ from typing import Self
 
 import pandas as pd
 
-from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
+from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, DiscretizerConfig, Sample
 from AutoCarver.features import CategoricalFeature
 from AutoCarver.utils import extend_docstring
 
@@ -29,7 +29,8 @@ class CategoricalDiscretizer(BaseDiscretizer):
         self,
         categoricals: list[CategoricalFeature],
         min_freq: float,
-        **kwargs,
+        *,
+        config: DiscretizerConfig | None = None,
     ) -> None:
         """
         Parameters
@@ -37,8 +38,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
         categoricals : list[CategoricalFeature]
             Categorical features to process
         """
-        # Initiating BaseDiscretizer
-        super().__init__(categoricals, **dict(kwargs, min_freq=min_freq))
+        super().__init__(categoricals, min_freq=min_freq, config=config)
 
     def _prepare_data(self, sample: Sample) -> Sample:
         """Validates format and content of X and y.

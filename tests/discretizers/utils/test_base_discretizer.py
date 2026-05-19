@@ -14,6 +14,7 @@ from AutoCarver.combinations import (
 )
 from AutoCarver.discretizers.utils.base_discretizer import (
     BaseDiscretizer,
+    DiscretizerConfig,
     Sample,
     transform_quantitative_feature,
 )
@@ -139,58 +140,47 @@ def test_init(features: Features, true_false: bool) -> None:
 
     # test default values
     assert not disc.is_fitted
-    assert not disc.dropna
-    assert disc.copy
-    assert disc.verbose
-    assert not disc.ordinal_encoding
-    assert disc.n_jobs == 1
+    assert not disc.config.dropna
+    assert disc.config.copy
+    assert not disc.config.verbose
+    assert not disc.config.ordinal_encoding
+    assert disc.config.n_jobs == 1
     assert disc.min_freq is None
     assert disc.combinations is None
 
     # test setting copy
-    disc = BaseDiscretizer(features, copy=true_false)
-    assert disc.copy == true_false
+    disc = BaseDiscretizer(features, config=DiscretizerConfig(copy=true_false))
+    assert disc.config.copy == true_false
 
     # test setting ordinal_encoding
-    disc = BaseDiscretizer(features, ordinal_encoding=true_false)
-    assert disc.ordinal_encoding == true_false
+    disc = BaseDiscretizer(features, config=DiscretizerConfig(ordinal_encoding=true_false))
+    assert disc.config.ordinal_encoding == true_false
 
     # test setting dropna
-    disc = BaseDiscretizer(features, dropna=true_false)
-    assert disc.dropna == true_false
+    disc = BaseDiscretizer(features, config=DiscretizerConfig(dropna=true_false))
+    assert disc.config.dropna == true_false
 
     # test setting verbose
-    disc = BaseDiscretizer(features, verbose=true_false)
-    assert disc.verbose == true_false
+    disc = BaseDiscretizer(features, config=DiscretizerConfig(verbose=true_false))
+    assert disc.config.verbose == true_false
 
-    # test setting is_fitted
-    disc = BaseDiscretizer(features, is_fitted=true_false)
+    # test setting is_fitted (now a post-construction attribute, not a constructor arg)
+    disc = BaseDiscretizer(features)
+    disc.is_fitted = true_false
     assert disc.is_fitted == true_false
 
     # test setting n_jobs
-    disc = BaseDiscretizer(features, n_jobs=4)
-    assert disc.n_jobs == 4
+    disc = BaseDiscretizer(features, config=DiscretizerConfig(n_jobs=4))
+    assert disc.config.n_jobs == 4
 
     # test setting min_freq
     disc = BaseDiscretizer(features, min_freq=0.2)
     assert disc.min_freq == 0.2
 
-    # test setting sort_by
-    disc = BaseDiscretizer(features, combinations="test")
-    assert disc.combinations == "test"
-
-
-def test_remove_feature(features: Features) -> None:
-    """test remove_feature method"""
-
+    # test setting combinations (post-construction; carvers attach their own)
     disc = BaseDiscretizer(features)
-    # existing feature
-    disc._remove_feature("feature1")
-    assert "feature1" not in disc.features
-    # non-existing feature
-    n_features = len(disc.features)
-    disc._remove_feature("feature_x")
-    assert len(disc.features) == n_features
+    disc.combinations = "test"
+    assert disc.combinations == "test"
 
 
 def test_cast_features(features: Features) -> None:
@@ -233,7 +223,7 @@ def test_prepare_X(features: Features) -> None:
     )
 
     # test with copy
-    disc = BaseDiscretizer(features, copy=True)
+    disc = BaseDiscretizer(features, config=DiscretizerConfig(copy=True))
     with raises(ValueError):
         disc._prepare_X(X["feature1"])
     with raises(ValueError):
@@ -246,7 +236,7 @@ def test_prepare_X(features: Features) -> None:
     assert (X["feature3"] != prepared_X["feature3"]).any()
 
     # test without copy
-    disc = BaseDiscretizer(features, copy=False)
+    disc = BaseDiscretizer(features, config=DiscretizerConfig(copy=False))
     prepared_X = disc._prepare_X(X)
     prepared_X["feature1"] = [1] * len(X["feature1"])
     X["feature3"] = [3] * len(X["feature3"])
@@ -308,7 +298,8 @@ def test_fit(features: Features) -> None:
     """tests fit method"""
 
     # already fitted discretizer
-    disc = BaseDiscretizer(features, is_fitted=True)
+    disc = BaseDiscretizer(features)
+    disc.is_fitted = True
     with raises(RuntimeError):
         disc.fit()
 
@@ -322,14 +313,14 @@ def test_fit(features: Features) -> None:
         feature.is_fitted = True
 
     # expected use without ordinal_encoding
-    disc = BaseDiscretizer(features, ordinal_encoding=False)
+    disc = BaseDiscretizer(features, config=DiscretizerConfig(ordinal_encoding=False))
     disc.fit()
     assert disc.is_fitted
     for feature in features:
         assert not feature.ordinal_encoding
 
     # expected use with ordinal_encoding
-    disc = BaseDiscretizer(features, ordinal_encoding=True)
+    disc = BaseDiscretizer(features, config=DiscretizerConfig(ordinal_encoding=True))
     disc.fit()
     assert disc.is_fitted
     for feature in features:
@@ -429,7 +420,7 @@ def test_transform(true_false: bool) -> None:
     feature3.update(GroupedList([2, 4.5, np.inf]))
     feature3.is_fitted = True
     # GroupedList({2: [2], 4.5: [4.5], np.inf: [np.inf, "__NAN__"]})
-    disc = BaseDiscretizer([feature1, feature2, feature3], copy=true_false)
+    disc = BaseDiscretizer([feature1, feature2, feature3], config=DiscretizerConfig(copy=true_false))
 
     # creating sample
     index = [1, 2, 3, 4, 5, 6, 7]
@@ -499,7 +490,7 @@ def test_transform(true_false: bool) -> None:
     feature3.has_nan = True
     feature3.dropna = True
     # feature3.update(GroupedList({2: [2], 4.5: [4.5], np.inf: [np.inf, "__NAN__"]}))
-    disc = BaseDiscretizer([feature1, feature2, feature3], copy=true_false)
+    disc = BaseDiscretizer([feature1, feature2, feature3], config=DiscretizerConfig(copy=true_false))
 
     # creating sample
     index = [1, 2, 3, 4, 5, 6, 7]
@@ -566,7 +557,7 @@ def test_transform(true_false: bool) -> None:
     feature3.is_fitted = True
     feature3.has_nan = True
     # feature3.update(GroupedList({2: [2], 4.5: [4.5], np.inf: [np.inf, "__NAN__"]}))
-    disc = BaseDiscretizer([feature1, feature2, feature3], copy=true_false)
+    disc = BaseDiscretizer([feature1, feature2, feature3], config=DiscretizerConfig(copy=true_false))
 
     # creating sample
     index = [1, 2, 3, 4, 5, 6, 7]
@@ -625,32 +616,37 @@ def combinations(request: FixtureRequest):
     return request.param()
 
 
+def _make_discretizer(features, *, min_freq, combinations, true_false, n_jobs):
+    """Helper: build a BaseDiscretizer with the new config-based API."""
+    config = DiscretizerConfig(
+        dropna=true_false,
+        verbose=true_false,
+        ordinal_encoding=true_false,
+        n_jobs=n_jobs,
+    )
+    discretizer = BaseDiscretizer(features, min_freq=min_freq, config=config)
+    discretizer.combinations = combinations
+    discretizer.is_fitted = true_false
+    return discretizer
+
+
 def test_to_json(features: Features, true_false: bool, combinations: CombinationEvaluator) -> None:
     """tests base discretizer to_json method"""
 
-    # Create a mock BaseDiscretizer instance
     min_freq = 0.1
     if combinations is not None:
         combinations.min_freq = min_freq
         combinations.dropna = true_false
         combinations.verbose = true_false
     n_jobs = 2
-    discretizer = BaseDiscretizer(
-        features,
-        dropna=true_false,
-        min_freq=min_freq,
-        combinations=combinations,
-        verbose=true_false,
-        ordinal_encoding=true_false,
-        n_jobs=n_jobs,
+    discretizer = _make_discretizer(
+        features, min_freq=min_freq, combinations=combinations, true_false=true_false, n_jobs=n_jobs
     )
-    discretizer.is_fitted = true_false
 
-    # Test with light_mode=False
     result = discretizer.to_json(light_mode=True)
     assert isinstance(result, dict)
     assert "features" in result
-    assert result["dropna"] == true_false
+    assert result["config"]["dropna"] == true_false
     assert result["min_freq"] == min_freq
 
     if combinations is None:
@@ -664,33 +660,24 @@ def test_to_json(features: Features, true_false: bool, combinations: Combination
             "verbose": true_false,
         }
     assert result["is_fitted"] == true_false
-    assert result["n_jobs"] == n_jobs
-    assert result["verbose"] == true_false
-    assert result["ordinal_encoding"] == true_false
+    assert result["config"]["n_jobs"] == n_jobs
+    assert result["config"]["verbose"] == true_false
+    assert result["config"]["ordinal_encoding"] == true_false
 
 
 def test_save(tmp_path, features: Features, true_false: bool, combinations: CombinationEvaluator) -> None:
     """tests base discretizer save method"""
 
-    # Create a mock BaseDiscretizer instance
     min_freq = 0.1
     if combinations is not None:
         combinations.min_freq = min_freq
         combinations.dropna = true_false
         combinations.verbose = true_false
     n_jobs = 2
-    discretizer = BaseDiscretizer(
-        features,
-        dropna=true_false,
-        min_freq=min_freq,
-        combinations=combinations,
-        verbose=true_false,
-        ordinal_encoding=true_false,
-        n_jobs=n_jobs,
+    discretizer = _make_discretizer(
+        features, min_freq=min_freq, combinations=combinations, true_false=true_false, n_jobs=n_jobs
     )
-    discretizer.is_fitted = true_false
 
-    # call method
     file_path = tmp_path / "test_discretizer.json"
     discretizer.save(str(file_path), light_mode=true_false)
 
@@ -707,34 +694,24 @@ def test_save(tmp_path, features: Features, true_false: bool, combinations: Comb
 def test_load_discretizer(tmp_path, features: Features, true_false: bool, combinations: CombinationEvaluator) -> None:
     """tests base discretizer load_discretizer method"""
 
-    # Create a mock BaseDiscretizer instance
     min_freq = 0.1
     n_jobs = 2
     if combinations is not None:
         combinations.min_freq = min_freq
         combinations.dropna = true_false
         combinations.verbose = true_false
-    discretizer = BaseDiscretizer(
-        features,
-        dropna=true_false,
-        min_freq=min_freq,
-        combinations=combinations,
-        verbose=true_false,
-        ordinal_encoding=true_false,
-        n_jobs=n_jobs,
+    discretizer = _make_discretizer(
+        features, min_freq=min_freq, combinations=combinations, true_false=true_false, n_jobs=n_jobs
     )
-    discretizer.is_fitted = true_false
 
-    # call save method
     file_path = tmp_path / "test_discretizer.json"
     discretizer.save(str(file_path), light_mode=true_false)
 
-    # loading
     loaded = BaseDiscretizer.load(str(file_path))
 
     for feature in loaded.features:
         assert feature.name in discretizer.features
-    assert loaded.dropna == discretizer.dropna
+    assert loaded.config.dropna == discretizer.config.dropna
     assert loaded.min_freq == discretizer.min_freq
     if combinations is None:
         assert loaded.combinations is None
@@ -748,9 +725,9 @@ def test_load_discretizer(tmp_path, features: Features, true_false: bool, combin
         }
 
     assert loaded.is_fitted == discretizer.is_fitted
-    assert loaded.n_jobs == discretizer.n_jobs
-    assert loaded.verbose == discretizer.verbose
-    assert loaded.ordinal_encoding == discretizer.ordinal_encoding
+    assert loaded.config.n_jobs == discretizer.config.n_jobs
+    assert loaded.config.verbose == discretizer.config.verbose
+    assert loaded.config.ordinal_encoding == discretizer.config.ordinal_encoding
 
     with raises(FileNotFoundError):
         _ = BaseDiscretizer.load("wrong_path")
@@ -808,7 +785,7 @@ def test_base_discretizer(x_train: pd.DataFrame, dropna: bool) -> None:
     print(feature.has_nan, feature.dropna, feature.content)
 
     # initiating discretizer
-    discretizer = BaseDiscretizer(features=features, dropna=dropna, copy=True)
+    discretizer = BaseDiscretizer(features=features, config=DiscretizerConfig(dropna=dropna, copy=True))
     x_discretized = discretizer.fit_transform(x_train)
 
     # testing ordinal qualitative feature discretization

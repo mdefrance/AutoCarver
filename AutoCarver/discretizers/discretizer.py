@@ -2,13 +2,14 @@
 for a binary classification model.
 """
 
+from dataclasses import replace
 from typing import Self
 
 import pandas as pd
 
 from AutoCarver.discretizers.qualitatives import QualitativeDiscretizer
 from AutoCarver.discretizers.quantitatives import QuantitativeDiscretizer
-from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
+from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, DiscretizerConfig, Sample
 from AutoCarver.features import Features
 from AutoCarver.utils import extend_docstring
 
@@ -32,10 +33,10 @@ class Discretizer(BaseDiscretizer):
         self,
         features: Features,
         min_freq: float,
-        **kwargs,
+        *,
+        config: DiscretizerConfig | None = None,
     ) -> None:
-        # Initiating BaseDiscretizer
-        super().__init__(features, **dict(kwargs, min_freq=min_freq))
+        super().__init__(features, min_freq=min_freq, config=config)
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: pd.DataFrame, y: pd.Series) -> Self:  # pylint: disable=W0222
@@ -56,21 +57,21 @@ class Discretizer(BaseDiscretizer):
     def _fit_qualitatives(self, X: pd.DataFrame, y: pd.Series) -> None:
         """Fit the QualitativeDiscretizer on the qualitative features."""
 
-        # [Qualitative features] Grouping qualitative features
         if len(self.features.qualitatives) > 0:
-            # grouping qualitative features
             qualitative_discretizer = QualitativeDiscretizer(
-                qualitatives=self.features.qualitatives, **dict(self.kwargs, copy=False)
+                qualitatives=self.features.qualitatives,
+                min_freq=self.min_freq,
+                config=replace(self.config, copy=False),
             )
             qualitative_discretizer.fit(X, y)
 
     def _fit_quantitatives(self, X: pd.DataFrame, y: pd.Series) -> None:
         """Fit the QuantitativeDiscretizer on the quantitative features."""
 
-        # [Quantitative features] Grouping quantitative features
         if len(self.features.quantitatives) > 0:
-            # grouping quantitative features
             quantitative_discretizer = QuantitativeDiscretizer(
-                quantitatives=self.features.quantitatives, **dict(self.kwargs, copy=False)
+                quantitatives=self.features.quantitatives,
+                min_freq=self.min_freq,
+                config=replace(self.config, copy=False),
             )
             quantitative_discretizer.fit(X, y)

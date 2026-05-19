@@ -2,13 +2,14 @@
 for a binary classification model.
 """
 
+from dataclasses import replace
 from typing import Self
 
 import pandas as pd
 
 from AutoCarver.discretizers.qualitatives import OrdinalDiscretizer
 from AutoCarver.discretizers.quantitatives.continuous_discretizer import ContinuousDiscretizer
-from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, Sample
+from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, DiscretizerConfig, Sample
 from AutoCarver.features import Features, QuantitativeFeature
 from AutoCarver.utils import extend_docstring
 
@@ -30,7 +31,8 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         self,
         quantitatives: list[QuantitativeFeature],
         min_freq: float,
-        **kwargs,
+        *,
+        config: DiscretizerConfig | None = None,
     ) -> None:
         """
         Parameters
@@ -39,9 +41,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         quantitatives : list[QuantitativeFeature]
             Quantitative features to process
         """
-
-        # Initiating BaseDiscretizer
-        super().__init__(quantitatives, **dict(kwargs, min_freq=min_freq))
+        super().__init__(quantitatives, min_freq=min_freq, config=config)
 
     @property
     def half_min_freq(self) -> float:
@@ -51,23 +51,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         return self.min_freq / 2
 
     def _prepare_data(self, sample: Sample) -> Sample:  # pylint: disable=W0222
-        """Validates format and content of X and y.
-
-        Parameters
-        ----------
-        X : pd.DataFrame
-            Dataset used to discretize. Needs to have columns has specified in
-            ``QuantitativeDiscretizer.features``.
-
-        y : pd.Series
-            Binary target feature with wich the association is maximized.
-
-        Returns
-        -------
-        DataFrame
-            A formatted copy of X
-        """
-        # checking for binary target and copying X
+        """Validates format and content of X and y."""
         sample = super()._prepare_data(sample)
 
         # checking for quantitative columns
@@ -92,7 +76,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         # discretizing features based on each feature's values_order
         super().fit(X, y)
 
-        if self.verbose:  # verbose if requested
+        if self.config.verbose:  # verbose if requested
             print("------\n")
 
         return self
@@ -100,11 +84,11 @@ class QuantitativeDiscretizer(BaseDiscretizer):
     def _fit_continuous(self, X: pd.DataFrame, y: pd.Series) -> pd.DataFrame:
         """Fit the ContinuousDiscretizer on the continuous features."""
 
-        # [Quantitative features] Grouping values into quantiles
+        # copy needs to be True so the next step can check for rare modalities on a stable copy
         continuous_discretizer = ContinuousDiscretizer(
             quantitatives=self.features.quantitatives,
-            # copy needs to be True not to check for rare modalities
-            **dict(self.kwargs, min_freq=self.min_freq, copy=True),
+            min_freq=self.min_freq,
+            config=replace(self.config, copy=True),
         )
 
         return continuous_discretizer.fit_transform(X, y)
@@ -112,15 +96,14 @@ class QuantitativeDiscretizer(BaseDiscretizer):
     def _fit_continuous_with_rare_modalities(self, X: pd.DataFrame, y: pd.Series) -> None:
         """Fit the OrdinalDiscretizer on the continuous features with rare modalities."""
 
-        # [Quantitative features] Grouping rare quantiles into closest common one
-        #  -> can exist because of overrepresented values (values more frequent than min_freq)
-        # identifying features that have rare modalities
+        # rare quantiles can exist because of overrepresented values (more frequent than min_freq)
         has_rare = check_frequencies(X, self.features, self.half_min_freq)
 
-        # Grouping rare modalities
         if len(has_rare) > 0:
             ordinal_discretizer = OrdinalDiscretizer(
-                ordinals=has_rare, **dict(self.kwargs, min_freq=self.half_min_freq, copy=False)
+                ordinals=has_rare,
+                min_freq=self.half_min_freq,
+                config=replace(self.config, copy=False),
             )
             ordinal_discretizer.fit(X, y)
 

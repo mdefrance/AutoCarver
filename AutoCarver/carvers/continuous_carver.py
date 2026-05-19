@@ -6,7 +6,8 @@ import numpy as np
 import pandas as pd
 
 from AutoCarver.carvers.utils.base_carver import BaseCarver, Samples
-from AutoCarver.combinations import KruskalCombinations
+from AutoCarver.combinations import CombinationEvaluator, KruskalCombinations
+from AutoCarver.discretizers.utils.base_discretizer import DiscretizerConfig
 from AutoCarver.features import BaseFeature, Features
 from AutoCarver.utils import extend_docstring
 
@@ -31,9 +32,13 @@ class ContinuousCarver(BaseCarver):
         self,
         features: Features,
         min_freq: float,
+        *,
         dropna: bool = True,
+        ordinal_encoding: bool = True,
         max_n_mod: int = 5,
-        **kwargs,
+        combinations: CombinationEvaluator | None = None,
+        discretizer_min_freq: float | None = None,
+        config: DiscretizerConfig | None = None,
     ) -> None:
         """
         Keyword Arguments
@@ -43,54 +48,27 @@ class ContinuousCarver(BaseCarver):
 
             Currently, only :ref:`KruskalCombinations` are implemented.
         """
-        # default binary combinations
-        combinations = kwargs.pop("combinations", None)
         if combinations is None:
             combinations = KruskalCombinations(max_n_mod=max_n_mod)
 
-        # association measure used to find the best groups for binary targets
         if not combinations.is_y_continuous:
             raise ValueError(
                 f"[{self.__name__}] {combinations} is not suited for continuous targets. "
                 f"Choose from: KruskalCombinations."
             )
 
-        # Initiating BaseCarver
         super().__init__(
             features=features,
             min_freq=min_freq,
             combinations=combinations,
             dropna=dropna,
-            **kwargs,
+            ordinal_encoding=ordinal_encoding,
+            discretizer_min_freq=discretizer_min_freq,
+            config=config,
         )
 
     def _prepare_data(self, samples: Samples) -> Samples:
-        """Validates format and content of X and y.
-
-        Parameters
-        ----------
-        X : pd.DataFrame
-            Dataset used to discretize. Needs to have columns has specified in
-            ``AutoCarver.features``.
-
-        y : pd.Series
-            Binary target feature with wich the association is maximized.
-
-        X_dev : pd.DataFrame, optional
-            Dataset to evalute the robustness of discretization, by default ``None``
-            It should have the same distribution as X.
-
-        y_dev : pd.Series, optional
-            Binary target feature with wich the robustness of discretization is evaluated,
-            by default ``None``
-
-        Returns
-        -------
-        tuple[pd.DataFrame, pd.DataFrame]
-            Copies of (X, X_dev) to be used according to target type
-        """
-
-        # continuous target, checking values (y is required by Carver.fit)
+        """Validates format and content of X and y."""
         if samples.train.y is None:
             raise ValueError(f"[{self.__name__}] y must be provided")
         if str in samples.train.y.apply(type).unique():
@@ -99,29 +77,12 @@ class ContinuousCarver(BaseCarver):
         y_values = np.unique(samples.train.y)
         if len(y_values) <= 2:
             raise ValueError(f"[{self.__name__}] provided y is binary, consider using BinaryCarver instead.")
-        # Checking for binary target and copying X
+
         return super()._prepare_data(samples)
 
     def _aggregator(self, X: pd.DataFrame, y: pd.Series) -> dict[str, pd.DataFrame | None]:
         """Computes y values for modalities of specified features and ensures the ordering
-        according to the known labels
-
-        Parameters
-        ----------
-        features : list[str]
-            _description_
-        X : pd.DataFrame
-            _description_
-        y : pd.Series
-            _description_
-        labels_orders : dict[str, GroupedList]
-            _description_
-
-        Returns
-        -------
-        dict[str, pdDataFrame]
-            _description_
-        """
+        according to the known labels"""
         # checking for empty datasets
         yvals = {feature.version: None for feature in self.features}
         if X is not None:
