@@ -8,6 +8,7 @@ datasets (German Credit via ``fetch_openml`` and California Housing via
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import nbformat
@@ -19,6 +20,10 @@ NOTEBOOK_PATH = PROJECT_ROOT / "docs" / "source" / "examples" / "Comparison" / "
 
 
 @pytest.mark.network
+@pytest.mark.skipif(
+    os.environ.get("CI") == "true",
+    reason="OpenML API is unreliable; fetch_openml('credit-g') intermittently fails in CI",
+)
 def test_comparison_notebook_executes() -> None:
     nb = nbformat.read(NOTEBOOK_PATH, as_version=4)
     client = NotebookClient(
