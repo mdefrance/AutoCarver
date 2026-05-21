@@ -11,6 +11,7 @@ from tqdm import tqdm
 from AutoCarver.combinations.continuous.continuous_target_rates import ContinuousTargetRate, TargetMean, TargetMedian
 from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample, CombinationEvaluator
 from AutoCarver.combinations.utils.combinations import combination_formatter
+from AutoCarver.combinations.utils.testing import Keys, is_viable, test_viability
 
 
 class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
@@ -18,6 +19,9 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
 
     is_y_continuous = True
     _target_rate_classes: list[type[ContinuousTargetRate]] = [TargetMean, TargetMedian]
+    # narrow the inherited `target_rate: TargetRate` annotation — continuous
+    # carvers always carry a ContinuousTargetRate (enforced by _init_target_rate).
+    target_rate: ContinuousTargetRate
 
     def _init_target_rate(self, target_rate: ContinuousTargetRate | None) -> ContinuousTargetRate:
         """Initializes target rate."""
@@ -141,6 +145,19 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
         mod_to_pos: dict = {m: i for i, m in enumerate(raw_xagg.index)}
         n_mod = len(mod_to_pos)
 
+        # Cache per-modality (n, sum_y) for the viability fast path.
+        # Resets each time _compute_associations runs so the nan-pass refreshes
+        # the cache after _apply_best_combination changes samples.train.xagg.
+        sum_y_per_mod = _modality_sum_y(raw_xagg)
+        self._train_modality_stats = {
+            "n_per_mod": n_per_mod.astype(float),
+            "sum_y_per_mod": sum_y_per_mod,
+            "mod_to_pos": mod_to_pos,
+            "n_mod": n_mod,
+        }
+        self._dev_modality_stats: dict | None = None  # lazy; aligned to train's mod_to_pos
+        self._dev_modality_stats_id: int | None = None
+
         batch: list[dict] = []
         for grouped_xagg in tqdm(grouped_xaggs, desc="Computing associations", disable=not self.verbose):
             batch.append(grouped_xagg)
@@ -166,6 +183,100 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
                 n_mod=n_mod,
             )
 
+    def _get_dev_modality_stats(self) -> dict | None:
+        """Lazily build per-modality ``(n, sum_y)`` for the dev sample,
+        aligned to ``self._train_modality_stats['mod_to_pos']`` (zeros for
+        modalities absent from dev). Returns ``None`` when no dev sample is set.
+
+        Cache is keyed by ``id(dev_xagg)`` so external reassignment of
+        ``samples.dev`` between viability iterations triggers a fresh
+        computation (the unit tests rely on this; production flows reassign
+        dev only via ``samples.set`` at the start of ``get_best_combination``).
+        """
+        dev_xagg = self.samples.dev.xagg
+        if dev_xagg is None:
+            return None
+        if self._dev_modality_stats is not None and self._dev_modality_stats_id == id(dev_xagg):
+            return self._dev_modality_stats
+        train_stats = self._train_modality_stats
+        mod_to_pos: dict = train_stats["mod_to_pos"]
+        n_mod: int = train_stats["n_mod"]
+
+        n = np.zeros(n_mod, dtype=float)
+        sum_y = np.zeros(n_mod, dtype=float)
+        for mod, vals in dev_xagg.items():
+            pos = mod_to_pos.get(mod)
+            if pos is None:
+                continue  # dev has a modality train doesn't — skip
+            arr = np.asarray(vals, dtype=float)
+            n[pos] = arr.size
+            sum_y[pos] = float(arr.sum())
+
+        self._dev_modality_stats = {
+            "n_per_mod": n,
+            "sum_y_per_mod": sum_y,
+            "mod_to_pos": mod_to_pos,
+            "n_mod": n_mod,
+        }
+        self._dev_modality_stats_id = id(dev_xagg)
+        return self._dev_modality_stats
+
+    def _test_viability_train(self, combination: dict) -> dict:
+        """Fast-path viability on train; falls back to legacy when the active
+        target rate's ``compute_from_stats`` returns ``None`` (e.g.
+        ``TargetMedian`` whose default closed-form path is a no-op).
+        """
+        stats = getattr(self, "_train_modality_stats", None)
+        if stats is not None:
+            train_rates = self.target_rate.compute_from_stats(
+                stats=stats, index_to_groupby=combination["index_to_groupby"]
+            )
+            if train_rates is not None:
+                return test_viability(train_rates, self.min_freq, self.target_rate.__name__)
+        # Fallback: legacy grouper + apply(np.mean/median) over Python lists
+        return super()._test_viability_train(combination)
+
+    def _get_viable_combination(self, associations: list[dict]) -> dict | None:
+        """Walks associations under the fast viability path and materialises
+        the winning combination's grouped xagg once at the end.
+
+        The fast path skips ``combination['xagg']`` because the closed-form
+        viability check doesn't need it; downstream consumers (debug, tests,
+        and any future code that introspects the winner) still expect to see
+        it, so we rebuild it for the winner only — that's one ``_grouper``
+        call per feature instead of ~13k per feature.
+        """
+        viable = super()._get_viable_combination(associations)
+        if viable is not None and viable.get("xagg") is None:
+            # `clean_combination` pops `index_to_groupby` during historization
+            # earlier in the loop, so rebuild it from the still-present
+            # `combination` list-of-groups.
+            index_to_groupby = viable.get("index_to_groupby")
+            if index_to_groupby is None:
+                index_to_groupby = combination_formatter(viable["combination"])
+            viable["xagg"] = self._grouper(self.samples.train, index_to_groupby)
+        return viable
+
+    def _test_viability_dev(self, test_results: dict, combination: dict) -> dict:
+        """Fast-path viability on dev; falls back to legacy when the active
+        target rate's ``compute_from_stats`` returns ``None``.
+        """
+        if not test_results[Keys.VIABLE.value] or self.samples.dev.xagg is None:
+            return {**test_results, "dev": {Keys.VIABLE.value: None}}
+
+        dev_stats = self._get_dev_modality_stats()
+        if dev_stats is not None:
+            dev_rates = self.target_rate.compute_from_stats(
+                stats=dev_stats, index_to_groupby=combination["index_to_groupby"]
+            )
+            if dev_rates is not None:
+                train_target_rate = test_results["train_rates"][self.target_rate.__name__]
+                dev_results = test_viability(dev_rates, self.min_freq, self.target_rate.__name__, train_target_rate)
+                merged = {**test_results, **dev_results}
+                merged[Keys.VIABLE.value] = is_viable(merged)
+                return merged
+        return super()._test_viability_dev(test_results, combination)
+
 
 class KruskalCombinations(ContinuousCombinationEvaluator):
     """Kruskal-Wallis' H based combination evaluation toolkit"""
@@ -184,6 +295,18 @@ _KRUSKAL_BATCH_SIZE = 1024
 # ---------------------------------------------------------------------------
 # Closed-form Kruskal–Wallis helpers
 # ---------------------------------------------------------------------------
+
+
+def _modality_sum_y(raw_xagg: pd.Series) -> np.ndarray:
+    """Per-modality ``sum_y`` aligned with ``raw_xagg.index``.
+
+    Used by the viability fast path (Step 3.5) to compute group target means
+    in closed form (``sum_y_g / n_g``) instead of applying ``np.mean`` to
+    Python lists of y values per candidate.
+    """
+    return np.fromiter(
+        (float(np.asarray(v, dtype=float).sum()) for v in raw_xagg.values), dtype=float, count=len(raw_xagg)
+    )
 
 
 def _modality_rank_stats(
