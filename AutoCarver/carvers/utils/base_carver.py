@@ -157,7 +157,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         # carver-friendly defaults differ from BaseDiscretizer's (which default
         # both to False): carvers group nans and ordinal-encode by default.
         if config is None:
-            config = DiscretizerConfig(dropna=True, ordinal_encoding=True, n_jobs=4)
+            config = DiscretizerConfig(dropna=True, ordinal_encoding=True)
         super().__init__(features, min_freq=min_freq, config=config)
 
         self.max_n_mod = max_n_mod
@@ -448,7 +448,7 @@ class BaseCarver(BaseDiscretizer, ABC):
             dropna=config_data.get("dropna", True),
             ordinal_encoding=config_data.get("ordinal_encoding", True),
             verbose=config_data.get("verbose", False),
-            n_jobs=config_data.get("n_jobs", 4),
+            n_jobs=config_data.get("n_jobs", 1),
             copy=config_data.get("copy", True),
         )
 
