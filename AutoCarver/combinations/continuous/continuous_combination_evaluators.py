@@ -222,12 +222,27 @@ def _kruskal_h_for_combination(
     # Build integer group assignment for this combination
     leader_to_grp: dict = {}
     assign = np.empty(n_mod, dtype=np.intp)
+    assigned = np.zeros(n_mod, dtype=bool)
     for mod, leader in index_to_groupby.items():
         gid = leader_to_grp.get(leader)
         if gid is None:
             gid = len(leader_to_grp)
             leader_to_grp[leader] = gid
-        assign[mod_to_pos[mod]] = gid
+        pos = mod_to_pos[mod]
+        assign[pos] = gid
+        assigned[pos] = True
+
+    # Modalities present in raw_xagg but not in index_to_groupby become their
+    # own singleton groups so bincount has a well-defined assignment. Matches
+    # the legacy binary `_grouper`'s `groupby.get(iv, iv)` semantics; the
+    # continuous test suite reaches this path only in an invalid-state fixture
+    # (has_nan=False but xagg carries a nan row) and the resulting Kruskal value
+    # is discarded downstream when `xagg_apply_combination` raises on the
+    # length mismatch — i.e. the user-visible behaviour is unchanged.
+    for pos in range(n_mod):
+        if not assigned[pos]:
+            leader_to_grp[("__unmapped__", pos)] = len(leader_to_grp)
+            assign[pos] = leader_to_grp[("__unmapped__", pos)]
 
     n_groups = len(leader_to_grp)
     # scipy.stats.kruskal requires at least 2 groups; mirror that here.

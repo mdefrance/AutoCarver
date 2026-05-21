@@ -320,7 +320,11 @@ def test_grouper_partial_groupby(evaluator: BinaryCombinationEvaluator):
 
 
 def test_group_xagg_by_combinations(evaluator: BinaryCombinationEvaluator):
-    """Test _group_xagg_by_combinations method."""
+    """`_group_xagg_by_combinations` for binary is a streaming generator that
+    skips building the per-combination crosstab — the closed-form chi² in
+    `_compute_associations` aggregates per-modality counts directly via
+    bincount, and the crosstab is rebuilt lazily later only for the handful
+    of combinations actually checked for viability."""
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     xagg = pd.DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
 
@@ -328,29 +332,26 @@ def test_group_xagg_by_combinations(evaluator: BinaryCombinationEvaluator):
 
     evaluator.samples.train = AggregatedSample(xagg)
 
-    result = evaluator._group_xagg_by_combinations(combinations)
-    print(result)
+    result = list(evaluator._group_xagg_by_combinations(combinations))
 
     expected = [
         {
-            "xagg": pd.DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
             "combination": [["a"], ["b", "c"]],
             "index_to_groupby": {"a": "a", "b": "b", "c": "b"},
         },
         {
-            "xagg": pd.DataFrame({0: [2, 0], 1: [2, 1]}, index=["a", "c"]),
             "combination": [["a", "b"], ["c"]],
             "index_to_groupby": {"a": "a", "b": "a", "c": "c"},
         },
     ]
     for res, exp in zip(result, expected):
-        assert np.allclose(res["xagg"], exp["xagg"])
+        assert "xagg" not in res  # streaming path skips heavy materialisation
         assert res["combination"] == exp["combination"]
         assert res["index_to_groupby"] == exp["index_to_groupby"]
 
 
 def test_group_xagg_by_combinations_with_nan(evaluator: BinaryCombinationEvaluator):
-    """Test _group_xagg_by_combinations with np.nan values."""
+    """Streaming variant of the multi-group case — xagg is not in output."""
     feature = OrdinalFeature("feature", ["A", "B", "C"])
     xagg = pd.DataFrame({0: [0, 2, 0], 1: [2, 0, 0]}, index=["A", "B", "C"])
 
@@ -358,28 +359,24 @@ def test_group_xagg_by_combinations_with_nan(evaluator: BinaryCombinationEvaluat
 
     evaluator.samples.train = AggregatedSample(xagg)
 
-    result = evaluator._group_xagg_by_combinations(combinations)
-    print(result)
+    result = list(evaluator._group_xagg_by_combinations(combinations))
 
     expected = [
         {
-            "xagg": pd.DataFrame({0: [0, 2, 0], 1: [2, 0, 0]}, index=["A", "B", "C"]),
             "combination": [["A"], ["B"], ["C"]],
             "index_to_groupby": {"A": "A", "B": "B", "C": "C"},
         },
         {
-            "xagg": pd.DataFrame({0: [0, 2], 1: [2, 0]}, index=["A", "B"]),
             "combination": [["A"], ["B", "C"]],
             "index_to_groupby": {"A": "A", "B": "B", "C": "B"},
         },
         {
-            "xagg": pd.DataFrame({0: [2, 0], 1: [2, 0]}, index=["A", "C"]),
             "combination": [["A", "B"], ["C"]],
             "index_to_groupby": {"A": "A", "B": "A", "C": "C"},
         },
     ]
     for res, exp in zip(result, expected):
-        assert np.allclose(res["xagg"], exp["xagg"])
+        assert "xagg" not in res
         assert res["combination"] == exp["combination"]
         assert res["index_to_groupby"] == exp["index_to_groupby"]
 
