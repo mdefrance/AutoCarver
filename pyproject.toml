@@ -1,6 +1,6 @@
 [project]
 name = "AutoCarver"
-version = "7.2.0"
+version = "7.2.1"
 description = "Automatic Discretization of Features with Optimal Target Association"
 authors = [{ name = "Mario DEFRANCE", email = "defrancemario@gmail.com" }]
 requires-python = ">=3.11, <3.15"
@@ -79,8 +79,7 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/mdefrance/AutoCarver"
-Documentation = "https://autocarver.readthedocs.io/en/latest/"
+Homepage = "https://autocarver.readthedocs.io/en/latest/"
 Repository = "https://github.com/mdefrance/AutoCarver"
 Issues = "https://github.com/mdefrance/AutoCarver/issues"
 

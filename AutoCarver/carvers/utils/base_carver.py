@@ -5,6 +5,8 @@ for any task.
 import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, replace
+from functools import partial
+from multiprocessing import Pool
 from typing import Self
 
 import pandas as pd
@@ -19,6 +21,8 @@ from AutoCarver.combinations import (
 from AutoCarver.discretizers import BaseDiscretizer, Discretizer, Sample
 from AutoCarver.discretizers.utils.base_discretizer import DiscretizerConfig
 from AutoCarver.features import BaseFeature, Features
+from AutoCarver.features.qualitatives import CategoricalFeature, OrdinalFeature
+from AutoCarver.features.quantitatives import QuantitativeFeature
 from AutoCarver.utils import extend_docstring, has_idisplay
 
 # trying to import extra dependencies
@@ -45,6 +49,53 @@ class Samples:
         self.train.X = features.fillna(self.train.X)
         if self.dev.X is not None:
             self.dev.X = features.fillna(self.dev.X)
+
+
+def _carve_feature_worker(
+    payload: tuple[BaseFeature, pd.Series | pd.DataFrame | None, pd.Series | pd.DataFrame | None],
+    *,
+    evaluator: CombinationEvaluator,
+    max_n_mod: int,
+    min_freq: float,
+    dropna: bool,
+) -> tuple[BaseFeature, bool]:
+    """Picklable worker: scores best combination for a single feature.
+
+    Each pool task receives a pickled deep copy of ``evaluator`` and a single
+    ``(feature, xagg, xagg_dev)`` triple; mutations stay local to the worker
+    process. The parent reattaches the returned (mutated) feature to its
+    ``Features`` container.
+    """
+    feature, xagg, xagg_dev = payload
+    # workers never print per-feature progress; the parent prints a single banner
+    evaluator.verbose = False
+    best = evaluator.get_best_combination(
+        feature, xagg, xagg_dev, max_n_mod=max_n_mod, min_freq=min_freq, dropna=dropna
+    )
+    return feature, best is not None
+
+
+def _replace_feature_in_features(features: Features, updated: BaseFeature) -> None:
+    """Swaps an existing feature (by version) for the worker-returned copy."""
+    if isinstance(updated, CategoricalFeature):
+        categoricals = features.categoricals
+        for i, existing in enumerate(categoricals):
+            if existing.version == updated.version:
+                categoricals[i] = updated
+                return
+    elif isinstance(updated, OrdinalFeature):
+        ordinals = features.ordinals
+        for i, existing in enumerate(ordinals):
+            if existing.version == updated.version:
+                ordinals[i] = updated
+                return
+    elif isinstance(updated, QuantitativeFeature):
+        quantitatives = features.quantitatives
+        for i, existing in enumerate(quantitatives):
+            if existing.version == updated.version:
+                quantitatives[i] = updated
+                return
+    raise KeyError(f"[BaseCarver] feature {updated.version!r} not in Features")
 
 
 class BaseCarver(BaseDiscretizer, ABC):
@@ -106,7 +157,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         # carver-friendly defaults differ from BaseDiscretizer's (which default
         # both to False): carvers group nans and ordinal-encode by default.
         if config is None:
-            config = DiscretizerConfig(dropna=True, ordinal_encoding=True)
+            config = DiscretizerConfig(dropna=True, ordinal_encoding=True, n_jobs=4)
         super().__init__(features, min_freq=min_freq, config=config)
 
         self.max_n_mod = max_n_mod
@@ -196,15 +247,54 @@ class BaseCarver(BaseDiscretizer, ABC):
         # getting all features to carve (features are removed from self.features)
         all_features = self.features.versions
 
-        # carving each feature
-        for n, feature in enumerate(all_features):
-            num_iter = f"{n + 1}/{len(all_features)}"  # logging iteration number
-            self._carve_feature(self.features(feature), xaggs, xaggs_dev, num_iter)
+        # carving each feature (parallel across features when n_jobs > 1)
+        if self.config.n_jobs > 1 and len(all_features) > 1:
+            self._carve_features_parallel(all_features, xaggs, xaggs_dev)
+        else:
+            for n, feature in enumerate(all_features):
+                num_iter = f"{n + 1}/{len(all_features)}"  # logging iteration number
+                self._carve_feature(self.features(feature), xaggs, xaggs_dev, num_iter)
 
         # discretizing features based on each feature's values_order
         super().fit(X, y)
 
         return self
+
+    def _carve_features_parallel(
+        self,
+        all_features: list[str],
+        xaggs: dict[str, pd.Series | pd.DataFrame | None],
+        xaggs_dev: dict[str, pd.Series | pd.DataFrame | None],
+    ) -> None:
+        """Dispatches ``_carve_feature`` across a process pool, one task per feature.
+
+        Per-feature workers receive only the feature instance + its xagg /
+        xagg_dev slice (not the full dict). Verbose per-feature logging is
+        silenced; a single banner is printed when verbose is on.
+        """
+        if self.config.verbose:
+            print(f"--- [{self.__name__}] Carving {len(all_features)} features on {self.config.n_jobs} workers")
+
+        payloads = [(self.features(version), xaggs[version], xaggs_dev[version]) for version in all_features]
+        worker = partial(
+            _carve_feature_worker,
+            evaluator=self.combination_evaluator,
+            max_n_mod=self.max_n_mod,
+            min_freq=self.min_freq,
+            dropna=self.config.dropna,
+        )
+
+        with Pool(processes=self.config.n_jobs) as pool:
+            for updated_feature, viable in pool.imap_unordered(worker, payloads):
+                if viable:
+                    _replace_feature_in_features(self.features, updated_feature)
+                else:
+                    print(
+                        f"WARNING: No robust combination for {updated_feature}. Consider "
+                        "increasing the size of X_dev or dropping the feature (X not "
+                        "representative of X_dev for this feature)."
+                    )
+                    self.features.remove(updated_feature.version)
 
     @abstractmethod
     def _aggregator(self, X: pd.DataFrame, y: pd.Series) -> dict[str, pd.Series | pd.DataFrame | None]:
@@ -358,7 +448,7 @@ class BaseCarver(BaseDiscretizer, ABC):
             dropna=config_data.get("dropna", True),
             ordinal_encoding=config_data.get("ordinal_encoding", True),
             verbose=config_data.get("verbose", False),
-            n_jobs=config_data.get("n_jobs", 1),
+            n_jobs=config_data.get("n_jobs", 4),
             copy=config_data.get("copy", True),
         )
 
