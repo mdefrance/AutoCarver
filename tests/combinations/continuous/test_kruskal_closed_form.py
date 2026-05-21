@@ -36,16 +36,18 @@ def _scipy_kruskal_or_none(groups: list[list[float]]) -> float | None:
 
 
 def _eval_via_evaluator(xagg: pd.Series, index_to_groupby: dict) -> float | None:
-    """Drive `_compute_associations` on a single combination and return H."""
+    """Drive `_compute_associations` on a single combination and return H.
+
+    `_compute_associations` is a streaming generator (Step 2 fused pipeline);
+    consume the single entry we feed it.
+    """
     evaluator = KruskalCombinations()
     evaluator.samples.train = AggregatedSample(xagg)
     grouped = {
-        "xagg": xagg.groupby(index_to_groupby).sum(),
         "combination": [],
         "index_to_groupby": index_to_groupby,
     }
-    result = evaluator._compute_associations([grouped])
-    return result[0]["kruskal"]
+    return next(iter(evaluator._compute_associations([grouped])))["kruskal"]
 
 
 def _scipy_groups_from(xagg: pd.Series, index_to_groupby: dict) -> list[list[float]]:

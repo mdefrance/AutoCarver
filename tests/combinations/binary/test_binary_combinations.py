@@ -384,8 +384,23 @@ def test_group_xagg_by_combinations_with_nan(evaluator: BinaryCombinationEvaluat
         assert res["index_to_groupby"] == exp["index_to_groupby"]
 
 
+def _sorted_assocs(evaluator, grouped_stream):
+    """Materialise + sort the streaming association generator by sort_by desc.
+
+    Matches the order `_get_best_association` would feed into the viability
+    walk, which is what these tests assert against."""
+    sort_by = evaluator.sort_by
+    return sorted(
+        evaluator._compute_associations(grouped_stream),
+        key=lambda r: r[sort_by] if r[sort_by] is not None and r[sort_by] == r[sort_by] else -float("inf"),
+        reverse=True,
+    )
+
+
 def test_compute_associations(evaluator: BinaryCombinationEvaluator):
-    """Test _compute_associations method."""
+    """`_compute_associations` is now a streaming generator yielding light
+    ``{combination, index_to_groupby, cramerv, tschuprowt}`` dicts in arrival
+    order — the heavy crosstab is consumed for scoring and dropped."""
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     xagg = pd.DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
 
@@ -394,19 +409,16 @@ def test_compute_associations(evaluator: BinaryCombinationEvaluator):
     evaluator.samples.train = AggregatedSample(xagg)
 
     grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
-    result = evaluator._compute_associations(grouped_xaggs)
-    print(result)
+    result = _sorted_assocs(evaluator, grouped_xaggs)
 
     expected = [
         {
-            "xagg": pd.DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
             "combination": [["a"], ["b", "c"]],
             "index_to_groupby": {"a": "a", "b": "b", "c": "b"},
             "cramerv": 0.25,
             "tschuprowt": 0.25,
         },
         {
-            "xagg": pd.DataFrame({0: [2, 0], 1: [2, 1]}, index=["a", "c"]),
             "combination": [["a", "b"], ["c"]],
             "index_to_groupby": {"a": "a", "b": "a", "c": "c"},
             "cramerv": 0.0,
@@ -414,7 +426,7 @@ def test_compute_associations(evaluator: BinaryCombinationEvaluator):
         },
     ]
     for res, exp in zip(result, expected):
-        assert np.allclose(res["xagg"], exp["xagg"])
+        assert "xagg" not in res
         assert res["combination"] == exp["combination"]
         assert res["index_to_groupby"] == exp["index_to_groupby"]
         assert res["cramerv"] == exp["cramerv"]
@@ -422,7 +434,7 @@ def test_compute_associations(evaluator: BinaryCombinationEvaluator):
 
 
 def test_compute_associations_with_three_rows(evaluator: BinaryCombinationEvaluator):
-    """Test _compute_associations with a small xagg."""
+    """Sorted-by-metric variant on the 3-modality case."""
     feature = OrdinalFeature("feature", ["A", "B", "C"])
     xagg = pd.DataFrame({0: [0, 2, 0], 1: [2, 0, 0]}, index=["A", "B", "C"])
     evaluator.samples.train = AggregatedSample(xagg)
@@ -436,26 +448,22 @@ def test_compute_associations_with_three_rows(evaluator: BinaryCombinationEvalua
     evaluator.samples.train = AggregatedSample(xagg)
 
     grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
-    result = evaluator._compute_associations(grouped_xaggs)
-    print(result)
+    result = _sorted_assocs(evaluator, grouped_xaggs)
 
     expected = [
         {
-            "xagg": pd.DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["A", "B", "C"]),
             "combination": [["A"], ["B"], ["C"]],
             "index_to_groupby": {"A": "A", "B": "B", "C": "C"},
             "cramerv": 0.9999999999,
             "tschuprowt": 0.8408964152,
         },
         {
-            "xagg": pd.DataFrame({0: [0, 2], 1: [2, 1]}, index=["A", "B"]),
             "combination": [["A"], ["B", "C"]],
             "index_to_groupby": {"A": "A", "B": "B", "C": "B"},
             "cramerv": 0.25,
             "tschuprowt": 0.25,
         },
         {
-            "xagg": pd.DataFrame({0: [2, 0], 1: [2, 1]}, index=["A", "C"]),
             "combination": [["A", "B"], ["C"]],
             "index_to_groupby": {"A": "A", "B": "A", "C": "C"},
             "cramerv": 0.0,
@@ -463,7 +471,7 @@ def test_compute_associations_with_three_rows(evaluator: BinaryCombinationEvalua
         },
     ]
     for res, exp in zip(result, expected):
-        assert np.allclose(res["xagg"], exp["xagg"])
+        assert "xagg" not in res
         assert res["combination"] == exp["combination"]
         assert res["index_to_groupby"] == exp["index_to_groupby"]
         assert res["cramerv"] == exp["cramerv"]
@@ -471,7 +479,7 @@ def test_compute_associations_with_three_rows(evaluator: BinaryCombinationEvalua
 
 
 def test_compute_associations_with_ten_labels(evaluator: BinaryCombinationEvaluator):
-    """Test _compute_associations with a larger xagg (10 labels, 84 combinations)."""
+    """Sorted top-1 of streaming output across 84 combinations."""
     feature = OrdinalFeature("feature", [chr(i) for i in range(65, 75)])  # A to J
     xagg = pd.DataFrame(
         {
@@ -485,13 +493,9 @@ def test_compute_associations_with_ten_labels(evaluator: BinaryCombinationEvalua
     combinations = consecutive_combinations(feature.labels, 4)
 
     grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
-    result = evaluator._compute_associations(grouped_xaggs)
+    result = _sorted_assocs(evaluator, grouped_xaggs)
 
     expected = {
-        "xagg": pd.DataFrame(
-            {0: [2.0, 13.0, 2.0], 1: [12.0, 7.0, 4.0]},
-            index=["A", "D", "J"],
-        ),
         "combination": [["A", "B", "C"], ["D", "E", "F", "G", "H", "I"], ["J"]],
         "index_to_groupby": {
             "A": "A",
@@ -509,7 +513,7 @@ def test_compute_associations_with_ten_labels(evaluator: BinaryCombinationEvalua
         "tschuprowt": 0.3968727932,
     }
     res = result[0]
-    assert np.allclose(res["xagg"], expected["xagg"])
+    assert "xagg" not in res
     assert res["combination"] == expected["combination"]
     assert res["index_to_groupby"] == expected["index_to_groupby"]
     assert res["cramerv"] == expected["cramerv"]
@@ -557,7 +561,7 @@ def test_viability_train(evaluator: BinaryCombinationEvaluator):
     evaluator.min_freq = MIN_FREQ
 
     grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
-    associations = evaluator._compute_associations(grouped_xaggs)
+    associations = _sorted_assocs(evaluator, grouped_xaggs)
     result = []
     for combination in associations:
         result += [evaluator._test_viability_train(combination)]
@@ -589,7 +593,7 @@ def test_viability_dev(evaluator: BinaryCombinationEvaluator):
     evaluator.min_freq = MIN_FREQ
 
     grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
-    associations = evaluator._compute_associations(grouped_xaggs)
+    associations = _sorted_assocs(evaluator, grouped_xaggs)
 
     # test with no xagg_dev
     for combination in associations:
@@ -650,7 +654,7 @@ def test_get_viable_combination_without_dev(evaluator: BinaryCombinationEvaluato
     evaluator.max_n_mod = MAX_N_MOD
 
     grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
-    associations = evaluator._compute_associations(grouped_xaggs)
+    associations = _sorted_assocs(evaluator, grouped_xaggs)
 
     # test with no xagg_dev
     result = evaluator._get_viable_combination(associations)
@@ -677,7 +681,7 @@ def test_get_viable_combination_with_non_viable_train(evaluator: BinaryCombinati
     combinations = consecutive_combinations(feature.labels, 2)
 
     grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
-    associations = evaluator._compute_associations(grouped_xaggs)
+    associations = _sorted_assocs(evaluator, grouped_xaggs)
 
     # test with xagg_dev but not viable on train
     evaluator.min_freq = 0.6
@@ -700,7 +704,7 @@ def test_get_viable_combination_with_viable_train(evaluator: BinaryCombinationEv
     combinations = consecutive_combinations(feature.labels, 2)
 
     grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
-    associations = evaluator._compute_associations(grouped_xaggs)
+    associations = _sorted_assocs(evaluator, grouped_xaggs)
 
     # test with xagg_dev same as train
     evaluator.samples.dev = AggregatedSample(xagg)
@@ -730,7 +734,7 @@ def test_get_viable_combination_with_not_viable_dev(evaluator: BinaryCombination
     combinations = consecutive_combinations(feature.labels, 2)
 
     grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
-    associations = evaluator._compute_associations(grouped_xaggs)
+    associations = _sorted_assocs(evaluator, grouped_xaggs)
 
     # test with xagg_dev wrong
     evaluator.samples.dev = AggregatedSample(pd.DataFrame({0: [5, 0, 10], 1: [2, 5, 1]}, index=["a", "b", "c"]))
@@ -751,7 +755,7 @@ def test_apply_best_combination_with_viable(evaluator: BinaryCombinationEvaluato
     combinations = consecutive_combinations(feature.labels, 2)
 
     grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
-    associations = evaluator._compute_associations(grouped_xaggs)
+    associations = _sorted_assocs(evaluator, grouped_xaggs)
 
     # test with xagg_dev same as train
     evaluator.samples.dev = AggregatedSample(xagg)

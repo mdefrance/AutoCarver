@@ -1,6 +1,7 @@
 """Module for continuous combination evaluators."""
 
 from abc import ABC
+from collections.abc import Iterable, Iterator
 
 import numpy as np
 import pandas as pd
@@ -9,6 +10,7 @@ from tqdm import tqdm
 
 from AutoCarver.combinations.continuous.continuous_target_rates import ContinuousTargetRate, TargetMean, TargetMedian
 from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample, CombinationEvaluator
+from AutoCarver.combinations.utils.combinations import combination_formatter
 
 
 class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
@@ -74,8 +76,26 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
         # longer goes through this path — see _compute_associations below.
         return xagg.groupby(groupby).sum()
 
-    def _compute_associations(self, grouped_xaggs: list[dict]) -> list[dict]:
-        """Closed-form Kruskal–Wallis evaluation across all combinations.
+    def _group_xagg_by_combinations(self, combinations: Iterable[list]) -> Iterator[dict]:
+        """Streams combinations *without* building the lists-of-lists xagg.
+
+        The continuous Kruskal–Wallis path is closed-form and only needs
+        ``index_to_groupby`` plus the precomputed per-raw-modality rank stats
+        (see :meth:`_compute_associations`). Building the heavy
+        ``Series.groupby(...).sum()`` of per-modality y-lists per combination
+        was the dominant memory + time cost (Python list concatenation),
+        so we skip it here entirely. The xagg is rebuilt lazily, on demand,
+        inside :meth:`_test_viability_train` for the handful of top
+        combinations actually checked for viability.
+        """
+        for combination in combinations:
+            yield {
+                "combination": combination,
+                "index_to_groupby": combination_formatter(combination),
+            }
+
+    def _compute_associations(self, grouped_xaggs: Iterable[dict]) -> Iterator[dict]:
+        """Closed-form, streaming Kruskal–Wallis across combinations.
 
         Statistically identical to ``scipy.stats.kruskal`` (including the
         tie correction factor); the only difference is that y is ranked **once**
@@ -98,6 +118,10 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
           where the tie correction factor depends only on the y values and is
           computed once per feature.
 
+        Yields light association dicts ``{combination, index_to_groupby,
+        kruskal}`` in arrival order — sorting happens in
+        :meth:`CombinationEvaluator._get_best_association`.
+
         Edge cases follow ``scipy.stats.kruskal``:
 
         * any group with ``n_j == 0`` → ``H = NaN``;
@@ -113,7 +137,6 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
         mod_to_pos: dict = {m: i for i, m in enumerate(raw_xagg.index)}
         n_mod = len(mod_to_pos)
 
-        associations: list[dict] = []
         for grouped_xagg in tqdm(grouped_xaggs, desc="Computing associations", disable=not self.verbose):
             h = _kruskal_h_for_combination(
                 R_per_mod=R_per_mod,
@@ -124,10 +147,11 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
                 n_mod=n_mod,
                 index_to_groupby=grouped_xagg["index_to_groupby"],
             )
-            associations.append({**grouped_xagg, "kruskal": h})
-
-        # sorting associations according to specified metric
-        return pd.DataFrame(associations).sort_values(self.sort_by, ascending=False).to_dict(orient="records")
+            yield {
+                "combination": grouped_xagg["combination"],
+                "index_to_groupby": grouped_xagg["index_to_groupby"],
+                "kruskal": h,
+            }
 
 
 class KruskalCombinations(ContinuousCombinationEvaluator):
