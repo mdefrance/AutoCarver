@@ -38,6 +38,44 @@ def test_min_decimals_to_differentiate() -> None:
     assert result == 1
 
 
+def test_min_decimals_to_differentiate_bankers_rounding_collision() -> None:
+    """Regression test: scientific-notation formatting collisions due to
+    banker's rounding (e.g. -118.04 and -118.05 → "-1.180e+02" at 3 decimals)
+    used to make ``GroupedList(format_quantiles(...))`` silently drop labels,
+    which left the trailing ``np.inf`` leader without an entry in
+    ``label_per_value`` and surfaced as ``KeyError: inf`` in
+    ``transform_quantitative_feature``. The function must return enough
+    decimals for every formatted string to be distinct.
+    """
+    # Two longitudes that collide at 3 decimals via banker's rounding.
+    values = sorted([-118.05, -118.04])
+    decimals = min_decimals_to_differentiate(values, min_decimals=1)
+    formatted = [f"{n:.{decimals}e}" for n in values]
+    assert len(set(formatted)) == len(values), f"format collision at {decimals} decimals: {formatted}"
+
+    # A dense cluster of close longitudes from the California Housing dataset.
+    dense = sorted([-118.04, -118.05, -118.06, -118.15, -118.16, -118.24, -118.25])
+    decimals = min_decimals_to_differentiate(dense, min_decimals=1)
+    formatted = [f"{n:.{decimals}e}" for n in dense]
+    assert len(set(formatted)) == len(dense)
+
+
+def test_format_quantiles_produces_unique_strings_for_collision_prone_inputs() -> None:
+    """``format_quantiles`` must always return distinct strings — otherwise
+    ``GroupedList(format_quantiles(...))`` deduplicates labels and downstream
+    ``transform_quantitative_feature`` raises ``KeyError: inf``.
+
+    The collision-prone case: closely-spaced longitudes whose scientific-notation
+    formatting collides at the naively-computed precision due to banker's rounding.
+    """
+    # Pre-fix bug: at 3 decimals, both round to "-1.180e+02"
+    longitudes = [-118.05, -118.04, -118.0, -117.96, -117.5]
+    labels = format_quantiles(longitudes)
+    assert len(set(labels)) == len(labels), f"duplicate labels: {labels}"
+    # one boundary per quantile + open upper bound
+    assert len(labels) == len(longitudes) + 1
+
+
 def test_format_quantiles_empty_list() -> None:
     """test function min_decimals_to_differentiate"""
     # no value
