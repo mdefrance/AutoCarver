@@ -126,20 +126,22 @@ class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
         parameters (Pearson :math:`\\chi^2`, Yates correction for 2×2 tables);
         the only difference is that per-raw-modality counts ``(n_0, n_1)`` are
         gathered **once** from :attr:`self.samples.train.xagg` and aggregated
-        into per-combination groups via :func:`numpy.bincount`, skipping the
-        scipy call and the per-combination DataFrame construction.
+        into per-combination groups in batches via **one BLAS matmul per batch**.
 
-        For each combination:
+        Combinations are processed in batches of :data:`_CHI2_BATCH_SIZE`.
+        For each batch:
 
-        * group counts ``(n_{0,g}, n_{1,g})`` are obtained by summing per-raw-modality
-          counts via bincount on the integer assignment derived from
-          ``index_to_groupby``;
-        * ``tol`` is added to every cell (matching the existing scipy call,
-          which received ``xagg.values + tol``);
-        * the expected frequencies ``E_{gc} = R_g \\cdot C_c / N`` are computed
-          via outer product;
-        * Yates correction is applied iff the table is 2×2 (matching scipy's
-          default);
+        * the per-combination group assignment is encoded as a 0/1 matrix
+          ``A_c`` of shape ``(max_g, n_mod)`` and the batch is stacked into a
+          single ``(B, max_g, n_mod)`` tensor ``A``;
+        * per-group counts ``(n_{0,g}, n_{1,g})`` are obtained in one BLAS
+          call as ``A @ n0_per_mod`` and ``A @ n1_per_mod``;
+        * ``tol`` is added to every in-range cell (matching the historical
+          ``xagg.values + tol`` shift);
+        * expected frequencies ``E_{gc} = R_g \\cdot C_c / N`` are computed
+          via broadcast outer product;
+        * Yates correction is applied iff the combination's table is 2×2
+          (matching scipy's default);
         * :math:`\\chi^2 = \\sum_{g,c} (O_{gc} - E_{gc})^2 / E_{gc}`;
         * Cramér's V :math:`= \\sqrt{\\chi^2 / N_{\\text{obs}}}` and
           Tschuprow's T :math:`= V / \\sqrt[4]{k-1}`, both rounded to ``tol``
@@ -160,22 +162,30 @@ class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
 
         tol = 1e-10
 
+        batch: list[dict] = []
         for grouped_xagg in tqdm(grouped_xaggs, desc="Computing associations", disable=not self.verbose):
-            cv, tt = _chi2_assoc_for_combination(
+            batch.append(grouped_xagg)
+            if len(batch) >= _CHI2_BATCH_SIZE:
+                yield from _chi2_assoc_batch(
+                    batch=batch,
+                    n0_per_mod=n0_per_mod,
+                    n1_per_mod=n1_per_mod,
+                    n_obs=n_obs,
+                    mod_to_pos=mod_to_pos,
+                    n_mod=n_mod,
+                    tol=tol,
+                )
+                batch = []
+        if batch:
+            yield from _chi2_assoc_batch(
+                batch=batch,
                 n0_per_mod=n0_per_mod,
                 n1_per_mod=n1_per_mod,
                 n_obs=n_obs,
                 mod_to_pos=mod_to_pos,
                 n_mod=n_mod,
-                index_to_groupby=grouped_xagg["index_to_groupby"],
                 tol=tol,
             )
-            yield {
-                "combination": grouped_xagg["combination"],
-                "index_to_groupby": grouped_xagg["index_to_groupby"],
-                "cramerv": cv,
-                "tschuprowt": tt,
-            }
 
 
 class TschuprowtCombinations(BinaryCombinationEvaluator):
@@ -188,6 +198,13 @@ class CramervCombinations(BinaryCombinationEvaluator):
     """Cramér's V based combination evaluation toolkit"""
 
     sort_by = "cramerv"
+
+
+# Number of combinations processed per batched matmul call. Trades peak RAM
+# (``B * max_g * n_mod`` doubles for the assignment tensor) for amortized
+# Python overhead — same trade-off as :data:`_KRUSKAL_BATCH_SIZE` for the
+# continuous path.
+_CHI2_BATCH_SIZE = 1024
 
 
 # ---------------------------------------------------------------------------
@@ -280,3 +297,107 @@ def _chi2_pearson_2col(obs: np.ndarray) -> float:
         obs = obs + magnitude * direction
 
     return float(((obs - expected) ** 2 / expected).sum())
+
+
+def _chi2_assoc_batch(
+    *,
+    batch: list[dict],
+    n0_per_mod: np.ndarray,
+    n1_per_mod: np.ndarray,
+    n_obs: float,
+    mod_to_pos: dict,
+    n_mod: int,
+    tol: float,
+) -> Iterator[dict]:
+    """Batched closed-form Cramér's V & Tschuprow's T via matmul.
+
+    Encodes each combination's group assignment as a ``(max_g, n_mod)`` 0/1
+    matrix stacked into ``A`` of shape ``(B, max_g, n_mod)``. Per-group
+    ``(n0, n1)`` is obtained in one BLAS call as ``A @ n0_per_mod`` and
+    ``A @ n1_per_mod``. Mirrors :func:`_chi2_assoc_for_combination` cell-for-cell
+    (``+tol`` shift, Yates correction iff ``n_groups == 2``, ``round / tol``
+    quantisation), so for ``B == 1`` the floats are bit-identical to the
+    scalar path — preserving the pinned values in the parity tests.
+    """
+    B = len(batch)
+
+    # Build integer assignment matrix `assign[b, pos] = group_id`, plus
+    # n_groups[b]. Unmapped positions become their own singleton groups —
+    # matches :func:`_chi2_assoc_for_combination` exactly.
+    assign = np.empty((B, n_mod), dtype=np.intp)
+    n_groups = np.empty(B, dtype=np.intp)
+    for b, item in enumerate(batch):
+        leader_to_grp: dict = {}
+        assigned = np.zeros(n_mod, dtype=bool)
+        for mod, leader in item["index_to_groupby"].items():
+            gid = leader_to_grp.get(leader)
+            if gid is None:
+                gid = len(leader_to_grp)
+                leader_to_grp[leader] = gid
+            pos = mod_to_pos[mod]
+            assign[b, pos] = gid
+            assigned[pos] = True
+        for pos in range(n_mod):
+            if not assigned[pos]:
+                assign[b, pos] = len(leader_to_grp)
+                leader_to_grp[("__unmapped__", pos)] = len(leader_to_grp)
+        n_groups[b] = len(leader_to_grp)
+
+    max_g = int(n_groups.max())
+
+    # 0/1 assignment tensor: A[b, g, m] = 1 iff modality m is in group g of combination b
+    A = np.zeros((B, max_g, n_mod), dtype=np.float64)
+    b_idx = np.repeat(np.arange(B), n_mod)
+    mod_idx = np.tile(np.arange(n_mod), B)
+    A[b_idx, assign.ravel(), mod_idx] = 1.0
+
+    # Batched grouped (n0, n1) via BLAS matmul
+    n0_g = A @ n0_per_mod  # (B, max_g)
+    n1_g = A @ n1_per_mod  # (B, max_g)
+
+    # In-range mask: cells beyond n_groups[b] are padding (kept at 0)
+    in_range_mask = np.arange(max_g)[None, :] < n_groups[:, None]  # (B, max_g)
+
+    # Observed table per combination with ``+tol`` shift on in-range cells only
+    obs = np.stack((n0_g, n1_g), axis=-1)  # (B, max_g, 2)
+    obs = np.where(in_range_mask[..., None], obs + tol, obs)
+
+    # Marginals (padding rows/cols are 0)
+    R = obs.sum(axis=2)  # (B, max_g)
+    C = obs.sum(axis=1)  # (B, 2)
+    N_per = obs.sum(axis=(1, 2))  # (B,)
+
+    # Expected: E[b, g, c] = R[b, g] * C[b, c] / N[b]
+    expected = R[:, :, None] * C[:, None, :] / N_per[:, None, None]  # (B, max_g, 2)
+
+    # Yates correction for combinations whose table is exactly 2x2
+    diff = expected - obs
+    magnitude = np.minimum(0.5, np.abs(diff))
+    yates_shift = magnitude * np.sign(diff)
+    is_2group = n_groups == 2
+    yates_apply = is_2group[:, None, None] & in_range_mask[..., None]
+    obs_corrected = np.where(yates_apply, obs + yates_shift, obs)
+
+    # Per-cell chi². Padding cells: expected==0 → 0/0 = NaN, zeroed via mask.
+    with np.errstate(invalid="ignore", divide="ignore"):
+        cells = (obs_corrected - expected) ** 2 / expected
+    cells = np.where(in_range_mask[..., None], cells, 0.0)
+    chi2 = cells.sum(axis=(1, 2))  # (B,)
+
+    # Cramér's V & Tschuprow's T, with the same ``round(x / tol) * tol`` quantisation
+    cramerv = np.sqrt(chi2 / n_obs)
+    cramerv_q = np.where(np.isnan(cramerv), cramerv, np.round(cramerv / tol) * tol)
+
+    # tschuprowt = cramerv_q / (n_groups - 1) ** 0.25 if n_groups > 1 else cramerv_q
+    n_groups_f = n_groups.astype(np.float64)
+    denom = np.where(n_groups_f > 1, np.sqrt(np.sqrt(np.maximum(n_groups_f - 1.0, 1.0))), 1.0)
+    tt_raw = np.where(n_groups_f > 1, cramerv_q / denom, cramerv_q)
+    tt_q = np.where(np.isnan(tt_raw), tt_raw, np.round(tt_raw / tol) * tol)
+
+    for b, item in enumerate(batch):
+        yield {
+            "combination": item["combination"],
+            "index_to_groupby": item["index_to_groupby"],
+            "cramerv": float(cramerv_q[b]),
+            "tschuprowt": float(tt_q[b]),
+        }

@@ -102,12 +102,16 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
         from :attr:`self.samples.train.xagg` instead of being re-ranked from
         scratch for every combination.
 
-        For each combination:
+        Combinations are processed in batches of :data:`_KRUSKAL_BATCH_SIZE`.
+        For each batch:
 
-        * group rank sums ``R_j`` and counts ``n_j`` are obtained by summing
-          per-raw-modality rank sums via :func:`numpy.bincount` over the integer
-          assignment derived from ``index_to_groupby``;
-        * the Kruskal–Wallis H statistic is computed in closed form
+        * the per-combination group assignment is encoded as a 0/1 matrix
+          ``A_c`` of shape ``(max_g, n_mod)`` and the batch is stacked into a
+          single ``(B, max_g, n_mod)`` tensor ``A``;
+        * the per-group rank sums and counts are obtained in **one BLAS call**
+          as ``A @ R_per_mod`` and ``A @ n_per_mod`` (shape ``(B, max_g)``);
+        * the Kruskal–Wallis H statistic is computed in closed form across
+          the batch
 
           .. math::
 
@@ -137,27 +141,44 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
         mod_to_pos: dict = {m: i for i, m in enumerate(raw_xagg.index)}
         n_mod = len(mod_to_pos)
 
+        batch: list[dict] = []
         for grouped_xagg in tqdm(grouped_xaggs, desc="Computing associations", disable=not self.verbose):
-            h = _kruskal_h_for_combination(
+            batch.append(grouped_xagg)
+            if len(batch) >= _KRUSKAL_BATCH_SIZE:
+                yield from _kruskal_h_batch(
+                    batch=batch,
+                    R_per_mod=R_per_mod,
+                    n_per_mod=n_per_mod,
+                    N=N,
+                    tie_corr=tie_corr,
+                    mod_to_pos=mod_to_pos,
+                    n_mod=n_mod,
+                )
+                batch = []
+        if batch:
+            yield from _kruskal_h_batch(
+                batch=batch,
                 R_per_mod=R_per_mod,
                 n_per_mod=n_per_mod,
                 N=N,
                 tie_corr=tie_corr,
                 mod_to_pos=mod_to_pos,
                 n_mod=n_mod,
-                index_to_groupby=grouped_xagg["index_to_groupby"],
             )
-            yield {
-                "combination": grouped_xagg["combination"],
-                "index_to_groupby": grouped_xagg["index_to_groupby"],
-                "kruskal": h,
-            }
 
 
 class KruskalCombinations(ContinuousCombinationEvaluator):
     """Kruskal-Wallis' H based combination evaluation toolkit"""
 
     sort_by = "kruskal"
+
+
+# Number of combinations processed per batched matmul call. Trades peak RAM
+# (``B * max_g * n_mod`` doubles for the assignment tensor) for amortized
+# Python overhead. 1024 keeps the tensor under ~10 MB for the typical
+# (n_mod ≤ 40, max_g ≤ 7) sizes while making per-combination Python cost
+# (dict iteration to fill the assign row) the dominant remaining cost.
+_KRUSKAL_BATCH_SIZE = 1024
 
 
 # ---------------------------------------------------------------------------
@@ -269,3 +290,104 @@ def _kruskal_h_for_combination(
         return float("nan")
 
     return h / tie_corr
+
+
+def _kruskal_h_batch(  # noqa: C901
+    *,
+    batch: list[dict],
+    R_per_mod: np.ndarray | None,
+    n_per_mod: np.ndarray,
+    N: int,
+    tie_corr: float | None,
+    mod_to_pos: dict,
+    n_mod: int,
+) -> Iterator[dict]:
+    """Closed-form Kruskal–Wallis H for a batch of combinations via matmul.
+
+    Encodes each combination's group assignment as a ``(max_g, n_mod)`` 0/1
+    matrix stacked into ``A`` of shape ``(B, max_g, n_mod)``. Per-group rank
+    sums and counts are obtained in one BLAS call as ``A @ R_per_mod`` and
+    ``A @ n_per_mod``. Padding columns (``g >= n_groups[b]``) contribute zero
+    by construction; in-range empty groups (``n_g == 0``) propagate NaN
+    through ``ssbn`` exactly as :func:`_kruskal_h_for_combination` does.
+
+    For ``B == 1`` ``max_g`` equals ``n_groups[0]``, so the math reduces to
+    the scalar path and produces bit-identical floats — preserving the
+    pinned values in the parity tests.
+    """
+    B = len(batch)
+
+    # Short-circuit when ranking failed upstream (N<2 etc.); mirrors
+    # :func:`_kruskal_h_for_combination`'s ``None`` return.
+    if R_per_mod is None or N < 2:
+        for item in batch:
+            yield {
+                "combination": item["combination"],
+                "index_to_groupby": item["index_to_groupby"],
+                "kruskal": None,
+            }
+        return
+
+    # Build integer assignment matrix `assign[b, pos] = group_id`, plus
+    # n_groups[b]. Unmapped positions become their own singleton groups —
+    # matches :func:`_kruskal_h_for_combination` exactly.
+    assign = np.empty((B, n_mod), dtype=np.intp)
+    n_groups = np.empty(B, dtype=np.intp)
+    for b, item in enumerate(batch):
+        leader_to_grp: dict = {}
+        assigned = np.zeros(n_mod, dtype=bool)
+        for mod, leader in item["index_to_groupby"].items():
+            gid = leader_to_grp.get(leader)
+            if gid is None:
+                gid = len(leader_to_grp)
+                leader_to_grp[leader] = gid
+            pos = mod_to_pos[mod]
+            assign[b, pos] = gid
+            assigned[pos] = True
+        for pos in range(n_mod):
+            if not assigned[pos]:
+                assign[b, pos] = len(leader_to_grp)
+                leader_to_grp[("__unmapped__", pos)] = len(leader_to_grp)
+        n_groups[b] = len(leader_to_grp)
+
+    max_g = int(n_groups.max())
+
+    # 0/1 assignment tensor: A[b, g, m] = 1 iff modality m is in group g of combination b
+    A = np.zeros((B, max_g, n_mod), dtype=np.float64)
+    b_idx = np.repeat(np.arange(B), n_mod)
+    mod_idx = np.tile(np.arange(n_mod), B)
+    A[b_idx, assign.ravel(), mod_idx] = 1.0
+
+    # Batched grouped stats via BLAS matmul
+    R_g = A @ R_per_mod
+    n_g = A @ n_per_mod.astype(np.float64)
+
+    # Per-cell contribution to ssbn. Padding cells (g >= n_groups[b]) have
+    # R_g == n_g == 0 → contribute NaN through 0/0; we zero them out so they
+    # don't poison the per-combination sum. In-range cells with n_g == 0
+    # (empty raw modality grouped alone) keep their NaN, which propagates
+    # through `ssbn.sum()` exactly like the scalar path.
+    in_range_mask = np.arange(max_g)[None, :] < n_groups[:, None]
+    with np.errstate(invalid="ignore", divide="ignore"):
+        contrib = (R_g**2) / n_g
+    contrib = np.where(in_range_mask, contrib, 0.0)
+    ssbn = contrib.sum(axis=1)
+
+    h = (12.0 / (N * (N + 1))) * ssbn - 3.0 * (N + 1)
+
+    # All values identical → tie_corr == 0; scipy returns nan from H/0.
+    if tie_corr is None or tie_corr == 0:
+        h = np.full(B, float("nan"))
+    else:
+        h = h / tie_corr
+
+    for b, item in enumerate(batch):
+        if n_groups[b] < 2:
+            h_val: float | None = None
+        else:
+            h_val = float(h[b])
+        yield {
+            "combination": item["combination"],
+            "index_to_groupby": item["index_to_groupby"],
+            "kruskal": h_val,
+        }
