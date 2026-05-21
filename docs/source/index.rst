@@ -13,6 +13,7 @@ Welcome to AutoCarver's documentation!
    about
    installation
    quick_start
+   comparison
 
 .. toctree::
    :maxdepth: 1

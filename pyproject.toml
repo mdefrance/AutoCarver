@@ -59,6 +59,7 @@ jupyter = [
 ]
 [dependency-groups]
 dev = [
+    "optbinning>=0.20,<1",
     "ipykernel>=6.27.1,<7",
     "xgboost>=3.2,<4",
     "ipywidgets>=8.1.5,<9",
