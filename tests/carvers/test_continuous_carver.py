@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from pytest import FixtureRequest, fixture, raises
 
@@ -988,3 +989,42 @@ def test_continuous_carver_unknown_ordinal_values_raises(
     )
     with raises(ValueError):
         auto_carver.fit_transform(x_train_wrong_2, x_train_wrong_2["continuous_target"])
+
+
+def _fit_continuous_for_parity(n_jobs: int) -> dict[str, dict]:
+    """Fits a ContinuousCarver on a small synthetic frame and returns
+    ``{version: feature.content}`` so the parallel path can be compared to the
+    sequential one without depending on object identity."""
+
+    rng = np.random.default_rng(0)
+    n = 400
+    X = pd.DataFrame(
+        {
+            "feature1": rng.choice(["A", "B", "C", "D"], size=n),
+            "feature2": rng.choice(["low", "medium", "high"], size=n),
+            "feature3": rng.normal(size=n),
+            "feature4": rng.integers(0, 20, size=n).astype(float),
+        }
+    )
+    y = pd.Series(rng.normal(size=n) + X["feature3"] * 0.5)
+    features = Features(
+        categoricals=["feature1"],
+        ordinals={"feature2": ["low", "medium", "high"]},
+        quantitatives=["feature3", "feature4"],
+    )
+    carver = ContinuousCarver(
+        features=features,
+        min_freq=0.1,
+        max_n_mod=4,
+        combination_evaluator=KruskalCombinations(),
+        config=DiscretizerConfig(dropna=True, verbose=False, n_jobs=n_jobs),
+    )
+    carver.fit(X, y)
+    return {f.version: f.content for f in carver.features}
+
+
+def test_continuous_carver_parallel_features_parity():
+    """n_jobs=2 must produce the same carved features as n_jobs=1 (Step 5)."""
+    sequential = _fit_continuous_for_parity(n_jobs=1)
+    parallel = _fit_continuous_for_parity(n_jobs=2)
+    assert parallel == sequential

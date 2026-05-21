@@ -94,7 +94,7 @@ def find_quantiles(
     df_feature: np.ndarray,
     q: int,
 ) -> list[float]:
-    """Finds quantiles of a pd.Series recursively.
+    """Finds quantiles of a pd.Series in a single sort pass.
 
     * Values more frequent than ``min_freq`` are set as there own modalities.
     * Other values are cut in quantiles using ``numpy.quantile``.
@@ -113,16 +113,53 @@ def find_quantiles(
     list[float]
         list of quantiles for the feature
     """
-    return list(
-        np.sort(
-            np_find_quantiles(
-                df_feature[~np.isnan(df_feature)],  # getting rid of missing values
-                q,
-                initial_len_df=len(df_feature),  # getting raw dataset size
-                quantiles=[],  # initiating list of quantiles
-            )
-        )
-    )
+    initial_len_df = len(df_feature)
+    cleaned = df_feature[~np.isnan(df_feature)]
+    if cleaned.shape[0] == 0:
+        return []
+
+    # one O(N log N) sort; all subsequent work is O(N) at most
+    sorted_values = np.sort(cleaned)
+    unique_values, counts = np.unique(sorted_values, return_counts=True)
+
+    # over-represented modalities: same threshold as the recursive version
+    threshold = initial_len_df / q
+    is_frequent = counts >= threshold
+    frequent_values = unique_values[is_frequent]
+
+    # cum_counts[i] = index in sorted_values just past the last occurrence of unique_values[i]
+    cum_counts = np.cumsum(counts)
+    starts = np.concatenate(([0], cum_counts[:-1]))
+    ends = cum_counts
+
+    # sub-segments are the contiguous runs of sorted_values between frequent values
+    freq_idx = np.flatnonzero(is_frequent)
+    if len(freq_idx) == 0:
+        segment_bounds = [(0, len(sorted_values))]
+    else:
+        segment_bounds = [(0, int(starts[freq_idx[0]]))]
+        for i in range(len(freq_idx) - 1):
+            segment_bounds.append((int(ends[freq_idx[i]]), int(starts[freq_idx[i + 1]])))
+        segment_bounds.append((int(ends[freq_idx[-1]]), len(sorted_values)))
+
+    quantiles: list[float] = []
+    for lo, hi in segment_bounds:
+        seg_len = hi - lo
+        if seg_len == 0:
+            continue
+        new_q = round(seg_len / initial_len_df * q)
+        if new_q < 2:
+            # not enough remaining values: mirror compute_quantiles' fallback to the segment max
+            quantiles.append(sorted_values[hi - 1].item())
+            continue
+        # np.quantile(method='lower') on a sorted array == sorted[floor(p * (N-1))]
+        probs = np.linspace(0, 1, new_q + 1)[1:-1]
+        indices = lo + np.floor(probs * (seg_len - 1)).astype(np.intp)
+        quantiles.extend(sorted_values[indices].tolist())
+
+    quantiles.extend(frequent_values.tolist())
+    quantiles.sort()
+    return quantiles
 
 
 def np_find_quantiles(
