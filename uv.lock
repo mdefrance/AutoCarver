@@ -89,12 +89,14 @@ jupyter = [
 ]
 
 [package.dev-dependencies]
+compare = [
+    { name = "optbinning" },
+]
 dev = [
     { name = "icecream" },
     { name = "ipykernel" },
     { name = "ipywidgets" },
     { name = "nbsphinx" },
-    { name = "optbinning" },
     { name = "pylint" },
     { name = "pypandoc" },
     { name = "pytest" },
@@ -123,12 +125,12 @@ requires-dist = [
 provides-extras = ["jupyter"]
 
 [package.metadata.requires-dev]
+compare = [{ name = "optbinning", specifier = ">=0.20,<1" }]
 dev = [
     { name = "icecream", specifier = ">=2.1.3,<3" },
     { name = "ipykernel", specifier = ">=6.27.1,<7" },
     { name = "ipywidgets", specifier = ">=8.1.5,<9" },
     { name = "nbsphinx", specifier = "==0.9.6" },
-    { name = "optbinning", specifier = ">=0.20,<1" },
     { name = "pylint", specifier = ">=3.0.3,<4" },
     { name = "pypandoc", specifier = ">=1.12,<2" },
     { name = "pytest", specifier = ">=7.4.3,<8" },
