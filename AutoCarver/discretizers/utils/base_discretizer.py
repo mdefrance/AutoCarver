@@ -205,6 +205,17 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
                 "those columns are missing from provided X. Please check your inputs! "
             )
 
+        # coercing pandas Categorical-dtype columns to object so that in-place
+        # .replace can introduce grouped labels not in the original category set
+        # (astype(object), not astype(str), to preserve NaN as np.nan)
+        cat_qualitatives = [
+            feature.name
+            for feature in self.features.qualitatives
+            if isinstance(x_copy[feature.name].dtype, pd.CategoricalDtype)
+        ]
+        if cat_qualitatives:
+            x_copy[cat_qualitatives] = x_copy[cat_qualitatives].astype(object)
+
         # casting features for multiclass targets
         x_copy = self._cast_features(x_copy)
 

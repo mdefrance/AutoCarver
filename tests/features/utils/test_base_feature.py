@@ -96,6 +96,31 @@ def test_base_feature_make_labels() -> None:
     assert values.content == {"a": ["a", "b"], "c": ["c", "d"]}
 
 
+def test_label_per_value_covers_every_leader_when_labels_are_shorter() -> None:
+    """Invariant: ``update_labels`` must populate ``label_per_value`` with an
+    entry for *every* leader in ``self.values``, even when ``raw_labels``
+    (a GroupedList) happens to have fewer entries than there are leaders.
+
+    Regression test for ``KeyError: inf`` in ``transform_quantitative_feature``:
+    on California Housing's Longitude, ``format_quantiles`` produced
+    collision-prone scientific-notation strings ("-1.180e+02" for both -118.04
+    and -118.05 due to banker's rounding at 3 decimals); ``GroupedList(...)``
+    silently deduplicated them, leaving the trailing ``np.inf`` leader without
+    a label_per_value entry. Iterating ``self.values`` authoritatively guards
+    against this whatever the cause of the labels/values length mismatch.
+    """
+    feature = BaseFeature(name="test_feature")
+    feature.values = GroupedList({"a": ["a"], "b": ["b"], "c": ["c"]})
+
+    # Simulate a deduped raw_labels list (only 2 entries for 3 leaders).
+    feature.labels = GroupedList(["L1", "L2"])
+
+    # Every leader has an entry — no silent omission.
+    assert set(feature.label_per_value) == {"a", "b", "c"}
+    # The trailing leader without a fresh label falls back to the last available label.
+    assert feature.label_per_value["c"] == "L2"
+
+
 def test_base_feature_update_labels_ordinal_encoding() -> None:
     """test method update_labels and ordinal_encoding"""
     feature = BaseFeature(name="test_feature")

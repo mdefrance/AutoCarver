@@ -9,3 +9,11 @@ repos:
       - id: ruff-check
         args: [ --fix ]
       - id: ruff-format
+  - repo: local
+    hooks:
+      - id: sync-readme-quickstart
+        name: sync README quick-start from docs/source/examples/quick_start.py
+        entry: python docs/sync_readme.py
+        language: system
+        pass_filenames: false
+        files: ^(docs/source/examples/quick_start\.py|docs/sync_readme\.py|README\.md)$

@@ -12,18 +12,7 @@ class TargetRate(ABC):
 
     @abstractmethod
     def _compute(self, xagg: pd.Series | pd.DataFrame) -> pd.Series:
-        """Computes the target rate.
-
-        Parameters
-        ----------
-        xagg : pd.DataFrame
-            A crosstab.
-
-        Returns
-        -------
-        Series
-            Target rate.
-        """
+        """Computes the target rate."""
 
     @abstractmethod
     def compute(self, xagg: pd.Series | pd.DataFrame | None) -> pd.Series:
@@ -31,11 +20,11 @@ class TargetRate(ABC):
 
         Parameters
         ----------
-        xagg : pd.DataFrame
+        xagg : pd.Series | pd.DataFrame | None
             A crosstab.
 
         Returns
         -------
-        Series
+        pd.Series
             Target rate.
         """

@@ -11,7 +11,7 @@ from AutoCarver.features import BaseFeature, GroupedList
 
 
 def combinations_at_index(
-    start_index: int, elements: list[Any], remaining_groups: int
+    start_index: int, elements: list[Any] | GroupedList, remaining_groups: int
 ) -> Generator[tuple[list[Any], int, int], None, None]:
     """Gets all possible combinations of sizes up to the last element of a list"""
 
@@ -30,59 +30,66 @@ def combinations_at_index(
 def consecutive_combinations(
     raw_order: "list[Any] | GroupedList",
     max_group_size: int,
-    remaining_groups: int | None = None,
-    current_combination: list[Any] | None = None,
-    next_index: int | None = None,
-    all_combinations: list[list[Any]] | None = None,
-) -> list[list[Any]]:
-    """Computes all possible combinations of values of order up to max_group_size."""
+) -> Generator[list[list[Any]], None, None]:
+    """Yields all combinations of consecutive values of size up to ``max_group_size``.
 
-    # initiating recursive attributes
-    if current_combination is None:
-        current_combination = []
-    if next_index is None:
-        next_index = 0
-    if remaining_groups is None:
-        remaining_groups = max_group_size
-    if all_combinations is None:
-        all_combinations = []
+    Yields one combination at a time (a list of groups, each group a list of
+    contiguous values from ``raw_order``) so callers can stream them through
+    grouping + scoring without ever materialising the full enumeration. The
+    enumeration order is identical to the previous list-returning version.
+    """
+    yield from _consecutive_combinations_iter(raw_order, max_group_size, [], 0, max_group_size)
 
-    # getting combinations for next index
-    next_combinations = list(combinations_at_index(next_index, raw_order, remaining_groups))
 
-    # stop case: no next_combinations possible -> adding to all_combinations
-    if len(next_combinations) == 0 and 1 < len(current_combination) <= max_group_size:
-        # saving up combination
-        all_combinations += [current_combination]
+def _consecutive_combinations_iter(
+    raw_order: "list[Any] | GroupedList",
+    max_group_size: int,
+    current_combination: list[list[Any]],
+    next_index: int,
+    remaining_groups: int,
+) -> Generator[list[list[Any]], None, None]:
+    """Recursive generator backing :func:`consecutive_combinations`.
 
-        # resetting remaining number of groups
-        remaining_groups = max_group_size
-
-    # otherwise: adding all next_combinations to the current_combination
-    for combination, new_next_index, new_remaining_groups in next_combinations:
-        # going a rank further in the raw_xtab
-        consecutive_combinations(
+    A combination is emitted (a) once we've consumed the whole ``raw_order``
+    AND it contains ≥ 2 groups, OR (b) we cannot extend further. Note this
+    mirrors the previous "no next_combinations + 1 < len(current) ≤
+    max_group_size" stop condition exactly so the set of produced
+    combinations is unchanged.
+    """
+    produced_child = False
+    for combination, new_next_index, new_remaining_groups in combinations_at_index(
+        next_index, raw_order, remaining_groups
+    ):
+        produced_child = True
+        yield from _consecutive_combinations_iter(
             raw_order,
             max_group_size,
-            remaining_groups=new_remaining_groups,
-            current_combination=current_combination + [combination],
-            next_index=new_next_index,
-            all_combinations=all_combinations,
+            current_combination + [combination],
+            new_next_index,
+            new_remaining_groups,
         )
 
-    return all_combinations
+    if not produced_child and 1 < len(current_combination) <= max_group_size:
+        yield current_combination
 
 
 def nan_combinations(
     feature: BaseFeature,
     max_n_mod: int,
-) -> list[list[str]]:
-    """All consecutive combinations of non-nans with added nan to each possible group and a last
-    group only with nan if the max_n_mod is not reached by the combination
+) -> Generator[list[list[str]], None, None]:
+    """Streams consecutive combinations augmented with nan placements.
 
-    - feature must have has_nan = True
-    - feature must have dropna = True
-    - len(feature.labels) <= max_n_mod
+    For each consecutive combination of the non-nan labels, yields:
+
+    * one variant per group with the nan label folded into that group, and
+    * one variant where the nan label forms its own additional group, when
+      ``len(combination) < max_n_mod``.
+
+    Finally yields the all-vs-nan partition. Order is preserved exactly from
+    the previous list-returning version (so the carver picks the same first
+    viable combination it would have before).
+
+    Requires ``feature.has_nan == True`` and ``feature.dropna == True``.
     """
     # raw ordering without nans
     if feature.labels is None:
@@ -90,35 +97,19 @@ def nan_combinations(
     raw_labels = GroupedList(feature.labels[:])
     raw_labels.remove(feature.nan)  # nans are added within nan_combinations
 
-    # all possible consecutive combinations
-    combinations = consecutive_combinations(raw_labels, max_n_mod)
-
-    # iterating over each combination
-    nan_combis = []
-    for combination in combinations:
+    for combination in consecutive_combinations(raw_labels, max_n_mod):
         # adding nan to each group of the combination
-        nan_combination = []
         for n in range(len(combination)):
-            # copying input combination
             new_combination = combination[:]
-            # adding nan to the nth group
             new_combination[n] = new_combination[n] + [feature.nan]
-            # storing updated combination with attributed group to nan
-            nan_combination += [new_combination]
+            yield new_combination
 
         # if max_n_mod is not reached adding a combination with nans alone
         if len(combination) < max_n_mod:
-            # copying input combination
-            new_combination = combination[:]
-            # adding a group for nans only
-            nan_combination += [new_combination + [[feature.nan]]]
-
-        nan_combis += nan_combination
+            yield combination[:] + [[feature.nan]]
 
     # adding a combination for all modalities vs nans
-    nan_combis += [[list(raw_labels), [feature.nan]]]
-
-    return nan_combis
+    yield [list(raw_labels), [feature.nan]]
 
 
 def order_apply_combination(order: "GroupedList | list[Any] | None", combination: list[list[Any]]) -> GroupedList:
