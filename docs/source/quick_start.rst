@@ -48,11 +48,16 @@ Setting up Features to Carve
     features = Features(
         quantitatives=['quantitative1', 'quantitative2', 'discrete1', 'discrete2_with_nan'],
         categoricals=['categorical1', 'categorical2', 'categorical3_with_nan'],
-        ordinal={'ordinal1': ['low', 'medium', 'high'], 'ordinal2_with_nan': ['low', 'medium', 'high']},
+        ordinals={'ordinal1': ['low', 'medium', 'high'], 'ordinal2_with_nan': ['low', 'medium', 'high']},
     )
 
 Qualitative features will automatically be converted to :class:`str` if necessary.
 Ordinal features are added, alongside there expected ordering.
+
+To wrap already-instantiated feature objects (e.g. :class:`CategoricalFeature`,
+:class:`OrdinalFeature`, :class:`QuantitativeFeature`) use :meth:`Features.from_list`
+instead. Collection-level state (``nan`` / ``default`` / ``ordinal_encoding`` / ``dropna``)
+can be propagated to every feature via a :class:`FeaturesConfig`.
 
 
 
@@ -71,12 +76,21 @@ Fitting AutoCarver
     binary_carver = BinaryCarver(
         features=features,
         min_freq=0.02,  # minimum frequency per modality
-        max_n_mod=5,  # maximum number of modality per Carved feature
-        verbose=True,  # showing statistics
+        max_n_mod=5,  # maximum number of modality per Carved feature (mandatory)
     )
 
     # fitting on training sample, a dev sample can be specified to evaluate carving robustness
     x_discretized = binary_carver.fit_transform(train_set, train_set[target], X_dev=dev_set, y_dev=dev_set[target])
+
+.. note::
+
+    Behavioral toggles (``copy``, ``ordinal_encoding``, ``dropna``, ``verbose``, ``n_jobs``)
+    are now grouped in :class:`DiscretizerConfig`. Carvers default to
+    ``DiscretizerConfig(dropna=True, ordinal_encoding=True)``.
+
+    To pick a different association metric, pass a pre-built
+    :ref:`combination evaluator <Combinations>` via the
+    ``combination_evaluator`` keyword (e.g. :class:`CramervCombinations` for binary).
 
 
 

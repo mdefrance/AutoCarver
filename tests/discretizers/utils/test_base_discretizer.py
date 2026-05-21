@@ -350,6 +350,51 @@ def test_transform_qualitative() -> None:
     assert (result == X).all().all()
 
 
+def test_prepare_X_coerces_pandas_category_dtype() -> None:
+    """qualitative columns arriving as pandas Categorical dtype (e.g. from
+    ``fetch_openml(as_frame=True)`` or ``pd.read_csv(dtype='category')``) must
+    be coerced to ``object`` so that in-place ``.replace`` can introduce merged
+    labels not in the original category set.
+
+    Regression test: previously raised ``TypeError: Cannot setitem on a
+    Categorical with a new category``.
+    """
+
+    feature1 = OrdinalFeature("feature1", values=["1", "2", "3", "4"])
+    feature2 = CategoricalFeature("feature2")
+    feature2.update(GroupedList({"A": ["A"], "B": ["B"], "X": ["X", "C", "D"]}))
+
+    # X with strict pandas Categorical dtype on both qualitative columns,
+    # including a NaN — NaN must survive coercion (astype(object), not str).
+    X = pd.DataFrame(
+        {
+            "feature1": pd.Categorical(["1", "2", "3", "2", np.nan, "4", "4"]),
+            "feature2": pd.Categorical(["A", "A", "B", "C", "D", "E", "X"]),
+        }
+    )
+    assert isinstance(X["feature1"].dtype, pd.CategoricalDtype)
+    assert isinstance(X["feature2"].dtype, pd.CategoricalDtype)
+
+    disc = BaseDiscretizer([feature1, feature2])
+    prepared = disc._prepare_X(X)
+
+    # qualitative columns are now object dtype on the prepared frame
+    assert prepared["feature1"].dtype == object
+    assert prepared["feature2"].dtype == object
+
+    # NaN preserved as np.nan (not the string "nan")
+    assert prepared["feature1"].isna().sum() == 1
+    assert "nan" not in prepared["feature1"].dropna().tolist()
+
+    # original X untouched (no silent dtype mutation of the caller's frame)
+    assert isinstance(X["feature1"].dtype, pd.CategoricalDtype)
+    assert isinstance(X["feature2"].dtype, pd.CategoricalDtype)
+
+    # downstream _transform_qualitative no longer raises on the merged label
+    result = disc._transform_qualitative(Sample(X=prepared, y=None)).X
+    assert result["feature2"].tolist() == ["A", "A", "B", "X", "X", "E", "X"]
+
+
 def test_transform_quantitative() -> None:
     """tests base discretizer transform_quantitative method"""
 

@@ -61,18 +61,26 @@ def test_consecutive_combinations_basic():
     """Test consecutive_combinations with a basic order and max group size."""
     raw_order = [1, 2, 3, 4]
     max_group_size = 2
-    result = consecutive_combinations(raw_order, max_group_size)
-    print(result)
+    result = list(consecutive_combinations(raw_order, max_group_size))
     expected = [[[1], [2, 3, 4]], [[1, 2], [3, 4]], [[1, 2, 3], [4]]]
     assert result == expected
+
+
+def test_consecutive_combinations_returns_generator():
+    """consecutive_combinations must be a generator so the carver can stream
+    its enumeration through grouping + scoring without building a 92k-entry
+    list in memory."""
+    import types
+
+    gen = consecutive_combinations([1, 2, 3], 2)
+    assert isinstance(gen, types.GeneratorType)
 
 
 def test_consecutive_combinations_with_larger_group_size():
     """Test consecutive_combinations with a larger max group size."""
     raw_order = [1, 2, 3, 4]
     max_group_size = 3
-    result = consecutive_combinations(raw_order, max_group_size)
-    print(result)
+    result = list(consecutive_combinations(raw_order, max_group_size))
     expected = [
         [[1], [2], [3, 4]],
         [[1], [2, 3], [4]],
@@ -88,7 +96,7 @@ def test_consecutive_combinations_with_single_element():
     """Test consecutive_combinations with a single element in the order."""
     raw_order = [1]
     max_group_size = 1
-    result = consecutive_combinations(raw_order, max_group_size)
+    result = list(consecutive_combinations(raw_order, max_group_size))
     expected = []
     assert result == expected
 
@@ -97,18 +105,8 @@ def test_consecutive_combinations_with_empty_list():
     """Test consecutive_combinations with an empty order list."""
     raw_order = []
     max_group_size = 2
-    result = consecutive_combinations(raw_order, max_group_size)
+    result = list(consecutive_combinations(raw_order, max_group_size))
     expected = []
-    assert result == expected
-
-
-def test_consecutive_combinations_with_non_default_start_index():
-    """Test consecutive_combinations with a non-default start index."""
-    raw_order = [1, 2, 3, 4]
-    max_group_size = 2
-    result = consecutive_combinations(raw_order, max_group_size, next_index=1)
-    print(result)
-    expected = [[[2], [3, 4]], [[2, 3], [4]]]
     assert result == expected
 
 
@@ -120,8 +118,7 @@ def test_nan_combinations_basic():
     feature.has_nan = True
     feature.dropna = True
     max_n_mod = 2
-    result = nan_combinations(feature, max_n_mod)
-    print(result)
+    result = list(nan_combinations(feature, max_n_mod))
     expected = [
         [["A", str_nan], ["B", "C", "D"]],
         [["A"], ["B", "C", "D", str_nan]],
@@ -143,8 +140,7 @@ def test_nan_combinations_with_single_label():
     feature.has_nan = True
     feature.dropna = True
     max_n_mod = 1
-    result = nan_combinations(feature, max_n_mod)
-    print(result)
+    result = list(nan_combinations(feature, max_n_mod))
     expected = [[["A"], [str_nan]]]
     assert result == expected
 
@@ -157,8 +153,7 @@ def test_nan_combinations_with_max_n_mod_greater_than_labels():
     feature.has_nan = True
     feature.dropna = True
     max_n_mod = 3
-    result = nan_combinations(feature, max_n_mod)
-    print(result)
+    result = list(nan_combinations(feature, max_n_mod))
     expected = [
         [["A", "NaN_"], ["B"]],
         [["A"], ["B", "NaN_"]],
@@ -177,8 +172,7 @@ def test_nan_combinations_with_large_combination():
     feature.has_nan = True
     feature.dropna = True
     max_n_mod = 4
-    result = nan_combinations(feature, max_n_mod)
-    print(result)
+    result = list(nan_combinations(feature, max_n_mod))
     expected = [
         [["A", "NaN_"], ["B"], ["C"], ["D"]],
         [["A"], ["B", "NaN_"], ["C"], ["D"]],
@@ -219,8 +213,7 @@ def test_nan_combinations_with_low_max_n_mod():
     feature.has_nan = True
     feature.dropna = True
     max_n_mod = 2
-    result = nan_combinations(feature, max_n_mod)
-    print(result)
+    result = list(nan_combinations(feature, max_n_mod))
     expected = [
         [["A", "NaN_"], ["B", "C", "D"]],
         [["A"], ["B", "C", "D", "NaN_"]],

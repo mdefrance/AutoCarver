@@ -150,20 +150,47 @@ class BaseFeature(ABC):
             labels = [n for n, _ in enumerate(labels)]
 
         self._labels = list(labels)
-        self._update_value_per_label(raw_labels=raw_labels)
+        self._update_value_per_label(labels=labels, raw_labels=raw_labels)
 
-    def _update_value_per_label(self, raw_labels: GroupedList) -> None:
-        """Updates value_per_label and label_per_value dicts."""
+    def _update_value_per_label(self, labels: list, raw_labels: GroupedList) -> None:
+        """Updates value_per_label and label_per_value dicts.
 
-        # narrow for type checker: setter always assigns _labels before calling us
-        labels = self._labels or []
+        - value_per_label maps labels to values to keep in the dataset;
+        - label_per_value maps all values to their label for grouping during transform.
+
+        Parameters
+        ----------
+        labels : list
+            Labels to associate to values, in the same order as self.values leaders.
+        raw_labels : GroupedList
+            Original labels before ordinal encoding, used to keep track of the right value when encoding is active.
+        """
+
+        raw_leaders = list(raw_labels)
 
         self.value_per_label = {}
         self.label_per_value = {}
-        for value, label, raw_label in zip(self.values, labels, raw_labels):
+
+        # Iterate self.values (authoritative source of leaders) by position so
+        # every leader gets a label_per_value entry — even when labels happens
+        # to be shorter because raw_labels (a GroupedList) deduplicated
+        # collision-prone entries (see format_quantiles + min_decimals_to_differentiate).
+        # Without this invariant, transform_quantitative_feature raises
+        # ``KeyError: inf`` on the trailing leader.
+        for i, value in enumerate(self.values):
+            if i < len(labels):
+                label = labels[i]
+                raw_label = raw_leaders[i] if i < len(raw_leaders) else labels[i]
+            else:
+                label = labels[-1] if labels else value
+                raw_label = raw_leaders[-1] if raw_leaders else label
+
+            # mapping for grouping during transform — all values in the same group get the same label
             for grouped_value in self.values.get(value):
                 self.label_per_value[grouped_value] = label
 
+            # mapping for transform output — only the kept value gets mapped to the label, even when multiple values
+            # share the same label due to deduplication or ordinal encoding
             value_to_keep = value
             if self.ordinal_encoding:
                 value_to_keep = raw_label

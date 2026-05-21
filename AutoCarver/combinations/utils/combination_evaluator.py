@@ -2,15 +2,17 @@
 the best combination of modalities for a feature."""
 
 import json
+import math
 from abc import ABC, abstractmethod
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
 
 import pandas as pd
 from tqdm import tqdm
 
 from AutoCarver.combinations.utils.combinations import (
+    combination_formatter,
     consecutive_combinations,
-    format_combinations,
     nan_combinations,
     order_apply_combination,
     xagg_apply_combination,
@@ -160,12 +162,14 @@ class CombinationEvaluator(ABC):
         self._feature: BaseFeature | None = None
         self.samples: AggregatedSamples = AggregatedSamples()
         self._statistics_cache = None
-        self._init_target_rate(target_rate)
+        self.target_rate: TargetRate = self._init_target_rate(target_rate)
 
     @abstractmethod
-    def _init_target_rate(self, target_rate: TargetRate) -> None:
+    def _init_target_rate(self, target_rate: TargetRate | None) -> TargetRate:
         """Initializes target rate."""
-        self.target_rate = target_rate
+        if target_rate is None:
+            raise NotImplementedError("Subclasses must implement _init_target_rate to provide a default target rate")
+        return target_rate
 
     @property
     def feature(self) -> BaseFeature:
@@ -181,55 +185,72 @@ class CombinationEvaluator(ABC):
     def __repr__(self) -> str:
         return f"{self.__name__}(target_rate={self.target_rate.__name__})"
 
-    def _group_xagg_by_combinations(self, combinations: list[list]) -> list[dict]:
-        """groups xagg by combinations of indices"""
+    def _group_xagg_by_combinations(self, combinations: Iterable[list]) -> Iterator[dict]:
+        """Streams ``{xagg, combination, index_to_groupby}`` for each combination.
 
-        # values to groupby indices with
-        indices_to_groupby = format_combinations(combinations)
-
-        # grouping tab by its indices
-        return [
-            {
+        Yields one entry at a time so the caller can fuse this with scoring
+        without ever materialising the full 92k-entry list (the dominant
+        source of peak RAM in the continuous case).
+        """
+        for combination in tqdm(combinations, desc="Grouping modalities   ", disable=not self.verbose):
+            index_to_groupby = combination_formatter(combination)
+            yield {
                 "xagg": self._grouper(self.samples.train, index_to_groupby),
                 "combination": combination,
                 "index_to_groupby": index_to_groupby,
             }
-            for combination, index_to_groupby in zip(
-                combinations,
-                tqdm(indices_to_groupby, desc="Grouping modalities   ", disable=not self.verbose),
-            )
-        ]
 
-    def _compute_associations(self, grouped_xaggs: list[dict]) -> list[dict]:
-        """computes associations for each grouped xagg"""
+    def _compute_associations(self, grouped_xaggs: Iterable[dict]) -> Iterator[dict]:
+        """Streams light association dicts ``{combination, index_to_groupby, <metric>}``.
 
-        # number of observations (only used for crosstabs)
+        The heavy ``xagg`` is consumed for scoring and then **dropped** — only
+        the lightweight identifying fields and the association metric are
+        carried downstream so peak memory does not grow with the number of
+        combinations. Output is in arrival order; the caller is expected to
+        sort by the configured metric.
+        """
         n_obs = self.samples.train.xagg.apply(sum).sum()
+        for grouped_xagg in tqdm(grouped_xaggs, desc="Computing associations", disable=not self.verbose):
+            measure = self._association_measure(grouped_xagg["xagg"], n_obs=n_obs)
+            yield {
+                "combination": grouped_xagg["combination"],
+                "index_to_groupby": grouped_xagg["index_to_groupby"],
+                **measure,
+            }
 
-        # computing associations for each crosstab
-        associations = [
-            {**grouped_xagg, **self._association_measure(grouped_xagg["xagg"], n_obs=n_obs)}
-            for grouped_xagg in tqdm(grouped_xaggs, desc="Computing associations", disable=not self.verbose)
-        ]
+    def _get_best_association(self, combinations: Iterable[list[str]]) -> dict | None:
+        """Streams grouping → scoring → viability in one pass.
 
-        # sorting associations according to specified metric
-        return pd.DataFrame(associations).sort_values(self.sort_by, ascending=False).to_dict(orient="records")
-
-    def _get_best_association(self, combinations: list[list[str]]) -> dict | None:
-        """Computes associations of the tab for each combination
+        - ``combinations`` is consumed lazily (generator-friendly).
+        - Grouping and scoring are fused: each combination is grouped, scored,
+          and the heavy xagg is dropped before moving to the next one.
+        - The lightweight associations are collected (each ~ a few hundred
+          bytes) and sorted by ``self.sort_by``; the viability walk then
+          lazily rebuilds the xagg only for combinations it actually tests
+          (see :meth:`_test_viability_train`).
 
         Returns
         -------
-        tuple[dict[str, Any], GroupedList]
-            best viable association and associated modality order
+        dict | None
+            Best viable association (with grouped xagg rebuilt on demand),
+            or ``None`` if no combination satisfied the viability checks.
         """
-        # grouping tab by its indices
-        grouped_xaggs = self._group_xagg_by_combinations(combinations)
+        # fused stream: combinations -> grouped -> scored (light, no xagg)
+        association_stream = self._compute_associations(self._group_xagg_by_combinations(combinations))
 
-        # computing associations for each tabs
-        associations = self._compute_associations(grouped_xaggs)
+        # collect & sort by metric (NaN / None last, matching prior pandas behaviour)
+        associations = list(association_stream)
+        sort_key = self.sort_by
 
-        # testing viability of combination
+        def _key(assoc: dict) -> float:
+            value = assoc.get(sort_key)
+            if value is None or (isinstance(value, float) and math.isnan(value)):
+                return float("-inf")
+            return float(value)
+
+        associations.sort(key=_key, reverse=True)
+
+        # testing viability of combination (lazy-rebuilds xagg per candidate)
         best_combination = self._get_viable_combination(associations)
 
         # applying best combination to feature labels and xtab
@@ -338,10 +359,21 @@ class CombinationEvaluator(ABC):
         return self._get_best_combination_with_nan(best_combination)
 
     def _test_viability_train(self, combination: dict) -> dict:
-        """testing the viability of the combination on xagg_train"""
+        """Testing the viability of the combination on xagg_train.
+
+        When the combination comes from the streaming pipeline the heavy
+        grouped xagg was dropped after scoring, so we rebuild it lazily here
+        — once, and only for combinations actually selected for viability
+        checks (typically the top handful). The rebuilt xagg is cached on the
+        combination dict so subsequent dev/apply steps reuse it.
+        """
+        xagg = combination.get("xagg")
+        if xagg is None:
+            xagg = self._grouper(self.samples.train, combination["index_to_groupby"])
+            combination["xagg"] = xagg
 
         # computing target rate and frequency per value
-        train_rates = self.target_rate.compute(combination["xagg"])
+        train_rates = self.target_rate.compute(xagg)
 
         # viability on train sample:
         result = test_viability(train_rates, self.min_freq, self.target_rate.__name__)

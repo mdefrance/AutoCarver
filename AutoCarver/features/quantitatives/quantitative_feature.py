@@ -183,11 +183,24 @@ def min_decimals_to_differentiate(sorted_numbers: list[float], min_decimals: int
     if smallest_diff == 0:
         return min_decimals
 
-    # Number of decimal places needed
+    # Theoretical lower bound from the value gap.
     decimal_places = -int(np.floor(np.log10(smallest_diff)))
+    decimals = max(decimal_places, min_decimals) + 1
 
-    # minimum of 0
-    return max(decimal_places, min_decimals) + 1
+    # Banker's rounding in ``f"{x:.Ne}"`` can still collapse adjacent values to
+    # the same string (e.g. -118.04 and -118.05 both round to "-1.180e+02" at
+    # 3 decimals). When that happens, ``GroupedList(format_quantiles(...))``
+    # silently dedupes labels, leaving ``len(labels) < len(self.values)`` and
+    # the trailing ``np.inf`` leader without an entry in ``label_per_value``
+    # — which surfaces downstream as ``KeyError: inf`` in
+    # ``transform_quantitative_feature``. Bump decimals until every formatted
+    # string is distinct.
+    while len({f"{n:.{decimals}e}" for n in sorted_numbers}) < len(sorted_numbers):
+        decimals += 1
+        if decimals > 17:  # double precision exhausted
+            break
+
+    return decimals
 
 
 def get_quantitative_features(features: list[BaseFeature]) -> list[QuantitativeFeature]:

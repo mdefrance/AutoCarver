@@ -28,9 +28,11 @@ pip install autocarver
 
 Binary classification on the Titanic dataset:
 
+<!-- quick-start:start -->
 ```python
 import pandas as pd
 from sklearn.model_selection import train_test_split
+
 from AutoCarver import BinaryCarver, Features
 
 # 1. Load data
@@ -60,6 +62,7 @@ print(carver.summary)
 carver.save("titanic_carver.json")
 # carver = BinaryCarver.load("titanic_carver.json")
 ```
+<!-- quick-start:end -->
 
 For multiclass classification use `MulticlassCarver`; for regression use `ContinuousCarver` — the API is identical. To pre-select features by target association and inter-feature redundancy, pipe the carved output through `ClassificationSelector` or `RegressionSelector`.
 
