@@ -14,15 +14,19 @@ from AutoCarver.combinations.utils.combination_evaluator import (
     CombinationEvaluator,
 )
 from AutoCarver.combinations.utils.combinations import combination_formatter
+from AutoCarver.combinations.utils.target_rate import TargetRate
 
 
-class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
+class BinaryCombinationEvaluator(CombinationEvaluator[pd.DataFrame], ABC):
     """Binary combination evaluator class."""
 
     is_y_binary = True
     _target_rate_classes: list[type[BinaryTargetRate]] = [TargetMean, OddsRatio, Woe]
+    # narrow inherited attribute: binary evaluators always carry a BinaryTargetRate
+    # (enforced by _init_target_rate).
+    target_rate: BinaryTargetRate
 
-    def _init_target_rate(self, target_rate: BinaryTargetRate | None) -> BinaryTargetRate:
+    def _init_target_rate(self, target_rate: TargetRate[pd.DataFrame] | None) -> BinaryTargetRate:
         """Initializes target rate."""
         if target_rate is None:
             return TargetMean()
@@ -31,8 +35,11 @@ class BinaryCombinationEvaluator(CombinationEvaluator, ABC):
         return target_rate
 
     def _association_measure(
-        self, xagg: AggregatedSample, n_obs: int | None = None, tol: float = 1e-10
-    ) -> dict[str, float]:
+        self,
+        xagg: AggregatedSample | pd.Series | pd.DataFrame,
+        n_obs: int | None = None,
+        tol: float = 1e-10,
+    ) -> dict[str, float | None]:
         """Computes measures of association between feature and target by crosstab.
 
         Used for the raw (one-shot) distribution. The hot per-combination loop

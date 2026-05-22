@@ -65,7 +65,7 @@ class BinaryCarver(BaseCarver):
             config=config,
         )
 
-    def _prepare_data(self, samples: Samples) -> Samples:
+    def _prepare_samples(self, samples: Samples) -> Samples:
         """Validates format and content of X and y."""
         if samples.train.y is None:
             raise ValueError(f"[{self.__name__}] y must be provided")
@@ -73,9 +73,9 @@ class BinaryCarver(BaseCarver):
         if not ((0 in y_values) and (1 in y_values)) or len(y_values) != 2:
             raise ValueError(f"[{self.__name__}] y must be a binary Series of 0 and 1 (int or float, not object)")
 
-        return super()._prepare_data(samples)
+        return super()._prepare_samples(samples)
 
-    def _aggregator(self, X: pd.DataFrame, y: pd.Series) -> dict[str, pd.DataFrame | None]:
+    def _aggregator(self, X: pd.DataFrame, y: pd.Series) -> dict[str, pd.Series | pd.DataFrame | None]:
         """Computes crosstabs for specified features and ensures that the crosstab is ordered
         according to the known labels"""
         # checking for empty datasets (dev)

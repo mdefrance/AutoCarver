@@ -40,7 +40,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
         """
         super().__init__(categoricals, min_freq=min_freq, config=config)
 
-    def _prepare_data(self, sample: Sample) -> Sample:
+    def _prepare_sample(self, sample: Sample) -> Sample:
         """Validates format and content of X and y.
 
         Parameters
@@ -58,7 +58,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
             A formatted copy of X
         """
         # checking for binary target
-        sample = super()._prepare_data(sample)
+        sample = super()._prepare_sample(sample)
 
         # fitting features
         self.features.fit(**sample)
@@ -69,9 +69,9 @@ class CategoricalDiscretizer(BaseDiscretizer):
         return sample
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: pd.DataFrame, y: pd.Series) -> Self:  # pylint: disable=W0222
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> Self:
         # copying dataframe and checking data before bucketization
-        sample = self._prepare_data(Sample(X, y))
+        sample = self._prepare_sample(Sample(X, y))
 
         self._log_if_verbose()  # verbose if requested
 

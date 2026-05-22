@@ -6,6 +6,7 @@ import math
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
+from typing import Generic
 
 import pandas as pd
 from tqdm import tqdm
@@ -17,31 +18,46 @@ from AutoCarver.combinations.utils.combinations import (
     order_apply_combination,
     xagg_apply_combination,
 )
-from AutoCarver.combinations.utils.target_rate import TargetRate
+from AutoCarver.combinations.utils.target_rate import TargetRate, XAgg
 from AutoCarver.combinations.utils.testing import Keys, is_viable, test_viability
 from AutoCarver.features import BaseFeature, GroupedList
 
 
-@dataclass
 class AggregatedSample:
-    """Sample class to store aggregated samples
+    """Sample class to store aggregated samples.
 
-    Attributes
-    ----------
-    xagg : pd.DataFrame
-        Aggregated sample
-    raw : pd.DataFrame
-        Raw aggregated sample
+    The public ``xagg`` is typed as mandatory ``pd.Series | pd.DataFrame``. The
+    constructor accepts ``None`` so that placeholders (default factories, optional
+    dev samples) are expressible, but reading ``.xagg`` on an unset sample raises.
+    Use :attr:`has_xagg` to check presence without triggering.
     """
 
-    xagg: pd.Series | pd.DataFrame
-    _raw: pd.Series | pd.DataFrame | None = None
-
-    def __post_init__(self):
-        """Post initialization"""
+    def __init__(
+        self,
+        xagg: pd.Series | pd.DataFrame | None = None,
+        _raw: pd.Series | pd.DataFrame | None = None,
+    ) -> None:
+        self._xagg: pd.Series | pd.DataFrame | None = xagg
+        self._raw: pd.Series | pd.DataFrame | None = _raw
         # setting xtab_dev to xtab if not provided
-        if self._raw is None and self.xagg is not None:
-            self._raw = self.xagg.copy()
+        if self._raw is None and self._xagg is not None:
+            self._raw = self._xagg.copy()
+
+    @property
+    def xagg(self) -> pd.Series | pd.DataFrame:
+        """Returns the aggregated sample, or raises if not set."""
+        if self._xagg is None:
+            raise RuntimeError("[AggregatedSample] xagg is not set")
+        return self._xagg
+
+    @xagg.setter
+    def xagg(self, value: pd.Series | pd.DataFrame) -> None:
+        self._xagg = value
+
+    @property
+    def has_xagg(self) -> bool:
+        """Whether xagg is set."""
+        return self._xagg is not None
 
     @property
     def raw(self) -> pd.Series | pd.DataFrame | None:
@@ -88,8 +104,8 @@ class AggregatedSample:
 class AggregatedSamples:
     """stores train and dev samples"""
 
-    train: AggregatedSample = field(default_factory=lambda: AggregatedSample(None))
-    dev: AggregatedSample = field(default_factory=lambda: AggregatedSample(None))
+    train: AggregatedSample = field(default_factory=AggregatedSample)
+    dev: AggregatedSample = field(default_factory=AggregatedSample)
 
     def set(self, train: pd.Series | pd.DataFrame | None, dev: pd.Series | pd.DataFrame | None = None) -> None:
         """Sets the train and dev samples"""
@@ -130,7 +146,7 @@ class AggregatedSamples:
         self.dev.raw = xagg_apply_combination(self.dev.raw, feature)
 
 
-class CombinationEvaluator(ABC):
+class CombinationEvaluator(ABC, Generic[XAgg]):
     """CombinationEvaluator class to evaluate
     the best combination of modalities for a feature."""
 
@@ -144,7 +160,7 @@ class CombinationEvaluator(ABC):
         self,
         *,
         verbose: bool = False,
-        target_rate: TargetRate | None = None,
+        target_rate: TargetRate[XAgg] | None = None,
     ) -> None:
         """
         Parameters
@@ -162,10 +178,10 @@ class CombinationEvaluator(ABC):
         self._feature: BaseFeature | None = None
         self.samples: AggregatedSamples = AggregatedSamples()
         self._statistics_cache = None
-        self.target_rate: TargetRate = self._init_target_rate(target_rate)
+        self.target_rate: TargetRate[XAgg] = self._init_target_rate(target_rate)
 
     @abstractmethod
-    def _init_target_rate(self, target_rate: TargetRate | None) -> TargetRate:
+    def _init_target_rate(self, target_rate: TargetRate[XAgg] | None) -> TargetRate[XAgg]:
         """Initializes target rate."""
         if target_rate is None:
             raise NotImplementedError("Subclasses must implement _init_target_rate to provide a default target rate")
@@ -209,7 +225,7 @@ class CombinationEvaluator(ABC):
         combinations. Output is in arrival order; the caller is expected to
         sort by the configured metric.
         """
-        n_obs = self.samples.train.xagg.apply(sum).sum()
+        n_obs: int = self.samples.train.xagg.apply(sum).sum()  # type: ignore
         for grouped_xagg in tqdm(grouped_xaggs, desc="Computing associations", disable=not self.verbose):
             measure = self._association_measure(grouped_xagg["xagg"], n_obs=n_obs)
             yield {
@@ -218,7 +234,7 @@ class CombinationEvaluator(ABC):
                 **measure,
             }
 
-    def _get_best_association(self, combinations: Iterable[list[str]]) -> dict | None:
+    def _get_best_association(self, combinations: Iterable[list[list[str]]]) -> dict | None:
         """Streams grouping → scoring → viability in one pass.
 
         - ``combinations`` is consumed lazily (generator-friendly).
@@ -275,8 +291,13 @@ class CombinationEvaluator(ABC):
             # applying best_combination to raw xagg and xagg_dev
             self.samples.apply_combination(self.feature)
 
-            # udpating statistics
-            self.feature.statistics = self.target_rate.compute(self.samples.train.raw)
+            # udpating statistics — `apply_combination` always populates
+            # `samples.train.raw`; narrow Optional so the overloaded
+            # compute() returns DataFrame (not DataFrame | None).
+            raw = self.samples.train.raw
+            if raw is None:
+                raise RuntimeError(f"[{self.__name__}] samples.train.raw is not populated after apply_combination")
+            self.feature.statistics = self.target_rate.compute(raw)
 
     def _get_best_combination_non_nan(self) -> dict | None:
         """Computes associations of the tab for each combination of non-nans
@@ -384,7 +405,7 @@ class CombinationEvaluator(ABC):
         """testing the viability of the combination on xagg_dev"""
 
         # case 0: not viable on train or no test sample -> not testing for robustness
-        if not test_results[Keys.VIABLE.value] or self.samples.dev.xagg is None:
+        if not test_results[Keys.VIABLE.value] or not self.samples.dev.has_xagg:
             return {**test_results, "dev": {Keys.VIABLE.value: None}}
 
         # case 1: test sample provided and viable on train -> testing robustness
@@ -440,14 +461,22 @@ class CombinationEvaluator(ABC):
         return viable_combination
 
     @abstractmethod
-    def _grouper(self, xagg: AggregatedSample, groupby: dict[str, str]) -> pd.Series | pd.DataFrame:
+    def _grouper(self, xagg: AggregatedSample, groupby: dict[str, str]) -> XAgg:
         """Helper to group XAGG's values by groupby (carver specific)"""
 
     @abstractmethod
     def _association_measure(
-        self, xagg: AggregatedSample, n_obs: int | None = None, tol: float = 1e-10
-    ) -> dict[str, float]:
-        """Helper to measure association between X and y (carver specific)"""
+        self,
+        xagg: AggregatedSample | pd.Series | pd.DataFrame,
+        n_obs: int | None = None,
+        tol: float = 1e-10,
+    ) -> dict[str, float | None]:
+        """Helper to measure association between X and y (carver specific).
+
+        Return value type is widened to ``float | None`` so the continuous
+        Kruskal–Wallis path (which returns ``None`` when scipy raises) can
+        share the base signature with the binary chi² path.
+        """
 
     def _historize_remaining_combinations(self, associations: list[dict], n_combination: int) -> None:
         """historizes the remaining combinations that have not been tested"""

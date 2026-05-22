@@ -139,7 +139,7 @@ def test_init(features: Features, true_false: bool) -> None:
     assert not disc.config.verbose
     assert not disc.config.ordinal_encoding
     assert disc.config.n_jobs == 1
-    assert disc.min_freq is None
+    assert not disc.has_min_freq
 
     # test setting copy
     disc = BaseDiscretizer(features, config=DiscretizerConfig(copy=true_false))
@@ -259,7 +259,7 @@ def test_prepare_y(features: Features) -> None:
         disc._prepare_y(y)
 
 
-def test_prepare_data(features: Features) -> None:
+def test_prepare_sample(features: Features) -> None:
     """test prepare_data method"""
 
     disc = BaseDiscretizer(features)
@@ -272,14 +272,14 @@ def test_prepare_data(features: Features) -> None:
         }
     )
     y = pd.Series([0, 0, 0, 1])
-    assert disc._prepare_data(Sample(None)).X is None
-    disc._prepare_data(Sample(X))
-    disc._prepare_data(Sample(X, y))
+    assert not disc._prepare_sample(Sample(None)).has_X
+    disc._prepare_sample(Sample(X))
+    disc._prepare_sample(Sample(X, y))
 
     # mismatched X and y
     y = pd.Series([0, 0, 0, 1, 1])
     with raises(ValueError):
-        disc._prepare_data(Sample(X, y))
+        disc._prepare_sample(Sample(X, y))
 
 
 def test_fit(features: Features) -> None:

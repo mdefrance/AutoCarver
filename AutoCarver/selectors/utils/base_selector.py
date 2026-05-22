@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from math import ceil
 from random import seed, shuffle
-from typing import overload
+from typing import TypeVar
 
 import numpy as np
 import pandas as pd
@@ -360,7 +360,7 @@ class BaseSelector(ABC):
         nicer_association = prettier_measures(formatted_measures)
 
         # displaying html of colored DataFrame
-        display_html(nicer_association, raw=True)  # pylint: disable=E0606
+        display_html(nicer_association, raw=True)
 
 
 def get_typed_features(features: Features) -> dict[str, list[BaseFeature]]:
@@ -408,46 +408,25 @@ def make_random_chunks(elements: list, max_chunk_sizes: int, random_state: int |
     return chunks
 
 
-@overload
-def get_qualitative_metrics(metrics: list[BaseMeasure]) -> list[BaseMeasure]: ...
-@overload
-def get_qualitative_metrics(metrics: list[BaseFilter]) -> list[BaseFilter]: ...
+_MetricT = TypeVar("_MetricT", BaseMeasure, BaseFilter)
 
 
-def get_qualitative_metrics(metrics: list[BaseMeasure] | list[BaseFilter]) -> list[BaseMeasure | BaseFilter]:
+def get_qualitative_metrics(metrics: list[_MetricT]) -> list[_MetricT]:
     """returns filtered list of measures/filters that apply on qualitative features"""
     return [metric for metric in metrics if metric.is_x_qualitative]
 
 
-@overload
-def get_quantitative_metrics(metrics: list[BaseMeasure]) -> list[BaseMeasure]: ...
-@overload
-def get_quantitative_metrics(metrics: list[BaseFilter]) -> list[BaseFilter]: ...
-
-
-def get_quantitative_metrics(metrics: list[BaseMeasure] | list[BaseFilter]) -> list[BaseMeasure | BaseFilter]:
+def get_quantitative_metrics(metrics: list[_MetricT]) -> list[_MetricT]:
     """returns filtered list of measures/filters that apply on quantitative features"""
     return [metric for metric in metrics if metric.is_x_quantitative]
 
 
-@overload
-def get_default_metrics(metrics: list[BaseMeasure]) -> list[BaseMeasure]: ...
-@overload
-def get_default_metrics(metrics: list[BaseFilter]) -> list[BaseFilter]: ...
-
-
-def get_default_metrics(metrics: list[BaseMeasure] | list[BaseFilter]) -> list[BaseMeasure | BaseFilter]:
+def get_default_metrics(metrics: list[_MetricT]) -> list[_MetricT]:
     """returns filtered list of measures/filters that are default"""
     return [metric for metric in metrics if metric.is_default]
 
 
-@overload
-def remove_default_metrics(metrics: list[BaseMeasure]) -> list[BaseMeasure]: ...
-@overload
-def remove_default_metrics(metrics: list[BaseFilter]) -> list[BaseFilter]: ...
-
-
-def remove_default_metrics(metrics: list[BaseMeasure] | list[BaseFilter]) -> list[BaseMeasure | BaseFilter]:
+def remove_default_metrics(metrics: list[_MetricT]) -> list[_MetricT]:
     """returns filtered list of measures/filters that are non-default"""
     return [metric for metric in metrics if not metric.is_default]
 

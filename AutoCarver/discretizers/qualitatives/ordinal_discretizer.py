@@ -41,7 +41,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
         """
         super().__init__(ordinals, min_freq=min_freq, config=config)
 
-    def _prepare_data(self, sample: Sample) -> Sample:  # pylint: disable=W0222
+    def _prepare_sample(self, sample: Sample) -> Sample:
         """Validates format and content of X and y.
 
         Parameters
@@ -59,7 +59,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
             A formatted copy of X
         """
         # checking for binary target and copying X
-        sample = super()._prepare_data(sample)
+        sample = super()._prepare_sample(sample)
 
         # fitting features
         self.features.fit(**sample)
@@ -70,17 +70,12 @@ class OrdinalDiscretizer(BaseDiscretizer):
         return sample
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: pd.DataFrame, y: pd.Series) -> Self:  # pylint: disable=W0222
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> Self:
         # checking values orders
-        sample = self._prepare_data(Sample(X, y))
+        sample = self._prepare_sample(Sample(X, y))
 
         # verbose if requested
         self._log_if_verbose()
-
-        # narrow types: fit's signature requires non-None y and min_freq is set
-        # by the constructor for ordinal discretization.
-        if self.min_freq is None:
-            raise ValueError(f"[{self.__name__}] min_freq must be set before fitting")
 
         # grouping rare modalities for each feature
         common_modalities: dict[str, GroupedList | list] = {

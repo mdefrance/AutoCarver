@@ -20,7 +20,7 @@ jobs:
       - run: |
           uv run ruff check --output-format=github .
           uv run ruff format --check .
-          uv run pylint AutoCarver --fail-under=9
+          uv run ty check AutoCarver
 
   pytest_push:
     name: Tests (push)

@@ -37,17 +37,39 @@ class DiscretizerConfig:
     n_jobs: int = 1
 
 
-@dataclass
 class Sample:
-    """sample class to store X and y"""
+    """Sample class to store X and y.
 
-    X: pd.DataFrame
-    y: pd.Series | None = None
+    The public ``X`` is typed as mandatory :class:`pd.DataFrame`. The constructor
+    accepts ``None`` so that placeholders (default factories, optional dev samples)
+    are expressible, but reading ``.X`` on an unset Sample raises. Use
+    :attr:`has_X` to check presence without triggering.
+    """
+
+    def __init__(self, X: pd.DataFrame | None = None, y: pd.Series | None = None) -> None:
+        self._X: pd.DataFrame | None = X
+        self.y: pd.Series | None = y
+
+    @property
+    def X(self) -> pd.DataFrame:
+        """Returns the stored DataFrame, or raises if not set."""
+        if self._X is None:
+            raise RuntimeError("[Sample] X is not set")
+        return self._X
+
+    @X.setter
+    def X(self, value: pd.DataFrame) -> None:
+        self._X = value
+
+    @property
+    def has_X(self) -> bool:
+        """Whether X is set."""
+        return self._X is not None
 
     def __getitem__(self, key):
         """Returns the DataFrame or the Series"""
         if key == "X":
-            return self.X
+            return self._X
         if key == "y":
             return self.y
 
@@ -133,11 +155,33 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             self.features = Features.from_list(features)
 
         self.config: DiscretizerConfig = config if config is not None else DiscretizerConfig()
-        self.min_freq = min_freq
+        self._min_freq = min_freq
 
         # set by subclasses; serialized for round-trip but not used by BaseDiscretizer itself
         # lifecycle flag — set by fit(), or by load() after restoring state
         self.is_fitted: bool = False
+
+    @property
+    def min_freq(self) -> float:
+        """Public ``min_freq`` typed as mandatory ``float``.
+
+        ``__init__`` accepts ``None`` so plain :class:`BaseDiscretizer` can be
+        constructed without it (e.g. for the base-transform path that only
+        re-applies an already-fitted bucketization). Reading raises when unset.
+        Use :attr:`has_min_freq` to check presence without triggering.
+        """
+        if self._min_freq is None:
+            raise RuntimeError(f"[{self.__name__}] min_freq is not set")
+        return self._min_freq
+
+    @min_freq.setter
+    def min_freq(self, value: float | None) -> None:
+        self._min_freq = value
+
+    @property
+    def has_min_freq(self) -> bool:
+        """Whether ``min_freq`` is set."""
+        return self._min_freq is not None
 
     def __repr__(self, N_CHAR_MAX: int = 700) -> str:
         """Returns the string representation of the Discretizer"""
@@ -176,7 +220,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         return X
 
-    def _prepare_y(self, y: pd.Series) -> None:
+    def _prepare_y(self, y: pd.Series | None) -> None:
         """Validates input y"""
 
         if not isinstance(y, pd.Series):  # checking for y's type
@@ -229,7 +273,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         return x_copy
 
-    def _prepare_data(self, sample: Sample) -> Sample:
+    def _prepare_sample(self, sample: Sample) -> Sample:
         """Validates format and content of X and y.
 
         Parameters
@@ -248,7 +292,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         """
 
         # checking DataFrame of features
-        if sample.X is not None:
+        if sample.has_X:
             sample.X = self._prepare_X(sample.X)
 
             # checking target Series
@@ -261,9 +305,9 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         return sample
 
-    # name-mangled alias used by transform() so subclass overrides of _prepare_data
+    # name-mangled alias used by transform() so subclass overrides of _prepare_sample
     # (which add fit-time-only checks) don't break the transform path
-    __prepare_data = _prepare_data
+    __prepare_sample = _prepare_sample
 
     def fit(self, X: pd.DataFrame | None = None, y: pd.Series | None = None) -> Self:
         """Learns simple discretization of values of X according to values of y.
@@ -319,7 +363,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             raise RuntimeError(f"[{self.__name__}] Call fit method first.")
 
         # copying dataframes and casting for multiclass
-        sample = self.__prepare_data(Sample(X, y))
+        sample = self.__prepare_sample(Sample(X, y))
 
         # filling up nans for features that have some
         sample.fillna(self.features)
@@ -386,7 +430,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         """
         content = {
             "features": self.features.to_json(light_mode),
-            "min_freq": self.min_freq,
+            "min_freq": self._min_freq,
             "is_fitted": self.is_fitted,
             "config": {
                 "dropna": self.config.dropna,

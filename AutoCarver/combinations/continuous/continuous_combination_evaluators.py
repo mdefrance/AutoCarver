@@ -2,6 +2,7 @@
 
 from abc import ABC
 from collections.abc import Iterable, Iterator
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -11,10 +12,11 @@ from tqdm import tqdm
 from AutoCarver.combinations.continuous.continuous_target_rates import ContinuousTargetRate, TargetMean, TargetMedian
 from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample, CombinationEvaluator
 from AutoCarver.combinations.utils.combinations import combination_formatter
+from AutoCarver.combinations.utils.target_rate import TargetRate
 from AutoCarver.combinations.utils.testing import Keys, is_viable, test_viability
 
 
-class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
+class ContinuousCombinationEvaluator(CombinationEvaluator[pd.Series], ABC):
     """Continuous combination evaluator class."""
 
     is_y_continuous = True
@@ -23,7 +25,7 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
     # carvers always carry a ContinuousTargetRate (enforced by _init_target_rate).
     target_rate: ContinuousTargetRate
 
-    def _init_target_rate(self, target_rate: ContinuousTargetRate | None) -> ContinuousTargetRate:
+    def _init_target_rate(self, target_rate: TargetRate[pd.Series] | None) -> ContinuousTargetRate:
         """Initializes target rate."""
         if target_rate is None:
             return TargetMean()
@@ -32,7 +34,10 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
         return target_rate
 
     def _association_measure(
-        self, xagg: AggregatedSample, n_obs: int | None = None, tol: float = 1e-10
+        self,
+        xagg: AggregatedSample | pd.Series | pd.DataFrame,
+        n_obs: int | None = None,
+        tol: float = 1e-10,
     ) -> dict[str, float | None]:
         """Computes measures of association between feature and quantitative target.
 
@@ -138,8 +143,8 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
           :meth:`_association_measure`).
         """
         raw_xagg = self.samples.train.xagg
-        # Pre-rank y once for the whole feature
-        R_per_mod, n_per_mod, N, tie_corr = _modality_rank_stats(raw_xagg)
+        # Pre-rank y once for the whole feature.
+        R_per_mod, n_per_mod, N, tie_corr = _modality_rank_stats(raw_xagg)  # type: ignore
 
         # Map modality label -> position in R_per_mod / n_per_mod
         mod_to_pos: dict = {m: i for i, m in enumerate(raw_xagg.index)}
@@ -148,14 +153,17 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
         # Cache per-modality (n, sum_y) for the viability fast path.
         # Resets each time _compute_associations runs so the nan-pass refreshes
         # the cache after _apply_best_combination changes samples.train.xagg.
-        sum_y_per_mod = _modality_sum_y(raw_xagg)
-        self._train_modality_stats = {
+        sum_y_per_mod = _modality_sum_y(raw_xagg)  # type: ignore
+        # Why: heterogeneous-value dict; annotate `Any` so downstream readers (line 203-204
+        # and _get_dev_modality_stats) can narrow to the per-key concrete type without ty
+        # unioning across all value types.
+        self._train_modality_stats: dict[str, Any] = {
             "n_per_mod": n_per_mod.astype(float),
             "sum_y_per_mod": sum_y_per_mod,
             "mod_to_pos": mod_to_pos,
             "n_mod": n_mod,
         }
-        self._dev_modality_stats: dict | None = None  # lazy; aligned to train's mod_to_pos
+        self._dev_modality_stats: dict[str, Any] | None = None  # lazy; aligned to train's mod_to_pos
         self._dev_modality_stats_id: int | None = None
 
         batch: list[dict] = []
@@ -193,9 +201,9 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
         computation (the unit tests rely on this; production flows reassign
         dev only via ``samples.set`` at the start of ``get_best_combination``).
         """
-        dev_xagg = self.samples.dev.xagg
-        if dev_xagg is None:
+        if not self.samples.dev.has_xagg:
             return None
+        dev_xagg = self.samples.dev.xagg
         if self._dev_modality_stats is not None and self._dev_modality_stats_id == id(dev_xagg):
             return self._dev_modality_stats
         train_stats = self._train_modality_stats
@@ -261,7 +269,7 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
         """Fast-path viability on dev; falls back to legacy when the active
         target rate's ``compute_from_stats`` returns ``None``.
         """
-        if not test_results[Keys.VIABLE.value] or self.samples.dev.xagg is None:
+        if not test_results[Keys.VIABLE.value] or not self.samples.dev.has_xagg:
             return {**test_results, "dev": {Keys.VIABLE.value: None}}
 
         dev_stats = self._get_dev_modality_stats()

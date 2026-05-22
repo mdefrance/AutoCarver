@@ -35,8 +35,8 @@ def sample_data():
 def test_initialization_default():
     """Test default initialization of Samples."""
     samples = Samples()
-    assert samples.train.X is None
-    assert samples.dev.X is None
+    assert not samples.train.has_X
+    assert not samples.dev.has_X
     assert samples.train.y is None
     assert samples.dev.y is None
 
@@ -114,8 +114,8 @@ def test_pretty_print(features, evaluator):
     assert carver.pretty_print == (carver.config.verbose and _has_idisplay)
 
 
-def test_prepare_data_raises_value_error(features, evaluator, samples):
-    """Test _prepare_data method raises ValueError when y is None."""
+def test_prepare_samples_raises_value_error(features, evaluator, samples):
+    """Test _prepare_samples method raises ValueError when y is None."""
     carver = BaseCarver(
         features=features,
         min_freq=0.1,
@@ -125,11 +125,11 @@ def test_prepare_data_raises_value_error(features, evaluator, samples):
     )
     samples.train.y = None
     with raises(ValueError):
-        carver._prepare_data(samples)
+        carver._prepare_samples(samples)
 
 
-def test_prepare_data(features, evaluator, samples):
-    """Test _prepare_data method of BaseCarver."""
+def test_prepare_samples(features, evaluator, samples):
+    """Test _prepare_samples method of BaseCarver."""
     carver = BaseCarver(
         features=features,
         min_freq=0.1,
@@ -137,7 +137,7 @@ def test_prepare_data(features, evaluator, samples):
         combination_evaluator=evaluator,
         config=DiscretizerConfig(verbose=True),
     )
-    prepared_samples = carver._prepare_data(samples)
+    prepared_samples = carver._prepare_samples(samples)
     print(prepared_samples.train.X)
     print(samples.train.X)
 
@@ -167,13 +167,13 @@ def test_discretize_train(features, samples):
     discretizer_min_freq = 0.1
     samples.dev = Sample(X=None)
     samples = discretize(features, samples, discretizer_min_freq, DiscretizerConfig())
-    assert samples.train.X is not None
-    assert samples.dev.X is None
+    assert samples.train.has_X
+    assert not samples.dev.has_X
 
 
 def test_discretize_dev(features, samples):
     """Test discretize function for dev samples."""
     discretizer_min_freq = 0.1
     samples = discretize(features, samples, discretizer_min_freq, DiscretizerConfig())
-    assert samples.train.X is not None
-    assert samples.dev.X is not None
+    assert samples.train.has_X
+    assert samples.dev.has_X

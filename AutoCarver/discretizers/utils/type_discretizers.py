@@ -32,11 +32,11 @@ class StringDiscretizer(BaseDiscretizer):
         super().__init__(features=features_obj, config=config)
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> Self:  # pylint: disable=W0222
+    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> Self:
         self._log_if_verbose()  # verbose if requested
 
         # checking for binary target and copying X
-        sample = self._prepare_data(Sample(X, y))
+        sample = self._prepare_sample(Sample(X, y))
 
         # transforming all features
         all_orders = apply_async_function(fit_feature, self.features, self.config.n_jobs, sample.X)
@@ -111,11 +111,11 @@ class TimedeltaDiscretizer(BaseDiscretizer):
         super().__init__(features=features_obj, config=config)
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> Self:  # pylint: disable=W0222
+    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> Self:
         self._log_if_verbose()  # verbose if requested
 
         # checking for binary target and copying X
-        sample = self._prepare_data(Sample(X, y))
+        sample = self._prepare_sample(Sample(X, y))
 
         # transforming all features
         all_orders = apply_async_function(fit_feature, self.features, self.config.n_jobs, sample.X)

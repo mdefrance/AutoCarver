@@ -51,12 +51,10 @@ class ContinuousDiscretizer(BaseDiscretizer):
     @property
     def q(self) -> int:
         """Number of quantiles to discretize the continuous features."""
-        if self.min_freq is None:
-            raise ValueError(f"[{self.__name__}] min_freq must be set to compute q")
         return round(1 / self.min_freq)
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> Self:  # pylint: disable=W0222
+    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> Self:
         self._log_if_verbose()  # verbose if requested
 
         # fitting each feature

@@ -63,7 +63,7 @@ class ContinuousCarver(BaseCarver):
             config=config,
         )
 
-    def _prepare_data(self, samples: Samples) -> Samples:
+    def _prepare_samples(self, samples: Samples) -> Samples:
         """Validates format and content of X and y."""
         if samples.train.y is None:
             raise ValueError(f"[{self.__name__}] y must be provided")
@@ -74,9 +74,9 @@ class ContinuousCarver(BaseCarver):
         if len(y_values) <= 2:
             raise ValueError(f"[{self.__name__}] provided y is binary, consider using BinaryCarver instead.")
 
-        return super()._prepare_data(samples)
+        return super()._prepare_samples(samples)
 
-    def _aggregator(self, X: pd.DataFrame, y: pd.Series) -> dict[str, pd.DataFrame | None]:
+    def _aggregator(self, X: pd.DataFrame, y: pd.Series) -> dict[str, pd.Series | pd.DataFrame | None]:
         """Computes y values for modalities of specified features and ensures the ordering
         according to the known labels"""
         # checking for empty datasets
@@ -98,4 +98,4 @@ def get_target_values_by_modality(X: pd.DataFrame, y: pd.Series, feature: BaseFe
 
     # reindexing to ensure the right order (labels may be None pre-fit; pandas
     # treats None as "no reindex" so the original ordering is kept)
-    return yval.reindex(feature.labels, fill_value=[])  # type: ignore[arg-type]
+    return yval.reindex(feature.labels, fill_value=[])  # type: ignore

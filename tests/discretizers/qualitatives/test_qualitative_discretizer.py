@@ -20,12 +20,12 @@ def test_qualitative_discretizer_init():
     assert discretizer.min_freq == 0.05
 
 
-def test_qualitative_discretizer_prepare_data():
+def test_qualitative_discretizer_prepare_sample():
     """Test _prepare_X method of QualitativeDiscretizer"""
     features = [CategoricalFeature("feature1"), OrdinalFeature("feature2", ["A", "B", "C"])]
     df = pd.DataFrame({"feature1": [1, 2, 3], "feature2": ["A", "B", "C"], "feature3": [1.0, 2.1, 3.2]})
     discretizer = QualitativeDiscretizer(qualitatives=features, min_freq=0.05)
-    sample = discretizer._prepare_data(Sample(df))
+    sample = discretizer._prepare_sample(Sample(df))
     prepared_df = sample.X
     assert prepared_df["feature1"].dtype == object
     assert prepared_df["feature1"].tolist() == ["1", "2", "3"]

@@ -46,13 +46,11 @@ class QuantitativeDiscretizer(BaseDiscretizer):
     @property
     def half_min_freq(self) -> float:
         """Half of the minimal frequency of a quantile."""
-        if self.min_freq is None:
-            raise ValueError(f"[{self.__name__}] min_freq must be set")
         return self.min_freq / 2
 
-    def _prepare_data(self, sample: Sample) -> Sample:  # pylint: disable=W0222
+    def _prepare_sample(self, sample: Sample) -> Sample:
         """Validates format and content of X and y."""
-        sample = super()._prepare_data(sample)
+        sample = super()._prepare_sample(sample)
 
         # checking for quantitative columns
         check_quantitative_dtypes(sample.X, self.features.versions, self.__name__)
@@ -60,12 +58,12 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         return sample
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: pd.DataFrame, y: pd.Series) -> Self:  # pylint: disable=W0222
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> Self:
         # verbose if requested
         self._log_if_verbose("------\n---")
 
         # checking data before bucketization
-        sample = self._prepare_data(Sample(X, y))
+        sample = self._prepare_sample(Sample(X, y))
 
         # fitting continuous features if any
         sample.X = self._fit_continuous(**sample)

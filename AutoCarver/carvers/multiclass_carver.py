@@ -53,7 +53,7 @@ class MulticlassCarver(BinaryCarver):
         if self.config.copy:
             print("WARNING: can't set copy=True for MulticlassCarver (no inplace DataFrame.assign).")
 
-    def _prepare_data(self, samples: Samples) -> Samples:
+    def _prepare_samples(self, samples: Samples) -> Samples:
         """Validates format and content of X and y."""
         # converting target to str (y is required by Carver.fit)
         if samples.train.y is None:
@@ -93,11 +93,11 @@ class MulticlassCarver(BinaryCarver):
         samples = Samples(train=Sample(X, y), dev=Sample(X_dev, y_dev))
 
         # preparing datasets and checking for wrong values
-        samples = self._prepare_data(samples)
+        samples = self._prepare_samples(samples)
 
-        # getting distinct y classes (_prepare_data raises if y is missing)
-        assert samples.train.y is not None
-        y_classes = sorted(samples.train.y.unique().tolist())[1:]  # removing one of the classes
+        # getting distinct y classes (_prepare_samples raises if y is missing)
+        # removing one of the classes
+        y_classes = sorted(samples.train.y.unique().tolist())[1:]  # type: ignore
 
         # adding versionned features
         self.features.add_feature_versions(y_classes)
@@ -125,7 +125,12 @@ class MulticlassCarver(BinaryCarver):
                 config=replace(self.config, copy=True),
             )
 
-            binary_carver.fit_transform(samples.train.X, train_y_class, X_dev=samples.dev.X, y_dev=dev_y_class)
+            binary_carver.fit_transform(
+                samples.train.X,
+                train_y_class,
+                X_dev=samples.dev.X if samples.dev.has_X else None,
+                y_dev=dev_y_class,
+            )
 
             # filtering out dropped features whilst keeping other version tags
             kept_features = binary_carver.features.versions
