@@ -1,6 +1,7 @@
 """set of target rates for binary classification"""
 
 from abc import ABC
+from typing import overload
 
 import numpy as np
 import pandas as pd
@@ -8,12 +9,16 @@ import pandas as pd
 from AutoCarver.combinations.utils import TargetRate
 
 
-class ContinuousTargetRate(TargetRate, ABC):
+class ContinuousTargetRate(TargetRate[pd.Series], ABC):
     """Continuous target rate class."""
 
     __name__ = "continuous_target_rate"
 
-    def compute(self, xagg: pd.Series) -> pd.DataFrame:
+    @overload
+    def compute(self, xagg: pd.Series | pd.DataFrame) -> pd.DataFrame: ...
+    @overload
+    def compute(self, xagg: None) -> None: ...
+    def compute(self, xagg: pd.Series | pd.DataFrame | None) -> pd.DataFrame | None:
         """Computes the target rate.
 
         Parameters
@@ -31,8 +36,12 @@ class ContinuousTargetRate(TargetRate, ABC):
             # frequency per modality
             frequency = xagg.apply(len) / xagg.apply(len).sum()
 
-            # computing target rate
-            return pd.DataFrame({self.__name__: self._compute(xagg), "frequency": frequency})
+            # computing target rate. `_compute` expects pd.Series (Generic
+            # XAgg=Series); compute()'s wide signature is for LSP matching,
+            # callers always pass a Series-of-y-lists here.
+            return pd.DataFrame(
+                {self.__name__: self._compute(xagg), "frequency": frequency}  # type: ignore
+            )
         return None
 
     def compute_from_stats(self, *, stats: dict, index_to_groupby: dict) -> pd.DataFrame | None:
@@ -59,7 +68,10 @@ class TargetMean(ContinuousTargetRate):
 
     def _compute(self, xagg: pd.Series | pd.DataFrame) -> pd.Series:
         """Computes the mean target rate."""
-        return xagg.apply(np.mean)
+        # pandas stubs widen `Series.apply(func)` to `Series | DataFrame`
+        # because they can't tell np.mean returns a scalar; the runtime
+        # result is always a Series.
+        return xagg.apply(np.mean)  # type: ignore
 
     def compute_from_stats(self, *, stats: dict, index_to_groupby: dict) -> pd.DataFrame | None:
         """Closed-form ``(target_mean, frequency)`` per group from per-modality stats.
@@ -130,7 +142,8 @@ class TargetMedian(ContinuousTargetRate):
 
     def _compute(self, xagg: pd.Series | pd.DataFrame) -> pd.Series:
         """Computes the mean target rate."""
-        return xagg.apply(np.median)
+        # see TargetMean._compute: same pandas-stub widening on apply().
+        return xagg.apply(np.median)  # type: ignore
 
 
 # class TargetVariance(ContinuousTargetRate):

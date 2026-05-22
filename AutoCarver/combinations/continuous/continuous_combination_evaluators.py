@@ -11,10 +11,11 @@ from tqdm import tqdm
 from AutoCarver.combinations.continuous.continuous_target_rates import ContinuousTargetRate, TargetMean, TargetMedian
 from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample, CombinationEvaluator
 from AutoCarver.combinations.utils.combinations import combination_formatter
+from AutoCarver.combinations.utils.target_rate import TargetRate
 from AutoCarver.combinations.utils.testing import Keys, is_viable, test_viability
 
 
-class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
+class ContinuousCombinationEvaluator(CombinationEvaluator[pd.Series], ABC):
     """Continuous combination evaluator class."""
 
     is_y_continuous = True
@@ -23,7 +24,7 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
     # carvers always carry a ContinuousTargetRate (enforced by _init_target_rate).
     target_rate: ContinuousTargetRate
 
-    def _init_target_rate(self, target_rate: ContinuousTargetRate | None) -> ContinuousTargetRate:
+    def _init_target_rate(self, target_rate: TargetRate[pd.Series] | None) -> ContinuousTargetRate:
         """Initializes target rate."""
         if target_rate is None:
             return TargetMean()

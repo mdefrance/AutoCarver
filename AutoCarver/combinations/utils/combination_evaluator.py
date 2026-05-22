@@ -6,6 +6,7 @@ import math
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
+from typing import Generic
 
 import pandas as pd
 from tqdm import tqdm
@@ -17,7 +18,7 @@ from AutoCarver.combinations.utils.combinations import (
     order_apply_combination,
     xagg_apply_combination,
 )
-from AutoCarver.combinations.utils.target_rate import TargetRate
+from AutoCarver.combinations.utils.target_rate import TargetRate, XAgg
 from AutoCarver.combinations.utils.testing import Keys, is_viable, test_viability
 from AutoCarver.features import BaseFeature, GroupedList
 
@@ -145,7 +146,7 @@ class AggregatedSamples:
         self.dev.raw = xagg_apply_combination(self.dev.raw, feature)
 
 
-class CombinationEvaluator(ABC):
+class CombinationEvaluator(ABC, Generic[XAgg]):
     """CombinationEvaluator class to evaluate
     the best combination of modalities for a feature."""
 
@@ -159,7 +160,7 @@ class CombinationEvaluator(ABC):
         self,
         *,
         verbose: bool = False,
-        target_rate: TargetRate | None = None,
+        target_rate: TargetRate[XAgg] | None = None,
     ) -> None:
         """
         Parameters
@@ -177,10 +178,10 @@ class CombinationEvaluator(ABC):
         self._feature: BaseFeature | None = None
         self.samples: AggregatedSamples = AggregatedSamples()
         self._statistics_cache = None
-        self.target_rate: TargetRate = self._init_target_rate(target_rate)
+        self.target_rate: TargetRate[XAgg] = self._init_target_rate(target_rate)
 
     @abstractmethod
-    def _init_target_rate(self, target_rate: TargetRate | None) -> TargetRate:
+    def _init_target_rate(self, target_rate: TargetRate[XAgg] | None) -> TargetRate[XAgg]:
         """Initializes target rate."""
         if target_rate is None:
             raise NotImplementedError("Subclasses must implement _init_target_rate to provide a default target rate")
@@ -290,8 +291,13 @@ class CombinationEvaluator(ABC):
             # applying best_combination to raw xagg and xagg_dev
             self.samples.apply_combination(self.feature)
 
-            # udpating statistics
-            self.feature.statistics = self.target_rate.compute(self.samples.train.raw)
+            # udpating statistics — `apply_combination` always populates
+            # `samples.train.raw`; narrow Optional so the overloaded
+            # compute() returns DataFrame (not DataFrame | None).
+            raw = self.samples.train.raw
+            if raw is None:
+                raise RuntimeError(f"[{self.__name__}] samples.train.raw is not populated after apply_combination")
+            self.feature.statistics = self.target_rate.compute(raw)
 
     def _get_best_combination_non_nan(self) -> dict | None:
         """Computes associations of the tab for each combination of non-nans
@@ -455,14 +461,19 @@ class CombinationEvaluator(ABC):
         return viable_combination
 
     @abstractmethod
-    def _grouper(self, xagg: AggregatedSample, groupby: dict[str, str]) -> pd.Series | pd.DataFrame:
+    def _grouper(self, xagg: AggregatedSample, groupby: dict[str, str]) -> XAgg:
         """Helper to group XAGG's values by groupby (carver specific)"""
 
     @abstractmethod
     def _association_measure(
         self, xagg: AggregatedSample, n_obs: int | None = None, tol: float = 1e-10
-    ) -> dict[str, float]:
-        """Helper to measure association between X and y (carver specific)"""
+    ) -> dict[str, float | None]:
+        """Helper to measure association between X and y (carver specific).
+
+        Return value type is widened to ``float | None`` so the continuous
+        Kruskal–Wallis path (which returns ``None`` when scipy raises) can
+        share the base signature with the binary chi² path.
+        """
 
     def _historize_remaining_combinations(self, associations: list[dict], n_combination: int) -> None:
         """historizes the remaining combinations that have not been tested"""

@@ -1,6 +1,7 @@
 """set of target rates for binary classification"""
 
 from abc import ABC
+from typing import overload
 
 import numpy as np
 import pandas as pd
@@ -8,12 +9,16 @@ import pandas as pd
 from AutoCarver.combinations.utils import TargetRate
 
 
-class BinaryTargetRate(TargetRate, ABC):
+class BinaryTargetRate(TargetRate[pd.DataFrame], ABC):
     """Binary target rate class."""
 
     __name__ = "binary_target_rate"
 
-    def compute(self, xagg: pd.DataFrame) -> pd.DataFrame:
+    @overload
+    def compute(self, xagg: pd.Series | pd.DataFrame) -> pd.DataFrame: ...
+    @overload
+    def compute(self, xagg: None) -> None: ...
+    def compute(self, xagg: pd.Series | pd.DataFrame | None) -> pd.DataFrame | None:
         """Computes the target rate.
 
         Parameters
@@ -31,8 +36,12 @@ class BinaryTargetRate(TargetRate, ABC):
             # frequency per modality
             frequency = xagg.sum(axis=1) / xagg.sum().sum()
 
-            # computing target rate
-            return pd.DataFrame({self.__name__: self._compute(xagg), "frequency": frequency})
+            # computing target rate. `_compute` expects pd.DataFrame (Generic
+            # XAgg=DataFrame); compute()'s wide signature is for LSP matching,
+            # callers always pass a crosstab here.
+            return pd.DataFrame(
+                {self.__name__: self._compute(xagg), "frequency": frequency}  # type: ignore
+            )
         return None
 
 
