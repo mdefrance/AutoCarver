@@ -1,6 +1,6 @@
 [project]
 name = "AutoCarver"
-version = "7.2.1"
+version = "7.2.2"
 description = "Automatic Discretization of Features with Optimal Target Association"
 authors = [{ name = "Mario DEFRANCE", email = "defrancemario@gmail.com" }]
 requires-python = ">=3.11, <3.15"
@@ -65,7 +65,6 @@ dev = [
     "ipykernel>=6.27.1,<7",
     "xgboost>=3.2,<4",
     "ipywidgets>=8.1.5,<9",
-    "pylint>=3.0.3,<4",
     "pytest-cov>=4.1.0,<5",
     "pytest>=7.4.3,<8",
     "icecream>=2.1.3,<3",
@@ -76,6 +75,7 @@ dev = [
     "toml>=0.10.2,<0.11",
     "ruff>=0.15.12",
     "pytest-xdist>=3.8.0",
+    "ty>=0.0.38",
 ]
 
 [project.urls]
@@ -99,12 +99,6 @@ exclude = ["*.ipynb"]
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "B", "C4", "PTH", "UP", "C90", "FURB", "ERA"]
 ignore = ["PTH123", "B905", "ERA001"]
-
-[tool.pylint.basic]
-good-names = ["X", "y"]
-
-[tool.pylint.messages_control]
-disable = ["C0301", "C0103", "E0110", "W0621", "import-error"]
 
 [tool.pytest.ini_options]
 addopts = "-n auto --tb=short -q"
