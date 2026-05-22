@@ -48,7 +48,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         """Half of the minimal frequency of a quantile."""
         return self.min_freq / 2
 
-    def _prepare_sample(self, sample: Sample) -> Sample:  # pylint: disable=W0222
+    def _prepare_sample(self, sample: Sample) -> Sample:
         """Validates format and content of X and y."""
         sample = super()._prepare_sample(sample)
 
@@ -58,7 +58,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         return sample
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: pd.DataFrame, y: pd.Series) -> Self:  # pylint: disable=W0222
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> Self:
         # verbose if requested
         self._log_if_verbose("------\n---")
 

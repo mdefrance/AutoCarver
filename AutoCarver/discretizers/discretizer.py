@@ -39,7 +39,7 @@ class Discretizer(BaseDiscretizer):
         super().__init__(features, min_freq=min_freq, config=config)
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: pd.DataFrame, y: pd.Series) -> Self:  # pylint: disable=W0222
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> Self:
         # Checking for binary target and copying X
         sample = self._prepare_sample(Sample(X, y))
 

@@ -32,7 +32,7 @@ class StringDiscretizer(BaseDiscretizer):
         super().__init__(features=features_obj, config=config)
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> Self:  # pylint: disable=W0222
+    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> Self:
         self._log_if_verbose()  # verbose if requested
 
         # checking for binary target and copying X
@@ -111,7 +111,7 @@ class TimedeltaDiscretizer(BaseDiscretizer):
         super().__init__(features=features_obj, config=config)
 
     @extend_docstring(BaseDiscretizer.fit)
-    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> Self:  # pylint: disable=W0222
+    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> Self:
         self._log_if_verbose()  # verbose if requested
 
         # checking for binary target and copying X

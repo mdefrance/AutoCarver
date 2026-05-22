@@ -196,7 +196,7 @@ class BaseCarver(BaseDiscretizer, ABC):
 
         return samples
 
-    def fit(  # type: ignore  # pylint: disable=W0222
+    def fit(  # type: ignore
         self,
         X: pd.DataFrame,
         y: pd.Series,
