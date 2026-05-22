@@ -44,14 +44,14 @@ def prettier_xagg(
 
         # adding custom caption/title
         if caption is not None:
-            nicer_xagg = nicer_xagg.set_caption(caption)
+            nicer_xagg = nicer_xagg.set_caption(caption)  # type: ignore
 
         # hiding index for dev
         if hide_index:
-            nicer_xagg.hide(axis="index")
+            nicer_xagg.hide(axis="index")  # type: ignore
 
         # converting to html
-        nicer_xagg = nicer_xagg._repr_html_()  # pylint: disable=W0212
+        nicer_xagg = nicer_xagg._repr_html_()  # type: ignore
 
     return nicer_xagg
 

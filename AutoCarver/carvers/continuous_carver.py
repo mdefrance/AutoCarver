@@ -98,4 +98,4 @@ def get_target_values_by_modality(X: pd.DataFrame, y: pd.Series, feature: BaseFe
 
     # reindexing to ensure the right order (labels may be None pre-fit; pandas
     # treats None as "no reindex" so the original ordering is kept)
-    return yval.reindex(feature.labels, fill_value=[])  # type: ignore[arg-type]
+    return yval.reindex(feature.labels, fill_value=[])  # type: ignore

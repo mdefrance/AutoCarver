@@ -225,7 +225,7 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
         combinations. Output is in arrival order; the caller is expected to
         sort by the configured metric.
         """
-        n_obs = self.samples.train.xagg.apply(sum).sum()
+        n_obs: int = self.samples.train.xagg.apply(sum).sum()  # type: ignore
         for grouped_xagg in tqdm(grouped_xaggs, desc="Computing associations", disable=not self.verbose):
             measure = self._association_measure(grouped_xagg["xagg"], n_obs=n_obs)
             yield {
@@ -234,7 +234,7 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
                 **measure,
             }
 
-    def _get_best_association(self, combinations: Iterable[list[str]]) -> dict | None:
+    def _get_best_association(self, combinations: Iterable[list[list[str]]]) -> dict | None:
         """Streams grouping → scoring → viability in one pass.
 
         - ``combinations`` is consumed lazily (generator-friendly).
@@ -466,7 +466,10 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
 
     @abstractmethod
     def _association_measure(
-        self, xagg: AggregatedSample, n_obs: int | None = None, tol: float = 1e-10
+        self,
+        xagg: AggregatedSample | pd.Series | pd.DataFrame,
+        n_obs: int | None = None,
+        tol: float = 1e-10,
     ) -> dict[str, float | None]:
         """Helper to measure association between X and y (carver specific).
 
