@@ -112,7 +112,7 @@ class ChainedDiscretizer(BaseDiscretizer):
             # updating feature
             feature.update(order, replace=True)
 
-    def _prepare_data(self, sample: Sample) -> Sample:
+    def _prepare_sample(self, sample: Sample) -> Sample:
         """Validates format and content of X and y. Converts non-string columns into strings.
 
         Parameters
@@ -133,7 +133,7 @@ class ChainedDiscretizer(BaseDiscretizer):
         sample.X = sample.X.copy()
 
         # checking for binary target and previous fit
-        sample = super()._prepare_data(sample)
+        sample = super()._prepare_sample(sample)
 
         # checking feature values' frequencies
         check_frequencies(self.features, sample.X, self.min_freq, self.__name__)
@@ -155,7 +155,7 @@ class ChainedDiscretizer(BaseDiscretizer):
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> Self:  # pylint: disable=W0222
         # preprocessing data
-        sample = self._prepare_data(Sample(X, y))
+        sample = self._prepare_sample(Sample(X, y))
         self._log_if_verbose()  # verbose if requested
 
         # iterating over each feature

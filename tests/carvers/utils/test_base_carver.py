@@ -114,8 +114,8 @@ def test_pretty_print(features, evaluator):
     assert carver.pretty_print == (carver.config.verbose and _has_idisplay)
 
 
-def test_prepare_data_raises_value_error(features, evaluator, samples):
-    """Test _prepare_data method raises ValueError when y is None."""
+def test_prepare_samples_raises_value_error(features, evaluator, samples):
+    """Test _prepare_samples method raises ValueError when y is None."""
     carver = BaseCarver(
         features=features,
         min_freq=0.1,
@@ -125,11 +125,11 @@ def test_prepare_data_raises_value_error(features, evaluator, samples):
     )
     samples.train.y = None
     with raises(ValueError):
-        carver._prepare_data(samples)
+        carver._prepare_samples(samples)
 
 
-def test_prepare_data(features, evaluator, samples):
-    """Test _prepare_data method of BaseCarver."""
+def test_prepare_samples(features, evaluator, samples):
+    """Test _prepare_samples method of BaseCarver."""
     carver = BaseCarver(
         features=features,
         min_freq=0.1,
@@ -137,7 +137,7 @@ def test_prepare_data(features, evaluator, samples):
         combination_evaluator=evaluator,
         config=DiscretizerConfig(verbose=True),
     )
-    prepared_samples = carver._prepare_data(samples)
+    prepared_samples = carver._prepare_samples(samples)
     print(prepared_samples.train.X)
     print(samples.train.X)
 

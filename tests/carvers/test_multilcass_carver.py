@@ -111,8 +111,8 @@ def test_multiclass_carver_initialization():
         )
 
 
-def test_multiclass_carver_prepare_data(evaluator: CombinationEvaluator):
-    """Test MulticlassCarver _prepare_data method."""
+def test_multiclass_carver_prepare_samples(evaluator: CombinationEvaluator):
+    """Test MulticlassCarver _prepare_samples method."""
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
@@ -126,13 +126,13 @@ def test_multiclass_carver_prepare_data(evaluator: CombinationEvaluator):
     samples = Samples(train=Sample(X, y))
 
     with raises(ValueError):
-        carver._prepare_data(samples)
+        carver._prepare_samples(samples)
 
     # with right target
     y = pd.Series([0, 1, 2])
     samples = Samples(train=Sample(X, y))
 
-    prepared_samples = carver._prepare_data(samples)
+    prepared_samples = carver._prepare_samples(samples)
     assert isinstance(prepared_samples, Samples)
 
     # with wrong dev target
@@ -141,7 +141,7 @@ def test_multiclass_carver_prepare_data(evaluator: CombinationEvaluator):
     samples = Samples(train=Sample(X, y), dev=Sample(X, y_dev))
 
     with raises(ValueError):
-        carver._prepare_data(samples)
+        carver._prepare_samples(samples)
 
 
 def test_multiclass_carver_fit_transform_with_small_data_not_ordinal(

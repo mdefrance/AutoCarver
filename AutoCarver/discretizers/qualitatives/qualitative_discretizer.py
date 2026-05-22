@@ -46,7 +46,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
         """
         super().__init__(qualitatives, min_freq=min_freq, config=config)
 
-    def _prepare_data(self, sample: Sample) -> Sample:
+    def _prepare_sample(self, sample: Sample) -> Sample:
         """Validates format and content of X and y. Converts non-string columns into strings."""
         sample.X = super()._prepare_X(sample.X)
 
@@ -64,7 +64,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
         self._log_if_verbose("------\n---")
 
         # checking data before bucketization
-        sample = self._prepare_data(Sample(X, y))
+        sample = self._prepare_sample(Sample(X, y))
 
         # Base discretization (useful if already discretized)
         sample.X = self._base_transform(**sample)

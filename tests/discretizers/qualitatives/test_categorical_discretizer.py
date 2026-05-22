@@ -79,8 +79,8 @@ def test_categoricaldiscretizer_initialization():
     assert categorical_discretizer.min_freq == 0.02
 
 
-def test_prepare_data():
-    """Tests CategoricalDiscretizer _prepare_data method"""
+def test_prepare_sample():
+    """Tests CategoricalDiscretizer _prepare_sample method"""
 
     feature1 = CategoricalFeature("feature1")
     feature2 = CategoricalFeature("feature2")
@@ -89,7 +89,7 @@ def test_prepare_data():
 
     X = pd.DataFrame({"feature1": ["a", "b", "a", "b", np.nan], "feature2": ["x", "y", "x", "y", np.nan]})
 
-    sample = categorical_discretizer._prepare_data(Sample(X, None))
+    sample = categorical_discretizer._prepare_sample(Sample(X, None))
     X_prepared = sample.X
 
     assert X_prepared["feature1"].tolist() == ["a", "b", "a", "b", np.nan]

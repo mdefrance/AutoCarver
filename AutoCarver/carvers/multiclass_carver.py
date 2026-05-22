@@ -53,7 +53,7 @@ class MulticlassCarver(BinaryCarver):
         if self.config.copy:
             print("WARNING: can't set copy=True for MulticlassCarver (no inplace DataFrame.assign).")
 
-    def _prepare_data(self, samples: Samples) -> Samples:
+    def _prepare_samples(self, samples: Samples) -> Samples:
         """Validates format and content of X and y."""
         # converting target to str (y is required by Carver.fit)
         if samples.train.y is None:
@@ -93,9 +93,9 @@ class MulticlassCarver(BinaryCarver):
         samples = Samples(train=Sample(X, y), dev=Sample(X_dev, y_dev))
 
         # preparing datasets and checking for wrong values
-        samples = self._prepare_data(samples)
+        samples = self._prepare_samples(samples)
 
-        # getting distinct y classes (_prepare_data raises if y is missing)
+        # getting distinct y classes (_prepare_samples raises if y is missing)
         # removing one of the classes
         y_classes = sorted(samples.train.y.unique().tolist())[1:]  # type: ignore
 

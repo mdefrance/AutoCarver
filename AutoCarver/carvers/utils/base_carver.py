@@ -175,17 +175,14 @@ class BaseCarver(BaseDiscretizer, ABC):
         content["combination_evaluator"] = self.combination_evaluator.to_json()
         return content
 
-    def _prepare_data(self, samples: Samples) -> Samples:  # type: ignore
-        # Why: deliberate signature divergence vs `BaseDiscretizer._prepare_data(sample: Sample)`.
-        # Carvers operate on the train+dev `Samples` pair (the parent only knows about a single
-        # `Sample`); this method is internal and never invoked through a `BaseDiscretizer` handle.
+    def _prepare_samples(self, samples: Samples) -> Samples:
         """Validates format and content of X and y."""
         if samples.train.y is None:
             raise ValueError(f"[{self.__name__}] y must be provided, got {samples.train.y}")
 
         # Checking for binary target and copying X
-        samples.train = super()._prepare_data(samples.train)
-        samples.dev = super()._prepare_data(samples.dev)
+        samples.train = super()._prepare_sample(samples.train)
+        samples.dev = super()._prepare_sample(samples.dev)
 
         # discretizing features at half min_freq so the carver has a finer
         # granularity to combine when forming optimal groups
@@ -200,9 +197,6 @@ class BaseCarver(BaseDiscretizer, ABC):
         return samples
 
     def fit(  # type: ignore  # pylint: disable=W0222
-        # Why: deliberate signature divergence vs `BaseDiscretizer.fit(X=None, y=None)`. Carvers
-        # require X/y and additionally accept `X_dev`/`y_dev` for robustness checks; the W0222
-        # pylint disable already records that intent for the linter, this mirror records it for ty.
         self,
         X: pd.DataFrame,
         y: pd.Series,
@@ -241,7 +235,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         samples = Samples(Sample(X, y), Sample(X_dev, y_dev))
 
         # preparing datasets and checking for wrong values
-        samples = self._prepare_data(samples)
+        samples = self._prepare_samples(samples)
 
         # logging if requested
         super()._log_if_verbose("---------\n------")

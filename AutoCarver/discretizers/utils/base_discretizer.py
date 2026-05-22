@@ -273,7 +273,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         return x_copy
 
-    def _prepare_data(self, sample: Sample) -> Sample:
+    def _prepare_sample(self, sample: Sample) -> Sample:
         """Validates format and content of X and y.
 
         Parameters
@@ -305,9 +305,9 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         return sample
 
-    # name-mangled alias used by transform() so subclass overrides of _prepare_data
+    # name-mangled alias used by transform() so subclass overrides of _prepare_sample
     # (which add fit-time-only checks) don't break the transform path
-    __prepare_data = _prepare_data
+    __prepare_sample = _prepare_sample
 
     def fit(self, X: pd.DataFrame | None = None, y: pd.Series | None = None) -> Self:
         """Learns simple discretization of values of X according to values of y.
@@ -363,7 +363,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             raise RuntimeError(f"[{self.__name__}] Call fit method first.")
 
         # copying dataframes and casting for multiclass
-        sample = self.__prepare_data(Sample(X, y))
+        sample = self.__prepare_sample(Sample(X, y))
 
         # filling up nans for features that have some
         sample.fillna(self.features)

@@ -122,8 +122,8 @@ def test_continuous_carver_initialization():
         )
 
 
-def test_continuous_carver_prepare_data(evaluator: CombinationEvaluator):
-    """Test ContinuousCarver _prepare_data method."""
+def test_continuous_carver_prepare_samples(evaluator: CombinationEvaluator):
+    """Test ContinuousCarver _prepare_samples method."""
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
@@ -137,20 +137,20 @@ def test_continuous_carver_prepare_data(evaluator: CombinationEvaluator):
     samples = Samples(train=Sample(X, y))
 
     with raises(ValueError):
-        carver._prepare_data(samples)
+        carver._prepare_samples(samples)
 
     # with wrong target
     y = pd.Series([0.2, 1.5, "1"])
     samples = Samples(train=Sample(X, y))
 
     with raises(ValueError):
-        carver._prepare_data(samples)
+        carver._prepare_samples(samples)
 
     # with right target
     y = pd.Series([0.1, 1.2, 0.5])
     samples = Samples(train=Sample(X, y))
 
-    prepared_samples = carver._prepare_data(samples)
+    prepared_samples = carver._prepare_samples(samples)
     assert isinstance(prepared_samples, Samples)
 
 
@@ -207,7 +207,7 @@ def test_carve_feature_with_best_combination(evaluator):
         combination_evaluator=evaluator,
         config=DiscretizerConfig(dropna=True, verbose=False),
     )
-    carver._prepare_data(samples)
+    carver._prepare_samples(samples)
 
     # getting aggregated data
     xaggs = carver._aggregator(**samples.train)
@@ -266,7 +266,7 @@ def test_carve_feature_without_best_combination(evaluator: CombinationEvaluator)
         combination_evaluator=evaluator,
         config=DiscretizerConfig(dropna=True, verbose=False),
     )
-    carver._prepare_data(samples)
+    carver._prepare_samples(samples)
 
     # getting aggregated data
     xaggs = carver._aggregator(**samples.train)

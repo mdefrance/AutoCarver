@@ -48,9 +48,9 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         """Half of the minimal frequency of a quantile."""
         return self.min_freq / 2
 
-    def _prepare_data(self, sample: Sample) -> Sample:  # pylint: disable=W0222
+    def _prepare_sample(self, sample: Sample) -> Sample:  # pylint: disable=W0222
         """Validates format and content of X and y."""
-        sample = super()._prepare_data(sample)
+        sample = super()._prepare_sample(sample)
 
         # checking for quantitative columns
         check_quantitative_dtypes(sample.X, self.features.versions, self.__name__)
@@ -63,7 +63,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         self._log_if_verbose("------\n---")
 
         # checking data before bucketization
-        sample = self._prepare_data(Sample(X, y))
+        sample = self._prepare_sample(Sample(X, y))
 
         # fitting continuous features if any
         sample.X = self._fit_continuous(**sample)

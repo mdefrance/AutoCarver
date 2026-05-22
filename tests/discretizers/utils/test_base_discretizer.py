@@ -259,7 +259,7 @@ def test_prepare_y(features: Features) -> None:
         disc._prepare_y(y)
 
 
-def test_prepare_data(features: Features) -> None:
+def test_prepare_sample(features: Features) -> None:
     """test prepare_data method"""
 
     disc = BaseDiscretizer(features)
@@ -272,14 +272,14 @@ def test_prepare_data(features: Features) -> None:
         }
     )
     y = pd.Series([0, 0, 0, 1])
-    assert not disc._prepare_data(Sample(None)).has_X
-    disc._prepare_data(Sample(X))
-    disc._prepare_data(Sample(X, y))
+    assert not disc._prepare_sample(Sample(None)).has_X
+    disc._prepare_sample(Sample(X))
+    disc._prepare_sample(Sample(X, y))
 
     # mismatched X and y
     y = pd.Series([0, 0, 0, 1, 1])
     with raises(ValueError):
-        disc._prepare_data(Sample(X, y))
+        disc._prepare_sample(Sample(X, y))
 
 
 def test_fit(features: Features) -> None:

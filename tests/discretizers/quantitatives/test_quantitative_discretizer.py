@@ -181,8 +181,8 @@ def test_quantitative_discretizer_initialization():
     assert discretizer.half_min_freq == min_freq / 2
 
 
-def test_quantitative_discretizer_prepare_data():
-    """Tests _prepare_data method of QuantitativeDiscretizer"""
+def test_quantitative_discretizer_prepare_sample():
+    """Tests _prepare_sample method of QuantitativeDiscretizer"""
     quantitatives = [QuantitativeFeature(name="feature1"), QuantitativeFeature(name="feature2")]
     min_freq = 0.05
     discretizer = QuantitativeDiscretizer(quantitatives=quantitatives, min_freq=min_freq)
@@ -191,7 +191,7 @@ def test_quantitative_discretizer_prepare_data():
     df = pd.DataFrame(data)
     y = pd.Series([0, 1, 0, 1, 0])
 
-    sample = discretizer._prepare_data(Sample(df, y))
+    sample = discretizer._prepare_sample(Sample(df, y))
     prepared_df = sample.X
     assert prepared_df["feature1"].dtype != object
     assert prepared_df["feature1"].tolist() == [1, 2, 3, 4, 5]
