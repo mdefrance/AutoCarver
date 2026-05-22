@@ -46,8 +46,6 @@ class QuantitativeDiscretizer(BaseDiscretizer):
     @property
     def half_min_freq(self) -> float:
         """Half of the minimal frequency of a quantile."""
-        if self.min_freq is None:
-            raise ValueError(f"[{self.__name__}] min_freq must be set")
         return self.min_freq / 2
 
     def _prepare_data(self, sample: Sample) -> Sample:  # pylint: disable=W0222

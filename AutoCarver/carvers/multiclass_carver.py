@@ -96,8 +96,8 @@ class MulticlassCarver(BinaryCarver):
         samples = self._prepare_data(samples)
 
         # getting distinct y classes (_prepare_data raises if y is missing)
-        assert samples.train.y is not None
-        y_classes = sorted(samples.train.y.unique().tolist())[1:]  # removing one of the classes
+        # removing one of the classes
+        y_classes = sorted(samples.train.y.unique().tolist())[1:]  # type: ignore
 
         # adding versionned features
         self.features.add_feature_versions(y_classes)

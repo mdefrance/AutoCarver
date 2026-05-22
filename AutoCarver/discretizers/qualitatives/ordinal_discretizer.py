@@ -77,11 +77,6 @@ class OrdinalDiscretizer(BaseDiscretizer):
         # verbose if requested
         self._log_if_verbose()
 
-        # narrow types: fit's signature requires non-None y and min_freq is set
-        # by the constructor for ordinal discretization.
-        if self.min_freq is None:
-            raise ValueError(f"[{self.__name__}] min_freq must be set before fitting")
-
         # grouping rare modalities for each feature
         common_modalities: dict[str, GroupedList | list] = {
             feature.version: find_common_modalities(

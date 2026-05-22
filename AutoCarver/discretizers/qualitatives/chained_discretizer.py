@@ -135,10 +135,6 @@ class ChainedDiscretizer(BaseDiscretizer):
         # checking for binary target and previous fit
         sample = super()._prepare_data(sample)
 
-        # narrow Optional: min_freq is required for chained discretization
-        if self.min_freq is None:
-            raise ValueError(f"[{self.__name__}] min_freq must be set before fitting")
-
         # checking feature values' frequencies
         check_frequencies(self.features, sample.X, self.min_freq, self.__name__)
 

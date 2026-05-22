@@ -139,7 +139,7 @@ def test_init(features: Features, true_false: bool) -> None:
     assert not disc.config.verbose
     assert not disc.config.ordinal_encoding
     assert disc.config.n_jobs == 1
-    assert disc.min_freq is None
+    assert not disc.has_min_freq
 
     # test setting copy
     disc = BaseDiscretizer(features, config=DiscretizerConfig(copy=true_false))

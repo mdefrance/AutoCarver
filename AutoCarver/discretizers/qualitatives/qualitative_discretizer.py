@@ -50,10 +50,6 @@ class QualitativeDiscretizer(BaseDiscretizer):
         """Validates format and content of X and y. Converts non-string columns into strings."""
         sample.X = super()._prepare_X(sample.X)
 
-        # narrow Optional: min_freq is required for qualitative discretization
-        if self.min_freq is None:
-            raise ValueError(f"[{self.__name__}] min_freq must be set before fitting")
-
         # checking feature values' frequencies
         check_frequencies(self.features, sample.X, self.min_freq, self.__name__)
 

@@ -155,11 +155,33 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             self.features = Features.from_list(features)
 
         self.config: DiscretizerConfig = config if config is not None else DiscretizerConfig()
-        self.min_freq = min_freq
+        self._min_freq = min_freq
 
         # set by subclasses; serialized for round-trip but not used by BaseDiscretizer itself
         # lifecycle flag — set by fit(), or by load() after restoring state
         self.is_fitted: bool = False
+
+    @property
+    def min_freq(self) -> float:
+        """Public ``min_freq`` typed as mandatory ``float``.
+
+        ``__init__`` accepts ``None`` so plain :class:`BaseDiscretizer` can be
+        constructed without it (e.g. for the base-transform path that only
+        re-applies an already-fitted bucketization). Reading raises when unset.
+        Use :attr:`has_min_freq` to check presence without triggering.
+        """
+        if self._min_freq is None:
+            raise RuntimeError(f"[{self.__name__}] min_freq is not set")
+        return self._min_freq
+
+    @min_freq.setter
+    def min_freq(self, value: float | None) -> None:
+        self._min_freq = value
+
+    @property
+    def has_min_freq(self) -> bool:
+        """Whether ``min_freq`` is set."""
+        return self._min_freq is not None
 
     def __repr__(self, N_CHAR_MAX: int = 700) -> str:
         """Returns the string representation of the Discretizer"""
@@ -198,7 +220,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         return X
 
-    def _prepare_y(self, y: pd.Series) -> None:
+    def _prepare_y(self, y: pd.Series | None) -> None:
         """Validates input y"""
 
         if not isinstance(y, pd.Series):  # checking for y's type
@@ -408,7 +430,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         """
         content = {
             "features": self.features.to_json(light_mode),
-            "min_freq": self.min_freq,
+            "min_freq": self._min_freq,
             "is_fitted": self.is_fitted,
             "config": {
                 "dropna": self.config.dropna,
