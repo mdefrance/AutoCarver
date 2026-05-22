@@ -35,10 +35,10 @@ def test_init(evaluator: BinaryCombinationEvaluator):
     assert evaluator.is_y_continuous is False
     assert evaluator.sort_by in ["cramerv", "tschuprowt"]
     assert evaluator.verbose is False
-    # feature is a property that raises when unset; check the backing attribute
+    # feature/xagg are properties that raise when unset; check the predicates
     assert evaluator._feature is None
-    assert evaluator.samples.train.xagg is None
-    assert evaluator.samples.dev.xagg is None
+    assert not evaluator.samples.train.has_xagg
+    assert not evaluator.samples.dev.has_xagg
     assert evaluator.samples.train.raw is None
     assert evaluator.samples.dev.raw is None
 
@@ -1210,7 +1210,7 @@ def test_get_best_combination_viable_without_dev(evaluator: BinaryCombinationEva
     expected = pd.DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b to c"])
     assert feature.labels == list(expected.index)
     assert np.allclose(evaluator.samples.train.xagg, expected)
-    assert evaluator.samples.dev.xagg is None
+    assert not evaluator.samples.dev.has_xagg
     assert np.allclose(evaluator.samples.train.raw, expected)
 
 

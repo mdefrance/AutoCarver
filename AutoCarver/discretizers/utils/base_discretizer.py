@@ -37,17 +37,39 @@ class DiscretizerConfig:
     n_jobs: int = 1
 
 
-@dataclass
 class Sample:
-    """sample class to store X and y"""
+    """Sample class to store X and y.
 
-    X: pd.DataFrame
-    y: pd.Series | None = None
+    The public ``X`` is typed as mandatory :class:`pd.DataFrame`. The constructor
+    accepts ``None`` so that placeholders (default factories, optional dev samples)
+    are expressible, but reading ``.X`` on an unset Sample raises. Use
+    :attr:`has_X` to check presence without triggering.
+    """
+
+    def __init__(self, X: pd.DataFrame | None = None, y: pd.Series | None = None) -> None:
+        self._X: pd.DataFrame | None = X
+        self.y: pd.Series | None = y
+
+    @property
+    def X(self) -> pd.DataFrame:
+        """Returns the stored DataFrame, or raises if not set."""
+        if self._X is None:
+            raise RuntimeError("[Sample] X is not set")
+        return self._X
+
+    @X.setter
+    def X(self, value: pd.DataFrame) -> None:
+        self._X = value
+
+    @property
+    def has_X(self) -> bool:
+        """Whether X is set."""
+        return self._X is not None
 
     def __getitem__(self, key):
         """Returns the DataFrame or the Series"""
         if key == "X":
-            return self.X
+            return self._X
         if key == "y":
             return self.y
 
@@ -248,7 +270,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         """
 
         # checking DataFrame of features
-        if sample.X is not None:
+        if sample.has_X:
             sample.X = self._prepare_X(sample.X)
 
             # checking target Series

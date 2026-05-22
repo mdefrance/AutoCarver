@@ -204,8 +204,8 @@ def test_carve_feature_with_best_combination(evaluator):
     carver._prepare_data(samples)
 
     # getting aggregated data
-    xaggs = carver._aggregator(samples.train.X, samples.train.y)
-    xaggs_dev = carver._aggregator(samples.dev.X, samples.dev.y)
+    xaggs = carver._aggregator(**samples.train)
+    xaggs_dev = carver._aggregator(**samples.dev)
 
     # carving a feature
     feature = features[0]
@@ -262,8 +262,8 @@ def test_carve_feature_without_best_combination(evaluator: CombinationEvaluator)
     carver._prepare_data(samples)
 
     # getting aggregated data
-    xaggs = carver._aggregator(samples.train.X, samples.train.y)
-    xaggs_dev = carver._aggregator(samples.dev.X, samples.dev.y)
+    xaggs = carver._aggregator(**samples.train)
+    xaggs_dev = carver._aggregator(**samples.dev)
 
     # carving a feature
     feature = features[0]

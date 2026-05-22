@@ -35,8 +35,8 @@ def sample_data():
 def test_initialization_default():
     """Test default initialization of Samples."""
     samples = Samples()
-    assert samples.train.X is None
-    assert samples.dev.X is None
+    assert not samples.train.has_X
+    assert not samples.dev.has_X
     assert samples.train.y is None
     assert samples.dev.y is None
 
@@ -167,13 +167,13 @@ def test_discretize_train(features, samples):
     discretizer_min_freq = 0.1
     samples.dev = Sample(X=None)
     samples = discretize(features, samples, discretizer_min_freq, DiscretizerConfig())
-    assert samples.train.X is not None
-    assert samples.dev.X is None
+    assert samples.train.has_X
+    assert not samples.dev.has_X
 
 
 def test_discretize_dev(features, samples):
     """Test discretize function for dev samples."""
     discretizer_min_freq = 0.1
     samples = discretize(features, samples, discretizer_min_freq, DiscretizerConfig())
-    assert samples.train.X is not None
-    assert samples.dev.X is not None
+    assert samples.train.has_X
+    assert samples.dev.has_X

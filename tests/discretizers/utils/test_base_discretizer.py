@@ -272,7 +272,7 @@ def test_prepare_data(features: Features) -> None:
         }
     )
     y = pd.Series([0, 0, 0, 1])
-    assert disc._prepare_data(Sample(None)).X is None
+    assert not disc._prepare_data(Sample(None)).has_X
     disc._prepare_data(Sample(X))
     disc._prepare_data(Sample(X, y))
 

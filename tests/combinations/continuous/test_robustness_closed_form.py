@@ -36,7 +36,7 @@ def _legacy_viability_train(evaluator, combination):
 
 def _legacy_viability_dev(evaluator, train_result, combination):
     """Pure legacy path for dev viability — mirrors the base class."""
-    if not train_result[Keys.VIABLE.value] or evaluator.samples.dev.xagg is None:
+    if not train_result[Keys.VIABLE.value] or not evaluator.samples.dev.has_xagg:
         return {**train_result, "dev": {Keys.VIABLE.value: None}}
     train_target_rate = train_result["train_rates"][evaluator.target_rate.__name__]
     grouped_dev = evaluator._grouper(evaluator.samples.dev, combination["index_to_groupby"])

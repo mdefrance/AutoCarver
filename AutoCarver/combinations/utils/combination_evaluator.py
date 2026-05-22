@@ -22,26 +22,41 @@ from AutoCarver.combinations.utils.testing import Keys, is_viable, test_viabilit
 from AutoCarver.features import BaseFeature, GroupedList
 
 
-@dataclass
 class AggregatedSample:
-    """Sample class to store aggregated samples
+    """Sample class to store aggregated samples.
 
-    Attributes
-    ----------
-    xagg : pd.DataFrame
-        Aggregated sample
-    raw : pd.DataFrame
-        Raw aggregated sample
+    The public ``xagg`` is typed as mandatory ``pd.Series | pd.DataFrame``. The
+    constructor accepts ``None`` so that placeholders (default factories, optional
+    dev samples) are expressible, but reading ``.xagg`` on an unset sample raises.
+    Use :attr:`has_xagg` to check presence without triggering.
     """
 
-    xagg: pd.Series | pd.DataFrame
-    _raw: pd.Series | pd.DataFrame | None = None
-
-    def __post_init__(self):
-        """Post initialization"""
+    def __init__(
+        self,
+        xagg: pd.Series | pd.DataFrame | None = None,
+        _raw: pd.Series | pd.DataFrame | None = None,
+    ) -> None:
+        self._xagg: pd.Series | pd.DataFrame | None = xagg
+        self._raw: pd.Series | pd.DataFrame | None = _raw
         # setting xtab_dev to xtab if not provided
-        if self._raw is None and self.xagg is not None:
-            self._raw = self.xagg.copy()
+        if self._raw is None and self._xagg is not None:
+            self._raw = self._xagg.copy()
+
+    @property
+    def xagg(self) -> pd.Series | pd.DataFrame:
+        """Returns the aggregated sample, or raises if not set."""
+        if self._xagg is None:
+            raise RuntimeError("[AggregatedSample] xagg is not set")
+        return self._xagg
+
+    @xagg.setter
+    def xagg(self, value: pd.Series | pd.DataFrame) -> None:
+        self._xagg = value
+
+    @property
+    def has_xagg(self) -> bool:
+        """Whether xagg is set."""
+        return self._xagg is not None
 
     @property
     def raw(self) -> pd.Series | pd.DataFrame | None:
@@ -88,8 +103,8 @@ class AggregatedSample:
 class AggregatedSamples:
     """stores train and dev samples"""
 
-    train: AggregatedSample = field(default_factory=lambda: AggregatedSample(None))
-    dev: AggregatedSample = field(default_factory=lambda: AggregatedSample(None))
+    train: AggregatedSample = field(default_factory=AggregatedSample)
+    dev: AggregatedSample = field(default_factory=AggregatedSample)
 
     def set(self, train: pd.Series | pd.DataFrame | None, dev: pd.Series | pd.DataFrame | None = None) -> None:
         """Sets the train and dev samples"""
@@ -384,7 +399,7 @@ class CombinationEvaluator(ABC):
         """testing the viability of the combination on xagg_dev"""
 
         # case 0: not viable on train or no test sample -> not testing for robustness
-        if not test_results[Keys.VIABLE.value] or self.samples.dev.xagg is None:
+        if not test_results[Keys.VIABLE.value] or not self.samples.dev.has_xagg:
             return {**test_results, "dev": {Keys.VIABLE.value: None}}
 
         # case 1: test sample provided and viable on train -> testing robustness

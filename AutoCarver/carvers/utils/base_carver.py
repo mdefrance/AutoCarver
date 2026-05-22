@@ -41,13 +41,13 @@ class Samples:
         dev (Sample): The development sample, containing features (X) and target (y).
     """
 
-    train: Sample = field(default_factory=lambda: Sample(X=None))
-    dev: Sample = field(default_factory=lambda: Sample(X=None))
+    train: Sample = field(default_factory=Sample)
+    dev: Sample = field(default_factory=Sample)
 
     def fillna(self, features: Features) -> None:
         """fills up nans in X and X_dev"""
         self.train.X = features.fillna(self.train.X)
-        if self.dev.X is not None:
+        if self.dev.has_X:
             self.dev.X = features.fillna(self.dev.X)
 
 
@@ -329,10 +329,11 @@ class BaseCarver(BaseDiscretizer, ABC):
 
         # printing carved distribution, for found, suitable combination
         if best_combination is not None:
+            dev_sample = self.combination_evaluator.samples.dev
             self._print_xagg(
                 feature,
                 xagg=self.combination_evaluator.samples.train.xagg,
-                xagg_dev=self.combination_evaluator.samples.dev.xagg,
+                xagg_dev=dev_sample.xagg if dev_sample.has_xagg else None,
                 message="Carved distribution",
             )
 
@@ -482,7 +483,7 @@ def discretize(
     samples.train.X = discretizer.fit_transform(**samples.train)
 
     # applying discretizer on X_dev if provided
-    if samples.dev.X is not None:
+    if samples.dev.has_X:
         samples.dev.X = discretizer.transform(**samples.dev)
 
     return samples

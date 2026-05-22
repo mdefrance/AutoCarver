@@ -193,9 +193,9 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
         computation (the unit tests rely on this; production flows reassign
         dev only via ``samples.set`` at the start of ``get_best_combination``).
         """
-        dev_xagg = self.samples.dev.xagg
-        if dev_xagg is None:
+        if not self.samples.dev.has_xagg:
             return None
+        dev_xagg = self.samples.dev.xagg
         if self._dev_modality_stats is not None and self._dev_modality_stats_id == id(dev_xagg):
             return self._dev_modality_stats
         train_stats = self._train_modality_stats
@@ -261,7 +261,7 @@ class ContinuousCombinationEvaluator(CombinationEvaluator, ABC):
         """Fast-path viability on dev; falls back to legacy when the active
         target rate's ``compute_from_stats`` returns ``None``.
         """
-        if not test_results[Keys.VIABLE.value] or self.samples.dev.xagg is None:
+        if not test_results[Keys.VIABLE.value] or not self.samples.dev.has_xagg:
             return {**test_results, "dev": {Keys.VIABLE.value: None}}
 
         dev_stats = self._get_dev_modality_stats()

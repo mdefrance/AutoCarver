@@ -125,7 +125,12 @@ class MulticlassCarver(BinaryCarver):
                 config=replace(self.config, copy=True),
             )
 
-            binary_carver.fit_transform(samples.train.X, train_y_class, X_dev=samples.dev.X, y_dev=dev_y_class)
+            binary_carver.fit_transform(
+                samples.train.X,
+                train_y_class,
+                X_dev=samples.dev.X if samples.dev.has_X else None,
+                y_dev=dev_y_class,
+            )
 
             # filtering out dropped features whilst keeping other version tags
             kept_features = binary_carver.features.versions

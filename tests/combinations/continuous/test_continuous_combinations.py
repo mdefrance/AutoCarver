@@ -1202,7 +1202,7 @@ def test_get_best_combination_viable_without_dev(evaluator: ContinuousCombinatio
     print(evaluator.samples.train.xagg)
     assert feature.labels == list(expected.index)
     assert evaluator.samples.train.xagg.equals(expected)
-    assert evaluator.samples.dev.xagg is None
+    assert not evaluator.samples.dev.has_xagg
     assert evaluator.samples.dev.raw is None
     assert evaluator.samples.train.raw.equals(expected)
 
