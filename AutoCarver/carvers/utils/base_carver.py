@@ -175,7 +175,10 @@ class BaseCarver(BaseDiscretizer, ABC):
         content["combination_evaluator"] = self.combination_evaluator.to_json()
         return content
 
-    def _prepare_data(self, samples: Samples) -> Samples:
+    def _prepare_data(self, samples: Samples) -> Samples:  # type: ignore
+        # Why: deliberate signature divergence vs `BaseDiscretizer._prepare_data(sample: Sample)`.
+        # Carvers operate on the train+dev `Samples` pair (the parent only knows about a single
+        # `Sample`); this method is internal and never invoked through a `BaseDiscretizer` handle.
         """Validates format and content of X and y."""
         if samples.train.y is None:
             raise ValueError(f"[{self.__name__}] y must be provided, got {samples.train.y}")
@@ -196,7 +199,10 @@ class BaseCarver(BaseDiscretizer, ABC):
 
         return samples
 
-    def fit(  # pylint: disable=W0222
+    def fit(  # type: ignore  # pylint: disable=W0222
+        # Why: deliberate signature divergence vs `BaseDiscretizer.fit(X=None, y=None)`. Carvers
+        # require X/y and additionally accept `X_dev`/`y_dev` for robustness checks; the W0222
+        # pylint disable already records that intent for the linter, this mirror records it for ty.
         self,
         X: pd.DataFrame,
         y: pd.Series,

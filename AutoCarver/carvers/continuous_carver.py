@@ -76,7 +76,7 @@ class ContinuousCarver(BaseCarver):
 
         return super()._prepare_data(samples)
 
-    def _aggregator(self, X: pd.DataFrame, y: pd.Series) -> dict[str, pd.DataFrame | None]:
+    def _aggregator(self, X: pd.DataFrame, y: pd.Series) -> dict[str, pd.Series | pd.DataFrame | None]:
         """Computes y values for modalities of specified features and ensures the ordering
         according to the known labels"""
         # checking for empty datasets

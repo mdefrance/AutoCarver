@@ -2,6 +2,7 @@
 
 from abc import ABC
 from collections.abc import Iterable, Iterator
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -139,8 +140,8 @@ class ContinuousCombinationEvaluator(CombinationEvaluator[pd.Series], ABC):
           :meth:`_association_measure`).
         """
         raw_xagg = self.samples.train.xagg
-        # Pre-rank y once for the whole feature
-        R_per_mod, n_per_mod, N, tie_corr = _modality_rank_stats(raw_xagg)
+        # Pre-rank y once for the whole feature.
+        R_per_mod, n_per_mod, N, tie_corr = _modality_rank_stats(raw_xagg)  # type: ignore
 
         # Map modality label -> position in R_per_mod / n_per_mod
         mod_to_pos: dict = {m: i for i, m in enumerate(raw_xagg.index)}
@@ -149,14 +150,17 @@ class ContinuousCombinationEvaluator(CombinationEvaluator[pd.Series], ABC):
         # Cache per-modality (n, sum_y) for the viability fast path.
         # Resets each time _compute_associations runs so the nan-pass refreshes
         # the cache after _apply_best_combination changes samples.train.xagg.
-        sum_y_per_mod = _modality_sum_y(raw_xagg)
-        self._train_modality_stats = {
+        sum_y_per_mod = _modality_sum_y(raw_xagg)  # type: ignore
+        # Why: heterogeneous-value dict; annotate `Any` so downstream readers (line 203-204
+        # and _get_dev_modality_stats) can narrow to the per-key concrete type without ty
+        # unioning across all value types.
+        self._train_modality_stats: dict[str, Any] = {
             "n_per_mod": n_per_mod.astype(float),
             "sum_y_per_mod": sum_y_per_mod,
             "mod_to_pos": mod_to_pos,
             "n_mod": n_mod,
         }
-        self._dev_modality_stats: dict | None = None  # lazy; aligned to train's mod_to_pos
+        self._dev_modality_stats: dict[str, Any] | None = None  # lazy; aligned to train's mod_to_pos
         self._dev_modality_stats_id: int | None = None
 
         batch: list[dict] = []
