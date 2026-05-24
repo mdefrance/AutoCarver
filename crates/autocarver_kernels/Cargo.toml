@@ -1,0 +1,20 @@
+[package]
+name = "autocarver_kernels"
+version = "0.1.0"
+edition = "2021"
+description = "Native kernels for AutoCarver: closed-form Kruskal-Wallis H and Pearson chi^2 over batched combinations."
+license = "MIT"
+
+[lib]
+name = "autocarver_kernels"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.22", features = ["extension-module", "abi3-py311"] }
+numpy = "0.22"
+rayon = "1.10"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+opt-level = 3

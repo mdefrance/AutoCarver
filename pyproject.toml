@@ -83,13 +83,18 @@ Homepage = "https://autocarver.readthedocs.io/en/latest/"
 Repository = "https://github.com/mdefrance/AutoCarver"
 Issues = "https://github.com/mdefrance/AutoCarver/issues"
 
-[tool.uv.build-backend]
-module-name = ["AutoCarver"]
-module-root = ""
-
 [build-system]
-requires = ["uv_build>=0.11.7,<0.12.0"]
-build-backend = "uv_build"
+requires = ["maturin>=1.7,<2"]
+build-backend = "maturin"
+
+[tool.maturin]
+# Rust crate that builds the AutoCarver._kernels extension module (see SPEEDUP_PLAN.md §7).
+manifest-path = "crates/autocarver_kernels/Cargo.toml"
+module-name = "AutoCarver._kernels"
+python-source = "."
+include = ["AutoCarver/**/*.py"]
+exclude = ["tests/**", "work/**", "docs/**", ".claude/**"]
+features = ["pyo3/extension-module"]
 
 [tool.ruff]
 line-length = 120

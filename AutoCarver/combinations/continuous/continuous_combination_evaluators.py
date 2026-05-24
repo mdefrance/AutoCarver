@@ -15,6 +15,15 @@ from AutoCarver.combinations.utils.combinations import combination_formatter
 from AutoCarver.combinations.utils.target_rate import TargetRate
 from AutoCarver.combinations.utils.testing import Keys, is_viable, test_viability
 
+# Optional Rust kernel — see SPEEDUP_PLAN.md §7. Pre-built wheels carry it; local dev
+# installs that skip `maturin develop` fall through to the NumPy batch implementation.
+try:
+    from AutoCarver._kernels import kruskal_h_batch as _rust_kruskal_h_batch  # ty: ignore[unresolved-import]
+
+    _HAVE_RUST_KRUSKAL = True
+except ImportError:  # pragma: no cover - exercised only on no-toolchain dev installs
+    _HAVE_RUST_KRUSKAL = False
+
 
 class ContinuousCombinationEvaluator(CombinationEvaluator[pd.Series], ABC):
     """Continuous combination evaluator class."""
@@ -166,11 +175,16 @@ class ContinuousCombinationEvaluator(CombinationEvaluator[pd.Series], ABC):
         self._dev_modality_stats: dict[str, Any] | None = None  # lazy; aligned to train's mod_to_pos
         self._dev_modality_stats_id: int | None = None
 
+        # Pick the Rust kernel when available (release wheels ship it). The NumPy path
+        # remains fully exercised in the parity tests and as a fallback for dev installs
+        # without `maturin develop`.
+        batch_fn = _kruskal_h_batch_rust if _HAVE_RUST_KRUSKAL else _kruskal_h_batch
+
         batch: list[dict] = []
         for grouped_xagg in tqdm(grouped_xaggs, desc="Computing associations", disable=not self.verbose):
             batch.append(grouped_xagg)
             if len(batch) >= _KRUSKAL_BATCH_SIZE:
-                yield from _kruskal_h_batch(
+                yield from batch_fn(
                     batch=batch,
                     R_per_mod=R_per_mod,
                     n_per_mod=n_per_mod,
@@ -181,7 +195,7 @@ class ContinuousCombinationEvaluator(CombinationEvaluator[pd.Series], ABC):
                 )
                 batch = []
         if batch:
-            yield from _kruskal_h_batch(
+            yield from batch_fn(
                 batch=batch,
                 R_per_mod=R_per_mod,
                 n_per_mod=n_per_mod,
@@ -517,6 +531,57 @@ def _kruskal_h_batch(  # noqa: C901
             h_val: float | None = None
         else:
             h_val = float(h[b])
+        yield {
+            "combination": item["combination"],
+            "index_to_groupby": item["index_to_groupby"],
+            "kruskal": h_val,
+        }
+
+
+def _kruskal_h_batch_rust(
+    *,
+    batch: list[dict],
+    R_per_mod: np.ndarray | None,
+    n_per_mod: np.ndarray,
+    N: int,
+    tie_corr: float | None,
+    mod_to_pos: dict,
+    n_mod: int,
+) -> Iterator[dict]:
+    """Rust-backed equivalent of :func:`_kruskal_h_batch`.
+
+    Identical contract: yields ``{combination, index_to_groupby, kruskal}`` per
+    combination in arrival order. ``kruskal`` is ``None`` when ``n_groups < 2`` or
+    pre-ranking failed (mirrors the NumPy path). NaN values from empty groups or
+    ``tie_corr == 0`` propagate as-is (matches ``scipy.stats.kruskal``).
+    """
+    # Mirror the NumPy early-exit when ranking failed upstream.
+    if R_per_mod is None or N < 2:
+        for item in batch:
+            yield {
+                "combination": item["combination"],
+                "index_to_groupby": item["index_to_groupby"],
+                "kruskal": None,
+            }
+        return
+
+    py_idx2gb = [item["index_to_groupby"] for item in batch]
+    h_arr, n_groups_arr = _rust_kruskal_h_batch(
+        py_idx2gb,
+        mod_to_pos,
+        n_mod,
+        R_per_mod.astype(np.float64, copy=False),
+        n_per_mod.astype(np.float64, copy=False),
+        float(N),
+        float(tie_corr if tie_corr is not None else 0.0),
+    )
+
+    for b, item in enumerate(batch):
+        if n_groups_arr[b] < 2:
+            h_val: float | None = None
+        else:
+            v = float(h_arr[b])
+            h_val = v  # NaN passes through unchanged (matches scipy semantics)
         yield {
             "combination": item["combination"],
             "index_to_groupby": item["index_to_groupby"],

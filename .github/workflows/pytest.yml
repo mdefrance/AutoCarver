@@ -16,6 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: astral-sh/setup-uv@v7
+      - uses: dtolnay/rust-toolchain@stable
       - run: uv sync --all-extras
       - run: |
           uv run ruff check --output-format=github .
@@ -37,11 +38,17 @@ jobs:
           enable-cache: true
           cache-dependency-glob: "**/uv.lock"
 
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
       - name: Install dependencies
         run: |
           uv lock --check
           uv sync --all-extras
-          
+
+      - name: Build Rust extension (AutoCarver._kernels)
+        run: uv run --with maturin maturin develop --release
+
       - name: Run tests
         run: uv run pytest -n auto --cov --cov-branch --cov-report=xml -q tests/
 
@@ -75,11 +82,17 @@ jobs:
         with:
           enable-cache: true
           cache-dependency-glob: "**/uv.lock"
-  
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
       - name: Install dependencies
         run: |
           uv lock --check
           uv sync --all-extras
+
+      - name: Build Rust extension (AutoCarver._kernels)
+        run: uv run --with maturin maturin develop --release
 
       - name: Run tests
         run: uv run pytest -n auto -q tests/
@@ -100,10 +113,16 @@ jobs:
           enable-cache: true
           cache-dependency-glob: "**/uv.lock"
 
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
       - name: Install dependencies (lowest-direct)
         run: |
           uv lock --resolution=lowest-direct
           uv sync --all-extras --group compare
+
+      - name: Build Rust extension (AutoCarver._kernels)
+        run: uv run --with maturin maturin develop --release
 
       - name: Run tests
         run: uv run pytest -n auto -q tests/

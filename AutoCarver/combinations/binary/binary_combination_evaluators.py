@@ -16,6 +16,14 @@ from AutoCarver.combinations.utils.combination_evaluator import (
 from AutoCarver.combinations.utils.combinations import combination_formatter
 from AutoCarver.combinations.utils.target_rate import TargetRate
 
+# Optional Rust kernel — see SPEEDUP_PLAN.md §7.
+try:
+    from AutoCarver._kernels import chi2_assoc_batch as _rust_chi2_assoc_batch  # ty: ignore[unresolved-import]
+
+    _HAVE_RUST_CHI2 = True
+except ImportError:  # pragma: no cover
+    _HAVE_RUST_CHI2 = False
+
 
 class BinaryCombinationEvaluator(CombinationEvaluator[pd.DataFrame], ABC):
     """Binary combination evaluator class."""
@@ -169,11 +177,13 @@ class BinaryCombinationEvaluator(CombinationEvaluator[pd.DataFrame], ABC):
 
         tol = 1e-10
 
+        batch_fn = _chi2_assoc_batch_rust if _HAVE_RUST_CHI2 else _chi2_assoc_batch
+
         batch: list[dict] = []
         for grouped_xagg in tqdm(grouped_xaggs, desc="Computing associations", disable=not self.verbose):
             batch.append(grouped_xagg)
             if len(batch) >= _CHI2_BATCH_SIZE:
-                yield from _chi2_assoc_batch(
+                yield from batch_fn(
                     batch=batch,
                     n0_per_mod=n0_per_mod,
                     n1_per_mod=n1_per_mod,
@@ -184,7 +194,7 @@ class BinaryCombinationEvaluator(CombinationEvaluator[pd.DataFrame], ABC):
                 )
                 batch = []
         if batch:
-            yield from _chi2_assoc_batch(
+            yield from batch_fn(
                 batch=batch,
                 n0_per_mod=n0_per_mod,
                 n1_per_mod=n1_per_mod,
@@ -407,4 +417,38 @@ def _chi2_assoc_batch(
             "index_to_groupby": item["index_to_groupby"],
             "cramerv": float(cramerv_q[b]),
             "tschuprowt": float(tt_q[b]),
+        }
+
+
+def _chi2_assoc_batch_rust(
+    *,
+    batch: list[dict],
+    n0_per_mod: np.ndarray,
+    n1_per_mod: np.ndarray,
+    n_obs: float,
+    mod_to_pos: dict,
+    n_mod: int,
+    tol: float,
+) -> Iterator[dict]:
+    """Rust-backed equivalent of :func:`_chi2_assoc_batch`. Yields per-combination
+    ``{combination, index_to_groupby, cramerv, tschuprowt}`` in arrival order with
+    values quantised to ``tol`` precision (matches the NumPy path bit-for-bit on
+    the parity fixtures)."""
+    py_idx2gb = [item["index_to_groupby"] for item in batch]
+    cramerv, tschuprowt, _ = _rust_chi2_assoc_batch(
+        py_idx2gb,
+        mod_to_pos,
+        n_mod,
+        n0_per_mod.astype(np.float64, copy=False),
+        n1_per_mod.astype(np.float64, copy=False),
+        float(n_obs),
+        float(tol),
+    )
+
+    for b, item in enumerate(batch):
+        yield {
+            "combination": item["combination"],
+            "index_to_groupby": item["index_to_groupby"],
+            "cramerv": float(cramerv[b]),
+            "tschuprowt": float(tschuprowt[b]),
         }

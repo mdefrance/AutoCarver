@@ -10,3 +10,12 @@ docs/source/bin/*
 **.venv/*
 .python-version
 work/*
+
+# Rust / maturin build artifacts (see SPEEDUP_PLAN.md §7).
+target/
+AutoCarver/_kernels*.pyd
+AutoCarver/_kernels*.so
+AutoCarver/_kernels*.dylib
+AutoCarver/_kernels*.abi3.so
+AutoCarver/autocarver_kernels*.pdb
+Cargo.lock
