@@ -156,6 +156,15 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
     is_y_continuous = False
     sort_by = None
 
+    # Initial top-K for the DP-based segmentation
+    # path used by the continuous and binary subclasses. The progressive
+    # doubling loop in ``_get_best_combination_non_nan`` / ``_get_best_combination_with_nan``
+    # grows ``top_k`` from this starting point until either a viable candidate
+    # is found or the DP exhausts every consecutive partition — making the
+    # search exhaustive in the worst case while keeping the common case
+    # (viable in top ~100) essentially free.
+    dp_top_k_initial: int = 1000
+
     def __init__(
         self,
         *,
@@ -432,7 +441,7 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
 
         # testing viability of all combinations
         viable_combination = None
-        for n_combination, combination in tqdm(
+        for _n_combination, combination in tqdm(
             enumerate(associations),
             total=len(associations),
             desc="Testing robustness    ",
@@ -450,15 +459,61 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
             # best combination found: breaking the loop on combinations
             if test_results[Keys.VIABLE.value]:
                 viable_combination = combination
-
-                # historizing remaining combinations/not tested
-                self._historize_remaining_combinations(associations, n_combination)
                 break
 
         if self.verbose:  # verbose if requested
             print("\n")
 
         return viable_combination
+
+    def _walk_for_viable(self, associations: list[dict], start: int) -> tuple[dict | None, int]:
+        """Walk ``associations[start:]`` for the first viable combination.
+
+        Inlined version of :meth:`_get_viable_combination` that supports
+        resuming from a checkpoint (``start``) — used by the progressive
+        top-K loop in the subclasses' ``_get_best_combination_non_nan``.
+        ``_test_viability_train`` lazily rebuilds the heavy xagg via
+        ``_grouper`` on first access, so DP entries (which don't carry
+        ``xagg``) work transparently.
+
+        Returns
+        -------
+        (viable, walked) : tuple
+            ``viable`` is the first viable combination found, or ``None``.
+            ``walked`` is the next index to resume from on a follow-up call;
+            equals ``len(associations)`` when no viable was found in this slice.
+        """
+        i = start
+        while i < len(associations):
+            combination = associations[i]
+            test_results = self._test_viability_train(combination)
+            test_results = self._test_viability_dev(test_results, combination)
+            self._historize_combination(combination, test_results)
+            if test_results[Keys.VIABLE.value]:
+                return combination, i + 1
+            i += 1
+        return None, i
+
+    def _walk_nan_variants(self, scored: list[dict], historized: set[tuple]) -> dict | None:
+        """Walk NaN-fanout variants in metric-desc order, dedup'd by partition.
+
+        Used by the subclasses' ``_get_best_combination_with_nan`` after
+        DP top-K base partitions have been fanned out across NaN placements
+        and scored. ``historized`` is updated in place: variants already
+        tested in a previous progressive-top-K iteration are skipped (not
+        re-tested, not re-historized).
+        """
+        for combination in scored:
+            key = _variant_key(combination["combination"])
+            if key in historized:
+                continue
+            historized.add(key)
+            test_results = self._test_viability_train(combination)
+            test_results = self._test_viability_dev(test_results, combination)
+            self._historize_combination(combination, test_results)
+            if test_results[Keys.VIABLE.value]:
+                return combination
+        return None
 
     @abstractmethod
     def _grouper(self, xagg: AggregatedSample, groupby: dict[str, str]) -> XAgg:
@@ -477,14 +532,6 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
         Kruskal–Wallis path (which returns ``None`` when scipy raises) can
         share the base signature with the binary chi² path.
         """
-
-    def _historize_remaining_combinations(self, associations: list[dict], n_combination: int) -> None:
-        """historizes the remaining combinations that have not been tested"""
-
-        # historizing all remaining combinations
-        for combination in associations[n_combination + 1 :]:
-            # historizing not tested combination
-            self.feature.historize({**clean_combination(combination, self.feature), "info": "Not checked"})
 
     def _historize_combination(self, combination: dict, test_results: dict) -> None:
         """historizes the test results of the combination"""
@@ -661,3 +708,40 @@ def clean_combination(combination: dict, feature: BaseFeature, remove_train_rate
     filtered = {k: v for k, v in combination.items() if k not in unwanted_keys}
 
     return {**filtered, "n_mod": n_mod, "dropna": dropna, "combination": index_to_groupby}
+
+
+def _variant_key(combination: list[list]) -> tuple:
+    """Canonical hashable key identifying a (consecutive) combination.
+
+    Used by :meth:`CombinationEvaluator._walk_nan_variants` to skip variants
+    already tested in a previous progressive-top-K iteration. Order matters
+    semantically (``consecutive_combinations`` always preserves raw_index
+    order, and :func:`combination_formatter` picks ``group[0]`` as leader)
+    so a positional tuple-of-tuples is the right shape.
+    """
+    return tuple(tuple(g) for g in combination)
+
+
+def _nan_fanout_variants(
+    base_partitions: list[dict],
+    nan_label: str,
+    raw_labels: list,
+    max_n_mod: int,
+) -> Iterator[list[list]]:
+    """Yields NaN-augmented variants of each base consecutive partition.
+
+    Mirrors :func:`AutoCarver.combinations.utils.combinations.nan_combinations`
+    semantics: for every base combination, fold ``nan_label`` into each group;
+    add it as its own group iff ``len(base) < max_n_mod``; finally yield the
+    ``[list(raw_labels), [nan_label]]`` partition once. Subclass-specific
+    scoring (Kruskal H / chi²) happens in the caller.
+    """
+    for base in base_partitions:
+        base_combo = base["combination"]
+        for j in range(len(base_combo)):
+            variant = [g[:] for g in base_combo]
+            variant[j] = variant[j] + [nan_label]
+            yield variant
+        if len(base_combo) < max_n_mod:
+            yield [g[:] for g in base_combo] + [[nan_label]]
+    yield [list(raw_labels), [nan_label]]
