@@ -75,6 +75,32 @@ def _carve_feature_worker(
     return feature, best is not None
 
 
+def _drop_reason_from_history(history: pd.DataFrame) -> str:
+    """Synthesizes a human-readable drop reason from a dropped feature's history.
+
+    Picks the most frequent failing-test message across ``train``/``dev`` blocks
+    of historized non-viable combinations.
+    """
+    if history.empty:
+        return "No combination historized"
+
+    info_counts: dict[str, int] = {}
+    for _, row in history.iterrows():
+        if bool(row.get("viable", False)):
+            continue
+        for block_key in ("train", "dev"):
+            block = row.get(block_key)
+            if isinstance(block, dict):
+                msg = block.get("info") or ""
+                if msg:
+                    info_counts[msg] = info_counts.get(msg, 0) + 1
+
+    if not info_counts:
+        return "No robust combination"
+    msg, _ = max(info_counts.items(), key=lambda kv: kv[1])
+    return f"No robust combination ({msg})"
+
+
 def _replace_feature_in_features(features: Features, updated: BaseFeature) -> None:
     """Swaps an existing feature (by version) for the worker-returned copy."""
     if isinstance(updated, CategoricalFeature):
@@ -164,6 +190,11 @@ class BaseCarver(BaseDiscretizer, ABC):
         combination_evaluator.verbose = self.config.verbose
         self.combination_evaluator: CombinationEvaluator = combination_evaluator
 
+        # features dropped by the carver because no robust combination was found.
+        # Kept (not cleared on re-fit) so users can inspect why each dropped via
+        # the marker columns added to ``summary`` / ``history``.
+        self.dropped_features: list[BaseFeature] = []
+
     @property
     def pretty_print(self) -> bool:
         """Returns the pretty_print attribute"""
@@ -173,7 +204,56 @@ class BaseCarver(BaseDiscretizer, ABC):
         content = super().to_json(light_mode)
         content["max_n_mod"] = self.max_n_mod
         content["combination_evaluator"] = self.combination_evaluator.to_json()
+        content["dropped_features"] = [f.to_json(light_mode) for f in self.dropped_features]
         return content
+
+    @property
+    def summary(self) -> pd.DataFrame:
+        """Per-feature carving summary, extended with one block per dropped feature.
+
+        Rows from features that the carver dropped (no robust combination on
+        train and/or dev) are appended at the end with two marker columns:
+
+        - ``dropped`` (bool): ``True`` for dropped features, ``False`` otherwise.
+        - ``dropped_reason`` (str | None): synthesized from the feature's history
+          — the dominant failing test message across attempted combinations.
+        """
+        rows: list[dict] = []
+        for feature in self.features:
+            for row in feature.summary:
+                rows.append({**row, "dropped": False, "dropped_reason": None})
+        for feature in self.dropped_features:
+            reason = _drop_reason_from_history(feature.history)
+            for row in feature.summary:
+                rows.append({**row, "dropped": True, "dropped_reason": reason})
+
+        summaries = pd.DataFrame(rows)
+        if summaries.empty:
+            return summaries
+
+        excluded = {"feature", "label", "content", "target_mean", "frequency", "dropped", "dropped_reason"}
+        indices = [col for col in summaries.columns if col not in excluded]
+        indices = ["feature"] + indices + ["label"]
+        return summaries.set_index(indices)
+
+    @property
+    def history(self) -> pd.DataFrame:
+        """Combined combination-history of carved + dropped features.
+
+        Dropped features' rows are appended with ``dropped=True``; carved
+        features' rows get ``dropped=False``.
+        """
+        frames: list[pd.DataFrame] = []
+        current = self.features.history
+        if not current.empty:
+            frames.append(current.assign(dropped=False))
+        for feature in self.dropped_features:
+            df = feature.history
+            if len(df) > 0:
+                frames.append(df.assign(feature=str(feature), dropped=True))
+        if not frames:
+            return pd.DataFrame()
+        return pd.concat(frames, ignore_index=True)
 
     def _prepare_samples(self, samples: Samples) -> Samples:
         """Validates format and content of X and y."""
@@ -294,6 +374,7 @@ class BaseCarver(BaseDiscretizer, ABC):
                         "increasing the size of X_dev or dropping the feature (X not "
                         "representative of X_dev for this feature)."
                     )
+                    self.dropped_features.append(updated_feature)
                     self.features.remove(updated_feature.version)
 
     @abstractmethod
@@ -343,6 +424,7 @@ class BaseCarver(BaseDiscretizer, ABC):
                 f"WARNING: No robust combination for {feature}. Consider increasing the size of "
                 "X_dev or dropping the feature (X not representative of X_dev for this feature)."
             )
+            self.dropped_features.append(feature)
             self.features.remove(feature.version)
 
     def _print_xagg(
@@ -461,6 +543,16 @@ class BaseCarver(BaseDiscretizer, ABC):
             config=config,
         )
         instance.is_fitted = is_fitted
+
+        # deserializing dropped_features (mirrors Features.load type-dispatch)
+        for fjson in data.pop("dropped_features", []):
+            if fjson.get("is_categorical"):
+                instance.dropped_features.append(CategoricalFeature.load(fjson))
+            elif fjson.get("is_ordinal"):
+                instance.dropped_features.append(OrdinalFeature.load(fjson))
+            elif fjson.get("is_quantitative"):
+                instance.dropped_features.append(QuantitativeFeature.load(fjson))
+
         return instance
 
 
