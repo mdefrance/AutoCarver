@@ -487,6 +487,8 @@ class Features:
 
         # converting to DataFrame
         summaries = pd.DataFrame(summaries)
+        if summaries.empty:
+            return summaries
 
         # defining indices to set
         indices = []
