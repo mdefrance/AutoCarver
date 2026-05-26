@@ -7,6 +7,7 @@ from typing import Self
 import pandas as pd
 
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, DiscretizerConfig, Sample
+from AutoCarver.discretizers.utils.frequency_ci import is_significantly_below
 from AutoCarver.features import CategoricalFeature
 from AutoCarver.utils import extend_docstring
 
@@ -89,13 +90,25 @@ class CategoricalDiscretizer(BaseDiscretizer):
     def _group_feature_rare_modalities(
         self, feature: CategoricalFeature, X: pd.DataFrame, frequencies: pd.DataFrame
     ) -> pd.DataFrame:
-        """Groups modalities less frequent than min_freq into feature.default"""
+        """Groups modalities significantly less frequent than ``min_freq`` into
+        ``feature.default``.
 
-        # checking for rare values
+        A modality is grouped when the Wilson upper bound of its observed
+        proportion (at significance level ``config.min_freq_alpha``) is below
+        ``min_freq`` — i.e. its frequency is significantly below the target.
+        Callers that want a "tolerant" half-of-min_freq behaviour (e.g. the
+        carvers) are responsible for halving ``min_freq`` before instantiating
+        this class.
+        """
+
+        nobs = len(X)
+        alpha = self.config.min_freq_alpha
+
+        # checking for rare values (CI-based: significantly below min_freq)
         values_to_group = [
             value
-            for value, freq in frequencies[feature.version].items()
-            if freq < self.min_freq and value != feature.nan and pd.notna(value)
+            for value, count in frequencies[feature.version].items()
+            if is_significantly_below(count, nobs, self.min_freq, alpha) and value != feature.nan and pd.notna(value)
         ]
 
         # checking for completly missing values (no frequency observed in X)
@@ -147,10 +160,14 @@ def series_target_rate(x: pd.Series, y: pd.Series, dropna: bool = True, ascendin
     return rates.to_dict()
 
 
-def series_value_counts(x: pd.Series, dropna: bool = False, normalize: bool = True) -> dict:
-    """Counts the values of each modality of a series into a dictionnary"""
+def series_value_counts(x: pd.Series, dropna: bool = False) -> dict:
+    """Counts the modalities of a series into a ``{modality: count}`` dict.
 
-    values = x.value_counts(dropna=dropna, normalize=normalize)
+    Returns integer counts (not proportions) so callers can feed them directly
+    into Wilson-CI-based rare-modality tests.
+    """
+
+    values = x.value_counts(dropna=dropna, normalize=False)
 
     # pandas 3.0 returns float nan as key; normalize to None for consistency
     return {(None if pd.isna(k) else k): v for k, v in values.to_dict().items()}

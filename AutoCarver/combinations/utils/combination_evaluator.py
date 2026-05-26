@@ -188,6 +188,9 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
         self.samples: AggregatedSamples = AggregatedSamples()
         self._statistics_cache = None
         self.target_rate: TargetRate[XAgg] = self._init_target_rate(target_rate)
+        # default alpha so callers that drive viability tests directly (without
+        # going through ``get_best_combination``) get a sensible Wilson interval.
+        self.min_freq_alpha: float = 0.05
 
     @abstractmethod
     def _init_target_rate(self, target_rate: TargetRate[XAgg] | None) -> TargetRate[XAgg]:
@@ -368,12 +371,14 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
         max_n_mod: int,
         min_freq: float,
         dropna: bool,
+        min_freq_alpha: float = 0.05,
     ) -> dict | None:
         """Computes best combination of modalities for the feature"""
 
         self.max_n_mod = max_n_mod
         self.min_freq = min_freq
         self.dropna = dropna
+        self.min_freq_alpha = min_freq_alpha
 
         # setting dropna to user-requested value
         self.feature = feature
@@ -406,7 +411,7 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
         train_rates = self.target_rate.compute(xagg)
 
         # viability on train sample:
-        result = test_viability(train_rates, self.min_freq, self.target_rate.__name__)
+        result = test_viability(train_rates, self.min_freq, self.target_rate.__name__, self.min_freq_alpha)
 
         return result
 
@@ -428,7 +433,9 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
         dev_rates = self.target_rate.compute(grouped_xagg_dev)
 
         # viability on dev sample:
-        dev_results = test_viability(dev_rates, self.min_freq, self.target_rate.__name__, train_target_rate)
+        dev_results = test_viability(
+            dev_rates, self.min_freq, self.target_rate.__name__, self.min_freq_alpha, train_target_rate
+        )
         test_results = {**test_results, **dev_results}
 
         # checking for viability on both samples

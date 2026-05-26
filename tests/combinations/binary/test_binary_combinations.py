@@ -137,6 +137,7 @@ def test_compute_target_rates_basic(evaluator: BinaryCombinationEvaluator):
         {
             "target_mean": [0.333333, 0.428571, 0.454545],
             "frequency": [0.142857, 0.333333, 0.523810],
+            "count": [15, 35, 55],
         },
         index=["a", "b", "c"],
     )
@@ -149,8 +150,9 @@ def test_compute_target_rates_empty(evaluator: BinaryCombinationEvaluator):
     xagg = pd.DataFrame(columns=[0, 1])
     result = evaluator.target_rate.compute(xagg)
     print(result)
-    expected = pd.DataFrame(columns=["target_mean", "frequency"])
-    assert result.equals(expected)
+    expected = pd.DataFrame(columns=["target_mean", "frequency", "count"])
+    assert list(result.columns) == list(expected.columns)
+    assert len(result) == 0
 
 
 def test_compute_target_rates_none(evaluator: BinaryCombinationEvaluator):
@@ -163,7 +165,7 @@ def test_compute_target_rates_single_row(evaluator: BinaryCombinationEvaluator):
     """Test _compute_target_rates with a single row."""
     xagg = pd.DataFrame({0: [10], 1: [5]}, index=["a"])
     result = evaluator.target_rate.compute(xagg)
-    expected = pd.DataFrame({"target_mean": [0.333333], "frequency": [1.0]}, index=["a"])
+    expected = pd.DataFrame({"target_mean": [0.333333], "frequency": [1.0], "count": [15]}, index=["a"])
     print(result)
     assert np.allclose(result, expected)
 
@@ -173,7 +175,7 @@ def test_compute_target_rates_single_column(evaluator: BinaryCombinationEvaluato
     xagg = pd.DataFrame({1: [5, 15, 25]}, index=["a", "b", "c"])
     result = evaluator.target_rate.compute(xagg)
     expected = pd.DataFrame(
-        {"target_mean": [1.0, 1.0, 1.0], "frequency": [0.111111, 0.333333, 0.555556]},
+        {"target_mean": [1.0, 1.0, 1.0], "frequency": [0.111111, 0.333333, 0.555556], "count": [5, 15, 25]},
         index=["a", "b", "c"],
     )
     print(result)
@@ -189,7 +191,7 @@ def test_compute_target_rates_with_nan(evaluator: BinaryCombinationEvaluator):
     print(xagg)
     result = evaluator.target_rate.compute(xagg)
     expected = pd.DataFrame(
-        {"target_mean": [1.0, 0.0, np.nan], "frequency": [0.5, 0.5, 0.0]},
+        {"target_mean": [1.0, 0.0, np.nan], "frequency": [0.5, 0.5, 0.0], "count": [2, 2, 0]},
         index=["a", "b", "c"],
     )
     print(result)
@@ -214,7 +216,7 @@ def test_compute_target_rates_some_nan(evaluator: BinaryCombinationEvaluator):
     xagg = get_crosstab(X, y, feature)
     result = evaluator.target_rate.compute(xagg)
     expected = pd.DataFrame(
-        {"target_mean": [1.0, 0, 1.0], "frequency": [0.5, 0.25, 0.25]},
+        {"target_mean": [1.0, 0, 1.0], "frequency": [0.5, 0.25, 0.25], "count": [2, 1, 1]},
         index=["a", "b", "c"],
     )
     print(result)
@@ -567,11 +569,15 @@ def test_viability_train(evaluator: BinaryCombinationEvaluator):
     expected = [
         {
             "train": {Keys.VIABLE.value: True},
-            "train_rates": pd.DataFrame({"target_mean": [1.0, 0.333333], "frequency": [0.4, 0.6]}, index=["a", "c"]),
+            "train_rates": pd.DataFrame(
+                {"target_mean": [1.0, 0.333333], "frequency": [0.4, 0.6], "count": [2, 3]}, index=["a", "c"]
+            ),
         },
         {
             "train": {Keys.VIABLE.value: True},
-            "train_rates": pd.DataFrame({"target_mean": [0.5, 1.0], "frequency": [0.8, 0.2]}, index=["a", "c"]),
+            "train_rates": pd.DataFrame(
+                {"target_mean": [0.5, 1.0], "frequency": [0.8, 0.2], "count": [4, 1]}, index=["a", "c"]
+            ),
         },
     ]
     for res, exp in zip(result, expected):
@@ -669,23 +675,24 @@ def test_get_viable_combination_without_dev(evaluator: BinaryCombinationEvaluato
 
 
 def test_get_viable_combination_with_non_viable_train(evaluator: BinaryCombinationEvaluator):
-    """Test the get_viable_combination method with a non-viable train."""
+    """Test the get_viable_combination method with a non-viable train.
+
+    Scaled to a larger sample so the Wilson CI is tight enough to flag the
+    singleton modality as significantly below ``min_freq=0.6``.
+    """
     feature = OrdinalFeature("feature", ["a", "b", "c"])
-    xagg = pd.DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
+    xagg = pd.DataFrame({0: [0, 200, 0], 1: [200, 0, 1]}, index=["a", "b", "c"])
     evaluator.samples.train = AggregatedSample(xagg)
+    evaluator.samples.dev = AggregatedSample(xagg.copy())
     evaluator.feature = feature
+    evaluator.max_n_mod = 2
 
     combinations = consecutive_combinations(feature.labels, 2)
-
     grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
     associations = _sorted_assocs(evaluator, grouped_xaggs)
 
-    # test with xagg_dev but not viable on train
     evaluator.min_freq = 0.6
-    evaluator.samples.dev = AggregatedSample(xagg)
     result = evaluator._get_viable_combination(associations)
-    print(result)
-
     assert result is None
 
 
@@ -1096,7 +1103,9 @@ def test_get_best_combination_with_nan_viable_with_nan_without_feature_nan(
 def test_get_best_combination_with_nan_viable_with_nan_without_dropna(
     evaluator: BinaryCombinationEvaluator,
 ):
-    """Test the get_best_combination method with a feature that has no np.nan values."""
+    """No viable combination is found when ``dropna=False`` and the nan row is
+    kept — the high ``min_freq`` ensures every 2-group partition fails
+    viability under the Wilson CI."""
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     feature.has_nan = False
     evaluator.feature = feature
@@ -1104,13 +1113,14 @@ def test_get_best_combination_with_nan_viable_with_nan_without_dropna(
     xagg = pd.DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 3]}, index=["a", "b", "c", feature.nan])
     evaluator.samples.train = AggregatedSample(xagg)
     evaluator.samples.dev = AggregatedSample(xagg)
-    evaluator.min_freq = MIN_FREQ
+    evaluator.min_freq = 0.9
     evaluator.dropna = False
     evaluator.max_n_mod = 2
 
     best_combination = evaluator._get_best_combination_non_nan()
     result = evaluator._get_best_combination_with_nan(best_combination)
     assert result == best_combination
+    assert result is None
 
 
 def test_get_best_combination_with_nan_viable_with_nan(evaluator: BinaryCombinationEvaluator):

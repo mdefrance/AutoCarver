@@ -173,6 +173,8 @@ def test_multiclass_carver_fit_transform_with_small_data_not_ordinal(
     X_transformed = carver.fit_transform(X, y)
 
     print(X_transformed)
+    # Under Wilson-CI gating on n=4 the borderline ``2.0`` bin survives, and
+    # ordinal labels with count=1 are not significantly below min_freq → fewer merges.
     expected = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
@@ -182,12 +184,17 @@ def test_multiclass_carver_fit_transform_with_small_data_not_ordinal(
             "feature1__y=2": ["A, C", "B", "A, C", "A, C"],
             "feature2__y=1": ["low", "medium", "high", "high"],
             "feature2__y=2": ["low", "medium to high", "medium to high", "medium to high"],
-            "feature3__y=1": ["x <= 1.0e+00", "1.0e+00 < x", "1.0e+00 < x", "__NAN__"],
-            "feature3__y=2": [
+            "feature3__y=1": [
                 "x <= 1.00e+00",
                 "1.00e+00 < x <= 2.00e+00",
                 "2.00e+00 < x",
-                "x <= 1.00e+00",
+                "__NAN__",
+            ],
+            "feature3__y=2": [
+                "x <= 2.00e+00",
+                "x <= 2.00e+00",
+                "2.00e+00 < x <= 3.00e+00",
+                "x <= 2.00e+00",
             ],
         },
         index=idx,
@@ -236,6 +243,8 @@ def test_multiclass_carver_fit_transform_with_small_data_ordinal(evaluator: Comb
     X_transformed = carver.fit_transform(X, y)
 
     print(X_transformed)
+    # Under Wilson-CI gating fewer modalities collapse → feature3__y=1 keeps
+    # 4 bins (0,1,2,3) and feature3__y=2 keeps 3 bins (0,1,0).
     expected = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
@@ -245,8 +254,8 @@ def test_multiclass_carver_fit_transform_with_small_data_ordinal(evaluator: Comb
             "feature1__y=2": [1, 0, 1, 1],
             "feature2__y=1": [0, 1, 2, 2],
             "feature2__y=2": [0, 1, 1, 1],
-            "feature3__y=1": [0, 1, 1, 2],
-            "feature3__y=2": [0, 1, 2, 0],
+            "feature3__y=1": [0, 1, 2, 3],
+            "feature3__y=2": [0, 0, 1, 0],
         },
         index=idx,
     )
@@ -407,75 +416,23 @@ def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationE
                 1.0,
                 2.0,
             ],
-            "feature1__y=1": [
-                "A",
-                "B, C",
-                "A",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
-            ],
-            "feature1__y=2": [
-                "A, B",
-                "A, B",
-                "A, B",
-                "C",
-                "C",
-                "C",
-                "C",
-                "C",
-                "C",
-                "C",
-                "C",
-                "C",
-                "C",
-                "C",
-                "C",
-                "C",
-                "C",
-            ],
-            "feature1__y=3": [
-                "A",
-                "B, C",
-                "A",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
-            ],
+            # Under Wilson-CI gating on n=17, categorical "B" / ordinal "medium"/"high"
+            # bins are no longer significantly below min_freq for most y-splits.
+            "feature1__y=1": ["A", "B", "A"] + ["C"] * 14,
+            "feature1__y=2": ["A, B"] * 3 + ["C"] * 14,
+            "feature1__y=3": ["A", "B", "A"] + ["C"] * 14,
             "feature2__y=1": [
                 "low",
-                "medium to high",
-                "medium to high",
-                "medium to high",
+                "medium",
+                "high",
+                "high",
                 "low",
                 "low",
                 "low",
                 "low",
                 "low",
                 "low",
-                "medium to high",
+                "high",
                 "low",
                 "low",
                 "low",
@@ -485,16 +442,16 @@ def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationE
             ],
             "feature2__y=2": [
                 "low",
-                "medium to high",
-                "medium to high",
-                "medium to high",
+                "medium",
+                "high",
+                "high",
                 "low",
                 "low",
                 "low",
                 "low",
                 "low",
                 "low",
-                "medium to high",
+                "high",
                 "low",
                 "low",
                 "low",
@@ -504,16 +461,16 @@ def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationE
             ],
             "feature2__y=3": [
                 "low",
-                "medium to high",
-                "medium to high",
-                "medium to high",
+                "medium",
+                "high",
+                "high",
                 "low",
                 "low",
                 "low",
                 "low",
                 "low",
                 "low",
-                "medium to high",
+                "high",
                 "low",
                 "low",
                 "low",
@@ -522,23 +479,42 @@ def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationE
                 "low",
             ],
             "feature3__y=1": [
-                "x <= 1.0e+00",
-                "1.0e+00 < x",
-                "1.0e+00 < x",
+                "x <= 1.00e+00",
+                "1.00e+00 < x <= 2.00e+00",
+                "2.00e+00 < x",
                 "__NAN__",
-                "1.0e+00 < x",
-                "x <= 1.0e+00",
-                "1.0e+00 < x",
-                "1.0e+00 < x",
-                "x <= 1.0e+00",
-                "1.0e+00 < x",
+                "2.00e+00 < x",
+                "x <= 1.00e+00",
+                "1.00e+00 < x <= 2.00e+00",
+                "2.00e+00 < x",
+                "x <= 1.00e+00",
+                "1.00e+00 < x <= 2.00e+00",
                 "__NAN__",
-                "1.0e+00 < x",
-                "x <= 1.0e+00",
-                "1.0e+00 < x",
-                "1.0e+00 < x",
-                "x <= 1.0e+00",
-                "1.0e+00 < x",
+                "2.00e+00 < x",
+                "x <= 1.00e+00",
+                "1.00e+00 < x <= 2.00e+00",
+                "2.00e+00 < x",
+                "x <= 1.00e+00",
+                "1.00e+00 < x <= 2.00e+00",
+            ],
+            "feature3__y=2": [
+                "x <= 1.00e+00",
+                "1.00e+00 < x <= 3.00e+00",
+                "1.00e+00 < x <= 3.00e+00",
+                "3.00e+00 < x",
+                "1.00e+00 < x <= 3.00e+00",
+                "x <= 1.00e+00",
+                "1.00e+00 < x <= 3.00e+00",
+                "1.00e+00 < x <= 3.00e+00",
+                "x <= 1.00e+00",
+                "1.00e+00 < x <= 3.00e+00",
+                "3.00e+00 < x",
+                "1.00e+00 < x <= 3.00e+00",
+                "x <= 1.00e+00",
+                "1.00e+00 < x <= 3.00e+00",
+                "1.00e+00 < x <= 3.00e+00",
+                "x <= 1.00e+00",
+                "1.00e+00 < x <= 3.00e+00",
             ],
             "feature3__y=3": [
                 "x <= 1.00e+00",
@@ -598,6 +574,8 @@ def test_multiclass_carver_fit_transform_with_target_only_nan(evaluator: Combina
     X_transformed = carver.fit_transform(X, y)
 
     print(X_transformed.to_dict(orient="list"))
+    # Under Wilson-CI gating, feature3 keeps a third bucket for y=1 split
+    # ("3.00e+00 < x") and the y=2 split uses the same 3-bucket carving.
     expected = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
@@ -607,7 +585,18 @@ def test_multiclass_carver_fit_transform_with_target_only_nan(evaluator: Combina
             "feature1__y=2": ["A, C", "B", "A, C", "A, C"],
             "feature2__y=1": ["low", "medium to high", "medium to high", "medium to high"],
             "feature2__y=2": ["low", "medium", "high", "high"],
-            "feature3__y=2": ["x <= 1.0e+00", "1.0e+00 < x", "1.0e+00 < x", "1.0e+00 < x"],
+            "feature3__y=1": [
+                "x <= 1.00e+00",
+                "1.00e+00 < x <= 3.00e+00",
+                "1.00e+00 < x <= 3.00e+00",
+                "3.00e+00 < x",
+            ],
+            "feature3__y=2": [
+                "x <= 1.00e+00",
+                "1.00e+00 < x <= 3.00e+00",
+                "1.00e+00 < x <= 3.00e+00",
+                "1.00e+00 < x <= 3.00e+00",
+            ],
         },
         index=idx,
     )
@@ -662,13 +651,26 @@ def test_multiclass_carver_fit_transform_with_wrong_dev(evaluator: CombinationEv
     X_transformed = carver.fit_transform(X, y, X_dev=X_dev, y_dev=y_dev)
 
     print(X_transformed.to_dict(orient="list"))
+    # Under Wilson-CI gating fewer features fail the rank-inversion test, and
+    # the carver preserves an extra feature3__y=2 column.
     expected = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
             "feature2": ["low", "medium", "high", "high"],
             "feature3": [1.0, 2.0, 3.0, float("nan")],
             "feature2__y=1": ["low", "medium to high", "medium to high", "medium to high"],
-            "feature3__y=1": ["x <= 1.0e+00", "1.0e+00 < x", "1.0e+00 < x", "x <= 1.0e+00"],
+            "feature3__y=1": [
+                "x <= 1.00e+00",
+                "1.00e+00 < x <= 3.00e+00",
+                "1.00e+00 < x <= 3.00e+00",
+                "x <= 1.00e+00",
+            ],
+            "feature3__y=2": [
+                "x <= 1.00e+00",
+                "1.00e+00 < x <= 3.00e+00",
+                "1.00e+00 < x <= 3.00e+00",
+                "x <= 1.00e+00",
+            ],
         },
         index=idx,
     )
@@ -678,7 +680,7 @@ def test_multiclass_carver_fit_transform_with_wrong_dev(evaluator: CombinationEv
     assert all(X_transformed.columns == expected.columns)
     assert X_transformed.equals(expected)
 
-    assert len(carver.features) == 2
+    assert len(carver.features) == 3
 
 
 def test_multiclass_carver_save_load(tmp_path: Path, evaluator: CombinationEvaluator):

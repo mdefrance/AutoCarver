@@ -21,13 +21,19 @@ from AutoCarver.utils import extend_docstring
 class DiscretizerConfig:
     """Behavioral configuration applied to a :class:`BaseDiscretizer`.
 
-    Carries only cross-cutting toggles that propagate unchanged to sub-discretizers.
-    Domain parameters (``min_freq``, ``combinations`` …) are explicit constructor
-    arguments, not config.
+    Carries cross-cutting toggles that propagate unchanged to sub-discretizers.
+    Pure domain values (``min_freq``, ``combinations`` …) remain explicit
+    constructor arguments; ``min_freq_alpha`` lives here because it tunes
+    *how* ``min_freq`` is tested, not the target itself.
 
     ``copy=True`` is the default so that BaseDiscretizer doesn't mutate caller
     DataFrames in place — set to ``False`` when nested inside a pipeline that
     already owns the dataframe.
+
+    ``min_freq_alpha`` is the two-sided significance level of the Wilson
+    interval used to decide whether a modality's observed frequency is
+    significantly below ``min_freq``. Smaller values are more lenient
+    (wider CI → fewer merges); ``0.05`` matches a 95% interval.
     """
 
     copy: bool = True
@@ -35,6 +41,7 @@ class DiscretizerConfig:
     dropna: bool = False
     verbose: bool = False
     n_jobs: int = 1
+    min_freq_alpha: float = 0.05
 
 
 class Sample:
@@ -438,6 +445,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
                 "verbose": self.config.verbose,
                 "ordinal_encoding": self.config.ordinal_encoding,
                 "copy": self.config.copy,
+                "min_freq_alpha": self.config.min_freq_alpha,
             },
         }
 
@@ -504,6 +512,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             verbose=config_data.get("verbose", False),
             n_jobs=config_data.get("n_jobs", 1),
             copy=config_data.get("copy", True),
+            min_freq_alpha=config_data.get("min_freq_alpha", 0.05),
         )
 
         instance = cls(features=features, min_freq=min_freq, config=config)

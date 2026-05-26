@@ -33,14 +33,15 @@ class BinaryTargetRate(TargetRate[pd.DataFrame], ABC):
         """
         # checking for an xtab
         if xagg is not None:
-            # frequency per modality
-            frequency = xagg.sum(axis=1) / xagg.sum().sum()
+            # count + frequency per modality (count carried for CI-based viability tests)
+            count = xagg.sum(axis=1)
+            frequency = count / count.sum()
 
             # computing target rate. `_compute` expects pd.DataFrame (Generic
             # XAgg=DataFrame); compute()'s wide signature is for LSP matching,
             # callers always pass a crosstab here.
             return pd.DataFrame(
-                {self.__name__: self._compute(xagg), "frequency": frequency}  # type: ignore
+                {self.__name__: self._compute(xagg), "frequency": frequency, "count": count}  # type: ignore
             )
         return None
 

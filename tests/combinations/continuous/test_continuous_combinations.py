@@ -206,7 +206,10 @@ def test_compute_target_rates_basic(evaluator: ContinuousCombinationEvaluator):
     xagg = get_target_values_by_modality(X, y, feature)
 
     result = evaluator.target_rate.compute(xagg)
-    expected = pd.DataFrame({"target_mean": [2.0, 3.0, 5.0], "frequency": [2 / 5, 2 / 5, 1 / 5]}, index=["A", "B", "C"])
+    expected = pd.DataFrame(
+        {"target_mean": [2.0, 3.0, 5.0], "frequency": [2 / 5, 2 / 5, 1 / 5], "count": [2, 2, 1]},
+        index=["A", "B", "C"],
+    )
     assert result.equals(expected)
 
 
@@ -217,7 +220,10 @@ def test_compute_target_rates_with_nan(evaluator: ContinuousCombinationEvaluator
     xagg = get_target_values_by_modality(X, y, feature)
 
     result = evaluator.target_rate.compute(xagg)
-    expected = pd.DataFrame({"target_mean": [2.0, 3.0, None], "frequency": [2 / 4, 2 / 4, 0]}, index=["A", "B", "C"])
+    expected = pd.DataFrame(
+        {"target_mean": [2.0, 3.0, None], "frequency": [2 / 4, 2 / 4, 0], "count": [2, 2, 0]},
+        index=["A", "B", "C"],
+    )
     assert result.equals(expected)
 
 
@@ -228,7 +234,10 @@ def test_compute_target_rates_unordered_labels(evaluator: ContinuousCombinationE
     xagg = get_target_values_by_modality(X, y, feature)
 
     result = evaluator.target_rate.compute(xagg)
-    expected = pd.DataFrame({"target_mean": [5.0, 2.0, 3.0], "frequency": [1 / 5, 2 / 5, 2 / 5]}, index=["C", "A", "B"])
+    expected = pd.DataFrame(
+        {"target_mean": [5.0, 2.0, 3.0], "frequency": [1 / 5, 2 / 5, 2 / 5], "count": [1, 2, 2]},
+        index=["C", "A", "B"],
+    )
     assert result.equals(expected)
 
 
@@ -239,7 +248,7 @@ def test_compute_target_rates_missing_labels(evaluator: ContinuousCombinationEva
     xagg = get_target_values_by_modality(X, y, feature)
 
     result = evaluator.target_rate.compute(xagg)
-    expected = pd.DataFrame({"target_mean": [2.0, 3.0], "frequency": [2 / 4, 2 / 4]}, index=["A", "B"])
+    expected = pd.DataFrame({"target_mean": [2.0, 3.0], "frequency": [2 / 4, 2 / 4], "count": [2, 2]}, index=["A", "B"])
     assert result.equals(expected)
 
 
@@ -251,7 +260,7 @@ def test_compute_target_rates_extra_labels(evaluator: ContinuousCombinationEvalu
 
     result = evaluator.target_rate.compute(xagg)
     expected = pd.DataFrame(
-        {"target_mean": [2.0, 3.0, 5.0, None], "frequency": [2 / 5, 2 / 5, 1 / 5, 0]},
+        {"target_mean": [2.0, 3.0, 5.0, None], "frequency": [2 / 5, 2 / 5, 1 / 5, 0], "count": [2, 2, 1, 0]},
         index=["A", "B", "C", "D"],
     )
     assert result.equals(expected)
@@ -517,14 +526,14 @@ def test_viability_train(evaluator: ContinuousCombinationEvaluator):
         {
             "train": {Keys.VIABLE.value: True},
             "train_rates": pd.DataFrame(
-                {"target_mean": [0.666667, 1.250000], "frequency": [0.428571, 0.571429]},
+                {"target_mean": [0.666667, 1.250000], "frequency": [0.428571, 0.571429], "count": [3, 4]},
                 index=["a", "b"],
             ),
         },
         {
             "train": {Keys.VIABLE.value: False},
             "train_rates": pd.DataFrame(
-                {"target_mean": [1.0, 1.0], "frequency": [0.714286, 0.285714]}, index=["a", "c"]
+                {"target_mean": [1.0, 1.0], "frequency": [0.714286, 0.285714], "count": [5, 2]}, index=["a", "c"]
             ),
         },
     ]
@@ -656,12 +665,18 @@ def test_get_viable_combination_without_dev(evaluator: ContinuousCombinationEval
 
 
 def test_get_viable_combination_with_non_viable_train(evaluator: ContinuousCombinationEvaluator):
-    """Test the get_viable_combination method with a non-viable train"""
+    """Test the get_viable_combination method with a non-viable train.
+
+    Use a larger sample so the Wilson CI is tight enough to flag the singleton
+    modality as significantly below min_freq=0.6.
+    """
 
     feature = OrdinalFeature("feature", ["a", "b", "c"])
-    xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0]})
+    xagg = pd.Series({"a": [0.0] * 300, "b": [2.0] * 200, "c": [1.0] * 1})
     evaluator.samples.train = AggregatedSample(xagg)
+    evaluator.samples.dev = AggregatedSample(xagg.copy())
     evaluator.feature = feature
+    evaluator.max_n_mod = 2
 
     combinations = consecutive_combinations(feature.labels, 2)
 
@@ -672,12 +687,8 @@ def test_get_viable_combination_with_non_viable_train(evaluator: ContinuousCombi
         reverse=True,
     )
 
-    # test with xagg_dev but not viable on train
     evaluator.min_freq = 0.6
-    evaluator.samples.dev = AggregatedSample(xagg)
     result = evaluator._get_viable_combination(associations)
-    print(result)
-
     assert result is None
 
 

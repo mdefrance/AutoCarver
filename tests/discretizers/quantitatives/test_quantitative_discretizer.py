@@ -44,7 +44,7 @@ def test_min_value_counts_basic():
     x = pd.Series([1, 2, 2, 3, 3, 3], name="feature")
     features = Features.from_list([QuantitativeFeature(name="feature")])
     result = min_value_counts(x, features)
-    assert result == 1 / 6  # Minimum frequency is 1/6
+    assert result == 1  # Minimum count is 1
 
 
 def test_min_value_counts_with_nans():
@@ -53,13 +53,13 @@ def test_min_value_counts_with_nans():
     x = pd.Series([1, 2, 2, 3, 3, 3, np.nan, np.nan], name="feature")
     features = Features.from_list([QuantitativeFeature(name="feature")])
     result = min_value_counts(x, features, dropna=False)
-    assert result == 1 / 8  # Minimum frequency is 1/6
+    assert result == 1
 
     # with dropna
     x = pd.Series([1, 2, 2, 3, 3, 3, np.nan, np.nan], name="feature")
     features = Features.from_list([QuantitativeFeature(name="feature")])
     result = min_value_counts(x, features, dropna=True)
-    assert result == 1 / 6  # Minimum frequency is 1/6
+    assert result == 1
 
 
 def test_min_value_counts_with_labels():
@@ -80,7 +80,7 @@ def test_min_value_counts_with_labels():
     feature.update(GroupedList([1, 2, 3, 4, np.inf]))
     features = Features.from_list([feature])
     result = min_value_counts(x, features)
-    assert result == 0  # Label 4 has a frequency of 0
+    assert result == 0  # Label 4 has a count of 0
 
     # without missing label
     x = pd.Series(
@@ -98,15 +98,7 @@ def test_min_value_counts_with_labels():
     feature.update(GroupedList([1, 2, 3, np.inf]))
     features = Features.from_list([feature])
     result = min_value_counts(x, features)
-    assert result == 1 / 6
-
-
-def test_min_value_counts_normalize_false():
-    """Test min_value_counts with normalize set to False"""
-    x = pd.Series([1, 2, 2, 3, 3, 3], name="feature")
-    features = Features.from_list([QuantitativeFeature(name="feature")])
-    result = min_value_counts(x, features, normalize=False)
-    assert result == 1  # Minimum count is 1
+    assert result == 1
 
 
 def test_check_frequencies_no_rare_modalities():
@@ -119,23 +111,29 @@ def test_check_frequencies_no_rare_modalities():
         ]
     )
     half_min_freq = 0.1
-    result = check_frequencies(df, features, half_min_freq)
+    result = check_frequencies(df, features, half_min_freq, alpha=0.05)
     assert result == []  # No rare modalities
 
 
 def test_check_frequencies_with_rare_modalities():
-    """Test check_frequencies with rare modalities"""
-    df = pd.DataFrame({"feature1": [1, 1, 1, 1, 1, 2], "feature2": [4, 4, 4, 5, 5, 5]})
-    features = Features.from_list(
-        [
-            QuantitativeFeature(name="feature1"),
-            QuantitativeFeature(name="feature2"),
-        ]
+    """Test check_frequencies flags features whose smallest modality is significantly
+    below ``min_freq`` (Wilson upper bound < min_freq)."""
+
+    # n=8000 modality count 50 → Wilson upper ≈ 0.0083 ≪ 0.025 → flagged
+    # n=8000 modality count 400 → Wilson upper ≈ 0.055 ≫ 0.025 → not flagged
+    n = 8000
+    df = pd.DataFrame(
+        {
+            "feature1": [0.0] * 50 + [1.0] * (n - 50),
+            "feature2": [0.0] * 400 + [1.0] * (n - 400),
+        }
     )
-    half_min_freq = 0.2
-    result = check_frequencies(df, features, half_min_freq)
-    assert len(result) == 1
-    assert result[0].version == "feature1"  # Feature 1 has rare modalities
+    features = Features.from_list([QuantitativeFeature(name="feature1"), QuantitativeFeature(name="feature2")])
+
+    result = check_frequencies(df, features, min_freq=0.025, alpha=0.05)
+    versions = [f.version for f in result]
+    assert "feature1" in versions
+    assert "feature2" not in versions
 
 
 def test_check_frequencies_with_nans():
@@ -148,24 +146,51 @@ def test_check_frequencies_with_nans():
         ]
     )
     half_min_freq = 0.1
-    result = check_frequencies(df, features, half_min_freq)
+    result = check_frequencies(df, features, half_min_freq, alpha=0.05)
     assert result == []  # No rare modalities even with NaNs
 
 
 def test_check_frequencies_all_rare_modalities():
-    """Test check_frequencies with all rare modalities"""
-    df = pd.DataFrame({"feature1": [1, 2, 3, 4, 5, 1], "feature2": [1, 2, 3, 4, 5, 2]})
+    """All modalities significantly below min_freq → all features flagged."""
+    n = 8000
+    # both features have a singleton modality (count=1) — clearly below 0.025 under CI
+    df = pd.DataFrame(
+        {
+            "feature1": [0.0] * 1 + [1.0] * (n - 1),
+            "feature2": [0.0] * 2 + [1.0] * (n - 2),
+        }
+    )
     features = Features.from_list(
         [
             QuantitativeFeature(name="feature1"),
             QuantitativeFeature(name="feature2"),
         ]
     )
-    half_min_freq = 0.5
-    result = check_frequencies(df, features, half_min_freq)
-    assert len(result) == 2
-    assert result[0].version == "feature1"  # Feature 1 has rare modalities
-    assert result[1].version == "feature2"  # Feature 2 has rare modalities
+    result = check_frequencies(df, features, min_freq=0.025, alpha=0.05)
+    versions = {f.version for f in result}
+    assert versions == {"feature1", "feature2"}
+
+
+def test_check_frequencies_borderline_modality_not_flagged_on_small_n():
+    """A small sample cannot distinguish a freq just below min_freq from min_freq itself —
+    the Wilson CI captures min_freq, so the modality survives."""
+
+    # n=100, freq=0.08 vs min_freq=0.10 — Wilson upper(8, 100, 0.05) ≈ 0.152 > 0.10 → not flagged
+    df = pd.DataFrame({"feature1": [0.0] * 8 + [1.0] * 92})
+    features = Features.from_list([QuantitativeFeature(name="feature1")])
+    result = check_frequencies(df, features, min_freq=0.10, alpha=0.05)
+    assert result == []
+
+
+def test_check_frequencies_borderline_modality_flagged_on_large_n():
+    """The same proportion at large n IS significantly below min_freq under the CI."""
+
+    # n=10000, freq=0.08 vs min_freq=0.10 — Wilson upper(800, 10000, 0.05) ≈ 0.0856 < 0.10 → flagged
+    n = 10000
+    df = pd.DataFrame({"feature1": [0.0] * 800 + [1.0] * (n - 800)})
+    features = Features.from_list([QuantitativeFeature(name="feature1")])
+    result = check_frequencies(df, features, min_freq=0.10, alpha=0.05)
+    assert [f.version for f in result] == ["feature1"]
 
 
 def test_quantitative_discretizer_initialization():
@@ -178,7 +203,6 @@ def test_quantitative_discretizer_initialization():
     assert discretizer.min_freq == min_freq
     assert feature1 in discretizer.features
     assert feature2 in discretizer.features
-    assert discretizer.half_min_freq == min_freq / 2
 
 
 def test_quantitative_discretizer_prepare_sample():
@@ -272,6 +296,8 @@ def test_continuous_discretizer_fit():
     assert feature2.has_nan is True
     print(feature1.content)
     print(feature2.content)
+    # under the Wilson-CI gating, the borderline ``4`` and ``5`` bins survive
+    # on this 23-row sample (CI overlaps min_freq=0.2).
     assert feature1.content == {1: [1], 2: [2], 4: [4], np.inf: [np.inf]}
     assert feature2.content == {1.0: [1.0], 2.0: [2.0], np.inf: [5.0, np.inf]}
 
@@ -370,10 +396,11 @@ def test_quantitative_discretizer(x_train: pd.DataFrame, target: str):
     print(x_train.Discrete_Quantitative_rarevalue.value_counts(dropna=False, normalize=True))
 
     print(features("Discrete_Quantitative_rarevalue").content)
+    # post-pass now uses min_freq directly: ``4.0`` bin (~15%) survives but the inf bucket
+    # (5.0 + 6.0 ≈ 8%) is below the floor and gets merged into the ``4.0`` bin (kept as inf).
     assert features("Discrete_Quantitative_rarevalue").values == [
         1.0,
         2.0,
         3.0,
-        4.0,
         np.inf,
     ], "Rare values should be grouped to the closest one and np.inf should be kept whatsoever (OrdinalDiscretizer)"

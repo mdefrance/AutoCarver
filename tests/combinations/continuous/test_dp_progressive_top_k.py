@@ -45,10 +45,10 @@ def fixture_with_top_h_unviable() -> pd.Series:
     """
     return pd.Series(
         {
-            "a": [0.0, 0.0, 0.0],
-            "b": [5.0, 5.0, 5.0],
-            "c": [5.0, 5.0, 5.0],
-            "d": [10.0],
+            "a": [0.0] * 300,
+            "b": [5.0] * 300,
+            "c": [5.0] * 300,
+            "d": [10.0] * 100,
         }
     )
 
@@ -73,7 +73,7 @@ def test_top_h_partition_is_unviable_so_walk_must_descend(fixture_with_top_h_unv
         raw_index=list(fixture_with_top_h_unviable.index),
         top_k=10,
     )
-    # rank-1 must isolate "d" alone (1 obs → fails min_freq=0.2 needing ≥ 2 of 10)
+    # rank-1 must isolate "d" alone (Wilson upper(100, 1000) ≈ 0.12 < min_freq=0.2)
     rank1_groups = dp[0]["combination"]
     assert any(g == ["d"] for g in rank1_groups), (
         f"Test fixture invariant broken: rank-1 partition is {rank1_groups}, expected to isolate 'd' alone"
@@ -124,17 +124,19 @@ def test_progressive_top_k_returns_none_when_no_viable_exists():
     """When every partition fails viability, the doubling loop must terminate
     (when DP exhausts every partition: ``len(result) < top_k``) and return
     ``None`` — not loop forever.
+
+    Each modality has ~33% of the 600 observations; with min_freq=0.6 and the
+    Wilson upper bound around 0.37, every partition's smallest group is
+    significantly below 0.6 → no partition is viable.
     """
-    # min_freq high enough that no partition can pass: any group needs ≥ 4 obs
-    # but total N = 6, so 2-group partitions can't both meet min_freq.
     xagg = pd.Series(
         {
-            "a": [0.0, 0.0],
-            "b": [5.0, 5.0],
-            "c": [10.0, 10.0],
+            "a": [0.0] * 200,
+            "b": [5.0] * 200,
+            "c": [10.0] * 200,
         }
     )
-    ev = _make_evaluator(xagg, max_n_mod=3, min_freq=0.7, dp_top_k_initial=1)
+    ev = _make_evaluator(xagg, max_n_mod=3, min_freq=0.6, dp_top_k_initial=1)
     result = ev._get_best_combination_non_nan()
     assert result is None
 

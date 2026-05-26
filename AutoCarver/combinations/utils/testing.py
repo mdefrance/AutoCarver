@@ -5,6 +5,8 @@ from enum import StrEnum
 import numpy as np
 import pandas as pd
 
+from AutoCarver.discretizers.utils.frequency_ci import is_significantly_below
+
 
 class Keys(StrEnum):
     """keys for test results"""
@@ -32,10 +34,18 @@ def _test_distinct_target_rates_between_modalities(target_rates: pd.Series) -> b
     return not any(np.isclose(target_rates[1:], target_rates.shift(1)[1:]))
 
 
-def _test_minimum_frequency_per_modality(frequencies: pd.Series, min_freq: int | float | None) -> bool:
-    """tests that minimum frequency has been reached for each modality"""
-    # - minimum frequency is reached for all modalities
-    return all(frequencies >= min_freq)
+def _test_minimum_frequency_per_modality(
+    counts: pd.Series, nobs: int, min_freq: int | float | None, alpha: float
+) -> bool:
+    """tests that no modality is significantly below ``min_freq`` (Wilson CI).
+
+    A modality fails the test only when the Wilson upper bound of its observed
+    proportion is strictly below ``min_freq`` — i.e. its frequency is
+    significantly below the target at significance level ``alpha``.
+    """
+    if min_freq is None:
+        return True
+    return not bool(np.any(is_significantly_below(counts.values, nobs, float(min_freq), alpha)))
 
 
 def _test_modality_ordering(train_target_rate: pd.Series, dev_target_rate: pd.Series) -> bool:
@@ -56,12 +66,20 @@ def test_viability(
     rates: pd.Series | pd.DataFrame,
     min_freq: int | float | None,
     target_rate: str,
+    alpha: float,
     train_target_rate: pd.Series | None = None,
 ) -> dict:
-    """tests viability of the rates"""
+    """tests viability of the rates.
 
-    # - minimum frequency is reached for all modalities
-    min_freq_test = _test_minimum_frequency_per_modality(rates["frequency"], min_freq)
+    ``rates`` must carry per-modality ``count`` and ``frequency`` columns
+    (added by the binary/continuous target-rate builders); CI tests use the
+    counts and ``nobs = counts.sum()``.
+    """
+
+    # - no modality is significantly below min_freq (Wilson CI at level `alpha`)
+    counts = rates["count"]
+    nobs = int(counts.sum())
+    min_freq_test = _test_minimum_frequency_per_modality(counts, nobs, min_freq, alpha)
 
     # - target rates are distinct for all modalities
     distinct_rates = _test_distinct_target_rates_between_modalities(rates[target_rate])
