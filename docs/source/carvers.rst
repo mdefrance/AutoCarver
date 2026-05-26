@@ -16,16 +16,67 @@ Target-specific tools allow for association optimization per desired task:
 All carvers share the same constructor signature:
 
 * ``features`` (:class:`Features`) — features to carve.
-* ``min_freq`` (``float``) — minimum frequency per modality.
-* ``max_n_mod`` (``int``, **mandatory**) — maximum number of modalities per carved
+* ``min_freq`` (``float``) — minimum frequency per modality. Tested via the Wilson
+  score interval at significance ``min_freq_alpha`` (see :ref:`MinFreqViability`).
+* ``max_n_mod`` (``int``) — maximum number of modalities per carved
   feature; forwarded to the configured :class:`CombinationEvaluator`.
-* ``combination_evaluator`` (:class:`CombinationEvaluator`, keyword-only, optional) —
+* ``combination_evaluator`` (:class:`CombinationEvaluator`, optional) —
   association metric. Defaults to a task-appropriate evaluator (see each subclass).
-* ``config`` (:class:`DiscretizerConfig`, keyword-only, optional) — behavioral toggles
-  (``copy`` / ``ordinal_encoding`` / ``dropna`` / ``verbose`` / ``n_jobs``).
+  The search uses :ref:`progressive top-K interval dynamic programming (DP) <DPTopK>`
+  for both Kruskal-H (continuous) and Pearson :math:`\chi^2` (binary); statistically
+  equivalent to the legacy enumerate-and-score path.
+* ``config`` (:class:`DiscretizerConfig`, optional) — behavioral toggles
+  (``copy`` / ``ordinal_encoding`` / ``dropna`` / ``verbose`` / ``n_jobs`` /
+  ``min_freq_alpha``).
   Defaults to ``DiscretizerConfig(dropna=True, ordinal_encoding=True)``.
 
 
+.. _CarverParallelism:
+
+Per-feature parallelism (``n_jobs``)
+------------------------------------
+
+With ``DiscretizerConfig(n_jobs=k)`` and ``k > 1``, :class:`BaseCarver` dispatches
+one task per feature through ``multiprocessing.Pool.imap_unordered``. Each worker
+receives a pickled deep copy of the :class:`CombinationEvaluator` and a single
+``(feature, xagg, xagg_dev)`` payload; mutations stay local to the worker process
+and the parent reattaches the (mutated) feature on completion. Verbose per-feature
+logging is silenced — a single dispatch banner is printed when ``verbose=True``.
+
+.. tip::
+
+    Worth it only on **a few hundred features or more**. Below that, pool startup
+    and pickle overhead dominate and the single-process path is faster. The
+    :ref:`DP top-K search <DPTopK>` already removes the per-feature compute
+    bottleneck, so most users will not need ``n_jobs > 1``.
+
+
+.. _DroppedFeatures:
+
+Dropped features (no robust combination)
+----------------------------------------
+
+A feature for which **no** candidate combination passed the
+:ref:`viability filter <MinFreqViability>` (Wilson ``min_freq`` on train and dev,
+distinct target rates, train/dev rank preservation) is removed from
+``carver.features`` and retained on :attr:`carver.dropped_features` so the user
+can inspect *why* it was dropped without re-fitting.
+
+The :attr:`summary` and :attr:`history` properties append rows from dropped
+features with two marker columns:
+
+* ``dropped`` (``bool``) — ``True`` for rows from a dropped feature, ``False``
+  otherwise.
+* ``dropped_reason`` (``str`` | ``None``) — synthesized from the dominant
+  failing-test message across the feature's historized combinations (e.g.
+  *"Inversion of target rates per modality"*, *"Non-representative modality for
+  min_freq=2.00%"*).
+
+A dropped feature most commonly signals that **X_dev is too small or not
+representative of X** for that feature: every candidate combination viable on
+train flipped its target-rate ordering on dev. Increasing the dev sample size,
+relaxing ``max_n_mod``, or dropping the feature entirely are the three available
+levers.
 
 
 Classification tasks

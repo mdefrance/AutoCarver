@@ -495,7 +495,13 @@ class ContinuousCombinationEvaluator(CombinationEvaluator[pd.Series], ABC):
 
 
 class KruskalCombinations(ContinuousCombinationEvaluator):
-    """Kruskal-Wallis' H based combination evaluation toolkit"""
+    """Kruskal-Wallis' H based combination evaluation toolkit.
+
+    Search uses :ref:`progressive top-K interval DP <DPKruskal>` over the
+    closed-form Kruskal-Wallis H decomposition (rank once over pooled ``y``,
+    prefix-sum per-modality rank stats). Statistically equivalent to
+    :func:`scipy.stats.kruskal` — bit-exact agreement pinned by parity tests.
+    """
 
     sort_by = "kruskal"
 

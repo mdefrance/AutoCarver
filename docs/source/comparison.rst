@@ -60,11 +60,19 @@ Scope at a glance
      - no
      - no
    * - Optimality guarantee for fixed ``min_freq`` / ``max_n_mod`` / metric
-     - **yes — exhaustive search over admissible combinations**
+     - **yes — exhaustive top-K search over admissible combinations (interval dynamic programming, DP)**
      - yes (MIP, under its own constraints)
      - n/a (no objective)
+   * - Confidence-interval-guarded ``min_freq``
+     - **yes — Wilson score interval (tunable** ``min_freq_alpha`` **)**
+     - no (hard threshold)
+     - n/a
+   * - Per-feature parallelism for hundreds-to-thousands of features
+     - yes (``n_jobs`` via ``multiprocessing.Pool``)
+     - no (manual loop)
+     - yes (sklearn-native ``n_jobs`` semantics)
    * - Per-bin stats + carving history after ``fit``
-     - **yes — ``Features.summary`` and ``Features.history``**
+     - **yes —** ``Features.summary`` **and** ``Features.history``
      - via ``binning_table``
      - no
    * - JSON round-trip persistence
@@ -94,8 +102,8 @@ The three libraries answer "what's a good bin?" with very different objectives:
      - Objective
      - Constraint surface
    * - **AutoCarver**
-     - Maximize **Tschuprow's T** (default) or **Cramér's V** between the carved feature and the target via **exhaustive search** over every admissible combination of consecutive modalities — so for fixed ``min_freq``, ``max_n_mod`` and metric, no other combination scores higher. NaN groupings are explored as a separate combinatorial pass.
-     - ``min_freq`` (minimum bucket share), ``max_n_mod`` (cap on number of modalities), monotonic ordering for ordinal features (enforced by :class:`OrdinalDiscretizer`), and a dev-set veto: any candidate that flips its target-rate ordering on the dev set is rejected.
+     - Maximize **Tschuprow's T** (default) or **Cramér's V** between the carved feature and the binary target — or **Kruskal-Wallis H** for continuous targets — via **exhaustive top-K interval DP** over consecutive segmentations. The DP exploits additive decomposability of :math:`H` (and of :math:`\chi^2` at fixed :math:`k`) to enumerate the top-K partitions in closed form; progressive top-K doubling keeps the worst case exhaustive while making the common case essentially free. For fixed ``min_freq``, ``max_n_mod`` and metric, no other admissible combination scores higher. NaN groupings are fanned out and re-scored in closed form. See :ref:`DPTopK` for details and parity guarantees against ``scipy.stats``.
+     - ``min_freq`` (minimum bucket share, gated by a Wilson score CI at significance ``min_freq_alpha`` — see :ref:`MinFreqViability`), ``max_n_mod`` (cap on number of modalities), monotonic ordering for ordinal features (enforced by :class:`OrdinalDiscretizer`), and a dev-set veto: any candidate that flips its target-rate ordering on the dev set is rejected.
    * - **optbinning**
      - Maximize **Information Value (IV)** (binary) or split-gain analogues, solved as a mixed-integer program (CBC by default).
      - User-declarable monotonicity, minimum bin size, maximum number of bins, optional WoE smoothing, and constraint blocks (e.g. PSI-based stability).
@@ -103,7 +111,7 @@ The three libraries answer "what's a good bin?" with very different objectives:
      - **No target awareness.** Splits are placed on the marginal distribution of ``X`` only: equal-frequency (``quantile``), equal-width (``uniform``), or 1-D k-means.
      - ``n_bins`` per feature; that's it.
 
-The takeaway: **AutoCarver and optbinning both optimize against the target**, but AutoCarver's robustness step (the dev-set veto) is something optbinning does not do natively — you'd have to script it yourself with cross-validation. KBinsDiscretizer is a different category: it's a fast preprocessing primitive, not a supervised binner.
+The takeaway: **AutoCarver and optbinning both optimize against the target**, but AutoCarver's robustness step (the dev-set veto, with a Wilson-CI-guarded ``min_freq`` check on both train and dev) is something optbinning does not do natively — you'd have to script it yourself with cross-validation. KBinsDiscretizer is a different category: it's a fast preprocessing primitive, not a supervised binner.
 
 
 Side-by-side: bin a mixed feature set on the same data
@@ -242,4 +250,5 @@ The numbers are illustrative — single run, single machine, fixed seed — and 
 Caveats
 -------
 
-* All three libraries are actively maintained; the table reflects the public APIs as of AutoCarver |release|. Open an issue if anything has drifted.
+* All three libraries are actively maintained; the table reflects the public APIs as of AutoCarver |release| (2026-05). Open an issue if anything has drifted.
+* The DP top-K search strategy is statistically equivalent to the previous enumerate-and-score path: parity tests pin bit-exact agreement against :func:`scipy.stats.kruskal` (continuous) and :func:`scipy.stats.chi2_contingency` (binary, including the Yates correction). Performance numbers in older issues, pre-DP, are no longer representative.
