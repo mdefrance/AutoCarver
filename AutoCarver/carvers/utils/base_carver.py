@@ -58,6 +58,7 @@ def _carve_feature_worker(
     max_n_mod: int,
     min_freq: float,
     dropna: bool,
+    min_freq_alpha: float,
 ) -> tuple[BaseFeature, bool]:
     """Picklable worker: scores best combination for a single feature.
 
@@ -70,7 +71,13 @@ def _carve_feature_worker(
     # workers never print per-feature progress; the parent prints a single banner
     evaluator.verbose = False
     best = evaluator.get_best_combination(
-        feature, xagg, xagg_dev, max_n_mod=max_n_mod, min_freq=min_freq, dropna=dropna
+        feature,
+        xagg,
+        xagg_dev,
+        max_n_mod=max_n_mod,
+        min_freq=min_freq,
+        dropna=dropna,
+        min_freq_alpha=min_freq_alpha,
     )
     return feature, best is not None
 
@@ -196,6 +203,17 @@ class BaseCarver(BaseDiscretizer, ABC):
         self.dropped_features: list[BaseFeature] = []
 
     @property
+    def half_min_freq(self) -> float:
+        """Half of :attr:`min_freq` — the tolerant frequency floor the carver
+        applies when discretizing prior to combination search. Halving here gives
+        the combination evaluator a finer granularity to recombine, while the
+        underlying discretizers themselves compare directly against ``min_freq``
+        (with a 1-row tolerance). Owning the halving in the carver — rather than
+        inside individual discretizers — keeps the per-discretizer semantic uniform.
+        """
+        return self.min_freq / 2
+
+    @property
     def pretty_print(self) -> bool:
         """Returns the pretty_print attribute"""
         return self.config.verbose and _has_idisplay
@@ -266,7 +284,7 @@ class BaseCarver(BaseDiscretizer, ABC):
 
         # discretizing features at half min_freq so the carver has a finer
         # granularity to combine when forming optimal groups
-        samples = discretize(self.features, samples, self.min_freq / 2, self.config)
+        samples = discretize(self.features, samples, self.half_min_freq, self.config)
 
         # setting dropna to True for filling up nans
         self.features.dropna = True
@@ -362,6 +380,7 @@ class BaseCarver(BaseDiscretizer, ABC):
             max_n_mod=self.max_n_mod,
             min_freq=self.min_freq,
             dropna=self.config.dropna,
+            min_freq_alpha=self.config.min_freq_alpha,
         )
 
         with Pool(processes=self.config.n_jobs) as pool:
@@ -405,7 +424,13 @@ class BaseCarver(BaseDiscretizer, ABC):
 
         # getting best combination
         best_combination = self.combination_evaluator.get_best_combination(
-            feature, xagg, xagg_dev, max_n_mod=self.max_n_mod, min_freq=self.min_freq, dropna=self.config.dropna
+            feature,
+            xagg,
+            xagg_dev,
+            max_n_mod=self.max_n_mod,
+            min_freq=self.min_freq,
+            dropna=self.config.dropna,
+            min_freq_alpha=self.config.min_freq_alpha,
         )
 
         # printing carved distribution, for found, suitable combination

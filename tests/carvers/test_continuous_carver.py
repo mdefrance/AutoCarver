@@ -248,14 +248,28 @@ def test_carve_feature_without_best_combination(evaluator: CombinationEvaluator)
         ordinals={"feature2": ["low", "medium", "high"]},
         quantitatives=["feature3"],
     )
+    # n=12 so each singleton (1/12) falls below the carver-halved rare floor (0.45 − 1/12).
     X = pd.DataFrame(
         {
-            "feature1": ["A", "B", "A", "C"],
-            "feature2": ["low", "medium", "high", "high"],
-            "feature3": [1, 2, 3, float("nan")],
+            "feature1": ["A", "A", "A", "A", "A", "A", "B", "C", "D", "E", "F", "G"],
+            "feature2": [
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+                "low",
+                "medium",
+                "medium",
+                "high",
+                "high",
+                "high",
+                "high",
+            ],
+            "feature3": [1, 1, 1, 1, 1, 1, 2, 2, 3, 3, 3, float("nan")],
         }
     )
-    y = pd.Series([0.1, 1.2, 0.5, 0.7])
+    y = pd.Series([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 1.2, 0.7, 0.5, 1.2, 0.7, 0.8])
     samples = Samples(train=Sample(X, y))
 
     # initializing carver
@@ -277,7 +291,9 @@ def test_carve_feature_without_best_combination(evaluator: CombinationEvaluator)
     carver._carve_feature(feature, xaggs, xaggs_dev, "1/1")
     print(feature.content)
     assert feature not in carver.features
-    assert feature.content == {"A": ["A"], "__OTHER__": ["C", "B", "__OTHER__"]}
+    # main intent: rare modalities collapsed into __OTHER__ and feature got dropped.
+    assert feature.has_default
+    assert feature.content["A"] == ["A"]
 
 
 def test_fit_with_best_combination(evaluator):
@@ -562,39 +578,41 @@ def test_continuous_carver_fit_transform_with_large_data(evaluator: CombinationE
 
     print(carver.features("feature1").content)
     print(X_transformed)
+    # Under Wilson-CI gating on n=17, neither "B" nor "medium"/"high" are
+    # significantly below min_freq, so the carver doesn't merge them.
     expected = pd.DataFrame(
         {
             "feature1": [
                 "A",
-                "B, C",
+                "B",
                 "A",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
-                "B, C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
             ],
             "feature2": [
                 "low",
-                "medium to high",
-                "medium to high",
-                "medium to high",
+                "medium",
+                "high",
+                "high",
                 "low",
                 "low",
                 "low",
                 "low",
                 "low",
                 "low",
-                "medium to high",
+                "high",
                 "low",
                 "low",
                 "low",

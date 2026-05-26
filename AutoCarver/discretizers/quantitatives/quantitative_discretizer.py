@@ -10,6 +10,7 @@ import pandas as pd
 from AutoCarver.discretizers.qualitatives import OrdinalDiscretizer
 from AutoCarver.discretizers.quantitatives.continuous_discretizer import ContinuousDiscretizer
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, DiscretizerConfig, Sample
+from AutoCarver.discretizers.utils.frequency_ci import is_significantly_below
 from AutoCarver.features import Features, QuantitativeFeature
 from AutoCarver.utils import extend_docstring
 
@@ -42,11 +43,6 @@ class QuantitativeDiscretizer(BaseDiscretizer):
             Quantitative features to process
         """
         super().__init__(quantitatives, min_freq=min_freq, config=config)
-
-    @property
-    def half_min_freq(self) -> float:
-        """Half of the minimal frequency of a quantile."""
-        return self.min_freq / 2
 
     def _prepare_sample(self, sample: Sample) -> Sample:
         """Validates format and content of X and y."""
@@ -95,25 +91,32 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         """Fit the OrdinalDiscretizer on the continuous features with rare modalities."""
 
         # rare quantiles can exist because of overrepresented values (more frequent than min_freq)
-        has_rare = check_frequencies(X, self.features, self.half_min_freq)
+        has_rare = check_frequencies(X, self.features, self.min_freq, self.config.min_freq_alpha)
 
         if len(has_rare) > 0:
             ordinal_discretizer = OrdinalDiscretizer(
                 ordinals=has_rare,
-                min_freq=self.half_min_freq,
+                min_freq=self.min_freq,
                 config=replace(self.config, copy=False),
             )
             ordinal_discretizer.fit(X, y)
 
 
-def check_frequencies(x: pd.DataFrame, features: Features, half_min_freq: float) -> list[QuantitativeFeature]:
-    """Checks for rare modalities in the provided features."""
+def check_frequencies(x: pd.DataFrame, features: Features, min_freq: float, alpha: float) -> list[QuantitativeFeature]:
+    """Checks for rare modalities in the provided features.
 
-    # searching for features with rare quantiles: computing min frequency per feature
-    frequencies = x[features.versions].apply(min_value_counts, features=features, axis=0)
+    A modality is considered rare when the Wilson upper bound of its
+    observed proportion (at significance level ``alpha``) is strictly below
+    ``min_freq`` — i.e. its frequency is significantly below the target.
+    """
 
-    # identifying features that have rare modalities
-    has_rare = list(frequencies[frequencies <= half_min_freq].index)
+    # smallest modality count per feature
+    min_counts = x[features.versions].apply(min_value_counts, features=features, axis=0)
+
+    # CI-based rare-flag: only features whose smallest modality is significantly
+    # below min_freq are sent through the OrdinalDiscretizer.
+    rare_mask = is_significantly_below(min_counts.values, len(x), min_freq, alpha)
+    has_rare = list(min_counts.index[rare_mask])
 
     # returning features with rare modalities
     return [feature for feature in features if feature.version in has_rare]
@@ -123,21 +126,20 @@ def min_value_counts(
     x: pd.Series,
     features: Features,
     dropna: bool = False,
-    normalize: bool = True,
-) -> float:
-    """Minimum of modalities' frequencies."""
+) -> int:
+    """Smallest modality count for a feature (integer count, not proportion)."""
     # getting corresponding feature (pandas Series.name is Hashable; column names are str)
     feature = features(str(x.name))
 
-    # modality frequency
-    values = x.value_counts(dropna=dropna, normalize=normalize)
+    # modality counts
+    values = x.value_counts(dropna=dropna, normalize=False)
 
     # setting indices with known values
     if not feature.values.is_empty():
         values = values.reindex(feature.labels).fillna(0)
 
-    # minimal frequency
-    return values.values.min()
+    # minimal count
+    return int(values.values.min())
 
 
 def check_quantitative_dtypes(x: pd.DataFrame, feature_versions: list[str], name: str) -> None:

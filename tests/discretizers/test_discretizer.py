@@ -65,7 +65,9 @@ def test_discretizer_fit():
             "x <= 3.0e+00",
         ],
         "feature4": ["a", "b", "a", "b", np.nan],
-        "feature3": ["1, 3", "4", "1, 3", "4", np.nan],
+        # With the 1-row tolerance (rare floor = min_freq - 1/n = 0.1) and n=5, modalities
+        # at 1/5 = 0.2 are above the floor — "1" and "3" survive as their own modalities.
+        "feature3": ["1", "4", "3", "4", np.nan],
     }
     expected = pd.DataFrame(data)
     pd.testing.assert_frame_equal(transformed_df, expected, check_dtype=False)
@@ -143,11 +145,11 @@ def test_discretizer(x_train: pd.DataFrame, x_dev_1: pd.DataFrame, target: str):
         "Non-np.nan value were not grouped"
     )
 
+    # post-pass uses min_freq directly: the inf bucket (~8%) is below 0.1 and gets merged.
     assert features("Discrete_Quantitative_lownan").values == [
         1.0,
         2.0,
         3.0,
-        4.0,
         np.inf,
     ], "NaNs should not be grouped whatsoever"
 
@@ -155,7 +157,6 @@ def test_discretizer(x_train: pd.DataFrame, x_dev_1: pd.DataFrame, target: str):
         1.0,
         2.0,
         3.0,
-        4.0,
         np.inf,
     ], "Rare values should be grouped to the closest one (OrdinalDiscretizer)"
 

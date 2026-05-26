@@ -246,7 +246,7 @@ class ContinuousCombinationEvaluator(CombinationEvaluator[pd.Series], ABC):
                 stats=stats, index_to_groupby=combination["index_to_groupby"]
             )
             if train_rates is not None:
-                return test_viability(train_rates, self.min_freq, self.target_rate.__name__)
+                return test_viability(train_rates, self.min_freq, self.target_rate.__name__, self.min_freq_alpha)
         # Fallback: legacy grouper + apply(np.mean/median) over Python lists
         return super()._test_viability_train(combination)
 
@@ -485,7 +485,9 @@ class ContinuousCombinationEvaluator(CombinationEvaluator[pd.Series], ABC):
             )
             if dev_rates is not None:
                 train_target_rate = test_results["train_rates"][self.target_rate.__name__]
-                dev_results = test_viability(dev_rates, self.min_freq, self.target_rate.__name__, train_target_rate)
+                dev_results = test_viability(
+                    dev_rates, self.min_freq, self.target_rate.__name__, self.min_freq_alpha, train_target_rate
+                )
                 merged = {**test_results, **dev_results}
                 merged[Keys.VIABLE.value] = is_viable(merged)
                 return merged

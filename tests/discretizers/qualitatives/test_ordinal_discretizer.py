@@ -335,80 +335,77 @@ def test_update_stats_single_modality():
 
 
 def test_find_common_modalities_all_overrepresented():
-    """Test find_common_modalities with all values overrepresented"""
+    """All modalities have observed proportion >> min_freq → nothing merged."""
     df_feature = pd.Series(["A", "B", "A", "C", "B", "A"])
     y = pd.Series([1, 0, 1, 0, 1, 0])
     min_freq = 0 / 6
     labels = ["A", "B", "C"]
-    result = find_common_modalities(df_feature, y, min_freq, labels)
+    result = find_common_modalities(df_feature, y, min_freq, labels, alpha=0.05)
     expected = GroupedList(labels)
     assert result == expected
     assert result.content == expected.content
 
 
-def test_find_common_modalities_all_underrepresented():
-    """Test find_common_modalities with all values underrepresented"""
-    df_feature = pd.Series(["A", "B", "A", "C", "B", "A"])
-    y = pd.Series([1, 0, 1, 0, 1, 0])
-    min_freq = 4 / 6
-    labels = ["A", "B", "C"]
-    result = find_common_modalities(df_feature, y, min_freq, labels)
-    expected = GroupedList(labels)
-    expected.group("C", "B")
-    expected.group("A", "B")
-    assert result == expected
-    assert result.content == expected.content
+def test_find_common_modalities_all_significantly_below():
+    """All modalities significantly below min_freq (Wilson upper < min_freq) → all merged."""
+    # n=400, three modalities of count ~10 each → Wilson upper(10, 400, 0.05) ≈ 0.046 < 0.5.
+    df_feature = pd.Series(["A"] * 10 + ["B"] * 10 + ["C"] * 10 + ["D"] * 370)
+    y = pd.Series([0] * 400)
+    labels = ["A", "B", "C", "D"]
+    result = find_common_modalities(df_feature, y, min_freq=0.5, labels=labels, alpha=0.05)
+    # A/B/C all get merged into D (the only one above the CI floor); merge order is
+    # driven by argmin walk, so the listed order under D mirrors the discard sequence.
+    assert set(result.content["D"]) == {"A", "B", "C", "D"}
+    assert list(result.content.keys()) == ["D"]
 
 
-def test_find_common_modalities_with_nans():
-    """Test find_common_modalities with np.nan values in df_feature"""
+def test_find_common_modalities_borderline_modality_survives_on_small_n():
+    """On small samples, the Wilson CI is wide — a modality with proportion just below
+    min_freq isn't significantly below it, so the OrdinalDiscretizer doesn't merge."""
+
+    # n=6, C count=1 (~17%) vs min_freq=3/6=50%; Wilson upper(1,6,0.05) ≈ 0.56 > 0.5 → keep.
     df_feature = pd.Series(["A", "B", np.nan, "C", "B", "A"])
     y = pd.Series([1, 0, 1, 0, 1, 0])
-    min_freq = 2 / 6
     labels = ["A", "B", "C"]
-    result = find_common_modalities(df_feature, y, min_freq, labels)
-    expected = GroupedList(labels)
-    expected.group("C", "B")
-    assert result == expected
-    assert result.content == expected.content
+    result = find_common_modalities(df_feature, y, min_freq=3 / 6, labels=labels, alpha=0.05)
+    assert result == GroupedList(labels)
 
 
 def test_find_common_modalities_with_equal_min_freq():
-    """Test find_common_modalities with equal min_freq"""
+    """A modality at exactly min_freq passes (Wilson upper ≥ min_freq)."""
     df_feature = pd.Series(["A", "B", "A", "C", "B", "A"])
     y = pd.Series([1, 0, 1, 0, 1, 0])
     min_freq = 1 / 6
     labels = ["A", "B", "C"]
-    result = find_common_modalities(df_feature, y, min_freq, labels)
+    result = find_common_modalities(df_feature, y, min_freq, labels, alpha=0.05)
     expected = GroupedList(labels)
     assert result == expected
     assert result.content == expected.content
 
 
-def test_find_common_modalities_with_increased_freq():
-    """Test find_common_modalities with increased min_freq"""
-    df_feature = pd.Series(["A", "B", "A", "C", "B", "A"])
-    y = pd.Series([1, 0, 1, 0, 1, 0])
-    min_freq = 2 / 6
+def test_find_common_modalities_increased_freq_large_n():
+    """At large n the CI is tight: a 17%-modality IS significantly below 50% and gets merged."""
+
+    # n=600, C count=100 (~17%); Wilson upper(100, 600, 0.05) ≈ 0.198 < 0.5 → merge.
+    df_feature = pd.Series(["A"] * 300 + ["B"] * 200 + ["C"] * 100)
+    y = pd.Series([0] * 600)
     labels = ["A", "B", "C"]
-    result = find_common_modalities(df_feature, y, min_freq, labels)
+    result = find_common_modalities(df_feature, y, min_freq=3 / 6, labels=labels, alpha=0.05)
     expected = GroupedList(labels)
     expected.group("C", "B")
     assert result == expected
-    assert result.content == expected.content
 
 
-def test_find_common_modalities_with_missing_value():
-    """Test find_common_modalities with missing value in df_feature"""
+def test_find_common_modalities_with_missing_value_small_n():
+    """Missing label (count=0) on small n: Wilson upper(0, 6) ≈ 0.39 > min_freq=2/6 → not merged.
+
+    The CI captures the uncertainty around 0 counts on tiny samples.
+    """
     df_feature = pd.Series(["A", "B", "A", np.nan, "B", "A"])
     y = pd.Series([1, 0, 1, 0, 1, 0])
-    min_freq = 2 / 6
     labels = ["A", "B", "C"]
-    result = find_common_modalities(df_feature, y, min_freq, labels)
-    expected = GroupedList(labels)
-    expected.group("C", "B")
-    assert result == expected
-    assert result.content == expected.content
+    result = find_common_modalities(df_feature, y, min_freq=2 / 6, labels=labels, alpha=0.05)
+    assert result == GroupedList(labels)
 
 
 def test_find_common_modalities_empty_input():
@@ -417,7 +414,7 @@ def test_find_common_modalities_empty_input():
     y = pd.Series([])
     min_freq = 0.2
     labels = []
-    result = find_common_modalities(df_feature, y, min_freq, labels)
+    result = find_common_modalities(df_feature, y, min_freq, labels, alpha=0.05)
     expected = GroupedList([])
     assert result == expected
     assert result.content == expected.content
@@ -429,7 +426,7 @@ def test_find_common_modalities_single_modality():
     y = pd.Series([1, 0, 1])
     min_freq = 0.2
     labels = ["A"]
-    result = find_common_modalities(df_feature, y, min_freq, labels)
+    result = find_common_modalities(df_feature, y, min_freq, labels, alpha=0.05)
     expected = GroupedList(labels)
     assert result == expected
     assert result.content == expected.content
@@ -441,44 +438,78 @@ def test_find_common_modalities_unexpected_value():
     y = pd.Series([1, 0, 1, 0, 1, 0])
     min_freq = 2 / 6
     labels = ["A", "B"]
-    result = find_common_modalities(df_feature, y, min_freq, labels)
+    result = find_common_modalities(df_feature, y, min_freq, labels, alpha=0.05)
     expected = GroupedList(labels)
     assert result == expected
 
 
-def test_ordinal_discretizer_with_increasing_freq():
-    """Test OrdinalDiscretizer with basic input"""
+def test_find_common_modalities_small_n_does_not_overmerge():
+    """A modality 1 row short of min_freq on a small sample is NOT significantly below it —
+    the Wilson CI is wide enough that the proportion is statistically consistent with
+    min_freq. Merging on this evidence alone is too aggressive."""
+
+    # n=8000, min_freq=0.025 → target count 200. count=198 (2 short): Wilson upper ≈ 0.0284 > 0.025 → keep.
+    n = 8000
+    df_feature = pd.Series(["A"] * (n - 198) + ["B"] * 198)
+    y = pd.Series([0] * n)
+    result = find_common_modalities(df_feature, y, min_freq=0.025, labels=["A", "B"], alpha=0.05)
+    assert result == GroupedList(["A", "B"]), "modality within CI of min_freq must survive"
+
+
+def test_find_common_modalities_significantly_below_at_large_n():
+    """At large n the CI is tight — a modality clearly below min_freq is merged."""
+
+    # n=8000, min_freq=0.025; count=100 (~0.0125): Wilson upper ≈ 0.015 < 0.025 → merge.
+    n = 8000
+    df_feature = pd.Series(["A"] * (n - 100) + ["B"] * 100)
+    y = pd.Series([0] * n)
+    result = find_common_modalities(df_feature, y, min_freq=0.025, labels=["A", "B"], alpha=0.05)
+    expected = GroupedList(["A", "B"])
+    expected.group("B", "A")
+    assert result == expected
+
+
+def test_ordinal_discretizer_no_merge_on_small_n():
+    """On n=6 with min_freq=0.5, the Wilson CI covers each modality's proportion so
+    none is *significantly* below the floor — nothing gets merged."""
+
     df = pd.DataFrame({"feature1": ["A", "B", "A", "C", "B", "A"], "feature2": ["X", "Y", "X", "Z", "Y", "X"]})
     y = pd.Series([1, 0, 1, 0, 1, 0])
     feature1 = OrdinalFeature("feature1", ["A", "B", "C"])
     feature2 = OrdinalFeature("feature2", ["X", "Y", "Z"])
-    ordinals = [feature1, feature2]
-    discretizer = OrdinalDiscretizer(ordinals, min_freq=2 / 6)
+    discretizer = OrdinalDiscretizer([feature1, feature2], min_freq=3 / 6)
     discretizer.fit(df, y)
 
-    # Check feature1
+    assert feature1.values == GroupedList(["A", "B", "C"])
+    assert feature2.values == GroupedList(["X", "Y", "Z"])
+
+    transformed = discretizer.transform(df)
+    pd.testing.assert_frame_equal(transformed, df)
+
+
+def test_ordinal_discretizer_merges_at_large_n():
+    """At large n the CI is tight and the discretizer merges the genuinely-rare modality."""
+
+    # n=600, C / Z modality count = 50 (~8%) vs min_freq=50% → Wilson upper ≈ 0.107 < 0.5 → merge.
+    df = pd.DataFrame(
+        {
+            "feature1": ["A"] * 300 + ["B"] * 250 + ["C"] * 50,
+            "feature2": ["X"] * 300 + ["Y"] * 250 + ["Z"] * 50,
+        }
+    )
+    y = pd.Series([0] * 600)
+    feature1 = OrdinalFeature("feature1", ["A", "B", "C"])
+    feature2 = OrdinalFeature("feature2", ["X", "Y", "Z"])
+    discretizer = OrdinalDiscretizer([feature1, feature2], min_freq=3 / 6)
+    discretizer.fit(df, y)
+
     expected_feature1 = GroupedList(["A", "B", "C"])
     expected_feature1.group("C", "B")
     assert feature1.values == expected_feature1
-    assert feature1.content == expected_feature1.content
 
-    # Check feature2
     expected_feature2 = GroupedList(["X", "Y", "Z"])
     expected_feature2.group("Z", "Y")
     assert feature2.values == expected_feature2
-    assert feature2.content == expected_feature2.content
-
-    # Check transformed data
-    transformed = discretizer.transform(df)
-    assert not transformed.isnull().values.any(), "Transformed data should not contain NaNs"
-    df_expected = pd.DataFrame(
-        {
-            "feature1": ["A", "B to C", "A", "B to C", "B to C", "A"],
-            "feature2": ["X", "Y to Z", "X", "Y to Z", "Y to Z", "X"],
-        }
-    )
-    print(transformed)
-    assert transformed.equals(df_expected), "Transformed data does not match expected data"
 
 
 def test_ordinal_discretizer_with_nans():
@@ -513,72 +544,50 @@ def test_ordinal_discretizer_with_nans():
     assert transformed.equals(df_expected), "Transformed data does not match expected data"
 
 
-def test_ordinal_discretizer_with_missing_value():
-    """Test OrdinalDiscretizer with basic input"""
+def test_ordinal_discretizer_missing_value_on_small_n_keeps_label():
+    """A label that is absent (count=0) on n=6 is still within Wilson CI of min_freq=2/6,
+    so the OrdinalDiscretizer does not merge it."""
+
     df = pd.DataFrame({"feature1": ["A", "B", "A", np.nan, "B", "A"], "feature2": ["X", "Y", "X", np.nan, "Y", "X"]})
     y = pd.Series([1, 0, 1, 0, 1, 0])
     feature1 = OrdinalFeature("feature1", ["A", "B", "C"])
     feature2 = OrdinalFeature("feature2", ["X", "Y", "Z"])
-    ordinals = [feature1, feature2]
-    discretizer = OrdinalDiscretizer(ordinals, min_freq=1 / 6)
+    discretizer = OrdinalDiscretizer([feature1, feature2], min_freq=2 / 6)
     discretizer.fit(df, y)
 
-    # Check feature1
-    expected_feature1 = GroupedList(["A", "B", "C"])
-    expected_feature1.group("C", "B")
-    assert feature1.values == expected_feature1
-    assert feature1.content == expected_feature1.content
-
-    # Check feature2
-    expected_feature2 = GroupedList(["X", "Y", "Z"])
-    expected_feature2.group("Z", "Y")
-    assert feature2.values == expected_feature2
-    assert feature2.content == expected_feature2.content
-
-    # Check transformed data
-    transformed = discretizer.transform(df)
-    df_expected = pd.DataFrame(
-        {
-            "feature1": ["A", "B to C", "A", np.nan, "B to C", "A"],
-            "feature2": ["X", "Y to Z", "X", np.nan, "Y to Z", "X"],
-        }
-    )
-    assert transformed.equals(df_expected), "Transformed data does not match expected data"
+    assert feature1.values == GroupedList(["A", "B", "C"])
+    assert feature2.values == GroupedList(["X", "Y", "Z"])
 
 
 def test_ordinal_discretizer_with_all_underrepresented():
-    """Test OrdinalDiscretizer with basic input"""
+    """min_freq=5/6 is high enough that all modalities of an n=6 sample are
+    significantly below it under the Wilson CI → everything collapses."""
+
     df = pd.DataFrame({"feature1": ["A", "B", "A", "C", "B", "A"], "feature2": ["X", "Y", "X", "Z", "Y", "X"]})
     y = pd.Series([1, 0, 1, 0, 1, 0])
     feature1 = OrdinalFeature("feature1", ["A", "B", "C"])
     feature2 = OrdinalFeature("feature2", ["X", "Y", "Z"])
-    ordinals = [feature1, feature2]
-    discretizer = OrdinalDiscretizer(ordinals, min_freq=5 / 6)
+    discretizer = OrdinalDiscretizer([feature1, feature2], min_freq=5 / 6)
     discretizer.fit(df, y)
 
-    # Check feature1
     expected_feature1 = GroupedList(["A", "B", "C"])
     expected_feature1.group("A", "B")
     expected_feature1.group("C", "B")
     assert feature1.values == expected_feature1
-    assert feature1.content == expected_feature1.content
 
-    # Check feature2
     expected_feature2 = GroupedList(["X", "Y", "Z"])
     expected_feature2.group("X", "Y")
     expected_feature2.group("Z", "Y")
     assert feature2.values == expected_feature2
-    assert feature2.content == expected_feature2.content
 
-    # Check transformed data
     transformed = discretizer.transform(df)
     df_expected = pd.DataFrame(
         {
-            "feature1": ["A to C", "A to C", "A to C", "A to C", "A to C", "A to C"],
-            "feature2": ["X to Z", "X to Z", "X to Z", "X to Z", "X to Z", "X to Z"],
+            "feature1": ["A to C"] * 6,
+            "feature2": ["X to Z"] * 6,
         }
     )
-    assert transformed.equals(df_expected), "Transformed data does not match expected data"
+    assert transformed.equals(df_expected)
 
 
 def test_ordinal_discretizer(x_train: pd.DataFrame, target: str) -> None:

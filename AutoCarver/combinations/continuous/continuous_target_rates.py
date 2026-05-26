@@ -33,14 +33,15 @@ class ContinuousTargetRate(TargetRate[pd.Series], ABC):
         """
         # checking for an xtab
         if xagg is not None:
-            # frequency per modality
-            frequency = xagg.apply(len) / xagg.apply(len).sum()
+            # count + frequency per modality (count carried for CI-based viability tests)
+            count = xagg.apply(len)
+            frequency = count / count.sum()
 
             # computing target rate. `_compute` expects pd.Series (Generic
             # XAgg=Series); compute()'s wide signature is for LSP matching,
             # callers always pass a Series-of-y-lists here.
             return pd.DataFrame(
-                {self.__name__: self._compute(xagg), "frequency": frequency}  # type: ignore
+                {self.__name__: self._compute(xagg), "frequency": frequency, "count": count}  # type: ignore
             )
         return None
 
@@ -126,7 +127,7 @@ class TargetMean(ContinuousTargetRate):
         freq_g = n_g / n_total if n_total > 0 else np.zeros_like(n_g)
 
         df = pd.DataFrame(
-            {self.__name__: mean_g, "frequency": freq_g},
+            {self.__name__: mean_g, "frequency": freq_g, "count": n_g},
             index=pd.Index(leader_labels),
         )
         # Legacy `xagg.groupby(...).sum()` sorts groups by leader label;

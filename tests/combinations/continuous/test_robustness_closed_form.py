@@ -31,7 +31,7 @@ def _legacy_viability_train(evaluator, combination):
     """Pure legacy path: _grouper + compute + test_viability."""
     xagg = evaluator._grouper(evaluator.samples.train, combination["index_to_groupby"])
     rates = evaluator.target_rate.compute(xagg)
-    return _test_viability(rates, evaluator.min_freq, evaluator.target_rate.__name__)
+    return _test_viability(rates, evaluator.min_freq, evaluator.target_rate.__name__, evaluator.min_freq_alpha)
 
 
 def _legacy_viability_dev(evaluator, train_result, combination):
@@ -41,7 +41,9 @@ def _legacy_viability_dev(evaluator, train_result, combination):
     train_target_rate = train_result["train_rates"][evaluator.target_rate.__name__]
     grouped_dev = evaluator._grouper(evaluator.samples.dev, combination["index_to_groupby"])
     dev_rates = evaluator.target_rate.compute(grouped_dev)
-    dev_results = _test_viability(dev_rates, evaluator.min_freq, evaluator.target_rate.__name__, train_target_rate)
+    dev_results = _test_viability(
+        dev_rates, evaluator.min_freq, evaluator.target_rate.__name__, evaluator.min_freq_alpha, train_target_rate
+    )
     merged = {**train_result, **dev_results}
     merged[Keys.VIABLE.value] = is_viable(merged)
     return merged

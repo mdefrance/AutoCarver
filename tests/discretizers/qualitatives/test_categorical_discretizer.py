@@ -14,30 +14,20 @@ from AutoCarver.features import CategoricalFeature, Features, FeaturesConfig, Gr
 
 
 def test_series_value_counts():
-    """Tests series_value_counts function"""
-    # Test series_value_counts with normalize=True
+    """Tests series_value_counts function — returns integer counts (not proportions)."""
     x = pd.Series(["a", "b", "a", "b", "c", "c", "c"])
-    result = series_value_counts(x, dropna=False, normalize=True)
-    expected = {"c": 3 / 7, "a": 2 / 7, "b": 2 / 7}
-    assert result == expected
+    result = series_value_counts(x, dropna=False)
+    assert result == {"c": 3, "a": 2, "b": 2}
 
-    # Test series_value_counts with normalize=False
-    x = pd.Series(["a", "b", "a", "b", "c", "c", "c"])
-    result = series_value_counts(x, dropna=False, normalize=False)
-    expected = {"c": 3, "a": 2, "b": 2}
-    assert result == expected
-
-    # Test series_value_counts with dropna=True
+    # with NaN, dropna=True
     x = pd.Series(["a", "b", "a", "b", "c", "c", "c", None])
-    result = series_value_counts(x, dropna=True, normalize=True)
-    expected = {"c": 3 / 7, "a": 2 / 7, "b": 2 / 7}
-    assert result == expected
+    result = series_value_counts(x, dropna=True)
+    assert result == {"c": 3, "a": 2, "b": 2}
 
-    # Test series_value_counts with dropna=False
+    # with NaN, dropna=False
     x = pd.Series(["a", "b", "a", "b", "c", "c", "c", None])
-    result = series_value_counts(x, dropna=False, normalize=True)
-    expected = {"c": 3 / 8, "a": 2 / 8, "b": 2 / 8, None: 1 / 8}
-    assert result == expected
+    result = series_value_counts(x, dropna=False)
+    assert result == {"c": 3, "a": 2, "b": 2, None: 1}
 
 
 def test_series_target_rate():
@@ -97,37 +87,33 @@ def test_prepare_sample():
 
 
 def test_group_feature_rare_modalities():
-    """Tests CategoricalDiscretizer _group_feature_rare_modalities method"""
+    """Tests CategoricalDiscretizer._group_feature_rare_modalities with the Wilson CI.
 
-    # test with min_freq = 0.2
+    At n=1000 and min_freq=0.10, modalities with count ≈ 50 (~5%, Wilson upper ≈ 0.066)
+    are significantly below 10% and get grouped, while modalities with count ≈ 300
+    (~30%, Wilson upper > 0.10) survive.
+    """
+
     feature1 = CategoricalFeature("feature1")
     feature2 = CategoricalFeature("feature2")
-    categorical_discretizer = CategoricalDiscretizer([feature1, feature2], min_freq=0.2)
+    categorical_discretizer = CategoricalDiscretizer([feature1, feature2], min_freq=0.10)
 
     X = pd.DataFrame(
         {
-            "feature1": ["x", "b", "a", "b", "c", "c", "c"],
-            "feature2": ["a", "y", "x", "y", "z", "z", "z"],
+            "feature1": ["x"] * 50 + ["a"] * 50 + ["b"] * 300 + ["c"] * 600,
+            "feature2": ["a"] * 50 + ["x"] * 50 + ["y"] * 300 + ["z"] * 600,
         }
     )
     categorical_discretizer.features.fit(X)
     frequencies = X[categorical_discretizer.features.versions].apply(series_value_counts, axis=0)
     grouped_x = categorical_discretizer._group_feature_rare_modalities(feature1, X, frequencies)
 
-    assert feature1.default in grouped_x["feature1"].values
     assert feature1.has_default
-    assert grouped_x["feature1"].tolist() == [
-        feature1.default,
-        "b",
-        feature1.default,
-        "b",
-        "c",
-        "c",
-        "c",
-    ]
-    assert feature1.content[feature1.default] == ["a", "x", feature1.default]
+    # "x" and "a" merge into default; "b" and "c" survive
+    assert sorted(set(grouped_x["feature1"].values)) == sorted([feature1.default, "b", "c"])
+    assert set(feature1.content[feature1.default]) == {"a", "x", feature1.default}
 
-    # test with min_freq = 0.001
+    # test with very low min_freq — nothing should be grouped
     feature1 = CategoricalFeature("feature1")
     feature2 = CategoricalFeature("feature2")
     categorical_discretizer = CategoricalDiscretizer([feature1, feature2], min_freq=0.001)
@@ -142,15 +128,14 @@ def test_group_feature_rare_modalities():
     frequencies = X[categorical_discretizer.features.versions].apply(series_value_counts, axis=0)
     grouped_x = categorical_discretizer._group_feature_rare_modalities(feature1, X, frequencies)
 
-    assert feature1.default not in grouped_x["feature1"].values
     assert not feature1.has_default
     assert grouped_x["feature1"].tolist() == ["x", "b", "a", "b", "c", "c", "c"]
     assert feature1.values == ["x", "b", "a", "c"]
 
-    # test with min_freq = 1.0
+    # min_freq = 2.0 forces every modality significantly below the floor → everything grouped.
     feature1 = CategoricalFeature("feature1")
     feature2 = CategoricalFeature("feature2")
-    categorical_discretizer = CategoricalDiscretizer([feature1, feature2], min_freq=1.0)
+    categorical_discretizer = CategoricalDiscretizer([feature1, feature2], min_freq=2.0)
 
     X = pd.DataFrame(
         {
@@ -162,31 +147,65 @@ def test_group_feature_rare_modalities():
     frequencies = X[categorical_discretizer.features.versions].apply(series_value_counts, axis=0)
     grouped_x = categorical_discretizer._group_feature_rare_modalities(feature1, X, frequencies)
 
-    assert isinstance(grouped_x, pd.DataFrame)
-    assert feature1.default in grouped_x["feature1"].values
     assert feature1.has_default
-    assert grouped_x["feature1"].tolist() == [
-        feature1.default,
-        feature1.default,
-        feature1.default,
-        feature1.default,
-        feature1.default,
-        feature1.default,
-        feature1.default,
-    ]
-    assert feature1.content[feature1.default] == ["a", "x", "b", "c", feature1.default]
+    assert grouped_x["feature1"].tolist() == [feature1.default] * 7
+    assert set(feature1.content[feature1.default]) == {"a", "x", "b", "c", feature1.default}
+
+
+def test_categorical_ci_gating_keeps_near_threshold_groups_clearly_rare():
+    """At n=1000 and min_freq=0.05, a modality at count=49 is within the Wilson CI of
+    min_freq (upper ≈ 0.065 > 0.05) → survives. A modality at count=20 (upper ≈ 0.031)
+    is significantly below 5% and gets grouped into the default.
+    """
+
+    n = 1000
+    feature1 = CategoricalFeature("feature1")
+    categorical_discretizer = CategoricalDiscretizer([feature1], min_freq=0.05)
+    # "edge" at 49 rows — Wilson upper ≈ 0.065 → not significantly below 5% → keep
+    # "rare" at 20 rows — Wilson upper ≈ 0.031 → significantly below 5% → group
+    X = pd.DataFrame({"feature1": ["edge"] * 49 + ["rare"] * 20 + ["fat"] * (n - 69)})
+    categorical_discretizer.features.fit(X)
+    frequencies = X[categorical_discretizer.features.versions].apply(series_value_counts, axis=0)
+    grouped_x = categorical_discretizer._group_feature_rare_modalities(feature1, X, frequencies)
+
+    assert "edge" in grouped_x["feature1"].values, "near-threshold modality must survive under CI"
+    assert "rare" not in grouped_x["feature1"].values, "clearly-rare modality must be grouped"
+
+
+def test_carver_halves_min_freq_so_categorical_keeps_mid_freq_modalities():
+    """End-to-end regression for the ``other_parties`` example: when the user runs a
+    Carver with ``min_freq=0.05``, the Carver passes ``min_freq/2 = 0.025`` to
+    CategoricalDiscretizer. A 4.67%-frequent modality (well above 2.5%) survives,
+    whereas the old strict ``< min_freq`` comparison inside CategoricalDiscretizer
+    would have grouped it into ``__OTHER__``.
+    """
+
+    n = 1000
+    # "mid" at 4.7% — well above 2.5% but below 5%
+    feature1 = CategoricalFeature("feature1")
+    categorical_discretizer = CategoricalDiscretizer([feature1], min_freq=0.025)  # carver-halved
+    X = pd.DataFrame({"feature1": ["mid"] * 47 + ["fat"] * (n - 47)})
+    categorical_discretizer.features.fit(X)
+    frequencies = X[categorical_discretizer.features.versions].apply(series_value_counts, axis=0)
+    grouped_x = categorical_discretizer._group_feature_rare_modalities(feature1, X, frequencies)
+
+    assert "mid" in grouped_x["feature1"].values, "4.7% modality must survive under carver-halved min_freq"
+    assert not feature1.has_default
 
 
 def test_group_rare_modalities():
-    """Tests CategoricalDiscretizer _group_rare_modalities method"""
+    """Tests CategoricalDiscretizer._group_rare_modalities — at n=1000 with min_freq=0.10
+    the singleton-count modalities are clearly significantly below the floor.
+    """
     feature1 = CategoricalFeature("feature1")
     feature2 = CategoricalFeature("feature2")
-    categorical_discretizer = CategoricalDiscretizer([feature1, feature2], min_freq=0.2)
+    categorical_discretizer = CategoricalDiscretizer([feature1, feature2], min_freq=0.10)
 
+    n = 1000
     X = pd.DataFrame(
         {
-            "feature1": ["x", "b", "a", "b", "c", "c", "c"],
-            "feature2": ["a", "y", "x", "y", "z", "z", "z"],
+            "feature1": ["x"] * 50 + ["a"] * 50 + ["b"] * 300 + ["c"] * (n - 400),
+            "feature2": ["a"] * 50 + ["x"] * 50 + ["y"] * 300 + ["z"] * (n - 400),
         }
     )
     categorical_discretizer.features.fit(X)
@@ -213,93 +232,54 @@ def test_target_sort():
 
 
 def test_categoricaldiscretizer_fit():
-    """Tests CategoricalDiscretizer fit method"""
+    """Tests CategoricalDiscretizer fit method.
+
+    Scaled to n≈1000 so the Wilson CI is tight enough to flag the 5%-frequent
+    "x"/"a" modalities as significantly below min_freq=0.10.
+    """
+
+    n = 999
+    base_x = ["x"] * 50 + ["a"] * 50 + ["b"] * 300 + ["c"] * (n - 400) + [np.nan]
+    base_y_binary = [1] * 50 + [1] * 50 + [0] * 300 + [1] * (n - 400) + [1]
 
     # test with binary target
     feature1 = CategoricalFeature("feature1")
     feature2 = CategoricalFeature("feature2")
-    categorical_discretizer = CategoricalDiscretizer([feature1, feature2], min_freq=0.2)
+    categorical_discretizer = CategoricalDiscretizer([feature1, feature2], min_freq=0.10)
 
-    X = pd.DataFrame(
-        {
-            "feature1": ["x", "b", "a", "b", "c", "c", "c", np.nan],
-            "feature2": ["a", "y", "x", "y", "z", "z", "z", np.nan],
-        }
-    )
-    y = pd.Series([1, 0, 1, 0, 1, 1, 1, 1])
+    X = pd.DataFrame({"feature1": base_x, "feature2": base_x})
+    y = pd.Series(base_y_binary)
 
     categorical_discretizer.fit(X, y)
 
     assert feature1.has_default
     assert feature2.has_default
-    assert feature1.values == ["b", feature1.default, "c"]
-    assert feature2.values == ["y", feature2.default, "z"]
+    assert set(feature1.values) == {"c", "b", feature1.default}
+    assert set(feature2.values) == {"c", "b", feature2.default}
 
     transformed_x = categorical_discretizer.transform(X)
-
-    assert transformed_x["feature1"].tolist() == [
-        feature1.label_per_value[feature1.default],
-        "b",
-        feature1.label_per_value[feature1.default],
-        "b",
-        "c",
-        "c",
-        "c",
-        np.nan,
-    ]
-    assert transformed_x["feature2"].tolist() == [
-        feature2.label_per_value[feature2.default],
-        "y",
-        feature2.label_per_value[feature2.default],
-        "y",
-        "z",
-        "z",
-        "z",
-        np.nan,
-    ]
+    # the two near-threshold modalities x/a both land in default; b/c keep their labels.
+    f1_default_label = feature1.label_per_value[feature1.default]
+    f2_default_label = feature2.label_per_value[feature2.default]
+    assert (transformed_x["feature1"].iloc[:100] == f1_default_label).all()
+    assert (transformed_x["feature1"].iloc[100:400] == "b").all()
+    assert (transformed_x["feature1"].iloc[400:-1] == "c").all()
+    assert pd.isna(transformed_x["feature1"].iloc[-1])
+    assert (transformed_x["feature2"].iloc[:100] == f2_default_label).all()
 
     # test with continuous target
     feature1 = CategoricalFeature("feature1")
     feature2 = CategoricalFeature("feature2")
-    categorical_discretizer = CategoricalDiscretizer([feature1, feature2], min_freq=0.2)
+    categorical_discretizer = CategoricalDiscretizer([feature1, feature2], min_freq=0.10)
 
-    X = pd.DataFrame(
-        {
-            "feature1": ["x", "b", "a", "b", "c", "c", "c", np.nan],
-            "feature2": ["a", "y", "x", "y", "z", "z", "z", np.nan],
-        }
-    )
-    y = pd.Series([1.2, 0.1, 0.9, -0.2, 1, 1.5, 1.35, 1])
+    X = pd.DataFrame({"feature1": base_x, "feature2": base_x})
+    rng = np.random.default_rng(0)
+    y_cont = pd.Series(rng.normal(loc=base_y_binary, scale=0.1))
 
-    categorical_discretizer.fit(X, y)
+    categorical_discretizer.fit(X, y_cont)
 
     assert feature1.has_default
     assert feature2.has_default
-    assert feature1.values == ["b", feature1.default, "c"]
-    assert feature2.values == ["y", feature2.default, "z"]
-
-    transformed_x = categorical_discretizer.transform(X)
-
-    assert transformed_x["feature1"].tolist() == [
-        feature1.label_per_value[feature1.default],
-        "b",
-        feature1.label_per_value[feature1.default],
-        "b",
-        "c",
-        "c",
-        "c",
-        np.nan,
-    ]
-    assert transformed_x["feature2"].tolist() == [
-        feature2.label_per_value[feature2.default],
-        "y",
-        feature2.label_per_value[feature2.default],
-        "y",
-        "z",
-        "z",
-        "z",
-        np.nan,
-    ]
 
 
 def test_categorical_discretizer(x_train: pd.DataFrame, target: str) -> None:

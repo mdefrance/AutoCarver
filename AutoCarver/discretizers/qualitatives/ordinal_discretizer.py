@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, DiscretizerConfig, Sample
+from AutoCarver.discretizers.utils.frequency_ci import is_significantly_below
 from AutoCarver.features import GroupedList, OrdinalFeature
 from AutoCarver.utils import extend_docstring
 
@@ -84,6 +85,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
                 sample.y,  # type: ignore
                 min_freq=self.min_freq,
                 labels=[label for label in feature.labels if label != feature.nan],
+                alpha=self.config.min_freq_alpha,
             )
             for feature in self.features
         }
@@ -97,8 +99,15 @@ class OrdinalDiscretizer(BaseDiscretizer):
         return self
 
 
-def find_common_modalities(df_feature: pd.Series, y: pd.Series, min_freq: float, labels: list[str]) -> GroupedList:
-    """finds common modalities of a ordinal feature"""
+def find_common_modalities(
+    df_feature: pd.Series, y: pd.Series, min_freq: float, labels: list[str], alpha: float
+) -> GroupedList:
+    """finds common modalities of a ordinal feature.
+
+    A modality is considered underrepresented when the Wilson upper bound of
+    its observed proportion (at significance level ``alpha``) is strictly
+    below ``min_freq`` — i.e. its frequency is significantly below the target.
+    """
 
     # converting to grouped list
     grouped_labels = GroupedList(labels)
@@ -106,8 +115,13 @@ def find_common_modalities(df_feature: pd.Series, y: pd.Series, min_freq: float,
     # computing frequencies and target rate of each modality
     stats, len_df = compute_stats(df_feature, y, grouped_labels)
 
+    # empty input: nothing to merge
+    if len_df == 0:
+        return grouped_labels
+
     # case 1: there are underrepresented modalities/values
-    while any(stats[0, :] / len_df < min_freq) & (stats.shape[1] > 1):
+    underrepresented = is_significantly_below(stats[0, :], len_df, min_freq, alpha)
+    while bool(np.any(underrepresented)) and (stats.shape[1] > 1):
         # identifying the first underrepresented value
         discarded_idx = int(np.argmin(stats[0, :]))
 
@@ -124,6 +138,7 @@ def find_common_modalities(df_feature: pd.Series, y: pd.Series, min_freq: float,
 
         # updating stats accordingly
         stats = update_stats(stats, discarded_idx, kept_idx)
+        underrepresented = is_significantly_below(stats[0, :], len_df, min_freq, alpha)
 
     # case 2 : no underrepresented value
     return grouped_labels
