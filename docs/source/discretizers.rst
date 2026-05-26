@@ -50,7 +50,16 @@ remain explicit constructor arguments.
 * ``dropna`` (``bool``, default ``False``) — group ``nan`` into another modality
   (carvers default this to ``True``).
 * ``verbose`` (``bool``, default ``False``) — print progress and statistics.
-* ``n_jobs`` (``int``, default ``1``) — number of workers for parallel fits.
+* ``n_jobs`` (``int``, default ``1``) — number of workers for parallel fits. Inside
+  :class:`BaseCarver`, ``n_jobs > 1`` dispatches one task per feature through
+  ``multiprocessing.Pool``; see :ref:`Carvers` for sizing guidance.
+* ``min_freq_alpha`` (``float``, default ``0.05``) — two-sided significance level
+  of the Wilson score interval used to gate ``min_freq``. A modality is declared
+  under-represented only when the Wilson upper bound of its observed proportion is
+  *significantly* below ``min_freq`` (see :ref:`MinFreqViability` for the formula
+  and decision rule). Smaller :math:`\alpha` → wider CI → fewer rejections → less
+  merging; larger :math:`\alpha` → tighter CI → more merging.
+  :math:`\alpha = 1` recovers the legacy strict-threshold behaviour.
 
 
 .. _Discretizer:

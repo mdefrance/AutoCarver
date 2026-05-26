@@ -34,6 +34,12 @@ class DiscretizerConfig:
     interval used to decide whether a modality's observed frequency is
     significantly below ``min_freq``. Smaller values are more lenient
     (wider CI → fewer merges); ``0.05`` matches a 95% interval.
+
+    ``n_jobs`` controls per-feature parallelism inside :class:`BaseCarver`:
+    with ``n_jobs > 1`` and more than one feature, the per-feature combination
+    search runs through ``multiprocessing.Pool.imap_unordered``. Worth it only
+    on hundreds-to-thousands of features (pool startup + pickle overhead
+    dominate below that).
     """
 
     copy: bool = True
@@ -139,21 +145,29 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         ----------
 
         features : Features
-            A set of :class:`Features` to be processed
+            A set of :class:`Features` to be processed.
 
-        min_freq : float, optional
-            Minimum frequency per modality per feature, by default ``None``
+        min_freq : float
+            Minimum frequency per modality. Tested via a Wilson upper bound at
+            significance :attr:`DiscretizerConfig.min_freq_alpha` (see
+            :ref:`MinFreqViability`).
 
-            * Features need at least one modality more frequent than :attr:`min_freq`
-            * Defines number of quantiles of continuous features
-            * Minimum frequency of modality of quantitative features
+            * Features need at least one modality with frequency significantly
+              above :attr:`min_freq`.
+            * For continuous features, drives the number of quantiles (roughly
+              ``1 / min_freq``).
+            * Modalities significantly below :attr:`min_freq` are merged with
+              the closest one (ordinal) or with a default group (categorical).
 
             .. tip::
-                Set between ``0.01`` (slower, less robust) and ``0.2`` (faster, more robust)
+                Set between ``0.01`` (slower, less robust) and ``0.05`` (faster,
+                more robust).
 
         config : DiscretizerConfig, optional
-            Behavioral toggles (``copy``/``ordinal_encoding``/``dropna``/``verbose``/``n_jobs``),
-            by default a default-initialized :class:`DiscretizerConfig`.
+            Behavioral toggles (``copy`` / ``ordinal_encoding`` / ``dropna`` /
+            ``verbose`` / ``n_jobs`` / ``min_freq_alpha``). Defaults to a
+            default-initialized :class:`DiscretizerConfig` — see
+            :ref:`DiscretizerConfig` for each field.
         """
         # accept either a Features collection or an iterable of BaseFeature
         if isinstance(features, Features):

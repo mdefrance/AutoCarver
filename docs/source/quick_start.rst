@@ -84,13 +84,23 @@ Fitting AutoCarver
 
 .. note::
 
-    Behavioral toggles (``copy``, ``ordinal_encoding``, ``dropna``, ``verbose``, ``n_jobs``)
-    are now grouped in :class:`DiscretizerConfig`. Carvers default to
-    ``DiscretizerConfig(dropna=True, ordinal_encoding=True)``.
+    Behavioral toggles (``copy``, ``ordinal_encoding``, ``dropna``, ``verbose``,
+    ``n_jobs``, ``min_freq_alpha``) are now grouped in :class:`DiscretizerConfig`.
+    Carvers default to ``DiscretizerConfig(dropna=True, ordinal_encoding=True)``.
+
+    ``min_freq`` is gated by a Wilson score confidence interval at significance
+    ``min_freq_alpha`` (default ``0.05``): raise it for a stricter representativity
+    test, lower it for more lenient merging — see :ref:`MinFreqViability` for the
+    formula. ``n_jobs > 1`` parallelises the per-feature combination search via
+    ``multiprocessing.Pool``; useful only on hundreds-to-thousands of features
+    (see :ref:`CarverParallelism`).
 
     To pick a different association metric, pass a pre-built
     :ref:`combination evaluator <Combinations>` via the
     ``combination_evaluator`` keyword (e.g. :class:`CramervCombinations` for binary).
+    The search uses :ref:`progressive top-K interval dynamic programming (DP) <DPTopK>`
+    for both Kruskal-H and Pearson :math:`\chi^2`; statistically equivalent to the
+    legacy enumerate-and-score path.
 
 
 

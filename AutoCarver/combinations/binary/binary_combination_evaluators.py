@@ -387,13 +387,25 @@ class BinaryCombinationEvaluator(CombinationEvaluator[pd.DataFrame], ABC):
 
 
 class TschuprowtCombinations(BinaryCombinationEvaluator):
-    """Tschuprow's T based combination evaluation toolkit"""
+    """Tschuprow's T based combination evaluation toolkit.
+
+    Search uses :ref:`progressive top-K interval DP <DPChi2>` over the
+    closed-form Pearson :math:`\\chi^2` decomposition (per-k DP with constant
+    column marginals, Yates correction iff ``k == 2``). Statistically equivalent
+    to :func:`scipy.stats.chi2_contingency` — bit-exact agreement pinned by
+    parity tests.
+    """
 
     sort_by = "tschuprowt"
 
 
 class CramervCombinations(BinaryCombinationEvaluator):
-    """Cramér's V based combination evaluation toolkit"""
+    """Cramér's V based combination evaluation toolkit.
+
+    Same DP search as :class:`TschuprowtCombinations` (see :ref:`DPChi2`); only
+    the ``sort_by`` key differs. :math:`V = \\sqrt{\\chi^2 / N_{obs}}` is a
+    monotone transform of :math:`\\chi^2` at fixed :math:`k`.
+    """
 
     sort_by = "cramerv"
 

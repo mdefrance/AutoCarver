@@ -144,7 +144,7 @@ class BaseCarver(BaseDiscretizer, ABC):
     is_y_continuous = False
     is_y_multiclass = False
 
-    @extend_docstring(BaseDiscretizer.__init__)
+    @extend_docstring(BaseDiscretizer.__init__, exclude=["min_freq", "config"])
     def __init__(
         self,
         features: Features,
@@ -157,29 +157,48 @@ class BaseCarver(BaseDiscretizer, ABC):
         """
         Parameters
         ----------
+        min_freq : float
+            Minimum frequency per modality. Tested via a Wilson upper bound at
+            significance :attr:`DiscretizerConfig.min_freq_alpha` (see
+            :ref:`MinFreqViability`).
 
-        max_n_mod : int
-            Maximum number of modalities per feature. Forwarded to the configured
-            :class:`CombinationEvaluator`.
-
-            * The combination with the best association will be selected.
-            * All combinations of sizes from 1 to :attr:`max_n_mod` are tested out.
+            * Features need at least one modality with frequency significantly
+              above :attr:`min_freq`.
+            * Drives the :ref:`viability filter <MinFreqViability>` on both
+              **train** and **dev** crosstabs during the combination search.
+            * The pre-search discretization runs at the **halved** threshold
+              :attr:`half_min_freq` (= ``min_freq / 2``) so the combination
+              evaluator has a finer granularity to recombine.
 
             .. tip::
-                Set between ``3`` (faster, more robust) and ``7`` (slower, less robust)
+                Set between ``0.01`` (slower, less robust) and ``0.05`` (faster,
+                more robust).
+
+        max_n_mod : int
+            Maximum number of modalities per carved feature. Forwarded to the
+            configured :class:`CombinationEvaluator`.
+
+            * The combination with the best association will be selected.
+            * All combinations of sizes from ``1`` to :attr:`max_n_mod` are
+              tested out.
+
+            .. tip::
+                Set between ``5`` (faster, more robust) and ``7`` (slower, less
+                robust).
 
         combination_evaluator : CombinationEvaluator, optional
             Pre-built :class:`CombinationEvaluator` instance used to measure
             association. Subclasses default this to a task-appropriate instance
-            (e.g. :class:`TschuprowtCombinations` for binary). The carver
-            forwards ``verbose`` onto the instance and passes ``max_n_mod`` /
-            ``min_freq`` / ``dropna`` directly to each
+            (e.g. :class:`TschuprowtCombinations` for binary, :class:`KruskalCombinations`
+            for continuous). The carver forwards ``verbose`` onto the instance
+            and passes ``max_n_mod`` / ``min_freq`` / ``dropna`` /
+            ``min_freq_alpha`` directly to each
             :meth:`~CombinationEvaluator.get_best_combination` call.
 
         config : DiscretizerConfig, optional
             Behavioral toggles inherited from :class:`BaseDiscretizer`. Defaults
-            to ``DiscretizerConfig(dropna=True, ordinal_encoding=True)`` which are
-            the carver-friendly defaults (group ``nan``, ordinal-encode features
+            to ``DiscretizerConfig(dropna=True, ordinal_encoding=True)`` — the
+            carver-friendly defaults (group ``nan``, ordinal-encode features
             for downstream sklearn estimators).
         """
         if combination_evaluator is None:
@@ -304,6 +323,13 @@ class BaseCarver(BaseDiscretizer, ABC):
     ) -> Self:
         """Finds the combination of modalities of X that provides the best association with y.
         If provided, X_dev set should be large enough to have the same distribution as X.
+
+        Features for which no candidate combination survives the viability filter
+        (Wilson ``min_freq`` on train + dev, distinct target rates, train/dev rank
+        preservation) are dropped from ``self.features`` and retained on
+        ``self.dropped_features``. With ``DiscretizerConfig(n_jobs=k)`` and
+        ``k > 1`` and more than one feature, the per-feature combination search
+        runs in parallel through ``multiprocessing.Pool.imap_unordered``.
 
         Parameters
         ----------

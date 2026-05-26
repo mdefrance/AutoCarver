@@ -26,7 +26,7 @@ class BinaryCarver(BaseCarver):
     __name__ = "BinaryCarver"
     is_y_binary = True
 
-    @extend_docstring(BaseCarver.__init__)
+    @extend_docstring(BaseCarver.__init__, exclude=["combination_evaluator"])
     def __init__(
         self,
         features: Features,
@@ -37,17 +37,16 @@ class BinaryCarver(BaseCarver):
         config: DiscretizerConfig | None = None,
     ) -> None:
         """
-        Keyword Arguments
-        -----------------
-
+        Parameters
+        ----------
         combination_evaluator : CombinationEvaluator, optional
             Pre-built evaluator instance measuring association between
             :class:`Features` and a binary target. Defaults to
             :class:`TschuprowtCombinations`.
 
             .. tip::
-                * Use :ref:`TschuprowtCombinations` for less, more robust, modalities
-                * Use :ref:`CramervCombinations` for more, less robust, modalities
+                * Use :ref:`TschuprowtCombinations` for less, more robust, modalities.
+                * Use :ref:`CramervCombinations` for more, less robust, modalities.
         """
         if combination_evaluator is None:
             combination_evaluator = TschuprowtCombinations()

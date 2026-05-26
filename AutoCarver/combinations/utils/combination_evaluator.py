@@ -373,7 +373,30 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
         dropna: bool,
         min_freq_alpha: float = 0.05,
     ) -> dict | None:
-        """Computes best combination of modalities for the feature"""
+        """Computes the best combination of modalities for the feature.
+
+        Parameters
+        ----------
+        feature : BaseFeature
+            Feature being carved.
+        xagg : pd.Series | pd.DataFrame | None
+            Train-sample aggregation (per-modality y-lists for continuous,
+            crosstab for binary).
+        xagg_dev : pd.Series | pd.DataFrame | None, optional
+            Dev-sample aggregation, used for the robustness veto.
+        max_n_mod : int
+            Maximum number of modalities allowed in the returned combination.
+        min_freq : float
+            Minimum per-modality frequency, tested via a Wilson upper bound at
+            significance ``min_freq_alpha`` (see :ref:`MinFreqViability`).
+        dropna : bool
+            Whether to group NaN as another modality (fans out NaN placements
+            after the non-NaN DP, see :ref:`DPTopK`).
+        min_freq_alpha : float, default ``0.05``
+            Two-sided significance level of the Wilson score interval. Smaller
+            → wider CI → fewer rejections. ``alpha=1`` recovers the legacy
+            strict-threshold behaviour.
+        """
 
         self.max_n_mod = max_n_mod
         self.min_freq = min_freq
