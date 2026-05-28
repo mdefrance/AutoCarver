@@ -871,16 +871,24 @@ def quantitative_binary_frames() -> list[Frame]:
     rates_cd = (
         pd.DataFrame({"Fare": transformed_cd["Fare"], "y": y.to_numpy()}).groupby("Fare", observed=True)["y"].mean()
     )
-    s2_bins = _qd_bins_on_value_axis(
+    s2_bins_all = _qd_bins_on_value_axis(
         feature_cd.labels,
         feature_cd.values,
         counts_cd,
         rates_cd,
         n,
     )
+    # Drop the always-empty > fare_max bin that CD appends internally via
+    # GroupedList(... + [inf]). It is an implementation detail, not a meaningful
+    # modality to show in the animation.
+    cd_keep = [i for i, b in enumerate(s2_bins_all) if b.freq > 0]
+    s2_bins = tuple(s2_bins_all[i] for i in cd_keep)
+    cd_labels = [feature_cd.labels[i] for i in cd_keep]
+    cd_values = [feature_cd.values[i] for i in cd_keep]
+
     rare_idx = tuple(
         i
-        for i, lbl in enumerate(feature_cd.labels)
+        for i, lbl in enumerate(cd_labels)
         if is_significantly_below(
             int(counts_cd.get(lbl, 0)),
             n,
@@ -908,7 +916,7 @@ def quantitative_binary_frames() -> list[Frame]:
     # `feature.content` "kept = rightmost boundary" direction, which would point
     # a singleton into the rare segment that absorbed its boundary.
     groups = _qd_merge_groups(
-        pre_uppers=[float(v) for v in feature_cd.values],
+        pre_uppers=[float(v) for v in cd_values],
         pre_freqs=[b.freq for b in s2_bins],
         post_uppers=[float(v) for v in feature_qd.values],
     )

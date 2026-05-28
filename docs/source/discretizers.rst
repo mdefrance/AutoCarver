@@ -96,8 +96,7 @@ itself is the real output of ``QuantitativeDiscretizer.fit``):
 #. **After ContinuousDiscretizer** — four thin spike singletons plus the
    quantile bins that fill the gaps between them. Bars whose Wilson upper
    bound falls below ``min_freq`` are outlined in orange (the sparse segment
-   ``(13, 25.9]``, the tail ``(26.55, 33.9]``, and the always-empty ``> 33.9``
-   bin that the discretizer appends) — these are the bins the
+   ``(13, 25.9]`` and the tail ``(26.55, 33.9]``) — these are the bins the
    OrdinalDiscretizer pass will merge.
 #. **Merge direction chosen** — :class:`OrdinalDiscretizer` merges each rare
    bin into the dominant neighbour with the closest target rate; dashed arrows
