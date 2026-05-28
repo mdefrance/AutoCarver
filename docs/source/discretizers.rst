@@ -150,6 +150,28 @@ Qualitative Data
 Complete pipeline for categorical and ordinal features
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+The animation below shows how :class:`QualitativeDiscretizer` processes two
+features in parallel — a categorical feature (``Port``, top strip) and an
+ordinal feature (``AgeGroup``, bottom strip):
+
+#. **Raw features** — both strips shown: ``Port`` bars in frequency-descending
+   order, ``AgeGroup`` bars in declared ordinal order; rare modalities outlined
+   orange on each.
+#. **Rare modalities grouped** — rare ``Port`` modalities (``Belfast``,
+   ``Boston``) collapse into ``__OTHER__``; ``AgeGroup`` is unchanged (dimmed
+   at 60 % opacity — not yet processed).
+#. **After CategoricalDiscretizer** — ``Port`` bars reordered by ascending
+   ``P(y=1)``; dot trace is now monotonic. ``AgeGroup`` still unchanged (dimmed).
+#. **OrdinalDiscretizer — merge direction** — ``Port`` at full opacity (done);
+   curved arrows show which rare ``AgeGroup`` modality merges into which
+   neighbour.
+#. **After QualitativeDiscretizer** — both strips at full opacity; ``AgeGroup``
+   bars span the slots of their absorbed modalities, ordinal order preserved.
+
+.. image:: _static/animations/qualitative_discretizer.svg
+   :alt: QualitativeDiscretizer animation
+   :align: center
+
 .. autoclass:: AutoCarver.discretizers.QualitativeDiscretizer
     :members: fit, transform, fit_transform, to_json, summary
 

@@ -88,11 +88,17 @@ def main() -> int:
         print("no animation examples found", file=sys.stderr)
         return 1
 
+    DualFrame = getattr(engine, "DualFrame", None)
+
     drift = 0
     for path in paths:
         ex = _load_example(path)
         frames = engine.build_animation(ex.FEATURE, ex.TARGET, ex.STOP_AFTER_STAGE)
-        svg = render.render_svg(frames, ex.STOP_AFTER_STAGE)
+        is_dual = DualFrame is not None and frames and isinstance(frames[0], DualFrame)
+        if is_dual:
+            svg = render.render_dual_svg(frames, ex.STOP_AFTER_STAGE)
+        else:
+            svg = render.render_svg(frames, ex.STOP_AFTER_STAGE)
         out = OUT_DIR / f"{ex.NAME}.svg"
         if args.check:
             current = out.read_text(encoding="utf-8") if out.exists() else ""

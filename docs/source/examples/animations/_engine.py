@@ -10,7 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal
 
-FeatureType = Literal["continuous", "ordinal", "categorical", "quantitative"]
+FeatureType = Literal["continuous", "ordinal", "categorical", "quantitative", "qualitative"]
 TargetType = Literal["binary", "multiclass", "continuous"]
 
 
@@ -78,6 +78,25 @@ class Frame:
     target_strip_min: float = 0.0
 
 
+@dataclass(frozen=True)
+class DualFrame:
+    """Two stacked feature strips for QualitativeDiscretizer.
+
+    `top` = categorical strip (Port), `bot` = ordinal strip (AgeGroup).
+    `bot_opacity` is set to 0.6 on the stage where only the top strip is active,
+    to draw the eye to the transformation that is happening.
+    """
+
+    stage: int
+    title: str
+    top: Frame
+    bot: Frame
+    callout: str = ""
+    metric: str = "—"
+    top_opacity: float = 1.0
+    bot_opacity: float = 1.0
+
+
 def build_animation(
     feature: FeatureType,
     target: TargetType,
@@ -108,6 +127,10 @@ def build_animation(
         from ._data import quantitative_binary_frames
 
         frames = quantitative_binary_frames()
+    elif (feature, target) == ("qualitative", "binary"):
+        from ._data import qualitative_binary_frames
+
+        frames = qualitative_binary_frames()
     else:
         raise NotImplementedError(f"variant ({feature!r}, {target!r}) not yet implemented")
 

@@ -30,7 +30,7 @@ from AutoCarver.discretizers import (
 from AutoCarver.discretizers.utils.frequency_ci import is_significantly_below
 from AutoCarver.features import Features
 
-from ._engine import Bin, Frame, MergeArrow
+from ._engine import Bin, DualFrame, Frame, MergeArrow
 
 # --- Synthesis parameters ----------------------------------------------------
 SEED = 7
@@ -1186,6 +1186,76 @@ def _qd_merge_arrows(
                 )
             )
     return tuple(arrows)
+
+
+# =============================================================================
+# QualitativeDiscretizer animation
+# =============================================================================
+#
+# Composite: CategoricalDiscretizer on Port (top strip) then OrdinalDiscretizer
+# on AgeGroup (bottom strip). Each strip reuses the exact same synthetic data
+# and fitted frames as the standalone CD and OD animations — no new synthesis.
+# Four stages:
+#   0 — raw state on both strips
+#   1 — after CD (top strip transforms; bottom dimmed at 60 % opacity)
+#   2 — OD merge arrows on bottom strip; top stays at CD result
+#   3 — after QD: bottom shows merged bars; both strips at full opacity
+
+
+def qualitative_binary_frames() -> list[DualFrame]:
+    cat = categorical_binary_frames()  # [raw, rare_grouped, sorted]
+    ord_ = ordinal_binary_frames()  # [raw, arrows, merged]
+
+    # Stages 0-2 walk through all CD steps (bottom strip dimmed).
+    # Stages 3-4 walk through all OD steps (top strip at full opacity — already done).
+    return [
+        DualFrame(
+            stage=0,
+            title="Raw features",
+            top=cat[0],
+            bot=ord_[0],
+            callout=(
+                "Port (categorical, top) and AgeGroup (ordinal, bottom) in their raw state. "
+                "Rare modalities are outlined orange on both strips."
+            ),
+        ),
+        DualFrame(
+            stage=1,
+            title="Rare modalities grouped",
+            top=cat[1],
+            bot=ord_[0],
+            bot_opacity=0.6,
+            callout=(
+                "CategoricalDiscretizer: rare Port modalities (Belfast, Boston) collapse "
+                "into __OTHER__. AgeGroup is unchanged (dimmed — not yet processed)."
+            ),
+        ),
+        DualFrame(
+            stage=2,
+            title="After CategoricalDiscretizer",
+            top=cat[2],
+            bot=ord_[0],
+            bot_opacity=0.6,
+            callout=("Port bars reordered by ascending P(y=1) — dot trace is now monotonic. AgeGroup still unchanged."),
+        ),
+        DualFrame(
+            stage=3,
+            title="OrdinalDiscretizer — merge direction",
+            top=cat[2],
+            bot=ord_[1],
+            callout=(
+                "OrdinalDiscretizer: each rare AgeGroup modality merges with the adjacent "
+                "neighbour whose target rate is closest. Port is already done."
+            ),
+        ),
+        DualFrame(
+            stage=4,
+            title="After QualitativeDiscretizer",
+            top=cat[2],
+            bot=ord_[2],
+            callout=("Port: 4 modalities sorted by target rate. AgeGroup: 3 groups, ordinal order preserved."),
+        ),
+    ]
 
 
 def _le_boundary(a: float, b: float) -> bool:
