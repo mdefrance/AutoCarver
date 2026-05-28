@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 340"
+     width="800" height="340" role="img"
+     aria-label="AutoCarver discretizer animation">
+  <defs>
+    <pattern id="nan-hatch" patternUnits="userSpaceOnUse" width="6" height="6"
+             patternTransform="rotate(45)">
+      <rect width="6" height="6" fill="#e5e7eb"/>
+      <line x1="0" y1="0" x2="0" y2="6" stroke="#5D7092" stroke-width="1.2"/>
+    </pattern>
+    <marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#f97316"/>
+    </marker>
+  </defs>
+  <style>
+text { font-family: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+.title { font-size: 14px; font-weight: 600; fill: #111827; }
+.callout { font-size: 11px; fill: #4b5563; }
+.chip { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; fill: #f9fafb; }
+.binlabel { font-size: 10px; fill: #374151; }
+.binlabel-rot { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 10px; fill: #374151; }
+.tick-label { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 9px; fill: #6b7280; }
+.overrep-label { font-size: 11px; fill: #c2410c; font-weight: 600; }
+.merge-label { font-size: 9px; fill: #c2410c; font-weight: 600; }
+.strip-label { font-size: 9px; fill: #6b7280; font-style: italic; }
+.threshold-label {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 10px; fill: #ef4444; font-weight: 600;
+}
+
+@keyframes show-0 {
+  0% { opacity: 1; }
+  22.75% { opacity: 1; }
+  25.00% { opacity: 0; }
+  100% { opacity: 0; }
+}
+.stage-0 { opacity: 0; animation: show-0 20000ms infinite; }
+@keyframes show-1 {
+  0% { opacity: 0; }
+  25.00% { opacity: 0; }
+  27.25% { opacity: 1; }
+  47.75% { opacity: 1; }
+  50.00% { opacity: 0; }
+  100% { opacity: 0; }
+}
+.stage-1 { opacity: 0; animation: show-1 20000ms infinite; }
+@keyframes show-2 {
+  0% { opacity: 0; }
+  50.00% { opacity: 0; }
+  52.25% { opacity: 1; }
+  100% { opacity: 1; }
+}
+.stage-2 { opacity: 0; animation: show-2 20000ms infinite; }
+.stage-3 { display: none; }
+.stage-4 { display: none; }
+  </style>
+  <g class="stage stage-0">
+    <text class="title" x="400.00" y="29.00" text-anchor="middle">Stage 0 / 2 &#8212; Raw feature</text>
+    <rect x="658" y="12" width="110" height="22" rx="11" fill="#111827"/>
+    <text class="chip" x="713.00" y="27.00" text-anchor="middle">—</text>
+    <text class="callout" x="400.00" y="56.00" text-anchor="middle">Raw continuous distribution of Fare (synthetic, n=1500). Density estimated by Gaussian KDE;</text>
+    <text class="callout" x="400.00" y="70.00" text-anchor="middle">NaN held aside.</text>
+    <path d="M 32.00,248.00 L 32.00,88.00 L 36.21,135.53 L 40.43,207.75 L 44.64,237.64 L 48.86,240.82 L 53.07,237.26 L 57.28,231.37 L 61.50,223.05 L 65.71,215.03 L 69.92,210.00 L 74.14,205.29 L 78.35,195.80 L 82.57,181.16 L 86.78,168.44 L 90.99,159.83 L 95.21,150.74 L 99.42,145.67 L 103.64,147.74 L 107.85,148.61 L 112.06,143.12 L 116.28,138.58 L 120.49,143.25 L 124.70,152.19 L 128.92,157.64 L 133.13,159.52 L 137.35,159.01 L 141.56,159.53 L 145.77,162.08 L 149.99,165.41 L 154.20,171.60 L 158.42,178.43 L 162.63,181.84 L 166.84,183.66 L 171.06,185.63 L 175.27,185.30 L 179.48,182.69 L 183.70,181.13 L 187.91,185.53 L 192.13,194.32 L 196.34,198.53 L 200.55,196.44 L 204.77,193.96 L 208.98,192.41 L 213.19,191.39 L 217.41,193.83 L 221.62,199.68 L 225.84,204.03 L 230.05,205.48 L 234.26,206.80 L 238.48,208.75 L 242.69,210.07 L 246.91,210.91 L 251.12,212.84 L 255.33,214.17 L 259.55,213.41 L 263.76,212.40 L 267.97,213.10 L 272.19,215.47 L 276.40,217.59 L 280.62,218.74 L 284.83,221.33 L 289.04,223.87 L 293.26,226.02 L 297.47,229.22 L 301.69,230.38 L 305.90,227.90 L 310.11,223.65 L 314.33,219.81 L 318.54,217.67 L 322.75,218.34 L 326.97,223.16 L 331.18,229.39 L 335.40,232.52 L 339.61,231.59 L 343.82,229.37 L 348.04,227.11 L 352.25,225.20 L 356.47,226.76 L 360.68,231.63 L 364.89,235.76 L 369.11,237.61 L 373.32,237.91 L 377.53,237.61 L 381.75,238.15 L 385.96,239.22 L 390.18,239.45 L 394.39,240.24 L 398.60,241.28 L 402.82,240.96 L 407.03,239.90 L 411.25,239.05 L 415.46,238.95 L 419.67,239.22 L 423.89,239.22 L 428.10,238.83 L 432.31,239.06 L 436.53,240.17 L 440.74,240.74 L 444.96,240.24 L 449.17,238.79 L 453.38,237.74 L 457.60,238.63 L 461.81,240.74 L 466.03,242.64 L 470.24,243.71 L 474.45,244.47 L 478.67,244.16 L 482.88,242.27 L 487.09,241.01 L 491.31,241.85 L 495.52,243.05 L 499.74,243.24 L 503.95,243.30 L 508.16,244.05 L 512.38,244.54 L 516.59,244.08 L 520.81,243.50 L 525.02,243.04 L 529.23,242.45 L 533.45,242.61 L 537.66,243.66 L 541.87,244.61 L 546.09,244.63 L 550.30,243.75 L 554.52,242.74 L 558.73,242.48 L 562.94,242.93 L 567.16,243.56 L 571.37,244.34 L 575.58,245.67 L 579.80,247.07 L 584.01,247.63 L 588.23,247.31 L 592.44,246.69 L 596.65,246.12 L 600.87,245.31 L 605.08,244.49 L 609.30,244.35 L 613.51,244.59 L 617.72,245.11 L 621.94,246.02 L 626.15,246.58 L 630.36,246.83 L 634.58,247.15 L 638.79,246.61 L 643.01,244.57 L 647.22,242.69 L 651.43,242.63 L 655.65,243.95 L 659.86,245.84 L 664.08,247.01 L 668.29,246.97 L 672.50,246.62 L 676.72,246.16 L 680.93,245.04 L 685.14,244.14 L 689.36,244.99 L 693.57,246.74 L 697.79,247.73 L 702.00,247.97 L 702.00,248.00 Z" fill="#cfd2d6" stroke="#6b7280" stroke-width="1.2" stroke-linejoin="round"/>
+    <line x1="32.00" y1="248.00" x2="32.00" y2="252.00" stroke="#6b7280" stroke-width="1"/>
+    <text class="tick-label" x="32.00" y="264.00" text-anchor="middle">0</text>
+    <line x1="127.71" y1="248.00" x2="127.71" y2="252.00" stroke="#6b7280" stroke-width="1"/>
+    <text class="tick-label" x="127.71" y="264.00" text-anchor="middle">5</text>
+    <line x1="223.43" y1="248.00" x2="223.43" y2="252.00" stroke="#6b7280" stroke-width="1"/>
+    <text class="tick-label" x="223.43" y="264.00" text-anchor="middle">10</text>
+    <line x1="319.14" y1="248.00" x2="319.14" y2="252.00" stroke="#6b7280" stroke-width="1"/>
+    <text class="tick-label" x="319.14" y="264.00" text-anchor="middle">15</text>
+    <line x1="414.86" y1="248.00" x2="414.86" y2="252.00" stroke="#6b7280" stroke-width="1"/>
+    <text class="tick-label" x="414.86" y="264.00" text-anchor="middle">20</text>
+    <line x1="510.57" y1="248.00" x2="510.57" y2="252.00" stroke="#6b7280" stroke-width="1"/>
+    <text class="tick-label" x="510.57" y="264.00" text-anchor="middle">25</text>
+    <line x1="606.29" y1="248.00" x2="606.29" y2="252.00" stroke="#6b7280" stroke-width="1"/>
+    <text class="tick-label" x="606.29" y="264.00" text-anchor="middle">30</text>
+    <line x1="702.00" y1="248.00" x2="702.00" y2="252.00" stroke="#6b7280" stroke-width="1"/>
+    <text class="tick-label" x="702.00" y="264.00" text-anchor="middle">35</text>
+    <rect x="712.00" y="213.70" width="56.00" height="34.30" rx="3" fill="url(#nan-hatch)" stroke="#5D7092" stroke-width="1" opacity="0.85"/>
+    <text class="binlabel-rot" x="740.00" y="256.00" text-anchor="end" transform="rotate(-45 740.00 256.00)">NaN (3.6%)</text>
+    <line x1="32" y1="248.00" x2="702" y2="248.00" stroke="#9ca3af" stroke-width="1"/>
+    <line x1="32" y1="181.31" x2="768" y2="181.31" stroke="#ef4444" stroke-width="1" stroke-dasharray="5 3"/>
+    <text class="threshold-label" x="764.00" y="177.31" text-anchor="end">min_freq = 0.07</text>
+  </g>
+  <g class="stage stage-1">
+    <text class="title" x="400.00" y="29.00" text-anchor="middle">Stage 1 / 2 &#8212; Over-represented value detected</text>
+    <rect x="658" y="12" width="110" height="22" rx="11" fill="#111827"/>
+    <text class="chip" x="713.00" y="27.00" text-anchor="middle">—</text>
+    <text class="callout" x="400.00" y="56.00" text-anchor="middle">ContinuousDiscretizer flags values occurring ≥ 1/q (0.07) as their own modality. Fare = 0 is</text>
+    <text class="callout" x="400.00" y="70.00" text-anchor="middle">the over-rep spike (orange).</text>
+    <path d="M 32.00,248.00 L 32.00,88.00 L 36.21,135.53 L 40.43,207.75 L 44.64,237.64 L 48.86,240.82 L 53.07,237.26 L 57.28,231.37 L 61.50,223.05 L 65.71,215.03 L 69.92,210.00 L 74.14,205.29 L 78.35,195.80 L 82.57,181.16 L 86.78,168.44 L 90.99,159.83 L 95.21,150.74 L 99.42,145.67 L 103.64,147.74 L 107.85,148.61 L 112.06,143.12 L 116.28,138.58 L 120.49,143.25 L 124.70,152.19 L 128.92,157.64 L 133.13,159.52 L 137.35,159.01 L 141.56,159.53 L 145.77,162.08 L 149.99,165.41 L 154.20,171.60 L 158.42,178.43 L 162.63,181.84 L 166.84,183.66 L 171.06,185.63 L 175.27,185.30 L 179.48,182.69 L 183.70,181.13 L 187.91,185.53 L 192.13,194.32 L 196.34,198.53 L 200.55,196.44 L 204.77,193.96 L 208.98,192.41 L 213.19,191.39 L 217.41,193.83 L 221.62,199.68 L 225.84,204.03 L 230.05,205.48 L 234.26,206.80 L 238.48,208.75 L 242.69,210.07 L 246.91,210.91 L 251.12,212.84 L 255.33,214.17 L 259.55,213.41 L 263.76,212.40 L 267.97,213.10 L 272.19,215.47 L 276.40,217.59 L 280.62,218.74 L 284.83,221.33 L 289.04,223.87 L 293.26,226.02 L 297.47,229.22 L 301.69,230.38 L 305.90,227.90 L 310.11,223.65 L 314.33,219.81 L 318.54,217.67 L 322.75,218.34 L 326.97,223.16 L 331.18,229.39 L 335.40,232.52 L 339.61,231.59 L 343.82,229.37 L 348.04,227.11 L 352.25,225.20 L 356.47,226.76 L 360.68,231.63 L 364.89,235.76 L 369.11,237.61 L 373.32,237.91 L 377.53,237.61 L 381.75,238.15 L 385.96,239.22 L 390.18,239.45 L 394.39,240.24 L 398.60,241.28 L 402.82,240.96 L 407.03,239.90 L 411.25,239.05 L 415.46,238.95 L 419.67,239.22 L 423.89,239.22 L 428.10,238.83 L 432.31,239.06 L 436.53,240.17 L 440.74,240.74 L 444.96,240.24 L 449.17,238.79 L 453.38,237.74 L 457.60,238.63 L 461.81,240.74 L 466.03,242.64 L 470.24,243.71 L 474.45,244.47 L 478.67,244.16 L 482.88,242.27 L 487.09,241.01 L 491.31,241.85 L 495.52,243.05 L 499.74,243.24 L 503.95,243.30 L 508.16,244.05 L 512.38,244.54 L 516.59,244.08 L 520.81,243.50 L 525.02,243.04 L 529.23,242.45 L 533.45,242.61 L 537.66,243.66 L 541.87,244.61 L 546.09,244.63 L 550.30,243.75 L 554.52,242.74 L 558.73,242.48 L 562.94,242.93 L 567.16,243.56 L 571.37,244.34 L 575.58,245.67 L 579.80,247.07 L 584.01,247.63 L 588.23,247.31 L 592.44,246.69 L 596.65,246.12 L 600.87,245.31 L 605.08,244.49 L 609.30,244.35 L 613.51,244.59 L 617.72,245.11 L 621.94,246.02 L 626.15,246.58 L 630.36,246.83 L 634.58,247.15 L 638.79,246.61 L 643.01,244.57 L 647.22,242.69 L 651.43,242.63 L 655.65,243.95 L 659.86,245.84 L 664.08,247.01 L 668.29,246.97 L 672.50,246.62 L 676.72,246.16 L 680.93,245.04 L 685.14,244.14 L 689.36,244.99 L 693.57,246.74 L 697.79,247.73 L 702.00,247.97 L 702.00,248.00 Z" fill="#cfd2d6" stroke="#6b7280" stroke-width="1.2" stroke-linejoin="round"/>
+    <line x1="32.00" y1="84.00" x2="32.00" y2="248.00" stroke="#f97316" stroke-width="2" stroke-dasharray="5 3"/>
+    <text class="overrep-label" x="38.00" y="100.00" text-anchor="start">Fare = 0 spike → own modality</text>
+    <line x1="32.00" y1="248.00" x2="32.00" y2="252.00" stroke="#6b7280" stroke-width="1"/>
+    <text class="tick-label" x="32.00" y="264.00" text-anchor="middle">0</text>
+    <line x1="127.71" y1="248.00" x2="127.71" y2="252.00" stroke="#6b7280" stroke-width="1"/>
+    <text class="tick-label" x="127.71" y="264.00" text-anchor="middle">5</text>
+    <line x1="223.43" y1="248.00" x2="223.43" y2="252.00" stroke="#6b7280" stroke-width="1"/>
+    <text class="tick-label" x="223.43" y="264.00" text-anchor="middle">10</text>
+    <line x1="319.14" y1="248.00" x2="319.14" y2="252.00" stroke="#6b7280" stroke-width="1"/>
+    <text class="tick-label" x="319.14" y="264.00" text-anchor="middle">15</text>
+    <line x1="414.86" y1="248.00" x2="414.86" y2="252.00" stroke="#6b7280" stroke-width="1"/>
+    <text class="tick-label" x="414.86" y="264.00" text-anchor="middle">20</text>
+    <line x1="510.57" y1="248.00" x2="510.57" y2="252.00" stroke="#6b7280" stroke-width="1"/>
+    <text class="tick-label" x="510.57" y="264.00" text-anchor="middle">25</text>
+    <line x1="606.29" y1="248.00" x2="606.29" y2="252.00" stroke="#6b7280" stroke-width="1"/>
+    <text class="tick-label" x="606.29" y="264.00" text-anchor="middle">30</text>
+    <line x1="702.00" y1="248.00" x2="702.00" y2="252.00" stroke="#6b7280" stroke-width="1"/>
+    <text class="tick-label" x="702.00" y="264.00" text-anchor="middle">35</text>
+    <rect x="712.00" y="213.70" width="56.00" height="34.30" rx="3" fill="url(#nan-hatch)" stroke="#5D7092" stroke-width="1" opacity="0.85"/>
+    <text class="binlabel-rot" x="740.00" y="256.00" text-anchor="end" transform="rotate(-45 740.00 256.00)">NaN (3.6%)</text>
+    <line x1="32" y1="248.00" x2="702" y2="248.00" stroke="#9ca3af" stroke-width="1"/>
+    <line x1="32" y1="181.31" x2="768" y2="181.31" stroke="#ef4444" stroke-width="1" stroke-dasharray="5 3"/>
+    <text class="threshold-label" x="764.00" y="177.31" text-anchor="end">min_freq = 0.07</text>
+  </g>
+  <g class="stage stage-2">
+    <text class="title" x="400.00" y="29.00" text-anchor="middle">Stage 2 / 2 &#8212; After ContinuousDiscretizer</text>
+    <rect x="658" y="12" width="110" height="22" rx="11" fill="#111827"/>
+    <text class="chip" x="713.00" y="27.00" text-anchor="middle">—</text>
+    <text class="callout" x="400.00" y="56.00" text-anchor="middle">13 modalities from `ContinuousDiscretizer.fit_transform()`. Bar widths = real value ranges;</text>
+    <text class="callout" x="400.00" y="70.00" text-anchor="middle">heights = real frequencies.</text>
+    <rect x="32.50" y="154.00" width="5.70" height="94.00" rx="2" fill="#5B8FF9" stroke="#374151" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="35.35" y="256.00" text-anchor="end" transform="rotate(-45 35.35 256.00)">≤ 0</text>
+    <rect x="39.20" y="178.77" width="47.59" height="69.23" rx="2" fill="#5AD8A6" stroke="#374151" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="63.00" y="256.00" text-anchor="end" transform="rotate(-45 63.00 256.00)">(0, 2.89]</text>
+    <rect x="87.79" y="179.41" width="13.92" height="68.59" rx="2" fill="#F6BD16" stroke="#374151" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="94.75" y="256.00" text-anchor="end" transform="rotate(-45 94.75 256.00)">(2.89, 3.67]</text>
+    <rect x="102.71" y="179.41" width="13.61" height="68.59" rx="2" fill="#E8684A" stroke="#374151" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="109.52" y="256.00" text-anchor="end" transform="rotate(-45 109.52 256.00)">(3.67, 4.43]</text>
+    <rect x="117.32" y="179.41" width="13.23" height="68.59" rx="2" fill="#6DC8EC" stroke="#374151" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="123.94" y="256.00" text-anchor="end" transform="rotate(-45 123.94 256.00)">(4.43, 5.17]</text>
+    <rect x="131.56" y="179.41" width="16.41" height="68.59" rx="2" fill="#9270CA" stroke="#374151" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="139.76" y="256.00" text-anchor="end" transform="rotate(-45 139.76 256.00)">(5.17, 6.08]</text>
+    <rect x="148.97" y="179.41" width="18.33" height="68.59" rx="2" fill="#5B8FF9" stroke="#374151" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="158.14" y="256.00" text-anchor="end" transform="rotate(-45 158.14 256.00)">(6.08, 7.09]</text>
+    <rect x="168.30" y="179.41" width="21.93" height="68.59" rx="2" fill="#5AD8A6" stroke="#374151" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="179.27" y="256.00" text-anchor="end" transform="rotate(-45 179.27 256.00)">(7.09, 8.29]</text>
+    <rect x="191.24" y="179.41" width="26.26" height="68.59" rx="2" fill="#F6BD16" stroke="#374151" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="204.37" y="256.00" text-anchor="end" transform="rotate(-45 204.37 256.00)">(8.29, 9.72]</text>
+    <rect x="218.49" y="179.41" width="35.89" height="68.59" rx="2" fill="#E8684A" stroke="#374151" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="236.44" y="256.00" text-anchor="end" transform="rotate(-45 236.44 256.00)">(9.72, 11.6]</text>
+    <rect x="255.39" y="179.41" width="51.30" height="68.59" rx="2" fill="#6DC8EC" stroke="#374151" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="281.04" y="256.00" text-anchor="end" transform="rotate(-45 281.04 256.00)">(11.6, 14.4]</text>
+    <rect x="307.69" y="179.41" width="72.89" height="68.59" rx="2" fill="#9270CA" stroke="#374151" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="344.13" y="256.00" text-anchor="end" transform="rotate(-45 344.13 256.00)">(14.4, 18.2]</text>
+    <rect x="381.58" y="178.77" width="319.92" height="69.23" rx="2" fill="#5B8FF9" stroke="#374151" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="541.54" y="256.00" text-anchor="end" transform="rotate(-45 541.54 256.00)">&gt; 18.2</text>
+    <path d="M 35.35,140.00 L 63.00,136.55 L 94.75,139.00 L 109.52,134.90 L 123.94,130.81 L 139.76,132.86 L 158.14,129.27 L 179.27,128.76 L 204.37,124.66 L 236.44,121.07 L 281.04,116.97 L 344.13,112.87 L 541.54,100.00" fill="none" stroke="#9ca3af" stroke-width="1" stroke-dasharray="2 3"/>
+    <circle cx="35.35" cy="140.00" r="3.5" fill="#5B8FF9" stroke="#374151" stroke-width="0.6"/>
+    <circle cx="63.00" cy="136.55" r="3.5" fill="#5AD8A6" stroke="#374151" stroke-width="0.6"/>
+    <circle cx="94.75" cy="139.00" r="3.5" fill="#F6BD16" stroke="#374151" stroke-width="0.6"/>
+    <circle cx="109.52" cy="134.90" r="3.5" fill="#E8684A" stroke="#374151" stroke-width="0.6"/>
+    <circle cx="123.94" cy="130.81" r="3.5" fill="#6DC8EC" stroke="#374151" stroke-width="0.6"/>
+    <circle cx="139.76" cy="132.86" r="3.5" fill="#9270CA" stroke="#374151" stroke-width="0.6"/>
+    <circle cx="158.14" cy="129.27" r="3.5" fill="#5B8FF9" stroke="#374151" stroke-width="0.6"/>
+    <circle cx="179.27" cy="128.76" r="3.5" fill="#5AD8A6" stroke="#374151" stroke-width="0.6"/>
+    <circle cx="204.37" cy="124.66" r="3.5" fill="#F6BD16" stroke="#374151" stroke-width="0.6"/>
+    <circle cx="236.44" cy="121.07" r="3.5" fill="#E8684A" stroke="#374151" stroke-width="0.6"/>
+    <circle cx="281.04" cy="116.97" r="3.5" fill="#6DC8EC" stroke="#374151" stroke-width="0.6"/>
+    <circle cx="344.13" cy="112.87" r="3.5" fill="#9270CA" stroke="#374151" stroke-width="0.6"/>
+    <circle cx="541.54" cy="100.00" r="3.5" fill="#5B8FF9" stroke="#374151" stroke-width="0.6"/>
+    <text class="strip-label" x="32.00" y="96.00" text-anchor="start">target rate &#8712; [0.04, 0.98]</text>
+    <rect x="712.00" y="213.70" width="56.00" height="34.30" rx="3" fill="url(#nan-hatch)" stroke="#5D7092" stroke-width="1" opacity="0.85"/>
+    <text class="binlabel-rot" x="740.00" y="256.00" text-anchor="end" transform="rotate(-45 740.00 256.00)">NaN (3.6%)</text>
+    <line x1="32" y1="248.00" x2="702" y2="248.00" stroke="#9ca3af" stroke-width="1"/>
+    <line x1="32" y1="181.31" x2="768" y2="181.31" stroke="#ef4444" stroke-width="1" stroke-dasharray="5 3"/>
+    <text class="threshold-label" x="764.00" y="177.31" text-anchor="end">min_freq = 0.07</text>
+  </g>
+</svg>
