@@ -145,7 +145,7 @@ We therefore run an interval DP indexed by :math:`(k, j)` whose state is the
 .. math::
 
     \text{dp}[k][j] = \operatorname*{top\text{-}K}_{i \in [k-1,\, j)} \big\{\,
-       \text{dp}[k-1][i] \oplus \text{seg\_cost}(i,\, j)\, \big\}
+       \text{dp}[k-1][i] \oplus \text{seg_cost}(i,\, j)\, \big\}
 
 The final candidate list is :math:`\bigcup_k \text{dp}[k][n]`, sorted desc and
 truncated to ``top_k``.
