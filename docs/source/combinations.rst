@@ -18,7 +18,7 @@ The animation below starts from the six ordered bins a
 grouping into ``max_n_mod`` groups is scored by its association with the binary
 target (Tschuprow's T) and the table fills best-first in growing ``top_k``
 batches (the :ref:`progressive top-K DP <DPTopK>` search). The highest-scoring
-grouping that passes the :ref:`viability filter <MinFreqViability>` is kept
+grouping that passes the :ref:`viability filter <Viability>` is kept
 (gold row). Adjacent bins sharing a colour in a row are merged into one group.
 
 .. image:: _static/animations/combinations.svg
@@ -29,65 +29,10 @@ grouping that passes the :ref:`viability filter <MinFreqViability>` is kept
 .. autoclass:: AutoCarver.combinations.CombinationEvaluator
     :members: get_best_combination, save, load
 
-
-.. _MinFreqViability:
-
-Minimum-frequency viability test (Wilson score interval)
---------------------------------------------------------
-
-A candidate combination is *viable* on a sample only if every grouped modality is
-sufficiently frequent. Comparing :math:`\hat p = \text{count} / n_{obs}` directly
-against ``min_freq`` is noisy on small modalities — a modality with
-:math:`\hat p = 4\%` out of :math:`n_{obs}=100` would be rejected against
-``min_freq=5%``, even though its 95% confidence interval comfortably straddles
-5%. **AutoCarver** instead tests the one-sided question *"is this modality's
-true proportion significantly below* ``min_freq`` *?"* at level :math:`\alpha`,
-using a Wilson score interval — the small-sample-stable proportion interval
-recommended over Wald in Brown, Cai & DasGupta (2001).
-
-**Decision rule.** Modality :math:`m` is declared under-represented iff the
-**upper bound** of the two-sided Wilson interval for :math:`\hat p_m` is
-strictly below ``min_freq``:
-
-.. math::
-
-    \text{UB}(\hat p, n, \alpha) =
-    \frac{\hat p + z^2/(2n)}{1 + z^2/n}
-    + \frac{z}{1 + z^2/n}\sqrt{\frac{\hat p(1-\hat p)}{n} + \frac{z^2}{4n^2}}
-
-with :math:`z = \Phi^{-1}(1 - \alpha/2)` (two-sided z-score; :math:`\alpha=0.05`
-gives :math:`z \approx 1.96`). Reject iff
-:math:`\text{UB}(\hat p_m, n_{obs}, \alpha) < \text{min_freq}`.
-
-**Properties.**
-
-* **Asymptotic equivalence:** as :math:`n_{obs} \to \infty`,
-  :math:`\text{UB} \to \hat p`, so the test converges to the legacy strict
-  threshold :math:`\hat p < \text{min_freq}`.
-* **Small-sample conservativity:** a modality with very few observations cannot
-  be rejected (the CI is too wide to fall below ``min_freq``), preventing
-  premature merges driven by sampling noise.
-* :math:`n_{obs} = 0` returns :math:`\text{UB} = 1.0`, so empty groups are never
-  rejected by this test (other checks catch them).
-
-**Where the test fires.**
-
-* Inside each :ref:`Discretizer <Discretizer>` to gate raw modalities **before**
-  the combination search. Carvers discretize at ``min_freq / 2`` so this gate
-  runs at the halved threshold, giving the combination evaluator a finer
-  granularity to recombine.
-* Inside :class:`CombinationEvaluator` viability checks on both **train** and
-  **dev** samples for every candidate combination during the search.
-
-**Tuning.** Set via :attr:`DiscretizerConfig.min_freq_alpha` (default
-``0.05``). Smaller :math:`\alpha` → wider CI → fewer rejections → less merging;
-larger :math:`\alpha` → tighter CI → more rejections → more aggressive merging.
-:math:`\alpha = 1` recovers the legacy strict-threshold behaviour
-(:math:`\text{UB}` collapses to :math:`\hat p`).
-
-.. autofunction:: AutoCarver.discretizers.utils.frequency_ci.wilson_upper_bound
-
-.. autofunction:: AutoCarver.discretizers.utils.frequency_ci.is_significantly_below
+The highest-scoring grouping is not necessarily the one that is kept: each
+candidate must clear the :ref:`viability filter <Viability>` (minimum frequency
+via a Wilson score interval, distinct consecutive target rates, and train/dev
+rank preservation). That filter is documented on its own page.
 
 
 .. _DPTopK:
@@ -113,7 +58,7 @@ For a feature with raw modalities :math:`m_0, \dots, m_{n-1}` already ordered
 fully determined by integer split positions
 :math:`0 = s_0 < s_1 < \dots < s_k = n` with :math:`k \le \text{max_n_mod}`.
 The chosen partition maximises the association metric subject to the
-:ref:`viability filter <MinFreqViability>` (Wilson ``min_freq`` on train + dev,
+:ref:`viability filter <Viability>` (Wilson ``min_freq`` on train + dev,
 distinct target rates, preserved rank between train and dev when dev is
 provided).
 
@@ -347,7 +292,7 @@ What does **not** change
 
 * The admissible candidate set: consecutive segmentations with
   :math:`k \le \text{max_n_mod}`.
-* The :ref:`viability filter <MinFreqViability>`: Wilson ``min_freq`` on train
+* The :ref:`viability filter <Viability>`: Wilson ``min_freq`` on train
   + dev, distinct target rates, rank preservation.
 * The optimality claim: **for fixed** ``min_freq``\ **,** ``max_n_mod``\ **,
   and metric, no admissible combination scores higher than the one returned.**
