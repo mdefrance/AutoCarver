@@ -679,6 +679,142 @@ def _d_min_freq_line(frame: Frame, baseline: float, bar_zone_h: float) -> str:
     )
 
 
+# =============================================================================
+# Table renderer (combinations search)
+# =============================================================================
+#
+# A static input strip (the ordered post-discretizer bins) sits at the top; a
+# table below fills with consecutive groupings ranked by Tschuprow's T. Each
+# data row is a full-width segmented bar — one coloured block per group, spanning
+# its members' slots and coloured by its leader (leftmost) bin — plus the T
+# value. The selected (winning) row gets a gold background. Own layout constants
+# and `_t_*` helpers; zero changes to the existing single/dual renderers.
+
+TABLE_VIEW_H = 396
+TABLE_RANK_W = 34  # left gutter for the rank label
+TABLE_T_W = 72  # right column for the T value
+TABLE_INPUT_H = 30  # height of the input-strip cells
+TABLE_INPUT_LABEL_H = 16  # horizontal labels under the input cells
+TABLE_HEADER_H = 20  # table column-header row
+TABLE_ROW_H = 26  # one candidate row
+
+_T_INPUT_Y0 = _MAIN_Y0  # 88 — input strip starts right after the callout
+_T_CELL_X0 = PAD_X + TABLE_RANK_W
+_T_CELL_X1 = VIEW_W - PAD_X - TABLE_T_W
+_T_CELL_W = _T_CELL_X1 - _T_CELL_X0
+_T_TABLE_Y0 = _T_INPUT_Y0 + TABLE_INPUT_H + TABLE_INPUT_LABEL_H + 22
+_T_ROWS_Y0 = _T_TABLE_Y0 + TABLE_HEADER_H
+
+GOLD_BG = "#fef3c7"
+GOLD_STROKE = "#d97706"
+
+
+def render_table_svg(table_frames: list, stop_after_stage: int) -> str:
+    """Render a list of TableFrames to an animated SVG (combinations table)."""
+    total_stages = stop_after_stage
+    stage_groups = "\n".join(_t_render_frame(tf, total_stages) for tf in table_frames)
+    style = _render_style(stop_after_stage)
+    return _DOC.format(view_w=VIEW_W, view_h=TABLE_VIEW_H, style=style, stage_groups=stage_groups)
+
+
+def _t_render_frame(frame, total_stages: int) -> str:
+    parts = [
+        _stage_caption(frame, total_stages),
+        _metric_chip(frame),
+        _callout(frame),
+        _t_input_strip(frame),
+        _t_table(frame),
+    ]
+    inner = "\n".join(p for p in parts if p)
+    return f'  <g class="stage stage-{frame.stage}">\n{inner}\n  </g>'
+
+
+def _t_input_strip(frame) -> str:
+    """The ordered post-discretizer bins as a coloured cell row, with a short
+    horizontal label under each cell. Identical across stages so it reads as the
+    fixed input the search groups over."""
+    bins = frame.input_bins
+    if not bins:
+        return ""
+    y = _T_INPUT_Y0
+    parts: list[str] = [
+        f'<text class="strip-label" x="{PAD_X:.2f}" y="{y - 4:.2f}" '
+        f'text-anchor="start">ordered bins (QuantitativeDiscretizer output)</text>'
+    ]
+    for b in bins:
+        x = _T_CELL_X0 + b.x_start * _T_CELL_W
+        w = (b.x_end - b.x_start) * _T_CELL_W
+        parts.append(
+            f'<rect x="{x + 1:.2f}" y="{y:.2f}" width="{w - 2:.2f}" height="{TABLE_INPUT_H:.2f}" '
+            f'rx="2" fill="{PALETTE[b.color_id]}" stroke="#374151" stroke-width="0.6"/>'
+        )
+        cx = _T_CELL_X0 + ((b.x_start + b.x_end) / 2) * _T_CELL_W
+        parts.append(
+            f'<text class="binlabel" x="{cx:.2f}" y="{y + TABLE_INPUT_H + 11:.2f}" '
+            f'text-anchor="middle">{_escape(b.label)}</text>'
+        )
+    return "    " + "\n    ".join(parts)
+
+
+def _t_table(frame) -> str:
+    bins = frame.input_bins
+    n_bins = len(bins)
+    parts: list[str] = []
+
+    # Column headers
+    hy = _T_TABLE_Y0 + 13
+    parts.append(f'<text class="strip-label" x="{PAD_X:.2f}" y="{hy:.2f}" text-anchor="start">#</text>')
+    parts.append(
+        f'<text class="strip-label" x="{_T_CELL_X0:.2f}" y="{hy:.2f}" '
+        f'text-anchor="start">candidate grouping (adjacent bins sharing a colour are merged)</text>'
+    )
+    parts.append(
+        f'<text class="strip-label" x="{VIEW_W - PAD_X:.2f}" y="{hy:.2f}" text-anchor="end">Tschuprow\'s T</text>'
+    )
+    if frame.top_k:
+        parts.append(
+            f'<text class="tick-label" x="{_T_CELL_X1:.2f}" y="{_T_TABLE_Y0 - 4:.2f}" '
+            f'text-anchor="end">top_k = {frame.top_k} / {frame.n_total}</text>'
+        )
+
+    # Data rows
+    bar_h = TABLE_ROW_H - 12
+    for i, row in enumerate(frame.rows):
+        ry = _T_ROWS_Y0 + i * TABLE_ROW_H
+        cy = ry + TABLE_ROW_H / 2
+        if row.is_winner:
+            parts.append(
+                f'<rect x="{PAD_X - 4:.2f}" y="{ry + 1:.2f}" width="{VIEW_W - 2 * PAD_X + 8:.2f}" '
+                f'height="{TABLE_ROW_H - 2:.2f}" rx="4" fill="{GOLD_BG}" '
+                f'stroke="{GOLD_STROKE}" stroke-width="1"/>'
+            )
+        # rank
+        prefix = "&#9733; " if row.is_winner else ""  # ★ on the winner
+        parts.append(
+            f'<text class="binlabel" x="{PAD_X:.2f}" y="{cy + 3.5:.2f}" '
+            f'text-anchor="start">{prefix}#{row.rank + 1}</text>'
+        )
+        # segmented bar — one block per group
+        bar_y = ry + (TABLE_ROW_H - bar_h) / 2
+        for group in row.groups:
+            lo = min(group)
+            hi = max(group)
+            leader = group[0]
+            gx0 = _T_CELL_X0 + (lo / n_bins) * _T_CELL_W
+            gx1 = _T_CELL_X0 + ((hi + 1) / n_bins) * _T_CELL_W
+            parts.append(
+                f'<rect x="{gx0 + 1:.2f}" y="{bar_y:.2f}" width="{gx1 - gx0 - 2:.2f}" '
+                f'height="{bar_h:.2f}" rx="2" fill="{PALETTE[bins[leader].color_id]}" '
+                f'stroke="#374151" stroke-width="0.6"/>'
+            )
+        # T value
+        parts.append(
+            f'<text class="tick-label" x="{VIEW_W - PAD_X:.2f}" y="{cy + 3.5:.2f}" '
+            f'text-anchor="end">{row.tschuprowt:.3f}</text>'
+        )
+    return "    " + "\n    ".join(parts)
+
+
 _DOC = """<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {view_w} {view_h}"
      width="{view_w}" height="{view_h}" role="img"

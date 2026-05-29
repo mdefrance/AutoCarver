@@ -21,6 +21,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import gaussian_kde
 
+from AutoCarver.combinations.binary.binary_combination_evaluators import _top_k_partitions_chi2_dp
 from AutoCarver.discretizers import (
     CategoricalDiscretizer,
     ContinuousDiscretizer,
@@ -30,7 +31,7 @@ from AutoCarver.discretizers import (
 from AutoCarver.discretizers.utils.frequency_ci import is_significantly_below
 from AutoCarver.features import Features
 
-from ._engine import Bin, DualFrame, Frame, MergeArrow
+from ._engine import Bin, ComboRow, DualFrame, Frame, MergeArrow, TableFrame
 
 # --- Synthesis parameters ----------------------------------------------------
 SEED = 7
@@ -1302,3 +1303,151 @@ def _ordinal_stage2_bins(
             )
         )
     return tuple(bins)
+
+
+# =============================================================================
+# Combinations animation (base of every carver)
+# =============================================================================
+#
+# Starts from the QuantitativeDiscretizer stage-4 output (6 ordered bins) and
+# shows the *core carver step*: enumerate every consecutive grouping of those
+# bins, score each by association with the binary target (Tschuprow's T), and
+# keep the best viable one. The real `_top_k_partitions_chi2_dp` ranks them;
+# the table fills best-first in growing top-K batches (the progressive-doubling
+# search), and the selected combination is highlighted.
+#
+# Scope: this animates the *non-NaN* consecutive search on the 6 QD bins (NaN
+# fan-out is a secondary step). Fidelity note: a real BinaryCarver re-discretizes
+# at `half_min_freq` before the search, so its bins are finer than these 6 — we
+# use the QD bins for visual continuity with the QuantitativeDiscretizer
+# animation (its stage 4 is exactly this strip).
+
+COMBI_MAX_N_MOD = 5  # max groups per combination (carver tip range: 5–7)
+COMBI_SHOW_ROWS = 8  # ranked rows displayed in the table
+COMBI_TOPK_BATCHES = (2, 4, 8)  # rows revealed per stage (progressive top-K)
+
+
+def combinations_binary_frames() -> list[TableFrame]:
+    fare, y = _synthesize_quantitative()
+    df = pd.DataFrame({"Fare": fare})
+
+    # ----- Real QD fit: the 6 ordered bins fed to the combination search ------
+    features = Features(quantitatives=["Fare"])
+    qd = QuantitativeDiscretizer(quantitatives=features.quantitatives, min_freq=QD_MIN_FREQ)
+    qd.fit(df.copy(), y)
+    feature = features.quantitatives[0]
+    transformed = qd.transform(df.copy())
+    labels = list(feature.labels)
+    n_bins = len(labels)
+
+    # Per-modality (n0, n1) in label order, plus per-bin freq / target rate.
+    xtab = pd.crosstab(transformed["Fare"], y).reindex(labels, fill_value=0)
+    n0 = xtab[0].to_numpy(dtype=float)
+    n1 = xtab[1].to_numpy(dtype=float)
+    nobs = int(n0.sum() + n1.sum())
+
+    input_bins = tuple(
+        Bin(
+            label=_clean_label(lbl),
+            x_start=i / n_bins,
+            x_end=(i + 1) / n_bins,
+            freq=(n0[i] + n1[i]) / nobs,
+            target=float(n1[i] / (n0[i] + n1[i])) if (n0[i] + n1[i]) else 0.0,
+            color_id=QUANTILE_PALETTE[i % len(QUANTILE_PALETTE)],
+        )
+        for i, lbl in enumerate(labels)
+    )
+
+    # ----- Rank every consecutive grouping by Tschuprow's T (real DP) ---------
+    ranked = _top_k_partitions_chi2_dp(
+        n0, n1, max_n_mod=COMBI_MAX_N_MOD, raw_index=labels, sort_by="tschuprowt", top_k=10_000
+    )
+    n_total = len(ranked)
+    pos = {lbl: i for i, lbl in enumerate(labels)}
+
+    winner_rank = next(
+        (rk for rk, r in enumerate(ranked) if _combo_viable(r["combination"], pos, n0, n1, nobs)),
+        None,
+    )
+
+    rows: list[ComboRow] = []
+    for rk, r in enumerate(ranked[:COMBI_SHOW_ROWS]):
+        groups = tuple(tuple(pos[m] for m in g) for g in r["combination"])
+        rows.append(
+            ComboRow(
+                rank=rk,
+                groups=groups,
+                tschuprowt=float(r["tschuprowt"]),
+                is_winner=(rk == winner_rank),
+            )
+        )
+
+    winner_t = ranked[winner_rank]["tschuprowt"] if winner_rank is not None else None
+    metric = f"T = {winner_t:.3f}" if winner_t is not None else "—"
+
+    # ----- Stage 0: input strip only; Stages 1..n: growing top-K batches ------
+    frames: list[TableFrame] = [
+        TableFrame(
+            stage=0,
+            title="Carver input: ordered bins",
+            input_bins=input_bins,
+            rows=(),
+            top_k=0,
+            n_total=n_total,
+            metric="—",
+            callout=(
+                f"The carver starts from {n_bins} ordered bins (QuantitativeDiscretizer output) and tries "
+                f"every consecutive grouping into ≤ {COMBI_MAX_N_MOD} groups — {n_total} in total."
+            ),
+        )
+    ]
+    for s, k in enumerate(COMBI_TOPK_BATCHES, start=1):
+        revealed = rows[:k]
+        is_last = s == len(COMBI_TOPK_BATCHES)
+        frames.append(
+            TableFrame(
+                stage=s,
+                title=("Best grouping selected" if is_last else "Ranking groupings by association"),
+                input_bins=input_bins,
+                rows=tuple(
+                    ComboRow(rk.rank, rk.groups, rk.tschuprowt, is_winner=rk.is_winner and is_last) for rk in revealed
+                ),
+                top_k=k,
+                n_total=n_total,
+                metric=metric if is_last else "—",
+                callout=(
+                    (
+                        "Highest-T grouping that passes the viability checks (min_freq + distinct rates) "
+                        "is kept — here the 2-group split."
+                    )
+                    if is_last
+                    else (
+                        f"Consecutive groupings ranked by Tschuprow's T (top {k} shown); each row is one "
+                        "candidate — adjacent bins sharing a colour are merged."
+                    )
+                ),
+            )
+        )
+    return frames
+
+
+def _combo_viable(
+    combination: list[list[str]],
+    pos: dict[str, int],
+    n0: np.ndarray,
+    n1: np.ndarray,
+    nobs: int,
+) -> bool:
+    """Mirror `test_viability` for one grouping: no group significantly below
+    min_freq (Wilson CI) and consecutive groups have distinct target rates."""
+    counts: list[float] = []
+    rates: list[float] = []
+    for g in combination:
+        idx = [pos[m] for m in g]
+        c = float(sum(n0[j] + n1[j] for j in idx))
+        counts.append(c)
+        rates.append(float(sum(n1[j] for j in idx) / c) if c else 0.0)
+    min_freq_ok = not bool(np.any(is_significantly_below(np.array(counts), nobs, QD_MIN_FREQ, QD_MIN_FREQ_ALPHA)))
+    rate_arr = np.array(rates)
+    distinct = not bool(np.any(np.isclose(rate_arr[1:], rate_arr[:-1]))) if len(rate_arr) > 1 else True
+    return min_freq_ok and distinct

@@ -10,7 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal
 
-FeatureType = Literal["continuous", "ordinal", "categorical", "quantitative", "qualitative"]
+FeatureType = Literal["continuous", "ordinal", "categorical", "quantitative", "qualitative", "combinations"]
 TargetType = Literal["binary", "multiclass", "continuous"]
 
 
@@ -97,6 +97,43 @@ class DualFrame:
     bot_opacity: float = 1.0
 
 
+@dataclass(frozen=True)
+class ComboRow:
+    """One consecutive-grouping candidate in the combinations table.
+
+    `groups` is the partition of the input bins as index tuples (each group a
+    run of contiguous input-bin indices, e.g. ((0, 1, 2, 3), (4, 5))). The row
+    is drawn as a segmented bar: each group is one coloured block spanning its
+    members' slots, coloured by its leader (leftmost) input bin so the block
+    reads as "these adjacent bins merged".
+    """
+
+    rank: int
+    groups: tuple[tuple[int, ...], ...]
+    tschuprowt: float
+    is_winner: bool = False
+
+
+@dataclass(frozen=True)
+class TableFrame:
+    """One stage of the combinations animation.
+
+    `input_bins` is the ordered post-discretizer strip (drawn once at the top,
+    identical across stages). `rows` are the top-K ranked groupings revealed so
+    far — each stage reveals a larger top-K batch (`top_k`), so the table fills
+    best-first while the badge evokes the progressive-doubling DP search.
+    """
+
+    stage: int
+    title: str
+    input_bins: tuple[Bin, ...]
+    rows: tuple[ComboRow, ...]
+    top_k: int
+    n_total: int  # total consecutive groupings the search ranks
+    metric: str = "—"
+    callout: str = ""
+
+
 def build_animation(
     feature: FeatureType,
     target: TargetType,
@@ -131,6 +168,10 @@ def build_animation(
         from ._data import qualitative_binary_frames
 
         frames = qualitative_binary_frames()
+    elif (feature, target) == ("combinations", "binary"):
+        from ._data import combinations_binary_frames
+
+        frames = combinations_binary_frames()
     else:
         raise NotImplementedError(f"variant ({feature!r}, {target!r}) not yet implemented")
 

@@ -89,13 +89,17 @@ def main() -> int:
         return 1
 
     DualFrame = getattr(engine, "DualFrame", None)
+    TableFrame = getattr(engine, "TableFrame", None)
 
     drift = 0
     for path in paths:
         ex = _load_example(path)
         frames = engine.build_animation(ex.FEATURE, ex.TARGET, ex.STOP_AFTER_STAGE)
         is_dual = DualFrame is not None and frames and isinstance(frames[0], DualFrame)
-        if is_dual:
+        is_table = TableFrame is not None and frames and isinstance(frames[0], TableFrame)
+        if is_table:
+            svg = render.render_table_svg(frames, ex.STOP_AFTER_STAGE)
+        elif is_dual:
             svg = render.render_dual_svg(frames, ex.STOP_AFTER_STAGE)
         else:
             svg = render.render_svg(frames, ex.STOP_AFTER_STAGE)
