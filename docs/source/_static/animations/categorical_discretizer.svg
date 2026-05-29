@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 340"
+     width="800" height="340" role="img"
+     aria-label="AutoCarver discretizer animation">
+  <defs>
+    <pattern id="nan-hatch" patternUnits="userSpaceOnUse" width="6" height="6"
+             patternTransform="rotate(45)">
+      <rect width="6" height="6" fill="#e5e7eb"/>
+      <line x1="0" y1="0" x2="0" y2="6" stroke="#5D7092" stroke-width="1.2"/>
+    </pattern>
+    <marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#f97316"/>
+    </marker>
+  </defs>
+  <style>
+text { font-family: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+.title { font-size: 14px; font-weight: 600; fill: #111827; }
+.callout { font-size: 11px; fill: #4b5563; }
+.chip { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; fill: #f9fafb; }
+.binlabel { font-size: 10px; fill: #374151; }
+.binlabel-rot { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 10px; fill: #374151; }
+.tick-label { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 9px; fill: #6b7280; }
+.overrep-label { font-size: 11px; fill: #c2410c; font-weight: 600; }
+.merge-label { font-size: 9px; fill: #c2410c; font-weight: 600; }
+.strip-label { font-size: 9px; fill: #6b7280; font-style: italic; }
+.threshold-label {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 10px; fill: #ef4444; font-weight: 600;
+}
+
+@keyframes show-0 {
+  0% { opacity: 1; }
+  22.75% { opacity: 1; }
+  25.00% { opacity: 0; }
+  100% { opacity: 0; }
+}
+.stage-0 { opacity: 0; animation: show-0 20000ms infinite; }
+@keyframes show-1 {
+  0% { opacity: 0; }
+  25.00% { opacity: 0; }
+  27.25% { opacity: 1; }
+  47.75% { opacity: 1; }
+  50.00% { opacity: 0; }
+  100% { opacity: 0; }
+}
+.stage-1 { opacity: 0; animation: show-1 20000ms infinite; }
+@keyframes show-2 {
+  0% { opacity: 0; }
+  50.00% { opacity: 0; }
+  52.25% { opacity: 1; }
+  100% { opacity: 1; }
+}
+.stage-2 { opacity: 0; animation: show-2 20000ms infinite; }
+.stage-3 { display: none; }
+.stage-4 { display: none; }
+  </style>
+  <g class="stage stage-0">
+    <text class="title" x="400.00" y="29.00" text-anchor="middle">Stage 0 / 2 &#8212; Raw feature</text>
+    <rect x="658" y="12" width="110" height="22" rx="11" fill="#111827"/>
+    <text class="chip" x="713.00" y="27.00" text-anchor="middle">—</text>
+    <text class="callout" x="400.00" y="56.00" text-anchor="middle">Raw categorical distribution of Port (synthetic, n=1500). Dots above bars = P(y=1) per</text>
+    <text class="callout" x="400.00" y="70.00" text-anchor="middle">modality.</text>
+    <rect x="32.50" y="161.52" width="133.00" height="86.48" rx="2" fill="#5B8FF9" stroke="#374151" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="99.00" y="256.00" text-anchor="end" transform="rotate(-45 99.00 256.00)">Southampton</text>
+    <rect x="166.50" y="213.20" width="133.00" height="34.80" rx="2" fill="#5AD8A6" stroke="#374151" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="233.00" y="256.00" text-anchor="end" transform="rotate(-45 233.00 256.00)">Cherbourg</text>
+    <rect x="300.50" y="225.36" width="133.00" height="22.64" rx="2" fill="#F6BD16" stroke="#374151" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="367.00" y="256.00" text-anchor="end" transform="rotate(-45 367.00 256.00)">Queenstown</text>
+    <rect x="434.50" y="240.32" width="133.00" height="7.68" rx="2" fill="#E8684A" stroke="#f97316" stroke-width="2.0"/>
+    <text class="binlabel-rot" x="501.00" y="256.00" text-anchor="end" transform="rotate(-45 501.00 256.00)">Belfast</text>
+    <rect x="568.50" y="240.84" width="133.00" height="7.16" rx="2" fill="#6DC8EC" stroke="#f97316" stroke-width="2.0"/>
+    <text class="binlabel-rot" x="635.00" y="256.00" text-anchor="end" transform="rotate(-45 635.00 256.00)">Boston</text>
+    <path d="M 99.00,140.00 L 233.00,113.78 L 367.00,130.77 L 501.00,100.00 L 635.00,131.46" fill="none" stroke="#9ca3af" stroke-width="1" stroke-dasharray="2 3"/>
+    <circle cx="99.00" cy="140.00" r="3.5" fill="#5B8FF9" stroke="#374151" stroke-width="0.6"/>
+    <circle cx="233.00" cy="113.78" r="3.5" fill="#5AD8A6" stroke="#374151" stroke-width="0.6"/>
+    <circle cx="367.00" cy="130.77" r="3.5" fill="#F6BD16" stroke="#374151" stroke-width="0.6"/>
+    <circle cx="501.00" cy="100.00" r="3.5" fill="#E8684A" stroke="#374151" stroke-width="0.6"/>
+    <circle cx="635.00" cy="131.46" r="3.5" fill="#6DC8EC" stroke="#374151" stroke-width="0.6"/>
+    <text class="strip-label" x="32.00" y="96.00" text-anchor="start">target rate &#8712; [0.22, 0.84]</text>
+    <rect x="712.00" y="214.87" width="56.00" height="33.13" rx="3" fill="url(#nan-hatch)" stroke="#5D7092" stroke-width="1" opacity="0.85"/>
+    <text class="binlabel-rot" x="740.00" y="256.00" text-anchor="end" transform="rotate(-45 740.00 256.00)">NaN (17.3%)</text>
+    <line x1="32" y1="248.00" x2="702" y2="248.00" stroke="#9ca3af" stroke-width="1"/>
+    <line x1="32" y1="234.57" x2="768" y2="234.57" stroke="#ef4444" stroke-width="1" stroke-dasharray="5 3"/>
+    <text class="threshold-label" x="764.00" y="230.57" text-anchor="end">min_freq = 0.07</text>
+  </g>
+  <g class="stage stage-1">
+    <text class="title" x="400.00" y="29.00" text-anchor="middle">Stage 1 / 2 &#8212; Rare modalities grouped</text>
+    <rect x="658" y="12" width="110" height="22" rx="11" fill="#111827"/>
+    <text class="chip" x="713.00" y="27.00" text-anchor="middle">—</text>
+    <text class="callout" x="400.00" y="56.00" text-anchor="middle">Modalities significantly under min_freq (Wilson CI) collapse into the default bin '__OTHER__'</text>
+    <text class="callout" x="400.00" y="70.00" text-anchor="middle">= 'Belfast, Boston'.</text>
+    <rect x="32.50" y="161.52" width="133.00" height="86.48" rx="2" fill="#5B8FF9" stroke="#374151" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="99.00" y="256.00" text-anchor="end" transform="rotate(-45 99.00 256.00)">Southampton</text>
+    <rect x="166.50" y="213.20" width="133.00" height="34.80" rx="2" fill="#5AD8A6" stroke="#374151" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="233.00" y="256.00" text-anchor="end" transform="rotate(-45 233.00 256.00)">Cherbourg</text>
+    <rect x="300.50" y="225.36" width="133.00" height="22.64" rx="2" fill="#F6BD16" stroke="#374151" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="367.00" y="256.00" text-anchor="end" transform="rotate(-45 367.00 256.00)">Queenstown</text>
+    <rect x="434.50" y="233.16" width="267.00" height="14.84" rx="2" fill="#cfd2d6" stroke="#374151" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="568.00" y="256.00" text-anchor="end" transform="rotate(-45 568.00 256.00)"><tspan x="568.00" dy="0">__OTHER__</tspan><tspan x="568.00" dy="11">(Belfast, Boston)</tspan></text>
+    <path d="M 99.00,140.00 L 233.00,113.78 L 367.00,130.77 L 568.00,115.19" fill="none" stroke="#9ca3af" stroke-width="1" stroke-dasharray="2 3"/>
+    <circle cx="99.00" cy="140.00" r="3.5" fill="#5B8FF9" stroke="#374151" stroke-width="0.6"/>
+    <circle cx="233.00" cy="113.78" r="3.5" fill="#5AD8A6" stroke="#374151" stroke-width="0.6"/>
+    <circle cx="367.00" cy="130.77" r="3.5" fill="#F6BD16" stroke="#374151" stroke-width="0.6"/>
+    <circle cx="568.00" cy="115.19" r="3.5" fill="#cfd2d6" stroke="#374151" stroke-width="0.6"/>
+    <text class="strip-label" x="32.00" y="96.00" text-anchor="start">target rate &#8712; [0.22, 0.84]</text>
+    <rect x="712.00" y="214.87" width="56.00" height="33.13" rx="3" fill="url(#nan-hatch)" stroke="#5D7092" stroke-width="1" opacity="0.85"/>
+    <text class="binlabel-rot" x="740.00" y="256.00" text-anchor="end" transform="rotate(-45 740.00 256.00)">NaN (17.3%)</text>
+    <line x1="32" y1="248.00" x2="702" y2="248.00" stroke="#9ca3af" stroke-width="1"/>
+    <line x1="32" y1="234.57" x2="768" y2="234.57" stroke="#ef4444" stroke-width="1" stroke-dasharray="5 3"/>
+    <text class="threshold-label" x="764.00" y="230.57" text-anchor="end">min_freq = 0.07</text>
+  </g>
+  <g class="stage stage-2">
+    <text class="title" x="400.00" y="29.00" text-anchor="middle">Stage 2 / 2 &#8212; After CategoricalDiscretizer</text>
+    <rect x="658" y="12" width="110" height="22" rx="11" fill="#111827"/>
+    <text class="chip" x="713.00" y="27.00" text-anchor="middle">—</text>
+    <text class="callout" x="400.00" y="56.00" text-anchor="middle">4 modalities, reordered by ascending P(y=1) — the dot trace is now monotonic.</text>
+    <rect x="32.50" y="161.52" width="166.50" height="86.48" rx="2" fill="#5B8FF9" stroke="#374151" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="115.75" y="256.00" text-anchor="end" transform="rotate(-45 115.75 256.00)">Southampton</text>
+    <rect x="200.00" y="225.36" width="166.50" height="22.64" rx="2" fill="#F6BD16" stroke="#374151" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="283.25" y="256.00" text-anchor="end" transform="rotate(-45 283.25 256.00)">Queenstown</text>
+    <rect x="367.50" y="233.16" width="166.50" height="14.84" rx="2" fill="#cfd2d6" stroke="#374151" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="450.75" y="256.00" text-anchor="end" transform="rotate(-45 450.75 256.00)"><tspan x="450.75" dy="0">__OTHER__</tspan><tspan x="450.75" dy="11">(Belfast, Boston)</tspan></text>
+    <rect x="535.00" y="213.20" width="166.50" height="34.80" rx="2" fill="#5AD8A6" stroke="#374151" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="618.25" y="256.00" text-anchor="end" transform="rotate(-45 618.25 256.00)">Cherbourg</text>
+    <path d="M 115.75,140.00 L 283.25,130.77 L 450.75,115.19 L 618.25,113.78" fill="none" stroke="#9ca3af" stroke-width="1" stroke-dasharray="2 3"/>
+    <circle cx="115.75" cy="140.00" r="3.5" fill="#5B8FF9" stroke="#374151" stroke-width="0.6"/>
+    <circle cx="283.25" cy="130.77" r="3.5" fill="#F6BD16" stroke="#374151" stroke-width="0.6"/>
+    <circle cx="450.75" cy="115.19" r="3.5" fill="#cfd2d6" stroke="#374151" stroke-width="0.6"/>
+    <circle cx="618.25" cy="113.78" r="3.5" fill="#5AD8A6" stroke="#374151" stroke-width="0.6"/>
+    <text class="strip-label" x="32.00" y="96.00" text-anchor="start">target rate &#8712; [0.22, 0.84]</text>
+    <rect x="712.00" y="214.87" width="56.00" height="33.13" rx="3" fill="url(#nan-hatch)" stroke="#5D7092" stroke-width="1" opacity="0.85"/>
+    <text class="binlabel-rot" x="740.00" y="256.00" text-anchor="end" transform="rotate(-45 740.00 256.00)">NaN (17.3%)</text>
+    <line x1="32" y1="248.00" x2="702" y2="248.00" stroke="#9ca3af" stroke-width="1"/>
+    <line x1="32" y1="234.57" x2="768" y2="234.57" stroke="#ef4444" stroke-width="1" stroke-dasharray="5 3"/>
+    <text class="threshold-label" x="764.00" y="230.57" text-anchor="end">min_freq = 0.07</text>
+  </g>
+</svg>

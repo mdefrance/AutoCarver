@@ -13,7 +13,13 @@ repos:
     hooks:
       - id: sync-readme-quickstart
         name: sync README quick-start from docs/source/examples/quick_start.py
-        entry: python docs/sync_readme.py
+        entry: uv run python docs/sync_readme.py
         language: system
         pass_filenames: false
         files: ^(docs/source/examples/quick_start\.py|docs/sync_readme\.py|README\.md)$
+      - id: check-animations
+        name: check animation SVGs are up to date
+        entry: uv run python docs/build_animations.py --check
+        language: system
+        pass_filenames: false
+        files: ^docs/(build_animations\.py|source/examples/animations/|source/_static/animations/)

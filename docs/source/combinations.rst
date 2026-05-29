@@ -12,6 +12,20 @@ A pre-built :class:`CombinationEvaluator` instance can be passed to any carver v
 :class:`TschuprowtCombinations` for :class:`BinaryCarver` / :class:`MulticlassCarver`,
 :class:`KruskalCombinations` for :class:`ContinuousCarver`.
 
+The animation below starts from the six ordered bins a
+:class:`QuantitativeDiscretizer` produces (its final state — see
+:ref:`QuantitativeDiscretizer`) and shows the core step: every consecutive
+grouping into ``max_n_mod`` groups is scored by its association with the binary
+target (Tschuprow's T) and the table fills best-first in growing ``top_k``
+batches (the :ref:`progressive top-K DP <DPTopK>` search). The highest-scoring
+grouping that passes the :ref:`viability filter <MinFreqViability>` is kept
+(gold row). Adjacent bins sharing a colour in a row are merged into one group.
+
+.. image:: _static/animations/combinations.svg
+   :alt: Combinations search animation — ordered bins, then consecutive groupings ranked by Tschuprow's T filling a table best-first, with the selected grouping highlighted
+   :width: 100%
+   :align: center
+
 .. autoclass:: AutoCarver.combinations.CombinationEvaluator
     :members: get_best_combination, save, load
 
@@ -131,7 +145,7 @@ We therefore run an interval DP indexed by :math:`(k, j)` whose state is the
 .. math::
 
     \text{dp}[k][j] = \operatorname*{top\text{-}K}_{i \in [k-1,\, j)} \big\{\,
-       \text{dp}[k-1][i] \oplus \text{seg\_cost}(i,\, j)\, \big\}
+       \text{dp}[k-1][i] \oplus \text{seg_cost}(i,\, j)\, \big\}
 
 The final candidate list is :math:`\bigcup_k \text{dp}[k][n]`, sorted desc and
 truncated to ``top_k``.
