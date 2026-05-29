@@ -300,6 +300,95 @@ What does **not** change
 The DP is a **search-strategy optimisation**, not a statistical change.
 
 
+.. _TargetRates:
+
+Target rates
+------------
+
+Every combination evaluator carries a **target rate** — the per-modality summary
+of the target that the carver reports and, crucially, the scalar the
+:ref:`viability filter <Viability>` orders by. It is passed via the
+``target_rate`` keyword and defaults to a task-appropriate choice (the target
+mean, ``TargetMean``, for every built-in evaluator).
+
+A target rate plays **two distinct roles**:
+
+#. **Display statistic.** One value per modality, stored on
+   ``feature.statistics`` and surfaced in the carved-feature summary, so the
+   grouping can be read off in interpretable units (an event rate, an odds
+   ratio, a mean target, …).
+#. **Ordering key for viability.** The same per-modality value is what the
+   :ref:`distinct-rate test <DistinctRatesViability>` requires to differ
+   between consecutive modalities, and what the
+   :ref:`train/dev rank-preservation veto <RankViability>` sorts on. A
+   combination whose target-rate ordering collapses or flips is rejected.
+
+Because of this dual role, two properties decide whether a candidate rate is a
+good fit:
+
+* **It must be an orderable scalar.** The viability checks need a single value
+  per modality with a meaningful monotone ordering. A symmetric measure (e.g. a
+  Gini-style impurity, maximal at :math:`p = 0.5`) is fine as a display
+  statistic but a poor ordering key.
+* **Decomposability buys a fast path.** When a rate can be reconstructed from
+  per-raw-modality sufficient statistics it can opt into a closed-form path
+  (``compute_from_stats``) that costs :math:`O(k)` per combination instead of
+  re-aggregating the raw sample on every candidate. The continuous mean does
+  this; rates that need the full value multiset (median, quantiles) cannot and
+  fall back to the general aggregation path.
+
+.. autoclass:: AutoCarver.combinations.utils.TargetRate
+    :members: compute
+
+
+.. _BinaryTargetRates:
+
+Binary target rates
+^^^^^^^^^^^^^^^^^^^
+
+For binary (and multiclass) targets the per-modality input is a two-column
+crosstab :math:`(n_0, n_1)`, so every rate below is closed-form. The default is
+the event rate :math:`p = n_1 / (n_0 + n_1)` (``TargetMean``).
+
+.. autoclass:: AutoCarver.combinations.binary.binary_target_rates.TargetMean
+
+.. _ContinuousTargetRates:
+
+Continuous target rates
+^^^^^^^^^^^^^^^^^^^^^^^
+
+For continuous targets the per-modality input is the multiset of target values.
+The default ``TargetMean`` is decomposable from per-modality :math:`(n, \sum y)`
+aggregates and therefore implements the closed-form ``compute_from_stats`` fast
+path; ``TargetMedian`` is **not** decomposable from sums and uses the general
+aggregation path.
+
+.. autoclass:: AutoCarver.combinations.continuous.continuous_target_rates.TargetMean
+
+.. autoclass:: AutoCarver.combinations.continuous.continuous_target_rates.TargetMedian
+
+
+Custom target rates
+^^^^^^^^^^^^^^^^^^^
+
+A custom rate subclasses ``BinaryTargetRate`` or ``ContinuousTargetRate`` and
+implements ``_compute`` (one value per modality). To make it serialisable
+through ``save`` / ``load``, add it to the evaluator's ``_target_rate_classes``
+registry. When the rate is additively decomposable from per-modality sums,
+override ``compute_from_stats`` so the search uses the closed-form path.
+
+Candidate extensions that fit this contract (not yet implemented):
+
+* **Binary, closed-form:** logit / log-odds :math:`\log(n_1 / n_0)`, and a
+  column-normalised weight-of-evidence
+  :math:`\log\!\big((n_1/\textstyle\sum n_1)\,/\,(n_0/\textstyle\sum n_0)\big)`.
+* **Continuous, decomposable** (extend the carried stats with
+  :math:`\sum y^2`): variance and standard deviation.
+* **Continuous, non-decomposable** (general path only): inter-quartile range,
+  arbitrary quantiles, and trimmed/robust location — useful for heavy-tailed
+  targets where the mean ordering is unstable.
+
+
 Classification tasks
 --------------------
 
