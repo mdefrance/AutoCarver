@@ -259,3 +259,17 @@ String Discretizer
 .. autoclass:: AutoCarver.discretizers.StringDiscretizer
     :members: fit, transform, fit_transform, to_json, summary
 
+
+.. _TimedeltaDiscretizer:
+
+Timedelta Discretizer
+^^^^^^^^^^^^^^^^^^^^^
+
+:class:`TimedeltaDiscretizer` is the quantitative counterpart of :ref:`StringDiscretizer`: a data
+preparation tool that converts :class:`DatetimeFeature` columns to floats, namely the number of
+seconds elapsed since each feature's ``reference_date``. It runs before :ref:`ContinuousDiscretizer`
+so that datetime features can be bucketized as ordinary quantitative features.
+
+.. autoclass:: AutoCarver.discretizers.TimedeltaDiscretizer
+    :members: fit, transform, fit_transform, to_json, summary
+

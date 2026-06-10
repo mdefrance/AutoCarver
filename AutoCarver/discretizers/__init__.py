@@ -8,7 +8,13 @@ from AutoCarver.discretizers.qualitatives import (
     QualitativeDiscretizer,
 )
 from AutoCarver.discretizers.quantitatives import ContinuousDiscretizer, QuantitativeDiscretizer
-from AutoCarver.discretizers.utils import BaseDiscretizer, DiscretizerConfig, Sample, StringDiscretizer
+from AutoCarver.discretizers.utils import (
+    BaseDiscretizer,
+    DiscretizerConfig,
+    Sample,
+    StringDiscretizer,
+    TimedeltaDiscretizer,
+)
 
 __all__ = [
     "BaseDiscretizer",
@@ -22,4 +28,5 @@ __all__ = [
     "OrdinalDiscretizer",
     "ContinuousDiscretizer",
     "StringDiscretizer",
+    "TimedeltaDiscretizer",
 ]

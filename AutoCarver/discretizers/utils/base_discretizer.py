@@ -556,7 +556,15 @@ def cast_datetime_features(features: Features, X: pd.DataFrame) -> pd.DataFrame:
     for feature in features.datetimes:
         column = X[feature.version]
         if not pd.api.types.is_numeric_dtype(column):
-            X[feature.version] = feature.to_timedelta(column)
+            reference = None
+            if feature.reference_is_column:
+                if feature.reference_date not in X:
+                    raise ValueError(
+                        f"[{feature}] reference column {feature.reference_date!r} is missing "
+                        "from provided X. Please check your inputs!"
+                    )
+                reference = X[feature.reference_date]
+            X[feature.version] = feature.to_timedelta(column, reference)
     return X
 
 

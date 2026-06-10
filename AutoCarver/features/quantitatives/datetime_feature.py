@@ -16,6 +16,12 @@ class DatetimeFeature(QuantitativeFeature):
     values have been converted to a number of seconds elapsed since
     ``reference_date`` (see :meth:`to_timedelta`). The conversion is applied by
     the :class:`TimedeltaDiscretizer` before continuous discretization.
+
+    ``reference_date`` may be either a fixed date literal (e.g. ``"2020-01-01"``)
+    or the name of another datetime column in ``X``. The two are disambiguated at
+    fit time: if ``reference_date`` matches a column of the fitted ``X``, the
+    conversion is computed row-wise against that column; otherwise it is parsed as
+    a fixed date.
     """
 
     __name__ = "Datetime"
@@ -23,25 +29,43 @@ class DatetimeFeature(QuantitativeFeature):
 
     def __init__(self, name: str, reference_date: str) -> None:
         super().__init__(name)
-        self.reference_date = reference_date  # date of reference to compare with
+        self.reference_date = reference_date  # fixed date literal or reference column name
+        self.reference_is_column = False  # resolved at fit time against X's columns
 
-    def to_timedelta(self, series: pd.Series) -> pd.Series:
-        """Converts datetime values to a float number of seconds since ``reference_date``.
+    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> None:
+        # disambiguate reference_date: a column name resolves to a row-wise reference
+        self.reference_is_column = self.reference_date in X.columns
+        super().fit(X, y)
 
-        Non-datetime entries (``numpy.nan``, the ``nan`` placeholder, unparseable
-        values) are coerced to ``numpy.nan`` so the result is a plain float Series.
+        # a NaT in the reference column yields NaN after conversion
+        if self.reference_is_column and any(X[self.reference_date].isna()):
+            self.has_nan = True
+
+    def to_timedelta(self, series: pd.Series, reference: pd.Series | None = None) -> pd.Series:
+        """Converts datetime values to a float number of seconds since the reference.
+
+        When ``reference`` is ``None`` the fixed ``reference_date`` literal is used;
+        otherwise ``reference`` is a datetime Series subtracted row-wise (column
+        reference). Non-datetime entries (``numpy.nan``, the ``nan`` placeholder,
+        unparseable values) are coerced to ``numpy.nan`` so the result is a plain
+        float Series.
         """
-        reference = pd.to_datetime(self.reference_date)
         dates = pd.to_datetime(series, errors="coerce")
-        return (dates - reference).dt.total_seconds()
+        if reference is None:
+            ref = pd.to_datetime(self.reference_date)
+        else:
+            ref = pd.to_datetime(reference, errors="coerce")
+        return (dates - ref).dt.total_seconds()
 
     def to_json(self, light_mode: bool = False) -> dict[str, Any]:
         content = super().to_json(light_mode)
         content["reference_date"] = self.reference_date
+        content["reference_is_column"] = self.reference_is_column
         return content
 
     def _restore_from_json(self, feature_json: dict) -> None:
         self.reference_date = feature_json["reference_date"]
+        self.reference_is_column = feature_json.get("reference_is_column", False)
         super()._restore_from_json(feature_json)
 
 

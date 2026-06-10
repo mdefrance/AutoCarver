@@ -34,6 +34,27 @@ def test_timedelta_discretizer_fit_transform() -> None:
     assert np.isnan(result[3])
 
 
+def test_timedelta_discretizer_column_reference() -> None:
+    """fit/transform converts a datetime column to seconds since another datetime column"""
+    feature = DatetimeFeature("event", reference_date="signup")
+    timedelta_discretizer = TimedeltaDiscretizer([feature])
+
+    X = pd.DataFrame(
+        {
+            "event": pd.to_datetime(["2020-01-02", "2020-01-03", "2020-01-11", np.nan]),
+            "signup": pd.to_datetime(["2020-01-01", "2020-01-01", "2020-01-01", "2020-01-01"]),
+        }
+    )
+
+    timedelta_discretizer.fit(X)
+    assert timedelta_discretizer.features["event"].reference_is_column
+
+    transformed_x = timedelta_discretizer.transform(X)
+    result = transformed_x["event"].tolist()
+    assert result[:3] == [86400.0, 172800.0, 864000.0]
+    assert np.isnan(result[3])
+
+
 def test_ensure_datetime_dtypes_converts_only_datetimes() -> None:
     """ensure_datetime_dtypes converts datetime features and leaves numerics untouched"""
     datetime_feature = DatetimeFeature("dt", reference_date="2020-01-01")
