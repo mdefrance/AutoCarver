@@ -11,6 +11,7 @@ from AutoCarver.discretizers.qualitatives import OrdinalDiscretizer
 from AutoCarver.discretizers.quantitatives.continuous_discretizer import ContinuousDiscretizer
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, DiscretizerConfig, Sample
 from AutoCarver.discretizers.utils.frequency_ci import is_significantly_below
+from AutoCarver.discretizers.utils.type_discretizers import ensure_datetime_dtypes
 from AutoCarver.features import Features, QuantitativeFeature
 from AutoCarver.utils import extend_docstring
 
@@ -45,8 +46,11 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         super().__init__(quantitatives, min_freq=min_freq, config=config)
 
     def _prepare_sample(self, sample: Sample) -> Sample:
-        """Validates format and content of X and y."""
+        """Validates format and content of X and y. Converts datetime columns to timedeltas."""
         sample = super()._prepare_sample(sample)
+
+        # converting datetime features into numeric (seconds since reference_date)
+        sample.X = ensure_datetime_dtypes(self.features, sample.X, config=self.config)
 
         # checking for quantitative columns
         check_quantitative_dtypes(sample.X, self.features.versions, self.__name__)

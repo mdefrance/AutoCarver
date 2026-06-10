@@ -4,9 +4,14 @@ from typing import Self
 
 import pandas as pd
 
-from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, DiscretizerConfig, Sample
+from AutoCarver.discretizers.utils.base_discretizer import (
+    BaseDiscretizer,
+    DiscretizerConfig,
+    Sample,
+    cast_datetime_features,
+)
 from AutoCarver.discretizers.utils.multiprocessing import apply_async_function
-from AutoCarver.features import BaseFeature, Features, GroupedList
+from AutoCarver.features import BaseFeature, DatetimeFeature, Features, GroupedList
 from AutoCarver.features.qualitatives import nan_unique
 from AutoCarver.utils import extend_docstring
 
@@ -86,8 +91,44 @@ def fit_feature(feature: BaseFeature, df_feature: pd.Series):
     return feature.version, order
 
 
+def ensure_qualitative_dtypes(
+    features: Features,
+    X: pd.DataFrame,
+    *,
+    config: DiscretizerConfig | None = None,
+) -> pd.DataFrame:
+    """Checks features' data types and converts int/float to str"""
+
+    # getting per feature data types
+    dtypes = (
+        X.fillna({feature.version: feature.nan for feature in features})[features.versions]
+        .map(type)
+        .apply(pd.unique, result_type="reduce")
+    )
+
+    # identifying features that are not str
+    not_object = dtypes.apply(lambda u: any(dtype is not str for dtype in u))
+
+    # converting detected non-string features
+    if any(not_object):
+        # converting non-str features into qualitative features
+        to_convert = [feature for feature in features if feature.version in not_object.index[not_object]]
+        string_discretizer = StringDiscretizer(features=to_convert, config=config)
+        X = string_discretizer.fit_transform(X)
+
+    # pandas 3.0 infers StringDtype for string columns; enforce object dtype for consistency
+    X[features.versions] = X[features.versions].astype(object)
+
+    return X
+
+
 class TimedeltaDiscretizer(BaseDiscretizer):
-    """TODO Converts specified columns of a DataFrame into float timedeltas.
+    """Converts datetime features into floats: the number of seconds elapsed since each
+    feature's ``reference_date``.
+
+    Quantitative counterpart of :class:`StringDiscretizer`: a type-conversion step run
+    before :class:`ContinuousDiscretizer` so that datetime columns can be discretized as
+    ordinary quantitative features.
 
     * Keeps NaN inplace
     """
@@ -97,15 +138,15 @@ class TimedeltaDiscretizer(BaseDiscretizer):
     @extend_docstring(BaseDiscretizer.__init__)
     def __init__(
         self,
-        features: list[BaseFeature],
+        features: list[DatetimeFeature],
         *,
         config: DiscretizerConfig | None = None,
     ) -> None:
         """
         Parameters
         ----------
-        features : list[str]
-            List of column names of qualitative features to be converted as string
+        features : list[DatetimeFeature]
+            List of datetime features to be converted to second-based timedeltas
         """
         features_obj = Features.from_list(features)
         super().__init__(features=features_obj, config=config)
@@ -117,14 +158,35 @@ class TimedeltaDiscretizer(BaseDiscretizer):
         # checking for binary target and copying X
         sample = self._prepare_sample(Sample(X, y))
 
-        # transforming all features
-        all_orders = apply_async_function(fit_feature, self.features, self.config.n_jobs, sample.X)
-
-        # updating features accordingly
-        self.features.update(dict(all_orders), replace=True)
+        # fitting features on the raw datetime columns (records has_nan)
         self.features.fit(**sample)
 
-        # discretizing features based on each feature's values_order
+        # marking the discretizer as fitted (values are set later by ContinuousDiscretizer)
         super().fit(X, y)
 
         return self
+
+    def transform(self, X: pd.DataFrame, y: pd.Series | None = None) -> pd.DataFrame:
+        """Converts each datetime feature's column to seconds since its ``reference_date``."""
+        if not self.is_fitted:
+            raise RuntimeError(f"[{self.__name__}] Call fit method first.")
+
+        # validating and casting columns, then converting datetimes to numeric timedeltas
+        X = self._prepare_X(X)
+        return cast_datetime_features(self.features, X)
+
+
+def ensure_datetime_dtypes(
+    features: Features,
+    X: pd.DataFrame,
+    *,
+    config: DiscretizerConfig | None = None,
+) -> pd.DataFrame:
+    """Converts datetime features into second-based timedeltas (no-op when there are none)."""
+
+    datetimes = features.datetimes
+    if datetimes:
+        timedelta_discretizer = TimedeltaDiscretizer(features=datetimes, config=config)
+        X = timedelta_discretizer.fit_transform(X)
+
+    return X

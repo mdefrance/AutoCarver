@@ -8,9 +8,10 @@ from typing import Self
 import pandas as pd
 
 from AutoCarver.discretizers.qualitatives.categorical_discretizer import CategoricalDiscretizer
-from AutoCarver.discretizers.qualitatives.chained_discretizer import check_frequencies, ensure_qualitative_dtypes
+from AutoCarver.discretizers.qualitatives.chained_discretizer import check_frequencies
 from AutoCarver.discretizers.qualitatives.ordinal_discretizer import OrdinalDiscretizer
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, DiscretizerConfig, Sample
+from AutoCarver.discretizers.utils.type_discretizers import ensure_qualitative_dtypes
 from AutoCarver.features import QualitativeFeature
 from AutoCarver.utils import extend_docstring
 

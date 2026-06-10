@@ -26,6 +26,7 @@ class BaseFeature(ABC):
     is_qualitative: bool = False
     is_categorical: bool = False
     is_ordinal: bool = False
+    is_datetime: bool = False
 
     def __init__(self, name: str) -> None:
         self.name = name
@@ -409,6 +410,7 @@ class BaseFeature(ABC):
             "is_quantitative": self.is_quantitative,
             "is_categorical": self.is_categorical,
             "is_ordinal": self.is_ordinal,
+            "is_datetime": self.is_datetime,
             "ordinal_encoding": self.ordinal_encoding,
             "statistics": self._statistics,
         }
