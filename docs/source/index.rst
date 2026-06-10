@@ -22,6 +22,7 @@ Welcome to AutoCarver's documentation!
    features
    discretizers
    combinations
+   viability
    carvers
    selectors
 

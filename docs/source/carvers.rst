@@ -57,7 +57,7 @@ Dropped features (no robust combination)
 ----------------------------------------
 
 A feature for which **no** candidate combination passed the
-:ref:`viability filter <MinFreqViability>` (Wilson ``min_freq`` on train and dev,
+:ref:`viability filter <Viability>` (Wilson ``min_freq`` on train and dev,
 distinct target rates, train/dev rank preservation) is removed from
 ``carver.features`` and retained on :attr:`carver.dropped_features` so the user
 can inspect *why* it was dropped without re-fitting.

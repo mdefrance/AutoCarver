@@ -16,7 +16,7 @@ from AutoCarver.combinations import (
 )
 from AutoCarver.config import Constants
 from AutoCarver.discretizers import ChainedDiscretizer, DiscretizerConfig
-from AutoCarver.features import Features, OrdinalFeature
+from AutoCarver.features import DatetimeFeature, Features, OrdinalFeature
 
 
 @fixture(params=[CramervCombinations, TschuprowtCombinations])
@@ -791,6 +791,50 @@ def test_binary_carver_save_load(tmp_path: Path, evaluator: CombinationEvaluator
     assert carver.max_n_mod == loaded_carver.max_n_mod
     assert carver.combination_evaluator.sort_by == loaded_carver.combination_evaluator.sort_by
     assert carver.combination_evaluator.verbose == loaded_carver.combination_evaluator.verbose
+
+
+def test_binary_carver_end_to_end_with_datetime(tmp_path: Path, evaluator: CombinationEvaluator):
+    """End-to-end BinaryCarver on a datetime feature: fit, transform, save/load, re-transform."""
+    n = 60
+    idx = list(range(n))
+    dates = pd.date_range("2020-01-01", periods=n, freq="D").tolist()
+    dates[7] = pd.NaT  # a missing datetime
+    X = pd.DataFrame({"signup": dates, "cat": ["A", "B"] * (n // 2)}, index=idx)
+
+    # target correlated with how late the signup date is (earlier -> 0, later -> 1)
+    y = pd.Series([0 if i < n // 2 else 1 for i in range(n)], index=idx)
+
+    features = Features(categoricals=["cat"], datetimes=[("signup", "2020-01-01")])
+    carver = BinaryCarver(
+        min_freq=0.2,
+        max_n_mod=4,
+        features=features,
+        combination_evaluator=evaluator,
+        config=DiscretizerConfig(dropna=True, copy=True),
+    )
+    X_transformed = carver.fit_transform(X, y)
+
+    # the datetime feature is recognized as such, fitted, and carved into buckets
+    signup = carver.features("signup")
+    assert isinstance(signup, DatetimeFeature)
+    assert signup.reference_date == "2020-01-01"
+    assert signup.is_fitted and signup.has_nan
+    assert len(X_transformed) == n
+
+    # transformed datetime column only contains learned bucket labels
+    assert set(X_transformed["signup"].dropna().unique()).issubset(set(signup.labels))
+
+    # save / load preserves the DatetimeFeature (type + reference_date + carved buckets)
+    carver_file = tmp_path / "binary_carver_datetime.json"
+    carver.save(str(carver_file))
+    loaded = BinaryCarver.load(str(carver_file))
+    loaded_signup = loaded.features("signup")
+    assert isinstance(loaded_signup, DatetimeFeature)
+    assert loaded_signup.reference_date == "2020-01-01"
+    assert loaded_signup.content == signup.content
+
+    # the loaded carver transforms fresh raw datetimes identically
+    assert loaded.transform(X).equals(carver.transform(X))
 
 
 def _fit_binary_carver(

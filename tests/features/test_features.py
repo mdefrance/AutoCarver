@@ -5,7 +5,14 @@ import json
 import pandas as pd
 from pytest import fixture, raises
 
-from AutoCarver.features import BaseFeature, CategoricalFeature, OrdinalFeature, QualitativeFeature, QuantitativeFeature
+from AutoCarver.features import (
+    BaseFeature,
+    CategoricalFeature,
+    DatetimeFeature,
+    OrdinalFeature,
+    QualitativeFeature,
+    QuantitativeFeature,
+)
 from AutoCarver.features.features import (
     Features,
     get_names,
@@ -190,6 +197,56 @@ def test_features_initialization(features, mock_categoricals, mock_ordinals, moc
     assert len(features.categoricals) == len(mock_categoricals)
     assert len(features.ordinals) == len(mock_ordinals)
     assert len(features.quantitatives) == len(mock_quantitatives)
+
+
+def test_features_initialization_with_datetimes():
+    """datetimes can be created from the name-based constructor as (name, reference_date) pairs"""
+    features = Features(quantitatives=["num"], datetimes=[("dt", "2020-01-01")])
+
+    # datetimes are recognized as their own category, and remain quantitative under the hood
+    assert get_names(features.datetimes) == ["dt"]
+    assert features("dt").reference_date == "2020-01-01"
+    assert features("dt").is_datetime
+    assert features("dt") in features.quantitatives
+
+    # datetimes alone satisfy the "at least one feature" requirement
+    assert get_names(Features(datetimes=[("dt", "2020-01-01")]).datetimes) == ["dt"]
+
+
+def test_features_initialization_with_invalid_datetimes():
+    """datetimes must be a list of (name, reference_date) string pairs"""
+    for bad in ([("dt",)], [("dt", 2020)], ["dt"]):
+        with raises(TypeError):
+            Features(datetimes=bad)
+
+
+def test_features_datetimes_stored_separately():
+    """datetimes live in their own _datetimes list, recombined in the quantitatives view"""
+    features = Features(quantitatives=["num"], datetimes=[("dt", "2020-01-01")])
+
+    # stored apart from pure quantitatives
+    assert get_names(features._datetimes) == ["dt"]
+    assert get_names(features._quantitatives) == ["num"]
+
+    # the public quantitatives view recombines them (and to_list lists each once)
+    assert get_names(features.quantitatives) == ["num", "dt"]
+    assert get_names(features.to_list()) == ["num", "dt"]
+
+
+def test_features_replace_feature():
+    """replace_feature swaps a stored feature in place by version, in the right typed list"""
+    features = Features(quantitatives=["num"], datetimes=[("dt", "2020-01-01")])
+
+    new_dt = DatetimeFeature("dt", reference_date="2020-01-01")
+    features.replace_feature(new_dt)
+    assert features._datetimes[0] is new_dt
+
+    new_num = QuantitativeFeature("num")
+    features.replace_feature(new_num)
+    assert features._quantitatives[0] is new_num
+
+    with raises(KeyError):
+        features.replace_feature(QuantitativeFeature("absent"))
 
 
 def test_features_call(features, mock_categoricals, mock_ordinals, mock_quantitatives):

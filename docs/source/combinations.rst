@@ -18,7 +18,7 @@ The animation below starts from the six ordered bins a
 grouping into ``max_n_mod`` groups is scored by its association with the binary
 target (Tschuprow's T) and the table fills best-first in growing ``top_k``
 batches (the :ref:`progressive top-K DP <DPTopK>` search). The highest-scoring
-grouping that passes the :ref:`viability filter <MinFreqViability>` is kept
+grouping that passes the :ref:`viability filter <Viability>` is kept
 (gold row). Adjacent bins sharing a colour in a row are merged into one group.
 
 .. image:: _static/animations/combinations.svg
@@ -29,65 +29,10 @@ grouping that passes the :ref:`viability filter <MinFreqViability>` is kept
 .. autoclass:: AutoCarver.combinations.CombinationEvaluator
     :members: get_best_combination, save, load
 
-
-.. _MinFreqViability:
-
-Minimum-frequency viability test (Wilson score interval)
---------------------------------------------------------
-
-A candidate combination is *viable* on a sample only if every grouped modality is
-sufficiently frequent. Comparing :math:`\hat p = \text{count} / n_{obs}` directly
-against ``min_freq`` is noisy on small modalities — a modality with
-:math:`\hat p = 4\%` out of :math:`n_{obs}=100` would be rejected against
-``min_freq=5%``, even though its 95% confidence interval comfortably straddles
-5%. **AutoCarver** instead tests the one-sided question *"is this modality's
-true proportion significantly below* ``min_freq`` *?"* at level :math:`\alpha`,
-using a Wilson score interval — the small-sample-stable proportion interval
-recommended over Wald in Brown, Cai & DasGupta (2001).
-
-**Decision rule.** Modality :math:`m` is declared under-represented iff the
-**upper bound** of the two-sided Wilson interval for :math:`\hat p_m` is
-strictly below ``min_freq``:
-
-.. math::
-
-    \text{UB}(\hat p, n, \alpha) =
-    \frac{\hat p + z^2/(2n)}{1 + z^2/n}
-    + \frac{z}{1 + z^2/n}\sqrt{\frac{\hat p(1-\hat p)}{n} + \frac{z^2}{4n^2}}
-
-with :math:`z = \Phi^{-1}(1 - \alpha/2)` (two-sided z-score; :math:`\alpha=0.05`
-gives :math:`z \approx 1.96`). Reject iff
-:math:`\text{UB}(\hat p_m, n_{obs}, \alpha) < \text{min_freq}`.
-
-**Properties.**
-
-* **Asymptotic equivalence:** as :math:`n_{obs} \to \infty`,
-  :math:`\text{UB} \to \hat p`, so the test converges to the legacy strict
-  threshold :math:`\hat p < \text{min_freq}`.
-* **Small-sample conservativity:** a modality with very few observations cannot
-  be rejected (the CI is too wide to fall below ``min_freq``), preventing
-  premature merges driven by sampling noise.
-* :math:`n_{obs} = 0` returns :math:`\text{UB} = 1.0`, so empty groups are never
-  rejected by this test (other checks catch them).
-
-**Where the test fires.**
-
-* Inside each :ref:`Discretizer <Discretizer>` to gate raw modalities **before**
-  the combination search. Carvers discretize at ``min_freq / 2`` so this gate
-  runs at the halved threshold, giving the combination evaluator a finer
-  granularity to recombine.
-* Inside :class:`CombinationEvaluator` viability checks on both **train** and
-  **dev** samples for every candidate combination during the search.
-
-**Tuning.** Set via :attr:`DiscretizerConfig.min_freq_alpha` (default
-``0.05``). Smaller :math:`\alpha` → wider CI → fewer rejections → less merging;
-larger :math:`\alpha` → tighter CI → more rejections → more aggressive merging.
-:math:`\alpha = 1` recovers the legacy strict-threshold behaviour
-(:math:`\text{UB}` collapses to :math:`\hat p`).
-
-.. autofunction:: AutoCarver.discretizers.utils.frequency_ci.wilson_upper_bound
-
-.. autofunction:: AutoCarver.discretizers.utils.frequency_ci.is_significantly_below
+The highest-scoring grouping is not necessarily the one that is kept: each
+candidate must clear the :ref:`viability filter <Viability>` (minimum frequency
+via a Wilson score interval, distinct consecutive target rates, and train/dev
+rank preservation). That filter is documented on its own page.
 
 
 .. _DPTopK:
@@ -113,7 +58,7 @@ For a feature with raw modalities :math:`m_0, \dots, m_{n-1}` already ordered
 fully determined by integer split positions
 :math:`0 = s_0 < s_1 < \dots < s_k = n` with :math:`k \le \text{max_n_mod}`.
 The chosen partition maximises the association metric subject to the
-:ref:`viability filter <MinFreqViability>` (Wilson ``min_freq`` on train + dev,
+:ref:`viability filter <Viability>` (Wilson ``min_freq`` on train + dev,
 distinct target rates, preserved rank between train and dev when dev is
 provided).
 
@@ -347,12 +292,101 @@ What does **not** change
 
 * The admissible candidate set: consecutive segmentations with
   :math:`k \le \text{max_n_mod}`.
-* The :ref:`viability filter <MinFreqViability>`: Wilson ``min_freq`` on train
+* The :ref:`viability filter <Viability>`: Wilson ``min_freq`` on train
   + dev, distinct target rates, rank preservation.
 * The optimality claim: **for fixed** ``min_freq``\ **,** ``max_n_mod``\ **,
   and metric, no admissible combination scores higher than the one returned.**
 
 The DP is a **search-strategy optimisation**, not a statistical change.
+
+
+.. _TargetRates:
+
+Target rates
+------------
+
+Every combination evaluator carries a **target rate** — the per-modality summary
+of the target that the carver reports and, crucially, the scalar the
+:ref:`viability filter <Viability>` orders by. It is passed via the
+``target_rate`` keyword and defaults to a task-appropriate choice (the target
+mean, ``TargetMean``, for every built-in evaluator).
+
+A target rate plays **two distinct roles**:
+
+#. **Display statistic.** One value per modality, stored on
+   ``feature.statistics`` and surfaced in the carved-feature summary, so the
+   grouping can be read off in interpretable units (an event rate, an odds
+   ratio, a mean target, …).
+#. **Ordering key for viability.** The same per-modality value is what the
+   :ref:`distinct-rate test <DistinctRatesViability>` requires to differ
+   between consecutive modalities, and what the
+   :ref:`train/dev rank-preservation veto <RankViability>` sorts on. A
+   combination whose target-rate ordering collapses or flips is rejected.
+
+Because of this dual role, two properties decide whether a candidate rate is a
+good fit:
+
+* **It must be an orderable scalar.** The viability checks need a single value
+  per modality with a meaningful monotone ordering. A symmetric measure (e.g. a
+  Gini-style impurity, maximal at :math:`p = 0.5`) is fine as a display
+  statistic but a poor ordering key.
+* **Decomposability buys a fast path.** When a rate can be reconstructed from
+  per-raw-modality sufficient statistics it can opt into a closed-form path
+  (``compute_from_stats``) that costs :math:`O(k)` per combination instead of
+  re-aggregating the raw sample on every candidate. The continuous mean does
+  this; rates that need the full value multiset (median, quantiles) cannot and
+  fall back to the general aggregation path.
+
+.. autoclass:: AutoCarver.combinations.utils.TargetRate
+    :members: compute
+
+
+.. _BinaryTargetRates:
+
+Binary target rates
+^^^^^^^^^^^^^^^^^^^
+
+For binary (and multiclass) targets the per-modality input is a two-column
+crosstab :math:`(n_0, n_1)`, so every rate below is closed-form. The default is
+the event rate :math:`p = n_1 / (n_0 + n_1)` (``TargetMean``).
+
+.. autoclass:: AutoCarver.combinations.binary.binary_target_rates.TargetMean
+
+.. _ContinuousTargetRates:
+
+Continuous target rates
+^^^^^^^^^^^^^^^^^^^^^^^
+
+For continuous targets the per-modality input is the multiset of target values.
+The default ``TargetMean`` is decomposable from per-modality :math:`(n, \sum y)`
+aggregates and therefore implements the closed-form ``compute_from_stats`` fast
+path; ``TargetMedian`` is **not** decomposable from sums and uses the general
+aggregation path.
+
+.. autoclass:: AutoCarver.combinations.continuous.continuous_target_rates.TargetMean
+
+.. autoclass:: AutoCarver.combinations.continuous.continuous_target_rates.TargetMedian
+
+
+Custom target rates
+^^^^^^^^^^^^^^^^^^^
+
+A custom rate subclasses ``BinaryTargetRate`` or ``ContinuousTargetRate`` and
+implements ``_compute`` (one value per modality). To make it serialisable
+through ``save`` / ``load``, add it to the evaluator's ``_target_rate_classes``
+registry. When the rate is additively decomposable from per-modality sums,
+override ``compute_from_stats`` so the search uses the closed-form path.
+
+Candidate extensions that fit this contract (not yet implemented):
+
+* **Binary, closed-form:** logit / log-odds :math:`\log(n_1 / n_0)`, and a
+  column-normalised weight-of-evidence
+  :math:`\log\!\big((n_1/\textstyle\sum n_1)\,/\,(n_0/\textstyle\sum n_0)\big)`.
+* **Continuous, decomposable** (extend the carried stats with
+  :math:`\sum y^2`): variance and standard deviation.
+* **Continuous, non-decomposable** (general path only): inter-quartile range,
+  arbitrary quantiles, and trimmed/robust location — useful for heavy-tailed
+  targets where the mean ordering is unstable.
 
 
 Classification tasks

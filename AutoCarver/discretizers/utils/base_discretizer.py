@@ -386,6 +386,9 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         # copying dataframes and casting for multiclass
         sample = self.__prepare_sample(Sample(X, y))
 
+        # converting datetime features to numeric timedeltas before any nan-filling
+        sample.X = cast_datetime_features(self.features, sample.X)
+
         # filling up nans for features that have some
         sample.fillna(self.features)
 
@@ -542,6 +545,27 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
     def history(self) -> pd.DataFrame:
         """History of discretization process for all features"""
         return self.features.history
+
+
+def cast_datetime_features(features: Features, X: pd.DataFrame) -> pd.DataFrame:
+    """Converts datetime feature columns to a number of seconds since their ``reference_date``.
+
+    Idempotent: columns that are already numeric (converted at fit time) are left untouched,
+    so this is safe to call on both raw datetime input and already-converted frames.
+    """
+    for feature in features.datetimes:
+        column = X[feature.version]
+        if not pd.api.types.is_numeric_dtype(column):
+            reference = None
+            if feature.reference_is_column:
+                if feature.reference_date not in X:
+                    raise ValueError(
+                        f"[{feature}] reference column {feature.reference_date!r} is missing "
+                        "from provided X. Please check your inputs!"
+                    )
+                reference = X[feature.reference_date]
+            X[feature.version] = feature.to_timedelta(column, reference)
+    return X
 
 
 def transform_quantitative_feature(feature: BaseFeature, df_feature: pd.Series, x_len: int) -> tuple[str, list]:

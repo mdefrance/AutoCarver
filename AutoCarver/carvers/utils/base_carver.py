@@ -22,7 +22,7 @@ from AutoCarver.discretizers import BaseDiscretizer, Discretizer, Sample
 from AutoCarver.discretizers.utils.base_discretizer import DiscretizerConfig
 from AutoCarver.features import BaseFeature, Features
 from AutoCarver.features.qualitatives import CategoricalFeature, OrdinalFeature
-from AutoCarver.features.quantitatives import QuantitativeFeature
+from AutoCarver.features.quantitatives import DatetimeFeature, QuantitativeFeature
 from AutoCarver.utils import extend_docstring, has_idisplay
 
 # trying to import extra dependencies
@@ -106,29 +106,6 @@ def _drop_reason_from_history(history: pd.DataFrame) -> str:
         return "No robust combination"
     msg, _ = max(info_counts.items(), key=lambda kv: kv[1])
     return f"No robust combination ({msg})"
-
-
-def _replace_feature_in_features(features: Features, updated: BaseFeature) -> None:
-    """Swaps an existing feature (by version) for the worker-returned copy."""
-    if isinstance(updated, CategoricalFeature):
-        categoricals = features.categoricals
-        for i, existing in enumerate(categoricals):
-            if existing.version == updated.version:
-                categoricals[i] = updated
-                return
-    elif isinstance(updated, OrdinalFeature):
-        ordinals = features.ordinals
-        for i, existing in enumerate(ordinals):
-            if existing.version == updated.version:
-                ordinals[i] = updated
-                return
-    elif isinstance(updated, QuantitativeFeature):
-        quantitatives = features.quantitatives
-        for i, existing in enumerate(quantitatives):
-            if existing.version == updated.version:
-                quantitatives[i] = updated
-                return
-    raise KeyError(f"[BaseCarver] feature {updated.version!r} not in Features")
 
 
 class BaseCarver(BaseDiscretizer, ABC):
@@ -412,7 +389,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         with Pool(processes=self.config.n_jobs) as pool:
             for updated_feature, viable in pool.imap_unordered(worker, payloads):
                 if viable:
-                    _replace_feature_in_features(self.features, updated_feature)
+                    self.features.replace_feature(updated_feature)
                 else:
                     print(
                         f"WARNING: No robust combination for {updated_feature}. Consider "
@@ -601,6 +578,8 @@ class BaseCarver(BaseDiscretizer, ABC):
                 instance.dropped_features.append(CategoricalFeature.load(fjson))
             elif fjson.get("is_ordinal"):
                 instance.dropped_features.append(OrdinalFeature.load(fjson))
+            elif fjson.get("is_datetime"):
+                instance.dropped_features.append(DatetimeFeature.load(fjson))
             elif fjson.get("is_quantitative"):
                 instance.dropped_features.append(QuantitativeFeature.load(fjson))
 

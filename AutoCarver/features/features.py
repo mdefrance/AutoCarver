@@ -13,7 +13,12 @@ from AutoCarver.features.qualitatives import (
     get_categorical_features,
     get_ordinal_features,
 )
-from AutoCarver.features.quantitatives import QuantitativeFeature, get_quantitative_features
+from AutoCarver.features.quantitatives import (
+    DatetimeFeature,
+    QuantitativeFeature,
+    get_datetime_features,
+    get_quantitative_features,
+)
 from AutoCarver.features.utils.base_feature import BaseFeature
 from AutoCarver.features.utils.grouped_list import GroupedList
 
@@ -98,6 +103,18 @@ def _check_ordinal_mapping(ordinals: dict[str, list[str]] | None) -> None:
         )
 
 
+def _check_datetime_pairs(datetimes: list[tuple[str, str]] | None) -> None:
+    """Ensures ``datetimes`` is a list of ``(name, reference_date)`` string pairs."""
+    if datetimes is None:
+        return
+    for pair in datetimes:
+        if not isinstance(pair, tuple) or len(pair) != 2 or not all(isinstance(item, str) for item in pair):
+            raise TypeError(
+                "[Features] datetimes must be a list of (name, reference_date) string tuples;"
+                f" got {pair!r}. To wrap DatetimeFeature instances, use Features.from_list."
+            )
+
+
 def _dedupe_by_version(features: list[BaseFeature]) -> list[BaseFeature]:
     """Deduplicates features by version, keeping the last occurrence (matches legacy behavior)."""
     later_versions = [f.version for f in features]
@@ -114,6 +131,7 @@ class Features:
         categoricals: list[str] | None = None,
         quantitatives: list[str] | None = None,
         ordinals: dict[str, list[str]] | None = None,
+        datetimes: list[tuple[str, str]] | None = None,
         config: FeaturesConfig | None = None,
     ) -> None:
         """Build a :class:`Features` collection from column names.
@@ -130,25 +148,31 @@ class Features:
         ordinals : dict[str, list[str]], optional
             Ordinal column names mapped to their ordered value list, by default ``None``.
 
+        datetimes : list[tuple[str, str]], optional
+            Datetime features as ``(column name, reference_date)`` pairs, by default ``None``.
+            Values are discretized as the number of seconds elapsed since ``reference_date``.
+
         config : FeaturesConfig, optional
             Collection-level config propagated to each feature, by default ``None``.
 
 
         .. warning::
-            At least one of ``categoricals``, ``quantitatives`` or ``ordinals`` must be provided.
-            To build a :class:`Features` from already-instantiated feature objects, use
-            :meth:`Features.from_list` instead.
+            At least one of ``categoricals``, ``quantitatives``, ``ordinals`` or ``datetimes``
+            must be provided. To build a :class:`Features` from already-instantiated feature
+            objects, use :meth:`Features.from_list` instead.
         """
         # validate input types (strings only — instances belong on from_list)
         _check_names_only(categoricals, "categoricals")
         _check_names_only(quantitatives, "quantitatives")
         _check_ordinal_mapping(ordinals)
+        _check_datetime_pairs(datetimes)
 
         # build feature instances from names
         all_features: list[BaseFeature] = []
         all_features += [CategoricalFeature(name) for name in (categoricals or [])]
         all_features += [QuantitativeFeature(name) for name in (quantitatives or [])]
         all_features += [OrdinalFeature(name, values=values) for name, values in (ordinals or {}).items()]
+        all_features += [DatetimeFeature(name, reference_date=ref) for name, ref in (datetimes or [])]
 
         self._build(all_features, config)
 
@@ -185,12 +209,14 @@ class Features:
 
         self._categoricals = get_categorical_features(features)
         self._ordinals = get_ordinal_features(features)
-        self._quantitatives = get_quantitative_features(features)
+        self._datetimes = get_datetime_features(features)
+        # quantitatives stored without datetimes; the ``quantitatives`` view recombines them
+        self._quantitatives = [f for f in get_quantitative_features(features) if not f.is_datetime]
 
         if not (self.categoricals or self.quantitatives or self.ordinals):
             raise ValueError(
                 f"[{self}] No feature passed as input. Please provide column names"
-                " by setting categoricals, quantitatives or ordinals."
+                " by setting categoricals, quantitatives, ordinals or datetimes."
             )
 
         check_duplicate_features(self.ordinals, self.categoricals, self.quantitatives)
@@ -314,16 +340,30 @@ class Features:
 
     @property
     def quantitatives(self) -> list[QuantitativeFeature]:
-        """Returns all quantitative features"""
-        return self._quantitatives
+        """Returns all quantitative features (datetimes included)"""
+        return self._quantitatives + self._datetimes
 
     @quantitatives.setter
     def quantitatives(self, values: list[QuantitativeFeature]) -> None:
-        """sets quantitative features"""
+        """sets quantitative features (datetimes are routed to their own list)"""
 
         if not all(isinstance(feature, QuantitativeFeature) for feature in values):
             raise AttributeError(f"[{self}] Trying to set quantitative feature with wrongly typed feature")
-        self._quantitatives = values
+        self._quantitatives = [feature for feature in values if not feature.is_datetime]
+        self._datetimes = get_datetime_features(values)
+
+    @property
+    def datetimes(self) -> list[DatetimeFeature]:
+        """Returns all datetime features (also part of :attr:`quantitatives`)"""
+        return self._datetimes
+
+    @datetimes.setter
+    def datetimes(self, values: list[DatetimeFeature]) -> None:
+        """sets datetime features"""
+
+        if not all(isinstance(feature, DatetimeFeature) for feature in values):
+            raise AttributeError(f"[{self}] Trying to set datetime feature with wrongly typed feature")
+        self._datetimes = values
 
     @property
     def dropna(self) -> bool:
@@ -382,6 +422,23 @@ class Features:
         self.categoricals = keep_versions(kept, self.categoricals)
         self.ordinals = keep_versions(kept, self.ordinals)
         self.quantitatives = keep_versions(kept, self.quantitatives)
+
+    def replace_feature(self, updated: BaseFeature) -> None:
+        """Replaces the stored feature matching ``updated.version`` with ``updated`` (in place).
+
+        Datetimes are checked before quantitatives since :class:`DatetimeFeature` subclasses
+        :class:`QuantitativeFeature`.
+        """
+        # DatetimeFeature must be tested before QuantitativeFeature (it is a subclass)
+        if isinstance(updated, CategoricalFeature) and _replace_version(self._categoricals, updated):
+            return
+        if isinstance(updated, OrdinalFeature) and _replace_version(self._ordinals, updated):
+            return
+        if isinstance(updated, DatetimeFeature) and _replace_version(self._datetimes, updated):
+            return
+        if isinstance(updated, QuantitativeFeature) and _replace_version(self._quantitatives, updated):
+            return
+        raise KeyError(f"[{self.__name__}] feature {updated.version!r} not in Features")
 
     def check_values(self, X: pd.DataFrame) -> None:
         """Cheks for unexpected values for each feature in columns of DataFrame X"""
@@ -552,11 +609,23 @@ class Features:
             elif feature.get("is_ordinal"):
                 unpacked_features += [OrdinalFeature.load(feature)]
 
+            elif feature.get("is_datetime"):
+                unpacked_features += [DatetimeFeature.load(feature)]
+
             elif feature.get("is_quantitative"):
                 unpacked_features += [QuantitativeFeature.load(feature)]
 
         # initiating features
         return cls.from_list(unpacked_features, config=FeaturesConfig(is_fitted=bool(is_fitted)))
+
+
+def _replace_version(features: list[TFeature], updated: TFeature) -> bool:
+    """Replaces a feature matching ``updated.version`` in place; returns whether it was found."""
+    for i, existing in enumerate(features):
+        if existing.version == updated.version:
+            features[i] = updated
+            return True
+    return False
 
 
 def remove_version(removed_version: str, features: list[TFeature]) -> list[TFeature]:

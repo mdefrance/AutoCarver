@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, DiscretizerConfig, Sample
-from AutoCarver.discretizers.utils.type_discretizers import StringDiscretizer
+from AutoCarver.discretizers.utils.type_discretizers import ensure_qualitative_dtypes
 from AutoCarver.features import BaseFeature, Features, GroupedList
 from AutoCarver.utils import extend_docstring
 
@@ -243,34 +243,3 @@ def check_frequencies(features: Features, X: pd.DataFrame, min_freq: float, name
         error_msg += "\n".join(too_common + non_common)
 
         raise ValueError(error_msg)
-
-
-def ensure_qualitative_dtypes(
-    features: Features,
-    X: pd.DataFrame,
-    *,
-    config: DiscretizerConfig | None = None,
-) -> pd.DataFrame:
-    """Checks features' data types and converts int/float to str"""
-
-    # getting per feature data types
-    dtypes = (
-        X.fillna({feature.version: feature.nan for feature in features})[features.versions]
-        .map(type)
-        .apply(pd.unique, result_type="reduce")
-    )
-
-    # identifying features that are not str
-    not_object = dtypes.apply(lambda u: any(dtype is not str for dtype in u))
-
-    # converting detected non-string features
-    if any(not_object):
-        # converting non-str features into qualitative features
-        to_convert = [feature for feature in features if feature.version in not_object.index[not_object]]
-        string_discretizer = StringDiscretizer(features=to_convert, config=config)
-        X = string_discretizer.fit_transform(X)
-
-    # pandas 3.0 infers StringDtype for string columns; enforce object dtype for consistency
-    X[features.versions] = X[features.versions].astype(object)
-
-    return X
