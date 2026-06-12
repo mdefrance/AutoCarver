@@ -11,6 +11,10 @@
     <img alt="AutoCarver in one loop: discretize, rank groupings, carve" src="https://raw.githubusercontent.com/mdefrance/AutoCarver/main/docs/source/_static/animations/readme_full_pipeline.svg" width="100%">
 </p>
 
+<p align="center">
+    <img alt="AutoCarver in one loop: discretize, rank groupings, carve" src="https://raw.githubusercontent.com/mdefrance/AutoCarver/main/docs/source/_static/animations/readme_full_pipeline.svg" width="100%">
+</p>
+
 
 [![PyPI](https://img.shields.io/pypi/v/autocarver)](https://pypi.org/project/AutoCarver)
 [![Python](https://img.shields.io/pypi/pyversions/autocarver)](https://pypi.org/project/AutoCarver/)
