@@ -236,7 +236,7 @@ A reasonable rule of thumb: reach for **KBinsDiscretizer** when binning is a *pr
 Benchmark notebook
 ------------------
 
-A runnable side-by-side benchmark on two public datasets — German Credit (binary, mixed dtypes) and California Housing (regression, all-numeric) — comparing the three libraries on fit time, downstream-model score, and ``train``→``test`` score drop:
+A runnable side-by-side benchmark on two public datasets — German Credit (binary, mixed dtypes) and California Housing (regression, all-numeric) — comparing the three libraries on fit time, downstream-model score, and ``train`` → ``test`` score drop:
 
 .. toctree::
     :glob:
