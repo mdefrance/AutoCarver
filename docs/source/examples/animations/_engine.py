@@ -10,7 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal
 
-FeatureType = Literal["continuous", "ordinal", "categorical", "quantitative", "qualitative", "combinations"]
+FeatureType = Literal["continuous", "ordinal", "categorical", "quantitative", "qualitative", "combinations", "readme"]
 TargetType = Literal["binary", "multiclass", "continuous"]
 
 
@@ -134,6 +134,28 @@ class TableFrame:
     callout: str = ""
 
 
+@dataclass(frozen=True)
+class HeroFrame:
+    """One stage of the README hero animation — a feature strip (Discretizers'
+    idiom) stacked over the ranked-groupings table (Carvers' idiom).
+
+    `strip` is rendered with the regular single-strip helpers at the regular
+    single-strip coordinates; `rows` fill the table below it. `winner_cuts`
+    are normalized x positions where the winning grouping cuts the strip
+    (gold dashed verticals, shown when the winner is selected).
+    """
+
+    stage: int
+    title: str
+    strip: Frame
+    rows: tuple[ComboRow, ...]
+    top_k: int
+    n_total: int
+    metric: str = "—"
+    callout: str = ""
+    winner_cuts: tuple[float, ...] = ()
+
+
 def build_animation(
     feature: FeatureType,
     target: TargetType,
@@ -172,6 +194,10 @@ def build_animation(
         from ._data import combinations_binary_frames
 
         frames = combinations_binary_frames()
+    elif (feature, target) == ("readme", "binary"):
+        from ._data import readme_binary_frames
+
+        frames = readme_binary_frames()
     else:
         raise NotImplementedError(f"variant ({feature!r}, {target!r}) not yet implemented")
 

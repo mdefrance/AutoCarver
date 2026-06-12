@@ -90,6 +90,7 @@ def main() -> int:
 
     DualFrame = getattr(engine, "DualFrame", None)
     TableFrame = getattr(engine, "TableFrame", None)
+    HeroFrame = getattr(engine, "HeroFrame", None)
 
     drift = 0
     for path in paths:
@@ -97,7 +98,10 @@ def main() -> int:
         frames = engine.build_animation(ex.FEATURE, ex.TARGET, ex.STOP_AFTER_STAGE)
         is_dual = DualFrame is not None and frames and isinstance(frames[0], DualFrame)
         is_table = TableFrame is not None and frames and isinstance(frames[0], TableFrame)
-        if is_table:
+        is_hero = HeroFrame is not None and frames and isinstance(frames[0], HeroFrame)
+        if is_hero:
+            svg = render.render_hero_svg(frames, ex.STOP_AFTER_STAGE)
+        elif is_table:
             svg = render.render_table_svg(frames, ex.STOP_AFTER_STAGE)
         elif is_dual:
             svg = render.render_dual_svg(frames, ex.STOP_AFTER_STAGE)
