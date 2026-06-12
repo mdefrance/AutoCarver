@@ -815,6 +815,112 @@ def _t_table(frame) -> str:
     return "    " + "\n    ".join(parts)
 
 
+# =============================================================================
+# Hero renderer (README full-pipeline animation)
+# =============================================================================
+#
+# The feature strip (Discretizers' idiom) at the regular single-strip
+# coordinates, with the ranked-groupings table (Carvers' idiom) below it. The
+# strip reuses the single-strip helpers as-is on `frame.strip`; the table rows
+# span the strip's value-axis x-spans so each candidate row lines up vertically
+# under the bins it groups. Own `_h_*` helpers; zero changes to the existing
+# single/dual/table renderers.
+
+_H_SEP_Y = _MAIN_BASELINE + 72  # below the rotated bin labels
+_H_CAPTION_Y = _H_SEP_Y + 14  # table caption + top-k badge line
+_H_ROWS_Y0 = _H_SEP_Y + 22  # first candidate row
+HERO_VIEW_H = int(_H_ROWS_Y0 + 5 * TABLE_ROW_H + 10)
+
+
+def render_hero_svg(hero_frames: list, stop_after_stage: int) -> str:
+    """Render a list of HeroFrames to an animated SVG (strip + table hybrid)."""
+    total_stages = stop_after_stage
+    stage_groups = "\n".join(_h_render_frame(hf, total_stages) for hf in hero_frames)
+    style = _render_style(stop_after_stage)
+    return _DOC.format(view_w=VIEW_W, view_h=HERO_VIEW_H, style=style, stage_groups=stage_groups)
+
+
+def _h_render_frame(frame, total_stages: int) -> str:
+    strip = frame.strip
+    parts = [
+        _stage_caption(frame, total_stages),
+        _metric_chip(frame),
+        _callout(frame),
+        _main_display(strip),
+        _target_dots(strip),
+        _nan_strip(strip),
+        _baseline_line(),
+        _min_freq_line(strip),
+        _h_winner_cuts(frame),
+        _h_table(frame),
+    ]
+    inner = "\n".join(p for p in parts if p)
+    return f'  <g class="stage stage-{frame.stage}">\n{inner}\n  </g>'
+
+
+def _h_winner_cuts(frame) -> str:
+    """Gold dashed verticals over the bar zone at the winning grouping's
+    interior cut points."""
+    if not frame.winner_cuts:
+        return ""
+    bar_zone_h = _bar_zone_h(frame.strip)
+    y_top = _MAIN_BASELINE - bar_zone_h
+    parts: list[str] = []
+    for cut in frame.winner_cuts:
+        x = PAD_X + cut * BIN_W
+        parts.append(
+            f'<line x1="{x:.2f}" y1="{y_top - 4:.2f}" x2="{x:.2f}" '
+            f'y2="{_MAIN_BASELINE:.2f}" stroke="{GOLD_STROKE}" stroke-width="2" '
+            f'stroke-dasharray="5 3"/>'
+        )
+    return "    " + "\n    ".join(parts)
+
+
+def _h_table(frame) -> str:
+    """Candidate rows below the strip. Each row is a segmented bar whose blocks
+    span the grouped bins' value-axis x-spans (so they align under the strip);
+    rank + T sit in the right gutter under the NaN strip. Winner row gold."""
+    bins = frame.strip.bins
+    parts: list[str] = [
+        f'<line x1="{PAD_X}" y1="{_H_SEP_Y:.2f}" '
+        f'x2="{PAD_X + BIN_W + 10 + NAN_W:.2f}" y2="{_H_SEP_Y:.2f}" '
+        f'stroke="#d1d5db" stroke-width="1"/>',
+        f'<text class="strip-label" x="{PAD_X:.2f}" y="{_H_CAPTION_Y:.2f}" '
+        f'text-anchor="start">Carver — consecutive groupings ranked by Tschuprow\'s T (best first)</text>',
+    ]
+    if frame.top_k:
+        parts.append(
+            f'<text class="tick-label" x="{VIEW_W - PAD_X:.2f}" y="{_H_CAPTION_Y:.2f}" '
+            f'text-anchor="end">top {frame.top_k} of {frame.n_total}</text>'
+        )
+    bar_h = TABLE_ROW_H - 12
+    for i, row in enumerate(frame.rows):
+        ry = _H_ROWS_Y0 + i * TABLE_ROW_H
+        cy = ry + TABLE_ROW_H / 2
+        if row.is_winner:
+            parts.append(
+                f'<rect x="{PAD_X - 4:.2f}" y="{ry + 1:.2f}" width="{VIEW_W - 2 * PAD_X + 8:.2f}" '
+                f'height="{TABLE_ROW_H - 2:.2f}" rx="4" fill="{GOLD_BG}" '
+                f'stroke="{GOLD_STROKE}" stroke-width="1"/>'
+            )
+        bar_y = ry + (TABLE_ROW_H - bar_h) / 2
+        for group in row.groups:
+            leader = max(group, key=lambda j: bins[j].freq)
+            gx0 = PAD_X + bins[min(group)].x_start * BIN_W
+            gx1 = PAD_X + bins[max(group)].x_end * BIN_W
+            parts.append(
+                f'<rect x="{gx0 + 1:.2f}" y="{bar_y:.2f}" width="{gx1 - gx0 - 2:.2f}" '
+                f'height="{bar_h:.2f}" rx="2" fill="{PALETTE[bins[leader].color_id]}" '
+                f'stroke="#374151" stroke-width="0.6"/>'
+            )
+        prefix = "&#9733; " if row.is_winner else ""  # ★ on the winner
+        parts.append(
+            f'<text class="tick-label" x="{VIEW_W - PAD_X:.2f}" y="{cy + 3.5:.2f}" '
+            f'text-anchor="end">{prefix}#{row.rank + 1} &#183; {row.tschuprowt:.3f}</text>'
+        )
+    return "    " + "\n    ".join(parts)
+
+
 _DOC = """<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {view_w} {view_h}"
      width="{view_w}" height="{view_h}" role="img"

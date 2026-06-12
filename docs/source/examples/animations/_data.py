@@ -31,7 +31,7 @@ from AutoCarver.discretizers import (
 from AutoCarver.discretizers.utils.frequency_ci import is_significantly_below
 from AutoCarver.features import Features
 
-from ._engine import Bin, ComboRow, DualFrame, Frame, MergeArrow, TableFrame
+from ._engine import Bin, ComboRow, DualFrame, Frame, HeroFrame, MergeArrow, TableFrame
 
 # --- Synthesis parameters ----------------------------------------------------
 SEED = 7
@@ -1056,6 +1056,7 @@ def _synthesize_quantitative() -> tuple[np.ndarray, pd.Series]:
 def _qd_value_axis_layout(
     labels: list[str],
     values: list,
+    value_max: float = QD_FARE_MAX,
 ) -> list[tuple[float, float]]:
     """Shared (lo, hi] value-axis placement for Stage 2 and Stage 4 bars.
 
@@ -1064,13 +1065,13 @@ def _qd_value_axis_layout(
     shifts the next bar right so bars never overlap.
     """
     boundaries = [float(v) for v in values]
-    singleton_w = SINGLETON_STRIP_PCT * QD_FARE_MAX
+    singleton_w = SINGLETON_STRIP_PCT * value_max
     spans: list[tuple[float, float]] = []
     x_cursor = 0.0
     for i in range(len(labels)):
         upper = boundaries[i]
         lower = boundaries[i - 1] if i > 0 else float("-inf")
-        true_hi = QD_FARE_MAX if np.isinf(upper) else min(upper, QD_FARE_MAX)
+        true_hi = value_max if np.isinf(upper) else min(upper, value_max)
         true_lo = 0.0 if (np.isinf(lower) or lower < 0) else lower
         lo = max(x_cursor, true_lo)
         if true_hi - true_lo < 0.5:  # singleton (over-rep spike)
@@ -1078,7 +1079,7 @@ def _qd_value_axis_layout(
         else:
             hi = true_hi if true_hi > lo else lo + singleton_w / 2
         x_cursor = hi
-        spans.append((lo / QD_FARE_MAX, hi / QD_FARE_MAX))
+        spans.append((lo / value_max, hi / value_max))
     return spans
 
 
@@ -1088,9 +1089,10 @@ def _qd_bins_on_value_axis(
     counts: pd.Series,
     target_rates: pd.Series,
     n_total: int,
+    value_max: float = QD_FARE_MAX,
 ) -> tuple[Bin, ...]:
     """Stage 2 bars: one per CD modality, coloured by position in the palette."""
-    spans = _qd_value_axis_layout(labels, values)
+    spans = _qd_value_axis_layout(labels, values, value_max)
     bins: list[Bin] = []
     for i, raw_label in enumerate(labels):
         x_start, x_end = spans[i]
@@ -1429,6 +1431,254 @@ def combinations_binary_frames() -> list[TableFrame]:
             )
         )
     return frames
+
+
+# =============================================================================
+# README hero animation (full pipeline: Discretizers + Carvers)
+# =============================================================================
+#
+# The first canvas combining both idioms: the feature strip (Discretizers) on
+# top and the ranked-groupings table (Carvers) below. One feature travels the
+# full pipeline: raw → discretized → ranked → carved.
+#
+# Data story: synthetic Titanic-flavoured Age vs Survived with a NON-monotone
+# survival curve (children high, young adults low, middle-aged higher, elderly
+# lowest) and 20 % NaN. The non-monotone shape matters: with a monotone target
+# Tschuprow's T always picks a 2-bucket split (the sqrt(r-1) penalty beats any
+# finer cut), while the N-shaped plateaus give an honest 4-bucket winner — the
+# "binning captures non-linear risk" pitch.
+
+HERO_SEED = 7
+HERO_N_ROWS = 1500
+HERO_AGE_MAX = 80.0
+HERO_P_NAN = 0.20
+HERO_MIN_FREQ = 0.07
+HERO_MAX_N_MOD = 5
+HERO_SHOW_ROWS = 5
+HERO_TICK_STEP = 10
+HERO_KDE_BANDWIDTH = 0.15  # Age has no spikes; Fare's 0.04 over-sharpens here
+HERO_P_CHILD = 0.15  # mixture weight of the child bump
+# (upper_age, P(survived)) plateaus — the N-shaped risk the carver recovers.
+HERO_RATE_PLATEAUS = ((10.0, 0.72), (32.0, 0.36), (50.0, 0.52), (float("inf"), 0.20))
+HERO_NAN_TARGET_RATE = 0.35
+
+
+def readme_binary_frames() -> list[HeroFrame]:
+    """Five stages: raw KDE → discretized bins → ranked groupings table →
+    winner selected (gold cuts) → carved buckets. Strip frames reuse the
+    single-strip layout; the table reuses the combinations row idiom."""
+    age, y = _synthesize_hero()
+    nan_mask = np.isnan(age)
+    n = len(age)
+    nan_freq = float(nan_mask.sum()) / n
+
+    # ----- Stage 0 density curve ---------------------------------------------
+    kde = gaussian_kde(age[~nan_mask], bw_method=HERO_KDE_BANDWIDTH)
+    x_samples = np.linspace(0.0, HERO_AGE_MAX, 160)
+    density = kde(x_samples)
+    density = density / density.max()
+    density_curve = tuple((float(x) / HERO_AGE_MAX, float(d)) for x, d in zip(x_samples, density))
+    xaxis_ticks = tuple((v / HERO_AGE_MAX, str(int(v))) for v in range(0, int(HERO_AGE_MAX) + 1, HERO_TICK_STEP))
+
+    # ----- Stage 1: real QuantitativeDiscretizer ------------------------------
+    df = pd.DataFrame({"Age": age})
+    features = Features(quantitatives=["Age"])
+    qd = QuantitativeDiscretizer(quantitatives=features.quantitatives, min_freq=HERO_MIN_FREQ)
+    qd.fit(df.copy(), y)
+    feature = features.quantitatives[0]
+    transformed = qd.transform(df.copy())
+    labels = list(feature.labels)
+    values = list(feature.values)
+
+    xtab = pd.crosstab(transformed["Age"], y).reindex(labels, fill_value=0)
+    n0 = xtab[0].to_numpy(dtype=float)
+    n1 = xtab[1].to_numpy(dtype=float)
+    nobs = int(n0.sum() + n1.sum())
+    counts = transformed["Age"].value_counts(dropna=False)
+    rates = pd.DataFrame({"Age": transformed["Age"], "y": y.to_numpy()}).groupby("Age", observed=True)["y"].mean()
+    s1_bins = _qd_bins_on_value_axis(labels, values, counts, rates, n, HERO_AGE_MAX)
+
+    # ----- Stages 2-3: rank every consecutive grouping (real DP) --------------
+    ranked = _top_k_partitions_chi2_dp(
+        n0, n1, max_n_mod=HERO_MAX_N_MOD, raw_index=labels, sort_by="tschuprowt", top_k=10_000
+    )
+    n_total = len(ranked)
+    pos = {lbl: i for i, lbl in enumerate(labels)}
+    winner_rank = next(
+        (rk for rk, r in enumerate(ranked) if _combo_viable(r["combination"], pos, n0, n1, nobs)),
+        None,
+    )
+    rows = tuple(
+        ComboRow(
+            rank=rk,
+            groups=tuple(tuple(pos[m] for m in g) for g in r["combination"]),
+            tschuprowt=float(r["tschuprowt"]),
+        )
+        for rk, r in enumerate(ranked[:HERO_SHOW_ROWS])
+    )
+    winner_groups = rows[winner_rank].groups
+    winner_t = float(ranked[winner_rank]["tschuprowt"])
+    metric = f"T = {winner_t:.3f}"
+    rows_with_winner = tuple(ComboRow(r.rank, r.groups, r.tschuprowt, is_winner=(r.rank == winner_rank)) for r in rows)
+    # Interior cut points of the winning grouping, in strip coordinates.
+    winner_cuts = tuple(s1_bins[max(g)].x_end for g in winner_groups[:-1])
+
+    # ----- Stage 4: carved buckets (winner groups merged over s1 spans) -------
+    s4_bins = _hero_merged_bins(winner_groups, s1_bins, values)
+    # The stage-4 table row indexes the *merged* strip bins (one block per
+    # bucket) — the stage-1 indices in `winner_groups` would point past them.
+    winner_row_s4 = ComboRow(
+        rank=winner_rank,
+        groups=tuple((i,) for i in range(len(s4_bins))),
+        tschuprowt=winner_t,
+        is_winner=True,
+    )
+
+    # ----- Frame-wide knobs (consistent across the morph) ---------------------
+    target_strip_min, target_strip_max = _zoom_target_range([b.target for b in s1_bins + s4_bins])
+    bar_max_freq = max(b.freq for b in s1_bins + s4_bins)
+    nan_bin = Bin(label="NaN", x_start=0.0, x_end=1.0, freq=nan_freq, target=0.0, color_id=7, is_nan=True)
+    strip_common = {
+        "nan_bin": nan_bin,
+        "metric": "—",
+        "min_freq_y_norm": HERO_MIN_FREQ / bar_max_freq,
+        "min_freq_label": f"min_freq = {HERO_MIN_FREQ:.2f}",
+        "bar_max_freq": bar_max_freq,
+        "target_strip_max": target_strip_max,
+        "target_strip_min": target_strip_min,
+    }
+    raw_strip = Frame(0, "", bins=(), density_curve=density_curve, tick_values=xaxis_ticks, **strip_common)
+    binned_strip = Frame(1, "", bins=s1_bins, **strip_common)
+    carved_strip = Frame(4, "", bins=s4_bins, **strip_common)
+
+    return [
+        HeroFrame(
+            stage=0,
+            title="Raw feature",
+            strip=raw_strip,
+            rows=(),
+            top_k=0,
+            n_total=n_total,
+            callout=(
+                f"A raw continuous feature: Age (synthetic Titanic-flavoured, n={HERO_N_ROWS}) — "
+                "skewed, non-monotone risk, 20% missing."
+            ),
+        ),
+        HeroFrame(
+            stage=1,
+            title="Discretizers — split into clean ordered bins",
+            strip=binned_strip,
+            rows=(),
+            top_k=0,
+            n_total=n_total,
+            callout=(
+                f"QuantitativeDiscretizer splits Age into {len(s1_bins)} ordered bins above min_freq. "
+                "Categorical, ordinal and datetime features get the same treatment."
+            ),
+        ),
+        HeroFrame(
+            stage=2,
+            title="Carvers — rank every consecutive grouping",
+            strip=binned_strip,
+            rows=rows,
+            top_k=HERO_SHOW_ROWS,
+            n_total=n_total,
+            callout=(
+                f"BinaryCarver tries every consecutive grouping into ≤ {HERO_MAX_N_MOD} buckets — "
+                f"{n_total} candidates ranked by Tschuprow's T. Adjacent bins sharing a colour form one bucket."
+            ),
+        ),
+        HeroFrame(
+            stage=3,
+            title="Best viable grouping selected",
+            strip=binned_strip,
+            rows=rows_with_winner,
+            top_k=HERO_SHOW_ROWS,
+            n_total=n_total,
+            metric=metric,
+            winner_cuts=winner_cuts,
+            callout=(
+                "The highest-T grouping that stays viable on a held-out dev set "
+                "(min_freq + distinct target rates) wins — gold cuts on the strip."
+            ),
+        ),
+        HeroFrame(
+            stage=4,
+            title="Carved feature",
+            strip=carved_strip,
+            rows=(winner_row_s4,),
+            top_k=0,
+            n_total=n_total,
+            metric=metric,
+            callout=(
+                f"{len(s4_bins)} interpretable buckets capture the non-monotone age–survival risk — "
+                "ready for scorecards, WOE or one-hot encoding."
+            ),
+        ),
+    ]
+
+
+def _synthesize_hero() -> tuple[np.ndarray, pd.Series]:
+    rng = np.random.default_rng(HERO_SEED)
+    nan_mask = rng.random(HERO_N_ROWS) < HERO_P_NAN
+    n_nonnan = int((~nan_mask).sum())
+    is_child = rng.random(n_nonnan) < HERO_P_CHILD
+    child = rng.normal(8, 4, n_nonnan).clip(0.5, 14)
+    adult = rng.lognormal(np.log(30), 0.40, n_nonnan).clip(15, HERO_AGE_MAX)
+    age = np.full(HERO_N_ROWS, np.nan)
+    age[~nan_mask] = np.where(is_child, child, adult)
+
+    rng2 = np.random.default_rng(HERO_SEED + 1)
+    p = np.array([_hero_rate(a) for a in age])
+    y = (rng2.random(HERO_N_ROWS) < p).astype(int)
+    return age, pd.Series(y, name="Survived")
+
+
+def _hero_rate(a: float) -> float:
+    if np.isnan(a):
+        return HERO_NAN_TARGET_RATE
+    for upper, rate in HERO_RATE_PLATEAUS:
+        if a <= upper:
+            return rate
+    return HERO_RATE_PLATEAUS[-1][1]
+
+
+def _hero_merged_bins(
+    winner_groups: tuple[tuple[int, ...], ...],
+    s1_bins: tuple[Bin, ...],
+    values: list,
+) -> tuple[Bin, ...]:
+    """One bar per winning bucket: union span of its members' Stage-1 slots,
+    summed frequency, frequency-weighted target rate, anchor (highest-freq
+    member) colour — same conventions as `_qd_merged_bins`."""
+    # Same 3-significant-digit rounding as the scientific notation that
+    # `_clean_label` parses, so merged labels match the Stage-1 bin labels.
+    boundaries = [float(f"{float(v):.2e}") for v in values]
+    bins: list[Bin] = []
+    for group in winner_groups:
+        members = [s1_bins[i] for i in group]
+        freq = sum(b.freq for b in members)
+        target = sum(b.freq * b.target for b in members) / freq if freq else 0.0
+        anchor = max(members, key=lambda b: b.freq)
+        lower = boundaries[min(group) - 1] if min(group) > 0 else float("-inf")
+        upper = boundaries[max(group)]
+        if np.isinf(lower):
+            label = f"≤ {_fmt(upper)}"
+        elif np.isinf(upper):
+            label = f"> {_fmt(lower)}"
+        else:
+            label = f"({_fmt(lower)}, {_fmt(upper)}]"
+        bins.append(
+            Bin(
+                label=label,
+                x_start=members[0].x_start,
+                x_end=members[-1].x_end,
+                freq=freq,
+                target=target,
+                color_id=anchor.color_id,
+            )
+        )
+    return tuple(bins)
 
 
 def _combo_viable(
