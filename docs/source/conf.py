@@ -99,7 +99,8 @@ html_theme_options = {
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = "artwork/auto_carver_symbol_small.png"
+# Dark (light-ink) variant: the RTD theme's sidebar header background is dark.
+html_logo = "artwork/auto_carver_symbol_dark.svg"
 
 
 # -- General configuration ---------------------------------------------------
