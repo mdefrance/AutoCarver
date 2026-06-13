@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 482"
+     width="800" height="482" role="img"
+     aria-label="AutoCarver discretizer animation">
+  <defs>
+    <pattern id="nan-hatch" patternUnits="userSpaceOnUse" width="6" height="6"
+             patternTransform="rotate(45)">
+      <rect width="6" height="6" fill="#30363d"/>
+      <line x1="0" y1="0" x2="0" y2="6" stroke="#8b949e" stroke-width="1.2"/>
+    </pattern>
+    <marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#f97316"/>
+    </marker>
+  </defs>
+  <style>
+text { font-family: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+.title { font-size: 14px; font-weight: 600; fill: #e6edf3; }
+.callout { font-size: 11px; fill: #9ca3af; }
+.chip { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; fill: #f9fafb; }
+.binlabel { font-size: 10px; fill: #c9d1d9; }
+.binlabel-rot { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 10px; fill: #c9d1d9; }
+.tick-label { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 9px; fill: #8b949e; }
+.overrep-label { font-size: 11px; fill: #fb923c; font-weight: 600; }
+.merge-label { font-size: 9px; fill: #fb923c; font-weight: 600; }
+.strip-label { font-size: 9px; fill: #8b949e; font-style: italic; }
+.threshold-label {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 10px; fill: #f87171; font-weight: 600;
+}
+
+@keyframes show-0 {
+  0% { opacity: 1; }
+  15.17% { opacity: 1; }
+  16.67% { opacity: 0; }
+  100% { opacity: 0; }
+}
+.stage-0 { opacity: 0; animation: show-0 30000ms infinite; }
+@keyframes show-1 {
+  0% { opacity: 0; }
+  16.67% { opacity: 0; }
+  18.17% { opacity: 1; }
+  31.83% { opacity: 1; }
+  33.33% { opacity: 0; }
+  100% { opacity: 0; }
+}
+.stage-1 { opacity: 0; animation: show-1 30000ms infinite; }
+@keyframes show-2 {
+  0% { opacity: 0; }
+  33.33% { opacity: 0; }
+  34.83% { opacity: 1; }
+  48.50% { opacity: 1; }
+  50.00% { opacity: 0; }
+  100% { opacity: 0; }
+}
+.stage-2 { opacity: 0; animation: show-2 30000ms infinite; }
+@keyframes show-3 {
+  0% { opacity: 0; }
+  50.00% { opacity: 0; }
+  51.50% { opacity: 1; }
+  65.17% { opacity: 1; }
+  66.67% { opacity: 0; }
+  100% { opacity: 0; }
+}
+.stage-3 { opacity: 0; animation: show-3 30000ms infinite; }
+@keyframes show-4 {
+  0% { opacity: 0; }
+  66.67% { opacity: 0; }
+  68.17% { opacity: 1; }
+  100% { opacity: 1; }
+}
+.stage-4 { opacity: 0; animation: show-4 30000ms infinite; }
+  </style>
+  <g class="stage stage-0">
+    <text class="title" x="400.00" y="29.00" text-anchor="middle">Stage 0 / 4 &#8212; Raw feature</text>
+    <rect x="658" y="12" width="110" height="22" rx="11" fill="#30363d"/>
+    <text class="chip" x="713.00" y="27.00" text-anchor="middle">—</text>
+    <text class="callout" x="400.00" y="56.00" text-anchor="middle">A raw continuous feature: Age (synthetic Titanic-flavoured, n=1500) — skewed, non-monotone</text>
+    <text class="callout" x="400.00" y="70.00" text-anchor="middle">risk, 20% missing.</text>
+    <path d="M 32.00,248.00 L 32.00,241.72 L 36.21,239.71 L 40.43,237.25 L 44.64,234.30 L 48.86,230.81 L 53.07,226.78 L 57.28,222.24 L 61.50,217.27 L 65.71,212.01 L 69.92,206.61 L 74.14,201.28 L 78.35,196.21 L 82.57,191.65 L 86.78,187.81 L 90.99,184.88 L 95.21,182.97 L 99.42,182.13 L 103.64,182.24 L 107.85,183.08 L 112.06,184.28 L 116.28,185.37 L 120.49,185.86 L 124.70,185.29 L 128.92,183.30 L 133.13,179.72 L 137.35,174.62 L 141.56,168.29 L 145.77,161.23 L 149.99,154.07 L 154.20,147.42 L 158.42,141.77 L 162.63,137.35 L 166.84,134.18 L 171.06,132.00 L 175.27,130.47 L 179.48,129.17 L 183.70,127.80 L 187.91,126.15 L 192.13,124.17 L 196.34,121.87 L 200.55,119.34 L 204.77,116.64 L 208.98,113.80 L 213.19,110.81 L 217.41,107.67 L 221.62,104.35 L 225.84,100.91 L 230.05,97.45 L 234.26,94.18 L 238.48,91.36 L 242.69,89.25 L 246.91,88.08 L 251.12,88.00 L 255.33,89.03 L 259.55,91.08 L 263.76,93.94 L 267.97,97.34 L 272.19,100.98 L 276.40,104.63 L 280.62,108.10 L 284.83,111.28 L 289.04,114.14 L 293.26,116.71 L 297.47,119.06 L 301.69,121.25 L 305.90,123.35 L 310.11,125.39 L 314.33,127.41 L 318.54,129.43 L 322.75,131.45 L 326.97,133.47 L 331.18,135.50 L 335.40,137.57 L 339.61,139.68 L 343.82,141.87 L 348.04,144.19 L 352.25,146.67 L 356.47,149.37 L 360.68,152.31 L 364.89,155.48 L 369.11,158.84 L 373.32,162.29 L 377.53,165.74 L 381.75,169.12 L 385.96,172.35 L 390.18,175.42 L 394.39,178.37 L 398.60,181.24 L 402.82,184.08 L 407.03,186.91 L 411.25,189.72 L 415.46,192.50 L 419.67,195.20 L 423.89,197.78 L 428.10,200.21 L 432.31,202.47 L 436.53,204.57 L 440.74,206.51 L 444.96,208.31 L 449.17,210.01 L 453.38,211.62 L 457.60,213.18 L 461.81,214.73 L 466.03,216.27 L 470.24,217.83 L 474.45,219.39 L 478.67,220.95 L 482.88,222.48 L 487.09,223.96 L 491.31,225.34 L 495.52,226.60 L 499.74,227.71 L 503.95,228.65 L 508.16,229.40 L 512.38,229.93 L 516.59,230.25 L 520.81,230.36 L 525.02,230.28 L 529.23,230.07 L 533.45,229.82 L 537.66,229.63 L 541.87,229.61 L 546.09,229.88 L 550.30,230.51 L 554.52,231.53 L 558.73,232.92 L 562.94,234.58 L 567.16,236.39 L 571.37,238.18 L 575.58,239.81 L 579.80,241.16 L 584.01,242.15 L 588.23,242.75 L 592.44,242.97 L 596.65,242.87 L 600.87,242.56 L 605.08,242.12 L 609.30,241.68 L 613.51,241.32 L 617.72,241.10 L 621.94,241.04 L 626.15,241.14 L 630.36,241.34 L 634.58,241.59 L 638.79,241.82 L 643.01,241.99 L 647.22,242.08 L 651.43,242.09 L 655.65,242.04 L 659.86,241.95 L 664.08,241.86 L 668.29,241.79 L 672.50,241.76 L 676.72,241.78 L 680.93,241.85 L 685.14,241.99 L 689.36,242.18 L 693.57,242.45 L 697.79,242.81 L 702.00,243.26 L 702.00,248.00 Z" fill="#768491" stroke="#c9d1d9" stroke-width="1.2" stroke-linejoin="round"/>
+    <line x1="32.00" y1="248.00" x2="32.00" y2="252.00" stroke="#6e7681" stroke-width="1"/>
+    <text class="tick-label" x="32.00" y="264.00" text-anchor="middle">0</text>
+    <line x1="115.75" y1="248.00" x2="115.75" y2="252.00" stroke="#6e7681" stroke-width="1"/>
+    <text class="tick-label" x="115.75" y="264.00" text-anchor="middle">10</text>
+    <line x1="199.50" y1="248.00" x2="199.50" y2="252.00" stroke="#6e7681" stroke-width="1"/>
+    <text class="tick-label" x="199.50" y="264.00" text-anchor="middle">20</text>
+    <line x1="283.25" y1="248.00" x2="283.25" y2="252.00" stroke="#6e7681" stroke-width="1"/>
+    <text class="tick-label" x="283.25" y="264.00" text-anchor="middle">30</text>
+    <line x1="367.00" y1="248.00" x2="367.00" y2="252.00" stroke="#6e7681" stroke-width="1"/>
+    <text class="tick-label" x="367.00" y="264.00" text-anchor="middle">40</text>
+    <line x1="450.75" y1="248.00" x2="450.75" y2="252.00" stroke="#6e7681" stroke-width="1"/>
+    <text class="tick-label" x="450.75" y="264.00" text-anchor="middle">50</text>
+    <line x1="534.50" y1="248.00" x2="534.50" y2="252.00" stroke="#6e7681" stroke-width="1"/>
+    <text class="tick-label" x="534.50" y="264.00" text-anchor="middle">60</text>
+    <line x1="618.25" y1="248.00" x2="618.25" y2="252.00" stroke="#6e7681" stroke-width="1"/>
+    <text class="tick-label" x="618.25" y="264.00" text-anchor="middle">70</text>
+    <line x1="702.00" y1="248.00" x2="702.00" y2="252.00" stroke="#6e7681" stroke-width="1"/>
+    <text class="tick-label" x="702.00" y="264.00" text-anchor="middle">80</text>
+    <rect x="712.00" y="203.24" width="56.00" height="44.76" rx="3" fill="url(#nan-hatch)" stroke="#5D7092" stroke-width="1" opacity="0.85"/>
+    <text class="binlabel-rot" x="740.00" y="256.00" text-anchor="end" transform="rotate(-45 740.00 256.00)">NaN (20.6%)</text>
+    <line x1="32" y1="248.00" x2="702" y2="248.00" stroke="#484f58" stroke-width="1"/>
+    <line x1="32" y1="232.79" x2="768" y2="232.79" stroke="#f87171" stroke-width="1" stroke-dasharray="5 3"/>
+    <text class="threshold-label" x="764.00" y="228.79" text-anchor="end">min_freq = 0.07</text>
+    <line x1="32" y1="320.00" x2="768.00" y2="320.00" stroke="#21262d" stroke-width="1"/>
+    <text class="strip-label" x="32.00" y="334.00" text-anchor="start">Carver — consecutive groupings ranked by Tschuprow's T (best first)</text>
+  </g>
+  <g class="stage stage-1">
+    <text class="title" x="400.00" y="29.00" text-anchor="middle">Stage 1 / 4 &#8212; Discretizers — split into clean ordered bins</text>
+    <rect x="658" y="12" width="110" height="22" rx="11" fill="#30363d"/>
+    <text class="chip" x="713.00" y="27.00" text-anchor="middle">—</text>
+    <text class="callout" x="400.00" y="56.00" text-anchor="middle">QuantitativeDiscretizer splits Age into 11 ordered bins above min_freq. Categorical, ordinal</text>
+    <text class="callout" x="400.00" y="70.00" text-anchor="middle">and datetime features get the same treatment.</text>
+    <rect x="32.50" y="232.21" width="85.36" height="15.79" rx="2" fill="#5B8FF9" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="75.18" y="256.00" text-anchor="end" transform="rotate(-45 75.18 256.00)">≤ 10.3</text>
+    <rect x="118.86" y="232.36" width="43.72" height="15.64" rx="2" fill="#5AD8A6" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="140.72" y="256.00" text-anchor="end" transform="rotate(-45 140.72 256.00)">(10.3, 15.7]</text>
+    <rect x="163.58" y="232.36" width="34.62" height="15.64" rx="2" fill="#F6BD16" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="180.89" y="256.00" text-anchor="end" transform="rotate(-45 180.89 256.00)">(15.7, 19.9]</text>
+    <rect x="199.19" y="232.36" width="27.32" height="15.64" rx="2" fill="#E8684A" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="212.85" y="256.00" text-anchor="end" transform="rotate(-45 212.85 256.00)">(19.9, 23.3]</text>
+    <rect x="227.51" y="232.36" width="21.84" height="15.64" rx="2" fill="#6DC8EC" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="238.43" y="256.00" text-anchor="end" transform="rotate(-45 238.43 256.00)">(23.3, 26]</text>
+    <rect x="250.35" y="232.21" width="23.75" height="15.79" rx="2" fill="#9270CA" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="262.23" y="256.00" text-anchor="end" transform="rotate(-45 262.23 256.00)">(26, 29]</text>
+    <rect x="275.10" y="232.36" width="28.87" height="15.64" rx="2" fill="#5B8FF9" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="289.54" y="256.00" text-anchor="end" transform="rotate(-45 289.54 256.00)">(29, 32.5]</text>
+    <rect x="304.97" y="232.36" width="32.32" height="15.64" rx="2" fill="#5AD8A6" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="321.13" y="256.00" text-anchor="end" transform="rotate(-45 321.13 256.00)">(32.5, 36.5]</text>
+    <rect x="338.29" y="232.36" width="34.07" height="15.64" rx="2" fill="#F6BD16" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="355.33" y="256.00" text-anchor="end" transform="rotate(-45 355.33 256.00)">(36.5, 40.7]</text>
+    <rect x="373.36" y="232.36" width="64.17" height="15.64" rx="2" fill="#E8684A" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="405.45" y="256.00" text-anchor="end" transform="rotate(-45 405.45 256.00)">(40.7, 48.5]</text>
+    <rect x="438.53" y="232.21" width="262.97" height="15.79" rx="2" fill="#6DC8EC" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="570.02" y="256.00" text-anchor="end" transform="rotate(-45 570.02 256.00)">&gt; 48.5</text>
+    <path d="M 75.18,100.00 L 140.72,131.50 L 180.89,130.80 L 212.85,129.41 L 238.43,126.63 L 262.23,127.59 L 289.54,130.11 L 321.13,116.19 L 355.33,116.88 L 405.45,114.80 L 570.02,140.00" fill="none" stroke="#484f58" stroke-width="1" stroke-dasharray="2 3"/>
+    <circle cx="75.18" cy="100.00" r="3.5" fill="#5B8FF9" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="140.72" cy="131.50" r="3.5" fill="#5AD8A6" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="180.89" cy="130.80" r="3.5" fill="#F6BD16" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="212.85" cy="129.41" r="3.5" fill="#E8684A" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="238.43" cy="126.63" r="3.5" fill="#6DC8EC" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="262.23" cy="127.59" r="3.5" fill="#9270CA" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="289.54" cy="130.11" r="3.5" fill="#5B8FF9" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="321.13" cy="116.19" r="3.5" fill="#5AD8A6" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="355.33" cy="116.88" r="3.5" fill="#F6BD16" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="405.45" cy="114.80" r="3.5" fill="#E8684A" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="570.02" cy="140.00" r="3.5" fill="#6DC8EC" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="strip-label" x="32.00" y="96.00" text-anchor="start">target rate &#8712; [0.13, 0.82]</text>
+    <rect x="712.00" y="203.24" width="56.00" height="44.76" rx="3" fill="url(#nan-hatch)" stroke="#5D7092" stroke-width="1" opacity="0.85"/>
+    <text class="binlabel-rot" x="740.00" y="256.00" text-anchor="end" transform="rotate(-45 740.00 256.00)">NaN (20.6%)</text>
+    <line x1="32" y1="248.00" x2="702" y2="248.00" stroke="#484f58" stroke-width="1"/>
+    <line x1="32" y1="232.79" x2="768" y2="232.79" stroke="#f87171" stroke-width="1" stroke-dasharray="5 3"/>
+    <text class="threshold-label" x="764.00" y="228.79" text-anchor="end">min_freq = 0.07</text>
+    <line x1="32" y1="320.00" x2="768.00" y2="320.00" stroke="#21262d" stroke-width="1"/>
+    <text class="strip-label" x="32.00" y="334.00" text-anchor="start">Carver — consecutive groupings ranked by Tschuprow's T (best first)</text>
+  </g>
+  <g class="stage stage-2">
+    <text class="title" x="400.00" y="29.00" text-anchor="middle">Stage 2 / 4 &#8212; Carvers — rank every consecutive grouping</text>
+    <rect x="658" y="12" width="110" height="22" rx="11" fill="#30363d"/>
+    <text class="chip" x="713.00" y="27.00" text-anchor="middle">—</text>
+    <text class="callout" x="400.00" y="56.00" text-anchor="middle">BinaryCarver tries every consecutive grouping into ≤ 5 buckets — 385 candidates ranked by</text>
+    <text class="callout" x="400.00" y="70.00" text-anchor="middle">Tschuprow's T. Adjacent bins sharing a colour form one bucket.</text>
+    <rect x="32.50" y="232.21" width="85.36" height="15.79" rx="2" fill="#5B8FF9" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="75.18" y="256.00" text-anchor="end" transform="rotate(-45 75.18 256.00)">≤ 10.3</text>
+    <rect x="118.86" y="232.36" width="43.72" height="15.64" rx="2" fill="#5AD8A6" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="140.72" y="256.00" text-anchor="end" transform="rotate(-45 140.72 256.00)">(10.3, 15.7]</text>
+    <rect x="163.58" y="232.36" width="34.62" height="15.64" rx="2" fill="#F6BD16" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="180.89" y="256.00" text-anchor="end" transform="rotate(-45 180.89 256.00)">(15.7, 19.9]</text>
+    <rect x="199.19" y="232.36" width="27.32" height="15.64" rx="2" fill="#E8684A" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="212.85" y="256.00" text-anchor="end" transform="rotate(-45 212.85 256.00)">(19.9, 23.3]</text>
+    <rect x="227.51" y="232.36" width="21.84" height="15.64" rx="2" fill="#6DC8EC" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="238.43" y="256.00" text-anchor="end" transform="rotate(-45 238.43 256.00)">(23.3, 26]</text>
+    <rect x="250.35" y="232.21" width="23.75" height="15.79" rx="2" fill="#9270CA" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="262.23" y="256.00" text-anchor="end" transform="rotate(-45 262.23 256.00)">(26, 29]</text>
+    <rect x="275.10" y="232.36" width="28.87" height="15.64" rx="2" fill="#5B8FF9" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="289.54" y="256.00" text-anchor="end" transform="rotate(-45 289.54 256.00)">(29, 32.5]</text>
+    <rect x="304.97" y="232.36" width="32.32" height="15.64" rx="2" fill="#5AD8A6" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="321.13" y="256.00" text-anchor="end" transform="rotate(-45 321.13 256.00)">(32.5, 36.5]</text>
+    <rect x="338.29" y="232.36" width="34.07" height="15.64" rx="2" fill="#F6BD16" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="355.33" y="256.00" text-anchor="end" transform="rotate(-45 355.33 256.00)">(36.5, 40.7]</text>
+    <rect x="373.36" y="232.36" width="64.17" height="15.64" rx="2" fill="#E8684A" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="405.45" y="256.00" text-anchor="end" transform="rotate(-45 405.45 256.00)">(40.7, 48.5]</text>
+    <rect x="438.53" y="232.21" width="262.97" height="15.79" rx="2" fill="#6DC8EC" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="570.02" y="256.00" text-anchor="end" transform="rotate(-45 570.02 256.00)">&gt; 48.5</text>
+    <path d="M 75.18,100.00 L 140.72,131.50 L 180.89,130.80 L 212.85,129.41 L 238.43,126.63 L 262.23,127.59 L 289.54,130.11 L 321.13,116.19 L 355.33,116.88 L 405.45,114.80 L 570.02,140.00" fill="none" stroke="#484f58" stroke-width="1" stroke-dasharray="2 3"/>
+    <circle cx="75.18" cy="100.00" r="3.5" fill="#5B8FF9" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="140.72" cy="131.50" r="3.5" fill="#5AD8A6" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="180.89" cy="130.80" r="3.5" fill="#F6BD16" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="212.85" cy="129.41" r="3.5" fill="#E8684A" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="238.43" cy="126.63" r="3.5" fill="#6DC8EC" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="262.23" cy="127.59" r="3.5" fill="#9270CA" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="289.54" cy="130.11" r="3.5" fill="#5B8FF9" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="321.13" cy="116.19" r="3.5" fill="#5AD8A6" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="355.33" cy="116.88" r="3.5" fill="#F6BD16" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="405.45" cy="114.80" r="3.5" fill="#E8684A" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="570.02" cy="140.00" r="3.5" fill="#6DC8EC" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="strip-label" x="32.00" y="96.00" text-anchor="start">target rate &#8712; [0.13, 0.82]</text>
+    <rect x="712.00" y="203.24" width="56.00" height="44.76" rx="3" fill="url(#nan-hatch)" stroke="#5D7092" stroke-width="1" opacity="0.85"/>
+    <text class="binlabel-rot" x="740.00" y="256.00" text-anchor="end" transform="rotate(-45 740.00 256.00)">NaN (20.6%)</text>
+    <line x1="32" y1="248.00" x2="702" y2="248.00" stroke="#484f58" stroke-width="1"/>
+    <line x1="32" y1="232.79" x2="768" y2="232.79" stroke="#f87171" stroke-width="1" stroke-dasharray="5 3"/>
+    <text class="threshold-label" x="764.00" y="228.79" text-anchor="end">min_freq = 0.07</text>
+    <line x1="32" y1="320.00" x2="768.00" y2="320.00" stroke="#21262d" stroke-width="1"/>
+    <text class="strip-label" x="32.00" y="334.00" text-anchor="start">Carver — consecutive groupings ranked by Tschuprow's T (best first)</text>
+    <text class="tick-label" x="768.00" y="334.00" text-anchor="end">top 5 of 385</text>
+    <rect x="33.00" y="348.00" width="84.36" height="14.00" rx="2" fill="#5B8FF9" stroke="#6e7681" stroke-width="0.6"/>
+    <rect x="119.36" y="348.00" width="184.11" height="14.00" rx="2" fill="#9270CA" stroke="#6e7681" stroke-width="0.6"/>
+    <rect x="305.47" y="348.00" width="131.56" height="14.00" rx="2" fill="#5AD8A6" stroke="#6e7681" stroke-width="0.6"/>
+    <rect x="439.03" y="348.00" width="261.97" height="14.00" rx="2" fill="#6DC8EC" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="tick-label" x="768.00" y="358.50" text-anchor="end">#1 &#183; 0.214</text>
+    <rect x="33.00" y="374.00" width="84.36" height="14.00" rx="2" fill="#5B8FF9" stroke="#6e7681" stroke-width="0.6"/>
+    <rect x="119.36" y="374.00" width="581.64" height="14.00" rx="2" fill="#9270CA" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="tick-label" x="768.00" y="384.50" text-anchor="end">#2 &#183; 0.202</text>
+    <rect x="33.00" y="400.00" width="84.36" height="14.00" rx="2" fill="#5B8FF9" stroke="#6e7681" stroke-width="0.6"/>
+    <rect x="119.36" y="400.00" width="217.43" height="14.00" rx="2" fill="#9270CA" stroke="#6e7681" stroke-width="0.6"/>
+    <rect x="338.79" y="400.00" width="98.24" height="14.00" rx="2" fill="#F6BD16" stroke="#6e7681" stroke-width="0.6"/>
+    <rect x="439.03" y="400.00" width="261.97" height="14.00" rx="2" fill="#6DC8EC" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="tick-label" x="768.00" y="410.50" text-anchor="end">#3 &#183; 0.200</text>
+    <rect x="33.00" y="426.00" width="84.36" height="14.00" rx="2" fill="#5B8FF9" stroke="#6e7681" stroke-width="0.6"/>
+    <rect x="119.36" y="426.00" width="154.24" height="14.00" rx="2" fill="#9270CA" stroke="#6e7681" stroke-width="0.6"/>
+    <rect x="275.60" y="426.00" width="161.43" height="14.00" rx="2" fill="#5B8FF9" stroke="#6e7681" stroke-width="0.6"/>
+    <rect x="439.03" y="426.00" width="261.97" height="14.00" rx="2" fill="#6DC8EC" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="tick-label" x="768.00" y="436.50" text-anchor="end">#4 &#183; 0.200</text>
+    <rect x="33.00" y="452.00" width="84.36" height="14.00" rx="2" fill="#5B8FF9" stroke="#6e7681" stroke-width="0.6"/>
+    <rect x="119.36" y="452.00" width="78.33" height="14.00" rx="2" fill="#5AD8A6" stroke="#6e7681" stroke-width="0.6"/>
+    <rect x="199.69" y="452.00" width="103.78" height="14.00" rx="2" fill="#9270CA" stroke="#6e7681" stroke-width="0.6"/>
+    <rect x="305.47" y="452.00" width="131.56" height="14.00" rx="2" fill="#5AD8A6" stroke="#6e7681" stroke-width="0.6"/>
+    <rect x="439.03" y="452.00" width="261.97" height="14.00" rx="2" fill="#6DC8EC" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="tick-label" x="768.00" y="462.50" text-anchor="end">#5 &#183; 0.200</text>
+  </g>
+  <g class="stage stage-3">
+    <text class="title" x="400.00" y="29.00" text-anchor="middle">Stage 3 / 4 &#8212; Best viable grouping selected</text>
+    <rect x="658" y="12" width="110" height="22" rx="11" fill="#30363d"/>
+    <text class="chip" x="713.00" y="27.00" text-anchor="middle">T = 0.214</text>
+    <text class="callout" x="400.00" y="56.00" text-anchor="middle">The highest-T grouping that stays viable on a held-out dev set (min_freq + distinct target</text>
+    <text class="callout" x="400.00" y="70.00" text-anchor="middle">rates) wins — gold cuts on the strip.</text>
+    <rect x="32.50" y="232.21" width="85.36" height="15.79" rx="2" fill="#5B8FF9" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="75.18" y="256.00" text-anchor="end" transform="rotate(-45 75.18 256.00)">≤ 10.3</text>
+    <rect x="118.86" y="232.36" width="43.72" height="15.64" rx="2" fill="#5AD8A6" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="140.72" y="256.00" text-anchor="end" transform="rotate(-45 140.72 256.00)">(10.3, 15.7]</text>
+    <rect x="163.58" y="232.36" width="34.62" height="15.64" rx="2" fill="#F6BD16" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="180.89" y="256.00" text-anchor="end" transform="rotate(-45 180.89 256.00)">(15.7, 19.9]</text>
+    <rect x="199.19" y="232.36" width="27.32" height="15.64" rx="2" fill="#E8684A" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="212.85" y="256.00" text-anchor="end" transform="rotate(-45 212.85 256.00)">(19.9, 23.3]</text>
+    <rect x="227.51" y="232.36" width="21.84" height="15.64" rx="2" fill="#6DC8EC" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="238.43" y="256.00" text-anchor="end" transform="rotate(-45 238.43 256.00)">(23.3, 26]</text>
+    <rect x="250.35" y="232.21" width="23.75" height="15.79" rx="2" fill="#9270CA" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="262.23" y="256.00" text-anchor="end" transform="rotate(-45 262.23 256.00)">(26, 29]</text>
+    <rect x="275.10" y="232.36" width="28.87" height="15.64" rx="2" fill="#5B8FF9" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="289.54" y="256.00" text-anchor="end" transform="rotate(-45 289.54 256.00)">(29, 32.5]</text>
+    <rect x="304.97" y="232.36" width="32.32" height="15.64" rx="2" fill="#5AD8A6" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="321.13" y="256.00" text-anchor="end" transform="rotate(-45 321.13 256.00)">(32.5, 36.5]</text>
+    <rect x="338.29" y="232.36" width="34.07" height="15.64" rx="2" fill="#F6BD16" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="355.33" y="256.00" text-anchor="end" transform="rotate(-45 355.33 256.00)">(36.5, 40.7]</text>
+    <rect x="373.36" y="232.36" width="64.17" height="15.64" rx="2" fill="#E8684A" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="405.45" y="256.00" text-anchor="end" transform="rotate(-45 405.45 256.00)">(40.7, 48.5]</text>
+    <rect x="438.53" y="232.21" width="262.97" height="15.79" rx="2" fill="#6DC8EC" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="570.02" y="256.00" text-anchor="end" transform="rotate(-45 570.02 256.00)">&gt; 48.5</text>
+    <path d="M 75.18,100.00 L 140.72,131.50 L 180.89,130.80 L 212.85,129.41 L 238.43,126.63 L 262.23,127.59 L 289.54,130.11 L 321.13,116.19 L 355.33,116.88 L 405.45,114.80 L 570.02,140.00" fill="none" stroke="#484f58" stroke-width="1" stroke-dasharray="2 3"/>
+    <circle cx="75.18" cy="100.00" r="3.5" fill="#5B8FF9" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="140.72" cy="131.50" r="3.5" fill="#5AD8A6" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="180.89" cy="130.80" r="3.5" fill="#F6BD16" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="212.85" cy="129.41" r="3.5" fill="#E8684A" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="238.43" cy="126.63" r="3.5" fill="#6DC8EC" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="262.23" cy="127.59" r="3.5" fill="#9270CA" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="289.54" cy="130.11" r="3.5" fill="#5B8FF9" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="321.13" cy="116.19" r="3.5" fill="#5AD8A6" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="355.33" cy="116.88" r="3.5" fill="#F6BD16" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="405.45" cy="114.80" r="3.5" fill="#E8684A" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="570.02" cy="140.00" r="3.5" fill="#6DC8EC" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="strip-label" x="32.00" y="96.00" text-anchor="start">target rate &#8712; [0.13, 0.82]</text>
+    <rect x="712.00" y="203.24" width="56.00" height="44.76" rx="3" fill="url(#nan-hatch)" stroke="#5D7092" stroke-width="1" opacity="0.85"/>
+    <text class="binlabel-rot" x="740.00" y="256.00" text-anchor="end" transform="rotate(-45 740.00 256.00)">NaN (20.6%)</text>
+    <line x1="32" y1="248.00" x2="702" y2="248.00" stroke="#484f58" stroke-width="1"/>
+    <line x1="32" y1="232.79" x2="768" y2="232.79" stroke="#f87171" stroke-width="1" stroke-dasharray="5 3"/>
+    <text class="threshold-label" x="764.00" y="228.79" text-anchor="end">min_freq = 0.07</text>
+    <line x1="118.36" y1="150.00" x2="118.36" y2="248.00" stroke="#f6bd16" stroke-width="2" stroke-dasharray="5 3"/>
+    <line x1="304.47" y1="150.00" x2="304.47" y2="248.00" stroke="#f6bd16" stroke-width="2" stroke-dasharray="5 3"/>
+    <line x1="438.03" y1="150.00" x2="438.03" y2="248.00" stroke="#f6bd16" stroke-width="2" stroke-dasharray="5 3"/>
+    <line x1="32" y1="320.00" x2="768.00" y2="320.00" stroke="#21262d" stroke-width="1"/>
+    <text class="strip-label" x="32.00" y="334.00" text-anchor="start">Carver — consecutive groupings ranked by Tschuprow's T (best first)</text>
+    <text class="tick-label" x="768.00" y="334.00" text-anchor="end">top 5 of 385</text>
+    <rect x="28.00" y="343.00" width="744.00" height="24.00" rx="4" fill="#3b2f10" stroke="#f6bd16" stroke-width="1"/>
+    <rect x="33.00" y="348.00" width="84.36" height="14.00" rx="2" fill="#5B8FF9" stroke="#6e7681" stroke-width="0.6"/>
+    <rect x="119.36" y="348.00" width="184.11" height="14.00" rx="2" fill="#9270CA" stroke="#6e7681" stroke-width="0.6"/>
+    <rect x="305.47" y="348.00" width="131.56" height="14.00" rx="2" fill="#5AD8A6" stroke="#6e7681" stroke-width="0.6"/>
+    <rect x="439.03" y="348.00" width="261.97" height="14.00" rx="2" fill="#6DC8EC" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="tick-label" x="768.00" y="358.50" text-anchor="end">&#9733; #1 &#183; 0.214</text>
+    <rect x="33.00" y="374.00" width="84.36" height="14.00" rx="2" fill="#5B8FF9" stroke="#6e7681" stroke-width="0.6"/>
+    <rect x="119.36" y="374.00" width="581.64" height="14.00" rx="2" fill="#9270CA" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="tick-label" x="768.00" y="384.50" text-anchor="end">#2 &#183; 0.202</text>
+    <rect x="33.00" y="400.00" width="84.36" height="14.00" rx="2" fill="#5B8FF9" stroke="#6e7681" stroke-width="0.6"/>
+    <rect x="119.36" y="400.00" width="217.43" height="14.00" rx="2" fill="#9270CA" stroke="#6e7681" stroke-width="0.6"/>
+    <rect x="338.79" y="400.00" width="98.24" height="14.00" rx="2" fill="#F6BD16" stroke="#6e7681" stroke-width="0.6"/>
+    <rect x="439.03" y="400.00" width="261.97" height="14.00" rx="2" fill="#6DC8EC" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="tick-label" x="768.00" y="410.50" text-anchor="end">#3 &#183; 0.200</text>
+    <rect x="33.00" y="426.00" width="84.36" height="14.00" rx="2" fill="#5B8FF9" stroke="#6e7681" stroke-width="0.6"/>
+    <rect x="119.36" y="426.00" width="154.24" height="14.00" rx="2" fill="#9270CA" stroke="#6e7681" stroke-width="0.6"/>
+    <rect x="275.60" y="426.00" width="161.43" height="14.00" rx="2" fill="#5B8FF9" stroke="#6e7681" stroke-width="0.6"/>
+    <rect x="439.03" y="426.00" width="261.97" height="14.00" rx="2" fill="#6DC8EC" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="tick-label" x="768.00" y="436.50" text-anchor="end">#4 &#183; 0.200</text>
+    <rect x="33.00" y="452.00" width="84.36" height="14.00" rx="2" fill="#5B8FF9" stroke="#6e7681" stroke-width="0.6"/>
+    <rect x="119.36" y="452.00" width="78.33" height="14.00" rx="2" fill="#5AD8A6" stroke="#6e7681" stroke-width="0.6"/>
+    <rect x="199.69" y="452.00" width="103.78" height="14.00" rx="2" fill="#9270CA" stroke="#6e7681" stroke-width="0.6"/>
+    <rect x="305.47" y="452.00" width="131.56" height="14.00" rx="2" fill="#5AD8A6" stroke="#6e7681" stroke-width="0.6"/>
+    <rect x="439.03" y="452.00" width="261.97" height="14.00" rx="2" fill="#6DC8EC" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="tick-label" x="768.00" y="462.50" text-anchor="end">#5 &#183; 0.200</text>
+  </g>
+  <g class="stage stage-4">
+    <text class="title" x="400.00" y="29.00" text-anchor="middle">Stage 4 / 4 &#8212; Carved feature</text>
+    <rect x="658" y="12" width="110" height="22" rx="11" fill="#30363d"/>
+    <text class="chip" x="713.00" y="27.00" text-anchor="middle">T = 0.214</text>
+    <text class="callout" x="400.00" y="56.00" text-anchor="middle">4 interpretable buckets capture the non-monotone age–survival risk — ready for scorecards, WOE</text>
+    <text class="callout" x="400.00" y="70.00" text-anchor="middle">or one-hot encoding.</text>
+    <rect x="32.50" y="232.21" width="85.36" height="15.79" rx="2" fill="#5B8FF9" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="75.18" y="256.00" text-anchor="end" transform="rotate(-45 75.18 256.00)">≤ 10.3</text>
+    <rect x="118.86" y="154.00" width="185.11" height="94.00" rx="2" fill="#9270CA" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="211.42" y="256.00" text-anchor="end" transform="rotate(-45 211.42 256.00)">(10.3, 32.5]</text>
+    <rect x="304.97" y="201.07" width="132.56" height="46.93" rx="2" fill="#5AD8A6" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="371.25" y="256.00" text-anchor="end" transform="rotate(-45 371.25 256.00)">(32.5, 48.5]</text>
+    <rect x="438.53" y="232.21" width="262.97" height="15.79" rx="2" fill="#6DC8EC" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="binlabel-rot" x="570.02" y="256.00" text-anchor="end" transform="rotate(-45 570.02 256.00)">&gt; 48.5</text>
+    <path d="M 75.18,100.00 L 211.42,129.34 L 371.25,115.96 L 570.02,140.00" fill="none" stroke="#484f58" stroke-width="1" stroke-dasharray="2 3"/>
+    <circle cx="75.18" cy="100.00" r="3.5" fill="#5B8FF9" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="211.42" cy="129.34" r="3.5" fill="#9270CA" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="371.25" cy="115.96" r="3.5" fill="#5AD8A6" stroke="#6e7681" stroke-width="0.6"/>
+    <circle cx="570.02" cy="140.00" r="3.5" fill="#6DC8EC" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="strip-label" x="32.00" y="96.00" text-anchor="start">target rate &#8712; [0.13, 0.82]</text>
+    <rect x="712.00" y="203.24" width="56.00" height="44.76" rx="3" fill="url(#nan-hatch)" stroke="#5D7092" stroke-width="1" opacity="0.85"/>
+    <text class="binlabel-rot" x="740.00" y="256.00" text-anchor="end" transform="rotate(-45 740.00 256.00)">NaN (20.6%)</text>
+    <line x1="32" y1="248.00" x2="702" y2="248.00" stroke="#484f58" stroke-width="1"/>
+    <line x1="32" y1="232.79" x2="768" y2="232.79" stroke="#f87171" stroke-width="1" stroke-dasharray="5 3"/>
+    <text class="threshold-label" x="764.00" y="228.79" text-anchor="end">min_freq = 0.07</text>
+    <line x1="32" y1="320.00" x2="768.00" y2="320.00" stroke="#21262d" stroke-width="1"/>
+    <text class="strip-label" x="32.00" y="334.00" text-anchor="start">Carver — consecutive groupings ranked by Tschuprow's T (best first)</text>
+    <rect x="28.00" y="343.00" width="744.00" height="24.00" rx="4" fill="#3b2f10" stroke="#f6bd16" stroke-width="1"/>
+    <rect x="33.00" y="348.00" width="84.36" height="14.00" rx="2" fill="#5B8FF9" stroke="#6e7681" stroke-width="0.6"/>
+    <rect x="119.36" y="348.00" width="184.11" height="14.00" rx="2" fill="#9270CA" stroke="#6e7681" stroke-width="0.6"/>
+    <rect x="305.47" y="348.00" width="131.56" height="14.00" rx="2" fill="#5AD8A6" stroke="#6e7681" stroke-width="0.6"/>
+    <rect x="439.03" y="348.00" width="261.97" height="14.00" rx="2" fill="#6DC8EC" stroke="#6e7681" stroke-width="0.6"/>
+    <text class="tick-label" x="768.00" y="358.50" text-anchor="end">&#9733; #1 &#183; 0.214</text>
+  </g>
+</svg>

@@ -63,12 +63,75 @@ N_STAGES = 5  # max stage count across animations (QuantitativeDiscretizer = 5)
 STAGE_MS = 5000
 FADE_MS = 450
 
+# Hero-only colour themes: the README hero animation (readme_full_pipeline)
+# ships light + dark variants for GitHub's colour-scheme toggle. Every other
+# animation is embedded in always-light RTD pages and never passes `theme`,
+# so its output is unaffected (defaults reproduce the previous hardcoded
+# colours exactly).
+_LIGHT_THEME = {
+    "title": "#111827",
+    "callout": "#4b5563",
+    "chip_bg": "#111827",
+    "binlabel": "#374151",
+    "tick_label": "#6b7280",
+    "strip_label": "#6b7280",
+    "threshold": "#ef4444",
+    "overrep": "#c2410c",
+    "merge": "#c2410c",
+    "curve_fill": CURVE_FILL,
+    "curve_stroke": CURVE_STROKE,
+    "axis_stroke": "#9ca3af",
+    "tick_stroke": "#6b7280",
+    "bar_stroke": "#374151",
+    "sep_stroke": "#d1d5db",
+    "gold_bg": "#fef3c7",  # == GOLD_BG
+    "gold_stroke": "#d97706",  # == GOLD_STROKE
+    "nan_hatch_bg": "#e5e7eb",
+    "nan_hatch_stroke": PALETTE[7],
+}
+
+_DARK_THEME = {
+    "title": "#e6edf3",
+    "callout": "#9ca3af",
+    "chip_bg": "#30363d",
+    "binlabel": "#c9d1d9",
+    "tick_label": "#8b949e",
+    "strip_label": "#8b949e",
+    "threshold": "#f87171",
+    "overrep": "#fb923c",
+    "merge": "#fb923c",
+    "curve_fill": "#768491",
+    "curve_stroke": "#c9d1d9",
+    "axis_stroke": "#484f58",
+    "tick_stroke": "#6e7681",
+    "bar_stroke": "#6e7681",
+    "sep_stroke": "#21262d",
+    "gold_bg": "#3b2f10",
+    "gold_stroke": "#f6bd16",
+    "nan_hatch_bg": "#30363d",
+    "nan_hatch_stroke": "#8b949e",
+}
+
+# Hero light variant: like _LIGHT_THEME but with a single neutral mid-grey for
+# every body-text element (title/callout/labels) instead of near-black, so the
+# light SVG stays legible even when a viewer that ignores <picture> (or hasn't
+# loaded the dark file) shows it on a dark background. Semantic marker colours
+# (threshold red, over-rep/merge orange) keep their meaning.
+_HERO_LIGHT_THEME = {
+    **_LIGHT_THEME,
+    "title": "#6b7280",
+    "callout": "#6b7280",
+    "binlabel": "#6b7280",
+    "tick_label": "#6b7280",
+    "strip_label": "#6b7280",
+}
+
 
 def render_svg(frames: list[Frame], stop_after_stage: int) -> str:
     total_stages = stop_after_stage
     stage_groups = "\n".join(_render_stage(f, total_stages) for f in frames)
     style = _render_style(stop_after_stage)
-    return _DOC.format(view_w=VIEW_W, view_h=VIEW_H, style=style, stage_groups=stage_groups)
+    return _doc(VIEW_W, VIEW_H, style, stage_groups)
 
 
 # --- Stage rendering ----------------------------------------------------------
@@ -98,7 +161,7 @@ def _bar_zone_h(frame: Frame) -> float:
     return MAIN_H
 
 
-def _min_freq_line(frame: Frame) -> str:
+def _min_freq_line(frame: Frame, theme: dict = _LIGHT_THEME) -> str:
     if frame.min_freq_y_norm is None:
         return ""
     y_norm = max(0.0, min(1.0, frame.min_freq_y_norm))
@@ -106,7 +169,7 @@ def _min_freq_line(frame: Frame) -> str:
     line = (
         f'<line x1="{PAD_X}" y1="{y:.2f}" '
         f'x2="{VIEW_W - PAD_X}" y2="{y:.2f}" '
-        f'stroke="#ef4444" stroke-width="1" stroke-dasharray="5 3"/>'
+        f'stroke="{theme["threshold"]}" stroke-width="1" stroke-dasharray="5 3"/>'
     )
     label = (
         f'<text class="threshold-label" x="{VIEW_W - PAD_X - 4:.2f}" '
@@ -123,13 +186,13 @@ def _stage_caption(frame: Frame, total_stages: int) -> str:
     )
 
 
-def _metric_chip(frame: Frame) -> str:
+def _metric_chip(frame: Frame, theme: dict = _LIGHT_THEME) -> str:
     chip_w, chip_h = 110, 22
     chip_x = VIEW_W - PAD_X - chip_w
     chip_y = _TITLE_Y0
     return (
         f'    <rect x="{chip_x}" y="{chip_y}" width="{chip_w}" height="{chip_h}" '
-        f'rx="11" fill="#111827"/>\n'
+        f'rx="11" fill="{theme["chip_bg"]}"/>\n'
         f'    <text class="chip" x="{chip_x + chip_w / 2:.2f}" '
         f'y="{chip_y + chip_h / 2 + 4:.2f}" text-anchor="middle">'
         f"{_escape(frame.metric)}</text>"
@@ -152,19 +215,19 @@ def _callout(frame: Frame) -> str:
     return "    " + "\n    ".join(parts)
 
 
-def _main_display(frame: Frame) -> str:
+def _main_display(frame: Frame, theme: dict = _LIGHT_THEME) -> str:
     """Density curve + numeric x-axis ticks (Stages 0/1), or value-axis bars
     with rotated modality labels (Stage 2)."""
     parts: list[str] = []
     if frame.density_curve:
-        parts.append(_density_path(frame.density_curve))
+        parts.append(_density_path(frame.density_curve, theme))
         for x_norm, label in frame.overrep_markers:
             parts.append(_overrep_marker(x_norm, label))
         for x_norm, text in frame.tick_values:
-            parts.append(_xaxis_tick(x_norm, text))
+            parts.append(_xaxis_tick(x_norm, text, theme))
         return "    " + "\n    ".join(parts)
     if frame.bins:
-        return _freq_bars(frame)
+        return _freq_bars(frame, theme)
     return ""
 
 
@@ -177,12 +240,12 @@ def _rotated_label(cx: float, label: str) -> str:
     )
 
 
-def _xaxis_tick(x_norm: float, text: str) -> str:
+def _xaxis_tick(x_norm: float, text: str, theme: dict = _LIGHT_THEME) -> str:
     """Small tick mark + horizontal numeric label below the baseline."""
     x = PAD_X + x_norm * BIN_W
     tick = (
         f'<line x1="{x:.2f}" y1="{_MAIN_BASELINE:.2f}" x2="{x:.2f}" '
-        f'y2="{_MAIN_BASELINE + 4:.2f}" stroke="#6b7280" stroke-width="1"/>'
+        f'y2="{_MAIN_BASELINE + 4:.2f}" stroke="{theme["tick_stroke"]}" stroke-width="1"/>'
     )
     label = (
         f'<text class="tick-label" x="{x:.2f}" y="{_MAIN_BASELINE + 16:.2f}" '
@@ -191,7 +254,7 @@ def _xaxis_tick(x_norm: float, text: str) -> str:
     return tick + "\n    " + label
 
 
-def _density_path(curve: tuple[tuple[float, float], ...]) -> str:
+def _density_path(curve: tuple[tuple[float, float], ...], theme: dict = _LIGHT_THEME) -> str:
     """Filled grey path under the density curve."""
     if not curve:
         return ""
@@ -200,7 +263,7 @@ def _density_path(curve: tuple[tuple[float, float], ...]) -> str:
     d += [f"L {x:.2f},{y:.2f}" for x, y in pts]
     d.append(f"L {pts[-1][0]:.2f},{_MAIN_BASELINE:.2f} Z")
     return (
-        f'<path d="{" ".join(d)}" fill="{CURVE_FILL}" stroke="{CURVE_STROKE}" '
+        f'<path d="{" ".join(d)}" fill="{theme["curve_fill"]}" stroke="{theme["curve_stroke"]}" '
         f'stroke-width="1.2" stroke-linejoin="round"/>'
     )
 
@@ -220,7 +283,7 @@ def _overrep_marker(x_norm: float, label: str) -> str:
     return line + "\n    " + lbl
 
 
-def _freq_bars(frame: Frame) -> str:
+def _freq_bars(frame: Frame, theme: dict = _LIGHT_THEME) -> str:
     """Bars at their value-axis or equal-slot x positions. Widths reflect each
     modality's range; heights ∝ real frequency. Labels rotated below. Bars in
     `frame.highlight_bins` get an orange outline.
@@ -237,7 +300,7 @@ def _freq_bars(frame: Frame) -> str:
         h = (b.freq / max_freq) * bar_zone_h if max_freq > 0 else 0.0
         y = _MAIN_BASELINE - h
         is_highlight = bin_idx in frame.highlight_bins
-        stroke = HIGHLIGHT_COLOR if is_highlight else "#374151"
+        stroke = HIGHLIGHT_COLOR if is_highlight else theme["bar_stroke"]
         stroke_w = 2.0 if is_highlight else 0.6
         parts.append(
             f'<rect x="{x:.2f}" y="{y:.2f}" width="{w:.2f}" height="{h:.2f}" '
@@ -302,7 +365,7 @@ def _merge_arrows(frame: Frame) -> str:
     return "    " + "\n    ".join(parts)
 
 
-def _target_dots(frame: Frame) -> str:
+def _target_dots(frame: Frame, theme: dict = _LIGHT_THEME) -> str:
     """Top strip of MAIN_H: one filled circle per bin, connected by a light
     line, scaled to [`target_strip_min`, `target_strip_max`]. The range is
     zoomed to the actual rates (not anchored at 0) so small differences read
@@ -327,10 +390,13 @@ def _target_dots(frame: Frame) -> str:
     parts: list[str] = []
     if len(pts) >= 2:
         d = " ".join(("M" if i == 0 else "L") + f" {x:.2f},{y:.2f}" for i, (x, y, _c) in enumerate(pts))
-        parts.append(f'<path d="{d}" fill="none" stroke="#9ca3af" stroke-width="1" stroke-dasharray="2 3"/>')
+        parts.append(
+            f'<path d="{d}" fill="none" stroke="{theme["axis_stroke"]}" stroke-width="1" stroke-dasharray="2 3"/>'
+        )
     for x, y, c in pts:
         parts.append(
-            f'<circle cx="{x:.2f}" cy="{y:.2f}" r="3.5" fill="{PALETTE[c]}" stroke="#374151" stroke-width="0.6"/>'
+            f'<circle cx="{x:.2f}" cy="{y:.2f}" r="3.5" fill="{PALETTE[c]}" '
+            f'stroke="{theme["bar_stroke"]}" stroke-width="0.6"/>'
         )
     # Strip caption (left edge) shows the zoomed range so readers can tell
     # that the strip's bottom edge isn't necessarily 0.
@@ -342,11 +408,11 @@ def _target_dots(frame: Frame) -> str:
     return "    " + "\n    ".join(parts)
 
 
-def _baseline_line() -> str:
+def _baseline_line(theme: dict = _LIGHT_THEME) -> str:
     return (
         f'    <line x1="{PAD_X}" y1="{_MAIN_BASELINE:.2f}" '
         f'x2="{PAD_X + BIN_W}" y2="{_MAIN_BASELINE:.2f}" '
-        f'stroke="#9ca3af" stroke-width="1"/>'
+        f'stroke="{theme["axis_stroke"]}" stroke-width="1"/>'
     )
 
 
@@ -381,7 +447,7 @@ def _nan_strip(frame: Frame) -> str:
 # --- CSS keyframes ------------------------------------------------------------
 
 
-def _render_style(stop_after_stage: int) -> str:
+def _render_style(stop_after_stage: int, theme: dict = _LIGHT_THEME) -> str:
     n_visible = stop_after_stage + 1
     total = n_visible * STAGE_MS + STAGE_MS  # +end-pause
     fade_pct = (FADE_MS / total) * 100
@@ -407,22 +473,24 @@ def _render_style(stop_after_stage: int) -> str:
             f".stage-{k} {{ opacity: 0; animation: {kf_name} {total}ms infinite; }}"
         )
 
+    binlabel = theme["binlabel"]
+    tick_label = theme["tick_label"]
     base = dedent(
-        """\
-        text { font-family: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
-        .title { font-size: 14px; font-weight: 600; fill: #111827; }
-        .callout { font-size: 11px; fill: #4b5563; }
-        .chip { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; fill: #f9fafb; }
-        .binlabel { font-size: 10px; fill: #374151; }
-        .binlabel-rot { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 10px; fill: #374151; }
-        .tick-label { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 9px; fill: #6b7280; }
-        .overrep-label { font-size: 11px; fill: #c2410c; font-weight: 600; }
-        .merge-label { font-size: 9px; fill: #c2410c; font-weight: 600; }
-        .strip-label { font-size: 9px; fill: #6b7280; font-style: italic; }
-        .threshold-label {
+        f"""\
+        text {{ font-family: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif; }}
+        .title {{ font-size: 14px; font-weight: 600; fill: {theme["title"]}; }}
+        .callout {{ font-size: 11px; fill: {theme["callout"]}; }}
+        .chip {{ font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; fill: #f9fafb; }}
+        .binlabel {{ font-size: 10px; fill: {theme["binlabel"]}; }}
+        .binlabel-rot {{ font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 10px; fill: {binlabel}; }}
+        .tick-label {{ font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 9px; fill: {tick_label}; }}
+        .overrep-label {{ font-size: 11px; fill: {theme["overrep"]}; font-weight: 600; }}
+        .merge-label {{ font-size: 9px; fill: {theme["merge"]}; font-weight: 600; }}
+        .strip-label {{ font-size: 9px; fill: {theme["strip_label"]}; font-style: italic; }}
+        .threshold-label {{
             font-family: ui-monospace, "SF Mono", Menlo, monospace;
-            font-size: 10px; fill: #ef4444; font-weight: 600;
-        }
+            font-size: 10px; fill: {theme["threshold"]}; font-weight: 600;
+        }}
         """
     )
     return base + "\n" + "\n".join(rules)
@@ -508,7 +576,7 @@ def render_dual_svg(dual_frames: list, stop_after_stage: int) -> str:
     total_stages = stop_after_stage
     stage_groups = "\n".join(_d_render_frame(df, total_stages) for df in dual_frames)
     style = _render_style(stop_after_stage)
-    return _DOC.format(view_w=VIEW_W, view_h=DUAL_VIEW_H, style=style, stage_groups=stage_groups)
+    return _doc(VIEW_W, DUAL_VIEW_H, style, stage_groups)
 
 
 def _d_render_frame(df, total_stages: int) -> str:
@@ -714,7 +782,7 @@ def render_table_svg(table_frames: list, stop_after_stage: int) -> str:
     total_stages = stop_after_stage
     stage_groups = "\n".join(_t_render_frame(tf, total_stages) for tf in table_frames)
     style = _render_style(stop_after_stage)
-    return _DOC.format(view_w=VIEW_W, view_h=TABLE_VIEW_H, style=style, stage_groups=stage_groups)
+    return _doc(VIEW_W, TABLE_VIEW_H, style, stage_groups)
 
 
 def _t_render_frame(frame, total_stages: int) -> str:
@@ -832,33 +900,34 @@ _H_ROWS_Y0 = _H_SEP_Y + 22  # first candidate row
 HERO_VIEW_H = int(_H_ROWS_Y0 + 5 * TABLE_ROW_H + 10)
 
 
-def render_hero_svg(hero_frames: list, stop_after_stage: int) -> str:
+def render_hero_svg(hero_frames: list, stop_after_stage: int, dark: bool = False) -> str:
     """Render a list of HeroFrames to an animated SVG (strip + table hybrid)."""
+    theme = _DARK_THEME if dark else _HERO_LIGHT_THEME
     total_stages = stop_after_stage
-    stage_groups = "\n".join(_h_render_frame(hf, total_stages) for hf in hero_frames)
-    style = _render_style(stop_after_stage)
-    return _DOC.format(view_w=VIEW_W, view_h=HERO_VIEW_H, style=style, stage_groups=stage_groups)
+    stage_groups = "\n".join(_h_render_frame(hf, total_stages, theme) for hf in hero_frames)
+    style = _render_style(stop_after_stage, theme)
+    return _doc(VIEW_W, HERO_VIEW_H, style, stage_groups, theme)
 
 
-def _h_render_frame(frame, total_stages: int) -> str:
+def _h_render_frame(frame, total_stages: int, theme: dict = _LIGHT_THEME) -> str:
     strip = frame.strip
     parts = [
         _stage_caption(frame, total_stages),
-        _metric_chip(frame),
+        _metric_chip(frame, theme),
         _callout(frame),
-        _main_display(strip),
-        _target_dots(strip),
+        _main_display(strip, theme),
+        _target_dots(strip, theme),
         _nan_strip(strip),
-        _baseline_line(),
-        _min_freq_line(strip),
-        _h_winner_cuts(frame),
-        _h_table(frame),
+        _baseline_line(theme),
+        _min_freq_line(strip, theme),
+        _h_winner_cuts(frame, theme),
+        _h_table(frame, theme),
     ]
     inner = "\n".join(p for p in parts if p)
     return f'  <g class="stage stage-{frame.stage}">\n{inner}\n  </g>'
 
 
-def _h_winner_cuts(frame) -> str:
+def _h_winner_cuts(frame, theme: dict = _LIGHT_THEME) -> str:
     """Gold dashed verticals over the bar zone at the winning grouping's
     interior cut points."""
     if not frame.winner_cuts:
@@ -870,13 +939,13 @@ def _h_winner_cuts(frame) -> str:
         x = PAD_X + cut * BIN_W
         parts.append(
             f'<line x1="{x:.2f}" y1="{y_top - 4:.2f}" x2="{x:.2f}" '
-            f'y2="{_MAIN_BASELINE:.2f}" stroke="{GOLD_STROKE}" stroke-width="2" '
+            f'y2="{_MAIN_BASELINE:.2f}" stroke="{theme["gold_stroke"]}" stroke-width="2" '
             f'stroke-dasharray="5 3"/>'
         )
     return "    " + "\n    ".join(parts)
 
 
-def _h_table(frame) -> str:
+def _h_table(frame, theme: dict = _LIGHT_THEME) -> str:
     """Candidate rows below the strip. Each row is a segmented bar whose blocks
     span the grouped bins' value-axis x-spans (so they align under the strip);
     rank + T sit in the right gutter under the NaN strip. Winner row gold."""
@@ -884,7 +953,7 @@ def _h_table(frame) -> str:
     parts: list[str] = [
         f'<line x1="{PAD_X}" y1="{_H_SEP_Y:.2f}" '
         f'x2="{PAD_X + BIN_W + 10 + NAN_W:.2f}" y2="{_H_SEP_Y:.2f}" '
-        f'stroke="#d1d5db" stroke-width="1"/>',
+        f'stroke="{theme["sep_stroke"]}" stroke-width="1"/>',
         f'<text class="strip-label" x="{PAD_X:.2f}" y="{_H_CAPTION_Y:.2f}" '
         f'text-anchor="start">Carver — consecutive groupings ranked by Tschuprow\'s T (best first)</text>',
     ]
@@ -900,8 +969,8 @@ def _h_table(frame) -> str:
         if row.is_winner:
             parts.append(
                 f'<rect x="{PAD_X - 4:.2f}" y="{ry + 1:.2f}" width="{VIEW_W - 2 * PAD_X + 8:.2f}" '
-                f'height="{TABLE_ROW_H - 2:.2f}" rx="4" fill="{GOLD_BG}" '
-                f'stroke="{GOLD_STROKE}" stroke-width="1"/>'
+                f'height="{TABLE_ROW_H - 2:.2f}" rx="4" fill="{theme["gold_bg"]}" '
+                f'stroke="{theme["gold_stroke"]}" stroke-width="1"/>'
             )
         bar_y = ry + (TABLE_ROW_H - bar_h) / 2
         for group in row.groups:
@@ -911,7 +980,7 @@ def _h_table(frame) -> str:
             parts.append(
                 f'<rect x="{gx0 + 1:.2f}" y="{bar_y:.2f}" width="{gx1 - gx0 - 2:.2f}" '
                 f'height="{bar_h:.2f}" rx="2" fill="{PALETTE[bins[leader].color_id]}" '
-                f'stroke="#374151" stroke-width="0.6"/>'
+                f'stroke="{theme["bar_stroke"]}" stroke-width="0.6"/>'
             )
         prefix = "&#9733; " if row.is_winner else ""  # ★ on the winner
         parts.append(
@@ -928,8 +997,8 @@ _DOC = """<?xml version="1.0" encoding="UTF-8"?>
   <defs>
     <pattern id="nan-hatch" patternUnits="userSpaceOnUse" width="6" height="6"
              patternTransform="rotate(45)">
-      <rect width="6" height="6" fill="#e5e7eb"/>
-      <line x1="0" y1="0" x2="0" y2="6" stroke="#5D7092" stroke-width="1.2"/>
+      <rect width="6" height="6" fill="{nan_hatch_bg}"/>
+      <line x1="0" y1="0" x2="0" y2="6" stroke="{nan_hatch_stroke}" stroke-width="1.2"/>
     </pattern>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5"
             markerWidth="6" markerHeight="6" orient="auto-start-reverse">
@@ -942,3 +1011,14 @@ _DOC = """<?xml version="1.0" encoding="UTF-8"?>
 {stage_groups}
 </svg>
 """
+
+
+def _doc(view_w: int, view_h: int, style: str, stage_groups: str, theme: dict = _LIGHT_THEME) -> str:
+    return _DOC.format(
+        view_w=view_w,
+        view_h=view_h,
+        style=style,
+        stage_groups=stage_groups,
+        nan_hatch_bg=theme["nan_hatch_bg"],
+        nan_hatch_stroke=theme["nan_hatch_stroke"],
+    )

@@ -15,11 +15,11 @@
   </defs>
   <style>
 text { font-family: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
-.title { font-size: 14px; font-weight: 600; fill: #111827; }
-.callout { font-size: 11px; fill: #4b5563; }
+.title { font-size: 14px; font-weight: 600; fill: #6b7280; }
+.callout { font-size: 11px; fill: #6b7280; }
 .chip { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; fill: #f9fafb; }
-.binlabel { font-size: 10px; fill: #374151; }
-.binlabel-rot { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 10px; fill: #374151; }
+.binlabel { font-size: 10px; fill: #6b7280; }
+.binlabel-rot { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 10px; fill: #6b7280; }
 .tick-label { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 9px; fill: #6b7280; }
 .overrep-label { font-size: 11px; fill: #c2410c; font-weight: 600; }
 .merge-label { font-size: 9px; fill: #c2410c; font-weight: 600; }

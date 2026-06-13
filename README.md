@@ -17,7 +17,10 @@
 
 
 <p align="center">
-    <img alt="AutoCarver in one loop: discretize, rank groupings, carve" src="https://raw.githubusercontent.com/mdefrance/AutoCarver/main/docs/source/_static/animations/readme_full_pipeline.svg" width="100%">
+    <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/mdefrance/AutoCarver/main/docs/source/_static/animations/readme_full_pipeline_dark.svg">
+        <img alt="AutoCarver in one loop: discretize, rank groupings, carve" src="https://raw.githubusercontent.com/mdefrance/AutoCarver/main/docs/source/_static/animations/readme_full_pipeline_light.svg" width="100%">
+    </picture>
 </p>
 
 

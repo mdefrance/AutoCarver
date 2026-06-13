@@ -100,22 +100,26 @@ def main() -> int:
         is_table = TableFrame is not None and frames and isinstance(frames[0], TableFrame)
         is_hero = HeroFrame is not None and frames and isinstance(frames[0], HeroFrame)
         if is_hero:
-            svg = render.render_hero_svg(frames, ex.STOP_AFTER_STAGE)
+            outputs = [
+                (f"{ex.NAME}_light.svg", render.render_hero_svg(frames, ex.STOP_AFTER_STAGE, dark=False)),
+                (f"{ex.NAME}_dark.svg", render.render_hero_svg(frames, ex.STOP_AFTER_STAGE, dark=True)),
+            ]
         elif is_table:
-            svg = render.render_table_svg(frames, ex.STOP_AFTER_STAGE)
+            outputs = [(f"{ex.NAME}.svg", render.render_table_svg(frames, ex.STOP_AFTER_STAGE))]
         elif is_dual:
-            svg = render.render_dual_svg(frames, ex.STOP_AFTER_STAGE)
+            outputs = [(f"{ex.NAME}.svg", render.render_dual_svg(frames, ex.STOP_AFTER_STAGE))]
         else:
-            svg = render.render_svg(frames, ex.STOP_AFTER_STAGE)
-        out = OUT_DIR / f"{ex.NAME}.svg"
-        if args.check:
-            current = out.read_text(encoding="utf-8") if out.exists() else ""
-            if current != svg:
-                print(f"DRIFT: {out.relative_to(ROOT)}")
-                drift += 1
-        else:
-            out.write_text(svg, encoding="utf-8")
-            print(f"wrote {out.relative_to(ROOT)}")
+            outputs = [(f"{ex.NAME}.svg", render.render_svg(frames, ex.STOP_AFTER_STAGE))]
+        for filename, svg in outputs:
+            out = OUT_DIR / filename
+            if args.check:
+                current = out.read_text(encoding="utf-8") if out.exists() else ""
+                if current != svg:
+                    print(f"DRIFT: {out.relative_to(ROOT)}")
+                    drift += 1
+            else:
+                out.write_text(svg, encoding="utf-8")
+                print(f"wrote {out.relative_to(ROOT)}")
     return 1 if drift else 0
 
 
