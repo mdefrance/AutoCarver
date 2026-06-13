@@ -236,16 +236,19 @@ the real output of ``OrdinalDiscretizer.fit_transform``):
     :members: fit, transform, fit_transform, to_json, summary
 
 
-.. _ChainedDiscretizer:
+.. _NestedDiscretizer:
 
-Chained Discretizer
-^^^^^^^^^^^^^^^^^^^
+Nested Discretizer
+^^^^^^^^^^^^^^^^^^
 
-:class:`ChainedDiscretizer` can be used prior to using any carving pipeline or any other discretizer to group categorical modalities more intelligently.
-By providing a set of modality groups, the user can introduce use case specific knowledge into the discretization process.
-The fitted :class:`Features` can then be as parameter for further discretization. 
+:class:`NestedDiscretizer` collapses several nested columns of increasing granularity
+(``col_a`` ⊃ ``col_b`` ⊃ ``col_c``) into a single robust output column. For each
+:class:`NestedFeature`, modalities of the finest column that are too rare are rolled up to the
+coarser modality they are nested within — derived from the data — level by level until every
+surviving modality is frequent enough. It integrates into the carving pipeline automatically:
+declare nested features via ``Features(nested={"col_c": ["col_b", "col_a"]})``.
 
-.. autoclass:: AutoCarver.discretizers.ChainedDiscretizer
+.. autoclass:: AutoCarver.discretizers.NestedDiscretizer
     :members: fit, transform, fit_transform, to_json, summary
 
 

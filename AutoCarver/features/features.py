@@ -9,8 +9,10 @@ import pandas as pd
 
 from AutoCarver.features.qualitatives import (
     CategoricalFeature,
+    NestedFeature,
     OrdinalFeature,
     get_categorical_features,
+    get_nested_features,
     get_ordinal_features,
 )
 from AutoCarver.features.quantitatives import (
@@ -103,6 +105,23 @@ def _check_ordinal_mapping(ordinals: dict[str, list[str]] | None) -> None:
         )
 
 
+def _check_nested_mapping(nested: dict[str, list[str]] | None) -> None:
+    """Ensures ``nested`` is a ``{output_column: [parent columns coarser-ward]}`` mapping."""
+    if nested is None:
+        return
+    if not isinstance(nested, dict):
+        raise TypeError(
+            f"[Features] nested must be a dict of {{output column: [parent columns]}};"
+            f" got {type(nested).__name__}. To wrap NestedFeature instances, use Features.from_list."
+        )
+    for name, parents in nested.items():
+        if not isinstance(name, str) or not isinstance(parents, list) or not all(isinstance(p, str) for p in parents):
+            raise TypeError(
+                "[Features] nested must map an output column name (str) to a list of parent"
+                f" column names (str); got {{{name!r}: {parents!r}}}."
+            )
+
+
 def _check_datetime_pairs(datetimes: list[tuple[str, str]] | None) -> None:
     """Ensures ``datetimes`` is a list of ``(name, reference_date)`` string pairs."""
     if datetimes is None:
@@ -132,6 +151,7 @@ class Features:
         quantitatives: list[str] | None = None,
         ordinals: dict[str, list[str]] | None = None,
         datetimes: list[tuple[str, str]] | None = None,
+        nested: dict[str, list[str]] | None = None,
         config: FeaturesConfig | None = None,
     ) -> None:
         """Build a :class:`Features` collection from column names.
@@ -152,20 +172,27 @@ class Features:
             Datetime features as ``(column name, reference_date)`` pairs, by default ``None``.
             Values are discretized as the number of seconds elapsed since ``reference_date``.
 
+        nested : dict[str, list[str]], optional
+            Nested features as ``{output column: [parent columns coarser-ward]}``, by default
+            ``None``. The output column is the finest level; parents are listed from nearest
+            to farthest. Rare modalities of the output column are rolled up to their
+            data-derived parent until frequent enough (see :class:`NestedDiscretizer`).
+
         config : FeaturesConfig, optional
             Collection-level config propagated to each feature, by default ``None``.
 
 
         .. warning::
-            At least one of ``categoricals``, ``quantitatives``, ``ordinals`` or ``datetimes``
-            must be provided. To build a :class:`Features` from already-instantiated feature
-            objects, use :meth:`Features.from_list` instead.
+            At least one of ``categoricals``, ``quantitatives``, ``ordinals``, ``datetimes``
+            or ``nested`` must be provided. To build a :class:`Features` from
+            already-instantiated feature objects, use :meth:`Features.from_list` instead.
         """
         # validate input types (strings only — instances belong on from_list)
         _check_names_only(categoricals, "categoricals")
         _check_names_only(quantitatives, "quantitatives")
         _check_ordinal_mapping(ordinals)
         _check_datetime_pairs(datetimes)
+        _check_nested_mapping(nested)
 
         # build feature instances from names
         all_features: list[BaseFeature] = []
@@ -173,6 +200,7 @@ class Features:
         all_features += [QuantitativeFeature(name) for name in (quantitatives or [])]
         all_features += [OrdinalFeature(name, values=values) for name, values in (ordinals or {}).items()]
         all_features += [DatetimeFeature(name, reference_date=ref) for name, ref in (datetimes or [])]
+        all_features += [NestedFeature(name, parents=parents) for name, parents in (nested or {}).items()]
 
         self._build(all_features, config)
 
@@ -209,17 +237,20 @@ class Features:
 
         self._categoricals = get_categorical_features(features)
         self._ordinals = get_ordinal_features(features)
+        # nested features must be extracted before datetimes/quantitatives so they don't
+        # leak into other typed lists (NestedFeature is a QualitativeFeature subclass)
+        self._nested = get_nested_features(features)
         self._datetimes = get_datetime_features(features)
         # quantitatives stored without datetimes; the ``quantitatives`` view recombines them
         self._quantitatives = [f for f in get_quantitative_features(features) if not f.is_datetime]
 
-        if not (self.categoricals or self.quantitatives or self.ordinals):
+        if not (self.categoricals or self.quantitatives or self.ordinals or self._nested):
             raise ValueError(
                 f"[{self}] No feature passed as input. Please provide column names"
-                " by setting categoricals, quantitatives, ordinals or datetimes."
+                " by setting categoricals, quantitatives, ordinals, datetimes or nested."
             )
 
-        check_duplicate_features(self.ordinals, self.categoricals, self.quantitatives)
+        check_duplicate_features(self.ordinals, self.categoricals, self.quantitatives, self._nested)
 
         self._dropna = False
         self._ordinal_encoding = False
@@ -308,9 +339,22 @@ class Features:
         return get_versions(self.to_list())
 
     @property
-    def qualitatives(self) -> list[OrdinalFeature | CategoricalFeature]:
-        """Returns all qualitative features"""
-        return self.categoricals + self.ordinals
+    def qualitatives(self) -> list[OrdinalFeature | CategoricalFeature | NestedFeature]:
+        """Returns all qualitative features (categoricals, ordinals and nested)"""
+        return self.categoricals + self.ordinals + self._nested
+
+    @property
+    def nested(self) -> list[NestedFeature]:
+        """Returns all nested features"""
+        return self._nested
+
+    @nested.setter
+    def nested(self, values: list[NestedFeature]) -> None:
+        """sets nested features"""
+
+        if not all(isinstance(feature, NestedFeature) for feature in values):
+            raise AttributeError(f"[{self}] Trying to set nested feature with wrongly typed feature")
+        self._nested = values
 
     @property
     def categoricals(self) -> list[CategoricalFeature]:
@@ -415,12 +459,14 @@ class Features:
         """Removes a feature by version"""
         self.categoricals = remove_version(feature_version, self.categoricals)
         self.ordinals = remove_version(feature_version, self.ordinals)
+        self.nested = remove_version(feature_version, self.nested)
         self.quantitatives = remove_version(feature_version, self.quantitatives)
 
     def keep(self, kept: list[str]) -> None:
         """list of features' versions to keep (removes the others)"""
         self.categoricals = keep_versions(kept, self.categoricals)
         self.ordinals = keep_versions(kept, self.ordinals)
+        self.nested = keep_versions(kept, self.nested)
         self.quantitatives = keep_versions(kept, self.quantitatives)
 
     def replace_feature(self, updated: BaseFeature) -> None:
@@ -433,6 +479,8 @@ class Features:
         if isinstance(updated, CategoricalFeature) and _replace_version(self._categoricals, updated):
             return
         if isinstance(updated, OrdinalFeature) and _replace_version(self._ordinals, updated):
+            return
+        if isinstance(updated, NestedFeature) and _replace_version(self._nested, updated):
             return
         if isinstance(updated, DatetimeFeature) and _replace_version(self._datetimes, updated):
             return
@@ -514,6 +562,7 @@ class Features:
         """Builds versions of all features for each y_class"""
         self.categoricals = make_versions(self.categoricals, y_classes)
         self.ordinals = make_versions(self.ordinals, y_classes)
+        self.nested = make_versions(self.nested, y_classes)
         self.quantitatives = make_versions(self.quantitatives, y_classes)
 
     def get_version_group(self, y_class: str) -> list[BaseFeature]:
@@ -575,6 +624,7 @@ class Features:
         features: list[BaseFeature] = []
         features.extend(self.categoricals)
         features.extend(self.ordinals)
+        features.extend(self._nested)
         features.extend(self.quantitatives)
         return features
 
@@ -603,7 +653,10 @@ class Features:
         # casting each feature to there corresponding type
         unpacked_features: list[BaseFeature] = []
         for _, feature in features_json.items():
-            if feature.get("is_categorical"):
+            if feature.get("is_nested"):
+                unpacked_features += [NestedFeature.load(feature)]
+
+            elif feature.get("is_categorical"):
                 unpacked_features += [CategoricalFeature.load(feature)]
 
             elif feature.get("is_ordinal"):
@@ -711,6 +764,7 @@ def check_duplicate_features(
     ordinals: list[OrdinalFeature],
     categoricals: list[CategoricalFeature],
     quantitatives: list[QuantitativeFeature],
+    nested: list[NestedFeature] | None = None,
 ) -> None:
     """Checks that features are distinct"""
 
@@ -718,14 +772,18 @@ def check_duplicate_features(
     ordinal_names = get_versions(ordinals)
     categorcial_names = get_versions(categoricals)
     quantitative_names = get_versions(quantitatives)
+    nested_names = get_versions(nested or [])
 
     # checking for duplicates
-    duplicate = [feature in ordinal_names + quantitative_names for feature in categorcial_names]
+    duplicate = [feature in ordinal_names + quantitative_names + nested_names for feature in categorcial_names]
     if any(duplicate):
         raise ValueError(f"Provided categoricals found in ordinals/quantitatives: {duplicate}. Please, check inputs!")
-    duplicate = [feature in ordinal_names + categorcial_names for feature in quantitative_names]
+    duplicate = [feature in ordinal_names + categorcial_names + nested_names for feature in quantitative_names]
     if any(duplicate):
         raise ValueError(f"Provided quantitatives found in ordinals/categoricals: {duplicate}. Please, check inputs!")
-    duplicate = [feature in quantitative_names + categorcial_names for feature in ordinal_names]
+    duplicate = [feature in quantitative_names + categorcial_names + nested_names for feature in ordinal_names]
     if any(duplicate):
         raise ValueError(f"Provided ordinals found in categoricals/quantitatives: {duplicate}. Please, check inputs!")
+    duplicate = [feature in quantitative_names + categorcial_names + ordinal_names for feature in nested_names]
+    if any(duplicate):
+        raise ValueError(f"Provided nested found in categoricals/ordinals/quantitatives: {duplicate}. Check inputs!")

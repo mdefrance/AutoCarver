@@ -21,7 +21,7 @@ from AutoCarver.combinations import (
 from AutoCarver.discretizers import BaseDiscretizer, Discretizer, Sample
 from AutoCarver.discretizers.utils.base_discretizer import DiscretizerConfig
 from AutoCarver.features import BaseFeature, Features
-from AutoCarver.features.qualitatives import CategoricalFeature, OrdinalFeature
+from AutoCarver.features.qualitatives import CategoricalFeature, NestedFeature, OrdinalFeature
 from AutoCarver.features.quantitatives import DatetimeFeature, QuantitativeFeature
 from AutoCarver.utils import extend_docstring, has_idisplay
 
@@ -574,7 +574,9 @@ class BaseCarver(BaseDiscretizer, ABC):
 
         # deserializing dropped_features (mirrors Features.load type-dispatch)
         for fjson in data.pop("dropped_features", []):
-            if fjson.get("is_categorical"):
+            if fjson.get("is_nested"):
+                instance.dropped_features.append(NestedFeature.load(fjson))
+            elif fjson.get("is_categorical"):
                 instance.dropped_features.append(CategoricalFeature.load(fjson))
             elif fjson.get("is_ordinal"):
                 instance.dropped_features.append(OrdinalFeature.load(fjson))

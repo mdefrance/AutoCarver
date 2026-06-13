@@ -15,7 +15,7 @@ from AutoCarver.combinations import (
     TschuprowtCombinations,
 )
 from AutoCarver.config import Constants
-from AutoCarver.discretizers import ChainedDiscretizer, DiscretizerConfig
+from AutoCarver.discretizers import DiscretizerConfig
 from AutoCarver.features import DatetimeFeature, Features, OrdinalFeature
 
 
@@ -853,7 +853,7 @@ def _fit_binary_carver(
     copy: bool = True,
     min_freq: float = 0.1,
 ) -> tuple[BinaryCarver, pd.DataFrame, pd.DataFrame, Features]:
-    """Build features, fit ChainedDiscretizer + BinaryCarver, transform train and dev.
+    """Build features, fit BinaryCarver, transform train and dev.
 
     Common setup factored out of the original mega-test; each focused test below
     calls it with only the parameter combinations it actually exercises.
@@ -866,14 +866,8 @@ def _fit_binary_carver(
     for feature_name in ["nan", "ones", "ones_nan"]:
         features.remove(feature_name)
 
-    chained_discretizer = ChainedDiscretizer(
-        min_freq=min_freq,
-        features=features[chained_features],
-        chained_orders=[level0_to_level1, level1_to_level2],
-        config=DiscretizerConfig(copy=copy),
-    )
-    chained_discretizer.fit(x_train)
-
+    # (chained_features / level0_to_level1 / level1_to_level2 are retained as parameters for
+    # fixture compatibility; rare-modality rollup is now handled inside the carver pipeline.)
     auto_carver = BinaryCarver(
         min_freq=min_freq,
         max_n_mod=4,
