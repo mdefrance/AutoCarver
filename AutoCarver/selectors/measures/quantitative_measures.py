@@ -63,6 +63,67 @@ class KruskalMeasure(ReversibleMeasure):
         return self.value
 
 
+class KruskalEffectSizeMeasure(KruskalMeasure):
+    """Epsilon-squared effect size derived from Kruskal-Wallis' H statistic.
+
+    Unlike the raw H statistic (which grows with the number of observations,
+    making it unsuitable for comparing features of differing sample sizes),
+    :math:`\\varepsilon^2 = H / (N - 1)` is bounded in :math:`[0, 1]`. It is to
+    Kruskal-Wallis what Cramér's V is to Chi2 — a sample-size-normalized effect
+    size meant for cross-feature ranking.
+    """
+
+    __name__ = "KruskalEffectSizeMeasure"
+
+    @extend_docstring(KruskalMeasure.compute_association)
+    def compute_association(self, x: pd.Series, y: pd.Series) -> float:
+        # computing Kruskal-Wallis' H (handles the reverse swap internally)
+        h = super().compute_association(x, y)
+
+        # mirroring the reverse swap to count the pooled observations
+        if self.reversed:
+            x, y = y, x
+        n_obs = ((~(x.isnull() | x.isna())) & y.notna()).sum()
+
+        # computing epsilon-squared
+        self.value = np.nan
+        if pd.notna(h) and n_obs > 1:
+            self.value = float(h / (n_obs - 1))
+        return self.value
+
+
+class KruskalEtaSquaredMeasure(KruskalMeasure):
+    """Eta-squared effect size derived from Kruskal-Wallis' H statistic.
+
+    :math:`\\eta^2 = (H - k + 1) / (N - k)`, where ``k`` is the number of groups
+    and ``N`` the number of pooled observations. Like
+    :class:`KruskalEffectSizeMeasure` it removes the sample-size inflation of the
+    raw H statistic, but it additionally corrects for ``k`` — useful in the
+    reversed (regression) case where ``k`` is the feature's modality count and
+    therefore varies across features. Clamped to :math:`[0, 1]`.
+    """
+
+    __name__ = "KruskalEtaSquaredMeasure"
+
+    @extend_docstring(KruskalMeasure.compute_association)
+    def compute_association(self, x: pd.Series, y: pd.Series) -> float:
+        # computing Kruskal-Wallis' H (handles the reverse swap internally)
+        h = super().compute_association(x, y)
+
+        # mirroring the reverse swap to count observations and groups
+        if self.reversed:
+            x, y = y, x
+        valid = (~(x.isnull() | x.isna())) & y.notna()
+        n_obs = int(valid.sum())
+        n_groups = y[valid].nunique()
+
+        # computing eta-squared, clamped to a non-negative effect size
+        self.value = np.nan
+        if pd.notna(h) and n_obs - n_groups > 0:
+            self.value = max(0.0, float((h - n_groups + 1) / (n_obs - n_groups)))
+        return self.value
+
+
 class RMeasure(BaseMeasure):
     """Square root of the coefficient of determination of linear regression model of
     a Quantitative feature by a Binary target."""

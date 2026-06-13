@@ -3,11 +3,14 @@
 import numpy as np
 import pandas as pd
 from pytest import FixtureRequest, fixture
+from scipy.stats import kruskal
 
 from AutoCarver.selectors import (
     BaseMeasure,
     DistanceMeasure,
     IqrOutlierMeasure,
+    KruskalEffectSizeMeasure,
+    KruskalEtaSquaredMeasure,
     KruskalMeasure,
     PearsonMeasure,
     RMeasure,
@@ -28,7 +31,7 @@ def quanti_quanti_measure(request: FixtureRequest) -> BaseMeasure:
     return request.param(threshold=threshold)
 
 
-@fixture(params=[KruskalMeasure])
+@fixture(params=[KruskalMeasure, KruskalEffectSizeMeasure, KruskalEtaSquaredMeasure])
 def quanti_quali_measure(request: FixtureRequest) -> BaseMeasure:
     return request.param(threshold=threshold)
 
@@ -209,6 +212,25 @@ def test_quanti_quanli_reverse_xy(
     quanti_quali_measure.reverse_xy()
     association_reversed = quanti_quali_measure.compute_association(quali_series_data, series_data)
     assert association == association_reversed, "not same correlation when reversed"
+
+
+def test_kruskal_effect_sizes_formula(series_data: pd.Series, quali_series_data: pd.Series) -> None:
+    """checks epsilon-squared and eta-squared match their closed forms and are bounded"""
+
+    # raw Kruskal-Wallis H and sample/group sizes (no nans here)
+    h = kruskal(*(series_data[quali_series_data == v] for v in quali_series_data.unique()))[0]
+    n_obs = len(series_data)
+    n_groups = quali_series_data.nunique()
+
+    # epsilon-squared = H / (N - 1)
+    eps2 = KruskalEffectSizeMeasure().compute_association(series_data, quali_series_data)
+    assert eps2 == h / (n_obs - 1), "epsilon-squared does not match H / (N - 1)"
+    assert 0.0 <= eps2 <= 1.0, "epsilon-squared out of [0, 1]"
+
+    # eta-squared = (H - k + 1) / (N - k)
+    eta2 = KruskalEtaSquaredMeasure().compute_association(series_data, quali_series_data)
+    assert eta2 == max(0.0, (h - n_groups + 1) / (n_obs - n_groups)), "eta-squared does not match closed form"
+    assert 0.0 <= eta2 <= 1.0, "eta-squared out of [0, 1]"
 
 
 def test_quanti_quanti_compute_association(quanti_quanti_measure: BaseMeasure, series_data: pd.Series) -> None:

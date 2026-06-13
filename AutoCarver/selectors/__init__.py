@@ -18,6 +18,8 @@ from AutoCarver.selectors.measures import (
     CramervMeasure,
     DistanceMeasure,
     IqrOutlierMeasure,
+    KruskalEffectSizeMeasure,
+    KruskalEtaSquaredMeasure,
     KruskalMeasure,
     ModeMeasure,
     NanMeasure,
@@ -57,5 +59,7 @@ __all__ = [
     "DistanceMeasure",
     "IqrOutlierMeasure",
     "KruskalMeasure",
+    "KruskalEffectSizeMeasure",
+    "KruskalEtaSquaredMeasure",
     "ZscoreOutlierMeasure",
 ]
