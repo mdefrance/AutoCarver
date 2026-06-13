@@ -13,7 +13,7 @@ import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from AutoCarver.discretizers.utils.multiprocessing import apply_async_function
-from AutoCarver.features import BaseFeature, Features
+from AutoCarver.features import BaseFeature, Features, NestedFeature
 from AutoCarver.utils import extend_docstring
 
 
@@ -392,6 +392,12 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         # filling up nans for features that have some
         sample.fillna(self.features)
 
+        # resolving finest modalities of nested features seen only at transform: roll them up to a
+        # known parent bucket (parent-aware) or to the default modality, so they don't trip
+        # check_values below (see remap_nested_unseen)
+        if len(self.features.nested) > 0:
+            sample.X = remap_nested_unseen(self.features.nested, sample.X)
+
         # checking that all unique values in X are in features
         self.features.check_values(sample.X)
 
@@ -545,6 +551,45 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
     def history(self) -> pd.DataFrame:
         """History of discretization process for all features"""
         return self.features.history
+
+
+def remap_nested_unseen(nested_features: list[NestedFeature], X: pd.DataFrame) -> pd.DataFrame:
+    """Resolves finest-column modalities of nested features that were never seen at fit.
+
+    For each :class:`NestedFeature`, finest values absent from the learned grouping are rolled up
+    to the nearest parent-column value that *is* a known bucket leader (parent-aware), falling back
+    to the feature's default modality (``__OTHER__``) when no ancestor resolves or the parent
+    columns are absent. Operates in place on ``X`` and returns it.
+    """
+    for feature in nested_features:
+        column = feature.version
+        if column not in X:
+            continue
+
+        known_values = set(feature.label_per_value)
+        bucket_leaders = set(feature.values)
+
+        series = X[column]
+        unseen = ~series.isin(known_values) & series.notna() & (series != feature.nan)
+        if not bool(unseen.to_numpy().any()):
+            continue
+
+        # default fallback for everything unresolved
+        resolved = pd.Series(feature.default, index=series.index[unseen], dtype=object)
+        unresolved = pd.Series(True, index=resolved.index)
+
+        # walk parent columns nearest→farthest, mapping to the first ancestor that is a bucket
+        for parent in feature.parents:
+            if parent not in X or not bool(unresolved.to_numpy().any()):
+                continue
+            parent_values = X.loc[resolved.index, parent]
+            hit = unresolved & parent_values.isin(bucket_leaders)
+            resolved[hit] = parent_values[hit]
+            unresolved &= ~hit
+
+        X.loc[resolved.index, column] = resolved
+
+    return X
 
 
 def cast_datetime_features(features: Features, X: pd.DataFrame) -> pd.DataFrame:

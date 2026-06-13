@@ -8,11 +8,11 @@ from typing import Self
 import pandas as pd
 
 from AutoCarver.discretizers.qualitatives.categorical_discretizer import CategoricalDiscretizer
-from AutoCarver.discretizers.qualitatives.chained_discretizer import check_frequencies
+from AutoCarver.discretizers.qualitatives.nested_discretizer import NestedDiscretizer, check_frequencies
 from AutoCarver.discretizers.qualitatives.ordinal_discretizer import OrdinalDiscretizer
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, DiscretizerConfig, Sample
 from AutoCarver.discretizers.utils.type_discretizers import ensure_qualitative_dtypes
-from AutoCarver.features import QualitativeFeature
+from AutoCarver.features import Features, QualitativeFeature
 from AutoCarver.utils import extend_docstring
 
 
@@ -51,8 +51,11 @@ class QualitativeDiscretizer(BaseDiscretizer):
         """Validates format and content of X and y. Converts non-string columns into strings."""
         sample.X = super()._prepare_X(sample.X)
 
-        # checking feature values' frequencies
-        check_frequencies(self.features, sample.X, self.min_freq, self.__name__)
+        # checking feature values' frequencies (nested features are excluded: their finest
+        # modalities are legitimately rare and get rolled up by the NestedDiscretizer)
+        non_nested = [feature for feature in self.features if not feature.is_nested]
+        if len(non_nested) > 0:
+            check_frequencies(Features.from_list(non_nested), sample.X, self.min_freq, self.__name__)
 
         # converting non-str columns
         sample.X = ensure_qualitative_dtypes(self.features, sample.X, config=self.config)
@@ -69,6 +72,9 @@ class QualitativeDiscretizer(BaseDiscretizer):
 
         # Base discretization (useful if already discretized)
         sample.X = self._base_transform(**sample)
+
+        # rolling up nested features first (collapses nested columns to one robust column)
+        self._fit_nested(**sample)
 
         # fitting ordinal features if any
         self._fit_ordinals(**sample)
@@ -98,6 +104,17 @@ class QualitativeDiscretizer(BaseDiscretizer):
             X = base_discretizer.fit_transform(X, y)
 
         return X
+
+    def _fit_nested(self, X: pd.DataFrame, y: pd.Series) -> None:
+        """Fit the NestedDiscretizer on the nested features."""
+
+        if len(self.features.nested) > 0:
+            nested_discretizer = NestedDiscretizer(
+                nesteds=self.features.nested,
+                min_freq=self.min_freq,
+                config=replace(self.config, copy=False),
+            )
+            nested_discretizer.fit(X, y)
 
     def _fit_ordinals(self, X: pd.DataFrame, y: pd.Series) -> None:
         """Fit the OrdinalDiscretizer on the ordinal features."""

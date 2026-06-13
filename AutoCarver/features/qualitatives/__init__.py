@@ -4,6 +4,7 @@ from AutoCarver.features.qualitatives.categorical_feature import (
     CategoricalFeature,
     get_categorical_features,
 )
+from AutoCarver.features.qualitatives.nested_feature import NestedFeature, get_nested_features
 from AutoCarver.features.qualitatives.ordinal_feature import OrdinalFeature, get_ordinal_features
 from AutoCarver.features.qualitatives.qualitative_feature import (
     QualitativeFeature,
@@ -14,9 +15,11 @@ from AutoCarver.features.qualitatives.qualitative_feature import (
 __all__ = [
     "OrdinalFeature",
     "CategoricalFeature",
+    "NestedFeature",
     "QualitativeFeature",
     "get_ordinal_features",
     "get_categorical_features",
+    "get_nested_features",
     "get_qualitative_features",
     "nan_unique",
 ]

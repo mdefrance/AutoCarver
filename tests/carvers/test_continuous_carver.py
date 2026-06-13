@@ -16,7 +16,7 @@ from AutoCarver.combinations import (
     TschuprowtCombinations,
 )
 from AutoCarver.config import Constants
-from AutoCarver.discretizers import ChainedDiscretizer, DiscretizerConfig
+from AutoCarver.discretizers import DiscretizerConfig
 from AutoCarver.features import Features, OrdinalFeature
 
 
@@ -749,7 +749,7 @@ def _fit_continuous_carver(
     dropna: bool = True,
     copy: bool = True,
 ) -> tuple[ContinuousCarver, pd.DataFrame, pd.DataFrame, Features]:
-    """Build features, fit ChainedDiscretizer + ContinuousCarver, transform train and dev.
+    """Build features, fit ContinuousCarver, transform train and dev.
 
     Common setup factored out of the original mega-test; each focused test below
     calls it with only the parameter combinations it actually exercises.
@@ -762,15 +762,8 @@ def _fit_continuous_carver(
     for feature_name in ["nan", "ones", "ones_nan"]:
         features.remove(feature_name)
 
-    # chained discretizer uses min_freq=0.15, carver uses 0.1 — matches original behavior
-    chained_discretizer = ChainedDiscretizer(
-        min_freq=0.15,
-        features=features[chained_features],
-        chained_orders=[level0_to_level1, level1_to_level2],
-        config=DiscretizerConfig(copy=copy),
-    )
-    chained_discretizer.fit(x_train)
-
+    # (chained_features / level0_to_level1 / level1_to_level2 are retained as parameters for
+    # fixture compatibility; rare-modality rollup is now handled inside the carver pipeline.)
     auto_carver = ContinuousCarver(
         min_freq=0.1,
         max_n_mod=4,

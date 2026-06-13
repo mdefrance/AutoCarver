@@ -3,7 +3,7 @@
 from AutoCarver.discretizers.discretizer import Discretizer
 from AutoCarver.discretizers.qualitatives import (
     CategoricalDiscretizer,
-    ChainedDiscretizer,
+    NestedDiscretizer,
     OrdinalDiscretizer,
     QualitativeDiscretizer,
 )
@@ -24,7 +24,7 @@ __all__ = [
     "QualitativeDiscretizer",
     "QuantitativeDiscretizer",
     "CategoricalDiscretizer",
-    "ChainedDiscretizer",
+    "NestedDiscretizer",
     "OrdinalDiscretizer",
     "ContinuousDiscretizer",
     "StringDiscretizer",
