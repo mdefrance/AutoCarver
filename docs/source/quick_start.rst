@@ -149,7 +149,15 @@ Feature Selection
     classification_selector = ClassificationSelector(
         features=features,  # features to select from
         n_best_per_type=25,  # number of features to select per data type
-        verbose=True,  # displays statistics
     )
     best_features = classification_selector.select(train_set_discretized, train_set_discretized[target])
+
+.. note::
+
+    Selectors mirror the carver API: ``fit`` scores/ranks/filters and stores the
+    selection, ``transform`` restricts ``X`` to the selected columns, and the
+    convenience ``select`` returns the selected :class:`Features` directly.
+    Behavioral toggles (``verbose`` …) are grouped in :class:`DiscretizerConfig`,
+    exactly as for the carvers. Every feature is scored exactly (no sampling),
+    yet selection stays fast through vectorized, all-columns-at-once measures.
 

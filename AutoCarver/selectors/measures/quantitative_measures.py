@@ -8,6 +8,7 @@ from scipy.spatial.distance import correlation
 from scipy.stats import kruskal, pearsonr, spearmanr
 from statsmodels.formula.api import ols
 
+from AutoCarver.selectors.measures._vectorized import kruskal_h, kruskal_h_reversed
 from AutoCarver.selectors.measures.base_measures import AbsoluteMeasure, BaseMeasure, OutlierMeasure
 from AutoCarver.utils import extend_docstring
 
@@ -44,11 +45,13 @@ class KruskalMeasure(ReversibleMeasure):
         if self.reversed:
             x, y = y, x
 
-        # ckecking for nans
-        nans = x.isnull() | x.isna()
+        # excluding rows missing in either x or the grouping y (in the reversed
+        # case y is the qualitative feature and may carry NaN; dropping it here
+        # avoids an empty NaN group that would void the whole statistic)
+        nans = x.isnull() | x.isna() | y.isnull() | y.isna()
 
-        # getting y values
-        y_values = y.unique()
+        # getting y values (NaN already excluded via the mask above)
+        y_values = y[~nans].unique()
 
         # computing Kruskal-Wallis statistic
         self.value = np.nan
@@ -62,8 +65,30 @@ class KruskalMeasure(ReversibleMeasure):
                 pass
         return self.value
 
+    def compute_all(self, X, y, features) -> dict[str, dict]:
+        """Vectorized Kruskal-Wallis over all ``features`` at once.
 
-class KruskalEffectSizeMeasure(KruskalMeasure):
+        Picks the reversed kernel (each qualitative column defines the groups,
+        continuous ``y`` is ranked) when :attr:`reversed` is set, else the
+        shared-grouping kernel (quantitative columns ranked, ``y`` groups).
+        Subclasses map the raw ``H`` to their effect size via :meth:`_effect`.
+        """
+        block = X[[feature.version for feature in features]]
+        if self.reversed:
+            h, n_obs, n_groups = kruskal_h_reversed(block, y)
+        else:
+            h, n_obs, n_groups = kruskal_h(block, y)
+        return {
+            feature.version: self._result(self._effect(h[i], n_obs[i], n_groups[i]))
+            for i, feature in enumerate(features)
+        }
+
+    def _effect(self, h: float, n_obs: float, n_groups: float) -> float:
+        """Maps raw ``H`` to the reported statistic. Base measure reports ``H``."""
+        return float(h)
+
+
+class KruskalEpsilonSquaredMeasure(KruskalMeasure):
     """Epsilon-squared effect size derived from Kruskal-Wallis' H statistic.
 
     Unlike the raw H statistic (which grows with the number of observations,
@@ -73,7 +98,7 @@ class KruskalEffectSizeMeasure(KruskalMeasure):
     size meant for cross-feature ranking.
     """
 
-    __name__ = "KruskalEffectSizeMeasure"
+    __name__ = "KruskalEpsilonSquaredMeasure"
 
     @extend_docstring(KruskalMeasure.compute_association)
     def compute_association(self, x: pd.Series, y: pd.Series) -> float:
@@ -91,13 +116,18 @@ class KruskalEffectSizeMeasure(KruskalMeasure):
             self.value = float(h / (n_obs - 1))
         return self.value
 
+    def _effect(self, h: float, n_obs: float, n_groups: float) -> float:
+        if np.isnan(h) or n_obs <= 1:
+            return np.nan
+        return float(h / (n_obs - 1))
+
 
 class KruskalEtaSquaredMeasure(KruskalMeasure):
     """Eta-squared effect size derived from Kruskal-Wallis' H statistic.
 
     :math:`\\eta^2 = (H - k + 1) / (N - k)`, where ``k`` is the number of groups
     and ``N`` the number of pooled observations. Like
-    :class:`KruskalEffectSizeMeasure` it removes the sample-size inflation of the
+    :class:`KruskalEpsilonSquaredMeasure` it removes the sample-size inflation of the
     raw H statistic, but it additionally corrects for ``k`` — useful in the
     reversed (regression) case where ``k`` is the feature's modality count and
     therefore varies across features. Clamped to :math:`[0, 1]`.
@@ -122,6 +152,11 @@ class KruskalEtaSquaredMeasure(KruskalMeasure):
         if pd.notna(h) and n_obs - n_groups > 0:
             self.value = max(0.0, float((h - n_groups + 1) / (n_obs - n_groups)))
         return self.value
+
+    def _effect(self, h: float, n_obs: float, n_groups: float) -> float:
+        if np.isnan(h) or (n_obs - n_groups) <= 0:
+            return np.nan
+        return max(0.0, float((h - n_groups + 1) / (n_obs - n_groups)))
 
 
 class RMeasure(BaseMeasure):
@@ -169,13 +204,26 @@ def has_values(x: pd.Series, y: pd.Series, nans: pd.Series) -> bool:
     return True
 
 
-class PearsonMeasure(AbsoluteMeasure):
+class CorrelationMeasure(AbsoluteMeasure):
+    """Base for measures that batch via ``DataFrame.corrwith`` (Spearman/Pearson)."""
+
+    _corr_method = "pearson"
+
+    def compute_all(self, X, y, features) -> dict[str, dict]:
+        """Vectorized correlation of every feature with ``y`` in one ``corrwith`` call."""
+        block = X[[feature.version for feature in features]]
+        corr = block.corrwith(y, method=self._corr_method)
+        return {feature.version: self._result(corr[feature.version]) for feature in features}
+
+
+class PearsonMeasure(CorrelationMeasure):
     """Pearson's linear correlation coefficient between a Quantitative feature and target."""
 
     __name__ = "PearsonMeasure"
 
     is_x_quantitative = True
     is_y_quantitative = True
+    _corr_method = "pearson"
 
     @extend_docstring(BaseMeasure.compute_association)
     def compute_association(self, x: pd.Series, y: pd.Series) -> float:
@@ -191,12 +239,13 @@ class PearsonMeasure(AbsoluteMeasure):
         return self.value
 
 
-class SpearmanMeasure(AbsoluteMeasure):
+class SpearmanMeasure(CorrelationMeasure):
     """Spearman's rank correlation coefficient between a Quantitative feature and target."""
 
     __name__ = "SpearmanMeasure"
     is_x_quantitative = True
     is_y_quantitative = True
+    _corr_method = "spearman"
 
     @extend_docstring(BaseMeasure.compute_association)
     def compute_association(self, x: pd.Series, y: pd.Series) -> float:

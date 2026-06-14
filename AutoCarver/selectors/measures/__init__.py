@@ -15,7 +15,7 @@ from AutoCarver.selectors.measures.qualitative_measures import (
 from AutoCarver.selectors.measures.quantitative_measures import (
     DistanceMeasure,
     IqrOutlierMeasure,
-    KruskalEffectSizeMeasure,
+    KruskalEpsilonSquaredMeasure,
     KruskalEtaSquaredMeasure,
     KruskalMeasure,
     PearsonMeasure,
@@ -40,7 +40,7 @@ __all__ = [
     "DistanceMeasure",
     "IqrOutlierMeasure",
     "KruskalMeasure",
-    "KruskalEffectSizeMeasure",
+    "KruskalEpsilonSquaredMeasure",
     "KruskalEtaSquaredMeasure",
     "ZscoreOutlierMeasure",
     "ReversibleMeasure",

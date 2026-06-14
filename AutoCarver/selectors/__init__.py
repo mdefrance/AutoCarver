@@ -1,6 +1,5 @@
 """Loads feature selection tools."""
 
-# from AutoCarver.selectors.base_selector import BaseSelector
 from AutoCarver.selectors.classification_selector import ClassificationSelector
 from AutoCarver.selectors.filters import (
     BaseFilter,
@@ -18,7 +17,7 @@ from AutoCarver.selectors.measures import (
     CramervMeasure,
     DistanceMeasure,
     IqrOutlierMeasure,
-    KruskalEffectSizeMeasure,
+    KruskalEpsilonSquaredMeasure,
     KruskalEtaSquaredMeasure,
     KruskalMeasure,
     ModeMeasure,
@@ -31,9 +30,11 @@ from AutoCarver.selectors.measures import (
     ZscoreOutlierMeasure,
 )
 from AutoCarver.selectors.regression_selector import RegressionSelector
+from AutoCarver.selectors.utils.base_selector import BaseSelector
 
 __all__ = [
     # selectors
+    "BaseSelector",
     "RegressionSelector",
     "ClassificationSelector",
     # filters
@@ -59,7 +60,7 @@ __all__ = [
     "DistanceMeasure",
     "IqrOutlierMeasure",
     "KruskalMeasure",
-    "KruskalEffectSizeMeasure",
+    "KruskalEpsilonSquaredMeasure",
     "KruskalEtaSquaredMeasure",
     "ZscoreOutlierMeasure",
 ]

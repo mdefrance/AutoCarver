@@ -9,7 +9,7 @@ from AutoCarver.selectors import (
     BaseMeasure,
     DistanceMeasure,
     IqrOutlierMeasure,
-    KruskalEffectSizeMeasure,
+    KruskalEpsilonSquaredMeasure,
     KruskalEtaSquaredMeasure,
     KruskalMeasure,
     PearsonMeasure,
@@ -31,7 +31,7 @@ def quanti_quanti_measure(request: FixtureRequest) -> BaseMeasure:
     return request.param(threshold=threshold)
 
 
-@fixture(params=[KruskalMeasure, KruskalEffectSizeMeasure, KruskalEtaSquaredMeasure])
+@fixture(params=[KruskalMeasure, KruskalEpsilonSquaredMeasure, KruskalEtaSquaredMeasure])
 def quanti_quali_measure(request: FixtureRequest) -> BaseMeasure:
     return request.param(threshold=threshold)
 
@@ -223,7 +223,7 @@ def test_kruskal_effect_sizes_formula(series_data: pd.Series, quali_series_data:
     n_groups = quali_series_data.nunique()
 
     # epsilon-squared = H / (N - 1)
-    eps2 = KruskalEffectSizeMeasure().compute_association(series_data, quali_series_data)
+    eps2 = KruskalEpsilonSquaredMeasure().compute_association(series_data, quali_series_data)
     assert eps2 == h / (n_obs - 1), "epsilon-squared does not match H / (N - 1)"
     assert 0.0 <= eps2 <= 1.0, "epsilon-squared out of [0, 1]"
 

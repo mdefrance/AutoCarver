@@ -14,3 +14,15 @@ Example of the Titanic survival classification.
     :maxdepth: 1
 
     examples/Selectors/Classification/setting_selector_metrics
+
+
+Continuous Regression Example
+-----------------------------
+
+Example of the California housing median-value regression.
+
+.. toctree::
+    :glob:
+    :maxdepth: 1
+
+    examples/Selectors/Regression/regression_selector_example
