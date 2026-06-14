@@ -14,7 +14,7 @@ from AutoCarver.combinations import (
     TschuprowtCombinations,
 )
 from AutoCarver.config import Constants
-from AutoCarver.discretizers import DiscretizerConfig
+from AutoCarver.discretizers import ProcessingConfig
 from AutoCarver.features import Features
 
 
@@ -74,7 +74,7 @@ def test_multiclass_carver_initialization():
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
-        quantitatives=["feature3"],
+        numericals=["feature3"],
     )
     carver = MulticlassCarver(min_freq=0.1, max_n_mod=5, features=features)
     assert carver.min_freq == 0.1
@@ -116,7 +116,7 @@ def test_multiclass_carver_prepare_samples(evaluator: CombinationEvaluator):
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
-        quantitatives=["feature3"],
+        numericals=["feature3"],
     )
     carver = MulticlassCarver(min_freq=0.1, max_n_mod=5, features=features, combination_evaluator=evaluator)
     X = pd.DataFrame({"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]})
@@ -151,14 +151,14 @@ def test_multiclass_carver_fit_transform_with_small_data_not_ordinal(
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
-        quantitatives=["feature3"],
+        numericals=["feature3"],
     )
     carver = MulticlassCarver(
         min_freq=0.1,
         max_n_mod=5,
         features=features,
         combination_evaluator=evaluator,
-        config=DiscretizerConfig(dropna=True, ordinal_encoding=False, copy=False),
+        config=ProcessingConfig(dropna=True, ordinal_encoding=False, copy=False),
     )
     idx = ["a", "b", "c", "d"]
     X = pd.DataFrame(
@@ -185,16 +185,16 @@ def test_multiclass_carver_fit_transform_with_small_data_not_ordinal(
             "feature2__y=1": ["low", "medium", "high", "high"],
             "feature2__y=2": ["low", "medium to high", "medium to high", "medium to high"],
             "feature3__y=1": [
-                "x <= 1.00e+00",
-                "1.00e+00 < x <= 2.00e+00",
-                "2.00e+00 < x",
-                "__NAN__",
+                "(-inf, 1.00e+00]",
+                "(1.00e+00, 2.00e+00]",
+                "(2.00e+00, inf)",
+                "(1.00e+00, 2.00e+00]",
             ],
             "feature3__y=2": [
-                "x <= 2.00e+00",
-                "x <= 2.00e+00",
-                "2.00e+00 < x <= 3.00e+00",
-                "x <= 2.00e+00",
+                "(-inf, 2.00e+00]",
+                "(-inf, 2.00e+00]",
+                "(2.00e+00, 3.00e+00]",
+                "(-inf, 2.00e+00]",
             ],
         },
         index=idx,
@@ -221,14 +221,14 @@ def test_multiclass_carver_fit_transform_with_small_data_ordinal(evaluator: Comb
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
-        quantitatives=["feature3"],
+        numericals=["feature3"],
     )
     carver = MulticlassCarver(
         min_freq=0.1,
         max_n_mod=5,
         features=features,
         combination_evaluator=evaluator,
-        config=DiscretizerConfig(dropna=True, ordinal_encoding=True, copy=False),
+        config=ProcessingConfig(dropna=True, ordinal_encoding=True, copy=False),
     )
     idx = ["a", "b", "c", "d"]
     X = pd.DataFrame(
@@ -243,8 +243,8 @@ def test_multiclass_carver_fit_transform_with_small_data_ordinal(evaluator: Comb
     X_transformed = carver.fit_transform(X, y)
 
     print(X_transformed)
-    # Under Wilson-CI gating fewer modalities collapse → feature3__y=1 keeps
-    # 4 bins (0,1,2,3) and feature3__y=2 keeps 3 bins (0,1,0).
+    # feature3__y=1 keeps 3 numeric bins (codes 0,1,2); NaN folds into its
+    # ordinal-neighbour ``2.0`` bin (code 1). feature3__y=2 keeps 3 bins (0,1,0).
     expected = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
@@ -254,7 +254,7 @@ def test_multiclass_carver_fit_transform_with_small_data_ordinal(evaluator: Comb
             "feature1__y=2": [1, 0, 1, 1],
             "feature2__y=1": [0, 1, 2, 2],
             "feature2__y=2": [0, 1, 1, 1],
-            "feature3__y=1": [0, 1, 2, 3],
+            "feature3__y=1": [0, 1, 2, 1],
             "feature3__y=2": [0, 0, 1, 0],
         },
         index=idx,
@@ -281,14 +281,14 @@ def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationE
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
-        quantitatives=["feature3"],
+        numericals=["feature3"],
     )
     carver = MulticlassCarver(
         min_freq=0.1,
         max_n_mod=5,
         features=features,
         combination_evaluator=evaluator,
-        config=DiscretizerConfig(dropna=True, ordinal_encoding=False, copy=False),
+        config=ProcessingConfig(dropna=True, ordinal_encoding=False, copy=False),
     )
     idx = [
         "a",
@@ -442,16 +442,16 @@ def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationE
             ],
             "feature2__y=2": [
                 "low",
-                "medium",
-                "high",
-                "high",
+                "medium to high",
+                "medium to high",
+                "medium to high",
                 "low",
                 "low",
                 "low",
                 "low",
                 "low",
                 "low",
-                "high",
+                "medium to high",
                 "low",
                 "low",
                 "low",
@@ -461,16 +461,16 @@ def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationE
             ],
             "feature2__y=3": [
                 "low",
-                "medium",
-                "high",
-                "high",
+                "medium to high",
+                "medium to high",
+                "medium to high",
                 "low",
                 "low",
                 "low",
                 "low",
                 "low",
                 "low",
-                "high",
+                "medium to high",
                 "low",
                 "low",
                 "low",
@@ -479,65 +479,70 @@ def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationE
                 "low",
             ],
             "feature3__y=1": [
-                "x <= 1.00e+00",
-                "1.00e+00 < x <= 2.00e+00",
-                "2.00e+00 < x",
+                "(-inf, 1.00e+00]",
+                "(1.00e+00, 2.00e+00]",
+                "(2.00e+00, inf)",
                 "__NAN__",
-                "2.00e+00 < x",
-                "x <= 1.00e+00",
-                "1.00e+00 < x <= 2.00e+00",
-                "2.00e+00 < x",
-                "x <= 1.00e+00",
-                "1.00e+00 < x <= 2.00e+00",
+                "(2.00e+00, inf)",
+                "(-inf, 1.00e+00]",
+                "(1.00e+00, 2.00e+00]",
+                "(2.00e+00, inf)",
+                "(-inf, 1.00e+00]",
+                "(1.00e+00, 2.00e+00]",
                 "__NAN__",
-                "2.00e+00 < x",
-                "x <= 1.00e+00",
-                "1.00e+00 < x <= 2.00e+00",
-                "2.00e+00 < x",
-                "x <= 1.00e+00",
-                "1.00e+00 < x <= 2.00e+00",
+                "(2.00e+00, inf)",
+                "(-inf, 1.00e+00]",
+                "(1.00e+00, 2.00e+00]",
+                "(2.00e+00, inf)",
+                "(-inf, 1.00e+00]",
+                "(1.00e+00, 2.00e+00]",
             ],
             "feature3__y=2": [
-                "x <= 1.00e+00",
-                "1.00e+00 < x <= 3.00e+00",
-                "1.00e+00 < x <= 3.00e+00",
-                "3.00e+00 < x",
-                "1.00e+00 < x <= 3.00e+00",
-                "x <= 1.00e+00",
-                "1.00e+00 < x <= 3.00e+00",
-                "1.00e+00 < x <= 3.00e+00",
-                "x <= 1.00e+00",
-                "1.00e+00 < x <= 3.00e+00",
-                "3.00e+00 < x",
-                "1.00e+00 < x <= 3.00e+00",
-                "x <= 1.00e+00",
-                "1.00e+00 < x <= 3.00e+00",
-                "1.00e+00 < x <= 3.00e+00",
-                "x <= 1.00e+00",
-                "1.00e+00 < x <= 3.00e+00",
+                "(-inf, 3.0e+00]",
+                "(-inf, 3.0e+00]",
+                "(-inf, 3.0e+00]",
+                "__NAN__",
+                "(-inf, 3.0e+00]",
+                "(-inf, 3.0e+00]",
+                "(-inf, 3.0e+00]",
+                "(-inf, 3.0e+00]",
+                "(-inf, 3.0e+00]",
+                "(-inf, 3.0e+00]",
+                "__NAN__",
+                "(-inf, 3.0e+00]",
+                "(-inf, 3.0e+00]",
+                "(-inf, 3.0e+00]",
+                "(-inf, 3.0e+00]",
+                "(-inf, 3.0e+00]",
+                "(-inf, 3.0e+00]",
             ],
             "feature3__y=3": [
-                "x <= 1.00e+00",
-                "1.00e+00 < x <= 2.00e+00",
-                "2.00e+00 < x",
-                "2.00e+00 < x",
-                "2.00e+00 < x",
-                "x <= 1.00e+00",
-                "1.00e+00 < x <= 2.00e+00",
-                "2.00e+00 < x",
-                "x <= 1.00e+00",
-                "1.00e+00 < x <= 2.00e+00",
-                "2.00e+00 < x",
-                "2.00e+00 < x",
-                "x <= 1.00e+00",
-                "1.00e+00 < x <= 2.00e+00",
-                "2.00e+00 < x",
-                "x <= 1.00e+00",
-                "1.00e+00 < x <= 2.00e+00",
+                "(-inf, 1.00e+00]",
+                "(1.00e+00, 2.00e+00]",
+                "(2.00e+00, inf)",
+                "(2.00e+00, inf)",
+                "(2.00e+00, inf)",
+                "(-inf, 1.00e+00]",
+                "(1.00e+00, 2.00e+00]",
+                "(2.00e+00, inf)",
+                "(-inf, 1.00e+00]",
+                "(1.00e+00, 2.00e+00]",
+                "(2.00e+00, inf)",
+                "(2.00e+00, inf)",
+                "(-inf, 1.00e+00]",
+                "(1.00e+00, 2.00e+00]",
+                "(2.00e+00, inf)",
+                "(-inf, 1.00e+00]",
+                "(1.00e+00, 2.00e+00]",
             ],
         },
         index=idx,
     )
+    # Cramérv and Tschuprowt legitimately diverge here on the borderline NaN
+    # placement for the y=1 split: Cramérv keeps NaN as its own modality while
+    # Tschuprowt folds it into its ordinal-neighbour ``(1, 2]`` bin.
+    if isinstance(evaluator, TschuprowtCombinations):
+        expected.loc[["d", "k"], "feature3__y=1"] = "(1.00e+00, 2.00e+00]"
     print(X_transformed.to_dict(orient="list"))
     print(X_transformed.columns)
     assert isinstance(X_transformed, pd.DataFrame)
@@ -552,14 +557,14 @@ def test_multiclass_carver_fit_transform_with_target_only_nan(evaluator: Combina
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
-        quantitatives=["feature3"],
+        numericals=["feature3"],
     )
     carver = MulticlassCarver(
         min_freq=0.1,
         max_n_mod=5,
         features=features,
         combination_evaluator=evaluator,
-        config=DiscretizerConfig(dropna=True, ordinal_encoding=False, copy=False),
+        config=ProcessingConfig(dropna=True, ordinal_encoding=False, copy=False),
     )
     idx = ["a", "b", "c", "d"]
     X = pd.DataFrame(
@@ -574,8 +579,9 @@ def test_multiclass_carver_fit_transform_with_target_only_nan(evaluator: Combina
     X_transformed = carver.fit_transform(X, y)
 
     print(X_transformed.to_dict(orient="list"))
-    # Under Wilson-CI gating, feature3 keeps a third bucket for y=1 split
-    # ("3.00e+00 < x") and the y=2 split uses the same 3-bucket carving.
+    # For the y=1 split only NaN-ness predicts the class, so feature3 collapses
+    # to a single ``(-inf, 3]`` bin with NaN kept as its own modality; the y=2
+    # split keeps the 3-bucket carving. Grouping is label-independent (ordinal).
     expected = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
@@ -584,18 +590,18 @@ def test_multiclass_carver_fit_transform_with_target_only_nan(evaluator: Combina
             "feature1__y=1": ["A, B", "A, B", "A, B", "C"],
             "feature1__y=2": ["A, C", "B", "A, C", "A, C"],
             "feature2__y=1": ["low", "medium to high", "medium to high", "medium to high"],
-            "feature2__y=2": ["low", "medium", "high", "high"],
+            "feature2__y=2": ["low", "medium to high", "medium to high", "medium to high"],
             "feature3__y=1": [
-                "x <= 1.00e+00",
-                "1.00e+00 < x <= 3.00e+00",
-                "1.00e+00 < x <= 3.00e+00",
-                "3.00e+00 < x",
+                "(-inf, 3.0e+00]",
+                "(-inf, 3.0e+00]",
+                "(-inf, 3.0e+00]",
+                "__NAN__",
             ],
             "feature3__y=2": [
-                "x <= 1.00e+00",
-                "1.00e+00 < x <= 3.00e+00",
-                "1.00e+00 < x <= 3.00e+00",
-                "1.00e+00 < x <= 3.00e+00",
+                "(-inf, 1.00e+00]",
+                "(1.00e+00, 3.00e+00]",
+                "(1.00e+00, 3.00e+00]",
+                "(1.00e+00, 3.00e+00]",
             ],
         },
         index=idx,
@@ -620,14 +626,14 @@ def test_multiclass_carver_fit_transform_with_wrong_dev(evaluator: CombinationEv
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
-        quantitatives=["feature3"],
+        numericals=["feature3"],
     )
     carver = MulticlassCarver(
         min_freq=0.1,
         max_n_mod=5,
         features=features,
         combination_evaluator=evaluator,
-        config=DiscretizerConfig(dropna=True, ordinal_encoding=False, copy=False),
+        config=ProcessingConfig(dropna=True, ordinal_encoding=False, copy=False),
     )
     idx = ["a", "b", "c", "d"]
     X = pd.DataFrame(
@@ -660,16 +666,16 @@ def test_multiclass_carver_fit_transform_with_wrong_dev(evaluator: CombinationEv
             "feature3": [1.0, 2.0, 3.0, float("nan")],
             "feature2__y=1": ["low", "medium to high", "medium to high", "medium to high"],
             "feature3__y=1": [
-                "x <= 1.00e+00",
-                "1.00e+00 < x <= 3.00e+00",
-                "1.00e+00 < x <= 3.00e+00",
-                "x <= 1.00e+00",
+                "(-inf, 1.00e+00]",
+                "(1.00e+00, 3.00e+00]",
+                "(1.00e+00, 3.00e+00]",
+                "(-inf, 1.00e+00]",
             ],
             "feature3__y=2": [
-                "x <= 1.00e+00",
-                "1.00e+00 < x <= 3.00e+00",
-                "1.00e+00 < x <= 3.00e+00",
-                "x <= 1.00e+00",
+                "(-inf, 3.0e+00]",
+                "(-inf, 3.0e+00]",
+                "(-inf, 3.0e+00]",
+                "(-inf, 3.0e+00]",
             ],
         },
         index=idx,
@@ -688,7 +694,7 @@ def test_multiclass_carver_save_load(tmp_path: Path, evaluator: CombinationEvalu
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
-        quantitatives=["feature3"],
+        numericals=["feature3"],
     )
     carver = MulticlassCarver(min_freq=0.1, max_n_mod=5, features=features, combination_evaluator=evaluator)
     carver_file = tmp_path / "multilclass_carver.json"
@@ -730,7 +736,7 @@ def _fit_multiclass_carver(
     features = Features(
         categoricals=qualitative_features,
         ordinals=values_orders,
-        quantitatives=quantitative_features,
+        numericals=quantitative_features,
     )
     for feature_name in ["nan", "ones", "ones_nan"]:
         features.remove(feature_name)
@@ -742,7 +748,7 @@ def _fit_multiclass_carver(
         max_n_mod=4,
         features=features,
         combination_evaluator=evaluator,
-        config=DiscretizerConfig(dropna=dropna, ordinal_encoding=ordinal_encoding, copy=copy, verbose=False),
+        config=ProcessingConfig(dropna=dropna, ordinal_encoding=ordinal_encoding, copy=copy, verbose=False),
     )
     x_discretized = auto_carver.fit_transform(
         x_train,
@@ -988,7 +994,7 @@ def test_multiclass_carver_unknown_ordinal_values_raises(
         max_n_mod=5,
         features=features,
         combination_evaluator=CramervCombinations(),
-        config=DiscretizerConfig(verbose=False),
+        config=ProcessingConfig(verbose=False),
     )
     with raises(ValueError):
         auto_carver.fit_transform(x_train_wrong_2, x_train_wrong_2["multiclass_target"])

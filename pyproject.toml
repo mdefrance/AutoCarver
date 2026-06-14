@@ -1,6 +1,6 @@
 [project]
 name = "AutoCarver"
-version = "7.2.9"
+version = "7.3.0"
 description = "Automatic Discretization of Features with Optimal Target Association"
 authors = [{ name = "Mario DEFRANCE", email = "defrancemario@gmail.com" }]
 requires-python = ">=3.11, <3.15"

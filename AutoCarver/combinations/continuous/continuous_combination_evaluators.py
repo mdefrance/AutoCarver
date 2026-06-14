@@ -89,7 +89,9 @@ class ContinuousCombinationEvaluator(CombinationEvaluator[pd.Series], ABC):
         # downstream consumers (target rates, viability tests, public API tests
         # that pin the Series-of-lists shape). The Kruskal-Wallis hot loop no
         # longer goes through this path — see _compute_associations below.
-        return xagg.groupby(groupby).sum()
+        # sort=False keeps groups in ordinal order (first appearance), not label
+        # text order, so order-sensitive viability tests are label-independent.
+        return xagg.groupby(groupby, sort=False).sum()
 
     def _group_xagg_by_combinations(self, combinations: Iterable[list]) -> Iterator[dict]:
         """Streams combinations *without* building the lists-of-lists xagg.

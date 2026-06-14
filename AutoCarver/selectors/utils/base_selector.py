@@ -1,18 +1,31 @@
-"""Tools to select the best Quantitative and Qualitative features."""
+"""Tools to select the best Quantitative and Qualitative features.
 
-from abc import ABC, abstractmethod
-from math import ceil
-from random import seed, shuffle
-from typing import TypeVar
+The selector mirrors the :class:`BaseDiscretizer` / :class:`BaseCarver` shape: a
+sklearn estimator built from a :class:`Features` set, a per-type budget, a
+pluggable set of ``measures`` / ``filters`` (the swappable *decision boundary*),
+and a :class:`ProcessingConfig` carrying cross-cutting toggles (``verbose`` …).
+
+Speed comes from :meth:`BaseMeasure.compute_all`: every feature of a given type
+is scored in a single batched call (see
+:mod:`AutoCarver.selectors.measures._vectorized`) instead of a per-feature Python
+loop. Selection is **exhaustive** — every feature is scored exactly; there is no
+chunk sampling.
+"""
+
+from abc import ABC
+from collections.abc import Iterable
+from typing import Self, TypeVar
 
 import numpy as np
 import pandas as pd
+from sklearn.base import BaseEstimator, TransformerMixin
 
-from AutoCarver.features import BaseFeature, Features
-from AutoCarver.selectors.filters import BaseFilter
-from AutoCarver.selectors.measures import BaseMeasure
+from AutoCarver.discretizers.utils.base_discretizer import ProcessingConfig
+from AutoCarver.features import BaseFeature, Features, get_versions
+from AutoCarver.selectors.filters import BaseFilter, NonDefaultValidFilter, ValidFilter
+from AutoCarver.selectors.measures import BaseMeasure, ModeMeasure, NanMeasure
 from AutoCarver.selectors.utils.pretty_print import format_ranked_features, prettier_measures
-from AutoCarver.utils import get_bool_attribute, has_idisplay
+from AutoCarver.utils import has_idisplay
 
 # trying to import extra dependencies
 _has_idisplay = has_idisplay()
@@ -20,9 +33,11 @@ if _has_idisplay:
     from IPython.display import display_html
 
 
-class BaseSelector(ABC):
-    """A pipeline of measures to perform a feature pre-selection that maximizes association
-    with a binary target.
+class BaseSelector(BaseEstimator, TransformerMixin, ABC):
+    """Pipeline of measures/filters that pre-selects features by association with a target.
+
+    Subclasses (:class:`ClassificationSelector`, :class:`RegressionSelector`)
+    only declare the target type and the task-appropriate default measures.
 
     Examples
     --------
@@ -31,240 +46,214 @@ class BaseSelector(ABC):
 
     __name__ = "BaseSelector"
 
+    # whether the target is qualitative (classification) or quantitative
+    # (regression); ``None`` on the plain base selector (no reorientation).
+    _target_is_qualitative: bool | None = None
+
     def __init__(
         self,
-        features: Features,
+        features: Features | list[BaseFeature],
         n_best_per_type: int,
-        # *,
-        # measures: list[BaseMeasure] = None,
-        # filters: list[BaseFilter] = None,
-        # max_num_features_per_chunk: int = 100,
-        **kwargs,
+        *,
+        measures: list[BaseMeasure] | None = None,
+        filters: list[BaseFilter] | None = None,
+        config: ProcessingConfig | None = None,
     ) -> None:
-        # quantitative_measures : list[Callable], optional
-        #     List of association measures to be used for ``quantitative_features``.
-        #     :ref:`Implemented measures <Measures>` are:
-
-        #     * For association evaluation:
-        #         * :ref:`Kruskal-Wallis' H <kruskal>` (default)
-        #         * :ref:`R`
-        #     * For outlier detection:
-        #         * :ref:`Standard score <zscore>`
-        #         * :ref:`Interquartile range <iqr>`
-
-        # qualitative_measures : list[Callable], optional
-        #     List of association measures to be used for ``qualitative_features``.
-        #     :ref:`Implemented measures <Measures>` are:
-
-        #     * For association evaluation:
-        #         * :ref:`Pearson's chi² <chi2>`
-        #         * :ref:`cramerv`
-        #         * :ref:`tschuprowt` (default)
-
-        # quantitative_filters : list[Callable], optional
-        #     List of filters to be used for ``quantitative_features``.
-        #     :ref:`Implemented filters <Filters>` are:
-
-        #     * For linear correlation:
-        #         * :ref:`pearson_filter`
-        #         * :ref:`Spearman's rho <spearman_filter>` (default)
-
-        # qualitative_filters : list[Callable], optional
-        #     List of filters to be used for ``qualitative_features``.
-        #     :ref:`Implemented filters <Filters>` are:
-
-        #     * For correlation:
-        #         * :ref:`cramerv_filter`
-        #         * :ref:`tschuprowt_filter` (default)
-
-        # **kwargs
-        #     Allows one to set thresholds for provided ``quantitative_measures``/
-        #     ``qualitative_measures`` and ``quantitative_filters``/``qualitative_filters``
-        #     (see :ref:`Measures` and :ref:`Filters`) passed as keyword arguments.
         """
         Parameters
         ----------
         features : Features
-            A set of :class:`Features` to select from
+            A set of :class:`Features` to select from.
 
         n_best_per_type : int
-            Number of quantitative and/or qualitative :class:`Features` to  select
+            Number of quantitative and/or qualitative :class:`Features` to select.
 
-
-        Keyword Arguments
-        -----------------
         measures : list[BaseMeasure], optional
-            List of association measures to be used, by default ``None``.
-
-            Selects :attr:`n_best_per_type` features for each measure provided.
-            Implemented measures are:
-
-            * :class:`QuantitativeFeature`: see available :ref:`QuantiMeasures`
-            * :class:`QualitativeFeature`: see available :ref:`QualiMeasures`
+            Association measures (the swappable decision boundary). Defaults to a
+            task-appropriate set provided by the subclass. ``NanMeasure`` and
+            ``ModeMeasure`` are always added if missing.
 
         filters : list[BaseFilter], optional
-            List of filters to be used, by default ``None``.
+            Redundancy filters. Defaults to the task-appropriate set; the
+            validity filters are always added if missing.
 
-            Filters out features that do not pass the threshold of each filter.
-            Implemented filters are:
-
-            * :class:`QuantitativeFeature`: see available :ref:`QuantiFilters`
-            * :class:`QualitativeFeature`: see available :ref:`QualiFilters`
-
-        max_num_features_per_chunk : int, optional
-            Maximum number of features per chunk, by default ``100``.
-
-            Chunking is used to speed up the selection process for large numbers
-            of :class:`Features`.
-
-            1. :class:`Features` are split in ``n_chunks`` of :attr:`max_num_features_per_chunk`
-            2. ``n_best_per_type//n_chunks`` of each chunk are selected
-            3. best features are selected from the remaining features
-
-        verbose : bool, optional
-            * ``True``, without ``IPython``: prints raw statitics
-            * ``True``, with ``IPython``: prints HTML statistics, by default ``False``
+        config : ProcessingConfig, optional
+            Behavioral toggles shared with the discretizers (``verbose`` is the
+            one consumed here). ``ordinal_encoding`` / ``dropna`` are ignored by
+            the selector.
         """
-        # TODO print a config that says what the user has selected (measures+filters)
-        # features and values
-        self.features = features
-        if isinstance(features, list):
-            self.features = Features.from_list(features)
+        # features
+        self.features: Features = features if isinstance(features, Features) else Features.from_list(features)
 
-        # number of features selected
+        # number of features selected per type
         self.n_best_per_type = n_best_per_type
         if not 0 < int(self.n_best_per_type) <= len(self.features):
             raise ValueError("Must set 0 < n_best_per_type <= len(features)")
 
-        # feature sample size per iteration
-        # maximum number of features per chunk
-        self.max_num_features_per_chunk = kwargs.get("max_num_features_per_chunk", 100)
-        if self.max_num_features_per_chunk <= 2:
-            raise ValueError("Must set 2 < max_num_features_per_chunk")
+        # behavioral configuration (reused from the discretizers)
+        self.config: ProcessingConfig = config if config is not None else ProcessingConfig()
 
-        # random state for chunk shuffling
-        self.random_state = kwargs.get("random_state", 0)
+        # measures and filters (with task defaults + validity/outlier defaults)
+        self.measures = self._initiate_measures(measures)
+        self.filters = self._initiate_filters(filters)
 
-        # adding default measures
-        self.measures = self._initiate_measures(kwargs.get("measures"))
-
-        # adding default filter
-        self.filters = self._initiate_filters(kwargs.get("filters"))
-
-        # whether to print info
-        self.verbose = get_bool_attribute(kwargs, "verbose", False)
+        # fit state
+        self.is_fitted = False
+        self._selected: list[BaseFeature] | None = None
+        self.target_name = None
         self._message = ""
 
-        # target name
-        self.target_name = None
-
-    def __repr__(self) -> str:
+    def __repr__(self, N_CHAR_MAX: int = 700) -> str:
         """Returns the name of the selector"""
+        _ = N_CHAR_MAX
         return self.__name__
 
     @property
+    def verbose(self) -> bool:
+        """Whether to print selection statistics (from the config)."""
+        return self.config.verbose
+
+    @property
     def pretty_print(self) -> bool:
-        """Returns the pretty_print attribute"""
+        """Returns whether HTML pretty-printing is available and requested."""
         return self.verbose and _has_idisplay
 
-    @abstractmethod
-    def _initiate_measures(self, requested_measures: list[BaseMeasure] | None = None) -> list[BaseMeasure] | None:
-        """initiates the list of measures with default values"""
-        return requested_measures
+    # ------------------------------------------------------------------
+    # measure / filter initiation
+    # ------------------------------------------------------------------
 
-    @abstractmethod
-    def _initiate_filters(self, requested_filters: list[BaseFilter] | None = None) -> list[BaseFilter] | None:
-        """initiates the list of measures with default values"""
-        return requested_filters
+    def _default_measures(self) -> list[BaseMeasure]:
+        """Task-appropriate default association measures (subclass overrides)."""
+        return []
+
+    def _default_filters(self) -> list[BaseFilter]:
+        """Task-appropriate default redundancy filters."""
+        from AutoCarver.selectors.filters import SpearmanFilter, TschuprowtFilter
+
+        return [TschuprowtFilter(), SpearmanFilter()]
+
+    def _initiate_measures(self, requested_measures: list[BaseMeasure] | None = None) -> list[BaseMeasure]:
+        """Builds the measure list: task defaults, mandatory outlier defaults, orientation."""
+        measures = list(requested_measures) if requested_measures is not None else self._default_measures()
+
+        # always include the default outlier measures (Mode then Nan, prepended)
+        for default in (ModeMeasure(), NanMeasure()):
+            if all(measure.__name__ != default.__name__ for measure in measures):
+                measures = [default] + measures
+
+        return self._orient_measures(measures)
+
+    def _initiate_filters(self, requested_filters: list[BaseFilter] | None = None) -> list[BaseFilter]:
+        """Builds the filter list, always including the validity filters."""
+        filters = list(requested_filters) if requested_filters is not None else self._default_filters()
+
+        # always include the validity filters (Valid then NonDefaultValid, prepended)
+        for default in (ValidFilter(), NonDefaultValidFilter()):
+            if all(filter_.__name__ != default.__name__ for filter_ in filters):
+                filters = [default] + filters
+
+        return filters
+
+    def _orient_measures(self, measures: list[BaseMeasure]) -> list[BaseMeasure]:
+        """Reverses reversible measures so each handles the right feature type for the target.
+
+        e.g. in regression (quantitative target) Kruskal-Wallis is reversed so it
+        scores *qualitative* features against the continuous target. No-op on the
+        plain base selector (``_target_is_qualitative is None``).
+        """
+        if self._target_is_qualitative is None:
+            return measures
+
+        for measure in measures:
+            if measure.is_default:
+                continue
+            if not self._y_matches(measure) and measure.is_reversible:
+                measure.reverse_xy()
+            if not self._y_matches(measure):
+                raise ValueError(f"[{self}] measure {measure} does not match the target type")
+        return measures
+
+    def _y_matches(self, measure: BaseMeasure) -> bool:
+        """Whether a measure's target-type matches this selector's target."""
+        return measure.is_y_qualitative if self._target_is_qualitative else measure.is_y_quantitative
+
+    # ------------------------------------------------------------------
+    # sklearn API: fit / transform / select
+    # ------------------------------------------------------------------
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> Self:
+        """Scores, ranks and filters features; stores the selected ones.
+
+        Parameters
+        ----------
+        X : pd.DataFrame
+            Dataset to select from.
+        y : pd.Series
+            Target the association is evaluated against.
+        """
+        if isinstance(y, pd.Series):
+            self.target_name = y.name
+
+        # clearing any previously computed measures/filters
+        self._initiate_features_measures(self.features, remove_default=True)
+
+        # splitting features by type and selecting the best of each
+        typed = get_typed_features(self.features)
+        best_features = self._select_quantitatives(typed["quantitatives"], X, y)
+        best_features += self._select_qualitatives(typed["qualitatives"], X, y)
+
+        self._selected = best_features
+        self.is_fitted = True
+        return self
+
+    @property
+    def selected_features(self) -> Features:
+        """The selected :class:`Features` (available after :meth:`fit`)."""
+        if self._selected is None:
+            raise RuntimeError(f"[{self.__name__}] not fitted; call fit first")
+        return Features.from_list(self._selected) if self._selected else self._selected  # type: ignore
+
+    def transform(self, X: pd.DataFrame, y: pd.Series | None = None) -> pd.DataFrame:
+        """Restricts ``X`` to the selected features' columns."""
+        _ = y
+        if self._selected is None:
+            raise RuntimeError(f"[{self.__name__}] not fitted; call fit first")
+        return X[get_versions(self._selected)]
+
+    # ------------------------------------------------------------------
+    # selection internals
+    # ------------------------------------------------------------------
 
     def _select_quantitatives(
         self, quantitatives: list[BaseFeature], X: pd.DataFrame, y: pd.Series
     ) -> list[BaseFeature]:
         """Selects the best quantitative features"""
-
-        # checking for quantitative features before selection
         best_quantitatives: list[BaseFeature] = []
         if len(quantitatives) > 0:
-            # getting qualitative measures and filters
-            measures = get_quantitative_metrics(self.measures)  # type: ignore
-            filters = get_quantitative_metrics(self.filters)  # type: ignore
-
-            # setting message for pretty print
+            measures = get_quantitative_metrics(self.measures)
+            filters = get_quantitative_metrics(self.filters)
             self._message = "Quantitative "
-
-            # getting best features
             best_quantitatives = self._select_features(quantitatives, X, y, measures, filters)
-
         return best_quantitatives
 
     def _select_qualitatives(self, qualitatives: list[BaseFeature], X: pd.DataFrame, y: pd.Series) -> list[BaseFeature]:
         """Selects the best qualitative features"""
-
-        # checking for qualitative features before selection
         best_qualitatives: list[BaseFeature] = []
         if len(qualitatives) > 0:
-            # getting qualitative measures and filters
-            measures = get_qualitative_metrics(self.measures)  # type: ignore
-            filters = get_qualitative_metrics(self.filters)  # type: ignore
-
-            # setting message for pretty print
+            measures = get_qualitative_metrics(self.measures)
+            filters = get_qualitative_metrics(self.filters)
             self._message = "Qualitative "
-
-            # getting best features
             best_qualitatives = self._select_features(qualitatives, X, y, measures, filters)
-
         return best_qualitatives
 
-    def _initiate_features_measures(self, features: list[BaseFeature], remove_default: bool = True) -> None:
-        """initiates the list of measures with default values"""
-        # iterating over each feature
+    def _initiate_features_measures(self, features: Iterable[BaseFeature], remove_default: bool = True) -> None:
+        """Resets per-feature measures/filters before/within selection."""
         for feature in features:
-            # removing all measures
             if remove_default:
                 feature.measures = {}
                 feature.filters = {}
-
-            # keeping only default measures
             else:
                 remove_non_default_metrics_from_features(feature)
-
-    def select(self, X: pd.DataFrame, y: pd.Series) -> Features:
-        """Selects the :attr:`n_best_per_type` :class:`Features` of ``X``
-
-        Parameters
-        ----------
-        X : pd.DataFrame
-            Dataset to determine optimal features.
-
-        y : pd.Series
-            Target with wich the association is evaluated.
-
-        Returns
-        -------
-        Features
-            Selected :class:`Features`
-        """
-
-        # getting target name
-        if isinstance(y, pd.Series):
-            self.target_name = y.name
-
-        # initiating features measures and filters
-        self._initiate_features_measures(self.features, remove_default=True)  # type: ignore
-
-        # checking for quantitative and qualitative features
-        features = get_typed_features(self.features)
-
-        # selecting quantitative features
-        best_features = self._select_quantitatives(features.get("quantitatives"), X, y)  # type: ignore
-
-        # selecting qualitative features
-        best_features += self._select_qualitatives(features.get("qualitatives"), X, y)  # type: ignore
-
-        # converting to Features
-        if len(best_features) > 0:
-            return Features.from_list(best_features)
-        return best_features  # type: ignore
 
     def _select_features(
         self,
@@ -274,51 +263,20 @@ class BaseSelector(ABC):
         measures: list[BaseMeasure],
         filters: list[BaseFilter],
     ) -> list[BaseFeature]:
-        """selects amongst features"""
+        """Applies default gates, then exhaustively ranks/filters every feature."""
 
-        # apply default measures to features
+        # default (outlier/validity) measures + filters act as gates
         apply_measures(features, X, y, measures, default_measures=True)
-
-        # apply default filters to features
         features = apply_filters(features, X, filters, default_filters=True)
 
-        # getting non-default measures and filters
+        # non-default measures/filters do the ranking
         measures = remove_default_metrics(measures)
         filters = remove_default_metrics(filters)
 
-        # splitting features in chunks and getting best per-chunk set of features
-        return self._get_best_features_across_chunks(features, X, y, measures, filters)
-
-    def _get_best_features_across_chunks(
-        self,
-        features: list[BaseFeature],
-        X: pd.DataFrame,
-        y: pd.Series,
-        measures: list[BaseMeasure],
-        filters: list[BaseFilter],
-    ) -> list[BaseFeature]:
-        """gets best features per chunk of maximum size as set by max_num_features_per_chunk"""
-
-        # too many features: chunking and selecting best amongst chunks
-        if len(features) > self.max_num_features_per_chunk:
-            # making random chunks of features
-            chunks = make_random_chunks(features, self.max_num_features_per_chunk, self.random_state)
-
-            # iterating over each feature samples
-            features: list[BaseFeature] = []
-            for n_chunk, chunk in enumerate(chunks):
-                # fitting association on features
-                features += get_best_features(
-                    chunk, X, y, measures, filters, max(int(self.n_best_per_type // len(chunks)), 1)
-                )
-
-                # printing association
-                self._print_measures(chunk, f"from chunk {n_chunk}/{len(chunks)}")
-
-        # initiating features measures and filters for final prediction
+        # keeping only default metrics on features before final ranking
         self._initiate_features_measures(features, remove_default=False)
 
-        # selecting from remaining features
+        # exhaustively selecting the best features
         best_features = get_best_features(features, X, y, measures, filters, self.n_best_per_type)
 
         # printing association
@@ -327,39 +285,25 @@ class BaseSelector(ABC):
         return best_features
 
     def _print_measures(self, features: list[BaseFeature], message: str = "") -> None:
-        """Prints crosstabs' target rates and frequencies per modality, in raw or html format
-
-        Parameters
-        ----------
-        xagg : pd.Series | pd.DataFrame
-            Train crosstab
-        xagg_dev : pd.Series | pd.DataFrame
-            Dev crosstab, by default None
-        pretty_print : bool, optional
-            Whether to output html or not, by default False
-        """
+        """Prints per-feature association statistics, raw or HTML."""
         if self.verbose:
-            # formatting measures to print
             formatted_measures = format_ranked_features(features)
 
             if not formatted_measures.empty:
                 print(f" [{self.__name__}] Selected {self._message}Features {message}")
 
-            if not self.pretty_print:  # no pretty hmtl printing
+            if not self.pretty_print:
                 self._print_raw(formatted_measures)
-            else:  # pretty html printing
+            else:
                 self._print_html(formatted_measures)
 
     def _print_raw(self, formatted_measures: pd.DataFrame) -> None:
-        """Prints raw XAGG DataFrames."""
+        """Prints raw association DataFrames."""
         print(formatted_measures, "\n")
 
     def _print_html(self, formatted_measures: pd.DataFrame) -> None:
-        """Prints XAGG DataFrames in HTML format."""
-        # getting prettier xtabs
+        """Prints association DataFrames in HTML format."""
         nicer_association = prettier_measures(formatted_measures)
-
-        # displaying html of colored DataFrame
         display_html(nicer_association, raw=True)
 
 
@@ -379,33 +323,6 @@ def is_quantitative(feature: BaseFeature) -> bool:
 def is_qualitative(feature: BaseFeature) -> bool:
     """checks if feature is qualitative"""
     return feature.is_qualitative or feature.is_fitted
-
-
-def make_random_chunks(elements: list, max_chunk_sizes: int, random_state: int | None = None) -> list:
-    """makes a specific number of random chunks of of a list"""
-
-    # copying in order to not moidy initial list
-    shuffled_elements = elements[:]
-
-    # shuffling features to get random samples of features
-    seed(random_state)
-    shuffle(shuffled_elements)
-
-    # number of chunks
-    num_chunks = ceil(len(elements) / max_chunk_sizes)
-
-    # getting size of each chunk
-    chunk_size, remainder = divmod(len(elements), num_chunks)
-
-    # getting all chunks
-    chunks = []
-    start = 0
-    for i in range(num_chunks):
-        end = start + chunk_size + (1 if i < remainder else 0)
-        chunks.append(shuffled_elements[start:end])
-        start = end
-
-    return chunks
 
 
 _MetricT = TypeVar("_MetricT", BaseMeasure, BaseFilter)
@@ -432,20 +349,17 @@ def remove_default_metrics(metrics: list[_MetricT]) -> list[_MetricT]:
 
 
 def remove_non_default_metrics_from_features(feature: BaseFeature) -> None:
-    """removes default measures from feature"""
-    # removing non default measures
+    """removes non-default measures/filters from a feature"""
     measures = dict(feature.measures)
     for measure_name, measure in feature.measures.items():
         if not measure.get("info", {}).get("is_default"):
             measures.pop(measure_name)
 
-    # removing non default filters
     filters = dict(feature.filters)
     for filter_name, measure in feature.filters.items():
         if not measure.get("info", {}).get("is_default"):
             filters.pop(filter_name)
 
-    # updating feature
     feature.measures = measures
     feature.filters = filters
 
@@ -457,18 +371,15 @@ def remove_duplicates(features: list[BaseFeature]) -> list[BaseFeature]:
 
 def sort_features_per_measure(features: list[BaseFeature], measure: BaseMeasure) -> list[BaseFeature]:
     """sorts features according to specified measure"""
-    # checking if features are already ranked
     ranked = False
     for feature in features:
         if make_rank_name(measure) in feature.measures:
             ranked = True
 
-    # setting reverse mode
     reverse = not measure.info.get("higher_is_better")
     if ranked:
         reverse = False
 
-    # sorting features according to measure
     return sorted(features, key=lambda feature: get_feature_rank(feature, measure), reverse=reverse)
 
 
@@ -487,10 +398,8 @@ def get_measure_rank(feature: BaseFeature, measure: BaseMeasure) -> int:
 def get_measure_value(feature: BaseFeature, measure: BaseMeasure) -> float:
     """gives value of measure for specified feature"""
     value = feature.measures[measure.__name__]["value"]
-    # getting absolute value
     if measure.is_absolute:
         value = abs(value)
-    # replacing nan with -inf
     if np.isnan(value):
         value = float("-inf")
     return value
@@ -503,25 +412,25 @@ def apply_measures(
     measures: list[BaseMeasure],
     default_measures: bool = False,
 ) -> None:
-    """Measures association between columns of X and y, returns remaining_measures (not used)"""
+    """Measures association between every feature and ``y`` in batched calls.
 
-    # keeping only default measures or non default measures
+    Each measure scores all ``features`` at once via
+    :meth:`BaseMeasure.compute_all` (vectorized for built-ins, per-feature
+    fallback for custom measures), preserving the ``feature.measures`` contract.
+    """
     used_measures = remove_default_metrics(measures)
     if default_measures:
         used_measures = get_default_metrics(measures)
 
-    # iterating over each feature
-    for feature in features:
-        # iterating over each measure
-        for measure in used_measures:
-            # checking for mismatched data types
+    for measure in used_measures:
+        # type guard (raises TypeError on mismatch)
+        for feature in features:
             check_measure_mismatch(feature, measure)
 
-            # computing association for feature
-            measure.compute_association(X[feature.version], y)
-
-            # updating feature accordingly
-            measure._update_feature(feature)
+        # batched association for all features at once
+        results = measure.compute_all(X, y, features)
+        for feature in features:
+            feature.measures[measure.__name__] = results[feature.version]
 
 
 def apply_filters(
@@ -531,22 +440,14 @@ def apply_filters(
     default_filters: bool = False,
 ) -> list[BaseFeature]:
     """Filters out too correlated features (least relevant first)"""
-
-    # keeping only default filters or non default filters
     used_filters = remove_default_metrics(filters)
     if default_filters:
         used_filters = get_default_metrics(filters)
 
-    # keeping track of remaining features
     filtered = features[:]
-
-    # iterating over each filter
     for measure in used_filters:
-        # checking for mismatched data types
         for feature in features:
             check_measure_mismatch(feature, measure)
-
-        # applying filter
         filtered = measure.filter(X, filtered)
 
     return filtered
@@ -573,21 +474,15 @@ def get_best_features(
     n_best: int,
 ) -> list[BaseFeature]:
     """gives best features according to provided measures"""
-
-    # check for sortable measures
     if not all(measure.is_sortable for measure in measures):
         raise ValueError("All provided measures should be sortable")
 
-    # applying measures to all features
     apply_measures(features, X, y, measures)
 
-    # getting best feature for each sortable measure
     best_features = []
     for measure in measures:
-        # getting best features according to measure
         best_features += select_with_measure(X, features, measure, filters, n_best)
 
-    # deduplicating best features
     return remove_duplicates(best_features)
 
 
@@ -599,21 +494,14 @@ def select_with_measure(
     n_best: int,
 ) -> list[BaseFeature]:
     """Selects the ``n_best`` features of the DataFrame, by association with the target"""
-
-    # sorting features according to measure
     sorted_features = sort_features_per_measure(features, measure)
-
-    # reversing features
     sorted_features.reverse()
 
-    # applying filters
     filtered_features = apply_filters(sorted_features, X, filters)
 
-    # adding info to features
     for rank, feature in enumerate(filtered_features):
         feature.measures.update(make_rank_info(rank, measure, n_best, len(filtered_features)))
 
-    # getting best features according to measure
     return select_from_rank(filtered_features, measure)
 
 

@@ -51,7 +51,10 @@ def _test_minimum_frequency_per_modality(
 def _test_modality_ordering(train_target_rate: pd.Series, dev_target_rate: pd.Series) -> bool:
     """tests whether train and dev targets rates are similarly ranked between datasets"""
     # - grouped values have the same ranks in train/test
-    return all(train_target_rate.sort_index().sort_values().index == dev_target_rate.sort_index().sort_values().index)
+    # Tie-break by ordinal position (stable sort), not by label text: both series
+    # already share the ordinal label order, so a stable sort preserves it. This
+    # keeps carving independent of the cosmetic label strings.
+    return all(train_target_rate.sort_values(kind="stable").index == dev_target_rate.sort_values(kind="stable").index)
 
 
 def is_viable(test_results: dict):

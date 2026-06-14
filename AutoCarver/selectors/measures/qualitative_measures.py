@@ -5,6 +5,7 @@ from math import sqrt
 import pandas as pd
 from scipy.stats import chi2_contingency
 
+from AutoCarver.selectors.measures._vectorized import chi2_all
 from AutoCarver.selectors.measures.base_measures import BaseMeasure
 from AutoCarver.utils import extend_docstring
 
@@ -42,6 +43,24 @@ class Chi2Measure(BaseMeasure):
         self.value = chi2_contingency(xtab)[0]
         return self.value
 
+    def compute_all(self, X, y, features) -> dict[str, dict]:
+        """Vectorized chi²-family statistic over all qualitative ``features``.
+
+        Computes each feature's contingency table with ``bincount`` (instead of
+        ``pd.crosstab`` + ``chi2_contingency``); subclasses turn the raw chi²
+        into their normalized coefficient via :meth:`_stat`.
+        """
+        block = X[[feature.version for feature in features]]
+        chi2, n_obs, n_mod_x, n_mod_y = chi2_all(block, y)
+        return {
+            feature.version: self._result(self._stat(chi2[i], n_obs[i], n_mod_x[i], n_mod_y[i]))
+            for i, feature in enumerate(features)
+        }
+
+    def _stat(self, chi2: float, n_obs: float, n_mod_x: float, n_mod_y: float) -> float:
+        """Maps raw chi² to the reported statistic. Base measure reports chi²."""
+        return float(chi2)
+
 
 class CramervMeasure(Chi2Measure):
     """Computes Carmér's V between a Qualitative feature and a binary target."""
@@ -66,6 +85,12 @@ class CramervMeasure(Chi2Measure):
 
         return self.value  # type: ignore
 
+    def _stat(self, chi2: float, n_obs: float, n_mod_x: float, n_mod_y: float) -> float:
+        min_n_mod = min(n_mod_x, n_mod_y)
+        if min_n_mod > 1:
+            return sqrt(chi2 / n_obs / (min_n_mod - 1))
+        return float(chi2)
+
 
 class TschuprowtMeasure(Chi2Measure):
     """Computes Tschuprow's T between a Qualitative feature and a binary target."""
@@ -89,3 +114,9 @@ class TschuprowtMeasure(Chi2Measure):
         if dof_mods > 0:
             self.value = sqrt(chi2_value / n_obs / dof_mods)
         return self.value
+
+    def _stat(self, chi2: float, n_obs: float, n_mod_x: float, n_mod_y: float) -> float:
+        dof_mods = sqrt((n_mod_x - 1) * (n_mod_y - 1))
+        if dof_mods > 0:
+            return sqrt(chi2 / n_obs / dof_mods)
+        return 0.0

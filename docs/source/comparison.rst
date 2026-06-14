@@ -137,7 +137,7 @@ AutoCarver
 
     features = Features(
         categoricals=["Sex"],
-        quantitatives=["Age", "Fare", "Siblings/Spouses Aboard", "Parents/Children Aboard"],
+        numericals=["Age", "Fare", "Siblings/Spouses Aboard", "Parents/Children Aboard"],
         ordinals={"Pclass": ["1", "2", "3"]},
     )
     carver = BinaryCarver(features=features, min_freq=0.05, max_n_mod=5)

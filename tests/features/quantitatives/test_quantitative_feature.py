@@ -80,29 +80,29 @@ def test_format_quantiles_empty_list() -> None:
     """test function min_decimals_to_differentiate"""
     # no value
     result = format_quantiles([])
-    assert result == ["-inf < x < inf"]
+    assert result == ["(-inf, inf)"]
 
     # signle value
     result = format_quantiles([0.5])
-    assert result == ["x <= 5.0e-01", "5.0e-01 < x"]
+    assert result == ["(-inf, 5.0e-01]", "(5.0e-01, inf)"]
 
     # multiple values
     result = format_quantiles([0.1, 0.5, 0.9])
     assert result == [
-        "x <= 1.00e-01",
-        "1.00e-01 < x <= 5.00e-01",
-        "5.00e-01 < x <= 9.00e-01",
-        "9.00e-01 < x",
+        "(-inf, 1.00e-01]",
+        "(1.00e-01, 5.00e-01]",
+        "(5.00e-01, 9.00e-01]",
+        "(9.00e-01, inf)",
     ]
 
     # multiple close values
     result = format_quantiles([1.0, 1.01, 1.1])
     print(result)
     assert result == [
-        "x <= 1.000e+00",
-        "1.000e+00 < x <= 1.010e+00",
-        "1.010e+00 < x <= 1.100e+00",
-        "1.100e+00 < x",
+        "(-inf, 1.000e+00]",
+        "(1.000e+00, 1.010e+00]",
+        "(1.010e+00, 1.100e+00]",
+        "(1.100e+00, inf)",
     ]
 
 
@@ -158,20 +158,20 @@ def test_quantitative_feature_make_labels(sample_quantitative_feature: Quantitat
     assert sample_quantitative_feature.values == [0.1, 0.5, 0.9, np.inf]
     labels = sample_quantitative_feature.make_labels()
     assert labels == [
-        "x <= 1.00e-01",
-        "1.00e-01 < x <= 5.00e-01",
-        "5.00e-01 < x <= 9.00e-01",
-        "9.00e-01 < x",
+        "(-inf, 1.00e-01]",
+        "(1.00e-01, 5.00e-01]",
+        "(5.00e-01, 9.00e-01]",
+        "(9.00e-01, inf)",
     ]
     # setting dropna true
     sample_quantitative_feature.dropna = True
     labels = sample_quantitative_feature.make_labels()
     assert sample_quantitative_feature.values == [0.1, 0.5, 0.9, np.inf, Constants.NAN]
     assert labels == [
-        "x <= 1.00e-01",
-        "1.00e-01 < x <= 5.00e-01",
-        "5.00e-01 < x <= 9.00e-01",
-        "9.00e-01 < x",
+        "(-inf, 1.00e-01]",
+        "(1.00e-01, 5.00e-01]",
+        "(5.00e-01, 9.00e-01]",
+        "(9.00e-01, inf)",
         Constants.NAN,
     ]
     # resetting dropna
@@ -179,10 +179,10 @@ def test_quantitative_feature_make_labels(sample_quantitative_feature: Quantitat
     labels = sample_quantitative_feature.make_labels()
     assert sample_quantitative_feature.values == [0.1, 0.5, 0.9, np.inf]
     assert labels == [
-        "x <= 1.00e-01",
-        "1.00e-01 < x <= 5.00e-01",
-        "5.00e-01 < x <= 9.00e-01",
-        "9.00e-01 < x",
+        "(-inf, 1.00e-01]",
+        "(1.00e-01, 5.00e-01]",
+        "(5.00e-01, 9.00e-01]",
+        "(9.00e-01, inf)",
     ]
 
     # setting has_default true
@@ -190,20 +190,20 @@ def test_quantitative_feature_make_labels(sample_quantitative_feature: Quantitat
     labels = sample_quantitative_feature.make_labels()
     assert sample_quantitative_feature.values == [0.1, 0.5, 0.9, np.inf]
     assert labels == [
-        "x <= 1.00e-01",
-        "1.00e-01 < x <= 5.00e-01",
-        "5.00e-01 < x <= 9.00e-01",
-        "9.00e-01 < x",
+        "(-inf, 1.00e-01]",
+        "(1.00e-01, 5.00e-01]",
+        "(5.00e-01, 9.00e-01]",
+        "(9.00e-01, inf)",
     ]
     # resetting has_default false
     sample_quantitative_feature.has_default = False
     labels = sample_quantitative_feature.make_labels()
     assert sample_quantitative_feature.values == [0.1, 0.5, 0.9, np.inf]
     assert labels == [
-        "x <= 1.00e-01",
-        "1.00e-01 < x <= 5.00e-01",
-        "5.00e-01 < x <= 9.00e-01",
-        "9.00e-01 < x",
+        "(-inf, 1.00e-01]",
+        "(1.00e-01, 5.00e-01]",
+        "(5.00e-01, 9.00e-01]",
+        "(9.00e-01, inf)",
     ]
 
 
@@ -215,33 +215,33 @@ def test_quantitative_feature_update_no_ordinal_encoding(
     # fitting some nans
     sample_quantitative_feature.fit(pd.DataFrame({sample_quantitative_feature.version: [1, 2, 3, 4, np.nan]}))
     sample_quantitative_feature.update(
-        GroupedList({"x <= 1.00e-01": ["x <= 1.00e-01", "1.00e-01 < x <= 5.00e-01"]}),
+        GroupedList({"(-inf, 1.00e-01]": ["(-inf, 1.00e-01]", "(1.00e-01, 5.00e-01]"]}),
         convert_labels=True,
     )
     assert sample_quantitative_feature.values == [0.5, 0.9, np.inf]
     assert sample_quantitative_feature.content == {0.5: [0.1, 0.5], 0.9: [0.9], np.inf: [np.inf]}
     assert sample_quantitative_feature.labels == [
-        "x <= 5.00e-01",
-        "5.00e-01 < x <= 9.00e-01",
-        "9.00e-01 < x",
+        "(-inf, 5.00e-01]",
+        "(5.00e-01, 9.00e-01]",
+        "(9.00e-01, inf)",
     ]
     assert sample_quantitative_feature.value_per_label == {
-        "x <= 5.00e-01": 0.5,
-        "5.00e-01 < x <= 9.00e-01": 0.9,
-        "9.00e-01 < x": np.inf,
+        "(-inf, 5.00e-01]": 0.5,
+        "(5.00e-01, 9.00e-01]": 0.9,
+        "(9.00e-01, inf)": np.inf,
     }
     assert sample_quantitative_feature.label_per_value == {
-        0.1: "x <= 5.00e-01",
-        0.5: "x <= 5.00e-01",
-        0.9: "5.00e-01 < x <= 9.00e-01",
-        np.inf: "9.00e-01 < x",
+        0.1: "(-inf, 5.00e-01]",
+        0.5: "(-inf, 5.00e-01]",
+        0.9: "(5.00e-01, 9.00e-01]",
+        np.inf: "(9.00e-01, inf)",
     }
 
     # adding nans
     sample_quantitative_feature.dropna = True
     print(sample_quantitative_feature.label_per_value)
     sample_quantitative_feature.update(
-        GroupedList({Constants.NAN: [Constants.NAN, "x <= 5.00e-01"]}), convert_labels=True
+        GroupedList({Constants.NAN: [Constants.NAN, "(-inf, 5.00e-01]"]}), convert_labels=True
     )
     assert sample_quantitative_feature.values == [0.5, 0.9, np.inf]
     assert sample_quantitative_feature.content == {
@@ -250,21 +250,21 @@ def test_quantitative_feature_update_no_ordinal_encoding(
         np.inf: [np.inf],
     }
     assert sample_quantitative_feature.labels == [
-        "x <= 5.00e-01",
-        "5.00e-01 < x <= 9.00e-01",
-        "9.00e-01 < x",
+        "(-inf, 5.00e-01]",
+        "(5.00e-01, 9.00e-01]",
+        "(9.00e-01, inf)",
     ]
     assert sample_quantitative_feature.value_per_label == {
-        "x <= 5.00e-01": 0.5,
-        "5.00e-01 < x <= 9.00e-01": 0.9,
-        "9.00e-01 < x": np.inf,
+        "(-inf, 5.00e-01]": 0.5,
+        "(5.00e-01, 9.00e-01]": 0.9,
+        "(9.00e-01, inf)": np.inf,
     }
     assert sample_quantitative_feature.label_per_value == {
-        Constants.NAN: "x <= 5.00e-01",
-        0.1: "x <= 5.00e-01",
-        0.5: "x <= 5.00e-01",
-        0.9: "5.00e-01 < x <= 9.00e-01",
-        np.inf: "9.00e-01 < x",
+        Constants.NAN: "(-inf, 5.00e-01]",
+        0.1: "(-inf, 5.00e-01]",
+        0.5: "(-inf, 5.00e-01]",
+        0.9: "(5.00e-01, 9.00e-01]",
+        np.inf: "(9.00e-01, inf)",
     }
 
 
@@ -290,9 +290,9 @@ def test_quantitative_feature_update_ordinal_encoding(
     assert sample_quantitative_feature.content == {0.1: [0.1], 0.5: [0.5], np.inf: [0.9, np.inf]}
     assert sample_quantitative_feature.labels == [0, 1, 2]
     assert sample_quantitative_feature.value_per_label == {
-        0: "x <= 1.00e-01",
-        1: "1.00e-01 < x <= 5.00e-01",
-        2: "5.00e-01 < x",
+        0: "(-inf, 1.00e-01]",
+        1: "(1.00e-01, 5.00e-01]",
+        2: "(5.00e-01, inf)",
     }
     assert sample_quantitative_feature.label_per_value == {
         0.1: 0,
@@ -313,9 +313,9 @@ def test_quantitative_feature_update_ordinal_encoding(
     }
     assert sample_quantitative_feature.labels == [0, 1, 2]
     assert sample_quantitative_feature.value_per_label == {
-        0: "x <= 1.00e-01",
-        1: "1.00e-01 < x <= 5.00e-01",
-        2: "5.00e-01 < x",
+        0: "(-inf, 1.00e-01]",
+        1: "(1.00e-01, 5.00e-01]",
+        2: "(5.00e-01, inf)",
     }
     assert sample_quantitative_feature.label_per_value == {
         0.1: 0,
@@ -333,23 +333,23 @@ def test_get_summary(sample_quantitative_feature: QuantitativeFeature) -> None:
     expected_summary = [
         {
             "feature": "Quantitative('test_feature')",
-            "label": "x <= 1.00e-01",
-            "content": "x <= 1.00e-01",
+            "label": "(-inf, 1.00e-01]",
+            "content": "(-inf, 1.00e-01]",
         },
         {
             "feature": "Quantitative('test_feature')",
-            "label": "1.00e-01 < x <= 5.00e-01",
-            "content": "1.00e-01 < x <= 5.00e-01",
+            "label": "(1.00e-01, 5.00e-01]",
+            "content": "(1.00e-01, 5.00e-01]",
         },
         {
             "feature": "Quantitative('test_feature')",
-            "label": "5.00e-01 < x <= 9.00e-01",
-            "content": "5.00e-01 < x <= 9.00e-01",
+            "label": "(5.00e-01, 9.00e-01]",
+            "content": "(5.00e-01, 9.00e-01]",
         },
         {
             "feature": "Quantitative('test_feature')",
-            "label": "9.00e-01 < x",
-            "content": "9.00e-01 < x",
+            "label": "(9.00e-01, inf)",
+            "content": "(9.00e-01, inf)",
         },
     ]
     assert summary == expected_summary
@@ -357,18 +357,18 @@ def test_get_summary(sample_quantitative_feature: QuantitativeFeature) -> None:
     sample_quantitative_feature.ordinal_encoding = True
     summary = sample_quantitative_feature.summary
     expected_summary = [
-        {"feature": "Quantitative('test_feature')", "label": 0, "content": "x <= 1.00e-01"},
+        {"feature": "Quantitative('test_feature')", "label": 0, "content": "(-inf, 1.00e-01]"},
         {
             "feature": "Quantitative('test_feature')",
             "label": 1,
-            "content": "1.00e-01 < x <= 5.00e-01",
+            "content": "(1.00e-01, 5.00e-01]",
         },
         {
             "feature": "Quantitative('test_feature')",
             "label": 2,
-            "content": "5.00e-01 < x <= 9.00e-01",
+            "content": "(5.00e-01, 9.00e-01]",
         },
-        {"feature": "Quantitative('test_feature')", "label": 3, "content": "9.00e-01 < x"},
+        {"feature": "Quantitative('test_feature')", "label": 3, "content": "(9.00e-01, inf)"},
     ]
     assert summary == expected_summary
 
@@ -379,18 +379,18 @@ def test_get_summary(sample_quantitative_feature: QuantitativeFeature) -> None:
     summary = sample_quantitative_feature.summary
     print(summary)
     expected_summary = [
-        {"feature": "Quantitative('test_feature')", "label": 0, "content": "x <= 1.00e-01"},
+        {"feature": "Quantitative('test_feature')", "label": 0, "content": "(-inf, 1.00e-01]"},
         {
             "feature": "Quantitative('test_feature')",
             "label": 1,
-            "content": "1.00e-01 < x <= 5.00e-01",
+            "content": "(1.00e-01, 5.00e-01]",
         },
         {
             "feature": "Quantitative('test_feature')",
             "label": 2,
-            "content": "5.00e-01 < x <= 9.00e-01",
+            "content": "(5.00e-01, 9.00e-01]",
         },
-        {"feature": "Quantitative('test_feature')", "label": 3, "content": "9.00e-01 < x"},
+        {"feature": "Quantitative('test_feature')", "label": 3, "content": "(9.00e-01, inf)"},
         {"feature": "Quantitative('test_feature')", "label": 4, "content": "__NAN__"},
     ]
     assert summary == expected_summary

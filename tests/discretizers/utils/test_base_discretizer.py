@@ -4,11 +4,12 @@ import json
 
 import numpy as np
 import pandas as pd
+from pandas.api.types import is_numeric_dtype
 from pytest import FixtureRequest, fixture, raises
 
 from AutoCarver.discretizers.utils.base_discretizer import (
     BaseDiscretizer,
-    DiscretizerConfig,
+    ProcessingConfig,
     Sample,
     transform_quantitative_feature,
 )
@@ -54,12 +55,12 @@ def test_transform_quantitative_feature(features: Features) -> None:
     feature_version, list_feature = transform_quantitative_feature(feature, df_feature, len(df_feature))
     assert feature_version == feature.version
     assert [
-        "x <= 2.00e+00",
-        "x <= 2.00e+00",
-        "2.00e+00 < x <= 4.50e+00",
-        "2.00e+00 < x <= 4.50e+00",
-        "2.00e+00 < x <= 4.50e+00",
-        "4.50e+00 < x",
+        "(-inf, 2.00e+00]",
+        "(-inf, 2.00e+00]",
+        "(2.00e+00, 4.50e+00]",
+        "(2.00e+00, 4.50e+00]",
+        "(2.00e+00, 4.50e+00]",
+        "(4.50e+00, inf)",
     ] == list_feature
 
     # with values to group, with np.nan in df_feature (np.nan not grouped)
@@ -72,13 +73,13 @@ def test_transform_quantitative_feature(features: Features) -> None:
     feature_version, list_feature = transform_quantitative_feature(feature, df_feature, len(df_feature))
     assert feature_version == feature.version
     assert [
-        "x <= 2.00e+00",
-        "x <= 2.00e+00",
-        "2.00e+00 < x <= 4.50e+00",
-        "2.00e+00 < x <= 4.50e+00",
-        "2.00e+00 < x <= 4.50e+00",
+        "(-inf, 2.00e+00]",
+        "(-inf, 2.00e+00]",
+        "(2.00e+00, 4.50e+00]",
+        "(2.00e+00, 4.50e+00]",
+        "(2.00e+00, 4.50e+00]",
         feature.nan,
-        "4.50e+00 < x",
+        "(4.50e+00, inf)",
     ] == list_feature
 
     # with values to group, with np.nan in df_feature (grouped nans)
@@ -93,13 +94,13 @@ def test_transform_quantitative_feature(features: Features) -> None:
     feature_version, list_feature = transform_quantitative_feature(feature, df_feature, len(df_feature))
     assert feature_version == feature.version
     assert [
-        "x <= 2.00e+00",
-        "x <= 2.00e+00",
-        "2.00e+00 < x <= 4.50e+00",
-        "2.00e+00 < x <= 4.50e+00",
-        "2.00e+00 < x <= 4.50e+00",
-        "4.50e+00 < x",
-        "4.50e+00 < x",
+        "(-inf, 2.00e+00]",
+        "(-inf, 2.00e+00]",
+        "(2.00e+00, 4.50e+00]",
+        "(2.00e+00, 4.50e+00]",
+        "(2.00e+00, 4.50e+00]",
+        "(4.50e+00, inf)",
+        "(4.50e+00, inf)",
     ] == list_feature
 
     # with values to group, with feature.nan in df_feature (grouped nans)
@@ -113,13 +114,13 @@ def test_transform_quantitative_feature(features: Features) -> None:
     feature_version, list_feature = transform_quantitative_feature(feature, df_feature, len(df_feature))
     assert feature_version == feature.version
     assert [
-        "x <= 2.00e+00",
-        "x <= 2.00e+00",
-        "2.00e+00 < x <= 4.50e+00",
-        "2.00e+00 < x <= 4.50e+00",
-        "2.00e+00 < x <= 4.50e+00",
-        "4.50e+00 < x",
-        "4.50e+00 < x",
+        "(-inf, 2.00e+00]",
+        "(-inf, 2.00e+00]",
+        "(2.00e+00, 4.50e+00]",
+        "(2.00e+00, 4.50e+00]",
+        "(2.00e+00, 4.50e+00]",
+        "(4.50e+00, inf)",
+        "(4.50e+00, inf)",
     ] == list_feature
 
 
@@ -142,19 +143,19 @@ def test_init(features: Features, true_false: bool) -> None:
     assert not disc.has_min_freq
 
     # test setting copy
-    disc = BaseDiscretizer(features, config=DiscretizerConfig(copy=true_false))
+    disc = BaseDiscretizer(features, config=ProcessingConfig(copy=true_false))
     assert disc.config.copy == true_false
 
     # test setting ordinal_encoding
-    disc = BaseDiscretizer(features, config=DiscretizerConfig(ordinal_encoding=true_false))
+    disc = BaseDiscretizer(features, config=ProcessingConfig(ordinal_encoding=true_false))
     assert disc.config.ordinal_encoding == true_false
 
     # test setting dropna
-    disc = BaseDiscretizer(features, config=DiscretizerConfig(dropna=true_false))
+    disc = BaseDiscretizer(features, config=ProcessingConfig(dropna=true_false))
     assert disc.config.dropna == true_false
 
     # test setting verbose
-    disc = BaseDiscretizer(features, config=DiscretizerConfig(verbose=true_false))
+    disc = BaseDiscretizer(features, config=ProcessingConfig(verbose=true_false))
     assert disc.config.verbose == true_false
 
     # test setting is_fitted (now a post-construction attribute, not a constructor arg)
@@ -163,7 +164,7 @@ def test_init(features: Features, true_false: bool) -> None:
     assert disc.is_fitted == true_false
 
     # test setting n_jobs
-    disc = BaseDiscretizer(features, config=DiscretizerConfig(n_jobs=4))
+    disc = BaseDiscretizer(features, config=ProcessingConfig(n_jobs=4))
     assert disc.config.n_jobs == 4
 
     # test setting min_freq
@@ -211,7 +212,7 @@ def test_prepare_X(features: Features) -> None:
     )
 
     # test with copy
-    disc = BaseDiscretizer(features, config=DiscretizerConfig(copy=True))
+    disc = BaseDiscretizer(features, config=ProcessingConfig(copy=True))
     with raises(ValueError):
         disc._prepare_X(X["feature1"])
     with raises(ValueError):
@@ -224,7 +225,7 @@ def test_prepare_X(features: Features) -> None:
     assert (X["feature3"] != prepared_X["feature3"]).any()
 
     # test without copy
-    disc = BaseDiscretizer(features, config=DiscretizerConfig(copy=False))
+    disc = BaseDiscretizer(features, config=ProcessingConfig(copy=False))
     prepared_X = disc._prepare_X(X)
     prepared_X["feature1"] = [1] * len(X["feature1"])
     X["feature3"] = [3] * len(X["feature3"])
@@ -301,14 +302,14 @@ def test_fit(features: Features) -> None:
         feature.is_fitted = True
 
     # expected use without ordinal_encoding
-    disc = BaseDiscretizer(features, config=DiscretizerConfig(ordinal_encoding=False))
+    disc = BaseDiscretizer(features, config=ProcessingConfig(ordinal_encoding=False))
     disc.fit()
     assert disc.is_fitted
     for feature in features:
         assert not feature.ordinal_encoding
 
     # expected use with ordinal_encoding
-    disc = BaseDiscretizer(features, config=DiscretizerConfig(ordinal_encoding=True))
+    disc = BaseDiscretizer(features, config=ProcessingConfig(ordinal_encoding=True))
     disc.fit()
     assert disc.is_fitted
     for feature in features:
@@ -348,6 +349,25 @@ def test_transform_qualitative() -> None:
     )
     assert (result == expected).all().all()
     assert (result == X).all().all()
+
+
+def test_transform_qualitative_ordinal_encoding_is_numeric() -> None:
+    """ordinal-encoded qualitative columns must be numeric dtype (not object) for XGBoost."""
+    feature1 = OrdinalFeature("feature1", values=["1", "2", "3", "4"])
+    feature2 = CategoricalFeature("feature2")
+    feature2.update(GroupedList({"A": ["A"], "B": ["B"], "X": ["X", "C", "D"]}))
+    disc = BaseDiscretizer([feature1, feature2], config=ProcessingConfig(ordinal_encoding=True))
+    disc.features.ordinal_encoding = True
+
+    X = pd.DataFrame(
+        {
+            "feature1": ["1", "2", "3", "2", "3", "4", "4"],
+            "feature2": ["A", "A", "B", "C", "D", "B", "X"],
+        }
+    )
+    result = disc._transform_qualitative(Sample(X=X, y=None)).X
+    assert is_numeric_dtype(result["feature1"]), result["feature1"].dtype
+    assert is_numeric_dtype(result["feature2"]), result["feature2"].dtype
 
 
 def test_prepare_X_coerces_pandas_category_dtype() -> None:
@@ -418,20 +438,20 @@ def test_transform_quantitative() -> None:
     expected = pd.DataFrame(
         {
             "feature1": [
-                "x <= 2.00e+00",
-                "x <= 2.00e+00",
-                "2.00e+00 < x <= 4.50e+00",
-                "2.00e+00 < x <= 4.50e+00",
-                "2.00e+00 < x <= 4.50e+00",
-                "4.50e+00 < x",
+                "(-inf, 2.00e+00]",
+                "(-inf, 2.00e+00]",
+                "(2.00e+00, 4.50e+00]",
+                "(2.00e+00, 4.50e+00]",
+                "(2.00e+00, 4.50e+00]",
+                "(4.50e+00, inf)",
             ],
             "feature2": [
-                "x <= 2.00e+01",
-                "x <= 2.00e+01",
-                "2.00e+01 < x <= 4.50e+01",
-                "2.00e+01 < x <= 4.50e+01",
-                "2.00e+01 < x <= 4.50e+01",
-                "4.50e+01 < x",
+                "(-inf, 2.00e+01]",
+                "(-inf, 2.00e+01]",
+                "(2.00e+01, 4.50e+01]",
+                "(2.00e+01, 4.50e+01]",
+                "(2.00e+01, 4.50e+01]",
+                "(4.50e+01, inf)",
             ],
         },
         index=index,
@@ -453,7 +473,7 @@ def test_transform(true_false: bool) -> None:
     feature3.update(GroupedList([2, 4.5, np.inf]))
     feature3.is_fitted = True
     # GroupedList({2: [2], 4.5: [4.5], np.inf: [np.inf, "__NAN__"]})
-    disc = BaseDiscretizer([feature1, feature2, feature3], config=DiscretizerConfig(copy=true_false))
+    disc = BaseDiscretizer([feature1, feature2, feature3], config=ProcessingConfig(copy=true_false))
 
     # creating sample
     index = [1, 2, 3, 4, 5, 6, 7]
@@ -489,13 +509,13 @@ def test_transform(true_false: bool) -> None:
             "feature1": ["1", "2", "3", "2", "3", "4", "4"],
             "feature2": ["A", "A", "B", "X", "X", feature2.default, "X"],
             "feature3": [
-                "x <= 2.00e+00",
-                "x <= 2.00e+00",
-                "2.00e+00 < x <= 4.50e+00",
-                "2.00e+00 < x <= 4.50e+00",
-                "2.00e+00 < x <= 4.50e+00",
-                "4.50e+00 < x",
-                "4.50e+00 < x",
+                "(-inf, 2.00e+00]",
+                "(-inf, 2.00e+00]",
+                "(2.00e+00, 4.50e+00]",
+                "(2.00e+00, 4.50e+00]",
+                "(2.00e+00, 4.50e+00]",
+                "(4.50e+00, inf)",
+                "(4.50e+00, inf)",
             ],
         },
         index=index,
@@ -523,7 +543,7 @@ def test_transform(true_false: bool) -> None:
     feature3.has_nan = True
     feature3.dropna = True
     # feature3.update(GroupedList({2: [2], 4.5: [4.5], np.inf: [np.inf, "__NAN__"]}))
-    disc = BaseDiscretizer([feature1, feature2, feature3], config=DiscretizerConfig(copy=true_false))
+    disc = BaseDiscretizer([feature1, feature2, feature3], config=ProcessingConfig(copy=true_false))
 
     # creating sample
     index = [1, 2, 3, 4, 5, 6, 7]
@@ -560,12 +580,12 @@ def test_transform(true_false: bool) -> None:
             "feature2": ["A", "A", "B", "X", feature2.nan, feature2.default, "X"],
             "feature3": [
                 feature3.nan,
-                "x <= 2.00e+00",
-                "2.00e+00 < x <= 4.50e+00",
-                "2.00e+00 < x <= 4.50e+00",
-                "2.00e+00 < x <= 4.50e+00",
-                "4.50e+00 < x",
-                "4.50e+00 < x",
+                "(-inf, 2.00e+00]",
+                "(2.00e+00, 4.50e+00]",
+                "(2.00e+00, 4.50e+00]",
+                "(2.00e+00, 4.50e+00]",
+                "(4.50e+00, inf)",
+                "(4.50e+00, inf)",
             ],
         },
         index=index,
@@ -590,7 +610,7 @@ def test_transform(true_false: bool) -> None:
     feature3.is_fitted = True
     feature3.has_nan = True
     # feature3.update(GroupedList({2: [2], 4.5: [4.5], np.inf: [np.inf, "__NAN__"]}))
-    disc = BaseDiscretizer([feature1, feature2, feature3], config=DiscretizerConfig(copy=true_false))
+    disc = BaseDiscretizer([feature1, feature2, feature3], config=ProcessingConfig(copy=true_false))
 
     # creating sample
     index = [1, 2, 3, 4, 5, 6, 7]
@@ -627,12 +647,12 @@ def test_transform(true_false: bool) -> None:
             "feature2": ["A", "A", "B", "X", np.nan, feature2.default, "X"],
             "feature3": [
                 np.nan,
-                "x <= 2.00e+00",
-                "2.00e+00 < x <= 4.50e+00",
-                "2.00e+00 < x <= 4.50e+00",
-                "2.00e+00 < x <= 4.50e+00",
-                "4.50e+00 < x",
-                "4.50e+00 < x",
+                "(-inf, 2.00e+00]",
+                "(2.00e+00, 4.50e+00]",
+                "(2.00e+00, 4.50e+00]",
+                "(2.00e+00, 4.50e+00]",
+                "(4.50e+00, inf)",
+                "(4.50e+00, inf)",
             ],
         },
         index=index,
@@ -643,7 +663,7 @@ def test_transform(true_false: bool) -> None:
 
 def _make_discretizer(features, *, min_freq, true_false, n_jobs):
     """Helper: build a BaseDiscretizer with the new config-based API."""
-    config = DiscretizerConfig(
+    config = ProcessingConfig(
         dropna=true_false,
         verbose=true_false,
         ordinal_encoding=true_false,
@@ -770,7 +790,7 @@ def test_base_discretizer(x_train: pd.DataFrame, dropna: bool) -> None:
     print(feature.has_nan, feature.dropna, feature.content)
 
     # initiating discretizer
-    discretizer = BaseDiscretizer(features=features, config=DiscretizerConfig(dropna=dropna, copy=True))
+    discretizer = BaseDiscretizer(features=features, config=ProcessingConfig(dropna=dropna, copy=True))
     x_discretized = discretizer.fit_transform(x_train)
 
     # testing ordinal qualitative feature discretization

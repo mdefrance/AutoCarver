@@ -316,7 +316,7 @@ def test_grouper_partial_groupby(evaluator: BinaryCombinationEvaluator):
     xagg = pd.DataFrame({"A": [1, 2, 3], "B": [4, 5, 6]}, index=["a", "b", "c"])
     groupby = {"a": "group1"}
     result = evaluator._grouper(xagg, groupby)
-    expected = pd.DataFrame({"A": [2, 3, 1], "B": [5, 6, 4]}, index=["b", "c", "group1"])
+    expected = pd.DataFrame({"A": [1, 2, 3], "B": [4, 5, 6]}, index=["group1", "b", "c"])
     print(result)
     assert np.allclose(result, expected)
 

@@ -1,7 +1,7 @@
 """set of tests for base selector"""
 
 import pandas as pd
-from pytest import raises
+from pytest import approx, raises
 
 from AutoCarver.features import (
     BaseFeature,
@@ -9,7 +9,6 @@ from AutoCarver.features import (
     get_qualitative_features,
     get_quantitative_features,
 )
-from AutoCarver.features.qualitatives import OrdinalFeature
 from AutoCarver.selectors import BaseFilter, BaseMeasure
 from AutoCarver.selectors.utils.base_selector import (
     BaseSelector,
@@ -19,22 +18,10 @@ from AutoCarver.selectors.utils.base_selector import (
     get_default_metrics,
     get_qualitative_metrics,
     get_quantitative_metrics,
-    make_random_chunks,
     remove_default_metrics,
     remove_duplicates,
     sort_features_per_measure,
 )
-
-
-def test_make_random_chunks() -> None:
-    """function test of make_random_chunks"""
-    elements = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    max_chunk_sizes = 3
-    random_state = 42
-    chunks = make_random_chunks(elements, max_chunk_sizes, random_state)
-    assert len(chunks) == 4
-    assert sum(len(chunk) for chunk in chunks) == len(elements)
-    assert all(element in elements for chunk in chunks for element in chunk)
 
 
 def test_get_quantitative_metrics(
@@ -169,7 +156,13 @@ def test_sort_features_per_measure(measure: BaseMeasure) -> None:
 def test_apply_measures(
     features: list[BaseFeature], X: pd.DataFrame, y: pd.Series, measures: list[BaseMeasure]
 ) -> None:
-    """testing function apply_measures"""
+    """testing function apply_measures
+
+    The batched ``compute_all`` path may differ from the scalar
+    ``compute_association`` in the last floating-point digits, so values are
+    compared with ``approx`` (parity itself is asserted exactly elsewhere, in
+    ``test_vectorized_parity.py``).
+    """
 
     # sorting out measures
     quantitative_measures = get_quantitative_metrics(measures)
@@ -184,8 +177,8 @@ def test_apply_measures(
     apply_measures(qualitative_features, X, y, qualitative_measures, default_measures=False)
     for feature in qualitative_features:
         for measure in qualitative_measures:
-            assert measure.compute_association(X[feature.version], y) == feature.measures.get(measure.__name__).get(
-                "value"
+            assert measure.compute_association(X[feature.version], y) == approx(
+                feature.measures.get(measure.__name__).get("value"), rel=1e-9, abs=1e-9, nan_ok=True
             )
 
     # applying quantitative measures
@@ -193,8 +186,8 @@ def test_apply_measures(
     apply_measures(quantitative_features, X, y, quantitative_measures, default_measures=False)
     for feature in quantitative_features:
         for measure in quantitative_measures:
-            assert measure.compute_association(X[feature.version], y) == feature.measures.get(measure.__name__).get(
-                "value"
+            assert measure.compute_association(X[feature.version], y) == approx(
+                feature.measures.get(measure.__name__).get("value"), rel=1e-9, abs=1e-9, nan_ok=True
             )
 
     # type mismatch
@@ -324,33 +317,13 @@ def test_base_selector_init_valid_parameters(features_object: Features) -> None:
     """test init of base selector"""
 
     # n_best < len(features)
-    n_best, max_num_features_per_chunk = 2, 100
-    selector = BaseSelector(
-        n_best_per_type=n_best,
-        features=features_object,
-        max_num_features_per_chunk=max_num_features_per_chunk,
-    )
-    assert selector.n_best_per_type == n_best
+    selector = BaseSelector(n_best_per_type=2, features=features_object)
+    assert selector.n_best_per_type == 2
     assert selector.features == features_object
-    assert selector.max_num_features_per_chunk == max_num_features_per_chunk
 
     # n_best > len(features)
-    n_best, max_num_features_per_chunk = 100, 100
     with raises(ValueError):
-        BaseSelector(
-            n_best_per_type=n_best,
-            features=features_object,
-            max_num_features_per_chunk=max_num_features_per_chunk,
-        )
-
-    # invalid  max_num_features_per_chunk
-    n_best, max_num_features_per_chunk = 100, 1
-    with raises(ValueError):
-        BaseSelector(
-            n_best_per_type=n_best,
-            features=features_object,
-            max_num_features_per_chunk=max_num_features_per_chunk,
-        )
+        BaseSelector(n_best_per_type=100, features=features_object)
 
 
 def test_base_selector_select(
@@ -363,32 +336,20 @@ def test_base_selector_select(
     """tests BaseSelector select function"""
 
     # keeping all features
-    n_best, max_num_features_per_chunk = 2, 100
-    selector = BaseSelector(
-        n_best_per_type=n_best,
-        features=features_object,
-        max_num_features_per_chunk=max_num_features_per_chunk,
-        measures=measures,
-        filters=filters,
-    )
-    best_features = selector.select(X, y)
+    selector = BaseSelector(n_best_per_type=2, features=features_object, measures=measures, filters=filters)
+    best_features = selector.fit(X, y).selected_features
     assert isinstance(best_features, Features)
     for feature in features_object.quantitatives:
         assert feature in best_features
     for feature in features_object.qualitatives:
         assert feature in best_features
 
+    # transform restricts to the selected columns
+    assert set(selector.transform(X).columns) == {feature.version for feature in best_features}
+
     # keeping best feature per type
-    n_best, max_num_features_per_chunk = 1, 100
-    selector = BaseSelector(
-        n_best_per_type=n_best,
-        features=features_object,
-        max_num_features_per_chunk=max_num_features_per_chunk,
-        measures=measures,
-        filters=filters,
-    )
-    best_features = selector.select(X, y)
-    print("best_features", best_features)
+    selector = BaseSelector(n_best_per_type=1, features=features_object, measures=measures, filters=filters)
+    best_features = selector.fit(X, y).selected_features
 
     # checking that one feature has been selected per type
     assert len(best_features) == 2
@@ -410,17 +371,20 @@ def test_base_selector_select(
     assert get_quantitative_features(best_features)[0] == quantitative_sorted_features[0]
 
 
-def test_base_selector_get_best_features_across_chunks_no_chunking(
+def test_base_selector_scores_all_features_exhaustively(
     features_object: Features,
     X: pd.DataFrame,
     y: pd.Series,
     measures: list[BaseMeasure],
     filters: list[BaseFilter],
 ) -> None:
-    """tests BaseSelector get_best_features_across_chunks function"""
-    # generating several correlated features
+    """selection is exhaustive: the global best per type is always selected,
+    even across many (correlated) features — there is no chunk sampling."""
+    # generating several correlated copies of each feature
     new_features = []
     new_X = {}
+    from AutoCarver.features.qualitatives import OrdinalFeature
+
     for i in range(10):
         for feature in features_object:
             new_name = feature.name + f"_{i}"
@@ -434,121 +398,21 @@ def test_base_selector_get_best_features_across_chunks_no_chunking(
     X = pd.DataFrame(new_X)
     features_object = Features.from_list(new_features)
 
-    n_best, max_num_features_per_chunk = 1, 100
-    selector = BaseSelector(
-        n_best_per_type=n_best,
-        features=features_object,
-        max_num_features_per_chunk=max_num_features_per_chunk,
-        measures=measures,
-        filters=filters,
-    )
-    best_features = selector.select(X, y)
+    selector = BaseSelector(n_best_per_type=1, features=features_object, measures=measures, filters=filters)
+    best_features = selector.fit(X, y).selected_features
     assert len(best_features) == 2
+    assert len(get_quantitative_features(best_features)) == 1
+    assert len(get_qualitative_features(best_features)) == 1
+
+    # the selected feature is the global best across all features of its type
     quantitative_sorted_features = sort_features_per_measure(
         get_quantitative_features(features_object),
         remove_default_metrics(get_quantitative_metrics(measures))[0],
     )
-    print("best_features", best_features)
-    print("get_quantitative_features(features_object)", get_quantitative_features(features_object))
-    print("quantitative_sorted_features", quantitative_sorted_features)
-    print("get_quantitative_features(best_features)", get_quantitative_features(best_features))
-    assert len(get_quantitative_features(best_features)) == 1
     assert get_quantitative_features(best_features)[0] == quantitative_sorted_features[0]
 
     qualitative_sorted_features = sort_features_per_measure(
         get_qualitative_features(features_object),
         remove_default_metrics(get_qualitative_metrics(measures))[0],
     )
-    assert len(get_qualitative_features(best_features)) == 1
     assert get_qualitative_features(best_features)[0] == qualitative_sorted_features[0]
-
-
-def test_base_selector_get_best_features_across_chunks_with_chunking(
-    features_object: Features,
-    X: pd.DataFrame,
-    y: pd.Series,
-    measures: list[BaseMeasure],
-    filters: list[BaseFilter],
-) -> None:
-    """testing get_best_features across chunks"""
-    # generating several correlated features
-    new_features = []
-    new_X = {}
-    for i in range(10):
-        for feature in features_object:
-            new_name = feature.name + f"_{i}"
-            new_X.update({new_name: X[feature.name]})
-            if isinstance(feature, OrdinalFeature):
-                new_feature = OrdinalFeature(new_name, values=feature.raw_order)
-            else:
-                new_feature = type(feature)(new_name)
-            new_features += [new_feature]
-
-    X = pd.DataFrame(new_X)
-    features_object = Features.from_list(new_features)
-
-    n_best, max_num_features_per_chunk = 1, 10
-    selector = BaseSelector(
-        n_best_per_type=n_best,
-        features=features_object,
-        max_num_features_per_chunk=max_num_features_per_chunk,
-        measures=measures,
-        filters=filters,
-    )
-    best_features = selector.select(X, y)
-    assert len(best_features) == 2
-    assert len(get_quantitative_features(best_features)) == 1
-    assert len(get_qualitative_features(best_features)) == 1
-    best_quantitative = get_quantitative_features(best_features)[0]
-    best_qualitative = get_qualitative_features(best_features)[0]
-
-    # looking for chunk containing best quantitative feature
-    quantitative_chunks = make_random_chunks(
-        get_quantitative_features(features_object),
-        max_num_features_per_chunk,
-        selector.random_state,
-    )
-    print("number of chunks", len(quantitative_chunks))
-    quantitative_chunk = next(chunk for chunk in quantitative_chunks if best_quantitative in chunk)
-
-    # sorting chunk
-    quantitative_sorted_features = sort_features_per_measure(
-        quantitative_chunk,
-        remove_default_metrics(get_quantitative_metrics(measures))[0],
-    )
-
-    # best quantitative should be selected from its chunk
-    assert best_quantitative == quantitative_sorted_features[0]
-
-    # sorting all quantitative features
-    quantitative_sorted_features = sort_features_per_measure(
-        get_quantitative_features(features_object),
-        remove_default_metrics(get_quantitative_metrics(measures))[0],
-    )
-    # best quantitative should be selected from all quantitative features
-    assert best_quantitative == quantitative_sorted_features[0]
-
-    # looking for chunk containing best qualitative feature
-    qualitative_chunks = make_random_chunks(
-        get_qualitative_features(features_object),
-        max_num_features_per_chunk,
-        selector.random_state,
-    )
-    qualitative_chunk = next(chunk for chunk in qualitative_chunks if best_qualitative in chunk)
-
-    # sorting chunk
-    qualitative_sorted_features = sort_features_per_measure(
-        qualitative_chunk,
-        remove_default_metrics(get_qualitative_metrics(measures))[0],
-    )
-
-    # best qualitative should be selected from all quzlitative features
-    assert best_qualitative == qualitative_sorted_features[0]
-
-    # sorting all qualitative features
-    qualitative_sorted_features = sort_features_per_measure(
-        get_qualitative_features(features_object),
-        remove_default_metrics(get_qualitative_metrics(measures))[0],
-    )
-    # best qualitative should be selected from all qualitative features
-    assert best_qualitative == qualitative_sorted_features[0]

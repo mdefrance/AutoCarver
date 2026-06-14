@@ -7,7 +7,7 @@ import pandas as pd
 
 from AutoCarver.carvers.utils.base_carver import BaseCarver, Samples
 from AutoCarver.combinations import CombinationEvaluator, KruskalCombinations
-from AutoCarver.discretizers.utils.base_discretizer import DiscretizerConfig
+from AutoCarver.discretizers.utils.base_discretizer import ProcessingConfig
 from AutoCarver.features import BaseFeature, Features
 from AutoCarver.utils import extend_docstring
 
@@ -35,7 +35,7 @@ class ContinuousCarver(BaseCarver):
         max_n_mod: int,
         *,
         combination_evaluator: CombinationEvaluator | None = None,
-        config: DiscretizerConfig | None = None,
+        config: ProcessingConfig | None = None,
     ) -> None:
         """
         Parameters

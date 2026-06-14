@@ -12,11 +12,10 @@ from AutoCarver.selectors.utils.base_selector import get_default_metrics, remove
 def test_regression_selector_initiate_default(features_object: Features) -> None:
     """tests initiation of default measures and filters"""
     # checking for default measures
-    n_best, max_num_features_per_chunk = 2, 100
+    n_best = 2
     selector = RegressionSelector(
         n_best_per_type=n_best,
         features=features_object,
-        max_num_features_per_chunk=max_num_features_per_chunk,
     )
 
     mode_measure = ModeMeasure()
@@ -34,7 +33,7 @@ def test_regression_selector_initiate_default(features_object: Features) -> None
 def test_regression_selector_initiate_measures(features_object: Features, measures: list[BaseMeasure]) -> None:
     """tests initiation of measures"""
 
-    n_best, max_num_features_per_chunk = 2, 100
+    n_best = 2
 
     # adding default measure
     default_measures = get_default_metrics(measures)
@@ -42,7 +41,6 @@ def test_regression_selector_initiate_measures(features_object: Features, measur
         selector = RegressionSelector(
             n_best_per_type=n_best,
             features=features_object,
-            max_num_features_per_chunk=max_num_features_per_chunk,
             measures=default_measures,
         )
         mode_measure = ModeMeasure()
@@ -63,7 +61,6 @@ def test_regression_selector_initiate_measures(features_object: Features, measur
         selector = RegressionSelector(
             n_best_per_type=n_best,
             features=features_object,
-            max_num_features_per_chunk=max_num_features_per_chunk,
             measures=regression_measures,
         )
         mode_measure = ModeMeasure()
@@ -83,7 +80,6 @@ def test_regression_selector_initiate_measures(features_object: Features, measur
             selector = RegressionSelector(
                 n_best_per_type=n_best,
                 features=features_object,
-                max_num_features_per_chunk=max_num_features_per_chunk,
                 measures=classification_measures,
             )
 
@@ -92,7 +88,7 @@ def test_regression_selector_initiate_filters(features_object: Features, filters
     """tests initiation of filters"""
 
     # checking for default filters
-    n_best, max_num_features_per_chunk = 2, 100
+    n_best = 2
 
     # adding default filter
     default_filters = get_default_metrics(filters)
@@ -100,7 +96,6 @@ def test_regression_selector_initiate_filters(features_object: Features, filters
         selector = RegressionSelector(
             n_best_per_type=n_best,
             features=features_object,
-            max_num_features_per_chunk=max_num_features_per_chunk,
             filters=default_filters,
         )
         valid_filter = NonDefaultValidFilter()
@@ -118,7 +113,6 @@ def test_regression_selector_initiate_filters(features_object: Features, filters
         selector = RegressionSelector(
             n_best_per_type=n_best,
             features=features_object,
-            max_num_features_per_chunk=max_num_features_per_chunk,
             filters=filters,
         )
         valid_filter = NonDefaultValidFilter()

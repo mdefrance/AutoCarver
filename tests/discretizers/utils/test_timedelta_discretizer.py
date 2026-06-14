@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 from AutoCarver.discretizers.discretizer import Discretizer
-from AutoCarver.discretizers.utils.base_discretizer import DiscretizerConfig
+from AutoCarver.discretizers.utils.base_discretizer import ProcessingConfig
 from AutoCarver.discretizers.utils.type_discretizers import TimedeltaDiscretizer, ensure_datetime_dtypes
 from AutoCarver.features import DatetimeFeature, Features
 
@@ -68,7 +68,7 @@ def test_ensure_datetime_dtypes_converts_only_datetimes() -> None:
 
 def test_ensure_datetime_dtypes_noop_without_datetimes() -> None:
     """ensure_datetime_dtypes is a no-op when there are no datetime features"""
-    features = Features(quantitatives=["num"])
+    features = Features(numericals=["num"])
     X = pd.DataFrame({"num": [1.0, 2.0, 3.0]})
 
     converted = ensure_datetime_dtypes(features, X)
@@ -86,7 +86,7 @@ def test_datetime_feature_in_full_discretizer_pipeline() -> None:
     X.loc[5, "dt"] = pd.NaT
     y = pd.Series(np.arange(n) % 2, index=X.index)
 
-    discretizer = Discretizer(features, min_freq=0.1, config=DiscretizerConfig(copy=True))
+    discretizer = Discretizer(features, min_freq=0.1, config=ProcessingConfig(copy=True))
     discretizer.fit(X, y)
 
     # quantiles are learned on seconds-since-reference and capped with np.inf

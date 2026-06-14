@@ -9,7 +9,7 @@ import pandas as pd
 
 from AutoCarver.discretizers.qualitatives import QualitativeDiscretizer
 from AutoCarver.discretizers.quantitatives import QuantitativeDiscretizer
-from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, DiscretizerConfig, Sample
+from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, ProcessingConfig, Sample
 from AutoCarver.features import Features
 from AutoCarver.utils import extend_docstring
 
@@ -34,7 +34,7 @@ class Discretizer(BaseDiscretizer):
         features: Features,
         min_freq: float,
         *,
-        config: DiscretizerConfig | None = None,
+        config: ProcessingConfig | None = None,
     ) -> None:
         super().__init__(features, min_freq=min_freq, config=config)
 

@@ -27,6 +27,34 @@ In general, associations are computed according to the provided data types of :m
 See :ref:`Measures` and :ref:`Filters`, for details on measures and filters' implementation.
 
 
+Selectors are `scikit-learn <https://scikit-learn.org/>`_ transformers built like
+the :ref:`carvers <Carvers>`: from a :class:`Features` set, a per-type budget
+``n_best_per_type``, a swappable set of ``measures`` / ``filters``, and a
+:class:`ProcessingConfig` carrying behavioral toggles (``verbose`` …).
+
+   * :meth:`~AutoCarver.selectors.BaseSelector.fit` scores every feature against
+     the target, ranks them per measure, and filters out redundant ones.
+   * :meth:`~AutoCarver.selectors.BaseSelector.transform` restricts ``X`` to the
+     selected columns; :attr:`~AutoCarver.selectors.BaseSelector.selected_features`
+     returns the selected :class:`Features` directly.
+
+Selection is **exhaustive** — every feature is scored exactly — but fast: each
+measure scores all features of a type in a single vectorized pass rather than one
+call per feature.
+
+.. code-block:: python
+
+    from AutoCarver.discretizers.utils.base_discretizer import ProcessingConfig
+    from AutoCarver.selectors import ClassificationSelector
+
+    selector = ClassificationSelector(
+        features=features,
+        n_best_per_type=25,                       # best features kept per data type
+        config=ProcessingConfig(verbose=True),   # behavioral toggles, as for carvers
+    )
+    selector.fit(X, y)  # or selector.fit_transform(X, y) to keep only selected features in X
+    best_features = selector.selected_features
+
 .. _ClassificationSelector:
 
 Classification tasks
@@ -34,7 +62,7 @@ Classification tasks
 
 
 .. autoclass:: AutoCarver.selectors.ClassificationSelector
-    :members: select
+    :members: fit, transform, select, selected_features
 
 
 .. _RegressionSelector:
@@ -44,7 +72,7 @@ Regression tasks
 
 
 .. autoclass:: AutoCarver.selectors.RegressionSelector
-    :members: select
+    :members: fit, transform, select, selected_features
 
 
 
@@ -197,10 +225,57 @@ where:
 
 .. note::
 
-    * :class:`KruskalMeasure` is the default measure for each :class:`QualitativeFeature` when using :class:`RegressionSelector`.
-    * :class:`KruskalMeasure` is the default measure for each :class:`QuantitativeFeature` when using :class:`ClassificationSelector`.
+    * :class:`KruskalEtaSquaredMeasure` is the default measure for each :class:`QualitativeFeature` when using :class:`RegressionSelector`.
+    * :class:`KruskalEtaSquaredMeasure` is the default measure for each :class:`QuantitativeFeature` when using :class:`ClassificationSelector`.
 
-    
+
+
+.. _kruskal_epsilon2:
+
+Kruskal-Wallis' :math:`\varepsilon^2` effect size
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The raw :ref:`Kruskal-Wallis' H <kruskal>` statistic grows with the number of observations, which makes it unsuitable for comparing features of differing sample sizes. The epsilon-squared effect size normalizes it to :math:`[0, 1]`:
+
+.. math::
+
+    \varepsilon^2 = \frac{H}{N - 1}
+
+where:
+
+ * :math:`H` is :ref:`Kruskal-Wallis' H <kruskal>` test statistic
+ * :math:`N` is the number of pooled (non-missing) observations
+
+It is to Kruskal-Wallis what :ref:`Cramér's V <cramerv>` is to :ref:`Pearson's chi² <chi2>`: a sample-size-normalized effect size meant for cross-feature ranking.
+
+
+.. autoclass:: AutoCarver.selectors.measures.KruskalEpsilonSquaredMeasure
+    :members: compute_association, validate, is_x_quantitative, is_y_qualitative, higher_is_better, is_reversible
+
+
+.. _kruskal_eta2:
+
+Kruskal-Wallis' :math:`\eta^2` effect size
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Like :ref:`epsilon-squared <kruskal_epsilon2>`, the eta-squared effect size removes the sample-size inflation of the raw :ref:`H <kruskal>` statistic, but it additionally corrects for the number of groups :math:`k`:
+
+.. math::
+
+    \eta^2 = \frac{H - k + 1}{N - k}
+
+where:
+
+ * :math:`H` is :ref:`Kruskal-Wallis' H <kruskal>` test statistic
+ * :math:`k` is the number of groups (modalities of :math:`y`)
+ * :math:`N` is the number of pooled (non-missing) observations
+
+The correction for :math:`k` is useful in the reversed (regression) case, where :math:`k` is the feature's modality count and therefore varies across features. The result is clamped to :math:`[0, 1]`.
+
+
+.. autoclass:: AutoCarver.selectors.measures.KruskalEtaSquaredMeasure
+    :members: compute_association, validate, is_x_quantitative, is_y_qualitative, higher_is_better, is_reversible
+
 
 .. _R:
 

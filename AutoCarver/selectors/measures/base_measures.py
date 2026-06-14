@@ -135,6 +135,30 @@ class BaseMeasure(ABC):
         # when its not implemented
         return False
 
+    def compute_all(self, X: pd.DataFrame, y: pd.Series, features: list[BaseFeature]) -> dict[str, dict]:
+        """Batch-computes this measure for every feature, returning ``{version: measure_dict}``.
+
+        This default falls back to a per-feature loop over
+        :meth:`compute_association`, so user-supplied custom measures keep
+        working. Built-in measures override it with a vectorized kernel (see
+        :mod:`AutoCarver.selectors.measures._vectorized`). The returned dict carries
+        the same ``{value, threshold, valid, info}`` payload as :meth:`to_dict`.
+        """
+        results = {}
+        for feature in features:
+            self.compute_association(X[feature.version], y)
+            results[feature.version] = self.to_dict()[self.__name__]
+        return results
+
+    def _result(self, value: float | None) -> dict:
+        """Builds this measure's per-feature payload from a precomputed ``value``.
+
+        Reuses :meth:`validate` / :attr:`info` so vectorized overrides produce
+        the exact same dict shape as the scalar path.
+        """
+        self.value = value
+        return self.to_dict()[self.__name__]
+
 
 class AbsoluteMeasure(BaseMeasure):
     """Absolute measure of association between x and y"""

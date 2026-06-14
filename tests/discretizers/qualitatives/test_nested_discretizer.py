@@ -6,7 +6,7 @@ from pytest import raises
 
 from AutoCarver import BinaryCarver
 from AutoCarver.combinations import BinaryCombinationEvaluator, TschuprowtCombinations
-from AutoCarver.discretizers import DiscretizerConfig
+from AutoCarver.discretizers import ProcessingConfig
 from AutoCarver.discretizers.qualitatives import NestedDiscretizer, QualitativeDiscretizer
 from AutoCarver.features import Features
 
@@ -211,7 +211,7 @@ def test_nested_feature_within_binary_carver_unseen_dev() -> None:
         max_n_mod=4,
         combination_evaluator=TschuprowtCombinations(),
         features=features,
-        config=DiscretizerConfig(verbose=False),
+        config=ProcessingConfig(verbose=False),
     )
     # fit transforms X_dev internally — would crash without the parent-aware remap
     carver.fit_transform(X_train, y_train, X_dev=X_dev, y_dev=y_dev)
@@ -231,7 +231,7 @@ def test_nested_feature_within_binary_carver() -> None:
         max_n_mod=4,
         combination_evaluator=evaluator,
         features=features,
-        config=DiscretizerConfig(verbose=False),
+        config=ProcessingConfig(verbose=False),
     )
     X_carved = carver.fit_transform(X_train, y_train, X_dev=X_dev, y_dev=y_dev)
 

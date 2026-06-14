@@ -12,7 +12,7 @@ from AutoCarver.discretizers.quantitatives.continuous_discretizer import (
     get_remaining_quantiles,
     np_find_quantiles,
 )
-from AutoCarver.discretizers.utils.base_discretizer import DiscretizerConfig
+from AutoCarver.discretizers.utils.base_discretizer import ProcessingConfig
 from AutoCarver.features import Features, GroupedList, QuantitativeFeature
 
 
@@ -698,54 +698,54 @@ def test_continuous_discretizer_fit():
     expected = pd.DataFrame(
         {
             "feature1": [
-                "1.00e+00 < x <= 2.00e+00",
-                "2.00e+00 < x <= 4.00e+00",
-                "2.00e+00 < x <= 4.00e+00",
-                "4.00e+00 < x",
-                "x <= 1.00e+00",
-                "x <= 1.00e+00",
-                "x <= 1.00e+00",
-                "x <= 1.00e+00",
-                "x <= 1.00e+00",
-                "x <= 1.00e+00",
-                "1.00e+00 < x <= 2.00e+00",
-                "1.00e+00 < x <= 2.00e+00",
-                "1.00e+00 < x <= 2.00e+00",
-                "1.00e+00 < x <= 2.00e+00",
-                "1.00e+00 < x <= 2.00e+00",
-                "1.00e+00 < x <= 2.00e+00",
-                "2.00e+00 < x <= 4.00e+00",
-                "2.00e+00 < x <= 4.00e+00",
-                "4.00e+00 < x",
-                "1.00e+00 < x <= 2.00e+00",
-                "2.00e+00 < x <= 4.00e+00",
-                "2.00e+00 < x <= 4.00e+00",
-                "4.00e+00 < x",
+                "(1.00e+00, 2.00e+00]",
+                "(2.00e+00, 4.00e+00]",
+                "(2.00e+00, 4.00e+00]",
+                "(4.00e+00, inf)",
+                "(-inf, 1.00e+00]",
+                "(-inf, 1.00e+00]",
+                "(-inf, 1.00e+00]",
+                "(-inf, 1.00e+00]",
+                "(-inf, 1.00e+00]",
+                "(-inf, 1.00e+00]",
+                "(1.00e+00, 2.00e+00]",
+                "(1.00e+00, 2.00e+00]",
+                "(1.00e+00, 2.00e+00]",
+                "(1.00e+00, 2.00e+00]",
+                "(1.00e+00, 2.00e+00]",
+                "(1.00e+00, 2.00e+00]",
+                "(2.00e+00, 4.00e+00]",
+                "(2.00e+00, 4.00e+00]",
+                "(4.00e+00, inf)",
+                "(1.00e+00, 2.00e+00]",
+                "(2.00e+00, 4.00e+00]",
+                "(2.00e+00, 4.00e+00]",
+                "(4.00e+00, inf)",
             ],
             "feature2": [
                 np.nan,
-                "2.00e+00 < x <= 5.00e+00",
-                "2.00e+00 < x <= 5.00e+00",
+                "(2.00e+00, 5.00e+00]",
+                "(2.00e+00, 5.00e+00]",
                 np.nan,
-                "x <= 1.00e+00",
-                "x <= 1.00e+00",
-                "x <= 1.00e+00",
-                "x <= 1.00e+00",
-                "x <= 1.00e+00",
-                np.nan,
-                np.nan,
-                "1.00e+00 < x <= 2.00e+00",
-                "1.00e+00 < x <= 2.00e+00",
-                "1.00e+00 < x <= 2.00e+00",
-                "1.00e+00 < x <= 2.00e+00",
-                "1.00e+00 < x <= 2.00e+00",
+                "(-inf, 1.00e+00]",
+                "(-inf, 1.00e+00]",
+                "(-inf, 1.00e+00]",
+                "(-inf, 1.00e+00]",
+                "(-inf, 1.00e+00]",
                 np.nan,
                 np.nan,
-                "2.00e+00 < x <= 5.00e+00",
+                "(1.00e+00, 2.00e+00]",
+                "(1.00e+00, 2.00e+00]",
+                "(1.00e+00, 2.00e+00]",
+                "(1.00e+00, 2.00e+00]",
+                "(1.00e+00, 2.00e+00]",
                 np.nan,
-                "2.00e+00 < x <= 5.00e+00",
-                "2.00e+00 < x <= 5.00e+00",
-                "2.00e+00 < x <= 5.00e+00",
+                np.nan,
+                "(2.00e+00, 5.00e+00]",
+                np.nan,
+                "(2.00e+00, 5.00e+00]",
+                "(2.00e+00, 5.00e+00]",
+                "(2.00e+00, 5.00e+00]",
             ],
         }
     )
@@ -768,13 +768,13 @@ def test_continuous_discretizer(x_train: pd.DataFrame):
         "Discrete_Quantitative_lownan",
         "Discrete_Quantitative_rarevalue",
     ]
-    features = Features(quantitatives=quantitatives)
+    features = Features(numericals=quantitatives)
     min_freq = 0.1
 
     discretizer = ContinuousDiscretizer(
         features,
         min_freq,
-        config=DiscretizerConfig(copy=True),
+        config=ProcessingConfig(copy=True),
     )
     x_discretized = discretizer.fit(x_train)
     features.dropna = True

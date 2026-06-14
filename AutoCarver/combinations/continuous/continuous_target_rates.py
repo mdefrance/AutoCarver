@@ -130,10 +130,12 @@ class TargetMean(ContinuousTargetRate):
             {self.__name__: mean_g, "frequency": freq_g, "count": n_g},
             index=pd.Index(leader_labels),
         )
-        # Legacy `xagg.groupby(...).sum()` sorts groups by leader label;
-        # mirror that so downstream `_test_distinct_target_rates_between_modalities`
-        # (which is order-sensitive) sees the same sequence.
-        return df.sort_index()
+        # `leader_labels` is already in ordinal order (first appearance in
+        # `index_to_groupby`); keep it — matching the legacy `groupby(sort=False)`
+        # path — so downstream `_test_distinct_target_rates_between_modalities`
+        # (order-sensitive) sees the feature's natural ordering, independent of
+        # the cosmetic label strings.
+        return df
 
 
 class TargetMedian(ContinuousTargetRate):

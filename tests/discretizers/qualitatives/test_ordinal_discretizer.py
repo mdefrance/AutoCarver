@@ -13,7 +13,7 @@ from AutoCarver.discretizers.qualitatives.ordinal_discretizer import (
     is_next_modality_closer_by_target_rate,
     update_stats,
 )
-from AutoCarver.discretizers.utils.base_discretizer import DiscretizerConfig
+from AutoCarver.discretizers.utils.base_discretizer import ProcessingConfig
 from AutoCarver.features import Features, GroupedList, OrdinalFeature
 
 
@@ -619,7 +619,7 @@ def test_ordinal_discretizer(x_train: pd.DataFrame, target: str) -> None:
     min_freq = 0.01
 
     # discretizing features
-    discretizer = OrdinalDiscretizer(ordinals=features, min_freq=min_freq, config=DiscretizerConfig(copy=True))
+    discretizer = OrdinalDiscretizer(ordinals=features, min_freq=min_freq, config=ProcessingConfig(copy=True))
     x_disc = discretizer.fit_transform(x_train, x_train[target])
 
     feature = "Qualitative_Ordinal"
@@ -656,7 +656,7 @@ def test_ordinal_discretizer(x_train: pd.DataFrame, target: str) -> None:
 
     # discretizing features
     features = Features(ordinals=ordinal_values)
-    discretizer = OrdinalDiscretizer(ordinals=features, min_freq=min_freq, config=DiscretizerConfig(copy=True))
+    discretizer = OrdinalDiscretizer(ordinals=features, min_freq=min_freq, config=ProcessingConfig(copy=True))
     discretizer.fit_transform(x_train, x_train[target])
 
     expected_ordinal_08 = {

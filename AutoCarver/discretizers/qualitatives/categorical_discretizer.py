@@ -6,7 +6,7 @@ from typing import Self
 
 import pandas as pd
 
-from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, DiscretizerConfig, Sample
+from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, ProcessingConfig, Sample
 from AutoCarver.discretizers.utils.frequency_ci import is_significantly_below
 from AutoCarver.features import CategoricalFeature
 from AutoCarver.utils import extend_docstring
@@ -31,7 +31,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
         categoricals: list[CategoricalFeature],
         min_freq: float,
         *,
-        config: DiscretizerConfig | None = None,
+        config: ProcessingConfig | None = None,
     ) -> None:
         """
         Parameters

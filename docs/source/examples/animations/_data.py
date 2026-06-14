@@ -90,11 +90,8 @@ def continuous_binary_frames() -> list[Frame]:
 
     # ----- Stage 2: real ContinuousDiscretizer.fit_transform() --------------
     df = pd.DataFrame({"Fare": fare})
-    features = Features(quantitatives=["Fare"])
-    cd = ContinuousDiscretizer(
-        quantitatives=features.quantitatives,
-        min_freq=MIN_FREQ,
-    )
+    features = Features(numericals=["Fare"])
+    cd = ContinuousDiscretizer(quantitatives=features.quantitatives, min_freq=MIN_FREQ)
     transformed = cd.fit_transform(df)
     feature = features.quantitatives[0]
     counts = transformed["Fare"].value_counts(dropna=False)
@@ -294,24 +291,24 @@ _SCI_NUM = re.compile(r"-?\d+\.\d+e[+-]?\d+")
 
 
 def _clean_label(label: str) -> str:
-    """Convert CD's scientific-notation labels into compact interval form.
+    """Convert CD's scientific-notation interval labels into compact form.
 
     Examples
     --------
-    >>> _clean_label('x <= 0.00e+00')
+    >>> _clean_label('(-inf, 0.00e+00]')
     '≤ 0'
-    >>> _clean_label('0.00e+00 < x <= 2.89e+00')
+    >>> _clean_label('(0.00e+00, 2.89e+00]')
     '(0, 2.89]'
-    >>> _clean_label('1.98e+01 < x')
+    >>> _clean_label('(1.98e+01, inf)')
     '> 19.8'
     """
     label = _SCI_NUM.sub(lambda m: _fmt(float(m.group(0))), label)
-    if m := re.fullmatch(r"x <= (\S+)", label):
+    if m := re.fullmatch(r"\(-inf, (\S+)\]", label):
         return f"≤ {m.group(1)}"
-    if m := re.fullmatch(r"(\S+) < x <= (\S+)", label):
-        return f"({m.group(1)}, {m.group(2)}]"
-    if m := re.fullmatch(r"(\S+) < x", label):
+    if m := re.fullmatch(r"\((\S+), inf\)", label):
         return f"> {m.group(1)}"
+    if m := re.fullmatch(r"\((\S+), (\S+)\]", label):
+        return f"({m.group(1)}, {m.group(2)}]"
     return label
 
 
@@ -861,11 +858,8 @@ def quantitative_binary_frames() -> list[Frame]:
     # ----- Stage 2: ContinuousDiscretizer alone (so we can highlight the
     # post-CD rare bins before OD absorbs them) ------------------------------
     df = pd.DataFrame({"Fare": fare})
-    features_cd = Features(quantitatives=["Fare"])
-    cd = ContinuousDiscretizer(
-        quantitatives=features_cd.quantitatives,
-        min_freq=QD_MIN_FREQ,
-    )
+    features_cd = Features(numericals=["Fare"])
+    cd = ContinuousDiscretizer(quantitatives=features_cd.quantitatives, min_freq=QD_MIN_FREQ)
     transformed_cd = cd.fit_transform(df.copy())
     feature_cd = features_cd.quantitatives[0]
     counts_cd = transformed_cd["Fare"].value_counts(dropna=False)
@@ -899,11 +893,8 @@ def quantitative_binary_frames() -> list[Frame]:
     )
 
     # ----- Stage 4: full QuantitativeDiscretizer (CD + OD merge) ------------
-    features_qd = Features(quantitatives=["Fare"])
-    qd = QuantitativeDiscretizer(
-        quantitatives=features_qd.quantitatives,
-        min_freq=QD_MIN_FREQ,
-    )
+    features_qd = Features(numericals=["Fare"])
+    qd = QuantitativeDiscretizer(quantitatives=features_qd.quantitatives, min_freq=QD_MIN_FREQ)
     qd.fit(df.copy(), y)
     feature_qd = features_qd.quantitatives[0]
     transformed_qd = qd.transform(df.copy())
@@ -1334,7 +1325,7 @@ def combinations_binary_frames() -> list[TableFrame]:
     df = pd.DataFrame({"Fare": fare})
 
     # ----- Real QD fit: the 6 ordered bins fed to the combination search ------
-    features = Features(quantitatives=["Fare"])
+    features = Features(numericals=["Fare"])
     qd = QuantitativeDiscretizer(quantitatives=features.quantitatives, min_freq=QD_MIN_FREQ)
     qd.fit(df.copy(), y)
     feature = features.quantitatives[0]
@@ -1482,7 +1473,7 @@ def readme_binary_frames() -> list[HeroFrame]:
 
     # ----- Stage 1: real QuantitativeDiscretizer ------------------------------
     df = pd.DataFrame({"Age": age})
-    features = Features(quantitatives=["Age"])
+    features = Features(numericals=["Age"])
     qd = QuantitativeDiscretizer(quantitatives=features.quantitatives, min_freq=HERO_MIN_FREQ)
     qd.fit(df.copy(), y)
     feature = features.quantitatives[0]

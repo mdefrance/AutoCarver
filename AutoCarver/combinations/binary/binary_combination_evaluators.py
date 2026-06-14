@@ -101,18 +101,22 @@ class BinaryCombinationEvaluator(CombinationEvaluator[pd.DataFrame], ABC):
         DataFrame
             Crosstab grouped by indices
         """
-        # all indices that may be duplicated
-        index_values = np.array([groupby.get(index_value, index_value) for index_value in xagg.index])
+        # group leader per raw modality (raw modalities are in ordinal order)
+        index_values = [groupby.get(index_value, index_value) for index_value in xagg.index]
 
-        # all unique indices deduplicated
-        unique_indices = np.unique(index_values)
+        # unique leaders ordered by first appearance (ordinal order), not by label
+        # text: keeps grouping independent of the cosmetic label strings so the
+        # order-sensitive viability tests see the feature's natural ordering.
+        group_of: dict = {}
+        for leader in index_values:
+            if leader not in group_of:
+                group_of[leader] = len(group_of)
+        unique_indices = list(group_of)
 
-        # initiating summed up array with zeros
+        # summing each raw modality's row into its group's position
+        positions = np.fromiter((group_of[leader] for leader in index_values), dtype=np.intp, count=len(index_values))
         summed_values = np.zeros((len(unique_indices), len(xagg.columns)))
-
-        # for each unique_index found in index_values sums xtab.Values at corresponding position
-        # in summed_values
-        np.add.at(summed_values, np.searchsorted(unique_indices, index_values), xagg.values)
+        np.add.at(summed_values, positions, xagg.values)
 
         # converting back to dataframe
         return pd.DataFrame(summed_values, index=unique_indices, columns=xagg.columns)

@@ -9,7 +9,7 @@ import pandas as pd
 
 from AutoCarver.discretizers.qualitatives import OrdinalDiscretizer
 from AutoCarver.discretizers.quantitatives.continuous_discretizer import ContinuousDiscretizer
-from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, DiscretizerConfig, Sample
+from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, ProcessingConfig, Sample
 from AutoCarver.discretizers.utils.frequency_ci import is_significantly_below
 from AutoCarver.discretizers.utils.type_discretizers import ensure_datetime_dtypes
 from AutoCarver.features import Features, QuantitativeFeature
@@ -34,7 +34,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         quantitatives: list[QuantitativeFeature],
         min_freq: float,
         *,
-        config: DiscretizerConfig | None = None,
+        config: ProcessingConfig | None = None,
     ) -> None:
         """
         Parameters
