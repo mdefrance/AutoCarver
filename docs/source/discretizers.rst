@@ -33,16 +33,16 @@ Discretizers
    * Helps improve modality relevancy and reduces the set of possible combinations to test from
    * Included in all carving pipelines: :class:`BinaryCarver`, :class:`MulticlassCarver`, :class:`ContinuousCarver`
 
-.. _DiscretizerConfig:
+.. _ProcessingConfig:
 
-DiscretizerConfig
+ProcessingConfig
 -----------------
 
 Behavioral toggles shared by every discretizer and carver. All flags are optional
 and propagate unchanged to sub-discretizers; domain parameters such as ``min_freq``
 remain explicit constructor arguments.
 
-.. autoclass:: AutoCarver.discretizers.DiscretizerConfig
+.. autoclass:: AutoCarver.discretizers.ProcessingConfig
 
 * ``copy`` (``bool``, default ``True``) — copy input ``X`` rather than mutating it.
 * ``ordinal_encoding`` (``bool``, default ``False``) — emit ordinal codes instead of

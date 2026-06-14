@@ -3,7 +3,7 @@
 The selector mirrors the :class:`BaseDiscretizer` / :class:`BaseCarver` shape: a
 sklearn estimator built from a :class:`Features` set, a per-type budget, a
 pluggable set of ``measures`` / ``filters`` (the swappable *decision boundary*),
-and a :class:`DiscretizerConfig` carrying cross-cutting toggles (``verbose`` …).
+and a :class:`ProcessingConfig` carrying cross-cutting toggles (``verbose`` …).
 
 Speed comes from :meth:`BaseMeasure.compute_all`: every feature of a given type
 is scored in a single batched call (see
@@ -20,7 +20,7 @@ import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from AutoCarver.discretizers.utils.base_discretizer import DiscretizerConfig
+from AutoCarver.discretizers.utils.base_discretizer import ProcessingConfig
 from AutoCarver.features import BaseFeature, Features, get_versions
 from AutoCarver.selectors.filters import BaseFilter, NonDefaultValidFilter, ValidFilter
 from AutoCarver.selectors.measures import BaseMeasure, ModeMeasure, NanMeasure
@@ -57,7 +57,7 @@ class BaseSelector(BaseEstimator, TransformerMixin, ABC):
         *,
         measures: list[BaseMeasure] | None = None,
         filters: list[BaseFilter] | None = None,
-        config: DiscretizerConfig | None = None,
+        config: ProcessingConfig | None = None,
     ) -> None:
         """
         Parameters
@@ -77,7 +77,7 @@ class BaseSelector(BaseEstimator, TransformerMixin, ABC):
             Redundancy filters. Defaults to the task-appropriate set; the
             validity filters are always added if missing.
 
-        config : DiscretizerConfig, optional
+        config : ProcessingConfig, optional
             Behavioral toggles shared with the discretizers (``verbose`` is the
             one consumed here). ``ordinal_encoding`` / ``dropna`` are ignored by
             the selector.
@@ -91,7 +91,7 @@ class BaseSelector(BaseEstimator, TransformerMixin, ABC):
             raise ValueError("Must set 0 < n_best_per_type <= len(features)")
 
         # behavioral configuration (reused from the discretizers)
-        self.config: DiscretizerConfig = config if config is not None else DiscretizerConfig()
+        self.config: ProcessingConfig = config if config is not None else ProcessingConfig()
 
         # measures and filters (with task defaults + validity/outlier defaults)
         self.measures = self._initiate_measures(measures)
@@ -210,20 +210,15 @@ class BaseSelector(BaseEstimator, TransformerMixin, ABC):
     def selected_features(self) -> Features:
         """The selected :class:`Features` (available after :meth:`fit`)."""
         if self._selected is None:
-            raise RuntimeError(f"[{self.__name__}] not fitted; call fit/select first")
+            raise RuntimeError(f"[{self.__name__}] not fitted; call fit first")
         return Features.from_list(self._selected) if self._selected else self._selected  # type: ignore
 
     def transform(self, X: pd.DataFrame, y: pd.Series | None = None) -> pd.DataFrame:
         """Restricts ``X`` to the selected features' columns."""
         _ = y
         if self._selected is None:
-            raise RuntimeError(f"[{self.__name__}] not fitted; call fit/select first")
+            raise RuntimeError(f"[{self.__name__}] not fitted; call fit first")
         return X[get_versions(self._selected)]
-
-    def select(self, X: pd.DataFrame, y: pd.Series) -> Features:
-        """Fits and returns the selected :class:`Features` (convenience wrapper)."""
-        self.fit(X, y)
-        return self.selected_features
 
     # ------------------------------------------------------------------
     # selection internals

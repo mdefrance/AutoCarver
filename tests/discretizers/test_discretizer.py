@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 from AutoCarver.config import Constants
-from AutoCarver.discretizers import Discretizer, DiscretizerConfig
+from AutoCarver.discretizers import Discretizer, ProcessingConfig
 from AutoCarver.features import CategoricalFeature, Features, OrdinalFeature, QuantitativeFeature
 
 
@@ -129,7 +129,7 @@ def test_discretizer(x_train: pd.DataFrame, x_dev_1: pd.DataFrame, target: str):
     }
     features = Features(
         categoricals=categoricals,
-        quantitatives=quantitatives,
+        numericals=quantitatives,
         ordinals=ordinal_values,
     )
 
@@ -137,7 +137,7 @@ def test_discretizer(x_train: pd.DataFrame, x_dev_1: pd.DataFrame, target: str):
     min_freq = 0.1
 
     # discretizing features
-    discretizer = Discretizer(min_freq=min_freq, features=features, config=DiscretizerConfig(copy=True))
+    discretizer = Discretizer(min_freq=min_freq, features=features, config=ProcessingConfig(copy=True))
     x_discretized = discretizer.fit_transform(x_train, x_train[target])
     x_dev_discretized = discretizer.transform(x_dev_1)
 

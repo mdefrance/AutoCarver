@@ -14,7 +14,7 @@ from AutoCarver.combinations import (
     TschuprowtCombinations,
 )
 from AutoCarver.config import Constants
-from AutoCarver.discretizers import DiscretizerConfig
+from AutoCarver.discretizers import ProcessingConfig
 from AutoCarver.features import Features
 
 
@@ -74,7 +74,7 @@ def test_multiclass_carver_initialization():
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
-        quantitatives=["feature3"],
+        numericals=["feature3"],
     )
     carver = MulticlassCarver(min_freq=0.1, max_n_mod=5, features=features)
     assert carver.min_freq == 0.1
@@ -116,7 +116,7 @@ def test_multiclass_carver_prepare_samples(evaluator: CombinationEvaluator):
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
-        quantitatives=["feature3"],
+        numericals=["feature3"],
     )
     carver = MulticlassCarver(min_freq=0.1, max_n_mod=5, features=features, combination_evaluator=evaluator)
     X = pd.DataFrame({"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]})
@@ -151,14 +151,14 @@ def test_multiclass_carver_fit_transform_with_small_data_not_ordinal(
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
-        quantitatives=["feature3"],
+        numericals=["feature3"],
     )
     carver = MulticlassCarver(
         min_freq=0.1,
         max_n_mod=5,
         features=features,
         combination_evaluator=evaluator,
-        config=DiscretizerConfig(dropna=True, ordinal_encoding=False, copy=False),
+        config=ProcessingConfig(dropna=True, ordinal_encoding=False, copy=False),
     )
     idx = ["a", "b", "c", "d"]
     X = pd.DataFrame(
@@ -221,14 +221,14 @@ def test_multiclass_carver_fit_transform_with_small_data_ordinal(evaluator: Comb
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
-        quantitatives=["feature3"],
+        numericals=["feature3"],
     )
     carver = MulticlassCarver(
         min_freq=0.1,
         max_n_mod=5,
         features=features,
         combination_evaluator=evaluator,
-        config=DiscretizerConfig(dropna=True, ordinal_encoding=True, copy=False),
+        config=ProcessingConfig(dropna=True, ordinal_encoding=True, copy=False),
     )
     idx = ["a", "b", "c", "d"]
     X = pd.DataFrame(
@@ -281,14 +281,14 @@ def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationE
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
-        quantitatives=["feature3"],
+        numericals=["feature3"],
     )
     carver = MulticlassCarver(
         min_freq=0.1,
         max_n_mod=5,
         features=features,
         combination_evaluator=evaluator,
-        config=DiscretizerConfig(dropna=True, ordinal_encoding=False, copy=False),
+        config=ProcessingConfig(dropna=True, ordinal_encoding=False, copy=False),
     )
     idx = [
         "a",
@@ -552,14 +552,14 @@ def test_multiclass_carver_fit_transform_with_target_only_nan(evaluator: Combina
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
-        quantitatives=["feature3"],
+        numericals=["feature3"],
     )
     carver = MulticlassCarver(
         min_freq=0.1,
         max_n_mod=5,
         features=features,
         combination_evaluator=evaluator,
-        config=DiscretizerConfig(dropna=True, ordinal_encoding=False, copy=False),
+        config=ProcessingConfig(dropna=True, ordinal_encoding=False, copy=False),
     )
     idx = ["a", "b", "c", "d"]
     X = pd.DataFrame(
@@ -620,14 +620,14 @@ def test_multiclass_carver_fit_transform_with_wrong_dev(evaluator: CombinationEv
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
-        quantitatives=["feature3"],
+        numericals=["feature3"],
     )
     carver = MulticlassCarver(
         min_freq=0.1,
         max_n_mod=5,
         features=features,
         combination_evaluator=evaluator,
-        config=DiscretizerConfig(dropna=True, ordinal_encoding=False, copy=False),
+        config=ProcessingConfig(dropna=True, ordinal_encoding=False, copy=False),
     )
     idx = ["a", "b", "c", "d"]
     X = pd.DataFrame(
@@ -688,7 +688,7 @@ def test_multiclass_carver_save_load(tmp_path: Path, evaluator: CombinationEvalu
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
-        quantitatives=["feature3"],
+        numericals=["feature3"],
     )
     carver = MulticlassCarver(min_freq=0.1, max_n_mod=5, features=features, combination_evaluator=evaluator)
     carver_file = tmp_path / "multilclass_carver.json"
@@ -730,7 +730,7 @@ def _fit_multiclass_carver(
     features = Features(
         categoricals=qualitative_features,
         ordinals=values_orders,
-        quantitatives=quantitative_features,
+        numericals=quantitative_features,
     )
     for feature_name in ["nan", "ones", "ones_nan"]:
         features.remove(feature_name)
@@ -742,7 +742,7 @@ def _fit_multiclass_carver(
         max_n_mod=4,
         features=features,
         combination_evaluator=evaluator,
-        config=DiscretizerConfig(dropna=dropna, ordinal_encoding=ordinal_encoding, copy=copy, verbose=False),
+        config=ProcessingConfig(dropna=dropna, ordinal_encoding=ordinal_encoding, copy=copy, verbose=False),
     )
     x_discretized = auto_carver.fit_transform(
         x_train,
@@ -988,7 +988,7 @@ def test_multiclass_carver_unknown_ordinal_values_raises(
         max_n_mod=5,
         features=features,
         combination_evaluator=CramervCombinations(),
-        config=DiscretizerConfig(verbose=False),
+        config=ProcessingConfig(verbose=False),
     )
     with raises(ValueError):
         auto_carver.fit_transform(x_train_wrong_2, x_train_wrong_2["multiclass_target"])

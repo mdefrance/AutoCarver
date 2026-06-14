@@ -10,7 +10,7 @@ import pandas as pd
 from AutoCarver.carvers.binary_carver import BinaryCarver
 from AutoCarver.carvers.utils.base_carver import Samples
 from AutoCarver.combinations import CombinationEvaluator
-from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, DiscretizerConfig, Sample
+from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, ProcessingConfig, Sample
 from AutoCarver.features import Features
 from AutoCarver.utils import extend_docstring
 
@@ -38,7 +38,7 @@ class MulticlassCarver(BinaryCarver):
         max_n_mod: int,
         *,
         combination_evaluator: CombinationEvaluator | None = None,
-        config: DiscretizerConfig | None = None,
+        config: ProcessingConfig | None = None,
     ) -> None:
         """ """
         super().__init__(

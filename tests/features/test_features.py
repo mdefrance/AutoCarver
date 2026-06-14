@@ -201,7 +201,7 @@ def test_features_initialization(features, mock_categoricals, mock_ordinals, moc
 
 def test_features_initialization_with_datetimes():
     """datetimes can be created from the name-based constructor as (name, reference_date) pairs"""
-    features = Features(quantitatives=["num"], datetimes=[("dt", "2020-01-01")])
+    features = Features(numericals=["num"], datetimes=[("dt", "2020-01-01")])
 
     # datetimes are recognized as their own category, and remain quantitative under the hood
     assert get_names(features.datetimes) == ["dt"]
@@ -222,7 +222,7 @@ def test_features_initialization_with_invalid_datetimes():
 
 def test_features_datetimes_stored_separately():
     """datetimes live in their own _datetimes list, recombined in the quantitatives view"""
-    features = Features(quantitatives=["num"], datetimes=[("dt", "2020-01-01")])
+    features = Features(numericals=["num"], datetimes=[("dt", "2020-01-01")])
 
     # stored apart from pure quantitatives
     assert get_names(features._datetimes) == ["dt"]
@@ -235,7 +235,7 @@ def test_features_datetimes_stored_separately():
 
 def test_features_replace_feature():
     """replace_feature swaps a stored feature in place by version, in the right typed list"""
-    features = Features(quantitatives=["num"], datetimes=[("dt", "2020-01-01")])
+    features = Features(numericals=["num"], datetimes=[("dt", "2020-01-01")])
 
     new_dt = DatetimeFeature("dt", reference_date="2020-01-01")
     features.replace_feature(new_dt)

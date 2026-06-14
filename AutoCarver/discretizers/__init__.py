@@ -11,6 +11,7 @@ from AutoCarver.discretizers.quantitatives import ContinuousDiscretizer, Quantit
 from AutoCarver.discretizers.utils import (
     BaseDiscretizer,
     DiscretizerConfig,
+    ProcessingConfig,
     Sample,
     StringDiscretizer,
     TimedeltaDiscretizer,
@@ -18,6 +19,7 @@ from AutoCarver.discretizers.utils import (
 
 __all__ = [
     "BaseDiscretizer",
+    "ProcessingConfig",
     "DiscretizerConfig",
     "Sample",
     "Discretizer",

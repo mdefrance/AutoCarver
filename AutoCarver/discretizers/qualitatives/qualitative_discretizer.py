@@ -10,7 +10,7 @@ import pandas as pd
 from AutoCarver.discretizers.qualitatives.categorical_discretizer import CategoricalDiscretizer
 from AutoCarver.discretizers.qualitatives.nested_discretizer import NestedDiscretizer, check_frequencies
 from AutoCarver.discretizers.qualitatives.ordinal_discretizer import OrdinalDiscretizer
-from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, DiscretizerConfig, Sample
+from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, ProcessingConfig, Sample
 from AutoCarver.discretizers.utils.type_discretizers import ensure_qualitative_dtypes
 from AutoCarver.features import Features, QualitativeFeature
 from AutoCarver.utils import extend_docstring
@@ -36,7 +36,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
         qualitatives: list[QualitativeFeature],
         min_freq: float,
         *,
-        config: DiscretizerConfig | None = None,
+        config: ProcessingConfig | None = None,
     ) -> None:
         """
         Parameters

@@ -6,7 +6,7 @@ import pandas as pd
 
 from AutoCarver.discretizers.utils.base_discretizer import (
     BaseDiscretizer,
-    DiscretizerConfig,
+    ProcessingConfig,
     Sample,
     cast_datetime_features,
 )
@@ -31,7 +31,7 @@ class StringDiscretizer(BaseDiscretizer):
         self,
         features: Features,
         *,
-        config: DiscretizerConfig | None = None,
+        config: ProcessingConfig | None = None,
     ) -> None:
         features_obj = Features.from_list(features)
         super().__init__(features=features_obj, config=config)
@@ -95,7 +95,7 @@ def ensure_qualitative_dtypes(
     features: Features,
     X: pd.DataFrame,
     *,
-    config: DiscretizerConfig | None = None,
+    config: ProcessingConfig | None = None,
 ) -> pd.DataFrame:
     """Checks features' data types and converts int/float to str"""
 
@@ -140,7 +140,7 @@ class TimedeltaDiscretizer(BaseDiscretizer):
         self,
         features: list[DatetimeFeature],
         *,
-        config: DiscretizerConfig | None = None,
+        config: ProcessingConfig | None = None,
     ) -> None:
         """
         Parameters
@@ -180,7 +180,7 @@ def ensure_datetime_dtypes(
     features: Features,
     X: pd.DataFrame,
     *,
-    config: DiscretizerConfig | None = None,
+    config: ProcessingConfig | None = None,
 ) -> pd.DataFrame:
     """Converts datetime features into second-based timedeltas (no-op when there are none)."""
 

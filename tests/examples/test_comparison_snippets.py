@@ -33,7 +33,7 @@ def test_autocarver_snippet(titanic_split: tuple[pd.DataFrame, pd.DataFrame]) ->
     train, dev = titanic_split
     features = Features(
         categoricals=["Sex"],
-        quantitatives=NUMERIC_COLS,
+        numericals=NUMERIC_COLS,
         ordinals={"Pclass": ["1", "2", "3"]},
     )
     carver = BinaryCarver(features=features, min_freq=0.05, max_n_mod=5)

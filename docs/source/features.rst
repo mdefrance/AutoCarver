@@ -39,7 +39,14 @@ Qualitatitve features
 
 
 Quantitative features
----------------------
+------------------
+
+A :class:`NumericalFeature` is the concrete numeric feature type. Declare them from the
+:class:`Features` constructor via the ``numericals`` argument. :class:`QuantitativeFeature`
+remains the abstract umbrella shared by numericals and datetimes.
+
+.. autoclass:: AutoCarver.features.NumericalFeature
+    :members: is_quantitative, has_nan, has_default, summary, history
 
 .. autoclass:: AutoCarver.features.QuantitativeFeature
     :members: is_quantitative, has_nan, has_default, summary, history
@@ -65,7 +72,7 @@ Datetimes can be declared from the :class:`Features` constructor as
     from AutoCarver.features import Features
 
     features = Features(
-        quantitatives=["age"],
+        numericals=["age"],
         datetimes=[
             ("signup_date", "2020-01-01"),   # seconds since a fixed date
             ("churn_date", "signup_date"),   # seconds since another column

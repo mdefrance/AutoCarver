@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import pandas as pd
+from pandas.api.types import is_numeric_dtype
 from pytest import FixtureRequest, fixture, raises
 
 from AutoCarver import BinaryCarver
@@ -15,7 +16,7 @@ from AutoCarver.combinations import (
     TschuprowtCombinations,
 )
 from AutoCarver.config import Constants
-from AutoCarver.discretizers import DiscretizerConfig
+from AutoCarver.discretizers import ProcessingConfig
 from AutoCarver.features import DatetimeFeature, Features, OrdinalFeature
 
 
@@ -86,7 +87,7 @@ def test_binary_carver_initialization():
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
-        quantitatives=["feature3"],
+        numericals=["feature3"],
     )
     carver = BinaryCarver(min_freq=0.1, max_n_mod=5, features=features)
     assert carver.min_freq == 0.1
@@ -132,7 +133,7 @@ def test_binary_carver_prepare_samples(evaluator: CombinationEvaluator):
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
-        quantitatives=["feature3"],
+        numericals=["feature3"],
     )
     carver = BinaryCarver(min_freq=0.1, max_n_mod=5, features=features, combination_evaluator=evaluator)
     X = pd.DataFrame({"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]})
@@ -157,7 +158,7 @@ def test_binary_carver_aggregator(evaluator: CombinationEvaluator):
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
-        quantitatives=["feature3"],
+        numericals=["feature3"],
     )
     carver = BinaryCarver(min_freq=0.1, max_n_mod=5, features=features, combination_evaluator=evaluator)
     X = pd.DataFrame({"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]})
@@ -185,7 +186,7 @@ def test_carve_feature_with_best_combination(evaluator):
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
-        quantitatives=["feature3"],
+        numericals=["feature3"],
     )
     X = pd.DataFrame(
         {
@@ -203,7 +204,7 @@ def test_carve_feature_with_best_combination(evaluator):
         min_freq=0.1,
         max_n_mod=5,
         combination_evaluator=evaluator,
-        config=DiscretizerConfig(dropna=True, verbose=False),
+        config=ProcessingConfig(dropna=True, verbose=False),
     )
     carver._prepare_samples(samples)
 
@@ -244,7 +245,7 @@ def test_carve_feature_without_best_combination(evaluator: CombinationEvaluator)
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
-        quantitatives=["feature3"],
+        numericals=["feature3"],
     )
     # n=12 so each singleton (1/12) falls below the carver-halved rare floor (0.45 − 1/12).
     X = pd.DataFrame(
@@ -276,7 +277,7 @@ def test_carve_feature_without_best_combination(evaluator: CombinationEvaluator)
         min_freq=0.9,
         max_n_mod=5,
         combination_evaluator=evaluator,
-        config=DiscretizerConfig(dropna=True, verbose=False),
+        config=ProcessingConfig(dropna=True, verbose=False),
     )
     carver._prepare_samples(samples)
 
@@ -300,7 +301,7 @@ def test_fit_with_best_combination(evaluator):
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
-        quantitatives=["feature3"],
+        numericals=["feature3"],
     )
     X = pd.DataFrame(
         {
@@ -317,7 +318,7 @@ def test_fit_with_best_combination(evaluator):
         min_freq=0.1,
         max_n_mod=5,
         combination_evaluator=evaluator,
-        config=DiscretizerConfig(dropna=True, verbose=False),
+        config=ProcessingConfig(dropna=True, verbose=False),
     )
 
     # fitting carver
@@ -352,7 +353,7 @@ def test_fit_without_best_combination(evaluator: CombinationEvaluator):
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
-        quantitatives=["feature3"],
+        numericals=["feature3"],
     )
     X = pd.DataFrame(
         {
@@ -369,7 +370,7 @@ def test_fit_without_best_combination(evaluator: CombinationEvaluator):
         min_freq=0.9,
         max_n_mod=5,
         combination_evaluator=evaluator,
-        config=DiscretizerConfig(dropna=True, verbose=False),
+        config=ProcessingConfig(dropna=True, verbose=False),
     )
 
     # fitting carver
@@ -384,14 +385,14 @@ def test_binary_carver_fit_transform_with_small_data_not_ordinal(evaluator: Comb
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
-        quantitatives=["feature3"],
+        numericals=["feature3"],
     )
     carver = BinaryCarver(
         min_freq=0.1,
         max_n_mod=5,
         features=features,
         combination_evaluator=evaluator,
-        config=DiscretizerConfig(dropna=True, ordinal_encoding=False, copy=False),
+        config=ProcessingConfig(dropna=True, ordinal_encoding=False, copy=False),
     )
     idx = ["a", "b", "c", "d"]
     X = pd.DataFrame(
@@ -446,14 +447,14 @@ def test_binary_carver_fit_transform_with_small_data_ordinal(evaluator: Combinat
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
-        quantitatives=["feature3"],
+        numericals=["feature3"],
     )
     carver = BinaryCarver(
         min_freq=0.1,
         max_n_mod=5,
         features=features,
         combination_evaluator=evaluator,
-        config=DiscretizerConfig(dropna=True, ordinal_encoding=True, copy=False),
+        config=ProcessingConfig(dropna=True, ordinal_encoding=True, copy=False),
     )
     idx = ["a", "b", "c", "d"]
     X = pd.DataFrame(
@@ -503,14 +504,14 @@ def test_binary_carver_fit_transform_with_large_data(evaluator: CombinationEvalu
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
-        quantitatives=["feature3"],
+        numericals=["feature3"],
     )
     carver = BinaryCarver(
         min_freq=0.1,
         max_n_mod=5,
         features=features,
         combination_evaluator=evaluator,
-        config=DiscretizerConfig(dropna=True, ordinal_encoding=False, copy=False),
+        config=ProcessingConfig(dropna=True, ordinal_encoding=False, copy=False),
     )
     idx = [
         "a",
@@ -667,14 +668,14 @@ def test_binary_carver_fit_transform_with_target_only_nan(evaluator: Combination
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
-        quantitatives=["feature3"],
+        numericals=["feature3"],
     )
     carver = BinaryCarver(
         min_freq=0.1,
         max_n_mod=5,
         features=features,
         combination_evaluator=evaluator,
-        config=DiscretizerConfig(dropna=True, ordinal_encoding=False, copy=False),
+        config=ProcessingConfig(dropna=True, ordinal_encoding=False, copy=False),
     )
     idx = ["a", "b", "c", "d"]
     X = pd.DataFrame(
@@ -727,14 +728,14 @@ def test_binary_carver_fit_transform_with_wrong_dev(evaluator: CombinationEvalua
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
-        quantitatives=["feature3"],
+        numericals=["feature3"],
     )
     carver = BinaryCarver(
         min_freq=0.1,
         max_n_mod=5,
         features=features,
         combination_evaluator=evaluator,
-        config=DiscretizerConfig(dropna=True, ordinal_encoding=True, copy=False),
+        config=ProcessingConfig(dropna=True, ordinal_encoding=True, copy=False),
     )
     idx = ["a", "b", "c", "d"]
     X = pd.DataFrame(
@@ -774,7 +775,7 @@ def test_binary_carver_save_load(tmp_path: Path, evaluator: CombinationEvaluator
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
-        quantitatives=["feature3"],
+        numericals=["feature3"],
     )
     carver = BinaryCarver(min_freq=0.1, max_n_mod=5, features=features, combination_evaluator=evaluator)
     carver_file = tmp_path / "binary_carver.json"
@@ -791,6 +792,53 @@ def test_binary_carver_save_load(tmp_path: Path, evaluator: CombinationEvaluator
     assert carver.max_n_mod == loaded_carver.max_n_mod
     assert carver.combination_evaluator.sort_by == loaded_carver.combination_evaluator.sort_by
     assert carver.combination_evaluator.verbose == loaded_carver.combination_evaluator.verbose
+
+
+def test_binary_carver_ordinal_encoding_round_trip(tmp_path: Path, evaluator: CombinationEvaluator):
+    """ordinal_encoding=True must survive save/load and yield numeric (XGBoost-ready) dtypes."""
+    features = Features(
+        categoricals=["feature1"],
+        ordinals={"feature2": ["low", "medium", "high"]},
+        numericals=["feature3"],
+    )
+    carver = BinaryCarver(
+        min_freq=0.1,
+        max_n_mod=5,
+        features=features,
+        combination_evaluator=evaluator,
+        config=ProcessingConfig(dropna=True, ordinal_encoding=True, copy=True),
+    )
+    idx = ["a", "b", "c", "d"]
+    X = pd.DataFrame(
+        {
+            "feature1": ["A", "B", "A", "C"],
+            "feature2": ["low", "medium", "high", "high"],
+            "feature3": [1, 2, 3, float("nan")],
+        },
+        index=idx,
+    )
+    y = pd.Series([0, 1, 0, 1], index=idx)
+    carver.fit(X.copy(), y)
+
+    # in-memory transform: every column must be numeric (ordinal-encoded), not object
+    train_out = carver.transform(X.copy())
+    for col in train_out.columns:
+        assert is_numeric_dtype(train_out[col]), f"{col} not numeric in-memory: {train_out[col].dtype}"
+
+    # round-trip through JSON
+    carver_file = tmp_path / "binary_carver_ordinal.json"
+    carver.save(str(carver_file))
+    loaded = BinaryCarver.load(str(carver_file))
+
+    # collection-level flag must stay consistent with per-feature state
+    assert loaded.features.ordinal_encoding is True
+    assert all(feature.ordinal_encoding for feature in loaded.features)
+
+    # loaded transform must match in-memory transform AND stay numeric
+    dev_out = loaded.transform(X.copy())
+    for col in dev_out.columns:
+        assert is_numeric_dtype(dev_out[col]), f"{col} not numeric after load: {dev_out[col].dtype}"
+    pd.testing.assert_frame_equal(dev_out, train_out, check_dtype=True)
 
 
 def test_binary_carver_end_to_end_with_datetime(tmp_path: Path, evaluator: CombinationEvaluator):
@@ -810,7 +858,7 @@ def test_binary_carver_end_to_end_with_datetime(tmp_path: Path, evaluator: Combi
         max_n_mod=4,
         features=features,
         combination_evaluator=evaluator,
-        config=DiscretizerConfig(dropna=True, copy=True),
+        config=ProcessingConfig(dropna=True, copy=True),
     )
     X_transformed = carver.fit_transform(X, y)
 
@@ -861,7 +909,7 @@ def _fit_binary_carver(
     features = Features(
         categoricals=qualitative_features,
         ordinals=values_orders,
-        quantitatives=quantitative_features,
+        numericals=quantitative_features,
     )
     for feature_name in ["nan", "ones", "ones_nan"]:
         features.remove(feature_name)
@@ -873,7 +921,7 @@ def _fit_binary_carver(
         max_n_mod=4,
         combination_evaluator=evaluator,
         features=features,
-        config=DiscretizerConfig(dropna=dropna, ordinal_encoding=ordinal_encoding, copy=copy, verbose=False),
+        config=ProcessingConfig(dropna=dropna, ordinal_encoding=ordinal_encoding, copy=copy, verbose=False),
     )
     x_discretized = auto_carver.fit_transform(
         x_train,
@@ -897,7 +945,7 @@ def test_binary_carver_uneligible_features_raises(
     features = Features(
         categoricals=qualitative_features,
         ordinals=values_orders,
-        quantitatives=quantitative_features,
+        numericals=quantitative_features,
     )
     with raises(ValueError):
         auto_carver = BinaryCarver(
@@ -905,7 +953,7 @@ def test_binary_carver_uneligible_features_raises(
             max_n_mod=4,
             combination_evaluator=evaluator,
             features=features,
-            config=DiscretizerConfig(verbose=False),
+            config=ProcessingConfig(verbose=False),
         )
         auto_carver.fit_transform(
             x_train,
@@ -1136,7 +1184,7 @@ def test_binary_carver_unknown_ordinal_values_raises(
         max_n_mod=5,
         combination_evaluator=CramervCombinations(),
         features=features,
-        config=DiscretizerConfig(verbose=False),
+        config=ProcessingConfig(verbose=False),
     )
     with raises(ValueError):
         auto_carver.fit_transform(x_train_wrong_2, x_train_wrong_2["binary_target"])

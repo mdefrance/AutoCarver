@@ -337,7 +337,7 @@ def test_base_selector_select(
 
     # keeping all features
     selector = BaseSelector(n_best_per_type=2, features=features_object, measures=measures, filters=filters)
-    best_features = selector.select(X, y)
+    best_features = selector.fit(X, y).selected_features
     assert isinstance(best_features, Features)
     for feature in features_object.quantitatives:
         assert feature in best_features
@@ -349,7 +349,7 @@ def test_base_selector_select(
 
     # keeping best feature per type
     selector = BaseSelector(n_best_per_type=1, features=features_object, measures=measures, filters=filters)
-    best_features = selector.select(X, y)
+    best_features = selector.fit(X, y).selected_features
 
     # checking that one feature has been selected per type
     assert len(best_features) == 2
@@ -399,7 +399,7 @@ def test_base_selector_scores_all_features_exhaustively(
     features_object = Features.from_list(new_features)
 
     selector = BaseSelector(n_best_per_type=1, features=features_object, measures=measures, filters=filters)
-    best_features = selector.select(X, y)
+    best_features = selector.fit(X, y).selected_features
     assert len(best_features) == 2
     assert len(get_quantitative_features(best_features)) == 1
     assert len(get_qualitative_features(best_features)) == 1

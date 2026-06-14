@@ -19,10 +19,10 @@ from AutoCarver.combinations import (
     TschuprowtCombinations,
 )
 from AutoCarver.discretizers import BaseDiscretizer, Discretizer, Sample
-from AutoCarver.discretizers.utils.base_discretizer import DiscretizerConfig
+from AutoCarver.discretizers.utils.base_discretizer import ProcessingConfig
 from AutoCarver.features import BaseFeature, Features
 from AutoCarver.features.qualitatives import CategoricalFeature, NestedFeature, OrdinalFeature
-from AutoCarver.features.quantitatives import DatetimeFeature, QuantitativeFeature
+from AutoCarver.features.quantitatives import DatetimeFeature, NumericalFeature
 from AutoCarver.utils import extend_docstring, has_idisplay
 
 # trying to import extra dependencies
@@ -129,14 +129,14 @@ class BaseCarver(BaseDiscretizer, ABC):
         max_n_mod: int,
         *,
         combination_evaluator: CombinationEvaluator | None = None,
-        config: DiscretizerConfig | None = None,
+        config: ProcessingConfig | None = None,
     ) -> None:
         """
         Parameters
         ----------
         min_freq : float
             Minimum frequency per modality. Tested via a Wilson upper bound at
-            significance :attr:`DiscretizerConfig.min_freq_alpha` (see
+            significance :attr:`ProcessingConfig.min_freq_alpha` (see
             :ref:`MinFreqViability`).
 
             * Features need at least one modality with frequency significantly
@@ -172,9 +172,9 @@ class BaseCarver(BaseDiscretizer, ABC):
             ``min_freq_alpha`` directly to each
             :meth:`~CombinationEvaluator.get_best_combination` call.
 
-        config : DiscretizerConfig, optional
+        config : ProcessingConfig, optional
             Behavioral toggles inherited from :class:`BaseDiscretizer`. Defaults
-            to ``DiscretizerConfig(dropna=True, ordinal_encoding=True)`` — the
+            to ``ProcessingConfig(dropna=True, ordinal_encoding=True)`` — the
             carver-friendly defaults (group ``nan``, ordinal-encode features
             for downstream sklearn estimators).
         """
@@ -186,7 +186,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         # carver-friendly defaults differ from BaseDiscretizer's (which default
         # both to False): carvers group nans and ordinal-encode by default.
         if config is None:
-            config = DiscretizerConfig(dropna=True, ordinal_encoding=True)
+            config = ProcessingConfig(dropna=True, ordinal_encoding=True)
         super().__init__(features, min_freq=min_freq, config=config)
 
         self.max_n_mod = max_n_mod
@@ -244,6 +244,11 @@ class BaseCarver(BaseDiscretizer, ABC):
         summaries = pd.DataFrame(rows)
         if summaries.empty:
             return summaries
+
+        # binary carving historizes both cramerv and tschuprowt; keep only the metric the carver
+        # is configured to sort by so the same association isn't duplicated across two columns.
+        redundant = {"cramerv", "tschuprowt"} - {self.combination_evaluator.sort_by}
+        summaries = summaries.drop(columns=[col for col in redundant if col in summaries.columns])
 
         excluded = {"feature", "label", "content", "target_mean", "frequency", "dropped", "dropped_reason"}
         indices = [col for col in summaries.columns if col not in excluded]
@@ -304,7 +309,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         Features for which no candidate combination survives the viability filter
         (Wilson ``min_freq`` on train + dev, distinct target rates, train/dev rank
         preservation) are dropped from ``self.features`` and retained on
-        ``self.dropped_features``. With ``DiscretizerConfig(n_jobs=k)`` and
+        ``self.dropped_features``. With ``ProcessingConfig(n_jobs=k)`` and
         ``k > 1`` and more than one feature, the per-feature combination search
         runs in parallel through ``multiprocessing.Pool.imap_unordered``.
 
@@ -555,7 +560,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         min_freq = data.pop("min_freq", None)
         max_n_mod = data.pop("max_n_mod")
         config_data = data.pop("config", {})
-        config = DiscretizerConfig(
+        config = ProcessingConfig(
             dropna=config_data.get("dropna", True),
             ordinal_encoding=config_data.get("ordinal_encoding", True),
             verbose=config_data.get("verbose", False),
@@ -583,7 +588,7 @@ class BaseCarver(BaseDiscretizer, ABC):
             elif fjson.get("is_datetime"):
                 instance.dropped_features.append(DatetimeFeature.load(fjson))
             elif fjson.get("is_quantitative"):
-                instance.dropped_features.append(QuantitativeFeature.load(fjson))
+                instance.dropped_features.append(NumericalFeature.load(fjson))
 
         return instance
 
@@ -592,7 +597,7 @@ def discretize(
     features: Features,
     samples: Samples,
     discretizer_min_freq: float,
-    config: DiscretizerConfig,
+    config: ProcessingConfig,
 ) -> Samples:
     """Discretizes X and X_dev according to the frequency of each feature's modalities."""
 

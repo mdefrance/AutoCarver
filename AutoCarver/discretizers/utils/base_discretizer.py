@@ -18,7 +18,7 @@ from AutoCarver.utils import extend_docstring
 
 
 @dataclass
-class DiscretizerConfig:
+class ProcessingConfig:
     """Behavioral configuration applied to a :class:`BaseDiscretizer`.
 
     Carries cross-cutting toggles that propagate unchanged to sub-discretizers.
@@ -48,6 +48,11 @@ class DiscretizerConfig:
     verbose: bool = False
     n_jobs: int = 1
     min_freq_alpha: float = 0.05
+
+
+# Backward-compatible alias: this config was historically named ``DiscretizerConfig`` but is
+# shared by discretizers, carvers and selectors — the neutral ``ProcessingConfig`` is preferred.
+DiscretizerConfig = ProcessingConfig
 
 
 class Sample:
@@ -138,7 +143,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         features: "Features | Iterable[BaseFeature]",
         *,
         min_freq: float | None = None,
-        config: DiscretizerConfig | None = None,
+        config: ProcessingConfig | None = None,
     ) -> None:
         """
         Parameters
@@ -149,7 +154,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         min_freq : float
             Minimum frequency per modality. Tested via a Wilson upper bound at
-            significance :attr:`DiscretizerConfig.min_freq_alpha` (see
+            significance :attr:`ProcessingConfig.min_freq_alpha` (see
             :ref:`MinFreqViability`).
 
             * Features need at least one modality with frequency significantly
@@ -163,11 +168,11 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
                 Set between ``0.01`` (slower, less robust) and ``0.05`` (faster,
                 more robust).
 
-        config : DiscretizerConfig, optional
+        config : ProcessingConfig, optional
             Behavioral toggles (``copy`` / ``ordinal_encoding`` / ``dropna`` /
             ``verbose`` / ``n_jobs`` / ``min_freq_alpha``). Defaults to a
-            default-initialized :class:`DiscretizerConfig` — see
-            :ref:`DiscretizerConfig` for each field.
+            default-initialized :class:`ProcessingConfig` — see
+            :ref:`ProcessingConfig` for each field.
         """
         # accept either a Features collection or an iterable of BaseFeature
         if isinstance(features, Features):
@@ -175,7 +180,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         else:
             self.features = Features.from_list(features)
 
-        self.config: DiscretizerConfig = config if config is not None else DiscretizerConfig()
+        self.config: ProcessingConfig = config if config is not None else ProcessingConfig()
         self._min_freq = min_freq
 
         # set by subclasses; serialized for round-trip but not used by BaseDiscretizer itself
@@ -436,6 +441,13 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         # replacing values for there corresponding label
         sample.X.replace({feature.version: feature.label_per_value for feature in qualitatives}, inplace=True)
 
+        # ordinal_encoding produces integer labels, but the in-place ``replace`` above keeps the
+        # column's original object dtype. Cast those columns to numeric so downstream estimators
+        # (e.g. XGBoost) accept them, matching the numeric dtype quantitatives get from np.select.
+        encoded = [feature.version for feature in qualitatives if feature.ordinal_encoding]
+        if encoded:
+            sample.X[encoded] = sample.X[encoded].apply(pd.to_numeric)
+
         return sample
 
     def _log_if_verbose(self, prefix: str = " -") -> None:
@@ -529,7 +541,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         is_fitted = data.pop("is_fitted", False)
         min_freq = data.pop("min_freq", None)
         config_data = data.pop("config", {})
-        config = DiscretizerConfig(
+        config = ProcessingConfig(
             ordinal_encoding=config_data.get("ordinal_encoding", False),
             dropna=config_data.get("dropna", False),
             verbose=config_data.get("verbose", False),

@@ -32,7 +32,7 @@ def main() -> None:
     # 3. Declare features by type
     features = Features(
         categoricals=["Sex"],
-        quantitatives=["Age", "Fare", "Siblings/Spouses Aboard", "Parents/Children Aboard"],
+        numericals=["Age", "Fare", "Siblings/Spouses Aboard", "Parents/Children Aboard"],
         ordinals={"Pclass": ["1", "2", "3"]},
     )
 

@@ -56,7 +56,7 @@ train, dev = train_test_split(data, test_size=0.33, random_state=42, stratify=da
 # 3. Declare features by type
 features = Features(
     categoricals=["Sex"],
-    quantitatives=["Age", "Fare", "Siblings/Spouses Aboard", "Parents/Children Aboard"],
+    numericals=["Age", "Fare", "Siblings/Spouses Aboard", "Parents/Children Aboard"],
     ordinals={"Pclass": ["1", "2", "3"]},
 )
 

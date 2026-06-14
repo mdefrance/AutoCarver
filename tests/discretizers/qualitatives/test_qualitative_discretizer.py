@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 from AutoCarver.discretizers.qualitatives.qualitative_discretizer import QualitativeDiscretizer
-from AutoCarver.discretizers.utils.base_discretizer import DiscretizerConfig, Sample
+from AutoCarver.discretizers.utils.base_discretizer import ProcessingConfig, Sample
 from AutoCarver.features import CategoricalFeature, Features, FeaturesConfig, GroupedList, OrdinalFeature
 
 
@@ -145,7 +145,7 @@ def test_qualitative_discretizer(x_train: pd.DataFrame, target: str):
     discretizer = QualitativeDiscretizer(
         min_freq=min_freq,
         qualitatives=features.qualitatives,
-        config=DiscretizerConfig(copy=True, verbose=True),
+        config=ProcessingConfig(copy=True, verbose=True),
     )
     x_discretized = discretizer.fit_transform(x_train, x_train[target])
 

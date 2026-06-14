@@ -17,6 +17,7 @@ from AutoCarver.features.qualitatives import (
 )
 from AutoCarver.features.quantitatives import (
     DatetimeFeature,
+    NumericalFeature,
     QuantitativeFeature,
     get_datetime_features,
     get_quantitative_features,
@@ -148,7 +149,7 @@ class Features:
     def __init__(
         self,
         categoricals: list[str] | None = None,
-        quantitatives: list[str] | None = None,
+        numericals: list[str] | None = None,
         ordinals: dict[str, list[str]] | None = None,
         datetimes: list[tuple[str, str]] | None = None,
         nested: dict[str, list[str]] | None = None,
@@ -162,8 +163,8 @@ class Features:
         categoricals : list[str], optional
             Categorical column names, by default ``None``.
 
-        quantitatives : list[str], optional
-            Quantitative column names, by default ``None``.
+        numericals : list[str], optional
+            Numerical column names, by default ``None``.
 
         ordinals : dict[str, list[str]], optional
             Ordinal column names mapped to their ordered value list, by default ``None``.
@@ -183,13 +184,13 @@ class Features:
 
 
         .. warning::
-            At least one of ``categoricals``, ``quantitatives``, ``ordinals``, ``datetimes``
+            At least one of ``categoricals``, ``numericals``, ``ordinals``, ``datetimes``
             or ``nested`` must be provided. To build a :class:`Features` from
             already-instantiated feature objects, use :meth:`Features.from_list` instead.
         """
         # validate input types (strings only — instances belong on from_list)
         _check_names_only(categoricals, "categoricals")
-        _check_names_only(quantitatives, "quantitatives")
+        _check_names_only(numericals, "numericals")
         _check_ordinal_mapping(ordinals)
         _check_datetime_pairs(datetimes)
         _check_nested_mapping(nested)
@@ -197,7 +198,7 @@ class Features:
         # build feature instances from names
         all_features: list[BaseFeature] = []
         all_features += [CategoricalFeature(name) for name in (categoricals or [])]
-        all_features += [QuantitativeFeature(name) for name in (quantitatives or [])]
+        all_features += [NumericalFeature(name) for name in (numericals or [])]
         all_features += [OrdinalFeature(name, values=values) for name, values in (ordinals or {}).items()]
         all_features += [DatetimeFeature(name, reference_date=ref) for name, ref in (datetimes or [])]
         all_features += [NestedFeature(name, parents=parents) for name, parents in (nested or {}).items()]
@@ -252,8 +253,12 @@ class Features:
 
         check_duplicate_features(self.ordinals, self.categoricals, self.quantitatives, self._nested)
 
-        self._dropna = False
-        self._ordinal_encoding = False
+        # Derive collection-level flags from per-feature state (the source of truth) so they stay
+        # consistent after Features.load — apply_collection_state restores per-feature flags but a
+        # hardcoded collection False would desync, and the ordinal_encoding/dropna setters cascade
+        # the collection value back onto every feature, silently dropping a restored encoding.
+        self._dropna = bool(features) and all(feature.dropna for feature in features)
+        self._ordinal_encoding = bool(features) and all(feature.ordinal_encoding for feature in features)
         self.is_fitted = config.is_fitted if config is not None else False
 
     def __repr__(self) -> str:
@@ -666,7 +671,7 @@ class Features:
                 unpacked_features += [DatetimeFeature.load(feature)]
 
             elif feature.get("is_quantitative"):
-                unpacked_features += [QuantitativeFeature.load(feature)]
+                unpacked_features += [NumericalFeature.load(feature)]
 
         # initiating features
         return cls.from_list(unpacked_features, config=FeaturesConfig(is_fitted=bool(is_fitted)))

@@ -13,6 +13,7 @@ from AutoCarver.features.qualitatives import (
 )
 from AutoCarver.features.quantitatives import (
     DatetimeFeature,
+    NumericalFeature,
     QuantitativeFeature,
     get_datetime_features,
     get_quantitative_features,
@@ -37,6 +38,7 @@ __all__ = [
     "NestedFeature",
     "OrdinalFeature",
     "QuantitativeFeature",
+    "NumericalFeature",
     "DatetimeFeature",
     "QualitativeFeature",
 ]

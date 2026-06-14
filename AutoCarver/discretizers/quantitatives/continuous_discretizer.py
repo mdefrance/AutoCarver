@@ -7,7 +7,7 @@ from typing import Self
 import numpy as np
 import pandas as pd
 
-from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, DiscretizerConfig
+from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, ProcessingConfig
 from AutoCarver.discretizers.utils.multiprocessing import imap_unordered_function
 from AutoCarver.features import GroupedList, QuantitativeFeature, get_versions
 from AutoCarver.utils import extend_docstring
@@ -37,7 +37,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
         quantitatives: list[QuantitativeFeature],
         min_freq: float,
         *,
-        config: DiscretizerConfig | None = None,
+        config: ProcessingConfig | None = None,
     ) -> None:
         """
         Parameters

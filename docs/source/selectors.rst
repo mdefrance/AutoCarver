@@ -30,13 +30,13 @@ See :ref:`Measures` and :ref:`Filters`, for details on measures and filters' imp
 Selectors are `scikit-learn <https://scikit-learn.org/>`_ transformers built like
 the :ref:`carvers <Carvers>`: from a :class:`Features` set, a per-type budget
 ``n_best_per_type``, a swappable set of ``measures`` / ``filters``, and a
-:class:`DiscretizerConfig` carrying behavioral toggles (``verbose`` …).
+:class:`ProcessingConfig` carrying behavioral toggles (``verbose`` …).
 
    * :meth:`~AutoCarver.selectors.BaseSelector.fit` scores every feature against
      the target, ranks them per measure, and filters out redundant ones.
    * :meth:`~AutoCarver.selectors.BaseSelector.transform` restricts ``X`` to the
-     selected columns; :meth:`~AutoCarver.selectors.BaseSelector.select` returns
-     the selected :class:`Features` directly.
+     selected columns; :attr:`~AutoCarver.selectors.BaseSelector.selected_features`
+     returns the selected :class:`Features` directly.
 
 Selection is **exhaustive** — every feature is scored exactly — but fast: each
 measure scores all features of a type in a single vectorized pass rather than one
@@ -44,16 +44,16 @@ call per feature.
 
 .. code-block:: python
 
-    from AutoCarver.discretizers.utils.base_discretizer import DiscretizerConfig
+    from AutoCarver.discretizers.utils.base_discretizer import ProcessingConfig
     from AutoCarver.selectors import ClassificationSelector
 
     selector = ClassificationSelector(
         features=features,
         n_best_per_type=25,                       # best features kept per data type
-        config=DiscretizerConfig(verbose=True),   # behavioral toggles, as for carvers
+        config=ProcessingConfig(verbose=True),   # behavioral toggles, as for carvers
     )
-    best_features = selector.select(X, y)         # or selector.fit(X, y).transform(X)
-
+    selector.fit(X, y)  # or selector.fit_transform(X, y) to keep only selected features in X
+    best_features = selector.selected_features
 
 .. _ClassificationSelector:
 

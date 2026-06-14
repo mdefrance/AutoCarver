@@ -46,7 +46,7 @@ Setting up Features to Carve
     from AutoCarver import Features
 
     features = Features(
-        quantitatives=['quantitative1', 'quantitative2', 'discrete1', 'discrete2_with_nan'],
+        numericals=['numerical1', 'numerical2', 'discrete1', 'discrete2_with_nan'],
         categoricals=['categorical1', 'categorical2', 'categorical3_with_nan'],
         ordinals={'ordinal1': ['low', 'medium', 'high'], 'ordinal2_with_nan': ['low', 'medium', 'high']},
     )
@@ -55,7 +55,7 @@ Qualitative features will automatically be converted to :class:`str` if necessar
 Ordinal features are added, alongside there expected ordering.
 
 To wrap already-instantiated feature objects (e.g. :class:`CategoricalFeature`,
-:class:`OrdinalFeature`, :class:`QuantitativeFeature`) use :meth:`Features.from_list`
+:class:`OrdinalFeature`, :class:`NumericalFeature`) use :meth:`Features.from_list`
 instead. Collection-level state (``nan`` / ``default`` / ``ordinal_encoding`` / ``dropna``)
 can be propagated to every feature via a :class:`FeaturesConfig`.
 
@@ -85,8 +85,8 @@ Fitting AutoCarver
 .. note::
 
     Behavioral toggles (``copy``, ``ordinal_encoding``, ``dropna``, ``verbose``,
-    ``n_jobs``, ``min_freq_alpha``) are now grouped in :class:`DiscretizerConfig`.
-    Carvers default to ``DiscretizerConfig(dropna=True, ordinal_encoding=True)``.
+    ``n_jobs``, ``min_freq_alpha``) are now grouped in :class:`ProcessingConfig`.
+    Carvers default to ``ProcessingConfig(dropna=True, ordinal_encoding=True)``.
 
     ``min_freq`` is gated by a Wilson score confidence interval at significance
     ``min_freq_alpha`` (default ``0.05``): raise it for a stricter representativity
@@ -150,14 +150,14 @@ Feature Selection
         features=features,  # features to select from
         n_best_per_type=25,  # number of features to select per data type
     )
-    best_features = classification_selector.select(train_set_discretized, train_set_discretized[target])
+    best_features = classification_selector.fit(train_set_discretized, train_set_discretized[target]).selected_features
 
 .. note::
 
     Selectors mirror the carver API: ``fit`` scores/ranks/filters and stores the
-    selection, ``transform`` restricts ``X`` to the selected columns, and the
-    convenience ``select`` returns the selected :class:`Features` directly.
-    Behavioral toggles (``verbose`` …) are grouped in :class:`DiscretizerConfig`,
+    selection, ``transform`` restricts ``X`` to the selected columns, and
+    ``selected_features`` returns the selected :class:`Features` directly.
+    Behavioral toggles (``verbose`` …) are grouped in :class:`ProcessingConfig`,
     exactly as for the carvers. Every feature is scored exactly (no sampling),
     yet selection stays fast through vectorized, all-columns-at-once measures.
 
