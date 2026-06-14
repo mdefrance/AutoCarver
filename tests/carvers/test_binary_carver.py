@@ -233,9 +233,8 @@ def test_carve_feature_with_best_combination(evaluator):
     assert feature in carver.features
     assert feature.content == {
         1.0: [1.0],
-        2.0: [2.0],
+        2.0: ["__NAN__", 2.0],
         float("inf"): [3.0, float("inf")],
-        "__NAN__": ["__NAN__"],
     }
 
 
@@ -341,10 +340,54 @@ def test_fit_with_best_combination(evaluator):
     assert feature in carver.features
     assert feature.content == {
         1.0: [1.0],
-        2.0: [2.0],
+        2.0: ["__NAN__", 2.0],
         float("inf"): [3.0, float("inf")],
-        "__NAN__": ["__NAN__"],
     }
+
+
+def test_quantitative_carving_is_label_independent(evaluator, monkeypatch):
+    """Carving must not depend on the cosmetic quantile label strings.
+
+    Grouping order is derived from ordinal modality positions, not from the
+    leader-label text, so swapping ``format_quantiles`` for labels that sort in
+    a different order must leave ``feature.content`` (keyed by values, not
+    labels) byte-identical.
+    """
+    import AutoCarver.features.quantitatives.quantitative_feature as qf
+
+    def carve():
+        features = Features(
+            categoricals=["feature1"],
+            ordinals={"feature2": ["low", "medium", "high"]},
+            numericals=["feature3"],
+        )
+        X = pd.DataFrame(
+            {
+                "feature1": ["A", "B", "A", "C"],
+                "feature2": ["low", "medium", "high", "high"],
+                "feature3": [1, 2, 3, float("nan")],
+            }
+        )
+        y = pd.Series([0, 1, 0, 1])
+        carver = BinaryCarver(
+            features=features,
+            min_freq=0.1,
+            max_n_mod=5,
+            combination_evaluator=evaluator,
+            config=ProcessingConfig(dropna=True, verbose=False),
+        )
+        carver.fit(X, y)
+        return {str(k): v for k, v in features[2].content.items()}
+
+    reference = carve()
+
+    # labels whose lexicographic order is reversed vs the value order
+    def scrambled(a_list):
+        n = len(a_list) + 1
+        return [f"{n - i:04d}~zzz" for i in range(n)]
+
+    monkeypatch.setattr(qf, "format_quantiles", scrambled)
+    assert carve() == reference
 
 
 def test_fit_without_best_combination(evaluator: CombinationEvaluator):
@@ -409,16 +452,17 @@ def test_binary_carver_fit_transform_with_small_data_not_ordinal(evaluator: Comb
     print(carver.features("feature1").content)
     print(X_transformed)
     # Under Wilson-CI gating the borderline ``2.0`` bin survives on this n=4 sample,
-    # so feature3 keeps three numeric buckets (1, 2, >2) plus NaN.
+    # so feature3 keeps three numeric buckets (1, 2, >2); NaN folds into its
+    # ordinal-neighbour ``(1, 2]`` bin (grouping is label-independent).
     expected = pd.DataFrame(
         {
             "feature1": ["A", "B, C", "A", "B, C"],
             "feature2": ["low", "medium", "high", "high"],
             "feature3": [
-                "x <= 1.00e+00",
-                "1.00e+00 < x <= 2.00e+00",
-                "2.00e+00 < x",
-                "__NAN__",
+                "(-inf, 1.00e+00]",
+                "(1.00e+00, 2.00e+00]",
+                "(2.00e+00, inf)",
+                "(1.00e+00, 2.00e+00]",
             ],
         },
         index=idx,
@@ -474,9 +518,10 @@ def test_binary_carver_fit_transform_with_small_data_ordinal(evaluator: Combinat
         {
             "feature1": [0, 1, 0, 1],
             "feature2": [0, 1, 2, 2],
-            # Under Wilson-CI gating the borderline ``2.0`` bin survives, so feature3
-            # ends up with 4 buckets (1.0, 2.0, 3.0+, nan) instead of 3.
-            "feature3": [0, 1, 2, 3],
+            # Under Wilson-CI gating the borderline ``2.0`` bin survives; NaN folds
+            # into its ordinal-neighbour ``2.0`` bin, leaving 3 buckets (codes 0/1/2)
+            # with the NaN row encoded as the ``2.0`` bucket (1).
+            "feature3": [0, 1, 2, 1],
         },
         index=idx,
     )
@@ -625,23 +670,23 @@ def test_binary_carver_fit_transform_with_large_data(evaluator: CombinationEvalu
                 "low",
             ],
             "feature3": [
-                "x <= 1.00e+00",
-                "1.00e+00 < x <= 2.00e+00",
-                "2.00e+00 < x",
-                "1.00e+00 < x <= 2.00e+00",
-                "2.00e+00 < x",
-                "x <= 1.00e+00",
-                "1.00e+00 < x <= 2.00e+00",
-                "2.00e+00 < x",
-                "x <= 1.00e+00",
-                "1.00e+00 < x <= 2.00e+00",
-                "1.00e+00 < x <= 2.00e+00",
-                "2.00e+00 < x",
-                "x <= 1.00e+00",
-                "1.00e+00 < x <= 2.00e+00",
-                "2.00e+00 < x",
-                "x <= 1.00e+00",
-                "1.00e+00 < x <= 2.00e+00",
+                "(-inf, 1.00e+00]",
+                "(1.00e+00, 2.00e+00]",
+                "(2.00e+00, inf)",
+                "(1.00e+00, 2.00e+00]",
+                "(2.00e+00, inf)",
+                "(-inf, 1.00e+00]",
+                "(1.00e+00, 2.00e+00]",
+                "(2.00e+00, inf)",
+                "(-inf, 1.00e+00]",
+                "(1.00e+00, 2.00e+00]",
+                "(1.00e+00, 2.00e+00]",
+                "(2.00e+00, inf)",
+                "(-inf, 1.00e+00]",
+                "(1.00e+00, 2.00e+00]",
+                "(2.00e+00, inf)",
+                "(-inf, 1.00e+00]",
+                "(1.00e+00, 2.00e+00]",
             ],
         },
         index=idx,
@@ -691,16 +736,18 @@ def test_binary_carver_fit_transform_with_target_only_nan(evaluator: Combination
 
     print(carver.features("feature1").content)
     print(X_transformed)
-    # under Wilson-CI gating the borderline ``2.0`` numeric bin survives.
+    # Here only NaN-ness predicts y (y=1 sits on the NaN row), so the numeric
+    # values carry no signal: feature3 collapses to a single ``(-inf, 3]`` bin
+    # with NaN kept as its own modality (label-independent ordinal carving).
     expected = pd.DataFrame(
         {
             "feature1": ["A, B", "A, B", "A, B", "C"],
             "feature2": ["low", "medium to high", "medium to high", "medium to high"],
             "feature3": [
-                "x <= 1.00e+00",
-                "1.00e+00 < x <= 3.00e+00",
-                "1.00e+00 < x <= 3.00e+00",
-                "3.00e+00 < x",
+                "(-inf, 3.0e+00]",
+                "(-inf, 3.0e+00]",
+                "(-inf, 3.0e+00]",
+                "__NAN__",
             ],
         },
         index=idx,

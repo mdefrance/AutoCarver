@@ -51,18 +51,18 @@ def test_discretizer_fit():
 
     data = {
         "feature1": [
-            "x <= 2.00e+00",
-            "x <= 2.00e+00",
-            "2.00e+00 < x <= 3.00e+00",
-            "3.00e+00 < x",
-            "3.00e+00 < x",
+            "(-inf, 2.00e+00]",
+            "(-inf, 2.00e+00]",
+            "(2.00e+00, 3.00e+00]",
+            "(3.00e+00, inf)",
+            "(3.00e+00, inf)",
         ],
         "feature2": [
-            "3.0e+00 < x",
-            "3.0e+00 < x",
-            "x <= 3.0e+00",
+            "(3.0e+00, inf)",
+            "(3.0e+00, inf)",
+            "(-inf, 3.0e+00]",
             np.nan,
-            "x <= 3.0e+00",
+            "(-inf, 3.0e+00]",
         ],
         "feature4": ["a", "b", "a", "b", np.nan],
         # With the 1-row tolerance (rare floor = min_freq - 1/n = 0.1) and n=5, modalities

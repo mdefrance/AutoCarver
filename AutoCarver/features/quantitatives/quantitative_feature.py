@@ -141,7 +141,7 @@ def format_quantiles(a_list: list[float]) -> list[str]:
     """
     # only one non nan quantile
     if len(a_list) == 0:
-        order = ["-inf < x < inf"]
+        order = ["(-inf, inf)"]
 
     # several quantiles
     else:
@@ -160,11 +160,11 @@ def format_quantiles(a_list: list[float]) -> list[str]:
         order: list[str] = []
         for lower, upper in zip(lower_bounds, upper_bounds):
             if pd.isna(lower):
-                order += [f"x <= {upper}"]
+                order += [f"(-inf, {upper}]"]
             elif pd.isna(upper):
-                order += [f"{lower} < x"]
+                order += [f"({lower}, inf)"]
             else:
-                order += [f"{lower} < x <= {upper}"]
+                order += [f"({lower}, {upper}]"]
 
     return order
 

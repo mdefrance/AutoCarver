@@ -171,7 +171,9 @@ def test_grouper_unordered_labels(evaluator: ContinuousCombinationEvaluator):
     groupby = {"A": "group1", "B": "group1", "C": "group2"}
     result = evaluator._grouper(xagg, groupby)
 
-    expected = pd.Series({"group1": [1, 3, 2, 4], "group2": [5]})
+    # feature order is ["C", "A", "B"], so group2 (C) comes before group1 (A, B):
+    # _grouper now preserves ordinal order, not alphabetical leader-label order.
+    expected = pd.Series({"group2": [5], "group1": [1, 3, 2, 4]})
     assert result.equals(expected)
 
 

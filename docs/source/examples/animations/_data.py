@@ -291,24 +291,24 @@ _SCI_NUM = re.compile(r"-?\d+\.\d+e[+-]?\d+")
 
 
 def _clean_label(label: str) -> str:
-    """Convert CD's scientific-notation labels into compact interval form.
+    """Convert CD's scientific-notation interval labels into compact form.
 
     Examples
     --------
-    >>> _clean_label('x <= 0.00e+00')
+    >>> _clean_label('(-inf, 0.00e+00]')
     '≤ 0'
-    >>> _clean_label('0.00e+00 < x <= 2.89e+00')
+    >>> _clean_label('(0.00e+00, 2.89e+00]')
     '(0, 2.89]'
-    >>> _clean_label('1.98e+01 < x')
+    >>> _clean_label('(1.98e+01, inf)')
     '> 19.8'
     """
     label = _SCI_NUM.sub(lambda m: _fmt(float(m.group(0))), label)
-    if m := re.fullmatch(r"x <= (\S+)", label):
+    if m := re.fullmatch(r"\(-inf, (\S+)\]", label):
         return f"≤ {m.group(1)}"
-    if m := re.fullmatch(r"(\S+) < x <= (\S+)", label):
-        return f"({m.group(1)}, {m.group(2)}]"
-    if m := re.fullmatch(r"(\S+) < x", label):
+    if m := re.fullmatch(r"\((\S+), inf\)", label):
         return f"> {m.group(1)}"
+    if m := re.fullmatch(r"\((\S+), (\S+)\]", label):
+        return f"({m.group(1)}, {m.group(2)}]"
     return label
 
 
