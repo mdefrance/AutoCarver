@@ -50,7 +50,10 @@ def wilson_upper_bound(
     denom = 1.0 + (z * z) / n
     center = (phat + (z * z) / (2.0 * n)) / denom
     half_width = (z / denom) * np.sqrt(phat * (1.0 - phat) / n + (z * z) / (4.0 * n * n))
-    upper = center + half_width
+    # A proportion CI bound is by definition in [0, 1]; clamp to absorb float
+    # rounding (e.g. count == nobs cancels to exactly 1.0 in exact arithmetic but
+    # lands at 1.0000000000000002 in floating point).
+    upper = np.clip(center + half_width, 0.0, 1.0)
 
     if np.isscalar(count):
         return float(upper)
