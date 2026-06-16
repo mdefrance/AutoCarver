@@ -267,9 +267,73 @@ class BaseFeature(ABC):
     def _make_summary(self) -> list[dict]:
         """Returns a summary of the feature."""
 
-    @abstractmethod
     def _specific_update(self, values: GroupedList, convert_labels: bool = False) -> None:
-        """Update content of values specifically per feature type."""
+        """Update content of values, converting labels back to values if needed."""
+
+        # no values have been set
+        if not convert_labels and self.values.is_empty():
+            self._check_empty_values(values)
+            self.values = values
+            return
+
+        # values are not labels
+        if not convert_labels:
+            # updating: iterating over each grouped values
+            for kept_value, grouped_values in values.content.items():
+                self.values.group(grouped_values, kept_value)
+            return
+
+        # values are labels -> converting them back to values
+        # Snapshot the encoded-label -> leader-value map once. self.values.group()
+        # below mutates leader positions, so rebuilding this inside the loop would
+        # desync self.values[k] (IndexError on the 2nd+ grouped label).
+        r_value_per_label = self._reverse_value_per_label()
+
+        # iterating over each grouped values
+        for kept_label, grouped_labels in values.content.items():
+            self._update_grouped_label(kept_label, grouped_labels, r_value_per_label)
+
+    def _reverse_value_per_label(self) -> dict:
+        """Maps each encoded label back to its current leader value (ordinal only)."""
+        if self.ordinal_encoding:
+            leaders = list(self.values)
+            return {v: leaders[k] for k, v in self.value_per_label.items()}
+        return {}
+
+    def _update_grouped_label(self, kept_label: str | float, grouped_labels: list, r_value_per_label: dict) -> None:
+        """Converts one labelled group back to values and groups them."""
+
+        # checking that kept value exists
+        if kept_label not in self.value_per_label:
+            raise AttributeError(f"{self} no {kept_label}, in value_per_label: {self.value_per_label}")
+
+        # converting labels to values
+        grouped_values = [self.value_per_label.get(label) for label in grouped_labels]
+
+        # checking that grouped values exists
+        for grouped_value, grouped_label in zip(grouped_values, grouped_labels):
+            if grouped_value is None:
+                print(f"{self} no {grouped_label}, in value_per_label: {self.value_per_label}")
+
+        # feature-specific: choosing kept value and finalizing grouped values
+        grouped_values, kept_value = self._resolve_grouping(kept_label, grouped_values, r_value_per_label)
+
+        # updating values if any to group
+        if len(grouped_values) > 0:
+            self.values.group(grouped_values, kept_value)
+
+        # updating statistics
+        self._update_statistics_value(kept_label, kept_value)
+
+    def _check_empty_values(self, values: GroupedList) -> None:
+        """Optional hook: validates values before the first assignment (no-op by default)."""
+        return
+
+    @abstractmethod
+    def _resolve_grouping(
+        self, kept_label: str | float, grouped_values: list, r_value_per_label: dict
+    ) -> tuple[list, str | float]:
+        """Selects the kept value and finalizes grouped values specifically per feature type."""
 
     # ------------------------------------------------------------------
     # summary

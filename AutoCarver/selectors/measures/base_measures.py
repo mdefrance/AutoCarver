@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 
+import numpy as np
 import pandas as pd
 
 from AutoCarver.features import BaseFeature
@@ -279,6 +280,10 @@ class ModeMeasure(OutlierMeasure):
             Measure of ``x``'s mode
         """
         _ = y
-        mode = x.mode(dropna=True).values[0]  # computing mode
+        modes = x.mode(dropna=True)  # computing mode
+        if len(modes) == 0:  # all-NaN feature: no defined non-NaN mode
+            self.value = np.nan
+            return self.value
+        mode = modes.values[0]
         self.value = (x == mode).mean()  # Computing percentage of the mode
         return self.value

@@ -33,8 +33,6 @@ class QualitativeFeature(BaseFeature):
         super()._restore_from_json(feature_json)
 
     def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> None:
-        """TODO fit stats"""
-
         # checking for feature's unique non-nan values
         sorted_unique_values = nan_unique(X[self.version], sort=True)
 
@@ -119,64 +117,28 @@ class QualitativeFeature(BaseFeature):
         # adding statistics and history
         return self._add_statistics_to_summary(summary)
 
-    def _specific_update(self, values: GroupedList, convert_labels: bool = False) -> None:
-        """update content of values specifically per feature type"""
+    def _resolve_grouping(
+        self, kept_label: str | float, grouped_values: list, r_value_per_label: dict
+    ) -> tuple[list, str | float]:
+        """selects the kept value and finalizes grouped values"""
 
-        # no values have been set
-        if not convert_labels and self.values.is_empty():
-            self.values = values
+        # choosing which value to keep: getting group of kept_value
+        kept_value = self.values.get_group(self.value_per_label.get(kept_label))
+        # TODO force kept_value to != self.nan like in quantitative feature?
 
-        # values are not labels
-        elif not convert_labels:
-            # updating: iterating over each grouped values
-            for kept_value, grouped_values in values.content.items():
-                self.values.group(grouped_values, kept_value)
+        # keeping only values not already grouped with kept_value
+        grouped_values = [
+            self.values.get_group(value) for value in grouped_values if self.values.get_group(value) != kept_value
+        ]
 
-        # values are labels -> converting them back to values
-        else:
-            # iterating over each grouped values
-            for kept_label, grouped_labels in values.content.items():
-                # converting labels to values
-                kept_value = self.value_per_label.get(kept_label)
-                grouped_values = [self.value_per_label.get(label) for label in grouped_labels]
+        # deduplicating
+        grouped_values = [value for num, value in enumerate(grouped_values) if value not in grouped_values[num + 1 :]]
 
-                # checking that kept values exists
-                if kept_label not in self.value_per_label:
-                    raise AttributeError(f"{self} no {kept_label}, in value_per_label: {self.value_per_label}")
+        # if ordinal_encoding, converting values to unique values
+        if len(grouped_values) > 0 and self.ordinal_encoding:
+            grouped_values = [r_value_per_label[value] for value in grouped_values]
 
-                # checking that grouped values exists
-                for grouped_value, grouped_label in zip(grouped_values, grouped_labels):
-                    if grouped_value is None:
-                        print(f"{self} no {grouped_label}, in value_per_label: {self.value_per_label}")
-
-                # choosing which value to keep: getting group of kept_value
-                kept_value = self.values.get_group(kept_value)
-                # TODO force kept_value to != self.nan like in quantitative feature?
-
-                # keeping only values not already grouped with kept_value
-                grouped_values = [
-                    self.values.get_group(value)
-                    for value in grouped_values
-                    if self.values.get_group(value) != kept_value
-                ]
-
-                # deduplicating
-                grouped_values = [
-                    value for num, value in enumerate(grouped_values) if value not in grouped_values[num + 1 :]
-                ]
-
-                # updating values if any to group
-                if len(grouped_values) > 0:
-                    # if ordinal_encoding, converting values to unique values
-                    if self.ordinal_encoding:
-                        r_value_per_label = {v: self.values[k] for k, v in self.value_per_label.items()}
-                        grouped_values = [r_value_per_label[value] for value in grouped_values]
-
-                    # grouping values
-                    self.values.group(grouped_values, kept_value)
-
-                # updating statistics
-                self._update_statistics_value(kept_label, kept_value)
+        return grouped_values, kept_value
 
     @abstractmethod
     def _specific_formatting(self, ordered_content: list[str]) -> str:

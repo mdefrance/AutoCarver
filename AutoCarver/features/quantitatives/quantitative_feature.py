@@ -18,57 +18,30 @@ class QuantitativeFeature(BaseFeature):
         """No-op: quantitative features cannot have a default value."""
         _ = value
 
-    def _specific_update(self, values: GroupedList, convert_labels: bool = False) -> None:  # noqa: C901
-        """update content of values specifically per feature type"""
+    def _check_empty_values(self, values: GroupedList) -> None:
+        """checks that inf is amongst values"""
+        if values[-1] != np.inf:
+            raise ValueError(f"[{self}] Must provide values with values[-1] == numpy.inf")
 
-        # no values have been set
-        if not convert_labels and self.values.is_empty():
-            # checking that inf is amongst values
-            if values[-1] != np.inf:
-                raise ValueError(f"[{self}] Must provide values with values[-1] == numpy.inf")
-            self.values = values
+    def _resolve_grouping(
+        self, kept_label: str | float, grouped_values: list, r_value_per_label: dict
+    ) -> tuple[list, str | float]:
+        """selects the kept value and finalizes grouped values"""
 
-        # values are not labels
-        elif not convert_labels:
-            # updating: iterating over each grouped values
-            for kept_value, grouped_values in values.content.items():
-                self.values.group(grouped_values, kept_value)
+        # choosing which value to keep
+        kept_value = self.value_per_label[kept_label]
 
-        # values are labels -> converting them back to values
-        else:
-            # iterating over each grouped values
-            for kept_label, grouped_labels in values.content.items():
-                # checking that kept values exists
-                if kept_label not in self.value_per_label:
-                    raise AttributeError(f"{self} no {kept_label}, in value_per_label: {self.value_per_label}")
+        # keeping the largest value amongst the discarded
+        which_to_keep = [value for value in grouped_values if value != self.nan]
+        if len(which_to_keep) > 0:
+            kept_value = max(which_to_keep)
 
-                # converting labels to values
-                kept_value = self.value_per_label[kept_label]
-                grouped_values = [self.value_per_label.get(label) for label in grouped_labels]
+        # if ordinal_encoding, converting values to unique values
+        if len(grouped_values) > 0 and self.ordinal_encoding:
+            grouped_values = [r_value_per_label[value] for value in grouped_values]
+            kept_value = r_value_per_label[kept_value]
 
-                # checking that grouped values exists
-                for grouped_value, grouped_label in zip(grouped_values, grouped_labels):
-                    if grouped_value is None:
-                        print(f"{self} no {grouped_label}, in value_per_label: {self.value_per_label}")
-
-                # choosing which value to keep
-                which_to_keep = [value for value in grouped_values if value != self.nan]
-
-                # keeping the largest value amongst the discarded
-                if len(which_to_keep) > 0:
-                    kept_value = max(which_to_keep)
-
-                # updating values if any to group
-                if len(grouped_values) > 0:
-                    # if ordinal_encoding, converting values to unique values
-                    if self.ordinal_encoding:
-                        r_value_per_label = {v: self.values[k] for k, v in self.value_per_label.items()}
-                        grouped_values = [r_value_per_label[value] for value in grouped_values]
-                        kept_value = r_value_per_label[kept_value]
-                    self.values.group(grouped_values, kept_value)
-
-                # updating statistics
-                self._update_statistics_value(kept_label, kept_value)
+        return grouped_values, kept_value
 
     def make_labels(self) -> GroupedList:
         """gives labels per quantile (values for continuous features)
@@ -145,6 +118,11 @@ def format_quantiles(a_list: list[float]) -> list[str]:
 
     # several quantiles
     else:
+        # collapse signed zero: an identical boundary can surface as -0.0 or 0.0
+        # depending on the quantile computation path (they compare equal but
+        # format to different strings), which would make labels run-dependent
+        a_list = [number + 0.0 for number in a_list]
+
         # getting minimal number of decimals to differentiate labels
         decimals_needed = min_decimals_to_differentiate(a_list, min_decimals=1)
 
