@@ -14,6 +14,8 @@ across a wide variety of inputs, including:
 
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -30,7 +32,11 @@ from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample
 def _scipy_kruskal_or_none(groups: list[list[float]]) -> float | None:
     """scipy.stats.kruskal wrapped to mirror the evaluator's error swallowing."""
     try:
-        return float(kruskal(*tuple(groups))[0])
+        # this reference oracle feeds scipy degenerate (all-identical) groups on
+        # purpose; silence scipy's tie-correction warning for the expected value
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            return float(kruskal(*tuple(groups))[0])
     except (ValueError, IndexError):
         return None
 

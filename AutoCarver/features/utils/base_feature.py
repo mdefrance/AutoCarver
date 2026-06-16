@@ -357,8 +357,7 @@ class BaseFeature(ABC):
         if len(history) > 0:
             selected: dict = {}
 
-            with pd.option_context("future.no_silent_downcasting", True):
-                viable = history["viable"].fillna(False).astype(bool)
+            viable = history["viable"].fillna(False).astype(bool)
 
             if viable.any():
                 dropna = history["dropna"].fillna(False)

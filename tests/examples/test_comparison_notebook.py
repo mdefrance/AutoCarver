@@ -20,6 +20,7 @@ NOTEBOOK_PATH = PROJECT_ROOT / "docs" / "source" / "examples" / "Comparison" / "
 
 
 @pytest.mark.network
+@pytest.mark.filterwarnings("ignore:.*Proactor event loop.*:RuntimeWarning")  # Windows zmq/jupyter
 @pytest.mark.skipif(
     os.environ.get("CI") == "true",
     reason="OpenML API is unreliable; fetch_openml('credit-g') intermittently fails in CI",
