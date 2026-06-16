@@ -152,7 +152,16 @@ def chi2_all(block: pd.DataFrame, y: pd.Series) -> tuple[np.ndarray, np.ndarray,
         row = table.sum(1, keepdims=True)
         col_sum = table.sum(0, keepdims=True)
         expected = row @ col_sum / n
+
+        # Yates' continuity correction on 2x2 tables (dof == 1), matching the
+        # scalar reference (scipy.stats.chi2_contingency, correction=True by
+        # default) and the closed-form in binary_combination_evaluators.
+        obs = table
+        if m == 2 and n_y == 2:
+            diff = expected - obs
+            obs = obs + np.minimum(0.5, np.abs(diff)) * np.sign(diff)
+
         with np.errstate(divide="ignore", invalid="ignore"):
-            contrib = np.where(expected > 0, (table - expected) ** 2 / expected, 0.0)
+            contrib = np.where(expected > 0, (obs - expected) ** 2 / expected, 0.0)
         chi2[j] = contrib.sum()
     return chi2, n_obs, n_mod_x, np.full(p, float(n_y))
