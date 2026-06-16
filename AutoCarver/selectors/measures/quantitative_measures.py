@@ -6,7 +6,7 @@ from math import sqrt
 import numpy as np
 import pandas as pd
 from scipy.spatial.distance import correlation
-from scipy.stats import ConstantInputWarning, kruskal, pearsonr, spearmanr
+from scipy.stats import kruskal, pearsonr, spearmanr
 from statsmodels.formula.api import ols
 
 from AutoCarver.selectors.measures._vectorized import kruskal_h, kruskal_h_reversed
@@ -219,10 +219,11 @@ class CorrelationMeasure(AbsoluteMeasure):
     def compute_all(self, X, y, features) -> dict[str, dict]:
         """Vectorized correlation of every feature with ``y`` in one ``corrwith`` call."""
         block = X[[feature.version for feature in features]]
-        # constant/zero-variance columns legitimately yield NaN; silence numpy's
-        # divide warnings and scipy's ConstantInputWarning rather than surface them
+        # degenerate columns (constant, or <=1 non-NaN overlap) legitimately yield
+        # NaN; silence the numpy/scipy RuntimeWarnings (divide, df<=0, ConstantInput)
+        # rather than surface them to end users
         with np.errstate(divide="ignore", invalid="ignore"), warnings.catch_warnings():
-            warnings.simplefilter("ignore", ConstantInputWarning)
+            warnings.simplefilter("ignore", RuntimeWarning)
             corr = block.corrwith(y, method=self._corr_method)
         return {feature.version: self._result(corr[feature.version]) for feature in features}
 
