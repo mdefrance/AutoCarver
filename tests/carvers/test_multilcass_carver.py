@@ -186,15 +186,15 @@ def test_multiclass_carver_fit_transform_with_small_data_not_ordinal(
             "feature2__y=2": ["low", "medium to high", "medium to high", "medium to high"],
             "feature3__y=1": [
                 "(-inf, 1.00e+00]",
-                "(1.00e+00, 2.00e+00]",
+                "(1.00e+00, 2.00e+00], __NAN__",
                 "(2.00e+00, inf)",
-                "(1.00e+00, 2.00e+00]",
+                "(1.00e+00, 2.00e+00], __NAN__",
             ],
             "feature3__y=2": [
-                "(-inf, 2.00e+00]",
-                "(-inf, 2.00e+00]",
+                "(-inf, 2.00e+00], __NAN__",
+                "(-inf, 2.00e+00], __NAN__",
                 "(2.00e+00, 3.00e+00]",
-                "(-inf, 2.00e+00]",
+                "(-inf, 2.00e+00], __NAN__",
             ],
         },
         index=idx,
@@ -516,22 +516,24 @@ def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationE
                 "(-inf, 3.0e+00]",
                 "(-inf, 3.0e+00]",
             ],
+            # NaN folds into the ``(2, inf)`` bin for the y=3 split, so every row in
+            # that bucket carries the merged-NaN marker.
             "feature3__y=3": [
                 "(-inf, 1.00e+00]",
                 "(1.00e+00, 2.00e+00]",
-                "(2.00e+00, inf)",
-                "(2.00e+00, inf)",
-                "(2.00e+00, inf)",
+                "(2.00e+00, inf), __NAN__",
+                "(2.00e+00, inf), __NAN__",
+                "(2.00e+00, inf), __NAN__",
                 "(-inf, 1.00e+00]",
                 "(1.00e+00, 2.00e+00]",
-                "(2.00e+00, inf)",
+                "(2.00e+00, inf), __NAN__",
                 "(-inf, 1.00e+00]",
                 "(1.00e+00, 2.00e+00]",
-                "(2.00e+00, inf)",
-                "(2.00e+00, inf)",
+                "(2.00e+00, inf), __NAN__",
+                "(2.00e+00, inf), __NAN__",
                 "(-inf, 1.00e+00]",
                 "(1.00e+00, 2.00e+00]",
-                "(2.00e+00, inf)",
+                "(2.00e+00, inf), __NAN__",
                 "(-inf, 1.00e+00]",
                 "(1.00e+00, 2.00e+00]",
             ],
@@ -540,9 +542,28 @@ def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationE
     )
     # Cramérv and Tschuprowt legitimately diverge here on the borderline NaN
     # placement for the y=1 split: Cramérv keeps NaN as its own modality while
-    # Tschuprowt folds it into its ordinal-neighbour ``(1, 2]`` bin.
+    # Tschuprowt folds it into its ordinal-neighbour ``(1, 2]`` bin — which then
+    # carries the merged-NaN marker on every row of that bucket.
     if isinstance(evaluator, TschuprowtCombinations):
-        expected.loc[["d", "k"], "feature3__y=1"] = "(1.00e+00, 2.00e+00]"
+        expected["feature3__y=1"] = [
+            "(-inf, 1.00e+00]",
+            "(1.00e+00, 2.00e+00], __NAN__",
+            "(2.00e+00, inf)",
+            "(1.00e+00, 2.00e+00], __NAN__",
+            "(2.00e+00, inf)",
+            "(-inf, 1.00e+00]",
+            "(1.00e+00, 2.00e+00], __NAN__",
+            "(2.00e+00, inf)",
+            "(-inf, 1.00e+00]",
+            "(1.00e+00, 2.00e+00], __NAN__",
+            "(1.00e+00, 2.00e+00], __NAN__",
+            "(2.00e+00, inf)",
+            "(-inf, 1.00e+00]",
+            "(1.00e+00, 2.00e+00], __NAN__",
+            "(2.00e+00, inf)",
+            "(-inf, 1.00e+00]",
+            "(1.00e+00, 2.00e+00], __NAN__",
+        ]
     print(X_transformed.to_dict(orient="list"))
     print(X_transformed.columns)
     assert isinstance(X_transformed, pd.DataFrame)
@@ -599,9 +620,9 @@ def test_multiclass_carver_fit_transform_with_target_only_nan(evaluator: Combina
             ],
             "feature3__y=2": [
                 "(-inf, 1.00e+00]",
-                "(1.00e+00, 3.00e+00]",
-                "(1.00e+00, 3.00e+00]",
-                "(1.00e+00, 3.00e+00]",
+                "(1.00e+00, 3.00e+00], __NAN__",
+                "(1.00e+00, 3.00e+00], __NAN__",
+                "(1.00e+00, 3.00e+00], __NAN__",
             ],
         },
         index=idx,
@@ -666,16 +687,16 @@ def test_multiclass_carver_fit_transform_with_wrong_dev(evaluator: CombinationEv
             "feature3": [1.0, 2.0, 3.0, float("nan")],
             "feature2__y=1": ["low", "medium to high", "medium to high", "medium to high"],
             "feature3__y=1": [
-                "(-inf, 1.00e+00]",
+                "(-inf, 1.00e+00], __NAN__",
                 "(1.00e+00, 3.00e+00]",
                 "(1.00e+00, 3.00e+00]",
-                "(-inf, 1.00e+00]",
+                "(-inf, 1.00e+00], __NAN__",
             ],
             "feature3__y=2": [
-                "(-inf, 3.0e+00]",
-                "(-inf, 3.0e+00]",
-                "(-inf, 3.0e+00]",
-                "(-inf, 3.0e+00]",
+                "(-inf, 3.0e+00], __NAN__",
+                "(-inf, 3.0e+00], __NAN__",
+                "(-inf, 3.0e+00], __NAN__",
+                "(-inf, 3.0e+00], __NAN__",
             ],
         },
         index=idx,

@@ -1,6 +1,7 @@
 """Module for continuous combination evaluators."""
 
 import math
+import warnings
 from abc import ABC
 from collections.abc import Iterable, Iterator
 from typing import Any
@@ -64,9 +65,13 @@ class ContinuousCombinationEvaluator(CombinationEvaluator[pd.Series], ABC):
         """
         _, _ = n_obs, tol  # unused attribute
 
-        # Kruskal-Wallis' H
+        # Kruskal-Wallis' H (degenerate groups legitimately yield NaN: scipy's
+        # SmallSampleWarning / tie-correction RuntimeWarning are silenced here so
+        # end users don't see them)
         try:
-            return {"kruskal": kruskal(*tuple(xagg.values))[0]}
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                return {"kruskal": kruskal(*tuple(xagg.values))[0]}
         except (ValueError, IndexError):
             return {"kruskal": None}
 

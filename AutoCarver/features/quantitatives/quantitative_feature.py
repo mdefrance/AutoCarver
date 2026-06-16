@@ -64,15 +64,22 @@ class QuantitativeFeature(BaseFeature):
         # converting quantiles in string
         labels = format_quantiles(quantiles)
 
+        # add NaNs if there are any (grouped into an existing quantile bucket):
+        # mark the absorbing bucket's label (mirrors QualitativeFeature._format_modalities).
+        # Only relevant when nan isn't its own leader; labels is positionally aligned with
+        # the non-nan leaders of self.values (finite quantiles followed by inf).
+        if self.nan not in self.values and self.values.contains(self.nan):
+            labels = [
+                f"{label}, {self.nan}" if self.nan in self.values.get(leader) else label
+                for label, leader in zip(labels, self.values)
+            ]
+
         # converting to grouped list
         labels = GroupedList(labels)
 
         # add NaNs if there are any (not grouped)
         if self.nan in self.values:
             labels.append(self.nan)
-
-        # TODO add NaNs if there are any (grouped)
-        # elif self.nan in self.values.values:
 
         return labels
 

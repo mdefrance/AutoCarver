@@ -1,5 +1,6 @@
 """set of target rates for binary classification"""
 
+import warnings
 from abc import ABC
 from typing import overload
 
@@ -72,7 +73,10 @@ class TargetMean(ContinuousTargetRate):
         # pandas stubs widen `Series.apply(func)` to `Series | DataFrame`
         # because they can't tell np.mean returns a scalar; the runtime
         # result is always a Series.
-        return xagg.apply(np.mean)  # type: ignore
+        # empty modalities legitimately yield NaN: silence numpy's mean-of-empty warnings
+        with np.errstate(invalid="ignore", divide="ignore"), warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            return xagg.apply(np.mean)  # type: ignore
 
     def compute_from_stats(self, *, stats: dict, index_to_groupby: dict) -> pd.DataFrame | None:
         """Closed-form ``(target_mean, frequency)`` per group from per-modality stats.
@@ -146,7 +150,10 @@ class TargetMedian(ContinuousTargetRate):
     def _compute(self, xagg: pd.Series | pd.DataFrame) -> pd.Series:
         """Computes the mean target rate."""
         # see TargetMean._compute: same pandas-stub widening on apply().
-        return xagg.apply(np.median)  # type: ignore
+        # empty modalities legitimately yield NaN: silence numpy's median-of-empty warnings
+        with np.errstate(invalid="ignore", divide="ignore"), warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            return xagg.apply(np.median)  # type: ignore
 
 
 # class TargetVariance(ContinuousTargetRate):

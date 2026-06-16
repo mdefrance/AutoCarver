@@ -79,10 +79,13 @@ class BinaryCombinationEvaluator(CombinationEvaluator[pd.DataFrame], ABC):
         if pd.notna(cramerv):
             cramerv = round(cramerv / tol) * tol
 
-        # Tschuprow's T
-        tschuprowt = cramerv / np.sqrt(np.sqrt(n_mod_x - 1))
-        if pd.notna(tschuprowt):
-            tschuprowt = round(tschuprowt / tol) * tol
+        # Tschuprow's T (undefined for a single modality: avoids a divide-by-zero)
+        if n_mod_x <= 1:
+            tschuprowt = np.nan
+        else:
+            tschuprowt = cramerv / np.sqrt(np.sqrt(n_mod_x - 1))
+            if pd.notna(tschuprowt):
+                tschuprowt = round(tschuprowt / tol) * tol
 
         return {"cramerv": cramerv, "tschuprowt": tschuprowt}
 

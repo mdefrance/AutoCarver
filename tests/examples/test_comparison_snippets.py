@@ -69,6 +69,8 @@ def test_optbinning_snippet(titanic_split: tuple[pd.DataFrame, pd.DataFrame]) ->
 
 
 @pytest.mark.network
+@pytest.mark.filterwarnings("ignore::FutureWarning")  # sklearn KBins quantile_method default
+@pytest.mark.filterwarnings("ignore:Bins whose width are too small:UserWarning")  # sklearn KBins
 def test_kbins_snippet(titanic_split: tuple[pd.DataFrame, pd.DataFrame]) -> None:
     """KBinsDiscretizer block from comparison.rst — unsupervised, numeric-only."""
     preprocessing = pytest.importorskip("sklearn.preprocessing")

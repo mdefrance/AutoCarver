@@ -1,5 +1,6 @@
 """Measures of association between a Quantitative feature and binary target."""
 
+import warnings
 from math import sqrt
 
 import numpy as np
@@ -181,6 +182,12 @@ class RMeasure(BaseMeasure):
         if y[~nans].nunique() != 2:
             raise ValueError(f"[{self}] Provided y is not binary")
 
+        # a constant feature has no explained variance (centered_tss == 0): R is
+        # undefined, return NaN before fitting to avoid a divide-by-zero in statsmodels
+        if x[~nans].nunique() <= 1:
+            self.value = np.nan
+            return self.value
+
         # grouping feature and target
         ols_df = pd.DataFrame({"feature": x[~nans], "target": y[~nans]})
 
@@ -212,7 +219,12 @@ class CorrelationMeasure(AbsoluteMeasure):
     def compute_all(self, X, y, features) -> dict[str, dict]:
         """Vectorized correlation of every feature with ``y`` in one ``corrwith`` call."""
         block = X[[feature.version for feature in features]]
-        corr = block.corrwith(y, method=self._corr_method)
+        # degenerate columns (constant, or <=1 non-NaN overlap) legitimately yield
+        # NaN; silence the numpy/scipy RuntimeWarnings (divide, df<=0, ConstantInput)
+        # rather than surface them to end users
+        with np.errstate(divide="ignore", invalid="ignore"), warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            corr = block.corrwith(y, method=self._corr_method)
         return {feature.version: self._result(corr[feature.version]) for feature in features}
 
 

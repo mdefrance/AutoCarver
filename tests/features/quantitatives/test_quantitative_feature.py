@@ -250,19 +250,19 @@ def test_quantitative_feature_update_no_ordinal_encoding(
         np.inf: [np.inf],
     }
     assert sample_quantitative_feature.labels == [
-        "(-inf, 5.00e-01]",
+        f"(-inf, 5.00e-01], {Constants.NAN}",
         "(5.00e-01, 9.00e-01]",
         "(9.00e-01, inf)",
     ]
     assert sample_quantitative_feature.value_per_label == {
-        "(-inf, 5.00e-01]": 0.5,
+        f"(-inf, 5.00e-01], {Constants.NAN}": 0.5,
         "(5.00e-01, 9.00e-01]": 0.9,
         "(9.00e-01, inf)": np.inf,
     }
     assert sample_quantitative_feature.label_per_value == {
-        Constants.NAN: "(-inf, 5.00e-01]",
-        0.1: "(-inf, 5.00e-01]",
-        0.5: "(-inf, 5.00e-01]",
+        Constants.NAN: f"(-inf, 5.00e-01], {Constants.NAN}",
+        0.1: f"(-inf, 5.00e-01], {Constants.NAN}",
+        0.5: f"(-inf, 5.00e-01], {Constants.NAN}",
         0.9: "(5.00e-01, 9.00e-01]",
         np.inf: "(9.00e-01, inf)",
     }
@@ -314,7 +314,7 @@ def test_quantitative_feature_update_ordinal_encoding(
     assert sample_quantitative_feature.labels == [0, 1, 2]
     assert sample_quantitative_feature.value_per_label == {
         0: "(-inf, 1.00e-01]",
-        1: "(1.00e-01, 5.00e-01]",
+        1: f"(1.00e-01, 5.00e-01], {Constants.NAN}",
         2: "(5.00e-01, inf)",
     }
     assert sample_quantitative_feature.label_per_value == {

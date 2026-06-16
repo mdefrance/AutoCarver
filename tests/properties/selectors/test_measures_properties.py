@@ -61,6 +61,11 @@ def _is_nan(value) -> bool:
     return value is None or (isinstance(value, float) and np.isnan(value))
 
 
+def _same(a, b) -> bool:
+    """Equality that treats two NaNs as equal (an all-NaN x yields a NaN mode)."""
+    return (_is_nan(a) and _is_nan(b)) or a == b
+
+
 # --------------------------------------------------------------------------
 # Vectorized <-> scalar parity
 # --------------------------------------------------------------------------
@@ -309,8 +314,8 @@ def test_default_measures_ignore_y(data):
     y1 = pd.Series(data.draw(st.lists(st.integers(0, 1), min_size=n, max_size=n)))
     y2 = pd.Series(data.draw(st.lists(st.integers(0, 5), min_size=n, max_size=n)))
 
-    assert NanMeasure().compute_association(x, y1) == NanMeasure().compute_association(x, y2)
-    assert ModeMeasure().compute_association(x, y1) == ModeMeasure().compute_association(x, y2)
+    assert _same(NanMeasure().compute_association(x, y1), NanMeasure().compute_association(x, y2))
+    assert _same(ModeMeasure().compute_association(x, y1), ModeMeasure().compute_association(x, y2))
     assert NanMeasure().compute_association(x) == pytest.approx(x.isna().mean())
 
 

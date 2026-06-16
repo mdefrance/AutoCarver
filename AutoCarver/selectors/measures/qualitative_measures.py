@@ -2,6 +2,7 @@
 
 from math import sqrt
 
+import numpy as np
 import pandas as pd
 from scipy.stats import chi2_contingency
 
@@ -40,7 +41,10 @@ class Chi2Measure(BaseMeasure):
         xtab = pd.crosstab(x, y)
 
         # computing Chi2 statistic
-        self.value = chi2_contingency(xtab)[0]
+        try:
+            self.value = chi2_contingency(xtab)[0]
+        except ValueError:
+            self.value = np.nan
         return self.value
 
     def compute_all(self, X, y, features) -> dict[str, dict]:
@@ -109,14 +113,21 @@ class TschuprowtMeasure(Chi2Measure):
         n_mod_x, n_mod_y = x.nunique(), y.nunique()
 
         # computing Tschuprow's T
-        dof_mods = sqrt((n_mod_x - 1) * (n_mod_y - 1))
+        dof_prod = (n_mod_x - 1) * (n_mod_y - 1)
+        if dof_prod < 0:  # no data for x or y: Tschuprow's T is undefined
+            self.value = np.nan
+            return self.value
+        dof_mods = sqrt(dof_prod)
         self.value = 0
         if dof_mods > 0:
             self.value = sqrt(chi2_value / n_obs / dof_mods)
         return self.value
 
     def _stat(self, chi2: float, n_obs: float, n_mod_x: float, n_mod_y: float) -> float:
-        dof_mods = sqrt((n_mod_x - 1) * (n_mod_y - 1))
+        dof_prod = (n_mod_x - 1) * (n_mod_y - 1)
+        if dof_prod < 0:  # no data for x or y: Tschuprow's T is undefined
+            return np.nan
+        dof_mods = sqrt(dof_prod)
         if dof_mods > 0:
             return sqrt(chi2 / n_obs / dof_mods)
         return 0.0
