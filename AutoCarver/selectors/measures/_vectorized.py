@@ -69,13 +69,16 @@ def kruskal_h(block: pd.DataFrame, groups: pd.Series) -> tuple[np.ndarray, np.nd
     n_obs = mask.sum(0).astype(float)  # (P,)
     n_groups = (n > 0).sum(0)  # (P,)
 
+    tie_factors = _tie_factors(block)
     with np.errstate(divide="ignore", invalid="ignore"):
         term = np.nansum(np.where(n > 0, rank_sums**2 / n, np.nan), axis=0)  # (P,)
         h = 12.0 / (n_obs * (n_obs + 1)) * term - 3.0 * (n_obs + 1)
-        h = h / _tie_factors(block)
+        h = h / tie_factors
 
-    # undefined where scipy.kruskal would raise / has_values would bail
-    h = np.where((n_obs > 1) & (n_groups > 1), h, np.nan)
+    # undefined where scipy.kruskal would raise / has_values would bail; a
+    # constant column has tie_factor 0 (division above -> inf), which scipy
+    # rejects ("All numbers are identical") -> treat as undefined too
+    h = np.where((n_obs > 1) & (n_groups > 1) & (tie_factors > 0), h, np.nan)
     return h, n_obs, n_groups.astype(float)
 
 
@@ -115,12 +118,15 @@ def kruskal_h_reversed(block: pd.DataFrame, y: pd.Series) -> tuple[np.ndarray, n
             continue
         term = (rank_sums[populated] ** 2 / counts[populated]).sum()
         h_j = 12.0 / (n * (n + 1)) * term - 3.0 * (n + 1)
-        # tie correction over the pooled y ranks
+        # tie correction over the pooled y ranks; an all-tied y gives tie_factor
+        # 0 (scipy.stats.kruskal rejects it: "All numbers are identical") -> leave
+        # h[j] undefined instead of dividing to +inf
         _, tcounts = np.unique(ranks, return_counts=True)
         ties = float((tcounts**3 - tcounts).sum())
-        if n**3 - n > 0:
-            h_j /= 1.0 - ties / (n**3 - n)
-        h[j] = h_j
+        tie_factor = 1.0 - ties / (n**3 - n)
+        if tie_factor == 0:
+            continue
+        h[j] = h_j / tie_factor
     return h, n_obs, n_groups
 
 

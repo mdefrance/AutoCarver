@@ -118,6 +118,11 @@ def format_quantiles(a_list: list[float]) -> list[str]:
 
     # several quantiles
     else:
+        # collapse signed zero: an identical boundary can surface as -0.0 or 0.0
+        # depending on the quantile computation path (they compare equal but
+        # format to different strings), which would make labels run-dependent
+        a_list = [number + 0.0 for number in a_list]
+
         # getting minimal number of decimals to differentiate labels
         decimals_needed = min_decimals_to_differentiate(a_list, min_decimals=1)
 
