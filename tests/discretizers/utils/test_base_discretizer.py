@@ -99,8 +99,8 @@ def test_transform_quantitative_feature(features: Features) -> None:
         "(2.00e+00, 4.50e+00]",
         "(2.00e+00, 4.50e+00]",
         "(2.00e+00, 4.50e+00]",
-        "(4.50e+00, inf)",
-        "(4.50e+00, inf)",
+        f"(4.50e+00, inf), {feature.nan}",
+        f"(4.50e+00, inf), {feature.nan}",
     ] == list_feature
 
     # with values to group, with feature.nan in df_feature (grouped nans)
@@ -119,8 +119,8 @@ def test_transform_quantitative_feature(features: Features) -> None:
         "(2.00e+00, 4.50e+00]",
         "(2.00e+00, 4.50e+00]",
         "(2.00e+00, 4.50e+00]",
-        "(4.50e+00, inf)",
-        "(4.50e+00, inf)",
+        f"(4.50e+00, inf), {feature.nan}",
+        f"(4.50e+00, inf), {feature.nan}",
     ] == list_feature
 
 

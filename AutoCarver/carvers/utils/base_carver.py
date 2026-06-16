@@ -245,12 +245,10 @@ class BaseCarver(BaseDiscretizer, ABC):
         if summaries.empty:
             return summaries
 
-        # binary carving historizes both cramerv and tschuprowt; keep only the metric the carver
-        # is configured to sort by so the same association isn't duplicated across two columns.
-        redundant = {"cramerv", "tschuprowt"} - {self.combination_evaluator.sort_by}
-        summaries = summaries.drop(columns=[col for col in redundant if col in summaries.columns])
-
-        excluded = {"feature", "label", "content", "target_mean", "frequency", "dropped", "dropped_reason"}
+        # per-modality stats (count, target_mean, frequency) stay columns; only per-feature
+        # metrics (sort_by association, n_mod) become index levels so they collapse to one
+        # row per feature instead of repeating across every modality.
+        excluded = {"feature", "label", "content", "target_mean", "frequency", "count", "dropped", "dropped_reason"}
         indices = [col for col in summaries.columns if col not in excluded]
         indices = ["feature"] + indices + ["label"]
         return summaries.set_index(indices)

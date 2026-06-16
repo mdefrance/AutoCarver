@@ -51,7 +51,7 @@ class MulticlassCarver(BinaryCarver):
 
         # multiclass cannot copy inplace
         if self.config.copy:
-            print("WARNING: can't set copy=True for MulticlassCarver (no inplace DataFrame.assign).")
+            print("WARNING: can't set copy=False for MulticlassCarver (no inplace DataFrame.assign).")
 
     def _prepare_samples(self, samples: Samples) -> Samples:
         """Validates format and content of X and y."""
