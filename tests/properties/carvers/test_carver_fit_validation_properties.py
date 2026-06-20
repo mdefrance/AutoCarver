@@ -11,8 +11,15 @@ from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 from strategies import dataframe_and_features
 
-from AutoCarver.carvers import BinaryCarver, ContinuousCarver, MulticlassCarver
-from AutoCarver.combinations import CramervCombinations, KruskalCombinations, TschuprowtCombinations
+from AutoCarver.carvers import BinaryCarver, ContinuousCarver, MulticlassCarver, OrdinalCarver
+from AutoCarver.combinations import (
+    CramervCombinations,
+    KendallTauBCombinations,
+    KendallTauCCombinations,
+    KruskalCombinations,
+    SomersDCombinations,
+    TschuprowtCombinations,
+)
 from AutoCarver.features import Features
 
 SETTINGS = settings(max_examples=25, deadline=None, suppress_health_check=[HealthCheck.too_slow])
@@ -101,3 +108,58 @@ def test_multiclass_carver_rejects_dev_class_mismatch(prob, data):
     y_dev = pd.Series([0, 1] + data.draw(st.lists(st.sampled_from([0, 1]), min_size=n - 2, max_size=n - 2)))
     with pytest.raises(ValueError):
         MulticlassCarver(features, min_freq=0.2, max_n_mod=4).fit(X, y, X_dev=X, y_dev=y_dev)
+
+
+# --------------------------------------------------------------------------
+# OrdinalCarver
+# --------------------------------------------------------------------------
+@given(dataframe_and_features("ordinal"), st.data())
+@SETTINGS
+def test_ordinal_carver_rejects_too_few_levels(prob, data):
+    """A target with two or fewer ordered levels is rejected (use BinaryCarver)."""
+    X, features, _ = prob
+    n = len(X)
+    bad_y = pd.Series([1, 2] + data.draw(st.lists(st.sampled_from([1, 2]), min_size=n - 2, max_size=n - 2)))
+    with pytest.raises(ValueError):
+        OrdinalCarver(features, min_freq=0.2, max_n_mod=4).fit(X, bad_y)
+
+
+@given(dataframe_and_features("ordinal"), st.data())
+@SETTINGS
+def test_ordinal_carver_rejects_non_integer_target(prob, data):
+    """A non-integer-encoded (truly continuous) target is rejected."""
+    X, features, _ = prob
+    n = len(X)
+    element = st.floats(min_value=0.1, max_value=9.9, allow_nan=False, allow_infinity=False).filter(
+        lambda v: v % 1 != 0
+    )
+    bad_y = pd.Series([0.5, 1.5, 2.5] + data.draw(st.lists(element, min_size=n - 3, max_size=n - 3)))
+    with pytest.raises(ValueError):
+        OrdinalCarver(features, min_freq=0.2, max_n_mod=4).fit(X, bad_y)
+
+
+@given(dataframe_and_features("ordinal"), st.data())
+@SETTINGS
+def test_ordinal_carver_rejects_string_target(prob, data):
+    """A string/categorical target is rejected."""
+    X, features, _ = prob
+    n = len(X)
+    bad_y = pd.Series(data.draw(st.lists(st.sampled_from(["1", "2", "3"]), min_size=n, max_size=n)))
+    with pytest.raises(ValueError):
+        OrdinalCarver(features, min_freq=0.2, max_n_mod=4).fit(X, bad_y)
+
+
+def test_ordinal_carver_rejects_non_ordinal_evaluator():
+    """OrdinalCarver refuses an evaluator not suited to an ordinal target."""
+    features = Features(numericals=["a", "b"])
+    for evaluator in (TschuprowtCombinations(), CramervCombinations(), KruskalCombinations()):
+        with pytest.raises(ValueError):
+            OrdinalCarver(features, min_freq=0.2, max_n_mod=4, combination_evaluator=evaluator)
+
+
+def test_ordinal_carver_accepts_ordinal_evaluators():
+    """Every ordinal evaluator is accepted and flags the target as ordinal."""
+    features = Features(numericals=["a", "b"])
+    for evaluator in (KendallTauCCombinations(), KendallTauBCombinations(), SomersDCombinations()):
+        carver = OrdinalCarver(features, min_freq=0.2, max_n_mod=4, combination_evaluator=evaluator)
+        assert carver.combination_evaluator.is_y_ordinal is True

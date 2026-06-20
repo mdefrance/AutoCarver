@@ -17,7 +17,7 @@ from hypothesis import strategies as st
 from pandas.api.types import is_numeric_dtype
 from strategies import clone_features, dataframe_and_features
 
-from AutoCarver.carvers import BinaryCarver, MulticlassCarver
+from AutoCarver.carvers import BinaryCarver, MulticlassCarver, OrdinalCarver
 from AutoCarver.discretizers.utils.base_discretizer import ProcessingConfig
 
 SETTINGS = settings(
@@ -50,6 +50,14 @@ def _carve_transform(carver, X, y):
 @st.composite
 def binary_problem(draw, *, ordinal_encoding=False):
     X, features, y = draw(dataframe_and_features("binary", nrows=(40, 80), with_nan=True))
+    max_n_mod = draw(st.integers(min_value=2, max_value=4))
+    config = ProcessingConfig(ordinal_encoding=ordinal_encoding, dropna=True, copy=True)
+    return X, features, y, max_n_mod, config
+
+
+@st.composite
+def ordinal_problem(draw, *, ordinal_encoding=False):
+    X, features, y = draw(dataframe_and_features("ordinal", nrows=(40, 80), with_nan=True))
     max_n_mod = draw(st.integers(min_value=2, max_value=4))
     config = ProcessingConfig(ordinal_encoding=ordinal_encoding, dropna=True, copy=True)
     return X, features, y, max_n_mod, config
@@ -180,3 +188,56 @@ def test_multiclass_version_structure(prob, max_n_mod):
     # one version-tag group per modelled class (all but the dropped reference class)
     tags = {feature.version_tag for feature in carver.features}
     assert len(tags) <= n_classes - 1
+
+
+# --------------------------------------------------------------------------
+# ordinal structure / determinism
+# --------------------------------------------------------------------------
+@given(ordinal_problem())
+@SETTINGS
+def test_ordinal_rows_index_and_versions_present(prob):
+    """OrdinalCarver transform preserves rows/index; every surviving version is output."""
+    X, features, y, max_n_mod, config = prob
+    out = _carve_transform(OrdinalCarver(features, min_freq=0.15, max_n_mod=max_n_mod, config=config), X, y)
+
+    assert len(out) == len(X)
+    assert list(out.index) == list(X.index)
+
+
+@given(ordinal_problem())
+@SETTINGS
+def test_ordinal_modalities_within_max_n_mod_and_labels(prob):
+    """Each carved feature has at most ``max_n_mod`` non-nan modalities, and every
+    output value belongs to the feature's labels."""
+    X, features, y, max_n_mod, config = prob
+    carver = OrdinalCarver(features, min_freq=0.15, max_n_mod=max_n_mod, config=config)
+    out = _carve_transform(carver, X, y)
+
+    for feature in carver.features:
+        assert len(_non_nan_labels(feature)) <= max_n_mod, feature.version
+        observed = set(out[feature.version].dropna().unique())
+        assert observed.issubset(set(feature.labels)), feature.version
+
+
+@given(ordinal_problem())
+@SETTINGS
+def test_ordinal_copy_does_not_mutate_input(prob):
+    """copy=True leaves the input DataFrame untouched through fit_transform."""
+    X, features, y, max_n_mod, config = prob
+    before = X.copy(deep=True)
+    _carve_transform(OrdinalCarver(features, min_freq=0.15, max_n_mod=max_n_mod, config=config), X, y)
+    assert X.equals(before)
+
+
+@given(ordinal_problem())
+@SETTINGS
+def test_ordinal_fit_transform_equals_fit_then_transform(prob):
+    """fit_transform equals fit().transform() and is deterministic across instances."""
+    X, features, y, max_n_mod, config = prob
+    features2 = clone_features(features)
+
+    out_ft = _carve_transform(OrdinalCarver(features, min_freq=0.15, max_n_mod=max_n_mod, config=config), X, y)
+    fitted = _carve(OrdinalCarver(features2, min_freq=0.15, max_n_mod=max_n_mod, config=config), X, y)
+    out_split = fitted.transform(X)
+
+    assert out_ft.equals(out_split)

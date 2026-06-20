@@ -12,6 +12,7 @@ Target-specific tools allow for association optimization per desired task:
  * :ref:`BinaryCarver`
  * :ref:`MulticlassCarver`
  * :ref:`ContinuousCarver`
+ * :ref:`OrdinalCarver`
 
 All carvers share the same constructor signature:
 
@@ -148,5 +149,39 @@ It is used to determine whether or not :math:`y` is distributed the same when :m
 For two combinations of modalities of :math:`x`, a higher :math:`H` value indicates that there is a greater difference between the medians of the samples.
 
 .. autoclass:: AutoCarver.ContinuousCarver
+    :members: fit, transform, fit_transform, save, load, summary, history
+
+
+Ordinal tasks
+-------------
+
+.. _OrdinalCarver:
+
+Ordinal Classification
+^^^^^^^^^^^^^^^^^^^^^^
+
+Within :class:`OrdinalCarver`, an **ordinal** target is a column :math:`y` whose
+values are **integer-encoded ordered levels** (e.g. :math:`1..K` with
+:math:`K > 2`); the level order is read from the ascending integer values. A
+two-level target should use :ref:`BinaryCarver` and a free, unordered target
+:ref:`MulticlassCarver` — :class:`OrdinalCarver` rejects both at ``fit`` time, as
+it does a non-integer (continuous) or string target.
+
+The association with a feature :math:`x` is measured with a **rank-correlation**
+statistic computed on the ordered contingency table (feature groups × ordinal
+target levels). Unlike the binary :math:`\chi^2`, a rank statistic *rewards a
+grouping whose order matches the target's order* — exactly what an ordinal target
+calls for. The default is Kendall/Stuart's :ref:`tau-c <tau_c>`; Kendall's
+:ref:`tau-b <tau_b>` and the original :ref:`Somers' D <somersd>` are also
+available via ``combination_evaluator``. The symmetric Kendall taus self-balance
+to a robust, parsimonious number of modalities (only adding a split when it is
+genuinely discriminative), whereas Somers' D leans toward the coarsest split.
+See :ref:`OrdinalCombinations` for the metric definitions and the search.
+
+For two combinations of modalities of :math:`x`, a higher tau / Somers' D value
+indicates a grouping whose ordering agrees more strongly with the ordinal
+target's order.
+
+.. autoclass:: AutoCarver.OrdinalCarver
     :members: fit, transform, fit_transform, save, load, summary, history
 

@@ -10,7 +10,8 @@ from all possible combinations with up to :attr:`max_n_mod` modalities.
 A pre-built :class:`CombinationEvaluator` instance can be passed to any carver via the
 ``combination_evaluator`` keyword. Each subclass defaults to a task-appropriate metric:
 :class:`TschuprowtCombinations` for :class:`BinaryCarver` / :class:`MulticlassCarver`,
-:class:`KruskalCombinations` for :class:`ContinuousCarver`.
+:class:`KruskalCombinations` for :class:`ContinuousCarver`, and
+:class:`KendallTauCCombinations` for :class:`OrdinalCarver`.
 
 The animation below starts from the six ordered bins a
 :class:`QuantitativeDiscretizer` produces (its final state — see
@@ -368,6 +369,22 @@ aggregation path.
 .. autoclass:: AutoCarver.combinations.continuous.continuous_target_rates.TargetMedian
 
 
+.. _OrdinalTargetRates:
+
+Ordinal target rates
+^^^^^^^^^^^^^^^^^^^^
+
+For ordinal targets the per-modality input is the ordered contingency table
+(feature groups × ordinal target levels) — the binary crosstab generalised from
+two columns to one column per ordinal level. The default ``TargetMeanLevel`` is
+the per-group **mean ordinal level** :math:`\sum_j \text{level}_j \cdot n_{gj} /
+n_{g+}`, read from the (integer) crosstab columns. It is monotone in the target's
+order, so it drives both the ``min_freq`` viability test and the train/dev
+rank-preservation veto exactly like the binary/continuous target means.
+
+.. autoclass:: AutoCarver.combinations.ordinal.ordinal_target_rates.TargetMeanLevel
+
+
 Custom target rates
 ^^^^^^^^^^^^^^^^^^^
 
@@ -512,4 +529,152 @@ Kruskal's H Combinations
 See :ref:`kruskal` for more details on the metric.
 
 .. autoclass:: AutoCarver.combinations.KruskalCombinations
+    :members: save, load
+
+
+.. _OrdinalCombinations:
+
+Ordinal tasks
+-------------
+
+For an **ordinal** target (integer-encoded ordered levels), a combination is
+scored by a **rank-association** statistic on the ordered contingency table
+:math:`(r \times c)` — :math:`r` feature groups (rows, target-rate order) ×
+:math:`c` ordinal target levels (cols, ascending). All three statistics below are
+built from the same pair counts:
+
+* :math:`C` — **concordant** pairs (both members order the same way on the
+  feature and on the target);
+* :math:`D` — **discordant** pairs (members order oppositely);
+* :math:`P_0 = n(n-1)/2` — all pairs, with :math:`n` the number of observations;
+* :math:`T_X`, :math:`T_Y` — pairs **tied** on the feature / on the target
+  (equal row / equal column); :math:`P_0 - T_X` and :math:`P_0 - T_Y` are the
+  pairs untied on each margin;
+* :math:`m = \min(r', c')` — the smaller of the number of **non-empty** grouped
+  rows :math:`r'` and target levels :math:`c'`.
+
+The concordant-minus-discordant count :math:`C - D` is computed in closed form
+from the table's cumulative cell sums (``_concordant_minus_discordant``); the
+three measures are monotone-comparable transforms of it. Each measure is
+``None`` for a degenerate table (its denominator vanishes), mirroring the
+continuous evaluator's ``None`` convention. Parity against
+:func:`scipy.stats.kendalltau` (tau-b) and :func:`scipy.stats.somersd` is pinned
+by ``tests/combinations/ordinal/test_ordinal_associations.py`` and the property
+suite ``tests/properties/combinations/test_ordinal_combinations_properties.py``.
+
+
+.. _tau_c:
+
+Kendall/Stuart's :math:`\tau_c` (ordinal default)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Stuart's tau-c applies a :math:`\min(r, c)` correction tailored to
+**rectangular** tables — exactly our shape (few feature groups × many target
+levels):
+
+.. math::
+
+    \tau_c = \frac{2 \, m \, (C - D)}{n^2 \, (m - 1)}.
+
+Because the denominator depends only on :math:`(n, m)` and not on how
+observations distribute across groups, its magnitude stays comparable across
+combinations with different group counts. It self-balances toward fewer, robust
+modalities, only adding one when a split is genuinely discriminative — like
+:ref:`Tschuprow's T <Tschuprowt>` and the Kruskal effect sizes. This is the
+default for :class:`OrdinalCarver`.
+
+.. _tau_b:
+
+Kendall's :math:`\tau_b`
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Kendall's tau-b normalises :math:`C - D` by the geometric mean of the two
+margins' untied pairs:
+
+.. math::
+
+    \tau_b = \frac{C - D}{\sqrt{(P_0 - T_X)(P_0 - T_Y)}}.
+
+It is bit-exact with the ``tau-b`` variant of :func:`scipy.stats.kendalltau` on
+the grouped table and tends to retain more modalities on smoothly monotone
+signals than :math:`\tau_c`.
+
+.. _somersd:
+
+Somers' D
+^^^^^^^^^
+
+The original asymmetric Somers' D ``D(Y|X)`` — concordant minus discordant pairs
+over pairs untied on the feature :math:`X`:
+
+.. math::
+
+    D(Y \mid X) = \frac{C - D}{P_0 - T_X}.
+
+It matches ``scipy.stats.somersd(table).statistic``. Being asymmetric it leans
+strongly toward the **coarsest** split (its maximum over groupings is typically
+two modalities); offered for users who specifically want raw Somers' D rather
+than the self-balancing Kendall taus.
+
+
+Search strategy — additive :math:`C - D` interval DP
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ordinal evaluators reuse the :ref:`progressive top-K interval DP <DPTopK>`
+pattern. The key fact is that the numerator :math:`C - D` of a consecutive
+grouping decomposes **additively** over groups:
+
+.. math::
+
+    (C - D)(\text{grouping}) = \text{TotalBetween} - \sum_g
+    \text{WithinSegment}(g),
+
+where ``TotalBetween`` (the :math:`C - D` of the fully-split table) is constant
+and ``WithinSegment`` — the concordant−discordant pairs *removed* by merging the
+rows of a segment — is prefix-summable. An interval DP that keeps, per number of
+groups :math:`k`, the partitions with the largest numerator therefore enumerates
+the best candidates without materialising every consecutive partition.
+
+* For :math:`\tau_c` the per-:math:`k` denominator :math:`n^2 (m-1) / (2m)` is
+  **constant**, so numerator-optimal :math:`=` metric-optimal: the DP is
+  **exact** for tau-c even at the smallest ``top_k``.
+* For :math:`\tau_b` and Somers' D the denominator depends on the group sizes
+  (through :math:`T_X`), so the kept top-K candidates are **re-scored** with
+  their true denominators and ranked — exact once ``top_k`` is exhaustive, a
+  top-K approximation otherwise (progressive doubling makes it exhaustive in the
+  worst case, exactly as in the binary/continuous DPs).
+
+The :ref:`NaN fan-out <DPTopK>` is **not** re-implemented: it runs after this DP
+has applied the best non-NaN grouping, over the already-small grouped label set,
+so the inherited enumerate-and-score path is cheap there.
+
+
+.. _KendallTauCCombinations:
+
+Kendall's tau-c Combinations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+See :ref:`tau_c` for more details on the metric.
+
+.. autoclass:: AutoCarver.combinations.KendallTauCCombinations
+    :members: save, load
+
+.. _KendallTauBCombinations:
+
+Kendall's tau-b Combinations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+See :ref:`tau_b` for more details on the metric.
+
+.. autoclass:: AutoCarver.combinations.KendallTauBCombinations
+    :members: save, load
+
+.. _SomersDCombinations:
+
+Somers' D Combinations
+^^^^^^^^^^^^^^^^^^^^^^
+
+See :ref:`somersd` for more details on the metric.
+
+.. autoclass:: AutoCarver.combinations.SomersDCombinations
     :members: save, load

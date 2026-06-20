@@ -161,6 +161,21 @@ def multiclass_target(draw, nrows: int, *, n_classes: int | None = None) -> pd.S
     return pd.Series(data)
 
 
+@st.composite
+def ordinal_target(draw, nrows: int, *, n_levels: int | None = None) -> pd.Series:
+    """An int ``Series`` of integer-encoded ordered levels ``1..K`` (``K >= 3``).
+
+    Every level is guaranteed present (``nrows >= n_levels``), so the carver's
+    ``> 2`` ordered-level guard is satisfied.
+    """
+    if n_levels is None:
+        n_levels = draw(st.integers(min_value=3, max_value=5))
+    data = draw(st.lists(st.integers(min_value=1, max_value=n_levels), min_size=nrows, max_size=nrows))
+    for level in range(n_levels):
+        data[level] = level + 1
+    return pd.Series(data)
+
+
 def _target(draw, target_kind: str, nrows: int) -> pd.Series:
     """Draws a target ``Series`` matching ``target_kind``."""
     if target_kind == "binary":
@@ -169,6 +184,8 @@ def _target(draw, target_kind: str, nrows: int) -> pd.Series:
         return draw(continuous_target(nrows))
     if target_kind == "multiclass":
         return draw(multiclass_target(nrows))
+    if target_kind == "ordinal":
+        return draw(ordinal_target(nrows))
     raise ValueError(f"unknown target_kind {target_kind!r}")
 
 
@@ -184,8 +201,8 @@ def dataframe_and_features(
 
     ``X`` mixes 1-3 categorical / ordinal / numerical columns; ``features`` is a
     matching :class:`Features`; ``y`` matches ``target_kind`` ("binary",
-    "continuous" or "multiclass"). With ``with_nan`` the qualitative/categorical
-    columns may carry ``NaN``.
+    "continuous", "multiclass" or "ordinal"). With ``with_nan`` the
+    qualitative/categorical columns may carry ``NaN``.
     """
     n = draw(st.integers(min_value=nrows[0], max_value=nrows[1]))
     nan_rate = 0.2 if with_nan else 0.0
