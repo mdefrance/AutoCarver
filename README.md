@@ -27,6 +27,15 @@
 **AutoCarver** automates supervised feature discretization (binning) to maximize statistical association with your target — using Tschuprow's T or Cramér's V — and validates the chosen bins against a held-out dev set. It supports **binary classification**, **multiclass classification**, and **regression**, and is widely used for credit scoring, fraud detection, and risk modeling.
 
 
+## 🆕 What's New
+
+**🤖 LLM & MCP integration.** AutoCarver now ships a local [Model Context Protocol](https://modelcontextprotocol.io) server: point an MCP-aware assistant (VS Code Copilot, Claude Desktop, Cursor, …) at a data file and let it *qualify* the columns and *carve* them against your target through tool calls. The server runs **fully on your machine** — your dataset is never sent to AutoCarver or any external service (only your own LLM provider sees what the assistant shares). Carving quality depends on the LLM, so have a human confirm the feature definitions before production use. See the [LLM & MCP guide](https://autocarver.readthedocs.io/en/latest/mcp.html).
+
+```bash
+pip install "autocarver[mcp]"
+```
+
+
 ## Install
 
 ```bash

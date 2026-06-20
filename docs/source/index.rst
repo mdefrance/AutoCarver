@@ -25,6 +25,7 @@ Welcome to AutoCarver's documentation!
    viability
    carvers
    selectors
+   mcp
 
 .. toctree::
    :maxdepth: 1

@@ -3,6 +3,7 @@
 from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import TypeVar, overload
+from warnings import warn
 
 import numpy as np
 import pandas as pd
@@ -48,39 +49,49 @@ class FeaturesConfig:
     dropna: bool = False
 
 
-# class AutoFeatures(Features):
-#     """TODO"""
+def infer_feature_kind(dtype) -> str | None:
+    """Maps a pandas dtype to a feature kind, or ``None`` when unsupported.
 
-#     __name__ = "AutoFeatures"
+    Single source of truth for the dtype-based mapping used by both
+    :meth:`Features.from_dataframe` and the MCP inspection layer. Returns one of
+    ``"ordinal"`` / ``"datetime"`` / ``"numerical"`` / ``"categorical"``.
+    """
+    if isinstance(dtype, pd.CategoricalDtype) and dtype.ordered:
+        return "ordinal"
+    if pd.api.types.is_datetime64_any_dtype(dtype):
+        return "datetime"
+    if pd.api.types.is_bool_dtype(dtype):
+        return "categorical"
+    if pd.api.types.is_numeric_dtype(dtype):
+        return "numerical"
+    if isinstance(dtype, pd.CategoricalDtype) or dtype == "object" or pd.api.types.is_string_dtype(dtype):
+        return "categorical"
+    return None
 
-#     def __init__(self):
-#         raise EnvironmentError(
-#             f"[{self.__name__}] Should be instantiated with AutoFeatures.from_dataframe()"
-#         )
 
-#     def from_dataframe(self, X: pd.DataFrame) -> None:
-#         """Automatically generates Features from an input DataFrame based on there data types"""
-#         # initiating features
-#         categoricals, ordinals, quantitatives, datetimes = ([],) * 4
+def _resolve_datetime_references(X: pd.DataFrame, datetime_cols: list[str]) -> dict[str, str]:
+    """Picks a ``reference_date`` for each auto-detected datetime column.
 
-#         # getting data types
-#         for feature, dtype in X.dtypes:
-#             str_dtype = str(dtype).lower()
-#             # categorical feature
-#             if dtype == "object":
-#                 categoricals += [feature]
-#             # quantitative feature
-#             elif str_dtype.startswith("int") or str_dtype.startswith("float"):
-#                 quantitatives += [feature]
-#             # datetime feature
-#             elif "date" in str_dtype or "time" in str_dtype:
-#                 datetimes += [feature]
-#             # unknown data type
-#             else:
-#                 warn(
-#                     f"[{self.__name__}] Ommited column {feature}, unknown data type {dtype}",
-#                     UserWarning,
-#                 )
+    Every datetime column is measured (row-wise) against the most recent datetime column —
+    the ``anchor``, chosen as the column with the latest observation. The anchor can't
+    reference itself, so it falls back to a fixed literal (its own earliest date); the same
+    fallback applies when there is a single datetime column.
+    """
+    # most recent observation per column (NaT for all-NaT columns, which can't be anchors)
+    representatives = {col: X[col].max() for col in datetime_cols}
+    anchor_candidates = [col for col in datetime_cols if pd.notna(representatives[col])]
+
+    anchor = max(anchor_candidates, key=lambda col: representatives[col]) if anchor_candidates else None
+
+    references: dict[str, str] = {}
+    for col in datetime_cols:
+        if anchor is not None and col != anchor:
+            references[col] = anchor  # row-wise reference against the most recent column
+        else:
+            # anchor (or single/all-NaT column): fixed literal = its earliest date
+            earliest = X[col].min()
+            references[col] = str(earliest.date()) if pd.notna(earliest) else str(earliest)
+    return references
 
 
 def _check_names_only(names: list[str] | None, kind: str) -> None:
@@ -228,6 +239,58 @@ class Features:
 
         instance = cls.__new__(cls)
         instance._build(_dedupe_by_version(feature_list), config)
+        return instance
+
+    @classmethod
+    def from_dataframe(cls, X: pd.DataFrame, config: FeaturesConfig | None = None) -> "Features":
+        """Build a :class:`Features` by mapping each column of ``X`` to a feature type.
+
+        Mapping rules (deterministic, from each column's dtype):
+
+        - ordered ``category`` → :class:`OrdinalFeature` (order lifted from ``.cat.categories``)
+        - numeric (non-bool) → :class:`NumericalFeature`
+        - ``datetime64`` → :class:`DatetimeFeature` (``reference_date`` resolved against the
+          most recent datetime column, see :func:`_resolve_datetime_references`)
+        - ``bool`` / ``object`` / ``string`` / unordered ``category`` → :class:`CategoricalFeature`
+        - any other dtype → skipped with a warning
+
+        Nested features can't be inferred from a single column's dtype and are not produced;
+        declare them explicitly or use :func:`qualify_with_llm`. The target column, if present
+        in ``X``, is mapped like any other column and dropped later by the carver (see
+        ``BaseCarver._drop_target_from_features``).
+
+        Parameters
+        ----------
+        X : pd.DataFrame
+            DataFrame whose columns are mapped to typed features.
+
+        config : FeaturesConfig, optional
+            Collection-level config propagated to each feature, by default ``None``.
+        """
+        datetime_cols = [col for col in X.columns if pd.api.types.is_datetime64_any_dtype(X[col])]
+        references = _resolve_datetime_references(X, datetime_cols)
+
+        features: list[BaseFeature] = []
+        for col, dtype in X.dtypes.items():
+            name = str(col)
+            kind = infer_feature_kind(dtype)
+            if kind == "ordinal":
+                features.append(OrdinalFeature(name, values=[str(c) for c in dtype.categories]))
+            elif kind == "datetime":
+                features.append(DatetimeFeature(name, reference_date=references[col]))
+            elif kind == "numerical":
+                features.append(NumericalFeature(name))
+            elif kind == "categorical":
+                features.append(CategoricalFeature(name))
+            else:
+                warn(
+                    f"[{cls.__name__}] Omitted column {name!r}, unsupported data type {dtype}.",
+                    UserWarning,
+                    stacklevel=2,
+                )
+
+        instance = cls.__new__(cls)
+        instance._build(features, config)
         return instance
 
     def _build(self, features: list[BaseFeature], config: FeaturesConfig | None) -> None:

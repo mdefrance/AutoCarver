@@ -89,6 +89,9 @@ class MulticlassCarver(BinaryCarver):
         X_dev: pd.DataFrame | None = None,
         y_dev: pd.Series | None = None,
     ) -> Self:
+        # dropping the target column if it leaked into the features (before versioning)
+        self._drop_target_from_features(X, y)
+
         # initiating samples
         samples = Samples(train=Sample(X, y), dev=Sample(X_dev, y_dev))
 
