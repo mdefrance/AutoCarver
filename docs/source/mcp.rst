@@ -9,9 +9,9 @@ LLM & MCP Integration
 
 There are two ways to use this, depending on where you work:
 
-* :ref:`In a notebook <mcp_notebook>`, with an LLM client you instantiate yourself.
 * :ref:`As an MCP server <mcp_server>`, exposed to an MCP-aware assistant (VS Code Copilot,
   Claude Desktop, Cursor, …) that drives the workflow through tools.
+* :ref:`In a notebook <mcp_notebook>`, with an LLM client you instantiate yourself.
 
 Both paths share the **same logic**: the read-only inspection helpers
 (:mod:`AutoCarver.mcp.inspection`), the type-routing (:func:`specs_to_features_kwargs`) and the
@@ -42,89 +42,10 @@ on top of that session.
     share). That exchange is governed by your provider's terms, not by AutoCarver.
 
 
-.. _mcp_notebook:
-
-Path 1 — In a notebook, with your own LLM
------------------------------------------
-
-You already have a dataset loaded and an LLM client instantiated. AutoCarver gives you a
-provider-agnostic qualifier: you supply ``llm_fn``, a callable that takes a prompt string and
-returns the model's raw text. No provider SDK is imported by AutoCarver, so any backend works.
-
-Qualifying columns into ``Features``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. code-block:: python
-
-    from anthropic import Anthropic
-    from AutoCarver.features import qualify_with_llm
-
-    client = Anthropic()
-
-    def llm_fn(prompt: str) -> str:
-        msg = client.messages.create(
-            model="claude-opus-4-8",
-            max_tokens=2000,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        return msg.content[0].text
-
-    # X is your loaded DataFrame; the model qualifies every column
-    features = qualify_with_llm(X, llm_fn)
-
-:func:`~AutoCarver.features.qualify_with_llm` builds a prompt describing each column (dtype,
-cardinality, a value sample), asks the model to return a JSON ``{column: spec}`` mapping, and
-routes it into a :class:`~AutoCarver.features.Features`. Any backend works — swap ``llm_fn`` for
-an OpenAI / local-model call.
-
-Then carve exactly as you would by hand:
-
-.. code-block:: python
-
-    from AutoCarver import BinaryCarver
-
-    carver = BinaryCarver(features=features, min_freq=0.02, max_n_mod=5)
-    x_discretized = carver.fit_transform(X, X[target])
-    carver.save("my_carver.json")
-
-.. note::
-
-    Without an LLM, :meth:`Features.from_dataframe` gives the same dtype-based first pass
-    deterministically. ``qualify_with_llm`` adds the semantic judgment a dtype cannot infer:
-    *ordering* (ordinals), *hierarchies* (nested) and *which columns to ignore* (ids, free
-    text, leakage).
-
-Driving the session programmatically
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-For a guided, tool-by-tool workflow (the same one the MCP server exposes) without running a
-server, use :class:`~AutoCarver.mcp.session.CarverSession` directly. This lets the model — or
-you — *interrogate* the data before committing to types:
-
-.. code-block:: python
-
-    from AutoCarver.mcp import CarverSession
-
-    session = CarverSession()
-    session.load_dataset("data.parquet", target="default")
-
-    session.list_columns()                         # dtype / cardinality / missingness / suggested kind
-    session.feature_distribution("job", min_freq=0.05)   # modality rates + rare-modality flags
-    session.validate_nesting("city", ["region", "country"])  # check a hierarchy is many-to-one
-
-    session.suggest_features()                      # dtype-based draft (skips the target)
-    session.set_feature("grade", "ordinal", values=["low", "medium", "high"])
-    result = session.run_carver(task="auto", min_freq=0.05, max_n_mod=5)
-    session.save_carver("my_carver.json")          # carver + carved features, reloadable
-
-``run_carver`` returns the resolved task, the kept/dropped features, the carved content per
-feature and the carving summary. ``save_carver`` persists the fitted carver — features
-included — so it can later be restored with ``BinaryCarver.load("my_carver.json")``.
-
 
 .. _mcp_server:
 
-Path 2 — As an MCP server (VS Code Copilot, Claude Desktop, …)
+Path 1 — As an MCP server (VS Code Copilot, Claude Desktop, …)
 --------------------------------------------------------------
 
 AutoCarver ships a local `Model Context Protocol <https://modelcontextprotocol.io>`_ server, so
@@ -223,6 +144,88 @@ safe within a model's context window.
   and carve them against the target; returns the kept/dropped features, carved content and summary.
 * ``save_carver(path)`` — save the fitted carver and its carved features to a ``.json`` file
   (run ``run_carver`` first); the file restores both via ``BinaryCarver.load``.
+
+
+
+.. _mcp_notebook:
+
+Path 2 — In a notebook, with your own LLM
+-----------------------------------------
+
+You already have a dataset loaded and an LLM client instantiated. AutoCarver gives you a
+provider-agnostic qualifier: you supply ``llm_fn``, a callable that takes a prompt string and
+returns the model's raw text. No provider SDK is imported by AutoCarver, so any backend works.
+
+Qualifying columns into ``Features``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: python
+
+    from anthropic import Anthropic
+    from AutoCarver.features import qualify_with_llm
+
+    client = Anthropic()
+
+    def llm_fn(prompt: str) -> str:
+        msg = client.messages.create(
+            model="claude-opus-4-8",
+            max_tokens=2000,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return msg.content[0].text
+
+    # X is your loaded DataFrame; the model qualifies every column
+    features = qualify_with_llm(X, llm_fn)
+
+:func:`~AutoCarver.features.qualify_with_llm` builds a prompt describing each column (dtype,
+cardinality, a value sample), asks the model to return a JSON ``{column: spec}`` mapping, and
+routes it into a :class:`~AutoCarver.features.Features`. Any backend works — swap ``llm_fn`` for
+an OpenAI / local-model call.
+
+Then carve exactly as you would by hand:
+
+.. code-block:: python
+
+    from AutoCarver import BinaryCarver
+
+    carver = BinaryCarver(features=features, min_freq=0.02, max_n_mod=5)
+    x_discretized = carver.fit_transform(X, X[target])
+    carver.save("my_carver.json")
+
+.. note::
+
+    Without an LLM, :meth:`Features.from_dataframe` gives the same dtype-based first pass
+    deterministically. ``qualify_with_llm`` adds the semantic judgment a dtype cannot infer:
+    *ordering* (ordinals), *hierarchies* (nested) and *which columns to ignore* (ids, free
+    text, leakage).
+
+Driving the session programmatically
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For a guided, tool-by-tool workflow (the same one the MCP server exposes) without running a
+server, use :class:`~AutoCarver.mcp.session.CarverSession` directly. This lets the model — or
+you — *interrogate* the data before committing to types:
+
+.. code-block:: python
+
+    from AutoCarver.mcp import CarverSession
+
+    session = CarverSession()
+    session.load_dataset("data.parquet", target="default")
+
+    session.list_columns()                         # dtype / cardinality / missingness / suggested kind
+    session.feature_distribution("job", min_freq=0.05)   # modality rates + rare-modality flags
+    session.validate_nesting("city", ["region", "country"])  # check a hierarchy is many-to-one
+
+    session.suggest_features()                      # dtype-based draft (skips the target)
+    session.set_feature("grade", "ordinal", values=["low", "medium", "high"])
+    result = session.run_carver(task="auto", min_freq=0.05, max_n_mod=5)
+    session.save_carver("my_carver.json")          # carver + carved features, reloadable
+
+``run_carver`` returns the resolved task, the kept/dropped features, the carved content per
+feature and the carving summary. ``save_carver`` persists the fitted carver — features
+included — so it can later be restored with ``BinaryCarver.load("my_carver.json")``.
+
 
 
 Architecture
