@@ -154,6 +154,7 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
 
     is_y_binary = False
     is_y_continuous = False
+    is_y_ordinal = False
     sort_by = None
 
     # Initial top-K for the DP-based segmentation

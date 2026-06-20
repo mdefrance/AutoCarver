@@ -90,7 +90,7 @@ def _drop_reason_from_history(history: pd.DataFrame) -> str:
     of historized non-viable combinations.
     """
     if history.empty:
-        return "No combination historized"
+        return "No combination possible"
 
     info_counts: dict[str, int] = {}
     for _, row in history.iterrows():
@@ -121,6 +121,7 @@ class BaseCarver(BaseDiscretizer, ABC):
     is_y_binary = False
     is_y_continuous = False
     is_y_multiclass = False
+    is_y_ordinal = False
 
     @extend_docstring(BaseDiscretizer.__init__, exclude=["min_freq", "config"])
     def __init__(
