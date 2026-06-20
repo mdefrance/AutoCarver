@@ -1,6 +1,12 @@
 """Loads Features tools."""
 
 from AutoCarver.features.features import Features, FeaturesConfig, get_names, get_versions
+from AutoCarver.features.llm_qualifier import (
+    build_qualification_prompt,
+    parse_qualification_response,
+    qualify_with_llm,
+    specs_to_features_kwargs,
+)
 from AutoCarver.features.qualitatives import (
     CategoricalFeature,
     NestedFeature,
@@ -41,4 +47,8 @@ __all__ = [
     "NumericalFeature",
     "DatetimeFeature",
     "QualitativeFeature",
+    "build_qualification_prompt",
+    "parse_qualification_response",
+    "qualify_with_llm",
+    "specs_to_features_kwargs",
 ]

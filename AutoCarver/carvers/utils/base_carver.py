@@ -8,6 +8,7 @@ from dataclasses import dataclass, field, replace
 from functools import partial
 from multiprocessing import Pool
 from typing import Self
+from warnings import warn
 
 import pandas as pd
 
@@ -293,6 +294,24 @@ class BaseCarver(BaseDiscretizer, ABC):
 
         return samples
 
+    def _drop_target_from_features(self, X: pd.DataFrame, y: pd.Series | None) -> None:
+        """Drops the target column from ``self.features`` if it leaked in.
+
+        ``Features.from_dataframe`` maps every column of the input, target included; the
+        target reaches the carver as the named ``y`` Series, so it is removed here rather
+        than at feature-construction time.
+
+        The guard fires only when ``y`` is genuinely a column of ``X`` (same name *and*
+        values): pandas propagates column names through arithmetic, so a derived target
+        like ``X[col] * 0.5 + noise`` can share a feature's name without being it.
+        """
+        if y is None or y.name is None:
+            return
+        name = str(y.name)
+        if name in self.features and name in X.columns and y.equals(X[name]):
+            warn(f"[{self.__name__}] dropping target column {name!r} from features", UserWarning, stacklevel=2)
+            self.features.remove(name)
+
     def fit(  # type: ignore
         self,
         X: pd.DataFrame,
@@ -331,6 +350,9 @@ class BaseCarver(BaseDiscretizer, ABC):
             raise ValueError(
                 f"[{self.__name__}] features are already fitted or previous fit failed. Please reset your features."
             )
+
+        # dropping the target column if it leaked into the features
+        self._drop_target_from_features(X, y)
 
         # setting is_fitted
         self.features.is_fitted = True

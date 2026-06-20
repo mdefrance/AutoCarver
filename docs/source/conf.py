@@ -113,6 +113,7 @@ extensions = [
     "sphinx_rtd_theme",
     "sphinx.ext.autodoc",
     # "sphinx.ext.autosummary",
+    "sphinx_design",
     "nbsphinx",
 ]
 templates_path = ["_templates"]
