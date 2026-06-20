@@ -25,6 +25,22 @@ on top of that session.
     estimator. The saved ``.json`` embeds the carved :class:`Features`, so loading it back with
     :meth:`~AutoCarver.carvers.BinaryCarver.load` restores both the carver and its features.
 
+.. warning::
+
+    **Carving quality depends on the LLM.** Feature *qualification* — deciding which columns are
+    ordinal, which form hierarchies and which to ignore (ids, free text, leakage) — is only as
+    good as the model you point it at, and different models (or even different runs) can make
+    different calls. Treat the LLM's output as a **first draft, not a final answer**: a human
+    should review and confirm the feature definitions before any production use.
+
+.. note::
+
+    **Your data stays local.** The MCP server runs entirely on your machine — it reads files
+    from your filesystem and never sends your dataset to AutoCarver or any other external
+    service. The only data that leaves your machine is whatever your *own* LLM client/provider
+    transmits as part of the conversation (e.g. the column summaries the assistant chooses to
+    share). That exchange is governed by your provider's terms, not by AutoCarver.
+
 
 .. _mcp_notebook:
 
@@ -121,9 +137,21 @@ Installing the server
 The server depends on ``fastmcp``, which is **not** part of the core install. Pull it in with
 the ``mcp`` extra:
 
-.. code-block:: bash
+.. tab-set::
 
-    pip install "autocarver[mcp]"     # or:  uv add "autocarver[mcp]"
+    .. tab-item:: uv
+        :sync: uv
+
+        .. code-block:: bash
+
+            uv add "autocarver[mcp]"
+
+    .. tab-item:: pip
+        :sync: pip
+
+        .. code-block:: bash
+
+            pip install "autocarver[mcp]"
 
 Running the server
 ^^^^^^^^^^^^^^^^^^

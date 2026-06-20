@@ -34,6 +34,14 @@ tool calls. To get there:
    ``set_feature`` -> ``run_carver`` -> ``save_carver``). That is the qualify+carve
    workflow — let the tools run it, rather than calling Python directly.
 
+Two things to keep in mind:
+
+* **Local data.** The server runs entirely on the user's machine; it reads files from their
+  filesystem and never sends the dataset to AutoCarver or any external service. The only data
+  leaving the machine is whatever you (the assistant) relay to your own LLM provider.
+* **Human review.** Feature qualification is LLM-dependent and can be wrong; tell the user to
+  review and confirm the feature definitions before any production use.
+
 The :class:`CarverSession` / :mod:`inspection` Python layers below exist so the tools
 are importable and unit-tested without ``fastmcp``; they are an implementation detail,
 not the entry point. See ``docs/source/mcp.rst`` for the full guide.
