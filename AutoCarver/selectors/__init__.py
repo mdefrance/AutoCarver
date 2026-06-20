@@ -29,6 +29,7 @@ from AutoCarver.selectors.measures import (
     TschuprowtMeasure,
     ZscoreOutlierMeasure,
 )
+from AutoCarver.selectors.ordinal_selector import OrdinalSelector
 from AutoCarver.selectors.regression_selector import RegressionSelector
 from AutoCarver.selectors.utils.base_selector import BaseSelector
 
@@ -37,6 +38,7 @@ __all__ = [
     "BaseSelector",
     "RegressionSelector",
     "ClassificationSelector",
+    "OrdinalSelector",
     # filters
     "BaseFilter",
     "QuantitativeFilter",

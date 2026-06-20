@@ -3,11 +3,15 @@ for any task.
 """
 
 from collections.abc import Generator
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 
 from AutoCarver.features import BaseFeature, GroupedList
+
+if TYPE_CHECKING:
+    # typing-only: avoids a runtime import cycle (combination_evaluator imports this module)
+    from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample
 
 
 def combinations_at_index(
@@ -159,6 +163,22 @@ def xagg_apply_combination(
         combi_xagg.index = revised_index
 
     return combi_xagg
+
+
+def group_crosstab(xagg: "AggregatedSample | pd.DataFrame", groupby: dict) -> "pd.DataFrame":
+    """Sums a crosstab's rows into the groups defined by ``groupby``.
+
+    ``groupby`` maps each raw modality to its group leader. Group leaders are
+    ordered by first appearance (ordinal order), keeping the result independent
+    of the cosmetic label strings — the same contract as
+    :meth:`BinaryCombinationEvaluator._grouper`, shared here so crosstab-based
+    evaluators (binary, ordinal) don't each reimplement it.
+
+    Accepts anything exposing ``.index`` and ``.groupby`` (a ``pd.DataFrame`` or
+    an :class:`AggregatedSample`); always returns a ``pd.DataFrame``.
+    """
+    leaders = [groupby.get(index_value, index_value) for index_value in xagg.index]
+    return xagg.groupby(leaders, sort=False).sum()
 
 
 def combination_formatter(combination: list[list[str]]) -> dict[str, str]:

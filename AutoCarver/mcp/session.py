@@ -16,12 +16,20 @@ from pathlib import Path
 
 import pandas as pd
 
-from AutoCarver.carvers import BinaryCarver, ContinuousCarver, MulticlassCarver
+from AutoCarver.carvers import BinaryCarver, ContinuousCarver, MulticlassCarver, OrdinalCarver
 from AutoCarver.carvers.utils.base_carver import BaseCarver
 from AutoCarver.features import Features, specs_to_features_kwargs
 from AutoCarver.mcp import inspection
 
-_CARVERS = {"binary": BinaryCarver, "continuous": ContinuousCarver, "multiclass": MulticlassCarver}
+# "ordinal" is opt-in only: integer values alone can't distinguish an ordered
+# ordinal target from an unordered multiclass one, so ``auto`` never resolves to
+# it (see ``_resolve_task``) — the caller must request ``task="ordinal"``.
+_CARVERS = {
+    "binary": BinaryCarver,
+    "continuous": ContinuousCarver,
+    "multiclass": MulticlassCarver,
+    "ordinal": OrdinalCarver,
+}
 
 
 class CarverSession:
@@ -183,7 +191,7 @@ class CarverSession:
         if task in _CARVERS:
             return task
         if task != "auto":
-            raise ValueError(f"[session] unknown task {task!r}; use auto/binary/continuous/multiclass.")
+            raise ValueError(f"[session] unknown task {task!r}; use auto/binary/continuous/multiclass/ordinal.")
         uniques = y.dropna().unique()
         if len(uniques) == 2:
             return "binary"
