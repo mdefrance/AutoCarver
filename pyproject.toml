@@ -58,6 +58,7 @@ jupyter = [
 ]
 mcp = [
     "fastmcp>=3.4.2",
+    "pyarrow>=24.0.0",
 ]
 [dependency-groups]
 compare = [
@@ -82,6 +83,7 @@ dev = [
     "hypothesis>=6.0,<7",
     "fastmcp>=3.4.2",
 ]
+
 
 [project.urls]
 Homepage = "https://autocarver.readthedocs.io/en/latest/"
