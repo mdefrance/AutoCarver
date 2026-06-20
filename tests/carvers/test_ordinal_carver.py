@@ -80,9 +80,18 @@ def test_ordinal_carver_aggregator():
     assert int(xagg.to_numpy().sum()) == len(X)
 
 
+# the symmetric Kendall taus reward the genuine 3-cluster structure; the asymmetric
+# Somers' D collapses to the coarsest split (its documented behaviour).
+EXPECTED_MODALITIES = {
+    KendallTauCCombinations: 3,
+    KendallTauBCombinations: 3,
+    SomersDCombinations: 2,
+}
+
+
 @mark.parametrize("evaluator", ORDINAL_EVALUATORS)
 def test_ordinal_carver_fit_recovers_cluster_structure(evaluator):
-    """A 6-level feature with 3 latent clusters is carved into 3 ordered buckets."""
+    """A 6-level feature with 3 latent clusters: Kendall taus -> 3 buckets, Somers' D -> 2."""
     rng = np.random.default_rng(7)
     n = 3000
     base = rng.integers(0, 6, size=n)
@@ -96,8 +105,7 @@ def test_ordinal_carver_fit_recovers_cluster_structure(evaluator):
     carver.fit(X, y)
 
     feature = carver.features[0]
-    # the 3 clusters are recovered
-    assert len(feature.labels) == 3
+    assert len(feature.labels) == EXPECTED_MODALITIES[evaluator]
     # groups are ordered by increasing mean ordinal level
     mean_level = feature.statistics["target_mean_level"]
     assert list(mean_level) == sorted(mean_level)

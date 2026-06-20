@@ -5,6 +5,7 @@ for any task.
 from collections.abc import Generator
 from typing import TYPE_CHECKING, Any
 
+import numpy as np
 import pandas as pd
 
 from AutoCarver.features import BaseFeature, GroupedList
@@ -178,7 +179,10 @@ def group_crosstab(xagg: "AggregatedSample | pd.DataFrame", groupby: dict) -> "p
     an :class:`AggregatedSample`); always returns a ``pd.DataFrame``.
     """
     leaders = [groupby.get(index_value, index_value) for index_value in xagg.index]
-    return xagg.groupby(leaders, sort=False).sum()
+    # pass the key as an object ndarray (not a list): a list whose values happen
+    # to match column labels would be read by pandas as "group by these columns"
+    # rather than as a per-row grouping key.
+    return xagg.groupby(np.asarray(leaders, dtype=object), sort=False).sum()
 
 
 def combination_formatter(combination: list[list[str]]) -> dict[str, str]:
