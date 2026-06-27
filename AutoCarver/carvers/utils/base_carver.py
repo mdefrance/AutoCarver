@@ -123,6 +123,12 @@ class BaseCarver(BaseDiscretizer, ABC):
     is_y_multiclass = False
     is_y_ordinal = False
 
+    # carvers group nans and ordinal-encode by default; these override the
+    # BaseDiscretizer context defaults used to resolve the ``None`` toggles of
+    # ProcessingConfig (see ProcessingConfig docstring).
+    _default_dropna = True
+    _default_ordinal_encoding = True
+
     @extend_docstring(BaseDiscretizer.__init__, exclude=["min_freq", "config"])
     def __init__(
         self,
@@ -175,20 +181,21 @@ class BaseCarver(BaseDiscretizer, ABC):
             :meth:`~CombinationEvaluator.get_best_combination` call.
 
         config : ProcessingConfig, optional
-            Behavioral toggles inherited from :class:`BaseDiscretizer`. Defaults
-            to ``ProcessingConfig(dropna=True, ordinal_encoding=True)`` — the
-            carver-friendly defaults (group ``nan``, ordinal-encode features
-            for downstream sklearn estimators).
+            Behavioral toggles inherited from :class:`BaseDiscretizer`. Its
+            ``dropna`` and ``ordinal_encoding`` toggles default to ``None`` and
+            are resolved to the carver-friendly ``True`` here (group ``nan``,
+            ordinal-encode features for downstream sklearn estimators). Passing
+            a partial config (e.g. ``ProcessingConfig(verbose=True)``) therefore
+            keeps those carver defaults; set them explicitly to override.
         """
         if combination_evaluator is None:
             raise ValueError(
                 f"[{self.__name__}] combination_evaluator must be provided (subclasses set a task-appropriate default)."
             )
 
-        # carver-friendly defaults differ from BaseDiscretizer's (which default
-        # both to False): carvers group nans and ordinal-encode by default.
-        if config is None:
-            config = ProcessingConfig(dropna=True, ordinal_encoding=True)
+        # carver-friendly defaults (dropna / ordinal_encoding True) are applied
+        # by BaseDiscretizer.__init__ when those toggles are left ``None``, so a
+        # partial config only changes the fields it sets explicitly.
         super().__init__(features, min_freq=min_freq, config=config)
 
         self.max_n_mod = max_n_mod
@@ -408,7 +415,7 @@ class BaseCarver(BaseDiscretizer, ABC):
             evaluator=self.combination_evaluator,
             max_n_mod=self.max_n_mod,
             min_freq=self.min_freq,
-            dropna=self.config.dropna,
+            dropna=bool(self.config.dropna),
             min_freq_alpha=self.config.min_freq_alpha,
         )
 
@@ -458,7 +465,7 @@ class BaseCarver(BaseDiscretizer, ABC):
             xagg_dev,
             max_n_mod=self.max_n_mod,
             min_freq=self.min_freq,
-            dropna=self.config.dropna,
+            dropna=bool(self.config.dropna),
             min_freq_alpha=self.config.min_freq_alpha,
         )
 
