@@ -5,7 +5,7 @@ for a binary classification model.
 import json
 from abc import ABC
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Self
 
 import numpy as np
@@ -40,11 +40,19 @@ class ProcessingConfig:
     search runs through ``multiprocessing.Pool.imap_unordered``. Worth it only
     on hundreds-to-thousands of features (pool startup + pickle overhead
     dominate below that).
+
+    ``ordinal_encoding`` and ``dropna`` default to ``None`` meaning *use the
+    context default*: discretizers leave them ``False``, carvers turn them
+    ``True`` (group ``nan``, ordinal-encode for downstream sklearn estimators).
+    They are resolved to a concrete ``bool`` in :meth:`BaseDiscretizer.__init__`.
+    Leaving them ``None`` is what lets a partial config (e.g.
+    ``ProcessingConfig(verbose=True)``) toggle one field without silently
+    flipping the carver-friendly defaults — set them explicitly to override.
     """
 
     copy: bool = True
-    ordinal_encoding: bool = False
-    dropna: bool = False
+    ordinal_encoding: bool | None = None
+    dropna: bool | None = None
     verbose: bool = False
     n_jobs: int = 1
     min_freq_alpha: float = 0.05
@@ -138,6 +146,11 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
     __name__ = "BaseDiscretizer"
 
+    # context defaults for the ``None`` (unset) toggles of ProcessingConfig;
+    # BaseCarver overrides both to True.
+    _default_dropna: bool = False
+    _default_ordinal_encoding: bool = False
+
     def __init__(
         self,
         features: "Features | Iterable[BaseFeature]",
@@ -180,7 +193,17 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         else:
             self.features = Features.from_list(features)
 
-        self.config: ProcessingConfig = config if config is not None else ProcessingConfig()
+        config = config if config is not None else ProcessingConfig()
+        # resolve context-dependent toggles: ``None`` means "use the context
+        # default" (False here, overridden to True by BaseCarver) so a partial
+        # config doesn't silently flip the unset fields.
+        self.config: ProcessingConfig = replace(
+            config,
+            dropna=self._default_dropna if config.dropna is None else config.dropna,
+            ordinal_encoding=(
+                self._default_ordinal_encoding if config.ordinal_encoding is None else config.ordinal_encoding
+            ),
+        )
         self._min_freq = min_freq
 
         # set by subclasses; serialized for round-trip but not used by BaseDiscretizer itself
@@ -361,7 +384,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             raise RuntimeError(f"[{self.__name__}] Features not fitted: {str(missing_features)}.")
 
         # setting features in ordinal encoding mode
-        self.features.ordinal_encoding = self.config.ordinal_encoding
+        self.features.ordinal_encoding = bool(self.config.ordinal_encoding)
 
         # setting fitted as True to raise alerts
         self.is_fitted = True
