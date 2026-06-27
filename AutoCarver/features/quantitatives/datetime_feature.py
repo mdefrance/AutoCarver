@@ -35,6 +35,15 @@ class DatetimeFeature(QuantitativeFeature):
     def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> None:
         # disambiguate reference_date: a column name resolves to a row-wise reference
         self.reference_is_column = self.reference_date in X.columns
+
+        # otherwise it must be a parseable fixed-date literal: catch the common case
+        # of a reference column that was dropped before fit (e.g. df[features] selection)
+        if not self.reference_is_column and pd.isna(pd.to_datetime(self.reference_date, errors="coerce")):
+            raise ValueError(
+                f"[{self}] reference_date {self.reference_date!r} is neither a column of X nor a "
+                "parseable date. If it is meant to be a reference column, make sure it is kept in X."
+            )
+
         super().fit(X, y)
 
         # a NaT in the reference column yields NaN after conversion

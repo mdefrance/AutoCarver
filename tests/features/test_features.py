@@ -259,6 +259,35 @@ def test_features_call(features, mock_categoricals, mock_ordinals, mock_quantita
         features("nonexistent")
 
 
+def test_features_call_dataframe_keeps_datetime_reference():
+    """selecting columns with a Features object keeps datetime reference columns"""
+    features = Features(datetimes=[("event", "signup")])
+    X = pd.DataFrame(
+        {
+            "event": pd.to_datetime(["2020-01-02", "2020-01-03"]),
+            "signup": pd.to_datetime(["2020-01-01", "2020-01-01"]),
+            "extra": [1, 2],
+        }
+    )
+    # __call__(DataFrame) backs the df[features] selection idiom
+    assert features(X) == ["event", "signup"]
+    assert list(X[features].columns) == ["event", "signup"]
+
+
+def test_features_call_dataframe_keeps_nested_parents():
+    """selecting columns with a Features object keeps nested parent columns"""
+    features = Features(nested={"fine": ["coarse"]})
+    X = pd.DataFrame(
+        {
+            "fine": ["a", "b", "c"],
+            "coarse": ["X", "Y", "X"],
+            "extra": [1, 2, 3],
+        }
+    )
+    assert features(X) == ["fine", "coarse"]
+    assert list(X[features].columns) == ["fine", "coarse"]
+
+
 def test_features_len(features):
     """test Features len"""
     assert len(features) == len(features.categoricals) + len(features.ordinals) + len(features.quantitatives)

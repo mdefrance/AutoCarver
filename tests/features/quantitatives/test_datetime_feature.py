@@ -95,6 +95,17 @@ def test_reference_is_column_defaults_false(sample_datetime_feature: DatetimeFea
     assert sample_datetime_feature.reference_is_column is False
 
 
+def test_fit_raises_on_missing_reference_column() -> None:
+    """a reference_date that is neither a column nor a parseable date raises a clear error"""
+    feature = DatetimeFeature("event", reference_date="DT_MEL2")
+    X = pd.DataFrame({"event": pd.to_datetime(["2020-01-02", "2020-01-03"])})
+
+    from pytest import raises
+
+    with raises(ValueError, match="reference column"):
+        feature.fit(X)
+
+
 def test_column_reference_json_round_trip() -> None:
     """reference_is_column survives a to_json/load round trip"""
     feature = DatetimeFeature("event", reference_date="signup")
