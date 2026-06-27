@@ -343,7 +343,15 @@ class Features:
 
         # case for dataframes
         if isinstance(feature_name, pd.DataFrame):
-            return [feature.version for feature in self if feature.version in feature_name.columns]
+            columns = [feature.version for feature in self if feature.version in feature_name.columns]
+            # keep companion columns that are not features themselves so they survive a
+            # df[features] selection: datetime reference columns and nested parent columns
+            companions = [feature.reference_date for feature in self.datetimes]
+            companions += [parent for feature in self.nested for parent in feature.parents]
+            for column in companions:
+                if column in feature_name.columns and column not in columns:
+                    columns.append(column)
+            return columns
 
         # looking for feature names
         self_dict = self.to_dict()
