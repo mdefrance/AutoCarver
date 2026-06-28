@@ -442,11 +442,13 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
     def _transform_quantitative(self, sample: Sample) -> Sample:
         """Applies discretization to a DataFrame's Quantitative columns."""
-        # transforming all features
+        # transforming all features — kept serial (n_jobs=1): the per-feature transform is a
+        # vectorized searchsorted, so shipping each column to a worker and back costs more than the
+        # compute. n_jobs is reserved for the carver's per-feature combination search.
         transformed = apply_async_function(
             transform_quantitative_feature,
             self.features.quantitatives,
-            self.config.n_jobs,
+            1,
             sample.X,
             sample.shape[0],
         )

@@ -43,8 +43,9 @@ class StringDiscretizer(BaseDiscretizer):
         # checking for binary target and copying X
         sample = self._prepare_sample(Sample(X, y))
 
-        # transforming all features
-        all_orders = apply_async_function(fit_feature, self.features, self.config.n_jobs, sample.X)
+        # transforming all features — kept serial (n_jobs=1): per-feature string-casting is cheap and
+        # pickling each column to a worker dominates. n_jobs is reserved for the carver's search.
+        all_orders = apply_async_function(fit_feature, self.features, 1, sample.X)
 
         # updating features accordingly
         self.features.update(dict(all_orders), replace=True)
