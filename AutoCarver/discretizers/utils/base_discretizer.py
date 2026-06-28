@@ -5,6 +5,7 @@ for a binary classification model.
 import json
 from abc import ABC
 from collections.abc import Iterable
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
 from typing import Self
 
@@ -12,7 +13,6 @@ import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from AutoCarver.discretizers.utils.multiprocessing import apply_async_function
 from AutoCarver.features import BaseFeature, Features, NestedFeature
 from AutoCarver.utils import extend_docstring
 
@@ -442,16 +442,25 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
     def _transform_quantitative(self, sample: Sample) -> Sample:
         """Applies discretization to a DataFrame's Quantitative columns."""
-        # transforming all features — kept serial (n_jobs=1): the per-feature transform is a
-        # vectorized searchsorted, so shipping each column to a worker and back costs more than the
-        # compute. n_jobs is reserved for the carver's per-feature combination search.
-        transformed = apply_async_function(
-            transform_quantitative_feature,
-            self.features.quantitatives,
-            1,
-            sample.X,
-            sample.shape[0],
-        )
+        quantitatives = self.features.quantitatives
+        x_len = sample.shape[0]
+
+        # the per-feature transform is a vectorized searchsorted whose C internals release the GIL,
+        # so threads overlap the columns with zero pickling — unlike a process pool, whose per-column
+        # ship-and-return costs more than the compute (measured). ``n_jobs`` gates the width and stays
+        # 1 inside the carver's discretize workers, which keep the no-copy serial path below.
+        if self.config.n_jobs > 1 and len(quantitatives) > 1:
+            # threaded: hand each thread its own column copy (pandas 2.x has no copy-on-write) so the
+            # in-place nan-masking never races on the shared frame.
+            def _one(feature: BaseFeature) -> tuple[str, np.ndarray]:
+                return transform_quantitative_feature(feature, sample.X[feature.version].copy(), x_len)
+
+            with ThreadPoolExecutor(max_workers=self.config.n_jobs) as executor:
+                transformed = list(executor.map(_one, quantitatives))
+        else:
+            transformed = [
+                transform_quantitative_feature(feature, sample.X[feature.version], x_len) for feature in quantitatives
+            ]
 
         # unpacking transformed series — infer_objects restores numeric dtype for ordinal-encoded
         # labels (the per-feature arrays are object dtype); string interval labels stay object,
