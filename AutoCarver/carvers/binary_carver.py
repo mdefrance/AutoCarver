@@ -5,7 +5,7 @@ for binary classification tasks.
 import numpy as np
 import pandas as pd
 
-from AutoCarver.carvers.utils.base_carver import BaseCarver, Samples
+from AutoCarver.carvers.utils.base_carver import BaseCarver, Samples, parallel_aggregate
 from AutoCarver.combinations import CombinationEvaluator, TschuprowtCombinations
 from AutoCarver.discretizers.utils.base_discretizer import ProcessingConfig
 from AutoCarver.features import BaseFeature, Features
@@ -76,15 +76,8 @@ class BinaryCarver(BaseCarver):
 
     def _aggregator(self, X: pd.DataFrame, y: pd.Series) -> dict[str, pd.Series | pd.DataFrame | None]:
         """Computes crosstabs for specified features and ensures that the crosstab is ordered
-        according to the known labels"""
-        # checking for empty datasets (dev)
-        xtabs = {feature.version: None for feature in self.features}
-        if X is not None:
-            # crosstab for each feature
-            for feature in self.features:
-                xtabs.update({feature.version: get_crosstab(X, y, feature)})
-
-        return xtabs
+        according to the known labels. Threaded across features when ``n_jobs > 1``."""
+        return parallel_aggregate(get_crosstab, self.features, X, y, self.config.n_jobs)
 
 
 def get_crosstab(X: pd.DataFrame, y: pd.Series, feature: BaseFeature) -> pd.DataFrame:

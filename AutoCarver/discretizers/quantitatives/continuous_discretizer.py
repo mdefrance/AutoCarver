@@ -57,11 +57,13 @@ class ContinuousDiscretizer(BaseDiscretizer):
     def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> Self:
         self._log_if_verbose()  # verbose if requested
 
-        # fitting each feature
+        # fitting each feature — kept serial (n_jobs=1): the per-feature work is a single quantile
+        # sort (sub-second total), so process pickling (here the whole quantitative frame) costs far
+        # more than it saves. n_jobs is reserved for the carver's per-feature combination search.
         all_orders = imap_unordered_function(
             fit_feature,
             self.features.quantitatives,
-            self.config.n_jobs,
+            1,
             X=X[get_versions(self.features.quantitatives)],
             q=self.q,
         )

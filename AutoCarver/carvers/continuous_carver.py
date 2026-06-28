@@ -5,7 +5,7 @@ for continuous regression tasks.
 import numpy as np
 import pandas as pd
 
-from AutoCarver.carvers.utils.base_carver import BaseCarver, Samples
+from AutoCarver.carvers.utils.base_carver import BaseCarver, Samples, parallel_aggregate
 from AutoCarver.combinations import CombinationEvaluator, KruskalCombinations
 from AutoCarver.discretizers.utils.base_discretizer import ProcessingConfig
 from AutoCarver.features import BaseFeature, Features
@@ -79,15 +79,8 @@ class ContinuousCarver(BaseCarver):
 
     def _aggregator(self, X: pd.DataFrame, y: pd.Series) -> dict[str, pd.Series | pd.DataFrame | None]:
         """Computes y values for modalities of specified features and ensures the ordering
-        according to the known labels"""
-        # checking for empty datasets
-        yvals = {feature.version: None for feature in self.features}
-        if X is not None:
-            # list of y values for each modality of X
-            for feature in self.features:
-                yvals.update({feature.version: get_target_values_by_modality(X, y, feature)})
-
-        return yvals
+        according to the known labels. Threaded across features when ``n_jobs > 1``."""
+        return parallel_aggregate(get_target_values_by_modality, self.features, X, y, self.config.n_jobs)
 
 
 def get_target_values_by_modality(X: pd.DataFrame, y: pd.Series, feature: BaseFeature) -> pd.Series:

@@ -434,7 +434,15 @@ class BaseFeature(ABC):
     def check_values(self, X: pd.DataFrame) -> None:
         """Checks for unexpected values in DataFrame."""
 
-        if (any(X[self.version].isna()) or any(X[self.version] == self.nan)) and not self.has_nan:
+        # features that already account for nans can't have "unexpected" ones — short-circuit before
+        # touching the column so the full-length scan is skipped entirely for them.
+        if self.has_nan:
+            return
+
+        # vectorized ``.any()`` (C-level, short-circuits) instead of the builtin ``any()`` which
+        # iterates the 300k-element Series in python.
+        column = X[self.version]
+        if column.isna().any() or (column == self.nan).any():
             raise ValueError(f"[{self}] Unexpected NaNs.")
 
     def group(self, to_discard: list[str], to_keep: str) -> None:

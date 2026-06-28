@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from AutoCarver.carvers.binary_carver import get_crosstab
-from AutoCarver.carvers.utils.base_carver import BaseCarver, Samples
+from AutoCarver.carvers.utils.base_carver import BaseCarver, Samples, parallel_aggregate
 from AutoCarver.combinations import CombinationEvaluator, KendallTauCCombinations
 from AutoCarver.discretizers.utils.base_discretizer import ProcessingConfig
 from AutoCarver.features import Features
@@ -89,13 +89,8 @@ class OrdinalCarver(BaseCarver):
 
     def _aggregator(self, X: pd.DataFrame, y: pd.Series) -> dict[str, pd.Series | pd.DataFrame | None]:
         """Computes ordered contingency tables (feature modalities × ordinal target
-        levels) for specified features, ordered according to the known labels."""
-        # checking for empty datasets (dev)
-        xtabs = {feature.version: None for feature in self.features}
-        if X is not None:
-            # crosstab for each feature — pd.crosstab emits one column per ordinal
-            # level and sorts them ascending (correct ordinal column order)
-            for feature in self.features:
-                xtabs.update({feature.version: get_crosstab(X, y, feature)})
+        levels) for specified features, ordered according to the known labels.
 
-        return xtabs
+        Threaded across features when ``n_jobs > 1`` (pd.crosstab emits one column per ordinal
+        level, sorted ascending — correct ordinal column order)."""
+        return parallel_aggregate(get_crosstab, self.features, X, y, self.config.n_jobs)

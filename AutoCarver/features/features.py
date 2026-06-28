@@ -601,15 +601,14 @@ class Features:
     def unfillna(self, X: pd.DataFrame) -> pd.DataFrame:
         """unfills nans when not supposed to have filled them"""
 
-        # reinstating nans of features for which nans should not have been dropped
-        X.replace(
-            {
-                feature.version: {feature.label_per_value.get(feature.nan, feature.nan): np.nan}
-                for feature in self
-                if feature.has_nan and not feature.dropna
-            },
-            inplace=True,
-        )
+        # reinstating nans of features for which nans should not have been dropped — per-column
+        # ``where`` is far faster than a dict-of-dict ``DataFrame.replace`` on a wide frame (this
+        # runs on every transform pass), and only the nan-label is mapped back to ``np.nan``.
+        for feature in self:
+            if feature.has_nan and not feature.dropna:
+                column = X[feature.version]
+                nan_label = feature.label_per_value.get(feature.nan, feature.nan)
+                X[feature.version] = column.where(column != nan_label, np.nan)
 
         return X
 
