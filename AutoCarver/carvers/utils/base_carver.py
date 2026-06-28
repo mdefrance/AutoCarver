@@ -18,7 +18,10 @@ from AutoCarver.carvers.utils.pretty_print import index_mapper, prettier_xagg
 from AutoCarver.combinations import (
     CombinationEvaluator,
     CramervCombinations,
+    KendallTauBCombinations,
+    KendallTauCCombinations,
     KruskalCombinations,
+    SomersDCombinations,
     TschuprowtCombinations,
 )
 from AutoCarver.discretizers import BaseDiscretizer, Discretizer, Sample
@@ -32,6 +35,19 @@ from AutoCarver.utils import extend_docstring, has_idisplay
 _has_idisplay = has_idisplay()
 if _has_idisplay:
     from IPython.display import display_html
+
+# maps a serialized combination_evaluator.sort_by back to its evaluator class (used by load)
+_EVALUATORS_BY_SORT_BY: dict[str, type[CombinationEvaluator]] = {
+    evaluator_cls.sort_by: evaluator_cls
+    for evaluator_cls in (
+        TschuprowtCombinations,
+        CramervCombinations,
+        KruskalCombinations,
+        KendallTauCCombinations,
+        KendallTauBCombinations,
+        SomersDCombinations,
+    )
+}
 
 
 @dataclass
@@ -606,13 +622,8 @@ class BaseCarver(BaseDiscretizer, ABC):
         # deserializing Combinations: identify the evaluator class from sort_by
         combinations_json = data.pop("combination_evaluator")
         sort_by = combinations_json.pop("sort_by", None)
-        if sort_by == "tschuprowt":
-            evaluator_cls: type[CombinationEvaluator] = TschuprowtCombinations
-        elif sort_by == "cramerv":
-            evaluator_cls = CramervCombinations
-        elif sort_by == "kruskal":
-            evaluator_cls = KruskalCombinations
-        else:
+        evaluator_cls = _EVALUATORS_BY_SORT_BY.get(sort_by)
+        if evaluator_cls is None:
             raise ValueError(f"[{cls.__name__}] Unknown combinations sort_by={sort_by!r}")
 
         is_fitted = data.pop("is_fitted", False)
