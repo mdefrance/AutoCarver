@@ -16,6 +16,8 @@ def main() -> None:
     Writes ``titanic_carver.json`` to the current working directory.
     """
     # --8<-- [start:quick_start]
+    from pathlib import Path
+
     import pandas as pd
     from sklearn.model_selection import train_test_split
 
@@ -45,8 +47,8 @@ def main() -> None:
     print(carver.summary)
 
     # 6. Persist for later use
-    carver.save("titanic_carver.json")
-    # carver = BinaryCarver.load("titanic_carver.json")
+    carver.save(Path("titanic_carver.json"))
+    # carver = BinaryCarver.load(Path("titanic_carver.json"))
     # --8<-- [end:quick_start]
 
     # silence unused-variable warnings without altering the snippet above

@@ -719,8 +719,8 @@ def test_continuous_carver_save_load(tmp_path, evaluator: CombinationEvaluator):
     )
     carver = ContinuousCarver(min_freq=0.1, max_n_mod=5, features=features, combination_evaluator=evaluator)
     carver_file = tmp_path / "binary_carver.json"
-    carver.save(str(carver_file))
-    loaded_carver = ContinuousCarver.load(str(carver_file))
+    carver.save(carver_file)
+    loaded_carver = ContinuousCarver.load(carver_file)
     assert carver.min_freq == loaded_carver.min_freq
     for feature in carver.features:
         assert feature in loaded_carver.features
@@ -908,8 +908,8 @@ def test_continuous_carver_serialization_roundtrip(
     feature_names = features.names
 
     carver_file = tmp_path / "test.json"
-    auto_carver.save(str(carver_file))
-    loaded_carver = ContinuousCarver.load(str(carver_file))
+    auto_carver.save(carver_file)
+    loaded_carver = ContinuousCarver.load(carver_file)
 
     assert all(loaded_carver.summary == auto_carver.summary), "Non-identical summaries when loading from JSON"
     loaded_x_train = loaded_carver.transform(raw_x_train)

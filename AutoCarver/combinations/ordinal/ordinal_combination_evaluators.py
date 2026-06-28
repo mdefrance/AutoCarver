@@ -378,23 +378,35 @@ def _top_k_partitions_ordinal_dp(
     drops into the viability walk.
     """
     n_mod = len(raw_index)
-    cap = min(max_n_mod, n_mod)
     total_n = float(n_per_mod.sum())
+
+    # Empty modalities (all-zero rows — e.g. ordinal levels absent from the crosstab,
+    # which _dp_inputs_from_xagg zero-fills) carry no observations and must never form
+    # their own group: an empty group lowers the non-empty-group count m, which changes
+    # tau-c's per-k denominator and breaks the constant-denominator premise that makes the
+    # additive-numerator DP exact at top_k=1. So run the DP over the non-empty modalities
+    # only, then fold each empty modality back into an adjacent group when emitting.
+    keep = np.flatnonzero(n_per_mod > 0)
+    n_kept = len(keep)
+    cap = min(max_n_mod, n_kept)
     if cap < 2 or total_n < 2:
         return []
+
+    kept_M = M[keep]
+    kept_n_per_mod = n_per_mod[keep]
 
     all_pairs = total_n * (total_n - 1) / 2.0
     untied_on_target = all_pairs - float((col_sums * (col_sums - 1) / 2.0).sum())
     c_nonempty = int((col_sums > 0).sum())
-    total_between = _concordant_minus_discordant(M)
-    seg = _segment_within_costs(M)
-    n_prefix = np.concatenate([[0.0], np.cumsum(n_per_mod.astype(float))])
+    total_between = _concordant_minus_discordant(kept_M)
+    seg = _segment_within_costs(kept_M)
+    n_prefix = np.concatenate([[0.0], np.cumsum(kept_n_per_mod.astype(float))])
 
-    dp = _build_partition_dp(seg, n_mod=n_mod, cap=cap, top_k=top_k)
+    dp = _build_partition_dp(seg, n_mod=n_kept, cap=cap, top_k=top_k)
 
     entries: list[tuple[float, dict, tuple[int, ...]]] = []
     for k in range(2, cap + 1):
-        for sum_seg, splits in dp[k][n_mod]:
+        for sum_seg, splits in dp[k][n_kept]:
             metrics = _score_partition(
                 sum_seg,
                 splits,
@@ -412,7 +424,11 @@ def _top_k_partitions_ordinal_dp(
 
     out: list[dict] = []
     for _, metrics, splits in entries:
-        combination = [list(raw_index[splits[g] : splits[g + 1]]) for g in range(len(splits) - 1)]
+        # map compacted cut points back to raw_index: each cut sits just before the first
+        # kept modality of the next group, so empty modalities attach to the preceding group
+        # (leading empties join the first group, trailing empties the last).
+        bounds = [0, *(int(keep[s]) for s in splits[1:-1]), n_mod]
+        combination = [list(raw_index[bounds[g] : bounds[g + 1]]) for g in range(len(bounds) - 1)]
         out.append({"combination": combination, "index_to_groupby": combination_formatter(combination), **metrics})
     return out
 

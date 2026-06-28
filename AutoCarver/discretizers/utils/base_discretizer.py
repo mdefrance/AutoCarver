@@ -7,6 +7,7 @@ from abc import ABC
 from collections.abc import Iterable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
+from pathlib import Path
 from typing import Self
 
 import numpy as np
@@ -532,13 +533,13 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         return content
 
-    def save(self, file_name: str, light_mode: bool = False) -> None:
+    def save(self, file_name: Path, light_mode: bool = False) -> None:
         """Saves pipeline to .json file.
 
         Parameters
         ----------
-        file_name : str
-            String of .json file name.
+        file_name : Path
+            :class:`pathlib.Path` of the ``.json`` file to write.
         light_mode: bool, optional
             Whether or not to save features' history and statistics, by default False
 
@@ -548,15 +549,15 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             JSON serialized object
         """
         # checking for input
-        if file_name.endswith(".json"):
-            with open(file_name, "w", encoding="utf-8") as json_file:
+        if file_name.suffix == ".json":
+            with file_name.open("w", encoding="utf-8") as json_file:
                 json.dump(self.to_json(light_mode), json_file)
         # raising for non-json file name
         else:
             raise ValueError(f"[{self.__name__}] Provide a file_name that ends with .json.")
 
     @classmethod
-    def load(cls, file_name: str) -> "BaseDiscretizer":
+    def load(cls, file_name: Path) -> "BaseDiscretizer":
         """Allows one to load an Discretizer saved as a .json file.
 
         The Discretizer has to be saved with ``Discretizer.save()``, otherwise there
@@ -564,8 +565,8 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        file_name : str
-            String of saved Discretizer's .json file name.
+        file_name : Path
+            :class:`pathlib.Path` of the saved Discretizer's ``.json`` file.
 
         Returns
         -------
@@ -573,9 +574,8 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             A fitted Discretizer.
         """
         # reading file
-        with open(file_name, encoding="utf-8") as json_file:
+        with file_name.open(encoding="utf-8") as json_file:
             data = json.load(json_file)
-
         return cls._from_json(data)
 
     @classmethod

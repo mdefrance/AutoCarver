@@ -183,7 +183,7 @@ class CarverSession:
         """
         if self.carver is None:
             raise ValueError("[session] no fitted carver; call run_carver first.")
-        self.carver.save(path)
+        self.carver.save(Path(path))
         return {"saved": path, "features": [feature.version for feature in self.carver.features]}
 
     def _resolve_task(self, task: str, y: pd.Series) -> str:

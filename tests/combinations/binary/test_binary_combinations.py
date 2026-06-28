@@ -1,6 +1,7 @@
 """Tests for the binary_combinations module."""
 
 import json
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -56,9 +57,9 @@ def test_to_json(evaluator: BinaryCombinationEvaluator):
 def test_save(evaluator: BinaryCombinationEvaluator, tmp_path):
     """Test save method of BinaryCombinationEvaluator."""
     file_name = tmp_path / "test.json"
-    evaluator.save(str(file_name))
+    evaluator.save(file_name)
 
-    with open(file_name, encoding="utf-8") as json_file:
+    with file_name.open(encoding="utf-8") as json_file:
         data = json.load(json_file)
 
     expected_json = {
@@ -72,7 +73,7 @@ def test_save(evaluator: BinaryCombinationEvaluator, tmp_path):
 def test_save_invalid_filename(evaluator: BinaryCombinationEvaluator):
     """Test save method with an invalid filename."""
     with raises(ValueError):
-        evaluator.save("invalid_file.txt")
+        evaluator.save(Path("invalid_file.txt"))
 
 
 def test_load_tschuprowt(tmp_path):
@@ -84,10 +85,10 @@ def test_load_tschuprowt(tmp_path):
         "verbose": True,
     }
 
-    with open(file_name, "w", encoding="utf-8") as json_file:
+    with file_name.open("w", encoding="utf-8") as json_file:
         json.dump(data, json_file)
 
-    loaded_evaluator = TschuprowtCombinations.load(str(file_name))
+    loaded_evaluator = TschuprowtCombinations.load(file_name)
 
     assert loaded_evaluator.verbose is True
     assert loaded_evaluator.sort_by == "tschuprowt"
@@ -96,10 +97,10 @@ def test_load_tschuprowt(tmp_path):
     assert loaded_evaluator.is_y_continuous is False
 
     with raises(ValueError):
-        CramervCombinations.load(str(file_name))
+        CramervCombinations.load(file_name)
 
     with raises(ValueError):
-        KruskalCombinations.load(str(file_name))
+        KruskalCombinations.load(file_name)
 
 
 def test_load_cramerv(tmp_path):
@@ -111,10 +112,10 @@ def test_load_cramerv(tmp_path):
         "verbose": True,
     }
 
-    with open(file_name, "w", encoding="utf-8") as json_file:
+    with file_name.open("w", encoding="utf-8") as json_file:
         json.dump(data, json_file)
 
-    loaded_evaluator = CramervCombinations.load(str(file_name))
+    loaded_evaluator = CramervCombinations.load(file_name)
 
     assert loaded_evaluator.verbose is True
     assert loaded_evaluator.sort_by == "cramerv"
@@ -123,10 +124,10 @@ def test_load_cramerv(tmp_path):
     assert loaded_evaluator.is_y_continuous is False
 
     with raises(ValueError):
-        TschuprowtCombinations.load(str(file_name))
+        TschuprowtCombinations.load(file_name)
 
     with raises(ValueError):
-        KruskalCombinations.load(str(file_name))
+        KruskalCombinations.load(file_name)
 
 
 def test_compute_target_rates_basic(evaluator: BinaryCombinationEvaluator):

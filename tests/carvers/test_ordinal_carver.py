@@ -109,3 +109,22 @@ def test_ordinal_carver_fit_recovers_cluster_structure(evaluator):
     # groups are ordered by increasing mean ordinal level
     mean_level = feature.statistics["target_mean_level"]
     assert list(mean_level) == sorted(mean_level)
+
+
+@mark.parametrize("evaluator", ORDINAL_EVALUATORS)
+def test_ordinal_carver_save_load(tmp_path, evaluator):
+    """Each ordinal evaluator round-trips through save/load (regression for sort_by dispatch)."""
+    features = Features(
+        categoricals=["feature1"],
+        ordinals={"feature2": ["low", "medium", "high"]},
+        numericals=["feature3"],
+    )
+    carver = OrdinalCarver(min_freq=0.1, max_n_mod=5, features=features, combination_evaluator=evaluator())
+    carver_file = tmp_path / "ordinal_carver.json"  # exercise save/load with a Path, not str
+    carver.save(carver_file)
+    loaded_carver = OrdinalCarver.load(carver_file)
+
+    assert carver.combination_evaluator.__class__ == loaded_carver.combination_evaluator.__class__
+    assert carver.combination_evaluator.sort_by == loaded_carver.combination_evaluator.sort_by
+    assert carver.min_freq == loaded_carver.min_freq
+    assert carver.max_n_mod == loaded_carver.max_n_mod

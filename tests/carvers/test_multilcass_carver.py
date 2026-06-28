@@ -719,8 +719,8 @@ def test_multiclass_carver_save_load(tmp_path: Path, evaluator: CombinationEvalu
     )
     carver = MulticlassCarver(min_freq=0.1, max_n_mod=5, features=features, combination_evaluator=evaluator)
     carver_file = tmp_path / "multilclass_carver.json"
-    carver.save(str(carver_file))
-    loaded_carver = MulticlassCarver.load(str(carver_file))
+    carver.save(carver_file)
+    loaded_carver = MulticlassCarver.load(carver_file)
     assert carver.min_freq == loaded_carver.min_freq
     for feature in carver.features:
         assert feature in loaded_carver.features
@@ -928,8 +928,8 @@ def test_multiclass_carver_serialization_roundtrip(
     feature_versions = features.versions
 
     carver_file = tmp_path / "test.json"
-    auto_carver.save(str(carver_file))
-    loaded_carver = MulticlassCarver.load(str(carver_file))
+    auto_carver.save(carver_file)
+    loaded_carver = MulticlassCarver.load(carver_file)
 
     assert all(loaded_carver.summary == auto_carver.summary), "Non-identical summaries when loading from JSON"
     assert all(x_discretized[feature_versions] == loaded_carver.transform(x_dev_1)[loaded_carver.features.versions]), (

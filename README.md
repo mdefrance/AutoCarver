@@ -49,6 +49,8 @@ Binary classification on the Titanic dataset:
 
 <!-- quick-start:start -->
 ```python
+from pathlib import Path
+
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
@@ -78,8 +80,8 @@ dev_processed = carver.transform(dev)
 print(carver.summary)
 
 # 6. Persist for later use
-carver.save("titanic_carver.json")
-# carver = BinaryCarver.load("titanic_carver.json")
+carver.save(Path("titanic_carver.json"))
+# carver = BinaryCarver.load(Path("titanic_carver.json"))
 ```
 <!-- quick-start:end -->
 

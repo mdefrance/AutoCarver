@@ -1,6 +1,7 @@
 """Set of tests for base_discretizers module."""
 
 import json
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -740,16 +741,16 @@ def test_save(tmp_path, features: Features, true_false: bool) -> None:
     discretizer = _make_discretizer(features, min_freq=min_freq, true_false=true_false, n_jobs=n_jobs)
 
     file_path = tmp_path / "test_discretizer.json"
-    discretizer.save(str(file_path), light_mode=true_false)
+    discretizer.save(file_path, light_mode=true_false)
 
     assert file_path.exists()
-    with open(file_path, encoding="utf-8") as f:
-        saved_data = json.load(f)
+    with file_path.open(encoding="utf-8") as json_file:
+        saved_data = json.load(json_file)
     assert saved_data == discretizer.to_json(light_mode=true_false)
 
     # checking with wrong path
     with raises(ValueError):
-        discretizer.save("wrong_path", light_mode=true_false)
+        discretizer.save(Path("wrong_path"), light_mode=true_false)
 
 
 def test_load_discretizer(tmp_path, features: Features, true_false: bool) -> None:
@@ -760,9 +761,9 @@ def test_load_discretizer(tmp_path, features: Features, true_false: bool) -> Non
     discretizer = _make_discretizer(features, min_freq=min_freq, true_false=true_false, n_jobs=n_jobs)
 
     file_path = tmp_path / "test_discretizer.json"
-    discretizer.save(str(file_path), light_mode=true_false)
+    discretizer.save(file_path, light_mode=true_false)
 
-    loaded = BaseDiscretizer.load(str(file_path))
+    loaded = BaseDiscretizer.load(file_path)
 
     for feature in loaded.features:
         assert feature.name in discretizer.features
@@ -774,7 +775,7 @@ def test_load_discretizer(tmp_path, features: Features, true_false: bool) -> Non
     assert loaded.config.ordinal_encoding == discretizer.config.ordinal_encoding
 
     with raises(FileNotFoundError):
-        _ = BaseDiscretizer.load("wrong_path")
+        _ = BaseDiscretizer.load(Path("wrong_path"))
 
 
 # def test_summary() -> None:
