@@ -120,9 +120,9 @@ def test_ordinal_carver_save_load(tmp_path, evaluator):
         numericals=["feature3"],
     )
     carver = OrdinalCarver(min_freq=0.1, max_n_mod=5, features=features, combination_evaluator=evaluator())
-    carver_file = tmp_path / "ordinal_carver.json"
-    carver.save(str(carver_file))
-    loaded_carver = OrdinalCarver.load(str(carver_file))
+    carver_file = tmp_path / "ordinal_carver.json"  # exercise save/load with a Path, not str
+    carver.save(carver_file)
+    loaded_carver = OrdinalCarver.load(carver_file)
 
     assert carver.combination_evaluator.__class__ == loaded_carver.combination_evaluator.__class__
     assert carver.combination_evaluator.sort_by == loaded_carver.combination_evaluator.sort_by

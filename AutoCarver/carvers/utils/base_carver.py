@@ -9,6 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field, replace
 from functools import partial
 from multiprocessing import Pool
+from pathlib import Path
 from typing import Self
 from warnings import warn
 
@@ -611,9 +612,9 @@ class BaseCarver(BaseDiscretizer, ABC):
         display_html(nicer_xaggs, raw=True)
 
     @classmethod
-    def load(cls, file_name: str) -> "BaseCarver":
+    def load(cls, file_name: Path) -> "BaseCarver":
         """Allows one to load a Carver saved as a .json file."""
-        with open(file_name, encoding="utf-8") as json_file:
+        with file_name.open(encoding="utf-8") as json_file:
             data = json.load(json_file)
 
         # deserializing features

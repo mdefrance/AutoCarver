@@ -1,5 +1,7 @@
 """Tests for the stateful CarverSession (qualify -> carve workflow)."""
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 from pytest import fixture, raises
@@ -108,7 +110,7 @@ def test_save_carver_roundtrips(dataset, tmp_path):
 
     from AutoCarver.carvers import BinaryCarver
 
-    reloaded = BinaryCarver.load(path)
+    reloaded = BinaryCarver.load(Path(path))
     assert reloaded.is_fitted
     assert "num" in [feature.version for feature in reloaded.features]
 

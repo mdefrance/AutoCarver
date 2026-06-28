@@ -1,6 +1,7 @@
 """set of tests for the continuous_combinations module"""
 
 import json
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -49,9 +50,9 @@ def test_to_json(evaluator: ContinuousCombinationEvaluator):
 def test_save(evaluator: ContinuousCombinationEvaluator, tmp_path):
     """Test the save method"""
     file_name = tmp_path / "test.json"
-    evaluator.save(str(file_name))
+    evaluator.save(file_name)
 
-    with open(file_name, encoding="utf-8") as json_file:
+    with file_name.open(encoding="utf-8") as json_file:
         data = json.load(json_file)
 
     expected_json = {
@@ -65,7 +66,7 @@ def test_save(evaluator: ContinuousCombinationEvaluator, tmp_path):
 def test_save_invalid_filename(evaluator: ContinuousCombinationEvaluator):
     """Test the save method with an invalid filename"""
     with raises(ValueError):
-        evaluator.save("invalid_file.txt")
+        evaluator.save(Path("invalid_file.txt"))
 
 
 def test_load(tmp_path):
@@ -77,10 +78,10 @@ def test_load(tmp_path):
         "verbose": True,
     }
 
-    with open(file_name, "w", encoding="utf-8") as json_file:
+    with file_name.open("w", encoding="utf-8") as json_file:
         json.dump(data, json_file)
 
-    loaded_evaluator = KruskalCombinations.load(str(file_name))
+    loaded_evaluator = KruskalCombinations.load(file_name)
 
     assert loaded_evaluator.verbose is True
     assert loaded_evaluator.sort_by == "kruskal"
@@ -89,10 +90,10 @@ def test_load(tmp_path):
     assert loaded_evaluator.is_y_continuous is True
 
     with raises(ValueError):
-        TschuprowtCombinations.load(str(file_name))
+        TschuprowtCombinations.load(file_name)
 
     with raises(ValueError):
-        CramervCombinations.load(str(file_name))
+        CramervCombinations.load(file_name)
 
 
 def test_association_measure_basic(evaluator: ContinuousCombinationEvaluator):

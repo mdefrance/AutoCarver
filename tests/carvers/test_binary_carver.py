@@ -826,8 +826,8 @@ def test_binary_carver_save_load(tmp_path: Path, evaluator: CombinationEvaluator
     )
     carver = BinaryCarver(min_freq=0.1, max_n_mod=5, features=features, combination_evaluator=evaluator)
     carver_file = tmp_path / "binary_carver.json"
-    carver.save(str(carver_file))
-    loaded_carver = BinaryCarver.load(str(carver_file))
+    carver.save(carver_file)
+    loaded_carver = BinaryCarver.load(carver_file)
     assert carver.min_freq == loaded_carver.min_freq
     for feature in carver.features:
         assert feature in loaded_carver.features
@@ -874,8 +874,8 @@ def test_binary_carver_ordinal_encoding_round_trip(tmp_path: Path, evaluator: Co
 
     # round-trip through JSON
     carver_file = tmp_path / "binary_carver_ordinal.json"
-    carver.save(str(carver_file))
-    loaded = BinaryCarver.load(str(carver_file))
+    carver.save(carver_file)
+    loaded = BinaryCarver.load(carver_file)
 
     # collection-level flag must stay consistent with per-feature state
     assert loaded.features.ordinal_encoding is True
@@ -921,8 +921,8 @@ def test_binary_carver_end_to_end_with_datetime(tmp_path: Path, evaluator: Combi
 
     # save / load preserves the DatetimeFeature (type + reference_date + carved buckets)
     carver_file = tmp_path / "binary_carver_datetime.json"
-    carver.save(str(carver_file))
-    loaded = BinaryCarver.load(str(carver_file))
+    carver.save(carver_file)
+    loaded = BinaryCarver.load(carver_file)
     loaded_signup = loaded.features("signup")
     assert isinstance(loaded_signup, DatetimeFeature)
     assert loaded_signup.reference_date == "2020-01-01"
@@ -1143,8 +1143,8 @@ def test_binary_carver_serialization_roundtrip(
     feature_names = features.names
 
     carver_file = tmp_path / "test.json"
-    auto_carver.save(str(carver_file))
-    loaded_carver = BinaryCarver.load(str(carver_file))
+    auto_carver.save(carver_file)
+    loaded_carver = BinaryCarver.load(carver_file)
 
     assert all(loaded_carver.summary == auto_carver.summary), "Non-identical summaries when loading from JSON"
     loaded_x_train = loaded_carver.transform(raw_x_train)
