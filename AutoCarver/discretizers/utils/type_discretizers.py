@@ -99,25 +99,27 @@ def ensure_qualitative_dtypes(
 ) -> pd.DataFrame:
     """Checks features' data types and converts int/float to str"""
 
-    # getting per feature data types
-    dtypes = (
-        X.fillna({feature.version: feature.nan for feature in features})[features.versions]
-        .map(type)
-        .apply(pd.unique, result_type="reduce")
-    )
-
-    # identifying features that are not str
-    not_object = dtypes.apply(lambda u: any(dtype is not str for dtype in u))
+    # a column needs string-conversion unless every non-null value is already a python str.
+    # ``infer_dtype`` is a C-level scan that short-circuits on the first off-type value — far cheaper
+    # than ``pd.unique`` + a python ``type()`` loop on high-cardinality object columns. nan is filled
+    # with the str sentinel first so an all-nan column (else inferred "empty") still counts as string.
+    to_convert = [
+        feature
+        for feature in features
+        if pd.api.types.infer_dtype(X[feature.version].fillna(feature.nan), skipna=True) != "string"
+    ]
 
     # converting detected non-string features
-    if any(not_object):
-        # converting non-str features into qualitative features
-        to_convert = [feature for feature in features if feature.version in not_object.index[not_object]]
+    if to_convert:
         string_discretizer = StringDiscretizer(features=to_convert, config=config)
         X = string_discretizer.fit_transform(X)
 
-    # pandas 3.0 infers StringDtype for string columns; enforce object dtype for consistency
-    X[features.versions] = X[features.versions].astype(object)
+    # pandas 3.0 infers StringDtype for string columns; enforce object dtype for consistency — but
+    # only for columns that aren't already object (the common case), so we don't rebuild the whole
+    # qualitative block on every call.
+    non_object = [feature.version for feature in features if X[feature.version].dtype != object]
+    if non_object:
+        X[non_object] = X[non_object].astype(object)
 
     return X
 

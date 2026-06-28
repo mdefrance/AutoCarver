@@ -451,8 +451,12 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             sample.shape[0],
         )
 
-        # unpacking transformed series
-        sample.X[[feature for feature, _ in transformed]] = pd.DataFrame(dict(transformed), index=sample.index)
+        # unpacking transformed series — infer_objects restores numeric dtype for ordinal-encoded
+        # labels (the per-feature arrays are object dtype); string interval labels stay object,
+        # matching the inference the previous list-of-lists path got for free.
+        sample.X[[feature for feature, _ in transformed]] = pd.DataFrame(
+            dict(transformed), index=sample.index
+        ).infer_objects()
 
         return sample
 
@@ -461,8 +465,16 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         # list of qualitative features
         qualitatives = self.features.qualitatives
 
-        # replacing values for there corresponding label
-        sample.X.replace({feature.version: feature.label_per_value for feature in qualitatives}, inplace=True)
+        # replacing values for there corresponding label — per-column ``map`` is far faster than a
+        # dict-of-dict ``DataFrame.replace`` on a wide frame. Unmapped values are restored to match
+        # ``replace``'s leave-untouched semantics, but only when some value is actually unmapped (the
+        # common case is full coverage, which skips ``fillna``'s whole-column alignment pass).
+        for feature in qualitatives:
+            col = sample.X[feature.version]
+            mapped = col.map(feature.label_per_value)
+            if mapped.isna().any():
+                mapped = mapped.fillna(col)
+            sample.X[feature.version] = mapped
 
         # ordinal_encoding produces integer labels, but the in-place ``replace`` above keeps the
         # column's original object dtype. Cast those columns to numeric so downstream estimators
@@ -648,8 +660,9 @@ def cast_datetime_features(features: Features, X: pd.DataFrame) -> pd.DataFrame:
     return X
 
 
-def transform_quantitative_feature(feature: BaseFeature, df_feature: pd.Series, x_len: int) -> tuple[str, list]:
+def transform_quantitative_feature(feature: BaseFeature, df_feature: pd.Series, x_len: int) -> tuple[str, np.ndarray]:
     """Transforms a quantitative feature"""
+    del x_len  # kept for call-signature compatibility; searchsorted no longer needs it
 
     # keeping track of original index
     raw_index = df_feature.index
@@ -669,16 +682,37 @@ def transform_quantitative_feature(feature: BaseFeature, df_feature: pd.Series, 
         # converting to quantile value if grouped else keeping np.nan
         df_feature.mask(feature_nans, nan_group, inplace=True)
 
-    # list of masks of values to replace with there respective group
-    values_to_group = [df_feature <= value for value in feature.values if value != feature.nan]
+    # ascending quantile thresholds (the last is +inf) and their respective group labels
+    thresholds = [value for value in feature.values if value != feature.nan]
 
-    # corressponding group for each value
-    group_labels = [[feature.label_per_value[value]] * x_len for value in feature.values if value != feature.nan]
+    if len(thresholds) == 0:
+        # no non-nan modality: mirror np.select's ``default`` (values left untouched)
+        grouped = df_feature.to_numpy()
+    else:
+        threshold_arr = np.asarray(thresholds, dtype=float)
+        labels = np.asarray([feature.label_per_value[value] for value in thresholds], dtype=object)
 
-    df_feature = pd.Series(np.select(values_to_group, group_labels, default=df_feature), index=raw_index)
+        # post-mask the column is numeric (nans were replaced by their group value above); cast to
+        # float so searchsorted compares numerically — the column can arrive as object dtype (it
+        # carried the str nan sentinel before masking), which would derail searchsorted otherwise.
+        values = np.asarray(df_feature.to_numpy(), dtype=float)
+
+        # "first threshold >= x" is exactly the first matching ``df_feature <= value`` in the
+        # original np.select (thresholds are ascending) — one O(N log M) vectorized pass instead
+        # of M full-length boolean masks + M length-N python label lists.
+        idx = np.searchsorted(threshold_arr, values, side="left")
+
+        # out-of-range indices are exactly the (masked) nan positions — overwritten below; clip so
+        # the fancy-index stays valid (matches np.select leaving nans to ``default``).
+        np.clip(idx, 0, len(labels) - 1, out=idx)
+        grouped = labels[idx]
+
+    df_feature = pd.Series(grouped, index=raw_index)
 
     # reinstating nans otherwise nan is converted to 'nan' by numpy
     if any(feature_nans):
         df_feature[feature_nans] = feature.label_per_value.get(feature.nan, np.nan)
 
-    return feature.version, list(df_feature)
+    # returning the ndarray (not list(...)): the caller rebuilds a DataFrame from these, and
+    # materialising a length-N python list per feature was pure overhead across the transform passes.
+    return feature.version, df_feature.to_numpy()

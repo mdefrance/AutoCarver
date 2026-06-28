@@ -149,16 +149,19 @@ def min_value_counts(
 def check_quantitative_dtypes(x: pd.DataFrame, feature_versions: list[str], name: str) -> None:
     """Checks if the provided features are numeric."""
 
-    # checking for numeric columns
-    dtypes = x[feature_versions].map(type).apply(pd.unique, result_type="reduce")
-
-    # getting non-numeric columns
-    not_numeric = dtypes.apply(lambda u: str in u)
+    # numeric-dtype columns can't hold strings (O(1) check); only object columns need inspecting,
+    # and there only the *unique* values — instead of calling ``type`` on every cell of the frame.
+    not_numeric = [
+        version
+        for version in feature_versions
+        if not pd.api.types.is_numeric_dtype(x[version].dtype)
+        and any(isinstance(value, str) for value in pd.unique(x[version].dropna().to_numpy()))
+    ]
 
     # raising error if non-numeric columns are found
-    if any(not_numeric):
+    if not_numeric:
         raise ValueError(
             f"[{name}] Non-numeric features: "
-            f"{str(list(not_numeric[not_numeric].index))} in provided quantitative_features. "
+            f"{str(not_numeric)} in provided quantitative_features. "
             "Please check your inputs."
         )
