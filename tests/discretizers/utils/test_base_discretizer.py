@@ -370,6 +370,45 @@ def test_transform_qualitative_ordinal_encoding_is_numeric() -> None:
     assert is_numeric_dtype(result["feature2"]), result["feature2"].dtype
 
 
+def test_transform_qualitative_ordinal_encoding_with_nan() -> None:
+    """ordinal-encoded qualitative columns containing NaN must not raise and must keep NaN.
+
+    Regression test: the factorize+gather relabel built an Int64 ``Index`` from the integer
+    ordinal-encoded labels; gathering the NaN rows (factorize code ``-1``) raised
+    ``ValueError: Unable to fill values because Index cannot contain NA``. NaN rows must be
+    relabelled back to NaN and the column must stay numeric. The pre-existing encoding test
+    above used NaN-free data, so it never exercised the ``-1`` code path.
+    """
+    feature1 = OrdinalFeature("feature1", values=["1", "2", "3", "4"])
+    feature2 = CategoricalFeature("feature2")
+    feature2.update(GroupedList({"A": ["A"], "B": ["B"], "X": ["X", "C", "D"]}))
+    disc = BaseDiscretizer([feature1, feature2], config=ProcessingConfig(ordinal_encoding=True))
+    disc.features.ordinal_encoding = True
+
+    index = [1, 2, 3, 4, 5, 6, 7]
+    raw1 = ["1", "2", np.nan, "2", "3", "4", "4"]
+    raw2 = ["A", "A", "B", "C", np.nan, "B", "X"]
+    X = pd.DataFrame({"feature1": raw1, "feature2": raw2}, index=index)
+
+    result = disc._transform_qualitative(Sample(X=X, y=None)).X
+
+    # numeric dtype preserved despite the NaN rows (float, since NaN is present)
+    assert is_numeric_dtype(result["feature1"]), result["feature1"].dtype
+    assert is_numeric_dtype(result["feature2"]), result["feature2"].dtype
+
+    # index preserved
+    assert list(result.index) == index
+
+    # values match the feature's own label map (encoding-order independent); NaN -> NaN
+    for column, raw in (("feature1", raw1), ("feature2", raw2)):
+        label_per_value = disc.features(column).label_per_value
+        for got, value in zip(result[column].tolist(), raw):
+            if pd.isna(value):
+                assert pd.isna(got)
+            else:
+                assert got == label_per_value[value]
+
+
 def test_prepare_X_coerces_pandas_category_dtype() -> None:
     """qualitative columns arriving as pandas Categorical dtype (e.g. from
     ``fetch_openml(as_frame=True)`` or ``pd.read_csv(dtype='category')``) must
