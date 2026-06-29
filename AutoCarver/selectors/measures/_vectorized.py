@@ -130,6 +130,47 @@ def kruskal_h_reversed(block: pd.DataFrame, y: pd.Series) -> tuple[np.ndarray, n
     return h, n_obs, n_groups
 
 
+def factorize_column(series: pd.Series) -> tuple[np.ndarray, int]:
+    """Integer codes ``(N,)`` for a categorical column (``-1`` for NaN) plus its
+    cardinality ``k`` (distinct non-NaN values).
+
+    Used by :class:`QualitativeFilter` to factorize each column **once** and reuse
+    the codes across every pair it appears in (the scalar path re-factorized both
+    columns on every pair).
+    """
+    codes, cats = pd.factorize(series, use_na_sentinel=True)
+    return codes.astype(np.intp), int(cats.size)
+
+
+def pairwise_chi2(codes_a: np.ndarray, ka: int, codes_b: np.ndarray, kb: int) -> tuple[float, int]:
+    """Pearson chi² between two qualitative columns given their factorized codes.
+
+    Mirrors :func:`chi2_all` exactly (``bincount`` contingency table + Yates'
+    continuity correction on 2x2), but for a feature/feature pair rather than
+    feature/target. Returns ``(chi2, n_obs)`` over the rows where both columns
+    are non-NaN; ``chi2`` is ``nan`` when either column is empty.
+    """
+    valid = (codes_a >= 0) & (codes_b >= 0)
+    n = int(valid.sum())
+    if n == 0 or ka == 0 or kb == 0:
+        return np.nan, n
+
+    flat = codes_a[valid] * kb + codes_b[valid]
+    table = np.bincount(flat, minlength=ka * kb).reshape(ka, kb).astype(float)
+    row = table.sum(1, keepdims=True)
+    col = table.sum(0, keepdims=True)
+    expected = row @ col / n
+
+    obs = table
+    if ka == 2 and kb == 2:
+        diff = expected - obs
+        obs = obs + np.minimum(0.5, np.abs(diff)) * np.sign(diff)
+
+    with np.errstate(divide="ignore", invalid="ignore"):
+        contrib = np.where(expected > 0, (obs - expected) ** 2 / expected, 0.0)
+    return float(contrib.sum()), n
+
+
 def chi2_all(block: pd.DataFrame, y: pd.Series) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Pearson chi² per qualitative column against categorical ``y``.
 

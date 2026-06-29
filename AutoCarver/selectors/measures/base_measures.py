@@ -256,6 +256,13 @@ class NanMeasure(OutlierMeasure):
         self.value = (x.isna() | x.isnull()).mean()
         return self.value
 
+    def compute_all(self, X: pd.DataFrame, y: pd.Series, features: list[BaseFeature]) -> dict[str, dict]:
+        """NaN fraction for every column in one vectorized pass."""
+        _ = y
+        versions = [feature.version for feature in features]
+        fractions = X[versions].isna().mean()
+        return {feature.version: self._result(float(fractions[feature.version])) for feature in features}
+
 
 class ModeMeasure(OutlierMeasure):
     """Measure of the percentage of the mode"""
@@ -287,3 +294,23 @@ class ModeMeasure(OutlierMeasure):
         mode = modes.values[0]
         self.value = (x == mode).mean()  # Computing percentage of the mode
         return self.value
+
+    def compute_all(self, X: pd.DataFrame, y: pd.Series, features: list[BaseFeature]) -> dict[str, dict]:
+        """Mode frequency for every column via factorize + bincount.
+
+        Avoids the per-feature ``Series.mode()`` (a full sort) and the object-array
+        ``(x == mode)`` comparison; the mode's *frequency* is just the tallest
+        bincount bar, so ties pick the same count the scalar path reports.
+        """
+        _ = y
+        results = {}
+        for feature in features:
+            x = X[feature.version]
+            codes, _cats = pd.factorize(x, use_na_sentinel=True)  # NaN -> -1
+            valid = codes[codes >= 0]
+            if valid.size == 0:  # all-NaN feature: no defined non-NaN mode
+                value = np.nan
+            else:
+                value = float(np.bincount(valid).max() / len(x))
+            results[feature.version] = self._result(value)
+        return results

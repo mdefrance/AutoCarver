@@ -107,7 +107,7 @@ wheels = [
 
 [[package]]
 name = "autocarver"
-version = "7.3.8"
+version = "7.3.9"
 source = { editable = "." }
 dependencies = [
     { name = "numpy" },
@@ -173,10 +173,10 @@ requires-dist = [
 provides-extras = ["jupyter", "mcp"]
 
 [package.metadata.requires-dev]
-compare = [{ name = "optbinning", specifier = ">=0.20,<1" }]
+compare = [{ name = "optbinning", specifier = ">=0.21,<1" }]
 dev = [
     { name = "fastmcp", specifier = ">=3.4.2" },
-    { name = "hypothesis", specifier = ">=6.0,<7" },
+    { name = "hypothesis", specifier = ">=6.98,<7" },
     { name = "icecream", specifier = ">=2.1.3,<3" },
     { name = "ipykernel", specifier = ">=6.27.1,<7" },
     { name = "ipywidgets", specifier = ">=8.1.5,<9" },

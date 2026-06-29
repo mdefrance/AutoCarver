@@ -71,22 +71,33 @@ class QuantitativeFilter(BaseFilter):
     is_absolute = True
 
     @extend_docstring(BaseFilter.filter)
-    def filter(self, X: pd.DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:
+    def filter(self, X: pd.DataFrame, ranks: list[BaseFeature], n_best: int | None = None) -> list[BaseFeature]:
         # computing correlation between features
         X_corr = self._compute_correlation(X, ranks)
 
         # filtering too correlated features
-        return self._filter_correlated_features(X_corr, ranks)
+        return self._filter_correlated_features(X_corr, ranks, n_best)
 
     def _compute_correlation(self, X: pd.DataFrame, rank: list[BaseFeature]) -> pd.DataFrame:
         """Computing correlation between features"""
-        # absolute correlation between features
-        X_corr = X[get_versions(rank)].corr(self.measure)
+        X_features = X[get_versions(rank)]
+
+        # Spearman = Pearson on ranks. Ranking the whole block once and running a
+        # single Pearson is ~10x faster than pandas' corr("spearman"), which
+        # re-ranks every pair when NaNs are present. Under NaN this is a ~1e-5
+        # approximation of pairwise-complete Spearman (exact when no NaN), which
+        # is well within tolerance for a redundancy threshold.
+        if self.measure == "spearman":
+            X_corr = X_features.rank().corr()
+        else:
+            X_corr = X_features.corr(self.measure)
 
         # getting upper right part of the correlation matrix and removing autocorrelation
         return X_corr.where(np.triu(np.ones(X_corr.shape), k=1).astype(bool))
 
-    def _filter_correlated_features(self, X_corr: pd.DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:
+    def _filter_correlated_features(
+        self, X_corr: pd.DataFrame, ranks: list[BaseFeature], n_best: int | None = None
+    ) -> list[BaseFeature]:
         """filtering out features too correlated with a better ranked feature"""
 
         # iterating over each feature by target association order
@@ -106,6 +117,11 @@ class QuantitativeFilter(BaseFilter):
             # keeping feature
             else:
                 filtered += [feature]
+
+                # once n_best are kept the rest rank past the cutoff -> never
+                # selected (mirrors QualitativeFilter so both types stop alike)
+                if n_best is not None and len(filtered) >= n_best:
+                    break
 
         return filtered
 

@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 from pytest import FixtureRequest, fixture
 
@@ -5,6 +6,19 @@ from AutoCarver.features import BaseFeature
 from AutoCarver.selectors import PearsonFilter, QuantitativeFilter, SpearmanFilter
 
 THRESHOLD = 1.0
+
+
+def test_spearman_correlation_matches_pandas_no_nan() -> None:
+    """rank-once + Pearson must equal pandas corr('spearman') exactly when no NaN."""
+    rng = np.random.default_rng(0)
+    X = pd.DataFrame({f"q{j}": rng.normal(size=300) for j in range(6)})
+    X["q_dup"] = X["q0"]  # a perfectly correlated column
+    ranks = [BaseFeature(c) for c in X.columns]
+
+    got = SpearmanFilter(THRESHOLD)._compute_correlation(X, ranks)
+    versions = [feature.version for feature in ranks]
+    ref = X[versions].corr("spearman").where(np.triu(np.ones((len(versions),) * 2), k=1).astype(bool))
+    pd.testing.assert_frame_equal(got, ref, atol=1e-9)
 
 
 @fixture
@@ -31,6 +45,20 @@ def sample_ranks() -> list[BaseFeature]:
 @fixture(params=[SpearmanFilter, PearsonFilter])
 def filter(request: FixtureRequest) -> QuantitativeFilter:
     return request.param(THRESHOLD)
+
+
+def test_n_best_early_stop_matches_prefix() -> None:
+    """``filter(..., n_best=k)`` returns the first ``k`` of the full filtered list."""
+    rng = np.random.default_rng(1)
+    X = pd.DataFrame({f"q{j}": rng.normal(size=300) for j in range(8)})
+    X["q_dup0"], X["q_dup1"] = X["q0"], X["q1"]  # correlated -> forces some drops
+    ranks = [BaseFeature(c) for c in X.columns]
+
+    for filter_cls in (SpearmanFilter, PearsonFilter):
+        full = filter_cls(0.9).filter(X, ranks)
+        for k in (1, 2, 3):
+            stopped = filter_cls(0.9).filter(X, ranks, n_best=k)
+            assert stopped == full[:k], (filter_cls.__name__, k)
 
 
 def test_quantitative_filter(

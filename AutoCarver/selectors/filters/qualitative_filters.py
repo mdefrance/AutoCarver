@@ -5,6 +5,7 @@ import pandas as pd
 from AutoCarver.features import BaseFeature, get_versions
 from AutoCarver.selectors.filters.base_filters import BaseFilter
 from AutoCarver.selectors.measures import CramervMeasure, TschuprowtMeasure
+from AutoCarver.selectors.measures._vectorized import factorize_column, pairwise_chi2
 from AutoCarver.utils.extend_docstring import extend_docstring
 
 
@@ -19,7 +20,12 @@ class QualitativeFilter(BaseFilter):
     is_x_qualitative = True
 
     @extend_docstring(BaseFilter.filter)
-    def filter(self, X: pd.DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:
+    def filter(self, X: pd.DataFrame, ranks: list[BaseFeature], n_best: int | None = None) -> list[BaseFeature]:
+        # factorizing each column once and reusing the codes across every pair
+        # (the scalar path re-ran pd.crosstab + factorize on every pair -> O(P^2)
+        # pandas calls; here it is one bincount per pair over cached int codes)
+        self._codes_cache: dict[str, tuple] = {}
+
         # filtering ranks to avoid correlation with already removed features
         filtered_ranks = ranks[:]
 
@@ -39,10 +45,16 @@ class QualitativeFilter(BaseFilter):
             if valid:
                 filtered += [feature]
 
+                # any feature kept past n_best ranks >= n_best -> never selected,
+                # so once n_best are kept the remaining pairs are wasted work
+                if n_best is not None and len(filtered) >= n_best:
+                    break
+
             # removing feature from ranks
             else:
                 filtered_ranks.remove(feature)
 
+        self._codes_cache = {}
         return filtered
 
     def _compute_worst_correlation(
@@ -62,7 +74,7 @@ class QualitativeFilter(BaseFilter):
         # iterating over each better feature
         for better_feature in better_features:
             # computing association with the better feature
-            correlation = self.measure.compute_association(X[feature.version], X[better_feature.version])  # type: ignore
+            correlation = self._pairwise_association(X, feature.version, better_feature.version)
 
             # updating association if it's greater than previous better features
             if correlation > worst_correlation:
@@ -73,6 +85,27 @@ class QualitativeFilter(BaseFilter):
                 break
 
         return correlation_with, worst_correlation
+
+    def _pairwise_association(self, X: pd.DataFrame, version_a: str, version_b: str) -> float:
+        """Vectorized feature/feature association, reusing the measure's effect-size map.
+
+        ``pairwise_chi2`` gives the raw chi² + observation count; ``measure._stat``
+        turns it into Cramér's V / Tschuprow's T exactly as the scalar
+        ``compute_association`` would, so results match the per-pair path.
+        """
+        codes_a, ka = self._codes(X, version_a)
+        codes_b, kb = self._codes(X, version_b)
+        chi2, n_obs = pairwise_chi2(codes_a, ka, codes_b, kb)
+        return self.measure._stat(chi2, n_obs, ka, kb)  # type: ignore
+
+    def _codes(self, X: pd.DataFrame, version: str) -> tuple:
+        """Memoized integer codes + cardinality for a column (factorized once)."""
+        cache = getattr(self, "_codes_cache", None)
+        if cache is None:
+            cache = self._codes_cache = {}
+        if version not in cache:
+            cache[version] = factorize_column(X[version])
+        return cache[version]
 
     def _validate(self, worst_correlation: float) -> bool:
         """Checks if the worst correlation of a feature is above specified threshold"""
