@@ -18,6 +18,8 @@ from AutoCarver.selectors.measures import (
     KruskalEpsilonSquaredMeasure,
     KruskalEtaSquaredMeasure,
     KruskalMeasure,
+    ModeMeasure,
+    NanMeasure,
     PearsonMeasure,
     SpearmanMeasure,
     TschuprowtMeasure,
@@ -139,3 +141,37 @@ def test_cramerv_parity(quali_block, y_multiclass):
 
 def test_tschuprowt_parity(quali_block, y_multiclass):
     _assert_parity(TschuprowtMeasure, quali_block, y_multiclass)
+
+
+# --- default outlier gates (Nan / Mode), quantitative + qualitative blocks ----
+
+
+def test_nan_parity_quant(quant_block, y_binary):
+    _assert_parity(NanMeasure, quant_block, y_binary)
+
+
+def test_nan_parity_quali(quali_block, y_binary):
+    _assert_parity(NanMeasure, quali_block, y_binary)
+
+
+def test_mode_parity_quant(quant_block, y_binary):
+    _assert_parity(ModeMeasure, quant_block, y_binary)
+
+
+def test_mode_parity_quali(quali_block, y_binary):
+    _assert_parity(ModeMeasure, quali_block, y_binary)
+
+
+def test_mode_nan_all_nan_column():
+    """Mode is nan / Nan is 1.0 for an all-NaN column, matching the scalar path."""
+    X = pd.DataFrame({"ties": [1.0, 1.0, 2.0, 2.0, 3.0], "allnan": [np.nan] * 5})
+    features = _features(X.columns)
+    for measure_cls in (ModeMeasure, NanMeasure):
+        batch = measure_cls().compute_all(X, None, features)
+        for col in X.columns:
+            scalar = measure_cls().compute_association(X[col], None)
+            value = batch[col]["value"]
+            if scalar is None or (isinstance(scalar, float) and np.isnan(scalar)):
+                assert value is None or np.isnan(value), (measure_cls.__name__, col)
+            else:
+                assert value == approx(scalar, rel=1e-9, abs=1e-9), (measure_cls.__name__, col)
