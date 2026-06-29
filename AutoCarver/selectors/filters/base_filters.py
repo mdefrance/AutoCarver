@@ -43,7 +43,7 @@ class BaseFilter(ABC):
         return self.__name__
 
     @abstractmethod
-    def filter(self, X: pd.DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:
+    def filter(self, X: pd.DataFrame, ranks: list[BaseFeature], n_best: int | None = None) -> list[BaseFeature]:
         """Filters out ranked features that reach the association threshold
 
         Parameters
@@ -52,6 +52,10 @@ class BaseFilter(ABC):
             DataFrame containing features
         ranks : list[BaseFeature]
             List of ranked features to filter, from most to least associated
+        n_best : int, optional
+            When set, stop once ``n_best`` features have been kept — the rest
+            would rank past the selection cutoff anyway. Only honored by the
+            redundancy filters; ``None`` (the default) filters every feature.
 
         Returns
         -------
@@ -91,9 +95,8 @@ class ValidFilter(BaseFilter):
     is_x_quantitative = True
     is_x_qualitative = True
 
-    def filter(self, X: pd.DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:
+    def filter(self, X: pd.DataFrame, ranks: list[BaseFeature], n_best: int | None = None) -> list[BaseFeature]:
         """filters out all non-valid features fril ranks"""
-        _ = X  # not used
 
         # iterating over each feature
         filtered = []

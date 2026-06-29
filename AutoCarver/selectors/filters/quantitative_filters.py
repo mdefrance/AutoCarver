@@ -71,7 +71,7 @@ class QuantitativeFilter(BaseFilter):
     is_absolute = True
 
     @extend_docstring(BaseFilter.filter)
-    def filter(self, X: pd.DataFrame, ranks: list[BaseFeature]) -> list[BaseFeature]:
+    def filter(self, X: pd.DataFrame, ranks: list[BaseFeature], n_best: int | None = None) -> list[BaseFeature]:
         # computing correlation between features
         X_corr = self._compute_correlation(X, ranks)
 

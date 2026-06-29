@@ -103,7 +103,7 @@ jobs:
       - name: Install dependencies (lowest-direct)
         run: |
           uv lock --resolution=lowest-direct
-          uv sync --all-extras --group compare
+          uv sync --all-extras --group compare --resolution=lowest-direct
 
       - name: Run tests
         run: uv run pytest -n auto -q tests/

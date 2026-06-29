@@ -438,17 +438,23 @@ def apply_filters(
     X: pd.DataFrame,
     filters: list[BaseFilter],
     default_filters: bool = False,
+    n_best: int | None = None,
 ) -> list[BaseFeature]:
     """Filters out too correlated features (least relevant first)"""
     used_filters = remove_default_metrics(filters)
     if default_filters:
         used_filters = get_default_metrics(filters)
 
+    # the n_best early-stop is only sound for the *last* filter in the chain:
+    # nothing drops features after it, so its first n_best kept are exactly the
+    # final survivors that selection keeps (earlier filters must still see all)
+    last = len(used_filters) - 1
+
     filtered = features[:]
-    for measure in used_filters:
+    for i, measure in enumerate(used_filters):
         for feature in features:
             check_measure_mismatch(feature, measure)
-        filtered = measure.filter(X, filtered)
+        filtered = measure.filter(X, filtered, n_best=n_best if i == last else None)
 
     return filtered
 
@@ -497,7 +503,7 @@ def select_with_measure(
     sorted_features = sort_features_per_measure(features, measure)
     sorted_features.reverse()
 
-    filtered_features = apply_filters(sorted_features, X, filters)
+    filtered_features = apply_filters(sorted_features, X, filters, n_best=n_best)
 
     for rank, feature in enumerate(filtered_features):
         feature.measures.update(make_rank_info(rank, measure, n_best, len(filtered_features)))
