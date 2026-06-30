@@ -1,9 +1,10 @@
 """Tools to select the best Quantitative and Qualitative features.
 
 The selector mirrors the :class:`BaseDiscretizer` / :class:`BaseCarver` shape: a
-sklearn estimator built from a :class:`Features` set, a per-type budget, a
-pluggable set of ``measures`` / ``filters`` (the swappable *decision boundary*),
-and a :class:`ProcessingConfig` carrying cross-cutting toggles (``verbose`` …).
+sklearn estimator built from a :class:`Features` set, a per-type budget and a
+pluggable set of ``measures`` / ``filters`` (the swappable *decision boundary*).
+Inspect the per-feature measure/filter values through the
+:attr:`BaseSelector.summary` property, as on :class:`BaseCarver`.
 
 Speed comes from :meth:`BaseMeasure.compute_all`: every feature of a given type
 is scored in a single batched call (see
@@ -19,18 +20,12 @@ from typing import Self, TypeVar
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.utils.validation import check_is_fitted
 
-from AutoCarver.discretizers.utils.base_discretizer import ProcessingConfig
 from AutoCarver.features import BaseFeature, Features, get_versions
 from AutoCarver.selectors.filters import BaseFilter, NonDefaultValidFilter, ValidFilter
 from AutoCarver.selectors.measures import BaseMeasure, ModeMeasure, NanMeasure
-from AutoCarver.selectors.utils.pretty_print import format_ranked_features, prettier_measures
-from AutoCarver.utils import has_idisplay
-
-# trying to import extra dependencies
-_has_idisplay = has_idisplay()
-if _has_idisplay:
-    from IPython.display import display_html
+from AutoCarver.selectors.utils.pretty_print import format_ranked_features
 
 
 class BaseSelector(BaseEstimator, TransformerMixin, ABC):
@@ -57,7 +52,6 @@ class BaseSelector(BaseEstimator, TransformerMixin, ABC):
         *,
         measures: list[BaseMeasure] | None = None,
         filters: list[BaseFilter] | None = None,
-        config: ProcessingConfig | None = None,
     ) -> None:
         """
         Parameters
@@ -76,11 +70,6 @@ class BaseSelector(BaseEstimator, TransformerMixin, ABC):
         filters : list[BaseFilter], optional
             Redundancy filters. Defaults to the task-appropriate set; the
             validity filters are always added if missing.
-
-        config : ProcessingConfig, optional
-            Behavioral toggles shared with the discretizers (``verbose`` is the
-            one consumed here). ``ordinal_encoding`` / ``dropna`` are ignored by
-            the selector.
         """
         # features
         self.features: Features = features if isinstance(features, Features) else Features.from_list(features)
@@ -90,33 +79,36 @@ class BaseSelector(BaseEstimator, TransformerMixin, ABC):
         if not 0 < int(self.n_best_per_type) <= len(self.features):
             raise ValueError("Must set 0 < n_best_per_type <= len(features)")
 
-        # behavioral configuration (reused from the discretizers)
-        self.config: ProcessingConfig = config if config is not None else ProcessingConfig()
-
         # measures and filters (with task defaults + validity/outlier defaults)
         self.measures = self._initiate_measures(measures)
         self.filters = self._initiate_filters(filters)
 
         # fit state
         self.is_fitted = False
-        self._selected: list[BaseFeature] | None = None
+        self._selected: list[BaseFeature] = []
         self.target_name = None
-        self._message = ""
+        self._summaries: list[pd.DataFrame] = []
 
     def __repr__(self, N_CHAR_MAX: int = 700) -> str:
         """Returns the name of the selector"""
         _ = N_CHAR_MAX
         return self.__name__
 
-    @property
-    def verbose(self) -> bool:
-        """Whether to print selection statistics (from the config)."""
-        return self.config.verbose
+    def __sklearn_is_fitted__(self) -> bool:
+        """Hook used by :func:`sklearn.utils.validation.check_is_fitted`."""
+        return self.is_fitted
 
     @property
-    def pretty_print(self) -> bool:
-        """Returns whether HTML pretty-printing is available and requested."""
-        return self.verbose and _has_idisplay
+    def summary(self) -> pd.DataFrame:
+        """Per-feature association table: every scored feature with its measures,
+        filter values and rank, ranked best-first (available after :meth:`fit`).
+
+        Mirrors :attr:`BaseCarver.summary`: display it (e.g. in a notebook or by
+        printing) to inspect the measure/filter values that drove the selection.
+        """
+        if not self._summaries:
+            return pd.DataFrame()
+        return pd.concat(self._summaries, ignore_index=True)
 
     # ------------------------------------------------------------------
     # measure / filter initiation
@@ -194,7 +186,8 @@ class BaseSelector(BaseEstimator, TransformerMixin, ABC):
         if isinstance(y, pd.Series):
             self.target_name = y.name
 
-        # clearing any previously computed measures/filters
+        # clearing any previously computed measures/filters and summaries
+        self._summaries = []
         self._initiate_features_measures(self.features, remove_default=True)
 
         # splitting features by type and selecting the best of each
@@ -209,15 +202,13 @@ class BaseSelector(BaseEstimator, TransformerMixin, ABC):
     @property
     def selected_features(self) -> Features:
         """The selected :class:`Features` (available after :meth:`fit`)."""
-        if self._selected is None:
-            raise RuntimeError(f"[{self.__name__}] not fitted; call fit first")
+        check_is_fitted(self)
         return Features.from_list(self._selected) if self._selected else self._selected  # type: ignore
 
     def transform(self, X: pd.DataFrame, y: pd.Series | None = None) -> pd.DataFrame:
         """Restricts ``X`` to the selected features' columns."""
         _ = y
-        if self._selected is None:
-            raise RuntimeError(f"[{self.__name__}] not fitted; call fit first")
+        check_is_fitted(self)
         return X[get_versions(self._selected)]
 
     # ------------------------------------------------------------------
@@ -232,7 +223,6 @@ class BaseSelector(BaseEstimator, TransformerMixin, ABC):
         if len(quantitatives) > 0:
             measures = get_quantitative_metrics(self.measures)
             filters = get_quantitative_metrics(self.filters)
-            self._message = "Quantitative "
             best_quantitatives = self._select_features(quantitatives, X, y, measures, filters)
         return best_quantitatives
 
@@ -242,7 +232,6 @@ class BaseSelector(BaseEstimator, TransformerMixin, ABC):
         if len(qualitatives) > 0:
             measures = get_qualitative_metrics(self.measures)
             filters = get_qualitative_metrics(self.filters)
-            self._message = "Qualitative "
             best_qualitatives = self._select_features(qualitatives, X, y, measures, filters)
         return best_qualitatives
 
@@ -279,32 +268,12 @@ class BaseSelector(BaseEstimator, TransformerMixin, ABC):
         # exhaustively selecting the best features
         best_features = get_best_features(features, X, y, measures, filters, self.n_best_per_type)
 
-        # printing association
-        self._print_measures(features)
+        # storing the per-feature association table for the `summary` property
+        formatted_measures = format_ranked_features(features)
+        if not formatted_measures.empty:
+            self._summaries.append(formatted_measures)
 
         return best_features
-
-    def _print_measures(self, features: list[BaseFeature], message: str = "") -> None:
-        """Prints per-feature association statistics, raw or HTML."""
-        if self.verbose:
-            formatted_measures = format_ranked_features(features)
-
-            if not formatted_measures.empty:
-                print(f" [{self.__name__}] Selected {self._message}Features {message}")
-
-            if not self.pretty_print:
-                self._print_raw(formatted_measures)
-            else:
-                self._print_html(formatted_measures)
-
-    def _print_raw(self, formatted_measures: pd.DataFrame) -> None:
-        """Prints raw association DataFrames."""
-        print(formatted_measures, "\n")
-
-    def _print_html(self, formatted_measures: pd.DataFrame) -> None:
-        """Prints association DataFrames in HTML format."""
-        nicer_association = prettier_measures(formatted_measures)
-        display_html(nicer_association, raw=True)
 
 
 def get_typed_features(features: Features) -> dict[str, list[BaseFeature]]:

@@ -29,14 +29,16 @@ See :ref:`Measures` and :ref:`Filters`, for details on measures and filters' imp
 
 Selectors are `scikit-learn <https://scikit-learn.org/>`_ transformers built like
 the :ref:`carvers <Carvers>`: from a :class:`Features` set, a per-type budget
-``n_best_per_type``, a swappable set of ``measures`` / ``filters``, and a
-:class:`ProcessingConfig` carrying behavioral toggles (``verbose`` …).
+``n_best_per_type`` and a swappable set of ``measures`` / ``filters``.
 
    * :meth:`~AutoCarver.selectors.BaseSelector.fit` scores every feature against
      the target, ranks them per measure, and filters out redundant ones.
    * :meth:`~AutoCarver.selectors.BaseSelector.transform` restricts ``X`` to the
      selected columns; :attr:`~AutoCarver.selectors.BaseSelector.selected_features`
      returns the selected :class:`Features` directly.
+   * :attr:`~AutoCarver.selectors.BaseSelector.summary` returns the per-feature
+     table of measure/filter values and ranks that drove the selection, just like
+     :attr:`~AutoCarver.carvers.BinaryCarver.summary` on the carvers.
 
 Selection is **exhaustive** — every feature is scored exactly — but fast: each
 measure scores all features of a type in a single vectorized pass rather than one
@@ -44,16 +46,12 @@ call per feature.
 
 .. code-block:: python
 
-    from AutoCarver.discretizers.utils.base_discretizer import ProcessingConfig
     from AutoCarver.selectors import ClassificationSelector
 
-    selector = ClassificationSelector(
-        features=features,
-        n_best_per_type=25,                       # best features kept per data type
-        config=ProcessingConfig(verbose=True),   # behavioral toggles, as for carvers
-    )
+    selector = ClassificationSelector(features=features, n_best_per_type=25)   # best features kept per data type
     selector.fit(X, y)  # or selector.fit_transform(X, y) to keep only selected features in X
     best_features = selector.selected_features
+    selector.summary  # inspect the measure/filter values per feature
 
 .. _ClassificationSelector:
 
@@ -62,7 +60,7 @@ Classification tasks
 
 
 .. autoclass:: AutoCarver.selectors.ClassificationSelector
-    :members: fit, transform, select, selected_features
+    :members: fit, transform, select, selected_features, summary
 
 
 .. _RegressionSelector:
@@ -72,7 +70,7 @@ Regression tasks
 
 
 .. autoclass:: AutoCarver.selectors.RegressionSelector
-    :members: fit, transform, select, selected_features
+    :members: fit, transform, select, selected_features, summary
 
 
 

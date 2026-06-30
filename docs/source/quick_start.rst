@@ -157,7 +157,7 @@ Feature Selection
     Selectors mirror the carver API: ``fit`` scores/ranks/filters and stores the
     selection, ``transform`` restricts ``X`` to the selected columns, and
     ``selected_features`` returns the selected :class:`Features` directly.
-    Behavioral toggles (``verbose`` …) are grouped in :class:`ProcessingConfig`,
-    exactly as for the carvers. Every feature is scored exactly (no sampling),
-    yet selection stays fast through vectorized, all-columns-at-once measures.
+    Inspect the measure/filter values per feature through ``summary``, exactly as
+    for the carvers. Every feature is scored exactly (no sampling), yet selection
+    stays fast through vectorized, all-columns-at-once measures.
 

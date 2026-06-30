@@ -22,6 +22,7 @@ import pytest
 from hypothesis import HealthCheck, given, reject, settings
 from hypothesis import strategies as st
 from pandas.api.types import is_numeric_dtype
+from sklearn.exceptions import NotFittedError
 from strategies import binary_target, categorical_column, clone_features, dataframe_and_features
 
 from AutoCarver.discretizers.discretizer import Discretizer
@@ -191,9 +192,9 @@ def test_fit_transform_equals_fit_then_transform(prob):
 @given(problem)
 @SETTINGS
 def test_transform_before_fit_raises(prob):
-    """transform before fit raises RuntimeError."""
+    """transform before fit raises NotFittedError."""
     X, features, _ = prob
-    with pytest.raises(RuntimeError):
+    with pytest.raises(NotFittedError):
         Discretizer(features, 0.2).transform(X)
 
 
