@@ -3,6 +3,7 @@
 from typing import Self
 
 import pandas as pd
+from sklearn.utils.validation import check_is_fitted
 
 from AutoCarver.discretizers.utils.base_discretizer import (
     BaseDiscretizer,
@@ -171,8 +172,7 @@ class TimedeltaDiscretizer(BaseDiscretizer):
 
     def transform(self, X: pd.DataFrame, y: pd.Series | None = None) -> pd.DataFrame:
         """Converts each datetime feature's column to seconds since its ``reference_date``."""
-        if not self.is_fitted:
-            raise RuntimeError(f"[{self.__name__}] Call fit method first.")
+        check_is_fitted(self)
 
         # validating and casting columns, then converting datetimes to numeric timedeltas
         X = self._prepare_X(X)

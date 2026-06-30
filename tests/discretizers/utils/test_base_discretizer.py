@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 from pandas.api.types import is_numeric_dtype
 from pytest import FixtureRequest, fixture, raises
+from sklearn.exceptions import NotFittedError
 
 from AutoCarver.discretizers.utils.base_discretizer import (
     BaseDiscretizer,
@@ -527,7 +528,7 @@ def test_transform(true_false: bool) -> None:
     )
 
     # Call the method with non fitted discretizer
-    with raises(RuntimeError):
+    with raises(NotFittedError):
         result = disc.transform(X, None)
 
     # fitting discretizer
@@ -597,7 +598,7 @@ def test_transform(true_false: bool) -> None:
     )
 
     # Call the method with non fitted discretizer
-    with raises(RuntimeError):
+    with raises(NotFittedError):
         result = disc.transform(X, None)
 
     # fitting discretizer
@@ -664,7 +665,7 @@ def test_transform(true_false: bool) -> None:
     )
 
     # Call the method with non fitted discretizer
-    with raises(RuntimeError):
+    with raises(NotFittedError):
         result = disc.transform(X, None)
 
     # fitting discretizer

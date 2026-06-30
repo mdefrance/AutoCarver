@@ -9,6 +9,7 @@ invariants, the unfitted guards and determinism.
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
+from sklearn.exceptions import NotFittedError
 from strategies import clone_features, dataframe_and_features
 
 from AutoCarver.selectors import ClassificationSelector, RegressionSelector
@@ -102,12 +103,12 @@ def test_transform_preserves_rows_and_restricts_columns(problem):
 @given(classification_problem())
 @settings(max_examples=20)
 def test_unfitted_guards(problem):
-    """transform / selected_features before fit raise RuntimeError."""
+    """transform / selected_features before fit raise NotFittedError."""
     X, features, _, n_best = problem
     selector = ClassificationSelector(features, n_best)
-    with pytest.raises(RuntimeError):
+    with pytest.raises(NotFittedError):
         selector.transform(X)
-    with pytest.raises(RuntimeError):
+    with pytest.raises(NotFittedError):
         _ = selector.selected_features
 
 

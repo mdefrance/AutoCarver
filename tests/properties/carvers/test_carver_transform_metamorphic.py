@@ -15,6 +15,7 @@ import pytest
 from hypothesis import HealthCheck, given, reject, settings
 from hypothesis import strategies as st
 from pandas.api.types import is_numeric_dtype
+from sklearn.exceptions import NotFittedError
 from strategies import clone_features, dataframe_and_features
 
 from AutoCarver.carvers import BinaryCarver, MulticlassCarver, OrdinalCarver
@@ -148,10 +149,10 @@ def test_fit_transform_equals_fit_then_transform(prob):
 @given(binary_problem())
 @SETTINGS
 def test_transform_before_fit_raises(prob):
-    """transform before fit raises RuntimeError."""
+    """transform before fit raises NotFittedError."""
     X, features, _, max_n_mod, config = prob
     carver = BinaryCarver(features, min_freq=0.15, max_n_mod=max_n_mod, config=config)
-    with pytest.raises(RuntimeError):
+    with pytest.raises(NotFittedError):
         carver.transform(X)
 
 

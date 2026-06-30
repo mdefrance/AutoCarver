@@ -37,37 +37,3 @@ def format_ranked_features(features: list[BaseFeature]) -> pd.DataFrame:
             sort_by = ranks[0]
             return pd.DataFrame(measures).sort_values(by=sort_by, ascending=True)
     return pd.DataFrame(measures)
-
-
-def prettier_measures(association: pd.DataFrame) -> str:
-    """Pretty display of measures and filters per feature on the same line"""
-
-    # finding columns with indicators to colorize
-    subset = [
-        column
-        for column in association.columns
-        # checking for an association indicator
-        if any(column.endswith(indic) for indic in ["Measure", "Filter"])
-    ]
-
-    # adding coolwarm color gradient
-    nicer_association = association.style.background_gradient(cmap="coolwarm", subset=subset)
-    # printing inline notebook
-    nicer_association = nicer_association.set_table_attributes("style='display:inline'")
-
-    # finding columns with indicators to colorize
-    subset = [
-        column
-        for column in association.columns
-        # checking for an association indicator
-        if any(column.endswith(indic) for indic in ["Measure", "Filter"])
-    ]
-
-    # adding numerical columns
-    subset += association.select_dtypes(include=["number"]).columns.tolist()
-
-    # lower precision for specific columns
-    nicer_association = nicer_association.format(dict.fromkeys(subset, "{:.4f}"))
-
-    # conversion to html
-    return nicer_association._repr_html_()  # type: ignore

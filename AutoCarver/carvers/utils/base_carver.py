@@ -14,6 +14,7 @@ from typing import Self
 from warnings import warn
 
 import pandas as pd
+from sklearn.utils.validation import check_is_fitted
 
 from AutoCarver.carvers.utils.pretty_print import index_mapper, prettier_xagg
 from AutoCarver.combinations import (
@@ -422,8 +423,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         need cross-column context) fall back to the serial :meth:`BaseDiscretizer.transform`.
         """
         feature_list = list(self.features)
-        if not self.is_fitted:
-            raise RuntimeError(f"[{self.__name__}] Call fit method first.")
+        check_is_fitted(self)
         if self.config.n_jobs <= 1 or len(feature_list) <= 1 or not _discretizable_in_chunks(self.features):
             return super().transform(X, y)
 
