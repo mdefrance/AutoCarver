@@ -2,10 +2,12 @@
 for multiclass classification tasks.
 """
 
+from collections.abc import Iterable
 from dataclasses import replace
 from typing import Any, Self
 
 import pandas as pd
+from sklearn.model_selection import BaseCrossValidator
 
 from AutoCarver.carvers.binary_carver import BinaryCarver
 from AutoCarver.carvers.utils.base_carver import Samples
@@ -88,6 +90,7 @@ class MulticlassCarver(BinaryCarver):
         *,
         X_dev: pd.DataFrame | None = None,
         y_dev: pd.Series | None = None,
+        cv: int | BaseCrossValidator | Iterable = 0,
     ) -> Self:
         # dropping the target column if it leaked into the features (before versioning)
         self._drop_target_from_features(X, y)
@@ -133,6 +136,7 @@ class MulticlassCarver(BinaryCarver):
                 train_y_class,
                 X_dev=samples.dev.X if samples.dev.has_X else None,
                 y_dev=dev_y_class,
+                cv=cv,
             )
 
             # filtering out dropped features whilst keeping other version tags

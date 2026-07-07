@@ -294,6 +294,65 @@ def test_carve_feature_without_best_combination(evaluator: CombinationEvaluator)
     assert feature.content["A"] == ["A"]
 
 
+def _cv_dataset():
+    """Deterministic dataset: one signal feature + one noisy feature."""
+    import numpy as np
+
+    rng = np.random.default_rng(0)
+    n = 600
+    # strong, stable signal across the whole sample
+    signal = rng.choice(["A", "B", "C"], size=n)
+    base_rate = {"A": 0.15, "B": 0.5, "C": 0.85}
+    p = np.array([base_rate[s] for s in signal])
+    # a pure-noise feature (no real association with y)
+    noise = rng.choice(["x", "y", "z", "w"], size=n)
+    y = pd.Series((rng.random(n) < p).astype(int), name="target")
+    X = pd.DataFrame({"signal": signal, "noise": noise})
+    return X, y
+
+
+def _dropped_names(carver):
+    return {str(f) for f in carver.dropped_features}
+
+
+def test_fit_cv_runs_and_keeps_signal(evaluator):
+    """``fit(cv=...)`` runs end to end and keeps a genuinely robust feature."""
+    X, y = _cv_dataset()
+    carver = BinaryCarver(
+        features=Features(categoricals=["signal", "noise"]),
+        min_freq=0.1,
+        max_n_mod=4,
+        combination_evaluator=evaluator,
+        config=ProcessingConfig(dropna=True, verbose=False),
+    )
+    carver.fit(X, y, cv=4)
+
+    # the stable signal survives every fold and is actually carved into buckets
+    assert "signal" in carver.features
+    assert len(carver.features("signal").content) > 1
+
+
+def test_fit_cv_drops_superset_of_no_cv(evaluator):
+    """CV only adds robustness vetoes, so it drops a superset of the no-CV run."""
+    X, y = _cv_dataset()
+
+    def fit(cv):
+        carver = BinaryCarver(
+            features=Features(categoricals=["signal", "noise"]),
+            min_freq=0.1,
+            max_n_mod=4,
+            combination_evaluator=type(evaluator)(),
+            config=ProcessingConfig(dropna=True, verbose=False),
+        )
+        carver.fit(X.copy(), y, cv=cv)
+        return _dropped_names(carver)
+
+    dropped_no_cv = fit(0)
+    dropped_cv = fit(4)
+
+    assert dropped_no_cv <= dropped_cv
+
+
 def test_fit_with_best_combination(evaluator):
     """Test BinaryCarver fit method with best combination."""
 

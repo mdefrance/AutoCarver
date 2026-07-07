@@ -4,7 +4,7 @@ for any task.
 
 import json
 from abc import ABC, abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field, replace
 from functools import partial
@@ -14,6 +14,7 @@ from typing import Self
 from warnings import warn
 
 import pandas as pd
+from sklearn.model_selection import BaseCrossValidator, check_cv
 from sklearn.utils.validation import check_is_fitted
 
 from AutoCarver.carvers.utils.pretty_print import index_mapper, prettier_xagg
@@ -73,7 +74,12 @@ class Samples:
 
 
 def _carve_feature_worker(
-    payload: tuple[BaseFeature, pd.Series | pd.DataFrame | None, pd.Series | pd.DataFrame | None],
+    payload: tuple[
+        BaseFeature,
+        pd.Series | pd.DataFrame | None,
+        pd.Series | pd.DataFrame | None,
+        list[pd.Series | pd.DataFrame | None],
+    ],
     *,
     evaluator: CombinationEvaluator,
     max_n_mod: int,
@@ -84,11 +90,11 @@ def _carve_feature_worker(
     """Picklable worker: scores best combination for a single feature.
 
     Each pool task receives a pickled deep copy of ``evaluator`` and a single
-    ``(feature, xagg, xagg_dev)`` triple; mutations stay local to the worker
-    process. The parent reattaches the returned (mutated) feature to its
+    ``(feature, xagg, xagg_dev, folds_xagg)`` tuple; mutations stay local to the
+    worker process. The parent reattaches the returned (mutated) feature to its
     ``Features`` container.
     """
-    feature, xagg, xagg_dev = payload
+    feature, xagg, xagg_dev, folds_xagg = payload
     # workers never print per-feature progress; the parent prints a single banner
     evaluator.verbose = False
     best = evaluator.get_best_combination(
@@ -99,6 +105,7 @@ def _carve_feature_worker(
         min_freq=min_freq,
         dropna=dropna,
         min_freq_alpha=min_freq_alpha,
+        folds_xagg=folds_xagg,
     )
     return feature, best is not None
 
@@ -347,6 +354,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         *,
         X_dev: pd.DataFrame | None = None,
         y_dev: pd.Series | None = None,
+        cv: int | BaseCrossValidator | Iterable = 0,
     ) -> Self:
         """Finds the combination of modalities of X that provides the best association with y.
         If provided, X_dev set should be large enough to have the same distribution as X.
@@ -371,6 +379,26 @@ class BaseCarver(BaseDiscretizer, ABC):
 
         y_dev : pd.Series, optional
             Target associated to ``X_dev``, by default ``None``
+
+        cv : int, cross-validation generator or iterable, optional
+            Additional robustness views, resolved via
+            :func:`sklearn.model_selection.check_cv` exactly like sklearn's own
+            CV-consuming estimators — AutoCarver never builds folds itself.
+            Ranks are still determined on the full train ``X``; each fold is a
+            disjoint held-out partition and a carved combination must stay
+            viable on ``X_dev`` (if given) *and* every fold.
+
+            * ``0`` (default): disabled, a no-op.
+            * ``int >= 2``: k-fold split, automatically stratified for
+              classification targets (same rule ``check_cv`` itself applies).
+            * a scikit-learn cross-validator instance or splitter generator
+              (e.g. ``StratifiedKFold(5, shuffle=True, random_state=0)``): used
+              as-is.
+            * an iterable of ``(train_idx, test_idx)`` index pairs: wrapped as-is.
+
+            Combines with ``X_dev`` (both must pass), so expect more features
+            dropped than with a single dev set — each fold is a fraction of
+            train, so keep the fold count small (3-5).
         """
 
         # checking for fitted features
@@ -398,16 +426,19 @@ class BaseCarver(BaseDiscretizer, ABC):
         xaggs = self._aggregator(**samples.train)
         xaggs_dev = self._aggregator(**samples.dev)
 
+        # cross-validation fold aggregations (additional robustness views)
+        xaggs_folds = self._aggregate_folds(samples.train, cv)
+
         # getting all features to carve (features are removed from self.features)
         all_features = self.features.versions
 
         # carving each feature (parallel across features when n_jobs > 1)
         if self.config.n_jobs > 1 and len(all_features) > 1:
-            self._carve_features_parallel(all_features, xaggs, xaggs_dev)
+            self._carve_features_parallel(all_features, xaggs, xaggs_dev, xaggs_folds)
         else:
             for n, feature in enumerate(all_features):
                 num_iter = f"{n + 1}/{len(all_features)}"  # logging iteration number
-                self._carve_feature(self.features(feature), xaggs, xaggs_dev, num_iter)
+                self._carve_feature(self.features(feature), xaggs, xaggs_dev, num_iter, xaggs_folds)
 
         # discretizing features based on each feature's values_order
         super().fit(X, y)
@@ -442,22 +473,55 @@ class BaseCarver(BaseDiscretizer, ABC):
             transformed_X[transformed.columns] = transformed
         return transformed_X
 
+    def _aggregate_folds(
+        self, train: Sample, cv: int | BaseCrossValidator | Iterable
+    ) -> list[dict[str, pd.Series | pd.DataFrame | None]]:
+        """Aggregates each held-out fold of the (already-discretized) train sample.
+
+        ``cv`` is resolved via :func:`sklearn.model_selection.check_cv` — the
+        same resolution sklearn's own CV-consuming estimators use — so
+        AutoCarver never builds folds itself: an int becomes a k-fold splitter
+        (stratified automatically for classification targets), an existing
+        cross-validator/generator is used as-is, and an iterable of
+        ``(train_idx, test_idx)`` pairs is wrapped as-is. Ranks stay anchored to
+        full train; these per-feature fold aggregations only feed the
+        robustness veto. Returns ``[]`` when ``cv`` is falsy (``0`` default).
+        """
+        y = train.y
+        if not cv or y is None:
+            return []
+
+        X = train.X
+        classifier = self.is_y_binary or self.is_y_multiclass or self.is_y_ordinal
+        splitter = check_cv(cv, y, classifier=classifier)
+        return [self._aggregator(X.iloc[val_idx], y.iloc[val_idx]) for _, val_idx in splitter.split(X, y)]
+
+    def _folds_for_feature(
+        self, xaggs_folds: list[dict[str, pd.Series | pd.DataFrame | None]] | None, version: str
+    ) -> list[pd.Series | pd.DataFrame | None]:
+        """Picks the per-fold aggregation slice for a single feature version."""
+        return [fold[version] for fold in xaggs_folds] if xaggs_folds else []
+
     def _carve_features_parallel(
         self,
         all_features: list[str],
         xaggs: dict[str, pd.Series | pd.DataFrame | None],
         xaggs_dev: dict[str, pd.Series | pd.DataFrame | None],
+        xaggs_folds: list[dict[str, pd.Series | pd.DataFrame | None]],
     ) -> None:
         """Dispatches ``_carve_feature`` across a process pool, one task per feature.
 
         Per-feature workers receive only the feature instance + its xagg /
-        xagg_dev slice (not the full dict). Verbose per-feature logging is
-        silenced; a single banner is printed when verbose is on.
+        xagg_dev / fold slices (not the full dicts). Verbose per-feature logging
+        is silenced; a single banner is printed when verbose is on.
         """
         if self.config.verbose:
             print(f"--- [{self.__name__}] Carving {len(all_features)} features on {self.config.n_jobs} workers")
 
-        payloads = [(self.features(version), xaggs[version], xaggs_dev[version]) for version in all_features]
+        payloads = [
+            (self.features(version), xaggs[version], xaggs_dev[version], self._folds_for_feature(xaggs_folds, version))
+            for version in all_features
+        ]
         worker = partial(
             _carve_feature_worker,
             evaluator=self.combination_evaluator,
@@ -492,6 +556,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         xaggs: dict[str, pd.Series | pd.DataFrame | None],
         xaggs_dev: dict[str, pd.Series | pd.DataFrame | None],
         num_iter: str,
+        xaggs_folds: list[dict[str, pd.Series | pd.DataFrame | None]] | None = None,
     ) -> None:
         """Carves a feature into buckets that maximize association with the target"""
 
@@ -515,6 +580,7 @@ class BaseCarver(BaseDiscretizer, ABC):
             min_freq=self.min_freq,
             dropna=bool(self.config.dropna),
             min_freq_alpha=self.config.min_freq_alpha,
+            folds_xagg=self._folds_for_feature(xaggs_folds, feature.version),
         )
 
         # printing carved distribution, for found, suitable combination
