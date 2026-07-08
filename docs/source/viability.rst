@@ -24,14 +24,17 @@ The filter bundles three independent tests:
 **Decision rule.** The min-frequency and distinct-rate tests run on **both**
 samples; rank preservation runs on **dev** only (it compares dev against train).
 A combination is viable iff it passes on train **and** — when a dev sample was
-provided — passes on dev:
+provided — passes on dev **and** — when ``cv`` folds were requested — passes on
+every fold:
 
 .. math::
 
     \text{viable} \;=\;
     \text{viable}_{\text{train}}
     \;\wedge\;
-    \big(\text{viable}_{\text{dev}} \;\vee\; \text{no dev sample}\big).
+    \big(\text{viable}_{\text{dev}} \;\vee\; \text{no dev sample}\big)
+    \;\wedge\;
+    \bigwedge_{i=1}^{n} \text{viable}_{\text{fold}_i}.
 
 When **no** candidate survives the filter the feature is dropped — see
 :ref:`DroppedFeatures`. Each failing test contributes a human-readable reason
@@ -42,6 +45,40 @@ surfaces in :attr:`carver.history` and ``dropped_reason``.
 .. autofunction:: AutoCarver.combinations.utils.testing.test_viability
 
 .. autofunction:: AutoCarver.combinations.utils.testing.is_viable
+
+
+.. _CVViability:
+
+Cross-validation folds
+-----------------------
+
+The ``cv`` argument of :meth:`~AutoCarver.carvers.utils.base_carver.BaseCarver.fit`
+adds extra held-out views on top of (or instead of) ``X_dev``. Each fold is a
+disjoint held-out partition of **train**, resolved via
+:func:`sklearn.model_selection.check_cv` exactly like sklearn's own
+CV-consuming estimators: an ``int`` becomes a k-fold split (stratified
+automatically for classification targets), a scikit-learn cross-validator
+instance or splitter generator is used as-is, and an iterable of
+``(train_idx, test_idx)`` pairs is wrapped as-is.
+
+**Ranks stay anchored to train, folds only veto.** The combination search
+always ranks candidates by association measured on the full train sample;
+dev and folds are consulted afterward, purely to confirm or reject the
+current best-ranked candidate — they never reorder candidates.
+
+**Failures surface in history.** A fold that rejects a combination is recorded
+in :attr:`carver.history` with a ``[fold i/n] <reason>`` prefix, distinguishing
+it from a plain train/dev failure.
+
+**How many folds.** Each fold is a *fraction* of train, and ``min_freq``
+applies per fold — more folds means smaller per-fold samples, which means more
+modalities fail the min-frequency test and more features get dropped. 3–5
+folds is a good range; higher counts trade robustness confidence for feature
+retention.
+
+**Index pairs are positional.** An explicit iterable of ``(train_idx,
+test_idx)`` pairs is consumed through ``.iloc``, not ``.loc`` — indices must be
+**positional** integer offsets into ``X``, not DataFrame labels.
 
 
 .. _MinFreqViability:

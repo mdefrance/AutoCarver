@@ -2,11 +2,14 @@
 
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from pytest import FixtureRequest, fixture, raises
+from sklearn.model_selection import StratifiedKFold
+from sklearn.utils.validation import check_is_fitted
 
 from AutoCarver.carvers.multiclass_carver import MulticlassCarver, get_one_vs_rest
-from AutoCarver.carvers.utils.base_carver import Sample, Samples
+from AutoCarver.carvers.utils.base_carver import BaseCarver, Sample, Samples
 from AutoCarver.combinations import (
     CombinationEvaluator,
     CramervCombinations,
@@ -67,6 +70,70 @@ def test_get_one_vs_rest_none():
     y_class = 1
     result = get_one_vs_rest(y, y_class)
     assert result is None
+
+
+def _cv_multiclass_dataset():
+    """Deterministic 3-class dataset: one signal feature + one noisy feature."""
+    rng = np.random.default_rng(0)
+    n = 600
+    signal = rng.choice(["A", "B", "C"], size=n)
+    class_by_signal = {"A": 0, "B": 1, "C": 2}
+    y = np.array([class_by_signal[s] if rng.random() < 0.85 else rng.integers(0, 3) for s in signal])
+    noise = rng.choice(["x", "y", "z", "w"], size=n)
+    X = pd.DataFrame({"signal": signal, "noise": noise})
+    return X, pd.Series(y, name="target")
+
+
+def test_multiclass_carver_fit_cv_runs(evaluator: CombinationEvaluator):
+    """``fit(cv=...)`` runs end to end and produces a fitted carver."""
+    X, y = _cv_multiclass_dataset()
+    carver = MulticlassCarver(
+        features=Features(categoricals=["signal", "noise"]),
+        min_freq=0.1,
+        max_n_mod=4,
+        combination_evaluator=evaluator,
+        config=ProcessingConfig(dropna=True, verbose=False),
+    )
+    carver.fit(X, y, cv=3)
+
+    check_is_fitted(carver)
+
+
+def test_multiclass_carver_fit_cv_generator_not_exhausted(evaluator: CombinationEvaluator, monkeypatch):
+    """Regression: a one-shot ``cv`` generator must not be exhausted by the first
+    class' fit, leaving every subsequent class silently with zero folds.
+
+    Spies on ``BaseCarver._aggregate_folds`` (called once per per-class
+    ``BinaryCarver.fit``) to directly observe how many folds each class actually
+    received, rather than relying on the fold veto changing which features get
+    dropped (dataset-dependent and not a reliable signal here).
+    """
+    X, y = _cv_multiclass_dataset()
+    y_binarized = (y == y.unique()[0]).astype(int)
+    folds = list(StratifiedKFold(3, shuffle=True, random_state=0).split(X, y_binarized))
+
+    fold_counts: list[int] = []
+    original_aggregate_folds = BaseCarver._aggregate_folds
+
+    def spy_aggregate_folds(self, train, cv):
+        result = original_aggregate_folds(self, train, cv)
+        fold_counts.append(len(result))
+        return result
+
+    monkeypatch.setattr(BaseCarver, "_aggregate_folds", spy_aggregate_folds)
+
+    carver = MulticlassCarver(
+        features=Features(categoricals=["signal", "noise"]),
+        min_freq=0.1,
+        max_n_mod=4,
+        combination_evaluator=evaluator,
+        config=ProcessingConfig(dropna=True, verbose=False),
+    )
+    carver.fit(X, y, cv=iter(folds))
+
+    check_is_fitted(carver)
+    # 3 unique classes -> 2 one-vs-rest BinaryCarver fits, each must see every fold.
+    assert fold_counts == [len(folds)] * 2
 
 
 def test_multiclass_carver_initialization():

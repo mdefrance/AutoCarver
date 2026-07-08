@@ -1039,3 +1039,27 @@ def test_continuous_carver_parallel_features_parity():
     sequential = _fit_continuous_for_parity(n_jobs=1)
     parallel = _fit_continuous_for_parity(n_jobs=2)
     assert parallel == sequential
+
+
+def test_continuous_carver_fit_cv_runs(evaluator: CombinationEvaluator):
+    """``fit(cv=...)`` runs end to end and transform works (continuous target -> plain KFold)."""
+    rng = np.random.default_rng(0)
+    n = 300
+    signal = rng.choice(["A", "B", "C"], size=n)
+    base_rate = {"A": 0.0, "B": 5.0, "C": 10.0}
+    y = pd.Series([base_rate[s] + rng.normal(0, 1) for s in signal], name="target")
+    noise = rng.choice(["x", "y", "z", "w"], size=n)
+    X = pd.DataFrame({"signal": signal, "noise": noise})
+
+    carver = ContinuousCarver(
+        features=Features(categoricals=["signal", "noise"]),
+        min_freq=0.1,
+        max_n_mod=4,
+        combination_evaluator=evaluator,
+        config=ProcessingConfig(dropna=True, verbose=False),
+    )
+    carver.fit(X, y, cv=3)
+    X_transformed = carver.transform(X)
+
+    assert "signal" in carver.features
+    assert isinstance(X_transformed, pd.DataFrame)

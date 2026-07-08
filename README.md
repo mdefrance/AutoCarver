@@ -29,6 +29,13 @@
 
 ## 🆕 What's New
 
+**📊 Cross-validated robustness.** `fit` now accepts a `cv` argument for extra
+held-out robustness views on top of (or instead of) a dev set:
+`carver.fit(X, y, cv=5)`. Accepts an int, any scikit-learn splitter, or
+explicit index pairs, resolved via `sklearn.model_selection.check_cv` — folds
+veto over-fit combinations but never reorder them (ranks stay anchored to the
+full train set). See [Cross-validation folds](https://autocarver.readthedocs.io/en/latest/viability.html#cross-validation-folds).
+
 **🤖 LLM & MCP integration.** AutoCarver now ships a local [Model Context Protocol](https://modelcontextprotocol.io) server: point an MCP-aware assistant (VS Code Copilot, Claude Desktop, Cursor, …) at a data file and let it *qualify* the columns and *carve* them against your target through tool calls. The server runs **fully on your machine** — your dataset is never sent to AutoCarver or any external service (only your own LLM provider sees what the assistant shares). Carving quality depends on the LLM, so have a human confirm the feature definitions before production use. See the [LLM & MCP guide](https://autocarver.readthedocs.io/en/latest/mcp.html).
 
 ```bash
@@ -110,7 +117,7 @@ For multiclass classification use `MulticlassCarver`; for regression use `Contin
 | Numeric **and** categorical **and** ordinal in one `fit` | yes                                                          | one binner per feature                                                   | numeric only                                                                    |
 | Ordinal features with enforced order              | **yes — `OrdinalDiscretizer` preserves your declared order**       | via `user_splits` workaround (loses ordering)                            | no                                                                              |
 | `NaN` handled as its own modality                 | yes                                                                | yes                                                                      | no (raises)                                                                     |
-| Held-out dev-set robustness check                 | **yes — built into `fit`**                                         | no (script CV yourself)                                                  | no                                                                              |
+| Held-out dev-set robustness check                 | **yes — dev set + optional k-fold CV, built into `fit`**           | no (script CV yourself)                                                  | no                                                                              |
 | Per-bin stats + carving history after `fit`       | **`features.summary`, `features.history`**                         | `binning_table`                                                          | no                                                                              |
 | JSON round-trip persistence                       | yes (`carver.save("...json")`)                                     | via `pickle`                                                             | via `pickle`                                                                    |
 | sklearn `Pipeline` compatible                     | yes                                                                | yes                                                                      | yes                                                                             |
