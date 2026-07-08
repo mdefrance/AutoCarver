@@ -134,10 +134,9 @@ class MulticlassCarver(BaseCarver):
         :meth:`BaseCarver._pretty_print`) before :meth:`get_best_combination`
         has had a chance to fit the axis (see
         :meth:`~AutoCarver.combinations.multiclass.multiclass_target_rates.MulticlassTargetRate.fit_axis`).
-        This fit only serves the print: ``get_best_combination`` refits the
-        axis before scoring any candidate — from the same crosstab, minus the
-        NaN row when the feature has NaNs (its scores can therefore differ
-        slightly from the ones printed here) — so carving never depends on it.
+        Re-fitting here is idempotent: it uses the exact same raw crosstab
+        :meth:`~AutoCarver.carvers.utils.base_carver.BaseCarver._carve_feature`
+        goes on to pass to ``get_best_combination``.
         """
         target_rate = self.combination_evaluator.target_rate
         if message == "Raw distribution" and xagg is not None and isinstance(target_rate, MulticlassTargetRate):
