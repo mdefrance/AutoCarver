@@ -1,4 +1,4 @@
-"""Set of tests for multiclass_carver module."""
+"""Set of tests for one_vs_rest_carver module."""
 
 from pathlib import Path
 
@@ -8,7 +8,7 @@ from pytest import FixtureRequest, fixture, raises
 from sklearn.model_selection import StratifiedKFold
 from sklearn.utils.validation import check_is_fitted
 
-from AutoCarver.carvers.multiclass_carver import MulticlassCarver, get_one_vs_rest
+from AutoCarver.carvers.one_vs_rest_carver import OneVsRestCarver, get_one_vs_rest
 from AutoCarver.carvers.utils.base_carver import BaseCarver, Sample, Samples
 from AutoCarver.combinations import (
     CombinationEvaluator,
@@ -84,10 +84,10 @@ def _cv_multiclass_dataset():
     return X, pd.Series(y, name="target")
 
 
-def test_multiclass_carver_fit_cv_runs(evaluator: CombinationEvaluator):
+def test_one_vs_rest_carver_fit_cv_runs(evaluator: CombinationEvaluator):
     """``fit(cv=...)`` runs end to end and produces a fitted carver."""
     X, y = _cv_multiclass_dataset()
-    carver = MulticlassCarver(
+    carver = OneVsRestCarver(
         features=Features(categoricals=["signal", "noise"]),
         min_freq=0.1,
         max_n_mod=4,
@@ -99,7 +99,7 @@ def test_multiclass_carver_fit_cv_runs(evaluator: CombinationEvaluator):
     check_is_fitted(carver)
 
 
-def test_multiclass_carver_fit_cv_generator_not_exhausted(evaluator: CombinationEvaluator, monkeypatch):
+def test_one_vs_rest_carver_fit_cv_generator_not_exhausted(evaluator: CombinationEvaluator, monkeypatch):
     """Regression: a one-shot ``cv`` generator must not be exhausted by the first
     class' fit, leaving every subsequent class silently with zero folds.
 
@@ -122,7 +122,7 @@ def test_multiclass_carver_fit_cv_generator_not_exhausted(evaluator: Combination
 
     monkeypatch.setattr(BaseCarver, "_aggregate_folds", spy_aggregate_folds)
 
-    carver = MulticlassCarver(
+    carver = OneVsRestCarver(
         features=Features(categoricals=["signal", "noise"]),
         min_freq=0.1,
         max_n_mod=4,
@@ -136,14 +136,14 @@ def test_multiclass_carver_fit_cv_generator_not_exhausted(evaluator: Combination
     assert fold_counts == [len(folds)] * 2
 
 
-def test_multiclass_carver_initialization():
-    """Test MulticlassCarver initialization."""
+def test_one_vs_rest_carver_initialization():
+    """Test OneVsRestCarver initialization."""
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
         numericals=["feature3"],
     )
-    carver = MulticlassCarver(min_freq=0.1, max_n_mod=5, features=features)
+    carver = OneVsRestCarver(min_freq=0.1, max_n_mod=5, features=features)
     assert carver.min_freq == 0.1
     assert carver.features == features
     assert carver.config.dropna is True
@@ -151,7 +151,7 @@ def test_multiclass_carver_initialization():
     assert carver.max_n_mod == 5
 
     max_n_mod = 8
-    carver = MulticlassCarver(
+    carver = OneVsRestCarver(
         min_freq=0.1,
         features=features,
         max_n_mod=max_n_mod,
@@ -160,7 +160,7 @@ def test_multiclass_carver_initialization():
     assert isinstance(carver.combination_evaluator, TschuprowtCombinations)
     assert carver.max_n_mod == max_n_mod
 
-    carver = MulticlassCarver(
+    carver = OneVsRestCarver(
         min_freq=0.1,
         features=features,
         max_n_mod=max_n_mod,
@@ -170,7 +170,7 @@ def test_multiclass_carver_initialization():
     assert carver.max_n_mod == max_n_mod
 
     with raises(ValueError):
-        MulticlassCarver(
+        OneVsRestCarver(
             min_freq=0.1,
             features=features,
             max_n_mod=max_n_mod,
@@ -178,14 +178,14 @@ def test_multiclass_carver_initialization():
         )
 
 
-def test_multiclass_carver_prepare_samples(evaluator: CombinationEvaluator):
-    """Test MulticlassCarver _prepare_samples method."""
+def test_one_vs_rest_carver_prepare_samples(evaluator: CombinationEvaluator):
+    """Test OneVsRestCarver _prepare_samples method."""
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
         numericals=["feature3"],
     )
-    carver = MulticlassCarver(min_freq=0.1, max_n_mod=5, features=features, combination_evaluator=evaluator)
+    carver = OneVsRestCarver(min_freq=0.1, max_n_mod=5, features=features, combination_evaluator=evaluator)
     X = pd.DataFrame({"feature1": ["A", "B", "A"], "feature2": ["low", "medium", "high"], "feature3": [1, 2, 3]})
 
     # with wrong target
@@ -211,16 +211,16 @@ def test_multiclass_carver_prepare_samples(evaluator: CombinationEvaluator):
         carver._prepare_samples(samples)
 
 
-def test_multiclass_carver_fit_transform_with_small_data_not_ordinal(
+def test_one_vs_rest_carver_fit_transform_with_small_data_not_ordinal(
     evaluator: CombinationEvaluator,
 ):
-    """Test MulticlassCarver fit_transform method."""
+    """Test OneVsRestCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
         numericals=["feature3"],
     )
-    carver = MulticlassCarver(
+    carver = OneVsRestCarver(
         min_freq=0.1,
         max_n_mod=5,
         features=features,
@@ -283,14 +283,14 @@ def test_multiclass_carver_fit_transform_with_small_data_not_ordinal(
     assert X_transformed.equals(expected)
 
 
-def test_multiclass_carver_fit_transform_with_small_data_ordinal(evaluator: CombinationEvaluator):
-    """Test MulticlassCarver fit_transform method."""
+def test_one_vs_rest_carver_fit_transform_with_small_data_ordinal(evaluator: CombinationEvaluator):
+    """Test OneVsRestCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
         numericals=["feature3"],
     )
-    carver = MulticlassCarver(
+    carver = OneVsRestCarver(
         min_freq=0.1,
         max_n_mod=5,
         features=features,
@@ -343,14 +343,14 @@ def test_multiclass_carver_fit_transform_with_small_data_ordinal(evaluator: Comb
     pd.testing.assert_frame_equal(X_transformed, expected, check_dtype=False)
 
 
-def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationEvaluator):
-    """Test MulticlassCarver fit_transform method."""
+def test_one_vs_rest_carver_fit_transform_with_large_data(evaluator: CombinationEvaluator):
+    """Test OneVsRestCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
         numericals=["feature3"],
     )
-    carver = MulticlassCarver(
+    carver = OneVsRestCarver(
         min_freq=0.1,
         max_n_mod=5,
         features=features,
@@ -640,14 +640,14 @@ def test_multiclass_carver_fit_transform_with_large_data(evaluator: CombinationE
     assert X_transformed.equals(expected)
 
 
-def test_multiclass_carver_fit_transform_with_target_only_nan(evaluator: CombinationEvaluator):
-    """Test MulticlassCarver fit_transform method."""
+def test_one_vs_rest_carver_fit_transform_with_target_only_nan(evaluator: CombinationEvaluator):
+    """Test OneVsRestCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
         numericals=["feature3"],
     )
-    carver = MulticlassCarver(
+    carver = OneVsRestCarver(
         min_freq=0.1,
         max_n_mod=5,
         features=features,
@@ -709,14 +709,14 @@ def test_multiclass_carver_fit_transform_with_target_only_nan(evaluator: Combina
     assert X_transformed.equals(expected)
 
 
-def test_multiclass_carver_fit_transform_with_wrong_dev(evaluator: CombinationEvaluator):
-    """Test MulticlassCarver fit_transform method."""
+def test_one_vs_rest_carver_fit_transform_with_wrong_dev(evaluator: CombinationEvaluator):
+    """Test OneVsRestCarver fit_transform method."""
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
         numericals=["feature3"],
     )
-    carver = MulticlassCarver(
+    carver = OneVsRestCarver(
         min_freq=0.1,
         max_n_mod=5,
         features=features,
@@ -777,17 +777,17 @@ def test_multiclass_carver_fit_transform_with_wrong_dev(evaluator: CombinationEv
     assert len(carver.features) == 3
 
 
-def test_multiclass_carver_save_load(tmp_path: Path, evaluator: CombinationEvaluator):
-    """Test MulticlassCarver save and load methods."""
+def test_one_vs_rest_carver_save_load(tmp_path: Path, evaluator: CombinationEvaluator):
+    """Test OneVsRestCarver save and load methods."""
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
         numericals=["feature3"],
     )
-    carver = MulticlassCarver(min_freq=0.1, max_n_mod=5, features=features, combination_evaluator=evaluator)
+    carver = OneVsRestCarver(min_freq=0.1, max_n_mod=5, features=features, combination_evaluator=evaluator)
     carver_file = tmp_path / "multilclass_carver.json"
     carver.save(carver_file)
-    loaded_carver = MulticlassCarver.load(carver_file)
+    loaded_carver = OneVsRestCarver.load(carver_file)
     assert carver.min_freq == loaded_carver.min_freq
     for feature in carver.features:
         assert feature in loaded_carver.features
@@ -801,7 +801,7 @@ def test_multiclass_carver_save_load(tmp_path: Path, evaluator: CombinationEvalu
     assert carver.combination_evaluator.verbose == loaded_carver.combination_evaluator.verbose
 
 
-def _fit_multiclass_carver(
+def _fit_one_vs_rest_carver(
     x_train: pd.DataFrame,
     x_dev_1: pd.DataFrame,
     qualitative_features: list[str],
@@ -815,8 +815,8 @@ def _fit_multiclass_carver(
     ordinal_encoding: bool = False,
     dropna: bool = True,
     copy: bool = True,
-) -> tuple[MulticlassCarver, pd.DataFrame, pd.DataFrame, Features]:
-    """Build features, fit MulticlassCarver, transform train and dev.
+) -> tuple[OneVsRestCarver, pd.DataFrame, pd.DataFrame, Features]:
+    """Build features, fit OneVsRestCarver, transform train and dev.
 
     Common setup factored out of the original mega-test; each focused test below
     calls it with only the parameter combinations it actually exercises.
@@ -831,7 +831,7 @@ def _fit_multiclass_carver(
 
     # (chained_features / level0_to_level1 / level1_to_level2 are retained as parameters for
     # fixture compatibility; rare-modality rollup is now handled inside the carver pipeline.)
-    auto_carver = MulticlassCarver(
+    auto_carver = OneVsRestCarver(
         min_freq=0.1,
         max_n_mod=4,
         features=features,
@@ -848,7 +848,7 @@ def _fit_multiclass_carver(
     return auto_carver, x_discretized, x_dev_discretized, features
 
 
-def test_multiclass_carver_end_to_end_invariants(
+def test_one_vs_rest_carver_end_to_end_invariants(
     x_train: pd.DataFrame,
     x_dev_1: pd.DataFrame,
     quantitative_features: list[str],
@@ -863,7 +863,7 @@ def test_multiclass_carver_end_to_end_invariants(
     """Versions present, modality counts, NaN handling, train/dev robustness, value preservation."""
     raw_x_train = x_train.copy()
     target = "multiclass_target"
-    auto_carver, x_discretized, x_dev_discretized, features = _fit_multiclass_carver(
+    auto_carver, x_discretized, x_dev_discretized, features = _fit_one_vs_rest_carver(
         x_train,
         x_dev_1,
         qualitative_features,
@@ -934,7 +934,7 @@ def test_multiclass_carver_end_to_end_invariants(
         )
 
 
-def test_multiclass_carver_copy_semantics(
+def test_one_vs_rest_carver_copy_semantics(
     x_train: pd.DataFrame,
     x_dev_1: pd.DataFrame,
     quantitative_features: list[str],
@@ -946,7 +946,7 @@ def test_multiclass_carver_copy_semantics(
     copy: bool,
 ) -> None:
     """copy=True: version column values differ from raw feature values (new column was created)."""
-    _, x_discretized, _, features = _fit_multiclass_carver(
+    _, x_discretized, _, features = _fit_one_vs_rest_carver(
         x_train,
         x_dev_1,
         qualitative_features,
@@ -968,7 +968,7 @@ def test_multiclass_carver_copy_semantics(
             )
 
 
-def test_multiclass_carver_serialization_roundtrip(
+def test_one_vs_rest_carver_serialization_roundtrip(
     tmp_path: Path,
     x_train: pd.DataFrame,
     x_dev_1: pd.DataFrame,
@@ -981,7 +981,7 @@ def test_multiclass_carver_serialization_roundtrip(
     evaluator: CombinationEvaluator,
 ) -> None:
     """Save/load on a fitted carver preserves summary and transform output."""
-    auto_carver, x_discretized, _, features = _fit_multiclass_carver(
+    auto_carver, x_discretized, _, features = _fit_one_vs_rest_carver(
         x_train,
         x_dev_1,
         qualitative_features,
@@ -996,7 +996,7 @@ def test_multiclass_carver_serialization_roundtrip(
 
     carver_file = tmp_path / "test.json"
     auto_carver.save(carver_file)
-    loaded_carver = MulticlassCarver.load(carver_file)
+    loaded_carver = OneVsRestCarver.load(carver_file)
 
     assert all(loaded_carver.summary == auto_carver.summary), "Non-identical summaries when loading from JSON"
     assert all(x_discretized[feature_versions] == loaded_carver.transform(x_dev_1)[loaded_carver.features.versions]), (
@@ -1004,7 +1004,7 @@ def test_multiclass_carver_serialization_roundtrip(
     )
 
 
-def test_multiclass_carver_wrong_dev_transform(
+def test_one_vs_rest_carver_wrong_dev_transform(
     x_train: pd.DataFrame,
     x_dev_1: pd.DataFrame,
     x_dev_wrong_1: pd.DataFrame,
@@ -1018,7 +1018,7 @@ def test_multiclass_carver_wrong_dev_transform(
     level1_to_level2: dict[str, list[str]],
 ) -> None:
     """transform on wrong-dev variants raises (or not) per has_default semantics."""
-    auto_carver, _, _, _ = _fit_multiclass_carver(
+    auto_carver, _, _, _ = _fit_one_vs_rest_carver(
         x_train,
         x_dev_1,
         qualitative_features,
@@ -1042,7 +1042,7 @@ def test_multiclass_carver_wrong_dev_transform(
         auto_carver.transform(x_dev_wrong_3)
 
 
-def test_multiclass_carver_unknown_ordinal_values_raises(
+def test_one_vs_rest_carver_unknown_ordinal_values_raises(
     x_train_wrong_2: pd.DataFrame,
     values_orders: dict[str, list[str]],
 ) -> None:
@@ -1077,7 +1077,7 @@ def test_multiclass_carver_unknown_ordinal_values_raises(
     for feature_name in ["nan", "ones", "ones_nan"]:
         features.remove(feature_name)
 
-    auto_carver = MulticlassCarver(
+    auto_carver = OneVsRestCarver(
         min_freq=0.15,
         max_n_mod=5,
         features=features,

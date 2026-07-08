@@ -1,7 +1,7 @@
 """End-to-end metamorphic properties for carver fit/transform.
 
 Source: ``carvers/utils/base_carver.py`` (via :class:`BinaryCarver` /
-:class:`MulticlassCarver`), driven by ``dataframe_and_features``. Checks
+:class:`OneVsRestCarver`), driven by ``dataframe_and_features``. Checks
 row/index preservation, the ``max_n_mod`` cap, label membership / ordinal
 encoding, copy non-mutation, fit_transform determinism, the fit/transform guards
 and the multiclass version structure.
@@ -18,7 +18,7 @@ from pandas.api.types import is_numeric_dtype
 from sklearn.exceptions import NotFittedError
 from strategies import clone_features, dataframe_and_features
 
-from AutoCarver.carvers import BinaryCarver, MulticlassCarver, OrdinalCarver
+from AutoCarver.carvers import BinaryCarver, OneVsRestCarver, OrdinalCarver
 from AutoCarver.discretizers.utils.base_discretizer import ProcessingConfig
 
 SETTINGS = settings(
@@ -168,12 +168,12 @@ def test_refit_raises(prob):
 
 
 # --------------------------------------------------------------------------
-# multiclass version structure
+# one-vs-rest version structure
 # --------------------------------------------------------------------------
 @given(dataframe_and_features("multiclass", nrows=(40, 80)), st.integers(min_value=2, max_value=4))
 @SETTINGS
-def test_multiclass_version_structure(prob, max_n_mod):
-    """MulticlassCarver builds one feature version per (class - 1, input feature);
+def test_one_vs_rest_version_structure(prob, max_n_mod):
+    """OneVsRestCarver builds one feature version per (class - 1, input feature);
     after drops, versions stay within (n_classes - 1) x n_inputs and carry exactly
     the n_classes - 1 expected version tags."""
     X, features, y = prob
@@ -181,7 +181,7 @@ def test_multiclass_version_structure(prob, max_n_mod):
     n_classes = y.nunique()
 
     config = ProcessingConfig(ordinal_encoding=True, dropna=True, copy=False)
-    carver = MulticlassCarver(features, min_freq=0.15, max_n_mod=max_n_mod, config=config)
+    carver = OneVsRestCarver(features, min_freq=0.15, max_n_mod=max_n_mod, config=config)
     _carve(carver, X, y)
 
     versions = carver.features.versions

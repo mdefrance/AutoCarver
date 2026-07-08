@@ -11,6 +11,7 @@ The core of **AutoCarver** resides in its **Carvers**, they provide the followin
 Target-specific tools allow for association optimization per desired task:
  * :ref:`BinaryCarver`
  * :ref:`MulticlassCarver`
+ * :ref:`OneVsRestCarver`
  * :ref:`ContinuousCarver`
  * :ref:`OrdinalCarver`
 
@@ -113,19 +114,55 @@ For two combinations of modalities of :math:`x`, a higher :math:`T` or :math:`V`
 
 .. _MulticlassCarver:
 
-Multilclass Classification
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Multiclass Classification
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Within :class:`MulticlassCarver`, a multiclass target consists of a column :math:`y` that contains several values :math:`y_0` to :math:`y_{n_y}` where :math:`n_y>2` is the number of modalities taken by :math:`y`.
+Within :class:`MulticlassCarver`, a multiclass target consists of a column :math:`y` that contains several values :math:`y_0` to :math:`y_{n_y-1}` where :math:`n_y>2` is the number of modalities taken by :math:`y`. Two carvers handle this shape, with a real trade-off between them:
+
+* :class:`MulticlassCarver` (this class, **default choice**) carves each feature **once**, against the full :math:`n_y`-class crosstab: one bucket set per feature, ``copy=False`` supported, and roughly :math:`(n_y - 1)\times` faster than the one-vs-rest alternative. Use it when a single multiclass model consumes the carved features.
+* :ref:`OneVsRestCarver` fits a separate :class:`BinaryCarver` per class (:math:`n_y - 1` of them, one class held out as reference), producing :math:`n_y - 1` versions of every feature. Use it when the carved features feed :math:`n_y - 1` independent one-vs-rest scorecards — OVR buckets may score *higher per class* by construction, since each one is optimized against only that class.
+
+.. admonition:: Migration note (breaking change)
+   :class: warning
+
+   Prior to this release, ``MulticlassCarver`` **was** the one-vs-rest carver.
+   That behavior is unchanged but renamed: import :class:`OneVsRestCarver`
+   instead. ``MulticlassCarver`` now refers to the joint carver described below.
+
+:class:`MulticlassCarver` is a sibling of :ref:`OrdinalCarver` (both sit
+directly on ``BaseCarver`` and aggregate a ``feature-groups × target-levels``
+crosstab): the :math:`n_y` classes are **unordered** here, so qualitative
+modalities are ordered by their correspondence-analysis first-axis score (the
+chi²-optimal 1-D embedding — see :ref:`CAOrdering`) instead of a target-rate
+mean (:ref:`TargetMeanOrdering`), and the association
+measure generalizes the binary :math:`\chi^2` from a 2-column to a
+:math:`(B, n_y)`-column table:
+
+Cramér's :math:`V=\sqrt{\frac{\chi^2}{n\,(\min(B, n_y)-1)}}` and Tschuprow's
+:math:`T=\sqrt{\frac{\chi^2}{n\,\sqrt{(B-1)(n_y-1)}}}`, where :math:`B` is the
+number of groups in the candidate combination. At :math:`n_y=2` both reduce
+exactly to :class:`BinaryCarver`'s own formulas.
+
+For two combinations of modalities of :math:`x`, a higher :math:`T` or :math:`V`
+value indicates a stronger relationship with the multiclass target :math:`y`.
+
+.. autoclass:: AutoCarver.MulticlassCarver
+    :members: fit, transform, fit_transform, save, load, summary, history
+
+
+.. _OneVsRestCarver:
+
+One-vs-Rest Classification
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For values :math:`y_0` to :math:`y_{n_y-1}` of :math:`y`, an indicator feature is built: :math:`Y_0 = \mathbb{1}_{y=y_0}` to :math:`Y_{n_y-1} = \mathbb{1}_{y=y_{n_y-1}}`.
 
-:class:`MulticlassCarver` repeatedly applies :class:`BinaryCarver` for features :math:`Y_0` to :math:`Y_{n_y-1}`. Thus, the same association measure are implemented: Tschuprow's :math:`T` and Cramér's :math:`V`.
+:class:`OneVsRestCarver` repeatedly applies :class:`BinaryCarver` for features :math:`Y_0` to :math:`Y_{n_y-1}` (:math:`n_y - 1` fits — one class is held out as the implicit reference). Thus, the same association measures are implemented: Tschuprow's :math:`T` and Cramér's :math:`V`.
 
 For two combinations of modalities of a feature :math:`x`, a higher :math:`T` or :math:`V` value indicates a stronger relationship with the binary target :math:`Y`.
 
 
-.. autoclass:: AutoCarver.MulticlassCarver
+.. autoclass:: AutoCarver.OneVsRestCarver
     :members: fit, transform, fit_transform, save, load, summary, history
 
 

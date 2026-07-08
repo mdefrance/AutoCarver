@@ -21,11 +21,13 @@ from AutoCarver.carvers.utils.pretty_print import index_mapper, prettier_xagg
 from AutoCarver.combinations import (
     CombinationEvaluator,
     CramervCombinations,
+    CramervMulticlassCombinations,
     KendallTauBCombinations,
     KendallTauCCombinations,
     KruskalCombinations,
     SomersDCombinations,
     TschuprowtCombinations,
+    TschuprowtMulticlassCombinations,
 )
 from AutoCarver.discretizers import BaseDiscretizer, Discretizer, Sample
 from AutoCarver.discretizers.utils.base_discretizer import ProcessingConfig
@@ -39,18 +41,23 @@ _has_idisplay = has_idisplay()
 if _has_idisplay:
     from IPython.display import display_html
 
-# maps a serialized combination_evaluator.sort_by back to its evaluator class (used by load)
-_EVALUATORS_BY_SORT_BY: dict[str, type[CombinationEvaluator]] = {
-    evaluator_cls.sort_by: evaluator_cls
-    for evaluator_cls in (
-        TschuprowtCombinations,
-        CramervCombinations,
-        KruskalCombinations,
-        KendallTauCCombinations,
-        KendallTauBCombinations,
-        SomersDCombinations,
-    )
-}
+# Maps a serialized combination_evaluator.sort_by back to its candidate evaluator
+# class(es) (used by load()). Binary and multiclass evaluators share the same
+# sort_by strings ("tschuprowt", "cramerv"), so a sort_by can map to more than
+# one class — disambiguated in load() by trying each candidate against the
+# carver being loaded (its __init__ guard rejects the wrong family).
+_EVALUATORS_BY_SORT_BY: dict[str, list[type[CombinationEvaluator]]] = {}
+for _evaluator_cls in (
+    TschuprowtCombinations,
+    CramervCombinations,
+    KruskalCombinations,
+    KendallTauCCombinations,
+    KendallTauBCombinations,
+    SomersDCombinations,
+    TschuprowtMulticlassCombinations,
+    CramervMulticlassCombinations,
+):
+    _EVALUATORS_BY_SORT_BY.setdefault(_evaluator_cls.sort_by, []).append(_evaluator_cls)
 
 
 @dataclass
@@ -686,11 +693,15 @@ class BaseCarver(BaseDiscretizer, ABC):
         # deserializing features
         features = Features.load(data.pop("features"))
 
-        # deserializing Combinations: identify the evaluator class from sort_by
+        # deserializing Combinations: identify the evaluator class from sort_by.
+        # A sort_by can map to more than one candidate class (binary and
+        # multiclass evaluators share "tschuprowt"/"cramerv"); disambiguate by
+        # trying each candidate — the wrong family is rejected by this carver's
+        # own __init__ guard (e.g. BinaryCarver requires is_y_binary evaluators).
         combinations_json = data.pop("combination_evaluator")
         sort_by = combinations_json.pop("sort_by", None)
-        evaluator_cls = _EVALUATORS_BY_SORT_BY.get(sort_by)
-        if evaluator_cls is None:
+        candidates = _EVALUATORS_BY_SORT_BY.get(sort_by, [])
+        if not candidates:
             raise ValueError(f"[{cls.__name__}] Unknown combinations sort_by={sort_by!r}")
 
         is_fitted = data.pop("is_fitted", False)
@@ -705,29 +716,46 @@ class BaseCarver(BaseDiscretizer, ABC):
             copy=config_data.get("copy", True),
         )
 
-        instance = cls(
-            features=features,
-            min_freq=min_freq,
-            max_n_mod=max_n_mod,
-            combination_evaluator=evaluator_cls(),
-            config=config,
-        )
+        instance = None
+        last_error: ValueError | None = None
+        for evaluator_cls in candidates:
+            try:
+                instance = cls(
+                    features=features,
+                    min_freq=min_freq,
+                    max_n_mod=max_n_mod,
+                    combination_evaluator=evaluator_cls(),
+                    config=config,
+                )
+                break
+            except ValueError as error:
+                last_error = error
+        if instance is None:
+            raise ValueError(f"[{cls.__name__}] Unknown combinations sort_by={sort_by!r}") from last_error
         instance.is_fitted = is_fitted
 
         # deserializing dropped_features (mirrors Features.load type-dispatch)
         for fjson in data.pop("dropped_features", []):
-            if fjson.get("is_nested"):
-                instance.dropped_features.append(NestedFeature.load(fjson))
-            elif fjson.get("is_categorical"):
-                instance.dropped_features.append(CategoricalFeature.load(fjson))
-            elif fjson.get("is_ordinal"):
-                instance.dropped_features.append(OrdinalFeature.load(fjson))
-            elif fjson.get("is_datetime"):
-                instance.dropped_features.append(DatetimeFeature.load(fjson))
-            elif fjson.get("is_quantitative"):
-                instance.dropped_features.append(NumericalFeature.load(fjson))
+            dropped_feature = _load_dropped_feature(fjson)
+            if dropped_feature is not None:
+                instance.dropped_features.append(dropped_feature)
 
         return instance
+
+
+def _load_dropped_feature(fjson: dict) -> BaseFeature | None:
+    """Deserializes a single dropped feature (mirrors Features.load type-dispatch)."""
+    if fjson.get("is_nested"):
+        return NestedFeature.load(fjson)
+    if fjson.get("is_categorical"):
+        return CategoricalFeature.load(fjson)
+    if fjson.get("is_ordinal"):
+        return OrdinalFeature.load(fjson)
+    if fjson.get("is_datetime"):
+        return DatetimeFeature.load(fjson)
+    if fjson.get("is_quantitative"):
+        return NumericalFeature.load(fjson)
+    return None
 
 
 def _discretizable_in_chunks(features: Features) -> bool:

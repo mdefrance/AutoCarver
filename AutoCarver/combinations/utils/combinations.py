@@ -148,8 +148,12 @@ def xagg_apply_combination(
     # checking for input values
     combi_xagg = None
     if xagg is not None:
-        # grouping modalities in the crosstab
-        groups = list(map(feature.label_per_value.get, xagg.index))
+        # grouping modalities in the crosstab. Passed as an object ndarray (not a
+        # list): a list whose values happen to match column labels (e.g. a
+        # multiclass crosstab's class-name columns colliding with a feature's own
+        # modality values) would be read by pandas as "group by these columns"
+        # rather than as a per-row grouping key — same footgun `group_crosstab` guards.
+        groups = np.asarray(list(map(feature.label_per_value.get, xagg.index)), dtype=object)
         combi_xagg = xagg.groupby(groups, dropna=False, sort=False).sum()
 
         # reindexing to ensure the right labels — NOTE: this intentionally mutates

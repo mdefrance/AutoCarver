@@ -11,7 +11,7 @@ from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 from strategies import dataframe_and_features
 
-from AutoCarver.carvers import BinaryCarver, ContinuousCarver, MulticlassCarver, OrdinalCarver
+from AutoCarver.carvers import BinaryCarver, ContinuousCarver, MulticlassCarver, OneVsRestCarver, OrdinalCarver
 from AutoCarver.combinations import (
     CramervCombinations,
     KendallTauBCombinations,
@@ -85,7 +85,33 @@ def test_continuous_carver_rejects_binary_evaluator():
 
 
 # --------------------------------------------------------------------------
-# MulticlassCarver
+# OneVsRestCarver
+# --------------------------------------------------------------------------
+@given(dataframe_and_features("binary"), st.data())
+@SETTINGS
+def test_one_vs_rest_carver_rejects_binary_target(prob, data):
+    """A target with two or fewer classes is rejected (use BinaryCarver)."""
+    X, features, _ = prob
+    n = len(X)
+    bad_y = pd.Series([0, 1] + data.draw(st.lists(st.sampled_from([0, 1]), min_size=n - 2, max_size=n - 2)))
+    with pytest.raises(ValueError):
+        OneVsRestCarver(features, min_freq=0.2, max_n_mod=4).fit(X, bad_y)
+
+
+@given(dataframe_and_features("multiclass"), st.data())
+@SETTINGS
+def test_one_vs_rest_carver_rejects_dev_class_mismatch(prob, data):
+    """A dev target missing one of the train classes is rejected."""
+    X, features, y = prob
+    n = len(X)
+    # collapse the dev target to two classes so a train class is absent from dev
+    y_dev = pd.Series([0, 1] + data.draw(st.lists(st.sampled_from([0, 1]), min_size=n - 2, max_size=n - 2)))
+    with pytest.raises(ValueError):
+        OneVsRestCarver(features, min_freq=0.2, max_n_mod=4).fit(X, y, X_dev=X, y_dev=y_dev)
+
+
+# --------------------------------------------------------------------------
+# MulticlassCarver (joint)
 # --------------------------------------------------------------------------
 @given(dataframe_and_features("binary"), st.data())
 @SETTINGS

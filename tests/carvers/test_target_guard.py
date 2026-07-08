@@ -3,7 +3,7 @@
 import pandas as pd
 from pytest import warns
 
-from AutoCarver.carvers import BinaryCarver, ContinuousCarver, MulticlassCarver
+from AutoCarver.carvers import BinaryCarver, ContinuousCarver, MulticlassCarver, OneVsRestCarver
 from AutoCarver.features import Features
 
 
@@ -36,6 +36,10 @@ def test_binary_carver_drops_target():
 
 def test_continuous_carver_drops_target():
     _assert_drops_target(ContinuousCarver, [0.1, 1.2, 0.3, 1.4, 1.5, 0.6, 1.7, 0.8, 1.9, 0.2])
+
+
+def test_one_vs_rest_carver_drops_target():
+    _assert_drops_target(OneVsRestCarver, [0, 1, 2, 0, 1, 2, 0, 1, 2, 0])
 
 
 def test_multiclass_carver_drops_target():

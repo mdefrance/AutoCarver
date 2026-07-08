@@ -6,6 +6,7 @@ from pytest import raises
 
 from AutoCarver.discretizers.qualitatives.categorical_discretizer import (
     CategoricalDiscretizer,
+    series_ca_order,
     series_target_rate,
     series_value_counts,
 )
@@ -229,6 +230,50 @@ def test_target_sort():
 
     assert feature1.values == ["b", "a"]
     assert feature2.values == ["y", "x"]
+
+
+def test_series_ca_order_orders_by_ca_score():
+    """series_ca_order gives a deterministic order for an unordered (string) target."""
+    x = pd.Series(["A", "A", "B", "B", "C", "C", "D", "D"] * 10)
+    y = pd.Series((["1"] * 8 + ["2"] * 8 + ["3"] * 8 + ["1", "2", "3"] * 8)[:80])
+    result = series_ca_order(x, y)
+    assert set(result.keys()) == {"A", "B", "C", "D"}
+    # order is a dict in ascending-CA-score order; running twice is identical
+    assert series_ca_order(x, y) == result
+
+
+def test_target_sort_dispatches_to_ca_order_for_multiclass_target():
+    """A non-numeric (multiclass) target routes _target_sort through the CA
+    ordering path instead of the mean-target-rate path."""
+    feature1 = CategoricalFeature("feature1")
+    categorical_discretizer = CategoricalDiscretizer([feature1], min_freq=0.1)
+
+    n = 30
+    X = pd.DataFrame({"feature1": (["A"] * n + ["B"] * n + ["C"] * n + ["D"] * n)})
+    y = pd.Series((["1"] * n + ["2"] * n + ["3"] * n + ["1", "2", "3"] * (n // 3))[: 4 * n])
+
+    categorical_discretizer.features.fit(X)
+    categorical_discretizer._target_sort(X, y)
+
+    assert set(feature1.values) == {"A", "B", "C", "D"}
+    # deterministic: re-running _target_sort from the same inputs is a no-op on the order
+    order_before = list(feature1.values)
+    categorical_discretizer._target_sort(X, y)
+    assert list(feature1.values) == order_before
+
+
+def test_target_sort_keeps_mean_rate_path_for_numeric_target():
+    """A numeric (binary/ordinal) target is unaffected by the CA dispatch."""
+    feature1 = CategoricalFeature("feature1")
+    categorical_discretizer = CategoricalDiscretizer([feature1], min_freq=0.2)
+
+    X = pd.DataFrame({"feature1": ["a", "b", "a", "b"]})
+    y = pd.Series([1, 0, 1, 0])
+
+    categorical_discretizer.features.fit(X)
+    categorical_discretizer._target_sort(X, y)
+
+    assert feature1.values == ["b", "a"]
 
 
 def test_categoricaldiscretizer_fit():

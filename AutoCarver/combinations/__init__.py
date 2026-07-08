@@ -9,6 +9,11 @@ from AutoCarver.combinations.continuous.continuous_combination_evaluators import
     ContinuousCombinationEvaluator,
     KruskalCombinations,
 )
+from AutoCarver.combinations.multiclass.multiclass_combination_evaluators import (
+    CramervMulticlassCombinations,
+    MulticlassCombinationEvaluator,
+    TschuprowtMulticlassCombinations,
+)
 from AutoCarver.combinations.ordinal.ordinal_combination_evaluators import (
     KendallTauBCombinations,
     KendallTauCCombinations,
@@ -28,4 +33,7 @@ __all__ = [
     "KendallTauCCombinations",
     "KendallTauBCombinations",
     "SomersDCombinations",
+    "MulticlassCombinationEvaluator",
+    "TschuprowtMulticlassCombinations",
+    "CramervMulticlassCombinations",
 ]

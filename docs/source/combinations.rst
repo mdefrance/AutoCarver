@@ -9,7 +9,8 @@ from all possible combinations with up to :attr:`max_n_mod` modalities.
 
 A pre-built :class:`CombinationEvaluator` instance can be passed to any carver via the
 ``combination_evaluator`` keyword. Each subclass defaults to a task-appropriate metric:
-:class:`TschuprowtCombinations` for :class:`BinaryCarver` / :class:`MulticlassCarver`,
+:class:`TschuprowtCombinations` for :class:`BinaryCarver` / :class:`OneVsRestCarver`,
+:class:`TschuprowtMulticlassCombinations` for the joint :class:`MulticlassCarver`,
 :class:`KruskalCombinations` for :class:`ContinuousCarver`, and
 :class:`KendallTauCCombinations` for :class:`OrdinalCarver`.
 
@@ -301,18 +302,30 @@ What does **not** change
 The DP is a **search-strategy optimisation**, not a statistical change.
 
 
+.. _ModalityOrdering:
 .. _TargetRates:
 
-Target rates
-------------
+Modality ordering and target rates
+----------------------------------
 
-Every combination evaluator carries a **target rate** — the per-modality summary
-of the target that the carver reports and, crucially, the scalar the
-:ref:`viability filter <Viability>` orders by. It is passed via the
-``target_rate`` keyword and defaults to a task-appropriate choice (the target
-mean, ``TargetMean``, for every built-in evaluator).
+The DP above only ever scores **consecutive** segmentations: once the raw
+modalities are laid out on a line, every candidate group is an interval of
+that line. For quantitative features that line is the numeric order, and for
+ordinal features the user-declared ranking. A **categorical** feature has no
+intrinsic order, so one must be built from the data — and because only
+consecutive groups are ever considered, this pre-search ordering decides
+which groupings are *reachable at all*. It is computed once, on the train
+sample, by the :ref:`CategoricalDiscretizer` step embedded in every carver
+pipeline.
 
-A target rate plays **two distinct roles**:
+The scalar built for that pre-sort does not disappear once the search
+starts. Every combination evaluator carries a **target rate** — the
+per-modality summary of the target that the carver reports and, crucially,
+the scalar the :ref:`viability filter <Viability>` orders by — re-computed
+for every candidate grouping the search proposes. It is passed via the
+``target_rate`` keyword and defaults to a task-appropriate choice,
+documented per target type below. A target rate plays **two distinct
+roles**:
 
 #. **Display statistic.** One value per modality, stored on
    ``feature.statistics`` and surfaced in the carved-feature summary, so the
@@ -338,25 +351,59 @@ good fit:
   this; rates that need the full value multiset (median, quantiles) cannot and
   fall back to the general aggregation path.
 
-.. autoclass:: AutoCarver.combinations.utils.TargetRate
-    :members: compute
+Each target type below tells the two-stage story in one place: how the
+pre-search order is built, and which target rates carry that ordering
+through the viability filter.
 
+.. _TargetMeanOrdering:
+
+Target-mean ordering (binary, continuous and ordinal targets)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When the target is numeric — binary :math:`\{0, 1\}`, continuous, or
+integer-encoded ordinal levels — each modality :math:`m` is scored by its
+**mean target value** over the train sample,
+
+.. math::
+
+    \bar{y}_m = \frac{1}{n_m} \sum_{i:\, x_i = m} y_i
+
+(a ``y.groupby(x).mean()``), and modalities are sorted by ascending
+:math:`\bar{y}_m`. For a binary target this is the per-modality event rate
+:math:`P(y = 1 \mid x = m)`.
+
+This choice is what makes the consecutive-only restriction statistically
+harmless rather than limiting: sorting by target mean puts modalities of
+similar risk next to each other, so the intervals the DP can form are exactly
+the merges of *comparable-risk* modalities — and the resulting carved feature
+has monotone target rates across its bins, the layout scorecard-style models
+expect.
+
+For an **ordinal** target the mean is taken over the integer *encoding* of
+the levels, so it depends on the levels' spacing, not only their order:
+encoding the same four levels as :math:`\{1, 2, 3, 4\}` or
+:math:`\{1, 2, 3, 10\}` can produce different modality orderings, even though
+the :ref:`tau statistics <OrdinalCombinations>` that score the combinations
+are rank-based and encoding-invariant. See :ref:`RiditOrdering` below for the
+upcoming encoding-invariant alternative.
 
 .. _BinaryTargetRates:
 
 Binary target rates
-^^^^^^^^^^^^^^^^^^^
+"""""""""""""""""""
 
-For binary (and multiclass) targets the per-modality input is a two-column
-crosstab :math:`(n_0, n_1)`, so every rate below is closed-form. The default is
-the event rate :math:`p = n_1 / (n_0 + n_1)` (``TargetMean``).
+For binary targets (and :ref:`OneVsRestCarver`'s per-class binary sub-fits) the
+per-modality input is a two-column crosstab :math:`(n_0, n_1)`, so every rate
+below is closed-form. The default is the event rate
+:math:`p = n_1 / (n_0 + n_1)` (``TargetMean``) — the same scalar the pre-sort
+ordered the raw modalities by.
 
 .. autoclass:: AutoCarver.combinations.binary.binary_target_rates.TargetMean
 
 .. _ContinuousTargetRates:
 
 Continuous target rates
-^^^^^^^^^^^^^^^^^^^^^^^
+"""""""""""""""""""""""
 
 For continuous targets the per-modality input is the multiset of target values.
 The default ``TargetMean`` is decomposable from per-modality :math:`(n, \sum y)`
@@ -368,11 +415,10 @@ aggregation path.
 
 .. autoclass:: AutoCarver.combinations.continuous.continuous_target_rates.TargetMedian
 
-
 .. _OrdinalTargetRates:
 
 Ordinal target rates
-^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""
 
 For ordinal targets the per-modality input is the ordered contingency table
 (feature groups × ordinal target levels) — the binary crosstab generalised from
@@ -384,26 +430,118 @@ rank-preservation veto exactly like the binary/continuous target means.
 
 .. autoclass:: AutoCarver.combinations.ordinal.ordinal_target_rates.TargetMeanLevel
 
+.. _RiditOrdering:
 
-Custom target rates
-^^^^^^^^^^^^^^^^^^^
+Ridit scoring (upcoming)
+""""""""""""""""""""""""
 
-A custom rate subclasses ``BinaryTargetRate`` or ``ContinuousTargetRate`` and
-implements ``_compute`` (one value per modality). To make it serialisable
-through ``save`` / ``load``, add it to the evaluator's ``_target_rate_classes``
-registry. When the rate is additively decomposable from per-modality sums,
-override ``compute_from_stats`` so the search uses the closed-form path.
+.. admonition:: Upcoming
+   :class: note
 
-Candidate extensions that fit this contract (not yet implemented):
+   Not yet released — this section documents the planned ``target_scale``
+   option of :class:`OrdinalCarver`.
 
-* **Binary, closed-form:** logit / log-odds :math:`\log(n_1 / n_0)`, and a
-  column-normalised weight-of-evidence
-  :math:`\log\!\big((n_1/\textstyle\sum n_1)\,/\,(n_0/\textstyle\sum n_0)\big)`.
-* **Continuous, decomposable** (extend the carried stats with
-  :math:`\sum y^2`): variance and standard deviation.
-* **Continuous, non-decomposable** (general path only): inter-quartile range,
-  arbitrary quantiles, and trimmed/robust location — useful for heavy-tailed
-  targets where the mean ordering is unstable.
+As noted :ref:`above <TargetMeanOrdering>`, the current ordinal pre-sort (and
+the ``TargetMeanLevel`` viability rate) consume the integer *encoding* of the
+levels numerically, while the tau statistics scoring the combinations are
+purely rank-based. The planned fix scores each level by its **ridit** against
+the train marginal:
+
+.. math::
+
+    r_j = F(j - 1) + \tfrac{1}{2} f_j,
+
+where :math:`f_j` is the train frequency of level :math:`j` and
+:math:`F(j-1)` the cumulative frequency of all lower levels — i.e. the
+level's mean midrank rescaled to :math:`[0, 1]`. A group's mean ridit is
+exactly the per-group quantity concordance statistics (Kendall's taus,
+Somers' D) respond to, and it is invariant under any strictly increasing
+re-encoding of the levels: :math:`\{1, 2, 3, 4\}` and
+:math:`\{1, 2, 3, 10\}` carve identically.
+
+Not every integer-encoded ordered target is order-only, though, so the scale
+becomes a user-declared ``target_scale`` mode driving both the pre-sort and
+the viability rate from a single resolved scale:
+
+* ``"ridit"`` (**default**) — order-only levels (*Poor* / *Fair* / *Good*):
+  encoding-invariant, semantically honest for "ordinal".
+* ``"level"`` — count targets (e.g. 0–5 claims), where the encoding *is* the
+  scale and the mean level (expected count) is the right summary; identical
+  to the current behaviour.
+* ``{level: value}`` — known representative values per level (e.g. a
+  calibrated default probability per rating grade), strictly increasing.
+
+When individual continuous target values are available, use
+:class:`ContinuousCarver` instead.
+
+.. _CAOrdering:
+.. _MulticlassTargetRates:
+
+Correspondence-analysis ordering (multiclass targets)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A multiclass (unordered) target has no numeric mean: with classes
+``{"car", "bike", "train"}`` there is no per-modality scalar to sort by. The
+joint :class:`MulticlassCarver` instead orders modalities along the **first
+axis of a correspondence analysis (CA)** of the raw ``modalities × classes``
+crosstab — the 1-D embedding of the table that captures the largest share of
+its :math:`\chi^2` inertia
+(:mod:`AutoCarver.discretizers.utils.correspondence_analysis`).
+
+Fitting the axis:
+
+#. Normalise the crosstab to proportions :math:`P`, with row masses
+   :math:`r_m` (modality frequencies) and column masses :math:`c_k` (class
+   frequencies).
+#. Form the standardized residuals
+   :math:`S_{mk} = (P_{mk} - r_m c_k) / \sqrt{r_m c_k}` — the signed
+   cell-wise contributions to :math:`\chi^2 / n`, zero everywhere iff
+   feature and target are independent.
+#. Take the SVD of :math:`S`; the first right singular vector :math:`v_1`
+   is the class-side axis.
+
+Each modality is then scored by projecting its **row profile**
+:math:`p_{m\cdot}` (its own distribution across classes) onto that fixed
+axis, via the CA transition formula
+
+.. math::
+
+    \text{score}(m) = \sum_k \frac{p_{mk} - c_k}{\sqrt{c_k}} \; v_{1k},
+
+and modalities are sorted by ascending score. Four properties matter for
+carving:
+
+* **Chi²-optimal.** The first CA axis is the 1-D layout that captures the
+  most of the table's :math:`\chi^2` association — the natural companion to
+  the :math:`\chi^2`-derived Cramér's V / Tschuprow's T the multiclass
+  evaluators maximise, playing the role the target-mean sort plays for a
+  binary target.
+* **Train-only, fit once.** The axis is fit on the feature's raw train
+  crosstab and never refit: because the transition formula only needs a
+  row's own profile plus the fixed column masses and axis, the same axis
+  scores candidate grouped tables *and* the dev-sample projection used by
+  the rank-preservation veto.
+* **Label-independent and deterministic.** Scores depend only on the counts,
+  never on the modalities' or classes' text, and the axis sign is anchored
+  on the largest-mass row (content-based tie-breaks), so any row permutation
+  of the same table yields the same ordering.
+* **Degenerate fallback.** With :math:`\le 2` modalities, fewer than 2
+  classes, or no :math:`\chi^2` structure (near-zero first singular value),
+  the CA axis is meaningless and modalities fall back to a deterministic
+  frequency-descending order.
+
+The same fitted axis doubles as the multiclass **target rate**: the default
+``CAScoreRate`` projects each row of a candidate grouping's crosstab
+(feature groups × classes) onto it, giving the scalar the
+:ref:`viability filter <Viability>` orders by — monotone along the axis by
+construction, so it drives the ``min_freq`` distinct-rate test and the
+train/dev rank-preservation veto exactly like the binary/ordinal target
+means. Because the axis is never refit on dev, the veto compares train and
+dev against one shared yardstick rather than two independently-defined axes —
+and the search-space ordering and the viability ordering can never disagree.
+
+.. autoclass:: AutoCarver.combinations.multiclass.multiclass_target_rates.CAScoreRate
+
 
 
 Classification tasks
@@ -480,6 +618,61 @@ See :ref:`Tschuprowt` for more details on the metric.
 
 .. autoclass:: AutoCarver.combinations.TschuprowtCombinations
     :members: save, load
+
+
+.. _MulticlassChi2:
+
+Pearson :math:`\chi^2` generalised to K classes (multiclass targets)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The joint :class:`MulticlassCarver` generalises :ref:`DPChi2` from a 2-column
+table to a :math:`(B, K)` one, :math:`K` the number of target classes. With row
+marginals :math:`R_g`, column marginals :math:`C_c` and total :math:`N` defined
+exactly as before,
+
+.. math::
+
+    \chi^2 = N \left(\sum_{g, c} \frac{O_{g,c}^2}{R_g\, C_c} - 1\right),
+    \qquad
+    V = \sqrt{\frac{\chi^2}{N\,(\min(B, K) - 1)}},
+    \qquad
+    T = \sqrt{\frac{\chi^2}{N\,\sqrt{(B-1)(K-1)}}}.
+
+The same two observations that make the binary DP possible still hold — at
+fixed :math:`k` groups, the column marginals and total depend only on
+:math:`k` (plus the constant ``tol`` shift), so :math:`\chi^2` is additive over
+groups and the DP in :ref:`DPChi2` carries over unchanged, generalised from a
+``(2,)`` to a ``(K,)`` per-segment observed vector. Yates' correction still
+applies only when the table is exactly :math:`2\times 2` (:math:`k=2` **and**
+:math:`K=2`). At :math:`K=2` both :math:`V` and :math:`T` — and the DP itself —
+are numerically identical to the binary evaluator, pinned bit-for-bit by a
+parity test.
+
+Unlike binary/ordinal features, a multiclass target gives qualitative
+modalities no numeric rate to order by before the DP walks them. They are
+instead ordered by their **correspondence-analysis (CA) first-axis score** —
+the 1-D embedding that maximises chi² association — computed once from the raw
+(un-grouped) crosstab and fixed for the rest of the search. How the axis is
+fit, why its ordering is deterministic and label-independent, and how the
+same axis doubles as the multiclass target rate (``CAScoreRate``) is
+detailed in :ref:`CAOrdering`.
+
+.. _CramervMulticlassCombinations:
+
+Cramér's V Multiclass Combinations
+""""""""""""""""""""""""""""""""""
+
+.. autoclass:: AutoCarver.combinations.CramervMulticlassCombinations
+    :members: save, load
+
+.. _TschuprowtMulticlassCombinations:
+
+Tschuprow's T Multiclass Combinations (default)
+""""""""""""""""""""""""""""""""""""""""""""""
+
+.. autoclass:: AutoCarver.combinations.TschuprowtMulticlassCombinations
+    :members: save, load
+
 
 Regression tasks
 ----------------

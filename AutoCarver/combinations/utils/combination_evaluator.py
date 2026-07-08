@@ -175,6 +175,7 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
 
     is_y_binary = False
     is_y_continuous = False
+    is_y_multiclass = False
     is_y_ordinal = False
     sort_by = None
 

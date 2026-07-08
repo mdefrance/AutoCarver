@@ -22,7 +22,8 @@ Discretizers
 +------------------------------------+-------------------------------------------------------------------------+
 | :ref:`CategoricalDiscretizer`:     | Under-represented modalities are grouped into a default value           |
 |                                    |                                                                         |
-| Categorical Data                   | Modalities are ordered by target rate                                   |
+| Categorical Data                   | Modalities are ordered by target rate (or, for a multiclass target, by  |
+|                                    | correspondence-analysis first-axis score — see :ref:`ModalityOrdering`) |
 |                                    |                                                                         |
 +------------------------------------+-------------------------------------------------------------------------+
 
@@ -201,6 +202,11 @@ output of ``CategoricalDiscretizer.fit_transform``):
    :alt: CategoricalDiscretizer pipeline animation — raw bars, rare-modality grouping, target-rate sort
    :width: 100%
    :align: center
+
+The final reordering step is what defines the carvers' search space — only
+consecutive modalities can later be merged. How the order is built per target
+type (target mean for numeric targets, correspondence-analysis first-axis
+score for multiclass ones) is detailed in :ref:`ModalityOrdering`.
 
 .. autoclass:: AutoCarver.discretizers.CategoricalDiscretizer
     :members: fit, transform, fit_transform, to_json, summary
