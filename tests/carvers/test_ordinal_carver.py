@@ -128,3 +128,21 @@ def test_ordinal_carver_save_load(tmp_path, evaluator):
     assert carver.combination_evaluator.sort_by == loaded_carver.combination_evaluator.sort_by
     assert carver.min_freq == loaded_carver.min_freq
     assert carver.max_n_mod == loaded_carver.max_n_mod
+
+
+@mark.parametrize("evaluator", ORDINAL_EVALUATORS)
+def test_ordinal_carver_fit_cv_runs(evaluator):
+    """``fit(cv=...)`` runs end to end and transform works (ordinal target -> plain KFold)."""
+    rng = np.random.default_rng(0)
+    n = 400
+    base = rng.integers(0, 4, size=n)
+    y = pd.Series(base * 2 + rng.integers(0, 2, size=n), name="target")
+    X = pd.DataFrame({"q": [str(b) for b in base]})
+
+    features = Features(ordinals={"q": ["0", "1", "2", "3"]})
+    carver = OrdinalCarver(min_freq=0.05, max_n_mod=4, features=features, combination_evaluator=evaluator())
+    carver.fit(X, y, cv=3)
+    X_transformed = carver.transform(X)
+
+    assert "q" in carver.features
+    assert isinstance(X_transformed, pd.DataFrame)

@@ -1235,6 +1235,63 @@ def test_get_best_combination_not_viable(evaluator: BinaryCombinationEvaluator):
     assert result is None
 
 
+# distribution that inverts the train target-rate ordering, so the winning
+# combination [["a"], ["b", "c"]] is non-viable on it (reused across CV tests).
+_NON_REPRESENTATIVE_XAGG = pd.DataFrame({0: [5, 0, 10], 1: [2, 5, 1]}, index=["a", "b", "c"])
+
+
+def test_get_best_combination_cv_all_folds_viable(evaluator: BinaryCombinationEvaluator):
+    """CV folds that agree with train don't change the carving (ranks from train)."""
+    feature = OrdinalFeature("feature", ["a", "b", "c"])
+    xagg = pd.DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
+
+    result = evaluator.get_best_combination(
+        feature, xagg, xagg, max_n_mod=2, min_freq=MIN_FREQ, dropna=False, folds_xagg=[xagg, xagg]
+    )
+
+    assert result is not None
+    assert result["combination"] == [["a"], ["b", "c"]]
+    assert len(evaluator.samples.folds) == 2
+
+
+def test_get_best_combination_cv_one_fold_vetoes(evaluator: BinaryCombinationEvaluator):
+    """A single non-representative fold vetoes a combination that passes train+dev."""
+    feature = OrdinalFeature("feature", ["a", "b", "c"])
+    xagg = pd.DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
+
+    # dev is fine, but one fold inverts the ordering -> all-folds-must-pass drops it
+    result = evaluator.get_best_combination(
+        feature,
+        xagg,
+        xagg,
+        max_n_mod=2,
+        min_freq=MIN_FREQ,
+        dropna=False,
+        folds_xagg=[xagg, _NON_REPRESENTATIVE_XAGG],
+    )
+    assert result is None
+
+
+def test_get_best_combination_cv_folds_only_no_dev(evaluator: BinaryCombinationEvaluator):
+    """Folds act as the robustness veto even with no explicit dev sample."""
+    feature = OrdinalFeature("feature", ["a", "b", "c"])
+    xagg = pd.DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"])
+
+    # folds all agree -> viable
+    viable = evaluator.get_best_combination(
+        feature, xagg, max_n_mod=2, min_freq=MIN_FREQ, dropna=False, folds_xagg=[xagg, xagg]
+    )
+    assert viable is not None
+    assert viable["combination"] == [["a"], ["b", "c"]]
+
+    # a bad fold (no dev) -> dropped
+    fresh = OrdinalFeature("feature", ["a", "b", "c"])
+    dropped = type(evaluator)().get_best_combination(
+        fresh, xagg, max_n_mod=2, min_freq=MIN_FREQ, dropna=False, folds_xagg=[_NON_REPRESENTATIVE_XAGG]
+    )
+    assert dropped is None
+
+
 def test_get_best_combination_viable_with_nan_without_feature_nan(
     evaluator: BinaryCombinationEvaluator,
 ):

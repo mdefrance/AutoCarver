@@ -103,26 +103,44 @@ class AggregatedSample:
 
 @dataclass
 class AggregatedSamples:
-    """stores train and dev samples"""
+    """stores train, dev and (optional) cross-validation fold samples.
+
+    ``dev`` is the single explicit validation view (set via ``X_dev``); ``folds``
+    are additional held-out views from cross-validation. Both feed the robustness
+    veto identically — a combination must pass on ``dev`` *and* every fold (see
+    :meth:`CombinationEvaluator._test_robustness`).
+    """
 
     train: AggregatedSample = field(default_factory=AggregatedSample)
     dev: AggregatedSample = field(default_factory=AggregatedSample)
+    folds: list[AggregatedSample] = field(default_factory=list)
 
-    def set(self, train: pd.Series | pd.DataFrame | None, dev: pd.Series | pd.DataFrame | None = None) -> None:
-        """Sets the train and dev samples"""
+    def set(
+        self,
+        train: pd.Series | pd.DataFrame | None,
+        dev: pd.Series | pd.DataFrame | None = None,
+        folds: list[pd.Series | pd.DataFrame | None] | None = None,
+    ) -> None:
+        """Sets the train, dev and fold samples"""
 
-        # setting train and dev samples
+        # setting train, dev and fold samples
         self.train = AggregatedSample(train)
         self.dev = AggregatedSample(dev)
+        self.folds = [AggregatedSample(fold) for fold in folds if fold is not None] if folds else []
+
+    def _validation_samples(self) -> list[AggregatedSample]:
+        """dev + folds — every view that a combination must stay viable on."""
+        return [self.dev, *self.folds]
 
     def dropna(self, feature_nan: str) -> None:
         """Removes nans from the samples"""
 
         # removing nans from crosstabs (filter_nan returns None when raw is None;
         # only assign when filtering actually produced a frame)
-        dev_filtered = filter_nan(self.dev.raw, feature_nan)
-        if dev_filtered is not None:
-            self.dev.xagg = dev_filtered
+        for sample in self._validation_samples():
+            filtered = filter_nan(sample.raw, feature_nan)
+            if filtered is not None:
+                sample.xagg = filtered
         train_filtered = filter_nan(self.train.raw, feature_nan)
         if train_filtered is not None:
             self.train.xagg = train_filtered
@@ -133,18 +151,20 @@ class AggregatedSamples:
         # renaming index to feature values
         if self.train.raw is not None:
             self.train.raw.rename(index=feature.value_per_label, inplace=True)
-        if self.dev.raw is not None:
-            self.dev.raw.rename(index=feature.value_per_label, inplace=True)
+        for sample in self._validation_samples():
+            if sample.raw is not None:
+                sample.raw.rename(index=feature.value_per_label, inplace=True)
 
     def __repr__(self) -> str:
-        return f"AggregatedSamples(train={self.train.shape}, dev={self.dev.shape})"
+        return f"AggregatedSamples(train={self.train.shape}, dev={self.dev.shape}, folds={len(self.folds)})"
 
     def apply_combination(self, feature: BaseFeature) -> None:
         """Applies best combination to xagg"""
 
         # applying best_combination to xaggs
         self.train.raw = xagg_apply_combination(self.train.raw, feature)
-        self.dev.raw = xagg_apply_combination(self.dev.raw, feature)
+        for sample in self._validation_samples():
+            sample.raw = xagg_apply_combination(sample.raw, feature)
 
 
 class CombinationEvaluator(ABC, Generic[XAgg]):
@@ -374,6 +394,7 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
         min_freq: float,
         dropna: bool,
         min_freq_alpha: float = 0.05,
+        folds_xagg: list[pd.Series | pd.DataFrame | None] | None = None,
     ) -> dict | None:
         """Computes the best combination of modalities for the feature.
 
@@ -398,6 +419,10 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
             Two-sided significance level of the Wilson score interval. Smaller
             → wider CI → fewer rejections. ``alpha=1`` recovers the legacy
             strict-threshold behaviour.
+        folds_xagg : list of (pd.Series | pd.DataFrame), optional
+            Cross-validation fold aggregations. Each is an additional robustness
+            view: the returned combination must stay viable on ``xagg_dev`` *and*
+            every fold. Ranks are still determined on ``xagg`` (full train) only.
         """
 
         self.max_n_mod = max_n_mod
@@ -410,7 +435,7 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
         self.feature.dropna = self.dropna
 
         # setting samples
-        self.samples.set(train=xagg, dev=xagg_dev)
+        self.samples.set(train=xagg, dev=xagg_dev, folds=folds_xagg)
 
         # getting best combination without NaNs
         best_combination = self._get_best_combination_non_nan()
@@ -468,6 +493,40 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
 
         return test_results
 
+    def _test_robustness(self, test_results: dict, combination: dict) -> dict:
+        """Tests robustness on the dev sample and every cross-validation fold.
+
+        The explicit dev view is tested through :meth:`_test_viability_dev`
+        (subclasses may fast-path it). Each fold is then tested by temporarily
+        binding it as ``samples.dev`` and reusing the same machinery — a
+        combination is robust only if it stays viable on dev *and* all folds
+        (short-circuits on the first failure). Ranks are unaffected: this only
+        vetoes, it never reorders.
+        """
+        # explicit dev view (also the single-dev / no-CV path)
+        test_results = self._test_viability_dev(test_results, combination)
+
+        # additional CV folds — all must pass
+        folds = self.samples.folds
+        if not folds or not test_results[Keys.VIABLE.value]:
+            return test_results
+
+        real_dev = self.samples.dev
+        try:
+            for idx, fold in enumerate(folds):
+                self.samples.dev = fold
+                test_results = self._test_viability_dev(test_results, combination)
+                if not test_results[Keys.VIABLE.value]:
+                    # tag which fold failed so history/drop reasons stay legible
+                    dev_block = test_results.get("dev")
+                    if isinstance(dev_block, dict) and dev_block.get(Keys.INFO.value):
+                        dev_block[Keys.INFO.value] = f"[fold {idx + 1}/{len(folds)}] {dev_block[Keys.INFO.value]}"
+                    break
+        finally:
+            self.samples.dev = real_dev
+
+        return test_results
+
     def _get_viable_combination(self, associations: list[dict]) -> dict | None:
         """Tests the viability of all possible combinations onto xagg_dev"""
 
@@ -482,8 +541,8 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
             # testing combination viability on train sample
             test_results = self._test_viability_train(combination)
 
-            # testing combination viability on dev sample
-            test_results = self._test_viability_dev(test_results, combination)
+            # testing combination robustness on dev sample + CV folds
+            test_results = self._test_robustness(test_results, combination)
 
             # historizing combinations and tests
             self._historize_combination(combination, test_results)
@@ -519,7 +578,7 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
         while i < len(associations):
             combination = associations[i]
             test_results = self._test_viability_train(combination)
-            test_results = self._test_viability_dev(test_results, combination)
+            test_results = self._test_robustness(test_results, combination)
             self._historize_combination(combination, test_results)
             if test_results[Keys.VIABLE.value]:
                 return combination, i + 1
@@ -541,7 +600,7 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
                 continue
             historized.add(key)
             test_results = self._test_viability_train(combination)
-            test_results = self._test_viability_dev(test_results, combination)
+            test_results = self._test_robustness(test_results, combination)
             self._historize_combination(combination, test_results)
             if test_results[Keys.VIABLE.value]:
                 return combination

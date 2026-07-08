@@ -5,6 +5,7 @@ from pathlib import Path
 import pandas as pd
 from pandas.api.types import is_numeric_dtype
 from pytest import FixtureRequest, fixture, raises
+from sklearn.model_selection import StratifiedKFold
 
 from AutoCarver import BinaryCarver
 from AutoCarver.carvers.binary_carver import get_crosstab
@@ -292,6 +293,146 @@ def test_carve_feature_without_best_combination(evaluator: CombinationEvaluator)
     # main intent: rare modalities collapsed into __OTHER__ and feature got dropped.
     assert feature.has_default
     assert feature.content["A"] == ["A"]
+
+
+def _cv_dataset():
+    """Deterministic dataset: one signal feature + one noisy feature."""
+    import numpy as np
+
+    rng = np.random.default_rng(0)
+    n = 600
+    # strong, stable signal across the whole sample
+    signal = rng.choice(["A", "B", "C"], size=n)
+    base_rate = {"A": 0.15, "B": 0.5, "C": 0.85}
+    p = np.array([base_rate[s] for s in signal])
+    # a pure-noise feature (no real association with y)
+    noise = rng.choice(["x", "y", "z", "w"], size=n)
+    y = pd.Series((rng.random(n) < p).astype(int), name="target")
+    X = pd.DataFrame({"signal": signal, "noise": noise})
+    return X, y
+
+
+def _dropped_names(carver):
+    return {str(f) for f in carver.dropped_features}
+
+
+def test_fit_cv_runs_and_keeps_signal(evaluator):
+    """``fit(cv=...)`` runs end to end and keeps a genuinely robust feature."""
+    X, y = _cv_dataset()
+    carver = BinaryCarver(
+        features=Features(categoricals=["signal", "noise"]),
+        min_freq=0.1,
+        max_n_mod=4,
+        combination_evaluator=evaluator,
+        config=ProcessingConfig(dropna=True, verbose=False),
+    )
+    carver.fit(X, y, cv=4)
+
+    # the stable signal survives every fold and is actually carved into buckets
+    assert "signal" in carver.features
+    assert len(carver.features("signal").content) > 1
+
+
+def test_fit_cv_drops_superset_of_no_cv(evaluator):
+    """CV only adds robustness vetoes, so it drops a superset of the no-CV run."""
+    X, y = _cv_dataset()
+
+    def fit(cv):
+        carver = BinaryCarver(
+            features=Features(categoricals=["signal", "noise"]),
+            min_freq=0.1,
+            max_n_mod=4,
+            combination_evaluator=type(evaluator)(),
+            config=ProcessingConfig(dropna=True, verbose=False),
+        )
+        carver.fit(X.copy(), y, cv=cv)
+        return _dropped_names(carver)
+
+    dropped_no_cv = fit(0)
+    dropped_cv = fit(4)
+
+    assert dropped_no_cv <= dropped_cv
+
+
+def test_fit_cv_zero_matches_omitted_cv(evaluator):
+    """``cv=0`` (the default) behaves identically to omitting ``cv`` entirely."""
+    X, y = _cv_dataset()
+
+    def fit(**kwargs):
+        carver = BinaryCarver(
+            features=Features(categoricals=["signal", "noise"]),
+            min_freq=0.1,
+            max_n_mod=4,
+            combination_evaluator=type(evaluator)(),
+            config=ProcessingConfig(dropna=True, verbose=False),
+        )
+        carver.fit(X.copy(), y, **kwargs)
+        return {feature.version: feature.content for feature in carver.features}
+
+    assert fit(cv=0) == fit()
+
+
+def test_fit_cv_one_raises(evaluator):
+    """``cv=1`` isn't enough splits for k-fold cross-validation — sklearn raises."""
+    X, y = _cv_dataset()
+    carver = BinaryCarver(
+        features=Features(categoricals=["signal", "noise"]),
+        min_freq=0.1,
+        max_n_mod=4,
+        combination_evaluator=evaluator,
+        config=ProcessingConfig(dropna=True, verbose=False),
+    )
+    with raises(ValueError):
+        carver.fit(X, y, cv=1)
+
+
+def test_fit_cv_splitter_instance_runs(evaluator):
+    """A scikit-learn cross-validator instance is used as-is."""
+    X, y = _cv_dataset()
+    carver = BinaryCarver(
+        features=Features(categoricals=["signal", "noise"]),
+        min_freq=0.1,
+        max_n_mod=4,
+        combination_evaluator=evaluator,
+        config=ProcessingConfig(dropna=True, verbose=False),
+    )
+    carver.fit(X, y, cv=StratifiedKFold(3, shuffle=True, random_state=0))
+
+    assert "signal" in carver.features
+
+
+def test_fit_cv_explicit_index_pairs_runs(evaluator):
+    """An explicit iterable of positional ``(train_idx, test_idx)`` pairs is wrapped as-is."""
+    X, y = _cv_dataset()
+    folds = list(StratifiedKFold(3, shuffle=True, random_state=0).split(X, y))
+    carver = BinaryCarver(
+        features=Features(categoricals=["signal", "noise"]),
+        min_freq=0.1,
+        max_n_mod=4,
+        combination_evaluator=evaluator,
+        config=ProcessingConfig(dropna=True, verbose=False),
+    )
+    carver.fit(X, y, cv=folds)
+
+    assert "signal" in carver.features
+
+
+def test_fit_cv_parallel_matches_serial(evaluator):
+    """cv folds survive pickling to worker processes: ``n_jobs=2`` drops the same features as serial."""
+    X, y = _cv_dataset()
+
+    def fit(n_jobs):
+        carver = BinaryCarver(
+            features=Features(categoricals=["signal", "noise"]),
+            min_freq=0.1,
+            max_n_mod=4,
+            combination_evaluator=type(evaluator)(),
+            config=ProcessingConfig(dropna=True, verbose=False, n_jobs=n_jobs),
+        )
+        carver.fit(X.copy(), y, cv=3)
+        return _dropped_names(carver)
+
+    assert fit(n_jobs=1) == fit(n_jobs=2)
 
 
 def test_fit_with_best_combination(evaluator):
