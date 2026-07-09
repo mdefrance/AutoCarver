@@ -7,6 +7,7 @@ from typing import Self
 import pandas as pd
 
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, ProcessingConfig, Sample
+from AutoCarver.discretizers.utils.correspondence_analysis import ca_row_scores, fit_ca_axis
 from AutoCarver.discretizers.utils.frequency_ci import is_significantly_below
 from AutoCarver.features import CategoricalFeature
 from AutoCarver.utils import extend_docstring
@@ -140,10 +141,17 @@ class CategoricalDiscretizer(BaseDiscretizer):
         return X
 
     def _target_sort(self, X: pd.DataFrame, y: pd.Series) -> None:
-        """Sorts features' values by target rate"""
+        """Sorts features' values by target rate.
 
-        # computing target rate per modality for ordering
-        target_rates = X[self.features.versions].apply(series_target_rate, y=y, axis=0)
+        An unordered (multiclass) target has no numeric mean to sort by, so it is
+        ordered instead by correspondence-analysis first-axis score (the
+        chi²-optimal 1-D embedding) — see :func:`series_ca_order`. Binary
+        (0/1) and ordinal (integer-level) targets keep the mean-target-rate order.
+        """
+        sorter = series_target_rate if pd.api.types.is_numeric_dtype(y) else series_ca_order
+
+        # computing target rate (or CA score) per modality for ordering
+        target_rates = X[self.features.versions].apply(sorter, y=y, axis=0)
 
         # sorting features' values based on target rates
         self.features.update(
@@ -158,6 +166,18 @@ def series_target_rate(x: pd.Series, y: pd.Series, dropna: bool = True, ascendin
     rates = y.groupby(x, dropna=dropna).mean().sort_index().sort_values(ascending=ascending)
 
     return rates.to_dict()
+
+
+def series_ca_order(x: pd.Series, y: pd.Series) -> dict:
+    """Orders a categorical feature's values by correspondence-analysis
+    first-axis score against an unordered (multiclass) target — the
+    chi²-optimal 1-D embedding, used in place of the target-rate mean (which
+    a multiclass target has no numeric equivalent of)."""
+    xtab = pd.crosstab(x, y)
+    axis = fit_ca_axis(xtab)
+    scores = ca_row_scores(xtab, axis).sort_values(ascending=True)
+
+    return scores.to_dict()
 
 
 def series_value_counts(x: pd.Series, dropna: bool = False) -> dict:

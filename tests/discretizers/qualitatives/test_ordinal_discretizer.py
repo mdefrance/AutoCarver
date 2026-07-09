@@ -261,6 +261,33 @@ def test_compute_stats_single_modality():
     assert len_df == expected_len_df
 
 
+def test_compute_stats_nonnumeric_y_uses_ca_score():
+    """A nominal (non-numeric) y has no numeric mean — compute_stats must not sum it
+    directly (str + int crashes downstream), so it substitutes each modality's
+    correspondence-analysis score before summing."""
+    df_feature = pd.Series(["A", "B", "A", "C", "B", "A"])
+    y = pd.Series(["x", "y", "x", "y", "x", "y"])
+    labels = GroupedList(["A", "B", "C"])
+    stats, len_df = compute_stats(df_feature, y, labels)
+    assert len_df == 6
+    assert stats.dtype.kind == "f"
+    assert np.isfinite(stats).all()
+
+
+def test_find_common_modalities_nonnumeric_y_does_not_crash():
+    """Regression test: used to crash with `TypeError: unsupported operand type(s)
+    for /: 'str' and 'int'` when y is a nominal (non-numeric) multiclass target —
+    e.g. under MulticlassCarver, which casts y to str before the shared
+    pre-discretization pass. C is rare enough to be merged; the merge must not
+    raise and must not lose any modality."""
+    df_feature = pd.Series(["A"] * 300 + ["B"] * 250 + ["C"] * 50)
+    y = pd.Series(np.random.default_rng(0).choice(["x", "y", "z"], size=600))
+    result = find_common_modalities(df_feature, y, min_freq=3 / 6, labels=["A", "B", "C"], alpha=0.05)
+    all_grouped = {value for group in result.content.values() for value in group}
+    assert all_grouped == {"A", "B", "C"}
+    assert len(result.content) < 3  # the rare modality got merged
+
+
 def test_update_stats_basic():
     """Test update_stats with basic input"""
     df_feature = pd.Series(["A", "B", "A", "C", "B", "A"])

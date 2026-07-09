@@ -16,18 +16,20 @@ from pathlib import Path
 
 import pandas as pd
 
-from AutoCarver.carvers import BinaryCarver, ContinuousCarver, MulticlassCarver, OrdinalCarver
+from AutoCarver.carvers import BinaryCarver, ContinuousCarver, MulticlassCarver, OneVsRestCarver, OrdinalCarver
 from AutoCarver.carvers.utils.base_carver import BaseCarver
 from AutoCarver.features import Features, specs_to_features_kwargs
 from AutoCarver.mcp import inspection
 
-# "ordinal" is opt-in only: integer values alone can't distinguish an ordered
-# ordinal target from an unordered multiclass one, so ``auto`` never resolves to
-# it (see ``_resolve_task``) — the caller must request ``task="ordinal"``.
+# "ordinal" and "one_vs_rest" are opt-in only: integer values alone can't distinguish
+# an ordered ordinal target from an unordered multiclass one, and one-vs-rest carving
+# is a deliberate per-class alternative to the default joint carving — so ``auto``
+# never resolves to either (see ``_resolve_task``); the caller must request them by name.
 _CARVERS = {
     "binary": BinaryCarver,
     "continuous": ContinuousCarver,
     "multiclass": MulticlassCarver,
+    "one_vs_rest": OneVsRestCarver,
     "ordinal": OrdinalCarver,
 }
 
@@ -150,9 +152,12 @@ class CarverSession:
     def run_carver(self, task: str = "auto", min_freq: float = 0.05, max_n_mod: int = 5) -> dict:
         """Builds :class:`Features` from the draft and carves them against the target.
 
-        ``task`` is ``binary``/``continuous``/``multiclass`` or ``auto`` (inferred from the
-        target). Returns the carving summary, the carved content per feature, and any features
-        the carver dropped as non-viable.
+        ``task`` is ``binary``/``continuous``/``multiclass``/``ordinal``/``one_vs_rest`` or
+        ``auto`` (inferred from the target; never resolves to ``ordinal`` or ``one_vs_rest``,
+        which must be requested explicitly). ``multiclass`` is the joint carver — one carving
+        per feature against the full K-class target; ``one_vs_rest`` fits a separate carving
+        per class instead. Returns the carving summary, the carved content per feature, and any
+        features the carver dropped as non-viable.
         """
         if self.target is None:
             raise ValueError("[session] no target set; reload the dataset with a target to carve.")
@@ -191,7 +196,9 @@ class CarverSession:
         if task in _CARVERS:
             return task
         if task != "auto":
-            raise ValueError(f"[session] unknown task {task!r}; use auto/binary/continuous/multiclass/ordinal.")
+            raise ValueError(
+                f"[session] unknown task {task!r}; use auto/binary/continuous/multiclass/ordinal/one_vs_rest."
+            )
         uniques = y.dropna().unique()
         if len(uniques) == 2:
             return "binary"

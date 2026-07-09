@@ -11,7 +11,7 @@ Target type and Carver selection
 Depending on one's desired modelling task, several Carvers are implemented:
 
  * :ref:`BinaryCarver`
- * :ref:`MulticlassCarver`
+ * :ref:`MulticlassCarver` (one binning per feature, joint) or :ref:`OneVsRestCarver` (a binning per class)
  * :ref:`ContinuousCarver`
 
 In the following quick start example, we will consider a binary classification problem:

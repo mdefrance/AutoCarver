@@ -32,8 +32,8 @@ Scope at a glance
      - ``OptimalBinning``
      - n/a
    * - Multiclass classification
-     - :class:`MulticlassCarver`
-     - ``MulticlassOptimalBinning``
+     - :class:`MulticlassCarver` — **one binning per feature** (joint, against the full K-class target); :class:`OneVsRestCarver` available for a per-class binning instead
+     - ``MulticlassOptimalBinning`` — one-vs-rest only (a separate binning per class)
      - n/a
    * - Regression / continuous target
      - :class:`ContinuousCarver`
@@ -102,7 +102,7 @@ The three libraries answer "what's a good bin?" with very different objectives:
      - Objective
      - Constraint surface
    * - **AutoCarver**
-     - Maximize **Tschuprow's T** (default) or **Cramér's V** between the carved feature and the binary target — or **Kruskal-Wallis H** for continuous targets — via **exhaustive top-K interval DP** over consecutive segmentations. The DP exploits additive decomposability of :math:`H` (and of :math:`\chi^2` at fixed :math:`k`) to enumerate the top-K partitions in closed form; progressive top-K doubling keeps the worst case exhaustive while making the common case essentially free. For fixed ``min_freq``, ``max_n_mod`` and metric, no other admissible combination scores higher. NaN groupings are fanned out and re-scored in closed form. See :ref:`DPTopK` for details and parity guarantees against ``scipy.stats``.
+     - Maximize **Tschuprow's T** (default) or **Cramér's V** between the carved feature and the binary target — generalised to a K-class :math:`\chi^2` for the joint :class:`MulticlassCarver` (see :ref:`MulticlassChi2`) — or **Kruskal-Wallis H** for continuous targets — via **exhaustive top-K interval DP** over consecutive segmentations. The DP exploits additive decomposability of :math:`H` (and of :math:`\chi^2` at fixed :math:`k`) to enumerate the top-K partitions in closed form; progressive top-K doubling keeps the worst case exhaustive while making the common case essentially free. For fixed ``min_freq``, ``max_n_mod`` and metric, no other admissible combination scores higher. NaN groupings are fanned out and re-scored in closed form. See :ref:`DPTopK` for details and parity guarantees against ``scipy.stats``.
      - ``min_freq`` (minimum bucket share, gated by a Wilson score CI at significance ``min_freq_alpha`` — see :ref:`MinFreqViability`), ``max_n_mod`` (cap on number of modalities), monotonic ordering for ordinal features (enforced by :class:`OrdinalDiscretizer`), and a dev-set veto: any candidate that flips its target-rate ordering on the dev set is rejected.
    * - **optbinning**
      - Maximize **Information Value (IV)** (binary) or split-gain analogues, solved as a mixed-integer program (CBC by default).

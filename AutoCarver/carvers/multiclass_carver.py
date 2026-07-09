@@ -1,38 +1,47 @@
 """Tool to build optimized buckets out of Quantitative and Qualitative features
-for multiclass classification tasks.
+for multiclass classification tasks — one carving per feature, against the
+full K-class target (see :class:`~AutoCarver.carvers.one_vs_rest_carver.OneVsRestCarver`
+for the one-vs-rest alternative: one carving per (class, feature) pair).
 """
 
-from collections.abc import Iterable
-from dataclasses import replace
-from typing import Any, Self
-
 import pandas as pd
-from sklearn.model_selection import BaseCrossValidator
 
-from AutoCarver.carvers.binary_carver import BinaryCarver
-from AutoCarver.carvers.utils.base_carver import Samples
-from AutoCarver.combinations import CombinationEvaluator
-from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, ProcessingConfig, Sample
-from AutoCarver.features import Features
+from AutoCarver.carvers.binary_carver import get_crosstab
+from AutoCarver.carvers.utils.base_carver import BaseCarver, Samples, parallel_aggregate
+from AutoCarver.combinations import CombinationEvaluator, TschuprowtMulticlassCombinations
+from AutoCarver.combinations.multiclass.multiclass_target_rates import MulticlassTargetRate
+from AutoCarver.discretizers.utils.base_discretizer import ProcessingConfig
+from AutoCarver.features import BaseFeature, Features
 from AutoCarver.utils import extend_docstring
 
 
-class MulticlassCarver(BinaryCarver):
+class MulticlassCarver(BaseCarver):
     """Automatic carving of continuous, discrete, categorical and ordinal
-    features that maximizes association with a multiclass target.
+    features that maximizes association with a multiclass (unordered,
+    :math:`K > 2` classes) target — **one carving per feature**, against the
+    full ``n x K`` crosstab.
 
+    Sibling of :class:`~AutoCarver.carvers.ordinal_carver.OrdinalCarver` (both
+    sit directly on :class:`BaseCarver` and aggregate a ``feature-groups x
+    target-levels`` crosstab): the K target classes are unordered here, so
+    qualitative modalities are ordered by their correspondence-analysis
+    first-axis score (see :mod:`AutoCarver.discretizers.utils.correspondence_analysis`)
+    instead of a numeric target-rate mean, and the association measure is a
+    chi²-family statistic (Tschuprow's T or Cramér's V) generalised to a
+    ``(B, K)`` table instead of Kendall's tau-c.
 
-    Examples
-    --------
-    `Multiclass Classification Example <https://autocarver.readthedocs.io/en/latest/examples/
-    Carvers/MulticlassClassification/multiclass_classification_example.html>`_
+    A feature is carved **once**: unlike
+    :class:`~AutoCarver.carvers.one_vs_rest_carver.OneVsRestCarver` (which
+    fits ``K - 1`` separate :class:`~AutoCarver.carvers.binary_carver.BinaryCarver`
+    instances — one per class, producing ``K - 1`` versions of every
+    feature), this carver produces a single bucket set per feature and
+    supports ``copy=False``.
     """
 
     __name__ = "MulticlassCarver"
-    is_y_binary = False
     is_y_multiclass = True
 
-    @extend_docstring(BinaryCarver.__init__)
+    @extend_docstring(BaseCarver.__init__, exclude=["combination_evaluator"])
     def __init__(
         self,
         features: Features,
@@ -42,7 +51,27 @@ class MulticlassCarver(BinaryCarver):
         combination_evaluator: CombinationEvaluator | None = None,
         config: ProcessingConfig | None = None,
     ) -> None:
-        """ """
+        """
+        Parameters
+        ----------
+        combination_evaluator : CombinationEvaluator, optional
+            Pre-built evaluator instance measuring association between
+            :class:`Features` and a multiclass target. Defaults to
+            :class:`~AutoCarver.combinations.multiclass.multiclass_combination_evaluators.TschuprowtMulticlassCombinations`.
+
+            Choose from:
+            :class:`~AutoCarver.combinations.multiclass.multiclass_combination_evaluators.TschuprowtMulticlassCombinations`
+            (default),
+            :class:`~AutoCarver.combinations.multiclass.multiclass_combination_evaluators.CramervMulticlassCombinations`.
+        """
+        if combination_evaluator is None:
+            combination_evaluator = TschuprowtMulticlassCombinations()
+        if not combination_evaluator.is_y_multiclass:
+            raise ValueError(
+                f"[{self.__name__}] {type(combination_evaluator).__name__} is not suited for multiclass targets. "
+                f"Choose from: TschuprowtMulticlassCombinations, CramervMulticlassCombinations."
+            )
+
         super().__init__(
             features=features,
             min_freq=min_freq,
@@ -51,15 +80,14 @@ class MulticlassCarver(BinaryCarver):
             config=config,
         )
 
-        # multiclass cannot copy inplace
-        if self.config.copy:
-            print("WARNING: can't set copy=False for MulticlassCarver (no inplace DataFrame.assign).")
-
     def _prepare_samples(self, samples: Samples) -> Samples:
         """Validates format and content of X and y."""
-        # converting target to str (y is required by Carver.fit)
         if samples.train.y is None:
             raise ValueError(f"[{self.__name__}] y must be provided")
+        # NaN check must precede astype(str): casting turns NaN into the string "nan",
+        # which would silently become a target class (and bypass the base check)
+        if samples.train.y.isna().any():
+            raise ValueError(f"[{self.__name__}] y should not contain numpy.nan")
         samples.train.y = samples.train.y.astype(str)
 
         # multiclass target, checking values
@@ -68,6 +96,8 @@ class MulticlassCarver(BinaryCarver):
 
         # checking for dev target's values
         if samples.dev.y is not None:
+            if samples.dev.y.isna().any():
+                raise ValueError(f"[{self.__name__}] y_dev should not contain numpy.nan")
             samples.dev.y = samples.dev.y.astype(str)
 
             unique_y_dev = samples.dev.y.unique()
@@ -80,93 +110,45 @@ class MulticlassCarver(BinaryCarver):
                     f": train({missing_y_dev}), dev({missing_y})"
                 )
 
-        return samples
+        return super()._prepare_samples(samples)
 
-    @extend_docstring(BinaryCarver.fit)
-    def fit(
+    def _aggregator(self, X: pd.DataFrame, y: pd.Series) -> dict[str, pd.Series | pd.DataFrame | None]:
+        """Computes crosstabs (feature modalities x target classes) for specified
+        features, with target classes in canonical (sorted) column order so
+        that class-column order never depends on row order of the data.
+        Threaded across features when ``n_jobs > 1``."""
+        return parallel_aggregate(get_multiclass_crosstab, self.features, X, y, self.config.n_jobs)
+
+    def _print_xagg(
         self,
-        X: pd.DataFrame,
-        y: pd.Series,
+        feature: BaseFeature,
+        xagg: pd.Series | pd.DataFrame | None,
+        message: str,
         *,
-        X_dev: pd.DataFrame | None = None,
-        y_dev: pd.Series | None = None,
-        cv: int | BaseCrossValidator | Iterable = 0,
-    ) -> Self:
-        # dropping the target column if it leaked into the features (before versioning)
-        self._drop_target_from_features(X, y)
+        xagg_dev: pd.Series | pd.DataFrame | None = None,
+    ) -> None:
+        """Fits the CA axis from the raw train crosstab before the pre-combination
+        "Raw distribution" print.
 
-        # initiating samples
-        samples = Samples(train=Sample(X, y), dev=Sample(X_dev, y_dev))
-
-        # preparing datasets and checking for wrong values
-        samples = self._prepare_samples(samples)
-
-        # getting distinct y classes (_prepare_samples raises if y is missing)
-        # removing one of the classes
-        y_classes = sorted(samples.train.y.unique().tolist())[1:]  # type: ignore
-
-        # adding versionned features
-        self.features.add_feature_versions(y_classes)
-
-        # one-shot iterables (generators of index pairs) would be exhausted by the
-        # first class; ints and CV objects are reusable as-is
-        if not isinstance(cv, (int, BaseCrossValidator)):
-            cv = list(cv)
-
-        # iterating over each class minus one
-        for n, y_class in enumerate(y_classes):
-            if self.config.verbose:
-                print(f"\n---------\n[{self.__name__}] Fit y={y_class} ({n + 1}/{len(y_classes)})\n------")
-
-            train_y_class = get_one_vs_rest(samples.train.y, y_class)
-            dev_y_class = get_one_vs_rest(samples.dev.y, y_class)
-
-            class_features = Features.from_list(self.features.get_version_group(y_class))
-
-            # spawn a BinaryCarver per class; copy X so each carver sees clean raw columns.
-            # Each child rebuilds its own evaluator from the same class + max_n_mod, so
-            # runtime state stays isolated per class fit.
-            # fresh evaluator instance per class fit so runtime state (samples,
-            # _feature) doesn't leak across iterations.
-            binary_carver = BinaryCarver(
-                features=class_features,
-                min_freq=self.min_freq,
-                max_n_mod=self.max_n_mod,
-                combination_evaluator=type(self.combination_evaluator)(),
-                config=replace(self.config, copy=True),
-            )
-
-            binary_carver.fit_transform(
-                samples.train.X,
-                train_y_class,
-                X_dev=samples.dev.X if samples.dev.has_X else None,
-                y_dev=dev_y_class,
-                cv=cv,
-            )
-
-            # filtering out dropped features whilst keeping other version tags
-            kept_features = binary_carver.features.versions
-            kept_features += [feature.version for feature in self.features if feature.version_tag != y_class]
-            self.features.keep(kept_features)
-
-            if self.config.verbose:
-                print("---------\n")
-
-        # re-init BaseDiscretizer state to reflect the final multiclass features,
-        # then mark fitted. Preserve combination_evaluator (BaseDiscretizer.__init__
-        # resets self.combinations to None).
-        combination_evaluator = self.combination_evaluator
-        BaseDiscretizer.__init__(self, features=self.features, min_freq=self.min_freq, config=self.config)
-        self.combination_evaluator = combination_evaluator
-        self.combinations = combination_evaluator
-
-        BaseDiscretizer.fit(self, samples.train.X, samples.train.y)
-
-        return self
+        Without this, a verbose fit would call ``target_rate.compute`` (via
+        :meth:`BaseCarver._pretty_print`) before :meth:`get_best_combination`
+        has had a chance to fit the axis (see
+        :meth:`~AutoCarver.combinations.multiclass.multiclass_target_rates.MulticlassTargetRate.fit_axis`).
+        This fit only serves the print: ``get_best_combination`` refits the
+        axis before scoring any candidate — from the same crosstab, minus the
+        NaN row when the feature has NaNs (its scores can therefore differ
+        slightly from the ones printed here) — so carving never depends on it.
+        """
+        target_rate = self.combination_evaluator.target_rate
+        if message == "Raw distribution" and xagg is not None and isinstance(target_rate, MulticlassTargetRate):
+            target_rate.fit_axis(xagg)  # type: ignore
+        super()._print_xagg(feature, xagg, message, xagg_dev=xagg_dev)
 
 
-def get_one_vs_rest(y: pd.Series | None, y_class: Any) -> pd.Series | None:
-    """converts a multiclass target into binary of specific y_class"""
-    if y is not None:
-        return (y == y_class).astype(int)
-    return None
+def get_multiclass_crosstab(X: pd.DataFrame, y: pd.Series, feature: BaseFeature) -> pd.DataFrame:
+    """Computes a crosstab between a feature and a multiclass target, with
+    target classes in sorted (canonical) column order — ``pd.crosstab``
+    already sorts by the classes' (string-cast) values, so this pins that
+    order explicitly rather than relying on it implicitly."""
+    xtab = get_crosstab(X, y, feature)
+    return xtab[sorted(xtab.columns)]

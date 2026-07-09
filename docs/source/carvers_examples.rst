@@ -14,10 +14,12 @@ Example of the Titanic survival classification.
 
     examples/Carvers/BinaryClassification/binary_classification_example
 
-Multiclass Classification Example
----------------------------------
+One-vs-Rest Classification Example
+-----------------------------------
 
-Example of the Iris type classification.
+Example of the Iris type classification using :class:`OneVsRestCarver` (a
+separate binning per class). For the joint :class:`MulticlassCarver` — one
+binning per feature against the full K-class target — see :ref:`MulticlassCarver`.
 
 .. toctree::
     :glob:
