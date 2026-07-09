@@ -84,6 +84,10 @@ class MulticlassCarver(BaseCarver):
         """Validates format and content of X and y."""
         if samples.train.y is None:
             raise ValueError(f"[{self.__name__}] y must be provided")
+        # NaN check must precede astype(str): casting turns NaN into the string "nan",
+        # which would silently become a target class (and bypass the base check)
+        if samples.train.y.isna().any():
+            raise ValueError(f"[{self.__name__}] y should not contain numpy.nan")
         samples.train.y = samples.train.y.astype(str)
 
         # multiclass target, checking values
@@ -92,6 +96,8 @@ class MulticlassCarver(BaseCarver):
 
         # checking for dev target's values
         if samples.dev.y is not None:
+            if samples.dev.y.isna().any():
+                raise ValueError(f"[{self.__name__}] y_dev should not contain numpy.nan")
             samples.dev.y = samples.dev.y.astype(str)
 
             unique_y_dev = samples.dev.y.unique()
@@ -128,9 +134,10 @@ class MulticlassCarver(BaseCarver):
         :meth:`BaseCarver._pretty_print`) before :meth:`get_best_combination`
         has had a chance to fit the axis (see
         :meth:`~AutoCarver.combinations.multiclass.multiclass_target_rates.MulticlassTargetRate.fit_axis`).
-        Re-fitting here is idempotent: it uses the exact same raw crosstab
-        :meth:`~AutoCarver.carvers.utils.base_carver.BaseCarver._carve_feature`
-        goes on to pass to ``get_best_combination``.
+        This fit only serves the print: ``get_best_combination`` refits the
+        axis before scoring any candidate — from the same crosstab, minus the
+        NaN row when the feature has NaNs (its scores can therefore differ
+        slightly from the ones printed here) — so carving never depends on it.
         """
         target_rate = self.combination_evaluator.target_rate
         if message == "Raw distribution" and xagg is not None and isinstance(target_rate, MulticlassTargetRate):

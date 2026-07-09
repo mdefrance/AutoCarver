@@ -52,7 +52,7 @@ class OneVsRestCarver(BinaryCarver):
         )
 
         # multiclass cannot copy inplace
-        if self.config.copy:
+        if not self.config.copy:
             print("WARNING: can't set copy=False for OneVsRestCarver (no inplace DataFrame.assign).")
 
     def _prepare_samples(self, samples: Samples) -> Samples:
@@ -60,6 +60,10 @@ class OneVsRestCarver(BinaryCarver):
         # converting target to str (y is required by Carver.fit)
         if samples.train.y is None:
             raise ValueError(f"[{self.__name__}] y must be provided")
+        # NaN check must precede astype(str): casting turns NaN into the string "nan",
+        # which would silently become a target class (and bypass the base check)
+        if samples.train.y.isna().any():
+            raise ValueError(f"[{self.__name__}] y should not contain numpy.nan")
         samples.train.y = samples.train.y.astype(str)
 
         # multiclass target, checking values
@@ -68,6 +72,8 @@ class OneVsRestCarver(BinaryCarver):
 
         # checking for dev target's values
         if samples.dev.y is not None:
+            if samples.dev.y.isna().any():
+                raise ValueError(f"[{self.__name__}] y_dev should not contain numpy.nan")
             samples.dev.y = samples.dev.y.astype(str)
 
             unique_y_dev = samples.dev.y.unique()

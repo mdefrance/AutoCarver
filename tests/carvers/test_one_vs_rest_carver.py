@@ -210,6 +210,16 @@ def test_one_vs_rest_carver_prepare_samples(evaluator: CombinationEvaluator):
     with raises(ValueError):
         carver._prepare_samples(samples)
 
+    # NaN in y -> rejected (must not silently become a "nan" class via astype(str))
+    y_nan = pd.Series([0, 1, np.nan])
+    with raises(ValueError, match="should not contain numpy.nan"):
+        carver._prepare_samples(Samples(train=Sample(X, y_nan)))
+
+    # NaN in y_dev -> rejected
+    y_dev_nan = pd.Series([0, 1, np.nan])
+    with raises(ValueError, match="should not contain numpy.nan"):
+        carver._prepare_samples(Samples(train=Sample(X, pd.Series([0, 1, 2])), dev=Sample(X, y_dev_nan)))
+
 
 def test_one_vs_rest_carver_fit_transform_with_small_data_not_ordinal(
     evaluator: CombinationEvaluator,
