@@ -75,6 +75,17 @@ def test_multiclass_carver_prepare_samples(evaluator: CombinationEvaluator):
     with raises(ValueError, match="Mismatched classes"):
         carver._prepare_samples(Samples(train=Sample(X, y), dev=Sample(X, y_dev)))
 
+    # NaN in y -> rejected (must not silently become a "nan" class via astype(str))
+    y_nan = pd.Series([0, 1, np.nan])
+    with raises(ValueError, match="should not contain numpy.nan"):
+        carver._prepare_samples(Samples(train=Sample(X, y_nan)))
+
+    # NaN in y_dev -> rejected
+    y = pd.Series([0, 1, 2])
+    y_dev_nan = pd.Series([0, 1, np.nan])
+    with raises(ValueError, match="should not contain numpy.nan"):
+        carver._prepare_samples(Samples(train=Sample(X, y), dev=Sample(X, y_dev_nan)))
+
 
 def test_quantitative_feature_with_rare_modality_and_numeric_target(evaluator: CombinationEvaluator):
     """Regression test: a quantitative feature with a dominant repeated value produces a
