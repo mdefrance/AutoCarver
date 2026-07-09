@@ -7,6 +7,7 @@ from typing import Self
 import numpy as np
 import pandas as pd
 
+from AutoCarver.discretizers.qualitatives.categorical_discretizer import series_ca_order
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, ProcessingConfig, Sample
 from AutoCarver.discretizers.utils.frequency_ci import is_significantly_below
 from AutoCarver.features import GroupedList, OrdinalFeature
@@ -155,7 +156,15 @@ def update_stats(stats: np.ndarray, discarded_idx: int, kept_idx: int) -> np.nda
 
 
 def compute_stats(df_feature: pd.Series, y: pd.Series, labels: GroupedList) -> tuple[np.ndarray, int]:
-    """Computes frequencies and target rates of each modality"""
+    """Computes frequencies and target rates of each modality.
+
+    An unordered (multiclass) target has no numeric mean to sum, so each row's
+    target value is replaced by its modality's correspondence-analysis
+    first-axis score (the same association proxy ``CategoricalDiscretizer``
+    uses via ``series_ca_order``) before summing — the rest of the merge
+    logic (weighted-average rate, closest-neighbor search) is unchanged.
+    Binary (0/1) and ordinal (integer-level) targets keep the mean-target-rate.
+    """
 
     # filtering nans
     not_nans = pd.notna(df_feature)
@@ -163,17 +172,28 @@ def compute_stats(df_feature: pd.Series, y: pd.Series, labels: GroupedList) -> t
     # total size
     len_df = len(df_feature)
 
+    # unordered targets have no numeric mean: substitute each row's target
+    # value with its modality's CA first-axis score against y (same full-length
+    # index as y, so the not_nans slicing below applies identically either way)
+    y_scores = y if pd.api.types.is_numeric_dtype(y) else _ca_row_scores(df_feature, y)
+
     # computing frequencies and target rates
     stats = np.vstack(
         (
             # frequencies
             df_feature[not_nans].value_counts(dropna=False, normalize=False).reindex(labels, fill_value=0).values,
-            # target rates
-            y[not_nans].groupby(df_feature[not_nans]).sum().reindex(labels).values,
+            # target rates (or CA scores, for a nominal target)
+            y_scores[not_nans].groupby(df_feature[not_nans]).sum().reindex(labels).values,
         )
     )
 
     return stats, len_df
+
+
+def _ca_row_scores(df_feature: pd.Series, y: pd.Series) -> pd.Series:
+    """Maps each modality of ``df_feature`` to its correspondence-analysis
+    first-axis score against ``y``, broadcast back to one value per row."""
+    return df_feature.map(series_ca_order(df_feature, y))
 
 
 def find_closest_modality(idx: int, frequencies: np.ndarray, target_rates: np.ndarray, min_freq: float) -> int:

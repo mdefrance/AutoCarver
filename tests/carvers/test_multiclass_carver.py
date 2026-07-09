@@ -76,6 +76,53 @@ def test_multiclass_carver_prepare_samples(evaluator: CombinationEvaluator):
         carver._prepare_samples(Samples(train=Sample(X, y), dev=Sample(X, y_dev)))
 
 
+def test_quantitative_feature_with_rare_modality_and_numeric_target(evaluator: CombinationEvaluator):
+    """Regression test: a quantitative feature with a dominant repeated value produces a
+    rare quantile modality, which routes through OrdinalDiscretizer's rare-modality merge
+    during the shared pre-discretization pass (see QuantitativeDiscretizer
+    ._fit_continuous_with_rare_modalities). Under MulticlassCarver, y is cast to str there;
+    for a numeric-coded target (e.g. 0/1/2 class codes) this used to crash with
+    `TypeError: unsupported operand type(s) for /: 'str' and 'int'` since the target-rate
+    merge sums y, and summing strings silently concatenates instead of erroring until the
+    later division."""
+    rng = np.random.default_rng(0)
+    n = 2000
+    values = np.concatenate([np.zeros(1600), rng.normal(10, 3, n - 1600)])
+    rng.shuffle(values)
+    X = pd.DataFrame({"num1": values})
+    y = pd.Series(rng.choice([0, 1, 2], size=n), name="target")
+
+    carver = MulticlassCarver(
+        features=Features(numericals=["num1"]),
+        min_freq=0.05,
+        max_n_mod=5,
+        combination_evaluator=evaluator,
+        config=ProcessingConfig(dropna=False, copy=True, verbose=False, n_jobs=1, min_freq_alpha=0.05),
+    )
+    carver.fit_transform(X, y)  # must not raise
+
+
+def test_quantitative_feature_with_rare_modality_and_nominal_target(evaluator: CombinationEvaluator):
+    """Same as above, but with a genuinely nominal (non-numeric) target — this crashed
+    even before the target was ever cast to str, since sum()/count() of nominal labels
+    is never meaningful."""
+    rng = np.random.default_rng(0)
+    n = 2000
+    values = np.concatenate([np.zeros(1600), rng.normal(10, 3, n - 1600)])
+    rng.shuffle(values)
+    X = pd.DataFrame({"num1": values})
+    y = pd.Series(rng.choice(["cat", "dog", "bird"], size=n), name="target")
+
+    carver = MulticlassCarver(
+        features=Features(numericals=["num1"]),
+        min_freq=0.05,
+        max_n_mod=5,
+        combination_evaluator=evaluator,
+        config=ProcessingConfig(dropna=False, copy=True, verbose=False, n_jobs=1, min_freq_alpha=0.05),
+    )
+    carver.fit_transform(X, y)  # must not raise
+
+
 def _multiclass_dataset(n_classes: int, n: int = 900, seed: int = 0) -> tuple[pd.DataFrame, pd.Series]:
     """A signal feature strongly associated with an n_classes-way target, plus a
     pure-noise feature — enough rows per (modality, class) cell to clear a
