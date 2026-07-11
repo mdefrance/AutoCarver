@@ -13,6 +13,7 @@ from AutoCarver.combinations import (
     SomersDCombinations,
     TschuprowtCombinations,
 )
+from AutoCarver.combinations.ordinal.ordinal_target_rates import TargetMeanLevel, TargetMeanRidit
 from AutoCarver.features import Features
 
 ORDINAL_EVALUATORS = [KendallTauCCombinations, KendallTauBCombinations, SomersDCombinations]
@@ -106,9 +107,9 @@ def test_ordinal_carver_fit_recovers_cluster_structure(evaluator):
 
     feature = carver.features[0]
     assert len(feature.labels) == EXPECTED_MODALITIES[evaluator]
-    # groups are ordered by increasing mean ordinal level
-    mean_level = feature.statistics["target_mean_level"]
-    assert list(mean_level) == sorted(mean_level)
+    # groups are ordered by increasing mean train-ridit (the default target rate)
+    mean_ridit = feature.statistics["target_mean_ridit"]
+    assert list(mean_ridit) == sorted(mean_ridit)
 
 
 @mark.parametrize("evaluator", ORDINAL_EVALUATORS)
@@ -128,6 +129,157 @@ def test_ordinal_carver_save_load(tmp_path, evaluator):
     assert carver.combination_evaluator.sort_by == loaded_carver.combination_evaluator.sort_by
     assert carver.min_freq == loaded_carver.min_freq
     assert carver.max_n_mod == loaded_carver.max_n_mod
+
+
+# ---------------------------------------------------------------------------
+# target_scale: ridit (default) / level / {level: value}
+# ---------------------------------------------------------------------------
+
+
+def test_ordinal_carver_target_scale_resolution():
+    """target_scale resolves into the evaluator's rate; conflicts and typos raise."""
+    features = Features(categoricals=["feature1"])
+
+    carver = OrdinalCarver(min_freq=0.1, max_n_mod=5, features=features)
+    assert isinstance(carver.combination_evaluator.target_rate, TargetMeanRidit)
+
+    carver = OrdinalCarver(min_freq=0.1, max_n_mod=5, features=features, target_scale="level")
+    assert isinstance(carver.combination_evaluator.target_rate, TargetMeanLevel)
+    assert carver.combination_evaluator.target_rate.level_values is None
+
+    scale = {1: 0.01, 2: 0.05, 3: 0.2}
+    carver = OrdinalCarver(min_freq=0.1, max_n_mod=5, features=features, target_scale=scale)
+    assert isinstance(carver.combination_evaluator.target_rate, TargetMeanLevel)
+    assert carver.combination_evaluator.target_rate.level_values == scale
+
+    # an explicitly chosen TargetMeanLevel rate is kept under the default target_scale
+    rate = TargetMeanLevel()
+    carver = OrdinalCarver(
+        min_freq=0.1,
+        max_n_mod=5,
+        features=features,
+        combination_evaluator=KendallTauCCombinations(target_rate=rate),
+    )
+    assert carver.combination_evaluator.target_rate is rate
+
+    # ... but a non-default target_scale on top of it is ambiguous
+    with raises(ValueError):
+        OrdinalCarver(
+            min_freq=0.1,
+            max_n_mod=5,
+            features=features,
+            combination_evaluator=KendallTauCCombinations(target_rate=TargetMeanLevel()),
+            target_scale="level",
+        )
+    with raises(ValueError):
+        OrdinalCarver(
+            min_freq=0.1,
+            max_n_mod=5,
+            features=features,
+            combination_evaluator=KendallTauCCombinations(target_rate=TargetMeanLevel()),
+            target_scale={1: 0.1, 2: 0.2, 3: 0.3},
+        )
+
+    # unknown mode
+    with raises(ValueError):
+        OrdinalCarver(min_freq=0.1, max_n_mod=5, features=features, target_scale="midrank")
+
+
+def _make_encoded_data(top_level: int) -> tuple[pd.DataFrame, pd.Series]:
+    """Categorical feature vs y over levels {1, 2, 3, top_level}.
+
+    Modality 'b' is a mixture of the extreme levels, so its mean *encoded* level
+    crosses modality 'a''s (concentrated on 3) when level 4 is re-encoded to 10 —
+    flipping the target-mean pre-sort while all rank statistics are unchanged.
+    """
+    rng = np.random.default_rng(3)
+    n = 4000
+    level_probs = {
+        "a": [0.05, 0.15, 0.60, 0.20],
+        "b": [0.45, 0.05, 0.05, 0.45],
+        "c": [0.60, 0.25, 0.10, 0.05],
+        "d": [0.55, 0.28, 0.11, 0.06],
+        "e": [0.10, 0.20, 0.30, 0.40],
+    }
+    x = rng.choice(list(level_probs), size=n)
+    levels = np.array([1, 2, 3, top_level])
+    y = np.array([levels[rng.choice(4, p=level_probs[modality])] for modality in x])
+    return pd.DataFrame({"cat": x}), pd.Series(y, name="target")
+
+
+def _fit_encoded(top_level: int, **kwargs) -> dict:
+    X, y = _make_encoded_data(top_level)
+    carver = OrdinalCarver(min_freq=0.05, max_n_mod=3, features=Features(categoricals=["cat"]), **kwargs)
+    carver.fit(X, y)
+    return dict(carver.features[0].content)
+
+
+def test_ordinal_carver_ridit_default_is_encoding_invariant():
+    """Headline regression: y encoded {1,2,3,4} vs {1,2,3,10} carve identically with
+    the "ridit" default (the raw target-mean pre-sort differs between the two)."""
+    assert _fit_encoded(4) == _fit_encoded(10)
+
+
+def test_ordinal_carver_level_scale_differs_across_encodings():
+    """target_scale="level" reads the encoding numerically: the same data under the
+    two encodings pre-sorts (and here groups) differently — the documented count
+    behaviour, and the reason "ridit" is the ordinal default."""
+    assert _fit_encoded(4, target_scale="level") != _fit_encoded(10, target_scale="level")
+
+
+def test_ordinal_carver_level_scale_pins_previous_default():
+    """Count regression: target_scale="level" is byte-identical to the previous
+    release's default carving (content pinned from the pre-ridit code)."""
+    rng = np.random.default_rng(42)
+    n = 3000
+    base = rng.integers(0, 6, size=n)
+    cluster = {0: 0, 1: 0, 2: 1, 3: 1, 4: 2, 5: 2}
+    g = np.vectorize(cluster.get)(base)
+    level_probs = {
+        0: [0.60, 0.30, 0.08, 0.02],
+        1: [0.35, 0.35, 0.20, 0.10],
+        2: [0.10, 0.20, 0.30, 0.40],
+    }
+    levels = np.array([0, 1, 2, 10])  # skewed count-like spacing
+    y = pd.Series(np.array([levels[rng.choice(4, p=level_probs[c])] for c in g]), name="target")
+    X = pd.DataFrame({"q": [str(b) for b in base]})
+
+    features = Features(ordinals={"q": ["0", "1", "2", "3", "4", "5"]})
+    carver = OrdinalCarver(min_freq=0.03, max_n_mod=6, features=features, target_scale="level")
+    carver.fit(X, y)
+
+    # pinned from the previous default (TargetMeanLevel) on this exact scenario
+    assert carver.features[0].content == {"0": ["1", "2", "3", "0"], "4": ["5", "4"]}
+    assert "target_mean_level" in carver.features[0].statistics.columns
+
+
+def test_ordinal_carver_dict_scale_end_to_end():
+    """A {level: value} scale carves exactly like re-encoding y with those values and
+    using target_scale="level" — the dict reaches both the pre-sort and viability."""
+    dict_content = _fit_encoded(4, target_scale={1: 1.0, 2: 2.0, 3: 3.0, 4: 10.0})
+    reencoded_content = _fit_encoded(10, target_scale="level")
+    assert dict_content == reencoded_content
+
+
+def test_ordinal_carver_dict_scale_missing_level_raises():
+    """A scale not covering every observed train level raises at fit."""
+    X, y = _make_encoded_data(4)
+    carver = OrdinalCarver(
+        min_freq=0.05,
+        max_n_mod=3,
+        features=Features(categoricals=["cat"]),
+        target_scale={1: 1.0, 2: 2.0, 3: 3.0},  # level 4 missing
+    )
+    with raises(ValueError):
+        carver.fit(X, y)
+
+
+def test_ordinal_carver_custom_level_rate_drives_presort():
+    """An explicit TargetMeanLevel() evaluator rate with the default target_scale is
+    kept, and the pre-sort follows it (no ridit/level mismatch): the carving equals
+    target_scale="level"'s."""
+    explicit_content = _fit_encoded(10, combination_evaluator=KendallTauCCombinations(target_rate=TargetMeanLevel()))
+    assert explicit_content == _fit_encoded(10, target_scale="level")
 
 
 @mark.parametrize("evaluator", ORDINAL_EVALUATORS)

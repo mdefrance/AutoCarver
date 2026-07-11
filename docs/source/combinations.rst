@@ -379,13 +379,16 @@ the merges of *comparable-risk* modalities — and the resulting carved feature
 has monotone target rates across its bins, the layout scorecard-style models
 expect.
 
-For an **ordinal** target the mean is taken over the integer *encoding* of
-the levels, so it depends on the levels' spacing, not only their order:
-encoding the same four levels as :math:`\{1, 2, 3, 4\}` or
-:math:`\{1, 2, 3, 10\}` can produce different modality orderings, even though
-the :ref:`tau statistics <OrdinalCombinations>` that score the combinations
-are rank-based and encoding-invariant. See :ref:`RiditOrdering` below for the
-upcoming encoding-invariant alternative.
+For an **ordinal** target a raw mean over the integer *encoding* of the levels
+would depend on the levels' spacing, not only their order: encoding the same
+four levels as :math:`\{1, 2, 3, 4\}` or :math:`\{1, 2, 3, 10\}` could produce
+different modality orderings, even though the :ref:`tau statistics
+<OrdinalCombinations>` that score the combinations are rank-based and
+encoding-invariant. :class:`OrdinalCarver` therefore maps the levels through
+the scale resolved from its ``target_scale`` mode before taking the mean —
+train ridits by default (see :ref:`RiditOrdering` below), the raw encoding
+with ``target_scale="level"`` (count targets), or user-declared representative
+values with a ``{level: value}`` dict.
 
 .. _BinaryTargetRates:
 
@@ -422,30 +425,32 @@ Ordinal target rates
 
 For ordinal targets the per-modality input is the ordered contingency table
 (feature groups × ordinal target levels) — the binary crosstab generalised from
-two columns to one column per ordinal level. The default ``TargetMeanLevel`` is
-the per-group **mean ordinal level** :math:`\sum_j \text{level}_j \cdot n_{gj} /
-n_{g+}`, read from the (integer) crosstab columns. It is monotone in the target's
-order, so it drives both the ``min_freq`` viability test and the train/dev
-rank-preservation veto exactly like the binary/continuous target means.
+two columns to one column per ordinal level. The default ``TargetMeanRidit`` is
+the per-group count-weighted **mean train-ridit** of the levels (see
+:ref:`RiditOrdering` below); ``TargetMeanLevel`` is the per-group **mean
+ordinal level** :math:`\sum_j \text{level}_j \cdot n_{gj} / n_{g+}`, read from
+the (integer) crosstab columns or from user-declared ``level_values``. Both
+are monotone in the target's order, so they drive the ``min_freq`` viability
+test and the train/dev rank-preservation veto exactly like the
+binary/continuous target means. Rather than instantiating these directly,
+declare the scale through :class:`OrdinalCarver`'s ``target_scale`` — the
+carver derives the modality pre-sort from the same resolved rate, so the two
+stages can never disagree.
+
+.. autoclass:: AutoCarver.combinations.ordinal.ordinal_target_rates.TargetMeanRidit
 
 .. autoclass:: AutoCarver.combinations.ordinal.ordinal_target_rates.TargetMeanLevel
 
 .. _RiditOrdering:
 
-Ridit scoring (upcoming)
-""""""""""""""""""""""""
+Ridit scoring
+"""""""""""""
 
-.. admonition:: Upcoming
-   :class: note
-
-   Not yet released — this section documents the planned ``target_scale``
-   option of :class:`OrdinalCarver`.
-
-As noted :ref:`above <TargetMeanOrdering>`, the current ordinal pre-sort (and
-the ``TargetMeanLevel`` viability rate) consume the integer *encoding* of the
-levels numerically, while the tau statistics scoring the combinations are
-purely rank-based. The planned fix scores each level by its **ridit** against
-the train marginal:
+As noted :ref:`above <TargetMeanOrdering>`, a raw-encoding ordinal pre-sort
+(and the ``TargetMeanLevel`` viability rate) consume the integer *encoding* of
+the levels numerically, while the tau statistics scoring the combinations are
+purely rank-based. The default ``target_scale="ridit"`` instead scores each
+level by its **ridit** against the train marginal:
 
 .. math::
 
@@ -460,14 +465,13 @@ re-encoding of the levels: :math:`\{1, 2, 3, 4\}` and
 :math:`\{1, 2, 3, 10\}` carve identically.
 
 Not every integer-encoded ordered target is order-only, though, so the scale
-becomes a user-declared ``target_scale`` mode driving both the pre-sort and
-the viability rate from a single resolved scale:
+is a user-declared ``target_scale`` mode driving both the pre-sort and the
+viability rate from a single resolved scale:
 
 * ``"ridit"`` (**default**) — order-only levels (*Poor* / *Fair* / *Good*):
   encoding-invariant, semantically honest for "ordinal".
 * ``"level"`` — count targets (e.g. 0–5 claims), where the encoding *is* the
-  scale and the mean level (expected count) is the right summary; identical
-  to the current behaviour.
+  scale and the mean level (expected count) is the right summary.
 * ``{level: value}`` — known representative values per level (e.g. a
   calibrated default probability per rating grade), strictly increasing.
 

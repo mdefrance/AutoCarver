@@ -12,7 +12,10 @@ from typing import Self
 
 import pandas as pd
 
-from AutoCarver.discretizers.qualitatives.categorical_discretizer import series_target_rate
+from AutoCarver.discretizers.qualitatives.categorical_discretizer import (
+    map_y_level_scores,
+    series_target_rate,
+)
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, ProcessingConfig, Sample
 from AutoCarver.discretizers.utils.frequency_ci import is_significantly_below
 from AutoCarver.discretizers.utils.type_discretizers import ensure_qualitative_dtypes
@@ -228,6 +231,9 @@ class NestedDiscretizer(BaseDiscretizer):
 
     def _target_sort(self, X: pd.DataFrame, y: pd.Series) -> None:
         """Sorts each feature's buckets by target rate (mirrors CategoricalDiscretizer)."""
+        # scoring y levels when a scale was resolved (e.g. train ridits from OrdinalCarver)
+        if self.config.y_level_scores is not None:
+            y = map_y_level_scores(y, self.config.y_level_scores, self.__name__)
         target_rates = X[self.features.versions].apply(series_target_rate, y=y, axis=0)
         self.features.update(
             {feature: list(sorted_values) for feature, sorted_values in target_rates.items()},
