@@ -2,14 +2,22 @@
 for ordinal targets (ordered, integer-encoded modalities).
 """
 
+from typing import Literal
+
 import numpy as np
 import pandas as pd
 
 from AutoCarver.carvers.binary_carver import get_crosstab
 from AutoCarver.carvers.utils.base_carver import BaseCarver, Samples, parallel_aggregate
 from AutoCarver.combinations import CombinationEvaluator, KendallTauCCombinations
+from AutoCarver.combinations.ordinal.ordinal_target_rates import (
+    OrdinalTargetRate,
+    TargetMeanLevel,
+    TargetMeanRidit,
+)
 from AutoCarver.discretizers.utils.base_discretizer import ProcessingConfig
-from AutoCarver.features import Features
+from AutoCarver.discretizers.utils.ridits import ridits_from_counts
+from AutoCarver.features import BaseFeature, Features
 from AutoCarver.utils import extend_docstring
 
 
@@ -25,6 +33,21 @@ class OrdinalCarver(BaseCarver):
     target's while favouring robust, parsimonious cardinality. :ref:`tau_b` and
     the original Somers' D (:ref:`somersd`) are also available via
     ``combination_evaluator``.
+
+    ``target_scale`` declares how the integer encoding of the levels should be
+    read (it drives the modality pre-sort and the viability rate; the rank-based
+    tau statistics are encoding-invariant either way):
+
+    * ``"ridit"`` (**default**) — order-only levels (*Poor* / *Fair* / *Good*):
+      levels are scored by their train ridits, invariant under any strictly
+      increasing re-encoding.
+    * ``"level"`` — count targets (e.g. 0–5 claims), where the encoding *is*
+      the scale and the mean level (expected count) is the right summary.
+    * ``{level: value}`` — known representative values per level (e.g. a
+      calibrated default probability per rating grade), strictly increasing.
+
+    When individual continuous target values are available, use
+    :class:`ContinuousCarver` instead.
     """
 
     __name__ = "OrdinalCarver"
@@ -38,6 +61,7 @@ class OrdinalCarver(BaseCarver):
         max_n_mod: int,
         *,
         combination_evaluator: CombinationEvaluator | None = None,
+        target_scale: Literal["ridit", "level"] | dict = "ridit",
         config: ProcessingConfig | None = None,
     ) -> None:
         """
@@ -50,6 +74,11 @@ class OrdinalCarver(BaseCarver):
 
             Choose from: :class:`KendallTauCCombinations` (default),
             :class:`KendallTauBCombinations`, :class:`SomersDCombinations`.
+
+        target_scale : "ridit", "level" or dict, optional
+            How the integer encoding of the target levels is read, by default
+            ``"ridit"``. A dict maps each level to its (strictly increasing) representative value. Conflicts with a
+            ``combination_evaluator`` carrying an explicit non-ridit ``target_rate``.
         """
         if combination_evaluator is None:
             combination_evaluator = KendallTauCCombinations()
@@ -57,6 +86,18 @@ class OrdinalCarver(BaseCarver):
             raise ValueError(
                 f"[{self.__name__}] {type(combination_evaluator).__name__} is not suited for ordinal targets. "
                 f"Choose from: KendallTauCCombinations, KendallTauBCombinations, SomersDCombinations."
+            )
+
+        # resolving target_scale into the evaluator's rate — the single source of truth
+        # both the viability tests and the modality pre-sort derive from.
+        if isinstance(combination_evaluator.target_rate, TargetMeanRidit):
+            # the evaluator carries the default rate (no explicit user choice)
+            combination_evaluator.target_rate = _target_rate_from_scale(target_scale, self.__name__)
+        elif target_scale != "ridit":
+            raise ValueError(
+                f"[{self.__name__}] both target_scale={target_scale!r} and an explicit "
+                f"target_rate ({type(combination_evaluator.target_rate).__name__}) were "
+                "provided; declare the scale through only one of them."
             )
 
         super().__init__(
@@ -85,6 +126,20 @@ class OrdinalCarver(BaseCarver):
                 f"[{self.__name__}] y must be integer-encoded ordered levels (e.g. 1..K); got non-integer values."
             )
 
+        # deriving the modality pre-sort scale from the resolved target rate (single source
+        # of truth: pre-sort and viability can never disagree) before super() discretizes
+        target_rate = self.combination_evaluator.target_rate
+        if isinstance(target_rate, TargetMeanRidit):
+            self.config.y_level_scores = ridits_from_counts(samples.train.y.value_counts())
+        elif isinstance(target_rate, TargetMeanLevel) and target_rate.level_values is not None:
+            uncovered = [level for level in y_values if level not in target_rate.level_values]
+            if len(uncovered) > 0:
+                raise ValueError(
+                    f"[{self.__name__}] observed y levels {uncovered} are missing from "
+                    "target_scale; provide a value for every train level."
+                )
+            self.config.y_level_scores = dict(target_rate.level_values)
+
         return super()._prepare_samples(samples)
 
     def _aggregator(self, X: pd.DataFrame, y: pd.Series) -> dict[str, pd.Series | pd.DataFrame | None]:
@@ -94,3 +149,39 @@ class OrdinalCarver(BaseCarver):
         Threaded across features when ``n_jobs > 1`` (pd.crosstab emits one column per ordinal
         level, sorted ascending — correct ordinal column order)."""
         return parallel_aggregate(get_crosstab, self.features, X, y, self.config.n_jobs)
+
+    def _print_xagg(
+        self,
+        feature: BaseFeature,
+        xagg: pd.Series | pd.DataFrame | None,
+        message: str,
+        *,
+        xagg_dev: pd.Series | pd.DataFrame | None = None,
+    ) -> None:
+        """Fits the ridit reference from the raw train crosstab before the pre-combination
+        "Raw distribution" print (mirrors
+        :meth:`~AutoCarver.carvers.multiclass_carver.MulticlassCarver._print_xagg`).
+
+        Without this, a verbose fit would call ``target_rate.compute`` (via
+        :meth:`BaseCarver._pretty_print`) before :meth:`get_best_combination`
+        has had a chance to fit the reference (see
+        :meth:`~AutoCarver.combinations.ordinal.ordinal_target_rates.TargetMeanRidit.fit_reference`).
+        This fit only serves the print: ``get_best_combination`` refits the
+        reference before scoring any candidate — from the same crosstab, minus
+        the NaN row when the feature has NaNs — so carving never depends on it.
+        """
+        target_rate = self.combination_evaluator.target_rate
+        if message == "Raw distribution" and xagg is not None and isinstance(target_rate, OrdinalTargetRate):
+            target_rate.fit_reference(xagg)  # type: ignore
+        super()._print_xagg(feature, xagg, message, xagg_dev=xagg_dev)
+
+
+def _target_rate_from_scale(target_scale: Literal["ridit", "level"] | dict, name: str) -> OrdinalTargetRate:
+    """Resolves a ``target_scale`` mode into its :class:`OrdinalTargetRate`."""
+    if isinstance(target_scale, dict):
+        return TargetMeanLevel(level_values=target_scale)
+    if target_scale == "ridit":
+        return TargetMeanRidit()
+    if target_scale == "level":
+        return TargetMeanLevel()
+    raise ValueError(f"[{name}] target_scale must be 'ridit', 'level' or a {{level: value}} dict, got {target_scale!r}")

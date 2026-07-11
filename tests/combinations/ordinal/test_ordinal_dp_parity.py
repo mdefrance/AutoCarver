@@ -85,6 +85,8 @@ def _select(evaluator: CombinationEvaluator, xtab: pd.DataFrame, feature: Ordina
     ev.feature.dropna = False
     ev.max_n_mod, ev.min_freq, ev.dropna, ev.min_freq_alpha = 6, 0.03, False, 0.05
     ev.samples.set(train=xtab.copy())
+    # the base enumerate path bypasses the DP override where fit_reference lives
+    ev.target_rate.fit_reference(ev.samples.train.xagg)
     best = ev._get_best_combination_non_nan() if use_dp else CombinationEvaluator._get_best_combination_non_nan(ev)
     return None if best is None else [list(group) for group in best["combination"]]
 

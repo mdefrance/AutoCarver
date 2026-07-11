@@ -146,8 +146,13 @@ class CategoricalDiscretizer(BaseDiscretizer):
         An unordered (multiclass) target has no numeric mean to sort by, so it is
         ordered instead by correspondence-analysis first-axis score (the
         chi²-optimal 1-D embedding) — see :func:`series_ca_order`. Binary
-        (0/1) and ordinal (integer-level) targets keep the mean-target-rate order.
+        (0/1) and ordinal (integer-level) targets keep the mean-target-rate order,
+        over ``config.y_level_scores`` when a per-level scale was resolved (e.g.
+        train ridits from :class:`~AutoCarver.carvers.ordinal_carver.OrdinalCarver`).
         """
+        # scoring y levels when a scale was resolved (mapped y is numeric → mean branch)
+        if self.config.y_level_scores is not None:
+            y = map_y_level_scores(y, self.config.y_level_scores, self.__name__)
         sorter = series_target_rate if pd.api.types.is_numeric_dtype(y) else series_ca_order
 
         # computing target rate (or CA score) per modality for ordering
@@ -158,6 +163,21 @@ class CategoricalDiscretizer(BaseDiscretizer):
             {feature: list(sorted_values) for feature, sorted_values in target_rates.items()},
             sorted_values=True,
         )
+
+
+def map_y_level_scores(y: pd.Series, scores: dict, name: str) -> pd.Series:
+    """Maps an integer-encoded ordinal target through per-level scores.
+
+    Raises when the mapping introduces NaN for a non-NaN y value (a level missing
+    from ``scores``) — guards standalone misuse; the carver resolving the scale
+    guarantees coverage of every observed train level.
+    """
+    mapped = y.map(scores)
+    unmapped = mapped.isna() & y.notna()
+    if unmapped.any():
+        missing = sorted(set(y[unmapped]))
+        raise ValueError(f"[{name}] y levels {missing} are missing from config.y_level_scores")
+    return mapped
 
 
 def series_target_rate(x: pd.Series, y: pd.Series, dropna: bool = True, ascending=True) -> dict:

@@ -50,6 +50,12 @@ class ProcessingConfig:
     Leaving them ``None`` is what lets a partial config (e.g.
     ``ProcessingConfig(verbose=True)``) toggle one field without silently
     flipping the carver-friendly defaults — set them explicitly to override.
+
+    ``y_level_scores`` is a ``{target level: score}`` scale the qualitative
+    pre-sort maps ``y`` through before computing per-modality target means
+    (e.g. train ridits resolved by
+    :class:`~AutoCarver.carvers.ordinal_carver.OrdinalCarver` from its
+    ``target_scale``). ``None`` (default) sorts by the raw target mean.
     """
 
     copy: bool = True
@@ -58,6 +64,7 @@ class ProcessingConfig:
     verbose: bool = False
     n_jobs: int = 1
     min_freq_alpha: float = 0.05
+    y_level_scores: dict | None = None
 
 
 # Backward-compatible alias: this config was historically named ``DiscretizerConfig`` but is

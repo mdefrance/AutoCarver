@@ -6,7 +6,11 @@ from abc import ABC
 import numpy as np
 import pandas as pd
 
-from AutoCarver.combinations.ordinal.ordinal_target_rates import OrdinalTargetRate, TargetMeanLevel
+from AutoCarver.combinations.ordinal.ordinal_target_rates import (
+    OrdinalTargetRate,
+    TargetMeanLevel,
+    TargetMeanRidit,
+)
 from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample, CombinationEvaluator
 from AutoCarver.combinations.utils.combinations import combination_formatter, group_crosstab
 from AutoCarver.combinations.utils.target_rate import TargetRate
@@ -38,7 +42,7 @@ class OrdinalCombinationEvaluator(CombinationEvaluator[pd.DataFrame], ABC):
     """
 
     is_y_ordinal = True
-    _target_rate_classes: list[type[OrdinalTargetRate]] = [TargetMeanLevel]
+    _target_rate_classes: list[type[OrdinalTargetRate]] = [TargetMeanRidit, TargetMeanLevel]
     # narrow inherited attribute: ordinal evaluators always carry an OrdinalTargetRate
     # (enforced by _init_target_rate).
     target_rate: OrdinalTargetRate
@@ -48,7 +52,7 @@ class OrdinalCombinationEvaluator(CombinationEvaluator[pd.DataFrame], ABC):
     def _init_target_rate(self, target_rate: TargetRate[pd.DataFrame] | None) -> OrdinalTargetRate:
         """Initializes target rate."""
         if target_rate is None:
-            return TargetMeanLevel()
+            return TargetMeanRidit()
         if not isinstance(target_rate, OrdinalTargetRate):
             raise ValueError("target_rate must be an OrdinalTargetRate")
         return target_rate
@@ -111,6 +115,10 @@ class OrdinalCombinationEvaluator(CombinationEvaluator[pd.DataFrame], ABC):
 
         if self.samples.train.shape[0] <= 1:
             return None
+
+        # fixing the ridit reference from the raw (un-grouped) train crosstab, before any
+        # combination (train or dev) is scored against it (no-op for TargetMeanLevel).
+        self.target_rate.fit_reference(self.samples.train.xagg)  # type: ignore
 
         self._historize_raw_combination()
 
