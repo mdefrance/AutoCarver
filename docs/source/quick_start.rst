@@ -102,6 +102,25 @@ Fitting AutoCarver
     for both Kruskal-H and Pearson :math:`\chi^2`; statistically equivalent to the
     legacy enumerate-and-score path.
 
+Recommended settings per use case
+----------------------------------
+
+.. list-table::
+   :header-rows: 1
+
+   * - Use case
+     - Settings
+     - Why
+   * - Credit scoring (default)
+     - ``min_freq=0.02, max_n_mod=5`` + ``TschuprowtCombinations()`` + ``X_dev`` or ``cv=5``
+     - Few, robust modalities that survive regulator-grade stability checks.
+   * - Rare events (fraud, claims)
+     - ``min_freq=0.01, max_n_mod=5`` + ``CramervCombinations()`` + ``cv=5``
+     - Lower ``min_freq`` keeps thin-but-informative modalities; CV guards against overfitting them.
+   * - Fast exploration
+     - ``min_freq=0.05, max_n_mod=4``, no dev set
+     - Coarser bins, fastest search; add a dev set before trusting the result.
+
 
 
 Applying AutoCarver

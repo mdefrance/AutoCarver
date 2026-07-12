@@ -31,8 +31,8 @@ class ContinuousCarver(BaseCarver):
     def __init__(
         self,
         features: Features,
-        min_freq: float,
-        max_n_mod: int,
+        min_freq: float = 0.02,
+        max_n_mod: int = 5,
         *,
         combination_evaluator: CombinationEvaluator | None = None,
         config: ProcessingConfig | None = None,

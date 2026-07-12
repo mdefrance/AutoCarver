@@ -196,6 +196,9 @@ class BaseCarver(BaseDiscretizer, ABC):
                 Set between ``0.01`` (slower, less robust) and ``0.05`` (faster,
                 more robust).
 
+            Defaults to ``0.02`` — the recommended starting point; see the
+            recipes table in the Quick Start.
+
         max_n_mod : int
             Maximum number of modalities per carved feature. Forwarded to the
             configured :class:`CombinationEvaluator`.
@@ -207,6 +210,9 @@ class BaseCarver(BaseDiscretizer, ABC):
             .. tip::
                 Set between ``5`` (faster, more robust) and ``7`` (slower, less
                 robust).
+
+            Defaults to ``5`` — the recommended starting point; see the
+            recipes table in the Quick Start.
 
         combination_evaluator : CombinationEvaluator, optional
             Pre-built :class:`CombinationEvaluator` instance used to measure
