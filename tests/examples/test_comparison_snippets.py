@@ -46,25 +46,23 @@ def test_autocarver_snippet(titanic_split: tuple[pd.DataFrame, pd.DataFrame]) ->
 
 @pytest.mark.network
 def test_optbinning_snippet(titanic_split: tuple[pd.DataFrame, pd.DataFrame]) -> None:
-    """optbinning block from comparison.rst — one binner per feature."""
+    """optbinning block from comparison.rst — BinningProcess, all columns in one fit."""
     optbinning = pytest.importorskip("optbinning")
 
     train, _ = titanic_split
-    columns = {
-        "Age": "numerical",
-        "Fare": "numerical",
-        "Siblings/Spouses Aboard": "numerical",
-        "Parents/Children Aboard": "numerical",
-        "Sex": "categorical",
-        "Pclass": "categorical",
-    }
-    train_binned = pd.DataFrame(index=train.index)
-    for name, dtype in columns.items():
-        ob = optbinning.OptimalBinning(name=name, dtype=dtype, solver="cp")
-        ob.fit(train[name].to_numpy(), train[TARGET].to_numpy())
-        train_binned[name] = ob.transform(train[name].to_numpy(), metric="bins")
+    variable_names = [*NUMERIC_COLS, "Sex", "Pclass"]
+    binning_process = optbinning.BinningProcess(
+        variable_names=variable_names,
+        categorical_variables=["Sex", "Pclass"],
+    )
+    binning_process.fit(train[variable_names], train[TARGET])
+    train_binned = pd.DataFrame(
+        binning_process.transform(train[variable_names], metric="bins"),
+        columns=variable_names,
+        index=train.index,
+    )
 
-    assert set(train_binned.columns) == set(columns)
+    assert set(train_binned.columns) == set(variable_names)
     assert len(train_binned) == len(train)
 
 

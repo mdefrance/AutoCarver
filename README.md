@@ -104,11 +104,14 @@ train_processed = carver.fit_transform(train, train[target], X_dev=dev, y_dev=de
 dev_processed = carver.transform(dev)
 
 # 5. Inspect the carved buckets, target rate, and association
-print(carver.summary)
+carver.summary
 
 # 6. Persist for later use
 carver.save(Path("titanic_carver.json"))
-# carver = BinaryCarver.load(Path("titanic_carver.json"))
+
+# 7. Load the carver back in
+carver = BinaryCarver.load(Path("titanic_carver.json"))
+dev_processed = carver.transform(dev)
 ```
 <!-- quick-start:end -->
 
@@ -139,20 +142,14 @@ Two questions worth answering before your next model review: can you defend ever
 
 |                                                   | **Manual binning**                                  | **AutoCarver**                                                     | [**optbinning**](https://github.com/guillermo-navas-palencia/optbinning) | [**sklearn KBinsDiscretizer**](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.KBinsDiscretizer.html) |
 | ------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
-| Supervised (uses `y`)                             | only as far as your patience goes                    | yes                                                                | yes                                                                      | no                                                                              |
-| Algorithm                                         | eyeballing distributions, notebook by notebook       | **exhaustive search** over admissible combinations                 | mixed-integer program (CBC)                                              | quantile / uniform / k-means                                                    |
-| Optimality for given `min_freq` / `max_n_mod` / metric | none — first acceptable grouping wins           | **guaranteed — best of every admissible combination**              | provably optimal under MIP constraints                                   | n/a — no target objective                                                       |
+| Algorithm                                         | eyeballing distributions, notebook by notebook       | **exhaustive search** over admissible combinations                 | CART pre-binning, then CP solver (CP-SAT default; MIP optional)          | quantile / uniform / k-means — unsupervised                                     |
+| Optimality for given `min_freq` / `max_n_mod` / metric | none — first acceptable grouping wins           | **guaranteed — best of every admissible combination**              | provably optimal over its pre-bins, under its constraints                | n/a — no target objective                                                       |
 | Target types                                      | any, at ~1 feature/hour                              | **binary, multiclass, ordinal, continuous**                        | binary, multiclass, continuous                                           | n/a                                                                             |
-| Numeric **and** categorical **and** ordinal in one `fit` | each feature is its own project               | yes                                                                | one binner per feature                                                   | numeric only                                                                    |
-| Ordinal features with enforced order              | if you remember to                                   | **yes — `OrdinalDiscretizer` preserves your declared order**       | via `user_splits` workaround (loses ordering)                            | no                                                                              |
-| `NaN` handled as its own modality                 | usually forgotten                                    | yes                                                                | yes                                                                      | no (raises)                                                                     |
+| All feature types in one `fit` (numeric, categorical, ordinal, `NaN`) | each feature is its own project | **yes — declared ordinal order enforced, `NaN` as its own modality** | yes via `BinningProcess`; no first-class ordinal type (`user_splits` workaround) | numeric only; `NaN` raises                                                      |
 | Held-out dev-set robustness check                 | rarely — too tedious to script per feature           | **yes — dev set + optional k-fold CV, built into `fit`**           | no (script CV yourself)                                                  | no                                                                              |
 | Per-bin stats + carving history after `fit`       | scattered notebook cells                             | **`features.summary`, `features.history`**                         | `binning_table`                                                          | no                                                                              |
-| JSON round-trip persistence                       | copy-pasted bound lists                              | yes (`carver.save("...json")`)                                     | via `pickle`                                                             | via `pickle`                                                                    |
-| sklearn `Pipeline` compatible                     | no                                                   | yes                                                                | yes                                                                      | yes                                                                             |
-| Feature pre-selection helpers                     | no                                                   | `ClassificationSelector`, `RegressionSelector`                     | no                                                                       | no                                                                              |
 
-Side-by-side runnable snippets and a "when to pick which" guide live on the [comparison page](https://autocarver.readthedocs.io/en/latest/comparison.html).
+All three libraries are sklearn-`Pipeline` compatible; AutoCarver adds JSON round-trip persistence (`carver.save("...json")`) and feature pre-selection helpers (`ClassificationSelector`, `RegressionSelector`). The full feature matrix, side-by-side runnable snippets, and a "when to pick which" guide live on the [comparison page](https://autocarver.readthedocs.io/en/latest/comparison.html).
 
 
 ## Documentation

@@ -108,6 +108,9 @@ exclude = ["*.ipynb"]
 select = ["E", "W", "F", "I", "B", "C4", "PTH", "UP", "C90", "FURB", "ERA"]
 ignore = ["B905", "ERA001"]
 
+[tool.ruff.lint.per-file-ignores]
+"docs/source/examples/quick_start.py" = ["B018"]
+
 [tool.pytest.ini_options]
 addopts = "-n auto --tb=short -q"
 testpaths = ["tests"]
