@@ -39,7 +39,7 @@ def main() -> None:
     )
 
     # 4. Fit the carver (dev set drives the robustness checks)
-    carver = BinaryCarver(features=features, min_freq=0.05, max_n_mod=5)
+    carver = BinaryCarver(features=features)
     train_processed = carver.fit_transform(train, train[target], X_dev=dev, y_dev=dev[target])
     dev_processed = carver.transform(dev)
 
