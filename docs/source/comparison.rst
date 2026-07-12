@@ -11,6 +11,8 @@ Three Python libraries are usually considered for feature discretization:
 
 This page compares them on scope, algorithm, and ergonomics so you can pick the right tool for your problem. The runnable code snippets are unit-tested in ``tests/examples/test_comparison_snippets.py``.
 
+The question is not only what each library adds, but what you lose without it: skip ordinal handling and the declared modality order of your features is gone; skip a dev-set veto and nothing stops a bin that only exists in your training sample.
+
 
 Scope at a glance
 -----------------
