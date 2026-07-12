@@ -1,9 +1,12 @@
 """Keeps docs/source/examples/quick_start_colab.ipynb in sync with quick_start.py.
 
-The notebook's code cells (minus the leading ``%pip install`` cell) must match
-the sentinel-extracted quick-start snippet — the same mechanism that keeps the
-README honest (``docs/sync_readme.py``) keeps the Colab notebook honest.
+The notebook's code cells (minus the leading ``%pip install`` cell and the
+trailing ``carver.summary`` display cell) must match the sentinel-extracted
+quick-start snippet — the same mechanism that keeps the README honest
+(``docs/sync_readme.py``) keeps the Colab notebook honest.
 """
+
+from __future__ import annotations
 
 import importlib.util
 import json
@@ -34,8 +37,11 @@ def test_colab_notebook_matches_quick_start_snippet() -> None:
     code_cells = ["".join(cell["source"]) for cell in notebook["cells"] if cell["cell_type"] == "code"]
 
     assert code_cells[0].startswith("%pip install autocarver"), "first cell must install the package"
+    assert _normalize(code_cells[-1]) == ["carver.summary"], (
+        "last cell must display carver.summary as its final expression"
+    )
 
-    notebook_body = "\n".join(code_cells[1:])
+    notebook_body = "\n".join(code_cells[1:-1])
     assert _normalize(notebook_body) == _normalize(_extract_snippet()), (
         "notebook code cells drifted from docs/source/examples/quick_start.py; "
         "update the notebook to match the sentinel-extracted snippet"
