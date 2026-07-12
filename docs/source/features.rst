@@ -17,6 +17,26 @@ Features
     :meth:`Features.from_list` to wrap already-instantiated feature objects.
 
 
+Auditing and adjusting carved bins
+-----------------------------------
+
+Carving is transparent: inspect what was decided, then override it if domain
+knowledge says otherwise. A manually merged bin is applied by ``transform``
+exactly like a carved one.
+
+.. code-block:: python
+
+    binary_carver.fit(train_set, train_set[target], X_dev=dev_set, y_dev=dev_set[target])
+
+    feature = features("ordinal1")
+    print(feature.summary)       # per-bin frequencies and target rates
+    print(feature.history)       # every combination tried, with viability verdicts
+
+    # merge two bins you consider equivalent, then re-transform
+    feature.group(["low", "medium"], "medium")
+    x_discretized = binary_carver.transform(train_set)
+
+
 FeaturesConfig
 ^^^^^^^^^^^^^^
 

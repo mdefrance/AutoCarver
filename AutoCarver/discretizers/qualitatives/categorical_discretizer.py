@@ -123,7 +123,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
             feature.has_default = True
 
             # grouping rare values in default value
-            feature.group(values_to_group, feature.default)
+            feature.group(values_to_group, feature.default, convert_labels=False)
             X.loc[X[feature.version].isin(values_to_group), feature.version] = feature.default
 
         return X

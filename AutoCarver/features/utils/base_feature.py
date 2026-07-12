@@ -445,12 +445,11 @@ class BaseFeature(ABC):
         if column.isna().any() or (column == self.nan).any():
             raise ValueError(f"[{self}] Unexpected NaNs.")
 
-    def group(self, to_discard: list[str], to_keep: str) -> None:
-        """Groups a list of values into a kept value."""
+    def group(self, to_discard: list[str], to_keep: str, convert_labels: bool = True) -> None:
+        """Groups a list of labels (or raw values, when ``convert_labels=False``) into a kept one."""
 
-        values = GroupedList(self.values)
-        values.group(to_discard, to_keep)
-        self.update(values, replace=True)
+        grouped = GroupedList({to_keep: [*to_discard, to_keep]})
+        self.update(grouped, convert_labels=convert_labels)
 
     # ------------------------------------------------------------------
     # serialization
