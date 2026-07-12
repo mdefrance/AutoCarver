@@ -60,7 +60,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
                 sample.X,
                 self.min_freq,
                 self.__name__,
-                rescue_rare=self.config.rescue_rare,
+                rescue_rare=bool(self.config.rescue_rare),
             )
 
         # converting non-str columns

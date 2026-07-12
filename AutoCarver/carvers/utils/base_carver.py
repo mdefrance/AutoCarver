@@ -562,7 +562,7 @@ class BaseCarver(BaseDiscretizer, ABC):
             min_freq=self.min_freq,
             dropna=bool(self.config.dropna),
             min_freq_alpha=self.config.min_freq_alpha,
-            rescue=self.config.rescue_rare,
+            rescue=bool(self.config.rescue_rare),
         )
 
         with Pool(processes=self.config.n_jobs) as pool:
@@ -610,7 +610,7 @@ class BaseCarver(BaseDiscretizer, ABC):
             dropna=bool(self.config.dropna),
             min_freq_alpha=self.config.min_freq_alpha,
             folds_xagg=self._folds_for_feature(xaggs_folds, feature.version),
-            rescue=self.config.rescue_rare,
+            rescue=bool(self.config.rescue_rare),
         )
 
         # printing carved distribution, for found, suitable combination
