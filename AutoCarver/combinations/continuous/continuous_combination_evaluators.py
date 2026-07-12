@@ -288,10 +288,10 @@ class ContinuousCombinationEvaluator(CombinationEvaluator[pd.Series], ABC):
                 raw_labels.remove(self.feature.nan)
             self.samples.dropna(self.feature.nan)
 
+        self._historize_raw_combination()
+
         if self.samples.train.shape[0] <= 1:
             return None
-
-        self._historize_raw_combination()
 
         # Pre-rank y once for the whole feature (same as _compute_associations).
         raw_xagg = self.samples.train.xagg
@@ -364,11 +364,18 @@ class ContinuousCombinationEvaluator(CombinationEvaluator[pd.Series], ABC):
            re-tested / re-historized.
 
         Falls back to the parent implementation when the guard condition
-        (``self.dropna and feature.has_nan and best_combination is not None``)
-        is not met — matches the legacy short-circuit behaviour.
+        (``self.dropna and feature.has_nan``) is not met — matches the legacy
+        short-circuit behaviour. Runs even when the non-nan search failed
+        (``best_combination is None``): the nan row is restored from raw
+        before reading per-modality stats below.
         """
-        if not (self.dropna and self.feature.has_nan and best_combination is not None):
+        if not (self.dropna and self.feature.has_nan):
             return super()._get_best_combination_with_nan(best_combination)
+
+        # non-nan search failed -> xaggs are still nan-filtered; restore the nan
+        # row before reading per-modality stats below
+        if best_combination is None:
+            self.samples.restore_raw()
 
         if self.verbose:
             print(f"[{self.__name__}] Grouping NaNs")

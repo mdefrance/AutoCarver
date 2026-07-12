@@ -10,3 +10,4 @@ docs/source/bin/*
 **.venv/*
 .python-version
 work/*
+.kaggle/*

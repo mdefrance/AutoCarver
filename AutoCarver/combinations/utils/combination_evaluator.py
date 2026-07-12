@@ -145,6 +145,12 @@ class AggregatedSamples:
         if train_filtered is not None:
             self.train.xagg = train_filtered
 
+    def restore_raw(self) -> None:
+        """Resets each sample's xagg from its raw copy (undoes ``dropna`` filtering)."""
+        for sample in [self.train, *self._validation_samples()]:
+            if sample.raw is not None:
+                sample.xagg = sample.raw.copy()
+
     def set_indices_to_values(self, feature: BaseFeature) -> None:
         """Resets the index of the samples"""
 
@@ -355,11 +361,12 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
             # removing nans from crosstabs
             self.samples.dropna(self.feature.nan)
 
+        # historizing raw combination (also for single-modality bail-outs, so the
+        # dropped feature keeps a legible history)
+        self._historize_raw_combination()
+
         # checking for non-nan values
         if self.samples.train.shape[0] > 1:
-            # historizing raw combination
-            self._historize_raw_combination()
-
             # all possible consecutive combinations
             combinations = consecutive_combinations(raw_labels, self.max_n_mod)
 
@@ -371,17 +378,48 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
     def _get_best_combination_with_nan(self, best_combination: dict | None) -> dict | None:
         """Computes associations of the tab for each combination with nans"""
 
-        # grouping NaNs if requested to drop them (dropna=True)
-        if self.dropna and self.feature.has_nan and best_combination is not None:
+        # grouping NaNs if requested to drop them (dropna=True). Runs even when the
+        # non-nan search failed (best_combination is None): the NaN placements —
+        # including the all-values-vs-NaN partition — may still yield a viable
+        # combination (e.g. a feature whose only signal is missing vs present).
+        if self.dropna and self.feature.has_nan:
             # verbose if requested
             if self.verbose:
                 print(f"[{self.__name__}] Grouping NaNs")
+
+            # non-nan search failed -> xaggs are still nan-filtered (no combination
+            # was applied); restore the nan row for the nan fan-out
+            if best_combination is None:
+                self.samples.restore_raw()
 
             # adding combinations with NaNs
             combinations = nan_combinations(self.feature, self.max_n_mod)
 
             # getting most associated combination
             best_combination = self._get_best_association(combinations)
+
+        # dropna=False: NaN can never be merged into another group (it must stay
+        # untouched in the output, see Features.unfillna, which reverts a group's
+        # label back to raw nan only when that group contains nothing but nan rows).
+        # So the only candidate that's ever safe to test here is "all non-nan values
+        # merged together, NaN on its own" — tried only when the non-nan search found
+        # nothing on its own, so a feature whose only signal is missing-vs-present is
+        # still kept (with nan left raw) instead of dropped untested.
+        elif not self.dropna and self.feature.has_nan and best_combination is None:
+            if self.verbose:
+                print(f"[{self.__name__}] Testing all-values-vs-NaN (dropna=False)")
+
+            self.samples.restore_raw()
+
+            # feature.labels excludes nan while feature.dropna is False (the dropna
+            # setter removes it, see BaseFeature.dropna) — it's already the raw
+            # non-nan label list, no removal needed.
+            feature_labels = self.feature.labels
+            if feature_labels is None:
+                raise RuntimeError(f"[{self.__name__}] feature labels are not populated")
+            raw_labels = list(feature_labels)
+
+            best_combination = self._get_best_association([[raw_labels, [self.feature.nan]]])
 
         return best_combination
 
@@ -681,11 +719,13 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
         if n_mod > self.max_n_mod:
             info += f" (n_mod={n_mod}>max_n_mod={self.max_n_mod})"
 
-        # historizing raw combination
+        # historizing raw combination. viable=False: the raw (ungrouped) distribution
+        # is not itself a candidate combination, it must never be selected as best.
         combination = {
             "info": info,
             **raw_association,
             "combination": {modality: modality for modality in raw.index},
+            "viable": False,
         }
 
         # historizing within feature

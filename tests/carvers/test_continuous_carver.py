@@ -660,7 +660,13 @@ def test_continuous_carver_fit_transform_with_large_data(evaluator: CombinationE
 
 
 def test_continuous_carver_fit_transform_with_wrong_dev(evaluator: CombinationEvaluator):
-    """Test ContinuousCarver fit_transform method."""
+    """Test ContinuousCarver fit_transform method.
+
+    feature1/feature2 have no NaN and no combination survives the adversarial
+    dev sample, so they get dropped and stay raw. feature3 has a NaN row whose
+    missingness alone is informative and robust across train/dev (nan-vs-values
+    rescue), so it gets carved and kept.
+    """
     features = Features(
         categoricals=["feature1"],
         ordinals={"feature2": ["low", "medium", "high"]},
@@ -691,23 +697,26 @@ def test_continuous_carver_fit_transform_with_wrong_dev(evaluator: CombinationEv
         },
         index=idx,
     )
+    X_dev_expected = X_dev.copy()
     y_dev = pd.Series([5.2, 0.1, 8.7, 0.5], index=idx)
     X_transformed = carver.fit_transform(X, y, X_dev=X_dev, y_dev=y_dev)
 
     print(X_transformed)
-    expected = X
     assert isinstance(X_transformed, pd.DataFrame)
-    assert all(X_transformed.index == expected.index)
     assert all(X_transformed.index == X.index)
-    assert all(X_transformed.columns == expected.columns)
-    assert all(X.columns == expected.columns)
-    assert X.equals(expected)
-    assert X_transformed.equals(expected)
+    assert all(X_transformed.columns == X.columns)
 
-    assert all(X_dev.index == expected.index)
-    assert all(X_dev.columns == expected.columns)
-    assert X_dev.equals(expected)
-    assert len(carver.features) == 0
+    # feature1/feature2: dropped, raw values unchanged
+    assert list(X_transformed["feature1"]) == ["A", "B", "A", "C"]
+    assert list(X_transformed["feature2"]) == ["low", "medium", "high", "high"]
+    assert sorted(f.name for f in carver.dropped_features) == ["feature1", "feature2"]
+
+    # feature3: rescued via the NaN-vs-values combination, kept
+    assert [f.name for f in carver.features] == ["feature3"]
+    assert list(X_transformed["feature3"]) == [0, 1, 1, 0]
+
+    # X_dev itself is never mutated/transformed by fit_transform
+    assert X_dev.equals(X_dev_expected)
 
 
 def test_continuous_carver_save_load(tmp_path, evaluator: CombinationEvaluator):
