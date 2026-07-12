@@ -237,6 +237,11 @@ class BaseCarver(BaseDiscretizer, ABC):
                 f"[{self.__name__}] combination_evaluator must be provided (subclasses set a task-appropriate default)."
             )
 
+        # max_n_mod=1 would carve every feature into a single constant modality: no
+        # combination can be viable, all features get dropped and pass through raw.
+        if max_n_mod < 2:
+            raise ValueError(f"[{self.__name__}] max_n_mod must be >= 2, got {max_n_mod}.")
+
         # carver-friendly defaults (dropna / ordinal_encoding True) are applied
         # by BaseDiscretizer.__init__ when those toggles are left ``None``, so a
         # partial config only changes the fields it sets explicitly.
