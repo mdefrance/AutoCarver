@@ -459,6 +459,14 @@ class BaseCarver(BaseDiscretizer, ABC):
                 num_iter = f"{n + 1}/{len(all_features)}"  # logging iteration number
                 self._carve_feature(self.features(feature), xaggs, xaggs_dev, num_iter, xaggs_folds)
 
+        # recap dropped features in one line instead of a warning per feature
+        if self.dropped_features:
+            dropped_names = ", ".join(feature.name for feature in self.dropped_features)
+            print(
+                f"[{self.__name__}] dropped {len(self.dropped_features)}/{len(all_features)} "
+                f"feature(s) (no robust train/dev combination): {dropped_names}"
+            )
+
         # discretizing features based on each feature's values_order
         super().fit(X, y)
 
@@ -556,11 +564,6 @@ class BaseCarver(BaseDiscretizer, ABC):
                 if viable:
                     self.features.replace_feature(updated_feature)
                 else:
-                    print(
-                        f"WARNING: No robust combination for {updated_feature}. Consider "
-                        "increasing the size of X_dev or dropping the feature (X not "
-                        "representative of X_dev for this feature)."
-                    )
                     self.dropped_features.append(updated_feature)
                     self.features.remove(updated_feature.version)
 
@@ -616,10 +619,6 @@ class BaseCarver(BaseDiscretizer, ABC):
 
         # no suitable combination has been found -> removing feature
         else:
-            print(
-                f"WARNING: No robust combination for {feature}. Consider increasing the size of "
-                "X_dev or dropping the feature (X not representative of X_dev for this feature)."
-            )
             self.dropped_features.append(feature)
             self.features.remove(feature.version)
 
