@@ -16,7 +16,7 @@ from warnings import warn
 import pandas as pd
 from sklearn.model_selection import BaseCrossValidator, check_cv
 from sklearn.utils.validation import check_is_fitted
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from AutoCarver.carvers.utils.pretty_print import index_mapper, prettier_xagg
 from AutoCarver.combinations import (
