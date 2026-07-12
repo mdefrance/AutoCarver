@@ -303,7 +303,7 @@ def test_binary_carver_constant_no_nan_raises():
         max_n_mod=4,
         features=Features(categoricals=["feature"]),
         combination_evaluator=CramervCombinations(),
-        config=ProcessingConfig(dropna=True, ordinal_encoding=True, copy=True),
+        config=ProcessingConfig(dropna=True, ordinal_encoding=True, copy=True, rescue_rare=False),
     )
     with raises(ValueError):
         carver.fit_transform(X, y)

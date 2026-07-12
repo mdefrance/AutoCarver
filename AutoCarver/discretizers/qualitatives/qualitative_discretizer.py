@@ -55,7 +55,13 @@ class QualitativeDiscretizer(BaseDiscretizer):
         # modalities are legitimately rare and get rolled up by the NestedDiscretizer)
         non_nested = [feature for feature in self.features if not feature.is_nested]
         if len(non_nested) > 0:
-            check_frequencies(Features.from_list(non_nested), sample.X, self.min_freq, self.__name__)
+            check_frequencies(
+                Features.from_list(non_nested),
+                sample.X,
+                self.min_freq,
+                self.__name__,
+                rescue_rare=self.config.rescue_rare,
+            )
 
         # converting non-str columns
         sample.X = ensure_qualitative_dtypes(self.features, sample.X, config=self.config)

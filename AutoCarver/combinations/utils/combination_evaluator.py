@@ -220,6 +220,8 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
         # default alpha so callers that drive viability tests directly (without
         # going through ``get_best_combination``) get a sensible Wilson interval.
         self.min_freq_alpha: float = 0.05
+        # rescue-rerun state: True while re-searching with the min_freq veto waived
+        self._rescue_mode: bool = False
 
     @abstractmethod
     def _init_target_rate(self, target_rate: TargetRate[XAgg] | None) -> TargetRate[XAgg]:
@@ -434,6 +436,7 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
         dropna: bool,
         min_freq_alpha: float = 0.05,
         folds_xagg: list[pd.Series | pd.DataFrame | None] | None = None,
+        rescue: bool = False,
     ) -> dict | None:
         """Computes the best combination of modalities for the feature.
 
@@ -462,10 +465,15 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
             Cross-validation fold aggregations. Each is an additional robustness
             view: the returned combination must stay viable on ``xagg_dev`` *and*
             every fold. Ranks are still determined on ``xagg`` (full train) only.
+        rescue : bool, default ``False``
+            When the normal search finds nothing viable and a validation view
+            exists (dev and/or CV folds), rerun the search with the
+            ``min_freq`` veto waived; distinct-rates and train/dev ordering
+            vetoes stay enforced on every validation view.
         """
 
         self.max_n_mod = max_n_mod
-        self.min_freq = min_freq
+        self.min_freq: float | None = min_freq
         self.dropna = dropna
         self.min_freq_alpha = min_freq_alpha
 
@@ -480,7 +488,23 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
         best_combination = self._get_best_combination_non_nan()
 
         # grouping NaNs if requested to drop them (dropna=True)
-        return self._get_best_combination_with_nan(best_combination)
+        best_combination = self._get_best_combination_with_nan(best_combination)
+
+        # last-chance rescue: nothing viable at min_freq -> rerun the search with the
+        # min_freq veto waived (min_freq=None). Distinct-rates and train/dev ordering
+        # vetoes stay enforced; requires at least one validation view (dev or folds),
+        # otherwise train alone would accept any distinct-rate split.
+        if best_combination is None and rescue and (self.samples.dev.has_xagg or self.samples.folds):
+            self.min_freq = None
+            self._rescue_mode = True
+            try:
+                self.samples.restore_raw()
+                best_combination = self._get_best_combination_non_nan()
+                best_combination = self._get_best_combination_with_nan(best_combination)
+            finally:
+                self._rescue_mode = False
+
+        return best_combination
 
     def _test_viability_train(self, combination: dict) -> dict:
         """Testing the viability of the combination on xagg_train.
@@ -682,6 +706,10 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
             if test_results.get("dropna"):
                 info += " (dropna=True)"
 
+            # tagging combinations found only after waiving the min_freq veto
+            if self._rescue_mode:
+                info += " (rescue: min_freq waived)"
+
         # not viable on train or dev
         else:
             info = "Not viable"
@@ -697,6 +725,11 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
 
     def _historize_raw_combination(self):
         """historizes the raw combination"""
+
+        # rescue rerun re-enters the search on the same samples; the raw
+        # distribution was already historized by the first pass
+        if self._rescue_mode:
+            return
 
         # narrow Optional: this method is only called after samples.set() has populated raw
         raw = self.samples.train.raw

@@ -11,3 +11,5 @@ docs/source/bin/*
 .python-version
 work/*
 .kaggle/*
+*.zip
+*.csv

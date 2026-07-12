@@ -93,6 +93,7 @@ def _carve_feature_worker(
     min_freq: float,
     dropna: bool,
     min_freq_alpha: float,
+    rescue: bool,
 ) -> tuple[BaseFeature, bool]:
     """Picklable worker: scores best combination for a single feature.
 
@@ -113,6 +114,7 @@ def _carve_feature_worker(
         dropna=dropna,
         min_freq_alpha=min_freq_alpha,
         folds_xagg=folds_xagg,
+        rescue=rescue,
     )
     return feature, best is not None
 
@@ -162,6 +164,7 @@ class BaseCarver(BaseDiscretizer, ABC):
     # ProcessingConfig (see ProcessingConfig docstring).
     _default_dropna = True
     _default_ordinal_encoding = True
+    _default_rescue_rare: bool = True
 
     @extend_docstring(BaseDiscretizer.__init__, exclude=["min_freq", "config"])
     def __init__(
@@ -426,6 +429,15 @@ class BaseCarver(BaseDiscretizer, ABC):
         # preparing datasets and checking for wrong values
         samples = self._prepare_samples(samples)
 
+        # rescue needs a validation view; without one it is silently skipped downstream
+        if self.config.rescue_rare and X_dev is None and not cv:
+            warn(
+                f"[{self.__name__}] rescue_rare=True has no effect without X_dev or cv "
+                "(a validation view is required to test rescued combinations).",
+                UserWarning,
+                stacklevel=2,
+            )
+
         # logging if requested
         super()._log_if_verbose("---------\n------")
 
@@ -536,6 +548,7 @@ class BaseCarver(BaseDiscretizer, ABC):
             min_freq=self.min_freq,
             dropna=bool(self.config.dropna),
             min_freq_alpha=self.config.min_freq_alpha,
+            rescue=self.config.rescue_rare,
         )
 
         with Pool(processes=self.config.n_jobs) as pool:
@@ -588,6 +601,7 @@ class BaseCarver(BaseDiscretizer, ABC):
             dropna=bool(self.config.dropna),
             min_freq_alpha=self.config.min_freq_alpha,
             folds_xagg=self._folds_for_feature(xaggs_folds, feature.version),
+            rescue=self.config.rescue_rare,
         )
 
         # printing carved distribution, for found, suitable combination
@@ -714,6 +728,7 @@ class BaseCarver(BaseDiscretizer, ABC):
             verbose=config_data.get("verbose", False),
             n_jobs=config_data.get("n_jobs", 1),
             copy=config_data.get("copy", True),
+            rescue_rare=config_data.get("rescue_rare", False),
         )
 
         instance = None
