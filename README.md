@@ -26,10 +26,12 @@
 
 **AutoCarver** turns raw numeric, categorical, and ordinal columns into optimal, drift-robust, human-readable bins in a few lines of code. Stop losing model performance to suboptimal manual binning — and stop discovering overfit bins in production monitoring.
 
-- **Provably optimal** — exhaustive search: for a fixed `min_freq`, `max_n_mod` and metric (Tschuprow's T by default, or Cramér's V), no other admissible bin combination scores higher.
+- **Provably optimal** — exhaustive search: for a fixed `min_freq`, `max_n_mod` and metric (Tschuprow's T by default, or Cramér's V), no other admissible bin combination scores higher. It checked them all so you don't have to.
 - **Robust by construction** — every candidate grouping is vetoed unless it holds on a held-out dev set (and optional CV folds), at `fit` time rather than in monitoring.
 - **Define → carve → model** — declare your `Features`, `fit` a carver, `transform`: the whole feature set is carved in one supervised pass, not one notebook per feature. One carver per target type — `BinaryCarver`, `MulticlassCarver`, `OrdinalCarver`, `ContinuousCarver` (regression) — all with the identical API.
 - **AI-assisted** — a local MCP server lets your LLM assistant qualify and carve columns through tool calls, fully on your machine.
+
+*On the Titanic quick start, `Fare` collapses from 72 pre-carving modalities to 2 bins while its association with survival rises: Tschuprow's T 0.18 raw → 0.29 carved.*
 
 Built for credit scoring, fraud detection, and risk modeling.
 
@@ -59,7 +61,18 @@ pip install autocarver
 
 ## Quick Start
 
-You already have a DataFrame and a target — that's step 1 of 6 done. The remaining five lines-worth take you to carved, dev-validated bins. Binary classification on the Titanic dataset:
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/mdefrance/AutoCarver/blob/main/docs/source/examples/quick_start_colab.ipynb)
+
+You already have a DataFrame and a target — that's the first box ticked before you start:
+
+- [x] Load data
+- [ ] Split train / dev
+- [ ] Declare features by type
+- [ ] Fit the carver, validated on the dev set
+- [ ] Inspect the carved bins
+- [ ] Persist
+
+The rest is the snippet below — binary classification on the Titanic dataset:
 
 <!-- quick-start:start -->
 ```python
@@ -105,6 +118,8 @@ For multiclass classification use `MulticlassCarver` (one binning per feature, a
 
 
 ## What you get
+
+Two questions worth answering before your next model review: can you defend every bin boundary of your current model to a stakeholder — and can you show each one holds on data it has never seen? AutoCarver makes both a one-liner:
 
 - **No performance left on the table** — exhaustive search over admissible bin combinations maximizes Tschuprow's T (default) or Cramér's V: for fixed `min_freq`, `max_n_mod` and metric, no other combination scores higher, so you never wonder whether a better grouping existed.
 - **Stop silent overfitting before production** — bins that only exist in your training sample degrade quietly under drift. Every candidate combination is validated on a dev set (and optional CV folds): any whose target rates flip or whose buckets fall below `min_freq` is rejected at fit time, not discovered in monitoring.
