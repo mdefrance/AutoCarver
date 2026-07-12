@@ -113,14 +113,16 @@ class OrdinalCombinationEvaluator(CombinationEvaluator[pd.DataFrame], ABC):
                 raw_labels.remove(self.feature.nan)
             self.samples.dropna(self.feature.nan)
 
-        if self.samples.train.shape[0] <= 1:
-            return None
-
         # fixing the ridit reference from the raw (un-grouped) train crosstab, before any
         # combination (train or dev) is scored against it (no-op for TargetMeanLevel).
+        # Must run before the historize/bail-out below: the inherited NaN path
+        # (which may now run after a Gate-1 bail-out) needs the reference fitted.
         self.target_rate.fit_reference(self.samples.train.xagg)  # type: ignore
 
         self._historize_raw_combination()
+
+        if self.samples.train.shape[0] <= 1:
+            return None
 
         raw_index = list(raw_labels)
         # samples.train.xagg is a crosstab DataFrame for ordinal evaluators

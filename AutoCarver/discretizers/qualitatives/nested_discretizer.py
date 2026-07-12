@@ -9,6 +9,7 @@ sufficient number of observations — improving downstream model robustness.
 
 from dataclasses import replace
 from typing import Self
+from warnings import warn
 
 import pandas as pd
 
@@ -241,7 +242,9 @@ class NestedDiscretizer(BaseDiscretizer):
         )
 
 
-def check_frequencies(features: Features, X: pd.DataFrame, min_freq: float, name: str) -> None:
+def check_frequencies(
+    features: Features, X: pd.DataFrame, min_freq: float, name: str, rescue_rare: bool = False
+) -> None:
     """Checks features' frequencies compared to min_freq"""
 
     # computing features' max modality frequency (mode frequency)
@@ -284,4 +287,12 @@ def check_frequencies(features: Features, X: pd.DataFrame, min_freq: float, name
         ]
         error_msg += "\n".join(too_common + non_common)
 
+        if rescue_rare:
+            warn(
+                error_msg + "\nrescue_rare=True: keeping these features — they are dropped "
+                "later unless a robust combination is found on the validation view(s).",
+                UserWarning,
+                stacklevel=2,
+            )
+            return
         raise ValueError(error_msg)

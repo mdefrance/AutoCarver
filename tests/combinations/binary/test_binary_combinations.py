@@ -1046,34 +1046,40 @@ def test_get_best_combination_with_nan_viable_with_nan_without_combi(
     evaluator: BinaryCombinationEvaluator,
 ):
     """Test the get_best_combination method with a feature that has no np.nan values."""
-    feature = OrdinalFeature("feature", ["a", "b", "c"])
-    feature.has_nan = True
-    feature.dropna = True
-    evaluator.feature = feature
-
-    xagg = pd.DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 3]}, index=["a", "b", "c", feature.nan])
-    evaluator.samples.train = AggregatedSample(xagg)
-
-    evaluator.samples.dev = AggregatedSample(xagg)
-
-    evaluator.dropna = False
+    xagg = pd.DataFrame({0: [0, 2, 0, 0], 1: [2, 0, 1, 3]}, index=["a", "b", "c", "__NAN__"])
     evaluator.max_n_mod = 2
+    evaluator.min_freq = MIN_FREQ
 
-    # test without best_combination
-    result = evaluator._get_best_combination_with_nan(None)
-    assert result is None
-    evaluator.dropna = True
-    result = evaluator._get_best_combination_with_nan(None)
-    assert result is None
-    feature.has_nan = False
-    result = evaluator._get_best_combination_with_nan(None)
-    assert result is None
-
+    # dropna=False, best_combination=None -> the only safe rescue candidate (all non-nan
+    # merged, nan on its own -- nan can never be folded into a partial group, see
+    # Features.unfillna) is still tested when the non-nan search found nothing. Unlike
+    # before this fix, where dropna=False meant the nan path never ran at all.
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     feature.has_nan = True
     feature.dropna = False
     evaluator.feature = feature
+    evaluator.samples.train = AggregatedSample(xagg)
+    evaluator.samples.dev = AggregatedSample(xagg)
+    evaluator.dropna = False
+    result = evaluator._get_best_combination_with_nan(None)
+    assert result is not None
+    assert result["combination"] == [["a", "b", "c"], [feature.nan]]
+
+    # dropna=True, best_combination=None -> the full nan fan-out runs (the fix):
+    # [[a, nan], [b, c]] is a viable rescue combination that was never tested before.
+    feature = OrdinalFeature("feature", ["a", "b", "c"])
+    feature.has_nan = True
+    feature.dropna = True
+    evaluator.feature = feature
+    evaluator.samples.train = AggregatedSample(xagg)
+    evaluator.samples.dev = AggregatedSample(xagg)
     evaluator.dropna = True
+    result = evaluator._get_best_combination_with_nan(None)
+    assert result is not None
+    assert result["combination"] == [["a", feature.nan], ["b", "c"]]
+
+    # has_nan=False -> nan path never runs
+    feature.has_nan = False
     result = evaluator._get_best_combination_with_nan(None)
     assert result is None
 

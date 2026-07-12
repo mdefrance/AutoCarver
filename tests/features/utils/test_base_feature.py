@@ -278,7 +278,7 @@ def test_base_feature_group() -> None:
     """test method group"""
     feature = BaseFeature(name="test_feature")
     feature.values = GroupedList(["a", "b", "c", "d"])
-    feature.group(["b", "c"], "a")
+    feature.group(["b", "c"], "a", convert_labels=False)
 
     assert feature.values == ["a", "d"]
     assert feature.content == {"a": ["c", "b", "a"], "d": ["d"]}

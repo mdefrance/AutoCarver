@@ -81,7 +81,7 @@ class QualitativeFeature(BaseFeature):
 
             # adding unexpected to default
             default_group = self.values.get_group(self.default)
-            self.group(unexpected, default_group)
+            self.group(unexpected, default_group, convert_labels=False)
 
         super().check_values(X)
 

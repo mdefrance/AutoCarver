@@ -62,6 +62,7 @@ mcp = [
 ]
 [dependency-groups]
 compare = [
+    "kaggle>=2.2.3",
     "optbinning>=0.21,<1",
 ]
 dev = [

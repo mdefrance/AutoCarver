@@ -11,6 +11,8 @@ Three Python libraries are usually considered for feature discretization:
 
 This page compares them on scope, algorithm, and ergonomics so you can pick the right tool for your problem. The runnable code snippets are unit-tested in ``tests/examples/test_comparison_snippets.py``.
 
+The question is not only what each library adds, but what you lose without it: skip ordinal handling and the declared modality order of your features is gone; skip a dev-set veto and nothing stops a bin that only exists in your training sample.
+
 
 Scope at a glance
 -----------------
@@ -236,7 +238,7 @@ A reasonable rule of thumb: reach for **KBinsDiscretizer** when binning is a *pr
 Benchmark notebook
 ------------------
 
-A runnable side-by-side benchmark on two public datasets — German Credit (binary, mixed dtypes) and California Housing (regression, all-numeric) — comparing the three libraries on fit time, downstream-model score, and ``train`` → ``test`` score drop:
+A runnable side-by-side benchmark on two public datasets — Home Credit Default Risk (binary, mixed dtypes, via Kaggle) and Allstate Claims Severity (regression, mixed dtypes, via Kaggle) — comparing the three libraries on fit time, downstream-model score, ``train`` → ``test`` score drop, and one-hot model size:
 
 .. toctree::
     :glob:

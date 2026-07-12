@@ -56,6 +56,14 @@ class ProcessingConfig:
     (e.g. train ridits resolved by
     :class:`~AutoCarver.carvers.ordinal_carver.OrdinalCarver` from its
     ``target_scale``). ``None`` (default) sorts by the raw target mean.
+
+    ``rescue_rare`` keeps features that fail the qualitative frequency check
+    (a too-frequent mode — including NaN — or no frequent-enough modality)
+    instead of raising, and lets carvers retry features whose combination
+    search found nothing viable with the ``min_freq`` veto waived. Rescued
+    combinations must still show distinct target rates and preserve train/dev
+    rank ordering on ``X_dev`` and every CV fold — with no validation view the
+    rescue is skipped. Off by default.
     """
 
     copy: bool = True
@@ -65,6 +73,7 @@ class ProcessingConfig:
     n_jobs: int = 1
     min_freq_alpha: float = 0.05
     y_level_scores: dict | None = None
+    rescue_rare: bool | None = None
 
 
 # Backward-compatible alias: this config was historically named ``DiscretizerConfig`` but is
@@ -159,6 +168,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
     # BaseCarver overrides both to True.
     _default_dropna: bool = False
     _default_ordinal_encoding: bool = False
+    _default_rescue_rare: bool = False
 
     def __init__(
         self,
@@ -212,6 +222,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             ordinal_encoding=(
                 self._default_ordinal_encoding if config.ordinal_encoding is None else config.ordinal_encoding
             ),
+            rescue_rare=self._default_rescue_rare if config.rescue_rare is None else config.rescue_rare,
         )
         self._min_freq = min_freq
 
@@ -539,6 +550,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
                 "ordinal_encoding": self.config.ordinal_encoding,
                 "copy": self.config.copy,
                 "min_freq_alpha": self.config.min_freq_alpha,
+                "rescue_rare": self.config.rescue_rare,
             },
         }
 
@@ -605,6 +617,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             n_jobs=config_data.get("n_jobs", 1),
             copy=config_data.get("copy", True),
             min_freq_alpha=config_data.get("min_freq_alpha", 0.05),
+            rescue_rare=config_data.get("rescue_rare", False),
         )
 
         instance = cls(features=features, min_freq=min_freq, config=config)

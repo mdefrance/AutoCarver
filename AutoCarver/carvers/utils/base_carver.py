@@ -16,6 +16,7 @@ from warnings import warn
 import pandas as pd
 from sklearn.model_selection import BaseCrossValidator, check_cv
 from sklearn.utils.validation import check_is_fitted
+from tqdm.auto import tqdm
 
 from AutoCarver.carvers.utils.pretty_print import index_mapper, prettier_xagg
 from AutoCarver.combinations import (
@@ -93,6 +94,7 @@ def _carve_feature_worker(
     min_freq: float,
     dropna: bool,
     min_freq_alpha: float,
+    rescue: bool,
 ) -> tuple[BaseFeature, bool]:
     """Picklable worker: scores best combination for a single feature.
 
@@ -113,6 +115,7 @@ def _carve_feature_worker(
         dropna=dropna,
         min_freq_alpha=min_freq_alpha,
         folds_xagg=folds_xagg,
+        rescue=rescue,
     )
     return feature, best is not None
 
@@ -162,6 +165,7 @@ class BaseCarver(BaseDiscretizer, ABC):
     # ProcessingConfig (see ProcessingConfig docstring).
     _default_dropna = True
     _default_ordinal_encoding = True
+    _default_rescue_rare: bool = True
 
     @extend_docstring(BaseDiscretizer.__init__, exclude=["min_freq", "config"])
     def __init__(
@@ -193,6 +197,9 @@ class BaseCarver(BaseDiscretizer, ABC):
                 Set between ``0.01`` (slower, less robust) and ``0.05`` (faster,
                 more robust).
 
+            Defaults to ``0.02`` — the recommended starting point; see the
+            recipes table in the Quick Start.
+
         max_n_mod : int
             Maximum number of modalities per carved feature. Forwarded to the
             configured :class:`CombinationEvaluator`.
@@ -204,6 +211,9 @@ class BaseCarver(BaseDiscretizer, ABC):
             .. tip::
                 Set between ``5`` (faster, more robust) and ``7`` (slower, less
                 robust).
+
+            Defaults to ``5`` — the recommended starting point; see the
+            recipes table in the Quick Start.
 
         combination_evaluator : CombinationEvaluator, optional
             Pre-built :class:`CombinationEvaluator` instance used to measure
@@ -226,6 +236,11 @@ class BaseCarver(BaseDiscretizer, ABC):
             raise ValueError(
                 f"[{self.__name__}] combination_evaluator must be provided (subclasses set a task-appropriate default)."
             )
+
+        # max_n_mod=1 would carve every feature into a single constant modality: no
+        # combination can be viable, all features get dropped and pass through raw.
+        if max_n_mod < 2:
+            raise ValueError(f"[{self.__name__}] max_n_mod must be >= 2, got {max_n_mod}.")
 
         # carver-friendly defaults (dropna / ordinal_encoding True) are applied
         # by BaseDiscretizer.__init__ when those toggles are left ``None``, so a
@@ -426,6 +441,15 @@ class BaseCarver(BaseDiscretizer, ABC):
         # preparing datasets and checking for wrong values
         samples = self._prepare_samples(samples)
 
+        # rescue needs a validation view; without one it is silently skipped downstream
+        if self.config.rescue_rare and X_dev is None and not cv:
+            warn(
+                f"[{self.__name__}] rescue_rare=True has no effect without X_dev or cv "
+                "(a validation view is required to test rescued combinations).",
+                UserWarning,
+                stacklevel=2,
+            )
+
         # logging if requested
         super()._log_if_verbose("---------\n------")
 
@@ -443,9 +467,25 @@ class BaseCarver(BaseDiscretizer, ABC):
         if self.config.n_jobs > 1 and len(all_features) > 1:
             self._carve_features_parallel(all_features, xaggs, xaggs_dev, xaggs_folds)
         else:
-            for n, feature in enumerate(all_features):
+            # disable=None: tqdm auto-disables on non-TTY (pytest, piped logs);
+            # verbose mode already prints one banner per feature instead
+            progress = tqdm(
+                all_features,
+                desc=f"[{self.__name__}] Carving",
+                unit="feature",
+                disable=True if self.config.verbose else None,
+            )
+            for n, feature in enumerate(progress):
                 num_iter = f"{n + 1}/{len(all_features)}"  # logging iteration number
                 self._carve_feature(self.features(feature), xaggs, xaggs_dev, num_iter, xaggs_folds)
+
+        # recap dropped features in one line instead of a warning per feature
+        if self.dropped_features:
+            dropped_names = ", ".join(feature.name for feature in self.dropped_features)
+            print(
+                f"[{self.__name__}] dropped {len(self.dropped_features)}/{len(all_features)} "
+                f"feature(s) (no robust train/dev combination): {dropped_names}"
+            )
 
         # discretizing features based on each feature's values_order
         super().fit(X, y)
@@ -536,18 +576,21 @@ class BaseCarver(BaseDiscretizer, ABC):
             min_freq=self.min_freq,
             dropna=bool(self.config.dropna),
             min_freq_alpha=self.config.min_freq_alpha,
+            rescue=bool(self.config.rescue_rare),
         )
 
         with Pool(processes=self.config.n_jobs) as pool:
-            for updated_feature, viable in pool.imap_unordered(worker, payloads):
+            results = tqdm(
+                pool.imap_unordered(worker, payloads),
+                total=len(payloads),
+                desc=f"[{self.__name__}] Carving",
+                unit="feature",
+                disable=True if self.config.verbose else None,
+            )
+            for updated_feature, viable in results:
                 if viable:
                     self.features.replace_feature(updated_feature)
                 else:
-                    print(
-                        f"WARNING: No robust combination for {updated_feature}. Consider "
-                        "increasing the size of X_dev or dropping the feature (X not "
-                        "representative of X_dev for this feature)."
-                    )
                     self.dropped_features.append(updated_feature)
                     self.features.remove(updated_feature.version)
 
@@ -588,6 +631,7 @@ class BaseCarver(BaseDiscretizer, ABC):
             dropna=bool(self.config.dropna),
             min_freq_alpha=self.config.min_freq_alpha,
             folds_xagg=self._folds_for_feature(xaggs_folds, feature.version),
+            rescue=bool(self.config.rescue_rare),
         )
 
         # printing carved distribution, for found, suitable combination
@@ -602,10 +646,6 @@ class BaseCarver(BaseDiscretizer, ABC):
 
         # no suitable combination has been found -> removing feature
         else:
-            print(
-                f"WARNING: No robust combination for {feature}. Consider increasing the size of "
-                "X_dev or dropping the feature (X not representative of X_dev for this feature)."
-            )
             self.dropped_features.append(feature)
             self.features.remove(feature.version)
 
@@ -714,6 +754,7 @@ class BaseCarver(BaseDiscretizer, ABC):
             verbose=config_data.get("verbose", False),
             n_jobs=config_data.get("n_jobs", 1),
             copy=config_data.get("copy", True),
+            rescue_rare=config_data.get("rescue_rare", False),
         )
 
         instance = None

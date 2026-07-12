@@ -3,7 +3,7 @@
 import pandas as pd
 from pytest import fixture
 
-from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample, filter_nan
+from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample, AggregatedSamples, filter_nan
 
 
 def test_filter_nan_with_dataframe():
@@ -124,3 +124,19 @@ def test_aggregated_sample_groupby_mean(sample_data2):
     expected_index = ["A", "B"]
     expected = pd.DataFrame(expected_data, index=expected_index)
     assert grouped.equals(expected)
+
+
+def test_aggregated_samples_restore_raw(sample_data):
+    """dropna() then restore_raw() should bring xagg back to the raw (unfiltered) data."""
+    xagg = pd.concat([sample_data, pd.DataFrame({"target_0": [1], "target_1": [1]}, index=["__NAN__"])])
+    samples = AggregatedSamples()
+    samples.set(train=xagg, dev=xagg)
+
+    samples.dropna("__NAN__")
+    assert "__NAN__" not in samples.train.xagg.index
+    assert "__NAN__" not in samples.dev.xagg.index
+
+    samples.restore_raw()
+    assert samples.train.xagg.equals(samples.train.raw)
+    assert samples.dev.xagg.equals(samples.dev.raw)
+    assert "__NAN__" in samples.train.xagg.index
