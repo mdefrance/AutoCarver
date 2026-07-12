@@ -16,6 +16,7 @@ from warnings import warn
 import pandas as pd
 from sklearn.model_selection import BaseCrossValidator, check_cv
 from sklearn.utils.validation import check_is_fitted
+from tqdm import tqdm
 
 from AutoCarver.carvers.utils.pretty_print import index_mapper, prettier_xagg
 from AutoCarver.combinations import (
@@ -461,7 +462,15 @@ class BaseCarver(BaseDiscretizer, ABC):
         if self.config.n_jobs > 1 and len(all_features) > 1:
             self._carve_features_parallel(all_features, xaggs, xaggs_dev, xaggs_folds)
         else:
-            for n, feature in enumerate(all_features):
+            # disable=None: tqdm auto-disables on non-TTY (pytest, piped logs);
+            # verbose mode already prints one banner per feature instead
+            progress = tqdm(
+                all_features,
+                desc=f"[{self.__name__}] Carving",
+                unit="feature",
+                disable=True if self.config.verbose else None,
+            )
+            for n, feature in enumerate(progress):
                 num_iter = f"{n + 1}/{len(all_features)}"  # logging iteration number
                 self._carve_feature(self.features(feature), xaggs, xaggs_dev, num_iter, xaggs_folds)
 
@@ -566,7 +575,14 @@ class BaseCarver(BaseDiscretizer, ABC):
         )
 
         with Pool(processes=self.config.n_jobs) as pool:
-            for updated_feature, viable in pool.imap_unordered(worker, payloads):
+            results = tqdm(
+                pool.imap_unordered(worker, payloads),
+                total=len(payloads),
+                desc=f"[{self.__name__}] Carving",
+                unit="feature",
+                disable=True if self.config.verbose else None,
+            )
+            for updated_feature, viable in results:
                 if viable:
                     self.features.replace_feature(updated_feature)
                 else:
