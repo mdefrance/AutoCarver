@@ -6,8 +6,6 @@ whole carving pipeline (modality pre-sort, DP search, viability vetoes) must be
 invariant under any strictly increasing re-encoding of the integer levels.
 """
 
-from __future__ import annotations
-
 import numpy as np
 import pandas as pd
 from hypothesis import HealthCheck, given, settings

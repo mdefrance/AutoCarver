@@ -16,8 +16,6 @@ tests assert:
   * ``TargetMeanLevel`` returns the per-group mean ordinal level + frequency.
 """
 
-from __future__ import annotations
-
 import math
 from itertools import combinations
 

@@ -5,8 +5,6 @@ the sentinel-extracted quick-start snippet — the same mechanism that keeps the
 README honest (``docs/sync_readme.py``) keeps the Colab notebook honest.
 """
 
-from __future__ import annotations
-
 import importlib.util
 import json
 import sys

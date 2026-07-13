@@ -6,8 +6,6 @@ datasets (German Credit via ``fetch_openml`` and California Housing via
 ``fetch_california_housing``) the first time it runs on a given machine.
 """
 
-from __future__ import annotations
-
 import os
 from pathlib import Path
 

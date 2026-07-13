@@ -5,8 +5,6 @@ Plays Stages 0 → 3: both strips raw → CategoricalDiscretizer applied (ordina
 dimmed) → OrdinalDiscretizer merge arrows → final merged state.
 """
 
-from __future__ import annotations
-
 NAME = "qualitative_discretizer"
 FEATURE = "qualitative"
 TARGET = "binary"

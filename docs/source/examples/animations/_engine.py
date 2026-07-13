@@ -5,8 +5,6 @@ of frames for a given (feature_type, target_type, stop_after_stage) variant. See
 `docs/animation_examples_plan.md` for the conceptual model.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from typing import Literal
 

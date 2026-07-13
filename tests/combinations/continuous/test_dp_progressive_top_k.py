@@ -7,8 +7,6 @@ viable candidate is found or every consecutive partition is exhausted.
 These tests pin that contract.
 """
 
-from __future__ import annotations
-
 import math
 
 import pandas as pd

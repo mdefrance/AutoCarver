@@ -7,8 +7,6 @@ optional ``compare`` extra; scikit-learn is a runtime dep so KBins is
 expected to be importable, but the guard keeps the test self-contained).
 """
 
-from __future__ import annotations
-
 import pandas as pd
 import pytest
 from sklearn.model_selection import train_test_split

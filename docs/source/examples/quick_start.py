@@ -7,8 +7,6 @@ injected into ``README.md`` between the ``<!-- quick-start:start -->`` /
 sentinels in place when editing.
 """
 
-from __future__ import annotations
-
 
 def main() -> None:
     """Trains a :class:`BinaryCarver` on the Titanic dataset.

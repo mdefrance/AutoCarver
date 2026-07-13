@@ -4,8 +4,6 @@ The example is the source of truth for the README quick-start block (see
 ``docs/sync_readme.py``); running it here keeps the snippet honest.
 """
 
-from __future__ import annotations
-
 import importlib.util
 import sys
 from pathlib import Path

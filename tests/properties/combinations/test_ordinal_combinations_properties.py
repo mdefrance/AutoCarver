@@ -15,8 +15,6 @@ seed-parametrised parity suite lives in
     metrics once ``top_k`` is exhaustive.
 """
 
-from __future__ import annotations
-
 import math
 from itertools import combinations
 

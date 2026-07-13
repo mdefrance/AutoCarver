@@ -13,8 +13,6 @@ y-coordinate (relative to the Stage 2 max bar height) so the threshold is
 comparable across the morph.
 """
 
-from __future__ import annotations
-
 import re
 
 import numpy as np

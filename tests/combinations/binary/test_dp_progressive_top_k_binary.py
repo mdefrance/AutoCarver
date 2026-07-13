@@ -8,8 +8,6 @@ These tests pin that contract — mirrors
 ``tests/combinations/continuous/test_dp_progressive_top_k.py``.
 """
 
-from __future__ import annotations
-
 import math
 
 import pandas as pd

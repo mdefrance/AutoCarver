@@ -5,8 +5,6 @@ through :class:`MulticlassTargetRate` (see
 :mod:`AutoCarver.combinations.multiclass.multiclass_target_rates`).
 """
 
-from __future__ import annotations
-
 import pandas as pd
 import pytest
 

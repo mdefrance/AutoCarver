@@ -11,8 +11,6 @@ Pearson chi² to a K-column (unordered) target. These tests assert:
     at K=2.
 """
 
-from __future__ import annotations
-
 import numpy as np
 import pandas as pd
 import pytest

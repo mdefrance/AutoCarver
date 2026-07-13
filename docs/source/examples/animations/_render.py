@@ -10,8 +10,6 @@ Per-stage layout (top → bottom):
 CSS keyframes cross-fade between stage <g> groups on a passive infinite loop.
 """
 
-from __future__ import annotations
-
 from textwrap import dedent
 
 from ._engine import Frame

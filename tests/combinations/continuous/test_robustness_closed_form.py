@@ -14,8 +14,6 @@ Per §6 of the speedup plan we also verify that ``TargetMedian`` (which has no
 ``compute_from_stats``) silently falls back to the legacy path.
 """
 
-from __future__ import annotations
-
 import numpy as np
 import pandas as pd
 import pytest

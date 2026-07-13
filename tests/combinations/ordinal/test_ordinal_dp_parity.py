@@ -11,8 +11,6 @@ numerator (:func:`_top_k_partitions_ordinal_dp`). These tests pin:
     enumerate-and-score path would, viability included.
 """
 
-from __future__ import annotations
-
 import copy
 
 import numpy as np
