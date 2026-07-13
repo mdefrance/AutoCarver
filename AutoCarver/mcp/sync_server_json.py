@@ -21,6 +21,9 @@ ROOT = Path(__file__).resolve().parents[2]
 PYPROJECT = ROOT / "pyproject.toml"
 SERVER_JSON = ROOT / "AutoCarver" / "mcp" / "server.json"
 
+# MCP registry rejects a longer top-level description at publish time (422).
+MAX_DESCRIPTION_LEN = 100
+
 
 def read_version() -> str:
     data = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))
@@ -39,6 +42,14 @@ def sync(*, check: bool) -> int:
     version = read_version()
     current = json.loads(SERVER_JSON.read_text(encoding="utf-8"))
     updated = synced_server_json(version)
+
+    description = updated["description"]
+    if len(description) > MAX_DESCRIPTION_LEN:
+        raise SystemExit(
+            f"{SERVER_JSON}'s description is {len(description)} chars, "
+            f"exceeds the registry's {MAX_DESCRIPTION_LEN}-char limit: {description!r}"
+        )
+
     if updated == current:
         return 0
     if check:
