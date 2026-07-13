@@ -6,7 +6,7 @@ Comparison with other binning libraries
 Three Python libraries are usually considered for feature discretization:
 
 * **AutoCarver** — supervised, target-association-driven binning with dev-set robustness validation.
-* `optbinning <https://github.com/guillermo-navas-palencia/optbinning>`_ — supervised binning solved as a mixed-integer program.
+* `optbinning <https://github.com/guillermo-navas-palencia/optbinning>`_ — supervised binning: CART pre-binning, then constraint / mixed-integer programming over the pre-bins.
 * `sklearn.preprocessing.KBinsDiscretizer <https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.KBinsDiscretizer.html>`_ — unsupervised quantile / uniform / k-means binning.
 
 This page compares them on scope, algorithm, and ergonomics so you can pick the right tool for your problem. The runnable code snippets are unit-tested in ``tests/examples/test_comparison_snippets.py``.
@@ -63,7 +63,7 @@ Scope at a glance
      - no
    * - Optimality guarantee for fixed ``min_freq`` / ``max_n_mod`` / metric
      - **yes — exhaustive top-K search over admissible combinations (interval dynamic programming, DP)**
-     - yes (MIP, under its own constraints)
+     - yes, over its CART pre-bins (CP / MIP, under its own constraints)
      - n/a (no objective)
    * - Confidence-interval-guarded ``min_freq``
      - **yes — Wilson score interval (tunable** ``min_freq_alpha`` **)**
@@ -71,7 +71,7 @@ Scope at a glance
      - n/a
    * - Per-feature parallelism for hundreds-to-thousands of features
      - yes (``n_jobs`` via ``multiprocessing.Pool``)
-     - no (manual loop)
+     - yes (``BinningProcess(n_jobs=...)``)
      - yes (sklearn-native ``n_jobs`` semantics)
    * - Per-bin stats + carving history after ``fit``
      - **yes —** ``Features.summary`` **and** ``Features.history``
@@ -107,7 +107,7 @@ The three libraries answer "what's a good bin?" with very different objectives:
      - Maximize **Tschuprow's T** (default) or **Cramér's V** between the carved feature and the binary target — generalised to a K-class :math:`\chi^2` for the joint :class:`MulticlassCarver` (see :ref:`MulticlassChi2`) — or **Kruskal-Wallis H** for continuous targets — via **exhaustive top-K interval DP** over consecutive segmentations. The DP exploits additive decomposability of :math:`H` (and of :math:`\chi^2` at fixed :math:`k`) to enumerate the top-K partitions in closed form; progressive top-K doubling keeps the worst case exhaustive while making the common case essentially free. For fixed ``min_freq``, ``max_n_mod`` and metric, no other admissible combination scores higher. NaN groupings are fanned out and re-scored in closed form. See :ref:`DPTopK` for details and parity guarantees against ``scipy.stats``.
      - ``min_freq`` (minimum bucket share, gated by a Wilson score CI at significance ``min_freq_alpha`` — see :ref:`MinFreqViability`), ``max_n_mod`` (cap on number of modalities), monotonic ordering for ordinal features (enforced by :class:`OrdinalDiscretizer`), and a dev-set veto: any candidate that flips its target-rate ordering on the dev set is rejected.
    * - **optbinning**
-     - Maximize **Information Value (IV)** (binary) or split-gain analogues, solved as a mixed-integer program (CBC by default).
+     - Maximize **Information Value (IV)** (binary) or split-gain analogues. A CART decision tree first produces pre-bins (``prebinning_method="cart"`` by default); the optimal merge of those pre-bins is then solved with constraint programming (CP-SAT, the default ``solver="cp"``) or a mixed-integer program (``solver="mip"``).
      - User-declarable monotonicity, minimum bin size, maximum number of bins, optional WoE smoothing, and constraint blocks (e.g. PSI-based stability).
    * - **KBinsDiscretizer**
      - **No target awareness.** Splits are placed on the marginal distribution of ``X`` only: equal-frequency (``quantile``), equal-width (``uniform``), or 1-D k-means.
@@ -158,31 +158,30 @@ optbinning
 
     import pandas as pd
     from sklearn.model_selection import train_test_split
-    from optbinning import OptimalBinning
+    from optbinning import BinningProcess
 
     url = "https://web.stanford.edu/class/archive/cs/cs109/cs109.1166/stuff/titanic.csv"
     data = pd.read_csv(url)
     target = "Survived"
     train, _ = train_test_split(data, test_size=0.33, random_state=42, stratify=data[target])
 
-    # one binner per column, dtype declared explicitly
-    columns = {
-        "Age": "numerical",
-        "Fare": "numerical",
-        "Siblings/Spouses Aboard": "numerical",
-        "Parents/Children Aboard": "numerical",
-        "Sex": "categorical",
-        "Pclass": "categorical",  # optbinning has no first-class ordinal type
-    }
-    binners = {}
-    train_binned = pd.DataFrame(index=train.index)
-    for name, dtype in columns.items():
-        ob = OptimalBinning(name=name, dtype=dtype, solver="cbc")
-        ob.fit(train[name].to_numpy(), train[target].to_numpy())
-        train_binned[name] = ob.transform(train[name].to_numpy(), metric="bins")
-        binners[name] = ob
+    variable_names = [
+        "Age", "Fare", "Siblings/Spouses Aboard", "Parents/Children Aboard",
+        "Sex", "Pclass",
+    ]
+    binning_process = BinningProcess(
+        variable_names=variable_names,
+        # Pclass is nominal here: optbinning has no first-class ordinal type
+        categorical_variables=["Sex", "Pclass"],
+    )
+    binning_process.fit(train[variable_names], train[target])
+    train_binned = pd.DataFrame(
+        binning_process.transform(train[variable_names], metric="bins"),
+        columns=variable_names,
+        index=train.index,
+    )
 
-* Fits **one binner per feature** — you manage the loop.
+* ``BinningProcess`` bins all declared columns in **one** ``fit`` (a per-feature ``OptimalBinning`` API also exists).
 * No held-out validation step; you'd add cross-validation yourself.
 * Ordinal columns must be passed as ``categorical`` (with optional ``user_splits``), losing the known order.
 
@@ -228,7 +227,7 @@ When to pick which
    * - **AutoCarver**
      - You want supervised binning **and** you have (or can carve out) a dev sample, you mix numeric / categorical / ordinal columns, you need a JSON-portable artifact to ship to a scorecard or production model, or you also need feature pre-selection.
    * - **optbinning**
-     - You want IV-driven binning solved as a true optimization problem, you need fine-grained per-feature constraints (monotonicity, WoE smoothing, PSI-based stability), and you are comfortable looping over features and managing validation yourself.
+     - You want IV-driven binning solved as a true optimization problem, you need fine-grained per-feature constraints (monotonicity, WoE smoothing, PSI-based stability), and you are comfortable managing validation yourself.
    * - **KBinsDiscretizer**
      - You need a fast, unsupervised preprocessing step inside an sklearn ``Pipeline`` — e.g. as input to a tree-free linear model — and you don't need target-aware bins.
 

@@ -8,8 +8,6 @@ partition shapes match the exhaustive enumeration path
 (``consecutive_combinations`` + ``_chi2_assoc_for_combination``).
 """
 
-from __future__ import annotations
-
 import math
 
 import numpy as np

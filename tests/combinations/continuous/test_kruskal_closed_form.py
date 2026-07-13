@@ -12,8 +12,6 @@ across a wide variety of inputs, including:
   * very small samples (N < 2).
 """
 
-from __future__ import annotations
-
 import warnings
 
 import numpy as np

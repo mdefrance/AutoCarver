@@ -7,8 +7,6 @@ growing top-K batches (the progressive-doubling DP search). Plays Stages 0 → 3
 input strip → top-2 → top-4 → top-8 with the selected grouping highlighted.
 """
 
-from __future__ import annotations
-
 NAME = "combinations"
 FEATURE = "combinations"
 TARGET = "binary"

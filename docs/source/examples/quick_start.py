@@ -7,8 +7,6 @@ injected into ``README.md`` between the ``<!-- quick-start:start -->`` /
 sentinels in place when editing.
 """
 
-from __future__ import annotations
-
 
 def main() -> None:
     """Trains a :class:`BinaryCarver` on the Titanic dataset.
@@ -44,11 +42,14 @@ def main() -> None:
     dev_processed = carver.transform(dev)
 
     # 5. Inspect the carved buckets, target rate, and association
-    print(carver.summary)
+    carver.summary
 
     # 6. Persist for later use
     carver.save(Path("titanic_carver.json"))
-    # carver = BinaryCarver.load(Path("titanic_carver.json"))
+
+    # 7. Load the carver back in
+    carver = BinaryCarver.load(Path("titanic_carver.json"))
+    dev_processed = carver.transform(dev)
     # --8<-- [end:quick_start]
 
     # silence unused-variable warnings without altering the snippet above

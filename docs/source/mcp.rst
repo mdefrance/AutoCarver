@@ -79,9 +79,24 @@ Running the server
 
 The server speaks ``stdio`` (the default transport for MCP clients):
 
-.. code-block:: bash
 
-    python -m AutoCarver.mcp
+.. tab-set::
+
+    .. tab-item:: uv
+        :sync: uv
+
+        .. code-block:: bash
+
+            uv run python -m AutoCarver.mcp
+
+    .. tab-item:: pip
+        :sync: pip
+
+        .. code-block:: bash
+
+            python -m AutoCarver.mcp
+
+    
 
 Clients usually launch the command for you via a config file (below) rather than you running it
 by hand.
@@ -92,16 +107,40 @@ Configuring the client
 Point your client at the command. For **VS Code / GitHub Copilot**, add a ``.vscode/mcp.json``
 to your workspace:
 
-.. code-block:: json
 
-    {
-      "servers": {
-        "autocarver": {
-          "command": "uv",
-          "args": ["run", "python", "-m", "AutoCarver.mcp"]
-        }
-      }
-    }
+
+
+.. tab-set::
+
+    .. tab-item:: uv
+        :sync: uv
+
+        .. code-block:: json
+
+            {
+              "servers": {
+                "autocarver": {
+                  "command": "uv",
+                  "args": ["run", "python", "-m", "AutoCarver.mcp"]
+                }
+              }
+            }
+
+    .. tab-item:: pip
+        :sync: pip
+
+        .. code-block:: json
+
+            {
+              "servers": {
+                "autocarver": {
+                  "command": "python",
+                  "args": ["-m", "AutoCarver.mcp"]
+                }
+              }
+            }
+
+    
 
 For **Claude Desktop** the shape is identical but the top-level key is ``mcpServers`` (in
 ``claude_desktop_config.json``). 

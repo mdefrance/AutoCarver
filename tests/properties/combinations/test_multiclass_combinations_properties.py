@@ -12,8 +12,6 @@ over hypothesis-generated ``(B, K)`` count tables:
     ``top_k`` is exhaustive, for both metrics and K in {2, 3, 5}.
 """
 
-from __future__ import annotations
-
 from itertools import combinations
 
 import numpy as np

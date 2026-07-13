@@ -23,3 +23,9 @@ repos:
         language: system
         pass_filenames: false
         files: ^docs/(build_animations\.py|source/examples/animations/|source/_static/animations/)
+      - id: sync-server-json-version
+        name: sync AutoCarver/mcp/server.json version from pyproject.toml
+        entry: uv run python AutoCarver/mcp/sync_server_json.py
+        language: system
+        pass_filenames: false
+        files: ^(pyproject\.toml|AutoCarver/mcp/(server\.json|sync_server_json\.py))$

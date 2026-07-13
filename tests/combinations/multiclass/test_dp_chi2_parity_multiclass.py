@@ -9,8 +9,6 @@ enumeration (``consecutive_combinations`` + the closed-form chi²), for K in
 {2, 3, 5}, and that K=2 also matches the binary evaluator's own DP.
 """
 
-from __future__ import annotations
-
 import math
 
 import numpy as np

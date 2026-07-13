@@ -10,8 +10,6 @@ Usage::
     python docs/build_animations.py --check    # exit non-zero if any drifts
 """
 
-from __future__ import annotations
-
 import argparse
 import importlib.util
 import sys

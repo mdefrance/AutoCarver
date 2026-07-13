@@ -13,8 +13,6 @@ via `np.bincount`). These tests assert the rounded values match the historical
     legacy `_grouper`'s `groupby.get(iv, iv)` fallback).
 """
 
-from __future__ import annotations
-
 import numpy as np
 import pandas as pd
 import pytest

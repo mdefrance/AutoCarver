@@ -7,8 +7,6 @@ DP's H values and partition shapes match the exhaustive enumeration path
 (``consecutive_combinations`` + ``_kruskal_h_for_combination``).
 """
 
-from __future__ import annotations
-
 import math
 
 import numpy as np

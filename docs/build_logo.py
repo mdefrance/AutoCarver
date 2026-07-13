@@ -24,8 +24,6 @@ Requires matplotlib (wordmark outlines, ships with the ``jupyter`` extra) and
 a local Chrome/Edge install (social-preview PNG rasterization).
 """
 
-from __future__ import annotations
-
 import subprocess
 import sys
 import tempfile
