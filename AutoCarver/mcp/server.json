@@ -1,0 +1,61 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "name": "io.github.mdefrance/autocarver",
+  "description": "Local MCP server that qualifies a dataset's columns and processes them against a target with AutoCarver (runs fully on your machine).",
+  "version": "7.5.4",
+  "websiteUrl": "https://autocarver.readthedocs.io/en/latest/mcp.html",
+  "repository": {
+    "url": "https://github.com/mdefrance/AutoCarver",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "pypi",
+      "registryBaseUrl": "https://pypi.org",
+      "identifier": "autocarver",
+      "version": "7.5.4",
+      "transport": {
+        "type": "stdio"
+      },
+      "runtimeHint": "python",
+      "runtimeArguments": [
+        {
+          "type": "positional",
+          "value": "-m"
+        },
+        {
+          "type": "positional",
+          "value": "AutoCarver.mcp"
+        }
+      ]
+    },
+    {
+      "registryType": "pypi",
+      "registryBaseUrl": "https://pypi.org",
+      "identifier": "autocarver",
+      "version": "7.5.4",
+      "transport": {
+        "type": "stdio"
+      },
+      "runtimeHint": "uv",
+      "runtimeArguments": [
+        {
+          "type": "positional",
+          "value": "run"
+        },
+        {
+          "type": "positional",
+          "value": "python"
+        },
+        {
+          "type": "positional",
+          "value": "-m"
+        },
+        {
+          "type": "positional",
+          "value": "AutoCarver.mcp"
+        }
+      ]
+    }
+  ]
+}

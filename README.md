@@ -1,4 +1,4 @@
-
+<!-- mcp-name: io.github.mdefrance/autocarver -->
 </p>
 <p align="center">
     <picture>
@@ -50,6 +50,43 @@ full train set). See [Cross-validation folds](https://autocarver.readthedocs.io/
 ```bash
 pip install "autocarver[mcp]"
 ```
+
+Once configured, just ask your assistant:
+
+> Qualify the columns in `titanic.csv` and carve them against `Survived`.
+
+The assistant infers feature types, proposes a carving, and returns the summary table — no code written by hand.
+
+<details>
+<summary>Client config</summary>
+
+Add to `.vscode/mcp.json` (VS Code / GitHub Copilot) or `claude_desktop_config.json` (Claude Desktop, under `mcpServers` instead of `servers`):
+
+```json
+{
+  "servers": {
+    "autocarver": {
+      "command": "python",
+      "args": ["-m", "AutoCarver.mcp"]
+    }
+  }
+}
+```
+
+If you use [uv](https://docs.astral.sh/uv/), point `command` at `uv` instead so it resolves the environment for you:
+
+```json
+{
+  "servers": {
+    "autocarver": {
+      "command": "uv",
+      "args": ["run", "python", "-m", "AutoCarver.mcp"]
+    }
+  }
+}
+```
+
+</details>
 
 
 ## Install
