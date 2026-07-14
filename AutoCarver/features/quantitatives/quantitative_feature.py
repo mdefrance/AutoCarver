@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 from AutoCarver.features.utils.base_feature import BaseFeature
-from AutoCarver.features.utils.grouped_list import GroupedList
+from AutoCarver.features.utils.grouped_list import GroupedList, is_equal
 
 
 class QuantitativeFeature(BaseFeature):
@@ -42,6 +42,88 @@ class QuantitativeFeature(BaseFeature):
             kept_value = r_value_per_label[kept_value]
 
         return grouped_values, kept_value
+
+    def split(self, label: str | int, at: float) -> None:
+        """Splits the interval bin ``label`` in two at ``at``.
+
+        ``at`` must lie strictly inside the bin: ``lower < at < upper`` where
+        ``upper`` is the bin's leader and ``lower`` the previous bin's leader
+        (``-inf`` for the first bin). Statistics of the split bin become NaN
+        (their true split is unknowable without a refit). A NaN member grouped
+        into the bin stays with the upper half.
+        """
+        leader = self._leader_of_label(label)
+        if leader == self.nan:
+            raise ValueError(f"[{self}] Cannot split the NaN bin")
+
+        non_nan_leaders = [value for value in self.values if value != self.nan]
+        position = non_nan_leaders.index(leader)
+        lower = non_nan_leaders[position - 1] if position > 0 else -np.inf
+        if not lower < at < leader:
+            raise ValueError(f"[{self}] Split point {at} must lie strictly inside ({lower}, {leader}]")
+
+        old_snapshot = self._raw_label_snapshot() if self._statistics is not None else {}
+
+        # rebuild content in order, splitting the target group at ``at``
+        new_content: dict = {}
+        for key, members in self.values.content.items():
+            if key == leader:
+                low_members: list = []
+                high_members: list = []
+                for member in members:
+                    if member == self.nan or is_equal(member, key):
+                        high_members.append(member)  # leader and nan stay with the upper half
+                    elif float(member) < at:
+                        low_members.append(member)
+                    elif float(member) > at:
+                        high_members.append(member)
+                    # member == at: dropped — represented by the new leader ``at`` itself
+                new_content[at] = low_members + [at]
+                new_content[key] = high_members
+            else:
+                new_content[key] = members
+        self.update(GroupedList(new_content), replace=True)
+        raw_labels = list(self.make_labels())
+        self._rebuild_statistics(old_snapshot, force_nan=[raw_labels[position], raw_labels[position + 1]])
+
+    def set_boundary(self, label: str | int, at: float) -> None:
+        """Moves the upper boundary of bin ``label`` to ``at``.
+
+        Shrinks the bin (``at`` below the current boundary, ceding to the next
+        bin) or grows it (``at`` above, eating into the next bin). Not allowed
+        on the last bin (its upper bound is +inf). Both touched bins' statistics
+        become NaN.
+        """
+        leader = self._leader_of_label(label)
+        if leader == self.nan:
+            raise ValueError(f"[{self}] The NaN bin has no boundary")
+
+        non_nan_leaders = [value for value in self.values if value != self.nan]
+        position = non_nan_leaders.index(leader)
+        if position == len(non_nan_leaders) - 1:
+            raise ValueError(f"[{self}] Cannot move the +inf upper bound of the last bin")
+        if at == leader:
+            return
+
+        if at < leader:
+            # shrink: split at ``at`` then merge the upper remainder into the next bin
+            self.split(label, at)
+            labels = self._non_none_labels()
+            self.group([labels[position + 1]], labels[position + 2])
+        else:
+            # grow: split the next bin at ``at`` then merge its lower part into this bin
+            next_leader = non_nan_leaders[position + 1]
+            if not at < next_leader:
+                raise ValueError(f"[{self}] New boundary {at} must stay below the next boundary {next_leader}")
+            self.split(self._non_none_labels()[position + 1], at)
+            labels = self._non_none_labels()
+            self.group([labels[position + 1]], labels[position])
+
+    def _non_none_labels(self) -> list:
+        """``self.labels`` narrowed to non-``None`` (guaranteed once a feature has values)."""
+        if self.labels is None:
+            raise RuntimeError(f"[{self}] labels have not been computed yet")
+        return self.labels
 
     def make_labels(self) -> GroupedList:
         """gives labels per quantile (values for continuous features)

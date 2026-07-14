@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from AutoCarver.features.utils.base_feature import BaseFeature
-from AutoCarver.features.utils.grouped_list import GroupedList
+from AutoCarver.features.utils.grouped_list import GroupedList, is_equal
 
 
 class QualitativeFeature(BaseFeature):
@@ -84,6 +84,58 @@ class QualitativeFeature(BaseFeature):
             self.group(unexpected, default_group, convert_labels=False)
 
         super().check_values(X)
+
+    def move(self, value: str, to_label: str | int) -> None:
+        """Moves a single raw modality out of its current bin into the bin labelled ``to_label``.
+
+        ``value`` is a raw (pre-carving) modality; ``to_label`` is a current label
+        as shown by ``labels``/``summary`` (an int code when ordinal_encoding is on).
+        """
+        if not self.values.contains(value):
+            raise ValueError(f"[{self}] Unknown value {value}")
+        target_leader = self._leader_of_label(to_label)
+        source_leader = self.values.get_group(value)
+        if is_equal(source_leader, target_leader):
+            return
+
+        if self.is_ordinal:
+            source_after = [v for v in self.values.get(source_leader) if not is_equal(v, value)]
+            target_after = self.values.get(target_leader) + [value]
+            self._check_contiguity(source_after, f"bin of {value} after removal")
+            self._check_contiguity(target_after, f"bin {to_label} after adding {value}")
+
+        old_snapshot = self._raw_label_snapshot() if self._statistics is not None else {}
+        values = GroupedList(self.values)
+        values.move_member(value, target_leader)
+        self.update(values, replace=True)
+        self._rebuild_statistics(old_snapshot)
+
+    def ungroup(self, value: str) -> None:
+        """Extracts a single raw modality into its own bin."""
+        if not self.values.contains(value):
+            raise ValueError(f"[{self}] Unknown value {value}")
+        source_leader = self.values.get_group(value)
+        if len(self.values.get(source_leader)) == 1:
+            return  # already its own bin
+
+        if self.is_ordinal:
+            source_after = [v for v in self.values.get(source_leader) if not is_equal(v, value)]
+            self._check_contiguity(source_after, f"bin of {value} after removal")
+
+        old_snapshot = self._raw_label_snapshot() if self._statistics is not None else {}
+        values = GroupedList(self.values)
+        values.extract_member(value)
+        self.update(values, replace=True)
+        self._rebuild_statistics(old_snapshot)
+
+    def _check_contiguity(self, members: list, context: str) -> None:
+        """Ordinal bins must stay contiguous runs of ``raw_order`` (labels render '{first} to {last}')."""
+        positions = sorted(self.raw_order.index(v) for v in members if v in self.raw_order)
+        if positions and positions != list(range(positions[0], positions[-1] + 1)):
+            raise ValueError(
+                f"[{self}] {context} would not be contiguous in the declared ordinal order; "
+                f"move the in-between modalities too, or use group()."
+            )
 
     def make_labels(self) -> GroupedList:
         """gives labels per values"""

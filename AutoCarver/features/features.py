@@ -305,8 +305,8 @@ class Features:
         # leak into other typed lists (NestedFeature is a QualitativeFeature subclass)
         self._nested = get_nested_features(features)
         self._datetimes = get_datetime_features(features)
-        # quantitatives stored without datetimes; the ``quantitatives`` view recombines them
-        self._quantitatives = [f for f in get_quantitative_features(features) if not f.is_datetime]
+        # numericals stored without datetimes; the ``quantitatives`` view recombines them
+        self._numericals = [f for f in get_quantitative_features(features) if not f.is_datetime]
 
         if not (self.categoricals or self.quantitatives or self.ordinals or self._nested):
             raise ValueError(
@@ -460,8 +460,8 @@ class Features:
 
     @property
     def quantitatives(self) -> list[QuantitativeFeature]:
-        """Returns all quantitative features (datetimes included)"""
-        return self._quantitatives + self._datetimes
+        """Returns all quantitative features (numericals and datetimes)"""
+        return self._numericals + self._datetimes
 
     @quantitatives.setter
     def quantitatives(self, values: list[QuantitativeFeature]) -> None:
@@ -469,8 +469,21 @@ class Features:
 
         if not all(isinstance(feature, QuantitativeFeature) for feature in values):
             raise AttributeError(f"[{self}] Trying to set quantitative feature with wrongly typed feature")
-        self._quantitatives = [feature for feature in values if not feature.is_datetime]
+        self._numericals = [feature for feature in values if not feature.is_datetime]
         self._datetimes = get_datetime_features(values)
+
+    @property
+    def numericals(self) -> list[QuantitativeFeature]:
+        """Returns all numerical features (also part of :attr:`quantitatives`, datetimes excluded)"""
+        return self._numericals
+
+    @numericals.setter
+    def numericals(self, values: list[QuantitativeFeature]) -> None:
+        """sets numerical features"""
+
+        if not all(isinstance(feature, QuantitativeFeature) and not feature.is_datetime for feature in values):
+            raise AttributeError(f"[{self}] Trying to set numerical feature with wrongly typed feature")
+        self._numericals = values
 
     @property
     def datetimes(self) -> list[DatetimeFeature]:
@@ -560,7 +573,7 @@ class Features:
             return
         if isinstance(updated, DatetimeFeature) and _replace_version(self._datetimes, updated):
             return
-        if isinstance(updated, QuantitativeFeature) and _replace_version(self._quantitatives, updated):
+        if isinstance(updated, QuantitativeFeature) and _replace_version(self._numericals, updated):
             return
         raise KeyError(f"[{self.__name__}] feature {updated.version!r} not in Features")
 

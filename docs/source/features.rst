@@ -21,8 +21,10 @@ Auditing and adjusting carved bins
 -----------------------------------
 
 Carving is transparent: inspect what was decided, then override it if domain
-knowledge says otherwise. A manually merged bin is applied by ``transform``
-exactly like a carved one.
+knowledge says otherwise. Every manual edit below is applied by ``transform``
+exactly like a carved bin, and per-bin statistics are kept consistent: merged
+bins get exactly aggregated counts and rates, while bins whose content can no
+longer be derived from the fit (after a move or split) show ``NaN`` until refit.
 
 .. code-block:: python
 
@@ -32,10 +34,31 @@ exactly like a carved one.
     print(feature.summary)       # per-bin frequencies and target rates
     print(feature.history)       # every combination tried, with viability verdicts
 
-    # merge two bins you consider equivalent, then re-transform
+    # merge two bins you consider equivalent
     feature.group(["low", "medium"], "medium")
+
+    # move a single modality into another bin, or give it its own bin
+    feature.move("high", "low to medium")  # raw modality, target bin label
+    feature.ungroup("high")
+
     x_discretized = binary_carver.transform(train_set)
 
+Quantitative bins are intervals, so their editing verbs differ: split a bin at
+a value of your choosing, or shift the boundary between two adjacent bins.
+
+.. code-block:: python
+
+    feature = features("numerical1")
+    print(feature.summary)
+
+    feature.split("(-inf, 2.50e+01]", at=10.0)       # one bin becomes two
+    feature.set_boundary("(-inf, 1.00e+01]", at=15.0)  # boundary 10.0 -> 15.0
+
+    x_discretized = binary_carver.transform(train_set)
+
+Ordinal features enforce their declared order: a ``move``/``ungroup`` that would
+leave a bin non-contiguous in the original ordering raises a ``ValueError``
+(labels always render as honest ``"first to last"`` ranges).
 
 FeaturesConfig
 ^^^^^^^^^^^^^^

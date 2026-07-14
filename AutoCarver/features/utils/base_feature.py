@@ -236,6 +236,54 @@ class BaseFeature(ABC):
         else:
             raise ValueError(f"Trying to set statistics with type {type(value)}")
 
+    def _raw_label_snapshot(self) -> dict:
+        """Maps every raw member value to its current raw (string) label.
+
+        Raw labels are the pre-ordinal-encoding labels — the space the stored
+        ``_statistics`` index lives in (in both encoding modes).
+        """
+        raw_labels = list(self.make_labels())
+        snapshot: dict = {}
+        for i, leader in enumerate(self.values):
+            if i < len(raw_labels):
+                label = raw_labels[i]
+            else:
+                label = raw_labels[-1] if raw_labels else leader
+            for member in self.values.get(leader):
+                snapshot[member] = label
+        return snapshot
+
+    def _rebuild_statistics(self, old_snapshot: dict, force_nan: list | None = None) -> None:
+        """Re-indexes stored statistics onto the current labels after a manual edit.
+
+        - a bin that absorbed exactly one former bin carries its row over;
+        - a bin that absorbed several whole former bins gets an exact aggregate
+          (counts/frequencies summed, other columns count-weighted);
+        - any bin touched by a *partial* former bin (a split) gets NaN — the
+          true per-bin statistics are unknowable without a refit.
+        """
+        if self._statistics is None:
+            return
+
+        old_stats = pd.DataFrame(self._statistics)  # index = old raw labels
+        new_snapshot = self._raw_label_snapshot()
+
+        old_labels_per_new = _old_labels_per_new_label(new_snapshot, old_snapshot)
+        split_old_labels = _find_split_old_labels(old_labels_per_new)
+        new_rows = _build_new_rows(old_labels_per_new, old_stats, split_old_labels)
+
+        # every current label gets a row (bins holding only post-fit synthetic values get NaN)
+        nan_row = {col: float("nan") for col in old_stats.columns}
+        for label in set(new_snapshot.values()):
+            if label not in new_rows:
+                new_rows[label] = dict(nan_row)
+
+        # bins the caller knows were split: their true statistics are unknowable
+        for label in force_nan or []:
+            new_rows[label] = dict(nan_row)
+
+        self._statistics = pd.DataFrame.from_dict(new_rows, orient="index").to_dict()
+
     # ------------------------------------------------------------------
     # history
     # ------------------------------------------------------------------
@@ -322,9 +370,6 @@ class BaseFeature(ABC):
         if len(grouped_values) > 0:
             self.values.group(grouped_values, kept_value)
 
-        # updating statistics
-        self._update_statistics_value(kept_label, kept_value)
-
     def _check_empty_values(self, values: GroupedList) -> None:
         """Optional hook: validates values before the first assignment (no-op by default)."""
         return
@@ -384,17 +429,6 @@ class BaseFeature(ABC):
         """Updates label for each value of the feature."""
         self.labels = self.make_labels()
 
-    def _update_statistics_value(self, kept_label: str | float, kept_value: str | float) -> None:
-        """Renames a statistics index entry to track a value-keep operation."""
-
-        if self._statistics is None:
-            return
-
-        # statistics is stored as a dict of {col: {index: value}} — rename keys in each inner dict
-        for index_map in self._statistics.values():
-            if isinstance(index_map, dict) and kept_label in index_map:
-                index_map[kept_value] = index_map.pop(kept_label)
-
     def update(
         self,
         values: "GroupedList | list",
@@ -448,8 +482,21 @@ class BaseFeature(ABC):
     def group(self, to_discard: list[str], to_keep: str, convert_labels: bool = True) -> None:
         """Groups a list of labels (or raw values, when ``convert_labels=False``) into a kept one."""
 
+        old_snapshot = self._raw_label_snapshot() if self._statistics is not None else {}
         grouped = GroupedList({to_keep: [*to_discard, to_keep]})
         self.update(grouped, convert_labels=convert_labels)
+        self._rebuild_statistics(old_snapshot)
+
+    def _leader_of_label(self, label: str | int) -> Any:
+        """Resolves a display label (str, or int code when ordinal_encoding) to its leader value."""
+        if self.labels is None or label not in self.labels:
+            raise ValueError(f"[{self}] Unknown label {label}. Available labels: {self.labels}")
+        if len(self.labels) != len(self.values):
+            raise ValueError(
+                f"[{self}] Some bins share the same display label (e.g. truncated at max_n_chars);"
+                " labels are ambiguous, manual editing is not supported in this state."
+            )
+        return list(self.values)[self.labels.index(label)]
 
     # ------------------------------------------------------------------
     # serialization
@@ -520,3 +567,69 @@ class BaseFeature(ABC):
         values = json_deserialize_content(feature_json)
         if values is not None:
             self.update(values, replace=True)
+
+
+def _old_labels_per_new_label(new_snapshot: dict, old_snapshot: dict) -> dict:
+    """Old labels absorbed by each new label (members unseen at fit have no old label)."""
+    old_labels_per_new: dict = {}
+    for member, new_label in new_snapshot.items():
+        if member in old_snapshot:
+            old_labels_per_new.setdefault(new_label, set()).add(old_snapshot[member])
+    return old_labels_per_new
+
+
+def _find_split_old_labels(old_labels_per_new: dict) -> set:
+    """An old label spread across several new labels means a split: stats unknowable."""
+    owner_per_old: dict = {}
+    split_old_labels: set = set()
+    for new_label, old_labels in old_labels_per_new.items():
+        for old_label in old_labels:
+            if old_label in owner_per_old and owner_per_old[old_label] != new_label:
+                split_old_labels.add(old_label)
+            owner_per_old[old_label] = new_label
+    return split_old_labels
+
+
+def _build_new_rows(old_labels_per_new: dict, old_stats: pd.DataFrame, split_old_labels: set) -> dict:
+    """Aggregates old stats rows onto each new label (NaN when unknowable or unseen)."""
+    new_rows: dict = {}
+    for new_label, old_labels in old_labels_per_new.items():
+        known = [label for label in old_labels if label in old_stats.index]
+        if any(label in split_old_labels for label in old_labels) or len(known) == 0:
+            new_rows[new_label] = {col: float("nan") for col in old_stats.columns}
+        elif len(known) == 1:
+            new_rows[new_label] = old_stats.loc[known[0]].to_dict()
+        else:
+            new_rows[new_label] = _aggregate_stats_rows(old_stats.loc[known])
+    return new_rows
+
+
+def _aggregate_stats_rows(rows: pd.DataFrame) -> dict:
+    """Aggregates several bins' statistics rows into one merged bin's row.
+
+    ``count`` and ``frequency`` sum exactly; every other column is pooled by a
+    count-weighted mean (falling back to frequency weights, then a plain mean),
+    which is exact for per-bin means such as target rates.
+    """
+    if "count" in rows.columns and rows["count"].notna().all():
+        weights = rows["count"].astype(float)
+    elif "frequency" in rows.columns and rows["frequency"].notna().all():
+        weights = rows["frequency"].astype(float)
+    else:
+        weights = pd.Series(1.0, index=rows.index)
+    if weights.sum() == 0:
+        weights = pd.Series(1.0, index=rows.index)
+
+    aggregated: dict = {}
+    for col in rows.columns:
+        values = rows[col]
+        if not pd.api.types.is_numeric_dtype(values) or values.isna().any():
+            # a NaN input (already-unknowable bin, e.g. from a prior split) must
+            # propagate — pandas' default skipna sum/mean would otherwise silently
+            # treat it as absent and understate the aggregate.
+            aggregated[col] = float("nan")
+        elif col in ("count", "frequency"):
+            aggregated[col] = values.sum()
+        else:
+            aggregated[col] = float((values * weights).sum() / weights.sum())
+    return aggregated

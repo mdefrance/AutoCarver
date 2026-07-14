@@ -226,7 +226,7 @@ def test_features_datetimes_stored_separately():
 
     # stored apart from pure quantitatives
     assert get_names(features._datetimes) == ["dt"]
-    assert get_names(features._quantitatives) == ["num"]
+    assert get_names(features._numericals) == ["num"]
 
     # the public quantitatives view recombines them (and to_list lists each once)
     assert get_names(features.quantitatives) == ["num", "dt"]
@@ -243,7 +243,7 @@ def test_features_replace_feature():
 
     new_num = QuantitativeFeature("num")
     features.replace_feature(new_num)
-    assert features._quantitatives[0] is new_num
+    assert features._numericals[0] is new_num
 
     with raises(KeyError):
         features.replace_feature(QuantitativeFeature("absent"))
