@@ -174,6 +174,15 @@ Two questions worth answering before your next model review: can you defend ever
 - **Dimensionality reduction** — groups under-represented modalities and caps bins per feature (`max_n_mod`), which is especially useful before one-hot encoding.
 - **Feature pre-selection** — `ClassificationSelector` / `RegressionSelector` rank features by target association and filter on inter-feature correlation.
 
+<p align="center">
+    <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/mdefrance/AutoCarver/main/docs/source/_static/hero_chart_dark.svg">
+        <img alt="Raw feature vs AutoCarver buckets: frequency and target rate before/after supervised binning" src="https://raw.githubusercontent.com/mdefrance/AutoCarver/main/docs/source/_static/hero_chart_light.svg" width="100%">
+    </picture>
+</p>
+
+*Titanic `Age`, one `BinaryCarver.fit` call: 84 raw values collapse to 3 buckets with a monotonic survival rate.*
+
 
 ## How does it compare?
 
