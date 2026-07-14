@@ -46,11 +46,12 @@ FEATURE = "Age"
 # same palette as docs/build_logo.py; GOLD is reserved for the "decision" accent
 NAVY = "#2E3A59"
 NAVY_DARKMODE = "#E2E8F0"
+BLUE = "#5B8FF9"  # carved bars on dark backgrounds — NAVY is invisible there
 GOLD = "#F6BD16"
 RAW_BAR = "#9CA6B8"  # light neutral — deliberately less confident than the carved bars
 
-LIGHT = {"ink": NAVY}
-DARK = {"ink": NAVY_DARKMODE}
+LIGHT = {"ink": NAVY, "carved_bar": NAVY}
+DARK = {"ink": NAVY_DARKMODE, "carved_bar": BLUE}
 
 N_RAW_BINS = 30
 FIG_W_IN, FIG_H_IN = 12, 5
@@ -135,7 +136,7 @@ def draw(raw: dict, carved: dict, palette: dict, *, figsize: tuple[float, float]
 
     # --- right: carved ---
     x = np.arange(len(carved["labels"]))
-    ax_carved.bar(x, carved["frequency"], color=NAVY, edgecolor=ink, linewidth=0.3)
+    ax_carved.bar(x, carved["frequency"], color=palette["carved_bar"], edgecolor=ink, linewidth=0.3)
     ax_carved.set_title(
         f"Carved — {len(carved['labels'])} auditable buckets, monotonic survival rate", color=ink, fontsize=11
     )
