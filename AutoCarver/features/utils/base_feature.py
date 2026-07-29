@@ -68,6 +68,18 @@ class BaseFeature(ABC):
     def __repr__(self) -> str:
         return f"{self.__name__}('{self.version}')"
 
+    def __eq__(self, other: object) -> bool:
+        # keyed on version so a bare list of features can subset a DataFrame's
+        # columns (``X[[feat_a, feat_b]]`` matches each ``feature.version`` string)
+        if isinstance(other, BaseFeature):
+            return self.version == other.version
+        if isinstance(other, str):
+            return self.version == other
+        return NotImplemented
+
+    def __hash__(self) -> int:
+        return hash(self.version)
+
     # ------------------------------------------------------------------
     # state flag properties
     # ------------------------------------------------------------------
