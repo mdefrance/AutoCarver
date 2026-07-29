@@ -72,15 +72,16 @@ handful of candidates ever survive the viability walk.
 The DP idea
 ^^^^^^^^^^^
 
-The DP exploits two properties shared by both supported metrics
+The DP exploits two properties shared by the supported metrics
 (Kruskal-Wallis :math:`H` for continuous targets, Pearson :math:`\chi^2` for
-binary targets):
+binary targets, the :ref:`additive C − D numerator <OrdinalCombinations>` of
+the rank statistics for ordinal targets):
 
 1. **Segmentation structure.** A partition is a sequence of disjoint
    consecutive intervals :math:`[s_g, s_{g+1})`. Sub-problems factorise over
    the right boundary :math:`j` and the number of groups :math:`k`.
 2. **Additive decomposability of the metric over groups, given fixed**
-   :math:`k`. Both :math:`H` and :math:`\chi^2` reduce — at fixed
+   :math:`k`. Each metric reduces — at fixed
    :math:`k` and after factoring out :math:`k`-dependent normalising
    constants — to a sum over groups of a quantity that depends **only on a
    single interval** :math:`[i, j)` of raw modalities.
