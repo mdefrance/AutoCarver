@@ -328,6 +328,22 @@ class Features:
         """Returns names of all features"""
         return f"{self.__name__}({str(self.versions)})"
 
+    def __add__(self, other: "Features | Iterable[BaseFeature]") -> "Features":
+        """Merge two feature sets into a new :class:`Features`.
+
+        Deduplicates by version (right operand wins on a clash, matching
+        :meth:`from_list`); each feature keeps its own state (``is_fitted``,
+        ``ordinal_encoding``, …), so a carved qualitative set can be combined
+        with a raw quantitative set for selection.
+        """
+        if isinstance(other, Features):
+            other_features = list(other)
+        elif isinstance(other, Iterable) and not isinstance(other, str):
+            other_features = list(other)
+        else:
+            return NotImplemented
+        return Features.from_list(list(self) + other_features)
+
     def __contains__(self, feature: str | BaseFeature) -> bool:
         """checks if a feature is in the features"""
         if isinstance(feature, BaseFeature):
