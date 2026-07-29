@@ -128,12 +128,9 @@ class OrdinalCombinationEvaluator(CombinationEvaluator[pd.DataFrame], ABC):
         # samples.train.xagg is a crosstab DataFrame for ordinal evaluators
         M, n_per_mod, col_sums = _dp_inputs_from_xagg(self.samples.train.xagg, raw_index)  # type: ignore
 
-        # Progressive top-K with doubling, mirroring the binary/continuous DPs.
-        top_k = self.dp_top_k_initial
-        walked = 0
-        viable: dict | None = None
-        while True:
-            associations = _top_k_partitions_ordinal_dp(
+        # Progressive top-K with ×4 growth (shared driver), mirroring binary/continuous.
+        viable = self._search_escalating(
+            lambda top_k: _top_k_partitions_ordinal_dp(
                 M,
                 n_per_mod,
                 col_sums,
@@ -142,16 +139,8 @@ class OrdinalCombinationEvaluator(CombinationEvaluator[pd.DataFrame], ABC):
                 sort_by=self.sort_by,
                 top_k=top_k,
             )
-            viable, walked = self._walk_for_viable(associations, start=walked)
-            if viable is not None:
-                break
-            if walked < top_k:
-                break  # DP exhausted every consecutive partition; no viable exists
-            top_k *= 2
-
-        if viable is not None and viable.get("xagg") is None:
-            index_to_groupby = viable.get("index_to_groupby") or combination_formatter(viable["combination"])
-            viable["xagg"] = self._grouper(self.samples.train, index_to_groupby)
+        )
+        self._rebuild_winner_xagg(viable)
 
         self._apply_best_combination(viable)
         return viable

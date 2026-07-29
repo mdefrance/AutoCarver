@@ -237,9 +237,10 @@ truncated to ``top_k``.
        <strong>Why "progressive" top-K?</strong>
        The DP returns the top <code style="background: #dbeafe; padding: 1px 4px; border-radius: 2px;">top_k</code>
        partitions by score, then the viability filter (Wilson <code style="background: #dbeafe; padding: 1px 4px; border-radius: 2px;">min_freq</code>,
-       distinct target rates, train/dev rank) walks them in order. If none pass,
+       distinct target rates, train/dev rank) walks them in order. If none pass and
+       escalation is enabled,
        <code style="background: #dbeafe; padding: 1px 4px; border-radius: 2px;">top_k</code>
-       doubles and the DP re-runs — keeping the common case (a viable winner in the
+       grows ×4 and the DP re-runs — keeping the common case (a viable winner in the
        first batch) cheap, while preserving the optimality guarantee in the worst case.
      </div>
    </div>
@@ -250,16 +251,16 @@ Progressive top-K
 
 The DP returns the **top-K** scored partitions, not all of them. The viability
 walk consumes that list in metric-desc order; if no candidate is viable in the
-current top-K we **double** ``top_k`` and re-run the DP, walking only the
-newly-appeared entries. Repeats until either:
+current top-K and escalation is enabled we grow ``top_k`` **×4** and re-run the
+DP, walking only the newly-appeared entries. Repeats until either:
 
 * a viable candidate is found, or
 * the DP returns fewer than ``top_k`` entries — every consecutive partition
   has been emitted; no viable exists for this feature.
 
-Doubling guarantees the search is **exhaustive in the worst case**: the same
-admissible candidate set is eventually considered as in the legacy
-enumerate-and-score path. Total work is bounded by :math:`\sim 2 \times` a
+When escalation is enabled the search is **exhaustive in the worst case**: the
+same admissible candidate set is eventually considered as in the legacy
+enumerate-and-score path. Total work is bounded by :math:`\sim 1.33 \times` a
 single DP run at the final ``top_k``. The common case (viable found in the
 initial top-K) costs :math:`O(K \cdot n^2 \cdot \text{top\_k} \cdot \log
 \text{top\_k})` ops, **independent of the total combination count** — which
@@ -267,7 +268,10 @@ scales combinatorially in :math:`n` and ``max_n_mod`` and reached :math:`\sim
 8\text{M}` at :math:`n=40,\,\text{max_n_mod}=7` previously.
 
 The initial top-K is configurable via the class attribute
-:attr:`CombinationEvaluator.dp_top_k_initial` (default ``1000``).
+:attr:`CombinationEvaluator.dp_top_k_initial` (default ``2000``). The ×4
+escalation is opt-in via ``ProcessingConfig.dp_escalate`` (default ``False``):
+when off, the search stops at the initial top-K and warns on the first fail
+instead of growing ``top_k``.
 
 
 NaN fan-out path
