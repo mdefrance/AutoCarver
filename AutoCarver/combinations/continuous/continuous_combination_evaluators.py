@@ -265,11 +265,12 @@ class ContinuousCombinationEvaluator(CombinationEvaluator[pd.Series], ABC):
         top-K consecutive partitions ranked by Kruskal-Wallis H descending.
 
         **Progressive search.** Starts with ``top_k = self.dp_top_k_initial``.
-        If the viability walk doesn't find a viable candidate within that top-K,
-        doubles top_k and re-runs DP — walking only the new entries from where
-        we left off. Repeats until either a viable is found or DP exhausts
-        every consecutive partition (signalled by ``len(result) < top_k``).
-        Total work bounded by ~2× a single DP run at the final top_k.
+        If the viability walk doesn't find a viable candidate within that top-K
+        and escalation is enabled (``dp_escalate``), grows top_k ×4 and re-runs
+        DP — walking only the new entries from where we left off. Repeats until
+        either a viable is found or DP exhausts every consecutive partition
+        (signalled by ``len(result) < top_k``). Total work bounded by ~1.33× a
+        single DP run at the final top_k.
 
         This makes the search **exhaustive in the worst case**, matching the
         legacy enumerate-and-score path's correctness while keeping the common
@@ -311,13 +312,9 @@ class ContinuousCombinationEvaluator(CombinationEvaluator[pd.Series], ABC):
         self._dev_modality_stats: dict[str, Any] | None = None
         self._dev_modality_stats_id: int | None = None
 
-        # Progressive top-K with doubling. See docstring.
-        top_k = self.dp_top_k_initial
-        walked = 0
-        viable: dict | None = None
-        associations: list[dict] = []
-        while True:
-            associations = _top_k_partitions_kruskal_dp(
+        # Progressive top-K with ×4 growth (shared driver). See docstring.
+        viable = self._search_escalating(
+            lambda top_k: _top_k_partitions_kruskal_dp(
                 R_per_mod,
                 n_per_mod,
                 N,
@@ -326,18 +323,8 @@ class ContinuousCombinationEvaluator(CombinationEvaluator[pd.Series], ABC):
                 raw_index=raw_index,
                 top_k=top_k,
             )
-            viable, walked = self._walk_for_viable(associations, start=walked)
-            if viable is not None:
-                break
-            if walked < top_k:
-                break  # DP exhausted every consecutive partition; no viable exists
-            top_k *= 2
-
-        # Rebuild grouped xagg for the winner (fast path skipped this).
-        if viable is not None and viable.get("xagg") is None:
-            index_to_groupby = viable.get("index_to_groupby") or combination_formatter(viable["combination"])
-            viable["xagg"] = self._grouper(self.samples.train, index_to_groupby)
-
+        )
+        self._rebuild_winner_xagg(viable)
         self._apply_best_combination(viable)
         return viable
 
@@ -359,7 +346,7 @@ class ContinuousCombinationEvaluator(CombinationEvaluator[pd.Series], ABC):
            ``_apply_best_combination`` repopulates ``samples.train.xagg`` with
            the nan modality intact);
         4. walk the sorted variants for the first viable, with progressive
-           top-K doubling on the base DP — dedup'd via a per-partition seen
+           top-K ×4 growth on the base DP — dedup'd via a per-partition seen
            set so combinations carried over from a smaller ``top_k`` are not
            re-tested / re-historized.
 
@@ -424,11 +411,7 @@ class ContinuousCombinationEvaluator(CombinationEvaluator[pd.Series], ABC):
         )
         N_non_nan = int(n_non_nan.sum())
 
-        historized: set[tuple] = set()
-        base_top_k = self.dp_top_k_initial
-        viable: dict | None = None
-
-        while True:
+        def _run_round(top_k: int) -> tuple[list[dict], int]:
             base_partitions = _top_k_partitions_kruskal_dp(
                 R_non_nan,
                 n_non_nan,
@@ -436,7 +419,7 @@ class ContinuousCombinationEvaluator(CombinationEvaluator[pd.Series], ABC):
                 tie_corr,
                 max_n_mod=self.max_n_mod,
                 raw_index=non_nan_index,
-                top_k=base_top_k,
+                top_k=top_k,
             )
             scored = _score_nan_variants_kruskal(
                 base_partitions=base_partitions,
@@ -450,16 +433,10 @@ class ContinuousCombinationEvaluator(CombinationEvaluator[pd.Series], ABC):
                 mod_to_pos=mod_to_pos,
                 n_mod=n_mod,
             )
-            viable = self._walk_nan_variants(scored, historized)
-            if viable is not None:
-                break
-            if len(base_partitions) < base_top_k:
-                break  # DP exhausted every consecutive partition
-            base_top_k *= 2
+            return scored, len(base_partitions)
 
-        if viable is not None and viable.get("xagg") is None:
-            index_to_groupby = viable.get("index_to_groupby") or combination_formatter(viable["combination"])
-            viable["xagg"] = self._grouper(self.samples.train, index_to_groupby)
+        viable = self._search_escalating_nan(_run_round)
+        self._rebuild_winner_xagg(viable)
 
         self._apply_best_combination(viable)
         return viable

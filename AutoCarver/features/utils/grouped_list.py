@@ -357,6 +357,68 @@ class GroupedList:
                 new_content[key] = values
         self.content = new_content
 
+    def move_member(self, value: Any, to_leader: Any) -> None:
+        """Moves a single member from its current group into ``to_leader``'s group.
+
+        If ``value`` is itself a leader with other members, another member is
+        promoted to leader first (the first other member, deterministically).
+        A singleton leader is moved via :meth:`group`. No-op when ``value``
+        already belongs to ``to_leader``'s group.
+        """
+        if to_leader not in self.content:
+            raise ValueError(f"[{self}] {to_leader} not in list")
+
+        source = self.get_group(value)
+        if is_equal(source, value) and not self.contains(value):
+            raise ValueError(f"[{self}] {value} not in list")
+        if is_equal(source, to_leader):
+            return
+
+        # value is a leader: promote another member, or move the singleton group whole
+        if value in self.content:
+            others = [v for v in self.content[value] if not is_equal(v, value)]
+            if len(others) == 0:
+                self._group_single_value(value, to_leader)
+                self.sanity_check()
+                return
+            self.replace_group_leader(value, others[0])
+            source = others[0]
+
+        # plain member move (NaN-safe removal)
+        self.content[source] = [v for v in self.content[source] if not is_equal(v, value)]
+        self.content[to_leader] = self.content[to_leader] + [value]
+        self.sanity_check()
+
+    def extract_member(self, value: Any) -> None:
+        """Extracts a single member into its own singleton group, inserted right
+        after its current group in the ordering.
+
+        If ``value`` is a leader with other members, another member is promoted
+        first (same rule as :meth:`move_member`). No-op when ``value`` is
+        already a singleton leader.
+        """
+        source = self.get_group(value)
+        if is_equal(source, value) and not self.contains(value):
+            raise ValueError(f"[{self}] {value} not in list")
+
+        if value in self.content:
+            others = [v for v in self.content[value] if not is_equal(v, value)]
+            if len(others) == 0:
+                return  # already a singleton group
+            self.replace_group_leader(value, others[0])
+            source = others[0]
+
+        # rebuild content preserving order, inserting the singleton after its source group
+        new_content: dict[Any, list[Any]] = {}
+        for key, values in self.content.items():
+            if is_equal(key, source):
+                new_content[key] = [v for v in values if not is_equal(v, value)]
+                new_content[value] = [value]
+            else:
+                new_content[key] = values
+        self.content = new_content
+        self.sanity_check()
+
     # ------------------------------------------------------------------
     # Ordering
     # ------------------------------------------------------------------

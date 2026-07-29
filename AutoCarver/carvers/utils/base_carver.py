@@ -95,6 +95,7 @@ def _carve_feature_worker(
     dropna: bool,
     min_freq_alpha: float,
     rescue: bool,
+    dp_escalate: bool,
 ) -> tuple[BaseFeature, bool]:
     """Picklable worker: scores best combination for a single feature.
 
@@ -116,6 +117,7 @@ def _carve_feature_worker(
         min_freq_alpha=min_freq_alpha,
         folds_xagg=folds_xagg,
         rescue=rescue,
+        dp_escalate=dp_escalate,
     )
     return feature, best is not None
 
@@ -577,6 +579,7 @@ class BaseCarver(BaseDiscretizer, ABC):
             dropna=bool(self.config.dropna),
             min_freq_alpha=self.config.min_freq_alpha,
             rescue=bool(self.config.rescue_rare),
+            dp_escalate=self.config.dp_escalate,
         )
 
         with Pool(processes=self.config.n_jobs) as pool:
@@ -632,6 +635,7 @@ class BaseCarver(BaseDiscretizer, ABC):
             min_freq_alpha=self.config.min_freq_alpha,
             folds_xagg=self._folds_for_feature(xaggs_folds, feature.version),
             rescue=bool(self.config.rescue_rare),
+            dp_escalate=self.config.dp_escalate,
         )
 
         # printing carved distribution, for found, suitable combination

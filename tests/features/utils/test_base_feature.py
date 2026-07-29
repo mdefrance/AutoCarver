@@ -390,3 +390,42 @@ def test_base_feature_load() -> None:
     assert all(loaded_feature.statistics.index == [0, 1])
     assert len(loaded_feature.history) == 0
     assert loaded_feature.ordinal_encoding
+
+
+def test_base_feature_subsets_dataframe_by_version() -> None:
+    """a bare list of features subsets a DataFrame's columns by each feature's version"""
+    X = pd.DataFrame({"age": [1, 2], "name": ["a", "b"], "extra": [3, 4]})
+
+    feat_age = BaseFeature(name="age")
+    feat_name = BaseFeature(name="name")
+
+    subset = X[[feat_age, feat_name]]
+    assert list(subset.columns) == ["age", "name"]
+
+
+def test_base_feature_subsets_dataframe_by_version_when_versioned() -> None:
+    """subsetting matches the version (not the name) when a feature is versioned"""
+    X = pd.DataFrame({"age__y=1": [1, 2], "extra": [3, 4]})
+
+    feat = BaseFeature(name="age")
+    feat.version = "age__y=1"
+
+    assert list(X[[feat]].columns) == ["age__y=1"]
+
+
+def test_base_feature_eq_and_hash_keyed_on_version() -> None:
+    """__eq__/__hash__ key on version: equal to same-version feature and to the version string"""
+    feat_a = BaseFeature(name="age")
+    feat_b = BaseFeature(name="other")
+    feat_b.version = "age"
+
+    # equal by version, to another feature and to the version string
+    assert feat_a == feat_b
+    assert feat_a == "age"
+    assert hash(feat_a) == hash(feat_b) == hash("age")
+
+    # distinct versions stay unequal
+    feat_c = BaseFeature(name="age")
+    feat_c.version = "age__y=1"
+    assert feat_a != feat_c
+    assert feat_a != "unrelated"

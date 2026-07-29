@@ -226,7 +226,7 @@ def test_features_datetimes_stored_separately():
 
     # stored apart from pure quantitatives
     assert get_names(features._datetimes) == ["dt"]
-    assert get_names(features._quantitatives) == ["num"]
+    assert get_names(features._numericals) == ["num"]
 
     # the public quantitatives view recombines them (and to_list lists each once)
     assert get_names(features.quantitatives) == ["num", "dt"]
@@ -243,7 +243,7 @@ def test_features_replace_feature():
 
     new_num = QuantitativeFeature("num")
     features.replace_feature(new_num)
-    assert features._quantitatives[0] is new_num
+    assert features._numericals[0] is new_num
 
     with raises(KeyError):
         features.replace_feature(QuantitativeFeature("absent"))
@@ -680,3 +680,46 @@ def test_features_init() -> None:
     assert feature2 in features
     assert feature3 in features
     assert feature4 in features
+
+
+def test_features_add_combines_mixed_fit_state() -> None:
+    """`+` merges a carved (fitted) qualitative set with a raw quantitative set."""
+    from AutoCarver.selectors.utils.base_selector import get_typed_features
+
+    carved = CategoricalFeature("carved_cat")
+    carved.is_fitted = True
+    ordinal = OrdinalFeature("carved_ord", values=["a", "b", "c"])
+    ordinal.is_fitted = True
+    qualitatives = Features.from_list([carved, ordinal])
+
+    quantitatives = Features(numericals=["num1", "num2"])
+
+    combined = qualitatives + quantitatives
+
+    # union of versions, no duplicates
+    assert set(combined.versions) == {"carved_cat", "carved_ord", "num1", "num2"}
+    assert len(combined) == 4
+
+    # per-feature fit state preserved
+    assert combined("carved_cat").is_fitted and combined("carved_ord").is_fitted
+    assert not combined("num1").is_fitted and not combined("num2").is_fitted
+
+    # selector routes fitted qualitatives and raw numericals to their own buckets
+    typed = get_typed_features(combined)
+    assert {f.version for f in typed["quantitatives"]} == {"num1", "num2"}
+    assert {f.version for f in typed["qualitatives"]} == {"carved_cat", "carved_ord"}
+
+
+def test_features_add_dedupes_on_version_clash() -> None:
+    """Adding overlapping sets dedupes by version (right operand wins)."""
+    features = Features(categoricals=["a"], numericals=["b"])
+    combined = features + features
+    assert len(combined) == len(features)
+    assert set(combined.versions) == {"a", "b"}
+
+
+def test_features_add_rejects_str() -> None:
+    """`+` with a non-feature returns NotImplemented, so Python raises TypeError."""
+    features = Features(categoricals=["a"])
+    with raises(TypeError):
+        _ = features + "b"

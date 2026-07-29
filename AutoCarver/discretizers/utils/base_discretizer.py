@@ -64,6 +64,12 @@ class ProcessingConfig:
     combinations must still show distinct target rates and preserve train/dev
     rank ordering on ``X_dev`` and every CV fold — with no validation view the
     rescue is skipped. Off by default.
+
+    ``dp_escalate`` controls the DP combination-search fallback. When the search
+    finds nothing robust in the initial ``dp_top_k_initial`` candidates,
+    ``True`` grows the tested-combination budget (×4 per round) and retries
+    until a robust combination is found or the DP is exhausted; ``False``
+    (default) stops at the initial batch and warns on that first fail.
     """
 
     copy: bool = True
@@ -74,6 +80,7 @@ class ProcessingConfig:
     min_freq_alpha: float = 0.05
     y_level_scores: dict | None = None
     rescue_rare: bool | None = None
+    dp_escalate: bool = False
 
 
 # Backward-compatible alias: this config was historically named ``DiscretizerConfig`` but is

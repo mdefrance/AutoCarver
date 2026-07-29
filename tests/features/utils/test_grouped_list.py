@@ -259,3 +259,57 @@ def test_grouped_list_sanity_check():
     gl.content = {"a": ["a", "b"], "c": ["b", "c"]}
     with raises(ValueError):
         gl.sanity_check()
+
+
+def test_move_member_plain():
+    gl = GroupedList({"A": ["A", "B", "C"], "D": ["D", "E"]})
+    gl.move_member("B", "D")
+    assert gl.content == {"A": ["A", "C"], "D": ["D", "E", "B"]}
+
+
+def test_move_member_promotes_leader():
+    gl = GroupedList({"A": ["A", "B"], "D": ["D"]})
+    gl.move_member("A", "D")
+    # "B" promoted to leader of the source group, "A" moved
+    assert gl.content == {"B": ["B"], "D": ["D", "A"]}
+
+
+def test_move_member_singleton_leader_moves_group():
+    gl = GroupedList({"A": ["A"], "D": ["D"]})
+    gl.move_member("A", "D")
+    assert gl.content == {"D": ["A", "D"]}
+
+
+def test_move_member_unknown_raises():
+    gl = GroupedList({"A": ["A"]})
+    with raises(ValueError):
+        gl.move_member("Z", "A")
+    with raises(ValueError):
+        gl.move_member("A", "Z")
+
+
+def test_move_member_same_group_noop():
+    gl = GroupedList({"A": ["A", "B"]})
+    gl.move_member("B", "A")
+    assert gl.content == {"A": ["A", "B"]}
+
+
+def test_extract_member_plain():
+    gl = GroupedList({"A": ["A", "B", "C"], "D": ["D"]})
+    gl.extract_member("B")
+    assert gl.content == {"A": ["A", "C"], "B": ["B"], "D": ["D"]}
+    assert list(gl) == ["A", "B", "D"]  # inserted right after source group
+
+
+def test_extract_member_leader_promotes():
+    gl = GroupedList({"A": ["A", "B"]})
+    gl.extract_member("A")
+    assert gl.content == {"B": ["B"], "A": ["A"]}
+
+
+def test_move_member_absent_nan_raises_value_error():
+    gl = GroupedList({"A": ["A"]})
+    with raises(ValueError):
+        gl.move_member(np.nan, "A")
+    with raises(ValueError):
+        gl.extract_member(np.nan)

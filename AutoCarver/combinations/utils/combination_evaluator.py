@@ -4,10 +4,11 @@ the best combination of modalities for a feature."""
 import json
 import math
 from abc import ABC, abstractmethod
-from collections.abc import Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Generic
+from warnings import warn
 
 import pandas as pd
 from tqdm import tqdm
@@ -186,13 +187,13 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
     sort_by = None
 
     # Initial top-K for the DP-based segmentation
-    # path used by the continuous and binary subclasses. The progressive
-    # doubling loop in ``_get_best_combination_non_nan`` / ``_get_best_combination_with_nan``
-    # grows ``top_k`` from this starting point until either a viable candidate
-    # is found or the DP exhausts every consecutive partition — making the
-    # search exhaustive in the worst case while keeping the common case
-    # (viable in top ~100) essentially free.
-    dp_top_k_initial: int = 1000
+    # path used by the continuous and binary subclasses. When ``dp_escalate`` is
+    # on, the fallback loop in ``_get_best_combination_non_nan`` /
+    # ``_get_best_combination_with_nan`` grows ``top_k`` (×4 per round) from this
+    # starting point until either a viable candidate is found or the DP exhausts
+    # every consecutive partition — making the search exhaustive in the worst
+    # case while keeping the common case (viable in top ~100) essentially free.
+    dp_top_k_initial: int = 2000
 
     def __init__(
         self,
@@ -220,6 +221,10 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
         # default alpha so callers that drive viability tests directly (without
         # going through ``get_best_combination``) get a sensible Wilson interval.
         self.min_freq_alpha: float = 0.05
+        # whether the DP fallback may grow top_k when no robust combination is
+        # found in the initial batch. Defaults True here so direct-evaluator use
+        # stays exhaustive; the carver/config path overrides it (default False).
+        self.dp_escalate: bool = True
         # rescue-rerun state: True while re-searching with the min_freq veto waived
         self._rescue_mode: bool = False
 
@@ -437,6 +442,7 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
         min_freq_alpha: float = 0.05,
         folds_xagg: list[pd.Series | pd.DataFrame | None] | None = None,
         rescue: bool = False,
+        dp_escalate: bool = True,
     ) -> dict | None:
         """Computes the best combination of modalities for the feature.
 
@@ -470,12 +476,19 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
             exists (dev and/or CV folds), rerun the search with the
             ``min_freq`` veto waived; distinct-rates and train/dev ordering
             vetoes stay enforced on every validation view.
+        dp_escalate : bool, default ``True``
+            Controls the DP fallback when no robust combination is found in the
+            initial ``dp_top_k_initial`` candidates: ``True`` grows the
+            tested-combination budget (×4 per round) and retries until a robust
+            combination is found or the DP is exhausted; ``False`` stops at the
+            initial batch and emits a warning on that first fail.
         """
 
         self.max_n_mod = max_n_mod
         self.min_freq: float | None = min_freq
         self.dropna = dropna
         self.min_freq_alpha = min_freq_alpha
+        self.dp_escalate = dp_escalate
 
         # setting dropna to user-requested value
         self.feature = feature
@@ -619,6 +632,80 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
             print("\n")
 
         return viable_combination
+
+    def _escalation_allowed(self) -> bool:
+        """Whether the DP fallback may grow ``top_k``. When disabled, warn once
+        (first fail) that the search stopped at the initial ``dp_top_k_initial``."""
+        if self.dp_escalate:
+            return True
+        warn(
+            f"[{self.__name__}] no robust combination found in the top "
+            f"{self.dp_top_k_initial} candidates for {self.feature}; escalation "
+            f"disabled (config.dp_escalate=False)",
+            UserWarning,
+            stacklevel=2,
+        )
+        return False
+
+    def _search_escalating(self, run_dp: Callable[[int], list[dict]]) -> dict | None:
+        """DP → viability walk with ×4 ``top_k`` escalation (non-NaN path).
+
+        ``run_dp(top_k)`` returns the top-K scored associations (metric-desc).
+        The associations are walked resumably for the first robust candidate; if
+        none is found and the DP was not exhausted (``walked == top_k``) and
+        escalation is allowed, ``top_k`` grows ×4 and the DP re-runs — walking
+        only the newly-appeared entries. Returns the viable combination or
+        ``None`` (DP exhausted, or escalation disabled on the first fail).
+        Shared by the binary/continuous/ordinal/multiclass non-NaN DPs.
+        """
+        top_k = self.dp_top_k_initial
+        walked = 0
+        while True:
+            associations = run_dp(top_k)
+            viable, walked = self._walk_for_viable(associations, start=walked)
+            if viable is not None:
+                return viable
+            if walked < top_k:
+                return None  # DP exhausted every consecutive partition; no viable exists
+            if not self._escalation_allowed():
+                return None
+            top_k *= 4
+
+    def _search_escalating_nan(self, run_round: Callable[[int], tuple[list[dict], int]]) -> dict | None:
+        """NaN fan-out search with ×4 ``top_k`` escalation.
+
+        ``run_round(top_k)`` returns ``(scored_variants, n_base_partitions)`` —
+        the fanned-out+scored NaN variants and the number of base (non-NaN) DP
+        partitions (drives the exhaustion check). Variants are walked with a
+        shared ``historized`` dedup set so combinations carried over from a
+        smaller ``top_k`` are not re-tested. Grows ×4 until a robust variant is
+        found, the DP is exhausted (``n_base < top_k``), or escalation is
+        disabled. Shared by the binary/continuous NaN DPs.
+        """
+        historized: set[tuple] = set()
+        top_k = self.dp_top_k_initial
+        while True:
+            scored, n_base = run_round(top_k)
+            viable = self._walk_nan_variants(scored, historized)
+            if viable is not None:
+                return viable
+            if n_base < top_k:
+                return None  # DP exhausted every consecutive partition
+            if not self._escalation_allowed():
+                return None
+            top_k *= 4
+
+    def _rebuild_winner_xagg(self, viable: dict | None) -> None:
+        """Rebuild the grouped train xagg for the selected winner in place.
+
+        The streaming DP path drops the heavy grouped xagg after scoring and
+        only rebuilds it for combinations actually tested; the winner may still
+        be missing it. No-op when ``viable`` is ``None`` or already carries an
+        xagg.
+        """
+        if viable is not None and viable.get("xagg") is None:
+            index_to_groupby = viable.get("index_to_groupby") or combination_formatter(viable["combination"])
+            viable["xagg"] = self._grouper(self.samples.train, index_to_groupby)
 
     def _walk_for_viable(self, associations: list[dict], start: int) -> tuple[dict | None, int]:
         """Walk ``associations[start:]`` for the first viable combination.

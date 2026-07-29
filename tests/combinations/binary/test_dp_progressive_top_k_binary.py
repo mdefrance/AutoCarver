@@ -118,6 +118,42 @@ def test_progressive_top_k_returns_none_when_no_viable_exists(evaluator_cls):
     assert result is None
 
 
+def test_dp_escalate_off_warns_and_stops(fixture_with_top_partition_unviable, evaluator_cls):
+    """With ``dp_escalate=False``, when the initial top_k batch has no viable
+    candidate the loop must NOT grow top_k: it warns on the first fail and
+    returns ``None`` instead of descending to the viable winner past rank 1."""
+    ev = _make_evaluator(
+        evaluator_cls,
+        fixture_with_top_partition_unviable,
+        max_n_mod=3,
+        min_freq=0.2,
+        dp_top_k_initial=1,
+    )
+    ev.dp_escalate = False
+    with pytest.warns(UserWarning, match="escalation disabled"):
+        result = ev._get_best_combination_non_nan()
+    assert result is None
+
+
+def test_dp_escalate_on_finds_winner_past_initial(fixture_with_top_partition_unviable, evaluator_cls):
+    """Same fixture/initial with ``dp_escalate=True`` (the direct-evaluator
+    default) escalates ×4 and finds the viable winner — no warning."""
+    import warnings
+
+    ev = _make_evaluator(
+        evaluator_cls,
+        fixture_with_top_partition_unviable,
+        max_n_mod=3,
+        min_freq=0.2,
+        dp_top_k_initial=1,
+    )
+    assert ev.dp_escalate is True  # __init__ default for direct use
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", UserWarning)
+        result = ev._get_best_combination_non_nan()
+    assert result is not None
+
+
 def test_progressive_top_k_default_initial_is_fine_when_viable_at_top(evaluator_cls):
     """When the top-metric partition is already viable, the loop completes in
     the first iteration — no extra DP runs beyond the initial top_k."""

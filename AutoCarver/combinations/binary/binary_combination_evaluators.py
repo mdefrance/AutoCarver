@@ -216,11 +216,11 @@ class BinaryCombinationEvaluator(CombinationEvaluator[pd.DataFrame], ABC):
 
         **Progressive search.** Starts with ``top_k = self.dp_top_k_initial``.
         If the viability walk doesn't find a viable candidate within that
-        top-K, doubles ``top_k`` and re-runs DP — walking only the new
-        entries from where we left off. Repeats until either a viable is
-        found or DP exhausts every consecutive partition (signalled by
-        ``len(result) < top_k``). Total work bounded by ~2× a single DP run
-        at the final top_k.
+        top-K and escalation is enabled (``dp_escalate``), grows ``top_k`` ×4
+        and re-runs DP — walking only the new entries from where we left off.
+        Repeats until either a viable is found or DP exhausts every consecutive
+        partition (signalled by ``len(result) < top_k``). Total work bounded by
+        ~1.33× a single DP run at the final top_k.
 
         This makes the search **exhaustive in the worst case**, matching the
         legacy enumerate-and-score path's correctness while keeping the
@@ -269,13 +269,9 @@ class BinaryCombinationEvaluator(CombinationEvaluator[pd.DataFrame], ABC):
             count=len(raw_index),
         )
 
-        # Progressive top-K with doubling. See docstring.
-        top_k = self.dp_top_k_initial
-        walked = 0
-        viable: dict | None = None
-        associations: list[dict] = []
-        while True:
-            associations = _top_k_partitions_chi2_dp(
+        # Progressive top-K with ×4 growth (shared driver). See docstring.
+        viable = self._search_escalating(
+            lambda top_k: _top_k_partitions_chi2_dp(
                 n0_per_mod,
                 n1_per_mod,
                 max_n_mod=self.max_n_mod,
@@ -283,13 +279,7 @@ class BinaryCombinationEvaluator(CombinationEvaluator[pd.DataFrame], ABC):
                 sort_by=self.sort_by,
                 top_k=top_k,
             )
-            viable, walked = self._walk_for_viable(associations, start=walked)
-            if viable is not None:
-                break
-            if walked < top_k:
-                break  # DP exhausted every consecutive partition; no viable exists
-            top_k *= 2
-
+        )
         self._apply_best_combination(viable)
         return viable
 
@@ -311,7 +301,7 @@ class BinaryCombinationEvaluator(CombinationEvaluator[pd.DataFrame], ABC):
            :meth:`_get_best_combination_non_nan`'s ``_apply_best_combination``
            rebuilt it from raw);
         4. walk the sorted variants for the first viable, with progressive
-           top-K doubling on the base DP — dedup'd via a per-partition seen
+           top-K ×4 growth on the base DP — dedup'd via a per-partition seen
            set so combinations carried over from a smaller ``top_k`` are not
            re-tested / re-historized.
 
@@ -362,18 +352,14 @@ class BinaryCombinationEvaluator(CombinationEvaluator[pd.DataFrame], ABC):
             count=len(non_nan_index),
         )
 
-        historized: set[tuple] = set()
-        base_top_k = self.dp_top_k_initial
-        viable: dict | None = None
-
-        while True:
+        def _run_round(top_k: int) -> tuple[list[dict], int]:
             base_partitions = _top_k_partitions_chi2_dp(
                 n0_non_nan,
                 n1_non_nan,
                 max_n_mod=self.max_n_mod,
                 raw_index=non_nan_index,
                 sort_by=self.sort_by,
-                top_k=base_top_k,
+                top_k=top_k,
                 tol=tol,
             )
             scored = _score_nan_variants_chi2(
@@ -389,13 +375,9 @@ class BinaryCombinationEvaluator(CombinationEvaluator[pd.DataFrame], ABC):
                 tol=tol,
                 sort_by=self.sort_by,
             )
-            viable = self._walk_nan_variants(scored, historized)
-            if viable is not None:
-                break
-            if len(base_partitions) < base_top_k:
-                break  # DP exhausted every consecutive partition
-            base_top_k *= 2
+            return scored, len(base_partitions)
 
+        viable = self._search_escalating_nan(_run_round)
         self._apply_best_combination(viable)
         return viable
 
