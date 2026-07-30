@@ -347,6 +347,10 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
                 raise RuntimeError(f"[{self.__name__}] samples.train.raw is not populated after apply_combination")
             self.feature.statistics = self.target_rate.compute(raw)
 
+            # snapshotting any per-feature state the rate was fit on (ridit reference, CA axis)
+            # so the same rate can be recomputed on a future sample (see AutoCarver.stability)
+            self.feature.rate_reference = self.target_rate.reference_to_json()
+
     def _get_best_combination_non_nan(self) -> dict | None:
         """Computes associations of the tab for each combination of non-nans
 
@@ -825,6 +829,7 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
 
         # setting feature's statistics
         self.feature.statistics = self.target_rate.compute(raw)
+        self.feature.rate_reference = self.target_rate.reference_to_json()
 
         # computing association of sample
         raw_association = self._association_measure(raw, n_obs=sum(raw.apply(sum)))

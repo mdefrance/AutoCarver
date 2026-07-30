@@ -10,7 +10,7 @@ from dataclasses import dataclass, field, replace
 from functools import partial
 from multiprocessing import Pool
 from pathlib import Path
-from typing import Self
+from typing import TYPE_CHECKING, Self
 from warnings import warn
 
 import pandas as pd
@@ -36,6 +36,9 @@ from AutoCarver.features import BaseFeature, Features, get_versions
 from AutoCarver.features.qualitatives import CategoricalFeature, NestedFeature, OrdinalFeature
 from AutoCarver.features.quantitatives import DatetimeFeature, NumericalFeature
 from AutoCarver.utils import extend_docstring, has_idisplay
+
+if TYPE_CHECKING:  # pragma: no cover - AutoCarver.stability imports carver internals at runtime
+    from AutoCarver.stability import StabilityReport
 
 # trying to import extra dependencies
 _has_idisplay = has_idisplay()
@@ -305,10 +308,23 @@ class BaseCarver(BaseDiscretizer, ABC):
         if summaries.empty:
             return summaries
 
-        # per-modality stats (count, target_mean, frequency) stay columns; only per-feature
+        # per-modality stats (count, target_mean, frequency, std) stay columns; only per-feature
         # metrics (sort_by association, n_mod) become index levels so they collapse to one
         # row per feature instead of repeating across every modality.
-        excluded = {"feature", "label", "content", "target_mean", "frequency", "count", "dropped", "dropped_reason"}
+        excluded = {
+            "feature",
+            "label",
+            "content",
+            "target_mean",
+            "somersd",
+            "taub",
+            "tauc",
+            "frequency",
+            "count",
+            "std",
+            "dropped",
+            "dropped_reason",
+        }
         indices = [col for col in summaries.columns if col not in excluded]
         indices = ["feature"] + indices + ["label"]
         return summaries.set_index(indices)
@@ -331,6 +347,33 @@ class BaseCarver(BaseDiscretizer, ABC):
         if not frames:
             return pd.DataFrame()
         return pd.concat(frames, ignore_index=True)
+
+    def evaluate_stability(
+        self, X: pd.DataFrame, y: pd.Series | None = None, *, alpha: float | None = None
+    ) -> "StabilityReport":
+        """Evaluates carved features on a new sample against their train reference.
+
+        Thin delegate to :func:`AutoCarver.stability.evaluate_stability` — see it
+        for the metrics computed and their limitations.
+
+        Parameters
+        ----------
+        X : pd.DataFrame
+            New (production) sample, with this carver's raw feature columns.
+        y : pd.Series, optional
+            Target for ``X``. Without it only the frequency-based metrics
+            (PSI, chi-square goodness-of-fit) are computed, by default ``None``.
+        alpha : float, optional
+            Significance level, defaults to :attr:`ProcessingConfig.min_freq_alpha`.
+
+        Returns
+        -------
+        AutoCarver.stability.StabilityReport
+        """
+        # imported here: AutoCarver.stability imports carver internals
+        from AutoCarver.stability import evaluate_stability
+
+        return evaluate_stability(self, X, y, alpha=self.config.min_freq_alpha if alpha is None else alpha)
 
     def _prepare_samples(self, samples: Samples) -> Samples:
         """Validates format and content of X and y."""

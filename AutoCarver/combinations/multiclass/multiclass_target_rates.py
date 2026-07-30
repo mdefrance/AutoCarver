@@ -3,6 +3,7 @@
 from abc import ABC
 from typing import overload
 
+import numpy as np
 import pandas as pd
 
 from AutoCarver.combinations.utils import TargetRate
@@ -49,6 +50,25 @@ class MulticlassTargetRate(TargetRate[pd.DataFrame], ABC):
         needs only the row's own profile and this fixed axis).
         """
         self._axis = fit_ca_axis(raw_xagg)
+
+    def reference_to_json(self) -> dict | None:
+        """Snapshots the fitted CA axis (:class:`CAAxis`) as plain lists."""
+        if self._axis is None:
+            return None
+        return {
+            "col_mass": self._axis.col_mass.tolist(),
+            "v1": self._axis.v1.tolist(),
+            "degenerate": bool(self._axis.degenerate),
+        }
+
+    def load_reference(self, payload: dict | None) -> None:
+        """Restores the CA axis snapshotted by :meth:`reference_to_json`."""
+        if payload is not None:
+            self._axis = CAAxis(
+                col_mass=np.asarray(payload["col_mass"], dtype=float),
+                v1=np.asarray(payload["v1"], dtype=float),
+                degenerate=payload["degenerate"],
+            )
 
     @overload
     def compute(self, xagg: pd.Series | pd.DataFrame) -> pd.DataFrame: ...

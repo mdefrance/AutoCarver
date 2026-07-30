@@ -101,6 +101,11 @@ def _register_drafting_tools(server: FastMCP, session: CarverSession) -> None:
         """Save the fitted carver and its carved features to a .json file (run run_carver first)."""
         return session.save_carver(path)
 
+    @server.tool
+    def evaluate_stability(path: str, target: str | None = None) -> dict:
+        """Score a new dataset against the fitted carver: PSI, chi2 drift, rank inversions."""
+        return session.evaluate_stability(path, target)
+
 
 def main() -> None:
     """Entry point: run the AutoCarver MCP server over stdio."""

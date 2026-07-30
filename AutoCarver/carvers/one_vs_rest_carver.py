@@ -4,7 +4,7 @@ for multiclass classification tasks.
 
 from collections.abc import Iterable
 from dataclasses import replace
-from typing import Any, Self
+from typing import Any, Self, overload
 
 import pandas as pd
 from sklearn.model_selection import BaseCrossValidator
@@ -171,6 +171,10 @@ class OneVsRestCarver(BinaryCarver):
         return self
 
 
+@overload
+def get_one_vs_rest(y: pd.Series, y_class: Any) -> pd.Series: ...
+@overload
+def get_one_vs_rest(y: None, y_class: Any) -> None: ...
 def get_one_vs_rest(y: pd.Series | None, y_class: Any) -> pd.Series | None:
     """converts a multiclass target into binary of specific y_class"""
     if y is not None:
