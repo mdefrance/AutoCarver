@@ -1,6 +1,5 @@
 """Module for binary combination evaluators."""
 
-import math
 from abc import ABC
 from collections.abc import Iterable, Iterator
 
@@ -10,12 +9,10 @@ from scipy.stats import chi2_contingency
 from tqdm import tqdm
 
 from AutoCarver.combinations.binary.binary_target_rates import BinaryTargetRate, OddsRatio, TargetMean, Woe
-from AutoCarver.combinations.utils.combination_evaluator import (
-    AggregatedSample,
-    CombinationEvaluator,
-    _nan_fanout_variants,
-)
+from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample, CombinationEvaluator
 from AutoCarver.combinations.utils.combinations import combination_formatter
+from AutoCarver.combinations.utils.dp import build_group_assignment, score_nan_variants
+from AutoCarver.combinations.utils.dp import chi2_pearson as _chi2_pearson_2col
 from AutoCarver.combinations.utils.target_rate import TargetRate
 from AutoCarver.features import GroupedList
 
@@ -362,17 +359,25 @@ class BinaryCombinationEvaluator(CombinationEvaluator[pd.DataFrame], ABC):
                 top_k=top_k,
                 tol=tol,
             )
-            scored = _score_nan_variants_chi2(
+
+            def _scorer(index_to_groupby: dict) -> dict:
+                cv, tt = _chi2_assoc_for_combination(
+                    n0_per_mod=n0_per_mod,
+                    n1_per_mod=n1_per_mod,
+                    n_obs=n_obs,
+                    mod_to_pos=mod_to_pos,
+                    n_mod=n_mod,
+                    index_to_groupby=index_to_groupby,
+                    tol=tol,
+                )
+                return {"cramerv": cv, "tschuprowt": tt}
+
+            scored = score_nan_variants(
                 base_partitions=base_partitions,
                 nan_label=nan_label,
                 raw_labels=non_nan_index,
                 max_n_mod=self.max_n_mod,
-                n0_per_mod=n0_per_mod,
-                n1_per_mod=n1_per_mod,
-                n_obs=n_obs,
-                mod_to_pos=mod_to_pos,
-                n_mod=n_mod,
-                tol=tol,
+                scorer=_scorer,
                 sort_by=self.sort_by,
             )
             return scored, len(base_partitions)
@@ -435,29 +440,12 @@ def _chi2_assoc_for_combination(
     so the values produced here match the historical scipy-based ones to the
     last digit of the rounded representation.
     """
-    # Build integer group assignment for this combination
-    leader_to_grp: dict = {}
-    assign = np.empty(n_mod, dtype=np.intp)
-    assigned = np.zeros(n_mod, dtype=bool)
-    for mod, leader in index_to_groupby.items():
-        gid = leader_to_grp.get(leader)
-        if gid is None:
-            gid = len(leader_to_grp)
-            leader_to_grp[leader] = gid
-        pos = mod_to_pos[mod]
-        assign[pos] = gid
-        assigned[pos] = True
-
-    # Modalities present in raw_xagg but not in index_to_groupby become their
-    # own singleton groups — matches the legacy `_grouper`'s
-    # `groupby.get(iv, iv)` fallback (relevant in edge-case fixtures where the
-    # crosstab carries a nan row but the feature claims has_nan=False).
-    for pos in range(n_mod):
-        if not assigned[pos]:
-            leader_to_grp[("__unmapped__", pos)] = len(leader_to_grp)
-            assign[pos] = leader_to_grp[("__unmapped__", pos)]
-
-    n_groups = len(leader_to_grp)
+    # Build integer group assignment for this combination. Modalities present in
+    # raw_xagg but not in index_to_groupby become their own singleton groups —
+    # matches the legacy `_grouper`'s `groupby.get(iv, iv)` fallback (relevant in
+    # edge-case fixtures where the crosstab carries a nan row but the feature
+    # claims has_nan=False).
+    assign, n_groups = build_group_assignment(index_to_groupby, mod_to_pos, n_mod)
 
     # Per-group (n0, n1) via bincount with weights (vectorised)
     n0_g = np.bincount(assign, weights=n0_per_mod, minlength=n_groups)
@@ -480,29 +468,6 @@ def _chi2_assoc_for_combination(
         tschuprowt = cramerv
 
     return cramerv, tschuprowt
-
-
-def _chi2_pearson_2col(obs: np.ndarray) -> float:
-    """Pearson :math:`\\chi^2` for a (k, 2) observed contingency table.
-
-    Replicates :func:`scipy.stats.chi2_contingency` defaults:
-
-    * expected frequencies via the outer product of marginals divided by N
-      (same as :func:`scipy.stats.contingency.expected_freq`);
-    * Yates correction iff the table is exactly 2×2 (same threshold scipy uses).
-    """
-    R = obs.sum(axis=1)
-    C = obs.sum(axis=0)
-    N = float(obs.sum())
-    expected = np.outer(R, C) / N
-
-    if obs.shape == (2, 2):
-        diff = expected - obs
-        direction = np.sign(diff)
-        magnitude = np.minimum(0.5, np.abs(diff))
-        obs = obs + magnitude * direction
-
-    return float(((obs - expected) ** 2 / expected).sum())
 
 
 def _chi2_assoc_batch(
@@ -533,21 +498,7 @@ def _chi2_assoc_batch(
     assign = np.empty((B, n_mod), dtype=np.intp)
     n_groups = np.empty(B, dtype=np.intp)
     for b, item in enumerate(batch):
-        leader_to_grp: dict = {}
-        assigned = np.zeros(n_mod, dtype=bool)
-        for mod, leader in item["index_to_groupby"].items():
-            gid = leader_to_grp.get(leader)
-            if gid is None:
-                gid = len(leader_to_grp)
-                leader_to_grp[leader] = gid
-            pos = mod_to_pos[mod]
-            assign[b, pos] = gid
-            assigned[pos] = True
-        for pos in range(n_mod):
-            if not assigned[pos]:
-                assign[b, pos] = len(leader_to_grp)
-                leader_to_grp[("__unmapped__", pos)] = len(leader_to_grp)
-        n_groups[b] = len(leader_to_grp)
+        assign[b], n_groups[b] = build_group_assignment(item["index_to_groupby"], mod_to_pos, n_mod)
 
     max_g = int(n_groups.max())
 
@@ -732,54 +683,3 @@ def _top_k_partitions_chi2_dp(  # noqa: C901
             }
         )
     return out
-
-
-def _score_nan_variants_chi2(
-    *,
-    base_partitions: list[dict],
-    nan_label: str,
-    raw_labels: list,
-    max_n_mod: int,
-    n0_per_mod: np.ndarray,
-    n1_per_mod: np.ndarray,
-    n_obs: float,
-    mod_to_pos: dict,
-    n_mod: int,
-    tol: float,
-    sort_by: str,
-) -> list[dict]:
-    """Score every NaN-fanout variant via closed-form chi² (Cramér's V +
-    Tschuprow's T), sorted by ``sort_by`` desc.
-
-    Uses :func:`_chi2_assoc_for_combination` per variant — bit-identical to
-    the legacy ``chi2_contingency`` path on the per-variant crosstab.
-    """
-    scored: list[dict] = []
-    for variant in _nan_fanout_variants(base_partitions, nan_label, raw_labels, max_n_mod):
-        index_to_groupby = combination_formatter(variant)
-        cv, tt = _chi2_assoc_for_combination(
-            n0_per_mod=n0_per_mod,
-            n1_per_mod=n1_per_mod,
-            n_obs=n_obs,
-            mod_to_pos=mod_to_pos,
-            n_mod=n_mod,
-            index_to_groupby=index_to_groupby,
-            tol=tol,
-        )
-        scored.append(
-            {
-                "combination": variant,
-                "index_to_groupby": index_to_groupby,
-                "cramerv": cv,
-                "tschuprowt": tt,
-            }
-        )
-
-    def _key(a: dict) -> float:
-        v = a[sort_by]
-        if v is None or (isinstance(v, float) and math.isnan(v)):
-            return float("-inf")
-        return float(v)
-
-    scored.sort(key=_key, reverse=True)
-    return scored

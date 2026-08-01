@@ -109,6 +109,10 @@ class TargetMean(ContinuousTargetRate):
         mod_to_pos = stats["mod_to_pos"]
         n_mod = stats["n_mod"]
 
+        # Does not use AutoCarver.combinations.utils.dp.build_group_assignment:
+        # unlike that helper, this bails to None on an unmapped modality (instead
+        # of making it a singleton group) and also needs leader_labels for the
+        # output index.
         leader_to_grp: dict = {}
         leader_labels: list = []
         assign = np.full(n_mod, -1, dtype=np.intp)

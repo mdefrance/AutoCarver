@@ -19,10 +19,10 @@ from AutoCarver.combinations.binary.binary_combination_evaluators import _top_k_
 from AutoCarver.combinations.multiclass.multiclass_combination_evaluators import (
     _chi2_pearson,
     _cramerv_tschuprowt,
-    _dp_inputs_from_xagg,
     _top_k_partitions_chi2_dp_multiclass,
 )
 from AutoCarver.combinations.utils.combinations import combination_formatter, consecutive_combinations
+from AutoCarver.combinations.utils.dp import dp_inputs_from_xagg
 
 TOL = 1e-10
 
@@ -197,7 +197,7 @@ def test_dp_partition_is_consecutive_segmentation():
 def test_dp_inputs_from_xagg_zero_fills_missing_rows():
     xagg = pd.DataFrame({1: [3, 5], 2: [1, 2], 3: [0, 4]}, index=["a", "c"])
     raw_index = ["a", "b", "c"]
-    M, n_per_mod, col_sums = _dp_inputs_from_xagg(xagg, raw_index)
+    M, n_per_mod, col_sums = dp_inputs_from_xagg(xagg, raw_index)
     assert M.shape == (3, 3)
     assert list(n_per_mod) == [4.0, 0.0, 11.0]
     assert list(col_sums) == [8.0, 3.0, 4.0]

@@ -1,6 +1,5 @@
 """Module for continuous combination evaluators."""
 
-import math
 import warnings
 from abc import ABC
 from collections.abc import Iterable, Iterator
@@ -12,12 +11,9 @@ from scipy.stats import kruskal, rankdata, tiecorrect
 from tqdm import tqdm
 
 from AutoCarver.combinations.continuous.continuous_target_rates import ContinuousTargetRate, TargetMean, TargetMedian
-from AutoCarver.combinations.utils.combination_evaluator import (
-    AggregatedSample,
-    CombinationEvaluator,
-    _nan_fanout_variants,
-)
+from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample, CombinationEvaluator
 from AutoCarver.combinations.utils.combinations import combination_formatter
+from AutoCarver.combinations.utils.dp import build_group_assignment, score_nan_variants
 from AutoCarver.combinations.utils.target_rate import TargetRate
 from AutoCarver.combinations.utils.testing import Keys, is_viable, test_viability
 from AutoCarver.features import GroupedList
@@ -421,17 +417,26 @@ class ContinuousCombinationEvaluator(CombinationEvaluator[pd.Series], ABC):
                 raw_index=non_nan_index,
                 top_k=top_k,
             )
-            scored = _score_nan_variants_kruskal(
+
+            def _scorer(index_to_groupby: dict) -> dict:
+                h = _kruskal_h_for_combination(
+                    R_per_mod=R_per_mod,
+                    n_per_mod=n_per_mod,
+                    N=N,
+                    tie_corr=tie_corr,
+                    mod_to_pos=mod_to_pos,
+                    n_mod=n_mod,
+                    index_to_groupby=index_to_groupby,
+                )
+                return {"kruskal": h}
+
+            scored = score_nan_variants(
                 base_partitions=base_partitions,
                 nan_label=nan_label,
                 raw_labels=non_nan_index,
                 max_n_mod=self.max_n_mod,
-                R_per_mod=R_per_mod,
-                n_per_mod=n_per_mod,
-                N=N,
-                tie_corr=tie_corr,
-                mod_to_pos=mod_to_pos,
-                n_mod=n_mod,
+                scorer=_scorer,
+                sort_by="kruskal",
             )
             return scored, len(base_partitions)
 
@@ -576,32 +581,15 @@ def _kruskal_h_for_combination(
     if R_per_mod is None or N < 2:
         return None
 
-    # Build integer group assignment for this combination
-    leader_to_grp: dict = {}
-    assign = np.empty(n_mod, dtype=np.intp)
-    assigned = np.zeros(n_mod, dtype=bool)
-    for mod, leader in index_to_groupby.items():
-        gid = leader_to_grp.get(leader)
-        if gid is None:
-            gid = len(leader_to_grp)
-            leader_to_grp[leader] = gid
-        pos = mod_to_pos[mod]
-        assign[pos] = gid
-        assigned[pos] = True
-
-    # Modalities present in raw_xagg but not in index_to_groupby become their
-    # own singleton groups so bincount has a well-defined assignment. Matches
-    # the legacy binary `_grouper`'s `groupby.get(iv, iv)` semantics; the
-    # continuous test suite reaches this path only in an invalid-state fixture
-    # (has_nan=False but xagg carries a nan row) and the resulting Kruskal value
-    # is discarded downstream when `xagg_apply_combination` raises on the
-    # length mismatch — i.e. the user-visible behaviour is unchanged.
-    for pos in range(n_mod):
-        if not assigned[pos]:
-            leader_to_grp[("__unmapped__", pos)] = len(leader_to_grp)
-            assign[pos] = leader_to_grp[("__unmapped__", pos)]
-
-    n_groups = len(leader_to_grp)
+    # Build integer group assignment for this combination. Modalities present in
+    # raw_xagg but not in index_to_groupby become their own singleton groups so
+    # bincount has a well-defined assignment. Matches the legacy binary
+    # `_grouper`'s `groupby.get(iv, iv)` semantics; the continuous test suite
+    # reaches this path only in an invalid-state fixture (has_nan=False but xagg
+    # carries a nan row) and the resulting Kruskal value is discarded downstream
+    # when `xagg_apply_combination` raises on the length mismatch — i.e. the
+    # user-visible behaviour is unchanged.
+    assign, n_groups = build_group_assignment(index_to_groupby, mod_to_pos, n_mod)
     # scipy.stats.kruskal requires at least 2 groups; mirror that here.
     if n_groups < 2:
         return None
@@ -670,21 +658,7 @@ def _kruskal_h_batch(  # noqa: C901
     assign = np.empty((B, n_mod), dtype=np.intp)
     n_groups = np.empty(B, dtype=np.intp)
     for b, item in enumerate(batch):
-        leader_to_grp: dict = {}
-        assigned = np.zeros(n_mod, dtype=bool)
-        for mod, leader in item["index_to_groupby"].items():
-            gid = leader_to_grp.get(leader)
-            if gid is None:
-                gid = len(leader_to_grp)
-                leader_to_grp[leader] = gid
-            pos = mod_to_pos[mod]
-            assign[b, pos] = gid
-            assigned[pos] = True
-        for pos in range(n_mod):
-            if not assigned[pos]:
-                assign[b, pos] = len(leader_to_grp)
-                leader_to_grp[("__unmapped__", pos)] = len(leader_to_grp)
-        n_groups[b] = len(leader_to_grp)
+        assign[b], n_groups[b] = build_group_assignment(item["index_to_groupby"], mod_to_pos, n_mod)
 
     max_g = int(n_groups.max())
 
@@ -830,52 +804,3 @@ def _top_k_partitions_kruskal_dp(  # noqa: C901
             }
         )
     return out
-
-
-def _score_nan_variants_kruskal(
-    *,
-    base_partitions: list[dict],
-    nan_label: str,
-    raw_labels: list,
-    max_n_mod: int,
-    R_per_mod: np.ndarray,
-    n_per_mod: np.ndarray,
-    N: int,
-    tie_corr: float,
-    mod_to_pos: dict,
-    n_mod: int,
-) -> list[dict]:
-    """Score every NaN-fanout variant via closed-form Kruskal H, sorted desc.
-
-    Uses :func:`_kruskal_h_for_combination` per variant (O(k) per call),
-    which is plenty fast for the ~top_k * (max_n_mod + 1) + 1 variants
-    produced by :func:`_nan_fanout_variants`.
-    """
-    scored: list[dict] = []
-    for variant in _nan_fanout_variants(base_partitions, nan_label, raw_labels, max_n_mod):
-        index_to_groupby = combination_formatter(variant)
-        h = _kruskal_h_for_combination(
-            R_per_mod=R_per_mod,
-            n_per_mod=n_per_mod,
-            N=N,
-            tie_corr=tie_corr,
-            mod_to_pos=mod_to_pos,
-            n_mod=n_mod,
-            index_to_groupby=index_to_groupby,
-        )
-        scored.append(
-            {
-                "combination": variant,
-                "index_to_groupby": index_to_groupby,
-                "kruskal": h,
-            }
-        )
-
-    def _key(a: dict) -> float:
-        v = a["kruskal"]
-        if v is None or (isinstance(v, float) and math.isnan(v)):
-            return float("-inf")
-        return float(v)
-
-    scored.sort(key=_key, reverse=True)
-    return scored

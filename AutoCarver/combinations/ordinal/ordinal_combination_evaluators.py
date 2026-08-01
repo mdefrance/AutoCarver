@@ -13,6 +13,7 @@ from AutoCarver.combinations.ordinal.ordinal_target_rates import (
 )
 from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample, CombinationEvaluator
 from AutoCarver.combinations.utils.combinations import combination_formatter, group_crosstab
+from AutoCarver.combinations.utils.dp import dp_inputs_from_xagg, sort_key
 from AutoCarver.combinations.utils.target_rate import TargetRate
 from AutoCarver.features import GroupedList
 
@@ -126,7 +127,7 @@ class OrdinalCombinationEvaluator(CombinationEvaluator[pd.DataFrame], ABC):
 
         raw_index = list(raw_labels)
         # samples.train.xagg is a crosstab DataFrame for ordinal evaluators
-        M, n_per_mod, col_sums = _dp_inputs_from_xagg(self.samples.train.xagg, raw_index)  # type: ignore
+        M, n_per_mod, col_sums = dp_inputs_from_xagg(self.samples.train.xagg, raw_index)  # type: ignore
 
         # Progressive top-K with ×4 growth (shared driver), mirroring binary/continuous.
         viable = self._search_escalating(
@@ -268,23 +269,6 @@ def _ordinal_associations(values: np.ndarray) -> dict[str, float | None]:
 # top-K approximation otherwise.
 
 
-def _dp_inputs_from_xagg(raw_xagg: pd.DataFrame, raw_index: list) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Aligns a raw crosstab to ``raw_index`` for the DP.
-
-    Returns ``(M, n_per_mod, col_sums)`` where ``M`` is the ``(len(raw_index), c)``
-    per-modality column-count matrix (rows absent from ``raw_xagg`` are zero),
-    ``n_per_mod`` the row totals and ``col_sums`` the target marginal.
-    """
-    position = {label: i for i, label in enumerate(raw_xagg.index)}
-    values = np.asarray(raw_xagg.values, dtype=float)
-    M = np.zeros((len(raw_index), values.shape[1]))
-    for row, label in enumerate(raw_index):
-        source = position.get(label)
-        if source is not None:
-            M[row] = values[source]
-    return M, M.sum(axis=1), M.sum(axis=0)
-
-
 def _segment_within_costs(M: np.ndarray) -> np.ndarray:
     """WithinSegment ``C−D`` for every consecutive row segment.
 
@@ -416,7 +400,7 @@ def _top_k_partitions_ordinal_dp(
                 untied_on_target=untied_on_target,
                 c_nonempty=c_nonempty,
             )
-            entries.append((_sort_key(metrics.get(sort_by)), metrics, splits))
+            entries.append((sort_key(metrics.get(sort_by)), metrics, splits))
 
     entries.sort(key=lambda e: e[0], reverse=True)
     entries = entries[:top_k]
@@ -430,10 +414,3 @@ def _top_k_partitions_ordinal_dp(
         combination = [list(raw_index[bounds[g] : bounds[g + 1]]) for g in range(len(bounds) - 1)]
         out.append({"combination": combination, "index_to_groupby": combination_formatter(combination), **metrics})
     return out
-
-
-def _sort_key(value: float | None) -> float:
-    """Sort key putting ``None`` / ``NaN`` metrics last (descending sort)."""
-    if value is None or (isinstance(value, float) and math.isnan(value)):
-        return float("-inf")
-    return float(value)
