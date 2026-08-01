@@ -2,7 +2,7 @@
 
 Source: ``AutoCarver.selectors.utils.base_selector`` exercised through the
 concrete :class:`ClassificationSelector` / :class:`RegressionSelector`. Checks
-the per-type budget, subset/no-duplicate selection, row/column transform
+the total budget, subset/no-duplicate selection, row/column transform
 invariants, the unfitted guards and determinism.
 """
 
@@ -13,13 +13,6 @@ from sklearn.exceptions import NotFittedError
 from strategies import clone_features, dataframe_and_features
 
 from AutoCarver.selectors import ClassificationSelector, RegressionSelector
-
-
-def _split_counts(selected):
-    """(#quantitative, #qualitative) among selected features."""
-    quanti = sum(1 for f in selected if f.is_quantitative)
-    quali = sum(1 for f in selected if f.is_qualitative)
-    return quanti, quali
 
 
 @st.composite
@@ -41,13 +34,17 @@ def regression_problem(draw):
 # --------------------------------------------------------------------------
 @given(dataframe_and_features("binary"))
 @settings(max_examples=20)
-def test_init_rejects_out_of_range_n_best(problem):
-    """n_best_per_type must satisfy 0 < n_best_per_type <= len(features)."""
+def test_init_rejects_non_positive_n_best(problem):
+    """n_best_features must be > 0, or None for no selection."""
     _, features, _ = problem
     with pytest.raises(ValueError):
         ClassificationSelector(features, 0)
     with pytest.raises(ValueError):
-        ClassificationSelector(features, len(features) + 1)
+        ClassificationSelector(features, -1)
+
+    # a budget above the feature count is not an error: it just means no cap
+    assert ClassificationSelector(features, len(features) + 1).n_best_features == len(features) + 1
+    assert ClassificationSelector(features).n_best_features is None
 
 
 # --------------------------------------------------------------------------
@@ -57,7 +54,7 @@ def test_init_rejects_out_of_range_n_best(problem):
 @settings(max_examples=20, deadline=None)
 def test_fit_selects_subset_within_budget(problem):
     """After fit: fitted flag set; selection is a duplicate-free subset of the
-    input features and respects the per-type budget."""
+    input features and respects the total budget."""
     X, features, y, n_best = problem
     input_versions = features.versions
 
@@ -73,10 +70,8 @@ def test_fit_selects_subset_within_budget(problem):
     assert set(selected_versions).issubset(set(input_versions))
     assert len(selected_versions) == len(set(selected_versions))
 
-    # per-type budget respected
-    quanti, quali = _split_counts(selected)
-    assert quanti <= n_best
-    assert quali <= n_best
+    # n_best_features is a total budget, split across types
+    assert len(selected) <= n_best
 
 
 @given(classification_problem())
@@ -140,8 +135,6 @@ def test_regression_selection_deterministic_and_subset(problem):
     first = RegressionSelector(features, n_best).fit(X, y)
     second = RegressionSelector(features2, n_best).fit(X, y)
 
-    selected = list(first.selected_features)
-    quanti, quali = _split_counts(selected)
-    assert quanti <= n_best and quali <= n_best
+    assert len(list(first.selected_features)) <= n_best
 
     assert [f.version for f in first.selected_features] == [f.version for f in second.selected_features]

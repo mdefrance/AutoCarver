@@ -4,11 +4,13 @@ from AutoCarver.selectors.classification_selector import ClassificationSelector
 from AutoCarver.selectors.filters import (
     BaseFilter,
     CramervFilter,
+    NonDefaultValidFilter,
     PearsonFilter,
     QualitativeFilter,
     QuantitativeFilter,
     SpearmanFilter,
     TschuprowtFilter,
+    ValidFilter,
 )
 from AutoCarver.selectors.measures import (
     AbsoluteMeasure,
@@ -24,6 +26,7 @@ from AutoCarver.selectors.measures import (
     NanMeasure,
     OutlierMeasure,
     PearsonMeasure,
+    ReversibleMeasure,
     RMeasure,
     SpearmanMeasure,
     TschuprowtMeasure,
@@ -31,11 +34,12 @@ from AutoCarver.selectors.measures import (
 )
 from AutoCarver.selectors.ordinal_selector import OrdinalSelector
 from AutoCarver.selectors.regression_selector import RegressionSelector
-from AutoCarver.selectors.utils.base_selector import BaseSelector
+from AutoCarver.selectors.utils.base_selector import BaseSelector, SelectionConfig
 
 __all__ = [
     # selectors
     "BaseSelector",
+    "SelectionConfig",
     "RegressionSelector",
     "ClassificationSelector",
     "OrdinalSelector",
@@ -47,12 +51,15 @@ __all__ = [
     "QualitativeFilter",
     "CramervFilter",
     "TschuprowtFilter",
+    "ValidFilter",
+    "NonDefaultValidFilter",
     # measures
     "AbsoluteMeasure",
     "ModeMeasure",
     "NanMeasure",
     "BaseMeasure",
     "OutlierMeasure",
+    "ReversibleMeasure",
     "Chi2Measure",
     "CramervMeasure",
     "PearsonMeasure",

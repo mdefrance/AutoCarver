@@ -28,8 +28,9 @@ See :ref:`Measures` and :ref:`Filters`, for details on measures and filters' imp
 
 
 Selectors are `scikit-learn <https://scikit-learn.org/>`_ transformers built like
-the :ref:`carvers <Carvers>`: from a :class:`Features` set, a per-type budget
-``n_best_per_type`` and a swappable set of ``measures`` / ``filters``.
+the :ref:`carvers <Carvers>`: from a :class:`Features` set, a total
+``n_best_features`` budget and a :class:`SelectionConfig` carrying the swappable
+per-type ``measures`` / ``filters``.
 
    * :meth:`~AutoCarver.selectors.BaseSelector.fit` scores every feature against
      the target, ranks them per measure, and filters out redundant ones.
@@ -48,10 +49,34 @@ call per feature.
 
     from AutoCarver.selectors import ClassificationSelector
 
-    selector = ClassificationSelector(features=features, n_best_per_type=25)   # best features kept per data type
+    # 25 features in total, split across types proportionally to how many of each
+    # were passed; omit n_best_features altogether to apply no cap (the measures'
+    # thresholds and the redundancy filters still apply)
+    selector = ClassificationSelector(features=features, n_best_features=25)
     selector.fit(X, y)  # or selector.fit_transform(X, y) to keep only selected features in X
     best_features = selector.selected_features
     selector.summary  # inspect the measure/filter values per feature
+
+
+Measures and filters are declared **per feature type**, so a qualitative-only
+measure can never silently leave the quantitative features unranked. Any slot
+left unset falls back to the task-appropriate default for that type.
+
+.. code-block:: python
+
+    from AutoCarver.selectors import (
+        ClassificationSelector, SelectionConfig,
+        TschuprowtMeasure, KruskalMeasure, CramervFilter, SpearmanFilter,
+    )
+
+    config = SelectionConfig(
+        qualitative_measures=[TschuprowtMeasure(threshold=0.001)],
+        quantitative_measures=[KruskalMeasure(threshold=1)],
+        qualitative_filters=[CramervFilter(threshold=0.7)],
+        quantitative_filters=[SpearmanFilter(threshold=0.9)],
+        verbose=True,  # prints how many features were kept, per type
+    )
+    selector = ClassificationSelector(features, n_best_features=50, config=config)
 
 .. _ClassificationSelector:
 

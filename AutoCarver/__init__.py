@@ -6,8 +6,9 @@ from AutoCarver.carvers.multiclass_carver import MulticlassCarver
 from AutoCarver.carvers.one_vs_rest_carver import OneVsRestCarver
 from AutoCarver.carvers.ordinal_carver import OrdinalCarver
 from AutoCarver.features import Features
-from AutoCarver.selectors import ClassificationSelector, OrdinalSelector, RegressionSelector
+from AutoCarver.selectors import ClassificationSelector, OrdinalSelector, RegressionSelector, SelectionConfig
 from AutoCarver.stability import StabilityReport, evaluate_stability
+
 
 try:
     __version__ = version("AutoCarver")
@@ -27,4 +28,5 @@ __all__ = [
     "RegressionSelector",
     "StabilityReport",
     "evaluate_stability",
+    "SelectionConfig",
 ]

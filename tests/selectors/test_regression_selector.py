@@ -1,122 +1,51 @@
 """Set of tests for RegressionSelector module."""
 
-from pytest import raises
+from pytest import raises, warns
 
 from AutoCarver.features import Features
-from AutoCarver.selectors import RegressionSelector
-from AutoCarver.selectors.filters import BaseFilter, NonDefaultValidFilter, ValidFilter
-from AutoCarver.selectors.measures import BaseMeasure, ModeMeasure, NanMeasure
-from AutoCarver.selectors.utils.base_selector import get_default_metrics, remove_default_metrics
+from AutoCarver.selectors import RegressionSelector, SelectionConfig
+from AutoCarver.selectors.measures import TschuprowtMeasure
+from AutoCarver.selectors.utils.base_selector import remove_default_metrics
+
+# NB: reading ``__name__`` off a metric *class* hits the metaclass descriptor, not the
+# per-class override — only instances carry the real metric name (see the sibling
+# classification tests), hence the literals below.
+GATES = {"Nan", "Mode"}
 
 
-def test_regression_selector_initiate_default(features_object: Features) -> None:
-    """tests initiation of default measures and filters"""
-    # checking for default measures
-    n_best = 2
-    selector = RegressionSelector(
-        n_best_per_type=n_best,
-        features=features_object,
-    )
-
-    mode_measure = ModeMeasure()
-    assert any(measure.__name__ == mode_measure.__name__ for measure in selector.measures)
-    nan_measure = NanMeasure()
-    assert any(measure.__name__ == nan_measure.__name__ for measure in selector.measures)
-    valid_filter = NonDefaultValidFilter()
-    assert any(measure.__name__ == valid_filter.__name__ for measure in selector.filters)
-    valid_filter = ValidFilter()
-    assert any(measure.__name__ == valid_filter.__name__ for measure in selector.filters)
-    assert len(remove_default_metrics(selector.measures)) >= 1
-    assert len(remove_default_metrics(selector.filters)) >= 1
+def names(metrics: list) -> set[str]:
+    """metric names of a per-type slot"""
+    return {metric.__name__ for metric in metrics}
 
 
-def test_regression_selector_initiate_measures(features_object: Features, measures: list[BaseMeasure]) -> None:
-    """tests initiation of measures"""
+def test_regression_selector_default_measures(features_object: Features) -> None:
+    """Kruskal-η² is *reversed* for a quantitative target, so it ranks qualitative features."""
+    selector = RegressionSelector(features_object, 2)
 
-    n_best = 2
-
-    # adding default measure
-    default_measures = get_default_metrics(measures)
-    if len(default_measures) > 0:
-        selector = RegressionSelector(
-            n_best_per_type=n_best,
-            features=features_object,
-            measures=default_measures,
-        )
-        mode_measure = ModeMeasure()
-        assert any(measure.__name__ == mode_measure.__name__ for measure in selector.measures)
-        nan_measure = NanMeasure()
-        assert any(measure.__name__ == nan_measure.__name__ for measure in selector.measures)
-        assert len(selector.measures) == 2 + sum(
-            not isinstance(measure, (NanMeasure, ModeMeasure)) for measure in default_measures
-        )
-
-    # adding qualitative target measures
-    regression_measures = [
-        measure
-        for measure in remove_default_metrics(measures)
-        if measure.is_y_quantitative or (measure.reverse_xy() and measure.is_y_quantitative)
-    ]
-    if len(regression_measures) > 0:
-        selector = RegressionSelector(
-            n_best_per_type=n_best,
-            features=features_object,
-            measures=regression_measures,
-        )
-        mode_measure = ModeMeasure()
-        assert any(measure.__name__ == mode_measure.__name__ for measure in selector.measures)
-        nan_measure = NanMeasure()
-        assert any(measure.__name__ == nan_measure.__name__ for measure in selector.measures)
-        assert len(selector.measures) == len(regression_measures) + 2
-
-    # checking error for quantitative target measures
-    classification_measures = [
-        measure
-        for measure in remove_default_metrics(measures)
-        if not (measure.is_y_quantitative or (measure.reverse_xy() and measure.is_y_quantitative))
-    ]
-    if len(classification_measures) > 0:
-        with raises(ValueError):
-            selector = RegressionSelector(
-                n_best_per_type=n_best,
-                features=features_object,
-                measures=classification_measures,
-            )
+    assert names(selector.measures["quantitatives"]) == GATES | {"SpearmanMeasure"}
+    assert names(selector.measures["qualitatives"]) == GATES | {"KruskalEtaSquaredMeasure"}
+    for kind in ("qualitatives", "quantitatives"):
+        assert len(remove_default_metrics(selector.measures[kind])) == 1
 
 
-def test_regression_selector_initiate_filters(features_object: Features, filters: list[BaseFilter]) -> None:
-    """tests initiation of filters"""
+def test_regression_selector_default_filters(features_object: Features) -> None:
+    """Validity filters are always added; redundancy filters are routed per type."""
+    selector = RegressionSelector(features_object, 2)
 
-    # checking for default filters
-    n_best = 2
+    # NonDefaultValid is not `is_default`: it re-runs the validity gate on the ranking pass
+    assert names(selector.filters["qualitatives"]) == {"Valid", "NonDefaultValid", "TschuprowtFilter"}
+    assert names(selector.filters["quantitatives"]) == {"Valid", "NonDefaultValid", "SpearmanFilter"}
 
-    # adding default filter
-    default_filters = get_default_metrics(filters)
-    if len(default_filters) > 0:
-        selector = RegressionSelector(
-            n_best_per_type=n_best,
-            features=features_object,
-            filters=default_filters,
-        )
-        valid_filter = NonDefaultValidFilter()
-        assert any(measure.__name__ == valid_filter.__name__ for measure in selector.filters)
-        valid_filter = ValidFilter()
-        assert any(measure.__name__ == valid_filter.__name__ for measure in selector.filters)
-        assert (
-            len(selector.filters)
-            == len([filter_ for filter_ in default_filters if filter_.__name__ != ValidFilter.__name__]) + 1
-        )
 
-    # adding filters
-    filters = remove_default_metrics(filters)
-    if len(filters) > 0:
-        selector = RegressionSelector(
-            n_best_per_type=n_best,
-            features=features_object,
-            filters=filters,
-        )
-        valid_filter = NonDefaultValidFilter()
-        assert any(measure.__name__ == valid_filter.__name__ for measure in selector.filters)
-        valid_filter = ValidFilter()
-        assert any(measure.__name__ == valid_filter.__name__ for measure in selector.filters)
-        assert len(selector.filters) == len(filters) + 2
+def test_regression_selector_rejects_classification_measure(features_object: Features) -> None:
+    """A non-reversible measure of the wrong target type is refused at construction."""
+    with raises(ValueError, match="does not match the target type"):
+        RegressionSelector(features_object, 2, config=SelectionConfig(qualitative_measures=[TschuprowtMeasure()]))
+
+
+def test_regression_selector_falls_back_on_empty_measures(features_object: Features) -> None:
+    """An explicitly empty per-type slot falls back to that type's default, with a warning."""
+    with warns(UserWarning, match="no ranking measure applies to qualitative features"):
+        selector = RegressionSelector(features_object, 2, config=SelectionConfig(qualitative_measures=[]))
+
+    assert names(remove_default_metrics(selector.measures["qualitatives"])) == {"KruskalEtaSquaredMeasure"}
