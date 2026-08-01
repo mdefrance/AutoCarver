@@ -95,6 +95,23 @@ class TargetMeanRidit(OrdinalTargetRate):
         """
         self._reference = raw_xagg.sum(axis=0)
 
+    def reference_to_json(self) -> dict | None:
+        """Snapshots the fitted reference marginal as parallel lists.
+
+        Levels can be integers, which JSON object keys would stringify — hence
+        two lists rather than a ``{level: count}`` mapping.
+        """
+        if self._reference is None:
+            return None
+        # levels come off a crosstab's columns: numpy scalars, which json.dump rejects
+        levels = [level.item() if hasattr(level, "item") else level for level in self._reference.index]
+        return {"levels": levels, "counts": [float(count) for count in self._reference]}
+
+    def load_reference(self, payload: dict | None) -> None:
+        """Restores the reference marginal snapshotted by :meth:`reference_to_json`."""
+        if payload is not None:
+            self._reference = pd.Series(payload["counts"], index=payload["levels"])
+
     def _compute(self, xagg: pd.DataFrame) -> pd.Series:
         """Computes the mean train-ridit per modality."""
         ridits = ridit_scores_for_levels(xagg.columns, self.reference)

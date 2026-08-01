@@ -31,8 +31,8 @@ tool calls. To get there:
 
 3. Reload the client and use the exposed tools (``load_dataset`` -> ``list_columns`` /
    ``feature_distribution`` / ``validate_nesting`` -> ``suggest_features`` /
-   ``set_feature`` -> ``run_carver`` -> ``save_carver``). That is the qualify+carve
-   workflow — let the tools run it, rather than calling Python directly.
+   ``set_feature`` -> ``run_carver`` -> ``save_carver`` -> ``evaluate_stability``). That is
+   the qualify+carve workflow — let the tools run it, rather than calling Python directly.
 
 Two things to keep in mind:
 

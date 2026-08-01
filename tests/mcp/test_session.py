@@ -1,5 +1,6 @@
 """Tests for the stateful CarverSession (qualify -> carve workflow)."""
 
+import json
 from pathlib import Path
 
 import numpy as np
@@ -113,6 +114,59 @@ def test_save_carver_roundtrips(dataset, tmp_path):
     reloaded = BinaryCarver.load(Path(path))
     assert reloaded.is_fitted
     assert "num" in [feature.version for feature in reloaded.features]
+
+
+def test_evaluate_stability_scores_a_new_extract(dataset):
+    session = CarverSession()
+    session.load_dataset(dataset, target="target")
+    session.suggest_features()
+    session.drop_feature("child")
+    session.drop_feature("parent")
+    session.run_carver(task="auto", min_freq=0.1, max_n_mod=4)
+
+    # the very sample it was carved on: perfectly stable by construction
+    report = session.evaluate_stability(dataset)
+    assert report["has_target"] is True
+    assert report["unstable_features"] == []
+    assert all(row["psi"] < 1e-9 for row in report["per_feature"])
+    assert json.loads(json.dumps(report))  # MCP transports plain JSON
+
+
+def test_evaluate_stability_without_a_target(dataset, tmp_path):
+    session = CarverSession()
+    session.load_dataset(dataset, target="target")
+    session.suggest_features()
+    session.drop_feature("child")
+    session.drop_feature("parent")
+    session.run_carver(task="auto", min_freq=0.1, max_n_mod=4)
+
+    unlabelled = pd.read_csv(dataset).drop(columns=["target"])
+    path = str(tmp_path / "unlabelled.csv")
+    unlabelled.to_csv(path, index=False)
+
+    report = session.evaluate_stability(path)
+    assert report["has_target"] is False
+    assert all(row["viable"] is None for row in report["per_feature"])
+    assert all(row["psi"] is not None for row in report["per_feature"])
+
+
+def test_evaluate_stability_requires_run(dataset):
+    session = CarverSession()
+    session.load_dataset(dataset, target="target")
+    with raises(ValueError, match="no fitted carver"):
+        session.evaluate_stability(dataset)
+
+
+def test_evaluate_stability_rejects_an_unknown_named_target(dataset):
+    session = CarverSession()
+    session.load_dataset(dataset, target="target")
+    session.suggest_features()
+    session.drop_feature("child")
+    session.drop_feature("parent")
+    session.run_carver(task="auto", min_freq=0.1, max_n_mod=4)
+
+    with raises(ValueError, match="not found in columns"):
+        session.evaluate_stability(dataset, target="nope")
 
 
 def test_save_carver_requires_run(dataset):

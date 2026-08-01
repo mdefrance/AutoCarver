@@ -23,6 +23,7 @@ Welcome to AutoCarver's documentation!
    discretizers
    combinations
    viability
+   stability
    carvers
    selectors
    mcp

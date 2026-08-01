@@ -51,13 +51,7 @@ class CarverSession:
         ``target``, when given, names the column carved against; it is excluded from feature
         suggestions. Resets any previous draft.
         """
-        file = Path(path)
-        if file.suffix == ".csv":
-            X = pd.read_csv(file)
-        elif file.suffix in (".parquet", ".pq"):
-            X = pd.read_parquet(file)
-        else:
-            raise ValueError(f"[session] unsupported file type {file.suffix!r}; use .csv or .parquet.")
+        X = _read_frame(path)
 
         if target is not None and target not in X.columns:
             raise ValueError(f"[session] target {target!r} not found in columns {list(X.columns)}.")
@@ -191,6 +185,30 @@ class CarverSession:
         self.carver.save(Path(path))
         return {"saved": path, "features": [feature.version for feature in self.carver.features]}
 
+    def evaluate_stability(self, path: str, target: str | None = None) -> dict:
+        """Scores a new sample against the fitted carver's train reference.
+
+        Loads a ``.csv``/``.parquet`` holdout or production extract and compares each carved
+        feature's modality distribution and target rate to the reference stored at carving
+        time: PSI, a chi-square goodness-of-fit on counts, per-modality target drift, and the
+        carver's own viability tests (rank inversion, Wilson ``min_freq``, distinct rates).
+        ``target`` names the target column in the loaded file; it defaults to the session's
+        target. An unlabelled extract (one that simply doesn't carry the session's target
+        column) falls back to the frequency-based metrics only — but an explicitly named
+        ``target`` that is missing is an error, not a silent downgrade. Requires a prior
+        :meth:`run_carver`.
+        """
+        if self.carver is None:
+            raise ValueError("[session] no fitted carver; call run_carver first.")
+
+        X = _read_frame(path)
+        column = target if target is not None else self.target
+        if target is not None and target not in X.columns:
+            raise ValueError(f"[session] target {target!r} not found in columns {list(X.columns)}.")
+
+        y = X[column] if column in X.columns else None
+        return self.carver.evaluate_stability(X, y).to_json()
+
     def _resolve_task(self, task: str, y: pd.Series) -> str:
         """Resolves ``auto`` to a concrete carver from the target's values."""
         if task in _CARVERS:
@@ -217,6 +235,16 @@ class CarverSession:
         if self.target is None:
             return None
         return self._frame()[self.target]
+
+
+def _read_frame(path: str) -> pd.DataFrame:
+    """Reads a ``.csv`` or ``.parquet`` file into a DataFrame."""
+    file = Path(path)
+    if file.suffix == ".csv":
+        return pd.read_csv(file)
+    if file.suffix in (".parquet", ".pq"):
+        return pd.read_parquet(file)
+    raise ValueError(f"[session] unsupported file type {file.suffix!r}; use .csv or .parquet.")
 
 
 def _feature_to_spec(feature) -> dict:

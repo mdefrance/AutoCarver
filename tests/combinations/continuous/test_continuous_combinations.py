@@ -1,6 +1,7 @@
 """set of tests for the continuous_combinations module"""
 
 import json
+from math import nan, sqrt
 from pathlib import Path
 
 import numpy as np
@@ -210,7 +211,12 @@ def test_compute_target_rates_basic(evaluator: ContinuousCombinationEvaluator):
 
     result = evaluator.target_rate.compute(xagg)
     expected = pd.DataFrame(
-        {"target_mean": [2.0, 3.0, 5.0], "frequency": [2 / 5, 2 / 5, 1 / 5], "count": [2, 2, 1]},
+        {
+            "target_mean": [2.0, 3.0, 5.0],
+            "frequency": [2 / 5, 2 / 5, 1 / 5],
+            "count": [2, 2, 1],
+            "std": [sqrt(2), sqrt(2), nan],
+        },
         index=["A", "B", "C"],
     )
     assert result.equals(expected)
@@ -224,7 +230,12 @@ def test_compute_target_rates_with_nan(evaluator: ContinuousCombinationEvaluator
 
     result = evaluator.target_rate.compute(xagg)
     expected = pd.DataFrame(
-        {"target_mean": [2.0, 3.0, None], "frequency": [2 / 4, 2 / 4, 0], "count": [2, 2, 0]},
+        {
+            "target_mean": [2.0, 3.0, None],
+            "frequency": [2 / 4, 2 / 4, 0],
+            "count": [2, 2, 0],
+            "std": [sqrt(2), sqrt(2), nan],
+        },
         index=["A", "B", "C"],
     )
     assert result.equals(expected)
@@ -238,7 +249,12 @@ def test_compute_target_rates_unordered_labels(evaluator: ContinuousCombinationE
 
     result = evaluator.target_rate.compute(xagg)
     expected = pd.DataFrame(
-        {"target_mean": [5.0, 2.0, 3.0], "frequency": [1 / 5, 2 / 5, 2 / 5], "count": [1, 2, 2]},
+        {
+            "target_mean": [5.0, 2.0, 3.0],
+            "frequency": [1 / 5, 2 / 5, 2 / 5],
+            "count": [1, 2, 2],
+            "std": [nan, sqrt(2), sqrt(2)],
+        },
         index=["C", "A", "B"],
     )
     assert result.equals(expected)
@@ -251,7 +267,10 @@ def test_compute_target_rates_missing_labels(evaluator: ContinuousCombinationEva
     xagg = get_target_values_by_modality(X, y, feature)
 
     result = evaluator.target_rate.compute(xagg)
-    expected = pd.DataFrame({"target_mean": [2.0, 3.0], "frequency": [2 / 4, 2 / 4], "count": [2, 2]}, index=["A", "B"])
+    expected = pd.DataFrame(
+        {"target_mean": [2.0, 3.0], "frequency": [2 / 4, 2 / 4], "count": [2, 2], "std": [sqrt(2), sqrt(2)]},
+        index=["A", "B"],
+    )
     assert result.equals(expected)
 
 
@@ -263,7 +282,12 @@ def test_compute_target_rates_extra_labels(evaluator: ContinuousCombinationEvalu
 
     result = evaluator.target_rate.compute(xagg)
     expected = pd.DataFrame(
-        {"target_mean": [2.0, 3.0, 5.0, None], "frequency": [2 / 5, 2 / 5, 1 / 5, 0], "count": [2, 2, 1, 0]},
+        {
+            "target_mean": [2.0, 3.0, 5.0, None],
+            "frequency": [2 / 5, 2 / 5, 1 / 5, 0],
+            "count": [2, 2, 1, 0],
+            "std": [sqrt(2), sqrt(2), nan, nan],
+        },
         index=["A", "B", "C", "D"],
     )
     assert result.equals(expected)

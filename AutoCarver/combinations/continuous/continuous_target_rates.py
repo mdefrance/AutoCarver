@@ -38,11 +38,15 @@ class ContinuousTargetRate(TargetRate[pd.Series], ABC):
             count = xagg.apply(len)
             frequency = count / count.sum()
 
+            # per-modality dispersion, needed by AutoCarver.stability for a Welch test
+            # against this reference; NaN for singleton modalities (ddof=1)
+            std = xagg.apply(lambda values: float(np.std(values, ddof=1)) if len(values) > 1 else float("nan"))
+
             # computing target rate. `_compute` expects pd.Series (Generic
             # XAgg=Series); compute()'s wide signature is for LSP matching,
             # callers always pass a Series-of-y-lists here.
             return pd.DataFrame(
-                {self.__name__: self._compute(xagg), "frequency": frequency, "count": count}  # type: ignore
+                {self.__name__: self._compute(xagg), "frequency": frequency, "count": count, "std": std}  # type: ignore
             )
         return None
 

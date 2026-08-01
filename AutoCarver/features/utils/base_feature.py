@@ -61,6 +61,11 @@ class BaseFeature(ABC):
         self._statistics: dict[str, Any] | None = None
         self._history: list[dict[str, Any]] = []
 
+        # per-feature state the evaluator's target rate was fit on (ridit reference,
+        # CA axis), snapshotted alongside statistics so AutoCarver.stability can
+        # recompute the same rate on a new sample. None for stateless rates.
+        self.rate_reference: dict[str, Any] | None = None
+
         # selector metrics (populated by selectors at runtime)
         self.measures: dict[str, dict[str, Any]] = {}
         self.filters: dict[str, dict[str, Any]] = {}
@@ -544,6 +549,7 @@ class BaseFeature(ABC):
             "is_datetime": self.is_datetime,
             "ordinal_encoding": self.ordinal_encoding,
             "statistics": self._statistics,
+            "rate_reference": self.rate_reference,
         }
 
         if not light_mode:
@@ -573,6 +579,7 @@ class BaseFeature(ABC):
         self._has_default = feature_json.get("has_default", False)
         self._dropna = feature_json.get("dropna", False)
         self._statistics = feature_json.get("statistics")
+        self.rate_reference = feature_json.get("rate_reference")
         self._history = list(feature_json.get("history") or [])
 
         # restore values / labels
@@ -643,5 +650,8 @@ def _aggregate_stats_rows(rows: pd.DataFrame) -> dict:
         elif col in ("count", "frequency"):
             aggregated[col] = values.sum()
         else:
+            # count-weighting is exact for per-bin means (target rates) but only
+            # approximate for the continuous "std" column — a true pooled std would
+            # also need the between-bin spread, which the stored rows don't carry.
             aggregated[col] = float((values * weights).sum() / weights.sum())
     return aggregated

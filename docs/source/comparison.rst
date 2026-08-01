@@ -113,7 +113,7 @@ The three libraries answer "what's a good bin?" with very different objectives:
      - **No target awareness.** Splits are placed on the marginal distribution of ``X`` only: equal-frequency (``quantile``), equal-width (``uniform``), or 1-D k-means.
      - ``n_bins`` per feature; that's it.
 
-The takeaway: **AutoCarver and optbinning both optimize against the target**, but AutoCarver's robustness step (the dev-set veto, with a Wilson-CI-guarded ``min_freq`` check on both train and dev) is something optbinning does not do natively — you'd have to script it yourself with cross-validation. KBinsDiscretizer is a different category: it's a fast preprocessing primitive, not a supervised binner.
+The takeaway: **AutoCarver and optbinning both optimize against the target**, but AutoCarver's robustness step (the dev-set veto, with a Wilson-CI-guarded ``min_freq`` check on both train and dev) is something optbinning does not do natively — you'd have to script it yourself with cross-validation. The two libraries place their stability check at opposite ends: optbinning constrains PSI *while* solving for bins, AutoCarver vetoes rank inversions *while* carving and then re-runs the whole viability filter — plus PSI and a :math:`\chi^2` drift test — against any later sample (see :ref:`Stability`). KBinsDiscretizer is a different category: it's a fast preprocessing primitive, not a supervised binner.
 
 
 Side-by-side: bin a mixed feature set on the same data

@@ -36,6 +36,10 @@ every fold:
     \;\wedge\;
     \bigwedge_{i=1}^{n} \text{viable}_{\text{fold}_i}.
 
+.. seealso::
+   The same filter can be re-run **after** fitting, against a production sample,
+   alongside PSI and drift tests — see :ref:`Stability`.
+
 When **no** candidate survives the filter the feature is dropped — see
 :ref:`DroppedFeatures`. Each failing test contributes a human-readable reason
 (*"Non-representative modality for min_freq=…"*, *"Non-distinct target rates per

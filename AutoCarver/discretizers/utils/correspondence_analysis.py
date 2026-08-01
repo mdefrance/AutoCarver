@@ -104,6 +104,14 @@ def ca_row_scores(xtab: pd.DataFrame, axis: CAAxis) -> pd.Series:
     Falls back to (deterministic) descending-frequency scoring when
     ``axis.degenerate`` (encoded as ``-row_total`` so ascending sort still
     yields frequency-descending order).
+
+    Raises
+    ------
+    ValueError
+        When ``xtab`` doesn't carry exactly the classes the axis was fit on —
+        typically a target class present in a later sample but unseen at fit
+        time. The axis is fixed by construction, so such a table cannot be
+        projected onto it (see :mod:`AutoCarver.stability`).
     """
     values = np.asarray(xtab.to_numpy(), dtype=float)
     row_totals = values.sum(axis=1)
@@ -112,6 +120,11 @@ def ca_row_scores(xtab: pd.DataFrame, axis: CAAxis) -> pd.Series:
         return pd.Series(-row_totals, index=xtab.index)
 
     c = axis.col_mass
+    if values.shape[1] != c.shape[0]:
+        raise ValueError(
+            f"[ca_row_scores] crosstab carries {values.shape[1]} target classes {list(xtab.columns)} but the "
+            f"fitted CA axis was built on {c.shape[0]}; the axis cannot score classes it was never fit on."
+        )
     col_ok = c > 1e-10
     safe_row_totals = np.where(row_totals > 0, row_totals, 1.0)
     profiles = values / safe_row_totals[:, None]

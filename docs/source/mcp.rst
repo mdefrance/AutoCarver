@@ -183,6 +183,10 @@ safe within a model's context window.
   and carve them against the target; returns the kept/dropped features, carved content and summary.
 * ``save_carver(path)`` — save the fitted carver and its carved features to a ``.json`` file
   (run ``run_carver`` first); the file restores both via ``BinaryCarver.load``.
+* ``evaluate_stability(path, target=None)`` — score a holdout or production extract against
+  the carved features' train reference: PSI, chi-square drift and rank inversions
+  (see :ref:`Stability`). ``target`` defaults to the session's; an extract without it gets
+  the population metrics only.
 
 
 
@@ -260,10 +264,13 @@ you — *interrogate* the data before committing to types:
     session.set_feature("grade", "ordinal", values=["low", "medium", "high"])
     result = session.run_carver(task="auto", min_freq=0.05, max_n_mod=5)
     session.save_carver("my_carver.json")          # carver + carved features, reloadable
+    session.evaluate_stability("holdout.csv")      # PSI / drift / rank inversions vs. the train reference
 
 ``run_carver`` returns the resolved task, the kept/dropped features, the carved content per
 feature and the carving summary. ``save_carver`` persists the fitted carver — features
 included — so it can later be restored with ``BinaryCarver.load("my_carver.json")``.
+``evaluate_stability`` scores a later sample against the reference statistics stored on each
+carved feature — see :ref:`Stability`.
 
 
 

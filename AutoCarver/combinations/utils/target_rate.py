@@ -50,3 +50,16 @@ class TargetRate(ABC, Generic[XAgg]):
         pd.DataFrame | None
             Target rate frame, or ``None`` if ``xagg`` was ``None``.
         """
+
+    def reference_to_json(self) -> dict | None:
+        """JSON-safe snapshot of any per-feature state this rate was fit on.
+
+        Rates carrying fitted state (``TargetMeanRidit``, ``CAScoreRate``) override
+        this so a carved feature can recompute its rate on a new sample once the
+        evaluator's transient state is gone (see :mod:`AutoCarver.stability`).
+        ``None`` means the rate is stateless.
+        """
+        return None
+
+    def load_reference(self, payload: dict | None) -> None:
+        """Restores state produced by :meth:`reference_to_json` (no-op when stateless)."""

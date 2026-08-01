@@ -17,6 +17,7 @@ _EXPECTED_TOOLS = {
     "preview_features",
     "run_carver",
     "save_carver",
+    "evaluate_stability",
 }
 
 
