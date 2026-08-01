@@ -9,7 +9,6 @@ from AutoCarver.combinations.utils.combinations import (
     combination_formatter,
     combinations_at_index,
     consecutive_combinations,
-    format_combinations,
     nan_combinations,
     order_apply_combination,
     xagg_apply_combination,
@@ -443,51 +442,3 @@ def test_xagg_apply_combination_with_nan():
     print(result)
     expected = pd.DataFrame({"A": [3, 7, 5], "B": [11, 15, 10]}, index=["a", "c", feature.nan])
     assert result.equals(expected)
-
-
-def test_format_combinations_basic():
-    """Test format_combinations with a basic set of combinations."""
-    combinations = [[["A", "B"], ["C", "D"]], [["E", "F"], ["G", "H"]]]
-    result = format_combinations(combinations)
-    expected = [{"A": "A", "B": "A", "C": "C", "D": "C"}, {"E": "E", "F": "E", "G": "G", "H": "G"}]
-    assert result == expected
-
-
-def test_format_combinations_single_group():
-    """Test format_combinations with a single group."""
-    combinations = [[["A", "B", "C"]]]
-    result = format_combinations(combinations)
-    expected = [{"A": "A", "B": "A", "C": "A"}]
-    assert result == expected
-
-
-def test_format_combinations_single_element_groups():
-    """Test format_combinations with single element groups."""
-    combinations = [[["A"], ["B"], ["C"]]]
-    result = format_combinations(combinations)
-    expected = [{"A": "A", "B": "B", "C": "C"}]
-    assert result == expected
-
-
-def test_format_combinations_empty_group():
-    """Test format_combinations with an empty group."""
-    combinations = [[[]]]
-    result = format_combinations(combinations)
-    expected = [{}]
-    assert result == expected
-
-
-def test_format_combinations_empty_combinations():
-    """Test format_combinations with empty combinations."""
-    combinations = []
-    result = format_combinations(combinations)
-    expected = []
-    assert result == expected
-
-
-def test_format_combinations_mixed_groups():
-    """Test format_combinations with mixed groups."""
-    combinations = [[["A", "B"], ["C"], ["D", "E", "F"]]]
-    result = format_combinations(combinations)
-    expected = [{"A": "A", "B": "A", "C": "C", "D": "D", "E": "D", "F": "D"}]
-    assert result == expected

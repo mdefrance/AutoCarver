@@ -1,0 +1,119 @@
+[
+  {
+    "feature": "Categorical('cat_a')",
+    "ca_score": -0.4573506683203236,
+    "cramerv": 0.3583980772,
+    "tschuprowt": 0.3013756584,
+    "n_mod": 2,
+    "label": 0,
+    "content": [
+      "b",
+      "a",
+      "c"
+    ],
+    "frequency": 0.38033333333333336,
+    "count": 1141.0,
+    "dropped": false,
+    "dropped_reason": null
+  },
+  {
+    "feature": "Categorical('cat_a')",
+    "ca_score": 0.28070850594593294,
+    "cramerv": 0.3583980772,
+    "tschuprowt": 0.3013756584,
+    "n_mod": 2,
+    "label": 1,
+    "content": [
+      "g",
+      "f",
+      "d",
+      "h",
+      "e"
+    ],
+    "frequency": 0.6196666666666667,
+    "count": 1859.0,
+    "dropped": false,
+    "dropped_reason": null
+  },
+  {
+    "feature": "Categorical('cat_b')",
+    "ca_score": -0.06579429807869136,
+    "cramerv": 0.043010224900000005,
+    "tschuprowt": 0.036167144,
+    "n_mod": 2,
+    "label": 0,
+    "content": [
+      "y",
+      "z"
+    ],
+    "frequency": 0.29433333333333334,
+    "count": 883.0,
+    "dropped": false,
+    "dropped_reason": null
+  },
+  {
+    "feature": "Categorical('cat_b')",
+    "ca_score": 0.02744277997330393,
+    "cramerv": 0.043010224900000005,
+    "tschuprowt": 0.036167144,
+    "n_mod": 2,
+    "label": 1,
+    "content": "x",
+    "frequency": 0.7056666666666667,
+    "count": 2117.0,
+    "dropped": false,
+    "dropped_reason": null
+  },
+  {
+    "feature": "Numerical('num_a')",
+    "ca_score": 0.6246014536478328,
+    "cramerv": 0.6567055317,
+    "tschuprowt": 0.5522213275,
+    "n_mod": 2,
+    "label": 0,
+    "content": "(-inf, 6.3e-03]",
+    "frequency": 0.525,
+    "count": 1575.0,
+    "dropped": false,
+    "dropped_reason": null
+  },
+  {
+    "feature": "Numerical('num_a')",
+    "ca_score": -0.6903489750844468,
+    "cramerv": 0.6567055317,
+    "tschuprowt": 0.5522213275,
+    "n_mod": 2,
+    "label": 1,
+    "content": "(6.3e-03, inf)",
+    "frequency": 0.475,
+    "count": 1425.0,
+    "dropped": false,
+    "dropped_reason": null
+  },
+  {
+    "feature": "Numerical('num_b')",
+    "ca_score": -0.15000324770972479,
+    "cramerv": 0.30000694440000003,
+    "tschuprowt": 0.2522747641,
+    "n_mod": 2,
+    "label": 0,
+    "content": "(-inf, 3.1e+00]",
+    "frequency": 0.8,
+    "count": 2400.0,
+    "dropped": false,
+    "dropped_reason": null
+  },
+  {
+    "feature": "Numerical('num_b')",
+    "ca_score": 0.600012990838899,
+    "cramerv": 0.30000694440000003,
+    "tschuprowt": 0.2522747641,
+    "n_mod": 2,
+    "label": 1,
+    "content": "(3.1e+00, inf)",
+    "frequency": 0.2,
+    "count": 600.0,
+    "dropped": false,
+    "dropped_reason": null
+  }
+]

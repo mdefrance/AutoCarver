@@ -11,7 +11,6 @@ from AutoCarver.discretizers.utils.base_discretizer import (
     Sample,
     cast_datetime_features,
 )
-from AutoCarver.discretizers.utils.multiprocessing import apply_async_function
 from AutoCarver.features import BaseFeature, DatetimeFeature, Features, GroupedList
 from AutoCarver.features.qualitatives import nan_unique
 from AutoCarver.utils import extend_docstring
@@ -46,7 +45,7 @@ class StringDiscretizer(BaseDiscretizer):
 
         # transforming all features — kept serial (n_jobs=1): per-feature string-casting is cheap and
         # pickling each column to a worker dominates. n_jobs is reserved for the carver's search.
-        all_orders = apply_async_function(fit_feature, self.features, 1, sample.X)
+        all_orders = [fit_feature(feature, sample.X[feature.version]) for feature in self.features]
 
         # updating features accordingly
         self.features.update(dict(all_orders), replace=True)

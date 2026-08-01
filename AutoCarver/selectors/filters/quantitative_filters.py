@@ -7,57 +7,6 @@ from AutoCarver.features import BaseFeature, get_versions
 from AutoCarver.selectors.filters.base_filters import BaseFilter
 from AutoCarver.utils.extend_docstring import extend_docstring
 
-# from statsmodels.stats.outliers_influence import variance_inflation_factor
-
-
-# TODO
-# def vif_filter(X: pd.DataFrame, ranks: pd.DataFrame, **params) -> dict[str, Any]:
-#     """Computes Variance Inflation Factor (multicolinearity)
-
-#     Parameters
-#     ----------
-#     thresh_vif, float: default inf
-#       Maximum VIF between features
-#     """
-
-#     # accessing the prefered order
-#     prefered_order = ranks.index
-
-#     # initiating list association per feature
-#     associations = []
-
-#     # list of dropped features
-#     dropped = []
-
-#     # iterating over each column
-#     for i, feature in enumerate(prefered_order):
-#         # identifying remaining more associated features
-#         better_features = [f for f in prefered_order[: i + 1] if f not in dropped]
-
-#         X_vif = X[better_features]  # keeping only better features
-#         X_vif = X_vif.dropna(axis=0)  # dropping NaNs for OLS
-
-#         # computation of VIF
-#         vif = nan
-#         if len(better_features) > 1 and len(X_vif) > 0:
-#             vif = variance_inflation_factor(X_vif.values, len(better_features) - 1)
-
-#         # dropping the feature if it was too correlated to a better feature
-#         if vif > params.get("thresh_vif", inf) and notna(vif):
-#             dropped += [feature]
-
-#         # kept feature: updating associations with this feature
-#         else:
-#             associations += [{"feature": feature, "vif_filter": vif}]
-
-#     # formatting ouput to DataFrame
-#     associations = pd.DataFrame(associations).set_index("feature")
-
-#     # applying filter on association
-#     associations = ranks.join(associations, how="right")
-
-#     return associations
-
 
 class QuantitativeFilter(BaseFilter):
     """Computes max association between X and X (quantitative) excluding features
