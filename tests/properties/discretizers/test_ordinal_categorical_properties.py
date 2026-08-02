@@ -14,8 +14,8 @@ from strategies import binary_target
 
 from AutoCarver.discretizers.qualitatives.categorical_discretizer import CategoricalDiscretizer
 from AutoCarver.discretizers.qualitatives.ordinal_discretizer import OrdinalDiscretizer
-from AutoCarver.discretizers.utils.frequency_ci import is_significantly_below
 from AutoCarver.features import Features
+from AutoCarver.stats.frequency_ci import is_significantly_below
 
 min_freqs = st.sampled_from([0.1, 0.15, 0.2, 0.3])
 

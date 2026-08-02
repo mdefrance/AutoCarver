@@ -495,7 +495,7 @@ joint :class:`MulticlassCarver` instead orders modalities along the **first
 axis of a correspondence analysis (CA)** of the raw ``modalities × classes``
 crosstab — the 1-D embedding of the table that captures the largest share of
 its :math:`\chi^2` inertia
-(:mod:`AutoCarver.discretizers.utils.correspondence_analysis`).
+(:mod:`AutoCarver.stats.correspondence_analysis`).
 
 Fitting the axis:
 

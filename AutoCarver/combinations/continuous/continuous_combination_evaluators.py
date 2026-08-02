@@ -20,6 +20,7 @@ from AutoCarver.combinations.utils.dp import (
 from AutoCarver.combinations.utils.target_rate import TargetRate
 from AutoCarver.combinations.utils.testing import Keys, is_viable, test_viability
 from AutoCarver.features import GroupedList
+from AutoCarver.stats.kruskal import h_from_rank_sums
 
 
 class ContinuousCombinationEvaluator(CombinationEvaluator[pd.Series], ABC):
@@ -443,6 +444,9 @@ def _modality_rank_stats(
 
     all_y = np.concatenate(raw_lists)
     ranks = rankdata(all_y, method="average")
+    # scipy.stats.tiecorrect is bit-exact against scipy elsewhere in this module's
+    # parity tests; AutoCarver.stats.kruskal.tie_correction is its scalar twin but
+    # is not substituted here to keep that scipy pin intact.
     tie_corr = tiecorrect(ranks)
 
     offsets = np.concatenate([[0], np.cumsum(n_per_mod)])
@@ -488,22 +492,11 @@ def _kruskal_h_for_combination(
     R_g = np.bincount(assign, weights=R_per_mod, minlength=n_groups)
     n_g = np.bincount(assign, weights=n_per_mod.astype(float), minlength=n_groups)
 
-    # Empty groups -> NaN, matching scipy (0**2 / 0 → nan).
-    if (n_g == 0).any():
-        with np.errstate(invalid="ignore", divide="ignore"):
-            ssbn = float((R_g**2 / n_g).sum())
-        if not np.isfinite(ssbn):
-            return float("nan")
-    else:
-        ssbn = float((R_g**2 / n_g).sum())
-
-    h = (12.0 / (N * (N + 1))) * ssbn - 3.0 * (N + 1)
-
     # All values identical → tie_corr == 0; scipy returns nan from H/0.
-    if tie_corr is None or tie_corr == 0:
+    if tie_corr is None:
         return float("nan")
 
-    return h / tie_corr
+    return h_from_rank_sums(R_g, n_g, N, tie_corr)
 
 
 def _top_k_partitions_kruskal_dp(  # noqa: C901

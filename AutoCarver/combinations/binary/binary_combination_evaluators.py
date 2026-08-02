@@ -15,9 +15,10 @@ from AutoCarver.combinations.utils.dp import (
     splits_to_combination,
     top_k_partitions,
 )
-from AutoCarver.combinations.utils.dp import chi2_pearson as _chi2_pearson_2col
 from AutoCarver.combinations.utils.target_rate import TargetRate
 from AutoCarver.features import GroupedList
+from AutoCarver.stats.chi2 import cramerv_tschuprowt
+from AutoCarver.stats.chi2 import pearson_chi2 as _chi2_pearson_2col
 
 
 class BinaryCombinationEvaluator(CombinationEvaluator[pd.DataFrame], ABC):
@@ -369,18 +370,7 @@ def _chi2_assoc_for_combination(
 
     chi2 = _chi2_pearson_2col(obs)
 
-    cramerv = float(np.sqrt(chi2 / n_obs))
-    if pd.notna(cramerv):
-        cramerv = round(cramerv / tol) * tol
-
-    if n_groups > 1:
-        tschuprowt = cramerv / float(np.sqrt(np.sqrt(n_groups - 1)))
-        if pd.notna(tschuprowt):
-            tschuprowt = round(tschuprowt / tol) * tol
-    else:
-        tschuprowt = cramerv
-
-    return cramerv, tschuprowt
+    return cramerv_tschuprowt(chi2, n_obs, n_groups, 2, tol=tol)
 
 
 def _top_k_partitions_chi2_dp(  # noqa: C901

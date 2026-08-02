@@ -16,8 +16,8 @@ from AutoCarver.combinations.ordinal.ordinal_target_rates import (
     TargetMeanRidit,
 )
 from AutoCarver.discretizers.utils.base_discretizer import ProcessingConfig
-from AutoCarver.discretizers.utils.ridits import ridits_from_counts
 from AutoCarver.features import Features
+from AutoCarver.stats.ridits import ridits_from_counts
 from AutoCarver.utils import extend_docstring
 
 

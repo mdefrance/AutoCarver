@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from AutoCarver.combinations.utils import TargetRate
-from AutoCarver.discretizers.utils.correspondence_analysis import CAAxis, ca_row_scores, fit_ca_axis
+from AutoCarver.stats.correspondence_analysis import CAAxis, ca_row_scores, fit_ca_axis
 
 
 class MulticlassTargetRate(TargetRate[pd.DataFrame], ABC):
@@ -17,7 +17,7 @@ class MulticlassTargetRate(TargetRate[pd.DataFrame], ABC):
     consumes, generalised to an unordered K-class target. The per-group "rate"
     is a scalar projection of the group's row profile onto a fixed
     correspondence-analysis axis (:class:`CAAxis`, see
-    :mod:`AutoCarver.discretizers.utils.correspondence_analysis`): the owning
+    :mod:`AutoCarver.stats.correspondence_analysis`): the owning
     :class:`~AutoCarver.combinations.multiclass.multiclass_combination_evaluators.MulticlassCombinationEvaluator`
     fits that axis once, from the feature's raw (un-grouped) train crosstab
     (:meth:`fit_axis`), and every later call — a train candidate grouping, or a
@@ -45,7 +45,7 @@ class MulticlassTargetRate(TargetRate[pd.DataFrame], ABC):
         Must be called once per feature, before any candidate grouping is
         scored — every subsequent :meth:`compute` call (train candidate, dev
         candidate) then projects onto this same axis (the CA transition
-        formula in :func:`~AutoCarver.discretizers.utils.correspondence_analysis.ca_row_scores`
+        formula in :func:`~AutoCarver.stats.correspondence_analysis.ca_row_scores`
         needs only the row's own profile and this fixed axis).
         """
         self._axis = fit_ca_axis(raw_xagg)

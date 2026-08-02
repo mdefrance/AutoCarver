@@ -87,6 +87,8 @@ def chi2_homogeneity(ref_count: pd.Series, new_count: pd.Series) -> tuple[float,
     if table.shape[1] < 2 or total <= 0 or (table.sum(axis=1) <= 0).any():
         return float("nan"), float("nan"), 0, float("nan")
 
+    # kept on scipy.stats.chi2_contingency (not AutoCarver.stats.chi2.pearson_chi2):
+    # this needs the p-value and degrees of freedom, which pearson_chi2 doesn't return.
     statistic, pvalue, dof, _ = chi2_contingency(table)
     return float(statistic), float(pvalue), int(dof), float(np.sqrt(statistic / total))
 

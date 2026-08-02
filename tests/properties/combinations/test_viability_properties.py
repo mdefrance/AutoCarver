@@ -11,7 +11,7 @@ from AutoCarver.combinations.utils.testing import (
     _test_modality_ordering,
 )
 from AutoCarver.combinations.utils.testing import test_viability as compute_viability
-from AutoCarver.discretizers.utils.frequency_ci import is_significantly_below
+from AutoCarver.stats.frequency_ci import is_significantly_below
 
 alphas = st.sampled_from([0.01, 0.05, 0.1])
 

@@ -140,9 +140,9 @@ larger :math:`\alpha` → tighter CI → more rejections → more aggressive mer
 :math:`\alpha = 1` recovers the legacy strict-threshold behaviour
 (:math:`\text{UB}` collapses to :math:`\hat p`).
 
-.. autofunction:: AutoCarver.discretizers.utils.frequency_ci.wilson_upper_bound
+.. autofunction:: AutoCarver.stats.frequency_ci.wilson_upper_bound
 
-.. autofunction:: AutoCarver.discretizers.utils.frequency_ci.is_significantly_below
+.. autofunction:: AutoCarver.stats.frequency_ci.is_significantly_below
 
 
 .. _DistinctRatesViability:

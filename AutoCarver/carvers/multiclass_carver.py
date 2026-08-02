@@ -25,7 +25,7 @@ class MulticlassCarver(BaseCarver):
     sit directly on :class:`BaseCarver` and aggregate a ``feature-groups x
     target-levels`` crosstab): the K target classes are unordered here, so
     qualitative modalities are ordered by their correspondence-analysis
-    first-axis score (see :mod:`AutoCarver.discretizers.utils.correspondence_analysis`)
+    first-axis score (see :mod:`AutoCarver.stats.correspondence_analysis`)
     instead of a numeric target-rate mean, and the association measure is a
     chi²-family statistic (Tschuprow's T or Cramér's V) generalised to a
     ``(B, K)`` table instead of Kendall's tau-c.

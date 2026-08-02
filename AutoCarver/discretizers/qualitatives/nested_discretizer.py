@@ -18,9 +18,9 @@ from AutoCarver.discretizers.qualitatives.categorical_discretizer import (
     series_target_rate,
 )
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, ProcessingConfig, Sample
-from AutoCarver.discretizers.utils.frequency_ci import is_significantly_below
 from AutoCarver.discretizers.utils.type_discretizers import ensure_qualitative_dtypes
 from AutoCarver.features import Features, GroupedList, NestedFeature
+from AutoCarver.stats.frequency_ci import is_significantly_below
 from AutoCarver.utils import extend_docstring
 
 

@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from AutoCarver.combinations.utils import TargetRate
-from AutoCarver.discretizers.utils.ridits import ridit_scores_for_levels
+from AutoCarver.stats.ridits import ridit_scores_for_levels
 
 
 class OrdinalTargetRate(TargetRate[pd.DataFrame], ABC):
@@ -31,7 +31,7 @@ class TargetMeanRidit(OrdinalTargetRate):
     """Mean train-ridit per modality (the ordinal default).
 
     The per-group rate is the count-weighted mean of the **train** ridits of
-    the crosstab's columns (see :mod:`AutoCarver.discretizers.utils.ridits`):
+    the crosstab's columns (see :mod:`AutoCarver.stats.ridits`):
     the owning evaluator fixes the reference marginal once, from the feature's
     raw (un-grouped) train crosstab (:meth:`fit_reference`), and every later
     call — a train candidate grouping, or a dev-sample grouping — scores

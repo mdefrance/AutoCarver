@@ -4,7 +4,7 @@ import numpy as np
 from hypothesis import given
 from hypothesis import strategies as st
 
-from AutoCarver.discretizers.utils.frequency_ci import is_significantly_below, wilson_upper_bound
+from AutoCarver.stats.frequency_ci import is_significantly_below, wilson_upper_bound
 
 alphas = st.sampled_from([0.01, 0.05, 0.1])
 nobs_strat = st.integers(min_value=1, max_value=100_000)

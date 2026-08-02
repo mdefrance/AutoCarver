@@ -14,6 +14,9 @@ non-NaN rows, matching ``scipy.stats.kruskal``.
 import numpy as np
 import pandas as pd
 
+from AutoCarver.stats.chi2 import pearson_chi2
+from AutoCarver.stats.kruskal import tie_correction
+
 
 def one_hot(groups: pd.Series) -> tuple[np.ndarray, int]:
     """One-hot ``(N, K)`` float matrix of a categorical series, plus ``K``."""
@@ -31,12 +34,7 @@ def _tie_factors(block: pd.DataFrame) -> np.ndarray:
     for j, col in enumerate(block.columns):
         values = block[col].to_numpy(dtype=float)
         values = values[~np.isnan(values)]
-        n = values.size
-        if n < 2:
-            continue
-        _, counts = np.unique(values, return_counts=True)
-        ties = float((counts**3 - counts).sum())
-        factors[j] = 1.0 - ties / (n**3 - n)
+        factors[j] = tie_correction(values)
     return factors
 
 
@@ -121,9 +119,7 @@ def kruskal_h_reversed(block: pd.DataFrame, y: pd.Series) -> tuple[np.ndarray, n
         # tie correction over the pooled y ranks; an all-tied y gives tie_factor
         # 0 (scipy.stats.kruskal rejects it: "All numbers are identical") -> leave
         # h[j] undefined instead of dividing to +inf
-        _, tcounts = np.unique(ranks, return_counts=True)
-        ties = float((tcounts**3 - tcounts).sum())
-        tie_factor = 1.0 - ties / (n**3 - n)
+        tie_factor = tie_correction(ranks)
         if tie_factor == 0:
             continue
         h[j] = h_j / tie_factor
@@ -157,18 +153,7 @@ def pairwise_chi2(codes_a: np.ndarray, ka: int, codes_b: np.ndarray, kb: int) ->
 
     flat = codes_a[valid] * kb + codes_b[valid]
     table = np.bincount(flat, minlength=ka * kb).reshape(ka, kb).astype(float)
-    row = table.sum(1, keepdims=True)
-    col = table.sum(0, keepdims=True)
-    expected = row @ col / n
-
-    obs = table
-    if ka == 2 and kb == 2:
-        diff = expected - obs
-        obs = obs + np.minimum(0.5, np.abs(diff)) * np.sign(diff)
-
-    with np.errstate(divide="ignore", invalid="ignore"):
-        contrib = np.where(expected > 0, (obs - expected) ** 2 / expected, 0.0)
-    return float(contrib.sum()), n
+    return pearson_chi2(table, guard_zero_expected=True), n
 
 
 def chi2_all(block: pd.DataFrame, y: pd.Series) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
@@ -196,19 +181,5 @@ def chi2_all(block: pd.DataFrame, y: pd.Series) -> tuple[np.ndarray, np.ndarray,
             continue
         flat = x_codes[valid] * n_y + y_codes[valid]
         table = np.bincount(flat, minlength=m * n_y).reshape(m, n_y).astype(float)
-        row = table.sum(1, keepdims=True)
-        col_sum = table.sum(0, keepdims=True)
-        expected = row @ col_sum / n
-
-        # Yates' continuity correction on 2x2 tables (dof == 1), matching the
-        # scalar reference (scipy.stats.chi2_contingency, correction=True by
-        # default) and the closed-form in binary_combination_evaluators.
-        obs = table
-        if m == 2 and n_y == 2:
-            diff = expected - obs
-            obs = obs + np.minimum(0.5, np.abs(diff)) * np.sign(diff)
-
-        with np.errstate(divide="ignore", invalid="ignore"):
-            contrib = np.where(expected > 0, (obs - expected) ** 2 / expected, 0.0)
-        chi2[j] = contrib.sum()
+        chi2[j] = pearson_chi2(table, guard_zero_expected=True)
     return chi2, n_obs, n_mod_x, np.full(p, float(n_y))

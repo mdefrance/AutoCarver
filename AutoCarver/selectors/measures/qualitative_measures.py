@@ -1,13 +1,12 @@
 """Measures of association between a Qualitative feature and binary target."""
 
-from math import sqrt
-
 import numpy as np
 import pandas as pd
 from scipy.stats import chi2_contingency
 
 from AutoCarver.selectors.measures._vectorized import chi2_all
 from AutoCarver.selectors.measures.base_measures import BaseMeasure
+from AutoCarver.stats.chi2 import cramerv_tschuprowt_unrounded
 from AutoCarver.utils import extend_docstring
 
 # X continue y continue distance correlation
@@ -79,21 +78,13 @@ class CramervMeasure(Chi2Measure):
         # number of non-missing observations
         n_obs = (pd.notna(x) & pd.notna(y)).sum()
 
-        # number of values taken by the features
-        n_mod_x, n_mod_y = x.nunique(), y.nunique()
-        min_n_mod = min(n_mod_x, n_mod_y)
-
         # computing Cramér's V
-        if min_n_mod > 1:
-            self.value = sqrt(chi2_value / n_obs / (min_n_mod - 1))
+        self.value = self._stat(chi2_value, n_obs, x.nunique(), y.nunique())
 
-        return self.value  # type: ignore
+        return self.value
 
     def _stat(self, chi2: float, n_obs: float, n_mod_x: float, n_mod_y: float) -> float:
-        min_n_mod = min(n_mod_x, n_mod_y)
-        if min_n_mod > 1:
-            return sqrt(chi2 / n_obs / (min_n_mod - 1))
-        return float(chi2)
+        return cramerv_tschuprowt_unrounded(chi2, n_obs, n_mod_x, n_mod_y)[0]
 
 
 class TschuprowtMeasure(Chi2Measure):
@@ -109,25 +100,9 @@ class TschuprowtMeasure(Chi2Measure):
         # number of non-missing observations
         n_obs = (pd.notna(x) & pd.notna(y)).sum()
 
-        # number of values taken by the features
-        n_mod_x, n_mod_y = x.nunique(), y.nunique()
-
         # computing Tschuprow's T
-        dof_prod = (n_mod_x - 1) * (n_mod_y - 1)
-        if dof_prod < 0:  # no data for x or y: Tschuprow's T is undefined
-            self.value = np.nan
-            return self.value
-        dof_mods = sqrt(dof_prod)
-        self.value = 0
-        if dof_mods > 0:
-            self.value = sqrt(chi2_value / n_obs / dof_mods)
+        self.value = self._stat(chi2_value, n_obs, x.nunique(), y.nunique())
         return self.value
 
     def _stat(self, chi2: float, n_obs: float, n_mod_x: float, n_mod_y: float) -> float:
-        dof_prod = (n_mod_x - 1) * (n_mod_y - 1)
-        if dof_prod < 0:  # no data for x or y: Tschuprow's T is undefined
-            return np.nan
-        dof_mods = sqrt(dof_prod)
-        if dof_mods > 0:
-            return sqrt(chi2 / n_obs / dof_mods)
-        return 0.0
+        return cramerv_tschuprowt_unrounded(chi2, n_obs, n_mod_x, n_mod_y)[1]

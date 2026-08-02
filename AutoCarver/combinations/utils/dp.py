@@ -37,28 +37,6 @@ def sort_key(value: float | None) -> float:
     return float(value)
 
 
-def chi2_pearson(obs: np.ndarray) -> float:
-    """Pearson :math:`\\chi^2` for a ``(B, C)`` observed contingency table.
-
-    Replicates :func:`scipy.stats.chi2_contingency` defaults: expected
-    frequencies via the outer product of marginals divided by N, with Yates
-    correction iff the table is exactly 2x2 (matches scipy's own threshold).
-    Shared by the binary (``C=2``) and multiclass (``C=K``) chi² paths.
-    """
-    R = obs.sum(axis=1)
-    C = obs.sum(axis=0)
-    N = float(obs.sum())
-    expected = np.outer(R, C) / N
-
-    if obs.shape == (2, 2):
-        diff = expected - obs
-        direction = np.sign(diff)
-        magnitude = np.minimum(0.5, np.abs(diff))
-        obs = obs + magnitude * direction
-
-    return float(((obs - expected) ** 2 / expected).sum())
-
-
 def _dp_base_row(
     n_mod: int, seg_cost: Callable[[int, int], float], skip_cost: float | None
 ) -> list[list[tuple[float, tuple[int, ...]]]]:

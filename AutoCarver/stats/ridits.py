@@ -7,7 +7,7 @@ viability machinery tests) — both need the same fixed reference, and the ridit
 of a level (its mean midrank rescaled to ``[0, 1]``, computed from the *train*
 count-marginal) is exactly what lets levels from any table (raw modalities, a
 carver's grouped candidate, or a dev-sample grouping) be scored against one
-shared scale — mirroring :mod:`AutoCarver.discretizers.utils.correspondence_analysis`
+shared scale — mirroring :mod:`AutoCarver.stats.correspondence_analysis`
 for the multiclass path.
 
 The ridit of reference level ``j`` is ``F(j-1) + f_j/2`` where ``f_j`` is the

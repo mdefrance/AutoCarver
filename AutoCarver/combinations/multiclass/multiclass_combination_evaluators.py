@@ -1,6 +1,5 @@
 """Module for multiclass combination evaluators."""
 
-import math
 from abc import ABC
 
 import numpy as np
@@ -9,7 +8,6 @@ import pandas as pd
 from AutoCarver.combinations.multiclass.multiclass_target_rates import CAScoreRate, MulticlassTargetRate
 from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample, CombinationEvaluator
 from AutoCarver.combinations.utils.combinations import combination_formatter, group_crosstab
-from AutoCarver.combinations.utils.dp import chi2_pearson as _chi2_pearson
 from AutoCarver.combinations.utils.dp import (
     compact_empty_modalities,
     dp_inputs_from_xagg,
@@ -19,6 +17,8 @@ from AutoCarver.combinations.utils.dp import (
 )
 from AutoCarver.combinations.utils.target_rate import TargetRate
 from AutoCarver.features import GroupedList
+from AutoCarver.stats.chi2 import cramerv_tschuprowt as _cramerv_tschuprowt
+from AutoCarver.stats.chi2 import pearson_chi2 as _chi2_pearson
 
 
 class MulticlassCombinationEvaluator(CombinationEvaluator[pd.DataFrame], ABC):
@@ -176,48 +176,8 @@ class CramervMulticlassCombinations(MulticlassCombinationEvaluator):
 # ---------------------------------------------------------------------------
 # Closed-form chi^2 helpers (K-column contingency tables)
 # ---------------------------------------------------------------------------
-# _chi2_pearson is shared with the binary family via
-# AutoCarver.combinations.utils.dp.chi2_pearson (imported above).
-
-
-def _cramerv_tschuprowt(chi2: float, n_obs: float, n_groups: int, n_classes: int, tol: float) -> tuple[float, float]:
-    """Cramér's V and Tschuprow's T from a chi² computed on an ``(n_groups, n_classes)`` table.
-
-    ``V = sqrt(chi2 / (N * (min(B,K)-1)))``; ``T = sqrt(chi2 / (N *
-    sqrt((B-1)(K-1))))``. Both are ``NaN`` when their denominator vanishes
-    (mirrors the binary/ordinal ``None``-on-degenerate convention).
-
-    For ``n_classes == 2``, ``T`` is instead derived from the (already
-    rounded) ``V`` via ``V / (B-1)**0.25`` — the exact expression
-    :func:`AutoCarver.combinations.binary.binary_combination_evaluators._chi2_assoc_for_combination`
-    uses. Both formulas are mathematically identical at ``K=2``, but only
-    computing it this way guarantees the two evaluators agree bit-for-bit
-    (independent ``sqrt``/``pow`` call sequences are not guaranteed to round
-    identically) — pinned by the K=2 parity test.
-    """
-    v_denom = min(n_groups, n_classes) - 1
-    if v_denom > 0 and n_obs > 0:
-        cramerv = math.sqrt(chi2 / (n_obs * v_denom))
-        cramerv = round(cramerv / tol) * tol
-    else:
-        cramerv = float("nan")
-
-    if n_classes == 2:
-        if n_groups > 1:
-            tschuprowt = cramerv / math.sqrt(math.sqrt(n_groups - 1))
-            if pd.notna(tschuprowt):
-                tschuprowt = round(tschuprowt / tol) * tol
-        else:
-            tschuprowt = cramerv
-    else:
-        t_denom = math.sqrt((n_groups - 1) * (n_classes - 1)) if n_groups > 1 else 0.0
-        if t_denom > 0 and n_obs > 0:
-            tschuprowt = math.sqrt(chi2 / (n_obs * t_denom))
-            tschuprowt = round(tschuprowt / tol) * tol
-        else:
-            tschuprowt = float("nan")
-
-    return cramerv, tschuprowt
+# _chi2_pearson and _cramerv_tschuprowt are shared with the binary family via
+# AutoCarver.stats.chi2 (imported above).
 
 
 def _top_k_partitions_chi2_dp_multiclass(  # noqa: C901

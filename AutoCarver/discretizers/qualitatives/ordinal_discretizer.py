@@ -9,8 +9,8 @@ import pandas as pd
 
 from AutoCarver.discretizers.qualitatives.categorical_discretizer import series_ca_order
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, ProcessingConfig, Sample
-from AutoCarver.discretizers.utils.frequency_ci import is_significantly_below
 from AutoCarver.features import GroupedList, OrdinalFeature
+from AutoCarver.stats.frequency_ci import is_significantly_below
 from AutoCarver.utils import extend_docstring
 
 

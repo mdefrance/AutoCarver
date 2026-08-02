@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from AutoCarver.discretizers.utils.correspondence_analysis import CAAxis, ca_row_scores, fit_ca_axis
+from AutoCarver.stats.correspondence_analysis import CAAxis, ca_row_scores, fit_ca_axis
 
 
 def _monotone_xtab() -> pd.DataFrame:
