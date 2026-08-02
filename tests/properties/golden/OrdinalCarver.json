@@ -1,127 +1,145 @@
-[
-  {
-    "feature": "Categorical('cat_a')",
-    "target_mean_ridit": 0.41857181280258204,
-    "tau_b": 0.3394579630410969,
-    "tau_c": 0.4036666666666667,
-    "n_mod": 2,
-    "label": 0,
-    "content": [
-      "h",
-      "g",
-      "f",
-      "e",
-      "d"
-    ],
-    "frequency": 0.6196666666666667,
-    "count": 1859.0,
-    "somersd": 0.42819379770771937,
-    "dropped": false,
-    "dropped_reason": null
-  },
-  {
-    "feature": "Categorical('cat_a')",
-    "target_mean_ridit": 0.6326687116564417,
-    "tau_b": 0.3394579630410969,
-    "tau_c": 0.4036666666666667,
-    "n_mod": 2,
-    "label": 1,
-    "content": [
-      "b",
-      "c",
-      "a"
-    ],
-    "frequency": 0.38033333333333336,
-    "count": 1141.0,
-    "somersd": 0.42819379770771937,
-    "dropped": false,
-    "dropped_reason": null
-  },
-  {
-    "feature": "Categorical('cat_b')",
-    "target_mean_ridit": 0.4837202718006795,
-    "tau_b": 0.03433850903739048,
-    "tau_c": 0.03833333333333333,
-    "n_mod": 2,
-    "label": 0,
-    "content": [
-      "y",
-      "z"
-    ],
-    "frequency": 0.29433333333333334,
-    "count": 883.0,
-    "somersd": 0.046139994896515345,
-    "dropped": false,
-    "dropped_reason": null
-  },
-  {
-    "feature": "Categorical('cat_b')",
-    "target_mean_ridit": 0.5067902692489372,
-    "tau_b": 0.03433850903739048,
-    "tau_c": 0.03833333333333333,
-    "n_mod": 2,
-    "label": 1,
-    "content": "x",
-    "frequency": 0.7056666666666667,
-    "count": 2117.0,
-    "somersd": 0.046139994896515345,
-    "dropped": false,
-    "dropped_reason": null
-  },
-  {
-    "feature": "Numerical('num_a')",
-    "target_mean_ridit": 0.2927777777777778,
-    "tau_b": 0.6121750151372147,
-    "tau_c": 0.746,
-    "n_mod": 2,
-    "label": 0,
-    "content": "(-inf, -1.9e-01]",
-    "frequency": 0.45,
-    "count": 1350.0,
-    "somersd": 0.7535353535353535,
-    "dropped": false,
-    "dropped_reason": null
-  },
-  {
-    "feature": "Numerical('num_a')",
-    "target_mean_ridit": 0.6695454545454546,
-    "tau_b": 0.6121750151372147,
-    "tau_c": 0.746,
-    "n_mod": 2,
-    "label": 1,
-    "content": "(-1.9e-01, inf)",
-    "frequency": 0.55,
-    "count": 1650.0,
-    "somersd": 0.7535353535353535,
-    "dropped": false,
-    "dropped_reason": null
-  },
-  {
-    "feature": "Numerical('num_b')",
-    "target_mean_ridit": 0.42893939393939395,
-    "tau_b": 0.25657737453025353,
-    "tau_c": 0.31266666666666665,
-    "n_mod": 2,
-    "label": 0,
-    "content": "(-inf, 1.9e+00]",
-    "frequency": 0.55,
-    "count": 1650.0,
-    "somersd": 0.31582491582491584,
-    "dropped": false,
-    "dropped_reason": null
-  },
-  {
-    "feature": "Numerical('num_b')",
-    "target_mean_ridit": 0.5868518518518518,
-    "tau_b": 0.25657737453025353,
-    "tau_c": 0.31266666666666665,
-    "n_mod": 2,
-    "label": 1,
-    "content": "(1.9e+00, inf)",
-    "frequency": 0.45,
-    "count": 1350.0,
-    "somersd": 0.31582491582491584,
-    "dropped": false,
-    "dropped_reason": null
-  }
-]
+{
+  "index_names": [
+    "feature",
+    "n_mod",
+    "label"
+  ],
+  "columns": [
+    "content",
+    "target_mean_ridit",
+    "frequency",
+    "count",
+    "tau_b",
+    "tau_c",
+    "somersd",
+    "dropped",
+    "dropped_reason"
+  ],
+  "records": [
+    {
+      "feature": "Categorical('cat_a')",
+      "n_mod": 2,
+      "label": 0,
+      "content": [
+        "h",
+        "g",
+        "f",
+        "e",
+        "d"
+      ],
+      "target_mean_ridit": 0.41857181280258204,
+      "frequency": 0.6196666666666667,
+      "count": 1859.0,
+      "tau_b": 0.3394579630410969,
+      "tau_c": 0.4036666666666667,
+      "somersd": 0.42819379770771937,
+      "dropped": false,
+      "dropped_reason": null
+    },
+    {
+      "feature": "Categorical('cat_a')",
+      "n_mod": 2,
+      "label": 1,
+      "content": [
+        "b",
+        "c",
+        "a"
+      ],
+      "target_mean_ridit": 0.6326687116564417,
+      "frequency": 0.38033333333333336,
+      "count": 1141.0,
+      "tau_b": 0.3394579630410969,
+      "tau_c": 0.4036666666666667,
+      "somersd": 0.42819379770771937,
+      "dropped": false,
+      "dropped_reason": null
+    },
+    {
+      "feature": "Categorical('cat_b')",
+      "n_mod": 2,
+      "label": 0,
+      "content": [
+        "y",
+        "z"
+      ],
+      "target_mean_ridit": 0.4837202718006795,
+      "frequency": 0.29433333333333334,
+      "count": 883.0,
+      "tau_b": 0.03433850903739048,
+      "tau_c": 0.03833333333333333,
+      "somersd": 0.046139994896515345,
+      "dropped": false,
+      "dropped_reason": null
+    },
+    {
+      "feature": "Categorical('cat_b')",
+      "n_mod": 2,
+      "label": 1,
+      "content": "x",
+      "target_mean_ridit": 0.5067902692489372,
+      "frequency": 0.7056666666666667,
+      "count": 2117.0,
+      "tau_b": 0.03433850903739048,
+      "tau_c": 0.03833333333333333,
+      "somersd": 0.046139994896515345,
+      "dropped": false,
+      "dropped_reason": null
+    },
+    {
+      "feature": "Numerical('num_a')",
+      "n_mod": 2,
+      "label": 0,
+      "content": "(-inf, -1.9e-01]",
+      "target_mean_ridit": 0.2927777777777778,
+      "frequency": 0.45,
+      "count": 1350.0,
+      "tau_b": 0.6121750151372147,
+      "tau_c": 0.746,
+      "somersd": 0.7535353535353535,
+      "dropped": false,
+      "dropped_reason": null
+    },
+    {
+      "feature": "Numerical('num_a')",
+      "n_mod": 2,
+      "label": 1,
+      "content": "(-1.9e-01, inf)",
+      "target_mean_ridit": 0.6695454545454546,
+      "frequency": 0.55,
+      "count": 1650.0,
+      "tau_b": 0.6121750151372147,
+      "tau_c": 0.746,
+      "somersd": 0.7535353535353535,
+      "dropped": false,
+      "dropped_reason": null
+    },
+    {
+      "feature": "Numerical('num_b')",
+      "n_mod": 2,
+      "label": 0,
+      "content": "(-inf, 1.9e+00]",
+      "target_mean_ridit": 0.42893939393939395,
+      "frequency": 0.55,
+      "count": 1650.0,
+      "tau_b": 0.25657737453025353,
+      "tau_c": 0.31266666666666665,
+      "somersd": 0.31582491582491584,
+      "dropped": false,
+      "dropped_reason": null
+    },
+    {
+      "feature": "Numerical('num_b')",
+      "n_mod": 2,
+      "label": 1,
+      "content": "(1.9e+00, inf)",
+      "target_mean_ridit": 0.5868518518518518,
+      "frequency": 0.45,
+      "count": 1350.0,
+      "tau_b": 0.25657737453025353,
+      "tau_c": 0.31266666666666665,
+      "somersd": 0.31582491582491584,
+      "dropped": false,
+      "dropped_reason": null
+    }
+  ]
+}

@@ -33,7 +33,7 @@ from AutoCarver.combinations import (
 from AutoCarver.discretizers import BaseDiscretizer, Discretizer, Sample
 from AutoCarver.discretizers.utils.base_discretizer import ProcessingConfig
 from AutoCarver.features import BaseFeature, Features, get_versions
-from AutoCarver.features.features import PER_MODALITY_COLUMNS
+from AutoCarver.features.features import per_modality_columns
 from AutoCarver.features.qualitatives import CategoricalFeature, NestedFeature, OrdinalFeature
 from AutoCarver.features.quantitatives import DatetimeFeature, NumericalFeature
 from AutoCarver.utils import extend_docstring, has_idisplay
@@ -363,7 +363,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         # per-modality stats (count, target_mean, frequency, std, somersd, tau_b, tau_c) stay
         # columns; only per-feature metrics (sort_by association, n_mod) become index levels
         # so they collapse to one row per feature instead of repeating across every modality.
-        excluded = PER_MODALITY_COLUMNS | {"dropped", "dropped_reason"}
+        excluded = per_modality_columns() | {"dropped", "dropped_reason"}
         indices = [col for col in summaries.columns if col not in excluded]
         indices = ["feature"] + indices + ["label"]
         return summaries.set_index(indices)

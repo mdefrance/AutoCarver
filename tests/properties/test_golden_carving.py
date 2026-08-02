@@ -63,14 +63,21 @@ def test_golden_carving(carver_cls, target):
     carver = carver_cls(features, min_freq=0.05, max_n_mod=5)
     carver.fit(X, y)
 
-    records = carver.summary.reset_index().to_dict("records")
+    summary = carver.summary
+    snapshot = {
+        "index_names": list(summary.index.names),
+        "columns": list(summary.columns),
+        "records": summary.reset_index().to_dict("records"),
+    }
 
     golden_path = GOLDEN_DIR / f"{carver_cls.__name__}.json"
     expected = json.loads(golden_path.read_text())
 
-    assert len(records) == len(expected)
-    for actual_row, expected_row in zip(records, expected):
-        assert actual_row.keys() == expected_row.keys()
+    assert snapshot["index_names"] == expected["index_names"]
+    assert snapshot["columns"] == expected["columns"]
+    assert len(snapshot["records"]) == len(expected["records"])
+    for actual_row, expected_row in zip(snapshot["records"], expected["records"]):
+        assert list(actual_row.keys()) == list(expected_row.keys())
         for key in actual_row:
             actual_value = actual_row[key]
             expected_value = expected_row[key]
