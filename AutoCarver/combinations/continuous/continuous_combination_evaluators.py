@@ -11,7 +11,12 @@ from scipy.stats import kruskal, rankdata, tiecorrect
 from AutoCarver.combinations.continuous.continuous_target_rates import ContinuousTargetRate, TargetMean, TargetMedian
 from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample, CombinationEvaluator
 from AutoCarver.combinations.utils.combinations import combination_formatter
-from AutoCarver.combinations.utils.dp import build_group_assignment, score_nan_variants
+from AutoCarver.combinations.utils.dp import (
+    build_group_assignment,
+    score_nan_variants,
+    splits_to_combination,
+    top_k_partitions,
+)
 from AutoCarver.combinations.utils.target_rate import TargetRate
 from AutoCarver.combinations.utils.testing import Keys, is_viable, test_viability
 from AutoCarver.features import GroupedList
@@ -554,45 +559,24 @@ def _top_k_partitions_kruskal_dp(  # noqa: C901
         r = R_prefix[j] - R_prefix[i]
         return (r * r) / nn
 
-    # dp[k][j] holds up to ``top_k`` (S_total, splits_tuple) pairs sorted by
-    # S_total desc, where splits_tuple = (0, s_1, ..., s_{k-1}, j).
-    # k = number of groups, j = right boundary of the partition prefix.
-    dp: list[list[list[tuple[float, tuple[int, ...]]]]] = [[[] for _ in range(n_mod + 1)] for _ in range(K + 1)]
-
-    # Base case: a single group covering [0, j].
-    for j in range(1, n_mod + 1):
-        c = seg_cost(0, j)
-        if c != float("-inf"):
-            dp[1][j] = [(c, (0, j))]
-
     # Recurrence: dp[k][j] = best top_k of  dp[k-1][i] + seg_cost(i, j)  over i.
-    for k in range(2, K + 1):
-        for j in range(k, n_mod + 1):
-            candidates: list[tuple[float, tuple[int, ...]]] = []
-            for i in range(k - 1, j):
-                c = seg_cost(i, j)
-                if c == float("-inf"):
-                    continue
-                for prev_s, prev_splits in dp[k - 1][i]:
-                    candidates.append((prev_s + c, prev_splits + (j,)))
-            if candidates:
-                candidates.sort(key=lambda x: x[0], reverse=True)
-                dp[k][j] = candidates[:top_k]
+    entries = top_k_partitions(
+        n_mod=n_mod, cap=K, seg_cost=seg_cost, top_k=top_k, maximize=True, skip_cost=float("-inf")
+    )
 
     # Collect full-coverage partitions for each k ∈ [2, K], translate ssbn → H.
     coef = 12.0 / (N * (N + 1))
     offset = 3.0 * (N + 1)
     final: list[tuple[float, tuple[int, ...]]] = []
-    for k in range(2, K + 1):
-        for s, splits in dp[k][n_mod]:
-            h = (coef * s - offset) / tie_corr
-            final.append((h, splits))
+    for _, s, splits in entries:
+        h = (coef * s - offset) / tie_corr
+        final.append((h, splits))
     final.sort(key=lambda x: x[0], reverse=True)
     final = final[:top_k]
 
     out: list[dict] = []
     for h, splits in final:
-        combination = [list(raw_index[splits[g] : splits[g + 1]]) for g in range(len(splits) - 1)]
+        combination = splits_to_combination(splits, raw_index)
         out.append(
             {
                 "combination": combination,

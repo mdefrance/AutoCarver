@@ -10,7 +10,13 @@ from AutoCarver.combinations.multiclass.multiclass_target_rates import CAScoreRa
 from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample, CombinationEvaluator
 from AutoCarver.combinations.utils.combinations import combination_formatter, group_crosstab
 from AutoCarver.combinations.utils.dp import chi2_pearson as _chi2_pearson
-from AutoCarver.combinations.utils.dp import dp_inputs_from_xagg, sort_key
+from AutoCarver.combinations.utils.dp import (
+    compact_empty_modalities,
+    dp_inputs_from_xagg,
+    sort_key,
+    splits_to_combination,
+    top_k_partitions,
+)
 from AutoCarver.combinations.utils.target_rate import TargetRate
 from AutoCarver.features import GroupedList
 
@@ -246,17 +252,15 @@ def _top_k_partitions_chi2_dp_multiclass(  # noqa: C901
     if sort_by not in ("cramerv", "tschuprowt"):
         raise ValueError(f"sort_by must be 'cramerv' or 'tschuprowt', got {sort_by!r}")
 
-    n_mod = len(raw_index)
     n_classes = M.shape[1]
     total_n = float(n_per_mod.sum())
 
-    keep = np.flatnonzero(n_per_mod > 0)
+    keep, kept_M, _ = compact_empty_modalities(M, n_per_mod)
     n_kept = len(keep)
     cap = min(max_n_mod, n_kept)
     if cap < 2 or total_n < 2:
         return []
 
-    kept_M = M[keep]
     col_totals = col_sums.astype(np.float64)
     prefix = np.concatenate([np.zeros((1, n_classes)), np.cumsum(kept_M, axis=0)], axis=0)
 
@@ -277,25 +281,13 @@ def _top_k_partitions_chi2_dp_multiclass(  # noqa: C901
                 obs = obs + shift
             return float(((obs - E) ** 2 / E).sum())
 
-        # dp[g][j]: up to ``top_k`` (chi2_partial, splits) with the LARGEST
-        # chi2_partial, where splits = (0, s_1, ..., s_{g-1}, j).
-        dp: list[list[list[tuple[float, tuple[int, ...]]]]] = [
-            [[] for _ in range(n_kept + 1)] for _ in range(k_groups + 1)
-        ]
-        for j in range(1, n_kept + 1):
-            dp[1][j] = [(seg_cost(0, j), (0, j))]
-        for g in range(2, k_groups + 1):
-            for j in range(g, n_kept + 1):
-                candidates: list[tuple[float, tuple[int, ...]]] = []
-                for i in range(g - 1, j):
-                    c = seg_cost(i, j)
-                    for prev_s, prev_splits in dp[g - 1][i]:
-                        candidates.append((prev_s + c, prev_splits + (j,)))
-                if candidates:
-                    candidates.sort(key=lambda x: x[0], reverse=True)
-                    dp[g][j] = candidates[:top_k]
+        # Only the final row (k == k_groups) is used: rebuilding the DP per k_groups
+        # is required because C/N/yates depend on k_groups (see docstring).
+        entries = top_k_partitions(n_mod=n_kept, cap=k_groups, seg_cost=seg_cost, top_k=top_k, maximize=True)
 
-        for chi2, splits in dp[k_groups][n_kept]:
+        for k, chi2, splits in entries:
+            if k != k_groups:
+                continue
             cramerv, tschuprowt = _cramerv_tschuprowt(chi2, total_n, k_groups, n_classes, tol)
             sort_val = tschuprowt if sort_by == "tschuprowt" else cramerv
             all_entries.append((sort_key(sort_val), cramerv, tschuprowt, splits))
@@ -305,11 +297,7 @@ def _top_k_partitions_chi2_dp_multiclass(  # noqa: C901
 
     out: list[dict] = []
     for _, cv, tt, splits in all_entries:
-        # map compacted cut points back to raw_index: each cut sits just before the first
-        # kept modality of the next group, so empty modalities attach to the preceding group
-        # (leading empties join the first group, trailing empties the last).
-        bounds = [0, *(int(keep[s]) for s in splits[1:-1]), n_mod]
-        combination = [list(raw_index[bounds[g] : bounds[g + 1]]) for g in range(len(bounds) - 1)]
+        combination = splits_to_combination(splits, raw_index, keep=keep)
         out.append(
             {
                 "combination": combination,

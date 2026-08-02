@@ -9,7 +9,12 @@ from scipy.stats import chi2_contingency
 from AutoCarver.combinations.binary.binary_target_rates import BinaryTargetRate, OddsRatio, TargetMean, Woe
 from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample, CombinationEvaluator
 from AutoCarver.combinations.utils.combinations import combination_formatter
-from AutoCarver.combinations.utils.dp import build_group_assignment, score_nan_variants
+from AutoCarver.combinations.utils.dp import (
+    build_group_assignment,
+    score_nan_variants,
+    splits_to_combination,
+    top_k_partitions,
+)
 from AutoCarver.combinations.utils.dp import chi2_pearson as _chi2_pearson_2col
 from AutoCarver.combinations.utils.target_rate import TargetRate
 from AutoCarver.features import GroupedList
@@ -456,29 +461,16 @@ def _top_k_partitions_chi2_dp(  # noqa: C901
                 obs1 = obs1 + (1.0 if d1 > 0 else (-1.0 if d1 < 0 else 0.0)) * min(0.5, abs(d1))
             return (obs0 - E0) ** 2 / E0 + (obs1 - E1) ** 2 / E1
 
-        # dp[g][j] holds up to ``top_k`` (chi2_partial, splits_tuple) pairs sorted
-        # desc, where splits_tuple = (0, s_1, ..., s_{g-1}, j). g = number of
-        # groups in the prefix, j = right boundary.
-        dp: list[list[list[tuple[float, tuple[int, ...]]]]] = [
-            [[] for _ in range(n_mod + 1)] for _ in range(k_groups + 1)
-        ]
-        for j in range(1, n_mod + 1):
-            dp[1][j] = [(seg_cost(0, j), (0, j))]
-        for g in range(2, k_groups + 1):
-            for j in range(g, n_mod + 1):
-                candidates: list[tuple[float, tuple[int, ...]]] = []
-                for i in range(g - 1, j):
-                    c = seg_cost(i, j)
-                    for prev_s, prev_splits in dp[g - 1][i]:
-                        candidates.append((prev_s + c, prev_splits + (j,)))
-                if candidates:
-                    candidates.sort(key=lambda x: x[0], reverse=True)
-                    dp[g][j] = candidates[:top_k]
+        # Only the final row (k == k_groups) is used: rebuilding the DP per k_groups
+        # is required because C0/C1/N/yates depend on k_groups (see docstring).
+        entries = top_k_partitions(n_mod=n_mod, cap=k_groups, seg_cost=seg_cost, top_k=top_k, maximize=True)
 
         # Translate chi² → cramerv (quantised) → tschuprowt (quantised). Matches
         # :func:`_chi2_assoc_for_combination` cell-for-cell.
         denom = (k_groups - 1) ** 0.25  # k_groups ≥ 2 here, so denom > 0
-        for chi2, splits in dp[k_groups][n_mod]:
+        for k, chi2, splits in entries:
+            if k != k_groups:
+                continue
             cramerv_raw = (chi2 / n_obs) ** 0.5
             cramerv_q = round(cramerv_raw / tol) * tol
             tt_raw = cramerv_q / denom
@@ -491,7 +483,7 @@ def _top_k_partitions_chi2_dp(  # noqa: C901
 
     out: list[dict] = []
     for _, cv, tt, splits in all_entries:
-        combination = [list(raw_index[splits[g] : splits[g + 1]]) for g in range(len(splits) - 1)]
+        combination = splits_to_combination(splits, raw_index)
         out.append(
             {
                 "combination": combination,
