@@ -11,7 +11,7 @@ an ordinary single-column qualitative feature.
 from typing import Any
 
 from AutoCarver.features.qualitatives.qualitative_feature import QualitativeFeature
-from AutoCarver.features.utils.base_feature import BaseFeature
+from AutoCarver.features.utils.base_feature import BaseFeature, features_of_type
 from AutoCarver.features.utils.grouped_list import GroupedList
 
 
@@ -84,4 +84,4 @@ class NestedFeature(QualitativeFeature):
 
 def get_nested_features(features: list[BaseFeature]) -> list[NestedFeature]:
     """returns nested features amongst provided features"""
-    return [feature for feature in features if isinstance(feature, NestedFeature)]
+    return features_of_type(features, NestedFeature)

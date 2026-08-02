@@ -103,8 +103,10 @@ def test_filter(filter: QuantitativeFilter, sample_data: pd.DataFrame, sample_ra
     assert pd.isna(correlation.iloc[0, 0]) and pd.isna(correlation.iloc[-1, -1]), "no autocorrelation"
     assert all(correlation >= 0), "should be positive"
 
-    # testing _filter_correlated_features
-    filtered_features = filter._filter_correlated_features(correlation, sample_ranks)
+    # testing _filter_ranked (shared BaseFilter template, driven via a worst_correlation_fn closure)
+    filtered_features = filter._filter_ranked(
+        sample_ranks, lambda feature: filter._compute_worst_correlation(correlation, feature)
+    )
     assert isinstance(filtered_features, list), "should be a list"
     assert all(isinstance(feature, BaseFeature) for feature in filtered_features), "should be BaseFeature"
 
@@ -116,9 +118,7 @@ def test_filter(filter: QuantitativeFilter, sample_data: pd.DataFrame, sample_ra
     print(correlation)
     assert correlation.loc[correlation_with, feature.version] == worst_correlation
 
-    # testing _validate
-    feature = sample_ranks[0]
+    # testing _validate (pure: takes only the worst correlation, no longer updates the feature)
     filter.threshold = 0.5
-    valid = filter._validate(feature, 0.6, "feature3")
-    assert valid is False
-    assert feature.filters[filter.__name__]["valid"] is False
+    assert filter._validate(0.6) is False
+    assert filter._validate(0.4) is True

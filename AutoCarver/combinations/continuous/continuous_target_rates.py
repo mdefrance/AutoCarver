@@ -2,7 +2,6 @@
 
 import warnings
 from abc import ABC
-from typing import overload
 
 import numpy as np
 import pandas as pd
@@ -15,40 +14,15 @@ class ContinuousTargetRate(TargetRate[pd.Series], ABC):
 
     __name__ = "continuous_target_rate"
 
-    @overload
-    def compute(self, xagg: pd.Series | pd.DataFrame) -> pd.DataFrame: ...
-    @overload
-    def compute(self, xagg: None) -> None: ...
-    def compute(self, xagg: pd.Series | pd.DataFrame | None) -> pd.DataFrame | None:
-        """Computes the target rate.
+    def _counts(self, xagg: pd.Series) -> pd.Series:
+        """Per-modality observation count: length of each modality's y-list."""
+        return xagg.apply(len)  # type: ignore
 
-        Parameters
-        ----------
-        xagg : pd.DataFrame
-            A crosstab.
-
-        Returns
-        -------
-        Series
-            Target rate.
-        """
-        # checking for an xtab
-        if xagg is not None:
-            # count + frequency per modality (count carried for CI-based viability tests)
-            count = xagg.apply(len)
-            frequency = count / count.sum()
-
-            # per-modality dispersion, needed by AutoCarver.stability for a Welch test
-            # against this reference; NaN for singleton modalities (ddof=1)
-            std = xagg.apply(lambda values: float(np.std(values, ddof=1)) if len(values) > 1 else float("nan"))
-
-            # computing target rate. `_compute` expects pd.Series (Generic
-            # XAgg=Series); compute()'s wide signature is for LSP matching,
-            # callers always pass a Series-of-y-lists here.
-            return pd.DataFrame(
-                {self.__name__: self._compute(xagg), "frequency": frequency, "count": count, "std": std}  # type: ignore
-            )
-        return None
+    def _extra_columns(self, xagg: pd.Series) -> dict:
+        """Per-modality dispersion, needed by AutoCarver.stability for a Welch test
+        against this reference; NaN for singleton modalities (ddof=1)."""
+        std = xagg.apply(lambda values: float(np.std(values, ddof=1)) if len(values) > 1 else float("nan"))
+        return {"std": std}
 
     def compute_from_stats(self, *, stats: dict, index_to_groupby: dict) -> pd.DataFrame | None:
         """Closed-form viability path.

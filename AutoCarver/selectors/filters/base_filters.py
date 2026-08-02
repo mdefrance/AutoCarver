@@ -1,6 +1,7 @@
 """Filters based on association measure between features and a binary target."""
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 
 import pandas as pd
 
@@ -62,6 +63,58 @@ class BaseFilter(ABC):
         list[BaseFeature]
             Filtered list of features
         """
+
+    def _filter_ranked(
+        self,
+        ranks: list[BaseFeature],
+        worst_correlation_fn: Callable[[BaseFeature], tuple[str, float]],
+        on_drop: Callable[[BaseFeature], None] | None = None,
+        n_best: int | None = None,
+    ) -> list[BaseFeature]:
+        """Walks ranked features, keeping those not too correlated with a better-ranked one.
+
+        Shared by :class:`~AutoCarver.selectors.filters.qualitative_filters.QualitativeFilter`
+        and :class:`~AutoCarver.selectors.filters.quantitative_filters.QuantitativeFilter`.
+        ``worst_correlation_fn(feature) -> (correlation_with, worst_correlation)`` computes the
+        feature-specific association; ``on_drop(feature)``, when given, lets the caller update
+        its own state (e.g. drop a row/column from a correlation matrix) when a feature fails.
+        """
+        filtered: list[BaseFeature] = []
+        for feature in ranks:
+            # maximum correlation with a better feature
+            correlation_with, worst_correlation = worst_correlation_fn(feature)
+
+            # checking for too much correlation
+            valid = self._validate(worst_correlation)
+
+            # update feature accordingly (update stats)
+            self._update_feature(feature, worst_correlation, valid, info={"correlation_with": correlation_with})
+
+            # keeping feature
+            if valid:
+                filtered.append(feature)
+
+                # any feature kept past n_best ranks >= n_best -> never selected,
+                # so once n_best are kept the remaining pairs are wasted work
+                if n_best is not None and len(filtered) >= n_best:
+                    break
+
+            # dropping feature
+            elif on_drop is not None:
+                on_drop(feature)
+
+        return filtered
+
+    def _validate(self, worst_correlation: float) -> bool:
+        """Checks if the worst correlation of a feature is within the specified threshold.
+
+        Only used by filters driven through :meth:`_filter_ranked`
+        (:class:`~AutoCarver.selectors.filters.qualitative_filters.QualitativeFilter`,
+        :class:`~AutoCarver.selectors.filters.quantitative_filters.QuantitativeFilter`);
+        each overrides this with its own comparison (qualitative measures are
+        non-negative; quantitative correlations need ``abs()``).
+        """
+        raise NotImplementedError
 
     def _update_feature(
         self,

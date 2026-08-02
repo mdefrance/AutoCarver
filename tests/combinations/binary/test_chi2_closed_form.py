@@ -1,9 +1,10 @@
 """Parity tests for the closed-form chi² path.
 
-`BinaryCombinationEvaluator._compute_associations` evaluates Cramér's V and
-Tschuprow's T in closed form (single global aggregation + per-group reductions
-via `np.bincount`). These tests assert the rounded values match the historical
-``scipy.stats.chi2_contingency`` path on a wide variety of inputs, including:
+`_chi2_assoc_for_combination` evaluates Cramér's V and Tschuprow's T in closed form
+(per-group reductions via `np.bincount`) for one combination. It backs the NaN-fanout
+scoring path (the hot per-combination search itself goes through the interval DP). These
+tests assert the rounded values match the historical ``scipy.stats.chi2_contingency``
+path on a wide variety of inputs, including:
 
   * many random partitions of random (n0, n1) modality counts (k > 2),
   * the 2×2 case where scipy applies Yates correction,
@@ -19,11 +20,9 @@ import pytest
 from scipy.stats import chi2_contingency
 
 from AutoCarver.combinations.binary.binary_combination_evaluators import (
-    TschuprowtCombinations,
     _chi2_assoc_for_combination,
     _chi2_pearson_2col,
 )
-from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample
 
 TOL = 1e-10
 
@@ -45,18 +44,21 @@ def _scipy_assoc(grouped_table: np.ndarray, n_obs: float) -> dict[str, float]:
 
 
 def _eval_via_evaluator(xagg: pd.DataFrame, index_to_groupby: dict) -> dict[str, float]:
-    """Drive `_compute_associations` on a single combination and return its dict.
-
-    `_compute_associations` is a streaming generator; consume the single entry.
-    """
-    evaluator = TschuprowtCombinations()
-    evaluator.samples.train = AggregatedSample(xagg)
-    grouped = {
-        "combination": [],
-        "index_to_groupby": index_to_groupby,
-    }
-    assoc = next(iter(evaluator._compute_associations([grouped])))
-    return {"cramerv": assoc["cramerv"], "tschuprowt": assoc["tschuprowt"]}
+    """Drive the closed-form `_chi2_assoc_for_combination` on a grouped crosstab."""
+    n0_per_mod = xagg.iloc[:, 0].to_numpy(dtype=float)
+    n1_per_mod = xagg.iloc[:, 1].to_numpy(dtype=float)
+    n_obs = float(n0_per_mod.sum() + n1_per_mod.sum())
+    mod_to_pos = {m: i for i, m in enumerate(xagg.index)}
+    cramerv, tschuprowt = _chi2_assoc_for_combination(
+        n0_per_mod=n0_per_mod,
+        n1_per_mod=n1_per_mod,
+        n_obs=n_obs,
+        mod_to_pos=mod_to_pos,
+        n_mod=len(mod_to_pos),
+        index_to_groupby=index_to_groupby,
+        tol=TOL,
+    )
+    return {"cramerv": cramerv, "tschuprowt": tschuprowt}
 
 
 # ---------------------------------------------------------------------------

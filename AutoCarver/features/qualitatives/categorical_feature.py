@@ -3,7 +3,7 @@
 from typing import Any
 
 from AutoCarver.features.qualitatives.qualitative_feature import QualitativeFeature
-from AutoCarver.features.utils.base_feature import BaseFeature
+from AutoCarver.features.utils.base_feature import BaseFeature, features_of_type
 
 
 class CategoricalFeature(QualitativeFeature):
@@ -40,4 +40,4 @@ class CategoricalFeature(QualitativeFeature):
 
 def get_categorical_features(features: list[BaseFeature]) -> list[CategoricalFeature]:
     """returns categorical features amongst provided features"""
-    return [feature for feature in features if isinstance(feature, CategoricalFeature)]
+    return features_of_type(features, CategoricalFeature)

@@ -60,16 +60,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
         DataFrame
             A formatted copy of X
         """
-        # checking for binary target and copying X
-        sample = super()._prepare_sample(sample)
-
-        # fitting features
-        self.features.fit(**sample)
-
-        # filling up nans for features that have some
-        sample.X = self.features.fillna(sample.X)
-
-        return sample
+        return self._prepare_sample_and_fit(sample)
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: pd.DataFrame, y: pd.Series) -> Self:

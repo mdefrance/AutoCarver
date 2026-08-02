@@ -1,10 +1,9 @@
 """Tools to select the best Quantitative and Qualitative features for an ordinal target."""
 
-from AutoCarver.selectors.measures import BaseMeasure, KruskalEtaSquaredMeasure, SpearmanMeasure
-from AutoCarver.selectors.utils.base_selector import BaseSelector
+from AutoCarver.selectors.regression_selector import RegressionSelector
 
 
-class OrdinalSelector(BaseSelector):
+class OrdinalSelector(RegressionSelector):
     """A pipeline of measures to perform a feature pre-selection that maximizes association
     with an **ordinal** target.
 
@@ -15,9 +14,3 @@ class OrdinalSelector(BaseSelector):
     """
 
     __name__ = "OrdinalSelector"
-    # the ordinal target is ranked numerically (like regression) for measure orientation
-    _target_is_qualitative = False
-
-    def _default_measures(self) -> list[BaseMeasure]:
-        """Spearman's rho ranks quantitative features, Kruskal-η² (reversed) ranks qualitative ones."""
-        return [SpearmanMeasure(), KruskalEtaSquaredMeasure()]

@@ -1,8 +1,9 @@
 """Parity tests for the closed-form Kruskal–Wallis path.
 
-`ContinuousCombinationEvaluator._compute_associations` evaluates the
-Kruskal–Wallis H statistic in closed form (single global ranking + per-group
-reductions). These tests assert that the result matches `scipy.stats.kruskal`
+`_kruskal_h_for_combination` evaluates the Kruskal–Wallis H statistic in closed
+form (single global ranking + per-group reductions) for one combination. It backs
+the NaN-fanout scoring path (the hot per-combination search itself goes through
+the interval DP). These tests assert that the result matches `scipy.stats.kruskal`
 across a wide variety of inputs, including:
 
   * many random partitions of random continuous y (no ties),
@@ -20,11 +21,9 @@ import pytest
 from scipy.stats import kruskal
 
 from AutoCarver.combinations.continuous.continuous_combination_evaluators import (
-    KruskalCombinations,
     _kruskal_h_for_combination,
     _modality_rank_stats,
 )
-from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample
 
 
 def _scipy_kruskal_or_none(groups: list[list[float]]) -> float | None:
@@ -40,18 +39,18 @@ def _scipy_kruskal_or_none(groups: list[list[float]]) -> float | None:
 
 
 def _eval_via_evaluator(xagg: pd.Series, index_to_groupby: dict) -> float | None:
-    """Drive `_compute_associations` on a single combination and return H.
-
-    `_compute_associations` is a streaming generator (Step 2 fused pipeline);
-    consume the single entry we feed it.
-    """
-    evaluator = KruskalCombinations()
-    evaluator.samples.train = AggregatedSample(xagg)
-    grouped = {
-        "combination": [],
-        "index_to_groupby": index_to_groupby,
-    }
-    return next(iter(evaluator._compute_associations([grouped])))["kruskal"]
+    """Drive the closed-form `_kruskal_h_for_combination` on a grouped xagg."""
+    R_per_mod, n_per_mod, N, tie_corr = _modality_rank_stats(xagg)
+    mod_to_pos = {m: i for i, m in enumerate(xagg.index)}
+    return _kruskal_h_for_combination(
+        R_per_mod=R_per_mod,
+        n_per_mod=n_per_mod,
+        N=N,
+        tie_corr=tie_corr,
+        mod_to_pos=mod_to_pos,
+        n_mod=len(mod_to_pos),
+        index_to_groupby=index_to_groupby,
+    )
 
 
 def _scipy_groups_from(xagg: pd.Series, index_to_groupby: dict) -> list[list[float]]:

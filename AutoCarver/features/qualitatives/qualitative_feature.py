@@ -6,7 +6,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from AutoCarver.features.utils.base_feature import BaseFeature
+from AutoCarver.features.utils.base_feature import BaseFeature, features_of_type
 from AutoCarver.features.utils.grouped_list import GroupedList, is_equal
 
 
@@ -276,4 +276,4 @@ def nan_unique(x: pd.Series, sort: bool = False) -> list[str]:
 
 def get_qualitative_features(features: list[BaseFeature]) -> list[QualitativeFeature]:
     """returns qualitative features amongst provided features"""
-    return [feature for feature in features if isinstance(feature, QualitativeFeature)]
+    return features_of_type(features, QualitativeFeature)

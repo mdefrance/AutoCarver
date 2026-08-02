@@ -26,6 +26,10 @@ class ContinuousCarver(BaseCarver):
 
     __name__ = "ContinuousCarver"
     is_y_continuous = True
+    _default_evaluator = KruskalCombinations
+    _evaluator_trait = "is_y_continuous"
+    _target_kind = "continuous targets"
+    _evaluator_choices = "KruskalCombinations"
 
     @extend_docstring(BaseCarver.__init__, exclude=["combination_evaluator"])
     def __init__(
@@ -48,13 +52,7 @@ class ContinuousCarver(BaseCarver):
             Currently, only :ref:`KruskalCombinations` is implemented for
             continuous targets.
         """
-        if combination_evaluator is None:
-            combination_evaluator = KruskalCombinations()
-        if not combination_evaluator.is_y_continuous:
-            raise ValueError(
-                f"[{self.__name__}] {type(combination_evaluator).__name__} is not suited for continuous targets. "
-                f"Choose from: KruskalCombinations."
-            )
+        combination_evaluator = self._resolve_evaluator(combination_evaluator)
 
         super().__init__(
             features=features,

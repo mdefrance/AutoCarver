@@ -10,7 +10,7 @@ import pandas as pd
 from sklearn.model_selection import BaseCrossValidator
 
 from AutoCarver.carvers.binary_carver import BinaryCarver
-from AutoCarver.carvers.utils.base_carver import Samples
+from AutoCarver.carvers.utils.base_carver import Samples, validate_multiclass_target
 from AutoCarver.combinations import CombinationEvaluator
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, ProcessingConfig, Sample
 from AutoCarver.features import Features
@@ -57,36 +57,9 @@ class OneVsRestCarver(BinaryCarver):
 
     def _prepare_samples(self, samples: Samples) -> Samples:
         """Validates format and content of X and y."""
-        # converting target to str (y is required by Carver.fit)
-        if samples.train.y is None:
-            raise ValueError(f"[{self.__name__}] y must be provided")
-        # NaN check must precede astype(str): casting turns NaN into the string "nan",
-        # which would silently become a target class (and bypass the base check)
-        if samples.train.y.isna().any():
-            raise ValueError(f"[{self.__name__}] y should not contain numpy.nan")
-        samples.train.y = samples.train.y.astype(str)
-
-        # multiclass target, checking values
-        if len(pd.unique(samples.train.y)) <= 2:
-            raise ValueError(f"[{self.__name__}] provided y is binary, consider using BinaryCarver instead.")
-
-        # checking for dev target's values
-        if samples.dev.y is not None:
-            if samples.dev.y.isna().any():
-                raise ValueError(f"[{self.__name__}] y_dev should not contain numpy.nan")
-            samples.dev.y = samples.dev.y.astype(str)
-
-            unique_y_dev = samples.dev.y.unique()
-            unique_y = samples.train.y.unique()
-            missing_y = [mod_y for mod_y in unique_y if mod_y not in unique_y_dev]
-            missing_y_dev = [mod_y_dev for mod_y_dev in unique_y_dev if mod_y_dev not in unique_y]
-            if len(missing_y) > 0 or len(missing_y_dev) > 0:
-                raise ValueError(
-                    f"[{self.__name__}] Mismatched classes between y and y_dev"
-                    f": train({missing_y_dev}), dev({missing_y})"
-                )
-
-        return samples
+        # skips super()._prepare_samples: this carver never discretizes itself
+        # (each spawned BinaryCarver child does its own discretization).
+        return validate_multiclass_target(samples, self.__name__)
 
     @extend_docstring(BinaryCarver.fit)
     def fit(

@@ -30,6 +30,24 @@ from AutoCarver.features.utils.grouped_list import GroupedList
 # concrete type of feature lists (e.g. list[CategoricalFeature] in → out).
 TFeature = TypeVar("TFeature", bound=BaseFeature)
 
+# per-modality statistics stay columns in a `summary`; everything else becomes a
+# summary index level. Shared with AutoCarver.carvers.utils.base_carver.BaseCarver.summary,
+# which adds its own {"dropped", "dropped_reason"} on top.
+PER_MODALITY_COLUMNS = frozenset(
+    {
+        "feature",
+        "label",
+        "content",
+        "target_mean",
+        "frequency",
+        "count",
+        "std",
+        "somersd",
+        "tau_b",
+        "tau_c",
+    }
+)
+
 
 @dataclass
 class FeaturesConfig:
@@ -700,11 +718,9 @@ class Features:
         if summaries.empty:
             return summaries
 
-        # defining indices to set
-        indices = []
-        for col in summaries.columns:
-            if col not in ["feature", "label", "content", "target_mean", "frequency", "count", "std"]:
-                indices += [col]
+        # defining indices to set: per-modality stats stay columns, everything else
+        # (sort_by association, n_mod, ...) becomes an index level
+        indices = [col for col in summaries.columns if col not in PER_MODALITY_COLUMNS]
         indices = ["feature"] + indices + ["label"]
 
         return summaries.set_index(indices)

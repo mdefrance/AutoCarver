@@ -3,7 +3,7 @@
 import numpy as np
 import pandas as pd
 
-from AutoCarver.features.utils.base_feature import BaseFeature
+from AutoCarver.features.utils.base_feature import BaseFeature, features_of_type
 from AutoCarver.features.utils.grouped_list import GroupedList, is_equal
 
 
@@ -272,4 +272,4 @@ def min_decimals_to_differentiate(sorted_numbers: list[float], min_decimals: int
 
 def get_quantitative_features(features: list[BaseFeature]) -> list[QuantitativeFeature]:
     """returns quantitative features amongst provided features"""
-    return [feature for feature in features if isinstance(feature, QuantitativeFeature)]
+    return features_of_type(features, QuantitativeFeature)
