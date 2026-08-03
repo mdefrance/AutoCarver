@@ -303,8 +303,10 @@ def _init_modality_stats(evaluator):
     """Populates the viability fast-path cache (``_train_modality_stats`` /
     ``_dev_modality_stats``) exactly like `_get_best_combination_non_nan` does.
 
-    In production this always runs before any viability check (every entry point
-    goes through `_get_best_combination_non_nan` first); tests that drive
+    Every entry point goes through `_get_best_combination_non_nan` first, but it
+    can return before building this cache (single-modality train sample), so the
+    cache is *not* guaranteed to be populated by the time a viability check runs
+    — see `test_get_dev_modality_stats_without_train_cache`. Tests that drive
     `_get_best_association` / `_test_viability_train` / `_test_viability_dev`
     directly need to do it themselves."""
     raw_xagg = evaluator.samples.train.xagg
@@ -1281,3 +1283,37 @@ def test_get_best_combination_viable_with_nan(evaluator: ContinuousCombinationEv
     assert evaluator.samples.dev.xagg.equals(expected)
     assert evaluator.samples.dev.raw.equals(expected)
     assert evaluator.samples.train.raw.equals(expected)
+
+
+def test_get_dev_modality_stats_without_train_cache(evaluator: ContinuousCombinationEvaluator):
+    """The dev fast path must report "no closed form" -- not raise -- when the DP
+    never built the train-side cache. `_get_best_combination_non_nan` bails out
+    before building it on a single-modality train sample, yet the legacy paths
+    that run afterwards still test viability on dev."""
+
+    evaluator.samples.dev = AggregatedSample(pd.Series({"a": [0, 2, 0], "b": [2, 1]}))
+    assert evaluator._train_modality_stats is None
+    assert evaluator._get_dev_modality_stats() is None
+
+
+def test_get_best_combination_single_non_nan_modality_with_dev(
+    evaluator: ContinuousCombinationEvaluator,
+):
+    """`dropna=False` + a single non-nan modality + a dev sample: the non-nan DP
+    bails out before building the viability fast-path cache, then the legacy
+    all-values-vs-NaN candidate is still tested for robustness on dev.
+
+    Regression (7.6.2): this raised ``AttributeError: 'KruskalCombinations'
+    object has no attribute '_dev_modality_stats'``. The feature's only signal
+    is missing-vs-present, so the NaN split must be kept."""
+
+    feature = OrdinalFeature("feature", ["a"])
+    feature.has_nan = True
+
+    xagg = pd.Series({"a": [0, 2, 0, 1], feature.nan: [8, 9, 7, 10]})
+
+    result = evaluator.get_best_combination(feature, xagg, xagg, max_n_mod=2, min_freq=MIN_FREQ, dropna=False)
+
+    assert result is not None
+    assert result["combination"] == [["a"], [feature.nan]]
+    assert feature.labels == ["a", feature.nan]

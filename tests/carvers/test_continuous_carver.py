@@ -1072,3 +1072,43 @@ def test_continuous_carver_fit_cv_runs(evaluator: CombinationEvaluator):
 
     assert "signal" in carver.features
     assert isinstance(X_transformed, pd.DataFrame)
+
+
+def test_continuous_carver_single_non_nan_modality_with_dev(evaluator: CombinationEvaluator):
+    """`dropna=False` + `X_dev` on a feature whose only non-nan modality is unique:
+    the non-nan DP bails out before building the viability fast-path cache, then
+    the legacy all-values-vs-NaN candidate is still tested for robustness on dev.
+
+    Regression (7.6.2): raised ``AttributeError: 'KruskalCombinations' object has
+    no attribute '_dev_modality_stats'`` -- the crash that blocked severity
+    (heavy-tailed continuous target, dropna=False) carving runs."""
+    rng = np.random.default_rng(0)
+
+    def _make(n: int) -> tuple[pd.DataFrame, pd.Series]:
+        missing = rng.random(n) < 0.4
+        # single non-nan modality: all signal is missing-vs-present
+        X = pd.DataFrame({"feature": pd.Series(np.where(missing, None, "a"), dtype=object)})
+        y = pd.Series(np.where(missing, 100.0, 1.0) + rng.gamma(2.0, 0.5, n))
+        return X, y
+
+    X, y = _make(600)
+    X_dev, y_dev = _make(300)
+
+    carver = ContinuousCarver(
+        features=Features(categoricals=["feature"]),
+        min_freq=0.1,
+        max_n_mod=5,
+        combination_evaluator=evaluator,
+        config=ProcessingConfig(dropna=False, verbose=False),
+    )
+    carver.fit(X, y, X_dev=X_dev, y_dev=y_dev)
+
+    # the feature's only signal is missing-vs-present: it must survive the search
+    assert "feature" in carver.features
+    assert carver.dropped_features == []
+
+    # dropna=False leaves NaN raw in the output (see Features.unfillna), so the
+    # carved column is the single non-nan bucket plus untouched missings
+    transformed = carver.transform(X)["feature"]
+    assert transformed.isna().equals(X["feature"].isna())
+    assert transformed.dropna().nunique() == 1

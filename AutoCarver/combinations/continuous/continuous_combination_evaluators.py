@@ -32,6 +32,15 @@ class ContinuousCombinationEvaluator(CombinationEvaluator[pd.Series], ABC):
     # carvers always carry a ContinuousTargetRate (enforced by _init_target_rate).
     target_rate: ContinuousTargetRate
 
+    # viability fast-path cache, (re)built by the DP paths in
+    # `_get_best_combination_non_nan` / `_get_best_combination_with_nan`. Declared
+    # here because those paths can bail out before building it (single-modality
+    # train sample) while the legacy parent path still runs viability tests after
+    # them — `None` means "no closed form available, use the legacy grouper".
+    _train_modality_stats: dict[str, Any] | None = None
+    _dev_modality_stats: dict[str, Any] | None = None
+    _dev_modality_stats_id: int | None = None
+
     def _init_target_rate(self, target_rate: TargetRate[pd.Series] | None) -> ContinuousTargetRate:
         """Initializes target rate."""
         if target_rate is None:
@@ -102,7 +111,10 @@ class ContinuousCombinationEvaluator(CombinationEvaluator[pd.Series], ABC):
     def _get_dev_modality_stats(self) -> dict | None:
         """Lazily build per-modality ``(n, sum_y)`` for the dev sample,
         aligned to ``self._train_modality_stats['mod_to_pos']`` (zeros for
-        modalities absent from dev). Returns ``None`` when no dev sample is set.
+        modalities absent from dev). Returns ``None`` when no dev sample is set,
+        or when the train-side cache was never built (the DP paths bail out
+        before building it on a single-modality train sample) — the caller then
+        falls back to the legacy grouper.
 
         Cache is keyed by ``id(dev_xagg)`` so external reassignment of
         ``samples.dev`` between viability iterations triggers a fresh
@@ -111,10 +123,12 @@ class ContinuousCombinationEvaluator(CombinationEvaluator[pd.Series], ABC):
         """
         if not self.samples.dev.has_xagg:
             return None
+        train_stats = self._train_modality_stats
+        if train_stats is None:
+            return None
         dev_xagg = self.samples.dev.xagg
         if self._dev_modality_stats is not None and self._dev_modality_stats_id == id(dev_xagg):
             return self._dev_modality_stats
-        train_stats = self._train_modality_stats
         mod_to_pos: dict = train_stats["mod_to_pos"]
         n_mod: int = train_stats["n_mod"]
 
@@ -198,14 +212,14 @@ class ContinuousCombinationEvaluator(CombinationEvaluator[pd.Series], ABC):
         raw_index = list(raw_xagg.index)
 
         # Cache for the viability fast path (_test_viability_train/_test_viability_dev).
-        self._train_modality_stats: dict[str, Any] = {
+        self._train_modality_stats = {
             "n_per_mod": n_per_mod.astype(float),
             "sum_y_per_mod": sum_y_per_mod,
             "mod_to_pos": mod_to_pos,
             "n_mod": n_mod,
         }
-        self._dev_modality_stats: dict[str, Any] | None = None
-        self._dev_modality_stats_id: int | None = None
+        self._dev_modality_stats = None
+        self._dev_modality_stats_id = None
 
         # Progressive top-K with ×4 growth (shared driver). See docstring.
         viable = self._search_escalating(
@@ -283,14 +297,14 @@ class ContinuousCombinationEvaluator(CombinationEvaluator[pd.Series], ABC):
         n_mod = len(mod_to_pos)
 
         # Refresh viability fast-path cache to the with-nan stats.
-        self._train_modality_stats: dict[str, Any] = {
+        self._train_modality_stats = {
             "n_per_mod": n_per_mod.astype(float),
             "sum_y_per_mod": sum_y_per_mod,
             "mod_to_pos": mod_to_pos,
             "n_mod": n_mod,
         }
-        self._dev_modality_stats: dict[str, Any] | None = None
-        self._dev_modality_stats_id: int | None = None
+        self._dev_modality_stats = None
+        self._dev_modality_stats_id = None
 
         # Non-nan subset, aligned to raw_labels order, for the base DP.
         non_nan_index = list(raw_labels)
