@@ -25,6 +25,15 @@ def wilson_upper_bound(
 ) -> np.ndarray | float:
     """Upper bound of the two-sided Wilson score interval for ``count / nobs``.
 
+    .. math::
+
+        \\text{upper} = \\frac{\\hat{p} + \\frac{z^2}{2n}
+            + z\\sqrt{\\frac{\\hat{p}(1-\\hat{p})}{n} + \\frac{z^2}{4n^2}}}
+            {1 + \\frac{z^2}{n}}
+
+    where :math:`\\hat{p} = \\text{count}/n`, :math:`n` = ``nobs``, and
+    :math:`z` is the two-sided normal quantile for ``alpha``.
+
     Parameters
     ----------
     count : array-like or scalar

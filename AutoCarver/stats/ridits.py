@@ -24,6 +24,15 @@ import pandas as pd
 def ridit_scores_for_levels(levels, reference_counts: pd.Series) -> np.ndarray:
     """Ridits of arbitrary numeric ``levels`` against a fixed train count-marginal.
 
+    .. math::
+
+        \\text{ridit}(j) = F(j^-) + \\frac{f_j}{2}
+
+    where :math:`f_j` is level :math:`j`'s train frequency and :math:`F(j^-)`
+    the cumulative train frequency of all strictly lower levels. A level
+    unseen in the reference gets :math:`F(j^-)` alone (zero mass at that
+    level).
+
     Parameters
     ----------
     levels : iterable of numbers

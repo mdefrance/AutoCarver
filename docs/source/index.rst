@@ -20,6 +20,7 @@ Welcome to AutoCarver's documentation!
    :caption: Documentation
 
    features
+   stats
    discretizers
    combinations
    viability

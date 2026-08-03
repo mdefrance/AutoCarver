@@ -17,6 +17,16 @@ def pearson_chi2(observed: np.ndarray, *, guard_zero_expected: bool = False) -> 
     frequencies via the outer product of marginals divided by N, with Yates
     correction iff the table is exactly 2x2 (matches scipy's own threshold).
 
+    .. math::
+
+        \\chi^2 = \\sum_{i, j} \\frac{(O_{ij} - E_{ij})^2}{E_{ij}}, \\qquad
+        E_{ij} = \\frac{n_{i.}\\, n_{.j}}{n}
+
+    where :math:`n_{i.}` and :math:`n_{.j}` are the row and column marginals
+    and :math:`n` the grand total. When the table is exactly :math:`2 \\times 2`,
+    Yates' continuity correction shrinks :math:`|O_{ij} - E_{ij}|` by :math:`0.5`
+    before squaring (matches scipy's own threshold for applying it).
+
     ``guard_zero_expected`` replaces the ``0/0`` of an all-zero row or column with
     ``0`` instead of ``nan``. The selector kernels need it (they build tables by
     ``bincount``, which can produce empty rows); the combination evaluators must
@@ -45,15 +55,20 @@ def pearson_chi2(observed: np.ndarray, *, guard_zero_expected: bool = False) -> 
 def cramerv_tschuprowt(chi2: float, n_obs: float, n_rows: int, n_cols: int, tol: float) -> tuple[float, float]:
     """Cramér's V and Tschuprow's T from a chi² computed on an ``(n_rows, n_cols)`` table.
 
-    ``V = sqrt(chi2 / (N * (min(B,K)-1)))``; ``T = sqrt(chi2 / (N *
-    sqrt((B-1)(K-1))))``. Both are ``NaN`` when their denominator vanishes
-    (mirrors the binary/ordinal ``None``-on-degenerate convention).
+    .. math::
+
+        V = \\sqrt{\\frac{\\chi^2}{N (\\min(B, K) - 1)}}, \\qquad
+        T = \\sqrt{\\frac{\\chi^2}{N \\sqrt{(B-1)(K-1)}}}
+
+    with :math:`B` = ``n_rows``, :math:`K` = ``n_cols``, :math:`N` = ``n_obs``.
+    Both are ``NaN`` when their denominator vanishes (mirrors the
+    binary/ordinal ``None``-on-degenerate convention).
 
     For ``n_cols == 2``, ``T`` is instead derived from the (already rounded)
-    ``V`` via ``V / (B-1)**0.25`` — the exact expression the binary combination
-    evaluator's closed form uses. Both formulas are mathematically identical at
-    ``K=2``, but only computing it this way guarantees the binary and
-    multiclass evaluators agree bit-for-bit (independent ``sqrt``/``pow`` call
+    ``V`` via :math:`T = V / \\sqrt[4]{B - 1}` — the exact expression the binary
+    combination evaluator's closed form uses. Both formulas are mathematically
+    identical at ``K=2``, but only computing it this way guarantees the binary
+    and multiclass evaluators agree bit-for-bit (independent ``sqrt``/``pow``
     sequences are not guaranteed to round identically) — pinned by the K=2
     parity test.
     """
@@ -85,7 +100,13 @@ def cramerv_tschuprowt(chi2: float, n_obs: float, n_rows: int, n_cols: int, tol:
 def cramerv_tschuprowt_unrounded(chi2: float, n_obs: float, n_mod_x: float, n_mod_y: float) -> tuple[float, float]:
     """Selector-side V / T: no ``tol`` quantisation, T from the raw chi² (not from V).
 
-    Different normalisation from :func:`cramerv_tschuprowt` — ``n_obs`` here is
+    .. math::
+
+        V = \\sqrt{\\frac{\\chi^2}{N (\\min(n_x, n_y) - 1)}}, \\qquad
+        T = \\sqrt{\\frac{\\chi^2}{N \\sqrt{(n_x-1)(n_y-1)}}}
+
+    with :math:`n_x`, :math:`n_y` the two features' modality counts. Different
+    normalisation from :func:`cramerv_tschuprowt` — ``n_obs`` here is
     the non-missing pair count and there is no rounding — so this is kept as a
     separate function rather than merged into it; do not "simplify" the two
     into one.

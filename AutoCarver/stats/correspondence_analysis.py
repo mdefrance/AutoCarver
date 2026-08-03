@@ -94,12 +94,17 @@ def fit_ca_axis(xtab: pd.DataFrame, tol: float = 1e-10) -> CAAxis:
 def ca_row_scores(xtab: pd.DataFrame, axis: CAAxis) -> pd.Series:
     """Projects each row of ``xtab`` onto a fixed :class:`CAAxis`.
 
-    Uses the CA transition formula ``score_i = sum_k (p_ik - c_k) / sqrt(c_k)
-    * v1_k`` where ``p_ik`` is row ``i``'s own profile (proportions across
-    columns). Only the row's own profile and the fixed (training) column
-    masses / axis are needed, so this is well-defined for any row set sharing
-    ``xtab``'s columns — including a dev-sample grouping the axis was never
-    fit on, or a carver's grouped candidate table.
+    .. math::
+
+        \\text{score}_i = \\sum_k \\frac{p_{ik} - c_k}{\\sqrt{c_k}}\\, v_{1k}
+
+    where :math:`p_{ik}` is row :math:`i`'s own profile (proportions across
+    columns), :math:`c_k` the fixed (training) column mass, and :math:`v_1`
+    the fitted first right singular vector. Only the row's own profile and
+    the fixed (training) column masses / axis are needed, so this is
+    well-defined for any row set sharing ``xtab``'s columns — including a
+    dev-sample grouping the axis was never fit on, or a carver's grouped
+    candidate table.
 
     Falls back to (deterministic) descending-frequency scoring when
     ``axis.degenerate`` (encoded as ``-row_total`` so ascending sort still
