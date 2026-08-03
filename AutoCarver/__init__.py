@@ -9,7 +9,6 @@ from AutoCarver.features import Features
 from AutoCarver.selectors import ClassificationSelector, OrdinalSelector, RegressionSelector, SelectionConfig
 from AutoCarver.stability import StabilityReport, evaluate_stability
 
-
 try:
     __version__ = version("AutoCarver")
 except PackageNotFoundError:  # package not installed
