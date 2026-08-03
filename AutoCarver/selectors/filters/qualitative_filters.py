@@ -29,30 +29,12 @@ class QualitativeFilter(BaseFilter):
         # filtering ranks to avoid correlation with already removed features
         filtered_ranks = ranks[:]
 
-        # iterating over each feature by target association order
-        filtered: list[BaseFeature] = []
-        for feature in ranks:
-            # maximum correlation with a better feature
-            correlation_with, worst_correlation = self._compute_worst_correlation(X, feature, filtered_ranks)
-
-            # checking for too much correlation
-            valid = self._validate(worst_correlation)
-
-            # update feature accordingly (update stats)
-            self._update_feature(feature, worst_correlation, valid, info={"correlation_with": correlation_with})
-
-            # keeping feature
-            if valid:
-                filtered += [feature]
-
-                # any feature kept past n_best ranks >= n_best -> never selected,
-                # so once n_best are kept the remaining pairs are wasted work
-                if n_best is not None and len(filtered) >= n_best:
-                    break
-
-            # removing feature from ranks
-            else:
-                filtered_ranks.remove(feature)
+        filtered = self._filter_ranked(
+            ranks,
+            worst_correlation_fn=lambda feature: self._compute_worst_correlation(X, feature, filtered_ranks),
+            on_drop=filtered_ranks.remove,
+            n_best=n_best,
+        )
 
         self._codes_cache = {}
         return filtered

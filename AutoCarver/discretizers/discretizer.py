@@ -2,7 +2,6 @@
 for a binary classification model.
 """
 
-from dataclasses import replace
 from typing import Self
 
 import pandas as pd
@@ -56,22 +55,8 @@ class Discretizer(BaseDiscretizer):
 
     def _fit_qualitatives(self, X: pd.DataFrame, y: pd.Series) -> None:
         """Fit the QualitativeDiscretizer on the qualitative features."""
-
-        if len(self.features.qualitatives) > 0:
-            qualitative_discretizer = QualitativeDiscretizer(
-                qualitatives=self.features.qualitatives,
-                min_freq=self.min_freq,
-                config=replace(self.config, copy=False),
-            )
-            qualitative_discretizer.fit(X, y)
+        self._fit_sub_discretizer(QualitativeDiscretizer, self.features.qualitatives, X, y)
 
     def _fit_quantitatives(self, X: pd.DataFrame, y: pd.Series) -> None:
         """Fit the QuantitativeDiscretizer on the quantitative features."""
-
-        if len(self.features.quantitatives) > 0:
-            quantitative_discretizer = QuantitativeDiscretizer(
-                quantitatives=self.features.quantitatives,
-                min_freq=self.min_freq,
-                config=replace(self.config, copy=False),
-            )
-            quantitative_discretizer.fit(X, y)
+        self._fit_sub_discretizer(QuantitativeDiscretizer, self.features.quantitatives, X, y)

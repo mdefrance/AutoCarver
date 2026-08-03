@@ -93,7 +93,9 @@ test on the ``2 x k`` table of reference and production counts (``chi2``,
 ``chi2_pvalue``, ``chi2_significant``). It is deliberately *not* a
 goodness-of-fit against the reference frequencies — the reference is itself an
 estimate from a finite train sample, and treating it as known truth would
-understate the p-value.
+understate the p-value. It stays on :func:`scipy.stats.chi2_contingency`
+rather than :ref:`stats_chi2` because it needs the p-value and degrees of
+freedom, which :func:`AutoCarver.stats.pearson_chi2` doesn't return.
 
 Because any chi-square grows with sample size, **Cramér's V** is reported
 beside it (``chi2_cramerv``) as the sample-size-independent effect size:

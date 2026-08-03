@@ -16,8 +16,8 @@ from AutoCarver.discretizers.qualitatives.categorical_discretizer import (
     series_target_rate,
     series_value_counts,
 )
-from AutoCarver.discretizers.utils.frequency_ci import is_significantly_below
 from AutoCarver.features.features import infer_feature_kind
+from AutoCarver.stats.frequency_ci import is_significantly_below
 
 
 def profile_dataframe(X: pd.DataFrame) -> list[dict]:

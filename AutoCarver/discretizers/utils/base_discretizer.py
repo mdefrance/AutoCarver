@@ -385,6 +385,37 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         return sample
 
+    def _fit_sub_discretizer(self, discretizer_cls, features, X: pd.DataFrame, y: pd.Series, **kwargs) -> None:
+        """Fits a sub-discretizer over a subset of features, sharing this config with copy=False.
+
+        No-op when ``features`` is empty. ``features`` is passed positionally: the
+        sub-discretizer classes each take it under a different keyword
+        (``categoricals=``, ``ordinals=``, ``nesteds=``, ``qualitatives=``,
+        ``quantitatives=``), but all accept it as their first positional argument.
+        """
+        if len(features) == 0:
+            return
+        discretizer_cls(features, min_freq=self.min_freq, config=replace(self.config, copy=False), **kwargs).fit(X, y)
+
+    def _prepare_sample_and_fit(self, sample: Sample) -> Sample:
+        """``BaseDiscretizer._prepare_sample`` + fitting features against it + filling up their nans.
+
+        Shared by :class:`~AutoCarver.discretizers.qualitatives.categorical_discretizer.CategoricalDiscretizer`
+        and :class:`~AutoCarver.discretizers.qualitatives.ordinal_discretizer.OrdinalDiscretizer`,
+        whose ``_prepare_sample`` overrides are otherwise identical. Uses the
+        name-mangled ``__prepare_sample`` alias (not ``self._prepare_sample``) so this
+        always runs the base validation, regardless of which subclass calls it.
+        """
+        sample = self.__prepare_sample(sample)
+
+        # fitting features
+        self.features.fit(**sample)
+
+        # filling up nans for features that have some
+        sample.X = self.features.fillna(sample.X)
+
+        return sample
+
     # name-mangled alias used by transform() so subclass overrides of _prepare_sample
     # (which add fit-time-only checks) don't break the transform path
     __prepare_sample = _prepare_sample

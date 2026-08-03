@@ -25,6 +25,10 @@ class BinaryCarver(BaseCarver):
 
     __name__ = "BinaryCarver"
     is_y_binary = True
+    _default_evaluator = TschuprowtCombinations
+    _evaluator_trait = "is_y_binary"
+    _target_kind = "binary targets"
+    _evaluator_choices = "TschuprowtCombinations, CramervCombinations"
 
     @extend_docstring(BaseCarver.__init__, exclude=["combination_evaluator"])
     def __init__(
@@ -48,13 +52,7 @@ class BinaryCarver(BaseCarver):
                 * Use :ref:`TschuprowtCombinations` for less, more robust, modalities.
                 * Use :ref:`CramervCombinations` for more, less robust, modalities.
         """
-        if combination_evaluator is None:
-            combination_evaluator = TschuprowtCombinations()
-        if not combination_evaluator.is_y_binary:
-            raise ValueError(
-                f"[{self.__name__}] {type(combination_evaluator).__name__} is not suited for binary targets. "
-                f"Choose from: TschuprowtCombinations, CramervCombinations."
-            )
+        combination_evaluator = self._resolve_evaluator(combination_evaluator)
 
         super().__init__(
             features=features,

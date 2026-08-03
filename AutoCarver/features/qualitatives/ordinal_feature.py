@@ -1,7 +1,7 @@
 """Defines an ordinal feature"""
 
 from AutoCarver.features.qualitatives.qualitative_feature import QualitativeFeature
-from AutoCarver.features.utils.base_feature import BaseFeature
+from AutoCarver.features.utils.base_feature import BaseFeature, features_of_type
 from AutoCarver.features.utils.grouped_list import GroupedList
 from AutoCarver.utils import extend_docstring
 
@@ -43,4 +43,4 @@ class OrdinalFeature(QualitativeFeature):
 
 def get_ordinal_features(features: list[BaseFeature]) -> list[OrdinalFeature]:
     """returns ordinal features amongst provided features"""
-    return [feature for feature in features if isinstance(feature, OrdinalFeature)]
+    return features_of_type(features, OrdinalFeature)

@@ -111,10 +111,8 @@ class KruskalEpsilonSquaredMeasure(KruskalMeasure):
             x, y = y, x
         n_obs = ((~(x.isnull() | x.isna())) & y.notna()).sum()
 
-        # computing epsilon-squared
-        self.value = np.nan
-        if pd.notna(h) and n_obs > 1:
-            self.value = float(h / (n_obs - 1))
+        # computing epsilon-squared (n_groups unused by this measure's _effect)
+        self.value = self._effect(h, n_obs, 0)
         return self.value
 
     def _effect(self, h: float, n_obs: float, n_groups: float) -> float:
@@ -149,9 +147,7 @@ class KruskalEtaSquaredMeasure(KruskalMeasure):
         n_groups = y[valid].nunique()
 
         # computing eta-squared, clamped to a non-negative effect size
-        self.value = np.nan
-        if pd.notna(h) and n_obs - n_groups > 0:
-            self.value = max(0.0, float((h - n_groups + 1) / (n_obs - n_groups)))
+        self.value = self._effect(h, n_obs, n_groups)
         return self.value
 
     def _effect(self, h: float, n_obs: float, n_groups: float) -> float:

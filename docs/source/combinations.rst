@@ -495,7 +495,7 @@ joint :class:`MulticlassCarver` instead orders modalities along the **first
 axis of a correspondence analysis (CA)** of the raw ``modalities × classes``
 crosstab — the 1-D embedding of the table that captures the largest share of
 its :math:`\chi^2` inertia
-(:mod:`AutoCarver.discretizers.utils.correspondence_analysis`).
+(:mod:`AutoCarver.stats.correspondence_analysis`).
 
 Fitting the axis:
 
@@ -564,12 +564,10 @@ Pearson :math:`\chi^2` (binary targets)
 For a 2-column contingency table (binary target), each group :math:`g`
 contributes counts :math:`(n_{0,g},\, n_{1,g})`. With row marginals
 :math:`R_g = n_{0,g} + n_{1,g}`, column marginals :math:`C_c = \sum_g n_{c,g}`,
-and grand total :math:`N = \sum_g R_g`, Pearson's statistic is
-
-.. math::
-
-    \chi^2 = \sum_{g, c} \frac{(O_{g, c} - E_{g, c})^2}{E_{g, c}},
-    \quad E_{g, c} = \frac{R_g \cdot C_c}{N}.
+and grand total :math:`N = \sum_g R_g`, Pearson's statistic is defined in
+:ref:`stats_chi2`. Unlike the selector path, the combination evaluators shift
+every cell by ``+tol`` before computing :math:`\chi^2` and quantise the result
+with :math:`\text{round}(x / \text{tol}) \cdot \text{tol}`.
 
 Two key observations:
 
@@ -692,13 +690,9 @@ Kruskal-Wallis H (continuous targets)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Given a partition with :math:`n_g` observations per group, rank sum
-:math:`R_g`, total :math:`N = \sum_g n_g`, and **tie correction**
-:math:`T = 1 - \sum_i (t_i^3 - t_i) / (N^3 - N)` (depends only on the pooled
-:math:`y` multiset), the Kruskal-Wallis statistic is
-
-.. math::
-
-    H = \frac{1}{T}\left[\,\frac{12}{N(N+1)} \sum_g \frac{R_g^2}{n_g} - 3(N+1)\,\right].
+:math:`R_g`, total :math:`N = \sum_g n_g`, and **tie correction** :math:`T`
+(depends only on the pooled :math:`y` multiset), the Kruskal-Wallis statistic
+is defined in :ref:`stats_kruskal`.
 
 Two key observations:
 

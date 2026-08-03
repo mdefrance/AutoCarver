@@ -8,7 +8,6 @@ import numpy as np
 import pandas as pd
 
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, ProcessingConfig
-from AutoCarver.discretizers.utils.multiprocessing import imap_unordered_function
 from AutoCarver.features import GroupedList, QuantitativeFeature, get_versions
 from AutoCarver.utils import extend_docstring
 
@@ -60,13 +59,8 @@ class ContinuousDiscretizer(BaseDiscretizer):
         # fitting each feature — kept serial (n_jobs=1): the per-feature work is a single quantile
         # sort (sub-second total), so process pickling (here the whole quantitative frame) costs far
         # more than it saves. n_jobs is reserved for the carver's per-feature combination search.
-        all_orders = imap_unordered_function(
-            fit_feature,
-            self.features.quantitatives,
-            1,
-            X=X[get_versions(self.features.quantitatives)],
-            q=self.q,
-        )
+        x_quantitatives = X[get_versions(self.features.quantitatives)]
+        all_orders = [fit_feature(feature, x_quantitatives, self.q) for feature in self.features.quantitatives]
 
         # storing into the values_orders
         self.features.fit(X, y)
@@ -160,96 +154,3 @@ def find_quantiles(
     quantiles.extend(frequent_values.tolist())
     quantiles.sort()
     return quantiles
-
-
-def np_find_quantiles(
-    df_feature: np.ndarray,
-    q: int,
-    initial_len_df: int,
-    quantiles: list[float],
-) -> list[float]:
-    """Finds quantiles of a Series recursively.
-
-    * Values more frequent than ``min_freq`` are set as there own modalities.
-    * Other values are cut in quantiles using ``numpy.quantile``.
-    * The number of quantiles is set as ``(1-freq_frequent_modals)/(min_freq)``.
-    * Nans are considered as a modality (and are taken into account in ``freq_frequent_modals``).
-
-    Parameters
-    ----------
-    df_feature : pd.Series
-        _description_
-    q : int
-        _description_
-    initial_len_df : int, optional
-        _description_, by default None
-    quantiles : list[float], optional
-        _description_, by default None
-
-    Returns
-    -------
-    list[float]
-        _description_
-    """
-
-    # case 1: no observation, all values have been attributed there corresponding modality
-    if df_feature.shape[0] == 0:
-        return quantiles
-
-    # frequencies per known value
-    values, frequencies = np.unique(df_feature, return_counts=True)
-
-    # case 2 : there is an over-represented value
-    if any(frequencies >= initial_len_df / q):
-        # identifying over-represented modality
-        frequent_values = values[frequencies >= initial_len_df / q]
-
-        # computing quantiles on smaller and greater values
-        sub_indices = np.digitize(df_feature, frequent_values, right=False)
-        for i in range(0, len(frequent_values) + 1):
-            quantiles += np_find_quantiles(
-                df_feature[(sub_indices == i) & (~np.isin(df_feature, frequent_values))],
-                q,
-                initial_len_df,
-                [],
-            )
-
-        # adding over-represented modality to the list of quantiles
-        return quantiles + list(frequent_values)
-
-    # case 3 : there is no over-represented value -> computing quantiles
-    quantiles += compute_quantiles(df_feature, q, initial_len_df)
-
-    return quantiles
-
-
-def compute_quantiles(df_feature: np.ndarray, q: int, initial_len_df: int) -> list[float]:
-    """Computes quantiles of a Series.
-
-    - q should not be larger than len(df_feature)
-    - df_feature should not contain any missing values
-    - df_feature should not contain any over-represented modality
-    - df_feature should not be empty
-    """
-
-    # getting quantiles needed
-    quantiles_needed = get_remaining_quantiles(len(df_feature), initial_len_df, q)
-
-    # cutting values into quantiles if there are enough values remaining
-    if len(quantiles_needed) > 0:
-        return list(np.quantile(df_feature, quantiles_needed, method="lower"))
-
-    # -> not enough values remaining, grouping all remaining values into one quantile
-    # returning the maximum value remaining, because it will be grouped within
-    # QuantitativeDiscretizer when using OrdinalDiscretizer
-    return [max(df_feature)]
-
-
-def get_remaining_quantiles(remaining_len_df: int, initial_len_df: int, q: int) -> np.ndarray:
-    """Computes list of indices of quantiles needed."""
-
-    # updating number of quantiles taking into account identified over-represented modalities
-    new_q = round(remaining_len_df / initial_len_df * q)
-
-    # list of quantiles needed
-    return np.linspace(0, 1, new_q + 1)[1:-1]

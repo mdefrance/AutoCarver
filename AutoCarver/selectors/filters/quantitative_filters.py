@@ -7,57 +7,6 @@ from AutoCarver.features import BaseFeature, get_versions
 from AutoCarver.selectors.filters.base_filters import BaseFilter
 from AutoCarver.utils.extend_docstring import extend_docstring
 
-# from statsmodels.stats.outliers_influence import variance_inflation_factor
-
-
-# TODO
-# def vif_filter(X: pd.DataFrame, ranks: pd.DataFrame, **params) -> dict[str, Any]:
-#     """Computes Variance Inflation Factor (multicolinearity)
-
-#     Parameters
-#     ----------
-#     thresh_vif, float: default inf
-#       Maximum VIF between features
-#     """
-
-#     # accessing the prefered order
-#     prefered_order = ranks.index
-
-#     # initiating list association per feature
-#     associations = []
-
-#     # list of dropped features
-#     dropped = []
-
-#     # iterating over each column
-#     for i, feature in enumerate(prefered_order):
-#         # identifying remaining more associated features
-#         better_features = [f for f in prefered_order[: i + 1] if f not in dropped]
-
-#         X_vif = X[better_features]  # keeping only better features
-#         X_vif = X_vif.dropna(axis=0)  # dropping NaNs for OLS
-
-#         # computation of VIF
-#         vif = nan
-#         if len(better_features) > 1 and len(X_vif) > 0:
-#             vif = variance_inflation_factor(X_vif.values, len(better_features) - 1)
-
-#         # dropping the feature if it was too correlated to a better feature
-#         if vif > params.get("thresh_vif", inf) and notna(vif):
-#             dropped += [feature]
-
-#         # kept feature: updating associations with this feature
-#         else:
-#             associations += [{"feature": feature, "vif_filter": vif}]
-
-#     # formatting ouput to DataFrame
-#     associations = pd.DataFrame(associations).set_index("feature")
-
-#     # applying filter on association
-#     associations = ranks.join(associations, how="right")
-
-#     return associations
-
 
 class QuantitativeFilter(BaseFilter):
     """Computes max association between X and X (quantitative) excluding features
@@ -75,8 +24,17 @@ class QuantitativeFilter(BaseFilter):
         # computing correlation between features
         X_corr = self._compute_correlation(X, ranks)
 
+        def on_drop(feature: BaseFeature) -> None:
+            X_corr.drop(feature.version, axis=0, inplace=True)
+            X_corr.drop(feature.version, axis=1, inplace=True)
+
         # filtering too correlated features
-        return self._filter_correlated_features(X_corr, ranks, n_best)
+        return self._filter_ranked(
+            ranks,
+            worst_correlation_fn=lambda feature: self._compute_worst_correlation(X_corr, feature),
+            on_drop=on_drop,
+            n_best=n_best,
+        )
 
     def _compute_correlation(self, X: pd.DataFrame, rank: list[BaseFeature]) -> pd.DataFrame:
         """Computing correlation between features"""
@@ -95,36 +53,6 @@ class QuantitativeFilter(BaseFilter):
         # getting upper right part of the correlation matrix and removing autocorrelation
         return X_corr.where(np.triu(np.ones(X_corr.shape), k=1).astype(bool))
 
-    def _filter_correlated_features(
-        self, X_corr: pd.DataFrame, ranks: list[BaseFeature], n_best: int | None = None
-    ) -> list[BaseFeature]:
-        """filtering out features too correlated with a better ranked feature"""
-
-        # iterating over each feature by target association order
-        filtered: list[BaseFeature] = []
-        for feature in ranks:
-            # maximum correlation with a better feature
-            correlation_with, worst_correlation = self._compute_worst_correlation(X_corr, feature)
-
-            # checking for too much correlation
-            valid = self._validate(feature, worst_correlation, correlation_with)
-
-            # dropping feature if it was too correlated
-            if not valid:
-                X_corr.drop(feature.version, axis=0, inplace=True)
-                X_corr.drop(feature.version, axis=1, inplace=True)
-
-            # keeping feature
-            else:
-                filtered += [feature]
-
-                # once n_best are kept the rest rank past the cutoff -> never
-                # selected (mirrors QualitativeFilter so both types stop alike)
-                if n_best is not None and len(filtered) >= n_best:
-                    break
-
-        return filtered
-
     def _compute_worst_correlation(self, X_corr: pd.DataFrame, feature: BaseFeature) -> tuple[str, float]:
         """Computes correlation with better features (filtering out X_corr)"""
 
@@ -132,22 +60,22 @@ class QuantitativeFilter(BaseFilter):
         corr_with_better_features = X_corr.loc[: feature.version, feature.version].fillna(0)
 
         # worst/maximum absolute correlation with better features
-        return corr_with_better_features.agg([lambda x: x.abs().idxmax(), lambda x: max(x.min(), x.max(), key=abs)])
+        correlation_with, worst_correlation = corr_with_better_features.agg(
+            [lambda x: x.abs().idxmax(), lambda x: max(x.min(), x.max(), key=abs)]
+        )
 
-    def _validate(self, feature: BaseFeature, worst_correlation: float, correlation_with: str) -> bool:
+        # no better feature correlated (or itself): normalize like QualitativeFilter's "itself"
+        if correlation_with == feature.version:
+            correlation_with = "itself"
+
+        return correlation_with, worst_correlation
+
+    def _validate(self, worst_correlation: float) -> bool:
         """Checks if the worst correlation of a feature is above specified threshold"""
         # dropping the feature if it was too correlated to a better feature
         valid = True
         if abs(worst_correlation) > self.threshold:
             valid = False
-
-        # update feature accordingly (update stats)
-        self._update_feature(
-            feature,
-            worst_correlation,
-            valid,
-            info={"correlation_with": (correlation_with if correlation_with != feature.version else "itself")},
-        )
 
         return valid
 

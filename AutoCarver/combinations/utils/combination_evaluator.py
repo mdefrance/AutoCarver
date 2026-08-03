@@ -2,7 +2,6 @@
 the best combination of modalities for a feature."""
 
 import json
-import math
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass, field
@@ -20,6 +19,7 @@ from AutoCarver.combinations.utils.combinations import (
     order_apply_combination,
     xagg_apply_combination,
 )
+from AutoCarver.combinations.utils.dp import sort_key
 from AutoCarver.combinations.utils.target_rate import TargetRate, XAgg
 from AutoCarver.combinations.utils.testing import Keys, is_viable, test_viability
 from AutoCarver.features import BaseFeature, GroupedList
@@ -304,15 +304,8 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
 
         # collect & sort by metric (NaN / None last, matching prior pandas behaviour)
         associations = list(association_stream)
-        sort_key = self.sort_by
-
-        def _key(assoc: dict) -> float:
-            value = assoc.get(sort_key)
-            if value is None or (isinstance(value, float) and math.isnan(value)):
-                return float("-inf")
-            return float(value)
-
-        associations.sort(key=_key, reverse=True)
+        metric = self.sort_by
+        associations.sort(key=lambda assoc: sort_key(assoc.get(metric)), reverse=True)
 
         # testing viability of combination (lazy-rebuilds xagg per candidate)
         best_combination = self._get_viable_combination(associations)
@@ -977,28 +970,3 @@ def _variant_key(combination: list[list]) -> tuple:
     so a positional tuple-of-tuples is the right shape.
     """
     return tuple(tuple(g) for g in combination)
-
-
-def _nan_fanout_variants(
-    base_partitions: list[dict],
-    nan_label: str,
-    raw_labels: list,
-    max_n_mod: int,
-) -> Iterator[list[list]]:
-    """Yields NaN-augmented variants of each base consecutive partition.
-
-    Mirrors :func:`AutoCarver.combinations.utils.combinations.nan_combinations`
-    semantics: for every base combination, fold ``nan_label`` into each group;
-    add it as its own group iff ``len(base) < max_n_mod``; finally yield the
-    ``[list(raw_labels), [nan_label]]`` partition once. Subclass-specific
-    scoring (Kruskal H / chi²) happens in the caller.
-    """
-    for base in base_partitions:
-        base_combo = base["combination"]
-        for j in range(len(base_combo)):
-            variant = [g[:] for g in base_combo]
-            variant[j] = variant[j] + [nan_label]
-            yield variant
-        if len(base_combo) < max_n_mod:
-            yield [g[:] for g in base_combo] + [[nan_label]]
-    yield [list(raw_labels), [nan_label]]

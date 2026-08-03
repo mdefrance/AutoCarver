@@ -1,13 +1,12 @@
 """set of target rates for multiclass (unordered) targets"""
 
 from abc import ABC
-from typing import overload
 
 import numpy as np
 import pandas as pd
 
 from AutoCarver.combinations.utils import TargetRate
-from AutoCarver.discretizers.utils.correspondence_analysis import CAAxis, ca_row_scores, fit_ca_axis
+from AutoCarver.stats.correspondence_analysis import CAAxis, ca_row_scores, fit_ca_axis
 
 
 class MulticlassTargetRate(TargetRate[pd.DataFrame], ABC):
@@ -18,7 +17,7 @@ class MulticlassTargetRate(TargetRate[pd.DataFrame], ABC):
     consumes, generalised to an unordered K-class target. The per-group "rate"
     is a scalar projection of the group's row profile onto a fixed
     correspondence-analysis axis (:class:`CAAxis`, see
-    :mod:`AutoCarver.discretizers.utils.correspondence_analysis`): the owning
+    :mod:`AutoCarver.stats.correspondence_analysis`): the owning
     :class:`~AutoCarver.combinations.multiclass.multiclass_combination_evaluators.MulticlassCombinationEvaluator`
     fits that axis once, from the feature's raw (un-grouped) train crosstab
     (:meth:`fit_axis`), and every later call — a train candidate grouping, or a
@@ -46,7 +45,7 @@ class MulticlassTargetRate(TargetRate[pd.DataFrame], ABC):
         Must be called once per feature, before any candidate grouping is
         scored — every subsequent :meth:`compute` call (train candidate, dev
         candidate) then projects onto this same axis (the CA transition
-        formula in :func:`~AutoCarver.discretizers.utils.correspondence_analysis.ca_row_scores`
+        formula in :func:`~AutoCarver.stats.correspondence_analysis.ca_row_scores`
         needs only the row's own profile and this fixed axis).
         """
         self._axis = fit_ca_axis(raw_xagg)
@@ -69,37 +68,6 @@ class MulticlassTargetRate(TargetRate[pd.DataFrame], ABC):
                 v1=np.asarray(payload["v1"], dtype=float),
                 degenerate=payload["degenerate"],
             )
-
-    @overload
-    def compute(self, xagg: pd.Series | pd.DataFrame) -> pd.DataFrame: ...
-    @overload
-    def compute(self, xagg: None) -> None: ...
-    def compute(self, xagg: pd.Series | pd.DataFrame | None) -> pd.DataFrame | None:
-        """Computes the target rate.
-
-        Parameters
-        ----------
-        xagg : pd.DataFrame
-            A crosstab (feature groups × target classes).
-
-        Returns
-        -------
-        pd.DataFrame
-            Per-group CA score, ``frequency`` and ``count``.
-        """
-        # checking for an xtab
-        if xagg is not None:
-            # count + frequency per modality (count carried for CI-based viability tests)
-            count = xagg.sum(axis=1)
-            frequency = count / count.sum()
-
-            # computing target rate. `_compute` expects pd.DataFrame (Generic
-            # XAgg=DataFrame); compute()'s wide signature is for LSP matching,
-            # callers always pass a crosstab here.
-            return pd.DataFrame(
-                {self.__name__: self._compute(xagg), "frequency": frequency, "count": count}  # type: ignore
-            )
-        return None
 
 
 class CAScoreRate(MulticlassTargetRate):

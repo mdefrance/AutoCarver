@@ -33,6 +33,7 @@ from AutoCarver.combinations import (
 from AutoCarver.discretizers import BaseDiscretizer, Discretizer, Sample
 from AutoCarver.discretizers.utils.base_discretizer import ProcessingConfig
 from AutoCarver.features import BaseFeature, Features, get_versions
+from AutoCarver.features.features import per_modality_columns
 from AutoCarver.features.qualitatives import CategoricalFeature, NestedFeature, OrdinalFeature
 from AutoCarver.features.quantitatives import DatetimeFeature, NumericalFeature
 from AutoCarver.utils import extend_docstring, has_idisplay
@@ -151,6 +152,38 @@ def _drop_reason_from_history(history: pd.DataFrame) -> str:
     return f"No robust combination ({msg})"
 
 
+def validate_multiclass_target(samples: Samples, name: str) -> Samples:
+    """Casts a multiclass y (and y_dev) to str and checks class counts / train-dev class sets."""
+    if samples.train.y is None:
+        raise ValueError(f"[{name}] y must be provided")
+    # NaN check must precede astype(str): casting turns NaN into the string "nan",
+    # which would silently become a target class (and bypass the base check)
+    if samples.train.y.isna().any():
+        raise ValueError(f"[{name}] y should not contain numpy.nan")
+    samples.train.y = samples.train.y.astype(str)
+
+    # multiclass target, checking values
+    if len(pd.unique(samples.train.y)) <= 2:
+        raise ValueError(f"[{name}] provided y is binary, consider using BinaryCarver instead.")
+
+    # checking for dev target's values
+    if samples.dev.y is not None:
+        if samples.dev.y.isna().any():
+            raise ValueError(f"[{name}] y_dev should not contain numpy.nan")
+        samples.dev.y = samples.dev.y.astype(str)
+
+        unique_y_dev = samples.dev.y.unique()
+        unique_y = samples.train.y.unique()
+        missing_y = [mod_y for mod_y in unique_y if mod_y not in unique_y_dev]
+        missing_y_dev = [mod_y_dev for mod_y_dev in unique_y_dev if mod_y_dev not in unique_y]
+        if len(missing_y) > 0 or len(missing_y_dev) > 0:
+            raise ValueError(
+                f"[{name}] Mismatched classes between y and y_dev: train({missing_y_dev}), dev({missing_y})"
+            )
+
+    return samples
+
+
 class BaseCarver(BaseDiscretizer, ABC):
     """Automatic carving of continuous, discrete, categorical and ordinal
     features that maximizes association with a binary or continuous target.
@@ -171,6 +204,25 @@ class BaseCarver(BaseDiscretizer, ABC):
     _default_dropna = True
     _default_ordinal_encoding = True
     _default_rescue_rare: bool = True
+
+    # subclasses declare their evaluator contract here; _resolve_evaluator enforces it.
+    _default_evaluator: type[CombinationEvaluator] | None = None
+    _evaluator_trait: str = ""  # e.g. "is_y_binary"
+    _target_kind: str = ""  # e.g. "binary targets" — used in the mismatch error message
+    _evaluator_choices: str = ""  # e.g. "TschuprowtCombinations, CramervCombinations"
+
+    def _resolve_evaluator(self, combination_evaluator: CombinationEvaluator | None) -> CombinationEvaluator:
+        """Defaults ``combination_evaluator`` and checks it matches this carver's target family."""
+        if combination_evaluator is None:
+            if self._default_evaluator is None:
+                raise ValueError(f"[{self.__name__}] combination_evaluator must be provided.")
+            combination_evaluator = self._default_evaluator()
+        if not getattr(combination_evaluator, self._evaluator_trait, False):
+            raise ValueError(
+                f"[{self.__name__}] {type(combination_evaluator).__name__} is not suited for "
+                f"{self._target_kind}. Choose from: {self._evaluator_choices}."
+            )
+        return combination_evaluator
 
     @extend_docstring(BaseDiscretizer.__init__, exclude=["min_freq", "config"])
     def __init__(
@@ -308,23 +360,10 @@ class BaseCarver(BaseDiscretizer, ABC):
         if summaries.empty:
             return summaries
 
-        # per-modality stats (count, target_mean, frequency, std) stay columns; only per-feature
-        # metrics (sort_by association, n_mod) become index levels so they collapse to one
-        # row per feature instead of repeating across every modality.
-        excluded = {
-            "feature",
-            "label",
-            "content",
-            "target_mean",
-            "somersd",
-            "taub",
-            "tauc",
-            "frequency",
-            "count",
-            "std",
-            "dropped",
-            "dropped_reason",
-        }
+        # per-modality stats (count, target_mean, frequency, std, somersd, tau_b, tau_c) stay
+        # columns; only per-feature metrics (sort_by association, n_mod) become index levels
+        # so they collapse to one row per feature instead of repeating across every modality.
+        excluded = per_modality_columns() | {"dropped", "dropped_reason"}
         indices = [col for col in summaries.columns if col not in excluded]
         indices = ["feature"] + indices + ["label"]
         return summaries.set_index(indices)
@@ -696,6 +735,14 @@ class BaseCarver(BaseDiscretizer, ABC):
             self.dropped_features.append(feature)
             self.features.remove(feature.version)
 
+    def _fit_rate_reference(self, xagg: pd.Series | pd.DataFrame) -> None:
+        """Hook: fit any per-feature target-rate state needed before the raw-distribution print.
+
+        No-op by default; :class:`~AutoCarver.carvers.ordinal_carver.OrdinalCarver` and
+        :class:`~AutoCarver.carvers.multiclass_carver.MulticlassCarver` override this to fit
+        their ridit reference / CA axis (see their overrides for why).
+        """
+
     def _print_xagg(
         self,
         feature: BaseFeature,
@@ -705,6 +752,9 @@ class BaseCarver(BaseDiscretizer, ABC):
         xagg_dev: pd.Series | pd.DataFrame | None = None,
     ) -> None:
         """Prints crosstabs' target rates and frequencies per modality, in raw or html format"""
+        if message == "Raw distribution" and xagg is not None:
+            self._fit_rate_reference(xagg)
+
         if self.config.verbose:
             print(f" [{self.__name__}] {message}")
 

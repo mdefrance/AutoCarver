@@ -1,13 +1,12 @@
 """set of target rates for ordinal targets"""
 
 from abc import ABC
-from typing import overload
 
 import numpy as np
 import pandas as pd
 
 from AutoCarver.combinations.utils import TargetRate
-from AutoCarver.discretizers.utils.ridits import ridit_scores_for_levels
+from AutoCarver.stats.ridits import ridit_scores_for_levels
 
 
 class OrdinalTargetRate(TargetRate[pd.DataFrame], ABC):
@@ -27,43 +26,12 @@ class OrdinalTargetRate(TargetRate[pd.DataFrame], ABC):
         :meth:`~AutoCarver.combinations.multiclass.multiclass_target_rates.MulticlassTargetRate.fit_axis`.
         """
 
-    @overload
-    def compute(self, xagg: pd.Series | pd.DataFrame) -> pd.DataFrame: ...
-    @overload
-    def compute(self, xagg: None) -> None: ...
-    def compute(self, xagg: pd.Series | pd.DataFrame | None) -> pd.DataFrame | None:
-        """Computes the target rate.
-
-        Parameters
-        ----------
-        xagg : pd.DataFrame
-            A crosstab (feature groups × ordinal target levels).
-
-        Returns
-        -------
-        pd.DataFrame
-            Per-group target rate, ``frequency`` and ``count``.
-        """
-        # checking for an xtab
-        if xagg is not None:
-            # count + frequency per modality (count carried for CI-based viability tests)
-            count = xagg.sum(axis=1)
-            frequency = count / count.sum()
-
-            # computing target rate. `_compute` expects pd.DataFrame (Generic
-            # XAgg=DataFrame); compute()'s wide signature is for LSP matching,
-            # callers always pass a crosstab here.
-            return pd.DataFrame(
-                {self.__name__: self._compute(xagg), "frequency": frequency, "count": count}  # type: ignore
-            )
-        return None
-
 
 class TargetMeanRidit(OrdinalTargetRate):
     """Mean train-ridit per modality (the ordinal default).
 
     The per-group rate is the count-weighted mean of the **train** ridits of
-    the crosstab's columns (see :mod:`AutoCarver.discretizers.utils.ridits`):
+    the crosstab's columns (see :mod:`AutoCarver.stats.ridits`):
     the owning evaluator fixes the reference marginal once, from the feature's
     raw (un-grouped) train crosstab (:meth:`fit_reference`), and every later
     call — a train candidate grouping, or a dev-sample grouping — scores

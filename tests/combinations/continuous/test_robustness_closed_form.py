@@ -18,7 +18,11 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from AutoCarver.combinations.continuous.continuous_combination_evaluators import KruskalCombinations
+from AutoCarver.combinations.continuous.continuous_combination_evaluators import (
+    KruskalCombinations,
+    _modality_rank_stats,
+    _modality_sum_y,
+)
 from AutoCarver.combinations.continuous.continuous_target_rates import TargetMean, TargetMedian
 from AutoCarver.combinations.utils.combinations import combination_formatter, consecutive_combinations
 from AutoCarver.combinations.utils.testing import Keys, is_viable
@@ -53,11 +57,23 @@ def _build_random_xagg(rng: np.random.Generator, modalities: list[str], size_ran
 
 
 def _consume_setup(evaluator, combos_list):
-    """Run _compute_associations once to populate the modality-stats cache."""
-    # exhaust the streaming pipeline — first `next()` runs the upfront setup
-    # that fills `self._train_modality_stats`.
-    stream = evaluator._compute_associations(evaluator._group_xagg_by_combinations(iter(combos_list)))
-    return list(stream)
+    """Populates the viability fast-path cache (``_train_modality_stats`` /
+    ``_dev_modality_stats``) exactly like `_get_best_combination_non_nan` does in
+    production, then returns ``{combination, index_to_groupby}`` dicts for the
+    given combinations."""
+    raw_xagg = evaluator.samples.train.xagg
+    R_per_mod, n_per_mod, N, tie_corr = _modality_rank_stats(raw_xagg)
+    sum_y_per_mod = _modality_sum_y(raw_xagg)
+    mod_to_pos = {m: i for i, m in enumerate(raw_xagg.index)}
+    evaluator._train_modality_stats = {
+        "n_per_mod": n_per_mod.astype(float),
+        "sum_y_per_mod": sum_y_per_mod,
+        "mod_to_pos": mod_to_pos,
+        "n_mod": len(mod_to_pos),
+    }
+    evaluator._dev_modality_stats = None
+    evaluator._dev_modality_stats_id = None
+    return [{"combination": combo, "index_to_groupby": combination_formatter(combo)} for combo in combos_list]
 
 
 # ---------------------------------------------------------------------------

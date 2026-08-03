@@ -167,7 +167,7 @@ Feature Selection
     # select the best 25 most target associated features
     classification_selector = ClassificationSelector(
         features=features,  # features to select from
-        n_best_per_type=25,  # number of features to select per data type
+        n_best_features=25,  # total number of features to select, split across data types
     )
     best_features = classification_selector.fit(train_set_discretized, train_set_discretized[target]).selected_features
 
@@ -179,4 +179,10 @@ Feature Selection
     Inspect the measure/filter values per feature through ``summary``, exactly as
     for the carvers. Every feature is scored exactly (no sampling), yet selection
     stays fast through vectorized, all-columns-at-once measures.
+
+    ``n_best_features`` is a **total** budget, apportioned across the feature
+    types in proportion to how many of each were passed; leave it out to apply
+    no cap at all — the measures' thresholds and the redundancy filters still
+    apply. Measures and filters are swapped through a ``SelectionConfig``, per
+    feature type — see :ref:`Selectors`.
 

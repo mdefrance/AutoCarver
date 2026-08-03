@@ -28,8 +28,9 @@ See :ref:`Measures` and :ref:`Filters`, for details on measures and filters' imp
 
 
 Selectors are `scikit-learn <https://scikit-learn.org/>`_ transformers built like
-the :ref:`carvers <Carvers>`: from a :class:`Features` set, a per-type budget
-``n_best_per_type`` and a swappable set of ``measures`` / ``filters``.
+the :ref:`carvers <Carvers>`: from a :class:`Features` set, a total
+``n_best_features`` budget and a :class:`SelectionConfig` carrying the swappable
+per-type ``measures`` / ``filters``.
 
    * :meth:`~AutoCarver.selectors.BaseSelector.fit` scores every feature against
      the target, ranks them per measure, and filters out redundant ones.
@@ -48,10 +49,34 @@ call per feature.
 
     from AutoCarver.selectors import ClassificationSelector
 
-    selector = ClassificationSelector(features=features, n_best_per_type=25)   # best features kept per data type
+    # 25 features in total, split across types proportionally to how many of each
+    # were passed; omit n_best_features altogether to apply no cap (the measures'
+    # thresholds and the redundancy filters still apply)
+    selector = ClassificationSelector(features=features, n_best_features=25)
     selector.fit(X, y)  # or selector.fit_transform(X, y) to keep only selected features in X
     best_features = selector.selected_features
     selector.summary  # inspect the measure/filter values per feature
+
+
+Measures and filters are declared **per feature type**, so a qualitative-only
+measure can never silently leave the quantitative features unranked. Any slot
+left unset falls back to the task-appropriate default for that type.
+
+.. code-block:: python
+
+    from AutoCarver.selectors import (
+        ClassificationSelector, SelectionConfig,
+        TschuprowtMeasure, KruskalMeasure, CramervFilter, SpearmanFilter,
+    )
+
+    config = SelectionConfig(
+        qualitative_measures=[TschuprowtMeasure(threshold=0.001)],
+        quantitative_measures=[KruskalMeasure(threshold=1)],
+        qualitative_filters=[CramervFilter(threshold=0.7)],
+        quantitative_filters=[SpearmanFilter(threshold=0.9)],
+        verbose=True,  # prints how many features were kept, per type
+    )
+    selector = ClassificationSelector(features, n_best_features=50, config=config)
 
 .. _ClassificationSelector:
 
@@ -195,25 +220,7 @@ The association with a **qualitative** target :math:`y` is computed using `scipy
 
 Kruskal-Wallis' :math:`H` test statistic, as known as one-way ANOVA on ranks, allows one to check that two samples originate from the same distribution.
 It is used to determine whether or not :math:`x` is distributed the same when :math:`y=y_0` to :math:`y=y_{n_y-1}` where :math:`n_y` is the number of modalities taken by :math:`y`.
-It is computed using the following formula:
-
-
-.. math::
-
-    H = (n-1) \frac{ \sum_{i=1}^{n_y}{ n_{y=i} (\bar{x_r^{i.}} - \bar{x_r})^2 } } { \sum_{i=1}^{n_y}{ \sum_{j=1}^{n_{y=i}}{ (x_r^{ij} - \bar{x_r})^2 } } }
-
-
-
-where:
-
- * :math:`n` is the number of observations
- * :math:`n_y` is the number of modalities of :math:`y`
- * :math:`n_{y=i}` is the number of observations taking :math:`y`'s :math:`i` th modality
- * :math:`x_r` is the ranked version of :math:`x`
- * :math:`x_r^{ij}` is the :math:`j` th observation of :math:`x_r` when :math:`y` takes its :math:`i` th modality
- * :math:`\bar{x_r^{i.}}=\sum_{j=1}^{n_{y=i}}x_r^{ij}` is the sample mean of :math:`x_r` when :math:`y` takes its :math:`i` th modality
- * :math:`\bar{x_r}=\sum_{i=1}^{n_y}{\sum_{j=1}^{n_{y=i}}}x_r^{ij}` is the sample mean of :math:`x_r`
-
+See :ref:`stats_kruskal` for the definition.
 
 .. autoclass:: AutoCarver.selectors.measures.KruskalMeasure
     :members: compute_association, validate, is_x_quantitative, is_y_qualitative, higher_is_better, is_reversible
@@ -390,20 +397,7 @@ Pearson's :math:`\chi^2` test statistic
 For a **qualititative** feature :math:`x`, the association with a **qualitative** target :math:`y` is computed based on the `pandas.crosstab <https://pandas.pydata.org/docs/reference/api/pandas.crosstab.html>`_.
 
 Pearson's :math:`\chi^2` test statistic is then computed using `scipy.stats.chi2_contingency <https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chi2_contingency.html>`_ to perform association measuring.
-The formula is the following:
-
-.. math::
-
-    \chi^2=\sum_{i=1}^{n_x}{\sum_{j=1}^{n_y}{\frac{(n_{ij} - \frac{n_{i.}n_{.j}}{n})^2}{\frac{n_{i.}n_{.j}}{n}}}}
-
-where:
-
- * :math:`n` is the number of observations
- * :math:`n_x` is the number of modalities of :math:`x`
- * :math:`n_y` is the number of modalities of :math:`y`
- * :math:`n_{ij}` is the number of observations that take modality :math:`i` of :math:`x` and modality :math:`j` of :math:`y`
- * :math:`n_{i.}=\sum_{i=1}^{n_x}n_{ij}` is the total number of observations that take modality :math:`i` of :math:`x`
- * :math:`n_{.j}=\sum_{j=1}^{n_y}n_{ij}` is the total number of observations that take modality :math:`j` of :math:`y`
+See :ref:`stats_chi2` for the definition. The selector builds the contingency table with :func:`pandas.crosstab` and reports the raw statistic.
 
 .. autoclass:: AutoCarver.selectors.measures.Chi2Measure
     :members: compute_association, validate, is_x_qualitative, is_y_qualitative, higher_is_better
@@ -415,18 +409,11 @@ where:
 Cramér's :math:`V`
 ^^^^^^^^^^^^^^^^^^
 
-Based on Pearson's :math:`\chi^2`, Cramér's :math:`V` is computed using the following formula:
+Based on Pearson's :math:`\chi^2`, Cramér's :math:`V` is computed. See :ref:`stats_cramerv_tschuprowt`
+for the definition — the selector uses the *unrounded* variant
+(:func:`AutoCarver.stats.cramerv_tschuprowt_unrounded`), with :math:`n` the
+non-missing pair count and no ``tol`` quantisation.
 
-.. math::
-    
-    V=\sqrt{\frac{\chi^2}{n\min(n_x-1, n_y-1)}}
-
-where:
-
- * :math:`n` is the number of observations
- * :math:`n_x` is the number of modalities of :math:`x`
- * :math:`n_y` is the number of modalities of :math:`y`
- 
 .. autoclass:: AutoCarver.selectors.measures.CramervMeasure
     :members: compute_association, validate, is_x_qualitative, is_y_qualitative, higher_is_better
 
@@ -439,18 +426,11 @@ Tschuprow's :math:`T`
 
 
 
-Based on Pearson's :math:`\chi^2`, Tschuprow's :math:`T` is computed using the following formula:
+Based on Pearson's :math:`\chi^2`, Tschuprow's :math:`T` is computed. See :ref:`stats_cramerv_tschuprowt`
+for the definition — the selector uses the *unrounded* variant
+(:func:`AutoCarver.stats.cramerv_tschuprowt_unrounded`), with :math:`n` the
+non-missing pair count and no ``tol`` quantisation.
 
-.. math::
-    
-    T=\sqrt{\frac{\chi^2}{n\sqrt{(n_x-1)(n_y-1)}}}
-
-where:
-
- * :math:`n` is the number of observations
- * :math:`n_x` is the number of modalities of :math:`x`
- * :math:`n_y` is the number of modalities of :math:`y`
- 
 .. autoclass:: AutoCarver.selectors.measures.TschuprowtMeasure
     :members: compute_association, validate, is_x_qualitative, is_y_qualitative, higher_is_better
 
@@ -554,35 +534,12 @@ Cramér's :math:`V`
 For a **qualititative** feature :math:`x_1`, the association with a **qualitative** feature :math:`x_2` is computed based on the `pandas.crosstab <https://pandas.pydata.org/docs/reference/api/pandas.crosstab.html>`_.
 
 Pearson's :math:`\chi^2` statistics is then computed using `scipy.stats.chi2_contingency <https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chi2_contingency.html>`_ to perform association measuring.
-The formula is the following:
+See :ref:`stats_chi2` for the definition.
 
-.. math::
-
-    \chi^2=\sum_{i=1}^{n_{x_1}}{\sum_{j=1}^{n_{x_2}}{\frac{(n_{ij} - \frac{n_{i.}n_{.j}}{n})^2}{\frac{n_{i.}n_{.j}}{n}}}}
-
-where:
-
- * :math:`n` is the number of observations
- * :math:`n_{x_1}` is the number of modalities of :math:`x_1`
- * :math:`n_{x_2}` is the number of modalities of :math:`x_2`
- * :math:`n_{ij}` is the number of observations that take modality :math:`i` of :math:`x_1` and modality :math:`j` of :math:`x_2`
- * :math:`n_{i.}=\sum_{i=1}^{n_{x_1}}` is the total number of observations that take modality :math:`i` of :math:`x_1`
- * :math:`n_{.j}=\sum_{j=1}^{n_{x_2}}` is the total number of observations that take modality :math:`j` of :math:`x_2`
-
-
-
-Based on Pearson's :math:`\chi^2`, Cramér's :math:`V` is computed using the following formula:
-
-.. math::
-    
-    V=\sqrt{ \frac{ \chi^2 }{ n\min(n_{x_1}-1, n_{x_2}-1) } }
-
-where:
-
- * :math:`n` is the number of observations
- * :math:`n_{x_1}` is the number of modalities of :math:`x_1`
- * :math:`n_{x_2}` is the number of modalities of :math:`x_2`
- 
+Based on Pearson's :math:`\chi^2`, Cramér's :math:`V` is computed. See :ref:`stats_cramerv_tschuprowt`
+for the definition — the selector uses the *unrounded* variant
+(:func:`AutoCarver.stats.cramerv_tschuprowt_unrounded`), with :math:`n` the
+non-missing pair count and no ``tol`` quantisation.
 
 .. autoclass:: AutoCarver.selectors.filters.CramervFilter
     :members: filter, is_x_qualitative, higher_is_better
@@ -595,19 +552,10 @@ Tschuprow's :math:`T`
 ^^^^^^^^^^^^^^^^^^^^^
 
 
-Based on Pearson's :math:`\chi^2`, Tschuprow's :math:`T` is computed using the following formula:
-
-.. math::
-    
-    T=\sqrt{\frac{\chi^2}{n\sqrt{(n_{x_1}-1)(n_{x_2}-1)}}}
-
-where:
-
- * :math:`n` is the number of observations
- * :math:`n_{x_1}` is the number of modalities of :math:`x_1`
- * :math:`n_{x_2}` is the number of modalities of :math:`x_2`
- 
-
+Based on Pearson's :math:`\chi^2`, Tschuprow's :math:`T` is computed. See :ref:`stats_cramerv_tschuprowt`
+for the definition — the selector uses the *unrounded* variant
+(:func:`AutoCarver.stats.cramerv_tschuprowt_unrounded`), with :math:`n` the
+non-missing pair count and no ``tol`` quantisation.
 
 .. autoclass:: AutoCarver.selectors.filters.TschuprowtFilter
     :members: filter, is_x_qualitative, higher_is_better

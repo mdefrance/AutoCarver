@@ -17,9 +17,15 @@ from AutoCarver.combinations.binary.binary_combination_evaluators import (
 from AutoCarver.combinations.continuous.continuous_combination_evaluators import (
     ContinuousCombinationEvaluator,
     KruskalCombinations,
+    _modality_rank_stats,
+    _modality_sum_y,
 )
 from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample
-from AutoCarver.combinations.utils.combinations import consecutive_combinations, nan_combinations
+from AutoCarver.combinations.utils.combinations import (
+    combination_formatter,
+    consecutive_combinations,
+    nan_combinations,
+)
 from AutoCarver.combinations.utils.testing import Keys, Messages
 from AutoCarver.features import OrdinalFeature
 
@@ -293,74 +299,50 @@ def test_compute_target_rates_extra_labels(evaluator: ContinuousCombinationEvalu
     assert result.equals(expected)
 
 
-def test_group_xagg_by_combinations(evaluator: ContinuousCombinationEvaluator):
-    """`_group_xagg_by_combinations` for continuous is a streaming generator that
-    skips building the heavy lists-of-lists xagg — only ``combination`` and
-    ``index_to_groupby`` are carried, the xagg is rebuilt lazily later only for
-    the handful of combinations actually checked for viability."""
+def _init_modality_stats(evaluator):
+    """Populates the viability fast-path cache (``_train_modality_stats`` /
+    ``_dev_modality_stats``) exactly like `_get_best_combination_non_nan` does.
 
-    feature = OrdinalFeature("feature", ["a", "b", "c"])
-    xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0]})
-
-    combinations = consecutive_combinations(feature.labels, 2)
-
-    evaluator.samples.train = AggregatedSample(xagg)
-
-    result = list(evaluator._group_xagg_by_combinations(combinations))
-
-    expected = [
-        {
-            "combination": [["a"], ["b", "c"]],
-            "index_to_groupby": {"a": "a", "b": "b", "c": "b"},
-        },
-        {
-            "combination": [["a", "b"], ["c"]],
-            "index_to_groupby": {"a": "a", "b": "a", "c": "c"},
-        },
-    ]
-    for res, exp in zip(result, expected):
-        assert "xagg" not in res  # streaming path skips heavy materialisation
-        assert res["combination"] == exp["combination"]
-        assert res["index_to_groupby"] == exp["index_to_groupby"]
+    In production this always runs before any viability check (every entry point
+    goes through `_get_best_combination_non_nan` first); tests that drive
+    `_get_best_association` / `_test_viability_train` / `_test_viability_dev`
+    directly need to do it themselves."""
+    raw_xagg = evaluator.samples.train.xagg
+    R_per_mod, n_per_mod, N, tie_corr = _modality_rank_stats(raw_xagg)
+    sum_y_per_mod = _modality_sum_y(raw_xagg)
+    mod_to_pos = {m: i for i, m in enumerate(raw_xagg.index)}
+    evaluator._train_modality_stats = {
+        "n_per_mod": n_per_mod.astype(float),
+        "sum_y_per_mod": sum_y_per_mod,
+        "mod_to_pos": mod_to_pos,
+        "n_mod": len(mod_to_pos),
+    }
+    evaluator._dev_modality_stats = None
+    evaluator._dev_modality_stats_id = None
 
 
-def test_group_xagg_by_combinations_with_nan(evaluator: ContinuousCombinationEvaluator):
-    """Streaming variant of the multi-group case — xagg is not in output."""
+def _sorted_assocs(evaluator, combinations):
+    """Score each combination via the surviving scipy-backed `_association_measure`
+    (the raw-distribution / NaN-fanout path) and sort by kruskal desc, NaN last —
+    matches the order `_get_best_association` would feed into the viability walk."""
+    _init_modality_stats(evaluator)
 
-    feature = OrdinalFeature("feature", ["A", "B", "C"])
-    xagg = pd.Series({"A": [0, 2, 0], "B": [2, 1], "C": [2, 0]})
-
-    combinations = consecutive_combinations(feature.labels, 3)
-
-    evaluator.samples.train = AggregatedSample(xagg)
-
-    result = list(evaluator._group_xagg_by_combinations(combinations))
-
-    expected = [
-        {
-            "combination": [["A"], ["B"], ["C"]],
-            "index_to_groupby": {"A": "A", "B": "B", "C": "C"},
-        },
-        {
-            "combination": [["A"], ["B", "C"]],
-            "index_to_groupby": {"A": "A", "B": "B", "C": "B"},
-        },
-        {
-            "combination": [["A", "B"], ["C"]],
-            "index_to_groupby": {"A": "A", "B": "A", "C": "C"},
-        },
-    ]
-    for res, exp in zip(result, expected):
-        assert "xagg" not in res
-        assert res["combination"] == exp["combination"]
-        assert res["index_to_groupby"] == exp["index_to_groupby"]
+    scored = []
+    for combination in combinations:
+        index_to_groupby = combination_formatter(combination)
+        grouped = evaluator._grouper(evaluator.samples.train, index_to_groupby)
+        measure = evaluator._association_measure(grouped)
+        scored.append({"combination": combination, "index_to_groupby": index_to_groupby, **measure})
+    return sorted(
+        scored,
+        key=lambda a: a["kruskal"] if a["kruskal"] is not None and a["kruskal"] == a["kruskal"] else -float("inf"),
+        reverse=True,
+    )
 
 
 def test_compute_associations(evaluator: ContinuousCombinationEvaluator):
-    """`_compute_associations` is now a streaming generator yielding light
-    ``{combination, index_to_groupby, kruskal}`` dicts in arrival order — the
-    heavy xagg is consumed for scoring and dropped. The caller sorts by
-    metric inside `_get_best_association`."""
+    """`_association_measure` scores each combination's grouped xagg; sorting by
+    kruskal desc matches what the viability walk consumes."""
 
     feature = OrdinalFeature("feature", ["a", "b", "c"])
     xagg = pd.Series({"a": [0, 2, 0], "b": [2, 1], "c": [2, 0]})
@@ -369,12 +351,7 @@ def test_compute_associations(evaluator: ContinuousCombinationEvaluator):
 
     evaluator.samples.train = AggregatedSample(xagg)
 
-    grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
-    result = sorted(
-        evaluator._compute_associations(grouped_xaggs),
-        key=lambda a: a["kruskal"] if a["kruskal"] is not None else -float("inf"),
-        reverse=True,
-    )
+    result = _sorted_assocs(evaluator, combinations)
 
     expected = [
         {
@@ -389,15 +366,14 @@ def test_compute_associations(evaluator: ContinuousCombinationEvaluator):
         },
     ]
     for res, exp in zip(result, expected):
-        assert "xagg" not in res
         assert res["combination"] == exp["combination"]
         assert res["index_to_groupby"] == exp["index_to_groupby"]
         assert res["kruskal"] == exp["kruskal"]
 
 
 def test_compute_associations_with_unobserved(evaluator: ContinuousCombinationEvaluator):
-    """Empty modality → kruskal=NaN (matches scipy when a group has zero
-    observations). Streaming output is sorted by metric desc with NaN last."""
+    """Empty modality → kruskal=NaN/None (matches scipy when a group has zero
+    observations). Sorted by metric desc with NaN/None last."""
 
     feature = OrdinalFeature("feature", ["A", "B", "C"])
     xagg = pd.Series({"A": [0, 2, 0], "B": [2, 1], "C": []})
@@ -405,12 +381,7 @@ def test_compute_associations_with_unobserved(evaluator: ContinuousCombinationEv
 
     combinations = consecutive_combinations(feature.labels, 3)
 
-    grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
-    result = sorted(
-        evaluator._compute_associations(grouped_xaggs),
-        key=lambda a: a["kruskal"] if a["kruskal"] is not None and not pd.isna(a["kruskal"]) else -float("inf"),
-        reverse=True,
-    )
+    result = _sorted_assocs(evaluator, combinations)
 
     expected = [
         {
@@ -421,23 +392,23 @@ def test_compute_associations_with_unobserved(evaluator: ContinuousCombinationEv
         {
             "combination": [["A"], ["B"], ["C"]],
             "index_to_groupby": {"A": "A", "B": "B", "C": "C"},
-            "kruskal": np.nan,
         },
         {
             "combination": [["A", "B"], ["C"]],
             "index_to_groupby": {"A": "A", "B": "A", "C": "C"},
-            "kruskal": np.nan,
         },
     ]
     for res, exp in zip(result, expected):
-        assert "xagg" not in res
         assert res["combination"] == exp["combination"]
         assert res["index_to_groupby"] == exp["index_to_groupby"]
-        assert res["kruskal"] == exp["kruskal"] or (pd.isna(res["kruskal"]) and pd.isna(exp["kruskal"]))
+        if "kruskal" in exp:
+            assert res["kruskal"] == exp["kruskal"]
+        else:
+            assert res["kruskal"] is None or pd.isna(res["kruskal"])
 
 
 def test_compute_associations_with_three_rows(evaluator: ContinuousCombinationEvaluator):
-    """Streaming + sorted-by-metric variant of the 3-modality case."""
+    """Sorted-by-metric variant of the 3-modality case."""
 
     feature = OrdinalFeature("feature", ["A", "B", "C"])
     xagg = pd.Series({"A": [0, 2, 0], "B": [2, 1], "C": [2, 0]})
@@ -445,12 +416,7 @@ def test_compute_associations_with_three_rows(evaluator: ContinuousCombinationEv
 
     combinations = consecutive_combinations(feature.labels, 3)
 
-    grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
-    result = sorted(
-        evaluator._compute_associations(grouped_xaggs),
-        key=lambda a: a["kruskal"] if a["kruskal"] is not None else -float("inf"),
-        reverse=True,
-    )
+    result = _sorted_assocs(evaluator, combinations)
 
     expected = [
         {
@@ -470,14 +436,13 @@ def test_compute_associations_with_three_rows(evaluator: ContinuousCombinationEv
         },
     ]
     for res, exp in zip(result, expected):
-        assert "xagg" not in res
         assert res["combination"] == exp["combination"]
         assert res["index_to_groupby"] == exp["index_to_groupby"]
         assert res["kruskal"] == exp["kruskal"]
 
 
 def test_compute_associations_with_ten_labels(evaluator: ContinuousCombinationEvaluator):
-    """Sorted top-1 of streaming output across 84 combinations."""
+    """Sorted top-1 across 84 combinations."""
     feature = OrdinalFeature("feature", [chr(i) for i in range(65, 75)])  # A to J
     xagg = pd.Series(
         {
@@ -497,12 +462,7 @@ def test_compute_associations_with_ten_labels(evaluator: ContinuousCombinationEv
 
     combinations = consecutive_combinations(feature.labels, 4)
 
-    grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
-    result = sorted(
-        evaluator._compute_associations(grouped_xaggs),
-        key=lambda a: a["kruskal"] if a["kruskal"] is not None else -float("inf"),
-        reverse=True,
-    )
+    result = _sorted_assocs(evaluator, combinations)
 
     expected = {
         "combination": [["A"], ["B", "C", "D", "E"], ["F", "G"], ["H", "I", "J"]],
@@ -521,7 +481,6 @@ def test_compute_associations_with_ten_labels(evaluator: ContinuousCombinationEv
         "kruskal": 20.728840695728103,
     }
     res = result[0]
-    assert "xagg" not in res
     assert res["combination"] == expected["combination"]
     assert res["index_to_groupby"] == expected["index_to_groupby"]
     assert res["kruskal"] == expected["kruskal"]
@@ -538,12 +497,7 @@ def test_viability_train(evaluator: ContinuousCombinationEvaluator):
     evaluator.samples.train = AggregatedSample(xagg)
     evaluator.min_freq = MIN_FREQ
 
-    grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
-    associations = sorted(
-        evaluator._compute_associations(grouped_xaggs),
-        key=lambda a: a["kruskal"] if a["kruskal"] is not None and a["kruskal"] == a["kruskal"] else -float("inf"),
-        reverse=True,
-    )
+    associations = _sorted_assocs(evaluator, combinations)
     result = []
     for combination in associations:
         result += [evaluator._test_viability_train(combination)]
@@ -581,12 +535,7 @@ def test_viability_dev(evaluator: ContinuousCombinationEvaluator):
     evaluator.samples.train = AggregatedSample(xagg)
     evaluator.min_freq = MIN_FREQ
 
-    grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
-    associations = sorted(
-        evaluator._compute_associations(grouped_xaggs),
-        key=lambda a: a["kruskal"] if a["kruskal"] is not None and a["kruskal"] == a["kruskal"] else -float("inf"),
-        reverse=True,
-    )
+    associations = _sorted_assocs(evaluator, combinations)
 
     # test with no xagg_dev
     for combination in associations:
@@ -671,12 +620,7 @@ def test_get_viable_combination_without_dev(evaluator: ContinuousCombinationEval
 
     evaluator.samples.train = AggregatedSample(xagg)
 
-    grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
-    associations = sorted(
-        evaluator._compute_associations(grouped_xaggs),
-        key=lambda a: a["kruskal"] if a["kruskal"] is not None and a["kruskal"] == a["kruskal"] else -float("inf"),
-        reverse=True,
-    )
+    associations = _sorted_assocs(evaluator, combinations)
 
     # test with no xagg_dev
     result = evaluator._get_viable_combination(associations)
@@ -707,12 +651,7 @@ def test_get_viable_combination_with_non_viable_train(evaluator: ContinuousCombi
 
     combinations = consecutive_combinations(feature.labels, 2)
 
-    grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
-    associations = sorted(
-        evaluator._compute_associations(grouped_xaggs),
-        key=lambda a: a["kruskal"] if a["kruskal"] is not None and a["kruskal"] == a["kruskal"] else -float("inf"),
-        reverse=True,
-    )
+    associations = _sorted_assocs(evaluator, combinations)
 
     evaluator.min_freq = 0.6
     result = evaluator._get_viable_combination(associations)
@@ -731,12 +670,7 @@ def test_get_viable_combination_with_viable_train(evaluator: ContinuousCombinati
 
     combinations = consecutive_combinations(feature.labels, 2)
 
-    grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
-    associations = sorted(
-        evaluator._compute_associations(grouped_xaggs),
-        key=lambda a: a["kruskal"] if a["kruskal"] is not None and a["kruskal"] == a["kruskal"] else -float("inf"),
-        reverse=True,
-    )
+    associations = _sorted_assocs(evaluator, combinations)
 
     # test with xagg_dev same as train
     evaluator.samples.dev = AggregatedSample(xagg)
@@ -764,12 +698,7 @@ def test_get_viable_combination_with_not_viable_dev(evaluator: ContinuousCombina
 
     combinations = consecutive_combinations(feature.labels, 2)
 
-    grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
-    associations = sorted(
-        evaluator._compute_associations(grouped_xaggs),
-        key=lambda a: a["kruskal"] if a["kruskal"] is not None and a["kruskal"] == a["kruskal"] else -float("inf"),
-        reverse=True,
-    )
+    associations = _sorted_assocs(evaluator, combinations)
 
     # test with xagg_dev wrong
     evaluator.samples.dev = AggregatedSample(pd.Series({"a": [0, 2, 1000], "b": [2, 1], "c": [2, 0]}))
@@ -790,12 +719,7 @@ def test_apply_best_combination_with_viable(evaluator: ContinuousCombinationEval
 
     combinations = consecutive_combinations(feature.labels, 2)
 
-    grouped_xaggs = evaluator._group_xagg_by_combinations(combinations)
-    associations = sorted(
-        evaluator._compute_associations(grouped_xaggs),
-        key=lambda a: a["kruskal"] if a["kruskal"] is not None and a["kruskal"] == a["kruskal"] else -float("inf"),
-        reverse=True,
-    )
+    associations = _sorted_assocs(evaluator, combinations)
 
     # test with xagg_dev same as train
     evaluator.samples.dev = AggregatedSample(xagg)
@@ -850,6 +774,7 @@ def test_best_association_with_combinations_viable(evaluator: ContinuousCombinat
 
     combinations = consecutive_combinations(feature.labels, 2)
 
+    _init_modality_stats(evaluator)
     result = evaluator._get_best_association(combinations)
     print(result)
 
@@ -885,6 +810,7 @@ def test_best_association_with_combinations_non_viable(evaluator: ContinuousComb
 
     combinations = consecutive_combinations(feature.labels, 2)
 
+    _init_modality_stats(evaluator)
     result = evaluator._get_best_association(combinations)
     print(result)
 
@@ -913,6 +839,7 @@ def test_best_association_with_nan_combinations_viable(evaluator: ContinuousComb
 
     combinations = nan_combinations(feature, 2)
 
+    _init_modality_stats(evaluator)
     result = evaluator._get_best_association(combinations)
     print(result)
 
@@ -1091,6 +1018,10 @@ def test_get_best_combination_with_nan_viable_with_nan_without_combi(
     evaluator.samples.train = AggregatedSample(xagg)
     evaluator.samples.dev = AggregatedSample(xagg)
     evaluator.dropna = False
+    # dropna=False takes the base-class fallback path (not the continuous DP override,
+    # which refreshes this cache itself), so the fast-path cache needs seeding here —
+    # exactly what `_get_best_combination_non_nan` would have done first in production.
+    _init_modality_stats(evaluator)
     result = evaluator._get_best_combination_with_nan(None)
     assert result is not None
     assert result["combination"] == [["a", "b", "c"], [feature.nan]]

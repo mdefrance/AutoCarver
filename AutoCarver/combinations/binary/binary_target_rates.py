@@ -1,7 +1,6 @@
 """set of target rates for binary classification"""
 
 from abc import ABC
-from typing import overload
 
 import numpy as np
 import pandas as pd
@@ -13,37 +12,6 @@ class BinaryTargetRate(TargetRate[pd.DataFrame], ABC):
     """Binary target rate class."""
 
     __name__ = "binary_target_rate"
-
-    @overload
-    def compute(self, xagg: pd.Series | pd.DataFrame) -> pd.DataFrame: ...
-    @overload
-    def compute(self, xagg: None) -> None: ...
-    def compute(self, xagg: pd.Series | pd.DataFrame | None) -> pd.DataFrame | None:
-        """Computes the target rate.
-
-        Parameters
-        ----------
-        xagg : pd.DataFrame
-            A crosstab.
-
-        Returns
-        -------
-        Series
-            Target rate.
-        """
-        # checking for an xtab
-        if xagg is not None:
-            # count + frequency per modality (count carried for CI-based viability tests)
-            count = xagg.sum(axis=1)
-            frequency = count / count.sum()
-
-            # computing target rate. `_compute` expects pd.DataFrame (Generic
-            # XAgg=DataFrame); compute()'s wide signature is for LSP matching,
-            # callers always pass a crosstab here.
-            return pd.DataFrame(
-                {self.__name__: self._compute(xagg), "frequency": frequency, "count": count}  # type: ignore
-            )
-        return None
 
 
 class TargetMean(BinaryTargetRate):

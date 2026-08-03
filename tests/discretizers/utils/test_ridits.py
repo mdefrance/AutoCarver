@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from pytest import raises
 
-from AutoCarver.discretizers.utils.ridits import ridit_scores_for_levels, ridits_from_counts
+from AutoCarver.stats.ridits import ridit_scores_for_levels, ridits_from_counts
 
 
 def test_ridits_uniform_marginal():

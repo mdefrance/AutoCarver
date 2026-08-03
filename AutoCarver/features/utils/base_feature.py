@@ -1,7 +1,8 @@
 """Base class for all features."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Self
+from collections.abc import Iterable
+from typing import Any, Self, TypeVar
 
 import pandas as pd
 
@@ -655,3 +656,11 @@ def _aggregate_stats_rows(rows: pd.DataFrame) -> dict:
             # also need the between-bin spread, which the stored rows don't carry.
             aggregated[col] = float((values * weights).sum() / weights.sum())
     return aggregated
+
+
+TFeature = TypeVar("TFeature", bound=BaseFeature)
+
+
+def features_of_type(features: Iterable[BaseFeature], kind: type[TFeature]) -> list[TFeature]:
+    """Features of ``features`` that are instances of ``kind`` (order preserved)."""
+    return [feature for feature in features if isinstance(feature, kind)]

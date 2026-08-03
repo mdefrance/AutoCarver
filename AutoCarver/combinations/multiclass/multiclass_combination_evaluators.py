@@ -1,6 +1,5 @@
 """Module for multiclass combination evaluators."""
 
-import math
 from abc import ABC
 
 import numpy as np
@@ -9,8 +8,17 @@ import pandas as pd
 from AutoCarver.combinations.multiclass.multiclass_target_rates import CAScoreRate, MulticlassTargetRate
 from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample, CombinationEvaluator
 from AutoCarver.combinations.utils.combinations import combination_formatter, group_crosstab
+from AutoCarver.combinations.utils.dp import (
+    compact_empty_modalities,
+    dp_inputs_from_xagg,
+    sort_key,
+    splits_to_combination,
+    top_k_partitions,
+)
 from AutoCarver.combinations.utils.target_rate import TargetRate
 from AutoCarver.features import GroupedList
+from AutoCarver.stats.chi2 import cramerv_tschuprowt as _cramerv_tschuprowt
+from AutoCarver.stats.chi2 import pearson_chi2 as _chi2_pearson
 
 
 class MulticlassCombinationEvaluator(CombinationEvaluator[pd.DataFrame], ABC):
@@ -121,7 +129,7 @@ class MulticlassCombinationEvaluator(CombinationEvaluator[pd.DataFrame], ABC):
 
         raw_index = list(raw_labels)
         # samples.train.xagg is a crosstab DataFrame for multiclass evaluators
-        M, n_per_mod, col_sums = _dp_inputs_from_xagg(self.samples.train.xagg, raw_index)  # type: ignore
+        M, n_per_mod, col_sums = dp_inputs_from_xagg(self.samples.train.xagg, raw_index)  # type: ignore
 
         # Progressive top-K with ×4 growth (shared driver), mirroring binary/ordinal.
         viable = self._search_escalating(
@@ -168,89 +176,8 @@ class CramervMulticlassCombinations(MulticlassCombinationEvaluator):
 # ---------------------------------------------------------------------------
 # Closed-form chi^2 helpers (K-column contingency tables)
 # ---------------------------------------------------------------------------
-
-
-def _chi2_pearson(obs: np.ndarray) -> float:
-    """Pearson :math:`\\chi^2` for a ``(B, K)`` observed contingency table.
-
-    Replicates :func:`scipy.stats.chi2_contingency` defaults: expected
-    frequencies via the outer product of marginals divided by N, with Yates
-    correction iff the table is exactly 2x2 (matches scipy's own threshold).
-    Structurally identical to
-    :func:`AutoCarver.combinations.binary.binary_combination_evaluators._chi2_pearson_2col`,
-    which is already shape-agnostic beyond that single check; kept as its own
-    copy here so the multiclass family doesn't reach into binary's private
-    helpers.
-    """
-    R = obs.sum(axis=1)
-    C = obs.sum(axis=0)
-    N = float(obs.sum())
-    expected = np.outer(R, C) / N
-
-    if obs.shape == (2, 2):
-        diff = expected - obs
-        direction = np.sign(diff)
-        magnitude = np.minimum(0.5, np.abs(diff))
-        obs = obs + magnitude * direction
-
-    return float(((obs - expected) ** 2 / expected).sum())
-
-
-def _cramerv_tschuprowt(chi2: float, n_obs: float, n_groups: int, n_classes: int, tol: float) -> tuple[float, float]:
-    """Cramér's V and Tschuprow's T from a chi² computed on an ``(n_groups, n_classes)`` table.
-
-    ``V = sqrt(chi2 / (N * (min(B,K)-1)))``; ``T = sqrt(chi2 / (N *
-    sqrt((B-1)(K-1))))``. Both are ``NaN`` when their denominator vanishes
-    (mirrors the binary/ordinal ``None``-on-degenerate convention).
-
-    For ``n_classes == 2``, ``T`` is instead derived from the (already
-    rounded) ``V`` via ``V / (B-1)**0.25`` — the exact expression
-    :func:`AutoCarver.combinations.binary.binary_combination_evaluators._chi2_assoc_for_combination`
-    uses. Both formulas are mathematically identical at ``K=2``, but only
-    computing it this way guarantees the two evaluators agree bit-for-bit
-    (independent ``sqrt``/``pow`` call sequences are not guaranteed to round
-    identically) — pinned by the K=2 parity test.
-    """
-    v_denom = min(n_groups, n_classes) - 1
-    if v_denom > 0 and n_obs > 0:
-        cramerv = math.sqrt(chi2 / (n_obs * v_denom))
-        cramerv = round(cramerv / tol) * tol
-    else:
-        cramerv = float("nan")
-
-    if n_classes == 2:
-        if n_groups > 1:
-            tschuprowt = cramerv / math.sqrt(math.sqrt(n_groups - 1))
-            if pd.notna(tschuprowt):
-                tschuprowt = round(tschuprowt / tol) * tol
-        else:
-            tschuprowt = cramerv
-    else:
-        t_denom = math.sqrt((n_groups - 1) * (n_classes - 1)) if n_groups > 1 else 0.0
-        if t_denom > 0 and n_obs > 0:
-            tschuprowt = math.sqrt(chi2 / (n_obs * t_denom))
-            tschuprowt = round(tschuprowt / tol) * tol
-        else:
-            tschuprowt = float("nan")
-
-    return cramerv, tschuprowt
-
-
-def _dp_inputs_from_xagg(raw_xagg: pd.DataFrame, raw_index: list) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Aligns a raw crosstab to ``raw_index`` for the DP.
-
-    Returns ``(M, n_per_mod, col_sums)`` where ``M`` is the ``(len(raw_index), K)``
-    per-modality column-count matrix (rows absent from ``raw_xagg`` are zero),
-    ``n_per_mod`` the row totals and ``col_sums`` the target marginal.
-    """
-    position = {label: i for i, label in enumerate(raw_xagg.index)}
-    values = np.asarray(raw_xagg.values, dtype=float)
-    M = np.zeros((len(raw_index), values.shape[1]))
-    for row, label in enumerate(raw_index):
-        source = position.get(label)
-        if source is not None:
-            M[row] = values[source]
-    return M, M.sum(axis=1), M.sum(axis=0)
+# _chi2_pearson and _cramerv_tschuprowt are shared with the binary family via
+# AutoCarver.stats.chi2 (imported above).
 
 
 def _top_k_partitions_chi2_dp_multiclass(  # noqa: C901
@@ -285,17 +212,15 @@ def _top_k_partitions_chi2_dp_multiclass(  # noqa: C901
     if sort_by not in ("cramerv", "tschuprowt"):
         raise ValueError(f"sort_by must be 'cramerv' or 'tschuprowt', got {sort_by!r}")
 
-    n_mod = len(raw_index)
     n_classes = M.shape[1]
     total_n = float(n_per_mod.sum())
 
-    keep = np.flatnonzero(n_per_mod > 0)
+    keep, kept_M, _ = compact_empty_modalities(M, n_per_mod)
     n_kept = len(keep)
     cap = min(max_n_mod, n_kept)
     if cap < 2 or total_n < 2:
         return []
 
-    kept_M = M[keep]
     col_totals = col_sums.astype(np.float64)
     prefix = np.concatenate([np.zeros((1, n_classes)), np.cumsum(kept_M, axis=0)], axis=0)
 
@@ -316,39 +241,23 @@ def _top_k_partitions_chi2_dp_multiclass(  # noqa: C901
                 obs = obs + shift
             return float(((obs - E) ** 2 / E).sum())
 
-        # dp[g][j]: up to ``top_k`` (chi2_partial, splits) with the LARGEST
-        # chi2_partial, where splits = (0, s_1, ..., s_{g-1}, j).
-        dp: list[list[list[tuple[float, tuple[int, ...]]]]] = [
-            [[] for _ in range(n_kept + 1)] for _ in range(k_groups + 1)
-        ]
-        for j in range(1, n_kept + 1):
-            dp[1][j] = [(seg_cost(0, j), (0, j))]
-        for g in range(2, k_groups + 1):
-            for j in range(g, n_kept + 1):
-                candidates: list[tuple[float, tuple[int, ...]]] = []
-                for i in range(g - 1, j):
-                    c = seg_cost(i, j)
-                    for prev_s, prev_splits in dp[g - 1][i]:
-                        candidates.append((prev_s + c, prev_splits + (j,)))
-                if candidates:
-                    candidates.sort(key=lambda x: x[0], reverse=True)
-                    dp[g][j] = candidates[:top_k]
+        # Only the final row (k == k_groups) is used: rebuilding the DP per k_groups
+        # is required because C/N/yates depend on k_groups (see docstring).
+        entries = top_k_partitions(n_mod=n_kept, cap=k_groups, seg_cost=seg_cost, top_k=top_k, maximize=True)
 
-        for chi2, splits in dp[k_groups][n_kept]:
+        for k, chi2, splits in entries:
+            if k != k_groups:
+                continue
             cramerv, tschuprowt = _cramerv_tschuprowt(chi2, total_n, k_groups, n_classes, tol)
             sort_val = tschuprowt if sort_by == "tschuprowt" else cramerv
-            all_entries.append((_sort_key(sort_val), cramerv, tschuprowt, splits))
+            all_entries.append((sort_key(sort_val), cramerv, tschuprowt, splits))
 
     all_entries.sort(key=lambda e: e[0], reverse=True)
     all_entries = all_entries[:top_k]
 
     out: list[dict] = []
     for _, cv, tt, splits in all_entries:
-        # map compacted cut points back to raw_index: each cut sits just before the first
-        # kept modality of the next group, so empty modalities attach to the preceding group
-        # (leading empties join the first group, trailing empties the last).
-        bounds = [0, *(int(keep[s]) for s in splits[1:-1]), n_mod]
-        combination = [list(raw_index[bounds[g] : bounds[g + 1]]) for g in range(len(bounds) - 1)]
+        combination = splits_to_combination(splits, raw_index, keep=keep)
         out.append(
             {
                 "combination": combination,
@@ -358,10 +267,3 @@ def _top_k_partitions_chi2_dp_multiclass(  # noqa: C901
             }
         )
     return out
-
-
-def _sort_key(value: float | None) -> float:
-    """Sort key putting ``None`` / ``NaN`` metrics last (descending sort)."""
-    if value is None or (isinstance(value, float) and math.isnan(value)):
-        return float("-inf")
-    return float(value)

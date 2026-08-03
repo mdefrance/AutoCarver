@@ -1,8 +1,9 @@
 """Tools to select the best Quantitative and Qualitative features.
 
 The selector mirrors the :class:`BaseDiscretizer` / :class:`BaseCarver` shape: a
-sklearn estimator built from a :class:`Features` set, a per-type budget and a
-pluggable set of ``measures`` / ``filters`` (the swappable *decision boundary*).
+sklearn estimator built from a :class:`Features` set, a total ``n_best_features``
+budget and a :class:`SelectionConfig` carrying per-type ``measures`` / ``filters``
+(the swappable *decision boundary*).
 Inspect the per-feature measure/filter values through the
 :attr:`BaseSelector.summary` property, as on :class:`BaseCarver`.
 
@@ -14,8 +15,10 @@ chunk sampling.
 """
 
 from abc import ABC
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
+from dataclasses import dataclass
 from typing import Self, TypeVar
+from warnings import warn
 
 import numpy as np
 import pandas as pd
@@ -26,6 +29,31 @@ from AutoCarver.features import BaseFeature, Features, get_versions
 from AutoCarver.selectors.filters import BaseFilter, NonDefaultValidFilter, ValidFilter
 from AutoCarver.selectors.measures import BaseMeasure, ModeMeasure, NanMeasure
 from AutoCarver.selectors.utils.pretty_print import format_ranked_features
+
+
+@dataclass
+class SelectionConfig:
+    """Behavioral configuration applied to a :class:`BaseSelector`.
+
+    Measures and filters are declared **per feature type** so the routing is
+    explicit: a qualitative-only measure can no longer silently leave the
+    quantitative features unranked.
+
+    Each list defaults to ``None`` meaning *use the selector's task-appropriate
+    default for that type*. Pass an explicit list to override it. The default
+    gate measures (:class:`NanMeasure`, :class:`ModeMeasure`) and validity
+    filters (:class:`ValidFilter`, :class:`NonDefaultValidFilter`) are always
+    added if missing — include your own instance to change their threshold.
+
+    ``verbose`` prints the per-type selection counts at the end of
+    :meth:`BaseSelector.fit`.
+    """
+
+    qualitative_measures: list[BaseMeasure] | None = None
+    quantitative_measures: list[BaseMeasure] | None = None
+    qualitative_filters: list[BaseFilter] | None = None
+    quantitative_filters: list[BaseFilter] | None = None
+    verbose: bool = False
 
 
 class BaseSelector(BaseEstimator, TransformerMixin, ABC):
@@ -48,10 +76,9 @@ class BaseSelector(BaseEstimator, TransformerMixin, ABC):
     def __init__(
         self,
         features: Features | list[BaseFeature],
-        n_best_per_type: int,
+        n_best_features: int | None = None,
         *,
-        measures: list[BaseMeasure] | None = None,
-        filters: list[BaseFilter] | None = None,
+        config: SelectionConfig | None = None,
     ) -> None:
         """
         Parameters
@@ -59,29 +86,35 @@ class BaseSelector(BaseEstimator, TransformerMixin, ABC):
         features : Features
             A set of :class:`Features` to select from.
 
-        n_best_per_type : int
-            Number of quantitative and/or qualitative :class:`Features` to select.
+        n_best_features : int, optional
+            Total number of :class:`Features` to select, split across feature
+            types proportionally to how many of each were passed (see
+            :func:`split_budget`). ``None`` (the default) applies no cap: every
+            feature passing the default gates is kept.
 
-        measures : list[BaseMeasure], optional
-            Association measures (the swappable decision boundary). Defaults to a
-            task-appropriate set provided by the subclass. ``NanMeasure`` and
-            ``ModeMeasure`` are always added if missing.
-
-        filters : list[BaseFilter], optional
-            Redundancy filters. Defaults to the task-appropriate set; the
-            validity filters are always added if missing.
+        config : SelectionConfig, optional
+            Per-type measures/filters and ``verbose``. Defaults to the
+            task-appropriate measures/filters provided by the subclass.
         """
         # features
         self.features: Features = features if isinstance(features, Features) else Features.from_list(features)
 
-        # number of features selected per type
-        self.n_best_per_type = n_best_per_type
-        if not 0 < int(self.n_best_per_type) <= len(self.features):
-            raise ValueError("Must set 0 < n_best_per_type <= len(features)")
+        # total number of features to select, split across types at fit time
+        self.n_best_features = n_best_features
+        if n_best_features is not None and int(n_best_features) <= 0:
+            raise ValueError(f"[{self}] n_best_features must be > 0, or None for no selection")
 
-        # measures and filters (with task defaults + validity/outlier defaults)
-        self.measures = self._initiate_measures(measures)
-        self.filters = self._initiate_filters(filters)
+        self.config = config if config is not None else SelectionConfig()
+
+        # per-type measures/filters, keyed like get_typed_features
+        self.measures: dict[str, list[BaseMeasure]] = {
+            "qualitatives": self._resolve_measures(self.config.qualitative_measures, "qualitatives"),
+            "quantitatives": self._resolve_measures(self.config.quantitative_measures, "quantitatives"),
+        }
+        self.filters: dict[str, list[BaseFilter]] = {
+            "qualitatives": self._resolve_filters(self.config.qualitative_filters, "qualitatives"),
+            "quantitatives": self._resolve_filters(self.config.quantitative_filters, "quantitatives"),
+        }
 
         # fit state
         self.is_fitted = False
@@ -100,15 +133,24 @@ class BaseSelector(BaseEstimator, TransformerMixin, ABC):
 
     @property
     def summary(self) -> pd.DataFrame:
-        """Per-feature association table: every scored feature with its measures,
-        filter values and rank, ranked best-first (available after :meth:`fit`).
+        """Per-feature association table, ranked best-first (available after :meth:`fit`).
+
+        One row per feature (per ranking measure when several apply to a type). The
+        ranking measure and redundancy filter are *named* in the ``measure`` /
+        ``filter`` columns so qualitative and quantitative features share the
+        ``association`` and ``redundancy`` columns instead of producing a ragged frame.
 
         Mirrors :attr:`BaseCarver.summary`: display it (e.g. in a notebook or by
         printing) to inspect the measure/filter values that drove the selection.
         """
         if not self._summaries:
             return pd.DataFrame()
-        return pd.concat(self._summaries, ignore_index=True)
+
+        frame = pd.concat(self._summaries, ignore_index=True)
+        if self.is_fitted:
+            selected = {feature.version for feature in self._selected}
+            frame["selected"] = [feature.version in selected for feature in frame["feature"]]
+        return frame
 
     # ------------------------------------------------------------------
     # measure / filter initiation
@@ -124,27 +166,84 @@ class BaseSelector(BaseEstimator, TransformerMixin, ABC):
 
         return [TschuprowtFilter(), SpearmanFilter()]
 
-    def _initiate_measures(self, requested_measures: list[BaseMeasure] | None = None) -> list[BaseMeasure]:
-        """Builds the measure list: task defaults, mandatory outlier defaults, orientation."""
-        measures = list(requested_measures) if requested_measures is not None else self._default_measures()
+    def _kind_getter(self, kind: str) -> Callable[[list], list]:
+        """Metric predicate for a feature-type key ('qualitatives'/'quantitatives')."""
+        return get_qualitative_metrics if kind == "qualitatives" else get_quantitative_metrics
 
-        # always include the default outlier measures (Mode then Nan, prepended)
+    def _other_kind(self, kind: str) -> str:
+        """Name of the other per-type slot, for error messages."""
+        return "quantitative" if kind == "qualitatives" else "qualitative"
+
+    def _type_default_measures(self, kind: str) -> list[BaseMeasure]:
+        """Task-default ranking measures that apply to ``kind`` (fresh instances)."""
+        oriented = self._orient_measures(self._default_measures())
+        return remove_default_metrics(self._kind_getter(kind)(oriented))
+
+    def _type_default_filters(self, kind: str) -> list[BaseFilter]:
+        """Task-default redundancy filters that apply to ``kind`` (fresh instances)."""
+        return remove_default_metrics(self._kind_getter(kind)(self._default_filters()))
+
+    def _resolve_measures(self, requested: list[BaseMeasure] | None, kind: str) -> list[BaseMeasure]:
+        """Builds the measure list for one feature type: gates then ranking measures."""
+        gates: list[BaseMeasure] = []
+        if requested is None:
+            ranking = self._type_default_measures(kind)
+        else:
+            oriented = self._orient_measures(list(requested))
+            gates = get_default_metrics(oriented)
+            ranking = remove_default_metrics(oriented)
+
+            # a non-default measure placed in the wrong per-type slot is a hard error
+            applicable = self._kind_getter(kind)(ranking)
+            mismatched = [measure for measure in ranking if measure not in applicable]
+            if mismatched:
+                raise ValueError(
+                    f"[{self}] {mismatched[0]} does not apply to {kind[:-1]} features; "
+                    f"move it to `{self._other_kind(kind)}_measures`"
+                )
+
+            # without a ranking measure nothing would be selected: fall back to the default
+            if not ranking:
+                ranking = self._type_default_measures(kind)
+                if ranking:
+                    warn(
+                        f"[{self}] no ranking measure applies to {kind[:-1]} features -- "
+                        f"falling back to {ranking[0]}().",
+                        UserWarning,
+                        stacklevel=3,
+                    )
+
+        # the gate measures are mandatory; a user-supplied instance wins (its threshold)
         for default in (ModeMeasure(), NanMeasure()):
-            if all(measure.__name__ != default.__name__ for measure in measures):
-                measures = [default] + measures
+            if all(gate.__name__ != default.__name__ for gate in gates):
+                gates = [default] + gates
 
-        return self._orient_measures(measures)
+        return gates + ranking
 
-    def _initiate_filters(self, requested_filters: list[BaseFilter] | None = None) -> list[BaseFilter]:
-        """Builds the filter list, always including the validity filters."""
-        filters = list(requested_filters) if requested_filters is not None else self._default_filters()
+    def _resolve_filters(self, requested: list[BaseFilter] | None, kind: str) -> list[BaseFilter]:
+        """Builds the filter list for one feature type: gates then redundancy filters."""
+        gates: list[BaseFilter] = []
+        if requested is None:
+            redundancy = self._type_default_filters(kind)
+        else:
+            gates = get_default_metrics(requested)
+            redundancy = remove_default_metrics(requested)
+
+            applicable = self._kind_getter(kind)(redundancy)
+            mismatched = [filter_ for filter_ in redundancy if filter_ not in applicable]
+            if mismatched:
+                raise ValueError(
+                    f"[{self}] {mismatched[0]} does not apply to {kind[:-1]} features; "
+                    f"move it to `{self._other_kind(kind)}_filters`"
+                )
+            # no fallback here: running without a redundancy filter is a valid choice
 
         # always include the validity filters (Valid then NonDefaultValid, prepended)
         for default in (ValidFilter(), NonDefaultValidFilter()):
-            if all(filter_.__name__ != default.__name__ for filter_ in filters):
-                filters = [default] + filters
+            if all(gate.__name__ != default.__name__ for gate in gates):
+                gates = [default] + gates
 
-        return filters
+        return gates + redundancy
 
     def _orient_measures(self, measures: list[BaseMeasure]) -> list[BaseMeasure]:
         """Reverses reversible measures so each handles the right feature type for the target.
@@ -190,13 +289,18 @@ class BaseSelector(BaseEstimator, TransformerMixin, ABC):
         self._summaries = []
         self._initiate_features_measures(self.features, remove_default=True)
 
-        # splitting features by type and selecting the best of each
+        # splitting features by type and apportioning the total budget across them
         typed = get_typed_features(self.features)
-        best_features = self._select_quantitatives(typed["quantitatives"], X, y)
-        best_features += self._select_qualitatives(typed["qualitatives"], X, y)
+        budget = split_budget(self.n_best_features, {kind: len(feats) for kind, feats in typed.items()})
+
+        best_features = self._select_kind("quantitatives", typed, X, y, budget)
+        best_features += self._select_kind("qualitatives", typed, X, y, budget)
 
         self._selected = best_features
         self.is_fitted = True
+
+        if self.config.verbose:
+            self._print_report(typed)
         return self
 
     @property
@@ -215,25 +319,27 @@ class BaseSelector(BaseEstimator, TransformerMixin, ABC):
     # selection internals
     # ------------------------------------------------------------------
 
-    def _select_quantitatives(
-        self, quantitatives: list[BaseFeature], X: pd.DataFrame, y: pd.Series
+    def _select_kind(
+        self,
+        kind: str,
+        typed: dict[str, list[BaseFeature]],
+        X: pd.DataFrame,
+        y: pd.Series,
+        budget: dict[str, int],
     ) -> list[BaseFeature]:
-        """Selects the best quantitative features"""
-        best_quantitatives: list[BaseFeature] = []
-        if len(quantitatives) > 0:
-            measures = get_quantitative_metrics(self.measures)
-            filters = get_quantitative_metrics(self.filters)
-            best_quantitatives = self._select_features(quantitatives, X, y, measures, filters)
-        return best_quantitatives
+        """Selects the best features of one type, within its share of the budget."""
+        features = typed[kind]
+        if len(features) == 0:
+            return []
+        return self._select_features(features, X, y, self.measures[kind], self.filters[kind], budget[kind])
 
-    def _select_qualitatives(self, qualitatives: list[BaseFeature], X: pd.DataFrame, y: pd.Series) -> list[BaseFeature]:
-        """Selects the best qualitative features"""
-        best_qualitatives: list[BaseFeature] = []
-        if len(qualitatives) > 0:
-            measures = get_qualitative_metrics(self.measures)
-            filters = get_qualitative_metrics(self.filters)
-            best_qualitatives = self._select_features(qualitatives, X, y, measures, filters)
-        return best_qualitatives
+    def _print_report(self, typed: dict[str, list[BaseFeature]]) -> None:
+        """Prints per-type selection counts (``config.verbose``)."""
+        selected = {feature.version for feature in self._selected}
+        for kind, features in typed.items():
+            if len(features) > 0:
+                kept = sum(feature.version in selected for feature in features)
+                print(f"[{self}] selected {kept}/{len(features)} {kind[:-1]} feature(s)")
 
     def _initiate_features_measures(self, features: Iterable[BaseFeature], remove_default: bool = True) -> None:
         """Resets per-feature measures/filters before/within selection."""
@@ -251,6 +357,7 @@ class BaseSelector(BaseEstimator, TransformerMixin, ABC):
         y: pd.Series,
         measures: list[BaseMeasure],
         filters: list[BaseFilter],
+        n_best: int,
     ) -> list[BaseFeature]:
         """Applies default gates, then exhaustively ranks/filters every feature."""
 
@@ -265,11 +372,12 @@ class BaseSelector(BaseEstimator, TransformerMixin, ABC):
         # keeping only default metrics on features before final ranking
         self._initiate_features_measures(features, remove_default=False)
 
-        # exhaustively selecting the best features
-        best_features = get_best_features(features, X, y, measures, filters, self.n_best_per_type)
+        # exhaustively selecting the best features; get_best_features returns the union of
+        # each measure's top-n_best, so it is truncated back to this type's budget
+        best_features = get_best_features(features, X, y, measures, filters, n_best)[:n_best]
 
         # storing the per-feature association table for the `summary` property
-        formatted_measures = format_ranked_features(features)
+        formatted_measures = format_ranked_features(features, measures, filters)
         if not formatted_measures.empty:
             self._summaries.append(formatted_measures)
 
@@ -282,6 +390,25 @@ def get_typed_features(features: Features) -> dict[str, list[BaseFeature]]:
         "quantitatives": [feature for feature in features if is_quantitative(feature)],
         "qualitatives": [feature for feature in features if is_qualitative(feature)],
     }
+
+
+def split_budget(n_best: int | None, counts: dict[str, int]) -> dict[str, int]:
+    """Splits a total selection budget across feature types, proportionally.
+
+    Largest-remainder apportionment: each type gets ``n_best * count / total``
+    rounded down, and the leftover seats go to the largest fractional parts.
+    ``None`` (or a budget larger than the feature count) means no cap.
+    """
+    total = sum(counts.values())
+    if n_best is None or total == 0 or n_best >= total:
+        return dict(counts)
+
+    exact = {kind: n_best * count / total for kind, count in counts.items()}
+    budget = {kind: int(value) for kind, value in exact.items()}
+    leftover = n_best - sum(budget.values())
+    for kind in sorted(exact, key=lambda kind: exact[kind] - budget[kind], reverse=True)[:leftover]:
+        budget[kind] += 1
+    return budget
 
 
 def is_quantitative(feature: BaseFeature) -> bool:

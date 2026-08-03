@@ -10,9 +10,9 @@ import pandas as pd
 from AutoCarver.discretizers.qualitatives import OrdinalDiscretizer
 from AutoCarver.discretizers.quantitatives.continuous_discretizer import ContinuousDiscretizer
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, ProcessingConfig, Sample
-from AutoCarver.discretizers.utils.frequency_ci import is_significantly_below
 from AutoCarver.discretizers.utils.type_discretizers import ensure_datetime_dtypes
 from AutoCarver.features import Features, QuantitativeFeature
+from AutoCarver.stats.frequency_ci import is_significantly_below
 from AutoCarver.utils import extend_docstring
 
 
@@ -96,14 +96,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
 
         # rare quantiles can exist because of overrepresented values (more frequent than min_freq)
         has_rare = check_frequencies(X, self.features, self.min_freq, self.config.min_freq_alpha)
-
-        if len(has_rare) > 0:
-            ordinal_discretizer = OrdinalDiscretizer(
-                ordinals=has_rare,
-                min_freq=self.min_freq,
-                config=replace(self.config, copy=False),
-            )
-            ordinal_discretizer.fit(X, y)
+        self._fit_sub_discretizer(OrdinalDiscretizer, has_rare, X, y)
 
 
 def check_frequencies(x: pd.DataFrame, features: Features, min_freq: float, alpha: float) -> list[QuantitativeFeature]:

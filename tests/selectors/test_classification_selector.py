@@ -1,126 +1,147 @@
 """Set of tests for ClassificationSelector module."""
 
-from pytest import raises
+import numpy as np
+import pandas as pd
+from pytest import fixture, raises, warns
 
 from AutoCarver.features import Features
-from AutoCarver.selectors import ClassificationSelector
-from AutoCarver.selectors.filters import BaseFilter, NonDefaultValidFilter, ValidFilter
-from AutoCarver.selectors.measures import BaseMeasure, ModeMeasure, NanMeasure, OutlierMeasure
-from AutoCarver.selectors.utils.base_selector import get_default_metrics, remove_default_metrics
+from AutoCarver.selectors import ClassificationSelector, SelectionConfig
+from AutoCarver.selectors.filters import CramervFilter, SpearmanFilter
+from AutoCarver.selectors.measures import (
+    KruskalEtaSquaredMeasure,
+    NanMeasure,
+    SpearmanMeasure,
+    TschuprowtMeasure,
+)
+from AutoCarver.selectors.utils.base_selector import remove_default_metrics
+
+# NB: ``__name__`` is overridden per class, but reading it off the *class* hits the
+# metaclass descriptor ("NanMeasure") instead of the override ("Nan") — only instances
+# carry the real metric name, so these are spelled out as literals.
+GATES = {"Nan", "Mode"}
 
 
-def test_classification_selector_initiate_default(features_object: Features) -> None:
-    """tests initiation of default measures and filters"""
-    # checking for default measures
-    n_best = 2
-    selector = ClassificationSelector(
-        n_best_per_type=n_best,
-        features=features_object,
+def names(metrics: list) -> set[str]:
+    """metric names of a per-type slot"""
+    return {metric.__name__ for metric in metrics}
+
+
+def test_classification_selector_default_measures(features_object: Features) -> None:
+    """Task defaults land in the right per-type slot, alongside the mandatory gates."""
+    selector = ClassificationSelector(features_object, 2)
+
+    assert names(selector.measures["qualitatives"]) == GATES | {"TschuprowtMeasure"}
+    assert names(selector.measures["quantitatives"]) == GATES | {"KruskalEtaSquaredMeasure"}
+    # every type has exactly one ranking measure
+    for kind in ("qualitatives", "quantitatives"):
+        assert len(remove_default_metrics(selector.measures[kind])) == 1
+
+
+def test_classification_selector_default_filters(features_object: Features) -> None:
+    """Validity filters are always added; redundancy filters are routed per type."""
+    selector = ClassificationSelector(features_object, 2)
+
+    # NonDefaultValid is not `is_default`: it re-runs the validity gate on the ranking pass
+    assert names(selector.filters["qualitatives"]) == {"Valid", "NonDefaultValid", "TschuprowtFilter"}
+    assert names(selector.filters["quantitatives"]) == {"Valid", "NonDefaultValid", "SpearmanFilter"}
+
+
+def test_classification_selector_custom_measures(features_object: Features) -> None:
+    """A user-supplied gate keeps its threshold; missing gates are still added."""
+    config = SelectionConfig(
+        qualitative_measures=[NanMeasure(threshold=0.3), TschuprowtMeasure(threshold=0.1)],
+        quantitative_measures=[KruskalEtaSquaredMeasure(threshold=0.05)],
     )
-    mode_measure = ModeMeasure()
-    assert any(measure.__name__ == mode_measure.__name__ for measure in selector.measures)
-    nan_measure = NanMeasure()
-    assert any(measure.__name__ == nan_measure.__name__ for measure in selector.measures)
-    print(selector.filters)
-    print([m.__name__ for m in selector.filters], ValidFilter.__name__)
-    valid_filter = NonDefaultValidFilter()
-    assert any(measure.__name__ == valid_filter.__name__ for measure in selector.filters)
-    valid_filter = ValidFilter()
-    assert any(measure.__name__ == valid_filter.__name__ for measure in selector.filters)
-    assert len(remove_default_metrics(selector.measures)) >= 1
-    assert len(remove_default_metrics(selector.filters)) >= 1
+    selector = ClassificationSelector(features_object, 2, config=config)
+
+    quali = selector.measures["qualitatives"]
+    assert names(quali) == GATES | {"TschuprowtMeasure"}
+    # the user's NanMeasure instance won: its threshold survived
+    assert next(measure for measure in quali if measure.__name__ == "Nan").threshold == 0.3
+    assert remove_default_metrics(quali)[0].threshold == 0.1
+    assert remove_default_metrics(selector.measures["quantitatives"])[0].threshold == 0.05
 
 
-def test_classification_selector_initiate_measures(features_object: Features, measures: list[BaseMeasure]) -> None:
-    """tests initiation of measures"""
-
-    n_best = 2
-
-    # adding default measure
-    default_measures = get_default_metrics(measures)
-    if len(default_measures) > 0:
-        selector = ClassificationSelector(
-            n_best_per_type=n_best,
-            features=features_object,
-            measures=default_measures,
-        )
-        mode_measure = ModeMeasure()
-        assert any(measure.__name__ == mode_measure.__name__ for measure in selector.measures)
-        nan_measure = NanMeasure()
-        assert any(measure.__name__ == nan_measure.__name__ for measure in selector.measures)
-        print("default_measures", default_measures)
-        print("selector.measures", selector.measures)
-        print([isinstance(measure, OutlierMeasure) for measure in default_measures])
-        assert len(selector.measures) == 2 + sum(
-            not isinstance(measure, (NanMeasure, ModeMeasure)) for measure in default_measures
-        )
-
-    # adding qualitative target measures
-    classification_measures = [
-        measure
-        for measure in remove_default_metrics(measures)
-        if measure.is_y_qualitative or (measure.reverse_xy() and measure.is_y_qualitative)
-    ]
-    if len(classification_measures) > 0:
-        selector = ClassificationSelector(
-            n_best_per_type=n_best,
-            features=features_object,
-            measures=classification_measures,
-        )
-        mode_measure = ModeMeasure()
-        assert any(measure.__name__ == mode_measure.__name__ for measure in selector.measures)
-        nan_measure = NanMeasure()
-        assert any(measure.__name__ == nan_measure.__name__ for measure in selector.measures)
-        assert len(selector.measures) == len(classification_measures) + 2
-
-    # checking error for quantitative target measures
-    regression_measures = [
-        measure
-        for measure in remove_default_metrics(measures)
-        if not (measure.is_y_qualitative or (measure.reverse_xy() and measure.is_y_qualitative))
-    ]
-    if len(regression_measures) > 0:
-        with raises(ValueError):
-            selector = ClassificationSelector(
-                n_best_per_type=n_best,
-                features=features_object,
-                measures=regression_measures,
-            )
+def test_classification_selector_rejects_regression_measure(features_object: Features) -> None:
+    """A non-reversible measure of the wrong target type is refused at construction."""
+    with raises(ValueError, match="does not match the target type"):
+        ClassificationSelector(features_object, 2, config=SelectionConfig(quantitative_measures=[SpearmanMeasure()]))
 
 
-def test_classification_selector_initiate_filters(features_object: Features, filters: list[BaseFilter]) -> None:
-    """tests initiation of filters"""
+def test_classification_selector_rejects_wrong_type_slot(features_object: Features) -> None:
+    """A measure/filter dropped into the wrong per-type slot is refused at construction."""
+    with raises(ValueError, match="does not apply to quantitative features"):
+        ClassificationSelector(features_object, 2, config=SelectionConfig(quantitative_measures=[TschuprowtMeasure()]))
 
-    # checking for default filters
-    n_best = 2
+    with raises(ValueError, match="does not apply to qualitative features"):
+        ClassificationSelector(features_object, 2, config=SelectionConfig(qualitative_filters=[SpearmanFilter()]))
 
-    # adding default filter
-    default_filters = get_default_metrics(filters)
-    if len(default_filters) > 0:
-        selector = ClassificationSelector(
-            n_best_per_type=n_best,
-            features=features_object,
-            filters=default_filters,
-        )
-        valid_filter = NonDefaultValidFilter()
-        assert any(measure.__name__ == valid_filter.__name__ for measure in selector.filters)
-        valid_filter = ValidFilter()
-        assert any(measure.__name__ == valid_filter.__name__ for measure in selector.filters)
-        assert (
-            len(selector.filters)
-            == len([filter_ for filter_ in default_filters if filter_.__name__ != ValidFilter.__name__]) + 1
-        )
 
-    # adding filters
-    filters = remove_default_metrics(filters)
-    if len(filters) > 0:
-        selector = ClassificationSelector(
-            n_best_per_type=n_best,
-            features=features_object,
-            filters=filters,
-        )
-        valid_filter = NonDefaultValidFilter()
-        assert any(measure.__name__ == valid_filter.__name__ for measure in selector.filters)
-        valid_filter = ValidFilter()
-        assert any(measure.__name__ == valid_filter.__name__ for measure in selector.filters)
-        assert len(selector.filters) == len(filters) + 2
+def test_classification_selector_falls_back_on_empty_measures(features_object: Features) -> None:
+    """An explicitly empty per-type slot falls back to that type's default, with a warning."""
+    with warns(UserWarning, match="no ranking measure applies to quantitative features"):
+        selector = ClassificationSelector(features_object, 2, config=SelectionConfig(quantitative_measures=[]))
+
+    assert names(remove_default_metrics(selector.measures["quantitatives"])) == {"KruskalEtaSquaredMeasure"}
+
+
+@fixture
+def mixed_sample() -> tuple[Features, pd.DataFrame, pd.Series]:
+    """A mixed qualitative/quantitative dataset with a binary target"""
+    rng = np.random.default_rng(0)
+    size = 300
+    X = pd.DataFrame(
+        {
+            "cat1": rng.choice(list("abc"), size),
+            "cat2": rng.choice(list("xy"), size),
+            "num1": rng.normal(size=size),
+            "num2": rng.normal(size=size),
+            "num3": rng.normal(size=size),
+        }
+    )
+    y = pd.Series((X["num1"] + rng.normal(size=size) > 0).astype(int), name="target")
+    features = Features(categoricals=["cat1", "cat2"], numericals=["num1", "num2", "num3"])
+    return features, X, y
+
+
+def test_quantitatives_kept_when_only_qualitative_measures_given(
+    mixed_sample: tuple[Features, pd.DataFrame, pd.Series],
+) -> None:
+    """Regression: qualitative-only measures used to silently drop every quantitative feature."""
+    features, X, y = mixed_sample
+    config = SelectionConfig(
+        qualitative_measures=[TschuprowtMeasure(threshold=0.001)],
+        qualitative_filters=[CramervFilter(threshold=0.7)],
+    )
+    selector = ClassificationSelector(features, 4, config=config).fit(X, y)
+
+    selected = selector.selected_features
+    assert len(selected.quantitatives) > 0
+    assert len(selected.qualitatives) > 0
+
+
+def test_summary_shares_columns_across_types(
+    mixed_sample: tuple[Features, pd.DataFrame, pd.Series],
+) -> None:
+    """Both types land in the same `measure`/`association` columns, not a ragged frame."""
+    features, X, y = mixed_sample
+    selector = ClassificationSelector(features, 3).fit(X, y)
+    summary = selector.summary
+
+    assert set(summary.columns) == {
+        "feature",
+        "Nan",
+        "Mode",
+        "measure",
+        "association",
+        "rank",
+        "filter",
+        "redundancy",
+        "filtered_with",
+        "selected",
+    }
+    # one row per feature, and both types share the association column
+    assert len(summary) == len(features)
+    assert set(summary["measure"]) == {"Tschuprowt", "KruskalEtaSquared"}
+    assert summary["association"].notna().all()
+    assert summary["selected"].sum() == len(selector.selected_features)

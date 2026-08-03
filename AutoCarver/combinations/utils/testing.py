@@ -5,7 +5,7 @@ from enum import StrEnum
 import numpy as np
 import pandas as pd
 
-from AutoCarver.discretizers.utils.frequency_ci import is_significantly_below
+from AutoCarver.stats.frequency_ci import is_significantly_below
 
 
 class Keys(StrEnum):

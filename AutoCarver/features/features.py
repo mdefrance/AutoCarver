@@ -30,6 +30,55 @@ from AutoCarver.features.utils.grouped_list import GroupedList
 # concrete type of feature lists (e.g. list[CategoricalFeature] in → out).
 TFeature = TypeVar("TFeature", bound=BaseFeature)
 
+# per-modality statistics stay columns in a `summary`; everything else becomes a
+# summary index level. Shared with AutoCarver.carvers.utils.base_carver.BaseCarver.summary,
+# which adds its own {"dropped", "dropped_reason"} on top.
+#
+# The target-rate names are derived from the TargetRate subclasses rather than listed, so
+# adding a TargetRate cannot silently push its column into the index (which is how
+# `tau_b`/`tau_c` regressed before Phase 3.9).
+_STRUCTURAL_COLUMNS = frozenset({"feature", "label", "content", "frequency", "count", "std"})
+_ASSOCIATION_COLUMNS = frozenset({"somersd", "tau_b", "tau_c"})
+
+
+def _target_rate_name(cls: type) -> str:
+    """The column name a ``TargetRate`` instance emits (``self.__name__``, not ``cls.__name__``).
+
+    ``__name__`` is overridden as a plain class attribute (``__name__ = "target_mean"``), so
+    on an *instance* normal attribute lookup along the MRO finds it. But ``cls.__name__`` on
+    the *class object itself* hits ``type.__name__`` (a data descriptor on the metaclass),
+    which wins over the class's own ``__dict__`` entry and returns the real Python class name
+    instead (e.g. ``"TargetMean"``). Walk the MRO's ``__dict__`` directly to get the value
+    ``self.__name__`` would actually resolve to.
+    """
+    for klass in cls.__mro__:
+        if "__name__" in klass.__dict__:
+            return klass.__dict__["__name__"]
+    return cls.__name__
+
+
+def _target_rate_column_names() -> frozenset[str]:
+    """Every column name a concrete ``TargetRate`` can emit into a feature summary."""
+    from AutoCarver.combinations.utils.target_rate import TargetRate
+
+    def _walk(cls: type) -> set[str]:
+        names = {_target_rate_name(cls)}
+        for sub in cls.__subclasses__():
+            names |= _walk(sub)
+        return names
+
+    return frozenset(_walk(TargetRate))
+
+
+def per_modality_columns() -> frozenset[str]:
+    """Columns that stay per-modality columns in a `summary` rather than index levels.
+
+    Evaluated at call time, not at import: `TargetRate.__subclasses__()` only sees
+    subclasses that have already been imported, and `features.py` loads well before
+    `AutoCarver.combinations`.
+    """
+    return _STRUCTURAL_COLUMNS | _ASSOCIATION_COLUMNS | _target_rate_column_names()
+
 
 @dataclass
 class FeaturesConfig:
@@ -700,11 +749,9 @@ class Features:
         if summaries.empty:
             return summaries
 
-        # defining indices to set
-        indices = []
-        for col in summaries.columns:
-            if col not in ["feature", "label", "content", "target_mean", "frequency", "count", "std"]:
-                indices += [col]
+        # defining indices to set: per-modality stats stay columns, everything else
+        # (sort_by association, n_mod, ...) becomes an index level
+        indices = [col for col in summaries.columns if col not in per_modality_columns()]
         indices = ["feature"] + indices + ["label"]
 
         return summaries.set_index(indices)

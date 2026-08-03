@@ -26,8 +26,8 @@ from AutoCarver.discretizers import (
     OrdinalDiscretizer,
     QuantitativeDiscretizer,
 )
-from AutoCarver.discretizers.utils.frequency_ci import is_significantly_below
 from AutoCarver.features import Features
+from AutoCarver.stats.frequency_ci import is_significantly_below
 
 from ._engine import Bin, ComboRow, DualFrame, Frame, HeroFrame, MergeArrow, TableFrame
 

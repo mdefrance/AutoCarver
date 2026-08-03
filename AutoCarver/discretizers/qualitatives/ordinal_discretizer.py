@@ -9,8 +9,8 @@ import pandas as pd
 
 from AutoCarver.discretizers.qualitatives.categorical_discretizer import series_ca_order
 from AutoCarver.discretizers.utils.base_discretizer import BaseDiscretizer, ProcessingConfig, Sample
-from AutoCarver.discretizers.utils.frequency_ci import is_significantly_below
 from AutoCarver.features import GroupedList, OrdinalFeature
+from AutoCarver.stats.frequency_ci import is_significantly_below
 from AutoCarver.utils import extend_docstring
 
 
@@ -60,16 +60,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
         DataFrame
             A formatted copy of X
         """
-        # checking for binary target and copying X
-        sample = super()._prepare_sample(sample)
-
-        # fitting features
-        self.features.fit(**sample)
-
-        # filling up nans for features that have some
-        sample.X = self.features.fillna(sample.X)
-
-        return sample
+        return self._prepare_sample_and_fit(sample)
 
     @extend_docstring(BaseDiscretizer.fit)
     def fit(self, X: pd.DataFrame, y: pd.Series) -> Self:

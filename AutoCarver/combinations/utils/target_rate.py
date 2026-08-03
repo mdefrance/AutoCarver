@@ -29,6 +29,14 @@ class TargetRate(ABC, Generic[XAgg]):
     def _compute(self, xagg: XAgg) -> pd.Series:
         """Computes the target rate."""
 
+    def _counts(self, xagg: XAgg) -> pd.Series:
+        """Per-modality observation count. Crosstab families sum the row; continuous counts the list."""
+        return xagg.sum(axis=1)  # type: ignore
+
+    def _extra_columns(self, xagg: XAgg) -> dict:
+        """Extra per-modality columns beyond rate/frequency/count (continuous adds ``std``)."""
+        return {}
+
     # `compute` is overloaded so that callers passing a non-None ``xagg`` get a
     # non-Optional ``pd.DataFrame`` back — required by `_test_viability_*` and
     # the `BaseFeature.statistics` setter, which don't accept ``None``.
@@ -36,20 +44,34 @@ class TargetRate(ABC, Generic[XAgg]):
     def compute(self, xagg: pd.Series | pd.DataFrame) -> pd.DataFrame: ...
     @overload
     def compute(self, xagg: None) -> None: ...
-    @abstractmethod
     def compute(self, xagg: pd.Series | pd.DataFrame | None) -> pd.DataFrame | None:
         """Computes the target rate.
 
         Parameters
         ----------
         xagg : pd.Series | pd.DataFrame | None
-            A crosstab (binary) or Series-of-y-lists (continuous).
+            A crosstab (binary/ordinal/multiclass) or Series-of-y-lists (continuous).
 
         Returns
         -------
         pd.DataFrame | None
             Target rate frame, or ``None`` if ``xagg`` was ``None``.
         """
+        if xagg is None:
+            return None
+        # count + frequency per modality (count carried for CI-based viability tests).
+        # `_counts`/`_compute`/`_extra_columns` expect XAgg (Generic); compute()'s wide
+        # signature is for LSP matching, callers always pass this rate's own XAgg kind here.
+        count = self._counts(xagg)  # type: ignore
+        frequency = count / count.sum()
+        return pd.DataFrame(
+            {
+                self.__name__: self._compute(xagg),  # type: ignore
+                "frequency": frequency,
+                "count": count,
+                **self._extra_columns(xagg),  # type: ignore
+            }
+        )
 
     def reference_to_json(self) -> dict | None:
         """JSON-safe snapshot of any per-feature state this rate was fit on.

@@ -13,6 +13,13 @@ from AutoCarver.combinations.ordinal.ordinal_target_rates import (
 )
 from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample, CombinationEvaluator
 from AutoCarver.combinations.utils.combinations import combination_formatter, group_crosstab
+from AutoCarver.combinations.utils.dp import (
+    compact_empty_modalities,
+    dp_inputs_from_xagg,
+    sort_key,
+    splits_to_combination,
+    top_k_partitions,
+)
 from AutoCarver.combinations.utils.target_rate import TargetRate
 from AutoCarver.features import GroupedList
 
@@ -126,7 +133,7 @@ class OrdinalCombinationEvaluator(CombinationEvaluator[pd.DataFrame], ABC):
 
         raw_index = list(raw_labels)
         # samples.train.xagg is a crosstab DataFrame for ordinal evaluators
-        M, n_per_mod, col_sums = _dp_inputs_from_xagg(self.samples.train.xagg, raw_index)  # type: ignore
+        M, n_per_mod, col_sums = dp_inputs_from_xagg(self.samples.train.xagg, raw_index)  # type: ignore
 
         # Progressive top-K with ×4 growth (shared driver), mirroring binary/continuous.
         viable = self._search_escalating(
@@ -268,23 +275,6 @@ def _ordinal_associations(values: np.ndarray) -> dict[str, float | None]:
 # top-K approximation otherwise.
 
 
-def _dp_inputs_from_xagg(raw_xagg: pd.DataFrame, raw_index: list) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Aligns a raw crosstab to ``raw_index`` for the DP.
-
-    Returns ``(M, n_per_mod, col_sums)`` where ``M`` is the ``(len(raw_index), c)``
-    per-modality column-count matrix (rows absent from ``raw_xagg`` are zero),
-    ``n_per_mod`` the row totals and ``col_sums`` the target marginal.
-    """
-    position = {label: i for i, label in enumerate(raw_xagg.index)}
-    values = np.asarray(raw_xagg.values, dtype=float)
-    M = np.zeros((len(raw_index), values.shape[1]))
-    for row, label in enumerate(raw_index):
-        source = position.get(label)
-        if source is not None:
-            M[row] = values[source]
-    return M, M.sum(axis=1), M.sum(axis=0)
-
-
 def _segment_within_costs(M: np.ndarray) -> np.ndarray:
     """WithinSegment ``C−D`` for every consecutive row segment.
 
@@ -308,29 +298,6 @@ def _segment_within_costs(M: np.ndarray) -> np.ndarray:
             block = block + M[b]
             seg[a, b + 1] = within
     return seg
-
-
-def _build_partition_dp(
-    seg: np.ndarray, *, n_mod: int, cap: int, top_k: int
-) -> list[list[list[tuple[float, tuple[int, ...]]]]]:
-    """dp[g][j]: up to ``top_k`` ``(sum_seg, splits)`` with the SMALLEST sum_seg
-    (largest numerator), where ``splits = (0, s_1, ..., s_{g-1}, j)`` and ``g`` is
-    the number of groups.
-    """
-    dp: list[list[list[tuple[float, tuple[int, ...]]]]] = [[[] for _ in range(n_mod + 1)] for _ in range(cap + 1)]
-    for j in range(1, n_mod + 1):
-        dp[1][j] = [(float(seg[0, j]), (0, j))]
-    for g in range(2, cap + 1):
-        for j in range(g, n_mod + 1):
-            candidates: list[tuple[float, tuple[int, ...]]] = []
-            for i in range(g - 1, j):
-                seg_ij = float(seg[i, j])
-                for prev_sum, prev_splits in dp[g - 1][i]:
-                    candidates.append((prev_sum + seg_ij, prev_splits + (j,)))
-            if candidates:
-                candidates.sort(key=lambda x: x[0])  # smallest Σ within-segment first
-                dp[g][j] = candidates[:top_k]
-    return dp
 
 
 def _score_partition(
@@ -376,7 +343,6 @@ def _top_k_partitions_ordinal_dp(
     sorted by ``sort_by`` desc — same shape the streaming pipeline yields, so it
     drops into the viability walk.
     """
-    n_mod = len(raw_index)
     total_n = float(n_per_mod.sum())
 
     # Empty modalities (all-zero rows — e.g. ordinal levels absent from the crosstab,
@@ -385,14 +351,11 @@ def _top_k_partitions_ordinal_dp(
     # tau-c's per-k denominator and breaks the constant-denominator premise that makes the
     # additive-numerator DP exact at top_k=1. So run the DP over the non-empty modalities
     # only, then fold each empty modality back into an adjacent group when emitting.
-    keep = np.flatnonzero(n_per_mod > 0)
+    keep, kept_M, kept_n_per_mod = compact_empty_modalities(M, n_per_mod)
     n_kept = len(keep)
     cap = min(max_n_mod, n_kept)
     if cap < 2 or total_n < 2:
         return []
-
-    kept_M = M[keep]
-    kept_n_per_mod = n_per_mod[keep]
 
     all_pairs = total_n * (total_n - 1) / 2.0
     untied_on_target = all_pairs - float((col_sums * (col_sums - 1) / 2.0).sum())
@@ -401,39 +364,30 @@ def _top_k_partitions_ordinal_dp(
     seg = _segment_within_costs(kept_M)
     n_prefix = np.concatenate([[0.0], np.cumsum(kept_n_per_mod.astype(float))])
 
-    dp = _build_partition_dp(seg, n_mod=n_kept, cap=cap, top_k=top_k)
+    def seg_cost(i: int, j: int) -> float:
+        return float(seg[i, j])
+
+    dp_entries = top_k_partitions(n_mod=n_kept, cap=cap, seg_cost=seg_cost, top_k=top_k, maximize=False)
 
     entries: list[tuple[float, dict, tuple[int, ...]]] = []
-    for k in range(2, cap + 1):
-        for sum_seg, splits in dp[k][n_kept]:
-            metrics = _score_partition(
-                sum_seg,
-                splits,
-                total_between=total_between,
-                n_prefix=n_prefix,
-                total_n=total_n,
-                all_pairs=all_pairs,
-                untied_on_target=untied_on_target,
-                c_nonempty=c_nonempty,
-            )
-            entries.append((_sort_key(metrics.get(sort_by)), metrics, splits))
+    for _, sum_seg, splits in dp_entries:
+        metrics = _score_partition(
+            sum_seg,
+            splits,
+            total_between=total_between,
+            n_prefix=n_prefix,
+            total_n=total_n,
+            all_pairs=all_pairs,
+            untied_on_target=untied_on_target,
+            c_nonempty=c_nonempty,
+        )
+        entries.append((sort_key(metrics.get(sort_by)), metrics, splits))
 
     entries.sort(key=lambda e: e[0], reverse=True)
     entries = entries[:top_k]
 
     out: list[dict] = []
     for _, metrics, splits in entries:
-        # map compacted cut points back to raw_index: each cut sits just before the first
-        # kept modality of the next group, so empty modalities attach to the preceding group
-        # (leading empties join the first group, trailing empties the last).
-        bounds = [0, *(int(keep[s]) for s in splits[1:-1]), n_mod]
-        combination = [list(raw_index[bounds[g] : bounds[g + 1]]) for g in range(len(bounds) - 1)]
+        combination = splits_to_combination(splits, raw_index, keep=keep)
         out.append({"combination": combination, "index_to_groupby": combination_formatter(combination), **metrics})
     return out
-
-
-def _sort_key(value: float | None) -> float:
-    """Sort key putting ``None`` / ``NaN`` metrics last (descending sort)."""
-    if value is None or (isinstance(value, float) and math.isnan(value)):
-        return float("-inf")
-    return float(value)

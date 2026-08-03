@@ -113,33 +113,12 @@ class QualitativeDiscretizer(BaseDiscretizer):
 
     def _fit_nested(self, X: pd.DataFrame, y: pd.Series) -> None:
         """Fit the NestedDiscretizer on the nested features."""
-
-        if len(self.features.nested) > 0:
-            nested_discretizer = NestedDiscretizer(
-                nesteds=self.features.nested,
-                min_freq=self.min_freq,
-                config=replace(self.config, copy=False),
-            )
-            nested_discretizer.fit(X, y)
+        self._fit_sub_discretizer(NestedDiscretizer, self.features.nested, X, y)
 
     def _fit_ordinals(self, X: pd.DataFrame, y: pd.Series) -> None:
         """Fit the OrdinalDiscretizer on the ordinal features."""
-
-        if len(self.features.ordinals) > 0:
-            ordinal_discretizer = OrdinalDiscretizer(
-                ordinals=self.features.ordinals,
-                min_freq=self.min_freq,
-                config=replace(self.config, copy=False),
-            )
-            ordinal_discretizer.fit(X, y)
+        self._fit_sub_discretizer(OrdinalDiscretizer, self.features.ordinals, X, y)
 
     def _fit_categoricals(self, X: pd.DataFrame, y: pd.Series) -> None:
         """Fit the CategoricalDiscretizer on the categorical features."""
-
-        if len(self.features.categoricals) > 0:
-            categorical_discretizer = CategoricalDiscretizer(
-                categoricals=self.features.categoricals,
-                min_freq=self.min_freq,
-                config=replace(self.config, copy=False),
-            )
-            categorical_discretizer.fit(X, y)
+        self._fit_sub_discretizer(CategoricalDiscretizer, self.features.categoricals, X, y)

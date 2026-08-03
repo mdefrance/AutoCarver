@@ -2,7 +2,6 @@
 
 import warnings
 from abc import ABC
-from typing import overload
 
 import numpy as np
 import pandas as pd
@@ -15,40 +14,15 @@ class ContinuousTargetRate(TargetRate[pd.Series], ABC):
 
     __name__ = "continuous_target_rate"
 
-    @overload
-    def compute(self, xagg: pd.Series | pd.DataFrame) -> pd.DataFrame: ...
-    @overload
-    def compute(self, xagg: None) -> None: ...
-    def compute(self, xagg: pd.Series | pd.DataFrame | None) -> pd.DataFrame | None:
-        """Computes the target rate.
+    def _counts(self, xagg: pd.Series) -> pd.Series:
+        """Per-modality observation count: length of each modality's y-list."""
+        return xagg.apply(len)  # type: ignore
 
-        Parameters
-        ----------
-        xagg : pd.DataFrame
-            A crosstab.
-
-        Returns
-        -------
-        Series
-            Target rate.
-        """
-        # checking for an xtab
-        if xagg is not None:
-            # count + frequency per modality (count carried for CI-based viability tests)
-            count = xagg.apply(len)
-            frequency = count / count.sum()
-
-            # per-modality dispersion, needed by AutoCarver.stability for a Welch test
-            # against this reference; NaN for singleton modalities (ddof=1)
-            std = xagg.apply(lambda values: float(np.std(values, ddof=1)) if len(values) > 1 else float("nan"))
-
-            # computing target rate. `_compute` expects pd.Series (Generic
-            # XAgg=Series); compute()'s wide signature is for LSP matching,
-            # callers always pass a Series-of-y-lists here.
-            return pd.DataFrame(
-                {self.__name__: self._compute(xagg), "frequency": frequency, "count": count, "std": std}  # type: ignore
-            )
-        return None
+    def _extra_columns(self, xagg: pd.Series) -> dict:
+        """Per-modality dispersion, needed by AutoCarver.stability for a Welch test
+        against this reference; NaN for singleton modalities (ddof=1)."""
+        std = xagg.apply(lambda values: float(np.std(values, ddof=1)) if len(values) > 1 else float("nan"))
+        return {"std": std}
 
     def compute_from_stats(self, *, stats: dict, index_to_groupby: dict) -> pd.DataFrame | None:
         """Closed-form viability path.
@@ -109,6 +83,10 @@ class TargetMean(ContinuousTargetRate):
         mod_to_pos = stats["mod_to_pos"]
         n_mod = stats["n_mod"]
 
+        # Does not use AutoCarver.combinations.utils.dp.build_group_assignment:
+        # unlike that helper, this bails to None on an unmapped modality (instead
+        # of making it a singleton group) and also needs leader_labels for the
+        # output index.
         leader_to_grp: dict = {}
         leader_labels: list = []
         assign = np.full(n_mod, -1, dtype=np.intp)
@@ -158,43 +136,3 @@ class TargetMedian(ContinuousTargetRate):
         with np.errstate(invalid="ignore", divide="ignore"), warnings.catch_warnings():
             warnings.simplefilter("ignore", RuntimeWarning)
             return xagg.apply(np.median)  # type: ignore
-
-
-# class TargetVariance(ContinuousTargetRate):
-#     """Variance of target per class."""
-
-#     __name__ = "target_variance"
-
-#     def _compute(self, xagg: pd.DataFrame) -> pd.Series:
-#         """Computes the mean target rate."""
-#         return xagg.apply(var)
-
-
-# class TargetStd(ContinuousTargetRate):
-#     """Std of target per class."""
-
-#     __name__ = "target_std"
-
-#     def _compute(self, xagg: pd.DataFrame) -> pd.Series:
-#         """Computes the mean target rate."""
-#         return xagg.apply(std)
-
-
-# class TargetIqr(ContinuousTargetRate):
-#     """IQR of target per class."""
-
-#     __name__ = "target_iqr"
-
-#     def _compute(self, xagg: pd.DataFrame) -> pd.Series:
-#         """Computes the mean target rate."""
-#         return xagg.apply(iqr)
-
-
-# class TargetRange(ContinuousTargetRate):
-#     """Range of target per class."""
-
-#     __name__ = "target_range"
-
-#     def _compute(self, xagg: pd.DataFrame) -> pd.Series:
-#         """Computes the mean target rate."""
-#         return xagg.apply(lambda x: x.max() - x.min())

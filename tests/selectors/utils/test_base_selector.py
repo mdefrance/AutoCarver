@@ -12,6 +12,7 @@ from AutoCarver.features import (
 from AutoCarver.selectors import BaseFilter, BaseMeasure
 from AutoCarver.selectors.utils.base_selector import (
     BaseSelector,
+    SelectionConfig,
     apply_filters,
     apply_measures,
     get_best_features,
@@ -21,7 +22,19 @@ from AutoCarver.selectors.utils.base_selector import (
     remove_default_metrics,
     remove_duplicates,
     sort_features_per_measure,
+    split_budget,
 )
+
+
+def make_config(measures: list[BaseMeasure], filters: list[BaseFilter], **kwargs) -> SelectionConfig:
+    """Splits flat measure/filter lists into the per-type SelectionConfig slots"""
+    return SelectionConfig(
+        qualitative_measures=get_qualitative_metrics(measures),
+        quantitative_measures=get_quantitative_metrics(measures),
+        qualitative_filters=get_qualitative_metrics(filters),
+        quantitative_filters=get_quantitative_metrics(filters),
+        **kwargs,
+    )
 
 
 def test_get_quantitative_metrics(
@@ -317,13 +330,42 @@ def test_base_selector_init_valid_parameters(features_object: Features) -> None:
     """test init of base selector"""
 
     # n_best < len(features)
-    selector = BaseSelector(n_best_per_type=2, features=features_object)
-    assert selector.n_best_per_type == 2
+    selector = BaseSelector(n_best_features=2, features=features_object)
+    assert selector.n_best_features == 2
     assert selector.features == features_object
 
-    # n_best > len(features)
+    # n_best > len(features) is no longer an error: it simply means no cap
+    assert BaseSelector(n_best_features=100, features=features_object).n_best_features == 100
+
+    # no budget at all
+    assert BaseSelector(features=features_object).n_best_features is None
+
+    # non-positive budgets
     with raises(ValueError):
-        BaseSelector(n_best_per_type=100, features=features_object)
+        BaseSelector(n_best_features=0, features=features_object)
+    with raises(ValueError):
+        BaseSelector(n_best_features=-1, features=features_object)
+
+
+def test_split_budget() -> None:
+    """function test of split_budget"""
+    counts = {"qualitatives": 435, "quantitatives": 119}
+
+    # the reproducer: 50 total, proportionally split (39.26 / 10.74 -> leftover to quanti)
+    assert split_budget(50, counts) == {"qualitatives": 39, "quantitatives": 11}
+
+    # no cap
+    assert split_budget(None, counts) == counts
+    assert split_budget(1000, counts) == counts
+
+    # the budget is always fully spent, and never exceeds what's available
+    for n_best in (1, 2, 7, 100, 553):
+        budget = split_budget(n_best, counts)
+        assert sum(budget.values()) == n_best
+        assert all(budget[kind] <= counts[kind] for kind in counts)
+
+    # no features at all
+    assert split_budget(5, {"qualitatives": 0, "quantitatives": 0}) == {"qualitatives": 0, "quantitatives": 0}
 
 
 def test_base_selector_select(
@@ -336,7 +378,8 @@ def test_base_selector_select(
     """tests BaseSelector select function"""
 
     # keeping all features
-    selector = BaseSelector(n_best_per_type=2, features=features_object, measures=measures, filters=filters)
+    config = make_config(measures, filters)
+    selector = BaseSelector(n_best_features=4, features=features_object, config=config)
     best_features = selector.fit(X, y).selected_features
     assert isinstance(best_features, Features)
     for feature in features_object.quantitatives:
@@ -347,8 +390,8 @@ def test_base_selector_select(
     # transform restricts to the selected columns
     assert set(selector.transform(X).columns) == {feature.version for feature in best_features}
 
-    # keeping best feature per type
-    selector = BaseSelector(n_best_per_type=1, features=features_object, measures=measures, filters=filters)
+    # keeping best feature per type (2 total over 2 quali + 2 quanti -> 1 each)
+    selector = BaseSelector(n_best_features=2, features=features_object, config=make_config(measures, filters))
     best_features = selector.fit(X, y).selected_features
 
     # checking that one feature has been selected per type
@@ -398,7 +441,7 @@ def test_base_selector_scores_all_features_exhaustively(
     X = pd.DataFrame(new_X)
     features_object = Features.from_list(new_features)
 
-    selector = BaseSelector(n_best_per_type=1, features=features_object, measures=measures, filters=filters)
+    selector = BaseSelector(n_best_features=2, features=features_object, config=make_config(measures, filters))
     best_features = selector.fit(X, y).selected_features
     assert len(best_features) == 2
     assert len(get_quantitative_features(best_features)) == 1
@@ -416,3 +459,33 @@ def test_base_selector_scores_all_features_exhaustively(
         remove_default_metrics(get_qualitative_metrics(measures))[0],
     )
     assert get_qualitative_features(best_features)[0] == qualitative_sorted_features[0]
+
+
+def test_no_budget_keeps_every_feature(
+    features_object: Features,
+    X: pd.DataFrame,
+    y: pd.Series,
+    measures: list[BaseMeasure],
+    filters: list[BaseFilter],
+) -> None:
+    """``n_best_features=None`` means no selection: everything passing the gates is kept."""
+    selector = BaseSelector(features=features_object, config=make_config(measures, filters))
+    best_features = selector.fit(X, y).selected_features
+    assert len(best_features) == len(features_object)
+
+
+def test_verbose_prints_per_type_counts(
+    features_object: Features,
+    X: pd.DataFrame,
+    y: pd.Series,
+    measures: list[BaseMeasure],
+    filters: list[BaseFilter],
+    capsys,
+) -> None:
+    """``config.verbose`` reports how many features were kept, per type."""
+    config = make_config(measures, filters, verbose=True)
+    BaseSelector(n_best_features=2, features=features_object, config=config).fit(X, y)
+
+    printed = capsys.readouterr().out
+    assert "selected 1/2 qualitative feature(s)" in printed
+    assert "selected 1/2 quantitative feature(s)" in printed
