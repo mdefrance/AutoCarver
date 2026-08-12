@@ -24,12 +24,10 @@ import pandas as pd
 import pytest
 from scipy.stats import kendalltau, somersd
 
-from AutoCarver.combinations.ordinal.ordinal_combination_evaluators import (
-    KendallTauCCombinations,
-    _ordinal_associations,
-)
+from AutoCarver.combinations.ordinal.ordinal_combination_evaluators import KendallTauCCombinations
 from AutoCarver.combinations.ordinal.ordinal_target_rates import TargetMeanLevel
 from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample
+from AutoCarver.stats import rank_associations
 
 
 def _expand(table: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -78,7 +76,7 @@ def test_matches_brute_force_and_scipy(seed: int) -> None:
     """Closed form matches the brute-force reference, scipy.kendalltau and scipy.somersd."""
     rng = np.random.default_rng(seed)
     table = rng.integers(0, 5, size=(int(rng.integers(2, 7)), int(rng.integers(2, 8)))).astype(float)
-    got = _ordinal_associations(table)
+    got = rank_associations(table)
     ref = _brute_reference(table)
     for key in ("tau_b", "tau_c", "somersd"):
         if ref[key] is None:
@@ -107,11 +105,11 @@ def test_evaluator_pipeline_returns_all_three() -> None:
 def test_degenerate_tables_return_none() -> None:
     """N < 2 / empty tables are unscorable; a single target level yields no tau but 0 Somers' D."""
     # fewer than two observations -> nothing is scorable
-    assert _ordinal_associations(np.array([[1.0, 0.0]])) == {"tau_b": None, "tau_c": None, "somersd": None}
-    assert _ordinal_associations(np.zeros((3, 3))) == {"tau_b": None, "tau_c": None, "somersd": None}
+    assert rank_associations(np.array([[1.0, 0.0]])) == {"tau_b": None, "tau_c": None, "somersd": None}
+    assert rank_associations(np.zeros((3, 3))) == {"tau_b": None, "tau_c": None, "somersd": None}
     # a single target level: tau-b/tau-c denominators vanish (None); Somers' D(Y|X) is a
     # well-defined 0.0 (pairs differ on the feature, none on the target -> no concordance)
-    single_level = _ordinal_associations(np.array([[5.0], [3.0]]))
+    single_level = rank_associations(np.array([[5.0], [3.0]]))
     assert single_level["tau_b"] is None
     assert single_level["tau_c"] is None
     assert single_level["somersd"] == 0.0
@@ -126,7 +124,7 @@ def _best_per_k(raw_table: np.ndarray, key: str, kmax: int = 8) -> dict[int, flo
         for cuts in combinations(range(1, m), k - 1):
             bounds = [0, *cuts, m]
             grouped = np.array([raw_table[bounds[i] : bounds[i + 1]].sum(axis=0) for i in range(k)])
-            value = _ordinal_associations(grouped)[key]
+            value = rank_associations(grouped)[key]
             if value is not None and value > best:
                 best = value
         out[k] = best

@@ -360,9 +360,10 @@ class BaseCarver(BaseDiscretizer, ABC):
         if summaries.empty:
             return summaries
 
-        # per-modality stats (count, target_mean, frequency, std, somersd, tau_b, tau_c) stay
-        # columns; only per-feature metrics (sort_by association, n_mod) become index levels
-        # so they collapse to one row per feature instead of repeating across every modality.
+        # per-modality stats (count, target_mean, frequency, std) stay columns; per-feature
+        # metrics (association — tau_c/tau_b/somersd, cramerv/tschuprowt, … — and n_mod)
+        # become index levels so they show once per feature instead of repeating across
+        # every modality.
         excluded = per_modality_columns() | {"dropped", "dropped_reason"}
         indices = [col for col in summaries.columns if col not in excluded]
         indices = ["feature"] + indices + ["label"]

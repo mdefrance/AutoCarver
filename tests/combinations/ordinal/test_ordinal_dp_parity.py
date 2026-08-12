@@ -22,10 +22,7 @@ from AutoCarver.combinations import (
     KendallTauCCombinations,
     SomersDCombinations,
 )
-from AutoCarver.combinations.ordinal.ordinal_combination_evaluators import (
-    _ordinal_associations,
-    _top_k_partitions_ordinal_dp,
-)
+from AutoCarver.combinations.ordinal.ordinal_combination_evaluators import _top_k_partitions_ordinal_dp
 from AutoCarver.combinations.utils.combination_evaluator import CombinationEvaluator
 from AutoCarver.combinations.utils.combinations import (
     combination_formatter,
@@ -33,6 +30,7 @@ from AutoCarver.combinations.utils.combinations import (
     group_crosstab,
 )
 from AutoCarver.features import OrdinalFeature
+from AutoCarver.stats import rank_associations
 
 EVALUATORS = [KendallTauCCombinations, KendallTauBCombinations, SomersDCombinations]
 SORT_KEYS = ["tau_c", "tau_b", "somersd"]
@@ -42,7 +40,7 @@ def _brute_best(xtab: pd.DataFrame, raw_index: list, max_n_mod: int, sort_by: st
     best = -np.inf
     for combo in consecutive_combinations(raw_index, max_n_mod):
         grouped = group_crosstab(xtab, combination_formatter(combo))
-        value = _ordinal_associations(grouped.values)[sort_by]
+        value = rank_associations(grouped.values)[sort_by]
         if value is not None and value > best:
             best = value
     return best
@@ -66,7 +64,7 @@ def test_dp_matches_bruteforce(sort_by: str, seed: int) -> None:
 
     # every DP candidate's metrics equal the closed form on the grouped table
     for entry in dp:
-        reference = _ordinal_associations(group_crosstab(xtab, entry["index_to_groupby"]).values)
+        reference = rank_associations(group_crosstab(xtab, entry["index_to_groupby"]).values)
         for key in SORT_KEYS:
             got, ref = entry[key], reference[key]
             assert (got is None) == (ref is None)

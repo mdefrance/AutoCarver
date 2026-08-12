@@ -6,7 +6,7 @@ from AutoCarver.features import BaseFeature
 from AutoCarver.selectors.filters import BaseFilter
 from AutoCarver.selectors.measures import BaseMeasure
 
-RANKED_COLUMNS = ["measure", "association", "rank", "filter", "redundancy", "filtered_with"]
+RANKED_COLUMNS = ["measure", "association", "rank", "filter", "redundancy", "redundancy_with"]
 
 
 def format_default_measures(feature: BaseFeature) -> dict:
@@ -36,9 +36,9 @@ def format_redundancy_filter(feature: BaseFeature, filters: list[BaseFilter]) ->
             return {
                 "filter": filter_.__name__.replace("Filter", ""),
                 "redundancy": payload.get("value"),
-                "filtered_with": payload.get("info", {}).get("correlation_with"),
+                "redundancy_with": payload.get("info", {}).get("correlation_with"),
             }
-    return {"filter": None, "redundancy": None, "filtered_with": None}
+    return {"filter": None, "redundancy": None, "redundancy_with": None}
 
 
 def format_ranked_features(
