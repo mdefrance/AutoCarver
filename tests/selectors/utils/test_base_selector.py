@@ -351,8 +351,9 @@ def test_split_budget() -> None:
     """function test of split_budget"""
     counts = {"qualitatives": 435, "quantitatives": 119}
 
-    # the reproducer: 50 total, proportionally split (39.26 / 10.74 -> leftover to quanti)
-    assert split_budget(50, counts) == {"qualitatives": 39, "quantitatives": 11}
+    # both types have capacity -> an even split, not one proportional to the counts
+    assert split_budget(50, counts) == {"qualitatives": 25, "quantitatives": 25}
+    assert split_budget(100, counts) == {"qualitatives": 50, "quantitatives": 50}
 
     # no cap
     assert split_budget(None, counts) == counts
@@ -366,6 +367,77 @@ def test_split_budget() -> None:
 
     # no features at all
     assert split_budget(5, {"qualitatives": 0, "quantitatives": 0}) == {"qualitatives": 0, "quantitatives": 0}
+
+
+def test_split_budget_redistributes_unfillable_seats() -> None:
+    """seats a type cannot fill go to the types that can"""
+
+    # only 25 quantitative features exist for a 100 budget -> qualitatives take 75
+    assert split_budget(100, {"qualitatives": 397, "quantitatives": 25}) == {
+        "qualitatives": 75,
+        "quantitatives": 25,
+    }
+
+    # a type with nothing at all forfeits its whole share
+    assert split_budget(40, {"qualitatives": 397, "quantitatives": 0}) == {
+        "qualitatives": 40,
+        "quantitatives": 0,
+    }
+
+    # scarcity on the qualitative side redistributes the same way
+    assert split_budget(60, {"qualitatives": 10, "quantitatives": 400}) == {
+        "qualitatives": 10,
+        "quantitatives": 50,
+    }
+
+    # odd budgets stay fully spent and within capacity
+    for n_best, counts in (
+        (7, {"qualitatives": 397, "quantitatives": 120}),
+        (9, {"qualitatives": 4, "quantitatives": 120}),
+        (3, {"qualitatives": 1, "quantitatives": 1}),
+    ):
+        budget = split_budget(n_best, counts)
+        assert sum(budget.values()) == min(n_best, sum(counts.values()))
+        assert all(budget[kind] <= counts[kind] for kind in counts)
+
+
+def test_fit_redistributes_seats_left_unfilled_by_gates(
+    features_object: Features,
+    X: pd.DataFrame,
+    y: pd.Series,
+) -> None:
+    """A type can come up short after its gates run, not only for lack of candidates.
+
+    ``split_budget`` cannot see that -- it only knows the candidate counts -- so ``fit``
+    tops the qualitative budget up with whatever the quantitative pass left on the table.
+    """
+    seen: dict[str, int] = {}
+
+    class ShortQuantitativeSelector(BaseSelector):
+        """Selects a single quantitative feature, whatever budget it is given."""
+
+        def _select_kind(self, kind, typed, X, y, budget):  # type: ignore[no-untyped-def]
+            seen[kind] = budget[kind]
+            if kind == "quantitatives":
+                return typed[kind][:1]
+            return typed[kind][: budget[kind]]
+
+    n_best = 6
+    selector = ShortQuantitativeSelector(n_best_features=n_best, features=features_object)
+    selector.fit(X, y)
+
+    n_quantitatives = len(get_quantitative_features(features_object))
+    n_qualitatives = len(get_qualitative_features(features_object))
+    if n_quantitatives > 1 and n_qualitatives >= n_best - 1:
+        # 5 seats were meant for the quantitative side but only 1 was used
+        assert seen["qualitatives"] == n_best - 1
+        assert len(selector.selected_features) == n_best
+
+    # without a budget nothing is redistributed and nothing is capped
+    seen.clear()
+    unbudgeted = ShortQuantitativeSelector(features=features_object)
+    unbudgeted.fit(X, y)
+    assert seen["qualitatives"] == n_qualitatives
 
 
 def test_base_selector_select(

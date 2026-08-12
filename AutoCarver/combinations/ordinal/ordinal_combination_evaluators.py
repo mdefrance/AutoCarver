@@ -1,6 +1,5 @@
 """Module for ordinal combination evaluators."""
 
-import math
 from abc import ABC
 
 import numpy as np
@@ -22,6 +21,7 @@ from AutoCarver.combinations.utils.dp import (
 )
 from AutoCarver.combinations.utils.target_rate import TargetRate
 from AutoCarver.features import GroupedList
+from AutoCarver.stats import concordant_minus_discordant, rank_associations, rank_associations_from_counts
 
 
 class OrdinalCombinationEvaluator(CombinationEvaluator[pd.DataFrame], ABC):
@@ -94,7 +94,7 @@ class OrdinalCombinationEvaluator(CombinationEvaluator[pd.DataFrame], ABC):
             ``None`` for a degenerate table.
         """
         _, _ = n_obs, tol  # unused
-        return _ordinal_associations(np.asarray(xagg.values, dtype=float))
+        return rank_associations(np.asarray(xagg.values, dtype=float))
 
     def _get_best_combination_non_nan(self) -> dict | None:
         """DP-based override with progressive top-K (mirrors the continuous path).
@@ -192,70 +192,6 @@ class SomersDCombinations(OrdinalCombinationEvaluator):
     sort_by = "somersd"
 
 
-def _concordant_minus_discordant(values: np.ndarray) -> float:
-    """Concordant minus discordant pairs ``C − D`` of an ordered table.
-
-    ``values`` is ``(r, c)`` with rows / columns already ascending.
-    """
-    # concordant partners of each cell: counts strictly down-right (k>i, l>j)
-    suffix = np.cumsum(np.cumsum(values[::-1, ::-1], axis=0), axis=1)[::-1, ::-1]
-    down_right = np.zeros_like(values)
-    down_right[:-1, :-1] = suffix[1:, 1:]
-
-    # discordant partners of each cell: counts strictly down-left (k>i, l<j)
-    suffix_rows_prefix_cols = np.cumsum(np.cumsum(values[::-1, :], axis=0)[::-1, :], axis=1)
-    down_left = np.zeros_like(values)
-    down_left[:-1, 1:] = suffix_rows_prefix_cols[1:, :-1]
-
-    return float((values * down_right).sum()) - float((values * down_left).sum())
-
-
-def _taus_from_counts(
-    cd: float, n: float, untied_on_feature: float, untied_on_target: float, m: int
-) -> dict[str, float | None]:
-    """Assembles tau-b, tau-c and Somers' D from pre-computed pair counts.
-
-    Shared by the closed form (:func:`_ordinal_associations`) and the DP path
-    so both produce bit-identical values.
-
-    * ``tau_b = (C − D) / sqrt((P0 − T_X)(P0 − T_Y))`` — matches
-      ``scipy.stats.kendalltau``;
-    * ``tau_c = 2·m·(C − D) / (n²·(m − 1))`` (Stuart's rectangular-table
-      correction);
-    * ``somersd = (C − D) / (P0 − T_X)`` — the original Somers' D ``D(Y|X)``.
-
-    Each measure is ``None`` when its denominator vanishes.
-    """
-    denominator_b = math.sqrt(untied_on_feature * untied_on_target)
-    return {
-        "tau_b": cd / denominator_b if denominator_b > 0 else None,
-        "tau_c": (2.0 * m * cd) / (n * n * (m - 1)) if m > 1 else None,
-        "somersd": cd / untied_on_feature if untied_on_feature > 0 else None,
-    }
-
-
-def _ordinal_associations(values: np.ndarray) -> dict[str, float | None]:
-    """Kendall's tau-b, tau-c and Somers' D ``D(Y|X)`` for an ordered table.
-
-    ``values`` is the ``(r, c)`` cell-count array with rows = ``X`` (feature
-    groups) and columns = ``Y`` (target levels), both already in ascending order.
-    Each measure is ``None`` when its denominator vanishes (degenerate table),
-    mirroring the continuous evaluator's ``None`` convention.
-    """
-    n = float(values.sum())
-    if n < 2:
-        return {"tau_b": None, "tau_c": None, "somersd": None}
-
-    cd = _concordant_minus_discordant(values)
-    row = values.sum(axis=1)
-    col = values.sum(axis=0)
-    all_pairs = n * (n - 1) / 2.0
-    untied_on_feature = all_pairs - float((row * (row - 1) / 2.0).sum())
-    untied_on_target = all_pairs - float((col * (col - 1) / 2.0).sum())
-    m = min(int((row > 0).sum()), int((col > 0).sum()))
-    return _taus_from_counts(cd, n, untied_on_feature, untied_on_target, m)
-
-
 # ---------------------------------------------------------------------------
 # Phase-B: progressive top-K interval DP over the additive C−D numerator
 # ---------------------------------------------------------------------------
@@ -322,7 +258,7 @@ def _score_partition(
             non_empty_groups += 1
     # m matches the closed form: min over *non-empty* grouped rows and target levels
     m = min(non_empty_groups, c_nonempty)
-    return _taus_from_counts(cd, total_n, all_pairs - tied_on_feature, untied_on_target, m)
+    return rank_associations_from_counts(cd, total_n, all_pairs - tied_on_feature, untied_on_target, m)
 
 
 def _top_k_partitions_ordinal_dp(
@@ -360,7 +296,7 @@ def _top_k_partitions_ordinal_dp(
     all_pairs = total_n * (total_n - 1) / 2.0
     untied_on_target = all_pairs - float((col_sums * (col_sums - 1) / 2.0).sum())
     c_nonempty = int((col_sums > 0).sum())
-    total_between = _concordant_minus_discordant(kept_M)
+    total_between = concordant_minus_discordant(kept_M)
     seg = _segment_within_costs(kept_M)
     n_prefix = np.concatenate([[0.0], np.cumsum(kept_n_per_mod.astype(float))])
 

@@ -87,10 +87,10 @@ class BaseSelector(BaseEstimator, TransformerMixin, ABC):
             A set of :class:`Features` to select from.
 
         n_best_features : int, optional
-            Total number of :class:`Features` to select, split across feature
-            types proportionally to how many of each were passed (see
-            :func:`split_budget`). ``None`` (the default) applies no cap: every
-            feature passing the default gates is kept.
+            Total number of :class:`Features` to select, split **evenly** across
+            feature types, with seats a type cannot fill redistributed to the
+            others (see :func:`split_budget`). ``None`` (the default) applies no
+            cap: every feature passing the default gates is kept.
 
         config : SelectionConfig, optional
             Per-type measures/filters and ``verbose``. Defaults to the
@@ -291,9 +291,20 @@ class BaseSelector(BaseEstimator, TransformerMixin, ABC):
 
         # splitting features by type and apportioning the total budget across them
         typed = get_typed_features(self.features)
-        budget = split_budget(self.n_best_features, {kind: len(feats) for kind, feats in typed.items()})
+        counts = {kind: len(feats) for kind, feats in typed.items()}
+        budget = split_budget(self.n_best_features, counts)
 
         best_features = self._select_kind("quantitatives", typed, X, y, budget)
+
+        # a type can also come up short *after* its gates and filters run, not just for
+        # lack of candidates; those seats are handed to the qualitative pass too, so the
+        # total budget is spent whenever there are features left to spend it on
+        if self.n_best_features is not None:
+            unfilled = budget["quantitatives"] - len(best_features)
+            if unfilled > 0:
+                budget = dict(budget)
+                budget["qualitatives"] = min(counts["qualitatives"], budget["qualitatives"] + unfilled)
+
         best_features += self._select_kind("qualitatives", typed, X, y, budget)
 
         self._selected = best_features
@@ -393,22 +404,46 @@ def get_typed_features(features: Features) -> dict[str, list[BaseFeature]]:
 
 
 def split_budget(n_best: int | None, counts: dict[str, int]) -> dict[str, int]:
-    """Splits a total selection budget across feature types, proportionally.
+    """Splits a total selection budget **evenly** across feature types.
 
-    Largest-remainder apportionment: each type gets ``n_best * count / total``
-    rounded down, and the leftover seats go to the largest fractional parts.
-    ``None`` (or a budget larger than the feature count) means no cap.
+    Each type gets an equal share of ``n_best``, capped by how many features of
+    that type are actually available; seats a type cannot fill are redistributed
+    to the types that can. ``None`` (or a budget larger than the feature count)
+    means no cap.
+
+    With 100 seats over 400 qualitative and 100 quantitative features, both types
+    have capacity, so the split is ``50 / 50``. With only 25 quantitative
+    features available, the quantitative side takes 25 and the qualitative side
+    takes the remaining ``75`` rather than being held to 50.
+
+    An even split is deliberate: apportioning proportionally to how many
+    candidates each type happens to have lets the *carver* decide the model's
+    feature mix, since carving a feature reclassifies it as qualitative (see
+    :func:`is_qualitative`). On a rare-event target that silently swamps the
+    model with thin carved buckets.
     """
     total = sum(counts.values())
     if n_best is None or total == 0 or n_best >= total:
         return dict(counts)
 
-    exact = {kind: n_best * count / total for kind, count in counts.items()}
-    budget = {kind: int(value) for kind, value in exact.items()}
-    leftover = n_best - sum(budget.values())
-    for kind in sorted(exact, key=lambda kind: exact[kind] - budget[kind], reverse=True)[:leftover]:
-        budget[kind] += 1
-    return budget
+    # water-filling: settle the scarcest type first, so every seat it cannot use
+    # is still on the table for the types that follow
+    budget: dict[str, int] = {}
+    remaining, unsettled = n_best, len(counts)
+    for kind in sorted(counts, key=lambda kind: counts[kind]):
+        budget[kind] = min(counts[kind], remaining // unsettled)
+        remaining -= budget[kind]
+        unsettled -= 1
+
+    # integer division can leave a seat or two over; hand them to whoever has room
+    for kind in sorted(counts, key=lambda kind: counts[kind], reverse=True):
+        if remaining <= 0:
+            break
+        extra = min(remaining, counts[kind] - budget[kind])
+        budget[kind] += extra
+        remaining -= extra
+
+    return {kind: budget[kind] for kind in counts}
 
 
 def is_quantitative(feature: BaseFeature) -> bool:

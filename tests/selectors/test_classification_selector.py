@@ -137,7 +137,7 @@ def test_summary_shares_columns_across_types(
         "rank",
         "filter",
         "redundancy",
-        "filtered_with",
+        "redundancy_with",
         "selected",
     }
     # one row per feature, and both types share the association column

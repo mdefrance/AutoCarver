@@ -5,11 +5,11 @@ seed-parametrised parity suite lives in
 ``tests/combinations/ordinal/test_ordinal_associations.py``; this module adds
 *property* coverage over hypothesis-generated contingency tables:
 
-  * ``_ordinal_associations`` matches an independent brute-force pair count and
+  * ``rank_associations`` matches an independent brute-force pair count and
     ``scipy`` (tau-b / Somers' D) on every non-degenerate table;
   * the three statistics stay within ``[-1, 1]`` and negate when the target
     order is reversed (a pure orientation flip);
-  * ``_concordant_minus_discordant`` matches the brute-force ``C - D``;
+  * ``concordant_minus_discordant`` matches the brute-force ``C - D``;
   * the interval DP recovers the brute-force-best consecutive partition: exactly
     for tau-c with any ``top_k`` (per-k constant denominator), and for all three
     metrics once ``top_k`` is exhaustive.
@@ -23,11 +23,8 @@ from hypothesis import HealthCheck, assume, given, settings
 from hypothesis import strategies as st
 from scipy.stats import kendalltau, somersd
 
-from AutoCarver.combinations.ordinal.ordinal_combination_evaluators import (
-    _concordant_minus_discordant,
-    _ordinal_associations,
-    _top_k_partitions_ordinal_dp,
-)
+from AutoCarver.combinations.ordinal.ordinal_combination_evaluators import _top_k_partitions_ordinal_dp
+from AutoCarver.stats import concordant_minus_discordant, rank_associations
 
 SETTINGS = settings(max_examples=60, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 
@@ -98,7 +95,7 @@ def _brute_best_partition(table: np.ndarray, sort_by: str, max_n_mod: int) -> fl
         for cuts in combinations(range(1, n_mod), k - 1):
             bounds = [0, *cuts, n_mod]
             grouped = np.array([table[bounds[i] : bounds[i + 1]].sum(axis=0) for i in range(k)])
-            value = _ordinal_associations(grouped)[sort_by]
+            value = rank_associations(grouped)[sort_by]
             if value is not None and (best is None or value > best):
                 best = value
     return best
@@ -111,7 +108,7 @@ def _brute_best_partition(table: np.ndarray, sort_by: str, max_n_mod: int) -> fl
 @SETTINGS
 def test_associations_match_brute_force(table):
     """The closed form equals the independent brute-force pair count."""
-    got = _ordinal_associations(table)
+    got = rank_associations(table)
     ref = _brute_associations(table)
     for key in METRICS:
         if ref[key] is None:
@@ -124,8 +121,8 @@ def test_associations_match_brute_force(table):
 @given(ordinal_count_table())
 @SETTINGS
 def test_concordant_minus_discordant_matches_brute_force(table):
-    """``_concordant_minus_discordant`` equals the O(N^2) reference."""
-    assert abs(_concordant_minus_discordant(table) - _brute_cd(table)) < 1e-9
+    """``concordant_minus_discordant`` equals the O(N^2) reference."""
+    assert abs(concordant_minus_discordant(table) - _brute_cd(table)) < 1e-9
 
 
 @given(ordinal_count_table())
@@ -134,7 +131,7 @@ def test_tau_b_and_somersd_match_scipy(table):
     """tau-b matches ``scipy.stats.kendalltau``; Somers' D matches ``scipy.stats.somersd``."""
     xs, ys = _expand(table)
     assume(len(set(xs)) > 1 and len(set(ys)) > 1)  # both margins non-degenerate
-    got = _ordinal_associations(table)
+    got = rank_associations(table)
     assert got["tau_b"] == _approx(kendalltau(xs, ys)[0])
     assert got["somersd"] == _approx(somersd(table).statistic)
 
@@ -146,7 +143,7 @@ def test_tau_b_and_somersd_match_scipy(table):
 @SETTINGS
 def test_metrics_within_unit_interval(table):
     """Every defined statistic lies in ``[-1, 1]``."""
-    got = _ordinal_associations(table)
+    got = rank_associations(table)
     for key in METRICS:
         if got[key] is not None:
             assert -1 - 1e-9 <= got[key] <= 1 + 1e-9, (key, got[key])
@@ -158,8 +155,8 @@ def test_reversing_target_order_negates_metrics(table):
     """Reversing the ordinal target columns is a pure orientation flip: every
     statistic negates (denominators, which depend only on the margins, are
     unchanged)."""
-    got = _ordinal_associations(table)
-    reversed_got = _ordinal_associations(table[:, ::-1])
+    got = rank_associations(table)
+    reversed_got = rank_associations(table[:, ::-1])
     for key in METRICS:
         if got[key] is None:
             assert reversed_got[key] is None

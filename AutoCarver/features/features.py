@@ -35,10 +35,8 @@ TFeature = TypeVar("TFeature", bound=BaseFeature)
 # which adds its own {"dropped", "dropped_reason"} on top.
 #
 # The target-rate names are derived from the TargetRate subclasses rather than listed, so
-# adding a TargetRate cannot silently push its column into the index (which is how
-# `tau_b`/`tau_c` regressed before Phase 3.9).
+# adding a TargetRate cannot silently push its per-modality column into the index.
 _STRUCTURAL_COLUMNS = frozenset({"feature", "label", "content", "frequency", "count", "std"})
-_ASSOCIATION_COLUMNS = frozenset({"somersd", "tau_b", "tau_c"})
 
 
 def _target_rate_name(cls: type) -> str:
@@ -77,7 +75,7 @@ def per_modality_columns() -> frozenset[str]:
     subclasses that have already been imported, and `features.py` loads well before
     `AutoCarver.combinations`.
     """
-    return _STRUCTURAL_COLUMNS | _ASSOCIATION_COLUMNS | _target_rate_column_names()
+    return _STRUCTURAL_COLUMNS | _target_rate_column_names()
 
 
 @dataclass
