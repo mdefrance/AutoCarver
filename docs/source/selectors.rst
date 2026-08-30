@@ -137,7 +137,7 @@ where:
 
 
 .. autoclass:: AutoCarver.selectors.measures.PearsonMeasure
-    :members: compute_association, validate, is_x_quantitative, is_y_quantitative, higher_is_better, is_absolute
+    :members: compute_association, validate, is_x_quantitative, is_y_quantitative, higher_is_better, rank_by_magnitude
 
 
 Spearman's :math:`\rho`
@@ -161,7 +161,7 @@ where:
 
 
 .. autoclass:: AutoCarver.selectors.measures.SpearmanMeasure
-    :members: compute_association, validate, is_x_quantitative, is_y_quantitative, higher_is_better, is_absolute
+    :members: compute_association, validate, is_x_quantitative, is_y_quantitative, higher_is_better, rank_by_magnitude
 
 
 
@@ -203,7 +203,7 @@ The Distance Correlation is computed using `scipy.spatial.distance.correlation <
 
 
 .. autoclass:: AutoCarver.selectors.measures.DistanceMeasure
-    :members: compute_association, validate, is_x_quantitative, is_y_quantitative, higher_is_better, is_absolute
+    :members: compute_association, validate, is_x_quantitative, is_y_quantitative, higher_is_better, rank_by_magnitude
 
 
 
@@ -482,7 +482,7 @@ where:
 
 
 .. autoclass:: AutoCarver.selectors.filters.PearsonFilter
-    :members: filter, is_x_quantitative, higher_is_better, is_absolute
+    :members: filter, is_x_quantitative, higher_is_better, rank_by_magnitude
 
 
 
@@ -509,7 +509,7 @@ where:
 
 
 .. autoclass:: AutoCarver.selectors.filters.SpearmanFilter
-    :members: filter, is_x_quantitative, higher_is_better, is_absolute
+    :members: filter, is_x_quantitative, higher_is_better, rank_by_magnitude
 
 
 .. note::

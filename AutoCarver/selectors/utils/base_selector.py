@@ -529,7 +529,7 @@ def get_measure_rank(feature: BaseFeature, measure: BaseMeasure) -> int:
 def get_measure_value(feature: BaseFeature, measure: BaseMeasure) -> float:
     """gives value of measure for specified feature"""
     value = feature.measures[measure.__name__]["value"]
-    if measure.is_absolute:
+    if measure.rank_by_magnitude:
         value = abs(value)
     if np.isnan(value):
         value = float("-inf")

@@ -41,7 +41,7 @@ class BaseMeasure(ABC):
     correlation_with = "target"
     """ info about correlation with which other feature """
 
-    is_absolute = False
+    rank_by_magnitude = False
     """ wether the measure needs absolute value for comparison or not """
 
     is_reversible = False
@@ -88,7 +88,7 @@ class BaseMeasure(ABC):
             higher_is_better=self.higher_is_better,
             correlation_with=self.correlation_with,
             is_default=self.is_default,
-            is_absolute=self.is_absolute,
+            rank_by_magnitude=self.rank_by_magnitude,
         )
 
     @info.setter
@@ -164,7 +164,7 @@ class BaseMeasure(ABC):
 class AbsoluteMeasure(BaseMeasure):
     """Absolute measure of association between x and y"""
 
-    is_absolute = True
+    rank_by_magnitude = True
 
     def validate(self) -> bool:
         """Checks if :attr:`threshold` is reached

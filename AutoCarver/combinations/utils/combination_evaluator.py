@@ -186,6 +186,14 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
     is_y_ordinal = False
     sort_by = None
 
+    # Whether ``sort_by`` is a signed metric that must be ranked by magnitude. The chi²
+    # and effect-size measures are non-negative, so signed ranking is already magnitude
+    # ranking for them; the ordinal rank statistics are signed, and a declared ordinal's
+    # order cannot be flipped to make a negative association positive. Ranking those by
+    # signed value would pick the least negative — the weakest grouping — over a strong
+    # inverse signal.
+    rank_by_magnitude: bool = False
+
     # Initial top-K for the DP-based segmentation
     # path used by the continuous and binary subclasses. When ``dp_escalate`` is
     # on, the fallback loop in ``_get_best_combination_non_nan`` /
@@ -282,6 +290,17 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
                 **measure,
             }
 
+    def _rank_key(self, value: float | None) -> float:
+        """Descending-sort key for a candidate's ``sort_by`` metric.
+
+        Takes the magnitude when the metric is signed (see :attr:`rank_by_magnitude`),
+        so a strong inverse association outranks a weak direct one. ``None`` / ``NaN``
+        still sort last.
+        """
+        if self.rank_by_magnitude and value is not None:
+            return sort_key(abs(value))
+        return sort_key(value)
+
     def _get_best_association(self, combinations: Iterable[list[list[str]]]) -> dict | None:
         """Streams grouping → scoring → viability in one pass.
 
@@ -305,7 +324,7 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
         # collect & sort by metric (NaN / None last, matching prior pandas behaviour)
         associations = list(association_stream)
         metric = self.sort_by
-        associations.sort(key=lambda assoc: sort_key(assoc.get(metric)), reverse=True)
+        associations.sort(key=lambda assoc: self._rank_key(assoc.get(metric)), reverse=True)
 
         # testing viability of combination (lazy-rebuilds xagg per candidate)
         best_combination = self._get_viable_combination(associations)

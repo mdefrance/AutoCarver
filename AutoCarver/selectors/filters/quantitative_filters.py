@@ -17,7 +17,7 @@ class QuantitativeFilter(BaseFilter):
     __name__ = "QuantitativeFilter"
 
     is_x_quantitative = True
-    is_absolute = True
+    rank_by_magnitude = True
 
     @extend_docstring(BaseFilter.filter)
     def filter(self, X: pd.DataFrame, ranks: list[BaseFeature], n_best: int | None = None) -> list[BaseFeature]:

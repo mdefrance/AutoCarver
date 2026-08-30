@@ -26,7 +26,7 @@ class BaseFilter(ABC):
     higher_is_better = False
     """ wether higher values are better or not """
 
-    is_absolute = False
+    rank_by_magnitude = False
     """ wether the measure needs absolute value for comparison or not """
 
     def __init__(self, threshold: float = 1.0) -> None:

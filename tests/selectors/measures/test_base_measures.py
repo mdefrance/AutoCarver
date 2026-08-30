@@ -68,7 +68,7 @@ def test_to_dict(base_measure: BaseMeasure) -> None:
                 "higher_is_better": True,
                 "correlation_with": "target",
                 "is_default": False,
-                "is_absolute": False,
+                "rank_by_magnitude": False,
             },
         }
     }
@@ -92,7 +92,7 @@ def test_update_feature(base_measure: BaseMeasure) -> None:
                 "higher_is_better": True,
                 "correlation_with": "target",
                 "is_default": False,
-                "is_absolute": False,
+                "rank_by_magnitude": False,
             },
         }
     }
