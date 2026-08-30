@@ -1096,3 +1096,62 @@ def test_one_vs_rest_carver_unknown_ordinal_values_raises(
     )
     with raises(ValueError):
         auto_carver.fit_transform(x_train_wrong_2, x_train_wrong_2["multiclass_target"])
+
+
+def _fit_one_vs_rest_for_parity(n_jobs: int) -> tuple[dict[str, dict], dict[str, int]]:
+    """Fits a OneVsRestCarver on a small synthetic frame and returns
+    ``({version: feature.content}, {version: n_modalities_out})``.
+
+    The carved contents are compared by value (not object identity) so the
+    parallel path can be checked against the sequential one.
+    """
+
+    rng = np.random.default_rng(0)
+    n, n_levels = 3000, 12
+    levels = np.linspace(0.0, 1.0, n_levels)
+    columns, signal = {}, np.zeros(n)
+    for i in range(4):
+        drawn = rng.integers(0, n_levels, n)
+        columns[f"feature{i}"] = [f"L{level:02d}" for level in drawn]
+        signal += levels[drawn]
+    rate = 0.05 + 0.45 * (signal / signal.max())
+    target = (rng.random(n) < rate).astype(int) + (rng.random(n) < rate / 3).astype(int)
+
+    X = pd.DataFrame(columns)
+    y = pd.Series(np.clip(target, 0, 2))
+    carver = OneVsRestCarver(
+        features=Features(categoricals=list(X.columns)),
+        min_freq=0.02,
+        max_n_mod=5,
+        config=ProcessingConfig(dropna=False, verbose=False, n_jobs=n_jobs),
+    )
+    carver.fit(X, y)
+    carved = carver.transform(X)
+    return (
+        {feature.version: feature.content for feature in carver.features},
+        {feature.version: carved[feature.version].nunique(dropna=False) for feature in carver.features},
+    )
+
+
+def test_one_vs_rest_carver_parallel_features_parity():
+    """``n_jobs=2`` must carve exactly like ``n_jobs=1``.
+
+    The parallel path carves in worker processes and returns *new* feature
+    instances, which the spawned ``BinaryCarver`` stores in its own container.
+    ``OneVsRestCarver`` has to adopt them: without that, its own features stay
+    merely discretized and every carved column comes out ungrouped.
+    """
+    sequential_content, sequential_n_mod = _fit_one_vs_rest_for_parity(n_jobs=1)
+    parallel_content, parallel_n_mod = _fit_one_vs_rest_for_parity(n_jobs=2)
+
+    assert parallel_content == sequential_content
+    assert parallel_n_mod == sequential_n_mod
+
+
+def test_one_vs_rest_carver_parallel_respects_max_n_mod():
+    """No carved column may exceed ``max_n_mod`` (+ NaN) on the parallel path."""
+    _, n_modalities = _fit_one_vs_rest_for_parity(n_jobs=2)
+
+    assert n_modalities, "expected at least one carved version"
+    over_cap = {version: count for version, count in n_modalities.items() if count > 5}
+    assert not over_cap, f"columns above max_n_mod=5: {over_cap}"
