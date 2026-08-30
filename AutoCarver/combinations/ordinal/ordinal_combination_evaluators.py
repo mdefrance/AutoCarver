@@ -49,6 +49,10 @@ class OrdinalCombinationEvaluator(CombinationEvaluator[pd.DataFrame], ABC):
     """
 
     is_y_ordinal = True
+    # the rank statistics are signed and a declared ordinal's order is the caller's, not
+    # ours to flip: a feature running opposite to the target scores negative on every
+    # grouping, so candidates rank by |metric| (see CombinationEvaluator.rank_by_magnitude)
+    rank_by_magnitude = True
     _target_rate_classes: list[type[OrdinalTargetRate]] = [TargetMeanRidit, TargetMeanLevel]
     # narrow inherited attribute: ordinal evaluators always carry an OrdinalTargetRate
     # (enforced by _init_target_rate).
@@ -303,10 +307,23 @@ def _top_k_partitions_ordinal_dp(
     def seg_cost(i: int, j: int) -> float:
         return float(seg[i, j])
 
-    dp_entries = top_k_partitions(n_mod=n_kept, cap=cap, seg_cost=seg_cost, top_k=top_k, maximize=False)
+    # C−D = total_between − Σ WithinSegment, so minimising Σ WithinSegment maximises the
+    # *signed* numerator. The strongest association may be the most negative one (an
+    # ordinal feature running opposite to the target), and those partitions live at the
+    # other end of the DP, so both ends are enumerated and ranked together by magnitude.
+    # ``top_k`` is the caller's budget for candidates kept, so the two ends split it
+    # rather than doubling the configured DP size. Each end still yields its own best
+    # first, so the head of the merged ranking is unaffected by the split.
+    half = max(1, top_k // 2)
+    dp_entries = top_k_partitions(n_mod=n_kept, cap=cap, seg_cost=seg_cost, top_k=half, maximize=False)
+    dp_entries += top_k_partitions(n_mod=n_kept, cap=cap, seg_cost=seg_cost, top_k=half, maximize=True)
 
     entries: list[tuple[float, dict, tuple[int, ...]]] = []
+    seen: set[tuple[int, ...]] = set()
     for _, sum_seg, splits in dp_entries:
+        if splits in seen:
+            continue
+        seen.add(splits)
         metrics = _score_partition(
             sum_seg,
             splits,
@@ -317,7 +334,8 @@ def _top_k_partitions_ordinal_dp(
             untied_on_target=untied_on_target,
             c_nonempty=c_nonempty,
         )
-        entries.append((sort_key(metrics.get(sort_by)), metrics, splits))
+        value = metrics.get(sort_by)
+        entries.append((sort_key(abs(value)) if value is not None else sort_key(value), metrics, splits))
 
     entries.sort(key=lambda e: e[0], reverse=True)
     entries = entries[:top_k]

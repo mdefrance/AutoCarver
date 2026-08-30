@@ -37,12 +37,19 @@ SORT_KEYS = ["tau_c", "tau_b", "somersd"]
 
 
 def _brute_best(xtab: pd.DataFrame, raw_index: list, max_n_mod: int, sort_by: str) -> float:
-    best = -np.inf
+    """Largest ``|metric|`` over every consecutive grouping.
+
+    The ordinal rank statistics are signed and candidates rank by magnitude (a strong
+    inverse association beats a weak direct one — see
+    ``test_ordinal_inverse_association.py``), so the brute-force reference is the
+    largest absolute value, not the largest signed one.
+    """
+    best = 0.0
     for combo in consecutive_combinations(raw_index, max_n_mod):
         grouped = group_crosstab(xtab, combination_formatter(combo))
         value = rank_associations(grouped.values)[sort_by]
-        if value is not None and value > best:
-            best = value
+        if value is not None and abs(value) > best:
+            best = abs(value)
     return best
 
 
@@ -71,8 +78,8 @@ def test_dp_matches_bruteforce(sort_by: str, seed: int) -> None:
             if got is not None:
                 assert got == pytest.approx(ref, abs=1e-9)
 
-    # the DP's best matches the exhaustive brute-force best
-    assert dp[0][sort_by] == pytest.approx(_brute_best(xtab, raw_index, max_n_mod, sort_by), abs=1e-9)
+    # the DP's best matches the exhaustive brute-force best (by magnitude)
+    assert abs(dp[0][sort_by]) == pytest.approx(_brute_best(xtab, raw_index, max_n_mod, sort_by), abs=1e-9)
 
 
 def _select(evaluator: CombinationEvaluator, xtab: pd.DataFrame, feature: OrdinalFeature, *, use_dp: bool):

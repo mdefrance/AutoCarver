@@ -10,9 +10,9 @@ seed-parametrised parity suite lives in
   * the three statistics stay within ``[-1, 1]`` and negate when the target
     order is reversed (a pure orientation flip);
   * ``concordant_minus_discordant`` matches the brute-force ``C - D``;
-  * the interval DP recovers the brute-force-best consecutive partition: exactly
-    for tau-c with any ``top_k`` (per-k constant denominator), and for all three
-    metrics once ``top_k`` is exhaustive.
+  * the interval DP recovers the brute-force-best consecutive partition, ranked by
+    ``|metric|``: exactly for tau-c with any ``top_k`` (per-k constant denominator),
+    and for all three metrics once ``top_k`` is exhaustive.
 """
 
 import math
@@ -88,7 +88,12 @@ def _brute_associations(table: np.ndarray) -> dict[str, float | None]:
 
 
 def _brute_best_partition(table: np.ndarray, sort_by: str, max_n_mod: int) -> float | None:
-    """Best ``sort_by`` over every consecutive row grouping with ``k <= max_n_mod``."""
+    """Largest ``|sort_by|`` over every consecutive row grouping with ``k <= max_n_mod``.
+
+    The rank statistics are signed and ordinal candidates rank by magnitude — a declared
+    ordinal running opposite to the target scores negative on every grouping, and the
+    strongest association must still win.
+    """
     n_mod = table.shape[0]
     best: float | None = None
     for k in range(2, min(max_n_mod, n_mod) + 1):
@@ -96,8 +101,8 @@ def _brute_best_partition(table: np.ndarray, sort_by: str, max_n_mod: int) -> fl
             bounds = [0, *cuts, n_mod]
             grouped = np.array([table[bounds[i] : bounds[i + 1]].sum(axis=0) for i in range(k)])
             value = rank_associations(grouped)[sort_by]
-            if value is not None and (best is None or value > best):
-                best = value
+            if value is not None and (best is None or abs(value) > best):
+                best = abs(value)
     return best
 
 
@@ -209,7 +214,7 @@ def _approx(value: float):
 
 
 def _dp_best(table: np.ndarray, sort_by: str, max_n_mod: int, *, top_k: int) -> float | None:
-    """Top ``sort_by`` value the DP returns for ``table`` (None if it returns nothing)."""
+    """Largest ``|sort_by|`` the DP returns for ``table`` (None if it returns nothing)."""
     raw_index = list(range(table.shape[0]))
     entries = _top_k_partitions_ordinal_dp(
         table,
@@ -220,5 +225,5 @@ def _dp_best(table: np.ndarray, sort_by: str, max_n_mod: int, *, top_k: int) -> 
         sort_by=sort_by,
         top_k=top_k,
     )
-    valid = [e[sort_by] for e in entries if e[sort_by] is not None]
+    valid = [abs(e[sort_by]) for e in entries if e[sort_by] is not None]
     return max(valid) if valid else None
