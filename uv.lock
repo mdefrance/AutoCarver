@@ -107,7 +107,7 @@ wheels = [
 
 [[package]]
 name = "autocarver"
-version = "8.0.0"
+version = "7.7.2"
 source = { editable = "." }
 dependencies = [
     { name = "numpy" },
