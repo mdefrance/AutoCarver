@@ -540,12 +540,18 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         # replacing values for there corresponding label — per-column ``map`` is far faster than a
         # dict-of-dict ``DataFrame.replace`` on a wide frame. Unmapped values are restored to match
         # ``replace``'s leave-untouched semantics, but only when some value is actually unmapped (the
-        # common case is full coverage, which skips ``fillna``'s whole-column alignment pass).
+        # common case is full coverage, which skips the whole-column alignment pass).
+        #
+        # ``where`` rather than ``fillna``: on an object column ``fillna`` silently downcasts the
+        # result, which pandas 2.2 deprecated (a FutureWarning per column, per worker) and pandas 3
+        # drops. ``where`` fills the same positions with the same values and never downcasts, so it
+        # is both quiet today and stable across that change. Nothing here wanted the downcast --
+        # ordinal-encoded columns are cast to numeric explicitly just below.
         for feature in qualitatives:
             col = sample.X[feature.version]
             mapped = col.map(feature.label_per_value)
             if mapped.isna().any():
-                mapped = mapped.fillna(col)
+                mapped = mapped.where(mapped.notna(), col)
             sample.X[feature.version] = mapped
 
         # ordinal_encoding produces integer labels, but the in-place ``replace`` above keeps the

@@ -105,5 +105,5 @@ jobs:
           uv lock --resolution=lowest-direct
           uv sync --all-extras --group compare --resolution=lowest-direct
 
-      - name: Run tests
-        run: uv run pytest -n auto -q tests/
+      - name: Run tests (FutureWarnings are errors)
+        run: uv run pytest -n auto -q -W error::FutureWarning tests/
