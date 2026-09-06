@@ -1,6 +1,5 @@
-"""Set of tests for base_discretizers module."""
-
 import json
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -124,6 +123,41 @@ def test_transform_quantitative_feature(features: Features) -> None:
         f"(4.50e+00, inf), {feature.nan}",
         f"(4.50e+00, inf), {feature.nan}",
     ] == list(list_feature)
+
+
+def test_transform_qualitative_unmapped_values_stay_quiet() -> None:
+    """Unmapped positions are restored from the source column, without a dtype downcast.
+
+    ``map`` returns NaN for anything a feature has no label for -- a NaN in the data, or a
+    modality the feature never saw -- and those positions are filled back from the original
+    column so the method matches ``replace``'s leave-untouched semantics.
+
+    Filling them with ``fillna`` silently downcast the object column, which pandas 2.2
+    deprecated (one FutureWarning per column, per worker process) and pandas 3 dropped.
+    ``where`` fills the same positions with the same values on every supported pandas and
+    never downcasts, so this asserts both halves at once: the values are right, and nothing
+    is warned about.
+
+    Note this only bites when the labels are numeric -- ``ordinal_encoding`` -- since that
+    is the case pandas was willing to downcast. It is also silent on pandas 3, where the
+    deprecation is already resolved, so the teeth are in the lowest-direct CI job.
+    """
+    feature = CategoricalFeature("feature3")
+    feature.ordinal_encoding = True
+    feature.update(GroupedList({"A": ["a", "x"], "B": ["b"], "C": ["c"]}), replace=True)
+
+    discretizer = BaseDiscretizer(Features.from_list([feature]), config=ProcessingConfig(copy=True))
+    # "a" and "x" share a group, np.nan has no label at all
+    df = pd.DataFrame({"feature3": pd.Series(["a", "b", np.nan, "c", "x"], dtype=object)})
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", FutureWarning)
+        warnings.simplefilter("error", DeprecationWarning)
+        transformed = discretizer._transform_qualitative(Sample(df)).X["feature3"]
+
+    assert is_numeric_dtype(transformed)
+    assert [0, 1, 2, 0] == [transformed[i] for i in (0, 1, 3, 4)]
+    assert pd.isna(transformed[2])
 
 
 def test_init(features: Features, true_false: bool) -> None:
