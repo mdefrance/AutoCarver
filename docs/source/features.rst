@@ -30,7 +30,7 @@ longer be derived from the fit (after a move or split) show ``NaN`` until refit.
 
     binary_carver.fit(train_set, train_set[target], X_dev=dev_set, y_dev=dev_set[target])
 
-    feature = features("ordinal1")
+    feature = binary_carver.features("ordinal1")  # carved state lives on the carver
     print(feature.summary)       # per-bin frequencies and target rates
     print(feature.history)       # every combination tried, with viability verdicts
 
@@ -48,7 +48,7 @@ a value of your choosing, or shift the boundary between two adjacent bins.
 
 .. code-block:: python
 
-    feature = features("numerical1")
+    feature = binary_carver.features("numerical1")
     print(feature.summary)
 
     feature.split("(-inf, 2.50e+01]", at=10.0)       # one bin becomes two
@@ -121,6 +121,11 @@ Datetimes can be declared from the :class:`Features` constructor as
             ("churn_date", "signup_date"),   # seconds since another column
         ],
     )
+
+Each datetime feature is versioned ``"<column name>__ref=<reference_date>"`` (e.g.
+``"churn_date__ref=signup_date"``): use that version to look the feature up and to read its
+carved column; the raw column is left as is. The same column can thus be listed several times
+with different references, each carved independently.
 
 They are tracked under :attr:`Features.datetimes` and are also part of
 :attr:`Features.quantitatives` (so the quantitative pipeline processes them transparently).

@@ -84,7 +84,9 @@ class BaseSelector(BaseEstimator, TransformerMixin, ABC):
         Parameters
         ----------
         features : Features
-            A set of :class:`Features` to select from.
+            A set of :class:`Features` to select from. For carved features, pass
+            ``carver.features``: carvers work on their own copy, so the
+            :class:`Features` built before carving stay raw.
 
         n_best_features : int, optional
             Total number of :class:`Features` to select, split **evenly** across

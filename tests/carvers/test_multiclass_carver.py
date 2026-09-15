@@ -36,7 +36,8 @@ def test_multiclass_carver_initialization():
     )
     carver = MulticlassCarver(min_freq=0.1, max_n_mod=5, features=features)
     assert carver.min_freq == 0.1
-    assert carver.features == features
+    assert carver.features.versions == features.versions
+    assert carver.features is not features  # carver works on its own copy
     assert carver.config.dropna is True
     assert isinstance(carver.combination_evaluator, TschuprowtMulticlassCombinations)
     assert carver.max_n_mod == 5

@@ -81,7 +81,8 @@ def test_continuous_carver_initialization():
     min_freq = 0.1
     carver = ContinuousCarver(min_freq=min_freq, max_n_mod=5, features=features)
     assert carver.min_freq == min_freq
-    assert carver.features == features
+    assert carver.features.versions == features.versions
+    assert carver.features is not features  # carver works on its own copy
     assert carver.config.dropna is True
     assert isinstance(carver.combination_evaluator, KruskalCombinations)
     assert carver.max_n_mod == 5
@@ -214,21 +215,21 @@ def test_carve_feature_with_best_combination(evaluator):
     xaggs_dev = carver._aggregator(**samples.dev)
 
     # carving a feature
-    feature = features[0]
+    feature = carver.features[0]
     carver._carve_feature(feature, xaggs, xaggs_dev, "1/1")
     print(feature.content)
     assert feature in carver.features
     assert feature.content == {"A": ["A"], "C": ["C"], "B": ["B"]}
 
     # carving a feature
-    feature = features[1]
+    feature = carver.features[1]
     carver._carve_feature(feature, xaggs, xaggs_dev, "1/1")
     print(feature.content)
     assert feature in carver.features
     assert feature.content == {"low": ["low"], "medium": ["medium"], "high": ["high"]}
 
     # carving a feature
-    feature = features[2]
+    feature = carver.features[2]
     carver._carve_feature(feature, xaggs, xaggs_dev, "1/1")
     print(feature.content)
     assert feature in carver.features
@@ -287,7 +288,7 @@ def test_carve_feature_without_best_combination(evaluator: CombinationEvaluator)
     xaggs_dev = carver._aggregator(**samples.dev)
 
     # carving a feature
-    feature = features[0]
+    feature = carver.features[0]
     carver._carve_feature(feature, xaggs, xaggs_dev, "1/1")
     print(feature.content)
     assert feature not in carver.features
@@ -325,19 +326,19 @@ def test_fit_with_best_combination(evaluator):
     # fitting carver
     carver.fit(X, y)
 
-    feature = features[0]
+    feature = carver.features[0]
     print(feature.content)
     assert feature in carver.features
     assert feature.content == {"A": ["A"], "C": ["C"], "B": ["B"]}
 
     # carving a feature
-    feature = features[1]
+    feature = carver.features[1]
     print(feature.content)
     assert feature in carver.features
     assert feature.content == {"low": ["low"], "medium": ["medium"], "high": ["high"]}
 
     # carving a feature
-    feature = features[2]
+    feature = carver.features[2]
     print(feature.content)
     assert feature in carver.features
     assert feature.content == {
@@ -378,7 +379,7 @@ def test_fit_without_best_combination(evaluator: CombinationEvaluator):
     carver.fit(X, y)
 
     # carving a feature
-    assert len(features) == 0
+    assert len(carver.features) == 0
 
 
 def test_continuous_carver_fit_transform_with_small_data_not_ordinal(
@@ -787,7 +788,7 @@ def _fit_continuous_carver(
         y_dev=x_dev_1["continuous_target"],
     )
     x_dev_discretized = auto_carver.transform(x_dev_1)
-    return auto_carver, x_discretized, x_dev_discretized, features
+    return auto_carver, x_discretized, x_dev_discretized, auto_carver.features
 
 
 def test_continuous_carver_end_to_end_invariants(

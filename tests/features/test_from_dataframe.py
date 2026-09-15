@@ -64,17 +64,17 @@ def test_from_dataframe_datetime_reference_uses_most_recent_column():
     features = Features.from_dataframe(X)
 
     # d_new is the most recent -> anchor; others reference it row-wise
-    assert features("d_old").reference_date == "d_new"
-    assert features("d_mid").reference_date == "d_new"
+    assert features("d_old__ref=d_new").reference_date == "d_new"
+    assert features("d_mid__ref=d_new").reference_date == "d_new"
     # the anchor can't reference itself -> fixed literal (its earliest date)
-    assert features("d_new").reference_date == "2023-01-01"
+    assert features("d_new__ref=2023-01-01").reference_date == "2023-01-01"
 
 
 def test_from_dataframe_single_datetime_uses_fixed_reference():
     """A lone datetime column has no other column to reference; uses its earliest date."""
     X = pd.DataFrame({"d": pd.to_datetime(["2020-03-01", "2020-01-15", "2020-12-31"])})
     features = Features.from_dataframe(X)
-    assert features("d").reference_date == "2020-01-15"
+    assert features("d__ref=2020-01-15").reference_date == "2020-01-15"
 
 
 def test_build_qualification_prompt_lists_every_column():

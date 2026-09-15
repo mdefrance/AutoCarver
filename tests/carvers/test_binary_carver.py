@@ -96,8 +96,46 @@ def test_binary_carver_initialization():
     # min_freq before discretizers are invoked; discretizers themselves use min_freq
     # directly (with a 1-row tolerance).
     assert carver.half_min_freq == 0.05
-    assert carver.features == features
+    assert carver.features.versions == features.versions
+    assert carver.features is not features  # carver works on its own copy
     assert carver.config.dropna is True
+
+
+def test_binary_carver_fit_does_not_mutate_input_features():
+    """Fitting carves ``carver.features`` only: the user's Features stay raw, as after a reload.
+
+    Selectors type features by ``is_fitted``, so a mutated input would be typed qualitative
+    before a save/load but quantitative after it.
+    """
+    features = Features(categoricals=["feature1"], numericals=["feature3"])
+    X = pd.DataFrame({"feature1": ["A", "B", "A", "C"] * 25, "feature3": [1, 2, 3, 4] * 25})
+    y = pd.Series([0, 1, 0, 1] * 25)
+
+    carver = BinaryCarver(features=features, min_freq=0.1, max_n_mod=5)
+    carver.fit(X, y)
+
+    assert all(feature.is_fitted for feature in carver.features)
+    assert not any(feature.is_fitted for feature in features)
+
+
+def test_binary_carver_selection_consistent_after_reload(tmp_path: Path):
+    """Selecting on ``carver.features`` uses the same measures before and after save/load."""
+    from AutoCarver.selectors import ClassificationSelector
+
+    features = Features(categoricals=["feature1"], numericals=["feature3"])
+    X = pd.DataFrame({"feature1": ["A", "B", "A", "C"] * 25, "feature3": [1, 2, 3, 4] * 25})
+    y = pd.Series([0, 1, 0, 1] * 25)
+
+    carver = BinaryCarver(features=features, min_freq=0.1, max_n_mod=5)
+    x_carved = carver.fit_transform(X, y)
+    carver.save(tmp_path / "carver.json")
+    loaded_carver = BinaryCarver.load(tmp_path / "carver.json")
+
+    def measures_used(selected_features: Features) -> dict[str, list[str]]:
+        ClassificationSelector(features=selected_features).fit(x_carved, y)
+        return {feature.version: sorted(feature.measures) for feature in selected_features}
+
+    assert measures_used(carver.features) == measures_used(loaded_carver.features)
     assert isinstance(carver.combination_evaluator, TschuprowtCombinations)
     assert carver.max_n_mod == 5
 
@@ -214,21 +252,21 @@ def test_carve_feature_with_best_combination(evaluator):
     xaggs_dev = carver._aggregator(**samples.dev)
 
     # carving a feature
-    feature = features[0]
+    feature = carver.features[0]
     carver._carve_feature(feature, xaggs, xaggs_dev, "1/1")
     print(feature.content)
     assert feature in carver.features
     assert feature.content == {"A": ["A"], "B": ["C", "B"]}
 
     # carving a feature
-    feature = features[1]
+    feature = carver.features[1]
     carver._carve_feature(feature, xaggs, xaggs_dev, "1/1")
     print(feature.content)
     assert feature in carver.features
     assert feature.content == {"low": ["low"], "medium": ["medium"], "high": ["high"]}
 
     # carving a feature
-    feature = features[2]
+    feature = carver.features[2]
     carver._carve_feature(feature, xaggs, xaggs_dev, "1/1")
     print(feature.content)
     assert feature in carver.features
@@ -286,7 +324,7 @@ def test_carve_feature_without_best_combination(evaluator: CombinationEvaluator)
     xaggs_dev = carver._aggregator(**samples.dev)
 
     # carving a feature
-    feature = features[0]
+    feature = carver.features[0]
     carver._carve_feature(feature, xaggs, xaggs_dev, "1/1")
     print(feature.content)
     assert feature not in carver.features
@@ -464,19 +502,19 @@ def test_fit_with_best_combination(evaluator):
     # fitting carver
     carver.fit(X, y)
 
-    feature = features[0]
+    feature = carver.features[0]
     print(feature.content)
     assert feature in carver.features
     assert feature.content == {"A": ["A"], "B": ["C", "B"]}
 
     # carving a feature
-    feature = features[1]
+    feature = carver.features[1]
     print(feature.content)
     assert feature in carver.features
     assert feature.content == {"low": ["low"], "medium": ["medium"], "high": ["high"]}
 
     # carving a feature
-    feature = features[2]
+    feature = carver.features[2]
     print(feature.content)
     assert feature in carver.features
     assert feature.content == {
@@ -561,7 +599,7 @@ def test_fit_without_best_combination(evaluator: CombinationEvaluator):
     carver.fit(X, y)
 
     # carving a feature
-    assert len(features) == 0
+    assert len(carver.features) == 0
 
 
 def test_binary_carver_fit_transform_with_small_data_not_ordinal(evaluator: CombinationEvaluator):
@@ -1051,25 +1089,51 @@ def test_binary_carver_end_to_end_with_datetime(tmp_path: Path, evaluator: Combi
     X_transformed = carver.fit_transform(X, y)
 
     # the datetime feature is recognized as such, fitted, and carved into buckets
-    signup = carver.features("signup")
+    signup = carver.features("signup__ref=2020-01-01")
     assert isinstance(signup, DatetimeFeature)
     assert signup.reference_date == "2020-01-01"
     assert signup.is_fitted and signup.has_nan
     assert len(X_transformed) == n
 
     # transformed datetime column only contains learned bucket labels
-    assert set(X_transformed["signup"].dropna().unique()).issubset(set(signup.labels))
+    assert set(X_transformed["signup__ref=2020-01-01"].dropna().unique()).issubset(set(signup.labels))
 
     # save / load preserves the DatetimeFeature (type + reference_date + carved buckets)
     carver_file = tmp_path / "binary_carver_datetime.json"
     carver.save(carver_file)
     loaded = BinaryCarver.load(carver_file)
-    loaded_signup = loaded.features("signup")
+    loaded_signup = loaded.features("signup__ref=2020-01-01")
     assert isinstance(loaded_signup, DatetimeFeature)
     assert loaded_signup.reference_date == "2020-01-01"
     assert loaded_signup.content == signup.content
 
     # the loaded carver transforms fresh raw datetimes identically
+    assert loaded.transform(X).equals(carver.transform(X))
+
+
+def test_binary_carver_datetime_reference_alternatives(tmp_path: Path, evaluator: CombinationEvaluator):
+    """BinaryCarver on one datetime column with two references: fit, save/load, re-transform."""
+    n = 60
+    idx = list(range(n))
+    dates = pd.date_range("2020-01-01", periods=n, freq="D").tolist()
+    dates[7] = pd.NaT
+    X = pd.DataFrame({"d": dates, "ref": [pd.Timestamp("2019-06-01")] * n}, index=idx)
+    y = pd.Series([0 if i < n // 2 else 1 for i in range(n)], index=idx)
+
+    carver = BinaryCarver(
+        min_freq=0.2,
+        max_n_mod=4,
+        features=Features(datetimes=[("d", "2020-01-01"), ("d", "ref")]),
+        combination_evaluator=evaluator,
+        config=ProcessingConfig(dropna=True, copy=True),
+    )
+    carver.fit_transform(X, y)
+    assert carver.features.versions == ["d__ref=2020-01-01", "d__ref=ref"]
+
+    carver_file = tmp_path / "binary_carver_datetime_alternatives.json"
+    carver.save(carver_file)
+    loaded = BinaryCarver.load(carver_file)
+    assert loaded.features.versions == carver.features.versions
     assert loaded.transform(X).equals(carver.transform(X))
 
 
@@ -1118,7 +1182,7 @@ def _fit_binary_carver(
         y_dev=x_dev_1["binary_target"],
     )
     x_dev_discretized = auto_carver.transform(x_dev_1)
-    return auto_carver, x_discretized, x_dev_discretized, features
+    return auto_carver, x_discretized, x_dev_discretized, auto_carver.features
 
 
 def test_binary_carver_uneligible_features_raises(

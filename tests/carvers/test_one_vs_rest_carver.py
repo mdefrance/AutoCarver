@@ -145,7 +145,8 @@ def test_one_vs_rest_carver_initialization():
     )
     carver = OneVsRestCarver(min_freq=0.1, max_n_mod=5, features=features)
     assert carver.min_freq == 0.1
-    assert carver.features == features
+    assert carver.features.versions == features.versions
+    assert carver.features is not features  # carver works on its own copy
     assert carver.config.dropna is True
     assert isinstance(carver.combination_evaluator, TschuprowtCombinations)
     assert carver.max_n_mod == 5
@@ -855,7 +856,7 @@ def _fit_one_vs_rest_carver(
         y_dev=x_dev_1["multiclass_target"],
     )
     x_dev_discretized = auto_carver.transform(x_dev_1)
-    return auto_carver, x_discretized, x_dev_discretized, features
+    return auto_carver, x_discretized, x_dev_discretized, auto_carver.features
 
 
 def test_one_vs_rest_carver_end_to_end_invariants(
@@ -1155,3 +1156,26 @@ def test_one_vs_rest_carver_parallel_respects_max_n_mod():
     assert n_modalities, "expected at least one carved version"
     over_cap = {version: count for version, count in n_modalities.items() if count > 5}
     assert not over_cap, f"columns above max_n_mod=5: {over_cap}"
+
+
+def test_one_vs_rest_carver_datetime_reference_alternatives(evaluator: CombinationEvaluator):
+    """Multiclass versions compose with datetime reference versions without collisions."""
+    n = 60
+    dates = pd.date_range("2020-01-01", periods=n, freq="D").tolist()
+    X = pd.DataFrame({"d": dates, "ref": [pd.Timestamp("2019-06-01")] * n})
+    y = pd.Series([i * 3 // n for i in range(n)])  # 3 ordered classes: 0, 1, 2
+
+    carver = OneVsRestCarver(
+        features=Features(datetimes=[("d", "2020-01-01"), ("d", "ref")]),
+        min_freq=0.2,
+        max_n_mod=4,
+        combination_evaluator=evaluator,
+        config=ProcessingConfig(dropna=True, copy=True),
+    )
+    X_out = carver.fit_transform(X, y)
+
+    check_is_fitted(carver)
+    versions = carver.features.versions
+    assert len(versions) == len(set(versions))
+    assert all("__ref=" in version and "__y=" in version for version in versions)
+    assert all(version in X_out.columns for version in versions)

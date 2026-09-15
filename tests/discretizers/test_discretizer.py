@@ -239,3 +239,23 @@ def test_discretizer(x_train: pd.DataFrame, x_dev_1: pd.DataFrame, target: str):
         train_unique = [val for val in train_unique if pd.notna(val)]
         assert all(value in test_unique for value in train_unique), "Missing value from test (at transform step)"
         assert all(value in train_unique for value in test_unique), "Missing value from train (at transform step)"
+
+
+def test_discretizer_datetime_reference_alternatives():
+    """One datetime column carved against two references yields two independent columns."""
+    n = 60
+    dates = pd.date_range("2020-01-01", periods=n, freq="D").tolist()
+    dates[7] = pd.NaT
+    X = pd.DataFrame({"d": dates, "ref": [pd.Timestamp("2019-06-01")] * n})
+    y = pd.Series([0 if i < n // 2 else 1 for i in range(n)])
+
+    features = Features(datetimes=[("d", "2020-01-01"), ("d", "ref")])
+    discretizer = Discretizer(features=features, min_freq=0.2, config=ProcessingConfig(copy=True))
+    X_out = discretizer.fit_transform(X, y)
+
+    assert all(feature.is_fitted for feature in discretizer.features)
+    for version in ["d__ref=2020-01-01", "d__ref=ref"]:
+        assert version in X_out.columns
+        assert set(X_out[version].dropna().unique()).issubset(set(discretizer.features(version).labels))
+    # raw column untouched
+    assert X_out["d"].equals(X["d"])
