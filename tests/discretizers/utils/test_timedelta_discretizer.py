@@ -66,6 +66,23 @@ def test_ensure_datetime_dtypes_converts_only_datetimes() -> None:
     assert converted["dt__ref=2020-01-01"].tolist() == [0.0, 86400.0]
 
 
+def test_discretizer_tz_aware_datetimes_from_dataframe() -> None:
+    """tz-aware datetime columns go through from_dataframe + Discretizer (regression: the
+    anchor's fixed reference is a naive date, raising "Cannot subtract tz-naive and tz-aware")."""
+    n = 40
+    event = pd.Series(pd.date_range("2020-01-01", periods=n, freq="D", tz="UTC"))
+    X = pd.DataFrame({"event": event, "signup": event - pd.Timedelta(days=3)})
+    y = pd.Series(np.arange(n) % 2)
+
+    features = Features.from_dataframe(X)
+    discretizer = Discretizer(features, min_freq=0.2, config=ProcessingConfig(copy=True))
+    transformed = discretizer.fit_transform(X, y)
+
+    assert all(feature.is_fitted for feature in features)
+    for feature in features:
+        assert set(transformed[feature.version].dropna().unique()).issubset(set(feature.labels))
+
+
 def test_ensure_datetime_dtypes_noop_without_datetimes() -> None:
     """ensure_datetime_dtypes is a no-op when there are no datetime features"""
     features = Features(numericals=["num"])

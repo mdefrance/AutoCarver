@@ -70,6 +70,31 @@ def test_to_timedelta_column_reference_with_nat_reference(sample_datetime_featur
     assert result.tolist()[1] == 172800.0
 
 
+def test_to_timedelta_aware_series_naive_literal(sample_datetime_feature: DatetimeFeature) -> None:
+    """a naive literal is read in the timezone of a tz-aware series"""
+    series = pd.Series([pd.Timestamp("2020-01-02", tz="UTC"), pd.NaT]).dt.tz_convert("UTC")
+    result = sample_datetime_feature.to_timedelta(series)
+
+    assert result.tolist()[0] == 86400.0
+    assert np.isnan(result.tolist()[1])
+
+
+def test_to_timedelta_naive_series_aware_literal() -> None:
+    """a naive series is read in the timezone of a tz-aware literal"""
+    feature = DatetimeFeature("event", reference_date="2020-01-01T00:00:00+01:00")
+    series = pd.Series([pd.Timestamp("2020-01-02")])
+    assert feature.to_timedelta(series).tolist() == [86400.0]
+
+
+def test_to_timedelta_aware_series_naive_reference_column(sample_datetime_feature: DatetimeFeature) -> None:
+    """a naive reference column is read in the timezone of a tz-aware series, and vice versa"""
+    aware = pd.Series(pd.to_datetime(["2020-01-02", "2020-01-03"])).dt.tz_localize("Europe/Paris")
+    naive = pd.Series(pd.to_datetime(["2020-01-01", "2020-01-01"]))
+
+    assert sample_datetime_feature.to_timedelta(aware, naive).tolist() == [86400.0, 172800.0]
+    assert sample_datetime_feature.to_timedelta(naive, aware).tolist() == [-86400.0, -172800.0]
+
+
 def test_fit_resolves_reference_is_column() -> None:
     """fit flags whether reference_date names a column or is a literal date"""
     # literal date -> not a column
