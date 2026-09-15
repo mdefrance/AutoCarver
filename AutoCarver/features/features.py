@@ -923,7 +923,18 @@ def check_duplicate_features(
     quantitative_names = get_versions(quantitatives)
     nested_names = get_versions(nested or [])
 
-    # checking for duplicates
+    # checking for duplicates within each type
+    for kind, names in [
+        ("ordinals", ordinal_names),
+        ("categoricals", categorcial_names),
+        ("quantitatives", quantitative_names),
+        ("nested", nested_names),
+    ]:
+        repeated = sorted({name for name in names if names.count(name) > 1})
+        if repeated:
+            raise ValueError(f"Provided {kind} contain duplicates: {repeated}. Please, check inputs!")
+
+    # checking for duplicates across types
     duplicate = [feature in ordinal_names + quantitative_names + nested_names for feature in categorcial_names]
     if any(duplicate):
         raise ValueError(f"Provided categoricals found in ordinals/quantitatives: {duplicate}. Please, check inputs!")

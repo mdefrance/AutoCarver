@@ -116,6 +116,17 @@ def test_from_list_dedupe(mock_features):
     assert feature1.version in versions
 
 
+def test_init_rejects_duplicate_names():
+    """Features.__init__ raises on repeated column names within a type (regression: Discretizer
+    raised "Features not fitted" on the unfitted earlier duplicate)."""
+    with raises(ValueError, match="quantitatives contain duplicates"):
+        Features(numericals=["col_a", "col_a"])
+    with raises(ValueError, match="categoricals contain duplicates"):
+        Features(categoricals=["col_b", "col_b"])
+    with raises(ValueError, match="quantitatives contain duplicates"):
+        Features(datetimes=[("col_d", "2020-01-01"), ("col_d", "2021-01-01")])
+
+
 def test_features_rejects_instance_in_names():
     """__init__ requires column names (str); feature instances must go via from_list."""
     with raises(TypeError):
