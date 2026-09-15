@@ -17,7 +17,10 @@ Target-specific tools allow for association optimization per desired task:
 
 All carvers share the same constructor signature:
 
-* ``features`` (:class:`Features`) — features to carve.
+* ``features`` (:class:`Features`) — features to carve. The carver works on its
+  own copy: fitting never modifies the object you pass, and the carved features
+  live on ``carver.features`` (exactly as after :meth:`~BaseCarver.load`). Use
+  ``carver.features`` for inspection, manual edits and selection.
 * ``min_freq`` (``float``) — minimum frequency per modality. Tested via the Wilson
   score interval at significance ``min_freq_alpha`` (see :ref:`MinFreqViability`).
 * ``max_n_mod`` (``int``) — maximum number of modalities per carved

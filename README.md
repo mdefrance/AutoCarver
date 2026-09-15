@@ -154,7 +154,7 @@ dev_processed = carver.transform(dev)
 
 `min_freq` and `max_n_mod` are the only two knobs that matter to start with — the defaults (`0.02` / `5`) reflect common scoring practice, and every behavioral toggle lives in one `ProcessingConfig` object. Scan, adjust, move on.
 
-For multiclass classification use `MulticlassCarver` (one binning per feature, against the full K-class target) — or `OneVsRestCarver` for a separate binning per class; for ordinal targets use `OrdinalCarver`; for regression use `ContinuousCarver` — the API is identical. To pre-select features by target association and inter-feature redundancy, pipe the carved output through `ClassificationSelector` or `RegressionSelector`.
+For multiclass classification use `MulticlassCarver` (one binning per feature, against the full K-class target) — or `OneVsRestCarver` for a separate binning per class; for ordinal targets use `OrdinalCarver`; for regression use `ContinuousCarver` — the API is identical. To pre-select features by target association and inter-feature redundancy, pipe the carved output through `ClassificationSelector` or `RegressionSelector` with `features=carver.features` (the carver carves its own copy, so your original `features` stay raw).
 
 
 ## What you get
@@ -164,10 +164,10 @@ Two questions worth answering before your next model review: can you defend ever
 - **No performance left on the table** — exhaustive search over admissible bin combinations maximizes Tschuprow's T (default) or Cramér's V: for fixed `min_freq`, `max_n_mod` and metric, no other combination scores higher, so you never wonder whether a better grouping existed.
 - **Stop silent overfitting before production** — bins that only exist in your training sample degrade quietly under drift. Every candidate combination is validated on a dev set (and optional CV folds): any whose target rates flip or whose buckets fall below `min_freq` is rejected at fit time, not discovered in monitoring.
 - **First-class ordinal features** — `OrdinalDiscretizer` enforces your declared modality order, so under-represented levels are merged with their nearest neighbour instead of being collapsed by frequency.
-- **You are the final auditor** — `features.summary` and `features.history` expose the bin definitions, per-bin target rate / frequency, and the full carving trace; disagree with a boundary and you can override it, and `transform` applies your fix like any carved bin:
+- **You are the final auditor** — `carver.features.summary` and `carver.features.history` expose the bin definitions, per-bin target rate / frequency, and the full carving trace; disagree with a boundary and you can override it, and `transform` applies your fix like any carved bin:
 
   ```python
-  feature = features("Siblings/Spouses Aboard")  # any fitted feature; labels are [0, 1, 2]
+  feature = carver.features("Siblings/Spouses Aboard")  # any carved feature; labels are [0, 1, 2]
   feature.group([1], 2)  # merge two bins you consider equivalent
   ```
 - **Interpretable buckets** — human-readable boundaries you can audit, document, and ship to a scorecard.
@@ -193,7 +193,7 @@ Two questions worth answering before your next model review: can you defend ever
 | Target types                                      | any, at ~1 feature/hour                              | **binary, multiclass, ordinal, continuous**                        | binary, multiclass, continuous                                           | n/a                                                                             |
 | All feature types in one `fit` (numeric, categorical, ordinal, `NaN`) | each feature is its own project | **yes — declared ordinal order enforced, `NaN` as its own modality** | yes via `BinningProcess`; no first-class ordinal type (`user_splits` workaround) | numeric only; `NaN` raises                                                      |
 | Held-out dev-set robustness check                 | rarely — too tedious to script per feature           | **yes — dev set + optional k-fold CV, built into `fit`**           | no (script CV yourself)                                                  | no                                                                              |
-| Per-bin stats + carving history after `fit`       | scattered notebook cells                             | **`features.summary`, `features.history`**                         | `binning_table`                                                          | no                                                                              |
+| Per-bin stats + carving history after `fit`       | scattered notebook cells                             | **`carver.summary`, `carver.history`**                             | `binning_table`                                                          | no                                                                              |
 
 All three libraries are sklearn-`Pipeline` compatible; AutoCarver adds JSON round-trip persistence (`carver.save("...json")`) and feature pre-selection helpers (`ClassificationSelector`, `RegressionSelector`). The full feature matrix, side-by-side runnable snippets, and a "when to pick which" guide live on the [comparison page](https://autocarver.readthedocs.io/en/latest/comparison.html).
 

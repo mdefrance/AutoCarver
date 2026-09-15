@@ -145,7 +145,8 @@ def test_one_vs_rest_carver_initialization():
     )
     carver = OneVsRestCarver(min_freq=0.1, max_n_mod=5, features=features)
     assert carver.min_freq == 0.1
-    assert carver.features == features
+    assert carver.features.versions == features.versions
+    assert carver.features is not features  # carver works on its own copy
     assert carver.config.dropna is True
     assert isinstance(carver.combination_evaluator, TschuprowtCombinations)
     assert carver.max_n_mod == 5
@@ -855,7 +856,7 @@ def _fit_one_vs_rest_carver(
         y_dev=x_dev_1["multiclass_target"],
     )
     x_dev_discretized = auto_carver.transform(x_dev_1)
-    return auto_carver, x_discretized, x_dev_discretized, features
+    return auto_carver, x_discretized, x_dev_discretized, auto_carver.features
 
 
 def test_one_vs_rest_carver_end_to_end_invariants(

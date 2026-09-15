@@ -123,11 +123,10 @@ class OneVsRestCarver(BinaryCarver):
                 cv=cv,
             )
 
-            # adopting the child's carved feature instances. The serial carving path
-            # mutates each feature in place, so the objects shared with self.features are
-            # already carved; the parallel path (n_jobs > 1) carves in worker processes and
-            # hands back *new* instances, which BaseCarver stores in the child's container
-            # only. Without this, self.features would keep the merely-discretized originals
+            # adopting the child's carved feature instances. Each carver works on its own
+            # copy of the features (and the parallel path, n_jobs > 1, hands back *new*
+            # instances from worker processes), so the carved state lives in the child's
+            # container only. Without this, self.features would keep the uncarved originals
             # and transform would emit uncarved columns (n_mod > max_n_mod).
             for carved_feature in binary_carver.features:
                 self.features.replace_feature(carved_feature)

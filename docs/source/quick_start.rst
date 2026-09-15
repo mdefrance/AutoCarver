@@ -166,7 +166,7 @@ Feature Selection
 
     # select the best 25 most target associated features
     classification_selector = ClassificationSelector(
-        features=features,  # features to select from
+        features=binary_carver.features,  # carved features to select from
         n_best_features=25,  # total number of features to select, split across data types
     )
     best_features = classification_selector.fit(train_set_discretized, train_set_discretized[target]).selected_features

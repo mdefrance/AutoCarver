@@ -158,7 +158,7 @@ def test_prepare_samples(features, evaluator, samples):
     assert y_dev.equals(samples.dev.y)
 
     assert carver.features.dropna is True
-    for feature in features:
+    for feature in carver.features:
         assert feature.dropna is True
 
 

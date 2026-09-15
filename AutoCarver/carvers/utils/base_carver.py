@@ -6,6 +6,7 @@ import json
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable
 from concurrent.futures import ThreadPoolExecutor
+from copy import deepcopy
 from dataclasses import dataclass, field, replace
 from functools import partial
 from multiprocessing import Pool
@@ -190,6 +191,9 @@ class BaseCarver(BaseDiscretizer, ABC):
 
     First fits a :class:`Discretizer`. Raw data should be provided as input (not a result of
     ``Discretizer.transform()``).
+
+    The carver works on its own copy of ``features``: the object passed in is never
+    modified, and carved features are exposed on :attr:`features` (as after :meth:`load`).
     """
 
     __name__ = "AutoCarver"
@@ -302,7 +306,10 @@ class BaseCarver(BaseDiscretizer, ABC):
         # carver-friendly defaults (dropna / ordinal_encoding True) are applied
         # by BaseDiscretizer.__init__ when those toggles are left ``None``, so a
         # partial config only changes the fields it sets explicitly.
-        super().__init__(features, min_freq=min_freq, config=config)
+        # the carver works on its own copy of the features: fitting never mutates the
+        # user's object, so the carved state lives only on ``carver.features`` (same
+        # as after ``load``).
+        super().__init__(deepcopy(features), min_freq=min_freq, config=config)
 
         self.max_n_mod = max_n_mod
         combination_evaluator.verbose = self.config.verbose

@@ -57,6 +57,15 @@ call per feature.
     best_features = selector.selected_features
     selector.summary  # inspect the measure/filter values per feature
 
+.. note::
+
+    To select among carved features, pass the carver's features:
+    ``ClassificationSelector(features=carver.features, ...)``. A carver works on
+    its own copy, so the :class:`Features` you built before carving stay raw —
+    their quantitative features would be scored with quantitative measures
+    (e.g. Kruskal) instead of qualitative ones (e.g. Tschuprow's T). This holds
+    the same way for a fitted and for a reloaded carver.
+
 
 Measures and filters are declared **per feature type**, so a qualitative-only
 measure can never silently leave the quantitative features unranked. Any slot
