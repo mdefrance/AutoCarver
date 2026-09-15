@@ -30,6 +30,8 @@ class DatetimeFeature(QuantitativeFeature):
     def __init__(self, name: str, reference_date: str) -> None:
         super().__init__(name)
         self.reference_date = reference_date  # fixed date literal or reference column name
+        # one column can be carved against several references: each gets its own version (column)
+        self.version = f"{name}__ref={reference_date}"
         self.reference_is_column = False  # resolved at fit time against X's columns
 
     def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> None:

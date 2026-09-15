@@ -1089,25 +1089,51 @@ def test_binary_carver_end_to_end_with_datetime(tmp_path: Path, evaluator: Combi
     X_transformed = carver.fit_transform(X, y)
 
     # the datetime feature is recognized as such, fitted, and carved into buckets
-    signup = carver.features("signup")
+    signup = carver.features("signup__ref=2020-01-01")
     assert isinstance(signup, DatetimeFeature)
     assert signup.reference_date == "2020-01-01"
     assert signup.is_fitted and signup.has_nan
     assert len(X_transformed) == n
 
     # transformed datetime column only contains learned bucket labels
-    assert set(X_transformed["signup"].dropna().unique()).issubset(set(signup.labels))
+    assert set(X_transformed["signup__ref=2020-01-01"].dropna().unique()).issubset(set(signup.labels))
 
     # save / load preserves the DatetimeFeature (type + reference_date + carved buckets)
     carver_file = tmp_path / "binary_carver_datetime.json"
     carver.save(carver_file)
     loaded = BinaryCarver.load(carver_file)
-    loaded_signup = loaded.features("signup")
+    loaded_signup = loaded.features("signup__ref=2020-01-01")
     assert isinstance(loaded_signup, DatetimeFeature)
     assert loaded_signup.reference_date == "2020-01-01"
     assert loaded_signup.content == signup.content
 
     # the loaded carver transforms fresh raw datetimes identically
+    assert loaded.transform(X).equals(carver.transform(X))
+
+
+def test_binary_carver_datetime_reference_alternatives(tmp_path: Path, evaluator: CombinationEvaluator):
+    """BinaryCarver on one datetime column with two references: fit, save/load, re-transform."""
+    n = 60
+    idx = list(range(n))
+    dates = pd.date_range("2020-01-01", periods=n, freq="D").tolist()
+    dates[7] = pd.NaT
+    X = pd.DataFrame({"d": dates, "ref": [pd.Timestamp("2019-06-01")] * n}, index=idx)
+    y = pd.Series([0 if i < n // 2 else 1 for i in range(n)], index=idx)
+
+    carver = BinaryCarver(
+        min_freq=0.2,
+        max_n_mod=4,
+        features=Features(datetimes=[("d", "2020-01-01"), ("d", "ref")]),
+        combination_evaluator=evaluator,
+        config=ProcessingConfig(dropna=True, copy=True),
+    )
+    carver.fit_transform(X, y)
+    assert carver.features.versions == ["d__ref=2020-01-01", "d__ref=ref"]
+
+    carver_file = tmp_path / "binary_carver_datetime_alternatives.json"
+    carver.save(carver_file)
+    loaded = BinaryCarver.load(carver_file)
+    assert loaded.features.versions == carver.features.versions
     assert loaded.transform(X).equals(carver.transform(X))
 
 

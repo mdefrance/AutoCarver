@@ -25,11 +25,11 @@ def test_timedelta_discretizer_fit_transform() -> None:
     X = pd.DataFrame({"feature1": pd.to_datetime(["2020-01-01", "2020-01-02", "2020-01-03", np.nan])})
 
     timedelta_discretizer.fit(X)
-    assert timedelta_discretizer.features["feature1"].is_fitted
-    assert timedelta_discretizer.features["feature1"].has_nan
+    assert timedelta_discretizer.features["feature1__ref=2020-01-01"].is_fitted
+    assert timedelta_discretizer.features["feature1__ref=2020-01-01"].has_nan
 
     transformed_x = timedelta_discretizer.transform(X)
-    result = transformed_x["feature1"].tolist()
+    result = transformed_x["feature1__ref=2020-01-01"].tolist()
     assert result[:3] == [0.0, 86400.0, 172800.0]
     assert np.isnan(result[3])
 
@@ -47,10 +47,10 @@ def test_timedelta_discretizer_column_reference() -> None:
     )
 
     timedelta_discretizer.fit(X)
-    assert timedelta_discretizer.features["event"].reference_is_column
+    assert timedelta_discretizer.features["event__ref=signup"].reference_is_column
 
     transformed_x = timedelta_discretizer.transform(X)
-    result = transformed_x["event"].tolist()
+    result = transformed_x["event__ref=signup"].tolist()
     assert result[:3] == [86400.0, 172800.0, 864000.0]
     assert np.isnan(result[3])
 
@@ -63,7 +63,7 @@ def test_ensure_datetime_dtypes_converts_only_datetimes() -> None:
     X = pd.DataFrame({"dt": pd.to_datetime(["2020-01-01", "2020-01-02"])})
     converted = ensure_datetime_dtypes(features, X)
 
-    assert converted["dt"].tolist() == [0.0, 86400.0]
+    assert converted["dt__ref=2020-01-01"].tolist() == [0.0, 86400.0]
 
 
 def test_ensure_datetime_dtypes_noop_without_datetimes() -> None:
@@ -97,5 +97,5 @@ def test_datetime_feature_in_full_discretizer_pipeline() -> None:
 
     # transforming fresh raw datetimes routes through the learned buckets
     transformed = discretizer.transform(X)
-    assert transformed["dt"].notna().sum() == n - 1  # the single NaT stays NaN
-    assert set(transformed["dt"].dropna().unique()).issubset(set(feature.labels))
+    assert transformed["dt__ref=2020-01-01"].notna().sum() == n - 1  # the single NaT stays NaN
+    assert set(transformed["dt__ref=2020-01-01"].dropna().unique()).issubset(set(feature.labels))

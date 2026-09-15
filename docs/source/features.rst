@@ -122,6 +122,11 @@ Datetimes can be declared from the :class:`Features` constructor as
         ],
     )
 
+Each datetime feature is versioned ``"<column name>__ref=<reference_date>"`` (e.g.
+``"churn_date__ref=signup_date"``): use that version to look the feature up and to read its
+carved column; the raw column is left as is. The same column can thus be listed several times
+with different references, each carved independently.
+
 They are tracked under :attr:`Features.datetimes` and are also part of
 :attr:`Features.quantitatives` (so the quantitative pipeline processes them transparently).
 The datetime-to-seconds conversion is performed by the :ref:`TimedeltaDiscretizer`.

@@ -123,8 +123,54 @@ def test_init_rejects_duplicate_names():
         Features(numericals=["col_a", "col_a"])
     with raises(ValueError, match="categoricals contain duplicates"):
         Features(categoricals=["col_b", "col_b"])
+
+
+def test_datetime_reference_alternatives_versioned():
+    """Same datetime column with distinct reference dates gets one version per reference."""
+    features = Features(datetimes=[("d", "2020-01-01"), ("d", "ref")])
+    assert features.versions == ["d__ref=2020-01-01", "d__ref=ref"]
+    assert features.names == ["d", "d"]
+    assert features("d__ref=ref").reference_date == "ref"
+
+
+def test_datetime_single_reference_versioned():
+    """A datetime column used once is versioned with its reference too."""
+    features = Features(datetimes=[("d", "2020-01-01"), ("e", "2020-01-01")])
+    assert features.versions == ["d__ref=2020-01-01", "e__ref=2020-01-01"]
+
+
+def test_datetime_same_reference_twice_raises():
+    """Same column and same reference twice is a true duplicate."""
     with raises(ValueError, match="quantitatives contain duplicates"):
-        Features(datetimes=[("col_d", "2020-01-01"), ("col_d", "2021-01-01")])
+        Features(datetimes=[("d", "2020-01-01"), ("d", "2020-01-01")])
+    with raises(ValueError, match="quantitatives contain duplicates"):
+        Features(datetimes=[("d", "2020-01-01"), ("d", "2020-01-01"), ("d", "ref")])
+
+
+def test_datetime_alternatives_from_list_idempotent():
+    """from_list versions instances too, and re-wrapping keeps versions unchanged."""
+    features = Features.from_list([DatetimeFeature("d", "2020-01-01"), DatetimeFeature("d", "ref")])
+    assert features.versions == ["d__ref=2020-01-01", "d__ref=ref"]
+    assert Features.from_list(list(features)).versions == ["d__ref=2020-01-01", "d__ref=ref"]
+
+
+def test_make_version_keeps_datetime_alternatives_distinct():
+    """Multiclass versions are built on the current version."""
+    features = Features(datetimes=[("d", "2020-01-01"), ("d", "ref")])
+    features.add_feature_versions(["1", "2"])
+    assert features.versions == [
+        "d__ref=2020-01-01__y=1",
+        "d__ref=ref__y=1",
+        "d__ref=2020-01-01__y=2",
+        "d__ref=ref__y=2",
+    ]
+
+
+def test_call_dataframe_keeps_raw_datetime_column():
+    """df selection keeps the raw column of datetime alternatives and their reference column."""
+    features = Features(datetimes=[("d", "2020-01-01"), ("d", "ref")])
+    X = pd.DataFrame({"d": pd.to_datetime(["2020-01-02"]), "ref": pd.to_datetime(["2019-01-01"]), "x": [1]})
+    assert set(features(X)) == {"d", "ref"}
 
 
 def test_features_rejects_instance_in_names():
@@ -216,9 +262,9 @@ def test_features_initialization_with_datetimes():
 
     # datetimes are recognized as their own category, and remain quantitative under the hood
     assert get_names(features.datetimes) == ["dt"]
-    assert features("dt").reference_date == "2020-01-01"
-    assert features("dt").is_datetime
-    assert features("dt") in features.quantitatives
+    assert features("dt__ref=2020-01-01").reference_date == "2020-01-01"
+    assert features("dt__ref=2020-01-01").is_datetime
+    assert features("dt__ref=2020-01-01") in features.quantitatives
 
     # datetimes alone satisfy the "at least one feature" requirement
     assert get_names(Features(datetimes=[("dt", "2020-01-01")]).datetimes) == ["dt"]

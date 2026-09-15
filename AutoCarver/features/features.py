@@ -230,6 +230,9 @@ class Features:
         datetimes : list[tuple[str, str]], optional
             Datetime features as ``(column name, reference_date)`` pairs, by default ``None``.
             Values are discretized as the number of seconds elapsed since ``reference_date``.
+            Each feature is versioned ``"<column>__ref=<reference_date>"``: use that version to
+            look the feature up and to read its carved column (the raw column is left as is).
+            A column may be listed several times with different ``reference_date``s.
 
         nested : dict[str, list[str]], optional
             Nested features as ``{output column: [parent columns coarser-ward]}``, by default
@@ -409,7 +412,9 @@ class Features:
             columns = [feature.version for feature in self if feature.version in feature_name.columns]
             # keep companion columns that are not features themselves so they survive a
             # df[features] selection: datetime reference columns and nested parent columns
-            companions = [feature.reference_date for feature in self.datetimes]
+            # raw column of datetime features first (their version isn't a raw column)
+            companions = [feature.name for feature in self.datetimes]
+            companions += [feature.reference_date for feature in self.datetimes]
             companions += [parent for feature in self.nested for parent in feature.parents]
             for column in companions:
                 if column in feature_name.columns and column not in columns:
@@ -853,7 +858,8 @@ def make_version(feature: TFeature, y_class: str) -> TFeature:
     new_feature = type(feature).load(feature.to_json(light_mode=False))
 
     new_feature.version_tag = y_class
-    new_feature.version = make_version_name(new_feature.name, y_class)
+    # built on the current version so datetime reference versions stay distinct per class
+    new_feature.version = make_version_name(new_feature.version, y_class)
 
     return new_feature
 
