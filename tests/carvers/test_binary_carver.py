@@ -1020,6 +1020,21 @@ def test_binary_carver_save_load(tmp_path: Path, evaluator: CombinationEvaluator
     assert carver.combination_evaluator.verbose == loaded_carver.combination_evaluator.verbose
 
 
+def test_binary_carver_save_load_str_path(tmp_path: Path):
+    """save/load accept a plain str path, not only a pathlib.Path."""
+    features = Features(categoricals=["feature1"], numericals=["feature3"])
+    X = pd.DataFrame({"feature1": ["A", "B", "A", "C"] * 25, "feature3": [1, 2, 3, 4] * 25})
+    y = pd.Series([0, 1, 0, 1] * 25)
+
+    carver = BinaryCarver(features=features, min_freq=0.1, max_n_mod=5)
+    carver.fit(X, y)
+    carver_file = str(tmp_path / "c.json")
+    carver.save(carver_file)
+    loaded_carver = BinaryCarver.load(carver_file)
+
+    pd.testing.assert_frame_equal(carver.transform(X), loaded_carver.transform(X))
+
+
 def test_binary_carver_ordinal_encoding_round_trip(tmp_path: Path, evaluator: CombinationEvaluator):
     """ordinal_encoding=True must survive save/load and yield numeric (XGBoost-ready) dtypes."""
     features = Features(

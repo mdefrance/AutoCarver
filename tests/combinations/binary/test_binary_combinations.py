@@ -74,6 +74,14 @@ def test_save(evaluator: BinaryCombinationEvaluator, tmp_path):
     assert data == expected_json
 
 
+def test_save_load_str_path(evaluator: BinaryCombinationEvaluator, tmp_path):
+    """save/load accept a plain str path, not only a pathlib.Path."""
+    file_name = str(tmp_path / "test.json")
+    evaluator.save(file_name)
+    loaded = type(evaluator).load(file_name)
+    assert loaded.to_json() == evaluator.to_json()
+
+
 def test_save_invalid_filename(evaluator: BinaryCombinationEvaluator):
     """Test save method with an invalid filename."""
     with raises(ValueError):

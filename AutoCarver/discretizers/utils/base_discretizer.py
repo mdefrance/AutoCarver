@@ -600,13 +600,13 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         return content
 
-    def save(self, file_name: Path, light_mode: bool = False) -> None:
+    def save(self, file_name: str | Path, light_mode: bool = False) -> None:
         """Saves pipeline to .json file.
 
         Parameters
         ----------
-        file_name : Path
-            :class:`pathlib.Path` of the ``.json`` file to write.
+        file_name : str or Path
+            Path of the ``.json`` file to write.
         light_mode: bool, optional
             Whether or not to save features' history and statistics, by default False
 
@@ -615,6 +615,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         str
             JSON serialized object
         """
+        file_name = Path(file_name)
         # checking for input
         if file_name.suffix == ".json":
             with file_name.open("w", encoding="utf-8") as json_file:
@@ -624,7 +625,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             raise ValueError(f"[{self.__name__}] Provide a file_name that ends with .json.")
 
     @classmethod
-    def load(cls, file_name: Path) -> "BaseDiscretizer":
+    def load(cls, file_name: str | Path) -> "BaseDiscretizer":
         """Allows one to load an Discretizer saved as a .json file.
 
         The Discretizer has to be saved with ``Discretizer.save()``, otherwise there
@@ -632,14 +633,15 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        file_name : Path
-            :class:`pathlib.Path` of the saved Discretizer's ``.json`` file.
+        file_name : str or Path
+            Path of the saved Discretizer's ``.json`` file.
 
         Returns
         -------
         BaseDiscretizer
             A fitted Discretizer.
         """
+        file_name = Path(file_name)
         # reading file
         with file_name.open(encoding="utf-8") as json_file:
             data = json.load(json_file)

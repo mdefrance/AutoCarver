@@ -884,14 +884,15 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
             "verbose": self.verbose,
         }
 
-    def save(self, file_name: Path) -> None:
+    def save(self, file_name: str | Path) -> None:
         """Saves :class:`CombinationEvaluator` to .json file.
 
         Parameters
         ----------
-        file_name : Path
-            :class:`pathlib.Path` of the ``.json`` file to write.
+        file_name : str or Path
+            Path of the ``.json`` file to write.
         """
+        file_name = Path(file_name)
         # checking for input
         if file_name.suffix == ".json":
             with file_name.open("w", encoding="utf-8") as json_file:
@@ -901,13 +902,13 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
             raise ValueError(f"[{self.__name__}] Provide a file_name that ends with .json.")
 
     @classmethod
-    def load(cls, file: Path | dict) -> "CombinationEvaluator":
+    def load(cls, file: str | Path | dict) -> "CombinationEvaluator":
         """Allows one to load a :class:`CombinationEvaluator` saved as a .json file.
 
         Parameters
         ----------
-        file : Path | dict
-            :class:`pathlib.Path` of the ``.json`` file or its already-parsed content.
+        file : str, Path or dict
+            Path of the ``.json`` file or its already-parsed content.
 
         Returns
         -------
@@ -915,8 +916,8 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
             A ready-to-use :class:`CombinationEvaluator`
         """
         # reading file
-        if isinstance(file, Path):
-            with file.open(encoding="utf-8") as json_file:
+        if isinstance(file, (str, Path)):
+            with Path(file).open(encoding="utf-8") as json_file:
                 combinations_json = json.load(json_file)
         elif isinstance(file, dict):
             combinations_json = file

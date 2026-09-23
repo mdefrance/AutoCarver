@@ -830,8 +830,15 @@ class BaseCarver(BaseDiscretizer, ABC):
         display_html(nicer_xaggs, raw=True)
 
     @classmethod
-    def load(cls, file_name: Path) -> "BaseCarver":
-        """Allows one to load a Carver saved as a .json file."""
+    def load(cls, file_name: str | Path) -> "BaseCarver":
+        """Allows one to load a Carver saved as a .json file.
+
+        Parameters
+        ----------
+        file_name : str or Path
+            Path of the saved Carver's ``.json`` file.
+        """
+        file_name = Path(file_name)
         with file_name.open(encoding="utf-8") as json_file:
             data = json.load(json_file)
 
