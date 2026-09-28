@@ -878,9 +878,19 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
         dict
             JSON serialized object
         """
+        level_values = getattr(self.target_rate, "level_values", None)
         return {
             "sort_by": self.sort_by,
             "target_rate": self.target_rate.__name__,
+            # list of pairs: JSON would stringify int keys; levels may be numpy scalars
+            "target_rate_params": (
+                None
+                if level_values is None
+                else [
+                    [level.item() if hasattr(level, "item") else level, float(value)]
+                    for level, value in level_values.items()
+                ]
+            ),
             "verbose": self.verbose,
         }
 
@@ -933,10 +943,14 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
 
         # resolve target_rate name → instance using the subclass registry
         target_rate_name = combinations_json.pop("target_rate", None)
+        target_rate_params = combinations_json.pop("target_rate_params", None)
         target_rate = None
         registry = {tr().__name__: tr for tr in getattr(cls, "_target_rate_classes", [])}
         if target_rate_name in registry:
-            target_rate = registry[target_rate_name]()
+            if target_rate_params is not None:
+                target_rate = registry[target_rate_name](level_values=dict(map(tuple, target_rate_params)))
+            else:
+                target_rate = registry[target_rate_name]()
 
         # strip non-constructor fields before passing remaining kwargs
         combinations_json.pop("sort_by", None)

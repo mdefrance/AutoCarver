@@ -595,6 +595,16 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
                 "copy": self.config.copy,
                 "min_freq_alpha": self.config.min_freq_alpha,
                 "rescue_rare": self.config.rescue_rare,
+                "dp_escalate": self.config.dp_escalate,
+                # list of pairs: JSON would stringify int keys; levels may be numpy scalars
+                "y_level_scores": (
+                    None
+                    if self.config.y_level_scores is None
+                    else [
+                        [level.item() if hasattr(level, "item") else level, float(score)]
+                        for level, score in self.config.y_level_scores.items()
+                    ]
+                ),
             },
         }
 

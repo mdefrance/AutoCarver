@@ -1,5 +1,3 @@
-"""set of tests for the continuous_combinations module"""
-
 import json
 from math import nan, sqrt
 from pathlib import Path
@@ -49,6 +47,7 @@ def test_to_json(evaluator: ContinuousCombinationEvaluator):
     expected_json = {
         "sort_by": evaluator.sort_by,
         "target_rate": evaluator.target_rate.__name__,
+        "target_rate_params": None,
         "verbose": evaluator.verbose,
     }
     assert evaluator.to_json() == expected_json
@@ -65,6 +64,7 @@ def test_save(evaluator: ContinuousCombinationEvaluator, tmp_path):
     expected_json = {
         "sort_by": evaluator.sort_by,
         "target_rate": evaluator.target_rate.__name__,
+        "target_rate_params": None,
         "verbose": evaluator.verbose,
     }
     assert data == expected_json

@@ -866,7 +866,12 @@ class BaseCarver(BaseDiscretizer, ABC):
             verbose=config_data.get("verbose", False),
             n_jobs=config_data.get("n_jobs", 1),
             copy=config_data.get("copy", True),
-            rescue_rare=config_data.get("rescue_rare", False),
+            rescue_rare=config_data.get("rescue_rare"),  # None → carver default
+            min_freq_alpha=config_data.get("min_freq_alpha", ProcessingConfig.min_freq_alpha),
+            dp_escalate=config_data.get("dp_escalate", False),
+            y_level_scores=(
+                None if config_data.get("y_level_scores") is None else dict(map(tuple, config_data["y_level_scores"]))
+            ),
         )
 
         instance = None
@@ -877,7 +882,8 @@ class BaseCarver(BaseDiscretizer, ABC):
                     features=features,
                     min_freq=min_freq,
                     max_n_mod=max_n_mod,
-                    combination_evaluator=evaluator_cls(),
+                    # fresh dict per candidate: load pops keys
+                    combination_evaluator=evaluator_cls.load(dict(combinations_json, sort_by=sort_by)),
                     config=config,
                 )
                 break

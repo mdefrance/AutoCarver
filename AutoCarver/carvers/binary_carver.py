@@ -7,6 +7,7 @@ import pandas as pd
 
 from AutoCarver.carvers.utils.base_carver import BaseCarver, Samples, parallel_aggregate
 from AutoCarver.combinations import CombinationEvaluator, TschuprowtCombinations
+from AutoCarver.combinations.binary.binary_target_rates import BinaryTargetRate
 from AutoCarver.discretizers.utils.base_discretizer import ProcessingConfig
 from AutoCarver.features import BaseFeature, Features
 from AutoCarver.utils import extend_docstring
@@ -76,6 +77,18 @@ class BinaryCarver(BaseCarver):
         """Computes crosstabs for specified features and ensures that the crosstab is ordered
         according to the known labels. Threaded across features when ``n_jobs > 1``."""
         return parallel_aggregate(get_crosstab, self.features, X, y, self.config.n_jobs)
+
+    def _fit_rate_reference(self, xagg: pd.Series | pd.DataFrame) -> None:
+        """Fits the woe train class ratio from the raw train crosstab before the
+        pre-combination "Raw distribution" print (mirrors
+        :meth:`~AutoCarver.carvers.ordinal_carver.OrdinalCarver._fit_rate_reference`).
+
+        ``get_best_combination`` refits it from the same crosstab, so carving never
+        depends on this fit.
+        """
+        target_rate = self.combination_evaluator.target_rate
+        if isinstance(target_rate, BinaryTargetRate) and isinstance(xagg, pd.DataFrame):
+            target_rate.fit_reference(xagg)
 
 
 def get_crosstab(X: pd.DataFrame, y: pd.Series, feature: BaseFeature) -> pd.DataFrame:

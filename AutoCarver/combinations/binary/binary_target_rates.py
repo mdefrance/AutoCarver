@@ -13,6 +13,12 @@ class BinaryTargetRate(TargetRate[pd.DataFrame], ABC):
 
     __name__ = "binary_target_rate"
 
+    def fit_reference(self, raw_xagg: pd.DataFrame) -> None:
+        """No-op hook fixing a train reference before any candidate is scored.
+
+        :class:`Woe` overrides it to fix the train class ratio.
+        """
+
 
 class TargetMean(BinaryTargetRate):
     """Mean target rate class."""
@@ -103,16 +109,45 @@ class OddsRatio(TargetMean):
 
 
 class Woe(BinaryTargetRate):
-    """Weight of evidence class."""
+    """Scorecard weight of evidence per modality.
+
+    ``woe = ln((n1_i / N1) / (n0_i / N0)) = logit(p_i) - ln(N1 / N0)``, where
+    ``N1 / N0`` is the class ratio of the feature's raw **train** crosstab,
+    fixed once per feature (:meth:`fit_reference`). Every later call — a train
+    candidate grouping, a dev grouping or a production sample — applies that
+    same train ratio, as a scorecard applies its train WoE table.
+    """
 
     __name__ = "woe"
 
+    def __init__(self) -> None:
+        self._log_ratio: float | None = None
+
+    @property
+    def log_ratio(self) -> float:
+        """The fixed train ``ln(N1 / N0)`` (raises until :meth:`fit_reference` runs)."""
+        if self._log_ratio is None:
+            raise RuntimeError(f"[{self.__name__}] reference is not fit; call fit_reference(raw_xagg) first")
+        return self._log_ratio
+
+    def fit_reference(self, raw_xagg: pd.DataFrame) -> None:
+        """Fixes the train class ratio ``ln(N1 / N0)`` from the feature's raw train crosstab."""
+        self._log_ratio = float(np.log(raw_xagg[1].sum() / raw_xagg[0].sum()))
+
+    def reference_to_json(self) -> dict | None:
+        """Snapshots the fitted train class ratio."""
+        if self._log_ratio is None:
+            return None
+        return {"log_ratio": self._log_ratio}
+
+    def load_reference(self, payload: dict | None) -> None:
+        """Restores the train class ratio snapshotted by :meth:`reference_to_json`."""
+        if payload is not None:
+            self._log_ratio = payload["log_ratio"]
+
     def _compute(self, xagg: pd.DataFrame) -> pd.Series:
-        """Computes the Weight of evidence."""
-        sum_f = xagg.sum(axis=1)
-        means = xagg.divide(sum_f, axis=0)
-        woe = np.log(means[1] / means[0])
-        return woe
+        """Computes the weight of evidence against the fixed train class ratio."""
+        return np.log(xagg[1] / xagg[0]) - self.log_ratio
 
 
 # class IV(Woe):
