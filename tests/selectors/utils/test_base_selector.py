@@ -561,3 +561,17 @@ def test_verbose_prints_per_type_counts(
     printed = capsys.readouterr().out
     assert "selected 1/2 qualitative feature(s)" in printed
     assert "selected 1/2 quantitative feature(s)" in printed
+
+
+def test_get_best_features_ties_keep_declaration_order() -> None:
+    """two identical features tie on every measure: the first declared ranks first"""
+    from AutoCarver.features import NumericalFeature
+    from AutoCarver.selectors import PearsonMeasure
+
+    X = pd.DataFrame({"first": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], "second": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]})
+    y = pd.Series([0.0, 1.0, 1.0, 2.0, 3.0, 3.0])
+    first, second = NumericalFeature("first"), NumericalFeature("second")
+
+    best_features = get_best_features([first, second], X, y, [PearsonMeasure()], [], 1)
+    assert best_features == [first]
+    assert first.measures["PearsonRank"]["value"] == 0

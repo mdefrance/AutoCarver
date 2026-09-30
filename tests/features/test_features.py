@@ -780,3 +780,9 @@ def test_features_add_rejects_str() -> None:
     features = Features(categoricals=["a"])
     with raises(TypeError):
         _ = features + "b"
+
+
+def test_features_empty_error_names_numericals() -> None:
+    """The no-feature error names the current argument, numericals"""
+    with raises(ValueError, match="numericals"):
+        Features()

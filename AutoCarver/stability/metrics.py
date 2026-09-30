@@ -176,7 +176,8 @@ def to_probability(rate_name: str, values: pd.Series, log_ratio: float | None = 
         return values.astype(float)
     if rate_name == "odds_ratio":
         odds = values.astype(float)
-        return odds / (1 + odds)
+        # 1 - 1/(1+odds), not odds/(1+odds): stays 1.0 (not inf/inf = NaN) at p = 1
+        return 1 - 1 / (1 + odds)
     if rate_name == "woe":
         if log_ratio is None:
             raise ValueError("[to_probability] 'woe' needs the train log_ratio ln(N1/N0) to be inverted")

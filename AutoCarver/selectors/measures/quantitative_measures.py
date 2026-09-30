@@ -221,6 +221,16 @@ class CorrelationMeasure(AbsoluteMeasure):
         with np.errstate(divide="ignore", invalid="ignore"), warnings.catch_warnings():
             warnings.simplefilter("ignore", RuntimeWarning)
             corr = block.corrwith(y, method=self._corr_method)
+
+            # same degenerate rule as the scalar path (has_values): x constant on its non-NaN rows, or
+            # y constant on them, is NaN. corrwith can return float noise (~1e-17) there instead, as
+            # its centering mean of a constant column is not exactly that constant
+            x_values = block.to_numpy(dtype=float, na_value=np.nan)
+            y_values = y.to_numpy(dtype=float, na_value=np.nan)[:, None]
+            y_on_x = np.where(np.isnan(x_values), np.nan, y_values)
+            x_varies = np.nanmax(x_values, axis=0) > np.nanmin(x_values, axis=0)
+            y_varies = np.nanmax(y_on_x, axis=0) > np.nanmin(y_on_x, axis=0)
+            corr = corr.where(pd.Series(x_varies & y_varies, index=block.columns))
         return {feature.version: self._result(corr[feature.version]) for feature in features}
 
 

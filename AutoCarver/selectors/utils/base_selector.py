@@ -633,8 +633,14 @@ def select_with_measure(
     n_best: int,
 ) -> list[BaseFeature]:
     """Selects the ``n_best`` features of the DataFrame, by association with the target"""
-    sorted_features = sort_features_per_measure(features, measure)
-    sorted_features.reverse()
+    # best first, by the measure's own value (a rank left on the feature by an earlier call is stale);
+    # sorted(reverse=...) keeps declaration order on ties, which list.reverse() would invert;
+    # rounded so float-noise gaps (~1e-16) are ties too, and every measure breaks them alike
+    sorted_features = sorted(
+        features,
+        key=lambda feature: round(get_measure_value(feature, measure), 12),
+        reverse=bool(measure.info.get("higher_is_better")),
+    )
 
     filtered_features = apply_filters(sorted_features, X, filters, n_best=n_best)
 

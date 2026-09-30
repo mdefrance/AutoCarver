@@ -177,6 +177,12 @@ def test_to_probability_inverts_every_binary_rate():
         to_probability("woe", woe)
 
 
+def test_to_probability_odds_at_the_bounds():
+    odds = pd.Series([np.inf, 1.0, 0.0], index=list("abc"))
+
+    assert list(to_probability("odds_ratio", odds)) == [1.0, 0.5, 0.0]
+
+
 def test_to_probability_rejects_a_non_invertible_rate():
     with raises(ValueError, match="not an invertible binary target rate"):
         to_probability("target_mean_ridit", pd.Series([0.5]))

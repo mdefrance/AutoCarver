@@ -174,7 +174,7 @@ def map_y_level_scores(y: pd.Series, scores: dict, name: str) -> pd.Series:
 def series_target_rate(x: pd.Series, y: pd.Series, dropna: bool = True, ascending=True) -> dict:
     """Target y rate per modality of x into a dictionnary"""
 
-    rates = y.groupby(x, dropna=dropna).mean().sort_index().sort_values(ascending=ascending)
+    rates = y.groupby(x, dropna=dropna).mean().sort_index().sort_values(ascending=ascending, kind="stable")
 
     return rates.to_dict()
 

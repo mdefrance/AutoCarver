@@ -429,3 +429,42 @@ def test_base_feature_eq_and_hash_keyed_on_version() -> None:
     feat_c.version = "age__y=1"
     assert feat_a != feat_c
     assert feat_a != "unrelated"
+
+
+def test_aggregate_stats_rows_pools_non_mean_rates() -> None:
+    """odds_ratio and woe are pooled through their probability; target_median is not poolable"""
+    from math import log
+
+    from pytest import approx
+
+    from AutoCarver.features.utils.base_feature import _aggregate_stats_rows
+
+    log_ratio = log(0.25)  # train ln(N1/N0)
+    rows = pd.DataFrame(
+        {
+            "odds_ratio": [0.1 / 0.9, 0.5 / 0.5],
+            "woe": [log(0.1 / 0.9) - log_ratio, log(0.5 / 0.5) - log_ratio],
+            "target_median": [1.0, 2.0],
+            "count": [100, 100],
+        }
+    )
+
+    merged = _aggregate_stats_rows(rows, log_ratio)
+    assert merged["odds_ratio"] == approx(0.3 / 0.7)
+    assert merged["woe"] == approx(log(0.3 / 0.7) - log_ratio)
+    assert merged["target_median"] != merged["target_median"]  # NaN
+    assert merged["count"] == 200
+
+    # woe cannot be pooled without the feature's train log_ratio
+    merged_without_ratio = _aggregate_stats_rows(rows)
+    assert merged_without_ratio["woe"] != merged_without_ratio["woe"]  # NaN
+
+
+def test_aggregate_stats_rows_odds_at_the_bounds() -> None:
+    """a bin with p = 1 (infinite odds) pools to a finite rate, not NaN"""
+    from pytest import approx
+
+    from AutoCarver.features.utils.base_feature import _aggregate_stats_rows
+
+    rows = pd.DataFrame({"odds_ratio": [float("inf"), 0.0], "count": [100, 100]})
+    assert _aggregate_stats_rows(rows)["odds_ratio"] == approx(1.0)  # p = 0.5
