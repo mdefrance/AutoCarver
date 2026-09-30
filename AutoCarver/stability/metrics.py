@@ -152,24 +152,34 @@ def welch_test(
     return pd.Series(pvalues, index=index)
 
 
-def to_probability(rate_name: str, values: pd.Series) -> pd.Series:
+def to_probability(rate_name: str, values: pd.Series, log_ratio: float | None = None) -> pd.Series:
     """Inverts a binary target rate back to ``P(y=1 | modality)``.
 
     ``target_mean`` already is that probability; ``odds_ratio`` is ``p/(1-p)``;
-    ``woe`` is ``log(P(y=1|mod) / P(y=0|mod))`` (see
-    :meth:`~AutoCarver.combinations.binary.binary_target_rates.Woe._compute`),
-    i.e. a logit — so ``p = sigmoid(woe)``.
+    ``woe`` is ``logit(p) - ln(N1/N0)`` against the fixed train class ratio (see
+    :class:`~AutoCarver.combinations.binary.binary_target_rates.Woe`) — so
+    ``p = sigmoid(woe + log_ratio)``.
+
+    Parameters
+    ----------
+    log_ratio : float, optional
+        The train ``ln(N1/N0)`` the ``woe`` values were computed against
+        (:attr:`Woe.log_ratio`). Required for ``woe`` only.
 
     Raises
     ------
     ValueError
-        When ``rate_name`` is not an invertible binary target rate.
+        When ``rate_name`` is not an invertible binary target rate, or when
+        ``woe`` is given without ``log_ratio``.
     """
     if rate_name == "target_mean":
         return values.astype(float)
     if rate_name == "odds_ratio":
         odds = values.astype(float)
-        return odds / (1 + odds)
+        # 1 - 1/(1+odds), not odds/(1+odds): stays 1.0 (not inf/inf = NaN) at p = 1
+        return 1 - 1 / (1 + odds)
     if rate_name == "woe":
-        return 1 / (1 + np.exp(-values.astype(float)))
+        if log_ratio is None:
+            raise ValueError("[to_probability] 'woe' needs the train log_ratio ln(N1/N0) to be inverted")
+        return 1 / (1 + np.exp(-(values.astype(float) + log_ratio)))
     raise ValueError(f"[to_probability] {rate_name!r} is not an invertible binary target rate")

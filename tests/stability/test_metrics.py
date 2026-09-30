@@ -1,5 +1,3 @@
-"""Tests for the stability metrics (PSI, chi-square GOF, drift tests)."""
-
 from math import log, nan
 
 import numpy as np
@@ -169,11 +167,20 @@ def test_welch_test_flags_a_mean_shift_and_tolerates_missing_std():
 def test_to_probability_inverts_every_binary_rate():
     probability = pd.Series([0.1, 0.4, 0.75], index=list("abc"))
     odds = probability / (1 - probability)
-    woe = odds.map(log)
+    log_ratio = log(0.25)  # train ln(N1/N0)
+    woe = odds.map(log) - log_ratio
 
     assert np.allclose(to_probability("target_mean", probability), probability)
     assert np.allclose(to_probability("odds_ratio", odds), probability)
-    assert np.allclose(to_probability("woe", woe), probability)
+    assert np.allclose(to_probability("woe", woe, log_ratio), probability)
+    with raises(ValueError, match="log_ratio"):
+        to_probability("woe", woe)
+
+
+def test_to_probability_odds_at_the_bounds():
+    odds = pd.Series([np.inf, 1.0, 0.0], index=list("abc"))
+
+    assert list(to_probability("odds_ratio", odds)) == [1.0, 0.5, 0.0]
 
 
 def test_to_probability_rejects_a_non_invertible_rate():

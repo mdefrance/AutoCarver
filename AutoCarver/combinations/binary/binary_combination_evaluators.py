@@ -153,6 +153,10 @@ class BinaryCombinationEvaluator(CombinationEvaluator[pd.DataFrame], ABC):
             raise RuntimeError(f"[{self.__name__}] feature labels are not populated")
         raw_labels = GroupedList(feature_labels[:])
 
+        # fixing the train class ratio (woe) from the full raw train crosstab — NaN row
+        # included — before any combination (train or dev) is scored against it
+        self.target_rate.fit_reference(self.samples.train.xagg)  # type: ignore
+
         if self.feature.has_nan:
             if self.feature.dropna:
                 raw_labels.remove(self.feature.nan)

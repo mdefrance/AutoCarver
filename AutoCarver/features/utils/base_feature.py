@@ -1,10 +1,10 @@
-"""Base class for all features."""
-
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from typing import Any, Self, TypeVar
 
+import numpy as np
 import pandas as pd
+from scipy.special import expit, logit
 
 from AutoCarver.config import Constants
 from AutoCarver.features.utils.grouped_list import GroupedList
@@ -288,7 +288,8 @@ class BaseFeature(ABC):
 
         old_labels_per_new = _old_labels_per_new_label(new_snapshot, old_snapshot)
         split_old_labels = _find_split_old_labels(old_labels_per_new)
-        new_rows = _build_new_rows(old_labels_per_new, old_stats, split_old_labels)
+        log_ratio = None if self.rate_reference is None else self.rate_reference.get("log_ratio")
+        new_rows = _build_new_rows(old_labels_per_new, old_stats, split_old_labels, log_ratio)
 
         # every current label gets a row (bins holding only post-fit synthetic values get NaN)
         nan_row = {col: float("nan") for col in old_stats.columns}
@@ -610,7 +611,9 @@ def _find_split_old_labels(old_labels_per_new: dict) -> set:
     return split_old_labels
 
 
-def _build_new_rows(old_labels_per_new: dict, old_stats: pd.DataFrame, split_old_labels: set) -> dict:
+def _build_new_rows(
+    old_labels_per_new: dict, old_stats: pd.DataFrame, split_old_labels: set, log_ratio: float | None = None
+) -> dict:
     """Aggregates old stats rows onto each new label (NaN when unknowable or unseen)."""
     new_rows: dict = {}
     for new_label, old_labels in old_labels_per_new.items():
@@ -620,16 +623,19 @@ def _build_new_rows(old_labels_per_new: dict, old_stats: pd.DataFrame, split_old
         elif len(known) == 1:
             new_rows[new_label] = old_stats.loc[known[0]].to_dict()
         else:
-            new_rows[new_label] = _aggregate_stats_rows(old_stats.loc[known])
+            new_rows[new_label] = _aggregate_stats_rows(old_stats.loc[known], log_ratio)
     return new_rows
 
 
-def _aggregate_stats_rows(rows: pd.DataFrame) -> dict:
+def _aggregate_stats_rows(rows: pd.DataFrame, log_ratio: float | None = None) -> dict:
     """Aggregates several bins' statistics rows into one merged bin's row.
 
     ``count`` and ``frequency`` sum exactly; every other column is pooled by a
     count-weighted mean (falling back to frequency weights, then a plain mean),
-    which is exact for per-bin means such as target rates.
+    which is exact for per-bin means such as target rates. Non-mean binary rates
+    are pooled through their probability: ``odds_ratio`` (odds ``p/(1-p)``) and
+    ``woe`` (``logit(p) - log_ratio``, NaN without the feature's train
+    ``log_ratio``). ``target_median`` is not poolable and becomes NaN.
     """
     if "count" in rows.columns and rows["count"].notna().all():
         weights = rows["count"].astype(float)
@@ -651,11 +657,26 @@ def _aggregate_stats_rows(rows: pd.DataFrame) -> dict:
         elif col in ("count", "frequency"):
             aggregated[col] = values.sum()
         else:
-            # count-weighting is exact for per-bin means (target rates) but only
-            # approximate for the continuous "std" column — a true pooled std would
-            # also need the between-bin spread, which the stored rows don't carry.
-            aggregated[col] = float((values * weights).sum() / weights.sum())
+            aggregated[col] = _pool_rate(col, values, weights, log_ratio)
     return aggregated
+
+
+def _pool_rate(col: str, values: pd.Series, weights: pd.Series, log_ratio: float | None) -> float:
+    """Pools one per-bin rate column into the merged bin's value (see :func:`_aggregate_stats_rows`)."""
+    if col == "target_median":
+        return float("nan")
+    if col == "odds_ratio":
+        pooled = float(((1 - 1 / (1 + values)) * weights).sum() / weights.sum())
+        return float(np.exp(logit(pooled)))
+    if col == "woe":
+        if log_ratio is None:
+            return float("nan")
+        pooled = float((expit(values + log_ratio) * weights).sum() / weights.sum())
+        return float(logit(pooled) - log_ratio)
+    # count-weighting is exact for per-bin means (target rates) but only
+    # approximate for the continuous "std" column — a true pooled std would
+    # also need the between-bin spread, which the stored rows don't carry.
+    return float((values * weights).sum() / weights.sum())
 
 
 TFeature = TypeVar("TFeature", bound=BaseFeature)

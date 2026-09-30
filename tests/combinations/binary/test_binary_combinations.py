@@ -1,5 +1,3 @@
-"""Tests for the binary_combinations module."""
-
 import json
 from pathlib import Path
 
@@ -14,6 +12,7 @@ from AutoCarver.combinations.binary.binary_combination_evaluators import (
     CramervCombinations,
     TschuprowtCombinations,
 )
+from AutoCarver.combinations.binary.binary_target_rates import Woe
 from AutoCarver.combinations.continuous.continuous_combination_evaluators import KruskalCombinations
 from AutoCarver.combinations.utils.combination_evaluator import AggregatedSample
 from AutoCarver.combinations.utils.combinations import (
@@ -53,6 +52,7 @@ def test_to_json(evaluator: BinaryCombinationEvaluator):
     expected_json = {
         "sort_by": evaluator.sort_by,
         "target_rate": evaluator.target_rate.__name__,
+        "target_rate_params": None,
         "verbose": evaluator.verbose,
     }
     assert evaluator.to_json() == expected_json
@@ -69,9 +69,18 @@ def test_save(evaluator: BinaryCombinationEvaluator, tmp_path):
     expected_json = {
         "sort_by": evaluator.sort_by,
         "target_rate": evaluator.target_rate.__name__,
+        "target_rate_params": None,
         "verbose": evaluator.verbose,
     }
     assert data == expected_json
+
+
+def test_save_load_str_path(evaluator: BinaryCombinationEvaluator, tmp_path):
+    """save/load accept a plain str path, not only a pathlib.Path."""
+    file_name = str(tmp_path / "test.json")
+    evaluator.save(file_name)
+    loaded = type(evaluator).load(file_name)
+    assert loaded.to_json() == evaluator.to_json()
 
 
 def test_save_invalid_filename(evaluator: BinaryCombinationEvaluator):
@@ -132,6 +141,43 @@ def test_load_cramerv(tmp_path):
 
     with raises(ValueError):
         KruskalCombinations.load(file_name)
+
+
+def test_woe_is_scorecard_woe():
+    """woe = ln((n1_i/N1) / (n0_i/N0)); it differs from the bin log-odds by ln(N0/N1)."""
+    xagg = pd.DataFrame({0: [80, 20], 1: [20, 30]}, index=["a", "b"])
+    n0, n1 = 100, 50
+    rate = Woe()
+    rate.fit_reference(xagg)
+    woe = rate.compute(xagg)["woe"]
+
+    expected = [np.log((20 / n1) / (80 / n0)), np.log((30 / n1) / (20 / n0))]
+    assert np.allclose(woe, expected)
+    logit = np.log(xagg[1] / xagg[0])
+    assert np.allclose(woe - logit, np.log(n0 / n1))
+
+
+def test_woe_applies_the_train_class_ratio_to_new_samples():
+    """A dev/production sample is scored against the train N1/N0, not its own."""
+    train = pd.DataFrame({0: [80, 20], 1: [20, 30]}, index=["a", "b"])
+    dev = pd.DataFrame({0: [10, 10], 1: [10, 30]}, index=["a", "b"])
+    rate = Woe()
+    rate.fit_reference(train)
+    woe_dev = rate.compute(dev)["woe"]
+    assert np.allclose(woe_dev, np.log(dev[1] / dev[0]) - np.log(50 / 100))
+
+
+def test_woe_reference_round_trips_and_is_required():
+    xagg = pd.DataFrame({0: [80, 20], 1: [20, 30]}, index=["a", "b"])
+    with raises(RuntimeError, match="reference is not fit"):
+        Woe().compute(xagg)
+
+    rate = Woe()
+    rate.fit_reference(xagg)
+    payload = json.loads(json.dumps(rate.reference_to_json()))
+    restored = Woe()
+    restored.load_reference(payload)
+    pd.testing.assert_frame_equal(restored.compute(xagg), rate.compute(xagg))
 
 
 def test_compute_target_rates_basic(evaluator: BinaryCombinationEvaluator):

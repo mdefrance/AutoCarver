@@ -878,20 +878,31 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
         dict
             JSON serialized object
         """
+        level_values = getattr(self.target_rate, "level_values", None)
         return {
             "sort_by": self.sort_by,
             "target_rate": self.target_rate.__name__,
+            # list of pairs: JSON would stringify int keys; levels may be numpy scalars
+            "target_rate_params": (
+                None
+                if level_values is None
+                else [
+                    [level.item() if hasattr(level, "item") else level, float(value)]
+                    for level, value in level_values.items()
+                ]
+            ),
             "verbose": self.verbose,
         }
 
-    def save(self, file_name: Path) -> None:
+    def save(self, file_name: str | Path) -> None:
         """Saves :class:`CombinationEvaluator` to .json file.
 
         Parameters
         ----------
-        file_name : Path
-            :class:`pathlib.Path` of the ``.json`` file to write.
+        file_name : str or Path
+            Path of the ``.json`` file to write.
         """
+        file_name = Path(file_name)
         # checking for input
         if file_name.suffix == ".json":
             with file_name.open("w", encoding="utf-8") as json_file:
@@ -901,13 +912,13 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
             raise ValueError(f"[{self.__name__}] Provide a file_name that ends with .json.")
 
     @classmethod
-    def load(cls, file: Path | dict) -> "CombinationEvaluator":
+    def load(cls, file: str | Path | dict) -> "CombinationEvaluator":
         """Allows one to load a :class:`CombinationEvaluator` saved as a .json file.
 
         Parameters
         ----------
-        file : Path | dict
-            :class:`pathlib.Path` of the ``.json`` file or its already-parsed content.
+        file : str, Path or dict
+            Path of the ``.json`` file or its already-parsed content.
 
         Returns
         -------
@@ -915,8 +926,8 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
             A ready-to-use :class:`CombinationEvaluator`
         """
         # reading file
-        if isinstance(file, Path):
-            with file.open(encoding="utf-8") as json_file:
+        if isinstance(file, (str, Path)):
+            with Path(file).open(encoding="utf-8") as json_file:
                 combinations_json = json.load(json_file)
         elif isinstance(file, dict):
             combinations_json = file
@@ -932,10 +943,14 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
 
         # resolve target_rate name → instance using the subclass registry
         target_rate_name = combinations_json.pop("target_rate", None)
+        target_rate_params = combinations_json.pop("target_rate_params", None)
         target_rate = None
         registry = {tr().__name__: tr for tr in getattr(cls, "_target_rate_classes", [])}
         if target_rate_name in registry:
-            target_rate = registry[target_rate_name]()
+            if target_rate_params is not None:
+                target_rate = registry[target_rate_name](level_values=dict(map(tuple, target_rate_params)))
+            else:
+                target_rate = registry[target_rate_name]()
 
         # strip non-constructor fields before passing remaining kwargs
         combinations_json.pop("sort_by", None)

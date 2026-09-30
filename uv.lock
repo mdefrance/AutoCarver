@@ -107,7 +107,7 @@ wheels = [
 
 [[package]]
 name = "autocarver"
-version = "7.8.0"
+version = "7.8.1"
 source = { editable = "." }
 dependencies = [
     { name = "numpy" },
@@ -162,7 +162,7 @@ requires-dist = [
     { name = "ipykernel", marker = "extra == 'jupyter'", specifier = ">=6.27.1,<7" },
     { name = "ipython", marker = "extra == 'jupyter'", specifier = ">=8.28,<9.11" },
     { name = "jinja2", marker = "extra == 'jupyter'", specifier = ">=3.1.5,<4" },
-    { name = "matplotlib", marker = "extra == 'jupyter'", specifier = ">=3.9,<3.11" },
+    { name = "matplotlib", marker = "extra == 'jupyter'", specifier = ">=3.9.3,<3.11" },
     { name = "numpy", specifier = ">=2.1,<2.5" },
     { name = "pandas", specifier = ">=2.3,!=3.0.4,<3.1" },
     { name = "pyarrow", marker = "extra == 'mcp'", specifier = ">=24.0.0" },

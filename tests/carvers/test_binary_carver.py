@@ -1,5 +1,4 @@
-"""Set of tests for binary_carver module."""
-
+import json
 from pathlib import Path
 
 import pandas as pd
@@ -1018,6 +1017,75 @@ def test_binary_carver_save_load(tmp_path: Path, evaluator: CombinationEvaluator
     assert carver.max_n_mod == loaded_carver.max_n_mod
     assert carver.combination_evaluator.sort_by == loaded_carver.combination_evaluator.sort_by
     assert carver.combination_evaluator.verbose == loaded_carver.combination_evaluator.verbose
+
+
+def test_binary_carver_save_load_str_path(tmp_path: Path):
+    """save/load accept a plain str path, not only a pathlib.Path."""
+    features = Features(categoricals=["feature1"], numericals=["feature3"])
+    X = pd.DataFrame({"feature1": ["A", "B", "A", "C"] * 25, "feature3": [1, 2, 3, 4] * 25})
+    y = pd.Series([0, 1, 0, 1] * 25)
+
+    carver = BinaryCarver(features=features, min_freq=0.1, max_n_mod=5)
+    carver.fit(X, y)
+    carver_file = str(tmp_path / "c.json")
+    carver.save(carver_file)
+    loaded_carver = BinaryCarver.load(carver_file)
+
+    pd.testing.assert_frame_equal(carver.transform(X), loaded_carver.transform(X))
+
+
+def test_binary_carver_verbose_woe_fit(capsys):
+    """The verbose raw-distribution print computes woe before the search: the carver fits the ratio first."""
+    from AutoCarver.combinations.binary.binary_target_rates import Woe
+
+    features = Features(categoricals=["feature1"], numericals=["feature3"])
+    X = pd.DataFrame({"feature1": ["A", "B", "A", "C"] * 25, "feature3": [1, 2, 3, 4] * 25})
+    y = pd.Series([0, 1, 0, 1] * 25)
+    carver = BinaryCarver(
+        features=features,
+        min_freq=0.1,
+        max_n_mod=5,
+        combination_evaluator=TschuprowtCombinations(target_rate=Woe()),
+        config=ProcessingConfig(verbose=True),
+    )
+    carver.fit(X, y)
+    assert "Raw distribution" in capsys.readouterr().out
+
+
+def test_binary_carver_save_load_keeps_config(tmp_path: Path):
+    """Non-default min_freq_alpha / dp_escalate / rescue_rare survive save/load."""
+    features = Features(categoricals=["feature1"], numericals=["feature3"])
+    config = ProcessingConfig(min_freq_alpha=0.01, dp_escalate=True, rescue_rare=False)
+    carver = BinaryCarver(features=features, min_freq=0.1, max_n_mod=5, config=config)
+    carver.save(tmp_path / "c.json")
+    loaded_carver = BinaryCarver.load(tmp_path / "c.json")
+
+    assert loaded_carver.config.min_freq_alpha == 0.01
+    assert loaded_carver.config.dp_escalate is True
+    assert loaded_carver.config.rescue_rare is False
+
+
+def test_binary_carver_load_file_without_new_config_keys(tmp_path: Path):
+    """A JSON saved before dp_escalate / y_level_scores / target_rate_params existed still loads."""
+    features = Features(categoricals=["feature1"], numericals=["feature3"])
+    X = pd.DataFrame({"feature1": ["A", "B", "A", "C"] * 25, "feature3": [1, 2, 3, 4] * 25})
+    y = pd.Series([0, 1, 0, 1] * 25)
+    carver = BinaryCarver(features=features, min_freq=0.1, max_n_mod=5)
+    carver.fit(X, y)
+    carver_file = tmp_path / "c.json"
+    carver.save(carver_file)
+
+    data = json.loads(carver_file.read_text(encoding="utf-8"))
+    for key in ("dp_escalate", "y_level_scores", "min_freq_alpha"):
+        del data["config"][key]
+    del data["combination_evaluator"]["target_rate_params"]
+    carver_file.write_text(json.dumps(data), encoding="utf-8")
+    loaded_carver = BinaryCarver.load(carver_file)
+
+    assert loaded_carver.config.dp_escalate is False
+    assert loaded_carver.config.y_level_scores is None
+    assert loaded_carver.config.min_freq_alpha == ProcessingConfig.min_freq_alpha
+    pd.testing.assert_frame_equal(carver.transform(X), loaded_carver.transform(X))
 
 
 def test_binary_carver_ordinal_encoding_round_trip(tmp_path: Path, evaluator: CombinationEvaluator):

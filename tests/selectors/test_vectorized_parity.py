@@ -128,6 +128,25 @@ def test_pearson_parity(quant_block, y_continuous):
     _assert_parity(PearsonMeasure, quant_block, y_continuous)
 
 
+def test_correlation_parity_degenerate_columns():
+    """Constant x (on its non-NaN rows), or y constant on them, is NaN on both paths.
+
+    q0 is the hypothesis counterexample: corrwith returned 7.85e-17 where the scalar gave NaN.
+    """
+    X = pd.DataFrame(
+        {
+            "q0": [342.322266, 342.322266, 342.322266, np.nan, np.nan],
+            "q1": [np.nan] * 5,
+            "q2": [1.0, 2.0, np.nan, 3.0, np.nan],  # y is constant on these rows
+            "q3": [1.0, 2.0, 3.0, 4.0, 5.0],
+        }
+    )
+    y = pd.Series([0.0, 0.0, 1.0, 0.0, 0.0])
+    for cls in (PearsonMeasure, SpearmanMeasure):
+        _assert_parity(cls, X, y)
+        assert not np.isnan(cls().compute_all(X, y, _features(["q3"]))["q3"]["value"])
+
+
 # --- qualitative-feature measures vs qualitative target --------------------
 
 

@@ -691,3 +691,36 @@ def test_move_colliding_labels_raises():
 
     with pytest.raises(ValueError):
         feature.move(b, feature.labels[0])
+
+
+@pytest.mark.parametrize("rate_name", ["odds_ratio", "woe"])
+def test_summary_after_manual_group_non_mean_rate(rate_name):
+    """A merged bin's odds_ratio / woe equals the rate recomputed on the merged rows."""
+    from scipy.special import logit
+
+    from AutoCarver.combinations.binary.binary_target_rates import OddsRatio, Woe
+
+    X, y = _six_modality_data()
+    target_rate = OddsRatio() if rate_name == "odds_ratio" else Woe()
+    carver = BinaryCarver(
+        min_freq=0.05,
+        max_n_mod=6,
+        features=Features(categoricals=["feature"]),
+        combination_evaluator=CramervCombinations(target_rate=target_rate),
+        config=ProcessingConfig(dropna=True, ordinal_encoding=False, copy=True),
+    )
+    carver.fit(X, y)
+
+    feature = carver.features("feature")
+    a, b = feature.labels[0], feature.labels[1]
+    out_before = carver.transform(X)
+    merged_rate = y[out_before["feature"].isin([a, b])].mean()
+
+    feature.group([a], b)
+
+    merged = feature.statistics.loc[feature.labels[0], rate_name]
+    if rate_name == "odds_ratio":
+        expected = merged_rate / (1 - merged_rate)
+    else:
+        expected = logit(merged_rate) - np.log(y.sum() / (len(y) - y.sum()))
+    assert merged == pytest.approx(expected)

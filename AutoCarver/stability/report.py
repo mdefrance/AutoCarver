@@ -1,5 +1,3 @@
-"""Post-fit stability evaluation of carved features against a new sample."""
-
 import json
 import math
 from dataclasses import dataclass
@@ -8,6 +6,7 @@ from warnings import warn
 
 import pandas as pd
 
+from AutoCarver.combinations.binary.binary_target_rates import Woe
 from AutoCarver.combinations.utils.combination_evaluator import CombinationEvaluator
 from AutoCarver.combinations.utils.testing import test_viability
 from AutoCarver.stability.metrics import (
@@ -298,10 +297,12 @@ def _drift_pvalues(
     The rate delta is reported regardless, and the viability block still runs.
     """
     if evaluator.is_y_binary:
+        target_rate = evaluator.target_rate
+        log_ratio = target_rate.log_ratio if isinstance(target_rate, Woe) else None
         return two_proportion_test(
-            to_probability(rate_name, reference[rate_name]),
+            to_probability(rate_name, reference[rate_name], log_ratio),
             reference["count"],
-            to_probability(rate_name, new[rate_name]),
+            to_probability(rate_name, new[rate_name], log_ratio),
             new["count"],
         )
     if rate_name == "target_mean" and not (evaluator.is_y_multiclass or evaluator.is_y_ordinal):  # continuous mean

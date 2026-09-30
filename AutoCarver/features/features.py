@@ -361,7 +361,7 @@ class Features:
         if not (self.categoricals or self.quantitatives or self.ordinals or self._nested):
             raise ValueError(
                 f"[{self}] No feature passed as input. Please provide column names"
-                " by setting categoricals, quantitatives, ordinals, datetimes or nested."
+                " by setting categoricals, numericals, ordinals, datetimes or nested."
             )
 
         check_duplicate_features(self.ordinals, self.categoricals, self.quantitatives, self._nested)

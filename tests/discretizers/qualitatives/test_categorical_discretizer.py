@@ -464,3 +464,16 @@ def test_categorical_discretizer(x_train: pd.DataFrame, target: str) -> None:
     assert features("Qualitative_highnan").content == quali_highnan_expected, (
         "If any, np.nan values should be put into str_nan and kept by themselves"
     )
+
+
+def test_series_target_rate_ties_keep_sorted_index_order():
+    """Exact rate ties keep the sort_index order, in both directions"""
+    labels = [f"m{i:02d}" for i in range(60)]
+    x = pd.Series(labels * 2)
+    y = pd.Series([i % 3 for i in range(60)] * 2)  # three rates, 20 tied modalities each
+
+    for ascending in (True, False):
+        keys = list(series_target_rate(x, y, ascending=ascending))
+        expected = sorted(labels, key=lambda label: int(label[1:]) % 3, reverse=not ascending)
+        # sorted(reverse=True) is stable, so expected ties are in label order both ways
+        assert keys == expected

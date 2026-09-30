@@ -1,5 +1,3 @@
-"""Tests for the post-fit stability report."""
-
 import json
 
 import numpy as np
@@ -60,6 +58,32 @@ def test_self_comparison_is_perfectly_stable(binary):
     assert report.unstable_features == []
     # reference and new statistics must coincide modality by modality
     assert report.per_modality["count_ref"].tolist() == report.per_modality["count_new"].tolist()
+
+
+def test_woe_carver_is_stable_on_itself_after_reload(sample, tmp_path):
+    """A woe carver stores the train class ratio: the reloaded carver inverts woe exactly."""
+    from AutoCarver.combinations import TschuprowtCombinations
+    from AutoCarver.combinations.binary.binary_target_rates import Woe
+
+    X, score, rng = sample
+    y = pd.Series(rng.binomial(1, 1 / (1 + np.exp(-score))), name="y")
+    carver = BinaryCarver(
+        features(), min_freq=0.05, max_n_mod=4, combination_evaluator=TschuprowtCombinations(target_rate=Woe())
+    )
+    carver.fit(X.copy(), y)
+    carver.save(tmp_path / "carver.json")
+    loaded = BinaryCarver.load(tmp_path / "carver.json")
+
+    report = loaded.evaluate_stability(X, y)
+    assert np.allclose(report.per_modality["woe_ref"], report.per_modality["woe_new"])
+    assert report.per_feature["n_modalities_drifted"].sum() == 0
+
+    # stored woe is the scorecard woe of each carved bin against the full train totals
+    feature = loaded.features["num"]
+    stats = feature.statistics
+    n1, n0 = y.sum(), (1 - y).sum()
+    events = stats["count"] * (1 / (1 + np.exp(-(stats["woe"] + np.log(n1 / n0)))))
+    assert np.isclose(events.sum(), n1)
 
 
 def test_evaluate_stability_does_not_mutate_the_input(binary):

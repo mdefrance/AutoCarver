@@ -1,5 +1,3 @@
-"""Set of tests for ordinal_carver module."""
-
 import numpy as np
 import pandas as pd
 from pytest import mark, raises
@@ -129,6 +127,51 @@ def test_ordinal_carver_save_load(tmp_path, evaluator):
     assert carver.combination_evaluator.sort_by == loaded_carver.combination_evaluator.sort_by
     assert carver.min_freq == loaded_carver.min_freq
     assert carver.max_n_mod == loaded_carver.max_n_mod
+
+
+def _three_level_ordinal_data() -> tuple[pd.DataFrame, pd.Series]:
+    """A 6-modality feature whose 3 latent clusters drive a 3-level (0/1/2) ordinal target."""
+    rng = np.random.default_rng(7)
+    n = 3000
+    base = rng.integers(0, 6, size=n)
+    cluster = np.vectorize({0: 0, 1: 0, 2: 1, 3: 1, 4: 2, 5: 2}.get)(base)
+    noise = rng.random(n) < 0.2
+    y = pd.Series(np.where(noise, rng.integers(0, 3, size=n), cluster), name="target")
+    X = pd.DataFrame({"q": [str(b) for b in base]})
+    return X, y
+
+
+@mark.parametrize("target_scale", ["level", {0: 0.0, 1: 1.0, 2: 5.0}])
+def test_ordinal_carver_save_load_keeps_target_scale(tmp_path, target_scale):
+    """A non-default target_scale (and its resolved pre-sort scale) survives save/load."""
+    X, y = _three_level_ordinal_data()
+    features = Features(ordinals={"q": ["0", "1", "2", "3", "4", "5"]})
+    carver = OrdinalCarver(min_freq=0.03, max_n_mod=5, features=features, target_scale=target_scale)
+    carver.fit(X, y)
+    carver.save(tmp_path / "ordinal_carver.json")
+    loaded_carver = OrdinalCarver.load(tmp_path / "ordinal_carver.json")
+
+    loaded_rate = loaded_carver.combination_evaluator.target_rate
+    assert type(loaded_rate).__name__ == "TargetMeanLevel"
+    assert loaded_rate.__name__ == "target_mean_level"
+    expected_level_values = target_scale if isinstance(target_scale, dict) else None
+    assert loaded_rate.level_values == expected_level_values
+    assert loaded_carver.config.y_level_scores == carver.config.y_level_scores
+    loaded_carver.evaluate_stability(X, y)
+
+
+def test_ordinal_carver_save_load_keeps_ridit_scores(tmp_path):
+    """The default ridit pre-sort scale (int level keys) survives the JSON round trip."""
+    X, y = _three_level_ordinal_data()
+    features = Features(ordinals={"q": ["0", "1", "2", "3", "4", "5"]})
+    carver = OrdinalCarver(min_freq=0.03, max_n_mod=5, features=features)
+    carver.fit(X, y)
+    carver.save(tmp_path / "ordinal_carver.json")
+    loaded_carver = OrdinalCarver.load(tmp_path / "ordinal_carver.json")
+
+    assert isinstance(loaded_carver.combination_evaluator.target_rate, TargetMeanRidit)
+    assert carver.config.y_level_scores is not None
+    assert loaded_carver.config.y_level_scores == carver.config.y_level_scores
 
 
 # ---------------------------------------------------------------------------
