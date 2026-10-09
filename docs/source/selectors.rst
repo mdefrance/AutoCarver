@@ -424,7 +424,7 @@ Pearson's :math:`\chi^2` test statistic
 For a **qualititative** feature :math:`x`, the association with a **qualitative** target :math:`y` is computed based on the `pandas.crosstab <https://pandas.pydata.org/docs/reference/api/pandas.crosstab.html>`_.
 
 Pearson's :math:`\chi^2` test statistic is then computed using `scipy.stats.chi2_contingency <https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chi2_contingency.html>`_ to perform association measuring.
-See :ref:`stats_chi2` for the definition. The selector builds the contingency table with :func:`pandas.crosstab` and reports the raw statistic.
+See :ref:`stats_chi2` for the definition. The selector builds the contingency table with :func:`pandas.crosstab` and reports the raw, uncorrected statistic (no Yates continuity correction, see :ref:`stats_bias_correction`).
 
 .. autoclass:: AutoCarver.selectors.measures.Chi2Measure
     :members: compute_association, validate, is_x_qualitative, is_y_qualitative, higher_is_better
@@ -439,7 +439,10 @@ Cramér's :math:`V`
 Based on Pearson's :math:`\chi^2`, Cramér's :math:`V` is computed. See :ref:`stats_cramerv_tschuprowt`
 for the definition — the selector uses the *unrounded* variant
 (:func:`AutoCarver.stats.cramerv_tschuprowt_unrounded`), with :math:`n` the
-non-missing pair count and no ``tol`` quantisation.
+non-missing pair count and no ``tol`` quantisation. The value is **bias-corrected**
+(Bergsma, 2013; see :ref:`stats_bias_correction`), which keeps features observed on
+very different numbers of rows comparable: without it, a sparsely observed feature
+with no signal can outrank a well-covered one with a real signal.
 
 .. autoclass:: AutoCarver.selectors.measures.CramervMeasure
     :members: compute_association, validate, is_x_qualitative, is_y_qualitative, higher_is_better
@@ -456,7 +459,10 @@ Tschuprow's :math:`T`
 Based on Pearson's :math:`\chi^2`, Tschuprow's :math:`T` is computed. See :ref:`stats_cramerv_tschuprowt`
 for the definition — the selector uses the *unrounded* variant
 (:func:`AutoCarver.stats.cramerv_tschuprowt_unrounded`), with :math:`n` the
-non-missing pair count and no ``tol`` quantisation.
+non-missing pair count and no ``tol`` quantisation. The value is **bias-corrected**
+(Bergsma, 2013; see :ref:`stats_bias_correction`), which keeps features observed on
+very different numbers of rows comparable: without it, a sparsely observed feature
+with no signal can outrank a well-covered one with a real signal.
 
 .. autoclass:: AutoCarver.selectors.measures.TschuprowtMeasure
     :members: compute_association, validate, is_x_qualitative, is_y_qualitative, higher_is_better
@@ -541,7 +547,7 @@ where:
 
 .. note::
 
-    * :class:`SpearmanFilter` is the default filter used for inter-:class:`QuantitativeFeature` association measure.
+    * ``SpearmanFilter(0.95)`` is the default filter used for inter-:class:`QuantitativeFeature` association measure: it drops near-duplicates only (an identical or rescaled copy of a better-ranked feature). The class default ``threshold=1.0`` drops nothing.
 
 
 
@@ -566,7 +572,10 @@ See :ref:`stats_chi2` for the definition.
 Based on Pearson's :math:`\chi^2`, Cramér's :math:`V` is computed. See :ref:`stats_cramerv_tschuprowt`
 for the definition — the selector uses the *unrounded* variant
 (:func:`AutoCarver.stats.cramerv_tschuprowt_unrounded`), with :math:`n` the
-non-missing pair count and no ``tol`` quantisation.
+non-missing pair count and no ``tol`` quantisation. The value is **bias-corrected**
+(Bergsma, 2013; see :ref:`stats_bias_correction`), which keeps features observed on
+very different numbers of rows comparable: without it, a sparsely observed feature
+with no signal can outrank a well-covered one with a real signal.
 
 .. autoclass:: AutoCarver.selectors.filters.CramervFilter
     :members: filter, is_x_qualitative, higher_is_better
@@ -582,7 +591,10 @@ Tschuprow's :math:`T`
 Based on Pearson's :math:`\chi^2`, Tschuprow's :math:`T` is computed. See :ref:`stats_cramerv_tschuprowt`
 for the definition — the selector uses the *unrounded* variant
 (:func:`AutoCarver.stats.cramerv_tschuprowt_unrounded`), with :math:`n` the
-non-missing pair count and no ``tol`` quantisation.
+non-missing pair count and no ``tol`` quantisation. The value is **bias-corrected**
+(Bergsma, 2013; see :ref:`stats_bias_correction`), which keeps features observed on
+very different numbers of rows comparable: without it, a sparsely observed feature
+with no signal can outrank a well-covered one with a real signal.
 
 .. autoclass:: AutoCarver.selectors.filters.TschuprowtFilter
     :members: filter, is_x_qualitative, higher_is_better
@@ -590,5 +602,5 @@ non-missing pair count and no ``tol`` quantisation.
 
 .. note::
 
-    * :class:`TschuprowtFilter` is the default filter used for inter-:class:`QualitativeFeature` association measure.
+    * ``TschuprowtFilter(0.9)`` is the default filter used for inter-:class:`QualitativeFeature` association measure: it drops near-duplicates only (an identical copy of a better-ranked feature, or the same feature at a coarser binning). The class default ``threshold=1.0`` drops nothing.
 

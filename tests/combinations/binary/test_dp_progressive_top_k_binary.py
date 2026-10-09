@@ -42,13 +42,15 @@ def _make_evaluator(cls, xagg: pd.DataFrame, max_n_mod: int, min_freq: float, dp
 def fixture_with_top_partition_unviable() -> pd.DataFrame:
     """Construct a fixture where the top-metric partition fails ``min_freq``.
 
-    Counts are arranged so the partition that isolates the rare modality ``d``
-    (1 obs total) maximises chi² but fails ``min_freq=0.2`` (need ≥ 2 obs in
-    every group; ``d`` alone has 1 of 10 = 0.1). The walk must descend the
-    ranking to find a viable partition that merges ``d`` into a neighbour.
+    Counts are arranged so the top-ranked partition (bias-corrected V/T, both
+    evaluators) isolates the rare modality ``a`` (1 obs of 25 = 0.04), which
+    fails ``min_freq=0.2``. The walk must descend the ranking to find a viable
+    partition that merges ``a`` into a neighbour. (Found by a small search: the
+    earlier 10-row fixture's top partition became viable once V/T were
+    bias-corrected, so it no longer exercised escalation.)
     """
     return pd.DataFrame(
-        {0: [3, 0, 0, 0], 1: [0, 3, 3, 1]},
+        {0: [0, 4, 2, 3], 1: [1, 1, 7, 7]},
         index=["a", "b", "c", "d"],
     )
 
@@ -163,5 +165,5 @@ def test_progressive_top_k_default_initial_is_fine_when_viable_at_top(evaluator_
     result = ev._get_best_combination_non_nan()
     assert result is not None
     assert result["combination"] == [["a"], ["b", "c"]]
-    assert result["cramerv"] == 0.25
-    assert result["tschuprowt"] == 0.25
+    assert result["cramerv"] == 0.5091750772
+    assert result["tschuprowt"] == 0.5091750772

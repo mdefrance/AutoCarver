@@ -27,6 +27,18 @@ MAX_N_MOD = 5
 MIN_FREQ = 0.2
 
 
+def _bergsma_reference(xagg: pd.DataFrame, n_obs: float, tol: float = 1e-10) -> dict:
+    """Independent reference: uncorrected scipy chi² + Bergsma (2013) bias-corrected V/T, quantised."""
+    r, c = xagg.shape
+    chi2 = chi2_contingency(xagg.values + tol, correction=False)[0]
+    phi2 = max(0.0, chi2 / n_obs - (r - 1) * (c - 1) / (n_obs - 1))
+    rows = r - (r - 1) ** 2 / (n_obs - 1)
+    cols = c - (c - 1) ** 2 / (n_obs - 1)
+    cramerv = min(1.0, np.sqrt(phi2 / (min(rows, cols) - 1)))
+    tschuprowt = min(1.0, np.sqrt(phi2 / np.sqrt((rows - 1) * (cols - 1))))
+    return {"cramerv": round(cramerv / tol) * tol, "tschuprowt": round(tschuprowt / tol) * tol}
+
+
 @fixture(params=[TschuprowtCombinations])
 def evaluator(request: FixtureRequest) -> BinaryCombinationEvaluator:
     """Fixture for BinaryCombinationEvaluator used in tests."""
@@ -280,12 +292,9 @@ def test_association_measure_basic(evaluator: BinaryCombinationEvaluator):
     n_obs = 105
     result = evaluator._association_measure(xagg, n_obs)
 
-    tol = 1e-10
-    chi2 = chi2_contingency(xagg.values + tol)[0]
-    cramerv = np.sqrt(chi2 / n_obs)
-    tschuprowt = cramerv / np.sqrt(np.sqrt(xagg.shape[0] - 1))
-    expected = {"cramerv": round(cramerv / tol) * tol, "tschuprowt": round(tschuprowt / tol) * tol}
-    assert result == expected
+    # rates 0.33 / 0.43 / 0.45 on 105 rows: a weak association the correction brings to 0
+    assert result == _bergsma_reference(xagg, n_obs)
+    assert result == {"cramerv": 0.0, "tschuprowt": 0.0}
 
 
 def test_association_measure_with_zeros(evaluator: BinaryCombinationEvaluator):
@@ -294,12 +303,8 @@ def test_association_measure_with_zeros(evaluator: BinaryCombinationEvaluator):
     n_obs = 105
     result = evaluator._association_measure(xagg, n_obs)
 
-    tol = 1e-10
-    chi2 = chi2_contingency(xagg.values + tol)[0]
-    cramerv = np.sqrt(chi2 / n_obs)
-    tschuprowt = cramerv / np.sqrt(np.sqrt(xagg.shape[0] - 1))
-    expected = {"cramerv": round(cramerv / tol) * tol, "tschuprowt": round(tschuprowt / tol) * tol}
-
+    expected = _bergsma_reference(xagg, n_obs)
+    assert expected["cramerv"] > 0.5  # a strong association survives the correction
     assert result == expected
 
 
@@ -318,8 +323,9 @@ def test_association_measure_single_row(evaluator: BinaryCombinationEvaluator):
     xagg = pd.DataFrame({"A": [10], "B": [5]})
     n_obs = 15
     result = evaluator._association_measure(xagg, n_obs)
+    # a single modality carries no association: bias-corrected V and T are both undefined
     assert pd.isna(result.get("tschuprowt"))
-    assert result.get("cramerv") == 0
+    assert pd.isna(result.get("cramerv"))
 
 
 def test_association_measure_single_column(evaluator: BinaryCombinationEvaluator):
@@ -410,8 +416,8 @@ def test_compute_associations(evaluator: BinaryCombinationEvaluator):
         {
             "combination": [["a"], ["b", "c"]],
             "index_to_groupby": {"a": "a", "b": "b", "c": "b"},
-            "cramerv": 0.25,
-            "tschuprowt": 0.25,
+            "cramerv": 0.5091750772,
+            "tschuprowt": 0.5091750772,
         },
         {
             "combination": [["a", "b"], ["c"]],
@@ -441,14 +447,14 @@ def test_compute_associations_with_three_rows(evaluator: BinaryCombinationEvalua
         {
             "combination": [["A"], ["B"], ["C"]],
             "index_to_groupby": {"A": "A", "B": "B", "C": "C"},
-            "cramerv": 0.9999999999,
-            "tschuprowt": 0.8408964152,
+            "cramerv": 0.8164965808,
+            "tschuprowt": 0.7598356856,
         },
         {
             "combination": [["A"], ["B", "C"]],
             "index_to_groupby": {"A": "A", "B": "B", "C": "B"},
-            "cramerv": 0.25,
-            "tschuprowt": 0.25,
+            "cramerv": 0.5091750772,
+            "tschuprowt": 0.5091750772,
         },
         {
             "combination": [["A", "B"], ["C"]],
@@ -481,7 +487,7 @@ def test_compute_associations_with_ten_labels(evaluator: BinaryCombinationEvalua
     result = _sorted_assocs(evaluator, combinations)
 
     expected = {
-        "combination": [["A", "B", "C"], ["D", "E", "F", "G", "H", "I"], ["J"]],
+        "combination": [["A", "B", "C"], ["D", "E", "F", "G", "H", "I", "J"]],
         "index_to_groupby": {
             "A": "A",
             "B": "A",
@@ -492,10 +498,10 @@ def test_compute_associations_with_ten_labels(evaluator: BinaryCombinationEvalua
             "G": "D",
             "H": "D",
             "I": "D",
-            "J": "J",
+            "J": "D",
         },
-        "cramerv": 0.4719639494,
-        "tschuprowt": 0.3968727932,
+        "cramerv": 0.39204932210000004,
+        "tschuprowt": 0.39204932210000004,
     }
     res = result[0]
     assert res["combination"] == expected["combination"]
@@ -506,7 +512,8 @@ def test_compute_associations_with_ten_labels(evaluator: BinaryCombinationEvalua
 
 def test_compute_associations_evaluators_differ():
     """TschuprowtCombinations and CramervCombinations pick different best combinations
-    because TschuprowT penalises more groups via the sqrt(sqrt(k-1)) factor."""
+    because Tschuprow's T penalises more groups via its sqrt(sqrt(k-1)) factor (on 41 rows,
+    the bias-corrected T no longer gives the 6-row J its own group)."""
     labels = [chr(i) for i in range(65, 75)]  # A to J
     xagg = pd.DataFrame(
         {
@@ -528,9 +535,9 @@ def test_compute_associations_evaluators_differ():
         best = sorted(assocs, key=lambda r: r[ev.sort_by] if r[ev.sort_by] == r[ev.sort_by] else -1, reverse=True)[0]
         results[ev.sort_by] = best
 
-    # tschuprowt merges I into D-I (3 groups); cramerv keeps I separate (4 groups)
+    # tschuprowt keeps 2 groups (D-J merged); cramerv keeps I and J separate (4 groups)
     assert len(results["tschuprowt"]["combination"]) != len(results["cramerv"]["combination"])
-    assert results["tschuprowt"]["combination"] == [["A", "B", "C"], ["D", "E", "F", "G", "H", "I"], ["J"]]
+    assert results["tschuprowt"]["combination"] == [["A", "B", "C"], ["D", "E", "F", "G", "H", "I", "J"]]
     assert results["cramerv"]["combination"] == [["A", "B", "C"], ["D", "E", "F", "G", "H"], ["I"], ["J"]]
 
 
@@ -647,8 +654,8 @@ def test_get_viable_combination_without_dev(evaluator: BinaryCombinationEvaluato
     expected = {
         "xagg": pd.DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
         "combination": [["a"], ["b", "c"]],
-        "cramerv": 0.25,
-        "tschuprowt": 0.25,
+        "cramerv": 0.5091750772,
+        "tschuprowt": 0.5091750772,
     }
     assert np.allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
@@ -698,8 +705,8 @@ def test_get_viable_combination_with_viable_train(evaluator: BinaryCombinationEv
     expected = {
         "xagg": pd.DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
         "combination": [["a"], ["b", "c"]],
-        "cramerv": 0.25,
-        "tschuprowt": 0.25,
+        "cramerv": 0.5091750772,
+        "tschuprowt": 0.5091750772,
     }
     assert np.allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
@@ -795,8 +802,8 @@ def test_best_association_with_combinations_viable(evaluator: BinaryCombinationE
     expected = {
         "xagg": pd.DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
         "combination": [["a"], ["b", "c"]],
-        "cramerv": 0.25,
-        "tschuprowt": 0.25,
+        "cramerv": 0.5091750772,
+        "tschuprowt": 0.5091750772,
     }
     assert np.allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
@@ -858,8 +865,8 @@ def test_best_association_with_nan_combinations_viable(evaluator: BinaryCombinat
     expected = {
         "xagg": pd.DataFrame({0: [0, 2], 1: [3, 0]}, index=["a", "b"]),
         "combination": [["a", "__NAN__"], ["b"]],
-        "cramerv": 0.5833333333,
-        "tschuprowt": 0.5833333333,
+        "cramerv": 0.9999999999,
+        "tschuprowt": 0.9999999999,
     }
     assert np.allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
@@ -894,8 +901,8 @@ def test_get_best_combination_non_nan_viable(evaluator: BinaryCombinationEvaluat
     expected = {
         "xagg": pd.DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
         "combination": [["a"], ["b", "c"]],
-        "cramerv": 0.25,
-        "tschuprowt": 0.25,
+        "cramerv": 0.5091750772,
+        "tschuprowt": 0.5091750772,
     }
     assert np.allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
@@ -947,8 +954,8 @@ def test_get_best_combination_non_nan_viable_with_nan(evaluator: BinaryCombinati
     expected = {
         "xagg": pd.DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
         "combination": [["a"], ["b", "c"]],
-        "cramerv": 0.25,
-        "tschuprowt": 0.25,
+        "cramerv": 0.5091750772,
+        "tschuprowt": 0.5091750772,
     }
     assert np.allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
@@ -985,8 +992,8 @@ def test_get_best_combination_with_nan_viable(evaluator: BinaryCombinationEvalua
     expected = {
         "xagg": pd.DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
         "combination": [["a"], ["b", "c"]],
-        "cramerv": 0.25,
-        "tschuprowt": 0.25,
+        "cramerv": 0.5091750772,
+        "tschuprowt": 0.5091750772,
     }
     assert np.allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
@@ -1132,8 +1139,8 @@ def test_get_best_combination_with_nan_viable_with_nan(evaluator: BinaryCombinat
     expected = {
         "xagg": pd.DataFrame({0: [0, 2], 1: [5, 1]}, index=["a", "b to c"]),
         "combination": [["a", "__NAN__"], ["b to c"]],
-        "cramerv": 0.4472135955,
-        "tschuprowt": 0.4472135955,
+        "cramerv": 0.6938886665,
+        "tschuprowt": 0.6938886665,
     }
 
     assert np.allclose(result["xagg"], expected["xagg"])
@@ -1163,8 +1170,8 @@ def test_get_best_combination_viable(evaluator: BinaryCombinationEvaluator):
     expected = {
         "xagg": pd.DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
         "combination": [["a"], ["b", "c"]],
-        "cramerv": 0.25,
-        "tschuprowt": 0.25,
+        "cramerv": 0.5091750772,
+        "tschuprowt": 0.5091750772,
     }
     assert np.allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
@@ -1193,8 +1200,8 @@ def test_get_best_combination_viable_without_dev(evaluator: BinaryCombinationEva
     expected = {
         "xagg": pd.DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
         "combination": [["a"], ["b", "c"]],
-        "cramerv": 0.25,
-        "tschuprowt": 0.25,
+        "cramerv": 0.5091750772,
+        "tschuprowt": 0.5091750772,
     }
     assert np.allclose(result["xagg"], expected["xagg"])
     assert result["combination"] == expected["combination"]
@@ -1291,8 +1298,8 @@ def test_get_best_combination_viable_with_nan_without_feature_nan(
     expected = {
         "xagg": pd.DataFrame({0: [2, 0], 1: [2, 4]}, index=["a", "c"]),
         "combination": [["a", "b"], ["c", "d"]],
-        "cramerv": 0.2886751346,
-        "tschuprowt": 0.2886751346,
+        "cramerv": 0.4714045208,
+        "tschuprowt": 0.4714045208,
     }
 
     assert np.allclose(result["xagg"], expected["xagg"])
@@ -1317,8 +1324,8 @@ def test_get_best_combination_viable_with_nan_without_dropna(
     expected = {
         "xagg": pd.DataFrame({0: [0, 2], 1: [2, 1]}, index=["a", "b"]),
         "combination": [["a"], ["b", "c"]],
-        "cramerv": 0.25,
-        "tschuprowt": 0.25,
+        "cramerv": 0.5091750772,
+        "tschuprowt": 0.5091750772,
     }
 
     assert np.allclose(result["xagg"], expected["xagg"])
@@ -1351,8 +1358,8 @@ def test_get_best_combination_viable_with_nan(evaluator: BinaryCombinationEvalua
     expected = {
         "xagg": pd.DataFrame({0: [0, 2], 1: [5, 1]}, index=["a", "b to c"]),
         "combination": [["a", "__NAN__"], ["b to c"]],
-        "cramerv": 0.4472135955,
-        "tschuprowt": 0.4472135955,
+        "cramerv": 0.6938886665,
+        "tschuprowt": 0.6938886665,
     }
 
     assert np.allclose(result["xagg"], expected["xagg"])

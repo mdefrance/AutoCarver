@@ -262,7 +262,8 @@ def test_carve_feature_with_best_combination(evaluator):
     carver._carve_feature(feature, xaggs, xaggs_dev, "1/1")
     print(feature.content)
     assert feature in carver.features
-    assert feature.content == {"low": ["low"], "medium": ["medium"], "high": ["high"]}
+    # n=4: the bias-corrected V/T (Bergsma 2013) keep 2 groups, not 3
+    assert feature.content == {"low": ["low"], "medium": ["high", "medium"]}
 
     # carving a feature
     feature = carver.features[2]
@@ -271,8 +272,7 @@ def test_carve_feature_with_best_combination(evaluator):
     assert feature in carver.features
     assert feature.content == {
         1.0: [1.0],
-        2.0: ["__NAN__", 2.0],
-        float("inf"): [3.0, float("inf")],
+        float("inf"): ["__NAN__", 2.0, 3.0, float("inf")],
     }
 
 
@@ -510,7 +510,8 @@ def test_fit_with_best_combination(evaluator):
     feature = carver.features[1]
     print(feature.content)
     assert feature in carver.features
-    assert feature.content == {"low": ["low"], "medium": ["medium"], "high": ["high"]}
+    # n=4: the bias-corrected V/T (Bergsma 2013) keep 2 groups, not 3
+    assert feature.content == {"low": ["low"], "medium": ["high", "medium"]}
 
     # carving a feature
     feature = carver.features[2]
@@ -518,8 +519,7 @@ def test_fit_with_best_combination(evaluator):
     assert feature in carver.features
     assert feature.content == {
         1.0: [1.0],
-        2.0: ["__NAN__", 2.0],
-        float("inf"): [3.0, float("inf")],
+        float("inf"): ["__NAN__", 2.0, 3.0, float("inf")],
     }
 
 
@@ -629,18 +629,17 @@ def test_binary_carver_fit_transform_with_small_data_not_ordinal(evaluator: Comb
 
     print(carver.features("feature1").content)
     print(X_transformed)
-    # Under Wilson-CI gating the borderline ``2.0`` bin survives on this n=4 sample,
-    # so feature3 keeps three numeric buckets (1, 2, >2); NaN folds into its
-    # ordinal-neighbour ``(1, 2]`` bin (grouping is label-independent).
+    # On this n=4 sample the bias-corrected V/T (Bergsma 2013) find no evidence for a
+    # third group: feature2 and feature3 carve to two buckets; NaN folds into (1, inf).
     expected = pd.DataFrame(
         {
             "feature1": ["A", "B, C", "A", "B, C"],
-            "feature2": ["low", "medium", "high", "high"],
+            "feature2": ["low", "medium to high", "medium to high", "medium to high"],
             "feature3": [
-                "(-inf, 1.00e+00]",
-                "(1.00e+00, 2.00e+00], __NAN__",
-                "(2.00e+00, inf)",
-                "(1.00e+00, 2.00e+00], __NAN__",
+                "(-inf, 1.0e+00]",
+                "(1.0e+00, inf), __NAN__",
+                "(1.0e+00, inf), __NAN__",
+                "(1.0e+00, inf), __NAN__",
             ],
         },
         index=idx,
@@ -695,11 +694,9 @@ def test_binary_carver_fit_transform_with_small_data_ordinal(evaluator: Combinat
     expected = pd.DataFrame(
         {
             "feature1": [0, 1, 0, 1],
-            "feature2": [0, 1, 2, 2],
-            # Under Wilson-CI gating the borderline ``2.0`` bin survives; NaN folds
-            # into its ordinal-neighbour ``2.0`` bin, leaving 3 buckets (codes 0/1/2)
-            # with the NaN row encoded as the ``2.0`` bucket (1).
-            "feature3": [0, 1, 2, 1],
+            # bias-corrected V/T on n=4: two buckets for feature2 and feature3, NaN in the upper one
+            "feature2": [0, 1, 1, 1],
+            "feature3": [0, 1, 1, 1],
         },
         index=idx,
     )
@@ -804,67 +801,48 @@ def test_binary_carver_fit_transform_with_large_data(evaluator: CombinationEvalu
 
     print(carver.features("feature1").content)
     print(X_transformed)
-    # Under Wilson-CI gating the categorical "B" and ordinal "medium"/"high" bins
-    # are no longer significantly under the min_freq floor at n=17, so the carver
-    # leaves them as their own labels instead of merging into "B, C" / "medium to high".
+    # n=17: the bias-corrected V/T (Bergsma 2013) keep 2 groups per feature; "B" (1 row)
+    # joins "C", "medium" (1 row) joins "low", and NaN folds into (-inf, 2].
     expected = pd.DataFrame(
         {
-            "feature1": [
-                "A",
-                "B",
-                "A",
-                "C",
-                "C",
-                "C",
-                "C",
-                "C",
-                "C",
-                "C",
-                "C",
-                "C",
-                "C",
-                "C",
-                "C",
-                "C",
-                "C",
-            ],
+            "feature1": ["A", "B, C", "A"] + ["B, C"] * 14,
             "feature2": [
-                "low",
-                "medium",
+                "low to medium",
+                "low to medium",
                 "high",
                 "high",
-                "low",
-                "low",
-                "low",
-                "low",
-                "low",
-                "low",
+                "low to medium",
+                "low to medium",
+                "low to medium",
+                "low to medium",
+                "low to medium",
+                "low to medium",
                 "high",
-                "low",
-                "low",
-                "low",
-                "low",
-                "low",
-                "low",
+                "low to medium",
+                "low to medium",
+                "low to medium",
+                "low to medium",
+                "low to medium",
+                "low to medium",
             ],
             "feature3": [
-                "(-inf, 1.00e+00]",
-                "(1.00e+00, 2.00e+00], __NAN__",
-                "(2.00e+00, inf)",
-                "(1.00e+00, 2.00e+00], __NAN__",
-                "(2.00e+00, inf)",
-                "(-inf, 1.00e+00]",
-                "(1.00e+00, 2.00e+00], __NAN__",
-                "(2.00e+00, inf)",
-                "(-inf, 1.00e+00]",
-                "(1.00e+00, 2.00e+00], __NAN__",
-                "(1.00e+00, 2.00e+00], __NAN__",
-                "(2.00e+00, inf)",
-                "(-inf, 1.00e+00]",
-                "(1.00e+00, 2.00e+00], __NAN__",
-                "(2.00e+00, inf)",
-                "(-inf, 1.00e+00]",
-                "(1.00e+00, 2.00e+00], __NAN__",
+                "(-inf, 2.0e+00], __NAN__",
+                "(-inf, 2.0e+00], __NAN__",
+                "(2.0e+00, inf)",
+                "(-inf, 2.0e+00], __NAN__",
+                "(2.0e+00, inf)",
+                "(-inf, 2.0e+00], __NAN__",
+                "(-inf, 2.0e+00], __NAN__",
+                "(2.0e+00, inf)",
+                "(-inf, 2.0e+00], __NAN__",
+                "(-inf, 2.0e+00], __NAN__",
+                "(-inf, 2.0e+00], __NAN__",
+                "(2.0e+00, inf)",
+                "(-inf, 2.0e+00], __NAN__",
+                "(-inf, 2.0e+00], __NAN__",
+                "(2.0e+00, inf)",
+                "(-inf, 2.0e+00], __NAN__",
+                "(-inf, 2.0e+00], __NAN__",
             ],
         },
         index=idx,
@@ -915,17 +893,17 @@ def test_binary_carver_fit_transform_with_target_only_nan(evaluator: Combination
     print(carver.features("feature1").content)
     print(X_transformed)
     # Here only NaN-ness predicts y (y=1 sits on the NaN row), so the numeric
-    # values carry no signal: feature3 collapses to a single ``(-inf, 3]`` bin
-    # with NaN kept as its own modality (label-independent ordinal carving).
+    # values carry no signal: feature3 keeps the observed rows in one ``(-inf, 3]``
+    # bin and the NaN row apart (its bucket also covers the empty ``(3, inf)``).
     expected = pd.DataFrame(
         {
             "feature1": ["A, B", "A, B", "A, B", "C"],
-            "feature2": ["low", "medium to high", "medium to high", "medium to high"],
+            "feature2": ["low to medium", "low to medium", "high", "high"],
             "feature3": [
                 "(-inf, 3.0e+00]",
                 "(-inf, 3.0e+00]",
                 "(-inf, 3.0e+00]",
-                "__NAN__",
+                "(3.0e+00, inf), __NAN__",
             ],
         },
         index=idx,
@@ -1532,3 +1510,36 @@ def test_binary_carver_progress_bar_only_when_verbose(monkeypatch, verbose: bool
     carver.fit(X, y)
 
     assert [call["disable"] for call in calls] == [not verbose]
+
+
+def _rare_but_predictive(scale: int) -> tuple[pd.DataFrame, pd.Series]:
+    """A (46%, rate 0.2), B (46%, rate 0.5) and a rare, strongly predictive r (8%, rate 0.9)."""
+    spec = {"A": (92 * scale, 0.2), "B": (92 * scale, 0.5), "r": (16 * scale, 0.9)}
+    feature, y = [], []
+    for label, (n_rows, rate) in spec.items():
+        n_pos = round(n_rows * rate)
+        feature += [label] * n_rows
+        y += [1] * n_pos + [0] * (n_rows - n_pos)
+    return pd.DataFrame({"feature": feature}), pd.Series(y)
+
+
+def test_binary_carver_wilson_gating_keeps_rare_bin_on_small_sample():
+    """End-to-end Wilson gating of min_freq: r is at 8% < min_freq=10% in both samples.
+
+    At n=200 it is not significantly below the floor (Wilson upper ≈ 0.126), so it keeps its own
+    bucket; at n=20,000 it is (Wilson upper ≈ 0.084), so it is merged. Cramér's V never prefers
+    fewer groups, so only the viability gate can decide here.
+    """
+    for scale, expected in (
+        (1, {"A": ["A"], "B": ["B"], "r": ["r"]}),
+        (100, {"A": ["A"], "B": ["r", "B"]}),
+    ):
+        X, y = _rare_but_predictive(scale)
+        carver = BinaryCarver(
+            min_freq=0.1,
+            max_n_mod=5,
+            features=Features(categoricals=["feature"]),
+            combination_evaluator=CramervCombinations(),
+        )
+        carver.fit(X, y, X_dev=X, y_dev=y)
+        assert carver.features("feature").content == expected, len(X)

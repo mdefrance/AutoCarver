@@ -20,6 +20,93 @@ Pearson's :math:`\chi^2`
 Cramér's :math:`V` and Tschuprow's :math:`T`
 --------------------------------------------
 
+Every Cramér's :math:`V` and Tschuprow's :math:`T` in AutoCarver (the binary and
+multiclass combination evaluators, the qualitative selector measures and the
+redundancy filters) is **bias-corrected** following Bergsma (2013), and is computed
+from the **uncorrected** Pearson :math:`\chi^2` (no Yates continuity correction).
+
+.. _stats_bias_correction:
+
+Why a bias correction
+^^^^^^^^^^^^^^^^^^^^^
+
+The plain estimates :math:`V = \sqrt{\chi^2 / (N(\min(r, c) - 1))}` and
+:math:`T = \sqrt{\chi^2 / (N\sqrt{(r-1)(c-1)})}` are biased **upward** on finite
+samples. Under independence :math:`\chi^2` averages its degrees of freedom
+:math:`(r-1)(c-1)`, so pure noise scores :math:`\phi^2 = \chi^2/N \approx (r-1)(c-1)/N`,
+more with more modalities and fewer rows. AutoCarver compares associations in two
+places where that bias decides the outcome:
+
+* **Across group counts, within one feature.** The carving search returns the best
+  grouping for every :math:`k \le` ``max_n_mod`` and keeps the one with the highest
+  association. Each extra group adds chance association, so the plain estimate
+  favours splits that carry nothing.
+* **Across features, in the selectors.** A feature observed on 1,000 rows is
+  compared with one observed on 100,000. On few rows the plain estimate of a
+  feature with no signal can outrank a real, weak signal measured on many rows.
+
+The correction subtracts the chance level and shrinks the table dimensions to match:
+
+.. math::
+
+    \tilde\phi^2_+ = \max\left(0,\ \frac{\chi^2}{N} - \frac{(r-1)(c-1)}{N-1}\right),
+    \qquad \tilde r = r - \frac{(r-1)^2}{N-1}, \qquad \tilde c = c - \frac{(c-1)^2}{N-1},
+
+.. math::
+
+    \tilde V = \sqrt{\frac{\tilde\phi^2_+}{\min(\tilde r, \tilde c) - 1}},
+    \qquad
+    \tilde T = \sqrt{\frac{\tilde\phi^2_+}{\sqrt{(\tilde r - 1)(\tilde c - 1)}}}.
+
+Both are clipped to :math:`[0, 1]`. The correction vanishes as :math:`N` grows, so
+large datasets are essentially unaffected. For a fixed table size and :math:`N` it is
+monotone in :math:`\chi^2`, so the chi²-maximising DP search (:ref:`DPChi2`) is
+unchanged; only candidates with different group counts, and features with different
+sample sizes, are re-weighed.
+
+**Measured effect** (synthetic study, one feature, true structure = 2 groups, best
+grouping per :math:`k \le 5`): at :math:`N = 200` Tschuprow's :math:`T` picks the
+true 2 groups in 75% of runs uncorrected and 84% corrected (61% with Yates); from
+:math:`N = 1{,}000` all pick it every time. On pure noise the corrected :math:`T`
+reports the least spurious association (0.097 vs 0.134 at :math:`N = 200`). A
+5-modality feature with no signal observed on 1,000 rows scores :math:`V = 0.059`
+uncorrected, above a real weak signal on 100,000 rows (:math:`V = 0.039`), and
+0.018 corrected.
+
+**Limits.**
+
+* A table with about one row per modality carries no evidence: :math:`\tilde r` or
+  :math:`\tilde c` drops to 1 and :math:`\tilde V`, :math:`\tilde T` are ``NaN``.
+* The correction removes the chance level of **one** table. It does not add a
+  penalty per group, so Cramér's :math:`V` on a binary target (denominator
+  :math:`\min(\tilde r, \tilde c) - 1 = \tilde c - 1`, the same for every :math:`k`)
+  still tends to the largest :math:`k`. Tschuprow's :math:`T`, the binary default,
+  carries that penalty through its :math:`\sqrt{\tilde r - 1}` denominator.
+* No unbiased estimator of :math:`\phi^2` exists at any sample size (Dwyer, 2026).
+  Bergsma's correction is the lowest-error closed form for single tables with few
+  degrees of freedom, which is the carving case (:math:`k \le` ``max_n_mod`` groups
+  against a binary or few-class target).
+
+**Why not Yates.** Yates' continuity correction (subtract 0.5 from every
+:math:`|O - E|`) fixes the **p-value** of a :math:`2 \times 2` independence test,
+where the continuous :math:`\chi^2` distribution approximates the discrete statistic
+poorly. AutoCarver reads no p-value when carving or selecting. Applied to an effect
+size, Yates lowers only the 2-group candidate, which tilts the comparison across
+:math:`k` toward more groups (61% vs 75% above) and does nothing for tables larger
+than :math:`2 \times 2`. It is kept only where a p-value is read: the drift test of
+:doc:`stability`.
+
+**References.**
+
+* W. Bergsma, "A bias-correction for Cramér's V and Tschuprow's T", *Journal of the
+  Korean Statistical Society* 42 (2013), 323-328.
+  `doi:10.1016/j.jkss.2012.10.002 <https://doi.org/10.1016/j.jkss.2012.10.002>`_
+* Dwyer, "An Honest Effect Size for Contingency Tables: Why Nothing Can Be Unbiased,
+  Where to Put the Error Instead, and How to Route the Report", arXiv:2609.26211
+  (2026, preprint). `arxiv.org/abs/2609.26211 <https://arxiv.org/abs/2609.26211>`_
+
+.. autofunction:: AutoCarver.stats.bergsma_phi2
+
 .. autofunction:: AutoCarver.stats.cramerv_tschuprowt
 
 .. autofunction:: AutoCarver.stats.cramerv_tschuprowt_unrounded

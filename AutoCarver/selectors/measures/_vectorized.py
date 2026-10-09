@@ -141,8 +141,8 @@ def factorize_column(series: pd.Series) -> tuple[np.ndarray, int]:
 def pairwise_chi2(codes_a: np.ndarray, ka: int, codes_b: np.ndarray, kb: int) -> tuple[float, int]:
     """Pearson chi² between two qualitative columns given their factorized codes.
 
-    Mirrors :func:`chi2_all` exactly (``bincount`` contingency table + Yates'
-    continuity correction on 2x2), but for a feature/feature pair rather than
+    Mirrors :func:`chi2_all` exactly (``bincount`` contingency table, no Yates
+    correction), but for a feature/feature pair rather than
     feature/target. Returns ``(chi2, n_obs)`` over the rows where both columns
     are non-NaN; ``chi2`` is ``nan`` when either column is empty.
     """

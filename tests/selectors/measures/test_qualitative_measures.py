@@ -12,16 +12,25 @@ def measure(request: FixtureRequest) -> BaseMeasure:
     return request.param(threshold=0.5)
 
 
+# each modality repeated: with one row per modality no association can be estimated, and the
+# bias-corrected V/T (Bergsma 2013) is then undefined (NaN)
 @fixture
 def series_data() -> pd.Series:
-    x = pd.Series([1, 2, 3, 4, 5])
+    x = pd.Series([1, 2, 3, 4, 5] * 10)
     return x
 
 
 @fixture
 def nan_series_data() -> pd.Series:
-    x = pd.Series([np.nan, np.nan, 3, 4, 5])
+    x = pd.Series([np.nan, np.nan, 3, 4, 5] * 10)
     return x
+
+
+def test_one_row_per_modality_is_undefined() -> None:
+    """A table with one row per modality carries no evidence: bias-corrected V/T are NaN, not 1"""
+    x = pd.Series([1, 2, 3, 4, 5])
+    for cls in (CramervMeasure, TschuprowtMeasure):
+        assert np.isnan(cls().compute_association(x, x))
 
 
 def test_measure_type(measure: BaseMeasure) -> None:

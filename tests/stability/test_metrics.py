@@ -186,3 +186,20 @@ def test_to_probability_odds_at_the_bounds():
 def test_to_probability_rejects_a_non_invertible_rate():
     with raises(ValueError, match="not an invertible binary target rate"):
         to_probability("target_mean_ridit", pd.Series([0.5]))
+
+
+def test_chi2_homogeneity_2x2_yates_p_value_uncorrected_v():
+    """On a 2 x 2 table the test keeps scipy's Yates correction (a p-value is read), while
+    Cramér's V is the effect size on the uncorrected chi²."""
+    from scipy.stats import chi2_contingency
+
+    ref, new = pd.Series([30.0, 10.0], index=list("ab")), pd.Series([15.0, 25.0], index=list("ab"))
+    statistic, pvalue, dof, cramerv = chi2_homogeneity(ref, new)
+
+    table = np.array([[30.0, 10.0], [15.0, 25.0]])
+    corrected = chi2_contingency(table)
+    assert statistic == approx(float(corrected[0]))
+    assert pvalue == approx(float(corrected[1]))
+    assert dof == 1
+    assert cramerv == approx(np.sqrt(chi2_contingency(table, correction=False)[0] / 80))
+    assert cramerv > np.sqrt(statistic / 80)  # Yates would have understated V

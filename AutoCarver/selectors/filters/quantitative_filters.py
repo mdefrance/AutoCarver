@@ -81,7 +81,10 @@ class QuantitativeFilter(BaseFilter):
 
 
 class SpearmanFilter(QuantitativeFilter):
-    """Computes maximum Spearman's rho between quantitative features of ``X``"""
+    """Computes maximum Spearman's rho between quantitative features of ``X``
+
+    Selectors use ``SpearmanFilter(0.95)`` by default; the class default ``threshold=1.0`` drops nothing.
+    """
 
     __name__ = "SpearmanFilter"
 

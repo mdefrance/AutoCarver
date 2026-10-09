@@ -101,12 +101,9 @@ The crosstab between :math:`y` and each possible combination of modalities of :m
 :class:`BinaryCarver` takes advantage of `scipy.stats.chi2_contingency <https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chi2_contingency.html>`_ to perform association measuring.
 It gives Pearson's :math:`\chi^2` statistics computed from crosstabs.
 
-Cramér's :math:`V` is then computed using :math:`V=\sqrt{\frac{\chi^2}{n}}` where :math:`n` is the number of observation.
-This implementation has been simplified taking into account the binary target :math:`y` to improve performances.
+The :math:`\chi^2` is uncorrected (no Yates continuity correction). Cramér's :math:`V` and Tschuprow's :math:`T` are then computed with the Bergsma (2013) bias correction, which subtracts the association a grouping with :math:`n_x` modalities would show by chance on :math:`n` observations (see :ref:`stats_bias_correction`).
 
-Finally, Tschuprow's :math:`T` is computed using :math:`T=\frac{V}{\sqrt{\sqrt{n_x-1}}}` where :math:`n_x` is the per-combination number of modalities.
-
-For two combinations of modalities of :math:`x`, a higher :math:`T` or :math:`V` value indicates a stronger relationship with the binary target :math:`y`.
+For two combinations of modalities of :math:`x`, a higher :math:`T` or :math:`V` value indicates a stronger relationship with the binary target :math:`y`. Because of the correction, a combination with more modalities only scores higher when it adds more association than chance would, which matters most on small samples.
 
 
 

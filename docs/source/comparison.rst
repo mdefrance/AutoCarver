@@ -252,4 +252,4 @@ Caveats
 -------
 
 * All three libraries are actively maintained; the table reflects the public APIs as of AutoCarver |release| (2026-05). Open an issue if anything has drifted.
-* The DP top-K search strategy is statistically equivalent to the previous enumerate-and-score path: parity tests pin bit-exact agreement against :func:`scipy.stats.kruskal` (continuous) and :func:`scipy.stats.chi2_contingency` (binary, including the Yates correction). Performance numbers in older issues, pre-DP, are no longer representative.
+* The DP top-K search strategy is statistically equivalent to the previous enumerate-and-score path: parity tests pin bit-exact agreement against :func:`scipy.stats.kruskal` (continuous) and :func:`scipy.stats.chi2_contingency` (binary, ``correction=False``; V/T are then bias-corrected, see :ref:`stats_bias_correction`). Comparison numbers on this page predate that correction. Performance numbers in older issues, pre-DP, are no longer representative.

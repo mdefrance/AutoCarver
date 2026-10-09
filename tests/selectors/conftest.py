@@ -125,21 +125,23 @@ def features() -> list[BaseFeature]:
     return [feature1, feature2, feature3, feature4]
 
 
+# rows repeated 10 times: with one row per target value the bias-corrected V/T (Bergsma 2013)
+# of every qualitative feature is undefined (NaN), and nothing could be selected
 @fixture
 def X():
     return pd.DataFrame(
         {
-            "feature1": [0, 1, 0, 1, 0, 1],
-            "feature2": [2, 0, 2, 0, 0, 0],
-            "feature3": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
-            "feature4": [-4.0, -2.0, -0.0, -2.0, -4.0, -8.0],
+            "feature1": [0, 1, 0, 1, 0, 1] * 10,
+            "feature2": [2, 0, 2, 0, 0, 0] * 10,
+            "feature3": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0] * 10,
+            "feature4": [-4.0, -2.0, -0.0, -2.0, -4.0, -8.0] * 10,
         }
     )
 
 
 @fixture
 def y():
-    return pd.Series([7, 8, 9, 10, 11, 12])
+    return pd.Series([7, 8, 9, 10, 11, 12] * 10)
 
 
 @fixture

@@ -163,10 +163,14 @@ class BaseSelector(BaseEstimator, TransformerMixin, ABC):
         return []
 
     def _default_filters(self) -> list[BaseFilter]:
-        """Task-appropriate default redundancy filters."""
+        """Task-appropriate default redundancy filters.
+
+        Thresholds drop near-duplicates only: an identical, rescaled or coarser re-binned copy of a
+        better-ranked feature (T = 0.90 when 10% of rows differ; rho = 0.95 for ``x + N(0, 0.33)``).
+        """
         from AutoCarver.selectors.filters import SpearmanFilter, TschuprowtFilter
 
-        return [TschuprowtFilter(), SpearmanFilter()]
+        return [TschuprowtFilter(0.9), SpearmanFilter(0.95)]
 
     def _kind_getter(self, kind: str) -> Callable[[list], list]:
         """Metric predicate for a feature-type key ('qualitatives'/'quantitatives')."""

@@ -251,28 +251,27 @@ def test_one_vs_rest_carver_fit_transform_with_small_data_not_ordinal(
     X_transformed = carver.fit_transform(X, y)
 
     print(X_transformed)
-    # Under Wilson-CI gating on n=4 the borderline ``2.0`` bin survives, and
-    # ordinal labels with count=1 are not significantly below min_freq → fewer merges.
+    # bias-corrected V/T (Bergsma 2013): on these few rows a split must beat chance
     expected = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
             "feature2": ["low", "medium", "high", "high"],
-            "feature3": [1, 2, 3, float("nan")],
+            "feature3": [1.0, 2.0, 3.0, float("nan")],
             "feature1__y=1": ["A", "B, C", "A", "B, C"],
-            "feature1__y=2": ["A, C", "B", "A, C", "A, C"],
-            "feature2__y=1": ["low", "medium", "high", "high"],
-            "feature2__y=2": ["low", "medium to high", "medium to high", "medium to high"],
+            "feature1__y=2": ["A", "B, C", "A", "B, C"],
+            "feature2__y=1": ["low", "medium to high", "medium to high", "medium to high"],
+            "feature2__y=2": ["low to medium", "low to medium", "high", "high"],
             "feature3__y=1": [
-                "(-inf, 1.00e+00]",
-                "(1.00e+00, 2.00e+00], __NAN__",
-                "(2.00e+00, inf)",
-                "(1.00e+00, 2.00e+00], __NAN__",
+                "(-inf, 1.0e+00]",
+                "(1.0e+00, inf), __NAN__",
+                "(1.0e+00, inf), __NAN__",
+                "(1.0e+00, inf), __NAN__",
             ],
             "feature3__y=2": [
-                "(-inf, 2.00e+00], __NAN__",
-                "(-inf, 2.00e+00], __NAN__",
-                "(2.00e+00, 3.00e+00]",
-                "(-inf, 2.00e+00], __NAN__",
+                "(-inf, 2.0e+00], __NAN__",
+                "(-inf, 2.0e+00], __NAN__",
+                "(2.0e+00, inf)",
+                "(-inf, 2.0e+00], __NAN__",
             ],
         },
         index=idx,
@@ -321,18 +320,17 @@ def test_one_vs_rest_carver_fit_transform_with_small_data_ordinal(evaluator: Com
     X_transformed = carver.fit_transform(X, y)
 
     print(X_transformed)
-    # feature3__y=1 keeps 3 numeric bins (codes 0,1,2); NaN folds into its
-    # ordinal-neighbour ``2.0`` bin (code 1). feature3__y=2 keeps 3 bins (0,1,0).
+    # bias-corrected V/T (Bergsma 2013): on these few rows a split must beat chance
     expected = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
             "feature2": ["low", "medium", "high", "high"],
-            "feature3": [1, 2, 3, float("nan")],
+            "feature3": [1.0, 2.0, 3.0, float("nan")],
             "feature1__y=1": [0, 1, 0, 1],
-            "feature1__y=2": [1, 0, 1, 1],
-            "feature2__y=1": [0, 1, 2, 2],
-            "feature2__y=2": [0, 1, 1, 1],
-            "feature3__y=1": [0, 1, 2, 1],
+            "feature1__y=2": [1, 0, 1, 0],
+            "feature2__y=1": [0, 1, 1, 1],
+            "feature2__y=2": [0, 0, 1, 1],
+            "feature3__y=1": [0, 1, 1, 1],
             "feature3__y=2": [0, 0, 1, 0],
         },
         index=idx,
@@ -435,27 +433,10 @@ def test_one_vs_rest_carver_fit_transform_with_large_data(evaluator: Combination
     X_transformed = carver.fit_transform(X, y)
 
     print(X_transformed)
+    # bias-corrected V/T (Bergsma 2013): on these few rows a split must beat chance
     expected = pd.DataFrame(
         {
-            "feature1": [
-                "A",
-                "B",
-                "A",
-                "C",
-                "C",
-                "C",
-                "C",
-                "C",
-                "C",
-                "C",
-                "C",
-                "C",
-                "C",
-                "C",
-                "C",
-                "C",
-                "C",
-            ],
+            "feature1": ["A", "B", "A", "C", "C", "C", "C", "C", "C", "C", "C", "C", "C", "C", "C", "C", "C"],
             "feature2": [
                 "low",
                 "medium",
@@ -494,23 +475,57 @@ def test_one_vs_rest_carver_fit_transform_with_large_data(evaluator: Combination
                 1.0,
                 2.0,
             ],
-            # Under Wilson-CI gating on n=17, categorical "B" / ordinal "medium"/"high"
-            # bins are no longer significantly below min_freq for most y-splits.
-            "feature1__y=1": ["A", "B", "A"] + ["C"] * 14,
-            "feature1__y=2": ["A, B"] * 3 + ["C"] * 14,
-            "feature1__y=3": ["A", "B", "A"] + ["C"] * 14,
+            "feature1__y=1": ["A", "B", "A", "C", "C", "C", "C", "C", "C", "C", "C", "C", "C", "C", "C", "C", "C"],
+            "feature1__y=2": [
+                "A, B",
+                "A, B",
+                "A, B",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+                "C",
+            ],
+            "feature1__y=3": [
+                "A",
+                "B, C",
+                "A",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+                "B, C",
+            ],
             "feature2__y=1": [
                 "low",
-                "medium",
-                "high",
-                "high",
+                "medium to high",
+                "medium to high",
+                "medium to high",
                 "low",
                 "low",
                 "low",
                 "low",
                 "low",
                 "low",
-                "high",
+                "medium to high",
                 "low",
                 "low",
                 "low",
@@ -557,72 +572,66 @@ def test_one_vs_rest_carver_fit_transform_with_large_data(evaluator: Combination
                 "low",
             ],
             "feature3__y=1": [
-                "(-inf, 1.00e+00]",
-                "(1.00e+00, 2.00e+00]",
-                "(2.00e+00, inf)",
+                "(-inf, inf)",
+                "(-inf, inf)",
+                "(-inf, inf)",
                 "__NAN__",
-                "(2.00e+00, inf)",
-                "(-inf, 1.00e+00]",
-                "(1.00e+00, 2.00e+00]",
-                "(2.00e+00, inf)",
-                "(-inf, 1.00e+00]",
-                "(1.00e+00, 2.00e+00]",
+                "(-inf, inf)",
+                "(-inf, inf)",
+                "(-inf, inf)",
+                "(-inf, inf)",
+                "(-inf, inf)",
+                "(-inf, inf)",
                 "__NAN__",
-                "(2.00e+00, inf)",
-                "(-inf, 1.00e+00]",
-                "(1.00e+00, 2.00e+00]",
-                "(2.00e+00, inf)",
-                "(-inf, 1.00e+00]",
-                "(1.00e+00, 2.00e+00]",
+                "(-inf, inf)",
+                "(-inf, inf)",
+                "(-inf, inf)",
+                "(-inf, inf)",
+                "(-inf, inf)",
+                "(-inf, inf)",
             ],
             "feature3__y=2": [
-                "(-inf, 3.0e+00]",
-                "(-inf, 3.0e+00]",
-                "(-inf, 3.0e+00]",
-                "__NAN__",
-                "(-inf, 3.0e+00]",
-                "(-inf, 3.0e+00]",
-                "(-inf, 3.0e+00]",
-                "(-inf, 3.0e+00]",
-                "(-inf, 3.0e+00]",
-                "(-inf, 3.0e+00]",
-                "__NAN__",
-                "(-inf, 3.0e+00]",
-                "(-inf, 3.0e+00]",
-                "(-inf, 3.0e+00]",
-                "(-inf, 3.0e+00]",
-                "(-inf, 3.0e+00]",
-                "(-inf, 3.0e+00]",
+                "(-inf, 3.0e+00], __NAN__",
+                "(-inf, 3.0e+00], __NAN__",
+                "(-inf, 3.0e+00], __NAN__",
+                "(-inf, 3.0e+00], __NAN__",
+                "(-inf, 3.0e+00], __NAN__",
+                "(-inf, 3.0e+00], __NAN__",
+                "(-inf, 3.0e+00], __NAN__",
+                "(-inf, 3.0e+00], __NAN__",
+                "(-inf, 3.0e+00], __NAN__",
+                "(-inf, 3.0e+00], __NAN__",
+                "(-inf, 3.0e+00], __NAN__",
+                "(-inf, 3.0e+00], __NAN__",
+                "(-inf, 3.0e+00], __NAN__",
+                "(-inf, 3.0e+00], __NAN__",
+                "(-inf, 3.0e+00], __NAN__",
+                "(-inf, 3.0e+00], __NAN__",
+                "(-inf, 3.0e+00], __NAN__",
             ],
-            # NaN folds into the ``(2, inf)`` bin for the y=3 split, so every row in
-            # that bucket carries the merged-NaN marker.
             "feature3__y=3": [
-                "(-inf, 1.00e+00]",
-                "(1.00e+00, 2.00e+00]",
-                "(2.00e+00, inf), __NAN__",
-                "(2.00e+00, inf), __NAN__",
-                "(2.00e+00, inf), __NAN__",
-                "(-inf, 1.00e+00]",
-                "(1.00e+00, 2.00e+00]",
-                "(2.00e+00, inf), __NAN__",
-                "(-inf, 1.00e+00]",
-                "(1.00e+00, 2.00e+00]",
-                "(2.00e+00, inf), __NAN__",
-                "(2.00e+00, inf), __NAN__",
-                "(-inf, 1.00e+00]",
-                "(1.00e+00, 2.00e+00]",
-                "(2.00e+00, inf), __NAN__",
-                "(-inf, 1.00e+00]",
-                "(1.00e+00, 2.00e+00]",
+                "(-inf, 1.0e+00]",
+                "(1.0e+00, inf), __NAN__",
+                "(1.0e+00, inf), __NAN__",
+                "(1.0e+00, inf), __NAN__",
+                "(1.0e+00, inf), __NAN__",
+                "(-inf, 1.0e+00]",
+                "(1.0e+00, inf), __NAN__",
+                "(1.0e+00, inf), __NAN__",
+                "(-inf, 1.0e+00]",
+                "(1.0e+00, inf), __NAN__",
+                "(1.0e+00, inf), __NAN__",
+                "(1.0e+00, inf), __NAN__",
+                "(-inf, 1.0e+00]",
+                "(1.0e+00, inf), __NAN__",
+                "(1.0e+00, inf), __NAN__",
+                "(-inf, 1.0e+00]",
+                "(1.0e+00, inf), __NAN__",
             ],
         },
         index=idx,
     )
-    # Cramérv and Tschuprowt legitimately diverge here on the borderline NaN
-    # placement for the y=1 split: Cramérv keeps NaN as its own modality while
-    # Tschuprowt folds it into its ordinal-neighbour ``(1, 2]`` bin — which then
-    # carries the merged-NaN marker on every row of that bucket.
-    if isinstance(evaluator, TschuprowtCombinations):
+    if isinstance(evaluator, CramervCombinations):  # V carries no per-group penalty: keeps more groups
         expected["feature3__y=1"] = [
             "(-inf, 1.00e+00]",
             "(1.00e+00, 2.00e+00], __NAN__",
@@ -678,29 +687,22 @@ def test_one_vs_rest_carver_fit_transform_with_target_only_nan(evaluator: Combin
     X_transformed = carver.fit_transform(X, y)
 
     print(X_transformed.to_dict(orient="list"))
-    # For the y=1 split only NaN-ness predicts the class, so feature3 collapses
-    # to a single ``(-inf, 3]`` bin with NaN kept as its own modality; the y=2
-    # split keeps the 3-bucket carving. Grouping is label-independent (ordinal).
+    # bias-corrected V/T (Bergsma 2013): on these few rows a split must beat chance
     expected = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
             "feature2": ["low", "medium", "high", "high"],
             "feature3": [1.0, 2.0, 3.0, float("nan")],
             "feature1__y=1": ["A, B", "A, B", "A, B", "C"],
-            "feature1__y=2": ["A, C", "B", "A, C", "A, C"],
-            "feature2__y=1": ["low", "medium to high", "medium to high", "medium to high"],
+            "feature1__y=2": ["A", "B, C", "A", "B, C"],
+            "feature2__y=1": ["low to medium", "low to medium", "high", "high"],
             "feature2__y=2": ["low", "medium to high", "medium to high", "medium to high"],
-            "feature3__y=1": [
-                "(-inf, 3.0e+00]",
-                "(-inf, 3.0e+00]",
-                "(-inf, 3.0e+00]",
-                "__NAN__",
-            ],
+            "feature3__y=1": ["(-inf, 3.0e+00]", "(-inf, 3.0e+00]", "(-inf, 3.0e+00]", "(3.0e+00, inf), __NAN__"],
             "feature3__y=2": [
-                "(-inf, 1.00e+00]",
-                "(1.00e+00, 3.00e+00], __NAN__",
-                "(1.00e+00, 3.00e+00], __NAN__",
-                "(1.00e+00, 3.00e+00], __NAN__",
+                "(-inf, 1.0e+00]",
+                "(1.0e+00, inf), __NAN__",
+                "(1.0e+00, inf), __NAN__",
+                "(1.0e+00, inf), __NAN__",
             ],
         },
         index=idx,
@@ -756,8 +758,7 @@ def test_one_vs_rest_carver_fit_transform_with_wrong_dev(evaluator: CombinationE
     X_transformed = carver.fit_transform(X, y, X_dev=X_dev, y_dev=y_dev)
 
     print(X_transformed.to_dict(orient="list"))
-    # Under Wilson-CI gating fewer features fail the rank-inversion test, and
-    # the carver preserves an extra feature3__y=2 column.
+    # bias-corrected V/T (Bergsma 2013): on these few rows a split must beat chance
     expected = pd.DataFrame(
         {
             "feature1": ["A", "B", "A", "C"],
@@ -765,10 +766,10 @@ def test_one_vs_rest_carver_fit_transform_with_wrong_dev(evaluator: CombinationE
             "feature3": [1.0, 2.0, 3.0, float("nan")],
             "feature2__y=1": ["low", "medium to high", "medium to high", "medium to high"],
             "feature3__y=1": [
-                "(-inf, 1.00e+00], __NAN__",
-                "(1.00e+00, 3.00e+00]",
-                "(1.00e+00, 3.00e+00]",
-                "(-inf, 1.00e+00], __NAN__",
+                "(-inf, 1.0e+00], __NAN__",
+                "(1.0e+00, inf)",
+                "(1.0e+00, inf)",
+                "(-inf, 1.0e+00], __NAN__",
             ],
             "feature3__y=2": [
                 "(-inf, 3.0e+00], __NAN__",

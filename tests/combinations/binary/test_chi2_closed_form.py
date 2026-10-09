@@ -3,16 +3,19 @@
 `_chi2_assoc_for_combination` evaluates Cramér's V and Tschuprow's T in closed form
 (per-group reductions via `np.bincount`) for one combination. It backs the NaN-fanout
 scoring path (the hot per-combination search itself goes through the interval DP). These
-tests assert the rounded values match the historical ``scipy.stats.chi2_contingency``
-path on a wide variety of inputs, including:
+tests assert the rounded values match an independent reference (uncorrected
+``scipy.stats.chi2_contingency`` + the Bergsma 2013 bias correction) on a wide variety
+of inputs, including:
 
   * many random partitions of random (n0, n1) modality counts (k > 2),
-  * the 2×2 case where scipy applies Yates correction,
+  * the 2×2 case (no Yates correction: V/T are defined on the uncorrected chi²),
   * pinned values from the existing binary test suite,
   * the edge case where a modality is present in the crosstab but absent from
     ``index_to_groupby`` (now treated as its own singleton group, matching the
     legacy `_grouper`'s `groupby.get(iv, iv)` fallback).
 """
+
+import math
 
 import numpy as np
 import pandas as pd
@@ -28,18 +31,14 @@ TOL = 1e-10
 
 
 def _scipy_assoc(grouped_table: np.ndarray, n_obs: float) -> dict[str, float]:
-    """Reproduces the historical scipy-based BinaryCombinationEvaluator path."""
-    n_mod_x = grouped_table.shape[0]
-    chi2 = float(chi2_contingency(grouped_table + TOL)[0])
-    cramerv = float(np.sqrt(chi2 / n_obs))
-    if pd.notna(cramerv):
-        cramerv = round(cramerv / TOL) * TOL
-    if n_mod_x > 1:
-        tschuprowt = cramerv / float(np.sqrt(np.sqrt(n_mod_x - 1)))
-        if pd.notna(tschuprowt):
-            tschuprowt = round(tschuprowt / TOL) * TOL
-    else:
-        tschuprowt = cramerv
+    """Reference: uncorrected scipy chi² + Bergsma (2013) bias-corrected V/T, quantised to TOL."""
+    r, c = grouped_table.shape
+    chi2 = float(chi2_contingency(grouped_table + TOL, correction=False)[0])
+    phi2 = max(0.0, chi2 / n_obs - (r - 1) * (c - 1) / (n_obs - 1))
+    rows = r - (r - 1) ** 2 / (n_obs - 1)
+    cols = c - (c - 1) ** 2 / (n_obs - 1)
+    cramerv = round(min(1.0, math.sqrt(phi2 / (min(rows, cols) - 1))) / TOL) * TOL
+    tschuprowt = round(min(1.0, math.sqrt(phi2 / math.sqrt((rows - 1) * (cols - 1)))) / TOL) * TOL
     return {"cramerv": cramerv, "tschuprowt": tschuprowt}
 
 
@@ -69,12 +68,12 @@ def _eval_via_evaluator(xagg: pd.DataFrame, index_to_groupby: dict) -> dict[str,
 @pytest.mark.parametrize(
     "xagg, index_to_groupby, expected_cv, expected_tt",
     [
-        # test_compute_associations: 2x2 (Yates applied)
+        # test_compute_associations: 2x2
         (
             pd.DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"]),
             {"a": "a", "b": "b", "c": "b"},
-            0.25,
-            0.25,
+            0.5091750772,
+            0.5091750772,
         ),
         (
             pd.DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["a", "b", "c"]),
@@ -82,12 +81,12 @@ def _eval_via_evaluator(xagg: pd.DataFrame, index_to_groupby: dict) -> dict[str,
             0.0,
             0.0,
         ),
-        # test_compute_associations_with_three_rows: 3x2 (no Yates)
+        # test_compute_associations_with_three_rows: 3x2
         (
             pd.DataFrame({0: [0, 2, 0], 1: [2, 0, 1]}, index=["A", "B", "C"]),
             {"A": "A", "B": "B", "C": "C"},
-            0.9999999999,
-            0.8408964152,
+            0.8164965808,
+            0.7598356856,
         ),
         # test_compute_associations_with_ten_labels: 3-group best from 10x2
         (
@@ -96,8 +95,8 @@ def _eval_via_evaluator(xagg: pd.DataFrame, index_to_groupby: dict) -> dict[str,
                 index=[chr(i) for i in range(65, 75)],
             ),
             {"A": "A", "B": "A", "C": "A", "D": "D", "E": "D", "F": "D", "G": "D", "H": "D", "I": "D", "J": "J"},
-            0.4719639494,
-            0.3968727932,
+            0.41949997840000003,
+            0.3551157317,
         ),
     ],
 )
@@ -142,7 +141,7 @@ def _grouped_table(xagg: pd.DataFrame, index_to_groupby: dict) -> np.ndarray:
 
 @pytest.mark.parametrize("seed", range(8))
 def test_parity_random_partitions_kgt2(seed: int):
-    """k > 2 groups, no Yates → vanilla Pearson chi²."""
+    """k > 2 groups → uncorrected Pearson chi², Bergsma V/T."""
     rng = np.random.default_rng(seed)
     n_mod = int(rng.integers(3, 12))
     n_groups = int(rng.integers(3, n_mod + 1))
@@ -157,8 +156,8 @@ def test_parity_random_partitions_kgt2(seed: int):
 
 
 @pytest.mark.parametrize("seed", range(8))
-def test_parity_random_partitions_k2_yates(seed: int):
-    """2 groups → 2×2 table → Yates correction applied by both paths."""
+def test_parity_random_partitions_k2(seed: int):
+    """2 groups → 2×2 table → no Yates correction on either path."""
     rng = np.random.default_rng(100 + seed)
     n_mod = int(rng.integers(2, 10))
     n0 = rng.integers(1, 20, size=n_mod).astype(float)
@@ -199,11 +198,11 @@ def test_unmapped_modality_becomes_own_group():
 # ---------------------------------------------------------------------------
 
 
-def test_chi2_pearson_2col_2x2_applies_yates():
-    """For 2x2, Yates correction must be applied (matches scipy default)."""
+def test_chi2_pearson_2col_2x2_no_yates():
+    """For 2x2, no Yates correction (matches scipy with correction=False)."""
     obs = np.array([[1e-10, 2], [2, 1]], dtype=float)
     got = _chi2_pearson_2col(obs)
-    expected = float(chi2_contingency(obs)[0])
+    expected = float(chi2_contingency(obs, correction=False)[0])
     assert got == expected
 
 

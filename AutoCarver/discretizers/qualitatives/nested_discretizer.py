@@ -243,21 +243,27 @@ class NestedDiscretizer(BaseDiscretizer):
 
 
 def check_frequencies(
-    features: Features, X: pd.DataFrame, min_freq: float, name: str, rescue_rare: bool = False
+    features: Features, X: pd.DataFrame, min_freq: float, name: str, alpha: float, rescue_rare: bool = False
 ) -> None:
-    """Checks features' frequencies compared to min_freq"""
+    """Checks features' frequencies compared to min_freq, with the Wilson test used by every rarity check.
 
-    # computing features' max modality frequency (mode frequency)
-    max_freq = X[features.versions].apply(
-        lambda u: u.value_counts(normalize=True, dropna=False).max(),
-        axis=0,
-    )
+    A feature fails when its mode is significantly below ``min_freq`` (no common modality),
+    or when all its other values together are (a too common mode). ``alpha`` is
+    :attr:`ProcessingConfig.min_freq_alpha`.
+    """
 
-    # features with no common modality (biggest value less frequent than min_freq)
-    non_common = [f.version for f in features if max_freq[f.version] < min_freq]
+    # computing features' max modality count (mode count), NaN counted as a value
+    n_obs = len(X)
+    mode_count = X[features.versions].apply(lambda u: u.value_counts(dropna=False).max(), axis=0)
+    max_freq = mode_count / n_obs
 
-    # features with too common modality (biggest value more frequent than 1-min_freq)
-    too_common = [f.version for f in features if max_freq[f.version] > 1 - min_freq]
+    # features with no common modality (mode significantly less frequent than min_freq)
+    non_common = [f.version for f in features if is_significantly_below(mode_count[f.version], n_obs, min_freq, alpha)]
+
+    # features with too common modality (the rest significantly less frequent than min_freq)
+    too_common = [
+        f.version for f in features if is_significantly_below(n_obs - mode_count[f.version], n_obs, min_freq, alpha)
+    ]
 
     # raising
     if len(too_common + non_common) > 0:
@@ -272,7 +278,7 @@ def check_frequencies(
         non_common = [
             (
                 f" - {features(feature)}: most frequent value has "
-                f"freq={max_freq[feature]:2.2%} < min_freq={min_freq:2.2%}"
+                f"freq={max_freq[feature]:2.2%}, significantly < min_freq={min_freq:2.2%}"
             )
             for feature in non_common
         ]
@@ -281,7 +287,7 @@ def check_frequencies(
         too_common = [
             (
                 f" - {features(feature)}: most frequent value has "
-                f"freq={max_freq[feature]:2.2%} > (1-min_freq)={1 - min_freq:2.2%}"
+                f"freq={max_freq[feature]:2.2%}, significantly > (1-min_freq)={1 - min_freq:2.2%}"
             )
             for feature in too_common
         ]
