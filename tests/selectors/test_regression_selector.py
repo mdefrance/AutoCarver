@@ -49,3 +49,20 @@ def test_regression_selector_falls_back_on_empty_measures(features_object: Featu
         selector = RegressionSelector(features_object, 2, config=SelectionConfig(qualitative_measures=[]))
 
     assert names(remove_default_metrics(selector.measures["qualitatives"])) == {"KruskalEtaSquaredMeasure"}
+
+
+def test_regression_selector_default_filters_drop_a_duplicate() -> None:
+    """With default filters, an exact duplicate of a better-ranked feature is dropped; an independent one is kept."""
+    import numpy as np
+    import pandas as pd
+
+    rng = np.random.default_rng(0)
+    signal = rng.normal(size=500)
+    X = pd.DataFrame({"a": signal, "a_dup": signal, "other": rng.normal(size=500)})
+    y = pd.Series(signal + 0.5 * X["other"] + rng.normal(scale=0.1, size=500))
+
+    selector = RegressionSelector(Features(numericals=["a", "a_dup", "other"]), 3).fit(X, y)
+    selected = selector.selected_features.versions
+
+    assert "other" in selected
+    assert ("a" in selected) != ("a_dup" in selected)

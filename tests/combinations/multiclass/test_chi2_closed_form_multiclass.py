@@ -3,13 +3,16 @@
 `MulticlassCombinationEvaluator` generalises the binary evaluator's 2-column
 Pearson chi² to a K-column (unordered) target. These tests assert:
 
-  * the closed form matches ``scipy.stats.chi2_contingency`` on random
-    ``(B, K)`` tables for K in {2, 3, 5};
+  * the closed form matches ``scipy.stats.chi2_contingency(..., correction=False)``
+    on random ``(B, K)`` tables for K in {2, 3, 5} (no Yates correction);
+  * Cramér's V / Tschuprow's T follow the Bergsma (2013) bias correction;
   * for K == 2, the multiclass evaluator's Cramér's V / Tschuprow's T are
     bit-for-bit identical to the binary evaluator's — the strongest
     correctness anchor available, since the two formulas provably coincide
     at K=2.
 """
+
+import math
 
 import numpy as np
 import pandas as pd
@@ -30,7 +33,7 @@ TOL = 1e-10
 
 
 def _scipy_chi2(obs: np.ndarray) -> float:
-    return float(chi2_contingency(obs)[0])
+    return float(chi2_contingency(obs, correction=False)[0])
 
 
 @pytest.mark.parametrize("n_classes", [2, 3, 5])
@@ -45,8 +48,8 @@ def test_chi2_pearson_matches_scipy(seed: int, n_classes: int):
     assert got == pytest.approx(expected, abs=1e-8)
 
 
-def test_chi2_pearson_2x2_applies_yates():
-    """For a 2x2 table, Yates correction must be applied (matches scipy default)."""
+def test_chi2_pearson_2x2_no_yates():
+    """For a 2x2 table, no Yates correction (V/T are defined on the uncorrected chi²)."""
     obs = np.array([[1e-10, 2], [2, 1]], dtype=float)
     got = _chi2_pearson(obs)
     expected = _scipy_chi2(obs)
@@ -121,24 +124,36 @@ def test_k2_association_measure_matches_binary_bit_for_bit(seed: int):
     assert got["tschuprowt"] == expected_tt
 
 
-def test_cramerv_tschuprowt_k2_matches_binary_formula():
-    """`_cramerv_tschuprowt` at n_classes=2 reduces to binary's own expression."""
-    rng = np.random.default_rng(42)
+@pytest.mark.parametrize("n_classes", [2, 3, 5])
+def test_cramerv_tschuprowt_matches_bergsma_formula(n_classes: int):
+    """`_cramerv_tschuprowt` is the Bergsma (2013) bias-corrected V / T, quantised to TOL."""
+    rng = np.random.default_rng(42 + n_classes)
     for _ in range(20):
         n_groups = int(rng.integers(2, 10))
         chi2 = float(rng.uniform(0, 50))
-        n_obs = float(rng.uniform(10, 200))
-        cv, tt = _cramerv_tschuprowt(chi2, n_obs, n_groups, 2, TOL)
+        n_obs = float(rng.uniform(50, 200))
+        cv, tt = _cramerv_tschuprowt(chi2, n_obs, n_groups, n_classes, TOL)
 
-        cramerv_ref = float(np.sqrt(chi2 / n_obs))
-        if pd.notna(cramerv_ref):
-            cramerv_ref = round(cramerv_ref / TOL) * TOL
-        tt_ref = cramerv_ref / float(np.sqrt(np.sqrt(n_groups - 1)))
-        if pd.notna(tt_ref):
-            tt_ref = round(tt_ref / TOL) * TOL
+        phi2 = max(0.0, chi2 / n_obs - (n_groups - 1) * (n_classes - 1) / (n_obs - 1))
+        rows = n_groups - (n_groups - 1) ** 2 / (n_obs - 1)
+        cols = n_classes - (n_classes - 1) ** 2 / (n_obs - 1)
+        cramerv_ref = round(min(1.0, math.sqrt(phi2 / (min(rows, cols) - 1))) / TOL) * TOL
+        tt_ref = round(min(1.0, math.sqrt(phi2 / math.sqrt((rows - 1) * (cols - 1)))) / TOL) * TOL
 
         assert cv == cramerv_ref
         assert tt == tt_ref
+
+
+def test_bergsma_removes_chance_association():
+    """Pure noise: the plain V is clearly positive, the corrected one is near 0."""
+    rng = np.random.default_rng(0)
+    obs = np.zeros((5, 3))
+    np.add.at(obs, (rng.integers(0, 5, 300), rng.integers(0, 3, 300)), 1)
+    chi2 = _chi2_pearson(obs + TOL)
+    plain_v = math.sqrt(chi2 / 300 / 2)
+    corrected_v, _ = _cramerv_tschuprowt(chi2, 300.0, 5, 3, TOL)
+    assert plain_v > 0.05
+    assert corrected_v < plain_v / 2
 
 
 def test_evaluator_rejects_non_multiclass_target_rate():

@@ -51,8 +51,8 @@ class BinaryCombinationEvaluator(CombinationEvaluator[pd.DataFrame], ABC):
 
         Used for the raw (one-shot) distribution. The hot per-combination loop
         goes through :meth:`_compute_associations`, which evaluates the same
-        Pearson :math:`\\chi^2` in closed form (with Yates correction for 2×2
-        tables, matching ``scipy.stats.chi2_contingency``) so the per-modality
+        Pearson :math:`\\chi^2` in closed form (no Yates correction, matching
+        ``scipy.stats.chi2_contingency(..., correction=False)``) so the per-modality
         crosstab does not have to be rebuilt + handed to scipy on every
         combination.
 
@@ -73,20 +73,11 @@ class BinaryCombinationEvaluator(CombinationEvaluator[pd.DataFrame], ABC):
         n_mod_x = xagg.shape[0]
 
         # Chi2 statistic
-        chi2 = chi2_contingency(xagg.values + tol)[0]
+        chi2 = chi2_contingency(xagg.values + tol, correction=False)[0]
 
-        # Cramér's V
-        cramerv = np.sqrt(chi2 / n_obs)
-        if pd.notna(cramerv):
-            cramerv = round(cramerv / tol) * tol
-
-        # Tschuprow's T (undefined for a single modality: avoids a divide-by-zero)
-        if n_mod_x <= 1:
-            tschuprowt = np.nan
-        else:
-            tschuprowt = cramerv / np.sqrt(np.sqrt(n_mod_x - 1))
-            if pd.notna(tschuprowt):
-                tschuprowt = round(tschuprowt / tol) * tol
+        # bias-corrected Cramér's V and Tschuprow's T (NaN for a single modality)
+        total = float(xagg.values.sum()) if n_obs is None else float(n_obs)
+        cramerv, tschuprowt = cramerv_tschuprowt(chi2, total, n_mod_x, 2, tol=tol)
 
         return {"cramerv": cramerv, "tschuprowt": tschuprowt}
 
@@ -317,8 +308,8 @@ class TschuprowtCombinations(BinaryCombinationEvaluator):
 
     Search uses :ref:`progressive top-K interval DP <DPChi2>` over the
     closed-form Pearson :math:`\\chi^2` decomposition (per-k DP with constant
-    column marginals, Yates correction iff ``k == 2``). Statistically equivalent
-    to :func:`scipy.stats.chi2_contingency` — bit-exact agreement pinned by
+    column marginals, no Yates correction). Statistically equivalent to
+    :func:`scipy.stats.chi2_contingency` with ``correction=False`` — bit-exact agreement pinned by
     parity tests.
     """
 
@@ -399,7 +390,7 @@ def _top_k_partitions_chi2_dp(  # noqa: C901
         c_g = (n_{0,g} + \\tau - E_{0,g})^2 / E_{0,g}
               + (n_{1,g} + \\tau - E_{1,g})^2 / E_{1,g}
 
-    (with Yates correction iff the combination has exactly 2 groups) is
+    (no Yates correction, even with 2 groups) is
     additive across groups **given a fixed number of groups k**: the column
     marginals ``C[c] = N_c + k·τ`` and total ``N = N₀ + N₁ + 2k·τ`` depend
     only on ``k``, not on the split positions. So we run a separate interval-DP
@@ -438,37 +429,25 @@ def _top_k_partitions_chi2_dp(  # noqa: C901
         C0 = N0_total + k_groups * tol
         C1 = N1_total + k_groups * tol
         N_with_tol = N0_total + N1_total + 2.0 * k_groups * tol
-        yates = k_groups == 2
 
-        def seg_cost(
-            i: int, j: int, _C0: float = C0, _C1: float = C1, _N: float = N_with_tol, _yates: bool = yates
-        ) -> float:
+        def seg_cost(i: int, j: int, _C0: float = C0, _C1: float = C1, _N: float = N_with_tol) -> float:
             obs0 = (n0_prefix[j] - n0_prefix[i]) + tol
             obs1 = (n1_prefix[j] - n1_prefix[i]) + tol
             R = obs0 + obs1
             E0 = R * _C0 / _N
             E1 = R * _C1 / _N
-            if _yates:
-                d0 = E0 - obs0
-                d1 = E1 - obs1
-                obs0 = obs0 + (1.0 if d0 > 0 else (-1.0 if d0 < 0 else 0.0)) * min(0.5, abs(d0))
-                obs1 = obs1 + (1.0 if d1 > 0 else (-1.0 if d1 < 0 else 0.0)) * min(0.5, abs(d1))
             return (obs0 - E0) ** 2 / E0 + (obs1 - E1) ** 2 / E1
 
         # Only the final row (k == k_groups) is used: rebuilding the DP per k_groups
-        # is required because C0/C1/N/yates depend on k_groups (see docstring).
+        # is required because C0/C1/N depend on k_groups (see docstring).
         entries = top_k_partitions(n_mod=n_mod, cap=k_groups, seg_cost=seg_cost, top_k=top_k, maximize=True)
 
-        # Translate chi² → cramerv (quantised) → tschuprowt (quantised). Matches
-        # :func:`_chi2_assoc_for_combination` cell-for-cell.
-        denom = (k_groups - 1) ** 0.25  # k_groups ≥ 2 here, so denom > 0
+        # Translate chi² → bias-corrected cramerv / tschuprowt (quantised) through the same
+        # helper as :func:`_chi2_assoc_for_combination`, so the two match cell-for-cell.
         for k, chi2, splits in entries:
             if k != k_groups:
                 continue
-            cramerv_raw = (chi2 / n_obs) ** 0.5
-            cramerv_q = round(cramerv_raw / tol) * tol
-            tt_raw = cramerv_q / denom
-            tt_q = round(tt_raw / tol) * tol
+            cramerv_q, tt_q = cramerv_tschuprowt(chi2, n_obs, k_groups, 2, tol=tol)
             sort_key = tt_q if sort_by == "tschuprowt" else cramerv_q
             all_entries.append((sort_key, cramerv_q, tt_q, splits))
 

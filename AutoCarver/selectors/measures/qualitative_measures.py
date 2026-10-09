@@ -41,7 +41,8 @@ class Chi2Measure(BaseMeasure):
 
         # computing Chi2 statistic
         try:
-            self.value = chi2_contingency(xtab)[0]
+            # no Yates correction: the statistic feeds V/T, which are defined on the uncorrected chi2
+            self.value = chi2_contingency(xtab, correction=False)[0]
         except ValueError:
             self.value = np.nan
         return self.value

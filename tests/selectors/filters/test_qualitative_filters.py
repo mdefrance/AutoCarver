@@ -17,11 +17,12 @@ THRESHOLD = 1.0
 
 @fixture
 def sample_data() -> pd.DataFrame:
+    # pattern repeated: on 7 rows the bias-corrected V/T (Bergsma 2013) of the weak pairs is 0
     data = {
-        "feature1": [0, 1, 0, 1, 0, 1, 0],
-        "feature2": [2, 0, 2, 0, 2, 0, 2],
-        "feature3": [-3, 0, -3, 0, -3, -3, -3],
-        "feature4": [0, 1, 2, 0, 1, 2, 0],
+        "feature1": [0, 1, 0, 1, 0, 1, 0] * 10,
+        "feature2": [2, 0, 2, 0, 2, 0, 2] * 10,
+        "feature3": [-3, 0, -3, 0, -3, -3, -3] * 10,
+        "feature4": [0, 1, 2, 0, 1, 2, 0] * 10,
     }
     return pd.DataFrame(data)
 
@@ -58,11 +59,12 @@ def test_qualitative_filter(
     assert len(filtered_features) == len(sample_ranks), "filtered some features"
     assert filtered_features == sample_ranks, "Should conserve the ranking"
 
-    # testing filtering out all features
+    # threshold 0: drops every feature with any association beyond chance to a better one; feature4 has
+    # none with feature2 (its bias-corrected V/T is exactly 0), so it is kept alongside the best feature
     filter.threshold = 0.0
     filtered_features = filter.filter(sample_data, sample_ranks)
     print([feature.statistics for feature in filtered_features])
-    assert len(filtered_features) == 1, "sould keep the best feature"
+    assert filtered_features == [sample_ranks[0], sample_ranks[-1]], "should keep the best and the unrelated feature"
 
 
 @fixture(params=[(CramervFilter, CramervMeasure), (TschuprowtFilter, TschuprowtMeasure)])
@@ -73,12 +75,12 @@ def filter_measure(request: FixtureRequest) -> tuple:
 def test_pairwise_association_parity(filter_measure: tuple) -> None:
     """Vectorized ``_pairwise_association`` must equal scalar ``compute_association``.
 
-    Covers NaN columns, heavy ties, a single-modality column and 2x2 pairs (Yates).
+    Covers NaN columns, heavy ties, a single-modality column and 2x2 pairs.
     """
     filter_cls, measure_cls = filter_measure
     rng = np.random.default_rng(0)
     X = pd.DataFrame({f"c{j}": rng.integers(0, 4, 600) for j in range(5)}).astype(object)
-    X["c_bin"] = rng.integers(0, 2, 600).astype(object)  # 2x2 pairs -> Yates path
+    X["c_bin"] = rng.integers(0, 2, 600).astype(object)  # 2x2 pairs
     X.loc[rng.random(600) < 0.2, "c2"] = np.nan
     X["c_const"] = "z"
 

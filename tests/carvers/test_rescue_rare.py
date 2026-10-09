@@ -93,6 +93,20 @@ def test_rescue_rare_no_validation_view_skipped_with_warning():
     assert [f.name for f in carver.dropped_features] == ["feature"]
 
 
+def test_rescue_rare_default_no_validation_view_does_not_warn():
+    """Default config (rescue_rare unset, on for carvers) without X_dev/cv -> no rescue warning."""
+    import warnings
+
+    X, y = _dominant_column(3000, 1000, 0.2, 0.9)
+    carver = BinaryCarver(min_freq=0.05, max_n_mod=4, features=Features(categoricals=["feature"]))
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        carver.fit(X, y)
+
+    assert carver.config.rescue_rare is True
+    assert not [w for w in caught if "rescue_rare" in str(w.message)]
+
+
 def test_rescue_rare_cv_only_kept():
     """rescue_rare=True with cv=3 (no X_dev) -> informative rare modality KEPT."""
     X, y = _dominant_column(3000, 180, 0.2, 0.9)
@@ -197,8 +211,22 @@ def test_check_frequencies_rescue_rare_warns_instead_of_raising():
     features.fit(X, pd.Series([0, 1] * 500))
 
     with pytest.warns(UserWarning, match="too_common"):
-        result = check_frequencies(features, X, min_freq=0.05, name="Test", rescue_rare=True)
+        result = check_frequencies(features, X, min_freq=0.05, name="Test", alpha=0.05, rescue_rare=True)
     assert result is None
 
     with raises(ValueError, match="too_common"):
-        check_frequencies(features, X, min_freq=0.05, name="Test", rescue_rare=False)
+        check_frequencies(features, X, min_freq=0.05, name="Test", alpha=0.05, rescue_rare=False)
+
+
+def test_check_frequencies_uses_the_wilson_test():
+    """A 97% mode on 40 rows is not significantly too common; a 99.9% mode on 10,000 rows is."""
+    small = pd.DataFrame({"feature": ["A"] * 39 + ["B"]})  # rest = 1/40 = 2.5% < min_freq, not significant
+    features = Features(categoricals=["feature"])
+    features.fit(small, pd.Series([0, 1] * 20))
+    check_frequencies(features, small, min_freq=0.05, name="Test", alpha=0.05)
+
+    large = pd.DataFrame({"feature": ["A"] * 9990 + ["B"] * 10})
+    features = Features(categoricals=["feature"])
+    features.fit(large, pd.Series([0, 1] * 5000))
+    with raises(ValueError, match="too frequent modality"):
+        check_frequencies(features, large, min_freq=0.05, name="Test", alpha=0.05)

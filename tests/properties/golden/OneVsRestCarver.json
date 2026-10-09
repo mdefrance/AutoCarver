@@ -17,8 +17,8 @@
   "records": [
     {
       "feature": "Categorical('cat_a__y=lo')",
-      "cramerv": 0.3041750306,
-      "tschuprowt": 0.3041750306,
+      "cramerv": 0.3044067636,
+      "tschuprowt": 0.3044067636,
       "n_mod": 2,
       "label": 0,
       "content": [
@@ -34,8 +34,8 @@
     },
     {
       "feature": "Categorical('cat_a__y=lo')",
-      "cramerv": 0.3041750306,
-      "tschuprowt": 0.3041750306,
+      "cramerv": 0.3044067636,
+      "tschuprowt": 0.3044067636,
       "n_mod": 2,
       "label": 1,
       "content": [
@@ -53,8 +53,8 @@
     },
     {
       "feature": "Categorical('cat_b__y=lo')",
-      "cramerv": 0.031289570100000004,
-      "tschuprowt": 0.031289570100000004,
+      "cramerv": 0.026362351500000002,
+      "tschuprowt": 0.026362351500000002,
       "n_mod": 2,
       "label": 0,
       "content": "x",
@@ -66,8 +66,8 @@
     },
     {
       "feature": "Categorical('cat_b__y=lo')",
-      "cramerv": 0.031289570100000004,
-      "tschuprowt": 0.031289570100000004,
+      "cramerv": 0.026362351500000002,
+      "tschuprowt": 0.026362351500000002,
       "n_mod": 2,
       "label": 1,
       "content": [
@@ -82,8 +82,8 @@
     },
     {
       "feature": "Categorical('cat_a__y=mid')",
-      "cramerv": 0.0563499858,
-      "tschuprowt": 0.0563499858,
+      "cramerv": 0.054065391600000005,
+      "tschuprowt": 0.054065391600000005,
       "n_mod": 2,
       "label": 0,
       "content": [
@@ -100,8 +100,8 @@
     },
     {
       "feature": "Categorical('cat_a__y=mid')",
-      "cramerv": 0.0563499858,
-      "tschuprowt": 0.0563499858,
+      "cramerv": 0.054065391600000005,
+      "tschuprowt": 0.054065391600000005,
       "n_mod": 2,
       "label": 1,
       "content": [
@@ -118,8 +118,8 @@
     },
     {
       "feature": "Categorical('cat_b__y=mid')",
-      "cramerv": 0.0204906285,
-      "tschuprowt": 0.0204906285,
+      "cramerv": 0.0116337326,
+      "tschuprowt": 0.0116337326,
       "n_mod": 2,
       "label": 0,
       "content": [
@@ -134,8 +134,8 @@
     },
     {
       "feature": "Categorical('cat_b__y=mid')",
-      "cramerv": 0.0204906285,
-      "tschuprowt": 0.0204906285,
+      "cramerv": 0.0116337326,
+      "tschuprowt": 0.0116337326,
       "n_mod": 2,
       "label": 1,
       "content": "z",
@@ -147,8 +147,8 @@
     },
     {
       "feature": "Numerical('num_a__y=lo')",
-      "cramerv": 0.6100481876,
-      "tschuprowt": 0.6100481876,
+      "cramerv": 0.6106182261,
+      "tschuprowt": 0.6106182261,
       "n_mod": 2,
       "label": 0,
       "content": "(-inf, -4.6e-01]",
@@ -160,8 +160,8 @@
     },
     {
       "feature": "Numerical('num_a__y=lo')",
-      "cramerv": 0.6100481876,
-      "tschuprowt": 0.6100481876,
+      "cramerv": 0.6106182261,
+      "tschuprowt": 0.6106182261,
       "n_mod": 2,
       "label": 1,
       "content": "(-4.6e-01, inf)",
@@ -173,8 +173,8 @@
     },
     {
       "feature": "Numerical('num_b__y=lo')",
-      "cramerv": 0.2294355392,
-      "tschuprowt": 0.2294355392,
+      "cramerv": 0.2295650846,
+      "tschuprowt": 0.2295650846,
       "n_mod": 2,
       "label": 0,
       "content": "(-inf, 2.8e+00]",
@@ -186,8 +186,8 @@
     },
     {
       "feature": "Numerical('num_b__y=lo')",
-      "cramerv": 0.2294355392,
-      "tschuprowt": 0.2294355392,
+      "cramerv": 0.2295650846,
+      "tschuprowt": 0.2295650846,
       "n_mod": 2,
       "label": 1,
       "content": "(2.8e+00, inf)",
@@ -199,8 +199,8 @@
     },
     {
       "feature": "Numerical('num_a__y=mid')",
-      "cramerv": 0.3384207018,
-      "tschuprowt": 0.284576755,
+      "cramerv": 0.3374902394,
+      "tschuprowt": 0.2838180027,
       "n_mod": 3,
       "label": 0,
       "content": "(-inf, -9.74e-01]",
@@ -212,8 +212,8 @@
     },
     {
       "feature": "Numerical('num_a__y=mid')",
-      "cramerv": 0.3384207018,
-      "tschuprowt": 0.284576755,
+      "cramerv": 0.3374902394,
+      "tschuprowt": 0.2838180027,
       "n_mod": 3,
       "label": 1,
       "content": "(-9.74e-01, 1.14e+00]",
@@ -225,8 +225,8 @@
     },
     {
       "feature": "Numerical('num_a__y=mid')",
-      "cramerv": 0.3384207018,
-      "tschuprowt": 0.284576755,
+      "cramerv": 0.3374902394,
+      "tschuprowt": 0.2838180027,
       "n_mod": 3,
       "label": 2,
       "content": "(1.14e+00, inf)",
@@ -238,8 +238,8 @@
     },
     {
       "feature": "Numerical('num_b__y=mid')",
-      "cramerv": 0.0632663542,
-      "tschuprowt": 0.0632663542,
+      "cramerv": 0.062276601200000004,
+      "tschuprowt": 0.062276601200000004,
       "n_mod": 2,
       "label": 0,
       "content": "(-inf, 4.8e+00]",
@@ -251,8 +251,8 @@
     },
     {
       "feature": "Numerical('num_b__y=mid')",
-      "cramerv": 0.0632663542,
-      "tschuprowt": 0.0632663542,
+      "cramerv": 0.062276601200000004,
+      "tschuprowt": 0.062276601200000004,
       "n_mod": 2,
       "label": 1,
       "content": "(4.8e+00, inf)",

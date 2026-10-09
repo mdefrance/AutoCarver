@@ -65,7 +65,9 @@ def chi2_homogeneity(ref_count: pd.Series, new_count: pd.Series) -> tuple[float,
     flag shifts that are real but negligible. Cramér's V is returned alongside
     it as the sample-size-independent effect size — for a ``2 x k`` table
     ``V = sqrt(chi2 / N)``, bounded in ``[0, 1]``, conventionally read as
-    negligible below 0.1, small to 0.3, moderate to 0.5, large above.
+    negligible below 0.1, small to 0.3, moderate to 0.5, large above. On a
+    ``2 x 2`` table the statistic and p-value are Yates-corrected (scipy's
+    default), while V uses the uncorrected chi².
 
     Returns
     -------
@@ -89,8 +91,11 @@ def chi2_homogeneity(ref_count: pd.Series, new_count: pd.Series) -> tuple[float,
 
     # kept on scipy.stats.chi2_contingency (not AutoCarver.stats.chi2.pearson_chi2):
     # this needs the p-value and degrees of freedom, which pearson_chi2 doesn't return.
+    # The test keeps scipy's Yates correction on a 2 x 2 table (a p-value is read here);
+    # Cramér's V is an effect size, defined on the uncorrected chi².
     statistic, pvalue, dof, _ = chi2_contingency(table)
-    return float(statistic), float(pvalue), int(dof), float(np.sqrt(statistic / total))
+    uncorrected = chi2_contingency(table, correction=False)[0] if table.shape == (2, 2) else statistic
+    return float(statistic), float(pvalue), int(dof), float(np.sqrt(uncorrected / total))
 
 
 def two_proportion_test(

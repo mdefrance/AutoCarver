@@ -1,6 +1,6 @@
 """Single home for statistical primitives shared by carvers, selectors and stability."""
 
-from AutoCarver.stats.chi2 import cramerv_tschuprowt, cramerv_tschuprowt_unrounded, pearson_chi2
+from AutoCarver.stats.chi2 import bergsma_phi2, cramerv_tschuprowt, cramerv_tschuprowt_unrounded, pearson_chi2
 from AutoCarver.stats.correspondence_analysis import CAAxis, ca_row_scores, fit_ca_axis
 from AutoCarver.stats.frequency_ci import is_significantly_below, wilson_upper_bound
 from AutoCarver.stats.kruskal import h_from_rank_sums, tie_correction
@@ -23,6 +23,7 @@ __all__ = [
     "rank_associations",
     "rank_associations_from_counts",
     "pearson_chi2",
+    "bergsma_phi2",
     "cramerv_tschuprowt",
     "cramerv_tschuprowt_unrounded",
     "tie_correction",

@@ -17,8 +17,8 @@
   "records": [
     {
       "feature": "Categorical('cat_a')",
-      "cramerv": 0.3583980772,
-      "tschuprowt": 0.3013756584,
+      "cramerv": 0.3575261044,
+      "tschuprowt": 0.300667495,
       "n_mod": 2,
       "label": 0,
       "content": [
@@ -34,8 +34,8 @@
     },
     {
       "feature": "Categorical('cat_a')",
-      "cramerv": 0.3583980772,
-      "tschuprowt": 0.3013756584,
+      "cramerv": 0.3575261044,
+      "tschuprowt": 0.300667495,
       "n_mod": 2,
       "label": 1,
       "content": [
@@ -53,8 +53,8 @@
     },
     {
       "feature": "Categorical('cat_b')",
-      "cramerv": 0.043010224900000005,
-      "tschuprowt": 0.036167144,
+      "cramerv": 0.0344003645,
+      "tschuprowt": 0.0289295559,
       "n_mod": 2,
       "label": 0,
       "content": [
@@ -69,8 +69,8 @@
     },
     {
       "feature": "Categorical('cat_b')",
-      "cramerv": 0.043010224900000005,
-      "tschuprowt": 0.036167144,
+      "cramerv": 0.0344003645,
+      "tschuprowt": 0.0289295559,
       "n_mod": 2,
       "label": 1,
       "content": "x",
@@ -82,8 +82,8 @@
     },
     {
       "feature": "Numerical('num_a')",
-      "cramerv": 0.6567055317,
-      "tschuprowt": 0.5522213275,
+      "cramerv": 0.6563070119000001,
+      "tschuprowt": 0.5519322444,
       "n_mod": 2,
       "label": 0,
       "content": "(-inf, 6.3e-03]",
@@ -95,8 +95,8 @@
     },
     {
       "feature": "Numerical('num_a')",
-      "cramerv": 0.6567055317,
-      "tschuprowt": 0.5522213275,
+      "cramerv": 0.6563070119000001,
+      "tschuprowt": 0.5519322444,
       "n_mod": 2,
       "label": 1,
       "content": "(6.3e-03, inf)",
@@ -108,8 +108,8 @@
     },
     {
       "feature": "Numerical('num_b')",
-      "cramerv": 0.30000694440000003,
-      "tschuprowt": 0.2522747641,
+      "cramerv": 0.29894326660000003,
+      "tschuprowt": 0.251401288,
       "n_mod": 2,
       "label": 0,
       "content": "(-inf, 3.1e+00]",
@@ -121,8 +121,8 @@
     },
     {
       "feature": "Numerical('num_b')",
-      "cramerv": 0.30000694440000003,
-      "tschuprowt": 0.2522747641,
+      "cramerv": 0.29894326660000003,
+      "tschuprowt": 0.251401288,
       "n_mod": 2,
       "label": 1,
       "content": "(3.1e+00, inf)",

@@ -60,6 +60,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
                 sample.X,
                 self.min_freq,
                 self.__name__,
+                alpha=self.config.min_freq_alpha,
                 rescue_rare=bool(self.config.rescue_rare),
             )
 

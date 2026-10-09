@@ -229,20 +229,15 @@ def _top_k_partitions_chi2_dp_multiclass(  # noqa: C901
     for k_groups in range(2, cap + 1):
         C = col_totals + k_groups * tol
         N_with_tol = total_n + k_groups * n_classes * tol
-        yates = k_groups == 2 and n_classes == 2
 
-        def seg_cost(i: int, j: int, _C: np.ndarray = C, _N: float = N_with_tol, _yates: bool = yates) -> float:
+        def seg_cost(i: int, j: int, _C: np.ndarray = C, _N: float = N_with_tol) -> float:
             obs = (prefix[j] - prefix[i]) + tol
             R = float(obs.sum())
             E = R * _C / _N
-            if _yates:
-                diff = E - obs
-                shift = np.minimum(0.5, np.abs(diff)) * np.sign(diff)
-                obs = obs + shift
             return float(((obs - E) ** 2 / E).sum())
 
         # Only the final row (k == k_groups) is used: rebuilding the DP per k_groups
-        # is required because C/N/yates depend on k_groups (see docstring).
+        # is required because C/N depend on k_groups (see docstring).
         entries = top_k_partitions(n_mod=n_kept, cap=k_groups, seg_cost=seg_cost, top_k=top_k, maximize=True)
 
         for k, chi2, splits in entries:

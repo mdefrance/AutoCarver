@@ -581,29 +581,34 @@ Two key observations:
 * Therefore, at fixed :math:`k`, :math:`\chi^2` is **additive over groups**:
   each group contributes :math:`(O - E)^2 / E` summed over its two cells,
   with :math:`E` derivable from :math:`(n_{0,g},\, n_{1,g})` and the constants
-  :math:`(C_0, C_1, N)`. The **Yates correction** (subtract :math:`0.5` from
-  :math:`|O - E|` iff the table is exactly :math:`2 \times 2`, matching scipy's
-  default) is applied **only when** :math:`k = 2`, which is again known at the
-  DP level.
+  :math:`(C_0, C_1, N)`. No Yates continuity correction is applied, not even at
+  :math:`k = 2`: :math:`\chi^2` only feeds the effect sizes :math:`V` and
+  :math:`T`, which are defined on the uncorrected statistic (see
+  :ref:`stats_bias_correction`).
 
 The DP is therefore run **once per** :math:`k \in [2,\, \text{max_n_mod}]`
-with the constants :math:`(C_0, C_1, N, \text{yates_flag})` fixed; per-:math:`k`
-top-K lists are merged and re-truncated:
+with the constants :math:`(C_0, C_1, N)` fixed; per-:math:`k` top-K lists are
+merged and re-truncated:
 
 .. math::
 
     \text{seg_cost}_k(i,\, j) =
     \chi^2\text{ contribution of }[i,\, j)\text{ under }
-    (C_0,\, C_1,\, N,\, \text{yates_flag} = (k = 2)).
+    (C_0,\, C_1,\, N).
 
-Cramér's :math:`V = \sqrt{\chi^2 / N_{obs}}` and Tschuprow's
-:math:`T = V / \sqrt[4]{k - 1}` are monotone transforms of :math:`\chi^2` at
-fixed :math:`k`, so sorting by either is equivalent to sorting by :math:`\chi^2`
-**within each** :math:`k` **slice**. The cross-:math:`k` merge re-applies the
-configured ``sort_by`` so the global top-K is correct under either metric.
-Statistical equivalence to :func:`scipy.stats.chi2_contingency` is **bit-exact**
-(parity tests pin the :math:`+\text{tol}` shift, the Yates handling, and the
-:math:`\text{round}(x / \text{tol}) \cdot \text{tol}` quantisation).
+Cramér's :math:`V` and Tschuprow's :math:`T` are the **bias-corrected**
+estimates of :ref:`stats_bias_correction`, computed by
+:func:`AutoCarver.stats.cramerv_tschuprowt`. At fixed :math:`k` both are
+monotone transforms of :math:`\chi^2`, so sorting by either is equivalent to
+sorting by :math:`\chi^2` **within each** :math:`k` **slice**, and the DP
+itself is untouched by the correction. The cross-:math:`k` merge re-applies the
+configured ``sort_by``, which is where the correction acts: a grouping with more
+groups only wins if it adds more association than chance would.
+Statistical equivalence to :func:`scipy.stats.chi2_contingency` with
+``correction=False`` is **bit-exact** (parity tests pin the
+:math:`+\text{tol}` shift and the
+:math:`\text{round}(x / \text{tol}) \cdot \text{tol}` quantisation), and every
+evaluator path converts :math:`\chi^2` through the same function.
 
 
 .. _CramervCombinations:
@@ -640,18 +645,16 @@ exactly as before,
 .. math::
 
     \chi^2 = N \left(\sum_{g, c} \frac{O_{g,c}^2}{R_g\, C_c} - 1\right),
-    \qquad
-    V = \sqrt{\frac{\chi^2}{N\,(\min(B, K) - 1)}},
-    \qquad
-    T = \sqrt{\frac{\chi^2}{N\,\sqrt{(B-1)(K-1)}}}.
+
+with :math:`V` and :math:`T` the bias-corrected estimates of
+:ref:`stats_bias_correction` on a :math:`(B, K)` table.
 
 The same two observations that make the binary DP possible still hold — at
 fixed :math:`k` groups, the column marginals and total depend only on
 :math:`k` (plus the constant ``tol`` shift), so :math:`\chi^2` is additive over
 groups and the DP in :ref:`DPChi2` carries over unchanged, generalised from a
-``(2,)`` to a ``(K,)`` per-segment observed vector. Yates' correction still
-applies only when the table is exactly :math:`2\times 2` (:math:`k=2` **and**
-:math:`K=2`). At :math:`K=2` both :math:`V` and :math:`T` — and the DP itself —
+``(2,)`` to a ``(K,)`` per-segment observed vector. No Yates correction is
+applied. At :math:`K=2` both :math:`V` and :math:`T` — and the DP itself —
 are numerically identical to the binary evaluator, pinned bit-for-bit by a
 parity test.
 

@@ -43,7 +43,8 @@ def wilson_upper_bound(
         Number of trials. Must be ``>= 0``; returns ``1.0`` when ``nobs == 0``
         so callers treat empty samples as non-significant.
     alpha : float
-        Two-sided significance level (e.g. ``0.05`` for a 95% interval).
+        Two-sided significance level (e.g. ``0.05`` for a 95% interval). Used
+        alone, this upper bound is a one-sided test at level ``alpha / 2``.
 
     Returns
     -------
@@ -78,7 +79,9 @@ def is_significantly_below(
     """Whether the observed proportion ``count / nobs`` is significantly below ``min_freq``.
 
     A modality is significantly below ``min_freq`` when the Wilson upper bound
-    of its observed proportion is strictly below ``min_freq``.
+    of its observed proportion is strictly below ``min_freq``. This is a
+    one-sided test at level ``alpha / 2``: ``alpha`` (``min_freq_alpha``) is the
+    two-sided level of the interval, so the default ``0.05`` tests at 2.5%.
     """
     upper = wilson_upper_bound(count, nobs, alpha)
     if isinstance(upper, np.ndarray):

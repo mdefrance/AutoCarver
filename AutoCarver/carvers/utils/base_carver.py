@@ -534,7 +534,8 @@ class BaseCarver(BaseDiscretizer, ABC):
         samples = self._prepare_samples(samples)
 
         # rescue needs a validation view; without one it is silently skipped downstream
-        if self.config.rescue_rare and X_dev is None and not cv:
+        # (only worth a warning when the user asked for rescue, not for the carver default)
+        if self.config.rescue_rare and self._rescue_rare_is_explicit and X_dev is None and not cv:
             warn(
                 f"[{self.__name__}] rescue_rare=True has no effect without X_dev or cv "
                 "(a validation view is required to test rescued combinations).",

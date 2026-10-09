@@ -111,7 +111,10 @@ class CramervFilter(QualitativeFilter):
 
 
 class TschuprowtFilter(QualitativeFilter):
-    """Computes maximum Tschuprow's T between qualitative features of ``X``"""
+    """Computes maximum Tschuprow's T between qualitative features of ``X``
+
+    Selectors use ``TschuprowtFilter(0.9)`` by default; the class default ``threshold=1.0`` drops nothing.
+    """
 
     __name__ = "TschuprowtFilter"
 

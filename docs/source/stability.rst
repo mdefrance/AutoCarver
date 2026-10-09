@@ -100,7 +100,10 @@ freedom, which :func:`AutoCarver.stats.pearson_chi2` doesn't return.
 Because any chi-square grows with sample size, **Cramér's V** is reported
 beside it (``chi2_cramerv``) as the sample-size-independent effect size:
 ``V = sqrt(chi2 / N)`` for a ``2 x k`` table, conventionally negligible below
-0.1. :attr:`~AutoCarver.stability.StabilityReport.unstable_features` requires
+0.1. On a ``2 x 2`` table the test statistic and p-value keep scipy's Yates
+correction (a p-value is read here), while V uses the uncorrected chi². Unlike the
+carving and selection V/T, this drift V is not bias-corrected: it gates a
+significant test rather than ranking candidates. :attr:`~AutoCarver.stability.StabilityReport.unstable_features` requires
 *both* significance and a non-negligible V, so a 300k-row extract doesn't flag
 every feature over a shift too small to act on.
 
