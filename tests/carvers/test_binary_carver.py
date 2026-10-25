@@ -1508,3 +1508,27 @@ def test_binary_carver_unknown_ordinal_values_raises(
     )
     with raises(ValueError):
         auto_carver.fit_transform(x_train_wrong_2, x_train_wrong_2["binary_target"])
+
+
+@fixture(params=[False, True])
+def verbose(request: FixtureRequest) -> bool:
+    return request.param
+
+
+def test_binary_carver_progress_bar_only_when_verbose(monkeypatch, verbose: bool):
+    """tqdm.auto draws a notebook widget even off a TTY: verbose=False must disable the bar outright."""
+    from AutoCarver.carvers.utils import base_carver
+
+    calls = []
+
+    def recording_tqdm(iterable, **kwargs):
+        calls.append(kwargs)
+        return iterable
+
+    monkeypatch.setattr(base_carver, "tqdm", recording_tqdm)
+    X = pd.DataFrame({"feature": [1, 2, 3, 4] * 50})
+    y = pd.Series([0, 0, 1, 1] * 50)
+    carver = BinaryCarver(features=Features(numericals=["feature"]), config=ProcessingConfig(verbose=verbose))
+    carver.fit(X, y)
+
+    assert [call["disable"] for call in calls] == [not verbose]

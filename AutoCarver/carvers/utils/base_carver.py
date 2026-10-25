@@ -534,7 +534,8 @@ class BaseCarver(BaseDiscretizer, ABC):
         samples = self._prepare_samples(samples)
 
         # rescue needs a validation view; without one it is silently skipped downstream
-        if self.config.rescue_rare and X_dev is None and not cv:
+        # (only worth a warning when the user asked for rescue, not for the carver default)
+        if self.config.rescue_rare and self._rescue_rare_is_explicit and X_dev is None and not cv:
             warn(
                 f"[{self.__name__}] rescue_rare=True has no effect without X_dev or cv "
                 "(a validation view is required to test rescued combinations).",
@@ -559,13 +560,13 @@ class BaseCarver(BaseDiscretizer, ABC):
         if self.config.n_jobs > 1 and len(all_features) > 1:
             self._carve_features_parallel(all_features, xaggs, xaggs_dev, xaggs_folds)
         else:
-            # disable=None: tqdm auto-disables on non-TTY (pytest, piped logs);
-            # verbose mode already prints one banner per feature instead
+            # progress bar only in verbose mode: tqdm.auto renders a widget in notebooks, so
+            # verbose=False must disable it outright rather than rely on non-TTY auto-detection
             progress = tqdm(
                 all_features,
                 desc=f"[{self.__name__}] Carving",
                 unit="feature",
-                disable=True if self.config.verbose else None,
+                disable=not self.config.verbose,
             )
             for n, feature in enumerate(progress):
                 num_iter = f"{n + 1}/{len(all_features)}"  # logging iteration number
@@ -678,7 +679,7 @@ class BaseCarver(BaseDiscretizer, ABC):
                 total=len(payloads),
                 desc=f"[{self.__name__}] Carving",
                 unit="feature",
-                disable=True if self.config.verbose else None,
+                disable=not self.config.verbose,
             )
             for updated_feature, viable in results:
                 if viable:

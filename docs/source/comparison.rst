@@ -35,7 +35,7 @@ Scope at a glance
      - n/a
    * - Multiclass classification
      - :class:`MulticlassCarver` — **one binning per feature** (joint, against the full K-class target); :class:`OneVsRestCarver` available for a per-class binning instead
-     - ``MulticlassOptimalBinning`` — one-vs-rest only (a separate binning per class)
+     - ``MulticlassOptimalBinning`` — one shared binning per feature (one-vs-rest objective), **numerical features only**
      - n/a
    * - Regression / continuous target
      - :class:`ContinuousCarver`
@@ -61,9 +61,9 @@ Scope at a glance
      - **yes (built in)**
      - no
      - no
-   * - Optimality guarantee for fixed ``min_freq`` / ``max_n_mod`` / metric
-     - **yes — exhaustive top-K search over admissible combinations (interval dynamic programming, DP)**
-     - yes, over its CART pre-bins (CP / MIP, under its own constraints)
+   * - Search of the best binning for fixed ``min_freq`` / ``max_n_mod`` / metric
+     - exact over consecutive groupings when a viable candidate is in the first top-K batch (interval dynamic programming, DP); see :ref:`its limits <DPLimits>`
+     - solved over its CART pre-bins (CP / MIP, within a solver time limit)
      - n/a (no objective)
    * - Confidence-interval-guarded ``min_freq``
      - **yes — Wilson score interval (tunable** ``min_freq_alpha`` **)**
@@ -86,8 +86,8 @@ Scope at a glance
      - yes
      - yes
    * - Feature pre-selection helpers
-     - :class:`ClassificationSelector`, :class:`RegressionSelector`
-     - no
+     - :class:`ClassificationSelector`, :class:`RegressionSelector` (association measures plus redundancy filters)
+     - yes (``BinningProcess(selection_criteria=...)``, by IV, Gini, quality score)
      - no
 
 
@@ -104,7 +104,7 @@ The three libraries answer "what's a good bin?" with very different objectives:
      - Objective
      - Constraint surface
    * - **AutoCarver**
-     - Maximize **Tschuprow's T** (default) or **Cramér's V** between the carved feature and the binary target — generalised to a K-class :math:`\chi^2` for the joint :class:`MulticlassCarver` (see :ref:`MulticlassChi2`) — or **Kruskal-Wallis H** for continuous targets — via **exhaustive top-K interval DP** over consecutive segmentations. The DP exploits additive decomposability of :math:`H` (and of :math:`\chi^2` at fixed :math:`k`) to enumerate the top-K partitions in closed form; progressive top-K doubling keeps the worst case exhaustive while making the common case essentially free. For fixed ``min_freq``, ``max_n_mod`` and metric, no other admissible combination scores higher. NaN groupings are fanned out and re-scored in closed form. See :ref:`DPTopK` for details and parity guarantees against ``scipy.stats``.
+     - Maximize **Tschuprow's T** (default) or **Cramér's V** between the carved feature and the binary target — generalised to a K-class :math:`\chi^2` for the joint :class:`MulticlassCarver` (see :ref:`MulticlassChi2`) — or **Kruskal-Wallis H** for continuous targets — via **exhaustive top-K interval DP** over consecutive segmentations. The DP exploits additive decomposability of :math:`H` (and of :math:`\chi^2` at fixed :math:`k`) to enumerate the top-K partitions in closed form. The result is the best viable consecutive grouping when one lies in the first top-K batch (or with ``dp_escalate=True``); the NaN placement is searched in a second stage on the already-grouped labels, so the overall search is not exhaustive. NaN groupings are fanned out and re-scored in closed form. See :ref:`DPTopK` for details and parity guarantees against ``scipy.stats``.
      - ``min_freq`` (minimum bucket share, gated by a Wilson score CI at significance ``min_freq_alpha`` — see :ref:`MinFreqViability`), ``max_n_mod`` (cap on number of modalities), monotonic ordering for ordinal features (enforced by :class:`OrdinalDiscretizer`), and a dev-set veto: any candidate that flips its target-rate ordering on the dev set is rejected.
    * - **optbinning**
      - Maximize **Information Value (IV)** (binary) or split-gain analogues. A CART decision tree first produces pre-bins (``prebinning_method="cart"`` by default); the optimal merge of those pre-bins is then solved with constraint programming (CP-SAT, the default ``solver="cp"``) or a mixed-integer program (``solver="mip"``).

@@ -35,7 +35,9 @@ class ProcessingConfig:
     ``min_freq_alpha`` is the two-sided significance level of the Wilson
     interval used to decide whether a modality's observed frequency is
     significantly below ``min_freq``. Smaller values are more lenient
-    (wider CI → fewer merges); ``0.05`` matches a 95% interval.
+    (wider CI → fewer merges); ``0.05`` matches a 95% interval. Only the upper
+    bound is read, so the test is one-sided at level ``min_freq_alpha / 2``
+    (2.5% by default).
 
     ``n_jobs`` controls per-feature parallelism inside :class:`BaseCarver`:
     with ``n_jobs > 1`` and more than one feature, the per-feature combination
@@ -220,6 +222,8 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             self.features = Features.from_list(features)
 
         config = config if config is not None else ProcessingConfig()
+        # whether the user set rescue_rare themselves (the default-on carver case must not warn)
+        self._rescue_rare_is_explicit = config.rescue_rare is not None
         # resolve context-dependent toggles: ``None`` means "use the context
         # default" (False here, overridden to True by BaseCarver) so a partial
         # config doesn't silently flip the unset fields.

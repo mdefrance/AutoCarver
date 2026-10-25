@@ -1,8 +1,10 @@
 """Set of tests for Qualitative correlation measures module."""
 
+from importlib.util import find_spec
+
 import numpy as np
 import pandas as pd
-from pytest import FixtureRequest, fixture
+from pytest import FixtureRequest, approx, fixture, mark, param, raises
 from scipy.stats import kruskal
 
 from AutoCarver.selectors import (
@@ -20,13 +22,16 @@ from AutoCarver.selectors import (
 
 threshold = 0.1
 
+# DistanceMeasure needs the optional dcor package (pip install autocarver[dcor])
+needs_dcor = mark.skipif(find_spec("dcor") is None, reason="dcor extra not installed")
+
 
 @fixture(params=[IqrOutlierMeasure, ZscoreOutlierMeasure])
 def outlier_measure(request: FixtureRequest) -> BaseMeasure:
     return request.param(threshold=threshold)
 
 
-@fixture(params=[DistanceMeasure, PearsonMeasure, SpearmanMeasure])
+@fixture(params=[param(DistanceMeasure, marks=needs_dcor), PearsonMeasure, SpearmanMeasure])
 def quanti_quanti_measure(request: FixtureRequest) -> BaseMeasure:
     return request.param(threshold=threshold)
 
@@ -467,3 +472,78 @@ def test_outlier_validate_with_computed_association_above_threshold(
         outlier_measure.validate(),
     )
     assert not outlier_measure.validate(), "kept feature with lower than threshold correlation"
+
+
+def _naive_distance_correlation(x: np.ndarray, y: np.ndarray) -> float:
+    """O(n²) reference: double-centred distance matrices (Székely et al., 2007)."""
+    a = np.abs(x[:, None] - x[None, :])
+    b = np.abs(y[:, None] - y[None, :])
+    a = a - a.mean(axis=0) - a.mean(axis=1)[:, None] + a.mean()
+    b = b - b.mean(axis=0) - b.mean(axis=1)[:, None] + b.mean()
+    return float(np.sqrt((a * b).mean() / np.sqrt((a * a).mean() * (b * b).mean())))
+
+
+@needs_dcor
+def test_distance_measure_detects_non_linear_dependence() -> None:
+    """y = x² is invisible to Pearson but not to distance correlation"""
+    z = np.random.default_rng(0).normal(size=500)
+    x = pd.Series(np.concatenate([z, -z]))  # exactly symmetric, so Pearson's r is 0
+    y = x**2
+    assert abs(PearsonMeasure().compute_association(x, y)) < 0.1
+    assert DistanceMeasure().compute_association(x, y) > 0.4
+
+
+@needs_dcor
+def test_distance_measure_linear_dependence() -> None:
+    """an affine relation gives a distance correlation of 1"""
+    x = pd.Series(np.random.default_rng(0).normal(size=1000))
+    assert DistanceMeasure().compute_association(x, 2 * x + 1) > 0.99
+
+
+@needs_dcor
+def test_distance_measure_independent() -> None:
+    """independent draws give a distance correlation close to 0"""
+    rng = np.random.default_rng(0)
+    x, y = pd.Series(rng.normal(size=1000)), pd.Series(rng.normal(size=1000))
+    assert DistanceMeasure().compute_association(x, y) < 0.1
+
+
+@needs_dcor
+def test_distance_measure_constant_target() -> None:
+    """a constant y has no distance variance: distance correlation is 0"""
+    x = pd.Series(np.random.default_rng(0).normal(size=100))
+    assert DistanceMeasure().compute_association(x, pd.Series(np.ones(100))) == 0.0
+
+
+@needs_dcor
+def test_distance_measure_uses_every_row() -> None:
+    """no subsampling on large inputs: the value equals dcor's other exact algorithm (AVL) on all rows"""
+    import dcor
+
+    rng = np.random.default_rng(0)
+    x = rng.normal(size=12_000)
+    y = x**2 + rng.normal(size=12_000)
+    value = DistanceMeasure().compute_association(pd.Series(x), pd.Series(y))
+    assert value == approx(dcor.distance_correlation(x, y, method="avl"), abs=1e-10)
+
+
+@needs_dcor
+def test_distance_measure_matches_naive_reference() -> None:
+    """the O(n log n) dcor algorithm equals the naive double-centring (ties included)"""
+    rng = np.random.default_rng(0)
+    x = rng.normal(size=300)
+    y = np.round(x**2 + rng.normal(size=300), 1)
+    measure = DistanceMeasure()
+    assert measure.compute_association(pd.Series(x), pd.Series(y)) == approx(
+        _naive_distance_correlation(x, y), abs=1e-10
+    )
+
+
+def test_distance_measure_without_dcor_names_the_extra(monkeypatch) -> None:
+    """without the dcor package, the error says which extra to install"""
+    import sys
+
+    monkeypatch.setitem(sys.modules, "dcor", None)  # makes `import dcor` raise ImportError
+    x = pd.Series([1.0, 2.0, 3.0])
+    with raises(ImportError, match=r"autocarver\[dcor\]"):
+        DistanceMeasure().compute_association(x, x)

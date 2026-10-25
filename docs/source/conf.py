@@ -73,10 +73,10 @@ pyproject = toml.load("../../pyproject.toml")
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = pyproject["project"]["name"]
-copyright = "2023, Mario Defrance"
+copyright = "2023–2026, Mario Defrance"
 author = ", ".join([author["name"] for author in pyproject["project"]["authors"]])
 version = pyproject["project"]["version"]
-release = "Beta release"
+release = version
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -117,7 +117,10 @@ extensions = [
     "nbsphinx",
 ]
 templates_path = ["_templates"]
-exclude_patterns = []
+# the ProTips notebooks are kept in the repo but not published
+exclude_patterns = ["examples/.ipynb_checkpoints", "examples/Carvers/ProTips"]
+# notebooks are rendered from their stored outputs (executed with nbconvert before each docs release)
+nbsphinx_execute = "never"
 autoclass_content = "both"
 highlight_language = "python"
 

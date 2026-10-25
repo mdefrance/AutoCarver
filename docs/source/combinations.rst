@@ -242,7 +242,8 @@ truncated to ``top_k``.
        escalation is enabled,
        <code style="background: #dbeafe; padding: 1px 4px; border-radius: 2px;">top_k</code>
        grows ×4 and the DP re-runs — keeping the common case (a viable winner in the
-       first batch) cheap, while preserving the optimality guarantee in the worst case.
+       first batch) cheap, while keeping the worst case exhaustive over consecutive
+       groupings (see <em>Limits</em> below).
      </div>
    </div>
 
@@ -301,10 +302,30 @@ What does **not** change
   :math:`k \le \text{max_n_mod}`.
 * The :ref:`viability filter <Viability>`: Wilson ``min_freq`` on train
   + dev, distinct target rates, rank preservation.
-* The optimality claim: **for fixed** ``min_freq``\ **,** ``max_n_mod``\ **,
-  and metric, no admissible combination scores higher than the one returned.**
+* The non-NaN result: when a viable candidate lies in the first top-K batch (or
+  with ``dp_escalate=True``), no viable consecutive grouping of the non-NaN
+  modalities scores higher than the one returned.
 
 The DP is a **search-strategy optimisation**, not a statistical change.
+
+.. _DPLimits:
+
+.. admonition:: Limits — when the returned grouping is not the best overall
+
+    * **Escalation is off by default** (``ProcessingConfig(dp_escalate=False)``).
+      If no candidate in the first ``dp_top_k_initial`` (2000) is viable, the
+      feature is dropped with a warning, even if a viable grouping exists further
+      down the ranking.
+    * **NaN is placed in a second stage.** With ``dropna=True`` the NaN placements
+      are searched on the already-grouped labels of the non-NaN winner, not over
+      every consecutive partition that includes NaN.
+    * **Ordinal τ-b / Somers' D** re-score a top-K ranked by their numerator, so a
+      better-scoring viable candidate outside that batch can be missed.
+    * **Categorical features** are first ordered by target rate (or by
+      correspondence-analysis score for a multiclass target); only groupings
+      consecutive in that order are searched.
+    * **Rescued features** (``rescue_rare``) are accepted with the ``min_freq``
+      test waived; they must still hold on the validation view(s).
 
 
 .. _ModalityOrdering:

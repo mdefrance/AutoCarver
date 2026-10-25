@@ -1,9 +1,12 @@
 Statistics
 ==========
 
-The statistical primitives shared by :doc:`combinations`, :doc:`selectors` and
-:doc:`stability`. Every carver, selector and monitoring metric routes its
-arithmetic through this module, so a formula stated here is the one that runs.
+The statistical primitives behind the carvers' combination search, the selectors'
+qualitative and Kruskal measures, and the ``min_freq`` Wilson test: a formula stated
+here is the one those paths run. Monitoring metrics (PSI, the homogeneity
+:math:`\chi^2`, drift tests) live in :mod:`AutoCarver.stability.metrics`, and the
+target rates (WoE, odds ratio, ridit and CA scores) in the :doc:`combinations`
+modules.
 
 .. _stats_chi2:
 
