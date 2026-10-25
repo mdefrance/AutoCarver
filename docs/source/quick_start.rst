@@ -2,6 +2,23 @@ Quick Start
 ===========
 
 
+Runnable example
+----------------
+
+The whole workflow on the Titanic dataset: declare the features, carve them on a train
+sample while a dev sample checks robustness, inspect the result, save and reload. This
+snippet is executed by the test suite (``tests/examples/test_quick_start.py``) and is
+the same as the one in the README.
+
+.. literalinclude:: examples/quick_start.py
+   :language: python
+   :start-after: # --8<-- [start:quick_start]
+   :end-before: # --8<-- [end:quick_start]
+   :dedent:
+
+The sections below walk through each step with placeholders, to adapt to your own data.
+
+
 Setting things up
 -----------------
 
@@ -75,12 +92,12 @@ Fitting AutoCarver
     # intiating AutoCarver
     binary_carver = BinaryCarver(
         features=features,
-        min_freq=0.02,  # minimum frequency per modality
-        max_n_mod=5,  # maximum number of modality per Carved feature (mandatory)
+        min_freq=0.02,  # minimum frequency per modality (default 0.02)
+        max_n_mod=5,  # maximum number of modalities per carved feature (default 5)
     )
 
     # fitting on training sample, a dev sample can be specified to evaluate carving robustness
-    x_discretized = binary_carver.fit_transform(train_set, train_set[target], X_dev=dev_set, y_dev=dev_set[target])
+    train_set_discretized = binary_carver.fit_transform(train_set, train_set[target], X_dev=dev_set, y_dev=dev_set[target])
 
 .. note::
 
@@ -130,18 +147,19 @@ Applying AutoCarver
 
     # transforming dev/test sample accordingly
     dev_set_discretized = binary_carver.transform(dev_set)
-    test_set_discretized = binary_carver.transform(tes_set)
+    test_set_discretized = binary_carver.transform(test_set)
 
 
 
 Saving AutoCarver
 ^^^^^^^^^^^^^^^^^
 
-All **Carvers** can safely be serialized as a ``.json`` file.
+All **Carvers** can safely be serialized as a ``.json`` file, given as a ``str`` or a
+:class:`pathlib.Path`.
 
 .. code-block:: python
 
-    binary_carver.save('my_carver.json')
+    binary_carver.save("my_carver.json")
 
 
 Loading AutoCarver
@@ -153,7 +171,7 @@ Loading AutoCarver
 
     from AutoCarver import BinaryCarver
 
-    binary_carver = BinaryCarver.load('my_carver.json')
+    binary_carver = BinaryCarver.load("my_carver.json")
 
 
 
@@ -180,9 +198,10 @@ Feature Selection
     for the carvers. Every feature is scored exactly (no sampling), yet selection
     stays fast through vectorized, all-columns-at-once measures.
 
-    ``n_best_features`` is a **total** budget, apportioned across the feature
-    types in proportion to how many of each were passed; leave it out to apply
-    no cap at all — the measures' thresholds and the redundancy filters still
-    apply. Measures and filters are swapped through a ``SelectionConfig``, per
+    ``n_best_features`` is a **total** budget, split **evenly** across the feature
+    types; seats a type cannot fill go to the other (100 seats over 400 qualitative
+    and 100 quantitative features gives 50/50; with only 25 quantitative features it
+    gives 25/75). Leave it out to apply no cap at all — the measures' thresholds and
+    the redundancy filters still apply. Measures and filters are swapped through a ``SelectionConfig``, per
     feature type — see :ref:`Selectors`.
 

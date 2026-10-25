@@ -70,3 +70,26 @@ To enable HTML outputs (nice colorful tables within jupyter), use the following:
         .. code-block:: bash
 
             pip install "autocarver[jupyter]"
+
+Distance correlation
+--------------------
+
+:class:`DistanceMeasure` computes its distance correlation with the
+`dcor <https://dcor.readthedocs.io>`_ package, which pulls in numba. To use it, install
+the ``dcor`` extra:
+
+.. tab-set::
+
+    .. tab-item:: uv
+        :sync: uv
+
+        .. code-block:: bash
+
+            uv add "autocarver[dcor]"
+
+    .. tab-item:: pip
+        :sync: pip
+
+        .. code-block:: bash
+
+            pip install "autocarver[dcor]"

@@ -6,15 +6,17 @@ scalar per-feature implementations are the reference, and the batched kernels in
 tie, single-modality and multiclass edge cases.
 """
 
+from importlib.util import find_spec
 from types import SimpleNamespace
 
 import numpy as np
 import pandas as pd
-from pytest import approx, fixture
+from pytest import approx, fixture, mark
 
 from AutoCarver.selectors.measures import (
     Chi2Measure,
     CramervMeasure,
+    DistanceMeasure,
     KruskalEpsilonSquaredMeasure,
     KruskalEtaSquaredMeasure,
     KruskalMeasure,
@@ -126,6 +128,11 @@ def test_spearman_parity(quant_block, y_continuous):
 
 def test_pearson_parity(quant_block, y_continuous):
     _assert_parity(PearsonMeasure, quant_block, y_continuous)
+
+
+@mark.skipif(find_spec("dcor") is None, reason="dcor extra not installed")
+def test_distance_parity(quant_block, y_continuous):
+    _assert_parity(DistanceMeasure, quant_block, y_continuous)
 
 
 def test_correlation_parity_degenerate_columns():

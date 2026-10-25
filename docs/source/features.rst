@@ -23,7 +23,9 @@ Auditing and adjusting carved bins
 Carving is transparent: inspect what was decided, then override it if domain
 knowledge says otherwise. Every manual edit below is applied by ``transform``
 exactly like a carved bin, and per-bin statistics are kept consistent: merged
-bins get exactly aggregated counts and rates, while bins whose content can no
+bins get exactly aggregated counts and target rates (``odds_ratio`` and ``woe`` are
+pooled through their probability; a ``target_median`` cannot be pooled and shows
+``NaN``; the continuous ``std`` is approximate), while bins whose content can no
 longer be derived from the fit (after a move or split) show ``NaN`` until refit.
 
 .. code-block:: python

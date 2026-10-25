@@ -11,7 +11,7 @@
 [![Python](https://img.shields.io/pypi/pyversions/autocarver)](https://pypi.org/project/AutoCarver/)
 [![License](https://img.shields.io/github/license/mdefrance/autocarver)](LICENSE)
 [![SPEC 0](https://img.shields.io/badge/SPEC-0-green?labelColor=%23004811&color=%235CA038)](https://scientific-python.org/specs/spec-0000/)
-[![Docs](https://readthedocs.org/projects/autocarver/badge/?version=latest)](https://autocarver.readthedocs.io/en/latest/)
+[![Docs](https://readthedocs.org/projects/autocarver/badge/?version=stable)](https://autocarver.readthedocs.io/en/stable/)
 [![Tests](https://github.com/mdefrance/AutoCarver/actions/workflows/pytest.yml/badge.svg)](https://github.com/mdefrance/AutoCarver/actions/workflows/pytest.yml)
 [![Coverage](https://codecov.io/gh/mdefrance/AutoCarver/branch/main/graph/badge.svg)](https://codecov.io/gh/mdefrance/AutoCarver)
 
@@ -24,9 +24,9 @@
 </p>
 
 
-**AutoCarver** turns raw numeric, categorical, and ordinal columns into optimal, drift-robust, human-readable bins in a few lines of code. Stop losing model performance to suboptimal manual binning — and stop discovering overfit bins in production monitoring.
+**AutoCarver** turns raw numeric, categorical, and ordinal columns into supervised, drift-robust, human-readable bins in a few lines of code. Stop losing model performance to suboptimal manual binning — and stop discovering overfit bins in production monitoring.
 
-- **Provably optimal** — exhaustive search: for a fixed `min_freq`, `max_n_mod` and metric (Tschuprow's T by default, or Cramér's V), no other admissible bin combination scores higher. It checked them all so you don't have to.
+- **Searched, not eyeballed** — a dynamic-programming search ranks the candidate groupings by Tschuprow's T (default) or Cramér's V, for your `min_freq` and `max_n_mod`.
 - **Robust by construction** — every candidate grouping is vetoed unless it holds on a held-out dev set (and optional CV folds), at `fit` time rather than in monitoring.
 - **Define → carve → model** — declare your `Features`, `fit` a carver, `transform`: the whole feature set is carved in one supervised pass, not one notebook per feature. One carver per target type — `BinaryCarver`, `MulticlassCarver`, `OrdinalCarver`, `ContinuousCarver` (regression) — all with the identical API.
 - **AI-assisted** — a local MCP server lets your LLM assistant qualify and carve columns through tool calls, fully on your machine.
@@ -43,9 +43,9 @@ held-out robustness views on top of (or instead of) a dev set:
 `carver.fit(X, y, cv=5)`. Accepts an int, any scikit-learn splitter, or
 explicit index pairs, resolved via `sklearn.model_selection.check_cv` — folds
 veto over-fit combinations but never reorder them (ranks stay anchored to the
-full train set). See [Cross-validation folds](https://autocarver.readthedocs.io/en/latest/viability.html#cross-validation-folds).
+full train set). See [Cross-validation folds](https://autocarver.readthedocs.io/en/stable/viability.html#cross-validation-folds).
 
-**🤖 LLM & MCP integration.** AutoCarver now ships a local [Model Context Protocol](https://modelcontextprotocol.io) server: point an MCP-aware assistant (VS Code Copilot, Claude Desktop, Cursor, …) at a data file and let it *qualify* the columns and *carve* them against your target through tool calls. The server runs **fully on your machine** — your dataset is never sent to AutoCarver or any external service (only your own LLM provider sees what the assistant shares). Carving quality depends on the LLM, so have a human confirm the feature definitions before production use. See the [LLM & MCP guide](https://autocarver.readthedocs.io/en/latest/mcp.html).
+**🤖 LLM & MCP integration.** AutoCarver now ships a local [Model Context Protocol](https://modelcontextprotocol.io) server: point an MCP-aware assistant (VS Code Copilot, Claude Desktop, Cursor, …) at a data file and let it *qualify* the columns and *carve* them against your target through tool calls. The server runs **fully on your machine** — your dataset is never sent to AutoCarver or any external service (only your own LLM provider sees what the assistant shares). Carving quality depends on the LLM, so have a human confirm the feature definitions before production use. See the [LLM & MCP guide](https://autocarver.readthedocs.io/en/stable/mcp.html).
 
 ```bash
 pip install "autocarver[mcp]"
@@ -161,7 +161,7 @@ For multiclass classification use `MulticlassCarver` (one binning per feature, a
 
 Two questions worth answering before your next model review: can you defend every bin boundary of your current model to a stakeholder — and can you show each one holds on data it has never seen? AutoCarver makes both a one-liner:
 
-- **No performance left on the table** — exhaustive search over admissible bin combinations maximizes Tschuprow's T (default) or Cramér's V: for fixed `min_freq`, `max_n_mod` and metric, no other combination scores higher, so you never wonder whether a better grouping existed.
+- **The best grouping, not the first acceptable one** — candidate groupings are ranked by Tschuprow's T (default) or Cramér's V, and the highest-ranked one that holds on the dev set is kept, so you don't stop at the first grouping that looks fine.
 - **Stop silent overfitting before production** — bins that only exist in your training sample degrade quietly under drift. Every candidate combination is validated on a dev set (and optional CV folds): any whose target rates flip or whose buckets fall below `min_freq` is rejected at fit time, not discovered in monitoring.
 - **First-class ordinal features** — `OrdinalDiscretizer` enforces your declared modality order, so under-represented levels are merged with their nearest neighbour instead of being collapsed by frequency.
 - **You are the final auditor** — `carver.features.summary` and `carver.features.history` expose the bin definitions, per-bin target rate / frequency, and the full carving trace; disagree with a boundary and you can override it, and `transform` applies your fix like any carved bin:
@@ -188,16 +188,16 @@ Two questions worth answering before your next model review: can you defend ever
 
 |                                                   | **Manual binning**                                  | **AutoCarver**                                                     | [**optbinning**](https://github.com/guillermo-navas-palencia/optbinning) | [**sklearn KBinsDiscretizer**](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.KBinsDiscretizer.html) |
 | ------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
-| Algorithm                                         | eyeballing distributions, notebook by notebook       | **exhaustive search** over admissible combinations                 | CART pre-binning, then CP solver (CP-SAT default; MIP optional)          | quantile / uniform / k-means — unsupervised                                     |
-| Optimality for given `min_freq` / `max_n_mod` / metric | none — first acceptable grouping wins           | **guaranteed — best of every admissible combination**              | provably optimal over its pre-bins, under its constraints                | n/a — no target objective                                                       |
+| Algorithm                                         | eyeballing distributions, notebook by notebook       | **dynamic-programming search** over ordered groupings              | CART pre-binning, then CP solver (CP-SAT default; MIP optional)          | quantile / uniform / k-means — unsupervised                                     |
+| Grouping kept for given `min_freq` / `max_n_mod` / metric | none — first acceptable grouping wins           | **best viable grouping among the top-ranked candidates**           | best merge of its CART pre-bins found within a solver time limit      | n/a — no target objective                                                       |
 | Target types                                      | any, at ~1 feature/hour                              | **binary, multiclass, ordinal, continuous**                        | binary, multiclass, continuous                                           | n/a                                                                             |
 | All feature types in one `fit` (numeric, categorical, ordinal, `NaN`) | each feature is its own project | **yes — declared ordinal order enforced, `NaN` as its own modality** | yes via `BinningProcess`; no first-class ordinal type (`user_splits` workaround) | numeric only; `NaN` raises                                                      |
 | Held-out dev-set robustness check                 | rarely — too tedious to script per feature           | **yes — dev set + optional k-fold CV, built into `fit`**           | no (script CV yourself)                                                  | no                                                                              |
 | Per-bin stats + carving history after `fit`       | scattered notebook cells                             | **`carver.summary`, `carver.history`**                             | `binning_table`                                                          | no                                                                              |
 
-All three libraries are sklearn-`Pipeline` compatible; AutoCarver adds JSON round-trip persistence (`carver.save("...json")`) and feature pre-selection helpers (`ClassificationSelector`, `RegressionSelector`). The full feature matrix, side-by-side runnable snippets, and a "when to pick which" guide live on the [comparison page](https://autocarver.readthedocs.io/en/latest/comparison.html).
+All three libraries are sklearn-`Pipeline` compatible; AutoCarver adds JSON round-trip persistence (`carver.save("...json")`). AutoCarver (`ClassificationSelector`, `RegressionSelector`) and optbinning (`BinningProcess(selection_criteria=...)`) both offer feature pre-selection. The full feature matrix, side-by-side runnable snippets, and a "when to pick which" guide live on the [comparison page](https://autocarver.readthedocs.io/en/stable/comparison.html).
 
 
 ## Documentation
 
-Full reference, tutorials, and end-to-end notebook examples on [ReadTheDocs](https://autocarver.readthedocs.io/en/latest/index.html).
+Full reference, tutorials, and end-to-end notebook examples on [ReadTheDocs](https://autocarver.readthedocs.io/en/stable/index.html).

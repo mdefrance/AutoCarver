@@ -1,6 +1,6 @@
 [project]
 name = "AutoCarver"
-version = "7.8.1"
+version = "7.8.2"
 description = "Automatic Discretization of Features with Optimal Target Association"
 authors = [{ name = "Mario DEFRANCE", email = "defrancemario@gmail.com" }]
 requires-python = ">=3.11, <3.15"
@@ -66,6 +66,9 @@ jupyter = [
 mcp = [
     "fastmcp>=3.4.2",
     "pyarrow>=24.0.0",
+]
+dcor = [
+    "dcor>=0.7,<1",
 ]
 [dependency-groups]
 compare = [

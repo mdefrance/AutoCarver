@@ -6,7 +6,7 @@ Selectors
 **AutoCarver** implements **Selectors**, they provide the following, association-centric, Data Selection steps: 
 
    1. Measuring association with a target and ranking features accordingly.
-   2. Filtering out features too asociated to a better ranked feature.
+   2. Filtering out features too associated to a better ranked feature.
 
 It allows one to select features:
 
@@ -49,8 +49,8 @@ call per feature.
 
     from AutoCarver.selectors import ClassificationSelector
 
-    # 25 features in total, split across types proportionally to how many of each
-    # were passed; omit n_best_features altogether to apply no cap (the measures'
+    # 25 features in total, split evenly across types (seats a type cannot fill go to
+    # the other); omit n_best_features altogether to apply no cap (the measures'
     # thresholds and the redundancy filters still apply)
     selector = ClassificationSelector(features=features, n_best_features=25)
     selector.fit(X, y)  # or selector.fit_transform(X, y) to keep only selected features in X
@@ -123,6 +123,8 @@ Quantitative measures
 .....................
 
 
+.. _pearson:
+
 Pearson's :math:`r`
 ^^^^^^^^^^^^^^^^^^^
 
@@ -188,26 +190,42 @@ Distance Correlation
 ^^^^^^^^^^^^^^^^^^^^
 
 
-For two **quantitative** features :math:`x` and :math:`y`, the Distance Correlation can be computed using the following formula:
+For a **quantitative** feature :math:`x` and a **quantitative** target :math:`y` with :math:`n` paired observations,
+distance correlation (Székely, Rizzo and Bakirov, 2007) measures any kind of dependence, linear or not.
+It starts from the pairwise distance matrices :math:`a_{ij} = |x^i - x^j|` and :math:`b_{ij} = |y^i - y^j|`,
+double-centred:
 
 .. math::
 
-    1 - \frac{ (x - \bar{x}) (y - \bar{y}) } { ||x - \bar{x}||_2 ||y - \bar{y}||_2  }
+    A_{ij} = a_{ij} - \bar{a}_{i\cdot} - \bar{a}_{\cdot j} + \bar{a}_{\cdot\cdot},
+    \qquad
+    B_{ij} = b_{ij} - \bar{b}_{i\cdot} - \bar{b}_{\cdot j} + \bar{b}_{\cdot\cdot}
 
+where :math:`\bar{a}_{i\cdot}`, :math:`\bar{a}_{\cdot j}` and :math:`\bar{a}_{\cdot\cdot}` are the row, column and
+grand means of :math:`a` (same for :math:`b`). The squared distance covariance and the distance correlation are
 
-where:
+.. math::
 
- * :math:`n_x` is the number of observations of :math:`x`
- * :math:`n_y` is the number of observations of :math:`y`
- * :math:`\bar{y}=\sum_{i=1}^{n_y}{y_{i}}` is the sample mean of :math:`y`
- * :math:`\bar{x}=\sum_{i=1}^{n_x}{x_{i}}` is the sample mean of :math:`x`
- * :math:`||x - \bar{x}||_2 = \sqrt{ \sum_{i=1}^{n_x}{  (x_i - \bar{x})^2 } }` is the euclidean norm of :math:`x`
- * :math:`||y - \bar{y}||_2 = \sqrt{ \sum_{i=1}^{n_x}{  (y_i - \bar{y})^2 } }` is the euclidean norm of :math:`y`
+    \text{dCov}^2(x, y) = \frac{1}{n^2}\sum_{i=1}^{n}\sum_{j=1}^{n}{A_{ij} B_{ij}},
+    \qquad
+    \text{dCor}(x, y) = \sqrt{\frac{\text{dCov}^2(x, y)}{\sqrt{\text{dCov}^2(x, x)\,\text{dCov}^2(y, y)}}}
 
+with :math:`\text{dCor}(x, y) = 0` when :math:`x` or :math:`y` is constant.
 
+ * :math:`\text{dCor}` lies in :math:`[0, 1]`; it is :math:`1` for an affine relation :math:`y = a x + b`.
+ * Its population value is :math:`0` if and only if :math:`x` and :math:`y` are independent, so unlike
+   :ref:`Pearson's r <pearson>` it detects non-linear dependence (for :math:`y = x^2` with a symmetric
+   :math:`x`, :math:`r \approx 0` while :math:`\text{dCor} \approx 0.5`).
+ * It is computed on every non-missing row, exactly, with the
+   `dcor <https://dcor.readthedocs.io>`_ package's :math:`O(n \log n)` algorithm for one-dimensional samples
+   (about 3 seconds for a million rows), instead of the :math:`O(n^2)` distance matrices above. The first
+   call loads ``dcor`` and compiles its numba kernels, which takes several seconds.
+ * ``dcor`` is an optional dependency: install it with ``pip install "autocarver[dcor]"``
+   (see :doc:`installation`).
 
-
-The Distance Correlation is computed using `scipy.spatial.distance.correlation <https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.correlation.html>`_.
+References: G. J. Székely, M. L. Rizzo, N. K. Bakirov, "Measuring and testing dependence by correlation of
+distances", *Annals of Statistics* 35(6), 2007; X. Huo, G. J. Székely, "Fast computing for distance covariance",
+*Technometrics* 58(4), 2016.
 
 
 

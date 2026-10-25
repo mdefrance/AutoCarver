@@ -93,6 +93,20 @@ def test_rescue_rare_no_validation_view_skipped_with_warning():
     assert [f.name for f in carver.dropped_features] == ["feature"]
 
 
+def test_rescue_rare_default_no_validation_view_does_not_warn():
+    """Default config (rescue_rare unset, on for carvers) without X_dev/cv -> no rescue warning."""
+    import warnings
+
+    X, y = _dominant_column(3000, 1000, 0.2, 0.9)
+    carver = BinaryCarver(min_freq=0.05, max_n_mod=4, features=Features(categoricals=["feature"]))
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        carver.fit(X, y)
+
+    assert carver.config.rescue_rare is True
+    assert not [w for w in caught if "rescue_rare" in str(w.message)]
+
+
 def test_rescue_rare_cv_only_kept():
     """rescue_rare=True with cv=3 (no X_dev) -> informative rare modality KEPT."""
     X, y = _dominant_column(3000, 180, 0.2, 0.9)
