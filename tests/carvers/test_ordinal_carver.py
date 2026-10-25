@@ -156,7 +156,7 @@ def test_ordinal_carver_save_load_keeps_target_scale(tmp_path, target_scale):
     assert loaded_rate.__name__ == "target_mean_level"
     expected_level_values = target_scale if isinstance(target_scale, dict) else None
     assert loaded_rate.level_values == expected_level_values
-    assert loaded_carver.config.y_level_scores == carver.config.y_level_scores
+    assert loaded_carver.config["y_level_scores"] == carver.config["y_level_scores"]
     loaded_carver.evaluate_stability(X, y)
 
 
@@ -170,8 +170,8 @@ def test_ordinal_carver_save_load_keeps_ridit_scores(tmp_path):
     loaded_carver = OrdinalCarver.load(tmp_path / "ordinal_carver.json")
 
     assert isinstance(loaded_carver.combination_evaluator.target_rate, TargetMeanRidit)
-    assert carver.config.y_level_scores is not None
-    assert loaded_carver.config.y_level_scores == carver.config.y_level_scores
+    assert carver.config["y_level_scores"] is not None
+    assert loaded_carver.config["y_level_scores"] == carver.config["y_level_scores"]
 
 
 # ---------------------------------------------------------------------------

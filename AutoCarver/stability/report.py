@@ -143,7 +143,7 @@ def evaluate_stability(
     rate_name = target_rate.__name__
 
     # carvers configured with copy=False transform in place; never mutate the caller's sample
-    X_carved = carver.transform(X if carver.config.copy else X.copy())
+    X_carved = carver.transform(X if carver.config["copy"] else X.copy())
 
     xaggs = _aggregate(carver, X_carved, y) if y is not None else {}
 

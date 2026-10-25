@@ -77,7 +77,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
                 sample.y,  # type: ignore
                 min_freq=self.min_freq,
                 labels=[label for label in feature.labels if label != feature.nan],
-                alpha=self.config.min_freq_alpha,
+                alpha=self.config["min_freq_alpha"],
             )
             for feature in self.features
         }

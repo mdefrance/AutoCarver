@@ -657,7 +657,7 @@ class CombinationEvaluator(ABC, Generic[XAgg]):
         warn(
             f"[{self.__name__}] no robust combination found in the top "
             f"{self.dp_top_k_initial} candidates for {self.feature}; escalation "
-            f"disabled (config.dp_escalate=False)",
+            f"disabled (dp_escalate=False in the config)",
             UserWarning,
             stacklevel=2,
         )

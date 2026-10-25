@@ -1,13 +1,9 @@
-"""Tool to build optimized buckets out of Quantitative and Qualitative features
-for any task.
-"""
-
 import json
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 from functools import partial
 from multiprocessing import Pool
 from pathlib import Path
@@ -32,7 +28,7 @@ from AutoCarver.combinations import (
     TschuprowtMulticlassCombinations,
 )
 from AutoCarver.discretizers import BaseDiscretizer, Discretizer, Sample
-from AutoCarver.discretizers.utils.base_discretizer import ProcessingConfig
+from AutoCarver.discretizers.utils.base_discretizer import ProcessingConfig, ResolvedProcessingConfig
 from AutoCarver.features import BaseFeature, Features, get_versions
 from AutoCarver.features.features import per_modality_columns
 from AutoCarver.features.qualitatives import CategoricalFeature, NestedFeature, OrdinalFeature
@@ -243,7 +239,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         ----------
         min_freq : float
             Minimum frequency per modality. Tested via a Wilson upper bound at
-            significance :attr:`ProcessingConfig.min_freq_alpha` (see
+            significance ``config["min_freq_alpha"]`` (see
             :ref:`MinFreqViability`).
 
             * Features need at least one modality with frequency significantly
@@ -312,7 +308,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         super().__init__(deepcopy(features), min_freq=min_freq, config=config)
 
         self.max_n_mod = max_n_mod
-        combination_evaluator.verbose = self.config.verbose
+        combination_evaluator.verbose = self.config["verbose"]
         self.combination_evaluator: CombinationEvaluator = combination_evaluator
 
         # features dropped by the carver because no robust combination was found.
@@ -334,7 +330,7 @@ class BaseCarver(BaseDiscretizer, ABC):
     @property
     def pretty_print(self) -> bool:
         """Returns the pretty_print attribute"""
-        return self.config.verbose and _has_idisplay
+        return self.config["verbose"] and _has_idisplay
 
     def to_json(self, light_mode: bool = False) -> dict:
         content = super().to_json(light_mode)
@@ -411,7 +407,7 @@ class BaseCarver(BaseDiscretizer, ABC):
             Target for ``X``. Without it only the frequency-based metrics
             (PSI, chi-square goodness-of-fit) are computed, by default ``None``.
         alpha : float, optional
-            Significance level, defaults to :attr:`ProcessingConfig.min_freq_alpha`.
+            Significance level, defaults to ``config["min_freq_alpha"]``.
 
         Returns
         -------
@@ -420,7 +416,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         # imported here: AutoCarver.stability imports carver internals
         from AutoCarver.stability import evaluate_stability
 
-        return evaluate_stability(self, X, y, alpha=self.config.min_freq_alpha if alpha is None else alpha)
+        return evaluate_stability(self, X, y, alpha=self.config["min_freq_alpha"] if alpha is None else alpha)
 
     def _prepare_samples(self, samples: Samples) -> Samples:
         """Validates format and content of X and y."""
@@ -535,7 +531,7 @@ class BaseCarver(BaseDiscretizer, ABC):
 
         # rescue needs a validation view; without one it is silently skipped downstream
         # (only worth a warning when the user asked for rescue, not for the carver default)
-        if self.config.rescue_rare and self._rescue_rare_is_explicit and X_dev is None and not cv:
+        if self.config["rescue_rare"] and self._rescue_rare_is_explicit and X_dev is None and not cv:
             warn(
                 f"[{self.__name__}] rescue_rare=True has no effect without X_dev or cv "
                 "(a validation view is required to test rescued combinations).",
@@ -557,7 +553,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         all_features = self.features.versions
 
         # carving each feature (parallel across features when n_jobs > 1)
-        if self.config.n_jobs > 1 and len(all_features) > 1:
+        if self.config["n_jobs"] > 1 and len(all_features) > 1:
             self._carve_features_parallel(all_features, xaggs, xaggs_dev, xaggs_folds)
         else:
             # progress bar only in verbose mode: tqdm.auto renders a widget in notebooks, so
@@ -566,7 +562,7 @@ class BaseCarver(BaseDiscretizer, ABC):
                 all_features,
                 desc=f"[{self.__name__}] Carving",
                 unit="feature",
-                disable=not self.config.verbose,
+                disable=not self.config["verbose"],
             )
             for n, feature in enumerate(progress):
                 num_iter = f"{n + 1}/{len(all_features)}"  # logging iteration number
@@ -595,12 +591,12 @@ class BaseCarver(BaseDiscretizer, ABC):
         """
         feature_list = list(self.features)
         check_is_fitted(self)
-        if self.config.n_jobs <= 1 or len(feature_list) <= 1 or not _discretizable_in_chunks(self.features):
+        if self.config["n_jobs"] <= 1 or len(feature_list) <= 1 or not _discretizable_in_chunks(self.features):
             return super().transform(X, y)
 
-        n_chunks = min(self.config.n_jobs, len(feature_list))
+        n_chunks = min(self.config["n_jobs"], len(feature_list))
         chunks = [feature_list[i::n_chunks] for i in range(n_chunks)]
-        chunk_config = replace(self.config, n_jobs=1, copy=True)
+        chunk_config: ProcessingConfig = {**self.config, "n_jobs": 1, "copy": True}
         payloads = [(chunk, X[get_versions(chunk)], chunk_config) for chunk in chunks]
 
         with Pool(processes=n_chunks) as pool:
@@ -655,8 +651,8 @@ class BaseCarver(BaseDiscretizer, ABC):
         xagg_dev / fold slices (not the full dicts). Verbose per-feature logging
         is silenced; a single banner is printed when verbose is on.
         """
-        if self.config.verbose:
-            print(f"--- [{self.__name__}] Carving {len(all_features)} features on {self.config.n_jobs} workers")
+        if self.config["verbose"]:
+            print(f"--- [{self.__name__}] Carving {len(all_features)} features on {self.config['n_jobs']} workers")
 
         payloads = [
             (self.features(version), xaggs[version], xaggs_dev[version], self._folds_for_feature(xaggs_folds, version))
@@ -667,19 +663,19 @@ class BaseCarver(BaseDiscretizer, ABC):
             evaluator=self.combination_evaluator,
             max_n_mod=self.max_n_mod,
             min_freq=self.min_freq,
-            dropna=bool(self.config.dropna),
-            min_freq_alpha=self.config.min_freq_alpha,
-            rescue=bool(self.config.rescue_rare),
-            dp_escalate=self.config.dp_escalate,
+            dropna=bool(self.config["dropna"]),
+            min_freq_alpha=self.config["min_freq_alpha"],
+            rescue=bool(self.config["rescue_rare"]),
+            dp_escalate=self.config["dp_escalate"],
         )
 
-        with Pool(processes=self.config.n_jobs) as pool:
+        with Pool(processes=self.config["n_jobs"]) as pool:
             results = tqdm(
                 pool.imap_unordered(worker, payloads),
                 total=len(payloads),
                 desc=f"[{self.__name__}] Carving",
                 unit="feature",
-                disable=not self.config.verbose,
+                disable=not self.config["verbose"],
             )
             for updated_feature, viable in results:
                 if viable:
@@ -705,7 +701,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         """Carves a feature into buckets that maximize association with the target"""
 
         # verbose if requested
-        if self.config.verbose:
+        if self.config["verbose"]:
             print(f"--- [{self.__name__}] Fit {feature} ({num_iter})")
 
         # getting xtabs on train/test
@@ -722,11 +718,11 @@ class BaseCarver(BaseDiscretizer, ABC):
             xagg_dev,
             max_n_mod=self.max_n_mod,
             min_freq=self.min_freq,
-            dropna=bool(self.config.dropna),
-            min_freq_alpha=self.config.min_freq_alpha,
+            dropna=bool(self.config["dropna"]),
+            min_freq_alpha=self.config["min_freq_alpha"],
             folds_xagg=self._folds_for_feature(xaggs_folds, feature.version),
-            rescue=bool(self.config.rescue_rare),
-            dp_escalate=self.config.dp_escalate,
+            rescue=bool(self.config["rescue_rare"]),
+            dp_escalate=self.config["dp_escalate"],
         )
 
         # printing carved distribution, for found, suitable combination
@@ -764,7 +760,7 @@ class BaseCarver(BaseDiscretizer, ABC):
         if message == "Raw distribution" and xagg is not None:
             self._fit_rate_reference(xagg)
 
-        if self.config.verbose:
+        if self.config["verbose"]:
             print(f" [{self.__name__}] {message}")
 
             formatted_xagg, formatted_xagg_dev = self._format_xagg(feature, xagg, xagg_dev)
@@ -868,7 +864,7 @@ class BaseCarver(BaseDiscretizer, ABC):
             n_jobs=config_data.get("n_jobs", 1),
             copy=config_data.get("copy", True),
             rescue_rare=config_data.get("rescue_rare"),  # None → carver default
-            min_freq_alpha=config_data.get("min_freq_alpha", ProcessingConfig.min_freq_alpha),
+            min_freq_alpha=config_data.get("min_freq_alpha", 0.05),
             dp_escalate=config_data.get("dp_escalate", False),
             y_level_scores=(
                 None if config_data.get("y_level_scores") is None else dict(map(tuple, config_data["y_level_scores"]))
@@ -995,7 +991,7 @@ def discretize(
     features: Features,
     samples: Samples,
     discretizer_min_freq: float,
-    config: ProcessingConfig,
+    config: ResolvedProcessingConfig,
 ) -> Samples:
     """Discretizes X and X_dev according to the frequency of each feature's modalities.
 
@@ -1007,10 +1003,10 @@ def discretize(
 
     # always copying, to keep discretization from start to finish; workers run fully serial
     # (n_jobs=1) so they never spawn nested pools.
-    chunk_config = replace(config, dropna=False, copy=True, ordinal_encoding=False, n_jobs=1)
+    chunk_config: ProcessingConfig = {**config, "dropna": False, "copy": True, "ordinal_encoding": False, "n_jobs": 1}
 
     feature_list = list(features)
-    if config.n_jobs <= 1 or len(feature_list) <= 1 or not _discretizable_in_chunks(features):
+    if config["n_jobs"] <= 1 or len(feature_list) <= 1 or not _discretizable_in_chunks(features):
         # serial path (and fallback for feature sets that aren't independently chunkable)
         discretizer = Discretizer(features=features, min_freq=discretizer_min_freq, config=chunk_config)
         samples.train.X = discretizer.fit_transform(**samples.train)
@@ -1022,8 +1018,8 @@ def discretize(
     # (high-cardinality categoricals cost far more than numerics), so finer chunks let an idle worker
     # pick up the next task instead of stalling while one worker grinds a heavy chunk — measured ~9%
     # faster than one-chunk-per-worker. Total column pickling is unchanged (each column ships once).
-    n_workers = min(config.n_jobs, len(feature_list))
-    n_chunks = min(config.n_jobs * 4, len(feature_list))
+    n_workers = min(config["n_jobs"], len(feature_list))
+    n_chunks = min(config["n_jobs"] * 4, len(feature_list))
     chunks = [feature_list[i::n_chunks] for i in range(n_chunks)]
     has_dev = samples.dev.has_X
 
@@ -1043,7 +1039,7 @@ def discretize(
         results = list(pool.imap_unordered(_discretize_chunk_worker, payloads))
 
     # copy before merging so we never mutate the caller's frame in place — the serial path returns
-    # a fresh (discretizer-copied) frame regardless of ``config.copy``, so we match that here.
+    # a fresh (discretizer-copied) frame regardless of ``config["copy"]``, so we match that here.
     samples.train.X = samples.train.X.copy()
     if has_dev:
         samples.dev.X = samples.dev.X.copy()

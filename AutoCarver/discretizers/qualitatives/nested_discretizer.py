@@ -7,7 +7,6 @@ remains. The result is a single output column (the finest one) where all modalit
 sufficient number of observations — improving downstream model robustness.
 """
 
-from dataclasses import replace
 from typing import Self
 from warnings import warn
 
@@ -28,7 +27,7 @@ class NestedDiscretizer(BaseDiscretizer):
     """Automatic discretization of nested qualitative features.
 
     For each :class:`NestedFeature`, modalities of the finest (output) column whose frequency
-    is significantly below ``min_freq`` (Wilson upper bound at ``config.min_freq_alpha``) are
+    is significantly below ``min_freq`` (Wilson upper bound at ``config["min_freq_alpha"]``) are
     rolled up to the coarser modality they are nested within — derived from the data. This
     repeats level by level until all surviving modalities are frequent enough or the coarsest
     level is reached, collapsing every nested column into the single output column.
@@ -53,7 +52,7 @@ class NestedDiscretizer(BaseDiscretizer):
         # nested discretization never drops nans (handled by the fillna/unfillna machinery)
         if config is None:
             config = ProcessingConfig()
-        config = replace(config, dropna=False)
+        config = {**config, "dropna": False}
 
         super().__init__(nesteds, min_freq=min_freq, config=config)
 
@@ -79,7 +78,7 @@ class NestedDiscretizer(BaseDiscretizer):
             )
 
         # converting non-str output columns
-        sample.X = ensure_qualitative_dtypes(self.features, sample.X, config=self.config)
+        sample.X = ensure_qualitative_dtypes(self.features, sample.X, config={**self.config})
 
         # converting non-str parent columns (they are not Features themselves)
         sample.X = self._ensure_parent_dtypes(sample.X)
@@ -97,7 +96,7 @@ class NestedDiscretizer(BaseDiscretizer):
         parent_columns = self._parent_columns
         if len(parent_columns) > 0:
             parent_features = Features(categoricals=parent_columns)
-            X = ensure_qualitative_dtypes(parent_features, X, config=self.config)
+            X = ensure_qualitative_dtypes(parent_features, X, config={**self.config})
         return X
 
     @extend_docstring(BaseDiscretizer.fit)
@@ -125,7 +124,7 @@ class NestedDiscretizer(BaseDiscretizer):
 
         super().fit(X, y)
 
-        if self.config.verbose:  # verbose if requested
+        if self.config["verbose"]:  # verbose if requested
             print("\n")
 
         return self
@@ -161,7 +160,7 @@ class NestedDiscretizer(BaseDiscretizer):
         """
         # working columns finest-to-coarsest: the (possibly versioned) output column + parents
         level_columns = [feature.version] + feature.parents
-        alpha = self.config.min_freq_alpha
+        alpha = self.config["min_freq_alpha"]
 
         # parent maps between consecutive levels, derived (and validated) from data
         parent_maps = [
@@ -233,8 +232,8 @@ class NestedDiscretizer(BaseDiscretizer):
     def _target_sort(self, X: pd.DataFrame, y: pd.Series) -> None:
         """Sorts each feature's buckets by target rate (mirrors CategoricalDiscretizer)."""
         # scoring y levels when a scale was resolved (e.g. train ridits from OrdinalCarver)
-        if self.config.y_level_scores is not None:
-            y = map_y_level_scores(y, self.config.y_level_scores, self.__name__)
+        if self.config["y_level_scores"] is not None:
+            y = map_y_level_scores(y, self.config["y_level_scores"], self.__name__)
         target_rates = X[self.features.versions].apply(series_target_rate, y=y, axis=0)
         self.features.update(
             {feature: list(sorted_values) for feature, sorted_values in target_rates.items()},
@@ -249,7 +248,7 @@ def check_frequencies(
 
     A feature fails when its mode is significantly below ``min_freq`` (no common modality),
     or when all its other values together are (a too common mode). ``alpha`` is
-    :attr:`ProcessingConfig.min_freq_alpha`.
+    ``config["min_freq_alpha"]``.
     """
 
     # computing features' max modality count (mode count), NaN counted as a value

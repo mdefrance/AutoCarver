@@ -1,8 +1,3 @@
-"""Tools to build simple buckets out of Quantitative and Qualitative features
-for a binary classification model.
-"""
-
-from dataclasses import replace
 from typing import Self
 
 import pandas as pd
@@ -60,12 +55,12 @@ class QualitativeDiscretizer(BaseDiscretizer):
                 sample.X,
                 self.min_freq,
                 self.__name__,
-                alpha=self.config.min_freq_alpha,
-                rescue_rare=bool(self.config.rescue_rare),
+                alpha=self.config["min_freq_alpha"],
+                rescue_rare=bool(self.config["rescue_rare"]),
             )
 
         # converting non-str columns
-        sample.X = ensure_qualitative_dtypes(self.features, sample.X, config=self.config)
+        sample.X = ensure_qualitative_dtypes(self.features, sample.X, config={**self.config})
 
         return sample
 
@@ -92,7 +87,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
         # discretizing features based on each feature's values_order
         super().fit(**sample)
 
-        if self.config.verbose:  # verbose if requested
+        if self.config["verbose"]:  # verbose if requested
             print("------\n")
 
         return self
@@ -106,7 +101,7 @@ class QualitativeDiscretizer(BaseDiscretizer):
         if len(discretized_features) > 0:
             base_discretizer = BaseDiscretizer(
                 features=discretized_features,
-                config=replace(self.config, copy=True, dropna=False),
+                config={**self.config, "copy": True, "dropna": False},
             )
             X = base_discretizer.fit_transform(X, y)
 

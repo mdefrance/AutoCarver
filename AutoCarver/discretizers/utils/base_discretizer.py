@@ -1,14 +1,9 @@
-"""Base tools to build simple buckets out of Quantitative and Qualitative features
-for a binary classification model.
-"""
-
 import json
 from abc import ABC
 from collections.abc import Iterable
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import Self
+from typing import Self, TypedDict
 
 import numpy as np
 import pandas as pd
@@ -16,12 +11,20 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
 from AutoCarver.features import BaseFeature, Features, NestedFeature
-from AutoCarver.utils import extend_docstring
+from AutoCarver.utils import check_config_keys, extend_docstring
 
 
-@dataclass
-class ProcessingConfig:
+class ProcessingConfig(TypedDict, total=False):
     """Behavioral configuration applied to a :class:`BaseDiscretizer`.
+
+    A typed dictionary: pass a plain ``dict`` or call the class, both give the same
+    value and every key is optional (unset keys take their default)::
+
+        BinaryCarver(features, config={"n_jobs": 4, "min_freq_alpha": 0.01})
+        BinaryCarver(features, config=ProcessingConfig(n_jobs=4, min_freq_alpha=0.01))
+
+    Fitted objects store the resolved configuration, every key set, and read it
+    as ``carver.config["n_jobs"]``. Unknown keys raise a ``TypeError``.
 
     Carries cross-cutting toggles that propagate unchanged to sub-discretizers.
     Pure domain values (``min_freq``, ``combinations`` …) remain explicit
@@ -74,15 +77,62 @@ class ProcessingConfig:
     (default) stops at the initial batch and warns on that first fail.
     """
 
-    copy: bool = True
-    ordinal_encoding: bool | None = None
-    dropna: bool | None = None
-    verbose: bool = False
-    n_jobs: int = 1
-    min_freq_alpha: float = 0.05
-    y_level_scores: dict | None = None
-    rescue_rare: bool | None = None
-    dp_escalate: bool = False
+    copy: bool
+    ordinal_encoding: bool | None
+    dropna: bool | None
+    verbose: bool
+    n_jobs: int
+    min_freq_alpha: float
+    y_level_scores: dict | None
+    rescue_rare: bool | None
+    dp_escalate: bool
+
+
+class ResolvedProcessingConfig(TypedDict):
+    """A :class:`ProcessingConfig` with every key set, as stored by discretizers and carvers."""
+
+    copy: bool
+    ordinal_encoding: bool
+    dropna: bool
+    verbose: bool
+    n_jobs: int
+    min_freq_alpha: float
+    y_level_scores: dict | None
+    rescue_rare: bool
+    dp_escalate: bool
+
+
+def resolve_processing_config(
+    config: ProcessingConfig | None, *, dropna: bool, ordinal_encoding: bool, rescue_rare: bool
+) -> ResolvedProcessingConfig:
+    """Fills every unset key of ``config`` with its default.
+
+    ``dropna``, ``ordinal_encoding`` and ``rescue_rare`` are the context defaults used
+    when the key is missing or ``None`` (discretizers pass ``False``, carvers ``True``).
+
+    Raises
+    ------
+    TypeError
+        When ``config`` holds a key :class:`ProcessingConfig` does not define.
+    """
+    config = ProcessingConfig() if config is None else config
+    check_config_keys(config, ProcessingConfig, "ProcessingConfig")
+    given_dropna, given_encoding, given_rescue = (
+        config.get("dropna"),
+        config.get("ordinal_encoding"),
+        config.get("rescue_rare"),
+    )
+    return ResolvedProcessingConfig(
+        copy=config.get("copy", True),
+        ordinal_encoding=ordinal_encoding if given_encoding is None else given_encoding,
+        dropna=dropna if given_dropna is None else given_dropna,
+        verbose=config.get("verbose", False),
+        n_jobs=config.get("n_jobs", 1),
+        min_freq_alpha=config.get("min_freq_alpha", 0.05),
+        y_level_scores=config.get("y_level_scores"),
+        rescue_rare=rescue_rare if given_rescue is None else given_rescue,
+        dp_escalate=config.get("dp_escalate", False),
+    )
 
 
 # Backward-compatible alias: this config was historically named ``DiscretizerConfig`` but is
@@ -195,7 +245,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         min_freq : float
             Minimum frequency per modality. Tested via a Wilson upper bound at
-            significance :attr:`ProcessingConfig.min_freq_alpha` (see
+            significance ``config["min_freq_alpha"]`` (see
             :ref:`MinFreqViability`).
 
             * Features need at least one modality with frequency significantly
@@ -221,19 +271,16 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         else:
             self.features = Features.from_list(features)
 
-        config = config if config is not None else ProcessingConfig()
         # whether the user set rescue_rare themselves (the default-on carver case must not warn)
-        self._rescue_rare_is_explicit = config.rescue_rare is not None
+        self._rescue_rare_is_explicit = config is not None and config.get("rescue_rare") is not None
         # resolve context-dependent toggles: ``None`` means "use the context
         # default" (False here, overridden to True by BaseCarver) so a partial
         # config doesn't silently flip the unset fields.
-        self.config: ProcessingConfig = replace(
+        self.config: ResolvedProcessingConfig = resolve_processing_config(
             config,
-            dropna=self._default_dropna if config.dropna is None else config.dropna,
-            ordinal_encoding=(
-                self._default_ordinal_encoding if config.ordinal_encoding is None else config.ordinal_encoding
-            ),
-            rescue_rare=self._default_rescue_rare if config.rescue_rare is None else config.rescue_rare,
+            dropna=self._default_dropna,
+            ordinal_encoding=self._default_ordinal_encoding,
+            rescue_rare=self._default_rescue_rare,
         )
         self._min_freq = min_freq
 
@@ -322,7 +369,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
         # copying X
         x_copy = X
-        if self.config.copy:
+        if self.config["copy"]:
             x_copy = X.copy()
 
         # checking for input columns by feature name
@@ -399,7 +446,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         """
         if len(features) == 0:
             return
-        discretizer_cls(features, min_freq=self.min_freq, config=replace(self.config, copy=False), **kwargs).fit(X, y)
+        discretizer_cls(features, min_freq=self.min_freq, config={**self.config, "copy": False}, **kwargs).fit(X, y)
 
     def _prepare_sample_and_fit(self, sample: Sample) -> Sample:
         """``BaseDiscretizer._prepare_sample`` + fitting features against it + filling up their nans.
@@ -450,7 +497,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             raise RuntimeError(f"[{self.__name__}] Features not fitted: {str(missing_features)}.")
 
         # setting features in ordinal encoding mode
-        self.features.ordinal_encoding = bool(self.config.ordinal_encoding)
+        self.features.ordinal_encoding = bool(self.config["ordinal_encoding"])
 
         # setting fitted as True to raise alerts
         self.is_fitted = True
@@ -514,13 +561,13 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         # so threads overlap the columns with zero pickling — unlike a process pool, whose per-column
         # ship-and-return costs more than the compute (measured). ``n_jobs`` gates the width and stays
         # 1 inside the carver's discretize workers, which keep the no-copy serial path below.
-        if self.config.n_jobs > 1 and len(quantitatives) > 1:
+        if self.config["n_jobs"] > 1 and len(quantitatives) > 1:
             # threaded: hand each thread its own column copy (pandas 2.x has no copy-on-write) so the
             # in-place nan-masking never races on the shared frame.
             def _one(feature: BaseFeature) -> tuple[str, np.ndarray]:
                 return transform_quantitative_feature(feature, sample.X[feature.version].copy(), x_len)
 
-            with ThreadPoolExecutor(max_workers=self.config.n_jobs) as executor:
+            with ThreadPoolExecutor(max_workers=self.config["n_jobs"]) as executor:
                 transformed = list(executor.map(_one, quantitatives))
         else:
             transformed = [
@@ -569,7 +616,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
     def _log_if_verbose(self, prefix: str = " -") -> None:
         """prints logs if requested"""
-        if self.config.verbose:
+        if self.config["verbose"]:
             print(f"{prefix} [{self.__name__}] Fit {str(self.features)}")
 
     def to_json(self, light_mode: bool = False) -> dict:
@@ -592,21 +639,21 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
             "min_freq": self._min_freq,
             "is_fitted": self.is_fitted,
             "config": {
-                "dropna": self.config.dropna,
-                "n_jobs": self.config.n_jobs,
-                "verbose": self.config.verbose,
-                "ordinal_encoding": self.config.ordinal_encoding,
-                "copy": self.config.copy,
-                "min_freq_alpha": self.config.min_freq_alpha,
-                "rescue_rare": self.config.rescue_rare,
-                "dp_escalate": self.config.dp_escalate,
+                "dropna": self.config["dropna"],
+                "n_jobs": self.config["n_jobs"],
+                "verbose": self.config["verbose"],
+                "ordinal_encoding": self.config["ordinal_encoding"],
+                "copy": self.config["copy"],
+                "min_freq_alpha": self.config["min_freq_alpha"],
+                "rescue_rare": self.config["rescue_rare"],
+                "dp_escalate": self.config["dp_escalate"],
                 # list of pairs: JSON would stringify int keys; levels may be numpy scalars
                 "y_level_scores": (
                     None
-                    if self.config.y_level_scores is None
+                    if self.config["y_level_scores"] is None
                     else [
                         [level.item() if hasattr(level, "item") else level, float(score)]
-                        for level, score in self.config.y_level_scores.items()
+                        for level, score in self.config["y_level_scores"].items()
                     ]
                 ),
             },

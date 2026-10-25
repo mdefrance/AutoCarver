@@ -1,14 +1,13 @@
-"""Generate the AutoCarver hero chart (raw vs carved ``Age`` on Titanic).
+"""Generate the AutoCarver hero chart (raw vs carved ``age`` on the Adult census data).
 
-Two-panel figure: left is the raw ``Age`` feature — a noisy per-value
-survival rate across dozens of distinct ages; right is the same feature
-after ``BinaryCarver`` — a handful of auditable buckets with a clearly
-monotonic survival rate. Used as the README hero image below the pipeline
-animation, the article's key figure, and the LinkedIn post image.
+Two-panel figure: left is the raw ``age`` feature, a noisy per-value share of
+incomes above 50K across dozens of distinct ages; right is the same feature
+after ``BinaryCarver`` with Cramér's V (``CramervCombinations``), a handful of
+auditable buckets that keep the rise-then-fall shape of income with age, checked
+on a dev sample. Used as the README and docs hero image and the social card.
 
-Note: the quick-start's Titanic CSV has no missing values in any column
-(verified — this mirror is already cleaned), so this chart does not depict
-a NaN bucket.
+Cramér's V is used because the default Tschuprow's T keeps only 2 buckets here
+(young vs the rest): its per-group penalty favours one dominant split.
 
 Writes to ``docs/source/_static/``:
 
@@ -18,11 +17,10 @@ Writes to ``docs/source/_static/``:
 
 Usage::
 
-    uv run python docs/build_hero_chart.py [--data path/to/titanic.csv]
+    uv run python docs/build_hero_chart.py [--data path/to/adult.csv]
 
-Without ``--data``, downloads the quick-start Titanic CSV and caches it to
-``docs/source/_static/.titanic_cache.csv`` (gitignored via ``*.csv``) so
-reruns and README rendering never depend on the network.
+Without ``--data``, loads the Adult data with ``sklearn.datasets.fetch_openml``
+("adult", version 2), which downloads once and then reads scikit-learn's cache.
 """
 
 import argparse
@@ -32,16 +30,15 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
 
 from AutoCarver import BinaryCarver, Features
-from AutoCarver.discretizers.utils.base_discretizer import ProcessingConfig
+from AutoCarver.combinations import CramervCombinations
 
 STATIC = Path(__file__).resolve().parent / "source" / "_static"
-CACHE = STATIC / ".titanic_cache.csv"
-TITANIC_URL = "https://web.stanford.edu/class/archive/cs/cs109/cs109.1166/stuff/titanic.csv"
-TARGET = "Survived"
-FEATURE = "Age"
+TARGET = "income_above_50k"
+FEATURE = "age"
 
 # same palette as docs/build_logo.py; GOLD is reserved for the "decision" accent
 NAVY = "#2E3A59"
@@ -59,31 +56,25 @@ SOCIAL_W, SOCIAL_H = 1200, 630
 
 
 def load_data(data_path: str | None) -> pd.DataFrame:
-    """Reads Titanic data from ``--data``, else the cache, else the quick-start URL."""
-    if data_path is not None:
-        return pd.read_csv(data_path)
-    if CACHE.exists():
-        return pd.read_csv(CACHE)
-    data = pd.read_csv(TITANIC_URL)
-    STATIC.mkdir(parents=True, exist_ok=True)
-    data.to_csv(CACHE, index=False)
+    """Reads the Adult data from ``--data``, else through ``fetch_openml`` (cached by scikit-learn)."""
+    data = pd.read_csv(data_path) if data_path is not None else fetch_openml("adult", version=2, as_frame=True).frame
+    data[TARGET] = (data["class"] == ">50K").astype(int)
     return data
 
 
 def fit_carver(data: pd.DataFrame) -> BinaryCarver:
     train, dev = train_test_split(data, test_size=0.33, random_state=42, stratify=data[TARGET])
-    features = Features(
-        categoricals=["Sex"],
-        numericals=["Age", "Fare", "Siblings/Spouses Aboard", "Parents/Children Aboard"],
-        ordinals={"Pclass": ["1", "2", "3"]},
+    carver = BinaryCarver(
+        features=Features(numericals=[FEATURE]),
+        combination_evaluator=CramervCombinations(),
+        config={"ordinal_encoding": False},
     )
-    carver = BinaryCarver(features=features, config=ProcessingConfig(ordinal_encoding=False))
     carver.fit(train, train[TARGET], X_dev=dev, y_dev=dev[TARGET])
     return carver, train
 
 
 def raw_age_stats(train: pd.DataFrame) -> dict:
-    """Per-bin count + survival rate for a ~30-bin raw Age histogram."""
+    """Per-bin count + share of incomes above 50K for a ~30-bin raw age histogram."""
     ages, targets = train[FEATURE].to_numpy(), train[TARGET].to_numpy()
 
     counts, edges = np.histogram(ages, bins=N_RAW_BINS)
@@ -103,15 +94,29 @@ def raw_age_stats(train: pd.DataFrame) -> dict:
 
 
 def carved_age_stats(carver: BinaryCarver) -> dict:
-    """Per-bucket label, frequency, and survival rate, in carving order."""
+    """Per-bucket label, frequency, and share of incomes above 50K, in carving order."""
     labels = carver.features(FEATURE).labels
     summary = carver.summary.reset_index()
     summary = summary[summary["feature"] == str(carver.features(FEATURE))].set_index("label").loc[labels]
     return {
-        "labels": labels,
+        "labels": _age_ranges(list(carver.features(FEATURE).values)),
         "frequency": summary["frequency"].to_numpy(),
         "rate": summary["target_mean"].to_numpy(),
     }
+
+
+def _age_ranges(upper_bounds: list[float]) -> list[str]:
+    """Readable whole-year ranges from the carved upper bounds, e.g. [27, 31, inf] -> ≤ 27, 28–31, 32+."""
+    labels, lower = [], None
+    for upper in upper_bounds:
+        if lower is None:
+            labels.append(f"≤ {int(upper)}")
+        elif upper == float("inf"):
+            labels.append(f"{int(lower) + 1}+")
+        else:
+            labels.append(f"{int(lower) + 1}–{int(upper)}")
+        lower = upper
+    return labels
 
 
 def _wrap(label: str) -> str:
@@ -126,19 +131,19 @@ def draw(raw: dict, carved: dict, palette: dict, *, figsize: tuple[float, float]
 
     # --- left: raw ---
     ax_raw.bar(raw["centers"], raw["counts"], width=np.diff(raw["edges"]), color=RAW_BAR, edgecolor=ink, linewidth=0.3)
-    ax_raw.set_title("Raw Age — noisy target signal across every distinct value", color=ink, fontsize=11)
+    ax_raw.set_title("Raw age: noisy target signal across every distinct value", color=ink, fontsize=11)
     ax_raw.set_xlabel("Age", color=ink)
-    ax_raw.set_ylabel("Passengers", color=ink)
+    ax_raw.set_ylabel("People", color=ink)
     rate_ax_raw = ax_raw.twinx()
     rate_ax_raw.plot(raw["centers"], raw["rate"], color=GOLD, linewidth=1, marker="o", markersize=3)
     rate_ax_raw.set_ylim(0, rate_max)
-    rate_ax_raw.set_ylabel("Survival rate", color=ink)
+    rate_ax_raw.set_ylabel("Income above 50K", color=ink)
 
     # --- right: carved ---
     x = np.arange(len(carved["labels"]))
     ax_carved.bar(x, carved["frequency"], color=palette["carved_bar"], edgecolor=ink, linewidth=0.3)
     ax_carved.set_title(
-        f"Carved — {len(carved['labels'])} auditable buckets, monotonic survival rate", color=ink, fontsize=11
+        f"Carved with Cramér's V: {len(carved['labels'])} buckets, income rises then falls", color=ink, fontsize=11
     )
     ax_carved.set_xticks(x)
     ax_carved.set_xticklabels([_wrap(label) for label in carved["labels"]], fontsize=7.5, color=ink)
@@ -146,7 +151,7 @@ def draw(raw: dict, carved: dict, palette: dict, *, figsize: tuple[float, float]
     rate_ax_carved = ax_carved.twinx()
     rate_ax_carved.plot(x, carved["rate"], color=GOLD, linewidth=0, marker="o", markersize=6, zorder=3)
     rate_ax_carved.set_ylim(0, rate_max)
-    rate_ax_carved.set_ylabel("Survival rate", color=ink)
+    rate_ax_carved.set_ylabel("Income above 50K", color=ink)
 
     for ax in (ax_raw, ax_carved):
         ax.tick_params(colors=ink, labelsize=8)
@@ -166,7 +171,7 @@ def draw(raw: dict, carved: dict, palette: dict, *, figsize: tuple[float, float]
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--data", default=None, help="local Titanic CSV path (default: download + cache)")
+    parser.add_argument("--data", default=None, help="local Adult CSV path (default: fetch_openml, cached)")
     args = parser.parse_args()
 
     plt.rcParams["svg.hashsalt"] = "autocarver"

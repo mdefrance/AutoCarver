@@ -43,6 +43,22 @@ Behavioral toggles shared by every discretizer and carver. All flags are optiona
 and propagate unchanged to sub-discretizers; domain parameters such as ``min_freq``
 remain explicit constructor arguments.
 
+``ProcessingConfig`` is a typed dictionary: pass a plain ``dict`` or call the class,
+and leave out any key to keep its default. Editors autocomplete the keys and type
+checkers flag unknown ones; at runtime an unknown key raises a ``TypeError``. A fitted
+object stores the resolved configuration, every key set:
+
+.. code-block:: python
+
+    carver = BinaryCarver(features, config={"n_jobs": 4, "min_freq_alpha": 0.01})
+    carver = BinaryCarver(features, config=ProcessingConfig(n_jobs=4, min_freq_alpha=0.01))  # same
+    carver.config["n_jobs"]  # 4
+
+.. versionchanged:: 8.0.0
+    ``ProcessingConfig``, ``SelectionConfig`` and ``FeaturesConfig`` were dataclasses.
+    Calling them still works, but a stored configuration is now read as
+    ``carver.config["n_jobs"]`` instead of ``carver.config.n_jobs``.
+
 .. autoclass:: AutoCarver.discretizers.ProcessingConfig
 
 * ``copy`` (``bool``, default ``True``) — copy input ``X`` rather than mutating it.

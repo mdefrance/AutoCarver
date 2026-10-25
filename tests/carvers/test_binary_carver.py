@@ -97,7 +97,7 @@ def test_binary_carver_initialization():
     assert carver.half_min_freq == 0.05
     assert carver.features.versions == features.versions
     assert carver.features is not features  # carver works on its own copy
-    assert carver.config.dropna is True
+    assert carver.config["dropna"] is True
 
 
 def test_binary_carver_fit_does_not_mutate_input_features():
@@ -988,9 +988,9 @@ def test_binary_carver_save_load(tmp_path: Path, evaluator: CombinationEvaluator
     for feature in carver.features:
         assert feature in loaded_carver.features
         assert feature.content == loaded_carver.features[feature.name].content
-    assert carver.config.dropna == loaded_carver.config.dropna
-    assert carver.config.verbose == loaded_carver.config.verbose
-    assert carver.config.copy == loaded_carver.config.copy
+    assert carver.config["dropna"] == loaded_carver.config["dropna"]
+    assert carver.config["verbose"] == loaded_carver.config["verbose"]
+    assert carver.config["copy"] == loaded_carver.config["copy"]
     assert carver.combination_evaluator.__class__ == loaded_carver.combination_evaluator.__class__
     assert carver.max_n_mod == loaded_carver.max_n_mod
     assert carver.combination_evaluator.sort_by == loaded_carver.combination_evaluator.sort_by
@@ -1038,9 +1038,9 @@ def test_binary_carver_save_load_keeps_config(tmp_path: Path):
     carver.save(tmp_path / "c.json")
     loaded_carver = BinaryCarver.load(tmp_path / "c.json")
 
-    assert loaded_carver.config.min_freq_alpha == 0.01
-    assert loaded_carver.config.dp_escalate is True
-    assert loaded_carver.config.rescue_rare is False
+    assert loaded_carver.config["min_freq_alpha"] == 0.01
+    assert loaded_carver.config["dp_escalate"] is True
+    assert loaded_carver.config["rescue_rare"] is False
 
 
 def test_binary_carver_load_file_without_new_config_keys(tmp_path: Path):
@@ -1060,9 +1060,9 @@ def test_binary_carver_load_file_without_new_config_keys(tmp_path: Path):
     carver_file.write_text(json.dumps(data), encoding="utf-8")
     loaded_carver = BinaryCarver.load(carver_file)
 
-    assert loaded_carver.config.dp_escalate is False
-    assert loaded_carver.config.y_level_scores is None
-    assert loaded_carver.config.min_freq_alpha == ProcessingConfig.min_freq_alpha
+    assert loaded_carver.config["dp_escalate"] is False
+    assert loaded_carver.config["y_level_scores"] is None
+    assert loaded_carver.config["min_freq_alpha"] == 0.05  # the default
     pd.testing.assert_frame_equal(carver.transform(X), loaded_carver.transform(X))
 
 

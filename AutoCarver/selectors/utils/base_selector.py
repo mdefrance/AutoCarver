@@ -16,8 +16,7 @@ chunk sampling.
 
 from abc import ABC
 from collections.abc import Callable, Iterable
-from dataclasses import dataclass
-from typing import Self, TypeVar
+from typing import Self, TypedDict, TypeVar
 from warnings import warn
 
 import numpy as np
@@ -29,11 +28,17 @@ from AutoCarver.features import BaseFeature, Features, get_versions
 from AutoCarver.selectors.filters import BaseFilter, NonDefaultValidFilter, ValidFilter
 from AutoCarver.selectors.measures import BaseMeasure, ModeMeasure, NanMeasure
 from AutoCarver.selectors.utils.pretty_print import format_ranked_features
+from AutoCarver.utils import check_config_keys
 
 
-@dataclass
-class SelectionConfig:
+class SelectionConfig(TypedDict, total=False):
     """Behavioral configuration applied to a :class:`BaseSelector`.
+
+    A typed dictionary: pass a plain ``dict`` or call the class, and leave out any key
+    to keep its default, e.g.
+    ``ClassificationSelector(features, 25, config={"qualitative_filters": [TschuprowtFilter(0.5)]})``.
+    The selector stores the dictionary as given (read it with
+    ``selector.config.get("verbose", False)``). Unknown keys raise a ``TypeError``.
 
     Measures and filters are declared **per feature type** so the routing is
     explicit: a qualitative-only measure can no longer silently leave the
@@ -49,11 +54,11 @@ class SelectionConfig:
     :meth:`BaseSelector.fit`.
     """
 
-    qualitative_measures: list[BaseMeasure] | None = None
-    quantitative_measures: list[BaseMeasure] | None = None
-    qualitative_filters: list[BaseFilter] | None = None
-    quantitative_filters: list[BaseFilter] | None = None
-    verbose: bool = False
+    qualitative_measures: list[BaseMeasure] | None
+    quantitative_measures: list[BaseMeasure] | None
+    qualitative_filters: list[BaseFilter] | None
+    quantitative_filters: list[BaseFilter] | None
+    verbose: bool
 
 
 class BaseSelector(BaseEstimator, TransformerMixin, ABC):
@@ -106,16 +111,17 @@ class BaseSelector(BaseEstimator, TransformerMixin, ABC):
         if n_best_features is not None and int(n_best_features) <= 0:
             raise ValueError(f"[{self}] n_best_features must be > 0, or None for no selection")
 
-        self.config = config if config is not None else SelectionConfig()
+        self.config: SelectionConfig = SelectionConfig() if config is None else {**config}
+        check_config_keys(self.config, SelectionConfig, "SelectionConfig")
 
         # per-type measures/filters, keyed like get_typed_features
         self.measures: dict[str, list[BaseMeasure]] = {
-            "qualitatives": self._resolve_measures(self.config.qualitative_measures, "qualitatives"),
-            "quantitatives": self._resolve_measures(self.config.quantitative_measures, "quantitatives"),
+            "qualitatives": self._resolve_measures(self.config.get("qualitative_measures"), "qualitatives"),
+            "quantitatives": self._resolve_measures(self.config.get("quantitative_measures"), "quantitatives"),
         }
         self.filters: dict[str, list[BaseFilter]] = {
-            "qualitatives": self._resolve_filters(self.config.qualitative_filters, "qualitatives"),
-            "quantitatives": self._resolve_filters(self.config.quantitative_filters, "quantitatives"),
+            "qualitatives": self._resolve_filters(self.config.get("qualitative_filters"), "qualitatives"),
+            "quantitatives": self._resolve_filters(self.config.get("quantitative_filters"), "quantitatives"),
         }
 
         # fit state
@@ -316,7 +322,7 @@ class BaseSelector(BaseEstimator, TransformerMixin, ABC):
         self._selected = best_features
         self.is_fitted = True
 
-        if self.config.verbose:
+        if self.config.get("verbose", False):
             self._print_report(typed)
         return self
 
@@ -351,7 +357,7 @@ class BaseSelector(BaseEstimator, TransformerMixin, ABC):
         return self._select_features(features, X, y, self.measures[kind], self.filters[kind], budget[kind])
 
     def _print_report(self, typed: dict[str, list[BaseFeature]]) -> None:
-        """Prints per-type selection counts (``config.verbose``)."""
+        """Prints per-type selection counts (``config["verbose"]``)."""
         selected = {feature.version for feature in self._selected}
         for kind, features in typed.items():
             if len(features) > 0:

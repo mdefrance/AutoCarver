@@ -6,7 +6,9 @@ Selectors
 **AutoCarver** implements **Selectors**, they provide the following, association-centric, Data Selection steps: 
 
    1. Measuring association with a target and ranking features accordingly.
-   2. Filtering out features too associated to a better ranked feature.
+   2. Filtering out features too associated to a better ranked feature. By default only
+      near-duplicates are dropped (``TschuprowtFilter(0.9)``, ``SpearmanFilter(0.95)``);
+      pass lower thresholds to filter more.
 
 It allows one to select features:
 
@@ -74,17 +76,18 @@ left unset falls back to the task-appropriate default for that type.
 .. code-block:: python
 
     from AutoCarver.selectors import (
-        ClassificationSelector, SelectionConfig,
+        ClassificationSelector,
         TschuprowtMeasure, KruskalMeasure, CramervFilter, SpearmanFilter,
     )
 
-    config = SelectionConfig(
-        qualitative_measures=[TschuprowtMeasure(threshold=0.001)],
-        quantitative_measures=[KruskalMeasure(threshold=1)],
-        qualitative_filters=[CramervFilter(threshold=0.7)],
-        quantitative_filters=[SpearmanFilter(threshold=0.9)],
-        verbose=True,  # prints how many features were kept, per type
-    )
+    # a SelectionConfig is a typed dictionary: leave out any key to keep its default
+    config = {
+        "qualitative_measures": [TschuprowtMeasure(threshold=0.001)],
+        "quantitative_measures": [KruskalMeasure(threshold=1)],
+        "qualitative_filters": [CramervFilter(threshold=0.7)],
+        "quantitative_filters": [SpearmanFilter(threshold=0.9)],
+        "verbose": True,  # prints how many features were kept, per type
+    }
     selector = ClassificationSelector(features, n_best_features=50, config=config)
 
 .. _ClassificationSelector:

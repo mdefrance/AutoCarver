@@ -77,7 +77,11 @@ def bergsma_phi2(chi2: float, n_obs: float, n_rows: float, n_cols: float) -> tup
     """
     if n_obs <= 1 or math.isnan(chi2):
         return float("nan"), float("nan"), float("nan")
-    phi2 = max(0.0, chi2 / n_obs - (n_rows - 1) * (n_cols - 1) / (n_obs - 1))
+    phi2 = chi2 / n_obs - (n_rows - 1) * (n_cols - 1) / (n_obs - 1)
+    # a difference at float-noise level is no association: without this, the square root in V/T
+    # turns 1e-16 rounding gaps between two chi² computations into 1e-8 differences
+    if phi2 <= 1e-12 * max(1.0, chi2 / n_obs):
+        phi2 = 0.0
     rows = n_rows - (n_rows - 1) ** 2 / (n_obs - 1)
     cols = n_cols - (n_cols - 1) ** 2 / (n_obs - 1)
     return phi2, rows, cols

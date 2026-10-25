@@ -86,7 +86,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
         ``feature.default``.
 
         A modality is grouped when the Wilson upper bound of its observed
-        proportion (at significance level ``config.min_freq_alpha``) is below
+        proportion (at significance level ``config["min_freq_alpha"]``) is below
         ``min_freq`` — i.e. its frequency is significantly below the target.
         Callers that want a "tolerant" half-of-min_freq behaviour (e.g. the
         carvers) are responsible for halving ``min_freq`` before instantiating
@@ -94,7 +94,7 @@ class CategoricalDiscretizer(BaseDiscretizer):
         """
 
         nobs = len(X)
-        alpha = self.config.min_freq_alpha
+        alpha = self.config["min_freq_alpha"]
 
         # checking for rare values (CI-based: significantly below min_freq)
         values_to_group = [
@@ -138,12 +138,12 @@ class CategoricalDiscretizer(BaseDiscretizer):
         ordered instead by correspondence-analysis first-axis score (the
         chi²-optimal 1-D embedding) — see :func:`series_ca_order`. Binary
         (0/1) and ordinal (integer-level) targets keep the mean-target-rate order,
-        over ``config.y_level_scores`` when a per-level scale was resolved (e.g.
+        over ``config["y_level_scores"]`` when a per-level scale was resolved (e.g.
         train ridits from :class:`~AutoCarver.carvers.ordinal_carver.OrdinalCarver`).
         """
         # scoring y levels when a scale was resolved (mapped y is numeric → mean branch)
-        if self.config.y_level_scores is not None:
-            y = map_y_level_scores(y, self.config.y_level_scores, self.__name__)
+        if self.config["y_level_scores"] is not None:
+            y = map_y_level_scores(y, self.config["y_level_scores"], self.__name__)
         sorter = series_target_rate if pd.api.types.is_numeric_dtype(y) else series_ca_order
 
         # computing target rate (or CA score) per modality for ordering
@@ -167,7 +167,7 @@ def map_y_level_scores(y: pd.Series, scores: dict, name: str) -> pd.Series:
     unmapped = mapped.isna() & y.notna()
     if unmapped.any():
         missing = sorted(set(y[unmapped]))
-        raise ValueError(f"[{name}] y levels {missing} are missing from config.y_level_scores")
+        raise ValueError(f"[{name}] y levels {missing} are missing from config['y_level_scores']")
     return mapped
 
 

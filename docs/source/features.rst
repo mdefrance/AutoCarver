@@ -68,8 +68,9 @@ FeaturesConfig
 Collection-level state propagated to every feature in a :class:`Features`. Internal
 feature attributes (``nan``, ``default``, ``ordinal_encoding``, ``has_nan``,
 ``has_default``, ``dropna``, ``is_fitted``) are not part of the public
-:class:`BaseFeature` constructor — set them via :class:`FeaturesConfig` and pass
-the instance to :class:`Features` or :meth:`Features.from_list`.
+:class:`BaseFeature` constructor — set them via :class:`FeaturesConfig`, a typed
+dictionary (``config={"default": "__OTHER__"}`` or ``FeaturesConfig(default="__OTHER__")``),
+and pass it to :class:`Features` or :meth:`Features.from_list`.
 
 .. autoclass:: AutoCarver.features.FeaturesConfig
 

@@ -128,7 +128,7 @@ class OrdinalCarver(BaseCarver):
         # of truth: pre-sort and viability can never disagree) before super() discretizes
         target_rate = self.combination_evaluator.target_rate
         if isinstance(target_rate, TargetMeanRidit):
-            self.config.y_level_scores = ridits_from_counts(samples.train.y.value_counts())
+            self.config["y_level_scores"] = ridits_from_counts(samples.train.y.value_counts())
         elif isinstance(target_rate, TargetMeanLevel) and target_rate.level_values is not None:
             uncovered = [level for level in y_values if level not in target_rate.level_values]
             if len(uncovered) > 0:
@@ -136,7 +136,7 @@ class OrdinalCarver(BaseCarver):
                     f"[{self.__name__}] observed y levels {uncovered} are missing from "
                     "target_scale; provide a value for every train level."
                 )
-            self.config.y_level_scores = dict(target_rate.level_values)
+            self.config["y_level_scores"] = dict(target_rate.level_values)
 
         return super()._prepare_samples(samples)
 
@@ -146,7 +146,7 @@ class OrdinalCarver(BaseCarver):
 
         Threaded across features when ``n_jobs > 1`` (pd.crosstab emits one column per ordinal
         level, sorted ascending — correct ordinal column order)."""
-        return parallel_aggregate(get_crosstab, self.features, X, y, self.config.n_jobs)
+        return parallel_aggregate(get_crosstab, self.features, X, y, self.config["n_jobs"])
 
     def _fit_rate_reference(self, xagg: pd.Series | pd.DataFrame) -> None:
         """Fits the ridit reference from the raw train crosstab before the pre-combination

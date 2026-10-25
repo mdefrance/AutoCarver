@@ -167,3 +167,15 @@ def test_evaluator_rejects_non_multiclass_target_rate():
 def test_is_y_multiclass_flag():
     assert TschuprowtMulticlassCombinations().is_y_multiclass is True
     assert MulticlassCombinationEvaluator.is_y_multiclass is True
+
+
+def test_bergsma_float_noise_is_no_association():
+    """A chi² a rounding error away from its chance level gives exactly 0, not a 1e-8 square-root artefact."""
+    from AutoCarver.stats import bergsma_phi2
+
+    n_obs, n_rows, n_cols = 5.0, 3, 3
+    chance = (n_rows - 1) * (n_cols - 1) / (n_obs - 1) * n_obs
+    for chi2 in (chance * (1 + 1e-15), chance * (1 + 3e-15)):
+        assert bergsma_phi2(chi2, n_obs, n_rows, n_cols)[0] == 0.0
+        assert _cramerv_tschuprowt(chi2, n_obs, n_rows, n_cols, TOL) == (0.0, 0.0)
+    assert bergsma_phi2(chance * 1.01, n_obs, n_rows, n_cols)[0] > 0.0

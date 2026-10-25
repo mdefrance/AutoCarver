@@ -1,9 +1,4 @@
-"""Tool to build optimized buckets out of Quantitative and Qualitative features
-for multiclass classification tasks.
-"""
-
 from collections.abc import Iterable
-from dataclasses import replace
 from typing import Any, Self, overload
 
 import pandas as pd
@@ -52,7 +47,7 @@ class OneVsRestCarver(BinaryCarver):
         )
 
         # multiclass cannot copy inplace
-        if not self.config.copy:
+        if not self.config["copy"]:
             print("WARNING: can't set copy=False for OneVsRestCarver (no inplace DataFrame.assign).")
 
     def _prepare_samples(self, samples: Samples) -> Samples:
@@ -94,7 +89,7 @@ class OneVsRestCarver(BinaryCarver):
 
         # iterating over each class minus one
         for n, y_class in enumerate(y_classes):
-            if self.config.verbose:
+            if self.config["verbose"]:
                 print(f"\n---------\n[{self.__name__}] Fit y={y_class} ({n + 1}/{len(y_classes)})\n------")
 
             train_y_class = get_one_vs_rest(samples.train.y, y_class)
@@ -112,7 +107,7 @@ class OneVsRestCarver(BinaryCarver):
                 min_freq=self.min_freq,
                 max_n_mod=self.max_n_mod,
                 combination_evaluator=type(self.combination_evaluator)(),
-                config=replace(self.config, copy=True),
+                config={**self.config, "copy": True},
             )
 
             binary_carver.fit_transform(
@@ -136,14 +131,14 @@ class OneVsRestCarver(BinaryCarver):
             kept_features += [feature.version for feature in self.features if feature.version_tag != y_class]
             self.features.keep(kept_features)
 
-            if self.config.verbose:
+            if self.config["verbose"]:
                 print("---------\n")
 
         # re-init BaseDiscretizer state to reflect the final multiclass features,
         # then mark fitted. Preserve combination_evaluator (BaseDiscretizer.__init__
         # resets self.combinations to None).
         combination_evaluator = self.combination_evaluator
-        BaseDiscretizer.__init__(self, features=self.features, min_freq=self.min_freq, config=self.config)
+        BaseDiscretizer.__init__(self, features=self.features, min_freq=self.min_freq, config={**self.config})
         self.combination_evaluator = combination_evaluator
         self.combinations = combination_evaluator
 

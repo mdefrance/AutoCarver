@@ -1,8 +1,3 @@
-"""Tools to build simple buckets out of Quantitative and Qualitative features
-for a binary classification model.
-"""
-
-from dataclasses import replace
 from typing import Self
 
 import pandas as pd
@@ -50,7 +45,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         sample = super()._prepare_sample(sample)
 
         # converting datetime features into numeric (seconds since reference_date)
-        sample.X = ensure_datetime_dtypes(self.features, sample.X, config=self.config)
+        sample.X = ensure_datetime_dtypes(self.features, sample.X, config={**self.config})
 
         # checking for quantitative columns
         check_quantitative_dtypes(sample.X, self.features.versions, self.__name__)
@@ -74,7 +69,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         # discretizing features based on each feature's values_order
         super().fit(X, y)
 
-        if self.config.verbose:  # verbose if requested
+        if self.config["verbose"]:  # verbose if requested
             print("------\n")
 
         return self
@@ -86,7 +81,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         continuous_discretizer = ContinuousDiscretizer(
             quantitatives=self.features.quantitatives,
             min_freq=self.min_freq,
-            config=replace(self.config, copy=True),
+            config={**self.config, "copy": True},
         )
 
         return continuous_discretizer.fit_transform(X, y)
@@ -95,7 +90,7 @@ class QuantitativeDiscretizer(BaseDiscretizer):
         """Fit the OrdinalDiscretizer on the continuous features with rare modalities."""
 
         # rare quantiles can exist because of overrepresented values (more frequent than min_freq)
-        has_rare = check_frequencies(X, self.features, self.min_freq, self.config.min_freq_alpha)
+        has_rare = check_frequencies(X, self.features, self.min_freq, self.config["min_freq_alpha"])
         self._fit_sub_discretizer(OrdinalDiscretizer, has_rare, X, y)
 
 

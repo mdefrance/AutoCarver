@@ -7,6 +7,7 @@ value-range, invariance and ``validate`` contract properties. The scalar
 reproduce it column-by-column.
 """
 
+from importlib.util import find_spec
 from types import SimpleNamespace
 
 import numpy as np
@@ -19,6 +20,7 @@ from strategies import categorical_column, continuous_floats, numerical_column
 from AutoCarver.selectors.measures import (
     Chi2Measure,
     CramervMeasure,
+    DistanceMeasure,
     KruskalEpsilonSquaredMeasure,
     KruskalEtaSquaredMeasure,
     KruskalMeasure,
@@ -110,12 +112,14 @@ def test_kruskal_reversed_parity(data):
 
 
 @given(st.data())
-@settings(max_examples=40)
+# no deadline: the first DistanceMeasure call loads dcor and compiles its numba kernels (seconds)
+@settings(max_examples=40, deadline=None)
 def test_correlation_parity(data):
-    """Pearson/Spearman batch == scalar, quanti x vs continuous y."""
+    """Pearson/Spearman/Distance batch == scalar, quanti x vs continuous y."""
     block = data.draw(quant_block())
     y = pd.Series(data.draw(st.lists(continuous_floats, min_size=block.shape[0], max_size=block.shape[0])))
-    for cls in (PearsonMeasure, SpearmanMeasure):
+    # DistanceMeasure needs the optional dcor package (pip install autocarver[dcor])
+    for cls in (PearsonMeasure, SpearmanMeasure) + ((DistanceMeasure,) if find_spec("dcor") else ()):
         _assert_parity(cls, block, y)
 
 

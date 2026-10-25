@@ -7,7 +7,7 @@ they hold on a held-out dev sample. One API covers binary, multiclass, ordinal a
 continuous targets.
 
 .. image:: _static/hero_chart_light.svg
-   :alt: Titanic Age before and after BinaryCarver: 84 raw values, then 3 buckets with a monotonic survival rate
+   :alt: Adult census age before and after BinaryCarver with Cramér's V: 72 raw ages, then 5 buckets where the share of incomes above 50K rises then falls
    :width: 100%
 
 .. code-block:: bash
@@ -19,7 +19,8 @@ continuous targets.
 ``KBinsDiscretizer``.
 
 * **Searched, not eyeballed** — a dynamic-programming search ranks candidate
-  groupings by Tschuprow's T (default) or Cramér's V (:doc:`combinations`).
+  groupings by Tschuprow's T (default) or Cramér's V, bias-corrected so that extra
+  buckets and small samples don't score by chance (:ref:`stats_bias_correction`).
 * **Robust by construction** — a grouping is kept only if its buckets and target-rate
   order hold on a dev sample or cross-validation folds (:doc:`viability`).
 * **Auditable** — per-bin statistics, the full carving history, and manual edits that
@@ -33,6 +34,7 @@ continuous targets.
    installation
    quick_start
    comparison
+   migration
 
 .. toctree::
    :maxdepth: 1
@@ -54,4 +56,5 @@ continuous targets.
 
    carvers_examples
    selectors_examples
+   discretizers_examples
 

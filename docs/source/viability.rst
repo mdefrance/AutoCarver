@@ -134,7 +134,7 @@ gives :math:`z \approx 1.96`). Reject iff
 * Inside :class:`CombinationEvaluator` viability checks on both **train** and
   **dev** samples for every candidate combination during the search.
 
-**Tuning.** Set via :attr:`ProcessingConfig.min_freq_alpha` (default
+**Tuning.** Set via ``config={"min_freq_alpha": ...}`` (see :ref:`ProcessingConfig`; default
 ``0.05``). Smaller :math:`\alpha` → wider CI → fewer rejections → less merging;
 larger :math:`\alpha` → tighter CI → more rejections → more aggressive merging.
 :math:`\alpha = 1` recovers the legacy strict-threshold behaviour

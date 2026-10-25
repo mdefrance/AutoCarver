@@ -30,10 +30,10 @@ All carvers share the same constructor signature:
   The search uses :ref:`progressive top-K interval dynamic programming (DP) <DPTopK>`
   for both Kruskal-H (continuous) and Pearson :math:`\chi^2` (binary); statistically
   equivalent to the legacy enumerate-and-score path.
-* ``config`` (:class:`ProcessingConfig`, optional) — behavioral toggles
-  (``copy`` / ``ordinal_encoding`` / ``dropna`` / ``verbose`` / ``n_jobs`` /
-  ``min_freq_alpha``).
-  Defaults to ``ProcessingConfig(dropna=True, ordinal_encoding=True)``.
+* ``config`` (:ref:`ProcessingConfig`, a typed dictionary, optional) — behavioral
+  toggles (``copy`` / ``ordinal_encoding`` / ``dropna`` / ``verbose`` / ``n_jobs`` /
+  ``min_freq_alpha`` / …), e.g. ``config={"n_jobs": 4}``. Carvers default ``dropna``
+  and ``ordinal_encoding`` to ``True``.
 
 
 .. _CarverParallelism:
@@ -41,7 +41,7 @@ All carvers share the same constructor signature:
 Per-feature parallelism (``n_jobs``)
 ------------------------------------
 
-With ``ProcessingConfig(n_jobs=k)`` and ``k > 1``, :class:`BaseCarver` dispatches
+With ``config={"n_jobs": k}`` and ``k > 1``, :class:`BaseCarver` dispatches
 one task per feature through ``multiprocessing.Pool.imap_unordered``. Each worker
 receives a pickled deep copy of the :class:`CombinationEvaluator` and a single
 ``(feature, xagg, xagg_dev)`` payload; mutations stay local to the worker process

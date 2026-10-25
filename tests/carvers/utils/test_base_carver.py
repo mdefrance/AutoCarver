@@ -10,7 +10,7 @@ from AutoCarver.combinations import (
     KruskalCombinations,
     TschuprowtCombinations,
 )
-from AutoCarver.discretizers.utils.base_discretizer import ProcessingConfig, Sample
+from AutoCarver.discretizers.utils.base_discretizer import ProcessingConfig, Sample, resolve_processing_config
 from AutoCarver.features import Features
 from AutoCarver.utils.dependencies import has_idisplay
 
@@ -92,13 +92,13 @@ def test_initialization(features, evaluator):
         config=ProcessingConfig(dropna=True, verbose=True, n_jobs=2),
     )
     assert carver.min_freq == 0.1
-    assert carver.config.dropna is True
-    assert carver.config.verbose is True
-    assert carver.config.n_jobs == 2
+    assert carver.config["dropna"] is True
+    assert carver.config["verbose"] is True
+    assert carver.config["n_jobs"] == 2
     assert isinstance(carver.combination_evaluator, type(evaluator))
     assert carver.min_freq == 0.1
     assert carver.combination_evaluator.verbose is True
-    assert carver.config.dropna is True
+    assert carver.config["dropna"] is True
 
 
 def test_pretty_print(features, evaluator):
@@ -111,7 +111,7 @@ def test_pretty_print(features, evaluator):
         config=ProcessingConfig(verbose=True),
     )
 
-    assert carver.pretty_print == (carver.config.verbose and _has_idisplay)
+    assert carver.pretty_print == (carver.config["verbose"] and _has_idisplay)
 
 
 def test_prepare_samples_raises_value_error(features, evaluator, samples):
@@ -162,11 +162,15 @@ def test_prepare_samples(features, evaluator, samples):
         assert feature.dropna is True
 
 
+# what a carver stores and hands to discretize: every key resolved, carver context defaults
+CARVER_CONFIG = resolve_processing_config(None, dropna=True, ordinal_encoding=True, rescue_rare=True)
+
+
 def test_discretize_train(features, samples):
     """Test discretize function for train samples."""
     discretizer_min_freq = 0.1
     samples.dev = Sample(X=None)
-    samples = discretize(features, samples, discretizer_min_freq, ProcessingConfig())
+    samples = discretize(features, samples, discretizer_min_freq, CARVER_CONFIG)
     assert samples.train.has_X
     assert not samples.dev.has_X
 
@@ -174,6 +178,6 @@ def test_discretize_train(features, samples):
 def test_discretize_dev(features, samples):
     """Test discretize function for dev samples."""
     discretizer_min_freq = 0.1
-    samples = discretize(features, samples, discretizer_min_freq, ProcessingConfig())
+    samples = discretize(features, samples, discretizer_min_freq, CARVER_CONFIG)
     assert samples.train.has_X
     assert samples.dev.has_X

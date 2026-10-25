@@ -88,7 +88,7 @@ class MulticlassCarver(BaseCarver):
         features, with target classes in canonical (sorted) column order so
         that class-column order never depends on row order of the data.
         Threaded across features when ``n_jobs > 1``."""
-        return parallel_aggregate(get_multiclass_crosstab, self.features, X, y, self.config.n_jobs)
+        return parallel_aggregate(get_multiclass_crosstab, self.features, X, y, self.config["n_jobs"])
 
     def _fit_rate_reference(self, xagg: pd.Series | pd.DataFrame) -> None:
         """Fits the CA axis from the raw train crosstab before the pre-combination

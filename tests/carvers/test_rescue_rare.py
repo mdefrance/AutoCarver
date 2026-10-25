@@ -103,7 +103,7 @@ def test_rescue_rare_default_no_validation_view_does_not_warn():
         warnings.simplefilter("always")
         carver.fit(X, y)
 
-    assert carver.config.rescue_rare is True
+    assert carver.config["rescue_rare"] is True
     assert not [w for w in caught if "rescue_rare" in str(w.message)]
 
 

@@ -554,7 +554,7 @@ def test_verbose_prints_per_type_counts(
     filters: list[BaseFilter],
     capsys,
 ) -> None:
-    """``config.verbose`` reports how many features were kept, per type."""
+    """``config["verbose"]`` reports how many features were kept, per type."""
     config = make_config(measures, filters, verbose=True)
     BaseSelector(n_best_features=2, features=features_object, config=config).fit(X, y)
 

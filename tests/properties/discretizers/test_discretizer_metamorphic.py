@@ -12,7 +12,7 @@ Two carver-independent realities shape these tests:
   modality, or none frequent enough) with a ``ValueError``. That is correct
   behaviour, not a metamorphic violation, so those inputs are filtered out via
   :func:`hypothesis.reject` (see :func:`_reject_degenerate`).
-* The plain ``Discretizer`` does not propagate ``config.dropna`` onto its
+* The plain ``Discretizer`` does not propagate ``config["dropna"]`` onto its
   features (the carvers own that), so the dropna properties set
   ``features.dropna`` explicitly after fit — mirroring the existing tests.
 """

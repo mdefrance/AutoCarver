@@ -83,7 +83,7 @@ def test_continuous_carver_initialization():
     assert carver.min_freq == min_freq
     assert carver.features.versions == features.versions
     assert carver.features is not features  # carver works on its own copy
-    assert carver.config.dropna is True
+    assert carver.config["dropna"] is True
     assert isinstance(carver.combination_evaluator, KruskalCombinations)
     assert carver.max_n_mod == 5
 
@@ -735,9 +735,9 @@ def test_continuous_carver_save_load(tmp_path, evaluator: CombinationEvaluator):
     for feature in carver.features:
         assert feature in loaded_carver.features
         assert feature.content == loaded_carver.features[feature.name].content
-    assert carver.config.dropna == loaded_carver.config.dropna
-    assert carver.config.verbose == loaded_carver.config.verbose
-    assert carver.config.copy == loaded_carver.config.copy
+    assert carver.config["dropna"] == loaded_carver.config["dropna"]
+    assert carver.config["verbose"] == loaded_carver.config["verbose"]
+    assert carver.config["copy"] == loaded_carver.config["copy"]
     assert carver.combination_evaluator.__class__ == loaded_carver.combination_evaluator.__class__
     assert carver.max_n_mod == loaded_carver.max_n_mod
     assert carver.combination_evaluator.sort_by == loaded_carver.combination_evaluator.sort_by

@@ -102,8 +102,9 @@ Fitting AutoCarver
 .. note::
 
     Behavioral toggles (``copy``, ``ordinal_encoding``, ``dropna``, ``verbose``,
-    ``n_jobs``, ``min_freq_alpha``) are now grouped in :class:`ProcessingConfig`.
-    Carvers default to ``ProcessingConfig(dropna=True, ordinal_encoding=True)``.
+    ``n_jobs``, ``min_freq_alpha``, …) are passed as one dictionary, typed as
+    :ref:`ProcessingConfig`, e.g. ``config={"n_jobs": 4}``. Carvers default
+    ``dropna`` and ``ordinal_encoding`` to ``True``.
 
     ``min_freq`` is gated by a Wilson score confidence interval at significance
     ``min_freq_alpha`` (default ``0.05``): raise it for a stricter representativity
@@ -202,6 +203,7 @@ Feature Selection
     types; seats a type cannot fill go to the other (100 seats over 400 qualitative
     and 100 quantitative features gives 50/50; with only 25 quantitative features it
     gives 25/75). Leave it out to apply no cap at all — the measures' thresholds and
-    the redundancy filters still apply. Measures and filters are swapped through a ``SelectionConfig``, per
+    the redundancy filters still apply. The default redundancy filters drop
+    near-duplicates only (``TschuprowtFilter(0.9)``, ``SpearmanFilter(0.95)``). Measures and filters are swapped through a ``SelectionConfig``, per
     feature type — see :ref:`Selectors`.
 

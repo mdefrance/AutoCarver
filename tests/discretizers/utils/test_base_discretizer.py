@@ -171,28 +171,28 @@ def test_init(features: Features, true_false: bool) -> None:
 
     # test default values
     assert not disc.is_fitted
-    assert not disc.config.dropna
-    assert disc.config.copy
-    assert not disc.config.verbose
-    assert not disc.config.ordinal_encoding
-    assert disc.config.n_jobs == 1
+    assert not disc.config["dropna"]
+    assert disc.config["copy"]
+    assert not disc.config["verbose"]
+    assert not disc.config["ordinal_encoding"]
+    assert disc.config["n_jobs"] == 1
     assert not disc.has_min_freq
 
     # test setting copy
     disc = BaseDiscretizer(features, config=ProcessingConfig(copy=true_false))
-    assert disc.config.copy == true_false
+    assert disc.config["copy"] == true_false
 
     # test setting ordinal_encoding
     disc = BaseDiscretizer(features, config=ProcessingConfig(ordinal_encoding=true_false))
-    assert disc.config.ordinal_encoding == true_false
+    assert disc.config["ordinal_encoding"] == true_false
 
     # test setting dropna
     disc = BaseDiscretizer(features, config=ProcessingConfig(dropna=true_false))
-    assert disc.config.dropna == true_false
+    assert disc.config["dropna"] == true_false
 
     # test setting verbose
     disc = BaseDiscretizer(features, config=ProcessingConfig(verbose=true_false))
-    assert disc.config.verbose == true_false
+    assert disc.config["verbose"] == true_false
 
     # test setting is_fitted (now a post-construction attribute, not a constructor arg)
     disc = BaseDiscretizer(features)
@@ -201,7 +201,7 @@ def test_init(features: Features, true_false: bool) -> None:
 
     # test setting n_jobs
     disc = BaseDiscretizer(features, config=ProcessingConfig(n_jobs=4))
-    assert disc.config.n_jobs == 4
+    assert disc.config["n_jobs"] == 4
 
     # test setting min_freq
     disc = BaseDiscretizer(features, min_freq=0.2)
@@ -802,12 +802,12 @@ def test_load_discretizer(tmp_path, features: Features, true_false: bool) -> Non
 
     for feature in loaded.features:
         assert feature.name in discretizer.features
-    assert loaded.config.dropna == discretizer.config.dropna
+    assert loaded.config["dropna"] == discretizer.config["dropna"]
     assert loaded.min_freq == discretizer.min_freq
     assert loaded.is_fitted == discretizer.is_fitted
-    assert loaded.config.n_jobs == discretizer.config.n_jobs
-    assert loaded.config.verbose == discretizer.config.verbose
-    assert loaded.config.ordinal_encoding == discretizer.config.ordinal_encoding
+    assert loaded.config["n_jobs"] == discretizer.config["n_jobs"]
+    assert loaded.config["verbose"] == discretizer.config["verbose"]
+    assert loaded.config["ordinal_encoding"] == discretizer.config["ordinal_encoding"]
 
     with raises(FileNotFoundError):
         _ = BaseDiscretizer.load(Path("wrong_path"))

@@ -26,12 +26,12 @@
 
 **AutoCarver** turns raw numeric, categorical, and ordinal columns into supervised, drift-robust, human-readable bins in a few lines of code. Stop losing model performance to suboptimal manual binning — and stop discovering overfit bins in production monitoring.
 
-- **Searched, not eyeballed** — a dynamic-programming search ranks the candidate groupings by Tschuprow's T (default) or Cramér's V, for your `min_freq` and `max_n_mod`.
+- **Searched, not eyeballed** — a dynamic-programming search ranks the candidate groupings by Tschuprow's T (default) or Cramér's V, bias-corrected so that extra buckets and small samples don't score by chance alone.
 - **Robust by construction** — every candidate grouping is vetoed unless it holds on a held-out dev set (and optional CV folds), at `fit` time rather than in monitoring.
 - **Define → carve → model** — declare your `Features`, `fit` a carver, `transform`: the whole feature set is carved in one supervised pass, not one notebook per feature. One carver per target type — `BinaryCarver`, `MulticlassCarver`, `OrdinalCarver`, `ContinuousCarver` (regression) — all with the identical API.
 - **AI-assisted** — a local MCP server lets your LLM assistant qualify and carve columns through tool calls, fully on your machine.
 
-*On the Titanic quick start, `Fare` collapses from 72 pre-carving modalities to 2 bins while its association with survival rises: Tschuprow's T 0.18 raw → 0.29 carved.*
+*On the Titanic quick start, `Fare` collapses from 72 pre-carving modalities to 2 bins while its association with survival rises: Tschuprow's T 0.15 raw → 0.29 carved.*
 
 Built for credit scoring, fraud detection, and risk modeling.
 
@@ -152,7 +152,7 @@ dev_processed = carver.transform(dev)
 ```
 <!-- quick-start:end -->
 
-`min_freq` and `max_n_mod` are the only two knobs that matter to start with — the defaults (`0.02` / `5`) reflect common scoring practice, and every behavioral toggle lives in one `ProcessingConfig` object. Scan, adjust, move on.
+`min_freq` and `max_n_mod` are the only two knobs that matter to start with — the defaults (`0.02` / `5`) reflect common scoring practice, and every behavioral toggle goes in one `config` dictionary (`config={"n_jobs": 4}`, typed as `ProcessingConfig`). Scan, adjust, move on.
 
 For multiclass classification use `MulticlassCarver` (one binning per feature, against the full K-class target) — or `OneVsRestCarver` for a separate binning per class; for ordinal targets use `OrdinalCarver`; for regression use `ContinuousCarver` — the API is identical. To pre-select features by target association and inter-feature redundancy, pipe the carved output through `ClassificationSelector` or `RegressionSelector` with `features=carver.features` (the carver carves its own copy, so your original `features` stay raw).
 
@@ -181,7 +181,7 @@ Two questions worth answering before your next model review: can you defend ever
     </picture>
 </p>
 
-*Titanic `Age`, one `BinaryCarver.fit` call: 84 raw values collapse to 3 buckets with a monotonic survival rate.*
+*Adult census `age`, one `BinaryCarver.fit` call with Cramér's V (`CramervCombinations()`): 72 raw ages collapse to 5 buckets, checked on a dev sample. The share of incomes above 50K rises from 3% (27 or younger) to 37% (37–61), then falls to 22% (62 and over). The default Tschuprow's T keeps 2 buckets here.*
 
 
 ## How does it compare?

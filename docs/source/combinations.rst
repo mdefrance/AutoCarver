@@ -271,7 +271,7 @@ scales combinatorially in :math:`n` and ``max_n_mod`` and reached :math:`\sim
 
 The initial top-K is configurable via the class attribute
 :attr:`CombinationEvaluator.dp_top_k_initial` (default ``2000``). The ×4
-escalation is opt-in via ``ProcessingConfig.dp_escalate`` (default ``False``):
+escalation is opt-in via ``config={"dp_escalate": True}`` (default ``False``):
 when off, the search stops at the initial top-K and warns on the first fail
 instead of growing ``top_k``.
 
@@ -312,7 +312,7 @@ The DP is a **search-strategy optimisation**, not a statistical change.
 
 .. admonition:: Limits — when the returned grouping is not the best overall
 
-    * **Escalation is off by default** (``ProcessingConfig(dp_escalate=False)``).
+    * **Escalation is off by default** (``"dp_escalate": False`` in the config).
       If no candidate in the first ``dp_top_k_initial`` (2000) is viable, the
       feature is dropped with a warning, even if a viable grouping exists further
       down the ranking.

@@ -78,7 +78,7 @@ class ContinuousCarver(BaseCarver):
     def _aggregator(self, X: pd.DataFrame, y: pd.Series) -> dict[str, pd.Series | pd.DataFrame | None]:
         """Computes y values for modalities of specified features and ensures the ordering
         according to the known labels. Threaded across features when ``n_jobs > 1``."""
-        return parallel_aggregate(get_target_values_by_modality, self.features, X, y, self.config.n_jobs)
+        return parallel_aggregate(get_target_values_by_modality, self.features, X, y, self.config["n_jobs"])
 
 
 def get_target_values_by_modality(X: pd.DataFrame, y: pd.Series, feature: BaseFeature) -> pd.Series:

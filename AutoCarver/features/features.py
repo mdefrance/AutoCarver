@@ -1,8 +1,5 @@
-"""Defines a set of features"""
-
 from collections.abc import Iterable
-from dataclasses import dataclass
-from typing import TypeVar, overload
+from typing import TypedDict, TypeVar, overload
 from warnings import warn
 
 import numpy as np
@@ -25,6 +22,7 @@ from AutoCarver.features.quantitatives import (
 )
 from AutoCarver.features.utils.base_feature import BaseFeature
 from AutoCarver.features.utils.grouped_list import GroupedList
+from AutoCarver.utils import check_config_keys
 
 # Generic over BaseFeature subclasses — lets helpers below preserve the
 # concrete type of feature lists (e.g. list[CategoricalFeature] in → out).
@@ -78,22 +76,24 @@ def per_modality_columns() -> frozenset[str]:
     return _STRUCTURAL_COLUMNS | _target_rate_column_names()
 
 
-@dataclass
-class FeaturesConfig:
+class FeaturesConfig(TypedDict, total=False):
     """Collection-level config applied to each feature in a :class:`Features`.
 
     Internal feature state (``nan``/``default``/``ordinal_encoding``/…) is not part of
-    the public ``BaseFeature`` constructor — pass them via this dataclass to ``Features``
-    or ``Features.from_list`` and they are propagated to each constituent feature.
+    the public ``BaseFeature`` constructor — pass them in this typed dictionary to
+    ``Features`` or ``Features.from_list`` and they are propagated to each constituent
+    feature. Every key is optional (``nan``/``default``: ``None``, the flags: ``False``),
+    e.g. ``Features(categoricals=[...], config={"default": "__OTHER__"})``. Unknown keys
+    raise a ``TypeError``.
     """
 
-    nan: str | None = None
-    default: str | None = None
-    ordinal_encoding: bool = False
-    is_fitted: bool = False
-    has_nan: bool = False
-    has_default: bool = False
-    dropna: bool = False
+    nan: str | None
+    default: str | None
+    ordinal_encoding: bool
+    is_fitted: bool
+    has_nan: bool
+    has_default: bool
+    dropna: bool
 
 
 def infer_feature_kind(dtype) -> str | None:
@@ -372,7 +372,7 @@ class Features:
         # the collection value back onto every feature, silently dropping a restored encoding.
         self._dropna = bool(features) and all(feature.dropna for feature in features)
         self._ordinal_encoding = bool(features) and all(feature.ordinal_encoding for feature in features)
-        self.is_fitted = config.is_fitted if config is not None else False
+        self.is_fitted = config.get("is_fitted", False) if config is not None else False
 
     def __repr__(self) -> str:
         """Returns names of all features"""
@@ -879,29 +879,31 @@ def apply_collection_state(features: list[BaseFeature], config: FeaturesConfig) 
     # nan/default are string config — propagate when explicitly provided (non-None).
     # The booleans use *truthy-only* propagation: a collection-level False shouldn't
     # override per-feature state (matters on Features.load, where per-feature is_fitted
-    # is restored True from JSON while FeaturesConfig.is_fitted is False).
+    # is restored True from JSON while the config's "is_fitted" is False).
     # The bool sets bypass property setters because features have no values yet at
     # construction time (the dropna/ordinal_encoding setters would otherwise raise).
+    check_config_keys(config, FeaturesConfig, "FeaturesConfig")
+    nan, default = config.get("nan"), config.get("default")
     for feature in features:
-        if config.nan is not None:
-            feature.nan = config.nan
+        if nan is not None:
+            feature.nan = nan
 
-        if config.default is not None:
-            feature.default = config.default
+        if default is not None:
+            feature.default = default
 
-        if config.ordinal_encoding:
+        if config.get("ordinal_encoding", False):
             feature._ordinal_encoding = True
 
-        if config.dropna:
+        if config.get("dropna", False):
             feature._dropna = True
 
-        if config.has_nan:
+        if config.get("has_nan", False):
             feature.has_nan = True
 
-        if config.has_default:
+        if config.get("has_default", False):
             feature._has_default = True
 
-        if config.is_fitted:
+        if config.get("is_fitted", False):
             feature.is_fitted = True
 
 
