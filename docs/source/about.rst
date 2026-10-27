@@ -41,7 +41,7 @@ I. Data Preparation: conversion to ordinal data buckets
 +------------------------------------+-------------------------------------------------------------------------+
 | Discretizer / Data Type            | Data Preparation                                                        |
 +====================================+=========================================================================+
-| :ref:`ContinuousDiscretizer`:      | Over-represented values are set as there own modality                   |
+| :ref:`ContinuousDiscretizer`:      | Over-represented values are set as their own modality                   |
 |                                    |                                                                         |
 | Continuous Data                    | Automatic quantile bucketization of under-represented values            |
 |                                    |                                                                         |
@@ -62,7 +62,7 @@ I. Data Preparation: conversion to ordinal data buckets
 .. note::
 
    * Representativity threshold of modalities is user selected (:attr:`min_freq`).
-   * At this step, if any, ``nan`` are set as there own modality (no given order).
+   * At this step, if any, ``nan`` are set as their own modality (no given order).
    * Helps improve modality relevancy and reduces the set of possible combinations to test from.
    * Included in all carving pipelines: :class:`BinaryCarver`, :class:`MulticlassCarver`, :class:`ContinuousCarver`.
 

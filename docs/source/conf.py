@@ -6,6 +6,7 @@ from inspect import getsourcefile
 from pathlib import Path
 
 import toml
+from sphinx.util.nodes import make_refnode
 
 
 # -- Path setup --------------------------------------------------------------
@@ -56,8 +57,9 @@ def ensure_pandoc_installed(_):
 
 
 def setup(app):
-    """ensures that pandoc is installed"""
+    """ensures that pandoc is installed, links unqualified AutoCarver names"""
     app.connect("builder-inited", ensure_pandoc_installed)
+    app.connect("missing-reference", _resolve_short_names, priority=400)  # before intersphinx
 
 
 # Read metadata from setup.cfg
@@ -110,12 +112,68 @@ html_logo = "artwork/auto_carver_symbol_dark.svg"
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
+    "sphinx.ext.intersphinx",
     "sphinx_rtd_theme",
-    "sphinx.ext.autodoc",
     # "sphinx.ext.autosummary",
     "sphinx_design",
     "nbsphinx",
 ]
+
+# links to the docs of the types used in signatures and docstrings
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+    "numpy": ("https://numpy.org/doc/stable", None),
+    "pandas": ("https://pandas.pydata.org/docs", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy", None),
+    "sklearn": ("https://scikit-learn.org/stable", None),
+}
+
+# docstring type words that are prose, not objects (numpydoc "int, optional", sklearn's "array-like of shape")
+nitpick_ignore = [
+    ("py:class", word) for word in ("optional", "array-like", "shape", "ndarray array", "scalar", "iterable", "numbers")
+]
+nitpick_ignore_regex = [
+    ("py:class", r"default.*|.*n_samples.*|.*n_features.*|.*n_outputs.*|.*cross-validation generator|\".*\"")
+]
+
+# short names used in docstrings, resolved by intersphinx once rewritten
+_TYPE_ALIASES = {
+    "DataFrame": "pandas.DataFrame",
+    "Series": "pandas.Series",
+    "ndarray": "numpy.ndarray",
+    "Path": "pathlib.Path",
+}
+_MODULE_ALIASES = {"pd": "pandas", "np": "numpy"}
+
+
+def _resolve_short_names(app, env, node, contnode):
+    """Links an unqualified AutoCarver name (``Features``, ``BinaryCarver``) to its documented object
+    when exactly one documented object has that name, and rewrites ``pd.``/``np.`` names for intersphinx."""
+    if node.get("refdomain") != "py":
+        return None
+    target = node["reftarget"]
+    module, _, rest = target.partition(".")
+    if module in _MODULE_ALIASES and rest:
+        node["reftarget"] = f"{_MODULE_ALIASES[module]}.{rest}"
+        return None
+    if target in _TYPE_ALIASES:
+        node["reftarget"] = _TYPE_ALIASES[target]
+        return None
+    parts = target.lstrip("~.").split(".")
+    domain = env.get_domain("py")
+    # "Class.member" first (AutoCarver.carvers.BinaryCarver.load -> AutoCarver.BinaryCarver.load), then the bare name
+    for suffix in (parts[-2:], parts[-1:]):
+        found = {
+            (obj.docname, obj.node_id)
+            for full, obj in domain.objects.items()
+            if full.split(".")[-len(suffix) :] == suffix
+        }
+        if len(found) == 1:
+            docname, node_id = found.pop()
+            return make_refnode(app.builder, node["refdoc"], docname, node_id, contnode, target)
+    return None
+
+
 templates_path = ["_templates"]
 # the ProTips notebooks are kept in the repo but not published
 exclude_patterns = ["examples/.ipynb_checkpoints", "examples/Carvers/ProTips"]

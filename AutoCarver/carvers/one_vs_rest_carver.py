@@ -24,7 +24,7 @@ class OneVsRestCarver(BinaryCarver):
 
     Examples
     --------
-    `One-vs-Rest Classification Example <https://autocarver.readthedocs.io/en/latest/examples/
+    `One-vs-Rest Classification Example <https://autocarver.readthedocs.io/en/stable/examples/
     Carvers/MulticlassClassification/multiclass_classification_example.html>`_
     """
 

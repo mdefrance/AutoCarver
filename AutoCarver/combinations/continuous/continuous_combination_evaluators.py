@@ -536,7 +536,7 @@ def _top_k_partitions_kruskal_dp(  # noqa: C901
 
     Complexity: O(K · n_mod² · top_k · log top_k). At ``n_mod = 40,
     max_n_mod = 7, top_k = 1000`` that's ~5.6 M ops — independent of the
-    combination count (which can reach ~8 M at the same n_mod / max_n_mod).
+    combination count (about 3.9 M at the same n_mod / max_n_mod).
 
     Returns a list of ``{combination, index_to_groupby, kruskal}`` dicts
     sorted by ``kruskal`` desc — the shape the viability walk expects.

@@ -232,7 +232,7 @@ class Features:
             Values are discretized as the number of seconds elapsed since ``reference_date``.
             Each feature is versioned ``"<column>__ref=<reference_date>"``: use that version to
             look the feature up and to read its carved column (the raw column is left as is).
-            A column may be listed several times with different ``reference_date``s.
+            A column may be listed several times with different ``reference_date`` values.
 
         nested : dict[str, list[str]], optional
             Nested features as ``{output column: [parent columns coarser-ward]}``, by default

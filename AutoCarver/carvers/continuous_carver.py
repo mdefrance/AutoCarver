@@ -20,7 +20,7 @@ class ContinuousCarver(BaseCarver):
 
     Examples
     --------
-    `Continuous Regression Example <https://autocarver.readthedocs.io/en/latest/examples/Carvers/
+    `Continuous Regression Example <https://autocarver.readthedocs.io/en/stable/examples/Carvers/
     ContinuousRegression/continuous_regression_example.html>`_
     """
 

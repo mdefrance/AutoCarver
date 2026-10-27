@@ -65,7 +65,8 @@ class ProcessingConfig:
     search found nothing viable with the ``min_freq`` veto waived. Rescued
     combinations must still show distinct target rates and preserve train/dev
     rank ordering on ``X_dev`` and every CV fold — with no validation view the
-    rescue is skipped. Off by default.
+    rescue is skipped. Off by default for discretizers, on by default for
+    carvers.
 
     ``dp_escalate`` controls the DP combination-search fallback. When the search
     finds nothing robust in the initial ``dp_top_k_initial`` candidates,
@@ -168,7 +169,7 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
 
     Examples
     --------
-    See `Discretizers examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
+    See `Discretizers examples <https://autocarver.readthedocs.io/en/stable/index.html>`_
     """
 
     __name__ = "BaseDiscretizer"

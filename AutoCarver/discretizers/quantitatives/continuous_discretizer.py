@@ -22,7 +22,7 @@ class ContinuousDiscretizer(BaseDiscretizer):
 
     The number of quantiles depends on overrepresented modalities and nans:
 
-    * Values more frequent than ``min_freq`` are set as there own modalities.
+    * Values more frequent than ``min_freq`` are set as their own modalities.
     * Other values are cut in quantiles using ``numpy.quantile``.
     * The number of quantiles is set as ``(1-freq_frequent_modals)/(min_freq)``.
     * Nans are considered as a modality (and are taken into account in ``freq_frequent_modals``).
@@ -90,7 +90,7 @@ def find_quantiles(
 ) -> list[float]:
     """Finds quantiles of a pd.Series in a single sort pass.
 
-    * Values more frequent than ``min_freq`` are set as there own modalities.
+    * Values more frequent than ``min_freq`` are set as their own modalities.
     * Other values are cut in quantiles using ``numpy.quantile``.
     * The number of quantiles is set as ``(1-freq_frequent_modals)/(min_freq)``.
     * Nans are considered as a modality (and are taken into account in ``freq_frequent_modals``).

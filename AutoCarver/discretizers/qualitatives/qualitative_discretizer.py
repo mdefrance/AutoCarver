@@ -19,10 +19,10 @@ from AutoCarver.utils import extend_docstring
 class QualitativeDiscretizer(BaseDiscretizer):
     """Automatic discretiziation pipeline of categorical and ordinal features.
 
-    Pipeline steps: :ref:`CategoricalDiscretizer`, :ref:`StringDiscretizer`,
-    :ref:`OrdinalDiscretizer`.
+    Pipeline steps: :ref:`StringDiscretizer`, :ref:`NestedDiscretizer`,
+    :ref:`OrdinalDiscretizer`, :ref:`CategoricalDiscretizer`.
 
-    Modalities/values of features are grouped according to there respective orders:
+    Modalities/values of features are grouped according to their respective orders:
 
     * [Categorical features] order based on modality target rate.
     * [Ordinal features] user-specified order.

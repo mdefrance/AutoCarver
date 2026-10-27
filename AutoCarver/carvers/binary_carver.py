@@ -20,7 +20,7 @@ class BinaryCarver(BaseCarver):
 
     Examples
     --------
-    `Binary Classification Example <https://autocarver.readthedocs.io/en/latest/examples/Carvers/
+    `Binary Classification Example <https://autocarver.readthedocs.io/en/stable/examples/Carvers/
     BinaryClassification/binary_classification_example.html>`_
     """
 

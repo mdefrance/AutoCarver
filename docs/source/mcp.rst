@@ -23,7 +23,7 @@ on top of that session.
     The scope is **qualify + carve**: the workflow stops at the carved-feature artifact (the
     carving summary, per-feature content and a saved carver). It does not train a downstream
     estimator. The saved ``.json`` embeds the carved :class:`Features`, so loading it back with
-    :meth:`~AutoCarver.carvers.BinaryCarver.load` restores both the carver and its features.
+    :meth:`~AutoCarver.BinaryCarver.load` restores both the carver and its features.
 
 .. warning::
 
@@ -211,14 +211,15 @@ Qualifying columns into ``Features``
 
     def llm_fn(prompt: str) -> str:
         msg = client.messages.create(
-            model="claude-opus-4-8",
+            model="claude-opus-5-5",
             max_tokens=2000,
             messages=[{"role": "user", "content": prompt}],
         )
         return msg.content[0].text
 
-    # X is your loaded DataFrame; the model qualifies every column
-    features = qualify_with_llm(X, llm_fn)
+    # X is your training DataFrame, X_dev a held-out sample with the same columns
+    target = "default"  # your binary 0/1 target column, kept out of the prompt
+    features = qualify_with_llm(X.drop(columns=[target]), llm_fn)
 
 :func:`~AutoCarver.features.qualify_with_llm` builds a prompt describing each column (dtype,
 cardinality, a value sample), asks the model to return a JSON ``{column: spec}`` mapping, and
@@ -232,7 +233,8 @@ Then carve exactly as you would by hand:
     from AutoCarver import BinaryCarver
 
     carver = BinaryCarver(features=features, min_freq=0.02, max_n_mod=5)
-    x_discretized = carver.fit_transform(X, X[target])
+    carver.fit(X, X[target], X_dev=X_dev, y_dev=X_dev[target])  # dev set: viability checks
+    x_discretized = carver.transform(X)
     carver.save("my_carver.json")
 
 .. note::
@@ -288,3 +290,31 @@ The MCP package is layered so the logic is importable and unit-tested without ``
 The draft specs use the **same schema** as :func:`~AutoCarver.features.qualify_with_llm`, and
 both go through :func:`~AutoCarver.features.specs_to_features_kwargs` — a single source of truth
 for routing a column's declared type into a :class:`~AutoCarver.features.Features`.
+
+API reference
+-------------
+
+.. autofunction:: AutoCarver.features.qualify_with_llm
+
+.. autofunction:: AutoCarver.features.specs_to_features_kwargs
+
+.. py:module:: AutoCarver.mcp.session
+
+.. autoclass:: AutoCarver.mcp.session.CarverSession
+    :members:
+
+.. py:module:: AutoCarver.mcp.server
+
+.. autofunction:: AutoCarver.mcp.server.create_server
+
+.. py:module:: AutoCarver.mcp.inspection
+
+.. autofunction:: AutoCarver.mcp.inspection.profile_dataframe
+
+.. autofunction:: AutoCarver.mcp.inspection.profile_column
+
+.. autofunction:: AutoCarver.mcp.inspection.feature_distribution
+
+.. autofunction:: AutoCarver.mcp.inspection.validate_nesting
+
+.. autofunction:: AutoCarver.mcp.inspection.datetime_reference_candidates

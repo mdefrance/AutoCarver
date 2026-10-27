@@ -9,7 +9,7 @@ Features
 --------
 
 .. autoclass:: AutoCarver.features.Features
-    :members: from_list, qualitatives, categoricals, ordinals, quantitatives, datetimes, names, versions, summary, history, load, to_json
+    :members: from_list, from_dataframe, qualitatives, categoricals, ordinals, nested, quantitatives, numericals, datetimes, names, versions, summary, history, load, to_json
 
 .. note::
 
@@ -37,7 +37,7 @@ longer be derived from the fit (after a move or split) show ``NaN`` until refit.
     print(feature.history)       # every combination tried, with viability verdicts
 
     # merge two bins you consider equivalent
-    feature.group(["low", "medium"], "medium")
+    feature.group(["low"], "medium")
 
     # move a single modality into another bin, or give it its own bin
     feature.move("high", "low to medium")  # raw modality, target bin label
@@ -73,28 +73,35 @@ the instance to :class:`Features` or :meth:`Features.from_list`.
 
 .. autoclass:: AutoCarver.features.FeaturesConfig
 
-Qualitatitve features
----------------------
+Qualitative features
+--------------------
 
 .. autoclass:: AutoCarver.features.CategoricalFeature
-    :members: is_qualitative, is_categorical, is_ordinal, has_nan, has_default, summary, history
+    :members: is_qualitative, is_categorical, is_ordinal, has_default, group, move, ungroup, statistics, summary, history
 
 .. autoclass:: AutoCarver.features.OrdinalFeature
-    :members: is_qualitative, is_categorical, is_ordinal, has_nan, has_default, summary, history
+    :members: is_qualitative, is_categorical, is_ordinal, has_default, group, move, ungroup, statistics, summary, history
+
+A :class:`NestedFeature` is a qualitative feature built from nested columns of increasing
+granularity, declared from the :class:`Features` constructor via the ``nested`` argument;
+rare modalities are rolled up to their parent by the :ref:`NestedDiscretizer`.
+
+.. autoclass:: AutoCarver.features.NestedFeature
+    :members: is_qualitative, levels, has_default, group, move, ungroup, statistics, summary, history
 
 
 Quantitative features
-------------------
+---------------------
 
 A :class:`NumericalFeature` is the concrete numeric feature type. Declare them from the
 :class:`Features` constructor via the ``numericals`` argument. :class:`QuantitativeFeature`
 remains the abstract umbrella shared by numericals and datetimes.
 
 .. autoclass:: AutoCarver.features.NumericalFeature
-    :members: is_quantitative, has_nan, has_default, summary, history
+    :members: is_quantitative, has_default, split, set_boundary, statistics, summary, history
 
 .. autoclass:: AutoCarver.features.QuantitativeFeature
-    :members: is_quantitative, has_nan, has_default, summary, history
+    :members: is_quantitative, has_default, split, set_boundary, statistics, summary, history
 
 
 Datetime features
@@ -134,4 +141,4 @@ They are tracked under :attr:`Features.datetimes` and are also part of
 The datetime-to-seconds conversion is performed by the :ref:`TimedeltaDiscretizer`.
 
 .. autoclass:: AutoCarver.features.DatetimeFeature
-    :members: is_quantitative, is_datetime, to_timedelta, has_nan, summary, history
+    :members: is_quantitative, is_datetime, to_timedelta, split, set_boundary, statistics, summary, history

@@ -1,8 +1,16 @@
-"""Defines fixtures for all pytests"""
+import os
+import tempfile
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from pytest import FixtureRequest, fixture
+
+# dcor's numba functions cache their compiled code next to the package: parallel xdist workers
+# writing the same cache files can crash a worker, so each worker gets its own cache directory
+# (set, not setdefault: workers inherit the controller's environment)
+_worker = os.environ.get("PYTEST_XDIST_WORKER", "main")
+os.environ["NUMBA_CACHE_DIR"] = str(Path(tempfile.gettempdir()) / f"autocarver_numba_{_worker}")
 
 
 def init_df(seed: int, size: int = 10000) -> pd.DataFrame:

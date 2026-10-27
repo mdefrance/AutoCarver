@@ -17,7 +17,7 @@ It allows one to select features:
 In general, associations are computed according to the provided data types of :math:`x` and :math:`y`:
 
 +-----------------------+---------------------------------------------------------------------+--------------------------------------------------+
-| :math:`x` \\ :math:`y`| Qualitatitve                                                        | Quantitative                                     |
+| :math:`x` \\ :math:`y`| Qualitative                                                         | Quantitative                                     |
 +-----------------------+---------------------------------------------------------------------+--------------------------------------------------+
 | Qualitative           | Pearson's :math:`\chi^2`, Cramér's :math:`V`, Tschuprow's :math:`T` | Kruskal-Wallis' :math:`H`, :math:`R` coefficient |
 +-----------------------+---------------------------------------------------------------------+--------------------------------------------------+
@@ -32,12 +32,12 @@ the :ref:`carvers <Carvers>`: from a :class:`Features` set, a total
 ``n_best_features`` budget and a :class:`SelectionConfig` carrying the swappable
 per-type ``measures`` / ``filters``.
 
-   * :meth:`~AutoCarver.selectors.BaseSelector.fit` scores every feature against
+   * :meth:`~AutoCarver.selectors.ClassificationSelector.fit` scores every feature against
      the target, ranks them per measure, and filters out redundant ones.
-   * :meth:`~AutoCarver.selectors.BaseSelector.transform` restricts ``X`` to the
-     selected columns; :attr:`~AutoCarver.selectors.BaseSelector.selected_features`
+   * :meth:`~AutoCarver.selectors.ClassificationSelector.transform` restricts ``X`` to the
+     selected columns; :attr:`~AutoCarver.selectors.ClassificationSelector.selected_features`
      returns the selected :class:`Features` directly.
-   * :attr:`~AutoCarver.selectors.BaseSelector.summary` returns the per-feature
+   * :attr:`~AutoCarver.selectors.ClassificationSelector.summary` returns the per-feature
      table of measure/filter values and ranks that drove the selection, just like
      :attr:`~AutoCarver.carvers.BinaryCarver.summary` on the carvers.
 
@@ -75,17 +75,21 @@ left unset falls back to the task-appropriate default for that type.
 
     from AutoCarver.selectors import (
         ClassificationSelector, SelectionConfig,
-        TschuprowtMeasure, KruskalMeasure, CramervFilter, SpearmanFilter,
+        TschuprowtMeasure, KruskalEtaSquaredMeasure, CramervFilter, SpearmanFilter,
     )
 
     config = SelectionConfig(
         qualitative_measures=[TschuprowtMeasure(threshold=0.001)],
-        quantitative_measures=[KruskalMeasure(threshold=1)],
+        quantitative_measures=[KruskalEtaSquaredMeasure(threshold=0.01)],  # effect size in [0, 1]
         qualitative_filters=[CramervFilter(threshold=0.7)],
         quantitative_filters=[SpearmanFilter(threshold=0.9)],
         verbose=True,  # prints how many features were kept, per type
     )
     selector = ClassificationSelector(features, n_best_features=50, config=config)
+
+.. autoclass:: AutoCarver.selectors.SelectionConfig
+
+.. autofunction:: AutoCarver.selectors.utils.base_selector.split_budget
 
 .. _ClassificationSelector:
 
@@ -94,7 +98,7 @@ Classification tasks
 
 
 .. autoclass:: AutoCarver.selectors.ClassificationSelector
-    :members: fit, transform, select, selected_features, summary
+    :members: fit, transform, selected_features, summary
 
 
 .. _RegressionSelector:
@@ -104,7 +108,7 @@ Regression tasks
 
 
 .. autoclass:: AutoCarver.selectors.RegressionSelector
-    :members: fit, transform, select, selected_features, summary
+    :members: fit, transform, selected_features, summary
 
 
 
@@ -592,3 +596,25 @@ non-missing pair count and no ``tol`` quantisation.
 
     * :class:`TschuprowtFilter` is the default filter used for inter-:class:`QualitativeFeature` association measure.
 
+.. _DefaultChecks:
+
+Default checks
+--------------
+
+Every selector adds these to its measures and filters when they are missing. With their
+default threshold of ``1.0`` they drop only features that are entirely ``NaN``
+(:class:`NanMeasure`) or constant (:class:`ModeMeasure`). Pass your own instance, e.g.
+``NanMeasure(threshold=0.5)``, in :class:`SelectionConfig` to make them stricter.
+:class:`ValidFilter` and :class:`NonDefaultValidFilter` then remove the features that failed a
+measure's threshold.
+
+.. autoclass:: AutoCarver.selectors.NanMeasure
+    :members: compute_association, validate
+
+.. autoclass:: AutoCarver.selectors.ModeMeasure
+    :members: compute_association, validate
+
+.. autoclass:: AutoCarver.selectors.ValidFilter
+    :members: filter
+
+.. autoclass:: AutoCarver.selectors.NonDefaultValidFilter
