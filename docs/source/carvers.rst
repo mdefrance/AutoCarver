@@ -6,7 +6,7 @@ Carvers
 The core of **AutoCarver** resides in its **Carvers**, they provide the following Data Optimization steps:
 
    1. Identifying the most associated combination from all ordered combinations of modalities
-   2. Testing all combinations of ``nan``s grouped to one of those modalities
+   2. Testing all combinations of ``nan`` values grouped to one of those modalities
 
 Target-specific tools allow for association optimization per desired task:
  * :ref:`BinaryCarver`

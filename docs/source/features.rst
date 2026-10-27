@@ -77,10 +77,10 @@ Qualitatitve features
 ---------------------
 
 .. autoclass:: AutoCarver.features.CategoricalFeature
-    :members: is_qualitative, is_categorical, is_ordinal, has_nan, has_default, summary, history
+    :members: is_qualitative, is_categorical, is_ordinal, has_default, summary, history
 
 .. autoclass:: AutoCarver.features.OrdinalFeature
-    :members: is_qualitative, is_categorical, is_ordinal, has_nan, has_default, summary, history
+    :members: is_qualitative, is_categorical, is_ordinal, has_default, summary, history
 
 
 Quantitative features
@@ -91,10 +91,10 @@ A :class:`NumericalFeature` is the concrete numeric feature type. Declare them f
 remains the abstract umbrella shared by numericals and datetimes.
 
 .. autoclass:: AutoCarver.features.NumericalFeature
-    :members: is_quantitative, has_nan, has_default, summary, history
+    :members: is_quantitative, has_default, summary, history
 
 .. autoclass:: AutoCarver.features.QuantitativeFeature
-    :members: is_quantitative, has_nan, has_default, summary, history
+    :members: is_quantitative, has_default, summary, history
 
 
 Datetime features
@@ -134,4 +134,4 @@ They are tracked under :attr:`Features.datetimes` and are also part of
 The datetime-to-seconds conversion is performed by the :ref:`TimedeltaDiscretizer`.
 
 .. autoclass:: AutoCarver.features.DatetimeFeature
-    :members: is_quantitative, is_datetime, to_timedelta, has_nan, summary, history
+    :members: is_quantitative, is_datetime, to_timedelta, summary, history

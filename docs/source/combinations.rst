@@ -696,7 +696,7 @@ Cramér's V Multiclass Combinations
 .. _TschuprowtMulticlassCombinations:
 
 Tschuprow's T Multiclass Combinations (default)
-""""""""""""""""""""""""""""""""""""""""""""""
+"""""""""""""""""""""""""""""""""""""""""""""""
 
 .. autoclass:: AutoCarver.combinations.TschuprowtMulticlassCombinations
     :members: save, load
