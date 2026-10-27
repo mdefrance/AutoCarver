@@ -159,13 +159,19 @@ def _resolve_short_names(app, env, node, contnode):
     if target in _TYPE_ALIASES:
         node["reftarget"] = _TYPE_ALIASES[target]
         return None
-    name = target.lstrip("~.").split(".")[-1]
+    parts = target.lstrip("~.").split(".")
     domain = env.get_domain("py")
-    found = {(obj.docname, obj.node_id) for full, obj in domain.objects.items() if full.split(".")[-1] == name}
-    if len(found) != 1:
-        return None
-    docname, node_id = found.pop()
-    return make_refnode(app.builder, node["refdoc"], docname, node_id, contnode, name)
+    # "Class.member" first (AutoCarver.carvers.BinaryCarver.load -> AutoCarver.BinaryCarver.load), then the bare name
+    for suffix in (parts[-2:], parts[-1:]):
+        found = {
+            (obj.docname, obj.node_id)
+            for full, obj in domain.objects.items()
+            if full.split(".")[-len(suffix) :] == suffix
+        }
+        if len(found) == 1:
+            docname, node_id = found.pop()
+            return make_refnode(app.builder, node["refdoc"], docname, node_id, contnode, target)
+    return None
 
 
 templates_path = ["_templates"]

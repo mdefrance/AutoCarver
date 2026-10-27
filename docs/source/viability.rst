@@ -44,7 +44,7 @@ When **no** candidate survives the filter the feature is dropped — see
 :ref:`DroppedFeatures`. Each failing test contributes a human-readable reason
 (*"Non-representative modality for min_freq=…"*, *"Non-distinct target rates per
 consecutive modalities"*, *"Inversion of target rates per modality"*) that
-surfaces in :attr:`carver.history` and ``dropped_reason``.
+surfaces in :attr:`~AutoCarver.BinaryCarver.history` and ``dropped_reason``.
 
 .. autofunction:: AutoCarver.combinations.utils.testing.test_viability
 
@@ -56,7 +56,7 @@ surfaces in :attr:`carver.history` and ``dropped_reason``.
 Cross-validation folds
 -----------------------
 
-The ``cv`` argument of :meth:`~AutoCarver.carvers.utils.base_carver.BaseCarver.fit`
+The ``cv`` argument of :meth:`~AutoCarver.BinaryCarver.fit`
 adds extra held-out views on top of (or instead of) ``X_dev``. Each fold is a
 disjoint held-out partition of **train**, resolved via
 :func:`sklearn.model_selection.check_cv` exactly like sklearn's own
@@ -71,7 +71,7 @@ dev and folds are consulted afterward, purely to confirm or reject the
 current best-ranked candidate — they never reorder candidates.
 
 **Failures surface in history.** A fold that rejects a combination is recorded
-in :attr:`carver.history` with a ``[fold i/n] <reason>`` prefix, distinguishing
+in :attr:`~AutoCarver.BinaryCarver.history` with a ``[fold i/n] <reason>`` prefix, distinguishing
 it from a plain train/dev failure.
 
 **How many folds.** Each fold is a *fraction* of train, and ``min_freq``

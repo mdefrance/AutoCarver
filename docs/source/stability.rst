@@ -42,7 +42,7 @@ The reference
 -------------
 
 At carving time the winning combination's per-modality statistics are stored on
-the feature itself, as :attr:`~AutoCarver.features.BaseFeature.statistics` — a
+the feature itself, as :attr:`~AutoCarver.features.NumericalFeature.statistics` — a
 frame indexed by final label carrying:
 
 * ``count`` and ``frequency`` — the population reference;
@@ -51,8 +51,8 @@ frame indexed by final label carrying:
   ``ca_score``) — the target reference;
 * ``std`` for continuous targets — the dispersion needed to test a mean shift.
 
-These survive :meth:`~AutoCarver.carvers.utils.base_carver.BaseCarver.save` /
-:meth:`~AutoCarver.carvers.utils.base_carver.BaseCarver.load`, together with any
+These survive :meth:`~AutoCarver.BinaryCarver.save` /
+:meth:`~AutoCarver.BinaryCarver.load`, together with any
 per-feature state the target rate was fit on (the ridit reference marginal, the
 correspondence-analysis axis). Features that were never carved — discretized
 only — carry no statistics and are skipped with a warning.

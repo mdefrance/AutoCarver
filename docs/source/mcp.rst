@@ -23,7 +23,7 @@ on top of that session.
     The scope is **qualify + carve**: the workflow stops at the carved-feature artifact (the
     carving summary, per-feature content and a saved carver). It does not train a downstream
     estimator. The saved ``.json`` embeds the carved :class:`Features`, so loading it back with
-    :meth:`~AutoCarver.carvers.BinaryCarver.load` restores both the carver and its features.
+    :meth:`~AutoCarver.BinaryCarver.load` restores both the carver and its features.
 
 .. warning::
 
@@ -290,3 +290,31 @@ The MCP package is layered so the logic is importable and unit-tested without ``
 The draft specs use the **same schema** as :func:`~AutoCarver.features.qualify_with_llm`, and
 both go through :func:`~AutoCarver.features.specs_to_features_kwargs` — a single source of truth
 for routing a column's declared type into a :class:`~AutoCarver.features.Features`.
+
+API reference
+-------------
+
+.. autofunction:: AutoCarver.features.qualify_with_llm
+
+.. autofunction:: AutoCarver.features.specs_to_features_kwargs
+
+.. py:module:: AutoCarver.mcp.session
+
+.. autoclass:: AutoCarver.mcp.session.CarverSession
+    :members:
+
+.. py:module:: AutoCarver.mcp.server
+
+.. autofunction:: AutoCarver.mcp.server.create_server
+
+.. py:module:: AutoCarver.mcp.inspection
+
+.. autofunction:: AutoCarver.mcp.inspection.profile_dataframe
+
+.. autofunction:: AutoCarver.mcp.inspection.profile_column
+
+.. autofunction:: AutoCarver.mcp.inspection.feature_distribution
+
+.. autofunction:: AutoCarver.mcp.inspection.validate_nesting
+
+.. autofunction:: AutoCarver.mcp.inspection.datetime_reference_candidates

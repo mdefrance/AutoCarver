@@ -19,7 +19,7 @@ All carvers share the same constructor signature:
 
 * ``features`` (:class:`Features`) — features to carve. The carver works on its
   own copy: fitting never modifies the object you pass, and the carved features
-  live on ``carver.features`` (exactly as after :meth:`~BaseCarver.load`). Use
+  live on ``carver.features`` (exactly as after :meth:`~AutoCarver.BinaryCarver.load`). Use
   ``carver.features`` for inspection, manual edits and selection.
 * ``min_freq`` (``float``) — minimum frequency per modality. Tested via the Wilson
   score interval at significance ``min_freq_alpha`` (see :ref:`MinFreqViability`).
@@ -64,10 +64,10 @@ Dropped features (no robust combination)
 A feature for which **no** candidate combination passed the
 :ref:`viability filter <Viability>` (Wilson ``min_freq`` on train and dev,
 distinct target rates, train/dev rank preservation) is removed from
-``carver.features`` and retained on :attr:`carver.dropped_features` so the user
+``carver.features`` and retained on ``carver.dropped_features`` so the user
 can inspect *why* it was dropped without re-fitting.
 
-The :attr:`summary` and :attr:`history` properties append rows from dropped
+The :attr:`~AutoCarver.BinaryCarver.summary` and :attr:`~AutoCarver.BinaryCarver.history` properties append rows from dropped
 features with two marker columns:
 
 * ``dropped`` (``bool``) — ``True`` for rows from a dropped feature, ``False``
@@ -111,7 +111,7 @@ For two combinations of modalities of :math:`x`, a higher :math:`T` or :math:`V`
 
 
 .. autoclass:: AutoCarver.BinaryCarver
-    :members: fit, transform, fit_transform, save, load, summary, history
+    :members: fit, transform, fit_transform, save, load, summary, history, evaluate_stability
 
 
 
@@ -150,7 +150,7 @@ For two combinations of modalities of :math:`x`, a higher :math:`T` or :math:`V`
 value indicates a stronger relationship with the multiclass target :math:`y`.
 
 .. autoclass:: AutoCarver.MulticlassCarver
-    :members: fit, transform, fit_transform, save, load, summary, history
+    :members: fit, transform, fit_transform, save, load, summary, history, evaluate_stability
 
 
 .. _OneVsRestCarver:
@@ -166,7 +166,7 @@ For two combinations of modalities of a feature :math:`x`, a higher :math:`T` or
 
 
 .. autoclass:: AutoCarver.OneVsRestCarver
-    :members: fit, transform, fit_transform, save, load, summary, history
+    :members: fit, transform, fit_transform, save, load, summary, history, evaluate_stability
 
 
 
@@ -189,7 +189,7 @@ It is used to determine whether or not :math:`y` is distributed the same when :m
 For two combinations of modalities of :math:`x`, a higher :math:`H` value indicates that there is a greater difference between the medians of the samples.
 
 .. autoclass:: AutoCarver.ContinuousCarver
-    :members: fit, transform, fit_transform, save, load, summary, history
+    :members: fit, transform, fit_transform, save, load, summary, history, evaluate_stability
 
 
 Ordinal tasks
@@ -223,5 +223,5 @@ indicates a grouping whose ordering agrees more strongly with the ordinal
 target's order.
 
 .. autoclass:: AutoCarver.OrdinalCarver
-    :members: fit, transform, fit_transform, save, load, summary, history
+    :members: fit, transform, fit_transform, save, load, summary, history, evaluate_stability
 
