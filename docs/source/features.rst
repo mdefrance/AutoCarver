@@ -37,7 +37,7 @@ longer be derived from the fit (after a move or split) show ``NaN`` until refit.
     print(feature.history)       # every combination tried, with viability verdicts
 
     # merge two bins you consider equivalent
-    feature.group(["low", "medium"], "medium")
+    feature.group(["low"], "medium")
 
     # move a single modality into another bin, or give it its own bin
     feature.move("high", "low to medium")  # raw modality, target bin label
@@ -84,7 +84,7 @@ Qualitatitve features
 
 
 Quantitative features
-------------------
+---------------------
 
 A :class:`NumericalFeature` is the concrete numeric feature type. Declare them from the
 :class:`Features` constructor via the ``numericals`` argument. :class:`QuantitativeFeature`

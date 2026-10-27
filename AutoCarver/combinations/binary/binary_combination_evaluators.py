@@ -410,7 +410,7 @@ def _top_k_partitions_chi2_dp(  # noqa: C901
     :meth:`_compute_associations` so it drops into the streaming pipeline.
 
     Complexity: O(K² · n_mod² · top_k · log top_k). Independent of the
-    combination count (which can reach ~8 M at ``n_mod=40, max_n_mod=7``).
+    combination count (about 3.9 M at ``n_mod=40, max_n_mod=7``).
 
     Edge cases (mirror :func:`_chi2_assoc_for_combination`):
 

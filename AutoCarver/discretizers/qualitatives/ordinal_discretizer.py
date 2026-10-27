@@ -22,7 +22,7 @@ class OrdinalDiscretizer(BaseDiscretizer):
 
     Only use for qualitative ordinal features.
 
-    Fisrt fits :ref:`StringDiscretizer` if neccesary.
+    First fits :ref:`StringDiscretizer` if necessary.
     """
 
     __name__ = "OrdinalDiscretizer"

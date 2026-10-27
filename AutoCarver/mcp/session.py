@@ -190,7 +190,7 @@ class CarverSession:
 
         Loads a ``.csv``/``.parquet`` holdout or production extract and compares each carved
         feature's modality distribution and target rate to the reference stored at carving
-        time: PSI, a chi-square goodness-of-fit on counts, per-modality target drift, and the
+        time: PSI, a chi-square homogeneity test on counts, per-modality target drift, and the
         carver's own viability tests (rank inversion, Wilson ``min_freq``, distinct rates).
         ``target`` names the target column in the loaded file; it defaults to the session's
         target. An unlabelled extract (one that simply doesn't carry the session's target

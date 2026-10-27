@@ -64,7 +64,7 @@ class BaseSelector(BaseEstimator, TransformerMixin, ABC):
 
     Examples
     --------
-    See `Selectors examples <https://autocarver.readthedocs.io/en/latest/index.html>`_
+    See `Selectors examples <https://autocarver.readthedocs.io/en/stable/index.html>`_
     """
 
     __name__ = "BaseSelector"

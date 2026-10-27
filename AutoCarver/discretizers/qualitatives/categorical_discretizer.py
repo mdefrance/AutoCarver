@@ -16,8 +16,8 @@ from AutoCarver.utils import extend_docstring
 class CategoricalDiscretizer(BaseDiscretizer):
     """Automatic discretization of categorical features, building simple groups frequent enough.
 
-    Groups a qualitative features' values less frequent than ``min_freq`` into a ``str_default``
-    string.
+    Groups a qualitative feature's values significantly less frequent than ``min_freq`` (Wilson
+    test) into the feature's default modality (``feature.default``, ``__OTHER__``).
 
     NaNs are left untouched.
 

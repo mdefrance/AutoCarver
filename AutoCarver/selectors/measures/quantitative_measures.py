@@ -156,8 +156,8 @@ class KruskalEtaSquaredMeasure(KruskalMeasure):
 
 
 class RMeasure(BaseMeasure):
-    """Square root of the coefficient of determination of linear regression model of
-    a Quantitative feature by a Binary target."""
+    """Multiple correlation R of a Quantitative feature with a Binary target, i.e. the
+    absolute point-biserial correlation (square root of the regression's R²)."""
 
     __name__ = "RMeasure"
     is_x_quantitative = True

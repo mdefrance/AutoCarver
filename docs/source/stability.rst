@@ -27,7 +27,7 @@ sample on its own.
 
 The target is optional. Labels usually lag in production, so
 ``carver.evaluate_stability(X_prod)`` computes the population-side metrics
-alone (PSI and the chi-square goodness-of-fit); the target-side ones are
+alone (PSI and the chi-square homogeneity test); the target-side ones are
 reported as ``NaN``.
 
 .. autofunction:: AutoCarver.stability.evaluate_stability

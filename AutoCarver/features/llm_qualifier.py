@@ -3,7 +3,7 @@
 These helpers never import any provider SDK. The caller supplies ``llm_fn``, a callable taking
 the prompt string and returning the model's raw text answer, so any backend can be plugged in.
 
-Anthropic example (latest model id ``claude-opus-4-8``)::
+Anthropic example::
 
     from anthropic import Anthropic
 
@@ -11,7 +11,7 @@ Anthropic example (latest model id ``claude-opus-4-8``)::
 
     def llm_fn(prompt: str) -> str:
         msg = client.messages.create(
-            model="claude-opus-4-8",
+            model="claude-opus-5-5",
             max_tokens=2000,
             messages=[{"role": "user", "content": prompt}],
         )

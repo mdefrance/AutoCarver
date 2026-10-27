@@ -75,12 +75,12 @@ left unset falls back to the task-appropriate default for that type.
 
     from AutoCarver.selectors import (
         ClassificationSelector, SelectionConfig,
-        TschuprowtMeasure, KruskalMeasure, CramervFilter, SpearmanFilter,
+        TschuprowtMeasure, KruskalEtaSquaredMeasure, CramervFilter, SpearmanFilter,
     )
 
     config = SelectionConfig(
         qualitative_measures=[TschuprowtMeasure(threshold=0.001)],
-        quantitative_measures=[KruskalMeasure(threshold=1)],
+        quantitative_measures=[KruskalEtaSquaredMeasure(threshold=0.01)],  # effect size in [0, 1]
         qualitative_filters=[CramervFilter(threshold=0.7)],
         quantitative_filters=[SpearmanFilter(threshold=0.9)],
         verbose=True,  # prints how many features were kept, per type
@@ -94,7 +94,7 @@ Classification tasks
 
 
 .. autoclass:: AutoCarver.selectors.ClassificationSelector
-    :members: fit, transform, select, selected_features, summary
+    :members: fit, transform, selected_features, summary
 
 
 .. _RegressionSelector:
@@ -104,7 +104,7 @@ Regression tasks
 
 
 .. autoclass:: AutoCarver.selectors.RegressionSelector
-    :members: fit, transform, select, selected_features, summary
+    :members: fit, transform, selected_features, summary
 
 
 

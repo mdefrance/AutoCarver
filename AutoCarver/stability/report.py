@@ -43,7 +43,7 @@ class StabilityReport:
         a target-drift test applies — its p-value.
     per_feature : pd.DataFrame
         One row per feature: ``psi`` and its flag, the chi-square
-        goodness-of-fit test, and (with a target) the viability verdict
+        homogeneity test, and (with a target) the viability verdict
         produced by the carver's own fit-time robustness tests.
     alpha : float
         Significance level used by every test.
@@ -123,7 +123,7 @@ def evaluate_stability(
         New (production) sample, with the carver's raw feature columns.
     y : pd.Series, optional
         Target for ``X``. Without it only PSI and the chi-square
-        goodness-of-fit on counts are computed, by default ``None``.
+        homogeneity test on counts are computed, by default ``None``.
     alpha : float, optional
         Significance level for every test, by default ``0.05``.
 

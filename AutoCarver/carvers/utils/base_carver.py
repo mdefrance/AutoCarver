@@ -325,8 +325,8 @@ class BaseCarver(BaseDiscretizer, ABC):
         """Half of :attr:`min_freq` — the tolerant frequency floor the carver
         applies when discretizing prior to combination search. Halving here gives
         the combination evaluator a finer granularity to recombine, while the
-        underlying discretizers themselves compare directly against ``min_freq``
-        (with a 1-row tolerance). Owning the halving in the carver — rather than
+        underlying discretizers themselves compare against ``min_freq`` with a
+        Wilson test (a modality is rare only if significantly below it). Owning the halving in the carver — rather than
         inside individual discretizers — keeps the per-discretizer semantic uniform.
         """
         return self.min_freq / 2
@@ -409,7 +409,7 @@ class BaseCarver(BaseDiscretizer, ABC):
             New (production) sample, with this carver's raw feature columns.
         y : pd.Series, optional
             Target for ``X``. Without it only the frequency-based metrics
-            (PSI, chi-square goodness-of-fit) are computed, by default ``None``.
+            (PSI, chi-square homogeneity test) are computed, by default ``None``.
         alpha : float, optional
             Significance level, defaults to :attr:`ProcessingConfig.min_freq_alpha`.
 

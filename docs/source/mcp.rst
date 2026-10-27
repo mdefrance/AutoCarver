@@ -211,14 +211,15 @@ Qualifying columns into ``Features``
 
     def llm_fn(prompt: str) -> str:
         msg = client.messages.create(
-            model="claude-opus-4-8",
+            model="claude-opus-5-5",
             max_tokens=2000,
             messages=[{"role": "user", "content": prompt}],
         )
         return msg.content[0].text
 
-    # X is your loaded DataFrame; the model qualifies every column
-    features = qualify_with_llm(X, llm_fn)
+    # X is your training DataFrame, X_dev a held-out sample with the same columns
+    target = "default"  # your binary 0/1 target column, kept out of the prompt
+    features = qualify_with_llm(X.drop(columns=[target]), llm_fn)
 
 :func:`~AutoCarver.features.qualify_with_llm` builds a prompt describing each column (dtype,
 cardinality, a value sample), asks the model to return a JSON ``{column: spec}`` mapping, and
@@ -232,7 +233,8 @@ Then carve exactly as you would by hand:
     from AutoCarver import BinaryCarver
 
     carver = BinaryCarver(features=features, min_freq=0.02, max_n_mod=5)
-    x_discretized = carver.fit_transform(X, X[target])
+    carver.fit(X, X[target], X_dev=X_dev, y_dev=X_dev[target])  # dev set: viability checks
+    x_discretized = carver.transform(X)
     carver.save("my_carver.json")
 
 .. note::
