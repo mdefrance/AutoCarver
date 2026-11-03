@@ -1,5 +1,7 @@
 """set of tests for quantitative features"""
 
+import time
+
 import numpy as np
 import pandas as pd
 from pytest import fixture, raises
@@ -455,6 +457,61 @@ def test_fit_with_existing_raw_order(sample_categorical_feature: CategoricalFeat
 
     # Check that raw_order remains unchanged
     assert sample_categorical_feature.raw_order == ["value1", "value2"]
+
+
+def test_fit_is_not_quadratic_in_cardinality() -> None:
+    """fit stays fast on a near-unique column (ids, free text): it used to be O(N²)"""
+    n = 5_000
+    feature = CategoricalFeature("high_card")
+    data = pd.DataFrame({"high_card": [f"value_{i}" for i in range(n)]})
+
+    start = time.perf_counter()
+    feature.fit(data)
+    elapsed = time.perf_counter() - start
+
+    assert len(feature.raw_order) == n
+    assert elapsed < 5, f"fit() took {elapsed:.1f}s for {n} unique values"
+
+
+def test_make_labels_is_not_quadratic() -> None:
+    """labelling many groups, one of them large, stays fast: it used to scan raw_order per group"""
+    n = 20_000
+    values = [f"v{i}" for i in range(n)]
+    feature = CategoricalFeature("high_card")
+    feature.fit(pd.DataFrame({"high_card": values}))
+
+    start = time.perf_counter()
+    feature.group(values[: n // 2], values[n // 2], convert_labels=False)  # one big group + singletons
+    elapsed = time.perf_counter() - start
+
+    assert len(feature.labels) == n // 2
+    assert elapsed < 3, f"group() + make_labels() took {elapsed:.1f}s for {n} values"
+
+
+def test_check_values_many_unseen_is_not_quadratic() -> None:
+    """many values unseen at fit go to the default group quickly: it used to append them one by one"""
+    feature = CategoricalFeature("high_card")
+    feature.fit(pd.DataFrame({"high_card": ["known"]}))
+    feature.has_default = True
+    feature.values.content[feature.default] = [f"old{i}" for i in range(50_000)] + [feature.default]
+    n_unseen = 5_000
+    unseen = [f"unseen{i}" for i in range(n_unseen)]
+
+    start = time.perf_counter()
+    feature.check_values(pd.DataFrame({"high_card": unseen}))
+    elapsed = time.perf_counter() - start
+
+    assert set(unseen) <= set(feature.values.get(feature.default))
+    assert elapsed < 3, f"check_values() took {elapsed:.1f}s for {n_unseen} unseen values"
+
+
+def test_fit_raw_order_uses_group_leaders() -> None:
+    """raw_order maps each value, by appearance, to its group leader (grouped values set before fit)"""
+    feature = CategoricalFeature("test_feature")
+    feature.update(GroupedList({"a": ["a", "b"], "c": ["c"]}), replace=True)
+    feature.fit(pd.DataFrame({"test_feature": ["c", "b", "a", np.nan]}))
+
+    assert feature.raw_order == ["c", "a", "a"]
 
 
 def test_fit_check_values_called(sample_categorical_feature: CategoricalFeature, monkeypatch) -> None:

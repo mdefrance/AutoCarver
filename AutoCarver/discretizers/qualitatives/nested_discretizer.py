@@ -139,18 +139,22 @@ class NestedDiscretizer(BaseDiscretizer):
         if feature.default in raw_to_bucket.values():
             feature.has_default = True
 
-        # historizing the rollup in the feature's order
+        # historizing the rollup in the feature's order (in bulk: one append/group per value is O(N²))
         order = GroupedList(feature.values)
-        for bucket in dict.fromkeys(raw_to_bucket.values()):
-            if bucket not in order.values:
-                order.append(bucket)
+        known_values = set(order.values)
+        order.update(
+            {bucket: [bucket] for bucket in dict.fromkeys(raw_to_bucket.values()) if bucket not in known_values}
+        )
+        raw_per_bucket: dict = {}
         for raw_value, bucket in raw_to_bucket.items():
             if raw_value != bucket:
-                order.group(raw_value, bucket)
+                raw_per_bucket.setdefault(bucket, []).append(raw_value)
+        for bucket, raw_values in raw_per_bucket.items():
+            order.group(raw_values, bucket)
         feature.update(order, replace=True)
 
         # materializing rolled-up labels in the output column (for target-rate sort)
-        X[feature.version] = X[feature.version].replace(raw_to_bucket)
+        X[feature.version] = _relabel(X[feature.version], raw_to_bucket)
 
     def _compute_rollup(self, feature: NestedFeature, X: pd.DataFrame, nobs: int) -> dict:
         """Computes, for each raw finest modality, the bucket it rolls up into.
@@ -191,7 +195,7 @@ class NestedDiscretizer(BaseDiscretizer):
             if len(relabel) == 0:
                 break
 
-            current = current.replace(relabel)
+            current = _relabel(current, relabel)
 
         # terminal pooling: buckets still significantly below min_freq (couldn't reach it even at
         # the coarsest level) are pooled into the default modality (__OTHER__)
@@ -202,7 +206,7 @@ class NestedDiscretizer(BaseDiscretizer):
             if value != feature.nan and pd.notna(value) and is_significantly_below(count, nobs, self.min_freq, alpha)
         ]
         if len(terminal_rare) > 0:
-            current = current.replace(dict.fromkeys(terminal_rare, feature.default))
+            current = _relabel(current, dict.fromkeys(terminal_rare, feature.default))
 
         # mapping each raw finest value to its final bucket (functional by construction)
         rolled = pd.DataFrame({"raw": X[feature.version], "bucket": current})
@@ -296,3 +300,17 @@ def check_frequencies(
             )
             return
         raise ValueError(error_msg)
+
+
+def _relabel(series: pd.Series, mapping: dict) -> pd.Series:
+    """Same as ``series.replace(mapping)``, unmapped values left untouched.
+
+    ``replace`` makes one pass per key (O(len(mapping) × N)), ``map`` a single hashed pass. The input
+    dtype is kept (pandas 3 ``map`` would infer a string dtype where ``replace`` keeps ``object``).
+    """
+    mapped = series.map(mapping)
+    if mapped.isna().any():
+        mapped = mapped.where(mapped.notna(), series)
+    if mapped.dtype != series.dtype:
+        mapped = mapped.astype(series.dtype)
+    return mapped

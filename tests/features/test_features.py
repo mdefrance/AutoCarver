@@ -15,6 +15,7 @@ from AutoCarver.features import (
 )
 from AutoCarver.features.features import (
     Features,
+    FeaturesConfig,
     get_names,
     get_versions,
     keep_versions,
@@ -145,6 +146,18 @@ def test_datetime_same_reference_twice_raises():
         Features(datetimes=[("d", "2020-01-01"), ("d", "2020-01-01")])
     with raises(ValueError, match="quantitatives contain duplicates"):
         Features(datetimes=[("d", "2020-01-01"), ("d", "2020-01-01"), ("d", "ref")])
+
+
+def test_datetime_resolution_from_config():
+    """FeaturesConfig.datetime_resolution is propagated to datetime features only; None keeps their own."""
+    features = Features(
+        numericals=["n"], datetimes=[("d", "2020-01-01")], config=FeaturesConfig(datetime_resolution="ms")
+    )
+    assert features("d__ref=2020-01-01").resolution == "ms"
+    assert not hasattr(features("n"), "resolution")
+
+    own = DatetimeFeature("d", reference_date="2020-01-01", resolution="us")
+    assert Features.from_list([own], config=FeaturesConfig()).datetimes[0].resolution == "us"
 
 
 def test_datetime_alternatives_from_list_idempotent():

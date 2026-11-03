@@ -1,5 +1,7 @@
 """Set of tests for base_discretizers module."""
 
+import time
+
 import numpy as np
 from pytest import raises
 
@@ -113,6 +115,48 @@ def test_grouped_list_group() -> None:
 
     with raises(ValueError):
         gl.group(["a", "g"], "c")  # g is not in grouped_list
+
+
+def test_grouped_list_group_list_matches_one_by_one() -> None:
+    """grouping a list gives the same content as grouping its values one by one"""
+    content = {"a": ["x", "a"], "b": ["b"], "c": ["y", "c"], "d": ["d"], "e": ["e"]}
+    one_by_one = GroupedList({key: list(values) for key, values in content.items()})
+    for discarded in ["d", "a", "c", "c"]:
+        one_by_one.group(discarded, "c")
+    at_once = GroupedList({key: list(values) for key, values in content.items()})
+    at_once.group(["d", "a", "c", "c"], "c")  # to_keep in the list is skipped, as one by one
+
+    assert at_once.content == one_by_one.content
+    assert list(at_once.content) == ["b", "c", "e"]
+
+
+def test_grouped_list_group_list_unchanged_on_error() -> None:
+    """an unknown (or repeated) value in the list raises before anything is grouped"""
+    for to_discard in (["a", "g"], ["a", "a"]):
+        gl = GroupedList({"a": ["b"], "c": ["d"], "e": ["e"]})
+        with raises(ValueError):
+            gl.group(to_discard, "c")
+        assert gl.content == {"a": ["b", "a"], "c": ["d", "c"], "e": ["e"]}
+
+    # empty list or only to_keep: no-op, even for an unknown to_keep
+    gl = GroupedList({"a": ["a"]})
+    gl.group([], "g")
+    gl.group(["a"], "a")
+    assert gl.content == {"a": ["a"]}
+
+
+def test_grouped_list_group_is_not_quadratic() -> None:
+    """grouping many values at once stays fast: it used to be O(N²)"""
+    n = 100_000
+    values = [f"v{i}" for i in range(n)]
+    gl = GroupedList(values)
+
+    start = time.perf_counter()
+    gl.group(values[:-1], values[-1])
+    elapsed = time.perf_counter() - start
+
+    assert len(gl.content[values[-1]]) == n
+    assert elapsed < 3, f"group() took {elapsed:.1f}s for {n} values"
 
 
 def test_grouped_list_append() -> None:

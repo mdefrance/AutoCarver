@@ -12,6 +12,7 @@ from AutoCarver.combinations import (
     TschuprowtCombinations,
 )
 from AutoCarver.combinations.ordinal.ordinal_target_rates import TargetMeanLevel, TargetMeanRidit
+from AutoCarver.discretizers import ProcessingConfig
 from AutoCarver.features import Features
 
 ORDINAL_EVALUATORS = [KendallTauCCombinations, KendallTauBCombinations, SomersDCombinations]
@@ -341,3 +342,21 @@ def test_ordinal_carver_fit_cv_runs(evaluator):
 
     assert "q" in carver.features
     assert isinstance(X_transformed, pd.DataFrame)
+
+
+@mark.parametrize("dropna", [True, False])
+def test_ordinal_carver_custom_nan_sentinel(dropna: bool):
+    """A literal nan sentinel (feature.nan = "missing") carves and transforms like a real NaN."""
+    sizes = ["micro", "small", "medium", "midcap", "large"]
+    outputs = {}
+    for missing in ("missing", np.nan):
+        X = pd.DataFrame({"company_size": ["micro", missing, "small", missing, "large"] * 100})
+        y = pd.Series([0, 1, 2, 1, 2] * 100)
+        features = Features(ordinals={"company_size": sizes})
+        if missing == "missing":
+            features["company_size"].nan = "missing"
+            features["company_size"].has_nan = True
+        carver = OrdinalCarver(features=features, target_scale="level", config=ProcessingConfig(dropna=dropna))
+        outputs[str(missing)] = carver.fit_transform(X, y)["company_size"]
+
+    pd.testing.assert_series_equal(outputs["missing"], outputs["nan"])
