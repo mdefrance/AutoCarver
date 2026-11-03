@@ -7,6 +7,7 @@ The example is the source of truth for the README quick-start block (see
 import importlib.util
 import sys
 from pathlib import Path
+from urllib.error import URLError
 
 import pytest
 
@@ -23,6 +24,10 @@ def test_quick_start_runs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> No
     spec.loader.exec_module(module)
 
     monkeypatch.chdir(tmp_path)
-    module.main()
+    # a failed download (e.g. the host's TLS chain) says nothing about AutoCarver: skip, don't fail
+    try:
+        module.main()
+    except URLError as error:
+        pytest.skip(f"Titanic download failed: {error}")
 
     assert (tmp_path / "titanic_carver.json").exists()
