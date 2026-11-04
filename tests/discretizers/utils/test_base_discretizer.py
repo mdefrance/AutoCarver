@@ -406,6 +406,22 @@ def test_transform_qualitative_ordinal_encoding_is_numeric() -> None:
     assert is_numeric_dtype(result["feature2"]), result["feature2"].dtype
 
 
+def test_transform_qualitative_ordinal_encoding_with_nan_sentinel() -> None:
+    """an unmapped custom nan sentinel (dropna=False) becomes NaN, like a real NaN, instead of
+    breaking the numeric cast of ordinal-encoded columns"""
+    feature = OrdinalFeature("feature1", values=["1", "2", "3"])
+    disc = BaseDiscretizer([feature], config=ProcessingConfig(ordinal_encoding=True))
+    disc.features.ordinal_encoding = True
+    feature.nan = "missing"
+    feature.has_nan = True
+
+    X = pd.DataFrame({"feature1": ["1", "missing", "3", "missing"]})
+    result = disc._transform_qualitative(Sample(X=X, y=None)).X["feature1"]
+
+    assert is_numeric_dtype(result), result.dtype
+    assert result.isna().tolist() == [False, True, False, True]
+
+
 def test_transform_qualitative_ordinal_encoding_with_nan() -> None:
     """ordinal-encoded qualitative columns containing NaN must not raise and must keep NaN.
 

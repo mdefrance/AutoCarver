@@ -118,6 +118,13 @@ matches a column of the fitted ``X``, the elapsed seconds are computed row-wise 
 that column; otherwise it is parsed as a fixed date. A row whose reference column value is
 missing (``NaT``) yields ``NaN``.
 
+Both sides are cast to ``resolution`` (``"s"`` by default) before subtracting. At ``"s"``,
+dates far from their reference (e.g. a 1683 placeholder against a 2025 reference) don't
+overflow, unlike pandas' nanosecond default, which only spans ~292 years. Set it per feature
+with ``DatetimeFeature(..., resolution="ms")`` via :meth:`Features.from_list`, or for every
+datetime feature with ``FeaturesConfig(datetime_resolution="ms")``. Finer units only keep
+sub-second precision.
+
 Datetimes can be declared from the :class:`Features` constructor as
 ``(column name, reference_date)`` pairs::
 

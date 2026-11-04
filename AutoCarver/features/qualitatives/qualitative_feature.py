@@ -43,8 +43,10 @@ class QualitativeFeature(BaseFeature):
 
         # checking that raw order has not been set (also useful when loading from json)
         if len(self.raw_order) == 0:
-            # saving up number ordering for labeling
-            self.raw_order = [self.values.get_group(value) for value in sorted_unique_values]
+            # saving up number ordering for labeling (index built once: get_group per value is O(N²))
+            # plain dict lookup is enough as sorted_unique_values has no NaN
+            leader_per_value = {value: leader for leader, values in self.values.content.items() for value in values}
+            self.raw_order = [leader_per_value.get(value, value) for value in sorted_unique_values]
 
         # fitting BaseFeature
         super().fit(X, y)
@@ -63,11 +65,10 @@ class QualitativeFeature(BaseFeature):
         if not self.ordinal_encoding:
             unique_values = [self.value_per_label.get(label, label) for label in unique_labels]
 
-        # unexpected values for this feature
+        # unexpected values for this feature (set built once: contains per value is O(N²))
+        known_values = set(self.values.values)
         unexpected = [
-            value
-            for value in unique_values
-            if not self.values.contains(value) and pd.notna(value) and value != self.nan
+            value for value in unique_values if value not in known_values and pd.notna(value) and value != self.nan
         ]
         if len(unexpected) > 0:
             # feature does not have a default value
@@ -75,9 +76,9 @@ class QualitativeFeature(BaseFeature):
                 raise ValueError(f"[{self}] Unexpected values: {str(list(unexpected))}")
 
             # feature has default value:
-            # adding unexpected value to list of known values
-            for unexpected_value in unexpected:
-                self.values.append(unexpected_value)
+            # adding unexpected values to list of known values, in one update (one append per value
+            # rescans every tracked value: O(N²))
+            self.values.update({unexpected_value: [unexpected_value] for unexpected_value in unexpected})
 
             # adding unexpected to default
             default_group = self.values.get_group(self.default)
@@ -140,11 +141,14 @@ class QualitativeFeature(BaseFeature):
     def make_labels(self) -> GroupedList:
         """gives labels per values"""
 
+        # position of each value in raw_order, computed once for all groups (O(N·G) otherwise)
+        raw_positions = _first_positions(self.raw_order)
+
         # iterating over each value and there content
         labels = []
         for group, content in self.content.items():
             # formatting label
-            labels += [self._format_modalities(group, content)]
+            labels += [self._format_modalities(group, content, raw_positions)]
 
         return GroupedList(labels)
 
@@ -196,7 +200,7 @@ class QualitativeFeature(BaseFeature):
     def _specific_formatting(self, ordered_content: list[str]) -> str:
         """specific label formatting"""
 
-    def _format_modalities(self, group: str, content: list[str]) -> str:
+    def _format_modalities(self, group: str, content: list[str], raw_positions: dict | None = None) -> str:
         """Formats a list of float quantiles into a list of boundaries.
 
         Rounds quantiles to the closest power of 1000.
@@ -212,22 +216,26 @@ class QualitativeFeature(BaseFeature):
             List of boundaries per quantile
         """
 
-        # ordering content as per original ordering (removes DEFAULT and NAN)
-        ordered_content = [
-            value
-            for value in self.raw_order
-            if value in content
-            # removing nan
-            and value != self.nan
-            # removing floats
-            and not isinstance(value, np.floating)
-            and not isinstance(value, float)
-            # removing ints
-            and not isinstance(value, np.integer)
-            and not isinstance(value, int)
-        ]
-        # removing duplicates
-        ordered_content = list(dict.fromkeys(ordered_content))
+        # ordering content as per original ordering (removes DEFAULT and NAN): sorting the content by
+        # its raw_order position rather than scanning raw_order per group
+        if raw_positions is None:
+            raw_positions = _first_positions(self.raw_order)
+        ordered_content = sorted(
+            {
+                value: None
+                for value in content
+                if value in raw_positions
+                # removing nan
+                and value != self.nan
+                # removing floats
+                and not isinstance(value, np.floating)
+                and not isinstance(value, float)
+                # removing ints
+                and not isinstance(value, np.integer)
+                and not isinstance(value, int)
+            },
+            key=raw_positions.__getitem__,
+        )
 
         # building label from ordered content
         if len(ordered_content) == 0:
@@ -242,6 +250,14 @@ class QualitativeFeature(BaseFeature):
             label += f", {self.nan}"
 
         return label
+
+
+def _first_positions(values: list) -> dict:
+    """Position of the first occurrence of each value."""
+    positions: dict = {}
+    for position, value in enumerate(values):
+        positions.setdefault(value, position)
+    return positions
 
 
 def nan_unique(x: pd.Series, sort: bool = False) -> list[str]:

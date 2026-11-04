@@ -8,6 +8,7 @@ from AutoCarver import BinaryCarver
 from AutoCarver.combinations import BinaryCombinationEvaluator, TschuprowtCombinations
 from AutoCarver.discretizers import ProcessingConfig
 from AutoCarver.discretizers.qualitatives import NestedDiscretizer, QualitativeDiscretizer
+from AutoCarver.discretizers.qualitatives.nested_discretizer import _relabel
 from AutoCarver.features import Features
 
 # col_c (finest) -> col_b -> col_a (coarsest)
@@ -241,3 +242,14 @@ def test_nested_feature_within_binary_carver() -> None:
     # the dev set transforms with the same buckets
     X_dev_carved = carver.transform(X_dev)
     assert set(X_dev_carved["col_c"].unique()) == set(X_carved["col_c"].unique())
+
+
+def test_relabel_matches_series_replace():
+    """_relabel gives the same values and dtype as Series.replace(dict) (unmapped and NaN kept)"""
+    series = pd.Series(["a", "b", np.nan, "c", "a", "d"], dtype=object, index=[5, 4, 3, 2, 1, 0])
+    for mapping in ({"a": "A", "c": "C"}, {"a": "A", "b": "B", "c": "C", "d": "D"}, {}, {"z": "Z"}):
+        expected = series.replace(mapping)
+        pd.testing.assert_series_equal(_relabel(series, mapping), expected)
+
+    # simultaneous, not chained: a -> b and b -> c gives b and c, not c and c
+    assert _relabel(pd.Series(["a", "b"]), {"a": "b", "b": "c"}).tolist() == ["b", "c"]

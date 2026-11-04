@@ -3,7 +3,7 @@
 import json
 
 import pandas as pd
-from pytest import raises, warns
+from pytest import mark, raises, warns
 
 from AutoCarver.features import (
     Features,
@@ -12,6 +12,7 @@ from AutoCarver.features import (
     parse_qualification_response,
     qualify_with_llm,
 )
+from AutoCarver.features.features import _resolve_datetime_references
 
 
 def _mixed_dataframe() -> pd.DataFrame:
@@ -68,6 +69,40 @@ def test_from_dataframe_datetime_reference_uses_most_recent_column():
     assert features("d_mid__ref=d_new").reference_date == "d_new"
     # the anchor can't reference itself -> fixed literal (its earliest date)
     assert features("d_new__ref=2023-01-01").reference_date == "2023-01-01"
+
+
+@mark.parametrize(
+    "timezones",
+    [
+        {"old": None, "new": None},  # tz-naive only (baseline)
+        {"old": None, "new": "UTC"},  # tz-naive + tz-aware
+        {"old": "Europe/Paris", "new": "Asia/Tokyo"},  # two non-UTC timezones
+        {"old": "Asia/Tokyo", "new": None, "empty": "Europe/Paris"},  # with an all-NaT column
+        {"old": None, "new": "Asia/Tokyo", "empty": None},
+    ],
+)
+def test_from_dataframe_datetime_reference_mixed_timezones(timezones: dict):
+    """The most recent column is the anchor whatever the tz-awareness or timezone of each column."""
+    dates = {"old": ["2020-01-01", "2020-01-02"], "new": ["2021-01-03", "2021-01-04"], "empty": [None, None]}
+    X = pd.DataFrame({col: pd.to_datetime(dates[col]).tz_localize(tz) for col, tz in timezones.items()})
+    references = _resolve_datetime_references(X, list(timezones))
+
+    assert references["new"] == "2021-01-03"
+    assert references["old"] == "new"
+    if "empty" in timezones:
+        assert references["empty"] == "new"
+
+
+def test_from_dataframe_datetime_reference_aware_close_to_naive():
+    """Aware timestamps are compared in UTC: 01:00 in Paris is before 00:30 naive (read as UTC)."""
+    X = pd.DataFrame(
+        {
+            "paris": pd.to_datetime(["2020-01-01 01:00"]).tz_localize("Europe/Paris"),
+            "naive": pd.to_datetime(["2020-01-01 00:30"]),
+        }
+    )
+    features = Features.from_dataframe(X)
+    assert features("paris__ref=naive").reference_date == "naive"
 
 
 def test_from_dataframe_single_datetime_uses_fixed_reference():

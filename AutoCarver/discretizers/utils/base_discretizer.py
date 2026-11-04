@@ -552,11 +552,18 @@ class BaseDiscretizer(ABC, BaseEstimator, TransformerMixin):
         # drops. ``where`` fills the same positions with the same values and never downcasts, so it
         # is both quiet today and stable across that change. Nothing here wanted the downcast --
         # ordinal-encoded columns are cast to numeric explicitly just below.
+        #
+        # When nans are not dropped, an unmapped ``feature.nan`` (a custom sentinel such as
+        # ``"missing"``) is not restored: it is left as NaN, like a real NaN, instead of breaking the
+        # numeric cast (``unfillna`` would have turned it into NaN anyway).
         for feature in qualitatives:
             col = sample.X[feature.version]
             mapped = col.map(feature.label_per_value)
             if mapped.isna().any():
-                mapped = mapped.where(mapped.notna(), col)
+                use_mapped = mapped.notna()
+                if feature.has_nan and not feature.dropna:
+                    use_mapped |= col == feature.nan
+                mapped = mapped.where(use_mapped, col)
             sample.X[feature.version] = mapped
 
         # ordinal_encoding produces integer labels, but the in-place ``replace`` above keeps the

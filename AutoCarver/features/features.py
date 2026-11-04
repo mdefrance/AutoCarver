@@ -23,6 +23,7 @@ from AutoCarver.features.quantitatives import (
     get_datetime_features,
     get_quantitative_features,
 )
+from AutoCarver.features.quantitatives.datetime_feature import Resolution
 from AutoCarver.features.utils.base_feature import BaseFeature
 from AutoCarver.features.utils.grouped_list import GroupedList
 
@@ -85,6 +86,9 @@ class FeaturesConfig:
     Internal feature state (``nan``/``default``/``ordinal_encoding``/…) is not part of
     the public ``BaseFeature`` constructor — pass them via this dataclass to ``Features``
     or ``Features.from_list`` and they are propagated to each constituent feature.
+
+    ``datetime_resolution`` sets :class:`DatetimeFeature`'s ``resolution`` for every datetime
+    feature (``None`` keeps each feature's own, ``"s"`` by default).
     """
 
     nan: str | None = None
@@ -94,6 +98,7 @@ class FeaturesConfig:
     has_nan: bool = False
     has_default: bool = False
     dropna: bool = False
+    datetime_resolution: Resolution | None = None
 
 
 def infer_feature_kind(dtype) -> str | None:
@@ -116,6 +121,14 @@ def infer_feature_kind(dtype) -> str | None:
     return None
 
 
+def _as_comparable_utc(timestamp: pd.Timestamp) -> pd.Timestamp:
+    """Tz-naive UTC version of a ``Timestamp``, so that naive and aware columns can be ordered.
+
+    pandas refuses to compare tz-naive and tz-aware timestamps; naive ones are read as UTC.
+    """
+    return timestamp if timestamp.tzinfo is None else timestamp.tz_convert("UTC").tz_localize(None)
+
+
 def _resolve_datetime_references(X: pd.DataFrame, datetime_cols: list[str]) -> dict[str, str]:
     """Picks a ``reference_date`` for each auto-detected datetime column.
 
@@ -128,7 +141,9 @@ def _resolve_datetime_references(X: pd.DataFrame, datetime_cols: list[str]) -> d
     representatives = {col: X[col].max() for col in datetime_cols}
     anchor_candidates = [col for col in datetime_cols if pd.notna(representatives[col])]
 
-    anchor = max(anchor_candidates, key=lambda col: representatives[col]) if anchor_candidates else None
+    anchor = (
+        max(anchor_candidates, key=lambda col: _as_comparable_utc(representatives[col])) if anchor_candidates else None
+    )
 
     references: dict[str, str] = {}
     for col in datetime_cols:
@@ -903,6 +918,9 @@ def apply_collection_state(features: list[BaseFeature], config: FeaturesConfig) 
 
         if config.is_fitted:
             feature.is_fitted = True
+
+        if config.datetime_resolution is not None and isinstance(feature, DatetimeFeature):
+            feature.resolution = config.datetime_resolution
 
 
 def get_names(features: list[BaseFeature]) -> list[str]:

@@ -2,7 +2,7 @@
 
 import numpy as np
 import pandas as pd
-from pytest import fixture
+from pytest import fixture, raises
 
 from AutoCarver.features.quantitatives.datetime_feature import DatetimeFeature, get_datetime_features
 from AutoCarver.features.quantitatives.quantitative_feature import QuantitativeFeature
@@ -93,6 +93,65 @@ def test_to_timedelta_aware_series_naive_reference_column(sample_datetime_featur
 
     assert sample_datetime_feature.to_timedelta(aware, naive).tolist() == [86400.0, 172800.0]
     assert sample_datetime_feature.to_timedelta(naive, aware).tolist() == [-86400.0, -172800.0]
+
+
+def test_to_timedelta_dates_far_from_reference_do_not_overflow(sample_datetime_feature: DatetimeFeature) -> None:
+    """dates more than ~292 years from a literal reference don't overflow at the default resolution"""
+    series = pd.Series([pd.Timestamp("1683-01-01"), pd.Timestamp("2020-01-02")])
+    feature = DatetimeFeature("event", reference_date="2025-07-01")
+
+    result = feature.to_timedelta(series)
+    assert result.tolist() == [
+        (pd.Timestamp("1683-01-01") - pd.Timestamp("2025-07-01")).total_seconds(),
+        (pd.Timestamp("2020-01-02") - pd.Timestamp("2025-07-01")).total_seconds(),
+    ]
+    assert sample_datetime_feature.resolution == "s"
+
+
+def test_to_timedelta_column_reference_far_apart_does_not_overflow(sample_datetime_feature: DatetimeFeature) -> None:
+    """a reference column more than ~292 years apart doesn't overflow at the default resolution"""
+    # nanosecond-resolution columns (pandas<3 default) overflow when subtracted as is
+    series = pd.Series([pd.Timestamp("1683-01-01")]).dt.as_unit("ns")
+    reference = pd.Series([pd.Timestamp("2025-07-01")]).dt.as_unit("ns")
+    result = sample_datetime_feature.to_timedelta(series, reference)
+    assert result.tolist() == [(pd.Timestamp("1683-01-01") - pd.Timestamp("2025-07-01")).total_seconds()]
+
+
+def test_to_timedelta_finer_resolution_overflows_with_context() -> None:
+    """opting into nanoseconds overflows on far-apart dates, with an error naming the feature"""
+    feature = DatetimeFeature("event", reference_date="2025-07-01", resolution="ns")
+    series = pd.Series([pd.Timestamp("1683-01-01")])
+
+    with raises(OverflowError, match="event.*coarser resolution"):
+        feature.to_timedelta(series)
+
+
+def test_to_timedelta_finer_resolution_keeps_sub_second_precision(sample_datetime_feature: DatetimeFeature) -> None:
+    """milliseconds are kept at resolution 'ms', truncated at the default 's'"""
+    series = pd.Series([pd.Timestamp("2020-01-01 00:00:01.500")])
+    feature = DatetimeFeature("event", reference_date="2020-01-01", resolution="ms")
+
+    assert feature.to_timedelta(series).tolist() == [1.5]
+    assert sample_datetime_feature.to_timedelta(series).tolist() == [1.0]
+
+
+def test_fit_raises_on_invalid_resolution() -> None:
+    """an unknown resolution is rejected at fit time"""
+    feature = DatetimeFeature("event", reference_date="2020-01-01", resolution="D")
+    X = pd.DataFrame({"event": pd.to_datetime(["2020-01-02", "2020-01-03"])})
+
+    with raises(ValueError, match="resolution"):
+        feature.fit(X)
+
+
+def test_resolution_json_round_trip() -> None:
+    """resolution survives a to_json/load round trip, and defaults to 's' for older JSON"""
+    feature = DatetimeFeature("event", reference_date="2020-01-01", resolution="ms")
+    feature_json = feature.to_json()
+    assert DatetimeFeature.load(feature_json).resolution == "ms"
+
+    del feature_json["resolution"]
+    assert DatetimeFeature.load(feature_json).resolution == "s"
 
 
 def test_fit_resolves_reference_is_column() -> None:

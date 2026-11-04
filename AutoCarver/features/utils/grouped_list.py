@@ -306,10 +306,22 @@ class GroupedList:
         if not isinstance(to_discard, list):
             self._group_single_value(to_discard, to_keep)
 
-        # list of values to group
+        # list of values to group: same result as grouping them one by one (each discarded group is
+        # prepended to the kept one), but the kept list is rebuilt once instead of once per value (O(N²))
         else:
+            # checked before any change (a value listed twice is no longer a leader the second time)
+            discarded_leaders: dict[Any, None] = {}  # ordered set
             for discarded in to_discard:
-                self._group_single_value(discarded, to_keep)
+                if is_equal(discarded, to_keep):
+                    continue
+                if discarded not in self.content or discarded in discarded_leaders:
+                    raise ValueError(f"[{self}] {discarded} not in list")
+                discarded_leaders[discarded] = None
+            if discarded_leaders:
+                if to_keep not in self.content:
+                    raise ValueError(f"[{self}] {to_keep} not in list")
+                prepended = [value for leader in reversed(discarded_leaders) for value in self.content.pop(leader)]
+                self.content[to_keep] = prepended + self.content[to_keep]
 
         # sanity check after modification
         self.sanity_check()

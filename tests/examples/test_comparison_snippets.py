@@ -7,6 +7,8 @@ optional ``compare`` extra; scikit-learn is a runtime dep so KBins is
 expected to be importable, but the guard keeps the test self-contained).
 """
 
+from urllib.error import URLError
+
 import pandas as pd
 import pytest
 from sklearn.model_selection import train_test_split
@@ -19,7 +21,11 @@ NUMERIC_COLS = ["Age", "Fare", "Siblings/Spouses Aboard", "Parents/Children Aboa
 @pytest.fixture(scope="module")
 def titanic_split() -> tuple[pd.DataFrame, pd.DataFrame]:
     """(train, dev) split of the Titanic dataset, stratified on the target."""
-    data = pd.read_csv(TITANIC_URL)
+    # a failed download (e.g. the host's TLS chain) says nothing about AutoCarver: skip, don't fail
+    try:
+        data = pd.read_csv(TITANIC_URL)
+    except URLError as error:
+        pytest.skip(f"Titanic download failed: {error}")
     return train_test_split(data, test_size=0.33, random_state=42, stratify=data[TARGET])
 
 
